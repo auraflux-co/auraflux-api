@@ -1,2 +1,0 @@
-# cwn-production
-CWN Production
