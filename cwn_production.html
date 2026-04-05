@@ -1415,6 +1415,11 @@ function assembleJob(batchJobId) {
       job.finalUrl = rawFinalUrl ? (rawFinalUrl.startsWith('http') ? rawFinalUrl : (CFG.ffmpegUrl + rawFinalUrl)) : '';
       job.outputPath = resp.outputPath;
       job.assembledAt = new Date().toISOString();
+      // Store thumbnail frame URL for publish prep
+      if (resp.thumbFilename) {
+        job.thumbnailUrl = CFG.ffmpegUrl + '/download/' + resp.thumbFilename;
+        job.thumbFilename = resp.thumbFilename;
+      }
       // Store probed segment durations for accurate chapter timestamps
       if (resp.segmentDurations && resp.segmentDurations.length && job.segments) {
         var durIdx = 0;
