@@ -1600,6 +1600,22 @@ app.post('/assemble', async (req, res) => {
       assemblyJobs[asmId].filename   = outFile;
       assemblyJobs[asmId].duration   = totalDur;
       assemblyJobs[asmId].sizeMB     = sizeMB;
+
+      // Extract thumbnail frame at 15s (Bobby G's first clean delivery after cold open)
+      const thumbFramePath = outPath.replace('.mp4', '_thumb.jpg');
+      try {
+        await new Promise((res, rej) => {
+          const args = ['-ss', '15', '-i', outPath, '-vframes', '1', '-q:v', '2', '-y', thumbFramePath];
+          execFile(ffmpegPath(), args, (err) => err ? rej(err) : res());
+        });
+        if (fs.existsSync(thumbFramePath) && fs.statSync(thumbFramePath).size > 1000) {
+          assemblyJobs[asmId].thumbFrame = thumbFramePath;
+          assemblyJobs[asmId].thumbFilename = path.basename(thumbFramePath);
+          log(asmId, `🖼  Thumbnail frame extracted: ${path.basename(thumbFramePath)}`);
+        }
+      } catch(e) {
+        log(asmId, `⚠️  Thumbnail frame extraction failed: ${e.message}`);
+      }
       // Store per-segment durations so dashboard can build accurate chapter timestamps
       assemblyJobs[asmId].segmentDurations = durations;
 
@@ -1693,15 +1709,30 @@ app.get('/assemble-progress/:id', (req, res) => {
     filename:         job.filename,
     duration:         job.duration,
     segmentDurations: job.segmentDurations || null,
-    downloadUrl:      job.filename ? `/download/${job.filename}` : null
+    downloadUrl:      job.filename ? `/download/${job.filename}` : null,
+    thumbFilename:    job.thumbFilename || null
   });
 });
 
-// GET /download/:file
+// GET /download/:file — serve assembled video or thumbnail frame
 app.get('/download/:file', (req, res) => {
   const filePath = path.join(OUTPUT_DIR, path.basename(req.params.file));
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+  if (!fs.existsSync(filePath)) {
+    // Also check tmp dir for thumbnail frames
+    const tmpPath = path.join(TMP_DIR, path.basename(req.params.file));
+    if (fs.existsSync(tmpPath)) return res.download(tmpPath);
+    return res.status(404).json({ error: 'File not found' });
+  }
   res.download(filePath);
+});
+
+// GET /thumbnail/:assemblyId — get extracted thumbnail frame for a job
+app.get('/thumbnail/:assemblyId', (req, res) => {
+  const job = assemblyJobs[req.params.assemblyId];
+  if (!job || !job.thumbFrame || !fs.existsSync(job.thumbFrame)) {
+    return res.status(404).json({ error: 'No thumbnail frame available' });
+  }
+  res.sendFile(job.thumbFrame);
 });
 
 // ── POST /canva-import ────────────────────────────────────────────
