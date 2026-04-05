@@ -1082,9 +1082,9 @@ app.post('/assemble', async (req, res) => {
                     `geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lte(pow(X-55\\,2)+pow(Y-55\\,2)\\,pow(55\\,2))\\,255\\,0)'[circ];` +
                     `[0:v]drawbox=x=50:y=50:w=420:h=180:color=0x22304b@0.92:t=fill:enable='lte(t\\,${introDur})',` +
                     `drawbox=x=50:y=50:w=420:h=180:color=0xc7af4f@1:t=3:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${name.toUpperCase()}':x=180:y=75:fontsize=20:fontcolor=0xc7af4f:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='Origin\\: ${origin}':x=180:y=105:fontsize=14:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${fact}':x=180:y=128:fontsize=13:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})'[bg];` +
+                    `drawtext=text='${name.toUpperCase()}':x=180:y=75:fontsize=20:fontcolor=0xc7af4f:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})',` +
+                    `drawtext=text='Origin\\: ${origin}':x=180:y=105:fontsize=14:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})',` +
+                    `drawtext=text='${fact}':x=180:y=128:fontsize=13:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})'[bg];` +
                     `[bg][circ]overlay=x=60:y=65:enable='lte(t\\,${introDur})'[out]`,
                   '-map', '[out]', '-map', '0:a',
                   '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
@@ -1097,9 +1097,9 @@ app.post('/assemble', async (req, res) => {
                   '-vf',
                     `drawbox=x=50:y=50:w=380:h=170:color=0x22304b@0.92:t=fill:enable='lte(t\\,${introDur})',` +
                     `drawbox=x=50:y=50:w=380:h=170:color=0xc7af4f@1:t=3:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${name.toUpperCase()}':x=65:y=70:fontsize=20:fontcolor=0xc7af4f:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='Origin\\: ${origin}':x=65:y=100:fontsize=14:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${fact}':x=65:y=123:fontsize=13:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})'`,
+                    `drawtext=text='${name.toUpperCase()}':x=65:y=70:fontsize=20:fontcolor=0xc7af4f:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})',` +
+                    `drawtext=text='Origin\\: ${origin}':x=65:y=100:fontsize=14:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})',` +
+                    `drawtext=text='${fact}':x=65:y=123:fontsize=13:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})'`,
                   '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
                   '-c:a', 'aac', '-y', burnedPath
                 ];
@@ -4243,9 +4243,9 @@ app.post('/burn-streamer-intro', async (req, res) => {
       const textFilter = [
         `drawbox=x=60:y=60:w=380:h=180:color=0x22304b@0.92:t=fill:enable='lte(t,${introDur})'`,
         `drawbox=x=60:y=60:w=380:h=180:color=0xc7af4f@1:t=3:enable='lte(t,${introDur})'`,
-        `drawtext=text='${name.toUpperCase()}':x=70:y=80:fontsize=22:fontcolor=0xc7af4f:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'`,
-        `drawtext=text='Origin\\: ${origin}':x=70:y=110:fontsize=15:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'`,
-        `drawtext=text='${fact}':x=70:y=135:fontsize=14:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'`
+        `drawtext=text='${name.toUpperCase()}':x=70:y=80:fontsize=22:fontcolor=0xc7af4f:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t,${introDur})'`,
+        `drawtext=text='Origin\\: ${origin}':x=70:y=110:fontsize=15:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t,${introDur})'`,
+        `drawtext=text='${fact}':x=70:y=135:fontsize=14:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t,${introDur})'`
       ].join(',');
 
       await new Promise((resolve, reject) => {
