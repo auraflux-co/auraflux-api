@@ -1101,7 +1101,17 @@ app.post('/assemble', async (req, res) => {
 
               await new Promise((res, rej) => {
                 const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
-                proc.on('close', code => code === 0 ? res() : rej(new Error(`Intro burn failed: ${code}`)));
+                let burnStderr = '';
+                proc.stderr && proc.stderr.on('data', d => { burnStderr += d.toString(); });
+                proc.on('close', code => {
+                  if (code === 0) res();
+                  else {
+                    // Log last 300 chars of stderr so we know exactly why it failed
+                    const reason = burnStderr.slice(-300).replace(/\n/g,' ').trim();
+                    console.error(`[intro-burn] FFmpeg exit ${code} for ${streamerName}: ${reason}`);
+                    rej(new Error(`Intro burn failed: ${code} — ${reason}`));
+                  }
+                });
                 proc.on('error', rej);
               });
 
