@@ -1847,7 +1847,7 @@ function renderQueue() {
       +'<div class="job-meta">'+(job.type||'video').toUpperCase().replace('-',' ')+' | '+new Date(job.created).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div></div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+platBar+actions+segToggle+segHtml
+      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -2895,6 +2895,49 @@ function sendToHeyGen() {
 
 // sendToHeyGenManual — called from Gate 1 QA manual review approval button
 // Bypasses the QA gate check and sends directly to HeyGen after Rob approves
+
+function triggerGate2(batchJob) {
+  if (batchJob._gate2Running || batchJob._gate2Done) return;
+  batchJob._gate2Running = true;
+  var avatarSegs = (batchJob.segments||[]).filter(function(s){ return s.type==='avatar'; });
+  var qaEl = document.getElementById('gate2-result-'+batchJob.id);
+  if (qaEl) { qaEl.style.display=''; qaEl.innerHTML='<span style="color:#3498db;font-size:11px;font-family:monospace;">⏳ GATE 2 — Gemini reviewing HeyGen segments...</span>'; }
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/gate2-segment-qa', true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.timeout = 300000;
+  xhr.onload = function() {
+    try {
+      var result = JSON.parse(xhr.responseText);
+      batchJob._gate2Done = true;
+      batchJob._gate2Running = false;
+      batchJob.gate2 = result;
+      saveJobs();
+      var color = result.outcome==='pass' ? '#2ecc71' : result.outcome==='manual_review' ? '#c7af4f' : '#e74c3c';
+      var html = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid '+color+';border-radius:4px;">'
+        +'<div style="font-size:9px;letter-spacing:2px;color:'+color+';font-weight:900;margin-bottom:4px;">GATE 2 — HEYGEN SEGMENT QA</div>'
+        +'<div style="font-size:18px;font-weight:700;color:'+color+';">'+result.score+'/100</div>'
+        +'<div style="font-size:11px;color:'+color+';">'+result.outcomeLabel+'</div>';
+      if (result.deductions && result.deductions.length) {
+        result.deductions.forEach(function(d){ html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;">-'+d.points+' '+d.reason+'</div>'; });
+      }
+      if (result.outcome==='pass') html += '<div style="font-size:10px;color:#2ecc71;margin-top:4px;">✅ Segments look good — ASSEMBLE when all are complete.</div>';
+      else if (result.outcome==='manual_review') html += '<div style="font-size:10px;color:#c7af4f;margin-top:4px;">🟡 Check segments before assembling. Proceed manually.</div>';
+      else html += '<div style="font-size:10px;color:#e74c3c;margin-top:4px;">❌ Issues detected — review failed segments and retry before assembling.</div>';
+      html += '</div>';
+      if (qaEl) qaEl.innerHTML = html;
+      renderQueue();
+    } catch(e) {
+      if (qaEl) qaEl.innerHTML = '<span style="color:#e74c3c;font-size:11px;">Gate 2 error: '+e.message+'</span>';
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    batchJob._gate2Running = false;
+    if (qaEl) qaEl.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Gate 2 skipped — server unreachable</span>';
+  };
+  xhr.send(JSON.stringify({ jobId: batchJob.id, segments: avatarSegs, contentType: batchJob.type||'twitch' }));
+}
+
 function sendToHeyGenManual() {
   var qaEl = g('script-qa-result');
   if (qaEl) qaEl.innerHTML += '<div style="margin-top:6px;font-size:11px;color:#c7af4f;">⚠️ Manual override — sending to HeyGen despite score below auto-pass threshold (90).</div>';
