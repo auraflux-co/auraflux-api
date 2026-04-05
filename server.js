@@ -509,9 +509,9 @@ For each item, respond: PASS / FAIL — [brief reason if fail]
 1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?
 2. OUTRO: Does the script end with "Appreciate you!"?
 3. DISPLAY NAMES: Are only the approved display names used (no Twitch usernames)?
-4. INTRO LENGTH: Is each streamer intro 2-3 sentences?
-5. REACTION LENGTH: Is each reaction exactly 1 sentence?
-6. SETUP LENGTH: Are clips 2 and 3 setups exactly 2 sentences each?
+4. INTRO LENGTH: Is each streamer intro 2 or 3 sentences? (2 minimum, 3 maximum — 3 sentences is PASS, only FAIL if 1 sentence or 4+ sentences)
+5. REACTION LENGTH: Is each reaction exactly 1 sentence? (FAIL only if 2 or more sentences)
+6. SETUP LENGTH: Are clips 2 and 3 setups 2 sentences each? (FAIL only if 1 sentence or 3+ sentences)
 7. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?
 8. CLIP MATCH (most important): Does each setup accurately describe what happens in the clip? Check each one.
 9. LOCKED INTRO: Does the video open with the correct locked intro line?
@@ -546,8 +546,15 @@ ISSUES:
     geminiReport = `Gemini QA call failed: ${e.message}`;
   }
 
-  // Parse score from Gemini response
-  const parsedScore = parseInt((geminiReport.match(/SCORE:\s*(\d+)/i) || [])[1] || '75');
+  // Compute score from Gemini's PASS/FAIL list — never trust Gemini's raw score
+  // Prevents Gemini applying wrong deduction weights (it gave -15 for a -5 item)
+  const DEDUCTION_MAP = { '1':15,'2':15,'8':15,'3':10,'7':10,'4':5,'5':5,'6':5,'9':5,'10':5 };
+  let computedScore = 100;
+  for (const [num, pts] of Object.entries(DEDUCTION_MAP)) {
+    const lineRegex = new RegExp('^' + num + '[.):]\\s*[^\\n]+:\\s*FAIL', 'im');
+    if (lineRegex.test(geminiReport)) computedScore = Math.max(0, computedScore - pts);
+  }
+  const parsedScore = computedScore;
 
   // Apply hard penalties for structural failures caught before Gemini
   const preCheckDeductions = [];
