@@ -457,10 +457,7 @@ ISSUES: [specific problems or "none"]`;
   const logFile = path.join(qaLogDir, `gate3_assembly_${outcome}_${Date.now()}.txt`);
   try { fs.writeFileSync(logFile, whyDoc); console.log(`[qa] Gate 3 why-doc saved: ${logFile}`); } catch(e) {}
 
-  // Upload to Drive — failures always, manual review always, passes only if opted in
-  if (outcome !== 'pass') {
-    uploadToDrive(logFile, path.basename(logFile), `GATE3 ${outcome.toUpperCase()} — ${path.basename(videoPath)}`).catch(() => {});
-  }
+  // QA logs saved locally only — Drive is for final videos only
 
   return { score: avgScore, report: whyDoc, passed, outcome, outcomeLabel, freezeDetected, deductions };
 }
@@ -636,10 +633,7 @@ ISSUES:
   const logFile = path.join(qaLogDir, `gate1_script_${outcome}_${Date.now()}.txt`);
   try { fs.writeFileSync(logFile, whyDoc); console.log(`[qa-gate1] Script QA why-doc saved: ${logFile}`); } catch(e) {}
 
-  if (outcome !== 'pass') {
-    uploadToDrive(logFile, path.basename(logFile), `GATE1 SCRIPT ${outcome.toUpperCase()} — ${jobId}`).catch(() => {});
-  }
-
+  // QA logs saved locally only — not uploaded to Drive
   return { score: adjustedScore, report: whyDoc, passed, outcome, outcomeLabel, deductions: preCheckDeductions, geminiReport };
 }
 
@@ -767,8 +761,7 @@ ISSUES: [specific problems or "none"]`;
   if (!fs.existsSync(qaLogDir)) fs.mkdirSync(qaLogDir, { recursive: true });
   const logFile = path.join(qaLogDir, `gate2_segments_${outcome}_${Date.now()}.txt`);
   try { fs.writeFileSync(logFile, whyDoc); console.log(`[qa-gate2] Segment QA why-doc saved: ${logFile}`); } catch(e) {}
-  if (outcome !== 'pass') uploadToDrive(logFile, path.basename(logFile), `GATE2 SEGMENTS ${outcome.toUpperCase()} — ${jobId}`).catch(() => {});
-
+  // QA logs saved locally only
   return { score: avgScore, report: whyDoc, passed, outcome, outcomeLabel, deductions };
 }
 
@@ -4460,7 +4453,7 @@ app.post('/remediate-video', async (req, res) => {
         // Estimated start time for this streamer's intro
         const startT = Math.round((idx + 1) * avgPerStreamer);
         const endT   = startT + 3;
-        const fontPath = SYSTEM_FONT || '/Library/Fonts/Arial.ttf';
+        const fontPath = (SYSTEM_FONT || '/Library/Fonts/Arial.ttf').replace(/ /g, '\\ ');
 
         // Navy box + gold border + text (3 lines)
         filterParts.push(
