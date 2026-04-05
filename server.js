@@ -4295,6 +4295,64 @@ app.post('/shorts/cut-from-long', async (req, res) => {
   }
 });
 
+
+// POST /gate2-segment-qa — Gate 2: Gemini reviews completed HeyGen segments
+// Called automatically by dashboard when all avatar segments finish polling.
+// Downloads segment files, samples first/middle/last, scores lip sync + audio + freeze.
+// PASS >= 85: auto-proceed to assemble button. MANUAL 65-84: flag for Rob. FAIL < 65: retry.
+app.post('/gate2-segment-qa', async (req, res) => {
+  const { jobId, segments, contentType = 'twitch' } = req.body;
+  if (!segments || !segments.length) return res.status(400).json({ error: 'segments required' });
+  if (!GEMINI_APIKEY) return res.json({ score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (no key)', deductions: [], skipped: true });
+
+  // Download avatar segments to tmp for Gemini analysis
+  const avatarSegs = segments.filter(s => s.type !== 'source_clip' && s.url);
+  if (!avatarSegs.length) return res.json({ score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (no avatar segs)', deductions: [] });
+
+  const tmpPaths = [];
+  // Sample first, middle, last — max 3 downloads
+  const toCheck = [
+    avatarSegs[0],
+    avatarSegs[Math.floor(avatarSegs.length / 2)],
+    avatarSegs[avatarSegs.length - 1]
+  ].filter((s, i, arr) => arr.indexOf(s) === i); // dedupe
+
+  console.log(`[gate2] Downloading ${toCheck.length} segments for QA (job: ${jobId})...`);
+
+  for (const seg of toCheck) {
+    const tmpPath = path.join(TMP_DIR, `gate2_${Date.now()}_${Math.random().toString(36).slice(2,6)}.mp4`);
+    try {
+      await downloadFile(seg.url, tmpPath);
+      const size = fs.existsSync(tmpPath) ? fs.statSync(tmpPath).size : 0;
+      if (size > 5000) {
+        tmpPaths.push(tmpPath);
+        console.log(`[gate2] Downloaded: ${seg.label} (${(size/1024/1024).toFixed(1)}MB)`);
+      } else {
+        console.warn(`[gate2] Segment too small (${size}b) — skipping: ${seg.label}`);
+        try { fs.unlinkSync(tmpPath); } catch(e) {}
+      }
+    } catch(e) {
+      console.warn(`[gate2] Download failed for ${seg.label}: ${e.message}`);
+      try { fs.unlinkSync(tmpPath); } catch(e2) {}
+    }
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  if (!tmpPaths.length) {
+    return res.json({ score: 75, passed: false, outcome: 'manual_review', outcomeLabel: '🟡 MANUAL REVIEW (download failed)', deductions: [{ points: 25, reason: 'Could not download segments for QA' }] });
+  }
+
+  try {
+    const result = await geminiSegmentQA(tmpPaths, { jobId, contentType });
+    res.json(result);
+  } catch(e) {
+    console.error('[gate2] QA error:', e.message);
+    res.json({ score: 75, passed: false, outcome: 'manual_review', outcomeLabel: '🟡 MANUAL REVIEW (QA error)', deductions: [{ points: 25, reason: e.message }] });
+  } finally {
+    tmpPaths.forEach(p => { try { fs.unlinkSync(p); } catch(e) {} });
+  }
+});
+
 // ── Start ─────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
