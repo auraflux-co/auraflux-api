@@ -37,14 +37,12 @@ function findBrandingAsset(name) {
 // Discover a usable font path for FFmpeg drawtext on this machine
 function findSystemFont() {
   const candidates = [
-    '/Library/Fonts/Arial.ttf',
+    '/Library/Fonts/Arial Unicode.ttf',
     '/System/Library/Fonts/Supplemental/Arial.ttf',
+    '/System/Library/Fonts/Supplemental/Andale Mono.ttf',
+    '/Library/Fonts/Arial.ttf',
     '/System/Library/Fonts/Helvetica.ttc',
-    '/System/Library/Fonts/HelveticaNeue.ttc',
-    '/System/Library/Fonts/SFNSDisplay.ttf',
-    '/System/Library/Fonts/SFNSText.ttf',
     '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) { console.log(`[font] Using: ${p}`); return p; }
