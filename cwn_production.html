@@ -4507,8 +4507,9 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
 
   // Auto-generate YouTube chapters from segments
   var chaptersEl = g('pub-chapters-out');
-  if (chaptersEl && job && job.segments) {
-    var chapters = generateYouTubeChapters(job);
+  var _pubJob = getCurrentPubJob();
+  if (chaptersEl && _pubJob && _pubJob.segments) {
+    var chapters = generateYouTubeChapters(_pubJob);
     chaptersEl.textContent = chapters || 'No chapters available — assemble job first.';
   }
 
