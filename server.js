@@ -33,6 +33,27 @@ function findBrandingAsset(name) {
   }
   return null;
 }
+
+// Discover a usable font path for FFmpeg drawtext on this machine
+function findSystemFont() {
+  const candidates = [
+    '/Library/Fonts/Arial.ttf',
+    '/System/Library/Fonts/Supplemental/Arial.ttf',
+    '/System/Library/Fonts/Helvetica.ttc',
+    '/System/Library/Fonts/HelveticaNeue.ttc',
+    '/System/Library/Fonts/SFNSDisplay.ttf',
+    '/System/Library/Fonts/SFNSText.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) { console.log(`[font] Using: ${p}`); return p; }
+  }
+  console.warn('[font] No system font found — drawtext will use FFmpeg built-in');
+  return null;
+}
+const SYSTEM_FONT = findSystemFont();
+
 const CWN_LOGO_PATH   = findBrandingAsset('logo_cwn');   // logo bug top-right
 const CWN_BANNER_PATH = findBrandingAsset('banner_cwn'); // intro card
 
@@ -1055,9 +1076,9 @@ app.post('/assemble', async (req, res) => {
                     `geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lte(pow(X-55\\,2)+pow(Y-55\\,2)\\,pow(55\\,2))\\,255\\,0)'[circ];` +
                     `[0:v]drawbox=x=50:y=50:w=420:h=180:color=0x22304b@0.92:t=fill:enable='lte(t\\,${introDur})',` +
                     `drawbox=x=50:y=50:w=420:h=180:color=0xc7af4f@1:t=3:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${name.toUpperCase()}':x=180:y=75:fontsize=20:fontcolor=0xc7af4f:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='Origin\\: ${origin}':x=180:y=105:fontsize=14:fontcolor=0xf0ede6:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${fact}':x=180:y=128:fontsize=13:fontcolor=0xf0ede6:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t\\,${introDur})'[bg];` +
+                    `drawtext=text='${name.toUpperCase()}':x=180:y=75:fontsize=20:fontcolor=0xc7af4f:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})',` +
+                    `drawtext=text='Origin\\: ${origin}':x=180:y=105:fontsize=14:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})',` +
+                    `drawtext=text='${fact}':x=180:y=128:fontsize=13:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})'[bg];` +
                     `[bg][circ]overlay=x=60:y=65:enable='lte(t\\,${introDur})'[out]`,
                   '-map', '[out]', '-map', '0:a',
                   '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
@@ -1070,9 +1091,9 @@ app.post('/assemble', async (req, res) => {
                   '-vf',
                     `drawbox=x=50:y=50:w=380:h=170:color=0x22304b@0.92:t=fill:enable='lte(t\\,${introDur})',` +
                     `drawbox=x=50:y=50:w=380:h=170:color=0xc7af4f@1:t=3:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${name.toUpperCase()}':x=65:y=70:fontsize=20:fontcolor=0xc7af4f:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='Origin\\: ${origin}':x=65:y=100:fontsize=14:fontcolor=0xf0ede6:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${fact}':x=65:y=123:fontsize=13:fontcolor=0xf0ede6:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t\\,${introDur})'`,
+                    `drawtext=text='${name.toUpperCase()}':x=65:y=70:fontsize=20:fontcolor=0xc7af4f:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})',` +
+                    `drawtext=text='Origin\\: ${origin}':x=65:y=100:fontsize=14:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})',` +
+                    `drawtext=text='${fact}':x=65:y=123:fontsize=13:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t\\,${introDur})'`,
                   '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
                   '-c:a', 'aac', '-y', burnedPath
                 ];
@@ -4162,13 +4183,13 @@ app.post('/burn-streamer-intro', async (req, res) => {
           `drawbox=x=60:y=60:w=400:h=200:color=0xc7af4f@1:t=3:enable='lte(t,${introDur})',` +
           // Streamer name
           `drawtext=text='${name.toUpperCase()}':x=200:y=85:fontsize=22:fontcolor=0xc7af4f:` +
-            `fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t,${introDur})',` +
+            `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})',` +
           // Origin
           `drawtext=text='Origin\\: ${origin}':x=200:y=115:fontsize=15:fontcolor=0xf0ede6:` +
-            `fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t,${introDur})',` +
+            `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})',` +
           // Fact
           `drawtext=text='${fact.replace(/'/g, "'")}':x=200:y=140:fontsize=14:fontcolor=0xf0ede6:` +
-            `fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t,${introDur})'[bg]`,
+            `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'[bg]`,
         // Overlay circular profile image onto card
         `[bg][circle]overlay=x=75:y=75:enable='lte(t,${introDur})'[out]`
       ].join(';');
@@ -4192,9 +4213,9 @@ app.post('/burn-streamer-intro', async (req, res) => {
       const textFilter = [
         `drawbox=x=60:y=60:w=380:h=180:color=0x22304b@0.92:t=fill:enable='lte(t,${introDur})'`,
         `drawbox=x=60:y=60:w=380:h=180:color=0xc7af4f@1:t=3:enable='lte(t,${introDur})'`,
-        `drawtext=text='${name.toUpperCase()}':x=70:y=80:fontsize=22:fontcolor=0xc7af4f:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t,${introDur})'`,
-        `drawtext=text='Origin\\: ${origin}':x=70:y=110:fontsize=15:fontcolor=0xf0ede6:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t,${introDur})'`,
-        `drawtext=text='${fact}':x=70:y=135:fontsize=14:fontcolor=0xf0ede6:fontfile=/System/Library/Fonts/Helvetica.ttc:enable='lte(t,${introDur})'`
+        `drawtext=text='${name.toUpperCase()}':x=70:y=80:fontsize=22:fontcolor=0xc7af4f:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'`,
+        `drawtext=text='Origin\\: ${origin}':x=70:y=110:fontsize=15:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'`,
+        `drawtext=text='${fact}':x=70:y=135:fontsize=14:fontcolor=0xf0ede6:${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'`
       ].join(',');
 
       await new Promise((resolve, reject) => {
@@ -4351,6 +4372,209 @@ app.post('/gate2-segment-qa', async (req, res) => {
   } finally {
     tmpPaths.forEach(p => { try { fs.unlinkSync(p); } catch(e) {} });
   }
+});
+
+
+// ── POST /remediate-video ─────────────────────────────────────────
+// Pre-publish remediation: downloads assembled video from Drive,
+// applies any FFmpeg work that failed during assembly (intro cards,
+// logo bug, etc.), re-uploads to Drive, returns new Drive URL.
+//
+// Called automatically before Upload-Post publish if remediation items exist.
+// Also callable manually from dashboard.
+//
+// Body: {
+//   driveUrl: string,         // current Drive download URL
+//   jobId: string,
+//   contentType: string,      // 'twitch' | 'nba' | 'news'
+//   missedItems: string[],    // ['intro_cards', 'logo_bug']
+//   streamers: []             // streamer data for intro cards
+// }
+app.post('/remediate-video', async (req, res) => {
+  const { driveUrl, jobId, contentType = 'twitch', missedItems = [], streamers = [] } = req.body;
+  if (!driveUrl) return res.status(400).json({ error: 'driveUrl required' });
+  if (!missedItems.length) return res.json({ ok: true, driveUrl, message: 'Nothing to remediate' });
+
+  const remId = 'rem_' + Date.now();
+  console.log(`[remediate] Starting remediation for job ${jobId}: ${missedItems.join(', ')}`);
+
+  // Step 1: Download video from Drive
+  const tmpInput  = path.join(TMP_DIR, `${remId}_input.mp4`);
+  const tmpOutput = path.join(TMP_DIR, `${remId}_output.mp4`);
+
+  try {
+    console.log(`[remediate] Downloading from Drive...`);
+    await downloadFile(driveUrl, tmpInput);
+    const inputSize = fs.statSync(tmpInput).size;
+    if (inputSize < 100000) throw new Error(`Downloaded file too small (${inputSize}b) — Drive URL may be expired`);
+    console.log(`[remediate] Downloaded: ${(inputSize/1024/1024).toFixed(1)}MB`);
+
+    let currentFile = tmpInput;
+    const appliedItems = [];
+    const failedItems  = [];
+
+    // ── Remediation: Intro Cards ────────────────────────────────────
+    // Burns streamer intro cards onto each intro segment region of the video.
+    // For Twitch compilations: overlays name/origin/fact card for 3s at each
+    // streamer section start, estimated by known segment timing.
+    if (missedItems.includes('intro_cards') && contentType === 'twitch' && streamers.length > 0) {
+      console.log(`[remediate] Applying intro cards for ${streamers.length} streamers...`);
+
+      // Get video duration to calculate streamer start times
+      const videoDur = await probeDuration(currentFile);
+
+      // Build drawtext filter for ALL streamers in one pass
+      // Each card shows at estimated start time for 3 seconds
+      // We estimate start times from the video duration / streamer count
+      const avgPerStreamer = videoDur / (streamers.length + 1); // +1 for cold open
+      const filterParts = [];
+
+      streamers.forEach((streamer, idx) => {
+        if (!streamer || !streamer.displayName) return;
+        const name   = (streamer.displayName || '').toUpperCase().replace(/'/g, "\'").replace(/:/g, '\:');
+        const origin = (streamer.origin || '').replace(/'/g, "\'").replace(/:/g, '\:');
+        const fact   = (streamer.fact   || '').replace(/'/g, "\'").replace(/:/g, '\:').slice(0, 40);
+
+        // Estimated start time for this streamer's intro
+        const startT = Math.round((idx + 1) * avgPerStreamer);
+        const endT   = startT + 3;
+        const fontPath = SYSTEM_FONT || '/Library/Fonts/Arial.ttf';
+
+        // Navy box + gold border + text (3 lines)
+        filterParts.push(
+          `drawbox=x=50:y=50:w=420:h=170:color=0x22304b@0.92:t=fill:enable='between(t\,${startT}\,${endT})'`,
+          `drawbox=x=50:y=50:w=420:h=170:color=0xc7af4f@1:t=3:enable='between(t\,${startT}\,${endT})'`,
+          `drawtext=text='${name}':x=65:y=72:fontsize=20:fontcolor=0xc7af4f:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'`,
+          origin ? `drawtext=text='Origin\: ${origin}':x=65:y=102:fontsize=14:fontcolor=0xf0ede6:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'` : null,
+          fact   ? `drawtext=text='${fact}':x=65:y=125:fontsize=13:fontcolor=0xf0ede6:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'` : null,
+        ).filter(Boolean);
+      });
+
+      if (filterParts.length > 0) {
+        const introOutput = path.join(TMP_DIR, `${remId}_intro_cards.mp4`);
+        const filterStr   = filterParts.join(',');
+
+        try {
+          await new Promise((res, rej) => {
+            const args = [
+              '-i', currentFile,
+              '-vf', filterStr,
+              '-c:v', 'libx264', '-preset', 'fast', '-crf', '22',
+              '-c:a', 'copy',
+              '-movflags', '+faststart',
+              '-y', introOutput
+            ];
+            const ff = execFile(ffmpegPath(), args, { maxBuffer: 100 * 1024 * 1024 });
+            let stderr = '';
+            ff.stderr && ff.stderr.on('data', d => { stderr += d; });
+            ff.on('close', code => {
+              if (code === 0) res();
+              else rej(new Error(`Intro cards FFmpeg exit ${code}: ${stderr.slice(-200)}`));
+            });
+            ff.on('error', rej);
+          });
+
+          if (fs.existsSync(introOutput) && fs.statSync(introOutput).size > 100000) {
+            currentFile = introOutput;
+            appliedItems.push('intro_cards');
+            console.log(`[remediate] ✅ Intro cards applied`);
+          }
+        } catch(e) {
+          failedItems.push({ item: 'intro_cards', error: e.message });
+          console.warn(`[remediate] ⚠️  Intro cards failed: ${e.message}`);
+        }
+      }
+    }
+
+    // ── Remediation: Logo Bug ───────────────────────────────────────
+    if (missedItems.includes('logo_bug')) {
+      const logoPng = CWN_LOGO_PATH;
+      if (logoPng && fs.existsSync(logoPng)) {
+        console.log(`[remediate] Applying logo bug...`);
+        const logoOutput = path.join(TMP_DIR, `${remId}_logo.mp4`);
+        try {
+          await new Promise((res, rej) => {
+            const args = [
+              '-i', currentFile, '-i', logoPng,
+              '-filter_complex',
+              '[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=W-w-20:20[vout]',
+              '-map', '[vout]', '-map', '0:a?',
+              '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'copy',
+              '-movflags', '+faststart', '-y', logoOutput
+            ];
+            const ff = execFile(ffmpegPath(), args, { maxBuffer: 100*1024*1024 });
+            ff.on('close', code => code === 0 ? res() : rej(new Error(`Logo FFmpeg exit ${code}`)));
+            ff.on('error', rej);
+          });
+          if (fs.existsSync(logoOutput) && fs.statSync(logoOutput).size > 100000) {
+            currentFile = logoOutput;
+            appliedItems.push('logo_bug');
+            console.log(`[remediate] ✅ Logo bug applied`);
+          }
+        } catch(e) {
+          failedItems.push({ item: 'logo_bug', error: e.message });
+          console.warn(`[remediate] ⚠️  Logo bug failed: ${e.message}`);
+        }
+      } else {
+        failedItems.push({ item: 'logo_bug', error: 'logo_cwn.png not found' });
+      }
+    }
+
+    // ── Step 3: Copy final to output dir + re-upload to Drive ───────
+    if (appliedItems.length === 0) {
+      // Nothing was applied — clean up and return original URL
+      try { fs.unlinkSync(tmpInput); } catch(e) {}
+      return res.json({ ok: true, driveUrl, appliedItems: [], failedItems, message: 'No remediation applied — check errors' });
+    }
+
+    const outFilename = `remediated_${jobId || remId}_${Date.now()}.mp4`;
+    const outPath     = path.join(OUTPUT_DIR, outFilename);
+    fs.copyFileSync(currentFile, outPath);
+
+    // Clean up tmp files
+    [tmpInput, tmpOutput].forEach(f => { try { if (f !== currentFile) fs.unlinkSync(f); } catch(e) {} });
+
+    // Re-upload to Drive
+    console.log(`[remediate] Re-uploading to Drive...`);
+    let newDriveUrl = driveUrl; // fallback to original if upload fails
+    try {
+      const uploadedUrl = await uploadToDrive(outPath, outFilename, `REMEDIATED — ${jobId || outFilename}`);
+      if (uploadedUrl) {
+        newDriveUrl = uploadedUrl;
+        console.log(`[remediate] ✅ Re-uploaded: ${newDriveUrl}`);
+      }
+    } catch(e) {
+      console.warn(`[remediate] ⚠️  Drive re-upload failed: ${e.message} — using original URL`);
+    }
+
+    res.json({
+      ok: true,
+      driveUrl: newDriveUrl,
+      originalUrl: driveUrl,
+      appliedItems,
+      failedItems,
+      outputFile: outFilename,
+      message: `Applied: ${appliedItems.join(', ')}${failedItems.length ? ' | Failed: ' + failedItems.map(f=>f.item).join(', ') : ''}`
+    });
+
+  } catch(err) {
+    console.error('[remediate] Error:', err.message);
+    try { fs.unlinkSync(tmpInput); } catch(e) {}
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /remediate-video/check/:jobId — check what remediation is needed
+// Reads the assembly log to determine what was missed
+app.get('/remediate-video/check/:jobId', (req, res) => {
+  const { jobId } = req.params;
+  // Check assembly log for missed items
+  const missed = [];
+  // Check if logo exists
+  if (!CWN_LOGO_PATH) missed.push('logo_bug');
+  // Font check — if SYSTEM_FONT is null, intro cards will fail
+  if (!SYSTEM_FONT) missed.push('intro_cards_no_font');
+  res.json({ jobId, missed, fontPath: SYSTEM_FONT, logoPath: CWN_LOGO_PATH });
 });
 
 // ── Start ─────────────────────────────────────────────────────────

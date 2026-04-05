@@ -2896,6 +2896,102 @@ function sendToHeyGen() {
 // sendToHeyGenManual — called from Gate 1 QA manual review approval button
 // Bypasses the QA gate check and sends directly to HeyGen after Rob approves
 
+
+// ── Pre-publish remediation ───────────────────────────────────────
+// Checks what FFmpeg work was missed and applies it before Upload-Post publish
+
+function runManualRemediation(jobId) {
+  var job = JOBS.find(function(j){ return j.id===jobId; });
+  if (!job || !job.driveUrl) { alert('No Drive URL found — assemble and upload to Drive first'); return; }
+  var missed = detectMissedItems(job);
+  if (!missed.length) { alert('No missed items detected for this job'); return; }
+  if (!confirm('Apply missed FFmpeg work to this video?\n\n' + missed.join(', ') + '\n\nThis will download from Drive, apply fixes, and re-upload.')) return;
+  job._remediationDone = true;
+  remediateBeforePublish(job, missed, function(newUrl) {
+    alert('Remediation complete! New Drive URL: ' + newUrl);
+    renderQueue();
+  });
+}
+
+function remediateBeforePublish(job, missedItems, onComplete) {
+  if (!missedItems || !missedItems.length || !job.driveUrl) {
+    onComplete(job.driveUrl || '');
+    return;
+  }
+  var statusEl = g('pub-up-status') || g('pub-yt-publish-status');
+  if (statusEl) statusEl.innerHTML = '⚙️ Applying missed FFmpeg work before publish: ' + missedItems.join(', ') + '...';
+
+  var streamers = [];
+  if (job.type === 'twitch' && job.meta && job.meta.streamers) {
+    // Load streamer data from streamers.json equivalent in memory
+    var STREAMER_DATA = {
+      'jasontheween':  { displayName: 'Jason',     origin: 'Arlington',  fact: 'Dep Gai guy' },
+      'hasanabi':      { displayName: 'Hasan',     origin: 'NB/Istanbul',fact: 'Hank Pecker bestie' },
+      'adapt':         { displayName: 'Adapt',     origin: 'Phoenix',    fact: 'Never faked a trickshot' },
+      'stableronaldo': { displayName: 'Ron',       origin: 'Cherry Hill',fact: "At least he's stable" },
+      'lacy':          { displayName: 'Lacy',      origin: 'Erie',       fact: 'Married to Drew' },
+      'marlon':        { displayName: 'Marlon',    origin: 'Malmö',      fact: 'Fooled the Internet' },
+      'cinna':         { displayName: 'Cinna',     origin: 'VA',         fact: "Rosi's Contract Extended....Again" },
+      'yonnajay':      { displayName: 'Yonna',     origin: 'Brevard',    fact: 'Number one roaster' },
+      'jaycinco':      { displayName: 'Jay Cinco', origin: 'Watts',      fact: 'Retired his jersey' },
+      'maya':          { displayName: 'Maya',      origin: 'NorCal',     fact: 'The Gen Z Jane Goodall' },
+      'extraemily':    { displayName: 'Emily',     origin: 'Omaha',      fact: 'Engaged to Maya' }
+    };
+    job.meta.streamers.forEach(function(s) {
+      var data = STREAMER_DATA[s.toLowerCase()] || STREAMER_DATA[s] || { displayName: s };
+      streamers.push(data);
+    });
+  }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/remediate-video', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 600000; // 10 min for large videos
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (resp.ok) {
+        if (statusEl) statusEl.innerHTML = '✅ Remediation complete: ' + (resp.appliedItems||[]).join(', ')
+          + (resp.failedItems&&resp.failedItems.length ? ' | ⚠️ Failed: '+resp.failedItems.map(function(f){return f.item;}).join(', ') : '');
+        // Update job with new Drive URL
+        if (resp.driveUrl && resp.driveUrl !== job.driveUrl) {
+          job.driveUrl = resp.driveUrl;
+          updateJob(job.id, { driveUrl: resp.driveUrl, remediatedAt: new Date().toISOString() });
+          console.log('[remediate] Drive URL updated to remediated version:', resp.driveUrl);
+        }
+        onComplete(resp.driveUrl || job.driveUrl);
+      } else {
+        if (statusEl) statusEl.innerHTML = '⚠️ Remediation skipped: ' + (resp.message||'');
+        onComplete(job.driveUrl);
+      }
+    } catch(e) {
+      if (statusEl) statusEl.innerHTML = '⚠️ Remediation error: ' + e.message + ' — proceeding with original';
+      onComplete(job.driveUrl);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (statusEl) statusEl.innerHTML = '⚠️ Remediation server unreachable — proceeding with original';
+    onComplete(job.driveUrl);
+  };
+  xhr.send(JSON.stringify({
+    driveUrl:     job.driveUrl,
+    jobId:        job.id,
+    contentType:  job.type || 'twitch',
+    missedItems:  missedItems,
+    streamers:    streamers
+  }));
+}
+
+// Detect what was missed on a job based on assembly log or known failures
+function detectMissedItems(job) {
+  var missed = [];
+  // Intro cards: always attempt for twitch jobs (they always fail until font is fixed)
+  if (job.type === 'twitch' && !job.introCardsBurned) missed.push('intro_cards');
+  // Logo bug: always attempt if not confirmed burned
+  if (!job.logoBurned) missed.push('logo_bug');
+  return missed;
+}
+
 function triggerGate2(batchJob) {
   if (batchJob._gate2Running || batchJob._gate2Done) return;
   batchJob._gate2Running = true;
@@ -3521,6 +3617,17 @@ function publishViaUploadPost(platforms, opts) {
   var job = getCurrentPubJob();
   if (!job) { alert('No job selected.'); return; }
   if (!job.driveUrl && !job.filename) { alert('No assembled video found. Assemble first — video must be uploaded to Drive before publishing.'); return; }
+
+  // Auto-remediate missed FFmpeg work before publishing
+  var missed = detectMissedItems(job);
+  if (missed.length && job.driveUrl && !job._remediationDone) {
+    job._remediationDone = true; // prevent double-run
+    remediateBeforePublish(job, missed, function(finalUrl) {
+      // Re-call publish with remediated URL already set on job
+      publishViaUploadPost(platforms, opts);
+    });
+    return; // wait for remediation to complete first
+  }
 
   var prep     = job.publishPrep || {};
   var statusEl = g('pub-up-status') || g('pub-yt-publish-status') || g('pub-tt-publish-status') || g('pub-ig-publish-status');
