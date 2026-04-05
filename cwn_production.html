@@ -3685,15 +3685,17 @@ function publishViaUploadPost(platforms, opts) {
   };
 
   xhr.send(JSON.stringify({
-    driveUrl:    job.driveUrl || '',
-    filename:    job.filename || '',
-    platforms:   platforms,
-    title:       prep.title || job.title || 'ClipzWorld News — The Daily Update',
-    description: prep.description || prep.ytDescription || '',
-    tags:        prep.tags || [],
-    scheduledAt: schedule || null,
-    contentType: contentType,
-    async:       true
+    driveUrl:     job.driveUrl || '',
+    filename:     job.filename || '',
+    platforms:    platforms,
+    title:        prep.title || job.title || 'ClipzWorld News — The Daily Update',
+    description:  prep.description || prep.ytDescription || '',
+    tags:         prep.tags || [],
+    scheduledAt:  schedule || null,
+    contentType:  contentType,
+    thumbnailUrl: prep.thumbnailUrl || job.thumbnailUrl || '',
+    pinnedComment:prep.pinnedComment || prep.comment || '',
+    async:        true
   }));
 }
 
