@@ -766,7 +766,7 @@ async function uploadToDrive(filePath, fileName, title) {
   const res = await drive.files.create({
     requestBody: fileMetadata,
     media: {
-      mimeType: ({'mp4':'video/mp4','.mov':'video/quicktime','.webm':'video/webm','.txt':'text/plain','.json':'application/json'})[require('path').extname(filePath).toLowerCase()] || 'application/octet-stream',
+      mimeType: ({'.mp4':'video/mp4','.mov':'video/quicktime','.webm':'video/webm','.txt':'text/plain','.json':'application/json'})[require('path').extname(filePath).toLowerCase()] || 'application/octet-stream',
       body: fs.createReadStream(filePath)
     },
     fields: 'id, name, webContentLink, webViewLink',
