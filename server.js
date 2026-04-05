@@ -1600,6 +1600,8 @@ app.post('/assemble', async (req, res) => {
       assemblyJobs[asmId].filename   = outFile;
       assemblyJobs[asmId].duration   = totalDur;
       assemblyJobs[asmId].sizeMB     = sizeMB;
+      // Store per-segment durations so dashboard can build accurate chapter timestamps
+      assemblyJobs[asmId].segmentDurations = durations;
 
       // Step 7.5: Gemini QA — 3-point check at 10%, 50%, 85% of video
       log(asmId, `\n🔍 Running Gemini QA check (early/middle/late samples)...`);
@@ -1682,15 +1684,16 @@ app.get('/assemble-progress/:id', (req, res) => {
   const newLog    = fullLog.slice(logOffset);
 
   res.json({
-    pct:        job.pct,
-    tickerPct:  job.tickerPct || null,
-    status:     job.status,
-    log:        newLog,
-    logOffset:  fullLog.length,
-    outputPath: job.outputPath,
-    filename:   job.filename,
-    duration:   job.duration,
-    downloadUrl: job.filename ? `/download/${job.filename}` : null
+    pct:              job.pct,
+    tickerPct:        job.tickerPct || null,
+    status:           job.status,
+    log:              newLog,
+    logOffset:        fullLog.length,
+    outputPath:       job.outputPath,
+    filename:         job.filename,
+    duration:         job.duration,
+    segmentDurations: job.segmentDurations || null,
+    downloadUrl:      job.filename ? `/download/${job.filename}` : null
   });
 });
 
@@ -3470,16 +3473,18 @@ app.post('/publish', async (req, res) => {
 
     // YouTube-specific
     if (platforms.includes('youtube')) {
-      form.append('youtube_title', title);
+      const ytTitle = contentType === 'short' ? title + ' #Shorts' : title;
+      form.append('youtube_title', ytTitle);
       form.append('youtube_description', description || title);
       if (tags.length) tags.forEach(t => form.append('tags[]', t));
-      form.append('privacyStatus', privacyStatus);
+      form.append('privacyStatus', privacyStatus || 'public');
       form.append('categoryId', '24'); // Entertainment
-      form.append('containsSyntheticMedia', 'true'); // AI-generated content
-      if (contentType === 'short') {
-        // Shorts use portrait format — already handled by video dimensions
-        form.append('youtube_title', title + ' #Shorts');
-      }
+      form.append('containsSyntheticMedia', 'true');
+      form.append('madeForKids', 'false');
+      // Thumbnail URL if provided
+      if (req.body.thumbnailUrl) form.append('thumbnail_url', req.body.thumbnailUrl);
+      // Pinned first comment if provided
+      if (req.body.pinnedComment) form.append('first_comment', req.body.pinnedComment);
     }
 
     // Instagram-specific
@@ -3490,9 +3495,11 @@ app.post('/publish', async (req, res) => {
 
     // TikTok-specific
     if (platforms.includes('tiktok')) {
-      form.append('tiktok_title', title.substring(0, 90)); // TikTok max 90 chars
+      form.append('tiktok_title', (title || '').substring(0, 90));
       form.append('privacy_level', 'PUBLIC_TO_EVERYONE');
+      form.append('post_mode', 'DIRECT_POST');
       form.append('is_aigc', 'true');
+      form.append('brand_content_toggle', 'false');
     }
 
     // Threads-specific
