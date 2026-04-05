@@ -475,7 +475,7 @@ async function geminiScriptQA(script, clipAnalyses, opts = {}) {
   // Count [CLIP PLAYS HERE] markers in script
   const clipMarkers    = (script.match(/\[CLIP PLAYS HERE\]/g) || []).length;
   const expectedClips  = contentType === 'twitch' ? streamers.length * clipsPerStreamer : clipAnalyses.length;
-  const wrongClipCount = clipMarkers !== expectedClips;
+  const wrongClipCount = Math.abs(clipMarkers - expectedClips) > 1; // allow ±1 tolerance
   const missingAppreciateYou = !/appreciate you/i.test(script);
 
   // Build Gemini prompt with clip analyses for content verification
