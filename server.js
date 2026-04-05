@@ -2352,6 +2352,8 @@ OUTRO — ALWAYS use this EXACT wording, no variation:
 "Well everybody, that does it for another edition of The Daily Update brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Go play a pick-up game today. Let us know how you did in the comments. Appreciate you!"
 Do not improvise the outro. This line is fixed for every compilation.
 
+DELIVERY NOTE — OUTRO: "Appreciate you!" must be on its own line after [beat]. Warm. Genuine. Give it room.
+
 NBA VOICEOVER STRUCTURE — IMPORTANT:
 In NBA compilations the avatar speaks WHILE the clip plays (voiceover style), not before/after.
 This means: the intro sets up the game, then [CLIP PLAYS HERE] begins, and the avatar's commentary
@@ -2382,7 +2384,9 @@ Do not improvise the cold open. This line is fixed for every compilation.
 
 OUTRO — ALWAYS use this EXACT wording, no variation:
 "Well everybody, that does it for another edition of The Daily Update brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the stories covered concerns you the most. Appreciate you!"
-Do not improvise the outro. This line is fixed for every compilation.`,
+Do not improvise the outro. This line is fixed for every compilation.
+
+DELIVERY NOTE — OUTRO: "Appreciate you!" must be on its own line after [beat]. Warm. Genuine. Give it room.`,
 
 twitch: `You write scripts for ClipzWorld News (@clipznashite), a deadpan Twitch clip reaction show.
 
@@ -2408,7 +2412,17 @@ This is the ONLY acceptable cold open for Twitch compilations. Do not improvise 
 
 OUTRO — ALWAYS use this EXACT text, word for word, no variation:
 "Well everybody, that does it for another edition of The Daily Update brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the clips you liked the most. Appreciate you!"
-This is the ONLY acceptable outro for Twitch compilations. Do not improvise it.`,
+This is the ONLY acceptable outro for Twitch compilations. Do not improvise it.
+
+DELIVERY NOTE — OUTRO: "Appreciate you!" must feel warm and genuine. Write it on its own line after a [beat] so HeyGen delivers it with weight. Never rush it.
+
+DELIVERY NOTE — BEFORE CLIPS: INTRO segments must end with a complete sentence followed by [beat]. Never end an INTRO mid-thought. The avatar needs a clean stop before the clip rolls or it will produce a filler sound.
+
+DELIVERY NOTE — REACTIONS + FOLLOW LINE: Always put [beat] between the reaction sentence and "Follow [name]." These are two separate beats — the reaction lands, then the follow ask. Example:
+"She did not blink once.
+[beat]
+Follow Cinna. Link in description."
+Never write them on the same line or without a [beat] between them.`,
 
 // ── SHORTS / REELS (portrait 9:16, single subject, ~45 seconds total) ───────
 'nba-short': `You write scripts for ClipzWorld News (@clipznashite) — The Daily Update.
