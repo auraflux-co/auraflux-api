@@ -1415,6 +1415,16 @@ function assembleJob(batchJobId) {
       job.finalUrl = rawFinalUrl ? (rawFinalUrl.startsWith('http') ? rawFinalUrl : (CFG.ffmpegUrl + rawFinalUrl)) : '';
       job.outputPath = resp.outputPath;
       job.assembledAt = new Date().toISOString();
+      // Store probed segment durations for accurate chapter timestamps
+      if (resp.segmentDurations && resp.segmentDurations.length && job.segments) {
+        var durIdx = 0;
+        job.segments.forEach(function(seg) {
+          if (resp.segmentDurations[durIdx] !== undefined) {
+            seg.duration = resp.segmentDurations[durIdx];
+            durIdx++;
+          }
+        });
+      }
       saveJobs();
       renderQueue();
     } catch(e) {
@@ -1952,58 +1962,59 @@ function navToThumbnail(jobId) {
 
 function generateYouTubeChapters(job) {
   if (!job || !job.segments) return '';
-  var segs = job.segments.filter(function(s) {
-    return (s.type !== 'source_clip' && s.status === 'completed' && s.url) ||
-           (s.type === 'source_clip' && (s.clipUrl || s.url));
-  });
-  if (!segs.length) return '';
 
-  // Estimate timing based on segment word counts and clip durations
-  // Avatar: ~130 words/min. Clips: use clipDuration or estimate 45s.
   var currentSec = 0;
   var chapters = [];
-  var lastStreamer = '';
+  var lastStreamerName = '';
 
-  segs.forEach(function(seg) {
+  job.segments.forEach(function(seg) {
     var label = (seg.label || '').toUpperCase();
-    var isClip = seg.type === 'source_clip';
-    var isIntro = label.includes('INTRO') || label.includes('COLD OPEN');
-    var isOutro = label.includes('OUTRO');
+    var isClip    = seg.type === 'source_clip';
+    var isColdOpen = label.indexOf('COLD OPEN') > -1;
+    var isIntro   = label.indexOf('INTRO') > -1 && !isColdOpen;
+    var isOutro   = label.indexOf('OUTRO') > -1;
 
-    // Only add chapter at intro/cold open/outro boundaries and clip starts
-    var addChapter = isIntro || isOutro || (isClip && !label.includes('CLIP 2') && !label.includes('CLIP 3'));
-
-    // Extract streamer name for chapter title
-    var streamerMatch = label.match(/^([A-Z0-9_]+)\s/);
-    var streamerName = streamerMatch ? streamerMatch[1] : label.split(' ')[0];
-    streamerName = streamerName.replace(/[()]/g, '').trim();
-
-    if (addChapter && streamerName !== lastStreamer) {
+    // Chapter boundary: cold open, each streamer INTRO, outro
+    if (isColdOpen || isIntro || isOutro) {
       var mm = Math.floor(currentSec / 60);
       var ss = Math.floor(currentSec % 60);
       var ts = mm + ':' + (ss < 10 ? '0' : '') + ss;
 
-      var chapterTitle = '';
-      if (label.includes('COLD OPEN')) chapterTitle = '0:00 Intro';
-      else if (isOutro) chapterTitle = ts + ' Outro';
-      else chapterTitle = ts + ' ' + toTitleCase(streamerName);
-
-      if (chapters.length === 0 && !label.includes('COLD OPEN')) {
-        chapters.push('0:00 Intro');
+      var chapterTitle;
+      if (isColdOpen) {
+        chapterTitle = '0:00 Intro';
+      } else if (isOutro) {
+        chapterTitle = ts + ' Outro';
+      } else {
+        // Extract streamer name from label e.g. "JASON (INTRO)" → "Jason"
+        var nameMatch = label.match(/^(.+?)\s*\(INTRO\)/);
+        var streamerName = nameMatch ? nameMatch[1].trim() : label.replace('(INTRO)','').trim();
+        // Title case
+        streamerName = streamerName.charAt(0) + streamerName.slice(1).toLowerCase();
+        // Multi-word names e.g. JAY CINCO
+        streamerName = streamerName.replace(/\s+([a-z])/g, function(m, l) { return ' ' + l.toUpperCase(); });
+        if (streamerName !== lastStreamerName) {
+          chapterTitle = ts + ' ' + streamerName;
+          lastStreamerName = streamerName;
+        }
       }
-      if (!chapters.includes(chapterTitle)) {
+
+      if (chapterTitle && chapters.indexOf(chapterTitle) === -1) {
         chapters.push(chapterTitle);
-        lastStreamer = streamerName;
       }
     }
 
-    // Advance time
-    if (isClip) {
-      currentSec += seg.clipDuration || 45;
-    } else {
-      var wc = seg.wordCount || (seg.text ? seg.text.split(/\s+/).length : 20);
-      currentSec += (wc / 130) * 60;
+    // Advance time using actual probed duration if available, else estimate
+    var dur = seg.duration || seg.clipDuration || null;
+    if (!dur) {
+      if (isClip) {
+        dur = 45; // fallback clip estimate
+      } else {
+        var wc = seg.wordCount || (seg.text ? seg.text.split(/\s+/).filter(Boolean).length : 15);
+        dur = (wc / 130) * 60;
+      }
     }
+    currentSec += dur;
   });
 
   return chapters.join('\n');
