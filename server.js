@@ -34,8 +34,13 @@ function findBrandingAsset(name) {
   return null;
 }
 
-// Discover a usable font path for FFmpeg drawtext on this machine
+// Copy system font to tmp/ with no spaces in filename — FFmpeg drawtext requires this
 function findSystemFont() {
+  // Local no-space copy takes priority (created on first run)
+  const localCopy = path.join(__dirname, 'tmp', 'cwn_font.ttf');
+  if (fs.existsSync(localCopy)) { console.log(`[font] Using local copy: ${localCopy}`); return localCopy; }
+
+  // Find source font
   const candidates = [
     '/Library/Fonts/Arial Unicode.ttf',
     '/System/Library/Fonts/Supplemental/Arial.ttf',
@@ -44,10 +49,20 @@ function findSystemFont() {
     '/System/Library/Fonts/Helvetica.ttc',
     '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
   ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) { console.log(`[font] Using: ${p}`); return p; }
+  for (const src of candidates) {
+    if (fs.existsSync(src)) {
+      try {
+        if (!fs.existsSync(path.join(__dirname, 'tmp'))) fs.mkdirSync(path.join(__dirname, 'tmp'), { recursive: true });
+        fs.copyFileSync(src, localCopy);
+        console.log(`[font] Copied ${src} → ${localCopy}`);
+        return localCopy;
+      } catch(e) {
+        console.warn(`[font] Copy failed: ${e.message} — using original path`);
+        return src;
+      }
+    }
   }
-  console.warn('[font] No system font found — drawtext will use FFmpeg built-in');
+  console.warn('[font] No system font found');
   return null;
 }
 const SYSTEM_FONT = findSystemFont();
