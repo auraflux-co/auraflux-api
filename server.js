@@ -67,6 +67,92 @@ function findSystemFont() {
 }
 const SYSTEM_FONT = findSystemFont();
 
+// ── Generate intro card PNG using Node Canvas ─────────────────────
+// No FFmpeg drawtext dependency — works regardless of FFmpeg build flags
+// Returns path to PNG file, or null if canvas not installed
+async function generateIntroCardPNG(streamerData, outputPath) {
+  let createCanvas, loadImage;
+  try {
+    const canvasModule = require('canvas');
+    createCanvas = canvasModule.createCanvas;
+    loadImage    = canvasModule.loadImage;
+  } catch(e) {
+    console.warn('[intro-card] canvas not installed — run: npm install canvas');
+    return null;
+  }
+
+  const W = 440, H = 180;
+  const canvas = createCanvas(W, H);
+  const ctx    = canvas.getContext('2d');
+
+  // Navy background
+  ctx.fillStyle = '#22304b';
+  ctx.fillRect(0, 0, W, H);
+
+  // Gold border
+  ctx.strokeStyle = '#c7af4f';
+  ctx.lineWidth   = 3;
+  ctx.strokeRect(1.5, 1.5, W - 3, H - 3);
+
+  const hasImg = streamerData.profileImage;
+  const textX  = hasImg ? 145 : 20;
+
+  // Profile image (circular crop)
+  if (hasImg) {
+    try {
+      const profileImgPath = path.join(TMP_DIR, `profile_${streamerData.displayName.replace(/\s/g,'_')}.png`);
+      if (!fs.existsSync(profileImgPath) && streamerData.profileImage) {
+        await downloadFile(streamerData.profileImage, profileImgPath);
+      }
+      if (fs.existsSync(profileImgPath) && fs.statSync(profileImgPath).size > 100) {
+        const img = await loadImage(profileImgPath);
+        const cx = 72, cy = 90, r = 52;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+        ctx.restore();
+        // Gold circle border
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = '#c7af4f';
+        ctx.lineWidth   = 3;
+        ctx.stroke();
+      }
+    } catch(e) {
+      console.warn('[intro-card] Profile image load failed:', e.message);
+    }
+  }
+
+  // Streamer name in gold
+  ctx.fillStyle = '#c7af4f';
+  ctx.font      = 'bold 22px Arial, sans-serif';
+  ctx.fillText((streamerData.displayName || '').toUpperCase(), textX, 65);
+
+  // Origin in light grey
+  if (streamerData.origin) {
+    ctx.fillStyle = '#f0ede6';
+    ctx.font      = '15px Arial, sans-serif';
+    ctx.fillText('Origin: ' + streamerData.origin, textX, 95);
+  }
+
+  // Fact in light grey
+  if (streamerData.fact) {
+    ctx.fillStyle = '#f0ede6';
+    ctx.font      = '13px Arial, sans-serif';
+    const fact = (streamerData.fact || '').slice(0, 42);
+    ctx.fillText(fact, textX, 120);
+  }
+
+  // Save PNG
+  const buffer = canvas.toBuffer('image/png');
+  fs.writeFileSync(outputPath, buffer);
+  return outputPath;
+}
+
+
 const CWN_LOGO_PATH   = findBrandingAsset('logo_cwn');   // logo bug top-right
 const CWN_BANNER_PATH = findBrandingAsset('banner_cwn'); // intro card
 
@@ -1123,8 +1209,10 @@ app.post('/assemble', async (req, res) => {
 
               if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
                 inputForTS = burnedPath;
-                log(asmId, `  🖼  Intro card burned: ${name} (${hasImg ? 'image' : 'text-only'})`);
+                log(asmId, `  🖼  Intro card burned: ${name}`);
               }
+              // Clean up temp card PNG
+              try { if (fs.existsSync(cardPngPath)) fs.unlinkSync(cardPngPath); } catch(e) {}
             } catch(e) {
               log(asmId, `  ⚠️  Intro card burn failed for ${streamerName}: ${e.message} — using original`);
             }
