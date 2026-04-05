@@ -1,0 +1,128 @@
+{
+  "roster": [
+    {
+      "displayName": "Jason",
+      "twitchUsername": "jasontheween",
+      "onAirName": "Jason",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/jasontheween-profile_image-70x70.png",
+      "origin": "Arlington",
+      "fact": "Dep Gai guy"
+    },
+    {
+      "displayName": "Hasan",
+      "twitchUsername": "hasanabi",
+      "onAirName": "Hasan",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/hasanabi-profile_image-70x70.png",
+      "origin": "NB/Istanbul",
+      "fact": "Hank Pecker bestie"
+    },
+    {
+      "displayName": "Adapt",
+      "twitchUsername": "adapt",
+      "onAirName": "Adapt",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/adapt-profile_image-70x70.png",
+      "origin": "Phoenix",
+      "fact": "Never faked a trickshot"
+    },
+    {
+      "displayName": "Ron",
+      "twitchUsername": "stableronaldo",
+      "onAirName": "Ron",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/stableronaldo-profile_image-70x70.png",
+      "origin": "Cherry Hill",
+      "fact": "At least he's stable"
+    },
+    {
+      "displayName": "Lacy",
+      "twitchUsername": "lacy",
+      "onAirName": "Lacy",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/lacy-profile_image-70x70.png",
+      "origin": "Erie",
+      "fact": "Married to Drew"
+    },
+    {
+      "displayName": "Marlon",
+      "twitchUsername": "marlon",
+      "onAirName": "Marlon",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/marlon-profile_image-70x70.png",
+      "origin": "Malmö",
+      "fact": "Fooled the Internet"
+    },
+    {
+      "displayName": "Cinna",
+      "twitchUsername": "cinna",
+      "onAirName": "Cinna",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/cinna-profile_image-70x70.png",
+      "origin": "VA",
+      "fact": "Rosi's Contract Extended....Again"
+    },
+    {
+      "displayName": "Yonna",
+      "twitchUsername": "yonnajay",
+      "onAirName": "Yonna",
+      "phonetic": "Yawn-uh",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/yonnajay-profile_image-70x70.png",
+      "origin": "Brevard",
+      "fact": "Number one roaster"
+    },
+    {
+      "displayName": "Jay Cinco",
+      "twitchUsername": "jaycinco",
+      "onAirName": "Jay Cinco",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/jaycinco-profile_image-70x70.png",
+      "origin": "Watts",
+      "fact": "Retired his jersey"
+    },
+    {
+      "displayName": "Maya",
+      "twitchUsername": "maya",
+      "onAirName": "Maya",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/42b93509-a232-452f-ae01-2051ad6ab1fc-profile_image-70x70.png",
+      "origin": "NorCal",
+      "fact": "The Gen Z Jane Goodall"
+    },
+    {
+      "displayName": "Emily",
+      "twitchUsername": "extraemily",
+      "onAirName": "Emily",
+      "active": false,
+      "expansion": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/extraemily-profile_image-70x70.png",
+      "origin": "Omaha",
+      "fact": "Engaged to Maya"
+    },
+    {
+      "displayName": "YourRage",
+      "twitchUsername": "yourrage",
+      "onAirName": "YourRage",
+      "active": false,
+      "expansion": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/yourrage-profile_image-70x70.png",
+      "origin": "South Florida",
+      "fact": "Founder of Huzz and Gyatt"
+    }
+  ],
+  "imageStyle": {
+    "shape": "circle",
+    "size": 120,
+    "borderColor": "#c7af4f",
+    "borderWidth": 3
+  },
+  "introCard": {
+    "originLabel": "Origin:",
+    "fontColor": "#f0ede6",
+    "accentColor": "#c7af4f",
+    "backgroundColor": "#22304b",
+    "durationSeconds": 3
+  }
+}
