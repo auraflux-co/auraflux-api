@@ -24,6 +24,8 @@ const Anthropic  = require('@anthropic-ai/sdk');
 
 const app  = express();
 app.use(cors());
+app.use(require('express').json({ limit: '50mb' }));
+app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 const PORT = process.env.PORT || 3000;
 
 const assemblyJobs  = {};
