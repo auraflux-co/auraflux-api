@@ -51,7 +51,7 @@
       "onAirName": "Marlon",
       "active": true,
       "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/marlon-profile_image-70x70.png",
-      "origin": "Malmö",
+      "origin": "Malm\u00f6",
       "fact": "Fooled the Internet"
     },
     {
@@ -110,6 +110,15 @@
       "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/yourrage-profile_image-70x70.png",
       "origin": "South Florida",
       "fact": "Founder of Huzz and Gyatt"
+    },
+    {
+      "displayName": "Rage",
+      "twitchUsername": "yourragegaming",
+      "onAirName": "Rage",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/yourragegaming-profile_image-70x70.png",
+      "origin": "Broward",
+      "fact": "A lot of motion for no knees"
     }
   ],
   "imageStyle": {
