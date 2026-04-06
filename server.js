@@ -107,7 +107,7 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   const fact   = (streamerData.fact    || '').replace(/\\'/g, "'").replace(/\\"/g, '"');
 
   // Check for local profile image first, fallback to remote URL
-  const twitchUsername = streamerData.name || '';
+  const twitchUsername = streamerData.twitchUsername || streamerData.name || '';
   const displayName = streamerData.displayName || '';
   const onAirName = streamerData.onAirName || '';
   let imgUrl = streamerData.profileImageUrl || streamerData.profile_image_url || null;
