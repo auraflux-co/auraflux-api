@@ -101,10 +101,10 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
 
-  // Sanitize text strings by replacing escaped apostrophes
-  const name   = (streamerData.displayName || streamerData.name || '').toUpperCase().replace(/\\'/g, "'");
-  const origin = (streamerData.origin  || '').replace(/\\'/g, "'");
-  const fact   = (streamerData.fact    || '').replace(/\\'/g, "'");
+  // Sanitize text strings by replacing escaped apostrophes and quotes
+  const name   = (streamerData.displayName || streamerData.name || '').toUpperCase().replace(/\\'/g, "'").replace(/\\"/g, '"');
+  const origin = (streamerData.origin  || '').replace(/\\'/g, "'").replace(/\\"/g, '"');
+  const fact   = (streamerData.fact    || '').replace(/\\'/g, "'").replace(/\\"/g, '"');
 
   // Check for local profile image first, fallback to remote URL
   const twitchUsername = streamerData.name || '';
