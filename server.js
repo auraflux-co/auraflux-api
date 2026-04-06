@@ -4958,6 +4958,118 @@ app.get('/thumbnail-status/:jobId', (req, res) => {
   res.json({ status: result.ok ? 'done' : 'failed', ...result });
 });
 
+
+// POST /cleanup — remove old output files, keep only the N most recent
+// Body: { keepCount: 2, cleanTmp: true, cleanQaLogs: false }
+app.post('/cleanup', async (req, res) => {
+  const { keepCount = 2, cleanTmp = true, cleanQaLogs = false } = req.body;
+  const results = { deleted: [], kept: [], freed: 0 };
+
+  // ── Output MP4s — keep N most recent ──────────────────────────
+  try {
+    const files = fs.readdirSync(OUTPUT_DIR)
+      .filter(f => f.endsWith('.mp4'))
+      .map(f => ({ name: f, path: path.join(OUTPUT_DIR, f), mtime: fs.statSync(path.join(OUTPUT_DIR, f)).mtimeMs }))
+      .sort((a, b) => b.mtime - a.mtime);
+
+    const toDelete = files.slice(keepCount);
+    const toKeep   = files.slice(0, keepCount);
+
+    toKeep.forEach(f => results.kept.push(f.name));
+    for (const f of toDelete) {
+      const size = fs.statSync(f.path).size;
+      fs.unlinkSync(f.path);
+      results.deleted.push(f.name);
+      results.freed += size;
+      console.log(`[cleanup] Deleted: ${f.name} (${(size/1024/1024).toFixed(1)}MB)`);
+    }
+
+    // Also clean thumb jpg files for deleted videos
+    fs.readdirSync(OUTPUT_DIR)
+      .filter(f => f.endsWith('_thumb.jpg'))
+      .forEach(f => {
+        const baseName = f.replace('_thumb.jpg', '.mp4');
+        if (results.deleted.includes(baseName)) {
+          try { fs.unlinkSync(path.join(OUTPUT_DIR, f)); } catch(e) {}
+        }
+      });
+  } catch(e) {
+    console.warn('[cleanup] Output cleanup error:', e.message);
+  }
+
+  // ── Tmp directory — clean all leftover segments ───────────────
+  if (cleanTmp) {
+    try {
+      let tmpFreed = 0;
+      fs.readdirSync(TMP_DIR).forEach(f => {
+        // Keep: cwn_font.ttf, ticker_*.mp4, profile_*.png (profile image cache)
+        // Delete: asm_*, gate2_*, gate3_*, learn_*, early_clips/
+        if (f.startsWith('asm_') || f.startsWith('gate') || f.startsWith('learn_') || f.startsWith('gemini_')) {
+          const fp = path.join(TMP_DIR, f);
+          try {
+            const size = fs.statSync(fp).size;
+            fs.unlinkSync(fp);
+            tmpFreed += size;
+          } catch(e) {}
+        }
+      });
+      // Clean early_clips subfolder
+      const earlyDir = path.join(TMP_DIR, 'early_clips');
+      if (fs.existsSync(earlyDir)) {
+        fs.readdirSync(earlyDir).forEach(f => {
+          try {
+            const fp = path.join(earlyDir, f);
+            const size = fs.statSync(fp).size;
+            fs.unlinkSync(fp);
+            tmpFreed += size;
+          } catch(e) {}
+        });
+      }
+      results.freed += tmpFreed;
+      if (tmpFreed > 0) console.log(`[cleanup] Tmp freed: ${(tmpFreed/1024/1024).toFixed(1)}MB`);
+    } catch(e) {
+      console.warn('[cleanup] Tmp cleanup error:', e.message);
+    }
+  }
+
+  // ── QA logs — optional ────────────────────────────────────────
+  if (cleanQaLogs) {
+    const qaDir = path.join(OUTPUT_DIR, 'qa_failures');
+    if (fs.existsSync(qaDir)) {
+      fs.readdirSync(qaDir).forEach(f => {
+        try { fs.unlinkSync(path.join(qaDir, f)); } catch(e) {}
+      });
+      console.log('[cleanup] QA logs cleared');
+    }
+  }
+
+  const freedMB = (results.freed / 1024 / 1024).toFixed(1);
+  console.log(`[cleanup] ✅ Done — freed ${freedMB}MB, deleted ${results.deleted.length} videos, kept ${results.kept.length}`);
+  res.json({ ok: true, deleted: results.deleted, kept: results.kept, freedMB: parseFloat(freedMB) });
+});
+
+// GET /disk-usage — check current disk usage
+app.get('/disk-usage', (req, res) => {
+  try {
+    const outputFiles = fs.readdirSync(OUTPUT_DIR)
+      .filter(f => f.endsWith('.mp4'))
+      .map(f => {
+        const fp = path.join(OUTPUT_DIR, f);
+        return { name: f, sizeMB: parseFloat((fs.statSync(fp).size/1024/1024).toFixed(1)), mtime: fs.statSync(fp).mtimeMs };
+      })
+      .sort((a, b) => b.mtime - a.mtime);
+
+    const tmpSize = fs.readdirSync(TMP_DIR).reduce((acc, f) => {
+      try { return acc + fs.statSync(path.join(TMP_DIR, f)).size; } catch(e) { return acc; }
+    }, 0);
+
+    const totalMB = outputFiles.reduce((a, f) => a + f.sizeMB, 0) + tmpSize/1024/1024;
+    res.json({ ok: true, outputFiles, tmpMB: parseFloat((tmpSize/1024/1024).toFixed(1)), totalMB: parseFloat(totalMB.toFixed(1)) });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Start ─────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
