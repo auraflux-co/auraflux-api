@@ -5733,7 +5733,6 @@ const THUMBNAIL_TEXT_ELEMENT_IDS = {
 
 app.post('/generate-thumbnail', async (req, res) => {
   const { jobId, hookLine, date, streamers: streamerSlugs } = req.body;
-  const CANVA_MCP_URL = 'https://mcp.canva.com/mcp';
 
   // Load streamer roster
   let roster = [];
@@ -5755,76 +5754,163 @@ app.post('/generate-thumbnail', async (req, res) => {
   console.log(`[thumbnail] Generating for ${activeStreamers.length} streamers, date: ${dateStr}`);
   res.json({ ok: true, message: 'Thumbnail generation started — check /thumbnail-status/' + jobId });
 
-  // Run async — Canva MCP calls take time
+  // Run async — Canva API calls take time
   (async () => {
     try {
-      const client = new Anthropic();
+      const CANVA_ACCESS_TOKEN = process.env.CANVA_ACCESS_TOKEN;
 
-      // Build the prompt for Claude to execute all Canva operations
-      const streamerList = activeStreamers.map((s, i) => {
-        const hiResUrl = (s.profileImage || '')
+      if (!CANVA_ACCESS_TOKEN) {
+        throw new Error('CANVA_ACCESS_TOKEN not set in .env — see CANVA_SETUP.md for instructions');
+      }
+
+      // STEP 1: Upload streamer profile images as assets
+      console.log(`[thumbnail] Uploading ${activeStreamers.length} profile images...`);
+      const uploadedAssets = [];
+
+      for (const [index, streamer] of activeStreamers.entries()) {
+        const hiResUrl = (streamer.profileImage || '')
           .replace(/-70x70\./, '-300x300.')
           .replace(/-28x28\./, '-300x300.');
-        return `${i + 1}. ${s.displayName} — image URL: ${hiResUrl || s.profileImage || ''} — element_id: ${THUMBNAIL_CIRCLE_ELEMENT_IDS[i]}`;
-      }).join('\n');
 
-      const systemPrompt = `You are a Canva automation assistant. 
-Execute the following steps using the Canva MCP tools EXACTLY as specified.
-Do each step in order. Return a JSON object with { canvaUrl, success }.
-No explanations — just execute and return JSON.`;
+        if (!hiResUrl) {
+          console.warn(`[thumbnail] No profile image for ${streamer.displayName}, skipping`);
+          continue;
+        }
 
-      const userPrompt = `Execute these Canva operations on design ID: ${TWITCH_THUMBNAIL_TEMPLATE_ID}
+        // Upload asset via Canva API
+        const uploadResp = await axios.post(
+          'https://api.canva.com/rest/v1/url-asset-uploads',
+          {
+            name: `${streamer.displayName} profile`,
+            url: hiResUrl
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${CANVA_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 30000
+          }
+        );
 
-STEP 1: For each streamer below, call upload-asset-from-url with their image URL.
-Note the returned asset_id for each.
+        const uploadJob = uploadResp.data.job;
+        console.log(`[thumbnail] Upload job ${uploadJob.id} for ${streamer.displayName}: ${uploadJob.status}`);
 
-Streamers and their circle element IDs:
-${streamerList}
+        // Poll for upload completion (max 30 seconds)
+        let asset = null;
+        for (let i = 0; i < 10; i++) {
+          await new Promise(r => setTimeout(r, 3000));
 
-STEP 2: Start an editing transaction on design ${TWITCH_THUMBNAIL_TEMPLATE_ID}
+          const statusResp = await axios.get(
+            `https://api.canva.com/rest/v1/url-asset-uploads/${uploadJob.id}`,
+            {
+              headers: { 'Authorization': `Bearer ${CANVA_ACCESS_TOKEN}` }
+            }
+          );
 
-STEP 3: For each streamer, call perform-editing-operations with an update_fill operation:
-- element_id: [their element_id from above]
-- asset_type: "image"
-- asset_id: [the asset_id returned in step 1]
-- alt_text: "[streamer name] profile"
+          const job = statusResp.data.job;
+          if (job.status === 'success') {
+            asset = job.asset;
+            console.log(`[thumbnail] ✅ Asset uploaded: ${asset.id}`);
+            break;
+          } else if (job.status === 'failed') {
+            console.error(`[thumbnail] ❌ Upload failed: ${job.error?.message}`);
+            break;
+          }
+        }
 
-STEP 4: In the same perform-editing-operations call, also update the text elements:
-- element_id: ${THUMBNAIL_TEXT_ELEMENT_IDS.hookLine}
-  replace_text: "${hookText}"
-- element_id: ${THUMBNAIL_TEXT_ELEMENT_IDS.branding}
-  find_text: "CLIPZWORLD NEWS  •  THE DAILY UPDATE"
-  replace_text: "CLIPZWORLD NEWS  •  ${dateStr.toUpperCase()}"
+        if (asset) {
+          uploadedAssets.push({ streamer: streamer.displayName, assetId: asset.id, index });
+        }
+      }
 
-STEP 5: Commit the editing transaction.
+      // STEP 2: Create autofill job with template
+      console.log(`[thumbnail] Creating autofill design with ${uploadedAssets.length} images...`);
 
-STEP 6: Return JSON: { "canvaUrl": "https://www.canva.com/d/...", "success": true }`;
+      // Build data mapping for autofill (this requires the template to have named data fields)
+      const autofillData = {};
 
-      const response = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-        mcp_servers: [{ type: 'url', url: CANVA_MCP_URL, name: 'canva-mcp' }]
+      // Add streamer images to data mapping
+      uploadedAssets.forEach(({ assetId, index }) => {
+        autofillData[`streamer${index + 1}`] = {
+          type: 'image',
+          asset_id: assetId
+        };
       });
 
-      const textBlocks = (response.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
-      let result = {};
-      try {
-        const clean = textBlocks.replace(/```json|```/g, '').trim();
-        const jsonMatch = clean.match(/\{[\s\S]*\}/);
-        if (jsonMatch) result = JSON.parse(jsonMatch[0]);
-      } catch(e) {}
+      // Add text fields
+      autofillData.hookLine = {
+        type: 'text',
+        text: hookText
+      };
 
-      const canvaUrl = result.canvaUrl || `https://www.canva.com/design/${TWITCH_THUMBNAIL_TEMPLATE_ID}`;
+      autofillData.dateLine = {
+        type: 'text',
+        text: `CLIPZWORLD NEWS  •  ${dateStr.toUpperCase()}`
+      };
+
+      const autofillResp = await axios.post(
+        'https://api.canva.com/rest/v1/autofills',
+        {
+          brand_template_id: TWITCH_THUMBNAIL_TEMPLATE_ID,
+          data: autofillData,
+          title: `Twitch Compilation - ${dateStr}`
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${CANVA_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000
+        }
+      );
+
+      const autofillJob = autofillResp.data.job;
+      console.log(`[thumbnail] Autofill job ${autofillJob.id}: ${autofillJob.status}`);
+
+      // Poll for autofill completion (max 60 seconds)
+      let design = null;
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 3000));
+
+        const statusResp = await axios.get(
+          `https://api.canva.com/rest/v1/autofills/${autofillJob.id}`,
+          {
+            headers: { 'Authorization': `Bearer ${CANVA_ACCESS_TOKEN}` }
+          }
+        );
+
+        const job = statusResp.data.job;
+        if (job.status === 'success') {
+          design = job.result.design;
+          console.log(`[thumbnail] ✅ Design created: ${design.id}`);
+          break;
+        } else if (job.status === 'failed') {
+          throw new Error(`Autofill failed: ${job.error?.message || 'Unknown error'}`);
+        }
+      }
+
+      if (!design) {
+        throw new Error('Autofill job timed out');
+      }
+
+      const canvaUrl = design.urls.edit_url;
       console.log(`[thumbnail] ✅ Complete: ${canvaUrl}`);
 
       // Store result so dashboard can poll
       if (!global._thumbnailJobs) global._thumbnailJobs = {};
-      global._thumbnailJobs[jobId] = { ok: true, canvaUrl, completedAt: new Date().toISOString() };
+      global._thumbnailJobs[jobId] = {
+        ok: true,
+        canvaUrl,
+        designId: design.id,
+        completedAt: new Date().toISOString()
+      };
 
     } catch(err) {
       console.error('[thumbnail] Error:', err.message);
+      if (err.response) {
+        console.error('[thumbnail] Canva API error:', err.response.data);
+      }
       if (!global._thumbnailJobs) global._thumbnailJobs = {};
       global._thumbnailJobs[jobId] = { ok: false, error: err.message };
     }
