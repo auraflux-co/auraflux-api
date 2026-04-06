@@ -1257,6 +1257,34 @@ app.post('/assemble', async (req, res) => {
           });
           tsFiles.push(tsPath);
           if (i % 10 === 0) log(asmId, `  🔄 Normalized ${i+1}/${localFiles.length} segments...`);
+
+          // Add 0.25s silence buffer after avatar segments before source clips
+          // Prevents Bobby G getting cut off mid-word when clip starts
+          const nextSeg = segsToProcess[i + 1];
+          const currSegType = segTypes[tsFiles.length - 1] || 'avatar';
+          const nextSegType = nextSeg && nextSeg.type === 'source_clip' ? 'source_clip' : 'avatar';
+          if (currSegType === 'avatar' && nextSegType === 'source_clip') {
+            const silencePath = tsPath.replace('.ts', '_silence.ts');
+            try {
+              await new Promise((res, rej) => {
+                const args = [
+                  '-f', 'lavfi', '-i', 'color=c=#000000:s=1920x1080:r=30:d=0.25',
+                  '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo:d=0.25',
+                  '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+                  '-c:a', 'aac', '-ar', '44100', '-ac', '2',
+                  '-bsf:v', 'h264_mp4toannexb',
+                  '-f', 'mpegts', '-y', silencePath
+                ];
+                const proc = execFile(ffmpegPath(), args, { maxBuffer: 5 * 1024 * 1024 });
+                proc.on('close', code => code === 0 ? res() : rej(new Error('silence gen failed')));
+                proc.on('error', rej);
+              });
+              tsFiles.push(silencePath);
+              segTypes.push('avatar'); // treat silence as avatar for transition logic
+            } catch(e) {
+              // non-fatal — skip silence if it fails
+            }
+          }
         } catch(e) {
           log(asmId, `  ⚠️  Skipping segment ${i+1}: ${e.message}`);
           segTypes.splice(tsFiles.length, 0);
