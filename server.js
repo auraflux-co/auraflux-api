@@ -118,7 +118,9 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
     { name: displayName ? `profile_${displayName}` : '', label: 'profile_displayName' },
     { name: onAirName ? `profile_${onAirName}` : '', label: 'profile_onAirName' },
     { name: displayName, label: 'displayName' },
-    { name: onAirName, label: 'onAirName' }
+    { name: onAirName, label: 'onAirName' },
+    { name: displayName ? `profile_${displayName.replace(/ /g, '_')}` : '', label: 'profile_displayName_underscore' },
+    { name: onAirName ? `profile_${onAirName.replace(/ /g, '_')}` : '', label: 'profile_onAirName_underscore' }
   ].filter(p => p.name); // Remove empty patterns
 
   // Try multiple extensions: .png, .jpeg, .jpg, and no extension
