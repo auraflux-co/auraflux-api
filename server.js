@@ -25,6 +25,7 @@ const Anthropic  = require('@anthropic-ai/sdk');
 const app  = express();
 
 const TMP_DIR    = require('path').join(__dirname, 'tmp');
+const CWN_LOGO_PATH = path.join(__dirname, 'assets', 'cwn_logo.png');
 const OUTPUT_DIR = require('path').join(__dirname, 'output');
 require('fs').mkdirSync(TMP_DIR,    { recursive: true });
 require('fs').mkdirSync(OUTPUT_DIR, { recursive: true });
