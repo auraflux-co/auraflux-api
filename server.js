@@ -1700,7 +1700,8 @@ app.post('/assemble', async (req, res) => {
               '-filter_complex',
               '[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=W-w-20:20[vout]',
               '-map', '[vout]', '-map', '0:a?',
-              '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'copy',
+              '-c:v', 'libx264', '-preset', 'fast', '-crf', '18', '-pix_fmt', 'yuv420p',
+              '-c:a', 'copy',
               '-movflags', '+faststart', '-y', loggedFile
             ];
             const ff = execFile(ffmpegPath(), args, { maxBuffer: 100*1024*1024 });
