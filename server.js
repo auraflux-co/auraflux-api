@@ -1233,7 +1233,8 @@ app.post('/assemble', async (req, res) => {
         const tsPath = inputForTS.replace(/\.[^.]+$/, '.ts');
         try {
           await new Promise((res, rej) => {
-            const tsArgs = [
+            const isAvatarSeg = segTypes[tsFiles.length] !== 'source_clip';
+          const tsArgs = [
               '-i', inputForTS,
               '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30',
               '-pix_fmt', 'yuv420p',
@@ -1242,7 +1243,11 @@ app.post('/assemble', async (req, res) => {
               '-keyint_min', '30',
               '-sc_threshold', '0',
               '-c:a', 'aac', '-ar', '44100', '-ac', '2',
-              '-af', 'aresample=async=1:min_hard_comp=0.100000:first_pts=0',
+              // Normalize avatar audio to -14 LUFS to match clip volume
+              // Source clips keep aresample only — their levels are already higher
+              '-af', isAvatarSeg
+                ? 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=async=1:min_hard_comp=0.100000:first_pts=0'
+                : 'aresample=async=1:min_hard_comp=0.100000:first_pts=0',
               '-bsf:v', 'h264_mp4toannexb',
               '-f', 'mpegts', '-y', tsPath
             ];
