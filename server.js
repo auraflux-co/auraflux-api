@@ -1168,7 +1168,7 @@ app.post('/assemble', async (req, res) => {
               const name   = streamerData.displayName;
               const origin = streamerData.origin || '';
               const fact   = (streamerData.fact || '').replace(/'/g, "\\'").replace(/:/g, '\\:');
-              const introDur = 3.0;
+              const introDur = 3.5;
 
               let burnArgs;
               if (hasImg) {
