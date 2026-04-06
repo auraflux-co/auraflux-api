@@ -230,9 +230,9 @@
 | **Twitch Helix API** | Clip fetching, GQL resolution | Free | ✅ Active |
 | **FFmpeg** | Assembly, normalization, overlays | Free | ✅ Active |
 | **Google Drive API** | Video storage | Free | ✅ Active |
-| **Upload-Post API** | Multi-platform publishing | $99/mo | 🟡 Planned |
-| **Canva (via MCP)** | Thumbnail generation | Free tier | 🟡 Planned |
-| **CapCut MCP** | Advanced assembly, thumbnails | Free | 🟡 Planned |
+| **Upload-Post API** | Multi-platform publishing | $50/mo | 🟢 Active |
+| **Canva (via MCP)** | Thumbnail generation | Free tier | 🟢 Active |
+| **CapCut MCP** | Advanced assembly, thumbnails | Free | 🟢 Active |
 
 ---
 
@@ -299,9 +299,9 @@
 
 ### **Phase 2: Stable Codebase (NEXT)**
 - ✅ All 4 gates passing reliably
-- ✅ All 3 content types working (Twitch ✅, NBA 🟡, News 🟡)
-- ✅ Pre-publish + thumbnails implemented
-- ✅ Upload-Post integration tested
+- ⏸️ All 3 content types working (Twitch ✅, NBA 🟡, News 🟡)
+- ⏸️ Pre-publish + thumbnails fully tested
+- ⏸️ Upload-Post first successful publish to all platforms
 
 ### **Phase 3: Railway Deployment**
 **Server Hosting:**
@@ -342,9 +342,9 @@
 **Estimated Monthly Cost:**
 - 12 long-form × 4 weeks = 48 compilations @ $4 = $192
 - 21 shorts × 4 weeks = 84 shorts @ $0.36 = $30
-- Upload-Post = $99
+- Upload-Post = $50
 - Gemini + Claude = $40
-- **Total:** ~$361/month
+- **Total:** ~$312/month
 
 ---
 
@@ -364,15 +364,15 @@
 
 ### **Immediate (This Week)**
 1. **Test complete Twitch workflow** — Generate → HeyGen → Assemble → Publish
-2. **Verify all local profile images** — Standardize filenames
-3. **Implement pre-publish tab** — Title/description/thumbnail generation
-4. **Upload-Post integration** — Test YouTube/TikTok/Instagram publish
+2. **Verify all local profile images** — Standardize filenames (✅ lookup fixed)
+3. **Test pre-publish tab** — Title/description/thumbnail (✅ endpoints ready)
+4. **Upload-Post first publish** — Test YouTube/TikTok/Instagram (✅ endpoints ready)
 
 ### **Short Term (2-4 Weeks)**
-1. **NBA compilation first run**
-2. **News compilation first run**
-3. **Canva thumbnail templates** — Options 3 & 4
-4. **CapCut MCP integration** — Advanced assembly
+1. **NBA compilation first run** — Full workflow test
+2. **News compilation first run** — Full workflow test
+3. **Canva thumbnail refinement** — Test Options 3 & 4 templates (✅ MCP integrated)
+4. **CapCut MCP testing** — Progressive assembly workflow (✅ endpoints ready)
 
 ### **Long Term (1-3 Months)**
 1. **Railway deployment** — Automated overnight runs
