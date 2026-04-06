@@ -35,6 +35,7 @@ validateRequiredEnv();
 
 const express    = require('express');
 const cors       = require('cors');
+const helmet     = require('helmet');
 const axios      = require('axios');
 const fs         = require('fs');
 const path       = require('path');
@@ -78,12 +79,35 @@ function cleanupOrphanedTempFiles() {
   }
 }
 
+// Validate directory write permissions on startup
+function validateDirWritable(dirPath, dirName) {
+  try {
+    const testFile = path.join(dirPath, `.writetest_${Date.now()}`);
+    fs.writeFileSync(testFile, 'permission_test');
+    fs.unlinkSync(testFile);
+    console.log(`✅ ${dirName} directory is writable`);
+  } catch (e) {
+    console.error(`\n❌ FATAL: ${dirName} directory is not writable: ${dirPath}`);
+    console.error(`   Error: ${e.message}`);
+    console.error(`   Fix permissions and restart.\n`);
+    process.exit(1);
+  }
+}
+
 cleanupOrphanedTempFiles();
+validateDirWritable(TMP_DIR, 'tmp');
+validateDirWritable(OUTPUT_DIR, 'output');
 
 const assemblyJobs = {};
 const heygenJobs   = {};
 
 function log(asmId, msg) { console.log(`[${asmId}] ${msg}`); }
+
+// Security headers via helmet
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled for local dashboard with inline scripts
+  crossOriginEmbedderPolicy: false // Disabled for embedded videos/images
+}));
 
 // CORS configuration with origin whitelist
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -110,6 +134,48 @@ app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 
 const PORT = process.env.PORT || 3000;
 
+// ── Configuration Constants ────────────────────────────────────────
+const CONFIG = {
+  INTRO_CARD: {
+    CANVAS_WIDTH: 720,
+    CANVAS_HEIGHT: 840,
+    CIRCLE_CENTER_Y: 330,
+    CIRCLE_RADIUS: 260,
+    NAME_FONT_SIZE: 68,
+    ORIGIN_FONT_SIZE: 44,
+    FACT_FONT_SIZE_START: 44,
+    FACT_FONT_SIZE_MIN: 28,
+    DURATION_SECONDS: 3.5
+  },
+  TRANSITIONS: {
+    DISSOLVE_DURATION: 0.7,
+    CROSSFADE_DURATION: 0.3,
+    FADE_DURATION: 0.5
+  },
+  GEMINI: {
+    MAX_FILE_SIZE: 34 * 1024 * 1024, // 34MB
+    MAX_VIDEO_RETRIES: 3,
+    UPLOAD_TIMEOUT: 120000
+  },
+  VIDEO: {
+    ANALYSIS_QUALITIES: ['720', '480', '360'],
+    ASSEMBLY_QUALITIES: ['1080', '720', 'best'],
+    MIN_SEGMENT_SIZE: 100000, // 100KB
+    MAX_SEGMENT_SIZE: 2 * 1024 * 1024 * 1024 // 2GB
+  },
+  ASSEMBLY: {
+    ESTIMATED_SIZE_PER_SEGMENT_MB: 20,
+    OVERHEAD_MB: 500,
+    TIMEOUT_MS: 1800000 // 30 minutes
+  },
+  TICKER: {
+    CACHE_TTL_MS: 3600000, // 1 hour
+    DURATION_SECONDS: 60,
+    WIDTH: 1920,
+    HEIGHT: 64,
+    FPS: 15
+  }
+};
 
 // ── CWN Branding assets (place in ~/Downloads/) ───────────────────
 function findBrandingAsset(name) {
@@ -366,6 +432,32 @@ function checkFFmpeg(cb) {
     if (err) return cb(new Error('FFmpeg not found. Install ffmpeg and ensure it is in PATH.'));
     const versionLine = stdout.split('\n')[0];
     cb(null, versionLine);
+  });
+}
+
+// Check available disk space before assembly
+async function checkDiskSpace(requiredMB) {
+  return new Promise((resolve, reject) => {
+    // Use df command to check free space on output directory
+    exec(`df -k "${OUTPUT_DIR}" | awk 'NR==2 {print $4}'`, (err, stdout) => {
+      if (err) {
+        console.warn(`[disk-check] Could not check disk space: ${err.message}`);
+        return resolve(); // Non-fatal, continue anyway
+      }
+      const freeKB = parseInt(stdout.trim());
+      const freeMB = Math.floor(freeKB / 1024);
+      const freeGB = (freeMB / 1024).toFixed(1);
+
+      console.log(`[disk-check] Available: ${freeGB}GB, Required: ${requiredMB}MB`);
+
+      if (freeMB < requiredMB) {
+        return reject(new Error(
+          `Insufficient disk space: ${freeGB}GB available, need ${(requiredMB/1024).toFixed(1)}GB. ` +
+          `Run cleanup to free space.`
+        ));
+      }
+      resolve();
+    });
   });
 }
 
@@ -1093,10 +1185,43 @@ async function uploadToDrive(filePath, fileName, title) {
   return directUrl;
 }
 
+// Claude API wrapper with detailed error handling
+async function callClaudeAPI(params) {
+  const client = new Anthropic();
+  try {
+    const response = await client.messages.create(params);
+    return response;
+  } catch (e) {
+    // Detailed error handling for different Claude API failure modes
+    if (e.status === 429) {
+      throw new Error(`Claude API rate limited. Retry after ${e.headers?.['retry-after'] || '60'} seconds`);
+    }
+    if (e.status === 401 || e.status === 403) {
+      throw new Error('Claude API authentication failed - check ANTHROPIC_API_KEY in .env');
+    }
+    if (e.status === 400) {
+      if (e.message && e.message.includes('max_tokens')) {
+        throw new Error('Claude API: max_tokens parameter too high or invalid');
+      }
+      if (e.message && e.message.includes('context_length')) {
+        throw new Error('Claude API: prompt exceeds context length - reduce input size');
+      }
+      throw new Error(`Claude API bad request: ${e.message}`);
+    }
+    if (e.status === 500 || e.status === 529) {
+      throw new Error('Claude API server error - service temporarily unavailable');
+    }
+    if (e.code === 'ECONNREFUSED' || e.code === 'ETIMEDOUT') {
+      throw new Error('Claude API connection failed - check network connectivity');
+    }
+    // Generic fallback
+    throw new Error(`Claude API error (${e.status || e.code || 'unknown'}): ${e.message}`);
+  }
+}
+
 async function importToCanva(videoUrl, title) {
   // Uses Claude + Canva MCP to import the video
-  const client = new Anthropic();
-  const response = await client.messages.create({
+  const response = await callClaudeAPI({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1024,
     system: 'You are a production assistant. Use the Canva MCP tool to import a video from a URL into Canva. Call import-design-from-url with the URL. Return ONLY JSON: {"design_id":"...","url":"..."}. No other text.',
@@ -1105,7 +1230,10 @@ async function importToCanva(videoUrl, title) {
   });
   const text  = (response.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
   const clean = text.replace(/```json|```/g, '').trim();
-  try { return JSON.parse(clean); } catch(e) { return null; }
+  try { return JSON.parse(clean); } catch(e) {
+    console.warn(`[canva] JSON parse failed: ${e.message} - Raw: ${clean.slice(0, 100)}`);
+    return null;
+  }
 }
 
 // POST /upload-to-drive — manual trigger from dashboard
@@ -1168,6 +1296,17 @@ app.post('/assemble', async (req, res) => {
       const clipCount   = segsToProcess.filter(s => s.type === 'source_clip').length;
       log(asmId, `Starting assembly: ${avatarCount} avatar + ${clipCount} source clips = ${segsToProcess.length} total`);
       log(asmId, `Transition: ${transition} | Format: ${format}`);
+
+      // Check disk space before assembly (estimate ~20MB per segment + 500MB overhead)
+      const estimatedSizeMB = (segsToProcess.length * 20) + 500;
+      try {
+        await checkDiskSpace(estimatedSizeMB);
+      } catch (diskErr) {
+        log(asmId, `❌ ${diskErr.message}`);
+        assemblyJobs[asmId].status = 'failed';
+        assemblyJobs[asmId].error = diskErr.message;
+        return;
+      }
 
       // ── Gate 2: Server-side segment QA ───────────────────────────
       // Runs at assembly start — doesn't depend on browser being open
@@ -1285,7 +1424,20 @@ app.post('/assemble', async (req, res) => {
               url = fresh.mp4Url;
               log(asmId, `🔄 Fresh GQL token for ${label} (${fresh.quality})`);
             } catch(e) {
-              log(asmId, `⚠️  GQL refresh failed for ${label}: ${e.message} — using stored URL`);
+              log(asmId, `⚠️  GQL refresh failed for ${label}: ${e.message} — validating stored URL`);
+
+              // Validate that stored URL is still accessible before using it
+              try {
+                const headResp = await axios.head(url, { timeout: 5000 });
+                if (headResp.status !== 200) {
+                  log(asmId, `❌ Stored URL returned status ${headResp.status} — cannot use this segment`);
+                  continue; // Skip this segment
+                }
+                log(asmId, `✓ Stored URL still valid for ${label}`);
+              } catch(headErr) {
+                log(asmId, `❌ Stored URL validation failed: ${headErr.message} — segment expired, skipping`);
+                continue; // Skip this segment
+              }
             }
           }
         }
@@ -2229,11 +2381,23 @@ const TICKER_MAP = {
   news:   'cwn_combined_ticker.html', // cwn_combined_ticker.html in Downloads
   twitch: 'cwn_twitch_ticker.html'    // cwn_twitch_ticker.html in Downloads
 };
-const TICKER_CACHE = {}; // { nba: '/path/to/ticker_nba.mp4', ... }
+const TICKER_CACHE = {}; // { nba: { path: '...', cachedAt: timestamp }, ... }
+const TICKER_CACHE_TTL = 3600000; // 1 hour cache validity
 const TICKER_DASH_PORT = process.env.DASHBOARD_PORT || '8765';
 
 async function captureTicker(contentType) {
-  if (TICKER_CACHE[contentType]) return TICKER_CACHE[contentType];
+  // Check cache with TTL
+  if (TICKER_CACHE[contentType]) {
+    const cached = TICKER_CACHE[contentType];
+    const age = Date.now() - cached.cachedAt;
+    if (age < TICKER_CACHE_TTL && fs.existsSync(cached.path)) {
+      console.log(`[ticker] Using cached ${contentType} ticker (age: ${Math.round(age/1000/60)}m)`);
+      return cached.path;
+    } else {
+      console.log(`[ticker] Cache expired for ${contentType} (age: ${Math.round(age/1000/60)}m), regenerating...`);
+      delete TICKER_CACHE[contentType];
+    }
+  }
   const tickerFile = TICKER_MAP[contentType];
   if (!tickerFile) return null;
 
@@ -2304,8 +2468,8 @@ async function captureTicker(contentType) {
     fs.readdirSync(frameDir).forEach(f => { try { fs.unlinkSync(path.join(frameDir, f)); } catch(e){} });
     try { fs.rmdirSync(frameDir); } catch(e) {}
 
-    TICKER_CACHE[contentType] = outPath;
-    console.log(`[ticker] ✓ ${contentType} ticker cached: ${outPath}`);
+    TICKER_CACHE[contentType] = { path: outPath, cachedAt: Date.now() };
+    console.log(`[ticker] ✓ ${contentType} ticker cached: ${outPath} (valid for ${TICKER_CACHE_TTL/1000/60}m)`);
     return outPath;
   } catch(err) {
     if (browser) try { await browser.close(); } catch(e) {}
@@ -2953,25 +3117,53 @@ Follow [streamer]. Link in description. Subscribe.`
 
 const GEMINI_FILE_LIMIT = 34 * 1024 * 1024; // 34MB
 
-async function uploadToGeminiFiles(filePath) {
+async function uploadToGeminiFiles(filePath, maxRetries = 3) {
   const fileBuffer = fs.readFileSync(filePath);
-  const boundary   = 'cwn_boundary_' + Date.now();
-  const metadata   = JSON.stringify({ file: { display_name: path.basename(filePath) } });
+  const fileSize = (fileBuffer.length / 1024 / 1024).toFixed(1);
 
-  const body = Buffer.concat([
-    Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`),
-    Buffer.from(metadata),
-    Buffer.from(`\r\n--${boundary}\r\nContent-Type: video/mp4\r\n\r\n`),
-    fileBuffer,
-    Buffer.from(`\r\n--${boundary}--`)
-  ]);
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const boundary   = 'cwn_boundary_' + Date.now();
+      const metadata   = JSON.stringify({ file: { display_name: path.basename(filePath) } });
 
-  const resp = await axios.post(
-    `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key=${GEMINI_APIKEY}`,
-    body,
-    { headers: { 'Content-Type': `multipart/related; boundary=${boundary}`, 'Content-Length': body.length }, timeout: 120000 }
-  );
-  return resp.data.file; // { name, uri, state }
+      const body = Buffer.concat([
+        Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`),
+        Buffer.from(metadata),
+        Buffer.from(`\r\n--${boundary}\r\nContent-Type: video/mp4\r\n\r\n`),
+        fileBuffer,
+        Buffer.from(`\r\n--${boundary}--`)
+      ]);
+
+      if (attempt > 0) {
+        console.log(`[gemini-upload] Retry ${attempt}/${maxRetries-1} for ${path.basename(filePath)} (${fileSize}MB)`);
+      }
+
+      const resp = await axios.post(
+        `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key=${GEMINI_APIKEY}`,
+        body,
+        { headers: { 'Content-Type': `multipart/related; boundary=${boundary}`, 'Content-Length': body.length }, timeout: 120000 }
+      );
+
+      if (attempt > 0) {
+        console.log(`[gemini-upload] ✓ Upload succeeded on retry ${attempt}`);
+      }
+
+      return resp.data.file; // { name, uri, state }
+
+    } catch (e) {
+      const isLastAttempt = attempt === maxRetries - 1;
+
+      if (isLastAttempt) {
+        console.error(`[gemini-upload] ✗ Upload failed after ${maxRetries} attempts: ${e.message}`);
+        throw e;
+      }
+
+      // Exponential backoff: 2s, 4s, 8s
+      const backoffMs = Math.pow(2, attempt + 1) * 1000;
+      console.warn(`[gemini-upload] Upload failed (attempt ${attempt + 1}): ${e.message}. Retrying in ${backoffMs/1000}s...`);
+      await new Promise(r => setTimeout(r, backoffMs));
+    }
+  }
 }
 
 async function waitForGeminiFile(file) {
@@ -4233,6 +4425,22 @@ async function capcut(endpoint, body) {
 
 // Active CapCut drafts: draftId → { segments: [], width, height, fps }
 const capcutDrafts = {};
+
+// GET /capcut/health — check if CapCut MCP server is running
+app.get('/capcut/health', async (req, res) => {
+  try {
+    const resp = await axios.post(`${CAPCUT_URL}/health`, {}, { timeout: 5000 });
+    res.json({ ok: true, capcut: 'online', url: CAPCUT_URL, data: resp.data });
+  } catch (e) {
+    res.status(503).json({
+      ok: false,
+      error: 'CapCut MCP server not running',
+      url: CAPCUT_URL,
+      hint: 'Start the CapCut MCP server on port 9001',
+      details: e.message
+    });
+  }
+});
 
 // POST /capcut/init — create a new CapCut draft for a job
 app.post('/capcut/init', async (req, res) => {
