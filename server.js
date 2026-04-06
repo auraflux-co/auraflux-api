@@ -220,8 +220,8 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   ctx.fillStyle = scheme.text3;
 
   // Dynamic font sizing: reduce by 1px if text exceeds 2 lines, down to 14px minimum
-  // (at 2x resolution: start 52px, reduce by 2px, min 28px) - never truncate
-  let fontSize = 52;
+  // (at 2x resolution: start 44px, reduce by 2px, min 28px) - never truncate
+  let fontSize = 44;
   let lines = [];
   const maxLines = 2;
   const maxWidth = W - 60;
