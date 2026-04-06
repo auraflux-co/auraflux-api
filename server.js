@@ -203,13 +203,14 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   // ── Line 3: Fact (italic) ────────────────────────────────────────
   ctx.fillStyle = scheme.text3;
 
-  // Dynamic font sizing: reduce by 4px if text exceeds 2 lines, down to 36px minimum
+  // Dynamic font sizing: reduce by 1px if text exceeds 2 lines, down to 16px minimum
+  // (at 2x resolution: start 52px, reduce by 2px, min 32px)
   let fontSize = 52;
   let lines = [];
   const maxLines = 2;
   const maxWidth = W - 60;
 
-  while (fontSize >= 36) {
+  while (fontSize >= 32) {
     ctx.font = `italic ${fontSize}px Arial`;
     lines = [];
     const words = fact.split(' ');
@@ -227,7 +228,7 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
     if (line) lines.push(line);
 
     if (lines.length <= maxLines) break;
-    fontSize -= 4;
+    fontSize -= 2;
   }
 
   // Draw the lines
