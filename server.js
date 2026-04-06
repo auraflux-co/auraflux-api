@@ -987,6 +987,44 @@ app.post('/assemble', async (req, res) => {
       log(asmId, `Starting assembly: ${avatarCount} avatar + ${clipCount} source clips = ${segsToProcess.length} total`);
       log(asmId, `Transition: ${transition} | Format: ${format}`);
 
+      // ── Gate 2: Server-side segment QA ───────────────────────────
+      // Runs at assembly start — doesn't depend on browser being open
+      // Samples first/middle/last avatar segments from HeyGen
+      if (GEMINI_APIKEY && avatarCount > 0) {
+        log(asmId, `\n🔍 Gate 2: Sampling HeyGen segments before assembly...`);
+        const avatarSegsForQA = segsToProcess
+          .filter(s => s.type !== 'source_clip' && s.url)
+          .filter((_, i, arr) => i === 0 || i === Math.floor(arr.length/2) || i === arr.length-1);
+
+        try {
+          // Download sample segments to tmp
+          const g2TmpPaths = [];
+          for (const seg of avatarSegsForQA) {
+            const g2Path = path.join(TMP_DIR, `gate2_${asmId}_${Date.now()}.mp4`);
+            try {
+              await downloadFile(seg.url, g2Path);
+              const sz = fs.existsSync(g2Path) ? fs.statSync(g2Path).size : 0;
+              if (sz > 5000) { g2TmpPaths.push(g2Path); log(asmId, `  ✓ Gate 2 sample: ${seg.label} (${(sz/1024).toFixed(0)}KB)`); }
+              else { try { fs.unlinkSync(g2Path); } catch(e) {} }
+            } catch(e) { log(asmId, `  ⚠️  Gate 2 sample failed for ${seg.label}: ${e.message}`); }
+            await new Promise(r => setTimeout(r, 500));
+          }
+
+          if (g2TmpPaths.length > 0) {
+            const g2Result = await geminiSegmentQA(g2TmpPaths, { jobId: asmId, contentType });
+            assemblyJobs[asmId].gate2Score   = g2Result.score;
+            assemblyJobs[asmId].gate2Outcome = g2Result.outcome;
+            log(asmId, `📋 Gate 2 Score: ${g2Result.score}/100 — ${g2Result.outcomeLabel}`);
+            if (g2Result.outcome === 'fail') {
+              log(asmId, `⚠️  Gate 2 FAIL — lip sync or audio issues detected. Check segments before publishing.`);
+            }
+            g2TmpPaths.forEach(p => { try { fs.unlinkSync(p); } catch(e) {} });
+          }
+        } catch(g2Err) {
+          log(asmId, `⚠️  Gate 2 check failed: ${g2Err.message} — continuing assembly`);
+        }
+      }
+
       // Step 1: Download all segments in order
       // For Twitch source_clips, re-resolve fresh GQL tokens — stored tokens expire within hours
       const localFiles = [];
@@ -1841,6 +1879,8 @@ app.get('/assemble-progress/:id', (req, res) => {
     filename:         job.filename,
     duration:         job.duration,
     segmentDurations: job.segmentDurations || null,
+    gate2Score:       job.gate2Score || null,
+    gate2Outcome:     job.gate2Outcome || null,
     downloadUrl:      job.filename ? `/download/${job.filename}` : null,
     thumbFilename:    job.thumbFilename || null
   });
