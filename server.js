@@ -24,6 +24,12 @@ const Anthropic  = require('@anthropic-ai/sdk');
 
 const app  = express();
 app.use(cors());
+
+// ── Log helper (fallback if displaced) ─────────────────────────
+if (typeof log === 'undefined') {
+  var log = (asmId, msg) => console.log(`[${asmId}] ${msg}`);
+}
+
 app.use(require('express').json({ limit: '50mb' }));
 app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 const PORT = process.env.PORT || 3000;
