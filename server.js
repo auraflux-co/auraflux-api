@@ -23,22 +23,25 @@ const { execFile, exec } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
 
 const app  = express();
-app.use(cors());
 
-// ── Log helper (fallback if displaced) ─────────────────────────
-if (typeof log === 'undefined') {
-  var log = (asmId, msg) => console.log(`[${asmId}] ${msg}`);
-}
+const TMP_DIR    = require('path').join(__dirname, 'tmp');
+const OUTPUT_DIR = require('path').join(__dirname, 'output');
+require('fs').mkdirSync(TMP_DIR,    { recursive: true });
+require('fs').mkdirSync(OUTPUT_DIR, { recursive: true });
 
+const assemblyJobs = {};
+const heygenJobs   = {};
+
+function log(asmId, msg) { console.log(`[${asmId}] ${msg}`); }
+
+app.use(require('cors')());
 app.use(require('express').json({ limit: '50mb' }));
 app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
+
+
+
 const PORT = process.env.PORT || 3000;
 
-const assemblyJobs  = {};
-const heygenJobs    = {};
-const TMP_DIR    = path.join(__dirname, 'tmp');
-const OUTPUT_DIR = path.join(__dirname, 'output');
-[require('fs').mkdirSync(TMP_DIR, { recursive: true }), require('fs').mkdirSync(OUTPUT_DIR, { recursive: true })];
 
 // ── CWN Branding assets (place in ~/Downloads/) ───────────────────
 function findBrandingAsset(name) {
