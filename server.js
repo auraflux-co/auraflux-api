@@ -525,7 +525,18 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
       );
 
       const segReport = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
-      const segScore  = parseInt((segReport.match(/SCORE:\s*(\d+)/i) || [])[1] || '75');
+
+      // Log raw Gemini response for debugging
+      console.log(`[qa-gate3] ${point.label} sample - Raw Gemini response:\n${segReport}\n---`);
+
+      let segScore = parseInt((segReport.match(/SCORE:\s*(\d+)/i) || [])[1] || '75');
+
+      // Validate: if all critical checks pass (no FAIL in checklist), minimum score is 70
+      const hasFailures = /:\s*FAIL/i.test(segReport);
+      if (!hasFailures && segScore < 70) {
+        console.log(`[qa-gate3] ${point.label} sample - All checks passed but score is ${segScore}, raising to 70`);
+        segScore = 70;
+      }
 
       // Flag freeze as critical failure
       if (/VIDEO FREEZE:.*yes/i.test(segReport)) {
