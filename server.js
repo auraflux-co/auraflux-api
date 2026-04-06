@@ -23,6 +23,7 @@ const { execFile, exec } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
 
 const app  = express();
+app.use(cors());
 const PORT = process.env.PORT || 3000;
 
 const assemblyJobs  = {};
