@@ -990,7 +990,6 @@ app.post('/assemble', async (req, res) => {
   }
 
   const asmId = assemblyId || ('asm_' + Date.now());
-  const jobSlug = (jobTitle||contentType||"video").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,60);
   assemblyJobs[asmId] = { pct: 0, log: '', status: 'running', outputPath: null };
 
   // Run async — respond immediately
@@ -1049,7 +1048,7 @@ app.post('/assemble', async (req, res) => {
         let   url      = seg.url;
         const label    = seg.label || `seg_${i}`;
         const segType  = seg.type || 'avatar';
-        const filename = `${asmId}_${i}_${slug(label)}.mp4`;
+        const filename = `${asmId}_${i}_${label.toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,40)}.mp4`;
         const destPath = path.join(TMP_DIR, filename);
 
         if (!url) {
@@ -1153,7 +1152,7 @@ app.post('/assemble', async (req, res) => {
       // Step 3: Build output path
       const outDir    = outputDir || OUTPUT_DIR;
       if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-      const outFile   = `${slug(jobTitle || 'cwn')}_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
+      const outFile   = `${(jobTitle||"cwn").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
       const outPath   = path.join(outDir, outFile);
 
       // Step 4: Normalize all segments to TS (handles mixed codecs + moov atom issues)
@@ -1864,7 +1863,7 @@ app.post('/assemble', async (req, res) => {
       localFiles.forEach(f => { try { fs.unlinkSync(f); } catch(e){} });
 
     } catch (err) {
-      log(asmId, `\n❌ Assembly error: ${err.message}`);
+      log(asmId, `\n❌ Assembly error: ${err.message}\n${err.stack}`);
       assemblyJobs[asmId].status = 'failed';
       assemblyJobs[asmId].error  = err.message;
     }
