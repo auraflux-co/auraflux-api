@@ -4341,6 +4341,134 @@ app.post('/publish', async (req, res) => {
   }
 });
 
+// POST /generate-publish-copy — generates title, description, hashtags, pinned comment
+// Body: {
+//   contentType: 'nba' | 'news' | 'twitch',
+//   formType: 'compilation' | 'short',
+//   script: string,             // full script text
+//   date: string,               // e.g. "Friday, April 6, 2026"
+//   streamers: string[]         // for Twitch only (display names)
+// }
+app.post('/generate-publish-copy', async (req, res) => {
+  const { contentType, formType, script, date, streamers = [] } = req.body;
+
+  if (!script) return res.status(400).json({ error: 'script required' });
+
+  const isShort = formType === 'short';
+  const scriptExcerpt = script.substring(0, 600);
+
+  // Content-specific prompts
+  const prompts = {
+    nba: `Generate YouTube metadata for this NBA ${isShort ? 'Short' : 'highlights compilation'}.
+
+Date: ${date}
+Script excerpt (first 600 chars):
+${scriptExcerpt}...
+
+Requirements:
+- **Title:** ${isShort ? '50-80' : '50-100'} chars max, include "${isShort ? 'NBA Highlights #Shorts' : 'NBA Highlights'}", team names, compelling hook
+- **Description:** ${isShort ? '100-150 words' : '200-300 words'}, game summaries, player stats, subscribe CTA, credit ESPN/NBA
+- **Hashtags:** ${isShort ? '10-15' : '5-8'} tags (#NBA, #Shorts if short, team names, player names)
+- **Pinned Comment:** Engagement question about top play or prediction for next game
+
+Output as JSON: { "title": "...", "description": "...", "hashtags": ["#NBA", ...], "pinnedComment": "..." }`,
+
+    news: `Generate YouTube metadata for this world news ${isShort ? 'Short' : 'compilation'}.
+
+Date: ${date}
+Script excerpt:
+${scriptExcerpt}...
+
+Requirements:
+- **Title:** ${isShort ? '50-80' : '50-100'} chars max, include "${isShort ? 'World News #Shorts' : 'World News Update'}", main story hook
+- **Description:** ${isShort ? '100-150 words' : '200-300 words'}, story summaries, subscribe CTA, credit sources
+- **Hashtags:** ${isShort ? '10-15' : '5-8'} tags (#News, #WorldNews, #Shorts if short, topic-specific)
+- **Pinned Comment:** Ask viewers which story concerns them most or for their take
+
+Output as JSON: { "title": "...", "description": "...", "hashtags": ["#News", ...], "pinnedComment": "..." }`,
+
+    twitch: `Generate YouTube metadata for this Twitch clips ${isShort ? 'Short' : 'compilation'}.
+
+Date: ${date}
+Streamers featured: ${streamers.join(', ') || 'Multiple streamers'}
+Script excerpt:
+${scriptExcerpt}...
+
+Requirements:
+- **Title:** ${isShort ? '50-80' : '50-100'} chars max, include "${isShort ? 'Twitch Highlights #Shorts' : 'Twitch Highlights'}", streamer names, funny/engaging hook
+- **Description:** ${isShort ? '100-150 words' : 'List each streamer with Twitch link (twitch.tv/username), what they did, subscribe CTA'}
+- **Hashtags:** ${isShort ? '10-15' : '5-8'} tags (#Twitch, #TwitchClips, #Shorts if short, streamer names, #Gaming)
+- **Pinned Comment:** Ask which clip was funniest or most shocking
+
+Output as JSON: { "title": "...", "description": "...", "hashtags": ["#Twitch", ...], "pinnedComment": "..." }`
+  };
+
+  const systemPrompt = `You generate YouTube video metadata for ClipzWorld News (@clipznashite).
+
+${prompts[contentType] || prompts.twitch}
+
+STRICT RULES:
+- Title must be under 100 characters (YouTube limit)
+- Description must include "ClipzWorld News" and "Subscribe for daily updates"
+- Always include #ClipzWorldNews in hashtags
+- Pinned comment should drive engagement (questions, predictions, reactions)
+- Output ONLY valid JSON, no markdown, no explanation
+- Use double quotes for all strings in JSON`;
+
+  try {
+    const client = new Anthropic();
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: 'Generate the metadata as JSON now.' }]
+    });
+
+    const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
+
+    // Extract JSON (Claude might wrap in ```json or include explanation)
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('[publish-copy] Could not extract JSON from response:', text);
+      throw new Error('Could not parse JSON from Claude response');
+    }
+
+    const metadata = JSON.parse(jsonMatch[0]);
+
+    // Validate and sanitize
+    if (!metadata.title || !metadata.description) {
+      throw new Error('Missing required fields: title or description');
+    }
+
+    // Enforce title length (YouTube hard limit is 100 chars)
+    if (metadata.title.length > 100) {
+      console.warn(`[publish-copy] Title too long (${metadata.title.length} chars), truncating...`);
+      metadata.title = metadata.title.substring(0, 97) + '...';
+    }
+
+    // Ensure hashtags is array
+    if (!Array.isArray(metadata.hashtags)) {
+      metadata.hashtags = [];
+    }
+
+    // Add metrics
+    metadata.titleLength = metadata.title.length;
+    metadata.descriptionLength = metadata.description.length;
+    metadata.hashtagCount = metadata.hashtags.length;
+
+    console.log(`[publish-copy] Generated metadata: title=${metadata.titleLength} chars, description=${metadata.descriptionLength} chars, hashtags=${metadata.hashtagCount}`);
+
+    res.json({
+      ok: true,
+      ...metadata
+    });
+
+  } catch (err) {
+    console.error('[publish-copy] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /log-heygen-metrics — frontend logs HeyGen rendering metrics
 // Body: {
 //   jobId: string,              // job ID from script generation
