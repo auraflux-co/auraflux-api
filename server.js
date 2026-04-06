@@ -1318,12 +1318,13 @@ app.post('/assemble', async (req, res) => {
               if (cardExists) {
                 burnArgs = [
                   "-i", inputForTS, "-i", cardPngPath,
-                  "-filter_complex", `[1:v]scale=360:-1[card];[0:v][card]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
+                  "-filter_complex", `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
                   "-map", "[out]", "-map", "0:a",
-                  "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+                  "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                  "-pix_fmt", "yuv420p",
                   "-c:a", "aac", "-ar", "44100", "-y", burnedPath
                 ];
-                console.log(`[intro-card] Canvas PNG ready for ${name}, overlaying top-right (2x render, scaled to 360px)`);
+                console.log(`[intro-card] Canvas PNG ready for ${name}, overlaying top-right (2x render, scaled to 360px w/ lanczos)`);
               } else {
                 console.warn(`[intro-card] No card for ${streamerName} - skipping burn`);
                 burnArgs = null;
