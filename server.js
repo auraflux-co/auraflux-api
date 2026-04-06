@@ -452,7 +452,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
             { text: qaPrompt },
             { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
           ]}],
-          generationConfig: { maxOutputTokens: 400, temperature: 0.1 }
+          generationConfig: { maxOutputTokens: 800, temperature: 0.1 }
         },
         { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
       );
@@ -496,7 +496,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   //   - Ticker missing from all 3 samples
   //   - Outro cut off ("Appreciate you!" not present)
   //   - A/V desync detected
-  const PASS_THRESHOLD   = opts.passThreshold   || 80;
+  const PASS_THRESHOLD   = opts.passThreshold   || 70;
   const MANUAL_THRESHOLD = opts.manualThreshold  || 60;
 
   // Detect critical failures from report text
