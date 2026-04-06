@@ -177,6 +177,83 @@ const CONFIG = {
   }
 };
 
+// ── Stage Timer for Performance Metrics ────────────────────────────
+// Tracks wall time, token usage, and results for each production stage
+class StageTimer {
+  constructor(jobId, stageName) {
+    this.jobId = jobId;
+    this.stageName = stageName;
+    this.startTime = Date.now();
+    this.metrics = {
+      stage: stageName,
+      startedAt: new Date().toISOString(),
+      wallTimeMs: null,
+      wallTimeSec: null
+    };
+  }
+
+  // Add custom data to metrics (tokens, file sizes, pass/fail, etc.)
+  addData(key, value) {
+    this.metrics[key] = value;
+    return this;
+  }
+
+  // Complete the stage and calculate duration
+  end() {
+    const endTime = Date.now();
+    this.metrics.wallTimeMs = endTime - this.startTime;
+    this.metrics.wallTimeSec = (this.metrics.wallTimeMs / 1000).toFixed(2);
+    this.metrics.completedAt = new Date().toISOString();
+    return this.metrics;
+  }
+}
+
+// Global metrics store: { jobId: { stages: [], totalTime: X } }
+const jobMetrics = {};
+
+function initJobMetrics(jobId) {
+  jobMetrics[jobId] = {
+    jobId,
+    startedAt: new Date().toISOString(),
+    stages: [],
+    totalTimeMs: null,
+    totalTimeSec: null
+  };
+}
+
+function addStageMetrics(jobId, stageMetrics) {
+  if (!jobMetrics[jobId]) initJobMetrics(jobId);
+  jobMetrics[jobId].stages.push(stageMetrics);
+  console.log(`[metrics:${jobId}] ${stageMetrics.stage} completed in ${stageMetrics.wallTimeSec}s`);
+}
+
+function finalizeJobMetrics(jobId) {
+  if (!jobMetrics[jobId]) return;
+
+  const firstStage = jobMetrics[jobId].stages[0];
+  const lastStage = jobMetrics[jobId].stages[jobMetrics[jobId].stages.length - 1];
+
+  if (firstStage && lastStage) {
+    const start = new Date(firstStage.startedAt).getTime();
+    const end = new Date(lastStage.completedAt).getTime();
+    jobMetrics[jobId].totalTimeMs = end - start;
+    jobMetrics[jobId].totalTimeSec = (jobMetrics[jobId].totalTimeMs / 1000).toFixed(2);
+    jobMetrics[jobId].completedAt = lastStage.completedAt;
+  }
+
+  // Save to file
+  const metricsFile = path.join(OUTPUT_DIR, `run_metrics_${jobId}.json`);
+  try {
+    fs.writeFileSync(metricsFile, JSON.stringify(jobMetrics[jobId], null, 2));
+    console.log(`[metrics:${jobId}] ✅ Metrics saved: ${metricsFile}`);
+    console.log(`[metrics:${jobId}] Total pipeline time: ${jobMetrics[jobId].totalTimeSec}s`);
+  } catch (e) {
+    console.error(`[metrics:${jobId}] Failed to save metrics: ${e.message}`);
+  }
+
+  return jobMetrics[jobId];
+}
+
 // ── CWN Branding assets (place in ~/Downloads/) ───────────────────
 function findBrandingAsset(name) {
   for (const ext of ['.png', '.jpg', '.jpeg', '.PNG', '.JPG']) {
@@ -1292,6 +1369,9 @@ app.post('/assemble', async (req, res) => {
 
   const run = async () => {
     try {
+      // Initialize metrics tracking for this job
+      initJobMetrics(asmId);
+
       const avatarCount = segsToProcess.filter(s => s.type !== 'source_clip').length;
       const clipCount   = segsToProcess.filter(s => s.type === 'source_clip').length;
       log(asmId, `Starting assembly: ${avatarCount} avatar + ${clipCount} source clips = ${segsToProcess.length} total`);
@@ -1312,6 +1392,7 @@ app.post('/assemble', async (req, res) => {
       // Runs at assembly start — doesn't depend on browser being open
       // Samples first/middle/last avatar segments from HeyGen
       if (GEMINI_APIKEY && avatarCount > 0) {
+        const gate2Timer = new StageTimer(asmId, 'Gate 2 QA');
         log(asmId, `\n🔍 Gate 2: Sampling HeyGen segments before assembly...`);
         const avatarSegsForQA = segsToProcess
           .filter(s => s.type !== 'source_clip' && s.url)
@@ -1362,16 +1443,29 @@ app.post('/assemble', async (req, res) => {
               log(asmId, `⚠️  Gate 2 FAIL — lip sync or audio issues detected. Check segments before publishing.`);
             }
             g2TmpPaths.forEach(p => { try { fs.unlinkSync(p); } catch(e) {} });
+
+            // Add metrics
+            gate2Timer
+              .addData('sampleCount', g2TmpPaths.length)
+              .addData('score', g2Result.score)
+              .addData('outcome', g2Result.outcome)
+              .addData('failedSegments', g2FailedSegments.length);
           }
+          addStageMetrics(asmId, gate2Timer.end());
         } catch(g2Err) {
           log(asmId, `❌ Gate 2 check failed: ${g2Err.message} — continuing assembly`);
           assemblyJobs[asmId].gate2Error = g2Err.message;
+          gate2Timer.addData('error', g2Err.message);
+          addStageMetrics(asmId, gate2Timer.end());
         }
       }
 
       // Step 1: Download all segments in order
       // For Twitch source_clips, re-resolve fresh GQL tokens — stored tokens expire within hours
+      const downloadTimer = new StageTimer(asmId, 'Download Segments');
       const localFiles = [];
+      let downloadedBytes = 0;
+      let cachedCount = 0;
       for (let i = 0; i < segsToProcess.length; i++) {
         const seg      = segsToProcess[i];
         let   url      = seg.url;
@@ -1396,6 +1490,8 @@ app.post('/assemble', async (req, res) => {
               try {
                 fs.copyFileSync(seg.localCache, destPath);
                 localFiles.push(destPath);
+                downloadedBytes += cacheSize;
+                cachedCount++;
                 log(asmId, `✅ ${filename} (from cache)`);
                 continue;
               } catch(e) {
@@ -1475,6 +1571,7 @@ app.post('/assemble', async (req, res) => {
             continue;
           }
           localFiles.push(destPath);
+          downloadedBytes += fileSize;
           log(asmId, `✅ ${filename}`);
         } catch (e) {
           log(asmId, `❌ Failed segment ${i+1} (${segType}): ${e.message}`);
@@ -1488,6 +1585,14 @@ app.post('/assemble', async (req, res) => {
         return;
       }
 
+      // Complete download metrics
+      downloadTimer
+        .addData('segmentCount', localFiles.length)
+        .addData('totalMB', (downloadedBytes / 1024 / 1024).toFixed(2))
+        .addData('cachedCount', cachedCount)
+        .addData('downloadedCount', localFiles.length - cachedCount);
+      addStageMetrics(asmId, downloadTimer.end());
+
       log(asmId, `\n📁 ${localFiles.length} segments ready. Probing durations...`);
       assemblyJobs[asmId].pct = 45;
 
@@ -1498,6 +1603,9 @@ app.post('/assemble', async (req, res) => {
         durations.push(dur);
         log(asmId, `  ${path.basename(f)}: ${dur.toFixed(2)}s`);
       }
+
+      // Start assembly timer (normalization + FFmpeg encode + ticker/logo)
+      const assemblyTimer = new StageTimer(asmId, 'FFmpeg Assembly');
 
       // Step 3: Build output path
       const outDir    = outputDir || OUTPUT_DIR;
@@ -2138,6 +2246,17 @@ app.post('/assemble', async (req, res) => {
       assemblyJobs[asmId].filename   = outFile;
       assemblyJobs[asmId].duration   = totalDur;
       assemblyJobs[asmId].sizeMB     = sizeMB;
+
+      // Complete assembly metrics
+      assemblyTimer
+        .addData('outputFile', outFile)
+        .addData('outputSizeMB', sizeMB)
+        .addData('outputDurationSec', totalDur)
+        .addData('segmentCount', localFiles.length);
+      addStageMetrics(asmId, assemblyTimer.end());
+
+      // Finalize all job metrics
+      finalizeJobMetrics(asmId);
 
       // Extract thumbnail frame at 15s (Bobby G's first clean delivery after cold open)
       const thumbFramePath = outPath.replace('.mp4', '_thumb.jpg');
@@ -3370,6 +3489,11 @@ app.post('/generate-full-script', async (req, res) => {
   const dateStr = date || new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
   console.log(`[generate-full-script] type:${type} items:${items.length} date:${dateStr}`);
 
+  // Initialize metrics tracking
+  const jobId = `script_${type}_${Date.now()}`;
+  initJobMetrics(jobId);
+  const scriptGenTimer = new StageTimer(jobId, 'Script Generation');
+
   try {
     // ── Step 1: Gemini analysis — full video where possible ──────────
     console.log('[generate-full-script] Running Gemini analysis...');
@@ -3824,6 +3948,29 @@ Target: 80-100 words spoken per streamer.`;
       scriptQA.deductions.forEach(d => console.log(`[generate-full-script]   -${d.points} ${d.reason}`));
     }
 
+    // Finalize script generation metrics
+    const totalGeminiCalls = type === 'twitch' || type === 'twitch-short'
+      ? (analyses.flat ? analyses.flat().length : analyses.length)
+      : analyses.length;
+    const geminiHitCount = analyses.flat ? analyses.flat().filter(a=>a && a.length > 50).length : analyses.filter(a=>a && a.length > 50).length;
+
+    scriptGenTimer
+      .addData('contentType', type)
+      .addData('itemCount', items.length)
+      .addData('geminiApiCalls', totalGeminiCalls)
+      .addData('geminiHits', geminiHitCount)
+      .addData('claudeInputTokens', response.usage?.input_tokens || 0)
+      .addData('claudeOutputTokens', response.usage?.output_tokens || 0)
+      .addData('totalClaudeTokens', (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0))
+      .addData('scriptWordCount', wordCount)
+      .addData('estimatedSeconds', estSecs)
+      .addData('gate1Score', scriptQA.score)
+      .addData('gate1Outcome', scriptQA.outcome)
+      .addData('gate1Passed', scriptQA.passed);
+
+    addStageMetrics(jobId, scriptGenTimer.end());
+    finalizeJobMetrics(jobId);
+
     res.json({
       ok: true,
       script,
@@ -3839,7 +3986,9 @@ Target: 80-100 words spoken per streamer.`;
         passed:      scriptQA.passed,
         report:      scriptQA.report,
         deductions:  scriptQA.deductions
-      }
+      },
+      // Include metrics in response for debugging
+      metricsJobId: jobId
     });
 
   } catch(err) {
@@ -4051,8 +4200,14 @@ app.post('/publish', async (req, res) => {
     scheduledAt,
     privacyStatus = 'public',
     contentType = 'long',
-    async: asyncUpload = true
+    async: asyncUpload = true,
+    metricsJobId  // Optional: if frontend passes the jobId from script gen or assembly
   } = req.body;
+
+  // Initialize metrics tracking
+  const jobId = metricsJobId || `publish_${Date.now()}`;
+  if (!metricsJobId) initJobMetrics(jobId);
+  const publishTimer = new StageTimer(jobId, 'Upload-Post Publish');
 
   if (!driveUrl && !filename) {
     return res.status(400).json({ error: 'driveUrl or filename required' });
@@ -4141,6 +4296,20 @@ app.post('/publish', async (req, res) => {
     if (request_id) console.log(`[upload-post]    request_id: ${request_id}`);
     if (job_id) console.log(`[upload-post]    job_id: ${job_id} (scheduled)`);
 
+    // Finalize publish metrics
+    publishTimer
+      .addData('platforms', platforms.join(', '))
+      .addData('platformCount', platforms.length)
+      .addData('contentType', contentType)
+      .addData('scheduled', !!scheduledAt)
+      .addData('async', asyncUpload)
+      .addData('request_id', request_id || null)
+      .addData('job_id', job_id || null)
+      .addData('success', true);
+
+    addStageMetrics(jobId, publishTimer.end());
+    if (!metricsJobId) finalizeJobMetrics(jobId);
+
     res.json({
       ok: true,
       request_id,
@@ -4152,12 +4321,74 @@ app.post('/publish', async (req, res) => {
         ? `https://api.upload-post.com/api/uploadposts/status?request_id=${request_id}`
         : job_id
         ? `https://api.upload-post.com/api/uploadposts/status?job_id=${job_id}`
-        : null
+        : null,
+      metricsJobId: jobId
     });
   } catch(e) {
     const errData = e.response?.data;
     console.error('[upload-post] Publish failed:', e.message, errData || '');
+
+    // Track failed publish
+    publishTimer
+      .addData('platforms', platforms.join(', '))
+      .addData('platformCount', platforms.length)
+      .addData('success', false)
+      .addData('error', e.message);
+    addStageMetrics(jobId, publishTimer.end());
+    if (!metricsJobId) finalizeJobMetrics(jobId);
+
     res.status(500).json({ error: e.message, details: errData || null });
+  }
+});
+
+// POST /log-heygen-metrics — frontend logs HeyGen rendering metrics
+// Body: {
+//   jobId: string,              // job ID from script generation
+//   segmentCount: number,       // total segments rendered
+//   totalWaitTimeMs: number,    // total time waiting for all segments
+//   avgRenderTimeMs: number,    // average render time per segment
+//   segments: [                 // optional per-segment details
+//     { index: number, renderTimeMs: number, retries: number }
+//   ]
+// }
+app.post('/log-heygen-metrics', async (req, res) => {
+  const { jobId, segmentCount, totalWaitTimeMs, avgRenderTimeMs, segments } = req.body;
+
+  if (!jobId) {
+    return res.status(400).json({ error: 'jobId required' });
+  }
+
+  try {
+    // Check if job metrics exist, if not initialize
+    if (!jobMetrics[jobId]) {
+      initJobMetrics(jobId);
+    }
+
+    // Create HeyGen stage metrics
+    const heygenTimer = new StageTimer(jobId, 'HeyGen Rendering');
+    heygenTimer.startTime = Date.now() - totalWaitTimeMs; // Backdate to actual start
+
+    heygenTimer
+      .addData('segmentCount', segmentCount || 0)
+      .addData('avgRenderTimeMs', avgRenderTimeMs || 0)
+      .addData('avgRenderTimeSec', ((avgRenderTimeMs || 0) / 1000).toFixed(2))
+      .addData('totalWaitTimeMs', totalWaitTimeMs || 0)
+      .addData('totalWaitTimeSec', ((totalWaitTimeMs || 0) / 1000).toFixed(2));
+
+    if (segments && segments.length) {
+      heygenTimer.addData('segmentDetails', segments);
+      const totalRetries = segments.reduce((sum, s) => sum + (s.retries || 0), 0);
+      heygenTimer.addData('totalRetries', totalRetries);
+    }
+
+    addStageMetrics(jobId, heygenTimer.end());
+
+    console.log(`[metrics:${jobId}] HeyGen rendering metrics logged: ${segmentCount} segments, ${(totalWaitTimeMs/1000).toFixed(2)}s total`);
+
+    res.json({ ok: true, jobId, message: 'HeyGen metrics logged successfully' });
+  } catch (e) {
+    console.error(`[metrics] Failed to log HeyGen metrics: ${e.message}`);
+    res.status(500).json({ error: e.message });
   }
 });
 
