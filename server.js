@@ -1305,7 +1305,10 @@ app.post('/assemble', async (req, res) => {
               const cardPngPath = require("path").join(require("os").tmpdir(), `cwn_card_${Date.now()}_${(streamerData.name||"x").replace(/[^a-z0-9]/gi,"")}.png`);
               try {
                 await generateIntroCardPNG(
-                  { name, displayName: name, origin, fact,
+                  { name, displayName: name,
+                    twitchUsername: streamerData.twitchUsername,
+                    onAirName: streamerData.onAirName || '',
+                    origin, fact,
                     profileImageUrl: streamerData.profileImageUrl || streamerData.profile_image_url || streamerData.profileImage || null },
                   cardPngPath, "cwn"
                 );
