@@ -24,6 +24,9 @@ const Anthropic  = require('@anthropic-ai/sdk');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+const TMP_DIR    = path.join(__dirname, 'tmp');
+const OUTPUT_DIR = path.join(__dirname, 'output');
+[require('fs').mkdirSync(TMP_DIR, { recursive: true }), require('fs').mkdirSync(OUTPUT_DIR, { recursive: true })];
 
 // ── CWN Branding assets (place in ~/Downloads/) ───────────────────
 function findBrandingAsset(name) {
