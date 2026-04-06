@@ -991,6 +991,7 @@ app.post('/assemble', async (req, res) => {
 
   const asmId = assemblyId || ('asm_' + Date.now());
   const slug = (jobTitle||contentType||"video").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,60);
+  const slug = (jobTitle||contentType||"video").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,60);
   assemblyJobs[asmId] = { pct: 0, log: '', status: 'running', outputPath: null };
 
   // Run async — respond immediately
