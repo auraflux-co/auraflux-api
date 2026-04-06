@@ -70,116 +70,113 @@ const SYSTEM_FONT = findSystemFont();
 // ── Generate intro card PNG using Node Canvas ─────────────────────
 // No FFmpeg drawtext dependency — works regardless of FFmpeg build flags
 // Returns path to PNG file, or null if canvas not installed
-async function generateIntroCardPNG(streamerData, outputPath) {
-  let createCanvas, loadImage;
-  try {
-    const canvasModule = require('canvas');
-    createCanvas = canvasModule.createCanvas;
-    loadImage    = canvasModule.loadImage;
-  } catch(e) {
-    console.warn('[intro-card] canvas not installed — run: npm install canvas');
-    return null;
-  }
+async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
+  const canvasModule = require('canvas');
+  const { createCanvas, loadImage } = canvasModule;
+  const https = require('https');
+  const http  = require('http');
 
-  const W = 680, H = 220;
+  // ── Dimensions ───────────────────────────────────────────────────
+  const W = 360, H = 420;
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
 
-  // Navy background
-  ctx.fillStyle = '#22304b';
-  ctx.fillRect(0, 0, W, H);
+  const name   = (streamerData.displayName || streamerData.name || '').toUpperCase();
+  const origin = streamerData.origin  || '';
+  const fact   = streamerData.fact    || '';
+  const imgUrl = streamerData.profileImageUrl || streamerData.profile_image_url || null;
 
-  // Gold border
-  ctx.strokeStyle = '#c7af4f';
-  ctx.lineWidth   = 3;
-  ctx.strokeRect(1.5, 1.5, W - 3, H - 3);
+  // ── Color schemes ────────────────────────────────────────────────
+  const scheme = variant === 'twitch'
+    ? { bg: '#9146FF', ring: '#c7af4f', text1: '#ffffff', text2: '#ffffff', text3: '#e8e0f5', hasBg: true  }
+    : { bg: 'transparent', ring: '#c7af4f', text1: '#c7af4f', text2: '#ffffff', text3: '#aaaaaa', hasBg: false };
 
-  const hasImg = streamerData.profileImage;
-  const textX  = hasImg ? 145 : 20;
+  // ── Clear canvas ─────────────────────────────────────────────────
+  ctx.clearRect(0, 0, W, H);
 
-  // Profile image (circular crop)
-  if (hasImg) {
+  const CX = W / 2, CY = 165, R = 130;
+
+  // ── Background (Twitch variant only) ─────────────────────────────
+  if (scheme.hasBg) {
+    ctx.fillStyle = scheme.bg;
+    const pad = 12;
+    ctx.beginPath();
+    ctx.roundRect(pad, pad, W - pad * 2, H - pad * 2, 20);
+    ctx.fill();
+  }
+
+  // ── Profile image clipped to circle ──────────────────────────────
+  if (imgUrl) {
     try {
-      const profileImgPath = path.join(TMP_DIR, `profile_${streamerData.displayName.replace(/\s/g,'_')}.png`);
-      if (!fs.existsSync(profileImgPath) && streamerData.profileImage) {
-        const hiResUrl = (streamerData.profileImage || '').replace(/-70x70\./, '-300x300.').replace(/-28x28\./, '-300x300.');
-        await downloadFile(hiResUrl || streamerData.profileImage, profileImgPath);
-      }
-      if (fs.existsSync(profileImgPath) && fs.statSync(profileImgPath).size > 100) {
-        const img = await loadImage(profileImgPath);
-        const cx = 90, cy = 110, r = 72;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
-        ctx.restore();
-        // Gold circle border
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.strokeStyle = '#c7af4f';
-        ctx.lineWidth   = 4;
-        ctx.stroke();
-      }
-    } catch(e) {
-      console.warn('[intro-card] Profile image load failed:', e.message);
+      const img = await loadImage(imgUrl);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(CX, CY, R - 6, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(img, CX - R + 6, CY - R + 6, (R - 6) * 2, (R - 6) * 2);
+      ctx.restore();
+    } catch (e) {
+      // Profile image failed — draw placeholder
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(CX, CY, R - 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#1a2540';
+      ctx.fill();
+      ctx.restore();
+      console.warn(`[intro-card] Profile image failed for ${name}: ${e.message}`);
     }
   }
 
-  // Streamer name in gold
-  ctx.fillStyle = '#c7af4f';
-  ctx.font      = 'bold 42px Arial, sans-serif';
-  ctx.fillText((streamerData.displayName || '').toUpperCase(), textX, 65);
+  // ── Gold ring ────────────────────────────────────────────────────
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, Math.PI * 2);
+  ctx.strokeStyle = scheme.ring;
+  ctx.lineWidth   = 5;
+  ctx.stroke();
 
-  // Origin in light grey
-  if (streamerData.origin) {
-    ctx.fillStyle = '#f0ede6';
-    ctx.font      = 'bold 28px Arial, sans-serif';
-    ctx.fillText('Origin: ' + streamerData.origin, textX, 118);
+  // ── Drop shadow behind text (subtle) ────────────────────────────
+  ctx.shadowColor   = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur    = 8;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
+
+  // ── Line 1: Streamer name (gold / white) ─────────────────────────
+  ctx.textAlign    = 'center';
+  ctx.fillStyle    = scheme.text1;
+  ctx.font         = 'bold 36px Arial';
+  ctx.fillText(name, CX, CY + R + 48);
+
+  // ── Line 2: Origin ───────────────────────────────────────────────
+  ctx.fillStyle = scheme.text2;
+  ctx.font      = 'normal 24px Arial';
+  ctx.fillText(origin, CX, CY + R + 82);
+
+  // ── Line 3: Fact (italic) ────────────────────────────────────────
+  ctx.fillStyle = scheme.text3;
+  ctx.font      = 'italic 20px Arial';
+  // Wrap long facts
+  const words = fact.split(' ');
+  let line = '', y = CY + R + 114;
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > W - 30) {
+      ctx.fillText(line, CX, y);
+      line = w;
+      y += 26;
+    } else {
+      line = test;
+    }
   }
+  ctx.fillText(line, CX, y);
 
-  // Fact in light grey
-  if (streamerData.fact) {
-    ctx.fillStyle = '#f0ede6';
-    ctx.font      = '24px Arial, sans-serif';
-    const fact = (streamerData.fact || '').slice(0, 42);
-    ctx.fillText(fact, textX, 158);
-  }
+  ctx.shadowColor = 'transparent';
 
-  // Save PNG
-  const buffer = canvas.toBuffer('image/png');
-  fs.writeFileSync(outputPath, buffer);
-  return outputPath;
+  // ── Save PNG ─────────────────────────────────────────────────────
+  const buf = canvas.toBuffer('image/png');
+  require('fs').writeFileSync(outputPath, buf);
+  console.log(`[intro-card] ✅ ${variant.toUpperCase()} card written: ${require('path').basename(outputPath)} (${name})`);
 }
 
-
-const CWN_LOGO_PATH   = findBrandingAsset('logo_cwn');   // logo bug top-right
-const CWN_BANNER_PATH = findBrandingAsset('banner_cwn'); // intro card
-
-app.use(cors());
-app.use(express.json());
-
-// ── Directories ────────────────────────────────────────────────────
-const TMP_DIR    = path.join(__dirname, 'tmp');
-const OUTPUT_DIR = path.join(__dirname, 'output');
-[TMP_DIR, OUTPUT_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
-
-// ── In-memory state ───────────────────────────────────────────────
-const assemblyJobs = {}; // assemblyId → { pct, log, status, outputPath }
-const canvaJobs    = {}; // jobId → { status, design_url, error }
-
-// ── Helpers ───────────────────────────────────────────────────────
-function slug(str) {
-  return (str || 'video').replace(/[^a-z0-9]+/gi, '_').toLowerCase().slice(0, 40);
-}
-
-function log(assemblyId, msg) {
-  if (assemblyJobs[assemblyId]) {
-    assemblyJobs[assemblyId].log += msg + '\n';
-    console.log(`[${assemblyId}] ${msg}`);
-  }
-}
 
 async function downloadFile(url, destPath) {
   const writer = fs.createWriteStream(destPath);
@@ -1208,38 +1205,36 @@ app.post('/assemble', async (req, res) => {
               const fact   = (streamerData.fact || '').replace(/'/g, "\\'").replace(/:/g, '\\:');
               const introDur = 3.5;
 
-              let burnArgs;
-              if (hasImg) {
-                burnArgs = [
-                  '-i', inputForTS, '-i', profileImgPath,
-                  '-filter_complex',
-                    `[1:v]scale=110:110,format=rgba,` +
-                    `geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lte(pow(X-55\\,2)+pow(Y-55\\,2)\\,pow(55\\,2))\\,255\\,0)'[circ];` +
-                    `[0:v]drawbox=x=50:y=50:w=420:h=180:color=0x22304b@0.92:t=fill:enable='lte(t\\,${introDur})',` +
-                    `drawbox=x=50:y=50:w=420:h=180:color=0xc7af4f@1:t=3:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${name.toUpperCase()}':x=180:y=75:fontsize=20:fontcolor=0xc7af4f:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='Origin\\: ${origin}':x=180:y=105:fontsize=14:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${fact}':x=180:y=128:fontsize=13:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})'[bg];` +
-                    `[bg][circ]overlay=x=60:y=65:enable='lte(t\\,${introDur})'[out]`,
-                  '-map', '[out]', '-map', '0:a',
-                  '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-                  '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
-                ];
-              } else {
-                // Text-only fallback
-                burnArgs = [
-                  '-i', inputForTS,
-                  '-vf',
-                    `drawbox=x=50:y=50:w=380:h=170:color=0x22304b@0.92:t=fill:enable='lte(t\\,${introDur})',` +
-                    `drawbox=x=50:y=50:w=380:h=170:color=0xc7af4f@1:t=3:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${name.toUpperCase()}':x=65:y=70:fontsize=20:fontcolor=0xc7af4f:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='Origin\\: ${origin}':x=65:y=100:fontsize=14:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})',` +
-                    `drawtext=text='${fact}':x=65:y=123:fontsize=13:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t\\,${introDur})'`,
-                  '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-                  '-c:a', 'aac', '-y', burnedPath
-                ];
+              const cardPngPath = require("path").join(require("os").tmpdir(), `cwn_card_${Date.now()}_${(streamerData.name||"x").replace(/[^a-z0-9]/gi,"")}.png`);
+              try {
+                await generateIntroCardPNG(
+                  { name, displayName: name, origin, fact,
+                    profileImageUrl: streamerData.profileImageUrl || streamerData.profile_image_url || null },
+                  cardPngPath, "cwn"
+                );
+              } catch(cardErr) {
+                console.warn(`[intro-card] PNG gen failed for ${streamerName}: ${cardErr.message}`);
               }
 
+              let burnArgs;
+              const cardExists = require("fs").existsSync(cardPngPath) && require("fs").statSync(cardPngPath).size > 1000;
+              if (cardExists) {
+                burnArgs = [
+                  "-i", inputForTS, "-i", cardPngPath,
+                  "-filter_complex", `[0:v][1:v]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
+                  "-map", "[out]", "-map", "0:a",
+                  "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+                  "-c:a", "aac", "-ar", "44100", "-y", burnedPath
+                ];
+                console.log(`[intro-card] Canvas PNG ready for ${name}, overlaying top-right`);
+              } else {
+                console.warn(`[intro-card] No card for ${streamerName} - skipping burn`);
+                burnArgs = null;
+              }
+
+              if (!burnArgs) {
+                log(asmId, `  skip intro card: ${name}`);
+              } else {
               await new Promise((res, rej) => {
                 const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
                 let burnStderr = '';
@@ -1254,7 +1249,7 @@ app.post('/assemble', async (req, res) => {
                   }
                 });
                 proc.on('error', rej);
-              });
+              }); }
 
               if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
                 inputForTS = burnedPath;
