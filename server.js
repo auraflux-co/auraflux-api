@@ -96,8 +96,8 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   const https = require('https');
   const http  = require('http');
 
-  // ── Dimensions ───────────────────────────────────────────────────
-  const W = 360, H = 420;
+  // ── Dimensions (2x resolution for sharpness) ─────────────────────
+  const W = 720, H = 840;
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
 
@@ -139,14 +139,14 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   // ── Clear canvas ─────────────────────────────────────────────────
   ctx.clearRect(0, 0, W, H);
 
-  const CX = W / 2, CY = 165, R = 130;
+  const CX = W / 2, CY = 330, R = 260;
 
   // ── Background (Twitch variant only) ─────────────────────────────
   if (scheme.hasBg) {
     ctx.fillStyle = scheme.bg;
-    const pad = 12;
+    const pad = 24;
     ctx.beginPath();
-    ctx.roundRect(pad, pad, W - pad * 2, H - pad * 2, 20);
+    ctx.roundRect(pad, pad, W - pad * 2, H - pad * 2, 40);
     ctx.fill();
   }
 
@@ -155,16 +155,19 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
     try {
       const img = await loadImage(imgUrl);
       ctx.save();
+      // Enable high-quality image smoothing
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.beginPath();
-      ctx.arc(CX, CY, R - 6, 0, Math.PI * 2);
+      ctx.arc(CX, CY, R - 12, 0, Math.PI * 2);
       ctx.clip();
-      ctx.drawImage(img, CX - R + 6, CY - R + 6, (R - 6) * 2, (R - 6) * 2);
+      ctx.drawImage(img, CX - R + 12, CY - R + 12, (R - 12) * 2, (R - 12) * 2);
       ctx.restore();
     } catch (e) {
       // Profile image failed — draw placeholder
       ctx.save();
       ctx.beginPath();
-      ctx.arc(CX, CY, R - 6, 0, Math.PI * 2);
+      ctx.arc(CX, CY, R - 12, 0, Math.PI * 2);
       ctx.fillStyle = '#1a2540';
       ctx.fill();
       ctx.restore();
@@ -176,36 +179,36 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   ctx.beginPath();
   ctx.arc(CX, CY, R, 0, Math.PI * 2);
   ctx.strokeStyle = scheme.ring;
-  ctx.lineWidth   = 5;
+  ctx.lineWidth   = 10;
   ctx.stroke();
 
   // ── Drop shadow behind text (subtle) ────────────────────────────
   ctx.shadowColor   = 'rgba(0,0,0,0.7)';
-  ctx.shadowBlur    = 8;
+  ctx.shadowBlur    = 16;
   ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 2;
+  ctx.shadowOffsetY = 4;
 
   // ── Line 1: Streamer name (gold / white) ─────────────────────────
   ctx.textAlign    = 'center';
   ctx.fillStyle    = scheme.text1;
-  ctx.font         = 'bold 48px Arial';
-  ctx.fillText(name, CX, CY + R + 48);
+  ctx.font         = 'bold 96px Arial';
+  ctx.fillText(name, CX, CY + R + 96);
 
   // ── Line 2: Origin ───────────────────────────────────────────────
   ctx.fillStyle = scheme.text2;
-  ctx.font      = 'normal 32px Arial';
-  ctx.fillText(origin, CX, CY + R + 82);
+  ctx.font      = 'normal 64px Arial';
+  ctx.fillText(origin, CX, CY + R + 164);
 
   // ── Line 3: Fact (italic) ────────────────────────────────────────
   ctx.fillStyle = scheme.text3;
 
-  // Dynamic font sizing: reduce by 2px if text exceeds 2 lines, down to 18px minimum
-  let fontSize = 26;
+  // Dynamic font sizing: reduce by 4px if text exceeds 2 lines, down to 36px minimum
+  let fontSize = 52;
   let lines = [];
   const maxLines = 2;
-  const maxWidth = W - 30;
+  const maxWidth = W - 60;
 
-  while (fontSize >= 18) {
+  while (fontSize >= 36) {
     ctx.font = `italic ${fontSize}px Arial`;
     lines = [];
     const words = fact.split(' ');
@@ -223,12 +226,12 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
     if (line) lines.push(line);
 
     if (lines.length <= maxLines) break;
-    fontSize -= 2;
+    fontSize -= 4;
   }
 
   // Draw the lines
   const lineHeight = fontSize;
-  let y = CY + R + 114;
+  let y = CY + R + 228;
   for (const line of lines) {
     ctx.fillText(line, CX, y);
     y += lineHeight;
@@ -1286,12 +1289,12 @@ app.post('/assemble', async (req, res) => {
               if (cardExists) {
                 burnArgs = [
                   "-i", inputForTS, "-i", cardPngPath,
-                  "-filter_complex", `[0:v][1:v]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
+                  "-filter_complex", `[1:v]scale=360:-1[card];[0:v][card]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
                   "-map", "[out]", "-map", "0:a",
                   "-c:v", "libx264", "-preset", "fast", "-crf", "23",
                   "-c:a", "aac", "-ar", "44100", "-y", burnedPath
                 ];
-                console.log(`[intro-card] Canvas PNG ready for ${name}, overlaying top-right`);
+                console.log(`[intro-card] Canvas PNG ready for ${name}, overlaying top-right (2x render, scaled to 360px)`);
               } else {
                 console.warn(`[intro-card] No card for ${streamerName} - skipping burn`);
                 burnArgs = null;
