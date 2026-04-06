@@ -121,15 +121,21 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
     { name: onAirName, label: 'onAirName' }
   ].filter(p => p.name); // Remove empty patterns
 
+  // Try multiple extensions: .png, .jpeg, .jpg, and no extension
+  const extensions = ['.png', '.jpeg', '.jpg', ''];
+
   let localImagePath = null;
   for (const pattern of filenamePatterns) {
-    const testPath = require('path').join(__dirname, 'assets', 'streamers', `${pattern.name}.png`);
-    if (require('fs').existsSync(testPath)) {
-      localImagePath = testPath;
-      imgUrl = localImagePath;
-      console.log(`[intro-card] Using local profile image (${pattern.label}): ${pattern.name}.png`);
-      break;
+    for (const ext of extensions) {
+      const testPath = require('path').join(__dirname, 'assets', 'streamers', `${pattern.name}${ext}`);
+      if (require('fs').existsSync(testPath)) {
+        localImagePath = testPath;
+        imgUrl = localImagePath;
+        console.log(`[intro-card] Using local profile image (${pattern.label}): ${pattern.name}${ext}`);
+        break;
+      }
     }
+    if (localImagePath) break; // Stop if we found a match
   }
 
   // ── Color schemes ────────────────────────────────────────────────
