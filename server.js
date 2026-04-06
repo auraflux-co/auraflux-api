@@ -470,7 +470,7 @@ async function geminiQACheck(videoPath, opts = {}) {
   const samplePoints = [
     { label: 'EARLY',  start: Math.max(0, dur * 0.10 - 10) },
     { label: 'MIDDLE', start: Math.max(0, dur * 0.50 - 10) },
-    { label: 'LATE',   start: Math.max(0, dur * 0.85 - 10) },
+    { label: 'LATE',   start: Math.max(0, Math.floor(dur) - 25) },
   ];
 
   const reports = [];
