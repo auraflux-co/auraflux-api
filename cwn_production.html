@@ -798,6 +798,21 @@ maya: she/her</textarea>
 
       <!-- ── TWITCH TAB ──────────────────────────────── -->
       <div id="thumb-pane-twitch" style="display:none;">
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;">
+            <div class="field" style="margin:0;flex:2;min-width:200px;">
+              <label>HOOK LINE</label>
+              <input id="thumb-hook-line" type="text" value="BEST TWITCH CLIPS" placeholder="e.g. WHO WENT VIRAL TODAY?" style="background:#060a12;border:1px solid rgba(199,175,79,0.2);color:#fff;font-family:Barlow Condensed,sans-serif;font-size:13px;padding:8px 12px;border-radius:4px;width:100%;">
+            </div>
+            <div class="field" style="margin:0;flex:1;min-width:120px;">
+              <label>DATE OVERRIDE</label>
+              <input id="thumb-date-override" type="text" placeholder="Auto (today)" style="background:#060a12;border:1px solid rgba(199,175,79,0.2);color:#fff;font-family:Barlow Condensed,sans-serif;font-size:13px;padding:8px 12px;border-radius:4px;width:100%;">
+            </div>
+            <button onclick="generateTwitchThumbnail()" class="btn btn-gold">🖼 GENERATE THUMBNAIL</button>
+            <a id="thumb-canva-link" href="#" target="_blank" class="btn btn-canva" style="display:none;text-decoration:none;">↗ OPEN IN CANVA</a>
+          </div>
+          <div id="thumb-generate-status" style="font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);"></div>
+        </div>
         <div style="margin-bottom:12px;font-size:11px;font-family:monospace;">
           <span id="twitch-thumb-status" style="color:rgba(255,255,255,0.4);">Select a Twitch job above — clips load from the job streamers automatically.</span>
         </div>
@@ -4848,6 +4863,83 @@ function thumbLoadTwitchClips(streamer) {
   xU.onerror=xU.ontimeout=function(){g('twitch-thumb-status').textContent='Network error';};
   xU.send();
 }
+
+
+function generateTwitchThumbnail() {
+  var jobId = g('thumb-job-select') ? g('thumb-job-select').value : '';
+  var hookLine = (g('thumb-hook-line') && g('thumb-hook-line').value) || 'BEST TWITCH CLIPS';
+  var dateOverride = (g('thumb-date-override') && g('thumb-date-override').value) || '';
+  var statusEl = g('thumb-generate-status');
+  var linkEl = g('thumb-canva-link');
+
+  if (!jobId) { alert('Select a finished Twitch job first'); return; }
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  var streamers = (job && job.meta && job.meta.streamers) || [];
+
+  if (statusEl) statusEl.textContent = '⏳ Uploading streamer images to Canva and generating thumbnail...';
+  if (linkEl) linkEl.style.display = 'none';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/generate-thumbnail', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Failed');
+      if (statusEl) statusEl.textContent = '⏳ Generating... polling for completion (~60s)';
+      pollThumbnailStatus(jobId, statusEl, linkEl);
+    } catch(e) {
+      if (statusEl) statusEl.textContent = '❌ ' + e.message;
+    }
+  };
+  xhr.onerror = function() {
+    if (statusEl) statusEl.textContent = '❌ Server unreachable';
+  };
+  xhr.send(JSON.stringify({
+    jobId: jobId,
+    hookLine: hookLine,
+    date: dateOverride,
+    streamers: streamers
+  }));
+}
+
+function pollThumbnailStatus(jobId, statusEl, linkEl) {
+  var attempts = 0;
+  function check() {
+    attempts++;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', CFG.ffmpegUrl + '/thumbnail-status/' + jobId, true);
+    xhr.timeout = 10000;
+    xhr.onload = function() {
+      try {
+        var resp = JSON.parse(xhr.responseText);
+        if (resp.status === 'done') {
+          if (statusEl) statusEl.innerHTML = '✅ Thumbnail ready!';
+          if (linkEl && resp.canvaUrl) {
+            linkEl.href = resp.canvaUrl;
+            linkEl.style.display = '';
+          }
+          // Store canva URL on the job
+          updateJob(jobId, { thumbnailCanvaUrl: resp.canvaUrl });
+          renderQueue();
+        } else if (resp.status === 'failed') {
+          if (statusEl) statusEl.textContent = '❌ ' + (resp.error || 'Generation failed');
+        } else if (attempts < 20) {
+          if (statusEl) statusEl.textContent = '⏳ Still generating... (' + attempts + '/20)';
+          setTimeout(check, 5000);
+        } else {
+          if (statusEl) statusEl.textContent = '⚠️ Timed out — check Canva directly';
+        }
+      } catch(e) {
+        if (attempts < 20) setTimeout(check, 5000);
+      }
+    };
+    xhr.send();
+  }
+  setTimeout(check, 5000);
+}
+
 
 function thumbSelectTwitchClip(idx) {
   var clips=window._twitchThumbClips||[];

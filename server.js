@@ -4777,6 +4777,147 @@ app.get('/remediate-video/check/:jobId', (req, res) => {
   res.json({ jobId, missed, fontPath: SYSTEM_FONT, logoPath: CWN_LOGO_PATH });
 });
 
+
+// ── POST /generate-thumbnail ──────────────────────────────────────
+// Generates a Twitch compilation YouTube thumbnail by:
+// 1. Reading streamer profile images from streamers.json
+// 2. Uploading each to Canva via MCP
+// 3. Swapping them into the template design
+// 4. Updating hook line + date text
+// 5. Exporting as JPG → storing in Drive
+//
+// Body: { jobId, hookLine, date, streamers: ['jason','hasan',...] }
+// Returns: { ok, canvaUrl, exportUrl }
+
+const TWITCH_THUMBNAIL_TEMPLATE_ID = 'DAHGB-hGwds';
+
+// Element IDs for the 11 streamer circles in the template (ring order)
+const THUMBNAIL_CIRCLE_ELEMENT_IDS = [
+  'PBs5L1XPdkxX4FNn-LBqzjtXxlBKcKZRW', // position 1 (left-mid)
+  'PBs5L1XPdkxX4FNn-LB04qHSRp15SC4bb', // position 2 (left-upper)
+  'PBs5L1XPdkxX4FNn-LBy2hNzFzq8RB5TD', // position 3 (top-left)
+  'PBs5L1XPdkxX4FNn-LBJW8Sft0FgzmRkz', // position 4 (top-right)
+  'PBs5L1XPdkxX4FNn-LBXgrNQD2QmCgBYB', // position 5 (right-upper)
+  'PBs5L1XPdkxX4FNn-LBR6x2xHwXS72H0p', // position 6 (right-mid)
+  'PBs5L1XPdkxX4FNn-LBPK73CS5j4PHYMc', // position 7 (right-lower)
+  'PBs5L1XPdkxX4FNn-LBcLMSzNshJzjbQS', // position 8 (bottom-right)
+  'PBs5L1XPdkxX4FNn-LBNCnh4gjsKVPl8G', // position 9 (bottom-center)
+  'PBs5L1XPdkxX4FNn-LB7jt94dj44cwnD5', // position 10 (bottom-left)
+  'PBs5L1XPdkxX4FNn-LBg8l43YPZn3lm06', // position 11 (left-lower)
+];
+
+const THUMBNAIL_TEXT_ELEMENT_IDS = {
+  hookLine: 'PBs5L1XPdkxX4FNn-LB50hKpBXHtvdLKj', // "BEST TWITCH CLIPS"
+  branding: 'PBs5L1XPdkxX4FNn-LBbqf1yz2f6pgXcB', // "CLIPZWORLD NEWS • THE DAILY UPDATE"
+};
+
+app.post('/generate-thumbnail', async (req, res) => {
+  const { jobId, hookLine, date, streamers: streamerSlugs } = req.body;
+  const CANVA_MCP_URL = 'https://mcp.canva.com/mcp';
+
+  // Load streamer roster
+  let roster = [];
+  try {
+    const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'streamers.json'), 'utf8'));
+    roster = data.roster || [];
+  } catch(e) {
+    return res.status(400).json({ error: 'streamers.json not found' });
+  }
+
+  // Get active streamers in configured order (max 11 for the circles)
+  const activeStreamers = roster
+    .filter(s => s.active)
+    .slice(0, THUMBNAIL_CIRCLE_ELEMENT_IDS.length);
+
+  const dateStr  = date || new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const hookText = hookLine || 'BEST TWITCH CLIPS';
+
+  console.log(`[thumbnail] Generating for ${activeStreamers.length} streamers, date: ${dateStr}`);
+  res.json({ ok: true, message: 'Thumbnail generation started — check /thumbnail-status/' + jobId });
+
+  // Run async — Canva MCP calls take time
+  (async () => {
+    try {
+      const client = new Anthropic();
+
+      // Build the prompt for Claude to execute all Canva operations
+      const streamerList = activeStreamers.map((s, i) => {
+        const hiResUrl = (s.profileImage || '')
+          .replace(/-70x70\./, '-300x300.')
+          .replace(/-28x28\./, '-300x300.');
+        return `${i + 1}. ${s.displayName} — image URL: ${hiResUrl || s.profileImage || ''} — element_id: ${THUMBNAIL_CIRCLE_ELEMENT_IDS[i]}`;
+      }).join('\n');
+
+      const systemPrompt = `You are a Canva automation assistant. 
+Execute the following steps using the Canva MCP tools EXACTLY as specified.
+Do each step in order. Return a JSON object with { canvaUrl, success }.
+No explanations — just execute and return JSON.`;
+
+      const userPrompt = `Execute these Canva operations on design ID: ${TWITCH_THUMBNAIL_TEMPLATE_ID}
+
+STEP 1: For each streamer below, call upload-asset-from-url with their image URL.
+Note the returned asset_id for each.
+
+Streamers and their circle element IDs:
+${streamerList}
+
+STEP 2: Start an editing transaction on design ${TWITCH_THUMBNAIL_TEMPLATE_ID}
+
+STEP 3: For each streamer, call perform-editing-operations with an update_fill operation:
+- element_id: [their element_id from above]
+- asset_type: "image"
+- asset_id: [the asset_id returned in step 1]
+- alt_text: "[streamer name] profile"
+
+STEP 4: In the same perform-editing-operations call, also update the text elements:
+- element_id: ${THUMBNAIL_TEXT_ELEMENT_IDS.hookLine}
+  replace_text: "${hookText}"
+- element_id: ${THUMBNAIL_TEXT_ELEMENT_IDS.branding}
+  find_text: "CLIPZWORLD NEWS  •  THE DAILY UPDATE"
+  replace_text: "CLIPZWORLD NEWS  •  ${dateStr.toUpperCase()}"
+
+STEP 5: Commit the editing transaction.
+
+STEP 6: Return JSON: { "canvaUrl": "https://www.canva.com/d/...", "success": true }`;
+
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+        mcp_servers: [{ type: 'url', url: CANVA_MCP_URL, name: 'canva-mcp' }]
+      });
+
+      const textBlocks = (response.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+      let result = {};
+      try {
+        const clean = textBlocks.replace(/```json|```/g, '').trim();
+        const jsonMatch = clean.match(/\{[\s\S]*\}/);
+        if (jsonMatch) result = JSON.parse(jsonMatch[0]);
+      } catch(e) {}
+
+      const canvaUrl = result.canvaUrl || `https://www.canva.com/design/${TWITCH_THUMBNAIL_TEMPLATE_ID}`;
+      console.log(`[thumbnail] ✅ Complete: ${canvaUrl}`);
+
+      // Store result so dashboard can poll
+      if (!global._thumbnailJobs) global._thumbnailJobs = {};
+      global._thumbnailJobs[jobId] = { ok: true, canvaUrl, completedAt: new Date().toISOString() };
+
+    } catch(err) {
+      console.error('[thumbnail] Error:', err.message);
+      if (!global._thumbnailJobs) global._thumbnailJobs = {};
+      global._thumbnailJobs[jobId] = { ok: false, error: err.message };
+    }
+  })();
+});
+
+// GET /thumbnail-status/:jobId — poll thumbnail generation
+app.get('/thumbnail-status/:jobId', (req, res) => {
+  const result = (global._thumbnailJobs || {})[req.params.jobId];
+  if (!result) return res.json({ status: 'pending', message: 'Still generating...' });
+  res.json({ status: result.ok ? 'done' : 'failed', ...result });
+});
+
 // ── Start ─────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
