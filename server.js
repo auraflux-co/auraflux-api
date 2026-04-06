@@ -411,7 +411,7 @@ async function geminiQACheck(videoPath, opts = {}) {
       const checklist = point.label === 'EARLY' ? [
         `1. LIP SYNC: Avatar mouth reasonably in sync with audio? (yes/partial/no)`,
         `2. TICKER: Scrolling ticker bar visible at bottom? (yes/no)`,
-        `3. VIDEO FREEZE: Does the video appear to FREEZE (video stuck, audio continues)? (yes/no) — THIS IS CRITICAL`,
+        `3. VIDEO FREEZE: Does the video appear to FREEZE (video stuck, audio continues)? (yes/no) — CRITICAL`,
         `4. TRANSITIONS: Do cuts between segments look clean? (yes/partial/no)`,
         `5. AUDIO: Audio clear and continuous? (yes/partial/no)`,
       ] : point.label === 'MIDDLE' ? [
@@ -431,11 +431,18 @@ async function geminiQACheck(videoPath, opts = {}) {
 Review this 20-second ${point.label} sample (from ~${Math.round(point.start)}s into an ${Math.round(dur)}s video).
 Context: ${avatarCount} avatar segments, ${clipCount} source clips.
 
-CHECKLIST:
+CHECKLIST — answer every item, even if the answer is PASS:
 ${checklist.join('\n')}
 
-SCORE: [0-100] for this segment only
-ISSUES: [specific problems or "none"]`;
+REQUIRED FORMAT — you must always respond with all of these fields:
+CHECKLIST RESULTS:
+1. [item name]: PASS/FAIL — [one sentence. If PASS say what you see that confirms it. If FAIL describe the problem.]
+2. [item name]: PASS/FAIL — [same]
+... (all items)
+
+DEDUCTIONS: [list any -points deductions with reason, OR write "None — all checks passed"]
+SCORE: [0-100]
+SUMMARY: [one sentence. Either "No issues found — video looks clean." or describe the main problem.]`;
 
       const genResp = await axios.post(
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
