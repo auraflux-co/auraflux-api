@@ -1,0 +1,5 @@
+{
+  "watch": ["server.js", "*.js"],
+  "ignore": ["tmp/", "output/", "assets/", "*.mp4", "*.png"],
+  "delay": "2000"
+}
