@@ -1329,7 +1329,13 @@ function pollCanvaImport(jobId, statusEl, cb) {
         var resp = JSON.parse(xhr.responseText);
         if (resp.status === 'success' && resp.design_url) {
           if (statusEl) {
-            statusEl.innerHTML = '✅ Canva design ready — <a href="'+resp.design_url+'" target="_blank" style="color:#c7af4f;">Open in Canva ↗</a>';
+            statusEl.textContent = '✅ Canva design ready — ';
+            var a = document.createElement('a');
+            a.href = resp.design_url;
+            a.textContent = 'Open in Canva ↗';
+            a.target = '_blank';
+            a.style.color = '#c7af4f';
+            statusEl.appendChild(a);
           }
           // Store design URL on the job so Publish Prep can reference it
           if (window._pendingCanvaJobId) {
@@ -1481,7 +1487,16 @@ function pollAssemblyProgress(batchJobId, assemblyId) {
     var badge = document.createElement('div');
     badge.id = 'asm-badge-'+batchJobId;
     badge.style.cssText = 'background:rgba(230,126,34,0.15);border:1px solid rgba(230,126,34,0.4);border-radius:4px;padding:8px 14px;margin-bottom:10px;font-family:Bebas Neue,sans-serif;font-size:14px;color:#e67e22;letter-spacing:2px;';
-    badge.innerHTML = '⚙ ASSEMBLING — <span id="asm-pct-'+batchJobId+'">0%</span> &nbsp;<span style="font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5);" id="asm-eta-'+batchJobId+'"></span>';
+    badge.textContent = '⚙ ASSEMBLING — ';
+    var pctSpan = document.createElement('span');
+    pctSpan.id = 'asm-pct-'+batchJobId;
+    pctSpan.textContent = '0%';
+    badge.appendChild(pctSpan);
+    badge.appendChild(document.createTextNode(' \u00A0'));
+    var etaSpan = document.createElement('span');
+    etaSpan.id = 'asm-eta-'+batchJobId;
+    etaSpan.style.cssText = 'font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5);';
+    badge.appendChild(etaSpan);
     panel.insertBefore(badge, panel.firstChild);
   }
 

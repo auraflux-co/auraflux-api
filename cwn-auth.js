@@ -19,10 +19,14 @@ const path       = require('path');
 const { exec }   = require('child_process');
 
 // ── Config ─────────────────────────────────────────────────────────
-// Uses Google's public OAuth client for installed apps —
-// same one used by gcloud CLI. No need to create your own.
-const CLIENT_ID     = process.env.DRIVE_CLIENT_ID     || '281415000137-u3qh2evajigmhsmft2s3rgeidqq97ueu.apps.googleusercontent.com';
-const CLIENT_SECRET = process.env.DRIVE_CLIENT_SECRET || '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';
+// Google OAuth credentials must be set in .env file
+if (!process.env.DRIVE_CLIENT_ID || !process.env.DRIVE_CLIENT_SECRET) {
+  console.error('\n❌ FATAL: Missing DRIVE_CLIENT_ID or DRIVE_CLIENT_SECRET in .env');
+  console.error('Add these to your .env file to enable Google Drive integration.\n');
+  process.exit(1);
+}
+const CLIENT_ID     = process.env.DRIVE_CLIENT_ID;
+const CLIENT_SECRET = process.env.DRIVE_CLIENT_SECRET;
 const REDIRECT_URI  = 'http://localhost:9876/oauth2callback';
 const SCOPES        = ['https://www.googleapis.com/auth/drive.file'];
 const ENV_PATH      = path.join(__dirname, '.env');

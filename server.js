@@ -1,5 +1,24 @@
 require('dotenv').config();
 
+// Validate required environment variables on startup
+function validateRequiredEnv() {
+  const required = [
+    'ANTHROPIC_API_KEY',
+    'GEMINI_API_KEY',
+    'HEYGEN_API_KEY'
+  ];
+  const missing = required.filter(key => !process.env[key]);
+  if (missing.length > 0) {
+    console.error('\n❌ FATAL: Missing required environment variables:');
+    missing.forEach(key => console.error(`   - ${key}`));
+    console.error('\nPlease add these to your .env file and restart.\n');
+    process.exit(1);
+  }
+  console.log('✅ All required environment variables present');
+}
+
+validateRequiredEnv();
+
 /**
  * CWN Production Server
  * - POST /assemble         → FFmpeg pipeline: download HeyGen segments → concat → output MP4
@@ -31,12 +50,59 @@ const OUTPUT_DIR = require('path').join(__dirname, 'output');
 require('fs').mkdirSync(TMP_DIR,    { recursive: true });
 require('fs').mkdirSync(OUTPUT_DIR, { recursive: true });
 
+// Clean up orphaned temp files on startup (older than 24 hours)
+function cleanupOrphanedTempFiles() {
+  const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+  const now = Date.now();
+  let cleaned = 0;
+
+  try {
+    const files = fs.readdirSync(TMP_DIR);
+    for (const f of files) {
+      const fp = path.join(TMP_DIR, f);
+      try {
+        const stat = fs.statSync(fp);
+        if (now - stat.mtimeMs > maxAge) {
+          fs.unlinkSync(fp);
+          cleaned++;
+        }
+      } catch (e) {
+        // File already deleted or inaccessible, skip
+      }
+    }
+    if (cleaned > 0) {
+      console.log(`🧹 Cleaned up ${cleaned} orphaned temp file(s) from previous sessions`);
+    }
+  } catch (e) {
+    console.error(`⚠️  Temp file cleanup failed: ${e.message}`);
+  }
+}
+
+cleanupOrphanedTempFiles();
+
 const assemblyJobs = {};
 const heygenJobs   = {};
 
 function log(asmId, msg) { console.log(`[${asmId}] ${msg}`); }
 
-app.use(require('cors')());
+// CORS configuration with origin whitelist
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:8765', 'http://localhost:3000'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️  Blocked CORS request from unauthorized origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(require('express').json({ limit: '50mb' }));
 app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 
@@ -265,6 +331,21 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
 
 
 async function downloadFile(url, destPath) {
+  // SSRF Protection: Validate URL is from trusted domains
+  const trustedDomains = [
+    'clips-media-assets',           // Twitch CDN
+    'clips-media-assets2',          // Twitch CDN
+    'production-assets',            // Twitch
+    'resource.heygencdn.com',       // HeyGen
+    'storage.googleapis.com',       // Google Cloud Storage
+    'drive.google.com'              // Google Drive
+  ];
+
+  const isTrusted = trustedDomains.some(domain => url.includes(domain));
+  if (!isTrusted) {
+    throw new Error(`URL blocked: not from trusted domain. URL: ${url.slice(0, 100)}`);
+  }
+
   const writer = fs.createWriteStream(destPath);
   const resp   = await axios({ url, method: 'GET', responseType: 'stream', timeout: 120000 });
   resp.data.pipe(writer);
@@ -275,7 +356,9 @@ async function downloadFile(url, destPath) {
 }
 
 function ffmpegPath() {
-  return process.env.FFMPEG_PATH || 'ffmpeg';
+  if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
+  // Cross-platform default: .exe on Windows, no extension on Unix
+  return process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
 }
 
 function checkFFmpeg(cb) {
@@ -366,7 +449,12 @@ function buildConcatCommand(inputFiles, outputPath, transition, format) {
 // Probe clip duration via ffprobe
 function probeDuration(filePath) {
   return new Promise((res) => {
-    exec(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${filePath}"`, (err, stdout) => {
+    execFile('ffprobe', [
+      '-v', 'error',
+      '-show_entries', 'format=duration',
+      '-of', 'csv=p=0',
+      filePath
+    ], (err, stdout) => {
       res(err ? 60 : parseFloat(stdout.trim()) || 60);
     });
   });
@@ -1093,6 +1181,7 @@ app.post('/assemble', async (req, res) => {
         try {
           // Download sample segments to tmp
           const g2TmpPaths = [];
+          const g2FailedSegments = [];
           for (const seg of avatarSegsForQA) {
             const g2Path = path.join(TMP_DIR, `gate2_${asmId}_${Date.now()}.mp4`);
             try {
@@ -1100,8 +1189,29 @@ app.post('/assemble', async (req, res) => {
               const sz = fs.existsSync(g2Path) ? fs.statSync(g2Path).size : 0;
               if (sz > 5000) { g2TmpPaths.push(g2Path); log(asmId, `  ✓ Gate 2 sample: ${seg.label} (${(sz/1024).toFixed(0)}KB)`); }
               else { try { fs.unlinkSync(g2Path); } catch(e) {} }
-            } catch(e) { log(asmId, `  ⚠️  Gate 2 sample failed for ${seg.label}: ${e.message}`); }
+            } catch(e) {
+              g2FailedSegments.push({ label: seg.label, error: e.message });
+              log(asmId, `  ❌ Gate 2 sample failed for ${seg.label}: ${e.message}`);
+            }
             await new Promise(r => setTimeout(r, 500));
+          }
+
+          // Persist failed segments to file
+          if (g2FailedSegments.length > 0) {
+            const qaLogDir = path.join(__dirname, 'output', 'qa_failures');
+            if (!fs.existsSync(qaLogDir)) fs.mkdirSync(qaLogDir, { recursive: true });
+            const failureLogFile = path.join(qaLogDir, `gate2_failures_${asmId}_${Date.now()}.json`);
+            try {
+              fs.writeFileSync(failureLogFile, JSON.stringify({
+                assemblyId: asmId,
+                timestamp: new Date().toISOString(),
+                failedSegments: g2FailedSegments
+              }, null, 2));
+              log(asmId, `📄 Gate 2 failures logged: ${failureLogFile}`);
+            } catch(e) {
+              console.error(`[gate2] Failed to write failure log: ${e.message}`);
+            }
+            assemblyJobs[asmId].gate2FailedSegments = g2FailedSegments;
           }
 
           if (g2TmpPaths.length > 0) {
@@ -1115,7 +1225,8 @@ app.post('/assemble', async (req, res) => {
             g2TmpPaths.forEach(p => { try { fs.unlinkSync(p); } catch(e) {} });
           }
         } catch(g2Err) {
-          log(asmId, `⚠️  Gate 2 check failed: ${g2Err.message} — continuing assembly`);
+          log(asmId, `❌ Gate 2 check failed: ${g2Err.message} — continuing assembly`);
+          assemblyJobs[asmId].gate2Error = g2Err.message;
         }
       }
 
@@ -1186,8 +1297,16 @@ app.post('/assemble', async (req, res) => {
           await downloadFile(url, destPath);
           // Validate the file is actual video data, not an HTML error page from expired CDN token
           const fileSize = fs.existsSync(destPath) ? fs.statSync(destPath).size : 0;
-          if (fileSize < 1000) {
-            log(asmId, `❌ Segment ${i+1} downloaded but suspiciously small (${fileSize} bytes) — skipping`);
+          const MIN_SEGMENT_SIZE = 100000; // 100KB minimum for valid video
+          const MAX_SEGMENT_SIZE = 2 * 1024 * 1024 * 1024; // 2GB max
+
+          if (fileSize < MIN_SEGMENT_SIZE) {
+            log(asmId, `❌ Segment ${i+1} too small (${fileSize} bytes, minimum ${MIN_SEGMENT_SIZE}) — likely error page`);
+            try { fs.unlinkSync(destPath); } catch(e) {}
+            continue;
+          }
+          if (fileSize > MAX_SEGMENT_SIZE) {
+            log(asmId, `❌ Segment ${i+1} too large (${(fileSize/1024/1024).toFixed(1)}MB, maximum 2GB)`);
             try { fs.unlinkSync(destPath); } catch(e) {}
             continue;
           }
@@ -2336,7 +2455,7 @@ app.post('/twitch-clip-url', async (req, res) => {
 // contentType: 'twitch' | 'nba' | 'news'
 
 const GEMINI_MODEL  = 'gemini-2.5-flash';
-const GEMINI_APIKEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_APIKEY = process.env.GEMINI_API_KEY; // Validated at startup
 
 // ── Tone variants per content type ────────────────────────────────
 // tone: 'deadpan' | 'warm' | 'chaotic'
@@ -5152,7 +5271,8 @@ app.get('/disk-usage', (req, res) => {
       .filter(f => f.endsWith('.mp4'))
       .map(f => {
         const fp = path.join(OUTPUT_DIR, f);
-        return { name: f, sizeMB: parseFloat((fs.statSync(fp).size/1024/1024).toFixed(1)), mtime: fs.statSync(fp).mtimeMs };
+        const stat = fs.statSync(fp); // Call statSync only once
+        return { name: f, sizeMB: parseFloat((stat.size/1024/1024).toFixed(1)), mtime: stat.mtimeMs };
       })
       .sort((a, b) => b.mtime - a.mtime);
 
