@@ -81,7 +81,7 @@ async function generateIntroCardPNG(streamerData, outputPath) {
     return null;
   }
 
-  const W = 440, H = 180;
+  const W = 680, H = 220;
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
 
@@ -102,11 +102,12 @@ async function generateIntroCardPNG(streamerData, outputPath) {
     try {
       const profileImgPath = path.join(TMP_DIR, `profile_${streamerData.displayName.replace(/\s/g,'_')}.png`);
       if (!fs.existsSync(profileImgPath) && streamerData.profileImage) {
-        await downloadFile(streamerData.profileImage, profileImgPath);
+        const hiResUrl = (streamerData.profileImage || '').replace(/-70x70\./, '-300x300.').replace(/-28x28\./, '-300x300.');
+        await downloadFile(hiResUrl || streamerData.profileImage, profileImgPath);
       }
       if (fs.existsSync(profileImgPath) && fs.statSync(profileImgPath).size > 100) {
         const img = await loadImage(profileImgPath);
-        const cx = 72, cy = 90, r = 52;
+        const cx = 90, cy = 110, r = 72;
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -118,7 +119,7 @@ async function generateIntroCardPNG(streamerData, outputPath) {
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.strokeStyle = '#c7af4f';
-        ctx.lineWidth   = 3;
+        ctx.lineWidth   = 4;
         ctx.stroke();
       }
     } catch(e) {
@@ -128,22 +129,22 @@ async function generateIntroCardPNG(streamerData, outputPath) {
 
   // Streamer name in gold
   ctx.fillStyle = '#c7af4f';
-  ctx.font      = 'bold 22px Arial, sans-serif';
+  ctx.font      = 'bold 42px Arial, sans-serif';
   ctx.fillText((streamerData.displayName || '').toUpperCase(), textX, 65);
 
   // Origin in light grey
   if (streamerData.origin) {
     ctx.fillStyle = '#f0ede6';
-    ctx.font      = '15px Arial, sans-serif';
-    ctx.fillText('Origin: ' + streamerData.origin, textX, 95);
+    ctx.font      = 'bold 28px Arial, sans-serif';
+    ctx.fillText('Origin: ' + streamerData.origin, textX, 118);
   }
 
   // Fact in light grey
   if (streamerData.fact) {
     ctx.fillStyle = '#f0ede6';
-    ctx.font      = '13px Arial, sans-serif';
+    ctx.font      = '24px Arial, sans-serif';
     const fact = (streamerData.fact || '').slice(0, 42);
-    ctx.fillText(fact, textX, 120);
+    ctx.fillText(fact, textX, 158);
   }
 
   // Save PNG
@@ -1159,7 +1160,8 @@ app.post('/assemble', async (req, res) => {
 
               // Download profile image if not cached
               if (!fs.existsSync(profileImgPath) && streamerData.profileImage) {
-                try { await downloadFile(streamerData.profileImage, profileImgPath); } catch(e) {}
+                try { const hiResUrl = (streamerData.profileImage || '').replace(/-70x70\./, '-300x300.').replace(/-28x28\./, '-300x300.');
+        await downloadFile(hiResUrl || streamerData.profileImage, profileImgPath); } catch(e) {}
               }
 
               const hasImg = fs.existsSync(profileImgPath) && fs.statSync(profileImgPath).size > 100;
