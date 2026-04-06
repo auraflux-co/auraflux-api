@@ -1306,7 +1306,7 @@ app.post('/assemble', async (req, res) => {
               try {
                 await generateIntroCardPNG(
                   { name, displayName: name, origin, fact,
-                    profileImageUrl: streamerData.profileImageUrl || streamerData.profile_image_url || null },
+                    profileImageUrl: streamerData.profileImageUrl || streamerData.profile_image_url || streamerData.profileImage || null },
                   cardPngPath, "cwn"
                 );
               } catch(cardErr) {
