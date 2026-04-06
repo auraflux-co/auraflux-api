@@ -124,18 +124,26 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   // Try multiple extensions: .png, .jpeg, .jpg, and no extension
   const extensions = ['.png', '.jpeg', '.jpg', ''];
 
+  console.log(`[intro-card] Looking for profile image for: ${name} (twitchUsername: ${twitchUsername}, displayName: ${displayName}, onAirName: ${onAirName})`);
+
   let localImagePath = null;
   for (const pattern of filenamePatterns) {
     for (const ext of extensions) {
       const testPath = require('path').join(__dirname, 'assets', 'streamers', `${pattern.name}${ext}`);
+      const filename = `${pattern.name}${ext}`;
+      console.log(`[intro-card]   Trying: ${filename} (${pattern.label}${ext}) ... ${require('fs').existsSync(testPath) ? 'FOUND ✓' : 'not found'}`);
       if (require('fs').existsSync(testPath)) {
         localImagePath = testPath;
         imgUrl = localImagePath;
-        console.log(`[intro-card] Using local profile image (${pattern.label}): ${pattern.name}${ext}`);
+        console.log(`[intro-card] ✓ Using local profile image: ${filename}`);
         break;
       }
     }
     if (localImagePath) break; // Stop if we found a match
+  }
+
+  if (!localImagePath) {
+    console.log(`[intro-card] ✗ No local file found - using remote URL`);
   }
 
   // ── Color schemes ────────────────────────────────────────────────
