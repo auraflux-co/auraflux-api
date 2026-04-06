@@ -104,7 +104,16 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   const name   = (streamerData.displayName || streamerData.name || '').toUpperCase();
   const origin = streamerData.origin  || '';
   const fact   = streamerData.fact    || '';
-  const imgUrl = streamerData.profileImageUrl || streamerData.profile_image_url || null;
+
+  // Check for local profile image first, fallback to remote URL
+  const twitchUsername = streamerData.name || '';
+  const localImagePath = require('path').join(__dirname, 'assets', 'streamers', `${twitchUsername}.png`);
+  let imgUrl = streamerData.profileImageUrl || streamerData.profile_image_url || null;
+
+  if (twitchUsername && require('fs').existsSync(localImagePath)) {
+    imgUrl = localImagePath;
+    console.log(`[intro-card] Using local profile image: ${localImagePath}`);
+  }
 
   // ── Color schemes ────────────────────────────────────────────────
   const scheme = variant === 'twitch'
