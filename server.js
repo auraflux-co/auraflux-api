@@ -109,22 +109,24 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   // Check for local profile image first, fallback to remote URL
   const twitchUsername = streamerData.name || '';
   const displayName = streamerData.displayName || '';
+  const onAirName = streamerData.onAirName || '';
   let imgUrl = streamerData.profileImageUrl || streamerData.profile_image_url || null;
 
-  // Try multiple filename variations
-  const filenameVariations = [
-    twitchUsername.toLowerCase(),
-    displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase(),
-    displayName
-  ].filter(v => v); // Remove empty strings
+  // Try multiple filename patterns in order
+  const filenamePatterns = [
+    { name: twitchUsername, label: 'twitchUsername' },
+    { name: displayName, label: 'displayName' },
+    { name: displayName.toLowerCase(), label: 'displayName (lowercase)' },
+    { name: onAirName, label: 'onAirName' }
+  ].filter(p => p.name); // Remove empty strings
 
   let localImagePath = null;
-  for (const filename of filenameVariations) {
-    const testPath = require('path').join(__dirname, 'assets', 'streamers', `${filename}.png`);
+  for (const pattern of filenamePatterns) {
+    const testPath = require('path').join(__dirname, 'assets', 'streamers', `${pattern.name}.png`);
     if (require('fs').existsSync(testPath)) {
       localImagePath = testPath;
       imgUrl = localImagePath;
-      console.log(`[intro-card] Using local profile image: ${localImagePath}`);
+      console.log(`[intro-card] Using local profile image (${pattern.label}): ${pattern.name}.png`);
       break;
     }
   }
