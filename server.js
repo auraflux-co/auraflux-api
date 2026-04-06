@@ -4341,79 +4341,144 @@ app.post('/publish', async (req, res) => {
   }
 });
 
-// POST /generate-publish-copy — generates title, description, hashtags, pinned comment
+// POST /generate-publish-copy — generates platform-specific publish metadata
 // Body: {
 //   contentType: 'nba' | 'news' | 'twitch',
 //   formType: 'compilation' | 'short',
 //   script: string,             // full script text
 //   date: string,               // e.g. "Friday, April 6, 2026"
-//   streamers: string[]         // for Twitch only (display names)
+//   streamers: string[],        // for Twitch only (display names)
+//   platforms: string[]         // ['youtube', 'tiktok', 'instagram'] - defaults to ['youtube']
 // }
 app.post('/generate-publish-copy', async (req, res) => {
-  const { contentType, formType, script, date, streamers = [] } = req.body;
+  const { contentType, formType, script, date, streamers = [], platforms = ['youtube'] } = req.body;
 
   if (!script) return res.status(400).json({ error: 'script required' });
 
   const isShort = formType === 'short';
   const scriptExcerpt = script.substring(0, 600);
+  const needsTikTok = platforms.includes('tiktok');
+  const needsInstagram = platforms.includes('instagram');
+  const needsYouTube = platforms.includes('youtube');
 
-  // Content-specific prompts
+  // Multi-platform prompt - generates metadata for all requested platforms
   const prompts = {
-    nba: `Generate YouTube metadata for this NBA ${isShort ? 'Short' : 'highlights compilation'}.
-
-Date: ${date}
-Script excerpt (first 600 chars):
-${scriptExcerpt}...
-
-Requirements:
-- **Title:** ${isShort ? '50-80' : '50-100'} chars max, include "${isShort ? 'NBA Highlights #Shorts' : 'NBA Highlights'}", team names, compelling hook
-- **Description:** ${isShort ? '100-150 words' : '200-300 words'}, game summaries, player stats, subscribe CTA, credit ESPN/NBA
-- **Hashtags:** ${isShort ? '10-15' : '5-8'} tags (#NBA, #Shorts if short, team names, player names)
-- **Pinned Comment:** Engagement question about top play or prediction for next game
-
-Output as JSON: { "title": "...", "description": "...", "hashtags": ["#NBA", ...], "pinnedComment": "..." }`,
-
-    news: `Generate YouTube metadata for this world news ${isShort ? 'Short' : 'compilation'}.
+    nba: `Generate publish metadata for this NBA ${isShort ? 'Short' : 'highlights compilation'} for ${platforms.join(', ')}.
 
 Date: ${date}
 Script excerpt:
 ${scriptExcerpt}...
 
-Requirements:
-- **Title:** ${isShort ? '50-80' : '50-100'} chars max, include "${isShort ? 'World News #Shorts' : 'World News Update'}", main story hook
-- **Description:** ${isShort ? '100-150 words' : '200-300 words'}, story summaries, subscribe CTA, credit sources
-- **Hashtags:** ${isShort ? '10-15' : '5-8'} tags (#News, #WorldNews, #Shorts if short, topic-specific)
-- **Pinned Comment:** Ask viewers which story concerns them most or for their take
+Generate metadata for each platform with these requirements:
 
-Output as JSON: { "title": "...", "description": "...", "hashtags": ["#News", ...], "pinnedComment": "..." }`,
+${needsYouTube ? `
+**YOUTUBE:**
+- Title: ${isShort ? '50-80' : '50-100'} chars max, include team names + hook
+- Description: ${isShort ? '100-150 words' : '200-300 words'}, game summary, stats, subscribe CTA
+- Hashtags: ${isShort ? '10-15' : '5-8'} tags (#NBA, #Lakers, etc.)
+- Pinned Comment: Engagement question
+` : ''}
+${needsTikTok ? `
+**TIKTOK:**
+- Caption: 90-150 chars optimal (max 2200), hook in first 40 chars, include emojis
+- Mix 4-6 hashtags into caption naturally (#NBA #LeBron #FYP #ForYou)
+- No separate title/description - ONE caption field
+` : ''}
+${needsInstagram ? `
+**INSTAGRAM:**
+- Caption: 125 char hook, then full description with line breaks, max 2200 chars total
+- Include emojis and call-to-action
+- 10-15 hashtags at end of caption (#NBA #Reels #Explore #Lakers etc.)
+- No separate title - ONE caption field
+` : ''}
 
-    twitch: `Generate YouTube metadata for this Twitch clips ${isShort ? 'Short' : 'compilation'}.
+Output as JSON with this structure:
+{
+  ${needsYouTube ? '"youtube": { "title": "...", "description": "...", "hashtags": [...], "pinnedComment": "..." },' : ''}
+  ${needsTikTok ? '"tiktok": { "caption": "..." },' : ''}
+  ${needsInstagram ? '"instagram": { "caption": "..." }' : ''}
+}`,
+
+    news: `Generate publish metadata for this world news ${isShort ? 'Short' : 'compilation'} for ${platforms.join(', ')}.
 
 Date: ${date}
-Streamers featured: ${streamers.join(', ') || 'Multiple streamers'}
 Script excerpt:
 ${scriptExcerpt}...
 
-Requirements:
-- **Title:** ${isShort ? '50-80' : '50-100'} chars max, include "${isShort ? 'Twitch Highlights #Shorts' : 'Twitch Highlights'}", streamer names, funny/engaging hook
-- **Description:** ${isShort ? '100-150 words' : 'List each streamer with Twitch link (twitch.tv/username), what they did, subscribe CTA'}
-- **Hashtags:** ${isShort ? '10-15' : '5-8'} tags (#Twitch, #TwitchClips, #Shorts if short, streamer names, #Gaming)
-- **Pinned Comment:** Ask which clip was funniest or most shocking
+${needsYouTube ? `
+**YOUTUBE:**
+- Title: ${isShort ? '50-80' : '50-100'} chars, main story hook
+- Description: ${isShort ? '100-150 words' : '200-300 words'}, story summaries, subscribe CTA
+- Hashtags: ${isShort ? '10-15' : '5-8'} tags (#News, #WorldNews, topic-specific)
+- Pinned Comment: Ask which story concerns viewers most
+` : ''}
+${needsTikTok ? `
+**TIKTOK:**
+- Caption: 90-150 chars, urgent/compelling hook with emojis
+- Mix 4-6 hashtags (#News #Breaking #FYP #ForYou)
+- ONE caption field (no separate title/description)
+` : ''}
+${needsInstagram ? `
+**INSTAGRAM:**
+- Caption: Hook in first 125 chars, full story summary, emojis, line breaks
+- 10-15 hashtags at end (#News #WorldNews #Reels #Explore)
+- ONE caption field
+` : ''}
 
-Output as JSON: { "title": "...", "description": "...", "hashtags": ["#Twitch", ...], "pinnedComment": "..." }`
+Output as JSON:
+{
+  ${needsYouTube ? '"youtube": { "title": "...", "description": "...", "hashtags": [...], "pinnedComment": "..." },' : ''}
+  ${needsTikTok ? '"tiktok": { "caption": "..." },' : ''}
+  ${needsInstagram ? '"instagram": { "caption": "..." }' : ''}
+}`,
+
+    twitch: `Generate publish metadata for this Twitch clips ${isShort ? 'Short' : 'compilation'} for ${platforms.join(', ')}.
+
+Date: ${date}
+Streamers: ${streamers.join(', ') || 'Multiple streamers'}
+Script excerpt:
+${scriptExcerpt}...
+
+${needsYouTube ? `
+**YOUTUBE:**
+- Title: ${isShort ? '50-80' : '50-100'} chars, streamer names + funny hook
+- Description: ${isShort ? '100-150 words' : 'List each streamer with Twitch link, what they did, subscribe CTA'}
+- Hashtags: ${isShort ? '10-15' : '5-8'} tags (#Twitch, streamer names, #Gaming)
+- Pinned Comment: Ask which clip was funniest
+` : ''}
+${needsTikTok ? `
+**TIKTOK:**
+- Caption: 90-150 chars, funniest moment hook with emojis
+- Mix 4-6 hashtags (#Twitch #Gaming #FYP #ForYou)
+- Include streamer names naturally
+` : ''}
+${needsInstagram ? `
+**INSTAGRAM:**
+- Caption: Hook + clip description with emojis, line breaks for readability
+- 10-15 hashtags (#Twitch #Gaming #Reels #Explore #StreamerName)
+- Tag streamers if possible: @streamername
+` : ''}
+
+Output as JSON:
+{
+  ${needsYouTube ? '"youtube": { "title": "...", "description": "...", "hashtags": [...], "pinnedComment": "..." },' : ''}
+  ${needsTikTok ? '"tiktok": { "caption": "..." },' : ''}
+  ${needsInstagram ? '"instagram": { "caption": "..." }' : ''}
+}`
   };
 
-  const systemPrompt = `You generate YouTube video metadata for ClipzWorld News (@clipznashite).
+  const systemPrompt = `You generate multi-platform publish metadata for ClipzWorld News (@clipznashite).
 
 ${prompts[contentType] || prompts.twitch}
 
 STRICT RULES:
-- Title must be under 100 characters (YouTube limit)
-- Description must include "ClipzWorld News" and "Subscribe for daily updates"
-- Always include #ClipzWorldNews in hashtags
-- Pinned comment should drive engagement (questions, predictions, reactions)
-- Output ONLY valid JSON, no markdown, no explanation
-- Use double quotes for all strings in JSON`;
+- YouTube titles: max 100 chars (hard limit)
+- TikTok captions: optimal 90-150 chars for engagement (max 2200)
+- Instagram captions: hook in first 125 chars (gets truncated)
+- All platforms: include "ClipzWorld News" or "@clipznashite" mention
+- Hashtags: platform-appropriate (#Shorts for YouTube, #FYP for TikTok, #Reels for Instagram)
+- Output ONLY valid JSON, no markdown code blocks, no explanation
+- Use double quotes for all JSON strings`;
 
   try {
     const client = new Anthropic();
@@ -4435,33 +4500,65 @@ STRICT RULES:
 
     const metadata = JSON.parse(jsonMatch[0]);
 
-    // Validate and sanitize
-    if (!metadata.title || !metadata.description) {
-      throw new Error('Missing required fields: title or description');
+    // Validate platform-specific metadata
+    if (needsYouTube && metadata.youtube) {
+      // Enforce YouTube title length (hard limit is 100 chars)
+      if (metadata.youtube.title && metadata.youtube.title.length > 100) {
+        console.warn(`[publish-copy] YouTube title too long (${metadata.youtube.title.length} chars), truncating...`);
+        metadata.youtube.title = metadata.youtube.title.substring(0, 97) + '...';
+      }
+
+      // Ensure hashtags is array
+      if (!Array.isArray(metadata.youtube.hashtags)) {
+        metadata.youtube.hashtags = [];
+      }
+
+      // Add metrics
+      metadata.youtube.titleLength = metadata.youtube.title?.length || 0;
+      metadata.youtube.descriptionLength = metadata.youtube.description?.length || 0;
+      metadata.youtube.hashtagCount = metadata.youtube.hashtags?.length || 0;
     }
 
-    // Enforce title length (YouTube hard limit is 100 chars)
-    if (metadata.title.length > 100) {
-      console.warn(`[publish-copy] Title too long (${metadata.title.length} chars), truncating...`);
-      metadata.title = metadata.title.substring(0, 97) + '...';
+    if (needsTikTok && metadata.tiktok) {
+      metadata.tiktok.captionLength = metadata.tiktok.caption?.length || 0;
     }
 
-    // Ensure hashtags is array
-    if (!Array.isArray(metadata.hashtags)) {
-      metadata.hashtags = [];
+    if (needsInstagram && metadata.instagram) {
+      metadata.instagram.captionLength = metadata.instagram.caption?.length || 0;
     }
 
-    // Add metrics
-    metadata.titleLength = metadata.title.length;
-    metadata.descriptionLength = metadata.description.length;
-    metadata.hashtagCount = metadata.hashtags.length;
+    // Log summary
+    const summary = platforms.map(p => {
+      if (p === 'youtube' && metadata.youtube) {
+        return `YouTube: ${metadata.youtube.titleLength} char title, ${metadata.youtube.hashtagCount} hashtags`;
+      }
+      if (p === 'tiktok' && metadata.tiktok) {
+        return `TikTok: ${metadata.tiktok.captionLength} char caption`;
+      }
+      if (p === 'instagram' && metadata.instagram) {
+        return `Instagram: ${metadata.instagram.captionLength} char caption`;
+      }
+      return null;
+    }).filter(Boolean).join(', ');
 
-    console.log(`[publish-copy] Generated metadata: title=${metadata.titleLength} chars, description=${metadata.descriptionLength} chars, hashtags=${metadata.hashtagCount}`);
+    console.log(`[publish-copy] Generated metadata: ${summary}`);
 
-    res.json({
-      ok: true,
-      ...metadata
-    });
+    // Backward compatibility: if only YouTube requested, return flat structure
+    if (platforms.length === 1 && platforms[0] === 'youtube' && metadata.youtube) {
+      res.json({
+        ok: true,
+        ...metadata.youtube,  // Flat structure for backward compatibility
+        platforms: { youtube: metadata.youtube }  // Also include nested for future use
+      });
+    } else {
+      res.json({
+        ok: true,
+        platforms: metadata,
+        // Add convenience fields if all platforms have same content type
+        contentType,
+        formType
+      });
+    }
 
   } catch (err) {
     console.error('[publish-copy] Error:', err.message);
