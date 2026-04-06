@@ -163,17 +163,17 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   // ── Line 1: Streamer name (gold / white) ─────────────────────────
   ctx.textAlign    = 'center';
   ctx.fillStyle    = scheme.text1;
-  ctx.font         = 'bold 36px Arial';
+  ctx.font         = 'bold 48px Arial';
   ctx.fillText(name, CX, CY + R + 48);
 
   // ── Line 2: Origin ───────────────────────────────────────────────
   ctx.fillStyle = scheme.text2;
-  ctx.font      = 'normal 24px Arial';
+  ctx.font      = 'normal 32px Arial';
   ctx.fillText(origin, CX, CY + R + 82);
 
   // ── Line 3: Fact (italic) ────────────────────────────────────────
   ctx.fillStyle = scheme.text3;
-  ctx.font      = 'italic 20px Arial';
+  ctx.font      = 'italic 26px Arial';
   // Wrap long facts
   const words = fact.split(' ');
   let line = '', y = CY + R + 114;
