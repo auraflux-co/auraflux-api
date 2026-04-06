@@ -115,10 +115,11 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   // Try multiple filename patterns in order
   const filenamePatterns = [
     { name: twitchUsername, label: 'twitchUsername' },
+    { name: displayName ? `profile_${displayName}` : '', label: 'profile_displayName' },
+    { name: onAirName ? `profile_${onAirName}` : '', label: 'profile_onAirName' },
     { name: displayName, label: 'displayName' },
-    { name: displayName.toLowerCase(), label: 'displayName (lowercase)' },
     { name: onAirName, label: 'onAirName' }
-  ].filter(p => p.name); // Remove empty strings
+  ].filter(p => p.name); // Remove empty patterns
 
   let localImagePath = null;
   for (const pattern of filenamePatterns) {
