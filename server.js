@@ -183,21 +183,41 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
 
   // ── Line 3: Fact (italic) ────────────────────────────────────────
   ctx.fillStyle = scheme.text3;
-  ctx.font      = 'italic 26px Arial';
-  // Wrap long facts
-  const words = fact.split(' ');
-  let line = '', y = CY + R + 114;
-  for (const w of words) {
-    const test = line ? line + ' ' + w : w;
-    if (ctx.measureText(test).width > W - 30) {
-      ctx.fillText(line, CX, y);
-      line = w;
-      y += 26;
-    } else {
-      line = test;
+
+  // Dynamic font sizing: reduce by 2px if text exceeds 2 lines, down to 18px minimum
+  let fontSize = 26;
+  let lines = [];
+  const maxLines = 2;
+  const maxWidth = W - 30;
+
+  while (fontSize >= 18) {
+    ctx.font = `italic ${fontSize}px Arial`;
+    lines = [];
+    const words = fact.split(' ');
+    let line = '';
+
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w;
+      if (ctx.measureText(test).width > maxWidth) {
+        lines.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
     }
+    if (line) lines.push(line);
+
+    if (lines.length <= maxLines) break;
+    fontSize -= 2;
   }
-  ctx.fillText(line, CX, y);
+
+  // Draw the lines
+  const lineHeight = fontSize;
+  let y = CY + R + 114;
+  for (const line of lines) {
+    ctx.fillText(line, CX, y);
+    y += lineHeight;
+  }
 
   ctx.shadowColor = 'transparent';
 
