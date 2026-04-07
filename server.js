@@ -772,6 +772,15 @@ app.get('/health', (req, res) => {
   });
 });
 
+// ── Serve HTML thumbnail/overlay tools ──────────────────────────────
+app.get('/news-tool', (req, res) => {
+  res.sendFile(path.join(__dirname, 'cwn_news_tool.html'));
+});
+
+app.get('/newscast-overlay', (req, res) => {
+  res.sendFile(path.join(__dirname, 'clipzworld_newscast.html'));
+});
+
 // ── POST /assemble ────────────────────────────────────────────────
 // ── GOOGLE DRIVE AUTO-UPLOAD ──────────────────────────────────────
 // Uses a service account key at ~/Downloads/cwn-drive-key.json
