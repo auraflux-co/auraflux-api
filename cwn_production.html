@@ -3353,42 +3353,29 @@ function fetchNBAScoreboard(dateStr) {
         };
         NBA_GAMES.push(gameEntry);
 
-        // Fetch summary to find "Game Highlights" video
+        // Use backend scraper to find highest duration video
         var xS = new XMLHttpRequest();
-        xS.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event='+ev.id,true);
-        xS.timeout=8000;
+        xS.open('POST','http://localhost:3000/nba/scrape-game-highlight',true);
+        xS.setRequestHeader('Content-Type','application/json');
+        xS.timeout=10000;
         xS.onload=function(){
           try{
-            var s=JSON.parse(xS.responseText);
-            var videos=s.videos||[];
-            var hlVid = null;
-            // Look for exact "Game Highlights" match first, then any containing "Highlights"
-            for(var i=0;i<videos.length;i++){
-              var t=(videos[i].headline||videos[i].title||videos[i].description||'').toLowerCase();
-              if(t.indexOf('game highlights')>-1){ hlVid=videos[i]; break; }
-            }
-            if(!hlVid){ for(var j=0;j<videos.length;j++){
-              var t2=(videos[j].headline||videos[j].title||videos[j].description||'').toLowerCase();
-              if(t2.indexOf('highlights')>-1){ hlVid=videos[j]; break; }
-            }}
-            if(hlVid){
+            var result=JSON.parse(xS.responseText);
+            if(result.ok && result.videoUrl){
               gameEntry.hasHighlights=true;
-              gameEntry.highlightTitle=hlVid.headline||hlVid.title||hlVid.description||'Game Highlights';
-              gameEntry.highlightId=hlVid.id||'';
-              // Extract best available direct video URL for FFmpeg
-              var links = hlVid.links||{};
-              var src = links.source||{};
-              gameEntry.clipUrl = src.HD&&src.HD.href || src.mezzanine&&src.mezzanine.href
-                || src.href || (links.mobile&&links.mobile.href) || '';
-              // Also store duration in seconds if available
-              gameEntry.clipDuration = hlVid.duration||null;
+              gameEntry.highlightTitle=result.title||'Game Highlights';
+              gameEntry.highlightId='';
+              gameEntry.clipUrl=result.videoUrl;
+              gameEntry.clipDuration=result.duration||null;
+              gameEntry.thumbnail=result.thumbnail||'';
+              console.log('[NBA] Found highest duration video for '+ev.id+': '+result.duration+'s');
             }
-          }catch(e){}
+          }catch(e){ console.warn('[NBA] Scrape failed for '+ev.id+':',e.message); }
           done++;
           if(done>=finalGames.length) renderNBAGamePicker();
         };
         xS.onerror=xS.ontimeout=function(){ done++; if(done>=finalGames.length) renderNBAGamePicker(); };
-        xS.send();
+        xS.send(JSON.stringify({gameId:ev.id}));
       });
     }catch(e){ g('nba-fetch-status').textContent='Error: '+e.message; }
   };
