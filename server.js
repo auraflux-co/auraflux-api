@@ -472,6 +472,139 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   console.log(`[intro-card] ✅ ${variant.toUpperCase()} card written: ${require('path').basename(outputPath)} (${name})`);
 }
 
+// ── Generate NBA/News Intro Card (Square Design) ────────────────────
+// For NBA: game thumbnail in square
+// For News: story image in square
+// Same placement as Twitch card (right of Bobby G during intro)
+async function generateGameStoryCardPNG(cardData, outputPath, contentType) {
+  const canvasModule = require('canvas');
+  const { createCanvas, loadImage } = canvasModule;
+
+  // ── Dimensions (same as Twitch card for consistency) ────────────────
+  const W = 720, H = 840;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext('2d');
+
+  // ── Color schemes ────────────────────────────────────────────────────
+  const schemes = {
+    nba: {
+      border: '#17408B',  // NBA Blue
+      accent: '#C9082A',  // NBA Red
+      bg: '#1a2540',      // Dark background
+      text1: '#ffffff',   // Title text
+      text2: '#c7af4f'    // CWN Gold for secondary
+    },
+    news: {
+      border: '#22304b',  // CWN Navy
+      accent: '#c7af4f',  // CWN Gold
+      bg: '#1a2540',      // Dark background
+      text1: '#ffffff',   // Title text
+      text2: '#c7af4f'    // CWN Gold for secondary
+    }
+  };
+
+  const scheme = schemes[contentType] || schemes.news;
+
+  // ── Extract data ─────────────────────────────────────────────────────
+  const title = cardData.title || cardData.gameTitle || 'GAME';
+  const subtitle = cardData.subtitle || cardData.score || '';
+  const imageUrl = cardData.imageUrl || cardData.thumbnailUrl || null;
+
+  // ── Clear canvas ─────────────────────────────────────────────────────
+  ctx.clearRect(0, 0, W, H);
+
+  // ── Background ───────────────────────────────────────────────────────
+  ctx.fillStyle = scheme.bg;
+  const pad = 24;
+  ctx.beginPath();
+  ctx.roundRect(pad, pad, W - pad * 2, H - pad * 2, 40);
+  ctx.fill();
+
+  // ── Square image in center ───────────────────────────────────────────
+  const CX = W / 2, CY = 330;
+  const SQUARE_SIZE = 440; // 440x440 square
+
+  if (imageUrl) {
+    try {
+      const img = await loadImage(imageUrl);
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // Draw square image
+      const x = CX - SQUARE_SIZE / 2;
+      const y = CY - SQUARE_SIZE / 2;
+      ctx.drawImage(img, x, y, SQUARE_SIZE, SQUARE_SIZE);
+
+      // Border around image (accent color)
+      ctx.strokeStyle = scheme.accent;
+      ctx.lineWidth = 8;
+      ctx.strokeRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
+
+      ctx.restore();
+    } catch (e) {
+      // Image failed — draw placeholder
+      const x = CX - SQUARE_SIZE / 2;
+      const y = CY - SQUARE_SIZE / 2;
+      ctx.fillStyle = '#2a3550';
+      ctx.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
+      ctx.strokeStyle = scheme.accent;
+      ctx.lineWidth = 8;
+      ctx.strokeRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
+      console.warn(`[game-story-card] Image failed for ${title}: ${e.message}`);
+    }
+  }
+
+  // ── Drop shadow behind text ─────────────────────────────────────────
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur = 16;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 4;
+
+  // ── Title text (below image) ────────────────────────────────────────
+  ctx.textAlign = 'center';
+  ctx.fillStyle = scheme.text1;
+  ctx.font = 'bold 64px Arial';
+
+  // Word wrap title if too long
+  const maxWidth = W - 80;
+  let titleLines = [];
+  const titleWords = title.split(' ');
+  let currentLine = '';
+
+  for (const word of titleWords) {
+    const test = currentLine ? currentLine + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && currentLine) {
+      titleLines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = test;
+    }
+  }
+  if (currentLine) titleLines.push(currentLine);
+
+  // Draw title lines
+  let y = CY + SQUARE_SIZE / 2 + 80;
+  for (const line of titleLines.slice(0, 2)) { // Max 2 lines
+    ctx.fillText(line, CX, y);
+    y += 72;
+  }
+
+  // ── Subtitle text (score/details) ───────────────────────────────────
+  if (subtitle) {
+    ctx.fillStyle = scheme.text2;
+    ctx.font = 'normal 48px Arial';
+    ctx.fillText(subtitle, CX, y);
+  }
+
+  ctx.shadowColor = 'transparent';
+
+  // ── Save PNG ────────────────────────────────────────────────────────
+  const buf = canvas.toBuffer('image/png');
+  require('fs').writeFileSync(outputPath, buf);
+  console.log(`[game-story-card] ✅ ${contentType.toUpperCase()} card written: ${require('path').basename(outputPath)} (${title})`);
+}
+
 
 async function downloadFile(url, destPath) {
   // SSRF Protection: Validate URL is from trusted domains
@@ -1651,10 +1784,12 @@ app.post('/assemble', async (req, res) => {
           localFiles[i].includes(`${asmId}_${si}_`)
         )?.label || '';
 
-        // ── Streamer intro card burn ───────────────────────────────
+        // ── Intro card burn (Twitch, NBA, News) ─────────────────────
         // If this is an INTRO segment (not cold open, not outro), burn the intro card
         const isIntro = /\(INTRO\)/i.test(label) && !/cold.open/i.test(label);
-        if (isIntro && streamerRoster.length && contentType === 'twitch') {
+
+        if (isIntro && contentType === 'twitch' && streamerRoster.length) {
+          // ── Twitch: Circular streamer card ────────────────────────
           // Extract streamer name from label e.g. "JASON (INTRO)" → "Jason"
           const streamerMatch = label.match(/^(.+?)\s*\(INTRO\)/i);
           const streamerName  = streamerMatch ? streamerMatch[1].trim() : '';
@@ -1740,6 +1875,68 @@ app.post('/assemble', async (req, res) => {
             } catch(e) {
               log(asmId, `  ⚠️  Intro card burn failed for ${streamerName}: ${e.message} — using original`);
             }
+          }
+        } else if (isIntro && (contentType === 'nba' || contentType === 'news')) {
+          // ── NBA/News: Square game/story card ──────────────────────
+          try {
+            // Extract game/story info from segment data
+            const seg = segsToProcess.find((s, si) => localFiles[i].includes(`${asmId}_${si}_`));
+            const cardData = seg?.cardData || {};
+
+            // NBA: Use game thumbnail from assets or provided URL
+            // News: Use story thumbnailUrl from RSS feed
+            const imageUrl = cardData.imageUrl || cardData.thumbnailUrl || null;
+            const title = cardData.title || (contentType === 'nba' ? 'GAME' : 'STORY');
+            const subtitle = cardData.subtitle || cardData.score || '';
+
+            if (imageUrl) {
+              const cardPngPath = path.join(TMP_DIR, `${contentType}_card_${Date.now()}.png`);
+
+              await generateGameStoryCardPNG(
+                { title, subtitle, imageUrl },
+                cardPngPath,
+                contentType
+              );
+
+              const burnedPath = inputForTS.replace('.mp4', '_intro_burned.mp4');
+              const introDur = 3.5;
+
+              const burnArgs = [
+                '-i', inputForTS, '-i', cardPngPath,
+                '-filter_complex', `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
+                '-map', '[out]', '-map', '0:a',
+                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                '-pix_fmt', 'yuv420p',
+                '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
+              ];
+
+              await new Promise((res, rej) => {
+                const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
+                let burnStderr = '';
+                proc.stderr && proc.stderr.on('data', d => { burnStderr += d.toString(); });
+                proc.on('close', code => {
+                  if (code === 0) res();
+                  else {
+                    const reason = burnStderr.slice(-300).replace(/\n/g, ' ').trim();
+                    console.error(`[intro-burn] FFmpeg exit ${code} for ${contentType}: ${reason}`);
+                    rej(new Error(`Intro burn failed: ${code} — ${reason}`));
+                  }
+                });
+                proc.on('error', rej);
+              });
+
+              if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
+                inputForTS = burnedPath;
+                log(asmId, `  🖼  ${contentType.toUpperCase()} intro card burned: ${title}`);
+              }
+
+              // Clean up temp card PNG
+              try { if (fs.existsSync(cardPngPath)) fs.unlinkSync(cardPngPath); } catch(e) {}
+            } else {
+              log(asmId, `  ⚠️  No image URL for ${contentType} intro card — skipping`);
+            }
+          } catch(e) {
+            log(asmId, `  ⚠️  ${contentType.toUpperCase()} intro card burn failed: ${e.message} — using original`);
           }
         }
 
@@ -2635,6 +2832,84 @@ app.post('/capture-ticker', async (req, res) => {
   captureTicker(contentType).catch(e => console.warn('[ticker] Background capture failed:', e.message));
 });
 
+// ── POST /nba/scrape-game-highlight ─────────────────────────────────
+// Scrapes the ESPN game page for the video with the highest duration
+// User requirement: "video on that page with the highest duration--top left of the game_id page"
+app.post('/nba/scrape-game-highlight', async (req, res) => {
+  const { gameId } = req.body;
+  if (!gameId) return res.status(400).json({ error: 'gameId required' });
+
+  try {
+    console.log(`[nba-scrape] Fetching game summary for gameId: ${gameId}`);
+
+    // Step 1: Fetch ESPN game summary API (contains videos)
+    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
+    const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
+    const videos = summaryResp.data.videos || [];
+
+    if (!videos.length) {
+      console.warn(`[nba-scrape] No videos found for game ${gameId}`);
+      return res.json({ ok: false, error: 'No videos found' });
+    }
+
+    console.log(`[nba-scrape] Found ${videos.length} videos for game ${gameId}`);
+
+    // Step 2: Find video with highest duration
+    let highestDurationVideo = null;
+    let maxDuration = 0;
+
+    for (const video of videos) {
+      const duration = video.duration || 0;
+      const title = video.headline || video.title || video.description || '';
+
+      console.log(`[nba-scrape]   Video: "${title}" (${duration}s)`);
+
+      if (duration > maxDuration) {
+        maxDuration = duration;
+        highestDurationVideo = video;
+      }
+    }
+
+    if (!highestDurationVideo) {
+      console.warn(`[nba-scrape] No valid video with duration found`);
+      return res.json({ ok: false, error: 'No video with duration found' });
+    }
+
+    // Step 3: Extract best quality video URL
+    const links = highestDurationVideo.links || {};
+    const source = links.source || {};
+    const videoUrl = source.HD?.href
+      || source.mezzanine?.href
+      || source.full?.href
+      || source.href
+      || links.mobile?.href
+      || '';
+
+    // Also extract thumbnail
+    const thumbnail = highestDurationVideo.thumbnail || '';
+
+    const result = {
+      ok: true,
+      gameId,
+      videoUrl,
+      thumbnail,
+      title: highestDurationVideo.headline || highestDurationVideo.title || 'Game Highlights',
+      description: highestDurationVideo.description || '',
+      duration: maxDuration,
+      videoCount: videos.length
+    };
+
+    console.log(`[nba-scrape] ✅ Selected highest duration video: "${result.title}" (${maxDuration}s)`);
+    console.log(`[nba-scrape]    URL: ${videoUrl.slice(0, 80)}...`);
+
+    res.json(result);
+
+  } catch (err) {
+    console.error(`[nba-scrape] Error:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── POST /twitch-clip-url ────────────────────────────────────────
 // Resolves a Twitch clip page URL or slug to a direct MP4 download URL.
 // Uses Twitch's GQL API (same method used by yt-dlp, streamlink, etc.)
@@ -3066,11 +3341,11 @@ SCRIPT FORMAT — use === SECTION HEADERS === exactly as shown.
 Target: 120-150 words of SPOKEN TEXT per game segment (90 seconds of delivery).
 The cold open and outro are short. Every game segment must be fully written and dense.
 COLD OPEN — ALWAYS use this EXACT wording, no variation:
-"Hello everyone! You are tuning into The Daily Update brought to you by ClipzWorld News. Where we appreciate all of yesterday's games in the association. I am your host Bobby G. Let's get to it."
+"Hello everyone! You are tuning into Witness the NBA brought to you by ClipzWorld News. Where we appreciate all of yesterday's games in the association. I am your host Bobby G. Let's get to it."
 Do not improvise the cold open. This line is fixed for every compilation.
 
 OUTRO — ALWAYS use this EXACT wording, no variation:
-"Well everybody, that does it for another edition of The Daily Update brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Go play a pick-up game today. Let us know how you did in the comments. Appreciate you!"
+"Well everybody, that does it for another edition of Witness the NBA brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Go play a pick-up game today. Let us know how you did in the comments. Appreciate you!"
 Do not improvise the outro. This line is fixed for every compilation.
 
 DELIVERY NOTE — OUTRO: "Appreciate you!" must be on its own line after [beat]. Warm. Genuine. Give it room.
@@ -3081,33 +3356,45 @@ This means: the intro sets up the game, then [CLIP PLAYS HERE] begins, and the a
 plays as audio OVER the video highlight. The avatar is not seen during clips — only heard.
 Write all game commentary assuming it will play as voiceover during the highlight clip.`,
 
-news: `You write scripts for ClipzWorld News (@clipznashite), a deadpan world news show. The anchor reads every word — there are no external clips, so every second of airtime is spoken content.
+news: `You write scripts for ClipzWorld News (@clipznashite), a deadpan world news show. Same rhythm as Twitch: setup → clip → reaction.
 
 VOICE — two sources blended:
 • Norm MacDonald Weekend Update: flat delivery, zero warmth, the world is absurd and we are simply reporting it. "Hi, I'm Norm MacDonald and this is the news."
 • Daily Show Jon Stewart: the observation must make the headline MORE alarming, not less. "I urge you not to think about it too hard." Never explain the observation.
 
 STRICT RULES:
-- State the headline exactly as it happened. No adjectives, no color.
-- Include: headline → context (2-3 sentences) → one flat observation → source credit
+- Each story follows: setup (2-3 sentences) → [beat] → [CLIP PLAYS HERE] → [beat] → reaction (1 sentence, flat)
+- Setup: headline + context, establishes what happened
+- Reaction: ONE flat observation after the clip. Short. Deadpan. Make it MORE alarming, not less.
 - Never say "shocking", "alarming", "incredible", "wild"
 - Never explain the observation — state it, period, move on
-- [beat] = pause, use freely between every sentence
+- [beat] = pause, use freely between sentences
+- [CLIP PLAYS HERE] = structural marker, keep it, it is not spoken
 - Write every single line — no brackets, no placeholders whatsoever
 - This is long-form. Every story needs FULL CONTENT.
 
 SCRIPT FORMAT — use === SECTION HEADERS === exactly as shown.
-Target: 130-160 words of SPOKEN TEXT per story (60-75 seconds of delivery).
+Target: 80-120 words of SPOKEN TEXT per story (setup + reaction, clip audio stripped).
 The cold open and outro are short. Every story segment must be fully written and dense.
 COLD OPEN — ALWAYS use this EXACT wording, no variation:
-"Hello everyone! You are tuning into The Daily Update brought to you by ClipzWorld News. Where we bring you the most impactful news stories of the day, our way, the CWN way. I am your host Bobby G. Let's get to it."
+"Hello everyone! You are tuning into Because the Light Was On brought to you by ClipzWorld News. Where we bring you the most impactful news stories of the day, our way, the CWN way. I am your host Bobby G. Let's get to it."
 Do not improvise the cold open. This line is fixed for every compilation.
 
 OUTRO — ALWAYS use this EXACT wording, no variation:
-"Well everybody, that does it for another edition of The Daily Update brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the stories covered concerns you the most. Appreciate you!"
+"Well everybody, that does it for another edition of Because the Light Was On brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the stories covered concerns you the most. Appreciate you!"
 Do not improvise the outro. This line is fixed for every compilation.
 
-DELIVERY NOTE — OUTRO: "Appreciate you!" must be on its own line after [beat]. Warm. Genuine. Give it room.`,
+DELIVERY NOTE — OUTRO: "Appreciate you!" must be on its own line after [beat]. Warm. Genuine. Give it room.
+
+NEWS STRUCTURE — IMPORTANT:
+Each story follows the same rhythm as Twitch:
+[Setup — 2-3 sentences. Headline + context. What happened and why it matters. Sets up the clip.]
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+[ONE flat reaction sentence. Short. Deadpan. Makes the story MORE alarming, not less. Could be a non-sequitur.]
+[beat]
+Source: [Source name]. Link in description.`,
 
 twitch: `You write scripts for ClipzWorld News (@clipznashite), a deadpan Twitch clip reaction show.
 
@@ -3128,11 +3415,11 @@ SCRIPT FORMAT — use === SECTION HEADERS === exactly as shown.
 Target: 80-100 words of SPOKEN TEXT per streamer (45 seconds before and after clip).
 
 COLD OPEN — ALWAYS use this EXACT text, word for word, no variation:
-"Hello everyone! You are tuning into The Daily Update brought to you by ClipzWorld News. Where we appreciate our favorite streamers on Twitch. I am your host Bobby G. Let's get to it."
+"Hello everyone! You are tuning into Twitch Soup brought to you by ClipzWorld News. Where we appreciate our favorite streamers on Twitch. I am your host Bobby G. Let's get to it."
 This is the ONLY acceptable cold open for Twitch compilations. Do not improvise it.
 
 OUTRO — ALWAYS use this EXACT text, word for word, no variation:
-"Well everybody, that does it for another edition of The Daily Update brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the clips you liked the most. Appreciate you!"
+"Well everybody, that does it for another edition of Twitch Soup brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the clips you liked the most. Appreciate you!"
 This is the ONLY acceptable outro for Twitch compilations. Do not improvise it.
 
 DELIVERY NOTE — OUTRO: "Appreciate you!" must feel warm and genuine. Write it on its own line after a [beat] so HeyGen delivers it with weight. Never rush it.
@@ -3799,9 +4086,11 @@ Write the FULL SCRIPT using exactly:
 Fully written, no brackets, no placeholders.
 Target: 50-70 words spoken total. One headline, one observation, done.`;
       } else {
+        const sectionHeaders = items.map((s,i) => '- === STORY ' + (i+1) + ' OF ' + items.length + ' ===').join('\n');
+
         userPrompt = `Write the COMPLETE ClipzWorld News world news script for ${dateStr}.
 
-${items.length} stor${items.length > 1 ? 'ies' : 'y'} total.
+${items.length} stor${items.length > 1 ? 'ies' : 'y'} total. ${items.length} [CLIP PLAYS HERE] markers required (one per story).
 
 STORY DATA:
 ${items.map((s, i) => `
@@ -3815,13 +4104,30 @@ Gemini visual/video analysis: ${analyses[i] || 'Not available — use article te
 
 Write the FULL SCRIPT using these === SECTION HEADERS === exactly:
 - === COLD OPEN (0:00 - 0:08) ===
-${items.map((s,i) => '- === STORY ' + (i+1) + ' OF ' + items.length + ' ===').join('\n')}
+${sectionHeaders}
 - === OUTRO ===
 
-Every story FULLY WRITTEN — no placeholder brackets.
-Use article text AND Gemini analysis for accurate, specific content.
-Use [beat] between every sentence. Include: headline → 2-3 sentences context → one flat observation → source credit.
-Target: 130-160 words spoken per story. Anchor speaks ENTIRE runtime — make it dense.`;
+CRITICAL — CLIP STRUCTURE FOR EACH STORY:
+Each story section must contain EXACTLY 1 [CLIP PLAYS HERE] marker.
+Structure for EACH story section — follow this EXACTLY:
+
+[Story setup — 2-3 sentences. Headline + context. What happened and why it matters. Sets up the clip.]
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+[ONE flat reaction sentence. Short. Deadpan. Makes the story MORE alarming, not less. Could be a non-sequitur.]
+[beat]
+Source: [Source name]. Link in description.
+
+RULES:
+- Setup: 2-3 sentences — establishes the story with headline + context
+- Reaction: EXACTLY 1 sentence — short, flat, punchy. Makes it MORE alarming, not less.
+- [beat] = pause — use before and after every clip
+- Never explain the observation in a reaction. Never recap what just happened.
+- Same rhythm as Twitch: setup → clip → reaction
+
+Total [CLIP PLAYS HERE] count must be exactly ${items.length}.
+Target: 80-120 words spoken per story (setup + reaction, clip audio is stripped).`;
       }
 
     } else { // twitch, twitch-short
@@ -5356,6 +5662,210 @@ app.post('/burn-streamer-intro', async (req, res) => {
   }
 });
 
+// ── POST /capcut/split-screen ────────────────────────────────────
+// Creates split-screen short form video with CapCut API
+// Requirements: 9:16, 1080p, masking, keyframes, auto-captions, 60fps
+// Generates 3 platform-optimized variants (YouTube Shorts, TikTok, Instagram Reels)
+app.post('/capcut/split-screen', async (req, res) => {
+  const {
+    sourceVideoPath,      // Left side: news source video
+    bobbyGVideoPath,      // Right side: Bobby G reaction
+    caption,              // Gemini-generated caption
+    contentType = 'news', // news, nba, or twitch
+    platforms = ['youtube', 'tiktok', 'instagram']
+  } = req.body;
+
+  if (!sourceVideoPath || !bobbyGVideoPath) {
+    return res.status(400).json({ error: 'sourceVideoPath and bobbyGVideoPath required' });
+  }
+
+  const CAPCUT_API = 'http://localhost:9001';
+
+  try {
+    const platformVariants = {};
+
+    // Create a variant for each platform
+    for (const platform of platforms) {
+      console.log(`[capcut-split] Creating ${platform} variant...`);
+
+      // Step 1: Create draft (9:16, 1080p)
+      const draftResp = await axios.post(`${CAPCUT_API}/create_draft`, {
+        width: 1080,
+        height: 1920,
+        fps: 60
+      });
+
+      if (!draftResp.data.ok) {
+        throw new Error(`CapCut create_draft failed: ${draftResp.data.error || 'unknown error'}`);
+      }
+
+      const draftId = draftResp.data.draft_id;
+      console.log(`[capcut-split] Draft created: ${draftId}`);
+
+      // Step 2: Add source video (left 50%)
+      await axios.post(`${CAPCUT_API}/add_video`, {
+        draft_id: draftId,
+        video_path: sourceVideoPath,
+        track_index: 0,
+        x: 0,
+        y: 0,
+        width: 540,  // 50% of 1080
+        height: 1920,
+        start_time: 0,
+        mask_type: 'rectangle' // Optional: can add mask for rounded corners
+      });
+
+      // Step 3: Add Bobby G reaction (right 50%)
+      await axios.post(`${CAPCUT_API}/add_video`, {
+        draft_id: draftId,
+        video_path: bobbyGVideoPath,
+        track_index: 1,
+        x: 540,  // Right half
+        y: 0,
+        width: 540,
+        height: 1920,
+        start_time: 0,
+        mask_type: 'rectangle'
+      });
+
+      // Step 4: Add keyframes for dynamic zooms (platform-specific)
+      const zoomKeyframes = getZoomKeyframes(platform);
+      for (const kf of zoomKeyframes) {
+        await axios.post(`${CAPCUT_API}/add_video_keyframe`, {
+          draft_id: draftId,
+          track_index: kf.track,
+          time: kf.time,
+          scale: kf.scale,
+          x: kf.x,
+          y: kf.y
+        });
+      }
+
+      // Step 5: Add auto-captions (platform-specific style)
+      if (caption) {
+        const captionStyle = getCaptionStyle(platform);
+        await axios.post(`${CAPCUT_API}/add_subtitle`, {
+          draft_id: draftId,
+          text: caption,
+          font_size: captionStyle.fontSize,
+          font_color: captionStyle.color,
+          position: captionStyle.position,
+          animation: captionStyle.animation
+        });
+      }
+
+      // Step 6: Add platform-specific effects
+      const effects = getPlatformEffects(platform, contentType);
+      for (const effect of effects) {
+        await axios.post(`${CAPCUT_API}/add_effect`, {
+          draft_id: draftId,
+          effect_type: effect.type,
+          start_time: effect.start,
+          duration: effect.duration
+        });
+      }
+
+      // Step 7: Save draft and export (1080p/60fps)
+      const saveResp = await axios.post(`${CAPCUT_API}/save_draft`, {
+        draft_id: draftId,
+        output_path: path.join(OUTPUT_DIR, `split_screen_${platform}_${Date.now()}.mp4`),
+        resolution: '1080p',
+        fps: 60,
+        quality: 'high'
+      });
+
+      if (!saveResp.data.ok) {
+        throw new Error(`CapCut save_draft failed for ${platform}: ${saveResp.data.error || 'unknown error'}`);
+      }
+
+      platformVariants[platform] = {
+        draftId,
+        outputPath: saveResp.data.output_path,
+        status: saveResp.data.status
+      };
+
+      console.log(`[capcut-split] ✅ ${platform} variant saved: ${saveResp.data.output_path}`);
+    }
+
+    res.json({
+      ok: true,
+      platforms: platformVariants,
+      caption
+    });
+
+  } catch (err) {
+    console.error('[capcut-split] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper: Get platform-specific zoom keyframes
+function getZoomKeyframes(platform) {
+  const keyframes = {
+    youtube: [
+      { track: 0, time: 0, scale: 1.0, x: 0, y: 0 },
+      { track: 0, time: 2, scale: 1.1, x: -20, y: -30 }, // Subtle zoom on source
+      { track: 1, time: 1, scale: 1.0, x: 540, y: 0 },
+      { track: 1, time: 3, scale: 1.05, x: 540, y: -20 }  // Subtle zoom on Bobby G
+    ],
+    tiktok: [
+      { track: 0, time: 0, scale: 1.0, x: 0, y: 0 },
+      { track: 0, time: 1.5, scale: 1.15, x: -30, y: -40 }, // More aggressive zoom
+      { track: 1, time: 0.5, scale: 1.0, x: 540, y: 0 },
+      { track: 1, time: 2.5, scale: 1.1, x: 540, y: -30 }
+    ],
+    instagram: [
+      { track: 0, time: 0, scale: 1.0, x: 0, y: 0 },
+      { track: 0, time: 2, scale: 1.08, x: -15, y: -20 }, // Gentle zoom
+      { track: 1, time: 1, scale: 1.0, x: 540, y: 0 },
+      { track: 1, time: 3, scale: 1.06, x: 540, y: -15 }
+    ]
+  };
+  return keyframes[platform] || keyframes.youtube;
+}
+
+// Helper: Get platform-specific caption style
+function getCaptionStyle(platform) {
+  const styles = {
+    youtube: {
+      fontSize: 48,
+      color: '#FFFFFF',
+      position: 'bottom',
+      animation: 'fade_in'
+    },
+    tiktok: {
+      fontSize: 52,
+      color: '#FFFFFF',
+      position: 'center_bottom',
+      animation: 'pop'
+    },
+    instagram: {
+      fontSize: 44,
+      color: '#FFFFFF',
+      position: 'bottom',
+      animation: 'slide_up'
+    }
+  };
+  return styles[platform] || styles.youtube;
+}
+
+// Helper: Get platform-specific effects
+function getPlatformEffects(platform, contentType) {
+  const effects = {
+    youtube: [
+      { type: 'color_correction', start: 0, duration: -1 } // Apply to entire video
+    ],
+    tiktok: [
+      { type: 'fast_zoom', start: 0, duration: 0.5 },
+      { type: 'shake', start: 2, duration: 0.3 }
+    ],
+    instagram: [
+      { type: 'soft_glow', start: 0, duration: -1 }
+    ]
+  };
+  return effects[platform] || [];
+}
+
 // ── Shorts Pipeline ───────────────────────────────────────────────
 // 9:16 vertical format for TikTok, Instagram Reels, YouTube Shorts
 // Uses the portrait avatar ID instead of landscape
@@ -5695,6 +6205,279 @@ app.get('/remediate-video/check/:jobId', (req, res) => {
   // Font check — if SYSTEM_FONT is null, intro cards will fail
   if (!SYSTEM_FONT) missed.push('intro_cards_no_font');
   res.json({ jobId, missed, fontPath: SYSTEM_FONT, logoPath: CWN_LOGO_PATH });
+});
+
+
+// ── POST /generate-thumbnail ──────────────────────────────────────
+// Thumbnail generator using HTML tools + reference images
+// - News: Uses cwn_news_tool.html via Puppeteer
+// - NBA: Uses reference NBA thumbnail JPG
+// - Twitch: Uses reference Ghostly Bobby G PNG
+//
+// Body: { contentType, date, storyTitle, storyImage, streamers[] }
+// Returns: { ok, thumbnailPath, episodeNum, contentType }
+
+app.post('/generate-thumbnail', async (req, res) => {
+  try {
+    const { contentType, date, streamers = [], storyImage = null, title = '', source = 'REACTION' } = req.body;
+
+    if (!['twitch', 'nba', 'news'].includes(contentType)) {
+      return res.status(400).json({ ok: false, error: 'Invalid contentType. Must be: twitch, nba, or news' });
+    }
+
+    // ── Step 1: Load and increment episode counter ─────────────────
+    const EPISODE_COUNTERS_PATH = path.join(__dirname, 'episode_counters.json');
+    let counters = { twitch: 1, nba: 1, news: 1 };
+
+    if (fs.existsSync(EPISODE_COUNTERS_PATH)) {
+      counters = JSON.parse(fs.readFileSync(EPISODE_COUNTERS_PATH, 'utf8'));
+    }
+
+    const episodeNum = counters[contentType] || 1;
+    counters[contentType] = episodeNum + 1;
+    fs.writeFileSync(EPISODE_COUNTERS_PATH, JSON.stringify(counters, null, 2));
+
+    // ── Step 2: Canvas setup (1280x720) ────────────────────────────
+    const canvasModule = require('canvas');
+    const { createCanvas, loadImage } = canvasModule;
+    const W = 1280, H = 720;
+    const canvas = createCanvas(W, H);
+    const ctx = canvas.getContext('2d');
+
+    // Brand colors
+    const colors = {
+      twitch: { primary: '#9146FF', secondary: '#c7af4f', navy: '#22304b', dark: '#1a2540' },
+      nba: { primary: '#17408B', secondary: '#C9082A', navy: '#22304b', gold: '#c7af4f', dark: '#060a12' },
+      news: { primary: '#22304b', secondary: '#c7af4f', red: '#c0392b', dark: '#060a12' }
+    };
+    const scheme = colors[contentType];
+
+    // ── Step 3: Content-specific designs ───────────────────────────
+    if (contentType === 'twitch') {
+      // ── TWITCH: Ghostly Bobby G with purple glow + streamer circles ───
+
+      // Dark navy gradient background
+      const gradient = ctx.createLinearGradient(0, 0, W, H);
+      gradient.addColorStop(0, '#0d1524');
+      gradient.addColorStop(0.5, '#1a2540');
+      gradient.addColorStop(1, scheme.navy);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, W, H);
+
+      // Ghostly Bobby G in center (hooded, dark, mysterious)
+      const bobbyGPath = path.join(__dirname, 'assets', 'bobbyg_short_form.png');
+      if (fs.existsSync(bobbyGPath)) {
+        const bobbyG = await loadImage(bobbyGPath);
+
+        // Draw Bobby G large and centered, slightly darkened
+        ctx.globalAlpha = 0.85;
+        ctx.filter = 'brightness(0.7) saturate(0.8)';
+        const bgSize = 500;
+        ctx.drawImage(bobbyG, W / 2 - bgSize / 2, H / 2 - bgSize / 2 + 20, bgSize, bgSize);
+        ctx.filter = 'none';
+        ctx.globalAlpha = 1.0;
+      }
+
+      // Streamer circles with purple glow (arrange in arc)
+      const centerX = W / 2;
+      const centerY = H / 2 + 40;
+      const radius = 320;
+      const circleSize = 100;
+      const glowSize = 20;
+
+      for (let i = 0; i < Math.min(9, streamers.length); i++) {
+        const angle = (i / 8) * Math.PI * 1.4 - (Math.PI * 0.7); // Arc from left to right
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius - 50;
+
+        const streamerName = streamers[i];
+        const profilePath = path.join(__dirname, 'assets', 'streamer_profiles', `${streamerName}.png`);
+
+        if (fs.existsSync(profilePath)) {
+          const img = await loadImage(profilePath);
+
+          // Purple glow effect
+          ctx.save();
+          ctx.shadowColor = scheme.primary;
+          ctx.shadowBlur = glowSize;
+          ctx.beginPath();
+          ctx.arc(x, y, circleSize / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.fillStyle = scheme.primary;
+          ctx.fill();
+          ctx.restore();
+
+          // Circular profile image
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(x, y, (circleSize / 2) - 4, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(img, x - circleSize / 2, y - circleSize / 2, circleSize, circleSize);
+          ctx.restore();
+
+          // Gold border
+          ctx.strokeStyle = scheme.secondary;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(x, y, (circleSize / 2) - 2, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      // Top left branding
+      ctx.font = '900 40px Arial';
+      ctx.fillStyle = scheme.secondary;
+      ctx.textAlign = 'left';
+      ctx.letterSpacing = '8px';
+      ctx.fillText('CLIPZWORLD NEWS', 60, 80);
+
+      ctx.font = '900 28px Arial';
+      ctx.fillStyle = scheme.primary;
+      ctx.fillText('NEWS', 60, 115);
+
+      // Bottom text
+      ctx.font = '900 80px Arial';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 30;
+      ctx.fillText('BEST TWITCH CLIPS', W / 2, H - 80);
+      ctx.shadowBlur = 0;
+
+    } else {
+      // ── NBA/NEWS: cwn_news_tool.html style ───
+
+      // Dark background
+      ctx.fillStyle = scheme.dark;
+      ctx.fillRect(0, 0, W, H);
+
+      // Story image (full size, dimmed)
+      if (storyImage) {
+        try {
+          const img = await loadImage(storyImage);
+
+          // Draw image covering full canvas
+          ctx.filter = 'brightness(0.25) saturate(0.6)';
+          ctx.drawImage(img, 0, 0, W, H);
+          ctx.filter = 'none';
+        } catch (err) {
+          console.warn('[Thumbnail] Failed to load story image:', err.message);
+        }
+      }
+
+      // Gradient overlay (dark at bottom)
+      const overlayGrad = ctx.createLinearGradient(0, 0, 0, H);
+      overlayGrad.addColorStop(0, 'rgba(6,10,18,0.3)');
+      overlayGrad.addColorStop(1, 'rgba(6,10,18,0.85)');
+      ctx.fillStyle = overlayGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Top left: CLIPZWORLD NEWS brand badge
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.strokeStyle = 'rgba(199,175,79,0.5)';
+      ctx.lineWidth = 1;
+      const brandW = 280, brandH = 44;
+      ctx.fillRect(40, 30, brandW, brandH);
+      ctx.strokeRect(40, 30, brandW, brandH);
+
+      ctx.font = '900 20px Arial';
+      ctx.fillStyle = scheme.secondary;
+      ctx.textAlign = 'left';
+      ctx.letterSpacing = '8px';
+      ctx.fillText('CLIPZWORLD NEWS', 64, 58);
+
+      // Top right: Source badge (red)
+      const sourceBadge = source || 'REACTION';
+      ctx.font = '900 16px Arial';
+      const sourceW = ctx.measureText(sourceBadge).width + 40;
+      const sourceH = 36;
+      const sourceX = W - sourceW - 40;
+      const sourceY = 30;
+
+      ctx.fillStyle = contentType === 'news' ? scheme.red : scheme.secondary;
+      ctx.fillRect(sourceX, sourceY, sourceW, sourceH);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.letterSpacing = '4px';
+      ctx.fillText(sourceBadge, sourceX + sourceW / 2, sourceY + 24);
+
+      // Bottom section: Category + Headline + Subtitle
+      const bottomPad = 40;
+      let yPos = H - bottomPad;
+
+      // Subtitle (date + brand)
+      const dateStr = date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const subtitle = dateStr.toUpperCase() + ' | CLIPZWORLD NEWS';
+
+      ctx.font = '600 20px Arial';
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.textAlign = 'left';
+      ctx.letterSpacing = '3px';
+      ctx.fillText(subtitle, bottomPad, yPos);
+      yPos -= 26;
+
+      // Headline (large, bold, Bebas Neue style)
+      const headline = title.length > 60 ? title.slice(0, 57) + '...' : title;
+      ctx.font = '900 72px Arial';
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 30;
+
+      // Word wrap headline if needed
+      const maxW = W - 80;
+      const words = headline.split(' ');
+      let lines = [];
+      let currentLine = '';
+
+      for (const word of words) {
+        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxW && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+
+      // Draw lines bottom-up
+      for (let i = lines.length - 1; i >= 0; i--) {
+        ctx.fillText(lines[i], bottomPad, yPos);
+        yPos -= 76;
+      }
+
+      ctx.shadowBlur = 0;
+
+      // Category label above headline
+      const category = contentType === 'nba' ? 'NBA' : 'WORLD NEWS';
+      ctx.font = '900 14px Arial';
+      ctx.fillStyle = scheme.secondary;
+      ctx.letterSpacing = '6px';
+      ctx.fillText(category, bottomPad, yPos);
+    }
+
+    // ── Step 4: Save thumbnail ─────────────────────────────────────
+    const outputPath = path.join(OUTPUT_DIR, `thumbnail_${contentType}_ep${episodeNum}_${Date.now()}.png`);
+    const buffer = canvas.toBuffer('image/png');
+    fs.writeFileSync(outputPath, buffer);
+
+    console.log(`[Thumbnail] ✅ Generated ${contentType} thumbnail: ${outputPath}`);
+
+    res.json({
+      ok: true,
+      thumbnailPath: outputPath,
+      episodeNum,
+      contentType,
+      size: { width: W, height: H }
+    });
+
+  } catch (error) {
+    console.error('[Thumbnail] ❌ Error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 

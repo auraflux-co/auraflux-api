@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>ClipzWorld Newscast Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:  #22304b;
+  --gold:  #c7af4f;
+  --gold2: #f0d060;
+  --red:   #c0392b;
+  --white: #ffffff;
+  --dark:  #0d1424;
+}
+
+body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: transparent;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+/* ═══════════════════════════════════════
+   LOWER THIRD — main topic/name bar
+═══════════════════════════════════════ */
+.lower-third {
+  position: absolute;
+  bottom: 80px;
+  left: 0;
+  width: 860px;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  animation: slideInLeft 0.5s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+
+@keyframes slideInLeft {
+  to { transform: translateX(0); }
+}
+
+.lt-top {
+  background: var(--gold);
+  padding: 8px 24px 8px 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%);
+}
+
+.lt-category {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  letter-spacing: 4px;
+  line-height: 1;
+}
+
+.lt-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--dark);
+  opacity: 0.4;
+}
+
+.lt-bottom {
+  background: var(--navy);
+  padding: 10px 24px 10px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  clip-path: polygon(0 0, 96% 0, 100% 100%, 0 100%);
+  border-left: 4px solid var(--gold);
+}
+
+.lt-headline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+.lt-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 400;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  margin-left: 20px;
+}
+
+/* ═══════════════════════════════════════
+   BREAKING NEWS BANNER
+═══════════════════════════════════════ */
+.breaking {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: stretch;
+  height: 52px;
+  transform: translateY(-100%);
+  animation: slideDown 0.4s cubic-bezier(0.22,1,0.36,1) 0.1s forwards;
+}
+
+@keyframes slideDown {
+  to { transform: translateY(0); }
+}
+
+.breaking-badge {
+  background: var(--red);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.breaking-pulse {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: bpulse 1s ease-in-out infinite;
+}
+
+@keyframes bpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.breaking-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: #fff;
+  letter-spacing: 3px;
+}
+
+.breaking-text-wrap {
+  flex: 1;
+  background: var(--dark);
+  border-top: 2px solid var(--red);
+  border-bottom: 2px solid var(--red);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.breaking-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  padding-left: 24px;
+  letter-spacing: 0.3px;
+  animation: marquee-break 18s linear infinite;
+}
+
+@keyframes marquee-break {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.breaking-time {
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  flex-shrink: 0;
+  border-top: 2px solid var(--red);
+  border-bottom: 2px solid var(--red);
+}
+
+/* ═══════════════════════════════════════
+   ANCHOR NAMEPLATE
+═══════════════════════════════════════ */
+.nameplate {
+  position: absolute;
+  bottom: 80px;
+  left: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeUp 0.5s ease 0.6s both;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.nameplate-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 38px;
+  color: #fff;
+  letter-spacing: 3px;
+  line-height: 1;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+}
+
+.nameplate-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════
+   TOP BAR — branding + date + show name
+═══════════════════════════════════════ */
+.top-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 48px;
+  background: linear-gradient(90deg, var(--navy) 0%, rgba(34,48,75,0.95) 60%, transparent 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 20px;
+  border-bottom: 2px solid var(--gold);
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.top-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: var(--gold);
+  letter-spacing: 4px;
+}
+
+.top-divider {
+  width: 1px; height: 24px;
+  background: rgba(199,175,79,0.3);
+}
+
+.top-show {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 3px;
+}
+
+.top-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.top-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--red);
+  padding: 3px 12px;
+  border-radius: 2px;
+}
+
+.top-live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: bpulse 1s ease-in-out infinite;
+}
+
+.top-live-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  letter-spacing: 3px;
+}
+
+.top-time {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: var(--gold);
+  letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════════
+   SEGMENT INDICATOR — top right corner
+═══════════════════════════════════════ */
+.segment-tag {
+  position: absolute;
+  top: 60px;
+  right: 32px;
+  background: var(--navy);
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  padding: 6px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  animation: fadeIn 0.5s ease 0.4s both;
+}
+
+.seg-label {
+  font-size: 9px;
+  color: rgba(199,175,79,0.6);
+  letter-spacing: 3px;
+  font-weight: 700;
+}
+
+.seg-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: #fff;
+  letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════════
+   SIDE STORY LIST — right panel
+═══════════════════════════════════════ */
+.story-list {
+  position: absolute;
+  top: 120px;
+  right: 32px;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 0.5s ease 0.6s both;
+}
+
+.story-item {
+  background: rgba(13,20,36,0.92);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 4px 4px 0;
+  padding: 8px 12px;
+  backdrop-filter: blur(8px);
+}
+
+.story-item-cat {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 3px;
+  margin-bottom: 3px;
+}
+
+.story-item-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.3;
+}
+
+.story-item.active {
+  border-left-color: var(--red);
+  background: rgba(34,48,75,0.95);
+}
+
+.story-item.active .story-item-cat { color: var(--red); }
+.story-item.active .story-item-text { color: #fff; }
+
+/* ═══════════════════════════════════════
+   BOTTOM NEWS TICKER
+═══════════════════════════════════════ */
+.news-ticker {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 40px;
+  background: var(--dark);
+  border-top: 2px solid var(--gold);
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.ticker-brand {
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.ticker-brand-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  letter-spacing: 3px;
+}
+
+.ticker-scroll {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.ticker-content {
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.3px;
+  animation: ticker-scroll 40s linear infinite;
+  padding-left: 40px;
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-sep {
+  color: var(--gold);
+  margin: 0 16px;
+  font-size: 10px;
+}
+
+.ticker-cat {
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-size: 11px;
+  margin-right: 8px;
+}
+
+/* ═══════════════════════════════════════
+   COMEDY TAG — animated pop-in
+═══════════════════════════════════════ */
+.comedy-tag {
+  position: absolute;
+  top: 200px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  background: var(--gold);
+  color: var(--dark);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 4px;
+  padding: 8px 28px;
+  border-radius: 4px;
+  box-shadow: 0 0 40px rgba(199,175,79,0.5);
+  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 1s forwards;
+}
+
+@keyframes popIn {
+  to { transform: translateX(-50%) scale(1); }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="top-brand">CLIPZWORLD</div>
+  <div class="top-divider"></div>
+  <div class="top-show">WORLD NEWS & SPORTS</div>
+  <div class="top-right">
+    <div class="top-live">
+      <div class="top-live-dot"></div>
+      <div class="top-live-text">LIVE</div>
+    </div>
+    <div class="top-time" id="clock">12:00 PM</div>
+  </div>
+</div>
+
+<!-- SEGMENT TAG -->
+<div class="segment-tag">
+  <div class="seg-label">NOW COVERING</div>
+  <div class="seg-name">WORLD NEWS</div>
+</div>
+
+<!-- STORY LIST -->
+<div class="story-list">
+  <div class="story-item active">
+    <div class="story-item-cat">▶ ON AIR</div>
+    <div class="story-item-text">Global Markets React to Fed Decision</div>
+  </div>
+  <div class="story-item">
+    <div class="story-item-cat">WORLD</div>
+    <div class="story-item-text">UN Security Council Emergency Session</div>
+  </div>
+  <div class="story-item">
+    <div class="story-item-cat">SPORTS</div>
+    <div class="story-item-text">UConn Stuns Duke on Half-Court Buzzer Beater</div>
+  </div>
+  <div class="story-item">
+    <div class="story-item-cat">TECH</div>
+    <div class="story-item-text">AI Regulation Bill Advances in Congress</div>
+  </div>
+</div>
+
+<!-- BREAKING NEWS -->
+<div class="breaking">
+  <div class="breaking-badge">
+    <div class="breaking-pulse"></div>
+    <div class="breaking-label">BREAKING</div>
+  </div>
+  <div class="breaking-text-wrap">
+    <div class="breaking-text">
+      UCONN STUNS DUKE 73-72 ON HALF-COURT BUZZER BEATER — HUSKIES ADVANCE TO FINAL FOUR &nbsp;&nbsp;&nbsp;●&nbsp;&nbsp;&nbsp;
+      UCONN STUNS DUKE 73-72 ON HALF-COURT BUZZER BEATER — HUSKIES ADVANCE TO FINAL FOUR &nbsp;&nbsp;&nbsp;●&nbsp;&nbsp;&nbsp;
+    </div>
+  </div>
+  <div class="breaking-time" id="break-time">12:00 PM</div>
+</div>
+
+<!-- LOWER THIRD -->
+<div class="lower-third">
+  <div class="lt-top">
+    <div class="lt-category">WORLD NEWS</div>
+    <div class="lt-dot"></div>
+    <div class="lt-category">BREAKING</div>
+  </div>
+  <div class="lt-bottom">
+    <div class="lt-headline">Global Markets React to Federal Reserve Rate Decision</div>
+    <div class="lt-sub">MARCH 30, 2026</div>
+  </div>
+</div>
+
+<!-- BOTTOM TICKER -->
+<div class="news-ticker">
+  <div class="ticker-brand">
+    <div class="ticker-brand-text">CZW NEWS</div>
+  </div>
+  <div class="ticker-scroll">
+    <div class="ticker-content">
+      <span class="ticker-cat">SPORTS</span>UConn defeats Duke 73-72 on Mullins half-court buzzer beater — Huskies advance to Final Four
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">MARKETS</span>Dow Jones up 0.4% following Fed announcement — tech stocks lead gains
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">NBA</span>Warriors host Nuggets tonight 10PM ET — Jokic seeks 36th triple-double of season
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">WORLD</span>UN Security Council convenes emergency session over escalating tensions in Eastern Europe
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">TECH</span>Congress advances AI regulation bill — vote expected next week
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">SPORTS</span>Michigan beats Tennessee 95-62 — Wolverines join UConn in Final Four
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">SPORTS</span>UConn defeats Duke 73-72 on Mullins half-court buzzer beater — Huskies advance to Final Four
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">MARKETS</span>Dow Jones up 0.4% following Fed announcement — tech stocks lead gains
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">NBA</span>Warriors host Nuggets tonight 10PM ET — Jokic seeks 36th triple-double of season
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">WORLD</span>UN Security Council convenes emergency session over escalating tensions in Eastern Europe
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">TECH</span>Congress advances AI regulation bill — vote expected next week
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-cat">SPORTS</span>Michigan beats Tennessee 95-62 — Wolverines join UConn in Final Four
+      <span class="ticker-sep">◆</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// Live clock
+function updateClock() {
+  var now = new Date();
+  var h = now.getHours();
+  var m = now.getMinutes();
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  var str = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+  var el = document.getElementById('clock');
+  var el2 = document.getElementById('break-time');
+  if (el) el.textContent = str;
+  if (el2) el2.textContent = str;
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
