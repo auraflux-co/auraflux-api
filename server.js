@@ -41,6 +41,7 @@ const fs         = require('fs');
 const path       = require('path');
 const { execFile, exec } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
+const puppeteer  = require('puppeteer');
 
 const app  = express();
 
@@ -1885,26 +1886,108 @@ app.post('/assemble', async (req, res) => {
               log(asmId, `  ⚠️  Intro card burn failed for ${streamerName}: ${e.message} — using original`);
             }
           }
-        } else if (isIntro && (contentType === 'nba' || contentType === 'news')) {
-          // ── NBA/News: Square game/story card ──────────────────────
+        } else if (isIntro && contentType === 'news') {
+          // ── News: Full newscast overlay ──────────────────────────────
           try {
-            // Extract game/story info from segment data
             const seg = segsToProcess.find((s, si) => localFiles[i].includes(`${asmId}_${si}_`));
             const cardData = seg?.cardData || {};
 
-            // NBA: Use game thumbnail from assets or provided URL
-            // News: Use story thumbnailUrl from RSS feed
-            const imageUrl = cardData.imageUrl || cardData.thumbnailUrl || null;
-            const title = cardData.title || (contentType === 'nba' ? 'GAME' : 'STORY');
-            const subtitle = cardData.subtitle || cardData.score || '';
+            // Build list of all news stories for the overlay sidebar
+            // Collect all intro segments to show in the story list
+            const allNewsIntros = segsToProcess.filter(s => {
+              const lbl = s.label || '';
+              return lbl.match(/\(INTRO\)/i) && s.cardData;
+            });
+
+            const allStories = allNewsIntros.map((introSeg, idx) => ({
+              title: introSeg.cardData?.title || `Story ${idx + 1}`,
+              category: introSeg.cardData?.category || 'WORLD',
+              storyId: introSeg.cardData?.storyId || `story_${idx}`
+            }));
+
+            // Find which story index this intro segment is
+            const currentStoryId = cardData.storyId || cardData.title;
+            const storyIndex = allStories.findIndex(s =>
+              s.storyId === currentStoryId || s.title === cardData.title
+            );
+            const activeStoryIndex = storyIndex >= 0 ? storyIndex : 0;
+
+            const overlayPngPath = path.join(TMP_DIR, `newscast_overlay_${Date.now()}.png`);
+
+            // Generate full newscast overlay with current story highlighted
+            await generateNewscastOverlay({
+              title: cardData.title || 'Breaking News Story',
+              category: cardData.category || 'WORLD NEWS',
+              date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase(),
+              allStories: allStories
+            }, overlayPngPath, activeStoryIndex);
+
+            const burnedPath = inputForTS.replace('.mp4', '_intro_burned.mp4');
+            const introDur = 3.5;
+
+            // Full-screen overlay blend
+            const burnArgs = [
+              '-i', inputForTS, '-i', overlayPngPath,
+              '-filter_complex', `[0:v][1:v]blend=all_mode=normal:all_opacity=1:enable='lte(t,${introDur})'[out]`,
+              '-map', '[out]', '-map', '0:a',
+              '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+              '-pix_fmt', 'yuv420p',
+              '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
+            ];
+
+            await new Promise((res, rej) => {
+              const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
+              let burnStderr = '';
+              proc.stderr && proc.stderr.on('data', d => { burnStderr += d.toString(); });
+              proc.on('close', code => {
+                if (code === 0) res();
+                else {
+                  const reason = burnStderr.slice(-300).replace(/\n/g, ' ').trim();
+                  console.error(`[intro-burn] FFmpeg exit ${code} for newscast overlay: ${reason}`);
+                  rej(new Error(`Newscast overlay burn failed: ${code} — ${reason}`));
+                }
+              });
+              proc.on('error', rej);
+            });
+
+            if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
+              inputForTS = burnedPath;
+              log(asmId, `  📰 NEWS newscast overlay burned [${activeStoryIndex + 1}/${allStories.length}]: ${cardData.title || 'story'}`);
+            }
+
+            // Clean up temp overlay PNG
+            try { if (fs.existsSync(overlayPngPath)) fs.unlinkSync(overlayPngPath); } catch(e) {}
+          } catch(e) {
+            log(asmId, `  ⚠️  NEWS newscast overlay burn failed: ${e.message} — using original`);
+          }
+        } else if (isIntro && contentType === 'nba') {
+          // ── NBA: Square game card with game-specific highlight ─────────
+          try {
+            const seg = segsToProcess.find((s, si) => localFiles[i].includes(`${asmId}_${si}_`));
+            const cardData = seg?.cardData || {};
+
+            // Get game-specific data
+            const gameId = cardData.gameId || cardData.id;
+            const imageUrl = cardData.imageUrl || cardData.thumbnailUrl || cardData.highlightImage || null;
+            const title = cardData.title || cardData.matchup || 'GAME';
+            const subtitle = cardData.subtitle || cardData.score || cardData.status || '';
 
             if (imageUrl) {
-              const cardPngPath = path.join(TMP_DIR, `${contentType}_card_${Date.now()}.png`);
+              // Use gameId in filename to ensure unique cards per game
+              const gameIdSlug = gameId ? `_${gameId}` : '';
+              const cardPngPath = path.join(TMP_DIR, `nba_card${gameIdSlug}_${Date.now()}.png`);
+
+              log(asmId, `  🏀 Generating NBA card for: ${title}${gameId ? ` (ID: ${gameId})` : ''}`);
 
               await generateGameStoryCardPNG(
-                { title, subtitle, imageUrl },
+                {
+                  title,
+                  subtitle,
+                  imageUrl,
+                  gameId  // Pass gameId for potential use in card generation
+                },
                 cardPngPath,
-                contentType
+                'nba'
               );
 
               const burnedPath = inputForTS.replace('.mp4', '_intro_burned.mp4');
@@ -1927,8 +2010,8 @@ app.post('/assemble', async (req, res) => {
                   if (code === 0) res();
                   else {
                     const reason = burnStderr.slice(-300).replace(/\n/g, ' ').trim();
-                    console.error(`[intro-burn] FFmpeg exit ${code} for ${contentType}: ${reason}`);
-                    rej(new Error(`Intro burn failed: ${code} — ${reason}`));
+                    console.error(`[intro-burn] FFmpeg exit ${code} for NBA: ${reason}`);
+                    rej(new Error(`NBA intro burn failed: ${code} — ${reason}`));
                   }
                 });
                 proc.on('error', rej);
@@ -1936,16 +2019,16 @@ app.post('/assemble', async (req, res) => {
 
               if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
                 inputForTS = burnedPath;
-                log(asmId, `  🖼  ${contentType.toUpperCase()} intro card burned: ${title}`);
+                log(asmId, `  🏀 NBA intro card burned: ${title}${gameId ? ` [${gameId}]` : ''}`);
               }
 
               // Clean up temp card PNG
               try { if (fs.existsSync(cardPngPath)) fs.unlinkSync(cardPngPath); } catch(e) {}
             } else {
-              log(asmId, `  ⚠️  No image URL for ${contentType} intro card — skipping`);
+              log(asmId, `  ⚠️  No image URL for NBA intro card — skipping`);
             }
           } catch(e) {
-            log(asmId, `  ⚠️  ${contentType.toUpperCase()} intro card burn failed: ${e.message} — using original`);
+            log(asmId, `  ⚠️  NBA intro card burn failed: ${e.message} — using original`);
           }
         }
 
@@ -6228,7 +6311,7 @@ app.get('/remediate-video/check/:jobId', (req, res) => {
 
 app.post('/generate-thumbnail', async (req, res) => {
   try {
-    const { contentType, date, streamers = [], storyImage = null, title = '', source = 'REACTION' } = req.body;
+    const { contentType, date, storyImage = null, title = '', source = 'REACTION', streamers = [] } = req.body;
 
     if (!['twitch', 'nba', 'news'].includes(contentType)) {
       return res.status(400).json({ ok: false, error: 'Invalid contentType. Must be: twitch, nba, or news' });
@@ -6246,241 +6329,81 @@ app.post('/generate-thumbnail', async (req, res) => {
     counters[contentType] = episodeNum + 1;
     fs.writeFileSync(EPISODE_COUNTERS_PATH, JSON.stringify(counters, null, 2));
 
-    // ── Step 2: Canvas setup (1280x720) ────────────────────────────
-    const canvasModule = require('canvas');
-    const { createCanvas, loadImage } = canvasModule;
-    const W = 1280, H = 720;
-    const canvas = createCanvas(W, H);
-    const ctx = canvas.getContext('2d');
+    const outputPath = path.join(OUTPUT_DIR, `thumbnail_${contentType}_ep${episodeNum}_${Date.now()}.png`);
 
-    // Brand colors
-    const colors = {
-      twitch: { primary: '#9146FF', secondary: '#c7af4f', navy: '#22304b', dark: '#1a2540' },
-      nba: { primary: '#17408B', secondary: '#C9082A', navy: '#22304b', gold: '#c7af4f', dark: '#060a12' },
-      news: { primary: '#22304b', secondary: '#c7af4f', red: '#c0392b', dark: '#060a12' }
-    };
-    const scheme = colors[contentType];
+    // ── Step 2: Generate thumbnail based on content type ───────────
+    if (contentType === 'news' || contentType === 'nba') {
+      // ── Use Puppeteer with cwn_news_tool.html ──────────────────────
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
 
-    // ── Step 3: Content-specific designs ───────────────────────────
-    if (contentType === 'twitch') {
-      // ── TWITCH: Ghostly Bobby G with purple glow + streamer circles ───
+      try {
+        const page = await browser.newPage();
+        await page.setViewport({ width: 1280, height: 720 });
 
-      // Dark navy gradient background
-      const gradient = ctx.createLinearGradient(0, 0, W, H);
-      gradient.addColorStop(0, '#0d1524');
-      gradient.addColorStop(0.5, '#1a2540');
-      gradient.addColorStop(1, scheme.navy);
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, W, H);
+        // Load cwn_news_tool.html
+        const toolUrl = `http://localhost:3000/news-tool`;
+        await page.goto(toolUrl, { waitUntil: 'networkidle0' });
 
-      // Ghostly Bobby G in center (hooded, dark, mysterious)
-      const bobbyGPath = path.join(__dirname, 'assets', 'bobbyg_short_form.png');
-      if (fs.existsSync(bobbyGPath)) {
-        const bobbyG = await loadImage(bobbyGPath);
+        // Inject story data into the page and make thumbnail visible
+        await page.evaluate((data) => {
+          // Make the gen-section visible (it's hidden by default)
+          const genSection = document.getElementById('gen-section');
+          if (genSection) genSection.style.display = 'block';
 
-        // Draw Bobby G large and centered, slightly darkened
-        ctx.globalAlpha = 0.85;
-        ctx.filter = 'brightness(0.7) saturate(0.8)';
-        const bgSize = 500;
-        ctx.drawImage(bobbyG, W / 2 - bgSize / 2, H / 2 - bgSize / 2 + 20, bgSize, bgSize);
-        ctx.filter = 'none';
-        ctx.globalAlpha = 1.0;
-      }
+          const thumbBg = document.getElementById('thumb-bg');
+          const thumbHeadline = document.getElementById('thumb-headline');
+          const thumbCat = document.getElementById('thumb-cat');
+          const thumbSrcBadge = document.getElementById('thumb-src-badge');
+          const thumbSub = document.getElementById('thumb-sub');
 
-      // Streamer circles with purple glow (arrange in arc)
-      const centerX = W / 2;
-      const centerY = H / 2 + 40;
-      const radius = 320;
-      const circleSize = 100;
-      const glowSize = 20;
+          if (thumbBg && data.storyImage) {
+            thumbBg.src = data.storyImage;
+            thumbBg.style.display = 'block';
+          }
+          if (thumbHeadline) thumbHeadline.textContent = data.title || 'Story Headline';
+          if (thumbCat) thumbCat.textContent = data.contentType === 'nba' ? 'NBA' : 'WORLD NEWS';
+          if (thumbSrcBadge) thumbSrcBadge.textContent = data.source || 'REACTION';
+          if (thumbSub) thumbSub.textContent = (data.date || new Date().toLocaleDateString()).toUpperCase() + ' | CLIPZWORLD NEWS';
+        }, { title, storyImage, source, date, contentType });
 
-      for (let i = 0; i < Math.min(9, streamers.length); i++) {
-        const angle = (i / 8) * Math.PI * 1.4 - (Math.PI * 0.7); // Arc from left to right
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius - 50;
+        // Wait for image to load
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        const streamerName = streamers[i];
-        const profilePath = path.join(__dirname, 'assets', 'streamer_profiles', `${streamerName}.png`);
-
-        if (fs.existsSync(profilePath)) {
-          const img = await loadImage(profilePath);
-
-          // Purple glow effect
-          ctx.save();
-          ctx.shadowColor = scheme.primary;
-          ctx.shadowBlur = glowSize;
-          ctx.beginPath();
-          ctx.arc(x, y, circleSize / 2, 0, Math.PI * 2);
-          ctx.closePath();
-          ctx.fillStyle = scheme.primary;
-          ctx.fill();
-          ctx.restore();
-
-          // Circular profile image
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(x, y, (circleSize / 2) - 4, 0, Math.PI * 2);
-          ctx.closePath();
-          ctx.clip();
-          ctx.drawImage(img, x - circleSize / 2, y - circleSize / 2, circleSize, circleSize);
-          ctx.restore();
-
-          // Gold border
-          ctx.strokeStyle = scheme.secondary;
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(x, y, (circleSize / 2) - 2, 0, Math.PI * 2);
-          ctx.stroke();
+        // Screenshot the thumbnail element
+        const thumbElement = await page.$('#thumb');
+        if (!thumbElement) {
+          throw new Error('Thumbnail element (#thumb) not found');
         }
+
+        await thumbElement.screenshot({ path: outputPath });
+        console.log(`[Thumbnail] ✅ Generated ${contentType} thumbnail via Puppeteer: ${outputPath}`);
+
+      } finally {
+        await browser.close();
       }
 
-      // Top left branding
-      ctx.font = '900 40px Arial';
-      ctx.fillStyle = scheme.secondary;
-      ctx.textAlign = 'left';
-      ctx.letterSpacing = '8px';
-      ctx.fillText('CLIPZWORLD NEWS', 60, 80);
+    } else if (contentType === 'twitch') {
+      // ── Use reference Ghostly Bobby G image ────────────────────────
+      const referenceImage = path.join(__dirname, 'assets', 'Ghostly Bobby G in Navy Themed Thumbnail.png');
 
-      ctx.font = '900 28px Arial';
-      ctx.fillStyle = scheme.primary;
-      ctx.fillText('NEWS', 60, 115);
-
-      // Bottom text
-      ctx.font = '900 80px Arial';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 30;
-      ctx.fillText('BEST TWITCH CLIPS', W / 2, H - 80);
-      ctx.shadowBlur = 0;
-
-    } else {
-      // ── NBA/NEWS: cwn_news_tool.html style ───
-
-      // Dark background
-      ctx.fillStyle = scheme.dark;
-      ctx.fillRect(0, 0, W, H);
-
-      // Story image (full size, dimmed)
-      if (storyImage) {
-        try {
-          const img = await loadImage(storyImage);
-
-          // Draw image covering full canvas
-          ctx.filter = 'brightness(0.25) saturate(0.6)';
-          ctx.drawImage(img, 0, 0, W, H);
-          ctx.filter = 'none';
-        } catch (err) {
-          console.warn('[Thumbnail] Failed to load story image:', err.message);
-        }
+      if (!fs.existsSync(referenceImage)) {
+        return res.status(404).json({ ok: false, error: 'Twitch reference image not found at: ' + referenceImage });
       }
 
-      // Gradient overlay (dark at bottom)
-      const overlayGrad = ctx.createLinearGradient(0, 0, 0, H);
-      overlayGrad.addColorStop(0, 'rgba(6,10,18,0.3)');
-      overlayGrad.addColorStop(1, 'rgba(6,10,18,0.85)');
-      ctx.fillStyle = overlayGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      // Top left: CLIPZWORLD NEWS brand badge
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.strokeStyle = 'rgba(199,175,79,0.5)';
-      ctx.lineWidth = 1;
-      const brandW = 280, brandH = 44;
-      ctx.fillRect(40, 30, brandW, brandH);
-      ctx.strokeRect(40, 30, brandW, brandH);
-
-      ctx.font = '900 20px Arial';
-      ctx.fillStyle = scheme.secondary;
-      ctx.textAlign = 'left';
-      ctx.letterSpacing = '8px';
-      ctx.fillText('CLIPZWORLD NEWS', 64, 58);
-
-      // Top right: Source badge (red)
-      const sourceBadge = source || 'REACTION';
-      ctx.font = '900 16px Arial';
-      const sourceW = ctx.measureText(sourceBadge).width + 40;
-      const sourceH = 36;
-      const sourceX = W - sourceW - 40;
-      const sourceY = 30;
-
-      ctx.fillStyle = contentType === 'news' ? scheme.red : scheme.secondary;
-      ctx.fillRect(sourceX, sourceY, sourceW, sourceH);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.letterSpacing = '4px';
-      ctx.fillText(sourceBadge, sourceX + sourceW / 2, sourceY + 24);
-
-      // Bottom section: Category + Headline + Subtitle
-      const bottomPad = 40;
-      let yPos = H - bottomPad;
-
-      // Subtitle (date + brand)
-      const dateStr = date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-      const subtitle = dateStr.toUpperCase() + ' | CLIPZWORLD NEWS';
-
-      ctx.font = '600 20px Arial';
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.textAlign = 'left';
-      ctx.letterSpacing = '3px';
-      ctx.fillText(subtitle, bottomPad, yPos);
-      yPos -= 26;
-
-      // Headline (large, bold, Bebas Neue style)
-      const headline = title.length > 60 ? title.slice(0, 57) + '...' : title;
-      ctx.font = '900 72px Arial';
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 30;
-
-      // Word wrap headline if needed
-      const maxW = W - 80;
-      const words = headline.split(' ');
-      let lines = [];
-      let currentLine = '';
-
-      for (const word of words) {
-        const testLine = currentLine + (currentLine ? ' ' : '') + word;
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxW && currentLine) {
-          lines.push(currentLine);
-          currentLine = word;
-        } else {
-          currentLine = testLine;
-        }
-      }
-      if (currentLine) lines.push(currentLine);
-
-      // Draw lines bottom-up
-      for (let i = lines.length - 1; i >= 0; i--) {
-        ctx.fillText(lines[i], bottomPad, yPos);
-        yPos -= 76;
-      }
-
-      ctx.shadowBlur = 0;
-
-      // Category label above headline
-      const category = contentType === 'nba' ? 'NBA' : 'WORLD NEWS';
-      ctx.font = '900 14px Arial';
-      ctx.fillStyle = scheme.secondary;
-      ctx.letterSpacing = '6px';
-      ctx.fillText(category, bottomPad, yPos);
+      // Copy reference image to output
+      fs.copyFileSync(referenceImage, outputPath);
+      console.log(`[Thumbnail] ✅ Using Twitch reference thumbnail: ${outputPath}`);
     }
 
-    // ── Step 4: Save thumbnail ─────────────────────────────────────
-    const outputPath = path.join(OUTPUT_DIR, `thumbnail_${contentType}_ep${episodeNum}_${Date.now()}.png`);
-    const buffer = canvas.toBuffer('image/png');
-    fs.writeFileSync(outputPath, buffer);
-
-    console.log(`[Thumbnail] ✅ Generated ${contentType} thumbnail: ${outputPath}`);
-
+    // ── Step 3: Return response ────────────────────────────────────
     res.json({
       ok: true,
       thumbnailPath: outputPath,
-      episodeNum,
-      contentType,
-      size: { width: W, height: H }
+      episodeNum: episodeNum,
+      contentType
     });
 
   } catch (error) {
@@ -6488,6 +6411,74 @@ app.post('/generate-thumbnail', async (req, res) => {
     res.status(500).json({ ok: false, error: error.message });
   }
 });
+
+// ── Generate Newscast Overlay PNG using Puppeteer ──────────────────
+// Renders clipzworld_newscast.html with story data for news intro segments
+// storyIndex: which story to highlight (0-based)
+async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0) {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+
+    // Load clipzworld_newscast.html
+    const overlayUrl = `http://localhost:3000/newscast-overlay`;
+    await page.goto(overlayUrl, { waitUntil: 'networkidle0' });
+
+    // Inject story data into the page
+    await page.evaluate((data, activeIndex) => {
+      // Update lower third with current story info
+      const ltHeadline = document.querySelector('.lt-headline');
+      const ltCategory = document.querySelector('.lt-category');
+      const ltSub = document.querySelector('.lt-sub');
+
+      if (ltHeadline) ltHeadline.textContent = data.title || 'Breaking News';
+      if (ltCategory) ltCategory.textContent = data.category || 'WORLD NEWS';
+      if (ltSub) ltSub.textContent = data.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
+
+      // Update breaking news banner with current story
+      const breakingText = document.querySelector('.breaking-text');
+      if (breakingText) {
+        const breakingMsg = (data.title || 'BREAKING NEWS').toUpperCase();
+        breakingText.textContent = breakingMsg + ' ● ' + breakingMsg;
+      }
+
+      // Update story list with all stories, highlighting the active one
+      if (data.allStories && data.allStories.length > 0) {
+        const storyList = document.querySelector('.story-list');
+        if (storyList) {
+          storyList.innerHTML = '';
+          data.allStories.forEach((story, idx) => {
+            const storyItem = document.createElement('div');
+            // Highlight the current story being introduced
+            storyItem.className = 'story-item' + (idx === activeIndex ? ' active' : '');
+            storyItem.innerHTML = `
+              <div class="story-item-cat">${idx === activeIndex ? '▶ ON AIR' : story.category || 'WORLD'}</div>
+              <div class="story-item-text">${story.title || story.text || ''}</div>
+            `;
+            storyList.appendChild(storyItem);
+          });
+        }
+      }
+    }, storyData, storyIndex);
+
+    // Wait for animations to settle
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Screenshot the full page
+    await page.screenshot({ path: outputPath, fullPage: false });
+    console.log(`[newscast-overlay] ✅ Generated overlay (story ${storyIndex}): ${outputPath}`);
+
+  } finally {
+    await browser.close();
+  }
+
+  return outputPath;
+}
 
 
 // ── POST /generate-thumbnail ──────────────────────────────────────
