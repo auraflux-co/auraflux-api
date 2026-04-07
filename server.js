@@ -782,6 +782,13 @@ app.get('/newscast-overlay', (req, res) => {
   res.sendFile(path.join(__dirname, 'clipzworld_newscast.html'));
 });
 
+app.get('/twitch-tool', (req, res) => {
+  res.sendFile(path.join(__dirname, 'cwn_twitch_tool.html'));
+});
+
+// Serve assets folder for images (Bobby G, etc.)
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
 // ── POST /assemble ────────────────────────────────────────────────
 // ── GOOGLE DRIVE AUTO-UPLOAD ──────────────────────────────────────
 // Uses a service account key at ~/Downloads/cwn-drive-key.json
@@ -6386,16 +6393,139 @@ app.post('/generate-thumbnail', async (req, res) => {
       }
 
     } else if (contentType === 'twitch') {
-      // ── Use reference Ghostly Bobby G image ────────────────────────
-      const referenceImage = path.join(__dirname, 'assets', 'Ghostly Bobby G in Navy Themed Thumbnail.png');
+      // ── Use Puppeteer with cwn_twitch_tool.html ────────────────────
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
 
-      if (!fs.existsSync(referenceImage)) {
-        return res.status(404).json({ ok: false, error: 'Twitch reference image not found at: ' + referenceImage });
+      try {
+        const page = await browser.newPage();
+        await page.setViewport({ width: 1280, height: 720 });
+
+        // Load cwn_twitch_tool.html
+        const toolUrl = `http://localhost:3000/twitch-tool`;
+        await page.goto(toolUrl, { waitUntil: 'networkidle0' });
+
+        // Inject Twitch compilation data into the page
+        await page.evaluate((data) => {
+          // Make the gen-section visible (it's hidden by default)
+          const genSection = document.getElementById('gen-section');
+          if (genSection) {
+            genSection.style.display = 'block';
+            genSection.style.visibility = 'visible';
+          }
+
+          // Make sure thumb-scaler is visible and has dimensions
+          const thumbScaler = document.getElementById('thumb-scaler');
+          if (thumbScaler) {
+            thumbScaler.style.display = 'inline-block';
+            thumbScaler.style.visibility = 'visible';
+            thumbScaler.style.width = '1280px';
+            thumbScaler.style.height = '720px';
+          }
+
+          // Ensure thumb element is visible and has explicit dimensions
+          const thumb = document.getElementById('thumb');
+          if (thumb) {
+            thumb.style.display = 'block';
+            thumb.style.visibility = 'visible';
+            thumb.style.opacity = '1';
+            thumb.style.position = 'relative';
+            thumb.style.width = '1280px';
+            thumb.style.height = '720px';
+          }
+
+          const thumbBg = document.getElementById('thumb-bg');
+          const thumbStreamer = document.getElementById('thumb-streamer');
+          const thumbHeadline = document.getElementById('thumb-headline');
+          const thumbSub = document.getElementById('thumb-sub');
+
+          // Use reference Bobby G image as background
+          if (thumbBg && data.backgroundImage) {
+            thumbBg.src = data.backgroundImage;
+            thumbBg.style.display = 'block';
+          }
+
+          // Set streamer names (if multiple, join them)
+          if (thumbStreamer && data.streamers && data.streamers.length > 0) {
+            const streamerNames = data.streamers.map(s => s.displayName || s.name || s).join(' • ');
+            thumbStreamer.textContent = streamerNames.toUpperCase();
+          }
+
+          // Set title/headline
+          if (thumbHeadline) {
+            thumbHeadline.textContent = data.title || 'TWITCH REACTION COMPILATION';
+          }
+
+          // Set subtitle
+          if (thumbSub) {
+            thumbSub.textContent = data.subtitle || 'TWITCH REACTION | CLIPZWORLD NEWS';
+          }
+        }, {
+          title,
+          subtitle: `${streamers && streamers.length > 0 ? streamers.length + ' STREAMERS' : 'TWITCH'} | CLIPZWORLD NEWS`,
+          streamers: streamers || [],
+          backgroundImage: '/assets/Ghostly Bobby G in Navy Themed Thumbnail.png'
+        });
+
+        // Force layout reflow and wait for render
+        await page.evaluate(() => {
+          return new Promise(resolve => {
+            const thumb = document.getElementById('thumb');
+            if (thumb) {
+              // Force a reflow by reading offsetHeight
+              const _height = thumb.offsetHeight;
+              console.log('Forced reflow, thumb offsetHeight:', _height);
+            }
+            // Wait for next frame
+            requestAnimationFrame(() => {
+              requestAnimationFrame(resolve);
+            });
+          });
+        });
+
+        // Additional wait for images to load
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Debug: Check element dimensions and visibility
+        const debugInfo = await page.evaluate(() => {
+          const thumb = document.getElementById('thumb');
+          if (!thumb) return { found: false };
+
+          const rect = thumb.getBoundingClientRect();
+          const computed = window.getComputedStyle(thumb);
+
+          return {
+            found: true,
+            rect: { width: rect.width, height: rect.height, top: rect.top, left: rect.left },
+            computed: {
+              display: computed.display,
+              visibility: computed.visibility,
+              opacity: computed.opacity,
+              width: computed.width,
+              height: computed.height
+            }
+          };
+        });
+
+        console.log('[Twitch Thumbnail Debug]', JSON.stringify(debugInfo, null, 2));
+
+        // Use page.screenshot with clip instead of element.screenshot to avoid bounding box issues
+        await page.screenshot({
+          path: outputPath,
+          clip: {
+            x: 0,
+            y: 0,
+            width: 1280,
+            height: 720
+          }
+        });
+        console.log(`[Thumbnail] ✅ Generated Twitch thumbnail via Puppeteer: ${outputPath}`);
+
+      } finally {
+        await browser.close();
       }
-
-      // Copy reference image to output
-      fs.copyFileSync(referenceImage, outputPath);
-      console.log(`[Thumbnail] ✅ Using Twitch reference thumbnail: ${outputPath}`);
     }
 
     // ── Step 3: Return response ────────────────────────────────────

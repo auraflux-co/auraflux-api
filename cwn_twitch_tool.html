@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; padding:20px; min-height:100vh; }
+.header { background:linear-gradient(90deg,#1a0a2e,#2d1457); border-bottom:3px solid #9146ff; padding:16px 20px; border-radius:8px 8px 0 0; }
+.header h1 { font-family:'Bebas Neue',sans-serif; font-size:28px; color:#9146ff; letter-spacing:4px; }
+.header p { font-size:12px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-top:2px; }
+.ctrl { background:#0d1524; border:1px solid rgba(145,70,255,0.2); padding:16px 20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; border-radius:0 0 8px 8px; margin-bottom:20px; }
+.ctrl label { font-size:11px; font-weight:700; color:rgba(145,70,255,0.7); letter-spacing:2px; }
+.ctrl input { background:#1a0a2e; border:1px solid rgba(145,70,255,0.3); color:#fff; font-family:monospace; font-size:14px; padding:8px 12px; border-radius:4px; width:200px; }
+.ctrl select { background:#1a0a2e; border:1px solid rgba(145,70,255,0.3); color:#fff; padding:8px 12px; border-radius:4px; font-size:13px; }
+.btn-purple { background:#9146ff; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px; padding:8px 24px; border:none; border-radius:4px; cursor:pointer; }
+.btn-purple:hover { background:#a855ff; }
+.btn-gold { background:#c7af4f; color:#060a12; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px; padding:8px 24px; border:none; border-radius:4px; cursor:pointer; }
+.btn-gold:hover { background:#f0d060; }
+#status { font-size:12px; color:rgba(255,255,255,0.4); font-family:monospace; }
+.sec-title { font-family:'Bebas Neue',sans-serif; font-size:18px; color:#9146ff; letter-spacing:3px; margin:20px 0 10px; }
+.sec-title.gold { color:#c7af4f; }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; margin-bottom:20px; }
+.tab { background:#0d1524; border:1px solid rgba(145,70,255,0.2); color:rgba(255,255,255,0.4); font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px; padding:8px 20px; border-radius:4px; cursor:pointer; }
+.tab.active { background:#9146ff; border-color:#9146ff; color:#fff; }
+
+/* Cards */
+.clips-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; margin-bottom:20px; }
+.clip-card { background:#0d1524; border:1px solid rgba(145,70,255,0.15); border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color 0.2s; }
+.clip-card:hover { border-color:rgba(145,70,255,0.5); }
+.clip-card.selected { border-color:#9146ff; background:#130a2e; }
+.clip-thumb { width:100%; height:160px; object-fit:cover; display:block; background:#1a0a2e; }
+.clip-body { padding:10px 12px; }
+.clip-streamer { font-size:9px; font-weight:900; color:#9146ff; letter-spacing:3px; margin-bottom:3px; }
+.clip-title { font-size:12px; font-weight:700; color:#fff; line-height:1.3; margin-bottom:5px; }
+.clip-meta { font-size:10px; color:rgba(255,255,255,0.3); margin-bottom:6px; }
+.clip-btns { display:flex; gap:6px; }
+.btn-sm { font-size:10px; font-weight:700; letter-spacing:1px; padding:4px 12px; border-radius:3px; cursor:pointer; border:none; }
+.btn-sel { background:rgba(145,70,255,0.2); color:#9146ff; }
+.btn-link { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6); }
+
+/* Live streams */
+.stream-card { background:#0d1524; border:1px solid rgba(145,70,255,0.15); border-radius:6px; overflow:hidden; }
+.stream-card.live { border-color:rgba(231,76,60,0.4); }
+.stream-thumb { width:100%; height:140px; object-fit:cover; display:block; background:#1a0a2e; position:relative; }
+.live-badge { position:absolute; top:8px; left:8px; background:#e74c3c; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:2px; padding:2px 8px; border-radius:2px; }
+.viewer-badge { position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.8); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:2px; font-family:monospace; }
+.stream-body { padding:10px 12px; }
+.stream-name { font-size:11px; font-weight:900; color:#9146ff; letter-spacing:2px; margin-bottom:3px; }
+.stream-title { font-size:12px; font-weight:700; color:#fff; line-height:1.3; margin-bottom:3px; }
+.stream-game { font-size:10px; color:rgba(255,255,255,0.35); }
+
+/* Thumbnail */
+#thumb { width:1280px; height:720px; position:relative; overflow:hidden; background:#0d0119; }
+.thumb-bg-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(0.2) saturate(0.5); }
+.thumb-overlay { position:absolute; inset:0; background:linear-gradient(180deg,rgba(6,0,18,0.2) 0%,rgba(6,0,18,0.9) 100%); }
+.thumb-purple-glow { position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 30%, rgba(145,70,255,0.15) 0%, transparent 70%); }
+.thumb-brand { position:absolute; top:30px; left:40px; background:rgba(0,0,0,0.75); border:1px solid rgba(145,70,255,0.5); padding:8px 24px; border-radius:3px; font-family:'Bebas Neue',sans-serif; font-size:20px; color:#9146ff; letter-spacing:8px; }
+.thumb-reaction-badge { position:absolute; top:30px; right:40px; background:rgba(145,70,255,0.9); padding:8px 20px; border-radius:3px; font-family:'Bebas Neue',sans-serif; font-size:16px; color:#fff; letter-spacing:4px; }
+.thumb-content { position:absolute; bottom:0; left:0; right:0; padding:40px; }
+.thumb-streamer { font-size:16px; font-weight:900; color:#9146ff; letter-spacing:6px; margin-bottom:10px; }
+.thumb-headline { font-family:'Bebas Neue',sans-serif; font-size:68px; line-height:0.9; color:#fff; text-shadow:0 4px 30px rgba(0,0,0,0.8); max-width:1000px; }
+.thumb-sub { font-size:18px; font-weight:600; color:rgba(255,255,255,0.45); letter-spacing:3px; margin-top:14px; }
+.thumb-scaler { display:inline-block; transform-origin:top left; }
+
+/* Embed */
+.embed-wrap { position:relative; width:100%; padding-bottom:56.25%; background:#000; border-radius:6px; overflow:hidden; margin-bottom:14px; }
+.embed-wrap iframe { position:absolute; inset:0; width:100%; height:100%; border:none; }
+
+/* Copy boxes */
+.copy-box { background:#0d1524; border:1px solid rgba(145,70,255,0.15); border-radius:6px; padding:14px 16px; margin-bottom:14px; }
+.copy-lbl { font-size:9px; font-weight:900; color:rgba(145,70,255,0.5); letter-spacing:3px; margin-bottom:6px; }
+.copy-txt { font-size:13px; line-height:1.7; color:rgba(255,255,255,0.85); white-space:pre-wrap; font-family:Arial,sans-serif; }
+.copy-btn { background:rgba(145,70,255,0.15); border:1px solid rgba(145,70,255,0.3); color:#9146ff; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; padding:5px 14px; border-radius:3px; cursor:pointer; margin-top:8px; }
+.copy-btn:hover { background:rgba(145,70,255,0.25); }
+.script-box { background:#0d1524; border:1px solid rgba(145,70,255,0.15); border-radius:6px; padding:16px; }
+.script-box pre { font-family:Arial,sans-serif; font-size:13px; line-height:1.8; color:rgba(255,255,255,0.85); white-space:pre-wrap; }
+#gen-section { display:none; }
+.auth-wrap { text-align:center; padding:60px 20px; }
+.auth-wrap p { color:rgba(255,255,255,0.4); margin-bottom:20px; font-size:14px; }
+
+/* SEO Status Bar */
+.seo-bar { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:4px; margin-top:8px; font-family:Arial,sans-serif; font-size:12px; cursor:pointer; }
+.seo-bar.all-pass { background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); color:#2ecc71; }
+.seo-bar.has-warn { background:rgba(243,156,18,0.1); border:1px solid rgba(243,156,18,0.3); color:#f39c12; }
+.seo-bar.has-fail { background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); color:#e74c3c; }
+.seo-bar-icon { font-size:14px; font-weight:900; }
+.seo-bar-txt { flex:1; font-weight:700; }
+.seo-bar-detail { font-size:10px; opacity:0.7; }
+.seo-issues { background:#0d1524; border:1px solid rgba(199,175,79,0.1); border-radius:4px; padding:10px 14px; margin-top:4px; display:none; }
+.seo-issues.show { display:block; }
+.seo-issue-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:11px; font-family:Arial,sans-serif; border-bottom:1px solid rgba(255,255,255,0.04); }
+.seo-issue-row:last-child { border-bottom:none; }
+.seo-badge { font-size:9px; font-weight:900; padding:2px 6px; border-radius:2px; flex-shrink:0; }
+.seo-badge.fail { background:rgba(231,76,60,0.2); color:#e74c3c; }
+.seo-badge.warn { background:rgba(243,156,18,0.2); color:#f39c12; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>CWN TWITCH REACTION TOOL</h1>
+  <p>BROWSE CLIPS + LIVE STREAMS -- BUILD THUMBNAIL + TITLE + DESCRIPTION + SCRIPT</p>
+</div>
+
+<div id="auth-section" style="display:none">
+  <div class="auth-wrap">
+    <p>Connect your Twitch account to access clips and live stream data</p>
+    <button class="btn-purple" onclick="authorize()">CONNECT TWITCH</button>
+  </div>
+</div>
+
+<div id="main-section" style="display:none">
+  <div class="ctrl">
+    <label>MODE</label>
+    <select id="mode-select" onchange="switchMode()">
+      <option value="clips">TOP CLIPS -- BY STREAMER</option>
+      <option value="live">LIVE NOW -- TOP STREAMS</option>
+      <option value="game-clips">TOP CLIPS -- BY GAME</option>
+    </select>
+    <div id="streamer-ctrl" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <label>STREAMER</label>
+      <div style="position:relative;">
+        <input id="streamer-input" type="text" placeholder="Search or pick a streamer" value="" list="streamer-list" style="width:260px;">
+        <datalist id="streamer-list"></datalist>
+      </div>
+      <select id="clip-sort" style="background:#1a0a2e;border:1px solid rgba(145,70,255,0.3);color:#fff;padding:8px 12px;border-radius:4px;font-size:13px;">
+        <option value="views">SORT: TOP VIEWED</option>
+        <option value="time">SORT: LAST 7 DAYS</option>
+      </select>
+      <button class="btn-purple" onclick="loadClips()">LOAD CLIPS</button>
+      <span style="font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:1px;">Dropdown shows top streamers live right now</span>
+    </div>
+    <div id="game-ctrl" style="display:none">
+      <label>GAME</label>
+      <select id="game-select">
+        <option value="518203">Sports</option>
+        <option value="32982">GTA V</option>
+        <option value="509658">Just Chatting</option>
+        <option value="21779">League of Legends</option>
+        <option value="33214">Fortnite</option>
+        <option value="516575">Escape from Tarkov</option>
+        <option value="27471">Minecraft</option>
+        <option value="488552">Overwatch 2</option>
+      </select>
+      <button class="btn-purple" onclick="loadGameClips()">LOAD CLIPS</button>
+    </div>
+    <div id="live-ctrl" style="display:none">
+      <button class="btn-purple" onclick="loadLive()">LOAD LIVE NOW</button>
+    </div>
+    <span id="status">Ready</span>
+  </div>
+
+  <div id="clips-section">
+    <div class="sec-title" id="clips-title">TOP CLIPS -- CLICK ONE TO REACT</div>
+    <div class="clips-grid" id="clips-grid"></div>
+  </div>
+
+  <div id="gen-section">
+    <div class="sec-title">EMBEDDED CLIP -- REACT ON SCREEN</div>
+    <div class="embed-wrap">
+      <iframe id="clip-embed" src="" allowfullscreen></iframe>
+    </div>
+
+    <div class="sec-title">THUMBNAIL -- SCREENSHOT AT 1280x720</div>
+    <div style="overflow:auto;margin-bottom:20px;">
+      <div class="thumb-scaler" id="thumb-scaler">
+        <div id="thumb">
+          <img class="thumb-bg-img" id="thumb-bg" src="" alt="">
+          <div class="thumb-overlay"></div>
+          <div class="thumb-purple-glow"></div>
+          <div class="thumb-brand">CLIPZWORLD NEWS</div>
+          <div class="thumb-reaction-badge">REACTION</div>
+          <div class="thumb-content">
+            <div class="thumb-streamer" id="thumb-streamer"></div>
+            <div class="thumb-headline" id="thumb-headline">Clip Title</div>
+            <div class="thumb-sub" id="thumb-sub">TWITCH REACTION | CLIPZWORLD NEWS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-title gold">YOUTUBE TITLE</div>
+    <div class="copy-box">
+      <div class="copy-lbl">TITLE</div>
+      <div class="copy-txt" id="yt-title">--</div>
+      <button class="copy-btn" onclick="copyEl('yt-title',this)">COPY TITLE</button>
+    </div>
+
+    <div class="sec-title gold">DESCRIPTION + HASHTAGS</div>
+    <div class="copy-box">
+      <div class="copy-lbl">DESCRIPTION</div>
+      <div class="copy-txt" id="yt-desc">--</div>
+      <button class="copy-btn" onclick="copyEl('yt-desc',this)">COPY DESCRIPTION</button>
+    </div>
+
+    <div class="sec-title gold">REACTION SCRIPT</div>
+    <div class="script-box">
+      <pre id="script-txt">--</pre>
+      <button class="copy-btn" onclick="copyEl('script-txt',this)">COPY SCRIPT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var CLIENT_ID = 'nghzr9gr22acplvunvkm5c13784nit';
+var TOKEN = '';
+
+function g(id) { return document.getElementById(id); }
+function copyEl(id, btn) {
+  var ta = document.createElement('textarea');
+  ta.value = g(id).textContent;
+  document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  var orig = btn.textContent; btn.textContent = 'COPIED!';
+  setTimeout(function() { btn.textContent = orig; }, 1500);
+}
+function fmtNum(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return n.toString();
+}
+function fmtDate(str) {
+  return new Date(str).toLocaleDateString([], {month:'long', day:'numeric', year:'numeric'});
+}
+function authorize() {
+  var redirect = encodeURIComponent(window.location.href.split('#')[0]);
+  window.location.href = 'https://id.twitch.tv/oauth2/authorize?client_id=' + CLIENT_ID + '&redirect_uri=' + redirect + '&response_type=token&scope=';
+}
+function tw(path, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.twitch.tv/helix/' + path, true);
+  xhr.setRequestHeader('Client-Id', CLIENT_ID);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + TOKEN);
+  xhr.timeout = 10000;
+  xhr.onload = function() { try { cb(JSON.parse(xhr.responseText)); } catch(e) { cb({data:[]}); } };
+  xhr.onerror = xhr.ontimeout = function() { cb({data:[]}); g('status').textContent = 'Network error'; };
+  xhr.send();
+}
+
+function populateStreamerDropdown() {
+  // Fetch top streams and populate datalist
+  tw('streams?first=100&language=en', function(d) {
+    var streams = d.data || [];
+    var list = document.getElementById('streamer-list');
+    if (!list) return;
+    list.innerHTML = '';
+    // Sort by viewer count (already sorted by API)
+    streams.forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s.user_name;
+      opt.label = s.user_name + ' -- ' + fmtNum(s.viewer_count) + ' viewers (' + (s.game_name || 'Just Chatting') + ')';
+      list.appendChild(opt);
+    });
+  });
+}
+
+function switchMode() {
+  var mode = g('mode-select').value;
+  g('streamer-ctrl').style.display = mode === 'clips' ? '' : 'none';
+  if (mode === 'clips') populateStreamerDropdown();
+  g('game-ctrl').style.display = mode === 'game-clips' ? '' : 'none';
+  g('live-ctrl').style.display = mode === 'live' ? '' : 'none';
+  g('clips-grid').innerHTML = '';
+  g('gen-section').style.display = 'none';
+}
+
+function loadClips() {
+  var name = g('streamer-input').value.trim();
+  if (!name) {
+    // No streamer - load top live streamer's clips
+    g('status').textContent = 'Loading top streamer clips...';
+    tw('streams?first=1&language=en', function(sd) {
+      var top = sd.data && sd.data[0];
+      if (!top) { g('status').textContent = 'No streams found'; return; }
+      g('streamer-input').value = top.user_name;
+      var sort2 = document.getElementById('clip-sort') ? document.getElementById('clip-sort').value : 'views';
+      var dateParam2 = '';
+      if (sort2 === 'time') {
+        var since2 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        dateParam2 = '&started_at=' + since2;
+      }
+      tw('clips?broadcaster_id=' + top.user_id + '&first=20' + dateParam2, function(cd) {
+        buildClipCards(cd.data || [], top.user_name, 'TOP CLIPS -- ' + top.user_name.toUpperCase());
+      });
+    });
+    return;
+  }
+  g('status').textContent = 'Looking up ' + name + '...';
+  g('clips-grid').innerHTML = '';
+  // Get user ID first
+  tw('users?login=' + encodeURIComponent(name.toLowerCase()), function(d) {
+    var user = d.data && d.data[0];
+    if (!user) { g('status').textContent = 'Streamer not found'; return; }
+    g('status').textContent = 'Loading clips for ' + user.display_name + '...';
+    var sort = document.getElementById('clip-sort') ? document.getElementById('clip-sort').value : 'views';
+    var dateParam = '';
+    if (sort === 'time') {
+      var since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      dateParam = '&started_at=' + since;
+    }
+    tw('clips?broadcaster_id=' + user.id + '&first=20' + dateParam, function(cd) {
+      buildClipCards(cd.data || [], user.display_name, 'TOP CLIPS -- ' + user.display_name.toUpperCase());
+    });
+  });
+}
+
+function loadGameClips() {
+  var gameId = g('game-select').value;
+  var gameName = g('game-select').options[g('game-select').selectedIndex].text;
+  g('status').textContent = 'Loading top clips for ' + gameName + '...';
+  tw('clips?game_id=' + gameId + '&first=20', function(d) {
+    buildClipCards(d.data || [], gameName, 'TOP CLIPS -- ' + gameName.toUpperCase());
+  });
+}
+
+function loadLive() {
+  g('status').textContent = 'Loading top streams...';
+  tw('streams?first=24&language=en', function(d) {
+    buildStreamCards(d.data || []);
+  });
+}
+
+function buildClipCards(clips, streamer, title) {
+  g('clips-title').textContent = title;
+  var grid = g('clips-grid');
+  grid.innerHTML = '';
+  if (!clips.length) { grid.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px">No clips found</div>'; return; }
+  clips.forEach(function(clip, idx) {
+    var thumb = clip.thumbnail_url || '';
+    var views = fmtNum(clip.view_count || 0);
+    var date = clip.created_at ? fmtDate(clip.created_at) : '';
+    var card = document.createElement('div');
+    card.className = 'clip-card';
+    card.innerHTML =
+      (thumb ? '<img class="clip-thumb" src="' + thumb + '">' : '') +
+      '<div class="clip-body">' +
+      '<div class="clip-streamer">' + (clip.broadcaster_name || streamer) + '</div>' +
+      '<div class="clip-title">' + (clip.title || '') + '</div>' +
+      '<div class="clip-meta">' + views + ' views' + (date ? ' - ' + date : '') + ' - ' + (clip.game_name || '') + '</div>' +
+      '<div class="clip-btns">' +
+      '<button class="btn-sm btn-sel" onclick="selectClip(' + idx + ')">REACT TO THIS</button>' +
+      '<button class="btn-sm btn-link" onclick="window.open(\'' + (clip.url || '') + '\',\'_blank\')">VIEW ON TWITCH</button>' +
+      '</div></div>';
+    card._clip = clip;
+    grid.appendChild(card);
+  });
+  window._clips = clips;
+  g('status').textContent = clips.length + ' clips loaded';
+}
+
+function buildStreamCards(streams) {
+  g('clips-title').textContent = 'LIVE NOW -- TOP STREAMS';
+  var grid = g('clips-grid');
+  grid.innerHTML = '';
+  if (!streams.length) { grid.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px">No streams found</div>'; return; }
+  streams.forEach(function(s, idx) {
+    var thumb = (s.thumbnail_url || '').replace('{width}', '320').replace('{height}', '180');
+    var card = document.createElement('div');
+    card.className = 'stream-card live';
+    card.innerHTML =
+      '<div style="position:relative">' +
+      (thumb ? '<img class="stream-thumb" src="' + thumb + '">' : '<div class="stream-thumb"></div>') +
+      '<div class="live-badge">LIVE</div>' +
+      '<div class="viewer-badge">' + fmtNum(s.viewer_count) + ' viewers</div>' +
+      '</div>' +
+      '<div class="stream-body">' +
+      '<div class="stream-name">' + (s.user_name || '') + '</div>' +
+      '<div class="stream-title">' + (s.title || '') + '</div>' +
+      '<div class="stream-game">' + (s.game_name || '') + '</div>' +
+      '<div class="clip-btns" style="margin-top:8px">' +
+      '<button class="btn-sm btn-sel" onclick="selectStream(' + idx + ')">REACT TO THIS</button>' +
+      '<button class="btn-sm btn-link" onclick="window.open(\'https://twitch.tv/' + s.user_login + '\',\'_blank\')">WATCH LIVE</button>' +
+      '</div></div>';
+    grid.appendChild(card);
+  });
+  window._streams = streams;
+  g('status').textContent = streams.length + ' live streams loaded';
+}
+
+function selectClip(idx) {
+  var clips = window._clips || [];
+  var clip = clips[idx];
+  if (!clip) return;
+
+  // Deselect all
+  document.querySelectorAll('.clip-card').forEach(function(c) { c.className = 'clip-card'; });
+  document.querySelectorAll('.clip-card')[idx].className = 'clip-card selected';
+
+  var embedUrl = clip.embed_url + '&parent=localhost&autoplay=true&muted=false';
+  var thumb = clip.thumbnail_url || '';
+  var title = clip.title || '';
+  var streamer = clip.broadcaster_name || '';
+  var views = fmtNum(clip.view_count || 0);
+  var game = clip.game_name || '';
+  var date = clip.created_at ? fmtDate(clip.created_at) : '';
+  var clipUrl = clip.url || '';
+
+  generateContent(embedUrl, thumb, title, streamer, views, game, date, clipUrl, false);
+}
+
+function selectStream(idx) {
+  var streams = window._streams || [];
+  var s = streams[idx];
+  if (!s) return;
+
+  var thumb = (s.thumbnail_url || '').replace('{width}', '1280').replace('{height}', '720');
+  var title = s.title || '';
+  var streamer = s.user_name || '';
+  var views = fmtNum(s.viewer_count || 0) + ' viewers';
+  var game = s.game_name || '';
+  var date = 'LIVE NOW';
+  var streamUrl = 'https://twitch.tv/' + s.user_login;
+  var embedUrl = 'https://player.twitch.tv/?channel=' + s.user_login + '&parent=localhost&autoplay=false';
+
+  generateContent(embedUrl, thumb, title, streamer, views, game, date, streamUrl, true);
+}
+
+function generateContent(embedUrl, thumb, title, streamer, views, game, date, url, isLive) {
+  // Embed
+  g('clip-embed').src = embedUrl;
+
+  // Thumbnail
+  if (thumb) { g('thumb-bg').src = thumb; g('thumb-bg').style.display = 'block'; }
+  else { g('thumb-bg').style.display = 'none'; }
+  var shortTitle = title.length > 55 ? title.slice(0, 52) + '...' : title;
+  g('thumb-streamer').textContent = streamer.toUpperCase();
+  g('thumb-headline').textContent = shortTitle;
+  g('thumb-sub').textContent = (isLive ? 'LIVE NOW' : game || 'TWITCH CLIP') + ' | CLIPZWORLD NEWS';
+
+  var scale = Math.min((window.innerWidth - 40) / 1280, 1);
+  var sc = g('thumb-scaler');
+  sc.style.transform = 'scale(' + scale + ')';
+  sc.style.width = Math.round(1280 * scale) + 'px';
+  sc.style.height = Math.round(720 * scale) + 'px';
+
+  // SEO Title - streamer name first (what people search), reaction keyword, brand last
+  var shortTitle = title.length > 50 ? title.slice(0, 47) + '...' : title;
+  var ytTitle = streamer + ' -- "' + shortTitle + '" Reaction | ClipzWorld News';
+  if (ytTitle.length > 100) ytTitle = ytTitle.slice(0, 97) + '...';
+  g('yt-title').textContent = ytTitle;
+
+  // SEO Description - first 2 lines are critical
+  var desc = '';
+  desc += 'Reacting to ' + streamer + (isLive ? ' LIVE on Twitch' : ' Twitch clip') + ' | ' + (game ? game + ' | ' : '') + date + '\n';
+  desc += '"' + title + '"\n';
+  desc += '\n';
+  desc += 'Watch ' + streamer + ' on Twitch: twitch.tv/' + streamer.toLowerCase().replace(/\s/g,'') + '\n';
+  desc += 'Original clip: ' + url + '\n';
+  desc += '\n';
+  desc += 'ClipzWorld News reacts to the biggest moments on Twitch daily. Subscribe for NBA live coverage, world news and Twitch reactions every weekday.\n';
+  desc += '\n';
+  desc += '00:00 Intro\n';
+  desc += '00:20 Clip Reaction\n';
+  desc += '01:30 Breakdown\n';
+  desc += '\n';
+  // Specific then broad tags - streamer name is most important
+  var streamerTag = '#' + streamer.split(' ').join('');
+  var gameTag = game ? '#' + game.split(' ').join('').replace(/[^a-zA-Z0-9]/g,'') : '';
+  var tags = [streamerTag, '#Twitch', '#TwitchClips', '#TwitchReaction'];
+  if (gameTag) tags.push(gameTag);
+  tags = tags.concat(['#ClipzWorldNews', '#Reaction', '#Gaming', '#StreamerClips', '#TwitchHighlights']);
+  desc += tags.join(' ');
+  g('yt-desc').textContent = desc;
+  // SEO check
+  var seoEl3 = document.getElementById('twitch-seo-status');
+  if (!seoEl3) {
+    seoEl3 = document.createElement('div');
+    seoEl3.id = 'twitch-seo-status';
+    var db3 = document.getElementById('yt-desc');
+    if (db3 && db3.parentNode) db3.parentNode.appendChild(seoEl3);
+  }
+  renderSeoBar('twitch-seo-status', g('yt-title').textContent, g('yt-desc').textContent, {teams:[streamer]});
+
+  // Script
+  var lines = [];
+  lines.push('CLIPZWORLD NEWS -- TWITCH REACTION');
+  lines.push('Streamer: ' + streamer + (isLive ? ' (LIVE)' : ''));
+  lines.push('Clip: "' + title + '"');
+  if (game) lines.push('Category: ' + game);
+  lines.push('');
+  lines.push('--- INTRO (0-8 sec) ---');
+  lines.push('What is UP ClipzWorld News. We are reacting to ' + streamer + ' right now' + (isLive ? ' -- they are LIVE as we speak' : ', this clip has ' + views + ' views') + '. Watch this.');
+  lines.push('');
+  lines.push('--- AS CLIP PLAYS ---');
+  lines.push('>> [React live to what happens -- call out the key moment]');
+  lines.push('>> [Did chat go crazy? Was this unexpected? Call it out]');
+  lines.push('>> ' + streamer + ' -- ' + (isLive ? 'LIVE right now on Twitch with ' + views : views + ' people have seen this') + '. That says everything.');
+  if (game) lines.push('>> ' + game + ' content always goes crazy and this is no different.');
+  lines.push('');
+  lines.push('--- YOUR TAKE ---');
+  lines.push('[Add your reaction -- why is this funny/impressive/wild? What would you have done?]');
+  lines.push('');
+  lines.push('--- OUTRO ---');
+  lines.push('Go follow ' + streamer + ' on Twitch -- link in the description. Drop a comment with your reaction. Subscribe to ClipzWorld News. Peace.');
+  g('script-txt').textContent = lines.join('\n');
+
+  g('gen-section').style.display = 'block';
+  g('gen-section').scrollIntoView({ behavior:'smooth' });
+}
+
+// Init
+var hash = window.location.hash;
+var tokenMatch = hash.match(/access_token=([^&]+)/);
+if (tokenMatch) { TOKEN = tokenMatch[1]; localStorage.setItem('twitch_token', TOKEN); }
+else { TOKEN = localStorage.getItem('twitch_token') || ''; }
+
+if (TOKEN) {
+  g('main-section').style.display = 'block';
+  switchMode();
+  populateStreamerDropdown();
+  loadClips(); // auto-load top clips
+} else {
+  g('auth-section').style.display = 'block';
+}
+</script>
+</body>
+</html>
