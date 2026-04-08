@@ -229,6 +229,98 @@ class StageTimer {
   }
 }
 
+// ── VectCut Design Orchestrator ─────────────────────────────────────
+// Bridge between Node.js and Python video engine (port 9001)
+// Handles: Split-screen assembly, branded overlays, burn-in images
+// Reference: "Creative Requirements and Direction.txt" (Gemini = Design Lead, Claude = Implementation Lead)
+class VectCutClient {
+  constructor(port = 9001) {
+    this.baseUrl = process.env.VECTCUT_API_URL || `http://localhost:${port}`;
+  }
+
+  /**
+   * Short-Form Split-Screen Assembly (9:16 Portrait)
+   * Top 50%: Source clip (1080×960)
+   * Bottom 50%: Bobby G avatar (1080×960)
+   * Logo: 80px top-right, 85% opacity
+   */
+  async assembleShortForm(clipPath, avatarPath, jobId) {
+    console.log(`[VectCut] Orchestrating split-screen for ${jobId}`);
+    const layout = CONFIG.VISUAL_LAYOUTS.SHORT_FORM;
+
+    const payload = {
+      jobId,
+      canvas: { width: layout.WIDTH, height: layout.HEIGHT },
+      layers: [
+        {
+          path: clipPath,
+          x: layout.CLIP_ZONE.x,
+          y: layout.CLIP_ZONE.y,
+          w: layout.CLIP_ZONE.w,
+          h: layout.CLIP_ZONE.h,
+          z: 1
+        },
+        {
+          path: avatarPath,
+          x: layout.AVATAR_ZONE.x,
+          y: layout.AVATAR_ZONE.y,
+          w: layout.AVATAR_ZONE.w,
+          h: layout.AVATAR_ZONE.h,
+          z: 2
+        }
+      ],
+      branding: {
+        path: findBrandingAsset('logo-80px.png'),
+        x: layout.LOGO_POS.x,
+        y: layout.LOGO_POS.y,
+        size: layout.LOGO_POS.size,
+        opacity: 0.85
+      }
+    };
+
+    return axios.post(`${this.baseUrl}/assemble`, payload);
+  }
+
+  /**
+   * Branded "Gold Ring" Overlay for Long-Form (16:9 Landscape)
+   * Applies CWN Gold (#c7af4f) 5px border + drop shadow
+   * Position: TV-shaped card (640×360) at OVERLAY_ZONE (top-right)
+   * Used for: NBA intro cards, News article images
+   */
+  async addBrandedOverlay(videoPath, assetPath, layout = 'LONG_FORM') {
+    const coords = CONFIG.VISUAL_LAYOUTS[layout].OVERLAY_ZONE;
+
+    return axios.post(`${this.baseUrl}/overlay`, {
+      videoPath,
+      assetPath,
+      x: coords.x,
+      y: coords.y,
+      w: coords.w,
+      h: coords.h,
+      style: {
+        border: '5px solid #c7af4f',  // CWN Gold border
+        shadow: '0 4px 15px rgba(0,0,0,0.5)'  // 50% opacity shadow
+      }
+    });
+  }
+
+  /**
+   * Health check - verify VectCut API is responsive
+   */
+  async healthCheck() {
+    try {
+      const response = await axios.get(`${this.baseUrl}/`);
+      return { healthy: true, status: response.status };
+    } catch (error) {
+      console.error(`[VectCut] Health check failed: ${error.message}`);
+      return { healthy: false, error: error.message };
+    }
+  }
+}
+
+// Initialize singleton instance
+const vectCutClient = new VectCutClient();
+
 // Global metrics store: { jobId: { stages: [], totalTime: X } }
 const jobMetrics = {};
 
