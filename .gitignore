@@ -6,3 +6,28 @@ node_modules/
 cwn-drive-key.json
 .DS_Store
 .aider*
+
+# Binary / media assets — keep locally or in Google Drive
+*.mp4
+*.mov
+*.avi
+*.rtf
+*.textClipping
+client_secret_*.json
+
+# Data exports — not source code
+internal_all.csv
+meta_description_all.csv
+search_console_all.csv
+url_all.csv
+issues_overview_report.csv
+video_generation_custom_*.csv
+
+# Reference/inspiration docs
+Space Ghost.pdf
+"The Daily Show.pdf"
+"Weekend Update with Norm MacDonald.pdf"
+"Twitch Brand/"
+
+# Scratch/downloaded files
+0347a9aa-*.jpeg
