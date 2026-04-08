@@ -1727,7 +1727,12 @@ EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}
 EXPECTED SCENES: ${expectedScenes}`;
 
   const checklist = isTwitch ? [
-    `1. SCENE COUNT: Are there exactly ${expectedScenes} === SCENE === markers in the script?`,
+    `1. SCENE COUNT: Count every === HEADER === marker systematically through the ENTIRE script.
+   - DO NOT try to count in your head
+   - Expected: exactly ${expectedScenes} markers
+   - Method: Search through script and list each header you find, then count your list
+   - Remember: Scenes with numbers (CLIP1, CLIP2, CLIP3) are SEPARATE scenes, not one scene
+   - Are there exactly ${expectedScenes} === SCENE === markers?`,
     `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
     `3. OUTRO: Does the script end with "Appreciate you!"?`,
     `4. DISPLAY NAMES: Are only the approved display names used (no Twitch usernames)?`,
@@ -1739,7 +1744,12 @@ EXPECTED SCENES: ${expectedScenes}`;
     `10. LOCKED INTRO: Does the video open with the correct locked intro line?`,
     `11. WORD COUNT: Is each streamer section approximately 80-100 words?`
   ] : isNBA ? [
-    `1. SCENE COUNT: Are there exactly ${expectedScenes} === SCENE === markers?`,
+    `1. SCENE COUNT: Count every === HEADER === marker systematically through the ENTIRE script.
+   - DO NOT try to count in your head
+   - Expected: exactly ${expectedScenes} markers
+   - Method: Search through script and list each header you find, then count your list
+   - Remember: GAME1_INTRO, GAME1_SETUP, GAME1_CLIP_REACTION, GAME1_REACTION are 4 SEPARATE scenes
+   - Are there exactly ${expectedScenes} === SCENE === markers?`,
     `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per game)?`,
     `3. OUTRO: Does the script end with "Appreciate you!"?`,
     `4. GAME ACCURACY: Are game scores, teams, and player stats accurately mentioned?`,
@@ -1751,7 +1761,12 @@ EXPECTED SCENES: ${expectedScenes}`;
     `10. WORD COUNT: Is each game section approximately 120-150 words?`,
     `11. REACTION: Is there a brief reaction/observation after each clip?`
   ] : isNews ? [
-    `1. SCENE COUNT: Are there exactly ${expectedScenes} === SCENE === markers?`,
+    `1. SCENE COUNT: Count every === HEADER === marker systematically through the ENTIRE script.
+   - DO NOT try to count in your head
+   - Expected: exactly ${expectedScenes} markers
+   - Method: Search through script and list each header you find, then count your list
+   - Remember: STORY1_INTRO, STORY1_SETUP, STORY1_CLIP_REACTION, STORY1_REACTION are 4 SEPARATE scenes
+   - Are there exactly ${expectedScenes} === SCENE === markers?`,
     `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per story)?`,
     `3. OUTRO: Does the script end with "Appreciate you!"?`,
     `4. STORY ACCURACY: Are headlines and story details accurately mentioned?`,
