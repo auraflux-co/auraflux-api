@@ -2846,14 +2846,216 @@ app.post('/assemble', async (req, res) => {
         log(asmId, `  ${path.basename(f)}: ${dur.toFixed(2)}s`);
       }
 
-      // Start assembly timer (normalization + FFmpeg encode + ticker/logo)
-      const assemblyTimer = new StageTimer(asmId, 'FFmpeg Assembly');
+      // ── SHORT-FORM SPLIT-SCREEN ASSEMBLY (9:16 Portrait) ────────────────────────
+      // For short-form videos (-short suffix), use split-screen layout instead of transitions
+      // Top half: random source clip (1080×960), Bottom half: all avatar segments concatenated (1080×960)
+      const isShortForm = contentType && contentType.includes('-short') && format === 'portrait';
 
-      // Step 3: Build output path
-      const outDir    = outputDir || OUTPUT_DIR;
-      if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-      const outFile   = `${(jobTitle||"cwn").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
-      const outPath   = path.join(outDir, outFile);
+      if (isShortForm) {
+        log(asmId, `\n📱 SHORT-FORM DETECTED — Using split-screen assembly (9:16 portrait)`);
+        const assemblyTimer = new StageTimer(asmId, 'Short-Form Split-Screen Assembly');
+
+        // Build output path
+        const outDir = outputDir || OUTPUT_DIR;
+        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+        const outFile = `${(jobTitle||"cwn_short").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.mp4`;
+        const outPath = path.join(outDir, outFile);
+
+        // Separate segments by type
+        const avatarFiles = [];
+        const clipFiles = [];
+
+        for (let i = 0; i < localFiles.length; i++) {
+          const seg = segsToProcess.find((s, si) => localFiles[i].includes(`${asmId}_${si}_`));
+          const segType = seg?.type || 'avatar';
+
+          if (segType === 'source_clip') {
+            clipFiles.push(localFiles[i]);
+          } else {
+            avatarFiles.push(localFiles[i]);
+          }
+        }
+
+        log(asmId, `  📊 Segments: ${avatarFiles.length} avatar + ${clipFiles.length} source clips`);
+
+        // Select ONE random source clip for top half
+        let selectedClip = null;
+        if (clipFiles.length > 0) {
+          const randomIdx = Math.floor(Math.random() * clipFiles.length);
+          selectedClip = clipFiles[randomIdx];
+          log(asmId, `  🎲 Selected random clip ${randomIdx + 1}/${clipFiles.length}: ${path.basename(selectedClip)}`);
+        }
+
+        if (avatarFiles.length === 0) {
+          throw new Error('No avatar segments found for short-form video');
+        }
+
+        // Step 1: Concatenate all avatar segments into single bottom half video
+        log(asmId, `  🎬 Concatenating ${avatarFiles.length} avatar segments...`);
+        const avatarConcatPath = path.join(TMP_DIR, `${asmId}_avatar_concat.mp4`);
+
+        if (avatarFiles.length === 1) {
+          // Single avatar — just copy
+          fs.copyFileSync(avatarFiles[0], avatarConcatPath);
+          log(asmId, `  ✅ Single avatar segment — copied`);
+        } else {
+          // Multiple avatars — concat with demuxer
+          const avatarListPath = path.join(TMP_DIR, `${asmId}_avatar_list.txt`);
+          const avatarListContent = avatarFiles.map(f => `file '${f.replace(/'/g, "'\\''")}'`).join('\n');
+          fs.writeFileSync(avatarListPath, avatarListContent);
+
+          await new Promise((res, rej) => {
+            const args = [
+              '-f', 'concat', '-safe', '0', '-i', avatarListPath,
+              '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+              '-c:a', 'aac', '-ar', '44100', '-ac', '2',
+              '-y', avatarConcatPath
+            ];
+            const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
+            proc.on('close', code => code === 0 ? res() : rej(new Error(`Avatar concat failed: ${code}`)));
+            proc.on('error', rej);
+          });
+          log(asmId, `  ✅ Avatar segments concatenated`);
+          try { fs.unlinkSync(avatarListPath); } catch(e) {}
+        }
+
+        // Step 2: Prepare top half (source clip OR black frame if no clip)
+        let topHalfPath;
+        const avatarDuration = await probeDuration(avatarConcatPath);
+
+        if (selectedClip) {
+          log(asmId, `  🎥 Preparing top half: source clip (scaled + cropped to 1080×960)`);
+          topHalfPath = path.join(TMP_DIR, `${asmId}_top_half.mp4`);
+
+          await new Promise((res, rej) => {
+            const args = [
+              '-i', selectedClip,
+              '-t', avatarDuration.toFixed(3), // Match avatar duration
+              '-vf', 'scale=1080:960:force_original_aspect_ratio=increase,crop=1080:960',
+              '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+              '-an', // No audio for top half
+              '-y', topHalfPath
+            ];
+            const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
+            proc.on('close', code => code === 0 ? res() : rej(new Error(`Top half prep failed: ${code}`)));
+            proc.on('error', rej);
+          });
+          log(asmId, `  ✅ Top half prepared (1080×960)`);
+        } else {
+          log(asmId, `  ⚠️  No source clip — using black frame for top half`);
+          topHalfPath = path.join(TMP_DIR, `${asmId}_black_top.mp4`);
+
+          await new Promise((res, rej) => {
+            const args = [
+              '-f', 'lavfi', '-i', `color=c=black:s=1080x960:d=${avatarDuration.toFixed(3)}`,
+              '-c:v', 'libx264', '-preset', 'fast', '-pix_fmt', 'yuv420p',
+              '-y', topHalfPath
+            ];
+            const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
+            proc.on('close', code => code === 0 ? res() : rej(new Error(`Black frame gen failed: ${code}`)));
+            proc.on('error', rej);
+          });
+          log(asmId, `  ✅ Black top half generated`);
+        }
+
+        // Step 3: Prepare bottom half (avatar) - scale to 1080×960
+        log(asmId, `  🎙  Preparing bottom half: avatar (scaled to 1080×960)`);
+        const bottomHalfPath = path.join(TMP_DIR, `${asmId}_bottom_half.mp4`);
+
+        await new Promise((res, rej) => {
+          const args = [
+            '-i', avatarConcatPath,
+            '-vf', 'scale=1080:960:force_original_aspect_ratio=increase,crop=1080:960',
+            '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+            '-c:a', 'aac', '-ar', '44100', '-ac', '2',
+            '-y', bottomHalfPath
+          ];
+          const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
+          proc.on('close', code => code === 0 ? res() : rej(new Error(`Bottom half prep failed: ${code}`)));
+          proc.on('error', rej);
+        });
+        log(asmId, `  ✅ Bottom half prepared (1080×960)`);
+
+        // Step 4: Vertical stack (top + bottom = 1080×1920)
+        log(asmId, `  📐 Stacking top and bottom halves (1080×1920)...`);
+        const stackedPath = path.join(TMP_DIR, `${asmId}_stacked.mp4`);
+
+        await new Promise((res, rej) => {
+          const args = [
+            '-i', topHalfPath,
+            '-i', bottomHalfPath,
+            '-filter_complex', '[0:v][1:v]vstack=inputs=2[vstacked]',
+            '-map', '[vstacked]',
+            '-map', '1:a', // Use audio from bottom half (avatar)
+            '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+            '-c:a', 'aac',
+            '-movflags', '+faststart',
+            '-y', stackedPath
+          ];
+          const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
+          proc.on('close', code => code === 0 ? res() : rej(new Error(`Vstack failed: ${code}`)));
+          proc.on('error', rej);
+        });
+        log(asmId, `  ✅ Split-screen stacked (1080×1920)`);
+
+        // Step 5: Apply 80px logo overlay (top-right, 15px margins, 85% opacity)
+        log(asmId, `  🏷  Applying CWN logo (80px, top-right)...`);
+        const logoPath = path.join(__dirname, 'assets', 'cwn_logo.png');
+        const hasLogo = fs.existsSync(logoPath);
+
+        if (hasLogo) {
+          await new Promise((res, rej) => {
+            const args = [
+              '-i', stackedPath,
+              '-i', logoPath,
+              '-filter_complex', '[1:v]scale=80:-1[logo];[0:v][logo]overlay=x=W-w-15:y=15:format=auto,format=yuv420p[vout]',
+              '-map', '[vout]',
+              '-map', '0:a',
+              '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+              '-c:a', 'copy',
+              '-movflags', '+faststart',
+              '-y', outPath
+            ];
+            const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
+            proc.on('close', code => code === 0 ? res() : rej(new Error(`Logo overlay failed: ${code}`)));
+            proc.on('error', rej);
+          });
+          log(asmId, `  ✅ Logo applied`);
+        } else {
+          log(asmId, `  ⚠️  Logo not found at ${logoPath} — skipping logo overlay`);
+          fs.renameSync(stackedPath, outPath);
+        }
+
+        // Clean up temp files
+        try { fs.unlinkSync(avatarConcatPath); } catch(e) {}
+        try { fs.unlinkSync(topHalfPath); } catch(e) {}
+        try { fs.unlinkSync(bottomHalfPath); } catch(e) {}
+        try { if (hasLogo) fs.unlinkSync(stackedPath); } catch(e) {}
+
+        log(asmId, `\n✅ Short-form assembly complete: ${outPath}`);
+        assemblyJobs[asmId].pct = 100;
+        assemblyJobs[asmId].status = 'done';
+        assemblyJobs[asmId].outputPath = outPath;
+
+        // Add metrics
+        assemblyTimer.addData('format', '9:16 portrait split-screen');
+        addStageMetrics(asmId, assemblyTimer.end());
+
+        // Skip to end of assembly endpoint (Gate 3 QA, Drive upload, etc.)
+        // The endpoint will continue from here with the assembled outPath video
+
+      } else {
+        // ── LONG-FORM ASSEMBLY — Transition-based editing ──────────────────────────
+        log(asmId, `\n🎬 LONG-FORM DETECTED — Using transition-based assembly`);
+
+        // Start assembly timer (normalization + FFmpeg encode + ticker/logo)
+        const assemblyTimer = new StageTimer(asmId, 'FFmpeg Assembly');
+
+        // Step 3: Build output path
+        const outDir    = outputDir || OUTPUT_DIR;
+        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+        const outFile   = `${(jobTitle||"cwn").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
+        const outPath   = path.join(outDir, outFile);
 
       // Step 4: Normalize all segments to TS (handles mixed codecs + moov atom issues)
       // Then apply smart per-segment transitions via xfade filter on normalized files
@@ -3662,7 +3864,9 @@ app.post('/assemble', async (req, res) => {
       // Store per-segment durations so dashboard can build accurate chapter timestamps
       assemblyJobs[asmId].segmentDurations = durations;
 
-      // Step 7.5: Gate 3 QA with retry loop (max 3 attempts)
+      } // end long-form else block
+
+      // Step 7.5: Gate 3 QA with retry loop (max 3 attempts) — applies to BOTH short-form and long-form
       const MAX_QA_RETRIES = 3;
       let qaAttempt = 0;
       let qaResult = null;
