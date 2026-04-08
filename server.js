@@ -5864,6 +5864,15 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
       estSecs,
       geminiHits: analyses.filter(a=>a).length,
       orderedClipUrls,
+      // Design metadata — Gemini's visual instructions for Claude to execute
+      design_metadata: {
+        visualHook: null,       // Timestamp where visual interest peaks (e.g., "0:15")
+        safeZone: null,         // Coordinates avoiding TikTok/Reels UI overlap
+        overlayPositions: [],   // Array of {sceneId, x, y, w, h} for each overlay
+        burnInImages: [],       // Array of {sceneId, design_brief, position}
+        logoPlacement: null,    // Override default logo position if needed
+        colorGrading: null      // Optional color grading suggestions
+      },
       // Gate 1 QA results — dashboard shows these before user approves HeyGen send
       scriptQA: {
         score:         scriptQA.score,
