@@ -28,6 +28,21 @@ cd ~/cwn-production && tail -f output/*.log
 
 ## Core Architecture
 
+### AI Design Hierarchy (April 2026 Update)
+
+**CRITICAL:** New two-AI collaborative workflow established:
+
+- **Gemini = Primary Design Owner** — Responsible for ALL visual strategy, placement decisions, pacing, design_brief generation
+- **Claude = Implementation Lead** — Executes Gemini's designs via VectCut/FFmpeg, manages all Gemini API calls, NEVER assumes design choices
+
+**Claude's Requirements:**
+1. Consult Gemini for ALL visual decisions (hooks, safe zones, coordinates, overlay positions)
+2. Pass Gemini's design_metadata directly into VectCutClient or FFmpeg filters
+3. Report to Rob only when Gemini has approved design at Gate 3
+4. Handle all one-off design tasks by prompting Gemini for strategy, then executing asset generation
+
+**See:** `server.js:5867-5875` for design_metadata schema, `server.js:232-318` for VectCutClient implementation
+
 ### Multi-Stage Production Pipeline
 
 ClipzWorld News (CWN) is an AI-generated news/reaction show using Claude (script), Gemini (QA), and HeyGen (avatar). The production pipeline has 4 stages with 4 quality gates:
