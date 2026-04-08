@@ -4159,6 +4159,374 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
   }
 });
 
+// ── POST /nba/generate-intro-card ────────────────────────────────
+// Generates a 640×360 NBA intro card for video overlay
+// Uses ESPN game data and renders a TV-shaped card (16:9 landscape)
+// Returns { cardPath, gameId, teams: { away, home } }
+//
+// Body: { gameId, width?, height? }
+// width/height default to 640×360 (TV shape for OVERLAY_ZONE)
+
+app.post('/nba/generate-intro-card', async (req, res) => {
+  const { gameId, width = 640, height = 360 } = req.body;
+  if (!gameId) return res.status(400).json({ error: 'gameId required' });
+
+  try {
+    console.log(`[nba-card] Generating ${width}×${height} intro card for game ${gameId}`);
+
+    // Step 1: Fetch ESPN game summary API
+    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
+    const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
+    const data = summaryResp.data;
+
+    // Step 2: Extract team data
+    const hc = data.header && data.header.competitions && data.header.competitions[0];
+    const comps = (hc && hc.competitors) || [];
+    let away = { team: {} }, home = { team: {} };
+
+    for (const comp of comps) {
+      if (comp.homeAway === 'away') away = comp;
+      if (comp.homeAway === 'home') home = comp;
+    }
+
+    const aAbbr = (away.team && away.team.abbreviation) || 'AWAY';
+    const hAbbr = (home.team && home.team.abbreviation) || 'HOME';
+
+    // Step 3: Extract team colors
+    const bst = (data.boxscore && data.boxscore.teams) || [];
+    let aColor = '1d428a', hColor = 'c41311';
+
+    for (const bt of bst) {
+      const team = bt.team || {};
+      if (team.abbreviation === aAbbr && team.color) aColor = team.color;
+      if (team.abbreviation === hAbbr && team.color) hColor = team.color;
+    }
+
+    // Step 4: Extract game info
+    const aLoc = (away.team && away.team.location) || '';
+    const aNick = (away.team && away.team.name) || '';
+    const aRec = (away.records && away.records[0] && away.records[0].summary) || '';
+
+    const hLoc = (home.team && home.team.location) || '';
+    const hNick = (home.team && home.team.name) || '';
+    const hRec = (home.records && home.records[0] && home.records[0].summary) || '';
+
+    const gi = data.gameInfo || {};
+    const venue = (gi.venue && gi.venue.fullName) || '';
+    const city = (gi.venue && gi.venue.address && gi.venue.address.city) || '';
+
+    // Format time
+    const fmtTime = (dateStr) => {
+      const d = new Date(dateStr);
+      const h = d.getHours();
+      const m = d.getMinutes();
+      const ap = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return `${h12}:${m < 10 ? '0' + m : m} ${ap} ET`;
+    };
+
+    const tipTime = hc && hc.date ? fmtTime(hc.date) : '-- ET';
+    const gameDate = hc && hc.date ? new Date(hc.date).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase() : '';
+
+    // Step 5: Launch Puppeteer and render card
+    const puppeteer = require('puppeteer');
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width, height, deviceScaleFactor: 2 });
+
+    // Hex to RGB helper
+    const hexRgb = (hex) => {
+      hex = (hex || '').replace('#', '');
+      if (hex.length !== 6) return '100,100,100';
+      return `${parseInt(hex.slice(0, 2), 16)},${parseInt(hex.slice(2, 4), 16)},${parseInt(hex.slice(4, 6), 16)}`;
+    };
+
+    // Build HTML for the card (scaled down version of nba_thumbnail_generator.html)
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          width: ${width}px;
+          height: ${height}px;
+          background: #0a0a0a;
+          position: relative;
+          overflow: hidden;
+        }
+        .bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; }
+        .panel-a, .panel-h { position: absolute; top: 0; width: 50%; height: 100%; opacity: 0.4; }
+        .panel-a { left: 0; background: linear-gradient(120deg, #${aColor}66 0%, #${aColor}22 60%, transparent 100%); }
+        .panel-h { right: 0; background: linear-gradient(240deg, #${hColor}66 0%, #${hColor}22 60%, transparent 100%); }
+        .team { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 10px; }
+        .team-a { left: 20px; }
+        .team-h { right: 20px; flex-direction: row-reverse; }
+        .logo { width: 70px; height: 70px; object-fit: contain; }
+        .team-info { color: white; }
+        .team-h .team-info { text-align: right; }
+        .city { font-size: 12px; font-weight: 700; letter-spacing: 1px; opacity: 0.8; }
+        .name { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
+        .rec { font-size: 10px; opacity: 0.6; margin-top: 2px; }
+        .vs-ring {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 50px;
+          height: 50px;
+          border: 3px solid #c7af4f;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(10, 10, 10, 0.8);
+        }
+        .vs-lbl { color: #c7af4f; font-size: 16px; font-weight: 900; }
+        .game-tag {
+          position: absolute;
+          top: 15px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 10px;
+          font-weight: 700;
+          color: #c7af4f;
+          letter-spacing: 1px;
+        }
+        .tip-time {
+          position: absolute;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 14px;
+          font-weight: 700;
+          color: white;
+        }
+        .game-sub {
+          position: absolute;
+          bottom: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 9px;
+          color: rgba(255,255,255,0.6);
+          letter-spacing: 0.5px;
+        }
+        .brand {
+          position: absolute;
+          bottom: 8px;
+          right: 12px;
+          font-size: 8px;
+          font-weight: 700;
+          color: #c7af4f;
+          letter-spacing: 1px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="bg"></div>
+      <div class="panel-a"></div>
+      <div class="panel-h"></div>
+
+      <div class="team team-a">
+        <img class="logo" src="https://a.espncdn.com/i/teamlogos/nba/500/${aAbbr.toLowerCase()}.png" />
+        <div class="team-info">
+          <div class="city" style="color: rgba(${hexRgb(aColor)}, 0.8)">${aLoc.toUpperCase()}</div>
+          <div class="name">${aNick.toUpperCase()}</div>
+          <div class="rec">${aRec}</div>
+        </div>
+      </div>
+
+      <div class="team team-h">
+        <img class="logo" src="https://a.espncdn.com/i/teamlogos/nba/500/${hAbbr.toLowerCase()}.png" />
+        <div class="team-info">
+          <div class="city" style="color: rgba(${hexRgb(hColor)}, 0.8)">${hLoc.toUpperCase()}</div>
+          <div class="name">${hNick.toUpperCase()}</div>
+          <div class="rec">${hRec}</div>
+        </div>
+      </div>
+
+      <div class="vs-ring">
+        <div class="vs-lbl">VS</div>
+      </div>
+
+      <div class="game-tag">NBA - ${gameDate}</div>
+      <div class="tip-time">${tipTime}</div>
+      <div class="game-sub">${venue.toUpperCase()}${city ? ' - ' + city.toUpperCase() : ''}</div>
+      <div class="brand">CLIPZWORLD NEWS</div>
+    </body>
+    </html>
+    `;
+
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    // Wait for images to load
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Step 6: Take screenshot
+    const cardPath = `/tmp/nba_card_${gameId}.png`;
+    await page.screenshot({ path: cardPath, type: 'png' });
+
+    await browser.close();
+
+    console.log(`[nba-card] ✅ Card generated: ${cardPath}`);
+
+    res.json({
+      ok: true,
+      cardPath,
+      gameId,
+      teams: {
+        away: aAbbr,
+        home: hAbbr
+      }
+    });
+
+  } catch (err) {
+    console.error(`[nba-card] Error:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /news/generate-intro-card ───────────────────────────────
+// Scrapes header image from news article URL and generates 640×360 card
+// Extracts og:image or twitter:image meta tags for video overlay
+// Returns { cardPath, sourceUrl, imageUrl }
+//
+// Body: { articleUrl, storyIndex?, width?, height? }
+// width/height default to 640×360 (TV shape for OVERLAY_ZONE)
+
+app.post('/news/generate-intro-card', async (req, res) => {
+  const { articleUrl, storyIndex = 0, width = 640, height = 360 } = req.body;
+  if (!articleUrl) return res.status(400).json({ error: 'articleUrl required' });
+
+  try {
+    console.log(`[news-card] Scraping header image from ${articleUrl}`);
+
+    // Step 1: Fetch article HTML
+    const cheerio = require('cheerio');
+    const articleResp = await axios.get(articleUrl, {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CWN-Bot/1.0; +https://clipzworldnews.com)'
+      }
+    });
+
+    const $ = cheerio.load(articleResp.data);
+
+    // Step 2: Extract image from meta tags (prioritize og:image, then twitter:image)
+    let imageUrl = $('meta[property="og:image"]').attr('content')
+      || $('meta[property="og:image:url"]').attr('content')
+      || $('meta[name="twitter:image"]').attr('content')
+      || $('meta[name="twitter:image:src"]').attr('content');
+
+    // Fallback: find first article image
+    if (!imageUrl) {
+      const firstImg = $('article img').first().attr('src') || $('img').first().attr('src');
+      imageUrl = firstImg;
+    }
+
+    if (!imageUrl) {
+      throw new Error('No image found in article');
+    }
+
+    // Handle relative URLs
+    if (imageUrl.startsWith('//')) {
+      imageUrl = 'https:' + imageUrl;
+    } else if (imageUrl.startsWith('/')) {
+      const urlObj = new URL(articleUrl);
+      imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;
+    }
+
+    console.log(`[news-card] Found image: ${imageUrl}`);
+
+    // Step 3: Download image
+    const imageResp = await axios.get(imageUrl, {
+      responseType: 'arraybuffer',
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CWN-Bot/1.0; +https://clipzworldnews.com)'
+      }
+    });
+
+    const crypto = require('crypto');
+    const imageHash = crypto.createHash('md5').update(imageUrl).digest('hex').substring(0, 8);
+    const tempImagePath = `/tmp/news_img_${imageHash}.jpg`;
+
+    const fs = require('fs');
+    fs.writeFileSync(tempImagePath, imageResp.data);
+
+    console.log(`[news-card] Downloaded to ${tempImagePath}`);
+
+    // Step 4: Resize to 640×360 using Puppeteer (same approach as NBA cards)
+    const puppeteer = require('puppeteer');
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await puppeteer.newPage();
+    await page.setViewport({ width, height, deviceScaleFactor: 2 });
+
+    // Create HTML with resized image
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          width: ${width}px;
+          height: ${height}px;
+          background: #000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+        }
+      </style>
+    </head>
+    <body>
+      <img src="file://${tempImagePath}" />
+    </body>
+    </html>
+    `;
+
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Step 5: Take screenshot
+    const cardPath = `/tmp/news_card_story${storyIndex}.png`;
+    await page.screenshot({ path: cardPath, type: 'png' });
+
+    await browser.close();
+
+    // Clean up temp image
+    fs.unlinkSync(tempImagePath);
+
+    console.log(`[news-card] ✅ Card generated: ${cardPath}`);
+
+    res.json({
+      ok: true,
+      cardPath,
+      sourceUrl: articleUrl,
+      imageUrl
+    });
+
+  } catch (err) {
+    console.error(`[news-card] Error:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── POST /twitch-clip-url ────────────────────────────────────────
 // Resolves a Twitch clip page URL or slug to a direct MP4 download URL.
 // Uses Twitch's GQL API (same method used by yt-dlp, streamlink, etc.)
