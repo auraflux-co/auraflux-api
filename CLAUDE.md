@@ -224,6 +224,9 @@ UPLOADPOST_PROFILE=        # Upload-Post profile name
 TOPAZLABS_API_KEY=         # Topaz Labs upscaling (optional)
 CANVA_CLIENT_ID=           # Canva Connect API
 CANVA_CLIENT_SECRET=       # Canva Connect API
+VECTCUT_API_URL=           # VectCut API endpoint (http://localhost:9001)
+SHORT_FORM_LOGO_SIZE=      # Logo size for short-form videos (80px)
+SHORT_FORM_AUDIO_MIX=      # Audio mixing mode (both, source_only, avatar_only)
 ```
 
 **First-time Google Drive setup:**
