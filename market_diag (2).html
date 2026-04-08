@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>body{background:#111;color:#0f0;font-family:monospace;font-size:11px;padding:15px;}
+h3{color:#f39c12;margin:8px 0 4px;}pre{background:#1a1a1a;padding:8px;border-radius:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}</style>
+</head><body>
+<h3>Open Data Sources Test</h3>
+<div id="out">Testing...</div>
+<script>
+var out=''; var done=0; var total=6;
+function fin(l,s,t){ out+='<h3>'+l+' ('+s+')</h3><pre>'+t.slice(0,400)+'</pre>'; done++; if(done>=total) document.getElementById('out').innerHTML=out; }
+
+// 1. FRED API (Federal Reserve - free, no key for basic)
+var xhr1=new XMLHttpRequest();
+xhr1.open('GET','https://api.stlouisfed.org/fred/series/observations?series_id=SP500&api_key=abcdefghijklmnopqrstuvwxyz123456&file_type=json&limit=1&sort_order=desc',true);
+xhr1.timeout=8000;
+xhr1.onload=function(){ fin('FRED',xhr1.status,xhr1.responseText.slice(0,300)); };
+xhr1.onerror=xhr1.ontimeout=function(){ fin('FRED','ERR','failed'); };
+xhr1.send();
+
+// 2. Nasdaq Data Link (free tier)
+var xhr2=new XMLHttpRequest();
+xhr2.open('GET','https://data.nasdaq.com/api/v3/datasets/WIKI/SPY/data.json?rows=1',true);
+xhr2.timeout=8000;
+xhr2.onload=function(){ fin('Nasdaq Data Link',xhr2.status,xhr2.responseText.slice(0,300)); };
+xhr2.onerror=xhr2.ontimeout=function(){ fin('Nasdaq','ERR','failed'); };
+xhr2.send();
+
+// 3. Binance (crypto, free, CORS ok)
+var xhr3=new XMLHttpRequest();
+xhr3.open('GET','https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT',true);
+xhr3.timeout=8000;
+xhr3.onload=function(){
+  try{
+    var d=JSON.parse(xhr3.responseText);
+    fin('Binance BTC',xhr3.status,'price:$'+parseFloat(d.lastPrice).toFixed(2)+' change:'+parseFloat(d.priceChangePercent).toFixed(2)+'%');
+  }catch(e){ fin('Binance',xhr3.status,xhr3.responseText.slice(0,200)); }
+};
+xhr3.onerror=xhr3.ontimeout=function(){ fin('Binance','ERR','failed'); };
+xhr3.send();
+
+// 4. CoinGecko (free, no key, CORS ok) - also has stock-like data
+var xhr4=new XMLHttpRequest();
+xhr4.open('GET','https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true',true);
+xhr4.timeout=8000;
+xhr4.onload=function(){
+  try{
+    var d=JSON.parse(xhr4.responseText);
+    fin('CoinGecko',xhr4.status,'BTC:$'+d.bitcoin.usd+' ('+d.bitcoin.usd_24h_change.toFixed(2)+'%) ETH:$'+d.ethereum.usd);
+  }catch(e){ fin('CoinGecko',xhr4.status,xhr4.responseText.slice(0,200)); }
+};
+xhr4.onerror=xhr4.ontimeout=function(){ fin('CoinGecko','ERR','failed'); };
+xhr4.send();
+
+// 5. Stock data via public Google Finance scrape alternative
+var xhr5=new XMLHttpRequest();
+xhr5.open('GET','https://query2.finance.yahoo.com/v6/finance/recommendationsbysymbol/SPY',true);
+xhr5.timeout=8000;
+xhr5.onload=function(){ fin('Yahoo v6',xhr5.status,xhr5.responseText.slice(0,300)); };
+xhr5.onerror=xhr5.ontimeout=function(){ fin('Yahoo v6','ERR','failed'); };
+xhr5.send();
+
+// 6. Frankfurter (free forex, no key, open source)
+var xhr6=new XMLHttpRequest();
+xhr6.open('GET','https://api.frankfurter.app/latest?from=USD',true);
+xhr6.timeout=8000;
+xhr6.onload=function(){
+  try{
+    var d=JSON.parse(xhr6.responseText);
+    fin('Frankfurter Forex',xhr6.status,'EUR:'+d.rates.EUR+' GBP:'+d.rates.GBP+' JPY:'+d.rates.JPY);
+  }catch(e){ fin('Frankfurter',xhr6.status,xhr6.responseText.slice(0,200)); }
+};
+xhr6.onerror=xhr6.ontimeout=function(){ fin('Frankfurter','ERR','failed'); };
+xhr6.send();
+</script></body></html>

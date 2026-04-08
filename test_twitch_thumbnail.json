@@ -1,0 +1,9 @@
+{
+  "contentType": "twitch",
+  "title": "Best Twitch Moments",
+  "streamers": [
+    {"displayName": "xQc", "name": "xqc"},
+    {"displayName": "Pokimane", "name": "pokimane"},
+    {"displayName": "Shroud", "name": "shroud"}
+  ]
+}

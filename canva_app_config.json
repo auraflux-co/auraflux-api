@@ -1,0 +1,24 @@
+{
+  "app_name": "CWN Thumbnail Generator",
+  "description": "Automated YouTube thumbnail generation for ClipzWorld News",
+  "redirect_uris": [
+    "http://localhost:3000/oauth/callback",
+    "https://your-production-domain.com/oauth/callback"
+  ],
+  "scopes": [
+    "asset:write",
+    "design:content:read",
+    "design:content:write"
+  ],
+  "integration_type": "server_side",
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "use_cases": [
+    "Automated thumbnail creation for video compilations",
+    "Batch image uploads from Twitch streamer profiles",
+    "Template-based design generation"
+  ],
+  "notes": "This app generates YouTube thumbnails by uploading streamer profile images and auto-filling a brand template with streamer circles and custom text."
+}

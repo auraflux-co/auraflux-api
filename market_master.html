@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="width:1px;height:1px;overflow:hidden;background:transparent">
+<script>
+var FMP  = 'rJPVYlHnpcjxuOLoR1phvBz7e27UMMSq';
+var BASE = 'https://financialmodelingprep.com/stable/quote?apikey='+FMP+'&symbol=';
+
+function store(k,d){ try{ localStorage.setItem('mkt_'+k,JSON.stringify(d)); }catch(e){} }
+
+// ── One call per group, staggered 2s apart ──
+
+function fetchIndices() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', BASE+'^GSPC,^IXIC,^DJI,^RUT', true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var arr = JSON.parse(xhr.responseText);
+      if (!Array.isArray(arr) || !arr.length) return;
+      var map = {'^GSPC':'SPY','^IXIC':'QQQ','^DJI':'DIA','^RUT':'IWM'};
+      var names = {'^GSPC':'S&P 500','^IXIC':'Nasdaq','^DJI':'Dow Jones','^RUT':'Russell 2000'};
+      var out = {};
+      arr.forEach(function(q) {
+        var key = map[q.symbol];
+        if (key) out[key] = { symbol:key, name:names[q.symbol], price:q.price, change:q.change, pct:q.changePercentage };
+      });
+      store('indices', out);
+      localStorage.setItem('mkt_updated', new Date().toISOString());
+    } catch(e) {}
+  };
+  xhr.onerror = xhr.ontimeout = function(){};
+  xhr.send();
+}
+
+function fetchStocks() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', BASE+'AAPL,NVDA,TSLA,AMZN,MSFT,META', true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var arr = JSON.parse(xhr.responseText);
+      if (!Array.isArray(arr) || !arr.length) return;
+      var out = {};
+      arr.forEach(function(q) {
+        out[q.symbol] = { symbol:q.symbol, name:q.name||q.symbol, price:q.price, change:q.change, pct:q.changePercentage, volume:q.volume };
+      });
+      store('stocks', out);
+    } catch(e) {}
+  };
+  xhr.onerror = xhr.ontimeout = function(){};
+  xhr.send();
+}
+
+function fetchCrypto() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true', true);
+  xhr.timeout = 8000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      store('crypto', {
+        BTC: { symbol:'BTC', name:'Bitcoin',  price:d.bitcoin.usd,  pct:d.bitcoin.usd_24h_change },
+        ETH: { symbol:'ETH', name:'Ethereum', price:d.ethereum.usd, pct:d.ethereum.usd_24h_change },
+        SOL: { symbol:'SOL', name:'Solana',   price:d.solana.usd,   pct:d.solana.usd_24h_change }
+      });
+    } catch(e) {}
+  };
+  xhr.onerror = xhr.ontimeout = function(){};
+  xhr.send();
+}
+
+function fetchForex() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY,CAD', true);
+  xhr.timeout = 8000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      var r = d.rates || {};
+      store('forex', {
+        EURUSD: { pair:'EUR/USD', rate:(1/r.EUR).toFixed(4) },
+        USDJPY: { pair:'USD/JPY', rate:r.JPY.toFixed(2) },
+        GBPUSD: { pair:'GBP/USD', rate:(1/r.GBP).toFixed(4) },
+        USDCAD: { pair:'USD/CAD', rate:r.CAD.toFixed(4) }
+      });
+    } catch(e) {}
+  };
+  xhr.onerror = xhr.ontimeout = function(){};
+  xhr.send();
+}
+
+function fetchNews() {
+  var feeds = [
+    'https://news.google.com/rss/search?q=stock+market+finance+economy&hl=en-US&gl=US&ceid=US:en',
+    'https://feeds.marketwatch.com/marketwatch/topstories/',
+    'https://feeds.bbci.co.uk/news/business/rss.xml'
+  ];
+  var url = feeds[Math.floor(Math.random()*feeds.length)];
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(url), true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      var items = d.items || [];
+      if (items.length) {
+        var headlines = items.slice(0,10).map(function(i){
+          return (i.title||'').replace(/ - [^-]+$/,'').trim();
+        }).filter(function(t){ return t.length > 10; });
+        if (headlines.length) store('news', headlines);
+      }
+    } catch(e) {}
+  };
+  xhr.onerror = xhr.ontimeout = function(){};
+  xhr.send();
+}
+
+// Stagger all calls on load
+fetchIndices();
+setTimeout(fetchStocks,  3000);
+setTimeout(fetchCrypto,  6000);
+setTimeout(fetchForex,   8000);
+setTimeout(fetchNews,   10000);
+
+// Refresh intervals
+setInterval(fetchIndices, 120000);
+setInterval(fetchStocks,  120000);
+setInterval(fetchCrypto,   30000);
+setInterval(fetchForex,    60000);
+setInterval(fetchNews,    300000);
+</script>
+</body></html>

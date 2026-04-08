@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: #0a0e1a;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&display=swap');
+
+/* ── DEEP BACKGROUND ── */
+.bg-base {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 120%, #0d1f3c 0%, #070c18 60%, #050810 100%);
+}
+
+/* City skyline silhouette effect */
+.city-layer {
+  position: absolute;
+  bottom: 280px; left: 0; right: 0;
+  height: 200px;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(13,25,50,0.4) 100%);
+}
+
+/* Grid perspective floor */
+.grid-floor {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 340px;
+  overflow: hidden;
+}
+
+.grid-floor::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: -20%; right: -20%;
+  height: 500px;
+  background-image:
+    linear-gradient(rgba(199,175,79,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(199,175,79,0.06) 1px, transparent 1px);
+  background-size: 120px 80px;
+  transform: perspective(400px) rotateX(65deg);
+  transform-origin: bottom center;
+}
+
+.grid-floor::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 160px;
+  background: linear-gradient(0deg, #070c18 0%, transparent 100%);
+}
+
+/* ── AMBIENT GLOWS ── */
+.glow-center {
+  position: absolute;
+  width: 900px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(34,48,75,0.6) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.glow-left {
+  position: absolute;
+  width: 500px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(29,66,138,0.25) 0%, transparent 65%);
+  top: 20%; left: -5%;
+}
+
+.glow-right {
+  position: absolute;
+  width: 500px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(199,175,79,0.12) 0%, transparent 65%);
+  top: 20%; right: -5%;
+}
+
+/* ── DESK SURFACE ── */
+.desk {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 1200px;
+  height: 280px;
+}
+
+/* Main desk top surface */
+.desk-top {
+  position: absolute;
+  bottom: 180px; left: 0; right: 0;
+  height: 28px;
+  background: linear-gradient(180deg,
+    #1e2d4a 0%,
+    #16223a 40%,
+    #0f1828 100%);
+  border-top: 2px solid rgba(199,175,79,0.6);
+  border-radius: 4px 4px 0 0;
+  box-shadow:
+    0 -8px 40px rgba(199,175,79,0.15),
+    0 2px 0 rgba(0,0,0,0.8),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Desk face front */
+.desk-front {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 180px;
+  background: linear-gradient(180deg,
+    #131d30 0%,
+    #0d1525 60%,
+    #080f1c 100%);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+/* Desk panel lines */
+.desk-front::before {
+  content: '';
+  position: absolute;
+  top: 20px; left: 60px; right: 60px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(199,175,79,0.15) 20%,
+    rgba(199,175,79,0.25) 50%,
+    rgba(199,175,79,0.15) 80%,
+    transparent);
+}
+
+.desk-front::after {
+  content: '';
+  position: absolute;
+  bottom: 30px; left: 60px; right: 60px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(199,175,79,0.1) 20%,
+    rgba(199,175,79,0.2) 50%,
+    rgba(199,175,79,0.1) 80%,
+    transparent);
+}
+
+/* Desk logo panel */
+.desk-logo {
+  position: absolute;
+  bottom: 55px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 14px;
+}
+
+.desk-logo-text {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 28px;
+  color: rgba(199,175,79,0.7);
+  letter-spacing: 8px;
+}
+
+.desk-logo-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(199,175,79,0.4));
+}
+
+.desk-logo-line.right {
+  background: linear-gradient(90deg, rgba(199,175,79,0.4), transparent);
+}
+
+/* Desk glow */
+.desk-glow {
+  position: absolute;
+  bottom: 195px; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 40px;
+  background: radial-gradient(ellipse, rgba(199,175,79,0.12) 0%, transparent 70%);
+  filter: blur(8px);
+}
+
+/* ── LEFT MONITOR ── */
+.monitor-left {
+  position: absolute;
+  bottom: 208px;
+  left: 30px;
+  width: 340px;
+  height: 220px;
+}
+
+.monitor-screen {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #0d1f3c 0%, #091528 100%);
+  border: 2px solid rgba(199,175,79,0.25);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 30px rgba(29,66,138,0.3),
+    inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+.monitor-screen::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.03) 0%,
+    transparent 50%,
+    rgba(0,0,0,0.1) 100%);
+}
+
+/* Screen content */
+.screen-content {
+  position: absolute; inset: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.screen-header {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(199,175,79,0.6);
+  letter-spacing: 3px;
+  font-family: monospace;
+}
+
+.screen-chart {
+  flex: 1;
+  display: flex; align-items: flex-end; gap: 6px;
+  padding-bottom: 4px;
+}
+
+.chart-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  opacity: 0.7;
+}
+
+.screen-stat {
+  display: flex; justify-content: space-between;
+  border-top: 1px solid rgba(199,175,79,0.1);
+  padding-top: 6px;
+}
+
+.stat-item { display: flex; flex-direction: column; align-items: center; }
+.stat-val { font-size: 14px; font-weight: 900; color: #fff; font-family: monospace; }
+.stat-lbl { font-size: 7px; color: rgba(255,255,255,0.3); letter-spacing: 1px; }
+
+.monitor-base {
+  position: absolute;
+  bottom: -14px; left: 50%;
+  transform: translateX(-50%);
+  width: 80px; height: 14px;
+  background: linear-gradient(180deg, #1a2538, #0f1828);
+  border-radius: 0 0 4px 4px;
+}
+
+/* ── RIGHT MONITOR ── */
+.monitor-right {
+  position: absolute;
+  bottom: 208px;
+  right: 30px;
+  width: 340px;
+  height: 220px;
+}
+
+/* ── VERTICAL ACCENT PANELS ── */
+.panel-left {
+  position: absolute;
+  top: 0; left: 0;
+  width: 6px; height: 100%;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(199,175,79,0.4) 20%,
+    rgba(199,175,79,0.6) 50%,
+    rgba(199,175,79,0.4) 80%,
+    transparent 100%);
+}
+
+.panel-right {
+  position: absolute;
+  top: 0; right: 0;
+  width: 6px; height: 100%;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(199,175,79,0.4) 20%,
+    rgba(199,175,79,0.6) 50%,
+    rgba(199,175,79,0.4) 80%,
+    transparent 100%);
+}
+
+/* ── BACKGROUND ARCHITECTURAL ELEMENTS ── */
+.arch-left {
+  position: absolute;
+  top: 60px; left: 80px;
+  width: 2px; height: 400px;
+  background: linear-gradient(180deg,
+    transparent,
+    rgba(199,175,79,0.15) 20%,
+    rgba(199,175,79,0.25) 50%,
+    rgba(199,175,79,0.1) 80%,
+    transparent);
+}
+
+.arch-right {
+  position: absolute;
+  top: 60px; right: 80px;
+  width: 2px; height: 400px;
+  background: linear-gradient(180deg,
+    transparent,
+    rgba(199,175,79,0.15) 20%,
+    rgba(199,175,79,0.25) 50%,
+    rgba(199,175,79,0.1) 80%,
+    transparent);
+}
+
+.arch-left-2 {
+  position: absolute;
+  top: 40px; left: 160px;
+  width: 1px; height: 320px;
+  background: linear-gradient(180deg,
+    transparent,
+    rgba(199,175,79,0.08) 30%,
+    rgba(199,175,79,0.12) 50%,
+    transparent);
+}
+
+.arch-right-2 {
+  position: absolute;
+  top: 40px; right: 160px;
+  width: 1px; height: 320px;
+  background: linear-gradient(180deg,
+    transparent,
+    rgba(199,175,79,0.08) 30%,
+    rgba(199,175,79,0.12) 50%,
+    transparent);
+}
+
+/* Horizontal accent lines */
+.h-line-1 {
+  position: absolute;
+  top: 60px; left: 80px; right: 80px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    rgba(199,175,79,0.3),
+    rgba(199,175,79,0.5) 30%,
+    rgba(199,175,79,0.5) 70%,
+    rgba(199,175,79,0.3));
+}
+
+.h-line-2 {
+  position: absolute;
+  top: 62px; left: 80px; right: 80px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(199,175,79,0.1) 30%,
+    rgba(199,175,79,0.1) 70%,
+    transparent);
+}
+
+/* ── BACKGROUND LOGO WATERMARK ── */
+.watermark {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Bebas Neue', cursive;
+  font-size: 180px;
+  color: rgba(199,175,79,0.025);
+  letter-spacing: 20px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ── CORNER BRACKETS ── */
+.corner { position: absolute; width: 24px; height: 24px; }
+.corner-tl { top: 70px; left: 88px; border-top: 2px solid rgba(199,175,79,0.5); border-left: 2px solid rgba(199,175,79,0.5); }
+.corner-tr { top: 70px; right: 88px; border-top: 2px solid rgba(199,175,79,0.5); border-right: 2px solid rgba(199,175,79,0.5); }
+
+/* ── FLOATING DATA ELEMENTS ── */
+.float-data {
+  position: absolute;
+  background: rgba(13,20,36,0.85);
+  border: 1px solid rgba(199,175,79,0.2);
+  border-radius: 4px;
+  padding: 8px 14px;
+  backdrop-filter: blur(10px);
+}
+
+.fd-label { font-size: 8px; color: rgba(199,175,79,0.5); letter-spacing: 3px; margin-bottom: 2px; }
+.fd-value { font-family: 'Bebas Neue', cursive; font-size: 22px; color: #fff; letter-spacing: 2px; }
+.fd-sub   { font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: 1px; }
+
+.fd-up   { color: #27ae60; }
+.fd-down { color: #c0392b; }
+
+/* Dot grid background texture */
+.dot-grid {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(199,175,79,0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-base"></div>
+<div class="dot-grid"></div>
+<div class="watermark">CZW</div>
+
+<!-- Glows -->
+<div class="glow-left"></div>
+<div class="glow-right"></div>
+<div class="glow-center"></div>
+
+<!-- Vertical accent panels -->
+<div class="panel-left"></div>
+<div class="panel-right"></div>
+
+<!-- Architectural lines -->
+<div class="h-line-1"></div>
+<div class="h-line-2"></div>
+<div class="arch-left"></div>
+<div class="arch-right"></div>
+<div class="arch-left-2"></div>
+<div class="arch-right-2"></div>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+
+<!-- Grid floor -->
+<div class="grid-floor"></div>
+
+<!-- Left Monitor -->
+<div class="monitor-left">
+  <div class="monitor-screen">
+    <div class="screen-content">
+      <div class="screen-header">MARKET DATA · LIVE</div>
+      <div class="screen-chart">
+        <div class="chart-bar" style="height:45%;background:linear-gradient(0deg,#1d428a,#4a7fe8)"></div>
+        <div class="chart-bar" style="height:72%;background:linear-gradient(0deg,#1d428a,#4a7fe8)"></div>
+        <div class="chart-bar" style="height:58%;background:linear-gradient(0deg,#1d428a,#4a7fe8)"></div>
+        <div class="chart-bar" style="height:85%;background:linear-gradient(0deg,#c7af4f,#f0d060)"></div>
+        <div class="chart-bar" style="height:65%;background:linear-gradient(0deg,#1d428a,#4a7fe8)"></div>
+        <div class="chart-bar" style="height:90%;background:linear-gradient(0deg,#c7af4f,#f0d060)"></div>
+        <div class="chart-bar" style="height:78%;background:linear-gradient(0deg,#1d428a,#4a7fe8)"></div>
+        <div class="chart-bar" style="height:95%;background:linear-gradient(0deg,#c7af4f,#f0d060)"></div>
+      </div>
+      <div class="screen-stat">
+        <div class="stat-item"><div class="stat-val fd-up">+0.4%</div><div class="stat-lbl">DOW</div></div>
+        <div class="stat-item"><div class="stat-val fd-up">+0.8%</div><div class="stat-lbl">S&P</div></div>
+        <div class="stat-item"><div class="stat-val fd-down">-0.2%</div><div class="stat-lbl">NASDAQ</div></div>
+        <div class="stat-item"><div class="stat-val">4.32%</div><div class="stat-lbl">10Y</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="monitor-base"></div>
+</div>
+
+<!-- Right Monitor -->
+<div class="monitor-right">
+  <div class="monitor-screen">
+    <div class="screen-content">
+      <div class="screen-header">TONIGHT'S GAMES · NBA</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(199,175,79,0.1);padding-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;color:#fff;">GSW</div>
+          <div style="font-size:10px;color:rgba(199,175,79,0.6);letter-spacing:2px;">vs</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;">DEN</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);">10PM ET</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(199,175,79,0.1);padding-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;color:#fff;">NYK</div>
+          <div style="font-size:10px;color:rgba(199,175,79,0.6);letter-spacing:2px;">vs</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;">OKC</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);">7:30PM ET</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:13px;font-weight:700;color:#fff;">BOS</div>
+          <div style="font-size:10px;color:rgba(199,175,79,0.6);letter-spacing:2px;">vs</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;">ATL</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);">7:30PM ET</div>
+        </div>
+      </div>
+      <div style="margin-top:auto;border-top:1px solid rgba(199,175,79,0.1);padding-top:6px;font-size:8px;color:rgba(199,175,79,0.5);letter-spacing:2px;">
+        MARCH MADNESS FINAL FOUR · SAT
+      </div>
+    </div>
+  </div>
+  <div class="monitor-base"></div>
+</div>
+
+<!-- Desk -->
+<div class="desk">
+  <div class="desk-glow"></div>
+  <div class="desk-top"></div>
+  <div class="desk-front">
+    <div class="desk-logo">
+      <div class="desk-logo-line"></div>
+      <div class="desk-logo-text">CLIPZWORLD</div>
+      <div class="desk-logo-line right"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating data widgets -->
+<div class="float-data" style="top:100px;left:100px;">
+  <div class="fd-label">EST</div>
+  <div class="fd-value" id="time-et">12:00 PM</div>
+  <div class="fd-sub">EASTERN TIME</div>
+</div>
+
+<div class="float-data" style="top:100px;right:100px;">
+  <div class="fd-label">MARCH 30, 2026</div>
+  <div class="fd-value" style="font-size:16px;letter-spacing:1px;">MONDAY</div>
+  <div class="fd-sub">EPISODE 001</div>
+</div>
+
+<script>
+function updateTime() {
+  var now = new Date();
+  var h = now.getHours();
+  var m = now.getMinutes();
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  var str = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+  var el = document.getElementById('time-et');
+  if (el) el.textContent = str;
+}
+updateTime();
+setInterval(updateTime, 1000);
+</script>
+
+</body>
+</html>

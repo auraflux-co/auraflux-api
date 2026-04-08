@@ -58,6 +58,13 @@ Claude must NEVER assume design choices (thumbnail layout, overlay positioning, 
    - Gemini generates design_brief (Midjourney-style prompts)
    - Claude triggers image generation API and places via VectCut
 
+6. **Cline Plan Presentation System** (NEW)
+   - `CLINE_PLAN_TEMPLATE.md` - 8-section structured plan format
+   - `CLINE_USAGE_GUIDE.md` - Complete workflow documentation
+   - `EXAMPLE_PLAN_NBA_CARDS.md` - Real-world example plan
+   - `CLAUDE.md` - Updated with Cline implementation references
+   - Enables human review checkpoints before/after code changes
+
 ### 🚧 In Progress
 
 - **End-of-Session Protocol Creation** (this file)
@@ -165,10 +172,55 @@ What is the next task on our Priority 1 list?
 
 ## Notes for Rob
 
-- All code changes committed and pushed to GitHub
+- **PENDING COMMIT:** New Cline files created but NOT yet committed to git
+  - `CLINE_PLAN_TEMPLATE.md`, `CLINE_USAGE_GUIDE.md`, `EXAMPLE_PLAN_NBA_CARDS.md`
+  - `CLAUDE.md` modified with Cline references
+  - See commit strategy below for how to notify Claude Code
+
 - VectCut API server still running on port 9001 (PID from previous session may have changed)
 - No broken state - everything is saved and ready for next session
 - design_metadata currently returns null values - Gemini prompt needs update to populate this (future task)
+
+### How to Notify Claude Code of New Files
+
+**Option 1: Commit to GitHub (Recommended)**
+```bash
+cd ~/cwn-production
+git add CLINE_PLAN_TEMPLATE.md CLINE_USAGE_GUIDE.md EXAMPLE_PLAN_NBA_CARDS.md CLAUDE.md
+git commit -m "docs: add Cline plan presentation system
+
+Implements structured plan presentation mechanism for Human Review Layer.
+Cline now presents 8-section plans before code changes and summaries after.
+
+Files:
+- CLINE_PLAN_TEMPLATE.md: Template for plan presentation
+- CLINE_USAGE_GUIDE.md: Complete workflow documentation
+- EXAMPLE_PLAN_NBA_CARDS.md: Real-world example
+- CLAUDE.md: Updated with Cline implementation references"
+
+git push origin main
+```
+
+Then in Claude Code chat:
+> "Claude, pull the latest changes from GitHub. New Cline documentation has been added: CLINE_PLAN_TEMPLATE.md, CLINE_USAGE_GUIDE.md, and EXAMPLE_PLAN_NBA_CARDS.md. Read these files to understand the new plan presentation workflow."
+
+**Option 2: Direct File Reference (No Commit)**
+In Claude Code chat:
+> "Claude, read the following new files in the repo: CLINE_PLAN_TEMPLATE.md, CLINE_USAGE_GUIDE.md, and EXAMPLE_PLAN_NBA_CARDS.md. These define how Cline presents plans before code changes."
+
+**Option 3: Update .aider.conf.yml (Auto-read on startup)**
+Add to `.aider.conf.yml`:
+```yaml
+read:
+  - CLAUDE.md
+  - AIDER_COMMIT_CHECKLIST.md
+  - CLINE_PLAN_TEMPLATE.md
+  - CLINE_USAGE_GUIDE.md
+```
+
+This makes Aider (and potentially Claude Code) auto-read these files on startup.
+
+**Recommended Approach:** Use Option 1 (commit + push) so files are version-controlled and Claude Code can reference them via git history.
 
 ---
 

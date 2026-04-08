@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { width:220px; height:580px; background:rgba(13,20,36,0.95); border:1px solid rgba(199,175,79,0.15); border-radius:10px; overflow:hidden; font-family:Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+.panel-header { background:linear-gradient(90deg,#22304b,#1a2538); border-bottom:2px solid #c7af4f; padding:10px 12px; display:flex; align-items:center; justify-content:center; }
+.panel-title { font-family:'Arial Black',Arial,sans-serif; font-size:13px; font-weight:900; color:#c7af4f; letter-spacing:3px; }
+.panel-sub { font-size:8px; color:rgba(255,255,255,0.3); letter-spacing:1px; }
+.sec-lbl { font-size:8px; font-weight:900; color:rgba(199,175,79,0.55); letter-spacing:2px; padding:6px 12px 3px; }
+.sector-row { padding:5px 12px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.sec-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+.sec-name { font-size:10px; font-weight:700; color:#fff; }
+.sec-chg  { font-size:10px; font-weight:900; }
+.sec-bar-bg { height:3px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+.sec-bar { height:100%; border-radius:2px; transition:width 0.8s ease; }
+.up { color:#27ae60; } .down { color:#e74c3c; }
+.bar-up { background:#27ae60; } .bar-down { background:#e74c3c; }
+
+.forex-section { padding:8px 0; border-top:1px solid rgba(199,175,79,0.1); }
+.forex-row { display:flex; align-items:center; justify-content:space-between; padding:4px 12px; }
+.forex-pair  { font-size:10px; font-weight:900; color:#c7af4f; letter-spacing:1px; }
+.forex-rate  { font-size:12px; font-weight:700; color:#fff; font-family:Arial,sans-serif; }
+
+.comm-section { padding:6px 0; border-top:1px solid rgba(199,175,79,0.1); }
+.comm-row { display:flex; align-items:center; justify-content:space-between; padding:4px 12px; }
+.comm-name  { font-size:10px; font-weight:700; color:#fff; }
+.comm-price { font-size:12px; font-weight:700; color:#fff; font-family:Arial,sans-serif; }
+</style>
+</head>
+<body>
+<div class="panel-header">
+  <div class="panel-title">STOCKS</div>
+  
+</div>
+
+<div class="sec-lbl">TOP STOCKS</div>
+<div class="sector-row"><div class="sec-top"><div class="sec-name">Apple</div><div class="sec-chg" id="aapl-chg">—</div></div><div class="sec-bar-bg"><div class="sec-bar" id="aapl-bar" style="width:50%"></div></div></div>
+<div class="sector-row"><div class="sec-top"><div class="sec-name">Nvidia</div><div class="sec-chg" id="nvda-chg">—</div></div><div class="sec-bar-bg"><div class="sec-bar" id="nvda-bar" style="width:50%"></div></div></div>
+<div class="sector-row"><div class="sec-top"><div class="sec-name">Tesla</div><div class="sec-chg" id="tsla-chg">—</div></div><div class="sec-bar-bg"><div class="sec-bar" id="tsla-bar" style="width:50%"></div></div></div>
+<div class="sector-row"><div class="sec-top"><div class="sec-name">Amazon</div><div class="sec-chg" id="amzn-chg">—</div></div><div class="sec-bar-bg"><div class="sec-bar" id="amzn-bar" style="width:50%"></div></div></div>
+<div class="sector-row"><div class="sec-top"><div class="sec-name">Microsoft</div><div class="sec-chg" id="msft-chg">—</div></div><div class="sec-bar-bg"><div class="sec-bar" id="msft-bar" style="width:50%"></div></div></div>
+<div class="sector-row"><div class="sec-top"><div class="sec-name">Meta</div><div class="sec-chg" id="meta-chg">—</div></div><div class="sec-bar-bg"><div class="sec-bar" id="meta-bar" style="width:50%"></div></div></div>
+
+<div class="sec-lbl">FOREX</div>
+<div class="forex-section">
+  <div class="forex-row"><div class="forex-pair">EUR/USD</div><div class="forex-rate" id="eur-rate">—</div></div>
+  <div class="forex-row"><div class="forex-pair">USD/JPY</div><div class="forex-rate" id="jpy-rate">—</div></div>
+  <div class="forex-row"><div class="forex-pair">GBP/USD</div><div class="forex-rate" id="gbp-rate">—</div></div>
+  <div class="forex-row"><div class="forex-pair">USD/CAD</div><div class="forex-rate" id="cad-rate">—</div></div>
+</div>
+
+
+
+<script>
+function g(id){ return document.getElementById(id); }
+
+function setSector(id, pct) {
+  var p = parseFloat(pct);
+  if(isNaN(p)) return;
+  var up = p >= 0;
+  var ce = g(id+'-chg'), be = g(id+'-bar');
+  if(ce){ ce.textContent=(up?'+':'')+p.toFixed(2)+'%'; ce.className='sec-chg '+(up?'up':'down'); }
+  if(be){ be.style.width=Math.min(100,Math.max(2,50+p*8))+'%'; be.className='sec-bar '+(up?'bar-up':'bar-down'); }
+}
+
+function fmtP(p, dec) {
+  var v=parseFloat(p); if(!v||isNaN(v)) return '—';
+  return '$'+(dec!==undefined?v.toFixed(dec):v.toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+
+function readData() {
+  try {
+    // Top stocks from mkt_stocks
+    var stk = JSON.parse(localStorage.getItem('mkt_stocks')||'{}');
+    if(stk.AAPL) setSector('aapl', stk.AAPL.pct);
+    if(stk.NVDA) setSector('nvda', stk.NVDA.pct);
+    if(stk.TSLA) setSector('tsla', stk.TSLA.pct);
+    if(stk.AMZN) setSector('amzn', stk.AMZN.pct);
+    if(stk.MSFT) setSector('msft', stk.MSFT.pct);
+    if(stk.META) setSector('meta', stk.META.pct);
+
+    // Forex
+    var fx = JSON.parse(localStorage.getItem('mkt_forex')||'{}');
+    if(fx.EURUSD && g('eur-rate')) g('eur-rate').textContent = fx.EURUSD.rate;
+    if(fx.USDJPY && g('jpy-rate')) g('jpy-rate').textContent = fx.USDJPY.rate;
+    if(fx.GBPUSD && g('gbp-rate')) g('gbp-rate').textContent = fx.GBPUSD.rate;
+    if(fx.USDCAD && g('cad-rate')) g('cad-rate').textContent = fx.USDCAD.rate;
+
+
+
+  } catch(e){}
+}
+
+readData();
+setInterval(readData, 5000);
+</script>
+</body>
+</html>

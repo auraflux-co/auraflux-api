@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ClipzWorld NBA Scoreboard</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:transparent; font-family:'Arial Black',Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+.board { width:520px; background:#0d1424; border-radius:10px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.7); border:1px solid rgba(199,175,79,0.15); }
+.header { background:linear-gradient(90deg,#22304b,#1a2538); border-bottom:2px solid #c7af4f; padding:7px 14px; display:flex; align-items:center; justify-content:space-between; }
+.hdr-brand { font-size:9px; font-weight:900; color:#c7af4f; letter-spacing:3px; }
+.hdr-game  { font-size:10px; font-weight:900; color:#fff; letter-spacing:0; }
+.hdr-right { font-size:9px; color:rgba(255,255,255,0.45); letter-spacing:1px; }
+.teams-row { display:flex; }
+.team-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px 10px 10px; gap:5px; position:relative; overflow:hidden; }
+.team-panel::after { content:''; position:absolute; inset:0; background:linear-gradient(160deg,rgba(0,0,0,0.25),rgba(0,0,0,0.5)); pointer-events:none; }
+.team-panel > * { position:relative; z-index:1; }
+.team-logo { width:72px; height:72px; border-radius:50%; overflow:hidden; border:3px solid #c7af4f; box-shadow:0 0 18px rgba(199,175,79,0.35),0 4px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; background:#fff; }
+.team-logo img { width:100%; height:100%; object-fit:contain; padding:4px; }
+.logo-fb { font-size:20px; font-weight:900; color:#333; }
+.team-abbr { font-size:12px; font-weight:900; color:#fff; letter-spacing:2px; }
+.team-record { font-size:12px; font-weight:700; color:rgba(255,255,255,0.6); font-family:Arial,sans-serif; letter-spacing:1px; margin:2px 0 4px; }
+.team-score { font-size:56px; font-weight:900; color:#fff; line-height:1; letter-spacing:-3px; }
+.team-score.leading { color:#f0d060; }
+.mid-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 10px; gap:4px; background:#0d1424; flex-shrink:0; }
+.game-clock  { font-size:26px; font-weight:900; color:#fff; letter-spacing:-1px; }
+.game-period { font-size:10px; color:rgba(199,175,79,0.7); letter-spacing:2px; font-weight:700; }
+.game-status { font-size:10px; font-weight:900; letter-spacing:1px; }
+.st-live  { color:#e74c3c; }
+.st-final { color:rgba(255,255,255,0.3); }
+.st-pre   { color:#27ae60; }
+.qs-table { width:100%; border-collapse:collapse; background:#0a1020; border-top:1px solid rgba(199,175,79,0.12); }
+.qs-table td, .qs-table th { font-family:Arial,sans-serif; font-size:10px; padding:4px 8px; text-align:center; }
+.qs-table th { color:rgba(199,175,79,0.5); font-weight:700; letter-spacing:1px; font-size:9px; border-bottom:1px solid rgba(255,255,255,0.07); }
+.qs-table td { color:rgba(255,255,255,0.6); }
+.qs-table td:first-child { text-align:left; font-weight:900; color:#fff; letter-spacing:1px; font-size:10px; padding-left:12px; }
+.qs-table th:first-child { text-align:left; padding-left:12px; }
+.qs-table td.tot { color:#c7af4f; font-weight:900; font-size:11px; }
+.qs-table tr:last-child td { }
+.last-play { background:rgba(255,255,255,0.03); border-top:1px solid rgba(199,175,79,0.1); padding:5px 12px; font-size:9px; color:rgba(255,255,255,0.4); font-family:Arial,sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:20px; }
+.status-bar { background:#111; color:#f39c12; font-family:monospace; font-size:10px; padding:3px 10px; text-align:center; }
+.leaders { background:#0d1424; border-top:1px solid rgba(199,175,79,0.12); padding:8px 12px; display:flex; }
+.leader-col { flex:1; display:flex; flex-direction:column; gap:5px; }
+.leader-col:first-child { border-right:1px solid rgba(199,175,79,0.12); padding-right:10px; }
+.leader-col:last-child  { padding-left:10px; }
+.ldr-lbl { font-size:9px; font-weight:900; color:rgba(199,175,79,0.6); letter-spacing:1.5px; margin-bottom:1px; }
+.ldr-row { display:flex; align-items:center; gap:5px; width:100%; }
+.ldr-av  { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,0.08); overflow:hidden; flex-shrink:0; border:1px solid rgba(199,175,79,0.2); display:flex; align-items:center; justify-content:center; }
+.ldr-av img { width:100%; height:100%; object-fit:cover; object-position:top; }
+.ldr-av-fb { font-size:7px; font-weight:900; color:rgba(255,255,255,0.4); }
+.ldr-cat  { font-size:9px; color:rgba(255,255,255,0.35); font-family:Arial,sans-serif; min-width:22px; }
+.ldr-name { font-size:11px; font-weight:900; color:#fff; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ldr-val  { font-size:12px; font-weight:900; color:#c7af4f; min-width:20px; text-align:right; }
+
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="header">
+    <div class="hdr-brand">CLIPZWORLD NEWS</div>
+    <div class="hdr-game" id="hdr-game">Loading...</div>
+    <div class="hdr-right">NBA</div>
+  </div>
+  <div class="teams-row">
+    <div class="team-panel" id="away-panel">
+      <div class="team-logo"><img id="away-logo" src="" onerror="this.style.display='none'"><div class="logo-fb" id="away-fb">--</div></div>
+      <div class="team-abbr" id="away-abbr">AWAY</div>
+      <div class="team-record" id="away-rec"></div>
+      <div class="team-score" id="away-score">0</div>
+    </div>
+    <div class="mid-col">
+      <div class="game-clock"  id="g-clock">--</div>
+      <div class="game-period" id="g-period"></div>
+      <div class="game-status st-pre" id="g-status">UPCOMING</div>
+    </div>
+    <div class="team-panel" id="home-panel">
+      <div class="team-logo"><img id="home-logo" src="" onerror="this.style.display='none'"><div class="logo-fb" id="home-fb">--</div></div>
+      <div class="team-abbr" id="home-abbr">HOME</div>
+      <div class="team-record" id="home-rec"></div>
+      <div class="team-score" id="home-score">0</div>
+    </div>
+  </div>
+  <table class="qs-table" id="qs-table" style="display:none">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>OT</th><th>TOT</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td id="qs-away-lbl">AWAY</td><td id="qs-a1">--</td><td id="qs-a2">--</td><td id="qs-a3">--</td><td id="qs-a4">--</td><td id="qs-ao" style="color:rgba(255,255,255,0.25)">--</td><td class="tot" id="qs-at">0</td></tr>
+      <tr><td id="qs-home-lbl">HOME</td><td id="qs-h1">--</td><td id="qs-h2">--</td><td id="qs-h3">--</td><td id="qs-h4">--</td><td id="qs-ho" style="color:rgba(255,255,255,0.25)">--</td><td class="tot" id="qs-ht">0</td></tr>
+    </tbody>
+  </table>
+  <div class="last-play" id="last-play"></div>
+  <div class="status-bar" id="status-bar" style="display:none">Starting...</div>
+  
+</div>
+<script>
+/*** CHANGE ONLY THESE 3 LINES ***/
+var GAME_ID = '401810961';
+var LEAGUE  = 'nba';
+var SPORT   = 'basketball';
+/*********************************/
+
+var CATS = ['pts','reb','ast','stl','blk'];
+var CAT_MAP = {'points':'pts','rebounds':'reb','assists':'ast','steals':'stl','blocks':'blk'};
+var SUFFIXES = {'jr':1,'sr':1,'ii':1,'iii':1,'iv':1,'v':1};
+
+function sb(id){ return document.getElementById(id); }
+
+function lastName(full) {
+  if (!full) return '--';
+  var parts = full.trim().split(' ');
+  for (var i = parts.length-1; i >= 0; i--) {
+    var w = parts[i].toLowerCase().replace('.','').replace(',','');
+    if (!SUFFIXES[w]) return parts[i];
+  }
+  return parts[parts.length-1];
+}
+
+function initials(full) {
+  if (!full) return '?';
+  var out = '';
+  var parts = full.split(' ');
+  for (var i = 0; i < parts.length; i++) {
+    var w = parts[i].toLowerCase().replace('.','');
+    if (parts[i].length > 1 && !SUFFIXES[w]) out += parts[i][0];
+  }
+  return out.slice(0,2).toUpperCase() || '?';
+}
+
+function setAvatar(avId, url, init) {
+  var el = sb(avId);
+  if (!el) return;
+  if (url) {
+    el.innerHTML = '<img src="' + url + '" onerror="this.style.display=\'none\'">';
+  } else {
+    el.innerHTML = '<div class="ldr-av-fb">' + init + '</div>';
+  }
+}
+
+function setLeader(side, cat, athlete, valStr) {
+  var full = (athlete && (athlete.displayName || athlete.shortName)) || '';
+  var ln   = full ? lastName(full) : '--';
+  var init = full ? initials(full) : '?';
+  // Use headshot.href if available, fallback to constructed URL
+  var url = '';
+  if (athlete && athlete.headshot && athlete.headshot.href) {
+    url = athlete.headshot.href;
+  } else if (athlete && athlete.id) {
+    url = 'https://a.espncdn.com/i/headshots/nba/players/full/' + athlete.id + '.png';
+  }
+  var nameEl = sb(side + '-' + cat + '-name');
+  var valEl  = sb(side + '-' + cat + '-val');
+  if (nameEl) nameEl.textContent = ln;
+  if (valEl)  valEl.textContent  = valStr || '--';
+  setAvatar(side + '-' + cat + '-av', url, init);
+}
+
+function applyColor(panelId, hex) {
+  var el = sb(panelId);
+  if (!el) return;
+  var c = (hex && hex !== '000000' && hex !== 'ffffff') ? hex : '1a2538';
+  el.style.background = 'linear-gradient(160deg,#' + c + 'cc 0%,#' + c + '55 100%)';
+}
+
+function setStatus(msg) {
+  var el = sb('status-bar');
+  if (el) el.textContent = msg;
+}
+
+function fetchGame() {
+  setStatus('Fetching ID=' + GAME_ID + '...');
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/' + SPORT + '/' + LEAGUE + '/summary?event=' + GAME_ID, true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    if (xhr.status !== 200) { setStatus('HTTP ' + xhr.status); return; }
+    try {
+      var d = JSON.parse(xhr.responseText);
+      setStatus('OK ' + new Date().toLocaleTimeString());
+
+      // Competitors
+      var hc    = d.header && d.header.competitions && d.header.competitions[0];
+      var comps = (hc && hc.competitors) || [];
+      var away  = null, home = null;
+      for (var i = 0; i < comps.length; i++) {
+        if (comps[i].homeAway === 'home') home = comps[i];
+        if (comps[i].homeAway === 'away') away = comps[i];
+      }
+      if (!away) away = comps[0] || {};
+      if (!home) home = comps[1] || {};
+
+      // Enrich team data from boxscore
+      var bst = (d.boxscore && d.boxscore.teams) || [];
+      for (var t = 0; t < bst.length; t++) {
+        var bt = bst[t].team || {};
+        if (away.team && away.team.abbreviation === bt.abbreviation) {
+          if (bt.color) away.team.color = bt.color;
+          if (bt.logo)  away.team.logo  = bt.logo;
+        }
+        if (home.team && home.team.abbreviation === bt.abbreviation) {
+          if (bt.color) home.team.color = bt.color;
+          if (bt.logo)  home.team.logo  = bt.logo;
+        }
+      }
+
+      var awayT = away.team || {};
+      var homeT = home.team || {};
+      var awayAbbr = awayT.abbreviation || awayT.shortDisplayName || 'AWAY';
+      var homeAbbr = homeT.abbreviation || homeT.shortDisplayName || 'HOME';
+
+      // Colors
+      applyColor('away-panel', awayT.color);
+      applyColor('home-panel', homeT.color);
+
+      // Logos
+      if (awayT.logo) { var al = sb('away-logo'); if (al) { al.src = awayT.logo; al.style.display=''; } var af = sb('away-fb'); if(af) af.style.display='none'; }
+      if (homeT.logo) { var hl = sb('home-logo'); if (hl) { hl.src = homeT.logo; hl.style.display=''; } var hf = sb('home-fb'); if(hf) hf.style.display='none'; }
+
+      // Abbr + labels
+      var el;
+      el=sb('away-abbr'); if(el) el.textContent=awayAbbr;
+      el=sb('home-abbr'); if(el) el.textContent=homeAbbr;
+      el=sb('away-lbl');  if(el) el.textContent=awayAbbr;
+      el=sb('home-lbl');  if(el) el.textContent=homeAbbr;
+      var awayFull = (awayT.shortDisplayName || awayT.displayName || awayAbbr);
+      var homeFull = (homeT.shortDisplayName || homeT.displayName || homeAbbr);
+      var gameDate = '';
+      if (hc && hc.date) {
+        var gd = new Date(hc.date);
+        gameDate = ' - ' + gd.toLocaleDateString([],{month:'short',day:'numeric'});
+      }
+      el=sb('hdr-game'); if(el) el.textContent=awayFull+' vs '+homeFull+gameDate;
+
+      // Records
+      // record is singular array with type:total first
+      var awayRecArr = away.record || away.records || [];
+      var homeRecArr = home.record || home.records || [];
+      var awayRec = '';
+      var homeRec = '';
+      for (var ri=0; ri<awayRecArr.length; ri++) { if(awayRecArr[ri].type==='total'||awayRecArr[ri].type==='0') { awayRec=awayRecArr[ri].summary||awayRecArr[ri].displayValue||''; break; } }
+      for (var ri=0; ri<homeRecArr.length; ri++) { if(homeRecArr[ri].type==='total'||homeRecArr[ri].type==='0') { homeRec=homeRecArr[ri].summary||homeRecArr[ri].displayValue||''; break; } }
+      if (!awayRec && awayRecArr[0]) awayRec = awayRecArr[0].summary || awayRecArr[0].displayValue || '';
+      if (!homeRec && homeRecArr[0]) homeRec = homeRecArr[0].summary || homeRecArr[0].displayValue || '';
+
+      // Fetch seeds from standings - store in seedMap
+      // -- SEEDS -- update daily -----------------------------------
+      // Last updated: March 31, 2026
+      if (!window._seedMap) {
+        window._seedMap = {
+          DET:{seed:1,conf:'East'}, BOS:{seed:2,conf:'East'}, NYK:{seed:3,conf:'East'},
+          NY:{seed:3,conf:'East'},  CLE:{seed:4,conf:'East'}, TOR:{seed:5,conf:'East'},
+          ATL:{seed:6,conf:'East'}, PHI:{seed:7,conf:'East'}, ORL:{seed:8,conf:'East'},
+          MIA:{seed:9,conf:'East'}, CHA:{seed:10,conf:'East'},MIL:{seed:11,conf:'East'},
+          CHI:{seed:12,conf:'East'},BKN:{seed:13,conf:'East'},WSH:{seed:14,conf:'East'},
+          IND:{seed:15,conf:'East'},
+          OKC:{seed:1,conf:'West'}, SA:{seed:2,conf:'West'},  SAS:{seed:2,conf:'West'},
+          LAL:{seed:3,conf:'West'}, DEN:{seed:4,conf:'West'}, MIN:{seed:5,conf:'West'},
+          HOU:{seed:6,conf:'West'}, PHX:{seed:7,conf:'West'}, LAC:{seed:8,conf:'West'},
+          POR:{seed:9,conf:'West'}, GS:{seed:10,conf:'West'}, GSW:{seed:10,conf:'West'},
+          MEM:{seed:11,conf:'West'},NO:{seed:12,conf:'West'},  NOP:{seed:12,conf:'West'},
+          DAL:{seed:13,conf:'West'},UTAH:{seed:14,conf:'West'},UTA:{seed:14,conf:'West'},
+          SAC:{seed:15,conf:'West'}
+        };
+      }
+      updateRecordDisplay();
+
+      function updateRecordDisplay() {
+        var aSeed = window._seedMap[awayAbbr];
+        var hSeed = window._seedMap[homeAbbr];
+        var aRecTxt = awayRec + (aSeed ? '  |  #'+aSeed.seed+' '+aSeed.conf : '');
+        var hRecTxt = homeRec + (hSeed ? '  |  #'+hSeed.seed+' '+hSeed.conf : '');
+        el=sb('away-rec'); if(el) el.textContent=aRecTxt;
+        el=sb('home-rec'); if(el) el.textContent=hRecTxt;
+      }
+
+      // Scores
+      var aScore = parseInt(away.score) || 0;
+      var hScore = parseInt(home.score) || 0;
+      el=sb('away-score'); if(el){ el.textContent=aScore; el.className='team-score'+(aScore>hScore?' leading':''); }
+      el=sb('home-score'); if(el){ el.textContent=hScore; el.className='team-score'+(hScore>aScore?' leading':''); }
+
+      // Clock
+      var st     = (hc && hc.status) || {};
+      var stType = (st.type && st.type.name) || '';
+      var period = st.period || 0;
+      var clock  = st.displayClock || '';
+      var clkTxt='', perTxt='', stTxt='', stCls='st-pre';
+
+      if (stType==='STATUS_IN_PROGRESS'||stType==='STATUS_IN_PROGRESS_2') {
+        clkTxt=clock; perTxt=(period>4?('OT'+(period>5?period-4:'')):'Q'+period); stTxt='LIVE'; stCls='st-live';
+      } else if (stType==='STATUS_HALFTIME') {
+        clkTxt='HALFTIME'; perTxt=''; stTxt=''; stCls='';
+      } else if (stType==='STATUS_END_PERIOD') {
+        clkTxt='0:00'; perTxt='END Q'+period; stCls='st-pre';
+      } else if (stType==='STATUS_FINAL'||stType==='STATUS_FULL_TIME') {
+        clkTxt='FINAL'; stTxt='FINAL'; stCls='st-final';
+      } else if (stType==='STATUS_OVERTIME'||stType==='STATUS_IN_OVERTIME') {
+        clkTxt=clock; perTxt='OT'; stTxt='LIVE'; stCls='st-live';
+      } else {
+        var dt = new Date(hc && hc.date ? hc.date : Date.now());
+        clkTxt = dt.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+        stTxt='UPCOMING'; stCls='st-pre';
+      }
+      el=sb('g-clock');  if(el) el.textContent=clkTxt;
+      el=sb('g-period'); if(el) el.textContent=perTxt;
+      el=sb('g-status'); if(el){ el.textContent=stTxt; el.className='game-status '+stCls; }
+
+      // Quarter scores -- try header linescores first, fall back to boxscore
+      var awayLS = away.linescores || [];
+      var homeLS = home.linescores || [];
+
+      // Fallback: pull from boxscore.teams if header has none
+      if (!awayLS.length && bst.length) {
+        for (var bsi = 0; bsi < bst.length; bsi++) {
+          var bstAbbr = (bst[bsi].team && bst[bsi].team.abbreviation) || '';
+          if (bstAbbr === awayAbbr && bst[bsi].team.linescores) awayLS = bst[bsi].team.linescores;
+          if (bstAbbr === homeAbbr && bst[bsi].team.linescores) homeLS = bst[bsi].team.linescores;
+        }
+      }
+
+      // Also try d.boxscore.teams linescores directly
+      if (!awayLS.length) {
+        for (var bsi2 = 0; bsi2 < bst.length; bsi2++) {
+          var bst2 = bst[bsi2];
+          if (!bst2.homeAway) continue;
+          if (bst2.homeAway === 'away' && bst2.linescores) awayLS = bst2.linescores;
+          if (bst2.homeAway === 'home' && bst2.linescores) homeLS = bst2.linescores;
+        }
+      }
+
+      // Last fallback: competition-level linescores (away=index 0, home=index 1)
+      if (!awayLS.length && hc && hc.linescores) {
+        // ESPN sometimes puts [away_q1, home_q1, away_q2, home_q2...] interleaved
+        // or separate per competitor - just try competitors again with different field names
+        for (var ci3 = 0; ci3 < comps.length; ci3++) {
+          var cc = comps[ci3];
+          var ccLS = cc.linescores || cc.lineScores || [];
+          if (cc.homeAway === 'away') awayLS = ccLS;
+          if (cc.homeAway === 'home') homeLS = ccLS;
+        }
+      }
+      var qsTable = sb('qs-table');
+      if (qsTable && awayLS.length) {
+        qsTable.style.display = '';
+        var qIds = ['1','2','3','4'];
+        for (var q = 0; q < 4; q++) {
+          var aLS = awayLS[q];
+          var hLS = homeLS[q];
+          var aVal = aLS ? (aLS.displayValue !== undefined ? aLS.displayValue : aLS.value) : '--';
+          var hVal = hLS ? (hLS.displayValue !== undefined ? hLS.displayValue : hLS.value) : '--';
+          el=sb('qs-a'+(q+1)); if(el) el.textContent = (aVal !== undefined && aVal !== null) ? aVal : '--';
+          el=sb('qs-h'+(q+1)); if(el) el.textContent = (hVal !== undefined && hVal !== null) ? hVal : '--';
+        }
+        // OT (index 4+) - use displayValue like Q1-Q4, sum all OT periods
+        var aot=0, hot=0, hasOT=false;
+        for (var q2 = 4; q2 < awayLS.length; q2++) {
+          var aOTLS = awayLS[q2];
+          var hOTLS = homeLS[q2];
+          var aOTVal = aOTLS ? (aOTLS.displayValue !== undefined ? parseFloat(aOTLS.displayValue)||0 : aOTLS.value||0) : 0;
+          var hOTVal = hOTLS ? (hOTLS.displayValue !== undefined ? parseFloat(hOTLS.displayValue)||0 : hOTLS.value||0) : 0;
+          aot += aOTVal;
+          hot += hOTVal;
+          hasOT = true;
+        }
+        el=sb('qs-ao'); if(el) { el.textContent = hasOT ? aot : '--'; el.style.color = hasOT ? '#c7af4f' : 'rgba(255,255,255,0.25)'; }
+        el=sb('qs-ho'); if(el) { el.textContent = hasOT ? hot : '--'; el.style.color = hasOT ? '#c7af4f' : 'rgba(255,255,255,0.25)'; }
+        el=sb('qs-away-lbl'); if(el) el.textContent=awayAbbr;
+        el=sb('qs-home-lbl'); if(el) el.textContent=homeAbbr;
+        el=sb('qs-at'); if(el) el.textContent=aScore;
+        el=sb('qs-ht'); if(el) el.textContent=hScore;
+      }
+
+      // Last play
+      var sit = d.situation || (hc && hc.situation) || {};
+      el=sb('last-play'); if(el) el.textContent=(sit.lastPlay && sit.lastPlay.text)||'';
+
+      // Leaders
+      var leaders = d.leaders || [];
+      var byTeam = {away:{}, home:{}};
+      for (var li = 0; li < leaders.length; li++) {
+        var grp = leaders[li];
+        var grpAbbr = (grp.team && grp.team.abbreviation) || '';
+        var side;
+        if      (grpAbbr === awayAbbr)       side = 'away';
+        else if (grpAbbr === homeAbbr)       side = 'home';
+        else if (grp.homeAway === 'away')    side = 'away';
+        else if (grp.homeAway === 'home')    side = 'home';
+        else side = li === 0 ? 'away' : 'home';
+
+        var grpLeaders = grp.leaders || [];
+        for (var ci = 0; ci < grpLeaders.length; ci++) {
+          var cat = grpLeaders[ci];
+          var mapped = CAT_MAP[cat.name];
+          if (!mapped) continue;
+          var top = cat.leaders && cat.leaders[0];
+          if (!top) continue;
+          byTeam[side][mapped] = { athlete: top.athlete, val: top.displayValue !== undefined ? top.displayValue : (top.value !== undefined ? Math.round(top.value) : '--') };
+        }
+      }
+
+      for (var ci2 = 0; ci2 < CATS.length; ci2++) {
+        var c = CATS[ci2];
+        var aw = byTeam.away[c] || {};
+        var hm = byTeam.home[c] || {};
+        setLeader('away', c, aw.athlete, aw.val);
+        setLeader('home', c, hm.athlete, hm.val);
+      }
+
+      // STL + BLK from boxscore players
+      var bsPlayers = (d.boxscore && d.boxscore.players) || [];
+      for (var pi = 0; pi < bsPlayers.length; pi++) {
+        var pd = bsPlayers[pi];
+        var pdAbbr = (pd.team && pd.team.abbreviation) || '';
+        var pdSide = pdAbbr === awayAbbr ? 'away' : pdAbbr === homeAbbr ? 'home' : null;
+        if (!pdSide) continue;
+        var statsBlock = pd.statistics && pd.statistics[0];
+        if (!statsBlock) continue;
+        var names = statsBlock.names || [];
+        var stlIdx = -1, blkIdx = -1;
+        for (var ni = 0; ni < names.length; ni++) {
+          if (names[ni] === 'STL') stlIdx = ni;
+          if (names[ni] === 'BLK') blkIdx = ni;
+        }
+        var stlBest = null, stlVal = -1;
+        var blkBest = null, blkVal = -1;
+
+        // athletes live in statistics[0].athletes not pd.athletes
+        var athletes = (statsBlock.athletes) || [];
+        for (var ai = 0; ai < athletes.length; ai++) {
+          var ath = athletes[ai];
+          if (ath.didNotPlay) continue;
+          var athObj = ath.athlete || {};
+          var stats  = ath.stats || [];
+          if (!stats.length) continue;
+          if (stlIdx >= 0) {
+            var sv = parseInt(stats[stlIdx]) || 0;
+            if (sv > stlVal) { stlVal = sv; stlBest = athObj; }
+          }
+          if (blkIdx >= 0) {
+            var bv = parseInt(stats[blkIdx]) || 0;
+            if (bv > blkVal) { blkVal = bv; blkBest = athObj; }
+          }
+        }
+        if (stlBest && stlVal > 0) setLeader(pdSide, 'stl', stlBest, String(stlVal));
+        if (blkBest && blkVal > 0) setLeader(pdSide, 'blk', blkBest, String(blkVal));
+      }
+
+    } catch(e) { setStatus('Error: ' + e.message); }
+  };
+  xhr.onerror   = function() { setStatus('Network error - check server'); };
+  xhr.ontimeout = function() { setStatus('Timeout'); };
+  xhr.send();
+}
+
+setStatus('Script loaded - starting fetch...');
+fetchGame();
+setInterval(fetchGame, 25000);
+</script>
+</body>
+</html>

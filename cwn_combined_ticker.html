@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { width:1920px; height:64px; background:transparent; overflow:hidden; font-family:Arial,sans-serif; }
+
+.ticker-wrap { width:1920px; height:64px; background:linear-gradient(90deg,#0a0e1a,#0d1524,#0a0e1a); border-top:2px solid #c7af4f; border-bottom:2px solid #c7af4f; display:flex; align-items:stretch; overflow:hidden; }
+
+/* LEFT LABEL */
+.bookend { flex-shrink:0; width:220px; background:linear-gradient(90deg,#22304b,#1a2538); border-right:3px solid #c7af4f; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; z-index:10; }
+.b-title { font-family:'Arial Black',Arial,sans-serif; font-size:12px; font-weight:900; color:#c7af4f; letter-spacing:3px; }
+.b-sub { font-size:9px; font-weight:700; color:rgba(255,255,255,0.4); letter-spacing:2px; }
+.live-row { display:flex; align-items:center; gap:5px; margin-top:1px; }
+.live-dot { width:7px; height:7px; border-radius:50%; background:#e74c3c; animation:pulse 1.2s ease-in-out infinite; }
+.live-txt { font-size:9px; font-weight:900; color:#e74c3c; letter-spacing:2px; }
+
+/* SCROLL */
+.scroll-outer { flex:1; overflow:hidden; }
+.scroll-track { display:flex; align-items:center; height:64px; white-space:nowrap; will-change:transform; }
+
+/* MARKET ITEMS */
+.tick-item { display:inline-flex; align-items:center; gap:8px; padding:0 16px; flex-shrink:0; border-right:1px solid rgba(255,255,255,0.06); }
+.tick-left { display:flex; flex-direction:column; gap:1px; }
+.tick-sym { font-size:11px; font-weight:900; color:#c7af4f; letter-spacing:1px; }
+.tick-name { font-size:9px; color:rgba(255,255,255,0.35); letter-spacing:0.5px; }
+.tick-right { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
+.tick-price { font-size:13px; font-weight:700; color:#fff; font-family:monospace; }
+.tick-chg { font-size:10px; font-weight:700; font-family:monospace; }
+.tick-chg.up { color:#2ecc71; }
+.tick-chg.down { color:#e74c3c; }
+.tick-chg.flat { color:rgba(255,255,255,0.3); }
+
+/* CATEGORY DIVIDERS */
+.tick-cat { display:inline-flex; align-items:center; padding:0 14px; flex-shrink:0; }
+.tick-cat-lbl { font-size:8px; font-weight:900; color:rgba(255,255,255,0.25); letter-spacing:3px; background:rgba(199,175,79,0.08); padding:3px 8px; border-radius:2px; border:1px solid rgba(199,175,79,0.15); }
+
+/* NEWS ITEMS */
+.news-item { display:inline-flex; align-items:center; padding:0 24px; flex-shrink:0; }
+.news-bullet { width:6px; height:6px; border-radius:50%; background:#4a90d9; margin-right:12px; flex-shrink:0; }
+.news-source { font-size:10px; font-weight:900; color:#4a90d9; letter-spacing:2px; margin-right:10px; flex-shrink:0; }
+.news-text { font-size:14px; font-weight:700; color:#fff; }
+
+/* SECTION DIVIDER between market and news */
+.section-div { display:inline-flex; align-items:center; padding:0 20px; flex-shrink:0; }
+.section-div-inner { width:3px; height:40px; background:linear-gradient(180deg,transparent,#c7af4f,transparent); }
+
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+</style>
+</head>
+<body>
+<div class="ticker-wrap">
+  <div class="bookend">
+    <div class="b-title">CLIPZWORLD</div>
+    <div class="b-sub">NEWS</div>
+    <div class="live-row"><div class="live-dot"></div><div class="live-txt">LIVE</div></div>
+  </div>
+  <div class="scroll-outer">
+    <div class="scroll-track" id="track">
+      <div class="tick-item"><div class="tick-left"><div class="tick-sym">—</div></div><div class="tick-right"><div class="tick-price">Loading...</div></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var FMP = 'rJPVYlHnpcjxuOLoR1phvBz7e27UMMSq';
+var trackEl = document.getElementById('track');
+var scrollX = 0, animId;
+
+/* ── MARKET DATA ── */
+var DATA = {
+  indices: {
+    SPY:  { price:6528.65,  change:184.93,  pct:2.92  },
+    QQQ:  { price:21590.63, change:795.99,  pct:3.83  },
+    DIA:  { price:46341.32, change:1125.17, pct:2.49  },
+    IWM:  { price:2496.37,  change:92.37,   pct:3.41  },
+    FTSE: { price:8632.44,  change:54.21,   pct:0.63  },
+    DAX:  { price:22841.32, change:312.44,  pct:1.38  },
+    CAC:  { price:7921.44,  change:98.32,   pct:1.25  },
+    N225: { price:35442.88, change:412.44,  pct:1.18  },
+    HSI:  { price:23441.32, change:188.44,  pct:0.81  },
+    ASX:  { price:8221.44,  change:54.88,   pct:0.67  }
+  },
+  stocks: {
+    NVDA:  { name:'Nvidia',        price:174.44, pct:5.62  },
+    AAPL:  { name:'Apple',         price:253.79, pct:2.99  },
+    MSFT:  { name:'Microsoft',     price:388.45, pct:2.14  },
+    AMZN:  { name:'Amazon',        price:208.27, pct:3.64  },
+    GOOGL: { name:'Alphabet',      price:287.56, pct:2.10  },
+    AVGO:  { name:'Broadcom',      price:198.32, pct:3.21  },
+    META:  { name:'Meta',          price:572.13, pct:6.67  },
+    TSLA:  { name:'Tesla',         price:371.80, pct:4.65  },
+    NFLX:  { name:'Netflix',       price:995.42, pct:1.88  },
+    AMD:   { name:'AMD',           price:108.34, pct:4.12  },
+    PLTR:  { name:'Palantir',      price:92.18,  pct:5.44  },
+    JPM:   { name:'JPMorgan',      price:248.76, pct:1.32  },
+    BAC:   { name:'Bank of Amer',  price:44.21,  pct:1.18  },
+    V:     { name:'Visa',          price:352.44, pct:0.88  },
+    MA:    { name:'Mastercard',    price:548.92, pct:0.94  },
+    BRKB:  { name:'Berkshire B',   price:498.31, pct:0.44  },
+    LLY:   { name:'Eli Lilly',     price:812.44, pct:1.22  },
+    JNJ:   { name:'J&J',           price:162.88, pct:0.54  },
+    ABBV:  { name:'AbbVie',        price:198.54, pct:0.88  },
+    COST:  { name:'Costco',        price:972.44, pct:1.14  },
+    WMT:   { name:'Walmart',       price:98.32,  pct:0.72  },
+    PG:    { name:'P&G',           price:168.44, pct:0.54  },
+    KO:    { name:'Coca-Cola',     price:72.18,  pct:0.38  },
+    HD:    { name:'Home Depot',    price:388.92, pct:0.96  }
+  },
+  crypto: {},
+  forex: {}
+};
+
+/* ── NEWS DATA ── */
+var NEWS_ITEMS = [];
+var NEWS_LOADED = 0;
+var NEWS_FEEDS = [
+  { name:'AL JAZEERA', url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml') },
+  { name:'BBC',        url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://feeds.bbci.co.uk/news/world/rss.xml') },
+  { name:'REUTERS',    url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://feeds.reuters.com/reuters/worldNews') },
+];
+
+function fmtP(p) {
+  var v = parseFloat(p); if (!v || isNaN(v)) return '--';
+  if (v >= 10000) return '$' + v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  if (v >= 1000)  return '$' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  if (v >= 10)    return '$' + v.toFixed(2);
+  return '$' + v.toFixed(4);
+}
+function fmtPct(pct) {
+  var p = parseFloat(pct); if (isNaN(p)) return { t:'', c:'flat' };
+  return { t:(p >= 0 ? '+' : '') + p.toFixed(2) + '%', c: p > 0 ? 'up' : p < 0 ? 'down' : 'flat' };
+}
+function mkItem(sym, name, price, pct) {
+  var ch = fmtPct(pct);
+  return '<div class="tick-item">'
+    + '<div class="tick-left"><div class="tick-sym">' + sym + '</div>' + (name ? '<div class="tick-name">' + name + '</div>' : '') + '</div>'
+    + '<div class="tick-right"><div class="tick-price">' + fmtP(price) + '</div>'
+    + '<div class="tick-chg ' + ch.c + '">' + ch.t + '</div></div></div>';
+}
+function mkCat(lbl) {
+  return '<div class="tick-cat"><div class="tick-cat-lbl">' + lbl + '</div></div>';
+}
+function mkNews(source, title) {
+  return '<div class="news-item"><div class="news-bullet"></div><div class="news-source">' + source + '</div><div class="news-text">' + title + '</div></div>';
+}
+function mkSectionDiv() {
+  return '<div class="section-div"><div class="section-div-inner"></div></div>';
+}
+
+function buildTicker() {
+  var html = '';
+
+  // MARKET section
+  var idxOrder = [{k:'SPY',n:'S&P 500'},{k:'QQQ',n:'NASDAQ'},{k:'DIA',n:'DOW'},{k:'IWM',n:'RUSSELL'},{k:'FTSE',n:'FTSE 100'},{k:'DAX',n:'DAX'},{k:'CAC',n:'CAC 40'},{k:'N225',n:'NIKKEI'},{k:'HSI',n:'HANG SENG'},{k:'ASX',n:'ASX 200'}];
+  var ih = ''; idxOrder.forEach(function(i) { var q = DATA.indices[i.k]; if (q && q.price) ih += mkItem(i.n, '', q.price, q.pct); });
+  if (ih) html += mkCat('MARKETS') + ih;
+
+  var stkOrder = ['NVDA','AAPL','MSFT','AMZN','GOOGL','AVGO','META','TSLA','NFLX','AMD','PLTR','JPM','BAC','V','MA','BRKB','LLY','JNJ','ABBV','COST','WMT','PG','KO','HD'];
+  var sh = ''; stkOrder.forEach(function(s) { var q = DATA.stocks[s]; if (q && q.price) sh += mkItem(s, q.name, q.price, q.pct); });
+  if (sh) html += mkCat('STOCKS') + sh;
+
+  var cryOrder = [{k:'BTC',n:'Bitcoin'},{k:'ETH',n:'Ethereum'},{k:'SOL',n:'Solana'}];
+  var ch2 = ''; cryOrder.forEach(function(c) { var q = DATA.crypto[c.k]; if (q && q.price) ch2 += mkItem(c.k, c.n, q.price, q.pct); });
+  if (ch2) html += mkCat('CRYPTO') + ch2;
+
+  var fxOrder = ['EURUSD','USDJPY','GBPUSD','USDCAD'];
+  var fh = ''; fxOrder.forEach(function(f) { var q = DATA.forex[f]; if (q) fh += mkItem(q.pair, '', q.rate, null); });
+  if (fh) html += mkCat('FOREX') + fh;
+
+  // SECTION DIVIDER
+  html += mkSectionDiv();
+
+  // NEWS section
+  if (NEWS_ITEMS.length) {
+    html += mkCat('WORLD NEWS');
+    NEWS_ITEMS.forEach(function(item) { html += mkNews(item.source, item.title); });
+  }
+
+  if (!html) return;
+  trackEl.innerHTML = html + html;
+  if (!animId) startScroll();
+}
+
+function startScroll() {
+  cancelAnimationFrame(animId);
+  scrollX = 0;
+  var lastTime = null;
+  var PX_PER_SEC = 80; // adjust this number to change speed on all devices equally
+  function step(ts) {
+    if (lastTime === null) lastTime = ts;
+    var delta = ts - lastTime;
+    lastTime = ts;
+    var hw = trackEl.scrollWidth / 2;
+    scrollX += PX_PER_SEC * (delta / 1000);
+    if (scrollX >= hw) scrollX = 0;
+    trackEl.style.transform = 'translateX(-' + scrollX + 'px)';
+    animId = requestAnimationFrame(step);
+  }
+  animId = requestAnimationFrame(step);
+}
+
+/* ── MARKET FETCHES ── */
+function fetchIndices() {
+  // US indices
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://financialmodelingprep.com/stable/quote?apikey=' + FMP + '&symbol=^GSPC,^IXIC,^DJI,^RUT', true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var arr = JSON.parse(xhr.responseText);
+      if (!Array.isArray(arr) || !arr.length) return;
+      var map = {'^GSPC':'SPY','^IXIC':'QQQ','^DJI':'DIA','^RUT':'IWM'};
+      arr.forEach(function(q) { var k = map[q.symbol]; if (k && q.price) DATA.indices[k] = {price:q.price,change:q.change,pct:q.changePercentage}; });
+      buildTicker();
+    } catch(e) {}
+  };
+  xhr.send();
+  // Global indices
+  var xhr2 = new XMLHttpRequest();
+  xhr2.open('GET', 'https://financialmodelingprep.com/stable/quote?apikey=' + FMP + '&symbol=^FTSE,^GDAXI,^FCHI,^N225,^HSI,^AXJO', true);
+  xhr2.timeout = 10000;
+  xhr2.onload = function() {
+    try {
+      var arr2 = JSON.parse(xhr2.responseText);
+      if (!Array.isArray(arr2) || !arr2.length) return;
+      var map2 = {'^FTSE':'FTSE','^GDAXI':'DAX','^FCHI':'CAC','^N225':'N225','^HSI':'HSI','^AXJO':'ASX'};
+      arr2.forEach(function(q) { var k = map2[q.symbol]; if (k && q.price) DATA.indices[k] = {price:q.price,change:q.change,pct:q.changePercentage}; });
+      buildTicker();
+    } catch(e) {}
+  };
+  xhr2.send();
+}
+function fetchStocks() {
+  ['NVDA','AAPL','MSFT','AMZN','GOOGL','AVGO','META','TSLA','NFLX','AMD','PLTR','JPM','BAC','V','MA','BRK.B','LLY','JNJ','ABBV','COST','WMT','PG','KO','HD'].forEach(function(sym, i) {
+    setTimeout(function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'https://financialmodelingprep.com/stable/quote?apikey=' + FMP + '&symbol=' + sym, true);
+      xhr.timeout = 8000;
+      xhr.onload = function() {
+        try {
+          var arr = JSON.parse(xhr.responseText);
+          if (arr && arr[0] && arr[0].price) {
+            var sk=sym==='BRK.B'?'BRKB':sym; DATA.stocks[sk] = {name:DATA.stocks[sk]&&DATA.stocks[sk].name||sym, price:arr[0].price, change:arr[0].change, pct:arr[0].changePercentage};
+            buildTicker();
+          }
+        } catch(e) {}
+      };
+      xhr.send();
+    }, i * 400);
+  });
+}
+function fetchCrypto() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true', true);
+  xhr.timeout = 8000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      DATA.crypto = {BTC:{price:d.bitcoin.usd,pct:d.bitcoin.usd_24h_change},ETH:{price:d.ethereum.usd,pct:d.ethereum.usd_24h_change},SOL:{price:d.solana.usd,pct:d.solana.usd_24h_change}};
+      buildTicker();
+    } catch(e) {}
+  };
+  xhr.send();
+}
+function fetchForex() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY,CAD', true);
+  xhr.timeout = 8000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText); var r = d.rates || {};
+      DATA.forex = {EURUSD:{pair:'EUR/USD',rate:(1/r.EUR).toFixed(4)},USDJPY:{pair:'USD/JPY',rate:r.JPY.toFixed(2)},GBPUSD:{pair:'GBP/USD',rate:(1/r.GBP).toFixed(4)},USDCAD:{pair:'USD/CAD',rate:r.CAD.toFixed(4)}};
+      buildTicker();
+    } catch(e) {}
+  };
+  xhr.send();
+}
+
+/* ── NEWS FETCHES ── */
+function loadNewsFeed(feed) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', feed.url, true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if (d.status === 'ok') {
+        (d.items || []).forEach(function(item) {
+          var t = (item.title || '').trim();
+          if (t.length > 10) NEWS_ITEMS.push({source:feed.name, title:t});
+        });
+      }
+    } catch(e) {}
+    NEWS_LOADED++;
+    if (NEWS_LOADED >= NEWS_FEEDS.length) {
+      // Shuffle news
+      for (var i = NEWS_ITEMS.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = NEWS_ITEMS[i]; NEWS_ITEMS[i] = NEWS_ITEMS[j]; NEWS_ITEMS[j] = tmp;
+      }
+      buildTicker();
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    NEWS_LOADED++;
+    if (NEWS_LOADED >= NEWS_FEEDS.length) buildTicker();
+  };
+  xhr.send();
+}
+
+/* ── INIT ── */
+buildTicker();
+fetchCrypto();
+setTimeout(fetchForex,   2000);
+setTimeout(fetchIndices, 4000);
+setTimeout(fetchStocks,  6000);
+NEWS_FEEDS.forEach(function(f) { loadNewsFeed(f); });
+
+setInterval(fetchCrypto,  30000);
+setInterval(fetchForex,   60000);
+setInterval(fetchIndices, 120000);
+setInterval(fetchStocks,  120000);
+setInterval(function() {
+  NEWS_ITEMS = []; NEWS_LOADED = 0;
+  NEWS_FEEDS.forEach(function(f) { loadNewsFeed(f); });
+}, 300000);
+</script>
+</body>
+</html>
