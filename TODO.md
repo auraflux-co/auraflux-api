@@ -42,6 +42,62 @@
 
 ---
 
+#### [DONE] Automated Visual Regression Tests
+**Status**: ✅ Completed 2026-04-08
+**Actual Time**: 0.5 hours
+
+**Changes Made**:
+- `qa/visual_regression.js`: Playwright-based screenshot comparison against baselines
+- `qa/baselines/`: Stored baseline PNGs (run `npm run qa:baseline` to create)
+- `output/visual_regression/`: Per-run screenshots + JSON reports
+- `package.json`: Added `qa:baseline` and `qa:regression` scripts
+
+**Usage**:
+- `npm run qa:baseline` — capture baselines (run once after UI is stable)
+- `npm run qa:regression` — compare current vs baselines (exits 1 on regression)
+
+---
+
+#### [DONE] Performance Benchmarking Suite
+**Status**: ✅ Completed 2026-04-08
+**Actual Time**: 0.5 hours
+
+**Changes Made**:
+- `qa/benchmark.js`: Measures response times + memory for all key endpoints
+- `PERFORMANCE.md`: Auto-generated after each benchmark run
+- `package.json`: Added `benchmark` and `benchmark:concurrent` scripts
+
+**Usage**:
+- `npm run benchmark` — run benchmarks (requires server running)
+- `npm run benchmark:concurrent` — includes 10-simultaneous-request stress test
+
+**Railway Migration Blocker**: Run benchmarks and confirm all pass before deploying.
+
+---
+
+#### [DONE] Error Handling Improvements
+**Status**: ✅ Completed 2026-04-08
+**Actual Time**: 0.5 hours
+
+**Changes Made**:
+- `lib/error_logger.js`: Structured JSON logging to `logs/errors.jsonl`
+  - `logError(label, err, context)` — log any error with label + context
+  - `withRetry(fn, opts)` — exponential backoff retry for external API calls
+  - `getFallbackImage(url, category)` — fallback images for broken story images
+  - `validateImageUrl(url, category)` — HEAD-check image URLs before use
+  - `getErrorRate()` — rolling 5-minute error rate by label
+  - `errorMiddleware` — Express error handler (logs all unhandled errors)
+- `server.js`: Wired in error logger + added `GET /errors` diagnostic endpoint
+- `logs/errors.jsonl`: Structured error log (auto-rotates at 10MB)
+
+**Usage**:
+- `GET /errors` — view recent errors + error rate
+- `GET /errors?label=ESPN_FETCH` — filter by label
+- `GET /errors?n=100` — get last 100 errors
+
+---
+
+#### [PENDING] Twitch Thumbnail Integration
 #### [PENDING] Twitch Thumbnail Integration
 **Status**: 🔴 Blocked - waiting on `twitchsoup_thumbnail.jpeg`
 **Estimate**: 1 hour (once asset received)

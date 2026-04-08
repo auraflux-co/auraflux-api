@@ -8,7 +8,11 @@
     "dev": "nodemon server.js",
     "qa:install": "npx playwright install chromium",
     "qa:record": "node qa/record_session.js",
-    "qa:clean": "rm -rf output/qa_sessions/*"
+    "qa:clean": "rm -rf output/qa_sessions/*",
+    "qa:baseline": "node qa/visual_regression.js --update",
+    "qa:regression": "node qa/visual_regression.js",
+    "benchmark": "node qa/benchmark.js",
+    "benchmark:concurrent": "node qa/benchmark.js --concurrent"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
