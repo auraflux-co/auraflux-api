@@ -1,0 +1,212 @@
+{
+  "test_suite": "Gemini/Claude Role Swap Validation",
+  "created": "2026-04-08T04:01:00.000Z",
+  "notes": "12 test cases validating scene count accuracy across all content types and sizes",
+  "cases": [
+    {
+      "id": 1,
+      "name": "Twitch Full (10 streamers × 3 clips)",
+      "endpoint": "/generate-full-script",
+      "expectedScenes": 72,
+      "payload": {
+        "type": "twitch",
+        "date": "Tuesday, April 7, 2026",
+        "clipsPerStreamer": 3,
+        "items": [
+          {"streamer": "jasontheween", "displayName": "Jason", "clips": []},
+          {"streamer": "hasanabi", "displayName": "Hasan", "clips": []},
+          {"streamer": "adapt", "displayName": "Adapt", "clips": []},
+          {"streamer": "stableronaldo", "displayName": "Ron", "clips": []},
+          {"streamer": "lacy", "displayName": "Lacy", "clips": []},
+          {"streamer": "marlon", "displayName": "Marlon", "clips": []},
+          {"streamer": "cinna", "displayName": "Cinna", "clips": []},
+          {"streamer": "yonnajay", "displayName": "Yonna", "clips": []},
+          {"streamer": "jaycinco", "displayName": "Jay Cinco", "clips": []},
+          {"streamer": "extraemily", "displayName": "ExtraEmily", "clips": []}
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "NBA Full (10 games)",
+      "endpoint": "/generate-full-script",
+      "expectedScenes": 42,
+      "payload": {
+        "type": "nba",
+        "date": "Tuesday, April 7, 2026",
+        "games": [
+          {"home": "Lakers", "away": "Celtics", "score": "112-108"},
+          {"home": "Warriors", "away": "Nets", "score": "125-118"},
+          {"home": "Heat", "away": "Bucks", "score": "103-99"},
+          {"home": "Suns", "away": "Mavericks", "score": "118-115"},
+          {"home": "Nuggets", "away": "Clippers", "score": "122-110"},
+          {"home": "76ers", "away": "Knicks", "score": "108-102"},
+          {"home": "Grizzlies", "away": "Pelicans", "score": "115-109"},
+          {"home": "Rockets", "away": "Spurs", "score": "98-95"},
+          {"home": "Trail Blazers", "away": "Jazz", "score": "107-104"},
+          {"home": "Kings", "away": "Timberwolves", "score": "119-112"}
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "News Full (10 stories)",
+      "endpoint": "/generate-full-script",
+      "expectedScenes": 42,
+      "payload": {
+        "type": "news",
+        "date": "Tuesday, April 7, 2026",
+        "stories": [
+          {"headline": "Major Tech Announcement", "source": "TechCrunch"},
+          {"headline": "Political Development", "source": "Reuters"},
+          {"headline": "Scientific Breakthrough", "source": "Nature"},
+          {"headline": "Sports Victory", "source": "ESPN"},
+          {"headline": "Economic Update", "source": "Bloomberg"},
+          {"headline": "Environmental News", "source": "National Geographic"},
+          {"headline": "Entertainment Release", "source": "Variety"},
+          {"headline": "Health Discovery", "source": "Medical News Today"},
+          {"headline": "Space Exploration", "source": "NASA"},
+          {"headline": "Cultural Event", "source": "Associated Press"}
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "name": "Twitch Medium (5 streamers × 2 clips)",
+      "endpoint": "/generate-full-script",
+      "expectedScenes": 32,
+      "payload": {
+        "type": "twitch",
+        "date": "Tuesday, April 7, 2026",
+        "clipsPerStreamer": 2,
+        "items": [
+          {"name": "Jason", "username": "jasontheween", "clips": 2},
+          {"name": "Hasan", "username": "hasanabi", "clips": 2},
+          {"name": "Adapt", "username": "adapt", "clips": 2},
+          {"name": "Ron", "username": "stableronaldo", "clips": 2},
+          {"name": "Lacy", "username": "lacy", "clips": 2}
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "NBA Medium (5 games)",
+      "endpoint": "/generate-full-script",
+      "expectedScenes": 22,
+      "payload": {
+        "type": "nba",
+        "date": "Tuesday, April 7, 2026",
+        "games": [
+          {"home": "Lakers", "away": "Celtics", "score": "112-108"},
+          {"home": "Warriors", "away": "Nets", "score": "125-118"},
+          {"home": "Heat", "away": "Bucks", "score": "103-99"},
+          {"home": "Suns", "away": "Mavericks", "score": "118-115"},
+          {"home": "Nuggets", "away": "Clippers", "score": "122-110"}
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "name": "News Medium (5 stories)",
+      "endpoint": "/generate-full-script",
+      "expectedScenes": 22,
+      "payload": {
+        "type": "news",
+        "date": "Tuesday, April 7, 2026",
+        "stories": [
+          {"headline": "Major Tech Announcement", "source": "TechCrunch"},
+          {"headline": "Political Development", "source": "Reuters"},
+          {"headline": "Scientific Breakthrough", "source": "Nature"},
+          {"headline": "Sports Victory", "source": "ESPN"},
+          {"headline": "Economic Update", "source": "Bloomberg"}
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "name": "Twitch Small (3 streamers × 3 clips)",
+      "expectedScenes": 23,
+      "endpoint": "/generate-full-script",
+      "payload": {
+        "type": "twitch",
+        "date": "Tuesday, April 7, 2026",
+        "clipsPerStreamer": 3,
+        "items": [
+          {"name": "Jason", "username": "jasontheween", "clips": 3},
+          {"name": "Hasan", "username": "hasanabi", "clips": 3},
+          {"name": "Adapt", "username": "adapt", "clips": 3}
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "name": "NBA Small (3 games)",
+      "expectedScenes": 14,
+      "endpoint": "/generate-full-script",
+      "payload": {
+        "type": "nba",
+        "date": "Tuesday, April 7, 2026",
+        "games": [
+          {"home": "Lakers", "away": "Celtics", "score": "112-108"},
+          {"home": "Warriors", "away": "Nets", "score": "125-118"},
+          {"home": "Heat", "away": "Bucks", "score": "103-99"}
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "name": "News Small (3 stories)",
+      "expectedScenes": 14,
+      "endpoint": "/generate-full-script",
+      "payload": {
+        "type": "news",
+        "date": "Tuesday, April 7, 2026",
+        "stories": [
+          {"headline": "Major Tech Announcement", "source": "TechCrunch"},
+          {"headline": "Political Development", "source": "Reuters"},
+          {"headline": "Scientific Breakthrough", "source": "Nature"}
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "name": "Twitch Minimal (1 streamer × 3 clips)",
+      "expectedScenes": 9,
+      "endpoint": "/generate-full-script",
+      "payload": {
+        "type": "twitch",
+        "date": "Tuesday, April 7, 2026",
+        "clipsPerStreamer": 3,
+        "items": [
+          {"name": "Jason", "username": "jasontheween", "clips": 3}
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "name": "NBA Minimal (1 game)",
+      "expectedScenes": 6,
+      "endpoint": "/generate-full-script",
+      "payload": {
+        "type": "nba",
+        "date": "Tuesday, April 7, 2026",
+        "games": [
+          {"home": "Lakers", "away": "Celtics", "score": "112-108"}
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "name": "News Minimal (1 story)",
+      "expectedScenes": 6,
+      "endpoint": "/generate-full-script",
+      "payload": {
+        "type": "news",
+        "date": "Tuesday, April 7, 2026",
+        "stories": [
+          {"headline": "Major Tech Announcement", "source": "TechCrunch"}
+        ]
+      }
+    }
+  ]
+}
