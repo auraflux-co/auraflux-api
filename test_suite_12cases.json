@@ -80,11 +80,11 @@
         "date": "Tuesday, April 7, 2026",
         "clipsPerStreamer": 2,
         "items": [
-          {"name": "Jason", "username": "jasontheween", "clips": 2},
-          {"name": "Hasan", "username": "hasanabi", "clips": 2},
-          {"name": "Adapt", "username": "adapt", "clips": 2},
-          {"name": "Ron", "username": "stableronaldo", "clips": 2},
-          {"name": "Lacy", "username": "lacy", "clips": 2}
+          {"streamer": "jasontheween", "displayName": "Jason", "clips": []},
+          {"streamer": "hasanabi", "displayName": "Hasan", "clips": []},
+          {"streamer": "adapt", "displayName": "Adapt", "clips": []},
+          {"streamer": "stableronaldo", "displayName": "Ron", "clips": []},
+          {"streamer": "lacy", "displayName": "Lacy", "clips": []}
         ]
       }
     },
@@ -132,9 +132,9 @@
         "date": "Tuesday, April 7, 2026",
         "clipsPerStreamer": 3,
         "items": [
-          {"name": "Jason", "username": "jasontheween", "clips": 3},
-          {"name": "Hasan", "username": "hasanabi", "clips": 3},
-          {"name": "Adapt", "username": "adapt", "clips": 3}
+          {"streamer": "jasontheween", "displayName": "Jason", "clips": []},
+          {"streamer": "hasanabi", "displayName": "Hasan", "clips": []},
+          {"streamer": "adapt", "displayName": "Adapt", "clips": []}
         ]
       }
     },
@@ -178,7 +178,7 @@
         "date": "Tuesday, April 7, 2026",
         "clipsPerStreamer": 3,
         "items": [
-          {"name": "Jason", "username": "jasontheween", "clips": 3}
+          {"streamer": "jasontheween", "displayName": "Jason", "clips": []}
         ]
       }
     },
