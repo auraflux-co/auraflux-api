@@ -43,6 +43,37 @@ cd ~/cwn-production && tail -f output/*.log
 
 **See:** `server.js:5867-5875` for design_metadata schema, `server.js:232-318` for VectCutClient implementation
 
+### Agent Orchestration Policy (Owner-Friendly Workflow)
+
+Use this policy for all implementation work so Rob can lead with ideas and review at checkpoints.
+
+**Roles:**
+- **Claude Code = General Manager** — plans work, breaks tasks into safe steps, keeps `CLAUDE.md` rules in force.
+- **Gemini Flash = Visual Director** — used for visual/frame decisions (thumbnail hooks, layout quality, clickability checks).
+- **Aider = Surgical Coder** — used for high-risk refactors or tightly scoped edits in large files.
+- **Cline = Human Review Layer** — present an English plan before changes; summarize what changed after edits.
+
+**When to call Aider:**
+1. File is large (roughly >2000 lines) and change touches multiple functions/sections.
+2. Refactor risk is high (shared utilities, assembly flow, API contract changes).
+3. Precise, contained rewrite is needed without broad side effects.
+
+**When NOT to call Aider:**
+1. Small single-function edits or obvious bug fixes.
+2. Simple config/text updates.
+3. Tasks that are mostly planning, explanation, or review.
+
+**Human checkpoints (required):**
+1. **Before editing:** Show a short plain-English plan with affected files.
+2. **Before commit:** Show what changed and why in non-technical language.
+3. **If behavior changes:** Ask for explicit approval before finalizing.
+
+**Commit guardrails:**
+1. Re-read `CLAUDE.md` and `AIDER_COMMIT_CHECKLIST.md` before every commit.
+2. Commit only files related to the request.
+3. Never commit secrets, `.env`, `tmp/`, `output/`, or credential files.
+4. Keep commit message focused on intent ("why"), not just file list.
+
 ### Multi-Stage Production Pipeline
 
 ClipzWorld News (CWN) is an AI-generated news/reaction show using Claude (script), Gemini (QA), and HeyGen (avatar). The production pipeline has 4 stages with 4 quality gates:
