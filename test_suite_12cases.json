@@ -34,7 +34,7 @@
       "payload": {
         "type": "nba",
         "date": "Tuesday, April 7, 2026",
-        "games": [
+        "items": [
           {"home": "Lakers", "away": "Celtics", "score": "112-108"},
           {"home": "Warriors", "away": "Nets", "score": "125-118"},
           {"home": "Heat", "away": "Bucks", "score": "103-99"},
@@ -56,7 +56,7 @@
       "payload": {
         "type": "news",
         "date": "Tuesday, April 7, 2026",
-        "stories": [
+        "items": [
           {"headline": "Major Tech Announcement", "source": "TechCrunch"},
           {"headline": "Political Development", "source": "Reuters"},
           {"headline": "Scientific Breakthrough", "source": "Nature"},
@@ -96,7 +96,7 @@
       "payload": {
         "type": "nba",
         "date": "Tuesday, April 7, 2026",
-        "games": [
+        "items": [
           {"home": "Lakers", "away": "Celtics", "score": "112-108"},
           {"home": "Warriors", "away": "Nets", "score": "125-118"},
           {"home": "Heat", "away": "Bucks", "score": "103-99"},
@@ -113,7 +113,7 @@
       "payload": {
         "type": "news",
         "date": "Tuesday, April 7, 2026",
-        "stories": [
+        "items": [
           {"headline": "Major Tech Announcement", "source": "TechCrunch"},
           {"headline": "Political Development", "source": "Reuters"},
           {"headline": "Scientific Breakthrough", "source": "Nature"},
@@ -146,7 +146,7 @@
       "payload": {
         "type": "nba",
         "date": "Tuesday, April 7, 2026",
-        "games": [
+        "items": [
           {"home": "Lakers", "away": "Celtics", "score": "112-108"},
           {"home": "Warriors", "away": "Nets", "score": "125-118"},
           {"home": "Heat", "away": "Bucks", "score": "103-99"}
@@ -190,7 +190,7 @@
       "payload": {
         "type": "nba",
         "date": "Tuesday, April 7, 2026",
-        "games": [
+        "items": [
           {"home": "Lakers", "away": "Celtics", "score": "112-108"}
         ]
       }

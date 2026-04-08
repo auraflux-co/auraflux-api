@@ -1,0 +1,18 @@
+{
+  "type": "twitch",
+  "date": "Wednesday, April 8, 2026",
+  "clipsPerStreamer": 1,
+  "items": [
+    {
+      "streamer": "jasontheween",
+      "displayName": "Jason",
+      "clips": [
+        {
+          "url": "https://clips.twitch.tv/test1",
+          "title": "Test Clip 1",
+          "creator": "test_creator"
+        }
+      ]
+    }
+  ]
+}

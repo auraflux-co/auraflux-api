@@ -1,0 +1,27 @@
+{
+  "type": "news",
+  "date": "2026-04-06",
+  "items": [
+    {
+      "title": "Climate Summit Concludes with Mixed Results",
+      "source": "Al Jazeera",
+      "desc": "The international climate summit ended today with some agreements on emissions reductions, but several major nations refused to commit to binding targets.",
+      "link": "https://example.com/story1",
+      "thumbnailUrl": "https://via.placeholder.com/300"
+    },
+    {
+      "title": "Tech Giant Announces Layoffs",
+      "source": "Al Jazeera",
+      "desc": "A major technology company announced it will lay off 10,000 employees as part of a restructuring effort.",
+      "link": "https://example.com/story2",
+      "thumbnailUrl": "https://via.placeholder.com/300"
+    },
+    {
+      "title": "New Space Mission Launched",
+      "source": "Al Jazeera",
+      "desc": "NASA launched a new mission to study asteroids in the outer solar system. The spacecraft is expected to reach its destination in 2030.",
+      "link": "https://example.com/story3",
+      "thumbnailUrl": "https://via.placeholder.com/300"
+    }
+  ]
+}

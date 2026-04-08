@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@700;900&family=Barlow:wght@600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 1280px; height: 720px; overflow: hidden; background: #060a12; }
+
+/* ── BACKGROUND ── */
+.bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 90% at 15% 50%, rgba(0,122,51,0.35) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 90% at 85% 50%, rgba(200,16,46,0.3) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(0,0,0,0.9) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(10,18,35,0.8) 0%, transparent 60%);
+}
+
+/* Parquet floor pattern */
+.floor {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 320px;
+  overflow: hidden;
+}
+.floor::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: -30%; right: -30%;
+  height: 500px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 60px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 40px);
+  transform: perspective(300px) rotateX(70deg);
+  transform-origin: bottom center;
+}
+.floor::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 160px;
+  background: linear-gradient(0deg, #060a12 0%, transparent 100%);
+}
+
+/* ── TEAM PANELS ── */
+.team-bos {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 520px;
+  background: linear-gradient(135deg, rgba(0,122,51,0.5) 0%, transparent 80%);
+  clip-path: polygon(0 0, 100% 0, 75% 100%, 0 100%);
+}
+.team-atl {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 520px;
+  background: linear-gradient(225deg, rgba(200,16,46,0.45) 0%, transparent 80%);
+  clip-path: polygon(25% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* ── TEAM TEXT ── */
+.team-info-bos {
+  position: absolute;
+  left: 52px; top: 50%;
+  transform: translateY(-50%);
+}
+.team-info-atl {
+  position: absolute;
+  right: 52px; top: 50%;
+  transform: translateY(-50%);
+  text-align: right;
+}
+.team-city {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 700;
+  letter-spacing: 6px; opacity: 0.7;
+  text-transform: uppercase;
+}
+.team-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px; line-height: 0.9;
+  letter-spacing: 3px;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+}
+.team-record {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px; font-weight: 600;
+  letter-spacing: 3px; opacity: 0.5;
+  margin-top: 6px;
+}
+.team-city.bos { color: #aee8c0; }
+.team-name.bos  { color: #fff; }
+.team-record.bos { color: #aee8c0; }
+.team-city.atl { color: #f4a0b0; }
+.team-name.atl  { color: #fff; }
+.team-record.atl { color: #f4a0b0; }
+
+/* ── CENTER CONTENT ── */
+.center {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column;
+  align-items: center; gap: 12px;
+  z-index: 10;
+}
+
+.vs-ring {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  border: 3px solid rgba(199,175,79,0.4);
+  background: radial-gradient(circle, rgba(34,48,75,0.9) 0%, rgba(13,20,36,0.95) 100%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 60px rgba(199,175,79,0.3), 0 0 120px rgba(199,175,79,0.1);
+}
+.vs-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px; color: #c7af4f;
+  letter-spacing: 4px;
+}
+
+.live-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(192,57,43,0.9);
+  border: 1px solid rgba(255,100,80,0.4);
+  padding: 6px 20px; border-radius: 3px;
+  box-shadow: 0 0 25px rgba(192,57,43,0.5);
+}
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px #fff;
+}
+.live-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; color: #fff; letter-spacing: 4px;
+}
+
+.game-time {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; color: #c7af4f;
+  letter-spacing: 4px;
+}
+
+.game-info {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 4px; text-align: center;
+}
+
+/* ── BRAND ── */
+.brand {
+  position: absolute;
+  top: 22px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(199,175,79,0.35);
+  color: #c7af4f;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 17px; letter-spacing: 7px;
+  padding: 6px 22px; border-radius: 3px;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 70px;
+  background: linear-gradient(90deg, rgba(0,122,51,0.85) 0%, rgba(13,20,36,0.95) 30%, rgba(13,20,36,0.95) 70%, rgba(200,16,46,0.8) 100%);
+  border-top: 3px solid #c7af4f;
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 50px;
+}
+.bb-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.bb-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 3px; }
+.bb-value { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: #c7af4f; letter-spacing: 2px; line-height: 1; }
+.bb-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+.bb-div { width: 1px; height: 38px; background: rgba(199,175,79,0.2); }
+
+/* ── GLOW ORBS ── */
+.orb-g { position: absolute; width: 350px; height: 350px; border-radius: 50%; background: radial-gradient(circle, rgba(0,122,51,0.2) 0%, transparent 70%); top: 30%; left: 8%; pointer-events: none; }
+.orb-r { position: absolute; width: 350px; height: 350px; border-radius: 50%; background: radial-gradient(circle, rgba(200,16,46,0.18) 0%, transparent 70%); top: 30%; right: 8%; pointer-events: none; }
+
+/* ── ACCENT LINES ── */
+.accent-l { position: absolute; left: 440px; top: 0; bottom: 70px; width: 1px; background: linear-gradient(180deg, transparent, rgba(199,175,79,0.2) 30%, rgba(199,175,79,0.3) 50%, rgba(199,175,79,0.2) 70%, transparent); }
+.accent-r { position: absolute; right: 440px; top: 0; bottom: 70px; width: 1px; background: linear-gradient(180deg, transparent, rgba(199,175,79,0.2) 30%, rgba(199,175,79,0.3) 50%, rgba(199,175,79,0.2) 70%, transparent); }
+
+/* ── PLAYOFF STAKES TAG ── */
+.stakes {
+  position: absolute;
+  top: 72px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(199,175,79,0.12);
+  border: 1px solid rgba(199,175,79,0.3);
+  color: rgba(199,175,79,0.8);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 4px; padding: 4px 16px;
+  border-radius: 2px; white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="floor"></div>
+<div class="orb-g"></div>
+<div class="orb-r"></div>
+<div class="team-bos"></div>
+<div class="team-atl"></div>
+<div class="accent-l"></div>
+<div class="accent-r"></div>
+
+<!-- Team info left -->
+<div class="team-info-bos">
+  <div class="team-city bos">BOSTON</div>
+  <div class="team-name bos">CELTICS</div>
+  <img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" style="width:90px;height:90px;object-fit:contain;margin-top:8px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.6))">
+  <div class="team-record bos" style="margin-top:6px">EAST · PLAYOFFS BOUND</div>
+</div>
+
+<!-- Team info right -->
+<div class="team-info-atl">
+  <div class="team-city atl">ATLANTA</div>
+  <div class="team-name atl">HAWKS</div>
+  <img src="https://a.espncdn.com/i/teamlogos/nba/500/atl.png" style="width:90px;height:90px;object-fit:contain;margin-top:8px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.6))">
+  <div class="team-record atl" style="margin-top:6px">EAST · PLAY-IN HUNT</div>
+</div>
+
+<!-- Center -->
+<div class="brand">CLIPZWORLD</div>
+<div class="stakes">NBA · EASTERN CONFERENCE</div>
+
+<div class="center">
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    <div class="live-text">LIVE TONIGHT</div>
+  </div>
+  <div class="vs-ring">
+    <div class="vs-text">VS</div>
+  </div>
+  <div class="game-time">7:30 PM ET</div>
+  <div class="game-info">MARCH 30, 2026 · STATE FARM ARENA · ATLANTA</div>
+</div>
+
+<!-- Bottom bar -->
+<div class="bottom-bar">
+  <!-- Brown stat with photo -->
+  <div class="bb-stat" style="flex-direction:row;align-items:center;gap:10px;">
+    <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1628384.png" style="width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid rgba(0,122,51,0.6);flex-shrink:0;">
+    <div style="display:flex;flex-direction:column;gap:1px;">
+      <div class="bb-label">J. BROWN · BOS</div>
+      <div class="bb-value">28.6 PPG</div>
+      <div class="bb-sub">47.7 FG% · 80.2 FT%</div>
+    </div>
+  </div>
+  <div class="bb-div"></div>
+  <div class="bb-stat">
+    <div class="bb-label">FOLLOW FOR MORE</div>
+    <div class="bb-value" style="font-size:20px;letter-spacing:1px;">@CLIPZWORLD</div>
+    <div class="bb-sub">FOLLOW ON CLIPZWORLD</div>
+  </div>
+  <div class="bb-div"></div>
+  <!-- Johnson stat with photo -->
+  <div class="bb-stat" style="flex-direction:row;align-items:center;gap:10px;">
+    <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630552.png" style="width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid rgba(200,16,46,0.6);flex-shrink:0;">
+    <div style="display:flex;flex-direction:column;gap:1px;">
+      <div class="bb-label">J. JOHNSON · ATL</div>
+      <div class="bb-value">22.9 PPG</div>
+      <div class="bb-sub">49.3 FG% · 78.6 FT%</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

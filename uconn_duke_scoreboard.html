@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ClipzWorld — UConn vs Duke</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: transparent; font-family: 'Arial Black', Arial, sans-serif; overflow: hidden; }
+
+  .scoreboard {
+    width: 500px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid #c7af4f;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.8);
+  }
+
+  /* Brand bar */
+  .brand-bar {
+    background: #c7af4f;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 16px;
+  }
+  .brand-name { font-size: 11px; font-weight: 900; color: #22304b; letter-spacing: 2px; }
+  .live-badge { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 900; color: #22304b; letter-spacing: 1px; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #c0392b; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+  /* NCAA badge */
+  .ncaa-bar {
+    background: #1a1a2e;
+    text-align: center;
+    padding: 4px;
+    font-size: 10px;
+    color: rgba(199,175,79,0.7);
+    letter-spacing: 3px;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(199,175,79,0.2);
+  }
+
+  /* Game clock */
+  .game-info {
+    background: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(199,175,79,0.15);
+  }
+  .period-badge {
+    background: #c7af4f;
+    color: #111827;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 3px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+  .game-clock { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 2px; min-width: 80px; text-align: center; }
+  .shot-wrap { text-align: center; }
+  .shot-num { font-size: 14px; font-weight: 900; color: #c7af4f; }
+  .shot-lbl { font-size: 9px; color: rgba(199,175,79,0.5); letter-spacing: 1px; }
+
+  /* Main score */
+  .score-area {
+    display: flex;
+    background: #0f172a;
+  }
+
+  /* UConn side — navy/white */
+  .team-uconn {
+    flex: 1;
+    background: linear-gradient(135deg, #002868 0%, #001a4a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .team-uconn::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+
+  /* Duke side — blue/white */
+  .team-duke {
+    flex: 1;
+    background: linear-gradient(135deg, #003087 0%, #001f5e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .team-duke::before {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+
+  /* Logo circles */
+  .logo-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .logo-uconn {
+    background: #0057a8;
+    border-color: rgba(255,255,255,0.4);
+  }
+  .logo-duke {
+    background: #003087;
+    border-color: rgba(255,255,255,0.4);
+  }
+
+  /* Husky SVG icon */
+  .husky-icon { width: 38px; height: 38px; }
+  /* Devil SVG icon */
+  .devil-icon { width: 32px; height: 38px; }
+
+  .team-abbr { font-size: 22px; font-weight: 900; color: rgba(255,255,255,0.9); letter-spacing: 2px; }
+  .team-full { font-size: 9px; color: rgba(255,255,255,0.45); letter-spacing: 1px; font-family: Arial, sans-serif; font-weight: 400; text-align: center; }
+  .team-score { font-size: 64px; font-weight: 900; color: #fff; line-height: 1; letter-spacing: -2px; }
+  .team-score.leading { color: #f0d060; }
+  .team-fouls { font-size: 10px; color: rgba(255,255,255,0.4); font-family: Arial, sans-serif; }
+  .team-fouls span { color: #f0c040; font-weight: 700; }
+  .team-timeouts { display: flex; gap: 4px; margin-top: 2px; }
+  .to-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.6); }
+  .to-dot.used { background: rgba(255,255,255,0.12); }
+
+  /* Divider */
+  .divider {
+    width: 3px;
+    background: #c7af4f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .div-dot { width: 6px; height: 6px; border-radius: 50%; background: #c7af4f; margin: 0 -2px; }
+
+  /* Half scores */
+  .half-scores {
+    background: #0a0f1e;
+    border-top: 1px solid rgba(199,175,79,0.15);
+    padding: 6px 16px;
+  }
+  .hs-table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }
+  .hs-table th { font-size: 10px; color: rgba(199,175,79,0.5); font-weight: 700; padding: 2px 6px; text-align: center; letter-spacing: 1px; }
+  .hs-table td { font-size: 13px; font-weight: 700; color: #fff; text-align: center; padding: 3px 6px; }
+  .hs-table td.tlbl { text-align: left; font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 400; }
+  .hs-table td.tot { color: #c7af4f; font-size: 15px; font-weight: 900; }
+
+  /* Bottom */
+  .brand-strip {
+    background: #0a0f1e;
+    border-top: 1px solid rgba(199,175,79,0.1);
+    padding: 4px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .bs-text { font-size: 9px; color: rgba(199,175,79,0.4); letter-spacing: 1.5px; font-family: Arial, sans-serif; }
+  .bs-time { font-size: 9px; color: rgba(255,255,255,0.25); font-family: Arial, sans-serif; }
+
+  /* Controls */
+  .toggle-btn {
+    width: 100%;
+    background: rgba(199,175,79,0.08);
+    border: 1px solid rgba(199,175,79,0.2);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    color: rgba(199,175,79,0.5);
+    font-size: 10px;
+    padding: 5px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    font-family: Arial, sans-serif;
+  }
+  .toggle-btn:hover { color: #c7af4f; }
+
+  .controls {
+    background: #070c18;
+    border: 2px solid #c7af4f;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 12px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cs { font-size: 9px; color: rgba(199,175,79,0.4); letter-spacing: 1px; font-family: Arial,sans-serif; border-bottom: 1px solid rgba(199,175,79,0.1); padding-bottom: 4px; }
+  .cr { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .cl { font-size: 10px; color: #c7af4f; min-width: 65px; font-family: Arial,sans-serif; }
+  input.ci, select.ci {
+    background: #111827;
+    border: 1px solid rgba(199,175,79,0.3);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 8px;
+    width: 65px;
+    text-align: center;
+    font-family: 'Arial Black', Arial, sans-serif;
+  }
+  input.ci:focus, select.ci:focus { outline: none; border-color: #c7af4f; }
+  input.ci.wide { width: 110px; }
+  select.ci { color: #c7af4f; width: auto; }
+  .cb {
+    background: #c7af4f; color: #111; border: none; border-radius: 4px;
+    font-size: 11px; font-weight: 900; padding: 6px 14px; cursor: pointer;
+    font-family: 'Arial Black', Arial, sans-serif; letter-spacing: .5px;
+  }
+  .cb:hover { background: #e0c86a; }
+  .cb.red { background: #c0392b; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="scoreboard">
+  <div class="brand-bar">
+    <span class="brand-name">CLIPZWORLD</span>
+    <div class="live-badge"><div class="live-dot"></div><span id="live-lbl">LIVE</span></div>
+  </div>
+
+  <div class="ncaa-bar">NCAA MEN'S BASKETBALL · TOURNAMENT</div>
+
+  <div class="game-info">
+    <div class="period-badge" id="period-disp">1ST HALF</div>
+    <div class="game-clock" id="clock-disp">20:00</div>
+    <div class="shot-wrap">
+      <div class="shot-num" id="shot-disp">30</div>
+      <div class="shot-lbl">SHOT</div>
+    </div>
+  </div>
+
+  <div class="score-area">
+    <!-- UConn -->
+    <div class="team-uconn">
+      <div class="logo-circle logo-uconn">
+        <svg class="husky-icon" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Simplified husky face -->
+          <ellipse cx="30" cy="32" rx="20" ry="22" fill="#4a90d9" opacity=".9"/>
+          <!-- Ears -->
+          <polygon points="12,16 18,32 8,28" fill="#3a7abf"/>
+          <polygon points="48,16 42,32 52,28" fill="#3a7abf"/>
+          <polygon points="13,16 18,28 11,26" fill="#f0e0c0"/>
+          <polygon points="47,16 42,28 49,26" fill="#f0e0c0"/>
+          <!-- Face white area -->
+          <ellipse cx="30" cy="36" rx="13" ry="14" fill="#e8e8e8"/>
+          <!-- Eyes -->
+          <ellipse cx="23" cy="30" rx="4" ry="4.5" fill="#1a3a6a"/>
+          <ellipse cx="37" cy="30" rx="4" ry="4.5" fill="#1a3a6a"/>
+          <circle cx="24.5" cy="29" r="1.5" fill="white"/>
+          <circle cx="38.5" cy="29" r="1.5" fill="white"/>
+          <!-- Nose -->
+          <ellipse cx="30" cy="38" rx="4" ry="3" fill="#2c2c2c"/>
+          <!-- Mouth -->
+          <path d="M26 41 Q30 44 34 41" stroke="#2c2c2c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Forehead markings -->
+          <path d="M22 24 Q30 20 38 24" stroke="#3a7abf" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="team-abbr">UCONN</div>
+      <div class="team-full">Connecticut Huskies</div>
+      <div class="team-score" id="away-score">0</div>
+      <div class="team-fouls">FOULS <span id="away-fouls">0</span></div>
+      <div class="team-timeouts" id="away-to"></div>
+    </div>
+
+    <div class="divider">
+      <div class="div-dot"></div>
+      <div class="div-dot"></div>
+      <div class="div-dot"></div>
+    </div>
+
+    <!-- Duke -->
+    <div class="team-duke">
+      <div class="logo-circle logo-duke">
+        <svg class="devil-icon" viewBox="0 0 50 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Blue devil simplified -->
+          <!-- Horns -->
+          <polygon points="10,5 18,22 6,18" fill="#4169C8"/>
+          <polygon points="40,5 32,22 44,18" fill="#4169C8"/>
+          <!-- Head -->
+          <ellipse cx="25" cy="32" rx="18" ry="20" fill="#4169C8"/>
+          <!-- Face -->
+          <ellipse cx="25" cy="35" rx="12" ry="13" fill="#c8a878"/>
+          <!-- Eyes -->
+          <ellipse cx="19" cy="31" rx="3.5" ry="4" fill="#1a1a3e"/>
+          <ellipse cx="31" cy="31" rx="3.5" ry="4" fill="#1a1a3e"/>
+          <circle cx="20" cy="30" r="1.2" fill="white"/>
+          <circle cx="32" cy="30" r="1.2" fill="white"/>
+          <!-- Nose -->
+          <ellipse cx="25" cy="37" rx="3" ry="2.5" fill="#8a6040"/>
+          <!-- Mouth — wide grin -->
+          <path d="M19 41 Q25 46 31 41" stroke="#5a3020" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Eyebrows — mean look -->
+          <path d="M15 27 Q19 24 23 27" stroke="#1a1a3e" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M27 27 Q31 24 35 27" stroke="#1a1a3e" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- Beard/chin -->
+          <ellipse cx="25" cy="50" rx="8" ry="5" fill="#4169C8"/>
+          <path d="M17 46 Q25 54 33 46" fill="#3a58b0"/>
+        </svg>
+      </div>
+      <div class="team-abbr">DUKE</div>
+      <div class="team-full">Duke Blue Devils</div>
+      <div class="team-score" id="home-score">0</div>
+      <div class="team-fouls">FOULS <span id="home-fouls">0</span></div>
+      <div class="team-timeouts" id="home-to"></div>
+    </div>
+  </div>
+
+  <!-- Half scores -->
+  <div class="half-scores">
+    <table class="hs-table">
+      <thead>
+        <tr>
+          <th></th><th>1H</th><th>2H</th><th>OT</th><th>TOT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tlbl">UCONN</td>
+          <td id="ah1">—</td><td id="ah2">—</td><td id="aot">—</td>
+          <td class="tot" id="away-tot">0</td>
+        </tr>
+        <tr>
+          <td class="tlbl">DUKE</td>
+          <td id="hh1">—</td><td id="hh2">—</td><td id="hot">—</td>
+          <td class="tot" id="home-tot">0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="brand-strip">
+    <span class="bs-text">CLIPS · HIGHLIGHTS · MOMENTS</span>
+    <span class="bs-time" id="upd-time">Pre-game</span>
+  </div>
+</div>
+
+<button class="toggle-btn" onclick="toggleCtrl()">EDIT SCORES ▼</button>
+
+<div class="controls" id="ctrl">
+  <div class="cs">LIVE SCORE</div>
+  <div class="cr">
+    <span class="cl">UConn</span>
+    <input class="ci" id="in-as" type="number" value="0" min="0">
+    <span class="cl" style="margin-left:8px">Duke</span>
+    <input class="ci" id="in-hs" type="number" value="0" min="0">
+  </div>
+
+  <div class="cs">GAME STATE</div>
+  <div class="cr">
+    <span class="cl">Period</span>
+    <select class="ci" id="in-period">
+      <option value="1ST HALF">1ST HALF</option>
+      <option value="HALFTIME">HALFTIME</option>
+      <option value="2ND HALF">2ND HALF</option>
+      <option value="OT">OVERTIME</option>
+      <option value="FINAL">FINAL</option>
+    </select>
+    <span class="cl" style="margin-left:8px">Clock</span>
+    <input class="ci" id="in-clock" value="20:00">
+    <span class="cl" style="margin-left:8px">Shot</span>
+    <input class="ci" id="in-shot" type="number" value="30" min="0" max="30" style="width:50px">
+  </div>
+
+  <div class="cs">FOULS & TIMEOUTS</div>
+  <div class="cr">
+    <span class="cl">UConn fouls</span>
+    <input class="ci" id="in-af" type="number" value="0" min="0" style="width:50px">
+    <span class="cl" style="margin-left:8px">TOs left</span>
+    <input class="ci" id="in-ato" type="number" value="4" min="0" max="4" style="width:50px">
+  </div>
+  <div class="cr">
+    <span class="cl">Duke fouls</span>
+    <input class="ci" id="in-hf" type="number" value="0" min="0" style="width:50px">
+    <span class="cl" style="margin-left:8px">TOs left</span>
+    <input class="ci" id="in-hto" type="number" value="4" min="0" max="4" style="width:50px">
+  </div>
+
+  <div class="cs">HALF SCORES</div>
+  <div class="cr">
+    <span class="cl">UConn</span>
+    <input class="ci" id="in-ah1" placeholder="1H" style="width:52px">
+    <input class="ci" id="in-ah2" placeholder="2H" style="width:52px">
+    <input class="ci" id="in-aot" placeholder="OT" style="width:52px">
+  </div>
+  <div class="cr">
+    <span class="cl">Duke</span>
+    <input class="ci" id="in-hh1" placeholder="1H" style="width:52px">
+    <input class="ci" id="in-hh2" placeholder="2H" style="width:52px">
+    <input class="ci" id="in-hot" placeholder="OT" style="width:52px">
+  </div>
+
+  <div class="cr" style="margin-top:4px">
+    <button class="cb" onclick="applyAll()">UPDATE SCOREBOARD</button>
+    <button class="cb red" onclick="resetAll()">RESET</button>
+  </div>
+</div>
+
+<script>
+function toggleCtrl(){
+  const c=document.getElementById('ctrl');
+  const b=document.querySelector('.toggle-btn');
+  const open=c.style.display==='flex';
+  c.style.display=open?'none':'flex';
+  b.textContent=open?'EDIT SCORES ▼':'HIDE CONTROLS ▲';
+}
+
+function renderTO(id, total, left){
+  const el=document.getElementById(id);
+  el.innerHTML='';
+  for(let i=0;i<total;i++){
+    const d=document.createElement('div');
+    d.className='to-dot'+(i>=left?' used':'');
+    el.appendChild(d);
+  }
+}
+
+function applyAll(){
+  const as=parseInt(document.getElementById('in-as').value)||0;
+  const hs=parseInt(document.getElementById('in-hs').value)||0;
+  const period=document.getElementById('in-period').value;
+  const clock=document.getElementById('in-clock').value;
+  const shot=document.getElementById('in-shot').value;
+  const af=parseInt(document.getElementById('in-af').value)||0;
+  const hf=parseInt(document.getElementById('in-hf').value)||0;
+  const ato=parseInt(document.getElementById('in-ato').value)||0;
+  const hto=parseInt(document.getElementById('in-hto').value)||0;
+
+  document.getElementById('away-score').textContent=as;
+  document.getElementById('home-score').textContent=hs;
+  document.getElementById('away-tot').textContent=as;
+  document.getElementById('home-tot').textContent=hs;
+  document.getElementById('away-score').className='team-score'+(as>hs?' leading':'');
+  document.getElementById('home-score').className='team-score'+(hs>as?' leading':'');
+
+  document.getElementById('period-disp').textContent=period;
+  const isFinal=period==='FINAL'||period==='HALFTIME';
+  document.getElementById('clock-disp').textContent=isFinal?period:clock;
+  document.getElementById('shot-disp').textContent=isFinal?'':shot;
+
+  document.getElementById('away-fouls').textContent=af;
+  document.getElementById('home-fouls').textContent=hf;
+  renderTO('away-to',4,ato);
+  renderTO('home-to',4,hto);
+
+  [['ah1','in-ah1'],['ah2','in-ah2'],['aot','in-aot'],
+   ['hh1','in-hh1'],['hh2','in-hh2'],['hot','in-hot']].forEach(([id,inp])=>{
+    const v=document.getElementById(inp).value;
+    document.getElementById(id).textContent=v||'—';
+  });
+
+  if(period==='FINAL'){
+    document.getElementById('live-lbl').textContent='FINAL';
+    document.querySelector('.live-dot').style.animationPlayState='paused';
+    document.querySelector('.live-dot').style.background='#555';
+  } else {
+    document.getElementById('live-lbl').textContent='LIVE';
+    document.querySelector('.live-dot').style.animationPlayState='running';
+    document.querySelector('.live-dot').style.background='#c0392b';
+  }
+
+  const now=new Date();
+  document.getElementById('upd-time').textContent='Updated '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function resetAll(){
+  ['in-as','in-hs','in-af','in-hf','in-ah1','in-ah2','in-aot','in-hh1','in-hh2','in-hot']
+    .forEach(id=>document.getElementById(id).value='');
+  document.getElementById('in-ato').value=4;
+  document.getElementById('in-hto').value=4;
+  document.getElementById('in-clock').value='20:00';
+  document.getElementById('in-shot').value=30;
+  document.getElementById('in-period').value='1ST HALF';
+  applyAll();
+}
+
+renderTO('away-to',4,4);
+renderTO('home-to',4,4);
+</script>
+</body>
+</html>

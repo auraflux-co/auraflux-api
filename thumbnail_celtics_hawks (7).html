@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@700;900&family=Barlow:wght@600&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 1280px; height: 720px; overflow: hidden; background: #060a12; font-family: 'Barlow Condensed', Arial, sans-serif; }
+
+.bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 90% at 15% 50%, rgba(0,122,51,0.4) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 90% at 85% 50%, rgba(200,16,46,0.35) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(0,0,0,0.95) 0%, transparent 55%),
+    linear-gradient(180deg, #080d1a 0%, #060a12 100%);
+}
+.floor {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 300px; overflow: hidden;
+}
+.floor::before {
+  content: '';
+  position: absolute; bottom: 0; left: -30%; right: -30%; height: 480px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 44px);
+  transform: perspective(280px) rotateX(72deg);
+  transform-origin: bottom center;
+}
+.floor::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 180px;
+  background: linear-gradient(0deg, #060a12 0%, transparent 100%);
+}
+
+/* Team color panels */
+.panel-bos {
+  position: absolute; top: 0; left: 0; bottom: 0; width: 580px;
+  background: linear-gradient(120deg, rgba(0,122,51,0.55) 0%, rgba(0,80,35,0.2) 60%, transparent 100%);
+  clip-path: polygon(0 0, 100% 0, 72% 100%, 0 100%);
+}
+.panel-atl {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 580px;
+  background: linear-gradient(240deg, rgba(200,16,46,0.5) 0%, rgba(140,10,30,0.2) 60%, transparent 100%);
+  clip-path: polygon(28% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Vertical accent lines */
+.vline-l { position: absolute; left: 390px; top: 0; bottom: 70px; width: 1px; background: linear-gradient(180deg, transparent, rgba(199,175,79,0.3) 30%, rgba(199,175,79,0.5) 50%, rgba(199,175,79,0.3) 70%, transparent); }
+.vline-r { position: absolute; right: 390px; top: 0; bottom: 70px; width: 1px; background: linear-gradient(180deg, transparent, rgba(199,175,79,0.3) 30%, rgba(199,175,79,0.5) 50%, rgba(199,175,79,0.3) 70%, transparent); }
+
+/* Team logos — SVG inline */
+.logo-wrap {
+  width: 120px; height: 120px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+}
+
+/* Team info */
+.team-bos {
+  position: absolute; left: 44px; top: 50%; transform: translateY(-52%);
+  display: flex; align-items: center; gap: 20px;
+}
+.team-atl {
+  position: absolute; right: 44px; top: 50%; transform: translateY(-52%);
+  display: flex; align-items: center; gap: 20px; flex-direction: row-reverse;
+}
+.team-text { display: flex; flex-direction: column; }
+.team-city { font-size: 15px; font-weight: 700; letter-spacing: 5px; margin-bottom: 2px; }
+.team-name { font-family: 'Bebas Neue', sans-serif; font-size: 78px; line-height: 0.88; letter-spacing: 2px; text-shadow: 0 4px 24px rgba(0,0,0,0.7); }
+.team-rec  { font-size: 13px; font-weight: 600; letter-spacing: 2px; margin-top: 6px; opacity: 0.55; }
+.bos-color { color: #a8e6c0; }
+.bos-name  { color: #fff; }
+.atl-color { color: #f5a0ae; }
+.atl-name  { color: #fff; }
+.atl-text  { text-align: right; }
+
+/* Center */
+.center {
+  position: absolute; left: 50%; top: 46%; transform: translate(-50%,-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 10;
+}
+.vs-circle {
+  width: 108px; height: 108px; border-radius: 50%;
+  background: radial-gradient(circle, #1a2840 0%, #0d1524 100%);
+  border: 3px solid rgba(199,175,79,0.5);
+  box-shadow: 0 0 50px rgba(199,175,79,0.25), 0 0 100px rgba(199,175,79,0.1);
+  display: flex; align-items: center; justify-content: center;
+}
+.vs-text { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: #c7af4f; letter-spacing: 4px; }
+.live-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(192,30,30,0.92); border: 1px solid rgba(255,80,60,0.35);
+  padding: 5px 18px; border-radius: 3px;
+  box-shadow: 0 0 20px rgba(192,30,30,0.4);
+}
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; }
+.live-lbl { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #fff; letter-spacing: 4px; }
+.tip-time { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: #c7af4f; letter-spacing: 3px; }
+.game-sub { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.35); letter-spacing: 3px; text-align: center; }
+
+/* Brand */
+.brand {
+  position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.7); border: 1px solid rgba(199,175,79,0.4);
+  color: #c7af4f; font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 7px; padding: 5px 20px; border-radius: 3px;
+}
+.conf-tag {
+  position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+  color: rgba(199,175,79,0.6); font-size: 10px; font-weight: 700; letter-spacing: 4px; white-space: nowrap;
+}
+
+/* Bottom bar */
+.bottom {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 68px;
+  background: linear-gradient(90deg, rgba(0,100,42,0.9) 0%, #0d1524 25%, #0d1524 75%, rgba(165,14,38,0.85) 100%);
+  border-top: 3px solid #c7af4f;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 36px;
+}
+.bb-player {
+  display: flex; align-items: center; gap: 12px;
+}
+.player-avatar {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px;
+  flex-shrink: 0; font-weight: 900;
+}
+.av-bos { background: linear-gradient(135deg, #007a33, #004d20); color: #fff; border: 2px solid rgba(0,180,80,0.5); }
+.av-atl { background: linear-gradient(135deg, #c8102e, #8b0a1e); color: #fff; border: 2px solid rgba(255,80,80,0.4); }
+.bb-info { display: flex; flex-direction: column; gap: 1px; }
+.bb-name  { font-size: 13px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+.bb-stat  { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: #c7af4f; letter-spacing: 2px; line-height: 1; }
+.bb-sub   { font-size: 10px; color: rgba(255,255,255,0.38); letter-spacing: 1px; }
+.bb-div   { width: 1px; height: 36px; background: rgba(199,175,79,0.2); }
+.bb-center { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.bb-cl    { font-size: 9px; font-weight: 700; color: rgba(199,175,79,0.5); letter-spacing: 3px; }
+.bb-cv    { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #fff; letter-spacing: 2px; }
+.bb-cs    { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 1px; }
+
+/* Injury badge */
+.inj { background: rgba(255,160,0,0.2); border: 1px solid rgba(255,160,0,0.4);
+  color: #ffa000; font-size: 8px; font-weight: 900; letter-spacing: 2px;
+  padding: 2px 6px; border-radius: 2px; }
+
+/* Orbs */
+.orb-g { position: absolute; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(0,122,51,0.18) 0%, transparent 70%); top: 25%; left: 5%; pointer-events: none; }
+.orb-r { position: absolute; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(200,16,46,0.15) 0%, transparent 70%); top: 25%; right: 5%; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="floor"></div>
+<div class="orb-g"></div>
+<div class="orb-r"></div>
+<div class="panel-bos"></div>
+<div class="panel-atl"></div>
+<div class="vline-l"></div>
+<div class="vline-r"></div>
+
+<!-- CELTICS -->
+<div class="team-bos">
+  <div class="logo-wrap">
+    <svg viewBox="0 0 120 120" width="120" height="120">
+      <circle cx="60" cy="60" r="58" fill="#007a33" stroke="#fff" stroke-width="2"/>
+      <circle cx="60" cy="60" r="48" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.4"/>
+      <!-- Shamrock -->
+      <g transform="translate(60,58)">
+        <ellipse cx="0" cy="-16" rx="10" ry="13" fill="#fff" opacity="0.9"/>
+        <ellipse cx="-14" cy="8" rx="10" ry="13" fill="#fff" opacity="0.9" transform="rotate(120)"/>
+        <ellipse cx="14" cy="8" rx="10" ry="13" fill="#fff" opacity="0.9" transform="rotate(240)"/>
+        <rect x="-3" y="-4" width="6" height="20" fill="#fff" opacity="0.9" rx="3"/>
+      </g>
+      <text x="60" y="108" text-anchor="middle" font-family="Arial Black" font-size="10" font-weight="900" fill="#fff" letter-spacing="2" opacity="0.8">CELTICS</text>
+    </svg>
+  </div>
+  <div class="team-text">
+    <div class="team-city bos-color">BOSTON</div>
+    <div class="team-name bos-name">CEL<br>TICS</div>
+    <div class="team-rec bos-color">50-24 · PLAYOFFS BOUND</div>
+  </div>
+</div>
+
+<!-- HAWKS -->
+<div class="team-atl">
+  <div class="logo-wrap">
+    <svg viewBox="0 0 120 120" width="120" height="120">
+      <circle cx="60" cy="60" r="58" fill="#c8102e" stroke="#fff" stroke-width="2"/>
+      <circle cx="60" cy="60" r="48" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.4"/>
+      <!-- Hawk silhouette simplified -->
+      <g transform="translate(60,55)">
+        <!-- Body -->
+        <ellipse cx="0" cy="0" rx="18" ry="12" fill="#fff" opacity="0.95"/>
+        <!-- Wing left -->
+        <path d="M-18,0 Q-38,-20 -30,-30 Q-20,-15 -8,-8 Z" fill="#fff" opacity="0.9"/>
+        <!-- Wing right -->
+        <path d="M18,0 Q38,-20 30,-30 Q20,-15 8,-8 Z" fill="#fff" opacity="0.9"/>
+        <!-- Head -->
+        <circle cx="0" cy="-16" r="10" fill="#fff" opacity="0.95"/>
+        <!-- Beak -->
+        <path d="M8,-16 L16,-18 L8,-12 Z" fill="#e8a020"/>
+        <!-- Eye -->
+        <circle cx="-3" cy="-18" r="2.5" fill="#c8102e"/>
+        <!-- Tail -->
+        <path d="M-10,10 Q0,24 10,10 Q0,18 -10,10 Z" fill="#fff" opacity="0.85"/>
+      </g>
+      <text x="60" y="108" text-anchor="middle" font-family="Arial Black" font-size="10" font-weight="900" fill="#fff" letter-spacing="2" opacity="0.8">HAWKS</text>
+    </svg>
+  </div>
+  <div class="team-text atl-text">
+    <div class="team-city atl-color">ATLANTA</div>
+    <div class="team-name atl-name">HAW<br>KS</div>
+    <div class="team-rec atl-color">39-36 · PLAY-IN HUNT</div>
+  </div>
+</div>
+
+<!-- BRAND -->
+<div class="brand">CLIPZWORLD</div>
+<div class="conf-tag">NBA · EASTERN CONFERENCE · LIVE COVERAGE</div>
+
+<!-- CENTER -->
+<div class="center">
+  <div class="live-pill"><div class="live-dot"></div><div class="live-lbl">LIVE TONIGHT</div></div>
+  <div class="vs-circle"><div class="vs-text">VS</div></div>
+  <div class="tip-time">7:30 PM ET</div>
+  <div class="game-sub">STATE FARM ARENA · ATLANTA · MARCH 30</div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom">
+  <!-- Brown -->
+  <div class="bb-player">
+    <div class="player-avatar av-bos">JB</div>
+    <div class="bb-info">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="bb-name">J. BROWN · #7</div>
+        <div class="inj">⚠ QUESTIONABLE</div>
+      </div>
+      <div class="bb-stat">28.6 PPG</div>
+      <div class="bb-sub">47.7 FG% · 80.2 FT%</div>
+    </div>
+  </div>
+  <div class="bb-div"></div>
+  <div class="bb-center">
+    <div class="bb-cl">FOLLOW FOR MORE</div>
+    <div class="bb-cv">@CLIPZWORLD</div>
+    <div class="bb-cs">FOLLOW ON CLIPZWORLD</div>
+  </div>
+  <div class="bb-div"></div>
+  <!-- Johnson -->
+  <div class="bb-player">
+    <div class="player-avatar av-atl">JJ</div>
+    <div class="bb-info">
+      <div class="bb-name">J. JOHNSON · #1</div>
+      <div class="bb-stat">22.9 PPG</div>
+      <div class="bb-sub">49.3 FG% · 8.3 REB · 8.1 AST</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

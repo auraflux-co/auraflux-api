@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>body{background:#111;color:#0f0;font-family:monospace;font-size:11px;padding:15px;}
+h3{color:#f39c12;margin:8px 0 4px;}pre{background:#1a1a1a;padding:8px;border-radius:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}</style>
+</head><body>
+<h3>FMP All Symbols Test</h3>
+<button onclick="run()" style="background:#c7af4f;color:#000;font-weight:900;padding:6px 14px;border:none;cursor:pointer">TEST</button>
+<div id="out" style="margin-top:12px">Click TEST</div>
+<script>
+var KEY='rJPVYlHnpcjxuOLoR1phvBz7e27UMMSq';
+var BASE='https://financialmodelingprep.com/stable/quote?apikey='+KEY+'&symbol=';
+
+function run(){
+  var out=''; var done=0;
+  var tests=[
+    // Indices
+    ['^GSPC','S&P 500'],
+    ['^IXIC','Nasdaq'],
+    ['^DJI','Dow Jones'],
+    ['^RUT','Russell 2000'],
+    // Sector ETFs
+    ['XLK,XLE,XLF,XLV,XLI','Sectors 1'],
+    // Commodities
+    ['GCUSD,SIUSD','Gold/Silver'],
+    ['CLUSD','Oil WTI'],
+    // Crypto
+    ['BTCUSD,ETHUSD,SOLUSD','Crypto'],
+    // Forex
+    ['EURUSD,USDJPY,GBPUSD','Forex'],
+  ];
+  var total=tests.length;
+  function fin(l,s,t){ out+='<h3>'+l+' ('+s+')</h3><pre>'+t+'</pre>'; done++; if(done>=total) document.getElementById('out').innerHTML=out; }
+
+  tests.forEach(function(t,i){
+    setTimeout(function(){
+      var xhr=new XMLHttpRequest();
+      xhr.open('GET',BASE+t[0],true);
+      xhr.timeout=8000;
+      xhr.onload=function(){
+        try{
+          var d=JSON.parse(xhr.responseText);
+          var arr=Array.isArray(d)?d:[];
+          if(arr.length===0){ fin(t[1],xhr.status,'EMPTY - '+xhr.responseText.slice(0,100)); return; }
+          fin(t[1],xhr.status,arr.map(function(q){
+            return q.symbol+': $'+q.price+' | '+parseFloat(q.changePercentage||0).toFixed(2)+'%';
+          }).join('\n'));
+        }catch(e){ fin(t[1],xhr.status,xhr.responseText.slice(0,200)); }
+      };
+      xhr.onerror=xhr.ontimeout=function(){ fin(t[1],'ERR','failed'); };
+      xhr.send();
+    }, i*1200);
+  });
+}
+</script></body></html>

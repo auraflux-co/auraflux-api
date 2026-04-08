@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>body{background:#111;color:#0f0;font-family:monospace;font-size:11px;padding:15px;}
+h3{color:#f39c12;margin:8px 0 4px;}pre{background:#1a1a1a;padding:8px;border-radius:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}</style>
+</head><body>
+<h3>Round 2 - Proxy + RSS Test</h3>
+<div id="out">Testing...</div>
+<script>
+var out=''; var done=0; var total=7;
+function fin(label,status,text){
+  out+='<h3>'+label+' ('+status+')</h3><pre>'+text.slice(0,400)+'</pre>';
+  done++; if(done>=total) document.getElementById('out').innerHTML=out;
+}
+
+// Yahoo via different proxies
+var proxies=[
+  'https://api.codetabs.com/v1/proxy?quest=',
+  'https://thingproxy.freeboard.io/fetch/',
+  'https://yacdn.org/proxy/'
+];
+var yhUrl='https://query1.finance.yahoo.com/v7/finance/quote?symbols=SPY,QQQ,DIA,AAPL,NVDA,TSLA,BTC-USD,ETH-USD';
+proxies.forEach(function(p,i){
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',p+encodeURIComponent(yhUrl),true);
+  xhr.timeout=8000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      var r=d.quoteResponse&&d.quoteResponse.result||[];
+      if(r.length) fin('Proxy '+i+': '+p.split('/')[2],xhr.status,r.map(function(q){return q.symbol+' $'+q.regularMarketPrice;}).join(' | '));
+      else fin('Proxy '+i+': '+p.split('/')[2],xhr.status,xhr.responseText.slice(0,200));
+    }catch(e){fin('Proxy '+i+': '+p.split('/')[2],xhr.status,xhr.responseText.slice(0,200));}
+  };
+  xhr.onerror=xhr.ontimeout=function(){fin('Proxy '+i+': '+p.split('/')[2],'ERR','failed');};
+  xhr.send();
+});
+
+// Test news RSS feeds via working proxies
+var newsFeeds=[
+  ['AP Business','https://feeds.apnews.com/rss/apf-business'],
+  ['Reuters Biz','https://feeds.reuters.com/reuters/businessNews'],
+  ['CNBC Top News','https://feeds.nbcnews.com/nbcnews/public/business'],
+  ['Yahoo Finance News','https://finance.yahoo.com/rss/']
+];
+newsFeeds.forEach(function(feed,i){
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET','https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(feed[1]),true);
+  xhr.timeout=8000;
+  xhr.onload=function(){
+    var titles=xhr.responseText.match(/<title[^>]*>(.*?)<\/title>/g)||[];
+    fin(feed[0],xhr.status,titles.slice(1,4).map(function(t){return t.replace(/<[^>]+>/g,'');}).join(' | '));
+  };
+  xhr.onerror=xhr.ontimeout=function(){fin(feed[0],'ERR','failed');};
+  xhr.send();
+});
+</script></body></html>

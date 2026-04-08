@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; padding:20px; }
+.header { background:linear-gradient(90deg,#22304b,#1a2538); border-bottom:3px solid #c7af4f; padding:16px 20px; border-radius:8px 8px 0 0; }
+.header h1 { font-family:'Bebas Neue',sans-serif; font-size:28px; color:#c7af4f; letter-spacing:4px; }
+.header p { font-size:12px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-top:2px; }
+.ctrl { background:#0d1524; border:1px solid rgba(199,175,79,0.2); padding:16px 20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:20px; border-radius:0 0 8px 8px; }
+.ctrl label { font-size:11px; font-weight:700; color:rgba(199,175,79,0.6); letter-spacing:2px; }
+.ctrl input { background:#1a2538; border:1px solid rgba(199,175,79,0.3); color:#fff; font-family:monospace; font-size:14px; padding:8px 12px; border-radius:4px; width:200px; }
+.ctrl button { background:#c7af4f; color:#060a12; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px; padding:8px 24px; border:none; border-radius:4px; cursor:pointer; }
+.ctrl button:hover { background:#f0d060; }
+#status { font-size:12px; color:rgba(255,255,255,0.4); font-family:monospace; }
+.sec-title { font-family:'Bebas Neue',sans-serif; font-size:18px; color:#c7af4f; letter-spacing:3px; margin:20px 0 10px; }
+.copy-box { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:6px; padding:14px 16px; margin-bottom:14px; }
+.copy-box-label { font-size:9px; font-weight:900; color:rgba(199,175,79,0.5); letter-spacing:3px; margin-bottom:6px; }
+.copy-box-text { font-size:13px; line-height:1.7; color:rgba(255,255,255,0.85); white-space:pre-wrap; font-family:Arial,sans-serif; }
+.copy-btn { background:rgba(199,175,79,0.15); border:1px solid rgba(199,175,79,0.3); color:#c7af4f; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; padding:5px 14px; border-radius:3px; cursor:pointer; margin-top:8px; }
+.copy-btn:hover { background:rgba(199,175,79,0.25); }
+#thumb { width:1280px; height:720px; position:relative; overflow:hidden; background:#060a12; }
+.thumb-panel-a { position:absolute; top:0; left:0; bottom:0; width:500px; clip-path:polygon(0 0,100% 0,70% 100%,0 100%); }
+.thumb-panel-h { position:absolute; top:0; right:0; bottom:0; width:500px; clip-path:polygon(30% 0,100% 0,100% 100%,0 100%); }
+.thumb-brand { position:absolute; top:22px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); border:1px solid rgba(199,175,79,0.5); padding:6px 28px; border-radius:3px; white-space:nowrap; font-family:'Bebas Neue',sans-serif; font-size:20px; color:#c7af4f; letter-spacing:8px; }
+.thumb-badge { position:absolute; top:72px; left:50%; transform:translateX(-50%); background:rgba(192,30,30,0.9); padding:6px 24px; border-radius:3px; white-space:nowrap; font-family:'Bebas Neue',sans-serif; font-size:16px; color:#fff; letter-spacing:5px; }
+.thumb-vs { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:140px; height:140px; border-radius:50%; background:radial-gradient(circle,#1a2840,#0d1524); border:3px solid rgba(199,175,79,0.6); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10; }
+.thumb-vs-lbl { font-family:'Bebas Neue',sans-serif; font-size:18px; color:#c7af4f; letter-spacing:3px; }
+.thumb-vs-score { font-family:'Bebas Neue',sans-serif; font-size:14px; color:rgba(255,255,255,0.6); letter-spacing:2px; }
+.thumb-team { position:absolute; top:50%; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.thumb-abbr { font-family:'Bebas Neue',sans-serif; font-size:72px; color:#fff; letter-spacing:4px; text-shadow:0 4px 20px rgba(0,0,0,0.8); }
+.thumb-rec { font-size:16px; font-weight:700; color:rgba(255,255,255,0.5); letter-spacing:2px; }
+.thumb-tag { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.35); font-size:13px; font-weight:700; letter-spacing:4px; white-space:nowrap; }
+.thumb-cwn { position:absolute; bottom:14px; right:20px; width:110px; height:110px; object-fit:contain; filter:drop-shadow(0 4px 16px rgba(0,0,0,0.7)); }
+.thumb-scaler { display:inline-block; transform-origin:top left; }
+.clips-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; margin-bottom:20px; }
+.clip-card { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:6px; overflow:hidden; }
+.clip-img { width:100%; height:160px; object-fit:cover; display:block; }
+.clip-body { padding:10px 12px; }
+.clip-title { font-size:12px; font-weight:700; color:#fff; margin-bottom:5px; line-height:1.3; }
+.clip-meta { font-size:10px; color:rgba(255,255,255,0.3); font-family:monospace; margin-bottom:6px; }
+.clip-btns { display:flex; gap:6px; }
+.btn-sm { font-size:10px; font-weight:700; letter-spacing:1px; padding:4px 10px; border-radius:3px; cursor:pointer; border:none; }
+.btn-watch { background:rgba(199,175,79,0.2); color:#c7af4f; }
+.btn-copy { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6); }
+.script-box { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:6px; padding:16px; }
+.script-box pre { font-family:Arial,sans-serif; font-size:13px; line-height:1.8; color:rgba(255,255,255,0.85); white-space:pre-wrap; }
+
+/* SEO Status Bar */
+.seo-bar { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:4px; margin-top:8px; font-family:Arial,sans-serif; font-size:12px; cursor:pointer; }
+.seo-bar.all-pass { background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); color:#2ecc71; }
+.seo-bar.has-warn { background:rgba(243,156,18,0.1); border:1px solid rgba(243,156,18,0.3); color:#f39c12; }
+.seo-bar.has-fail { background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); color:#e74c3c; }
+.seo-bar-icon { font-size:14px; font-weight:900; }
+.seo-bar-txt { flex:1; font-weight:700; }
+.seo-bar-detail { font-size:10px; opacity:0.7; }
+.seo-issues { background:#0d1524; border:1px solid rgba(199,175,79,0.1); border-radius:4px; padding:10px 14px; margin-top:4px; display:none; }
+.seo-issues.show { display:block; }
+.seo-issue-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:11px; font-family:Arial,sans-serif; border-bottom:1px solid rgba(255,255,255,0.04); }
+.seo-issue-row:last-child { border-bottom:none; }
+.seo-badge { font-size:9px; font-weight:900; padding:2px 6px; border-radius:2px; flex-shrink:0; }
+.seo-badge.fail { background:rgba(231,76,60,0.2); color:#e74c3c; }
+.seo-badge.warn { background:rgba(243,156,18,0.2); color:#f39c12; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>CWN HIGHLIGHT TOOL</h1>
+  <p>TITLE + DESCRIPTION + THUMBNAIL + SCRIPT GENERATOR</p>
+</div>
+
+<div class="ctrl">
+  <label>GAME ID</label>
+  <input id="gid" type="text" value="401810961">
+  <button onclick="loadGame()">GENERATE</button>
+  <span id="status">Enter a game ID and click Generate</span>
+</div>
+
+<div id="results" style="display:none">
+
+  <div class="sec-title">THUMBNAIL -- SCREENSHOT AT 1280x720</div>
+  <div style="overflow:auto;margin-bottom:20px;">
+    <div class="thumb-scaler" id="thumb-scaler">
+      <div id="thumb">
+        <div class="thumb-panel-a" id="tpa"></div>
+        <div class="thumb-panel-h" id="tph"></div>
+        <div id="tbg" style="position:absolute;inset:0;"></div>
+
+        <div class="thumb-team" style="left:30px;transform:translateY(-60%);width:240px;">
+          <img id="alogo" src="" style="width:150px;height:150px;object-fit:contain;">
+          <div class="thumb-abbr" id="aabbr"></div>
+          <div class="thumb-rec" id="arec"></div>
+        </div>
+
+        <div class="thumb-team" style="right:30px;transform:translateY(-60%);width:240px;align-items:center;">
+          <img id="hlogo" src="" style="width:150px;height:150px;object-fit:contain;">
+          <div class="thumb-abbr" id="habbr"></div>
+          <div class="thumb-rec" id="hrec"></div>
+        </div>
+
+        <div class="thumb-brand">CLIPZWORLD NEWS</div>
+        <div class="thumb-badge">REACTION</div>
+
+        <div class="thumb-vs">
+          <div class="thumb-vs-lbl">FINAL</div>
+          <div class="thumb-vs-score" id="tvscore">0-0</div>
+        </div>
+
+        <div class="thumb-tag">NBA REACTION | CLIPZWORLD NEWS</div>
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-title">YOUTUBE TITLE</div>
+  <div class="copy-box">
+    <div class="copy-box-label">TITLE (copy and paste to YouTube)</div>
+    <div class="copy-box-text" id="yt-title">--</div>
+    <button class="copy-btn" onclick="copyBox('yt-title', this)">COPY TITLE</button>
+  </div>
+
+  <div class="sec-title">DESCRIPTION + HASHTAGS</div>
+  <div class="copy-box">
+    <div class="copy-box-label">DESCRIPTION</div>
+    <div class="copy-box-text" id="yt-desc">--</div>
+    <button class="copy-btn" onclick="copyBox('yt-desc', this)">COPY DESCRIPTION</button>
+    <div id="hl-seo-status"></div>
+  </div>
+
+  <div class="sec-title">ESPN CLIPS FOR THIS GAME</div>
+  <div class="clips-grid" id="clips-grid"></div>
+
+  <div class="sec-title">REACTION SCRIPT (~90 SEC)</div>
+  <div class="script-box">
+    <pre id="script-txt">--</pre>
+    <button class="copy-btn" onclick="copyBox('script-txt', this)">COPY SCRIPT</button>
+  </div>
+
+</div>
+
+<script>
+function g(id) { return document.getElementById(id); }
+
+function copyBox(id, btn) {
+  var el = g(id);
+  var ta = document.createElement('textarea');
+  ta.value = el.textContent;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  var orig = btn.textContent;
+  btn.textContent = 'COPIED!';
+  setTimeout(function() { btn.textContent = orig; }, 1500);
+}
+
+function hexToRgb(hex) {
+  hex = (hex || '').replace('#', '');
+  if (hex.length !== 6) return '80,80,80';
+  var r = parseInt(hex.slice(0,2), 16);
+  var gr = parseInt(hex.slice(2,4), 16);
+  var b = parseInt(hex.slice(4,6), 16);
+  return r + ',' + gr + ',' + b;
+}
+
+function fmtDur(s) {
+  var m = Math.floor(s / 60);
+  var sec = s % 60;
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function getRecord(arr) {
+  if (!arr || !arr.length) return '';
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i].type === 'total') return arr[i].displayValue || arr[i].summary || '';
+  }
+  return arr[0].displayValue || arr[0].summary || '';
+}
+
+function loadCwnLogo() {
+  // Load CWN logo via fetch from ESPN CDN placeholder - use text fallback
+  var el = g('cwn-logo');
+  el.style.display = 'none';
+}
+
+function loadGame() {
+  var gameId = g('gid').value.trim();
+  if (!gameId) return;
+  g('status').textContent = 'Fetching game ' + gameId + '...';
+  g('results').style.display = 'none';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=' + gameId, true);
+  xhr.timeout = 12000;
+  xhr.onload = function() {
+    if (xhr.status !== 200) { g('status').textContent = 'ESPN error ' + xhr.status; return; }
+    try {
+      var data = JSON.parse(xhr.responseText);
+      render(data, gameId);
+    } catch(e) {
+      g('status').textContent = 'Parse error: ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() { g('status').textContent = 'Network error'; };
+  xhr.send();
+}
+
+
+function runSeoCheck(title, desc, opts) {
+  opts = opts || {};
+  var checks = [];
+  var tLen = (title || '').length;
+  var dLen = (desc || '').length;
+  var firstLine = (desc || '').split('\n')[0] || '';
+  var hashCount = ((desc || '').match(/#\w+/g) || []).length;
+  var hasTimestamps = (desc || '').indexOf('00:00') > -1;
+  var hasCTA = (desc || '').toLowerCase().indexOf('subscribe') > -1;
+  checks.push({ label:'Title length', pass:tLen<=60, warn:tLen>60&&tLen<=100, fail:tLen>100,
+    msg:tLen<=60?'Perfect ('+tLen+' chars)':tLen<=100?'OK but shorter is better ('+tLen+' chars)':'Too long ('+tLen+' chars)' });
+  if (opts.teams && opts.teams.length >= 2) {
+    var both=title.indexOf(opts.teams[0])>-1&&title.indexOf(opts.teams[1])>-1;
+    checks.push({ label:'Names in title', pass:both, fail:!both, msg:both?'Both names found':'Missing: '+opts.teams.join(' / ') });
+  }
+  checks.push({ label:'First line keywords', pass:firstLine.length>=40, warn:firstLine.length>=20&&firstLine.length<40, fail:firstLine.length<20,
+    msg:firstLine.length>=40?'Good ('+firstLine.length+' chars)':'First line too short' });
+  checks.push({ label:'Timestamps', pass:hasTimestamps, fail:!hasTimestamps, msg:hasTimestamps?'Included':'Add timestamps (00:00, 12:00 etc)' });
+  checks.push({ label:'Hashtags', pass:hashCount>=8&&hashCount<=20, warn:hashCount>0&&(hashCount<8||hashCount>20), fail:hashCount===0,
+    msg:hashCount+' hashtags '+(hashCount>=8&&hashCount<=20?'-- ideal':'-- aim for 8-20') });
+  checks.push({ label:'Subscribe CTA', pass:hasCTA, fail:!hasCTA, msg:hasCTA?'Present':'Add a subscribe call to action' });
+  checks.push({ label:'Description length', pass:dLen>=300, warn:dLen>=100&&dLen<300, fail:dLen<100,
+    msg:dLen+' chars '+(dLen>=300?'-- good':'-- add more detail') });
+  var failures=checks.filter(function(c){return c.fail;});
+  var warnings=checks.filter(function(c){return c.warn&&!c.fail;});
+  var passes=checks.filter(function(c){return !c.fail&&!c.warn;});
+  return {checks:checks,failures:failures,warnings:warnings,passes:passes};
+}
+function renderSeoBar(containerId, title, desc, opts) {
+  var el=document.getElementById(containerId); if(!el)return;
+  var r=runSeoCheck(title,desc,opts);
+  var f=r.failures.length,w=r.warnings.length,p=r.passes.length;
+  var cls=f>0?'has-fail':w>0?'has-warn':'all-pass';
+  var lbl=f>0?'ISSUES FOUND':w>0?'REVIEW SUGGESTED':'ALL CHECKS PASSED';
+  var msg=f>0?f+' thing'+(f>1?'s':'')+' to fix':w>0?w+' suggestion'+(w>1?'s':''):'Good to publish!';
+  var issHtml='';
+  if(f>0||w>0){r.checks.forEach(function(c){if(c.fail||c.warn){issHtml+='<div class="seo-issue-row"><span class="seo-badge '+(c.fail?'fail':'warn')+'">'+(c.fail?'FIX':'TIP')+'</span><span>'+c.label+' -- '+c.msg+'</span></div>';}});}
+  el.innerHTML='<div class="seo-bar '+cls+'" onclick="var i=document.getElementById(\''+containerId+'-iss\');if(i)i.classList.toggle(\'show\')">'
+    +'<span class="seo-bar-icon">'+(f>0?'!!':w>0?'i':'OK')+'</span>'
+    +'<span class="seo-bar-txt">SEO: '+lbl+' -- '+msg+'</span>'
+    +(f>0||w>0?'<span class="seo-bar-detail">click for details</span>':'')
+    +'</div>'
+    +(issHtml?'<div class="seo-issues" id="'+containerId+'-iss">'+issHtml+'</div>':'');
+}
+
+function render(data, gameId) {
+  // Teams
+  var hc = data.header && data.header.competitions && data.header.competitions[0];
+  var comps = (hc && hc.competitors) || [];
+  var away = { team: {} }, home = { team: {} };
+  for (var i = 0; i < comps.length; i++) {
+    if (comps[i].homeAway === 'away') away = comps[i];
+    if (comps[i].homeAway === 'home') home = comps[i];
+  }
+  var awayAbbr = (away.team && away.team.abbreviation) || 'AWAY';
+  var homeAbbr = (home.team && home.team.abbreviation) || 'HOME';
+  var awayFull = (away.team && away.team.displayName) || awayAbbr;
+  var homeFull = (home.team && home.team.displayName) || homeAbbr;
+  var awayScore = away.score || '0';
+  var homeScore = home.score || '0';
+  var awayRec = getRecord(away.record || away.records);
+  var homeRec = getRecord(home.record || home.records);
+
+  // Colors
+  var bst = (data.boxscore && data.boxscore.teams) || [];
+  var awayColor = '1d428a', homeColor = 'c41230';
+  var awayStats = null, homeStats = null;
+  for (var t = 0; t < bst.length; t++) {
+    var bt = bst[t].team || {};
+    if (bt.abbreviation === awayAbbr) { if (bt.color) awayColor = bt.color; awayStats = bst[t].statistics; }
+    if (bt.abbreviation === homeAbbr) { if (bt.color) homeColor = bt.color; homeStats = bst[t].statistics; }
+  }
+
+  var winner = parseInt(awayScore) > parseInt(homeScore) ? awayFull : homeFull;
+  var loser  = parseInt(awayScore) > parseInt(homeScore) ? homeFull : awayFull;
+  var winAbbr = parseInt(awayScore) > parseInt(homeScore) ? awayAbbr : homeAbbr;
+  var winScore = parseInt(awayScore) > parseInt(homeScore) ? awayScore : homeScore;
+  var losScore = parseInt(awayScore) > parseInt(homeScore) ? homeScore : awayScore;
+  var diff = Math.abs(parseInt(awayScore) - parseInt(homeScore));
+
+  // Date
+  var dateStr = '';
+  if (hc && hc.date) {
+    dateStr = new Date(hc.date).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  // Top scorers
+  var bsp = (data.boxscore && data.boxscore.players) || [];
+  var scorers = [];
+  for (var p = 0; p < bsp.length; p++) {
+    var tAbbr = (bsp[p].team && bsp[p].team.abbreviation) || '';
+    var grps = bsp[p].statistics || [];
+    for (var sg = 0; sg < grps.length; sg++) {
+      var labels = grps[sg].labels || [];
+      var ptsIdx = labels.indexOf('PTS'); if (ptsIdx === -1) ptsIdx = 13;
+      var rebIdx = labels.indexOf('REB'); if (rebIdx === -1) rebIdx = 6;
+      var astIdx = labels.indexOf('AST'); if (astIdx === -1) astIdx = 7;
+      var athletes = grps[sg].athletes || [];
+      for (var a = 0; a < athletes.length; a++) {
+        var ath = athletes[a].athlete || {};
+        var st = athletes[a].stats || [];
+        var pts = parseInt(st[ptsIdx]) || 0;
+        if (pts > 0) scorers.push({ name: ath.displayName || '', pts: pts, reb: st[rebIdx] || '0', ast: st[astIdx] || '0', team: tAbbr });
+      }
+    }
+  }
+  scorers.sort(function(a, b) { return b.pts - a.pts; });
+  var top3 = scorers.slice(0, 3);
+
+  // Injuries out
+  var injData = data.injuries || [];
+  var outNames = [];
+  for (var ii = 0; ii < injData.length; ii++) {
+    var injs = injData[ii].injuries || [];
+    for (var ji = 0; ji < injs.length; ji++) {
+      if ((injs[ji].status || '').toLowerCase() === 'out') {
+        var sn = (injs[ji].athlete && injs[ji].athlete.shortName) || '';
+        if (sn) outNames.push(sn);
+      }
+    }
+  }
+
+  // -- THUMBNAIL --
+  g('tbg').style.background =
+    'radial-gradient(ellipse 70% 90% at 15% 50%, rgba(' + hexToRgb('#' + awayColor) + ',0.45) 0%, transparent 60%),' +
+    'radial-gradient(ellipse 70% 90% at 85% 50%, rgba(' + hexToRgb('#' + homeColor) + ',0.4) 0%, transparent 60%),' +
+    'linear-gradient(180deg, #0a0f1e 0%, #060a12 100%)';
+  g('tpa').style.background = 'linear-gradient(120deg, #' + awayColor + 'aa 0%, #' + awayColor + '33 60%, transparent 100%)';
+  g('tph').style.background = 'linear-gradient(240deg, #' + homeColor + 'aa 0%, #' + homeColor + '33 60%, transparent 100%)';
+  g('alogo').src = 'https://a.espncdn.com/i/teamlogos/nba/500/' + awayAbbr.toLowerCase() + '.png';
+  g('hlogo').src = 'https://a.espncdn.com/i/teamlogos/nba/500/' + homeAbbr.toLowerCase() + '.png';
+  g('aabbr').textContent = awayAbbr;
+  g('habbr').textContent = homeAbbr;
+  g('arec').textContent = awayRec;
+  g('hrec').textContent = homeRec;
+  g('tvscore').textContent = awayScore + '-' + homeScore;
+
+  // Scale thumb to window
+  var scale = Math.min((window.innerWidth - 40) / 1280, 1);
+  var sc = g('thumb-scaler');
+  sc.style.transform = 'scale(' + scale + ')';
+  sc.style.width = Math.round(1280 * scale) + 'px';
+  sc.style.height = Math.round(720 * scale) + 'px';
+
+  // -- TITLE --
+  var title = winner + ' REACTION: ' + awayFull + ' vs ' + homeFull + ' | ' + winScore + '-' + losScore + ' | ' + dateStr + ' | ClipzWorld News';
+  if (title.length > 100) title = title.slice(0, 97) + '...';
+  g('yt-title').textContent = title;
+
+  // -- DESCRIPTION --
+  var desc = '';
+  desc += winner + ' defeat ' + loser + ' ' + winScore + ' to ' + losScore;
+  if (diff > 20) desc += ' in a DOMINANT performance';
+  else if (diff < 8) desc += ' in a TIGHT battle that came down to the wire';
+  desc += ' -- ' + dateStr + '\n\n';
+  desc += 'WATCH: My full reaction to the highlights from this ' + awayFull + ' vs ' + homeFull + ' game.\n\n';
+  if (top3[0]) desc += 'GAME LEADER: ' + top3[0].name + ' -- ' + top3[0].pts + ' PTS / ' + top3[0].reb + ' REB / ' + top3[0].ast + ' AST\n';
+  if (top3[1]) desc += top3[1].name + ' (' + top3[1].team + '): ' + top3[1].pts + ' PTS / ' + top3[1].reb + ' REB / ' + top3[1].ast + ' AST\n';
+  if (top3[2]) desc += top3[2].name + ' (' + top3[2].team + '): ' + top3[2].pts + ' PTS\n';
+  if (outNames.length) desc += '\nINJURIES OUT: ' + outNames.join(', ') + '\n';
+  desc += '\nReacting to the key plays, big moments, and breaking down what this means for the playoff race.\n';
+  desc += '\nFollow ClipzWorld News for daily NBA coverage, sports news and live game breakdowns every weekday at noon ET.\n';
+  desc += '\nSubscribe and hit the bell for daily content!\n';
+  desc += '\n';
+
+  var winnerTag = winner.split(' ').join('');
+  var tags = [
+    '#NBA', '#' + awayAbbr, '#' + homeAbbr, '#NBAHighlights', '#NBAReaction',
+    '#ClipzWorldNews', '#Basketball', '#NBAToday', '#' + winnerTag, '#NBASeason2026'
+  ];
+  desc += tags.join(' ');
+  g('yt-desc').textContent = desc;
+  setTimeout(function() {
+    renderSeoBar('hl-seo-status', g('yt-title').textContent, g('yt-desc').textContent, {teams:[awayName, homeName]});
+  }, 50);
+
+  // -- CLIPS --
+  var videos = data.videos || [];
+  var grid = g('clips-grid');
+  grid.innerHTML = '';
+  if (!videos.length) {
+    grid.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:13px;padding:8px 0">No clips returned by ESPN API for this game. Go to espn.com and search for clip IDs manually.</div>';
+  } else {
+    for (var v = 0; v < videos.length; v++) {
+      var vid = videos[v];
+      var cid = vid.id || '';
+      var thumb = (vid.thumbnail && (vid.thumbnail.href || vid.thumbnail)) || '';
+      var vtitle = vid.headline || vid.description || ('Clip ' + cid);
+      var dur = vid.duration ? fmtDur(vid.duration) : '';
+      var url = 'https://www.espn.com/video/clip?id=' + cid;
+      var card = document.createElement('div');
+      card.className = 'clip-card';
+      card.innerHTML =
+        (thumb ? '<img class="clip-img" src="' + thumb + '">' : '') +
+        '<div class="clip-body">' +
+        '<div class="clip-title">' + vtitle + '</div>' +
+        '<div class="clip-meta">' + dur + ' | ID: ' + cid + '</div>' +
+        '<div class="clip-btns">' +
+        '<button class="btn-sm btn-watch" onclick="window.open(\'' + url + '\',\'_blank\')">WATCH ON ESPN</button>' +
+        '<button class="btn-sm btn-copy" data-id="' + cid + '" onclick="var t=document.createElement(\'textarea\');t.value=this.getAttribute(\'data-id\');document.body.appendChild(t);t.select();document.execCommand(\'copy\');document.body.removeChild(t);this.textContent=\'COPIED!\';var b=this;setTimeout(function(){b.textContent=\'COPY ID\';},1500)">COPY ID</button>' +
+        '</div></div>';
+      grid.appendChild(card);
+    }
+  }
+
+  // -- SCRIPT --
+  var lines = [];
+  lines.push('CLIPZWORLD NEWS -- ' + awayFull + ' vs ' + homeFull + ' REACTION');
+  lines.push('Final: ' + awayFull + ' ' + awayScore + ' -- ' + homeFull + ' ' + homeScore);
+  lines.push('~90 seconds | Play the ESPN highlight clip and talk over it');
+  lines.push('');
+  lines.push('--- INTRO (0-8 sec) ---');
+  lines.push('What is UP ClipzWorld News. We are reacting to ' + winner + ' over ' + loser + ', ' + winScore + ' to ' + losScore + '. Let me tell you what went down -- watch this.');
+  lines.push('');
+  lines.push('--- AS CLIP PLAYS (8-55 sec) ---');
+  if (top3[0]) lines.push('>> ' + top3[0].name + ' -- ' + top3[0].pts + ' points, ' + top3[0].reb + ' rebounds, ' + top3[0].ast + ' assists. That is a COMPLETE performance right there.');
+  if (top3[1]) lines.push('>> ' + top3[1].name + ' chips in ' + top3[1].pts + ' for ' + top3[1].team + '. Multiple guys went off tonight -- that is what depth looks like.');
+  if (top3[2]) lines.push('>> Even ' + top3[2].name + ' with ' + top3[2].pts + '. When your third option is scoring like that, good luck stopping this team.');
+  if (diff > 20) lines.push('>> They led by ' + diff + ' at one point. This was not close. ' + winner + ' came out and made a STATEMENT.');
+  else if (diff < 8) lines.push('>> Only ' + diff + ' points in it -- this was a battle all the way. Could have gone either way down the stretch.');
+  else lines.push('>> ' + diff + ' point final. ' + winner + ' controlled this when it mattered most.');
+  lines.push('');
+  lines.push('--- REACTION (55-80 sec) ---');
+  lines.push(winner + ' picks up a big win here. ' + (outNames.length ? outNames.join(' and ') + ' were out for the other side, but you still have to go execute and they did. ' : '') + 'The playoff picture is heating up and ' + winner + ' is making noise right now.');
+  lines.push('');
+  lines.push('--- OUTRO (80-90 sec) ---');
+  lines.push('Drop a comment -- what did you think of this performance? Subscribe to ClipzWorld News for daily NBA coverage. Peace.');
+  g('script-txt').textContent = lines.join('\n');
+
+  g('status').textContent = awayFull + ' vs ' + homeFull + ' | ' + awayScore + '-' + homeScore + ' | ' + videos.length + ' clips found';
+  g('results').style.display = 'block';
+}
+
+loadGame();
+</script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ClipzWorld Live Ticker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: transparent;
+  font-family: 'Arial Black', Arial, sans-serif;
+  overflow: hidden;
+  width: 1920px;
+  height: 64px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── DEBUG PANEL ── */
+#debug {
+  display: none;
+  width: 1920px;
+  background: #1a1a2e;
+  color: #aaa;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 12px;
+  min-height: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  border-bottom: 1px solid #333;
+}
+
+/* ── TICKER ── */
+.ticker-wrap {
+  width: 1920px;
+  height: 64px;
+  background: #111827;
+  border-top: 3px solid #c7af4f;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+.brand-block {
+  background: #c7af4f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  flex-shrink: 0;
+  min-width: 110px;
+  gap: 2px;
+}
+.brand-title { font-size: 11px; font-weight: 900; color: #111827; letter-spacing: 2px; }
+.brand-live  { display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; color: #111827; letter-spacing: 1px; }
+.live-dot    { width: 6px; height: 6px; border-radius: 50%; background: #c0392b; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.scroll-outer { flex: 1; overflow: hidden; position: relative; }
+.scroll-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  height: 64px;
+  will-change: transform;
+}
+/* Scroll animation applied via JS */
+@keyframes scroll-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(var(--scroll-dist, -50%)); }
+}
+
+.league-div {
+  display: inline-flex; align-items: center;
+  height: 64px; padding: 0 12px;
+  border-right: 2px solid rgba(199,175,79,0.25);
+  flex-shrink: 0;
+}
+.league-lbl { font-size: 9px; font-weight: 900; color: rgba(199,175,79,0.55); letter-spacing: 2px; }
+
+.game-chip {
+  display: inline-flex; align-items: center;
+  height: 64px; padding: 0 12px;
+  border-right: 1px solid rgba(199,175,79,0.1);
+  flex-shrink: 0; gap: 6px;
+}
+.team-col { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 52px; }
+.team-col.away { align-items: flex-end; }
+.team-col.home { align-items: flex-start; }
+.t-abbr  { font-size: 13px; font-weight: 900; color: #fff; letter-spacing: .5px; line-height: 1; }
+.t-abbr.winner { color: #c7af4f; }
+.t-record{ font-size: 8px; color: rgba(255,255,255,0.3); font-family: Arial,sans-serif; line-height:1; }
+
+.logo-wrap {
+  width: 34px; height: 34px; border-radius: 50%;
+  overflow: hidden; flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-wrap img { width:100%; height:100%; object-fit:contain; padding:3px; background:#fff; }
+.logo-fallback { width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+  font-size:8px; font-weight:900; color:#fff; }
+
+.score-mid { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:70px; gap:3px; }
+.score-row { display:flex; align-items:center; gap:5px; }
+.sc      { font-size:24px; font-weight:900; color:#fff; line-height:1; min-width:26px; text-align:center; }
+.sc.win  { color:#c7af4f; }
+.sc-sep  { font-size:14px; color:rgba(199,175,79,0.4); }
+.game-state { font-size:9px; font-weight:700; font-family:Arial,sans-serif; letter-spacing:.3px; text-align:center; }
+.st-live { color:#e74c3c; }
+.st-final{ color:rgba(255,255,255,0.3); }
+.st-pre  { color:#27ae60; }
+.st-half { color:#f39c12; }
+.no-games{ display:inline-flex; align-items:center; height:64px; padding:0 24px;
+  font-size:12px; color:rgba(199,175,79,0.5); font-family:Arial,sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- DEBUG: remove this div or set display:none in OBS Custom CSS -->
+<div id="debug">Initializing...</div>
+
+<div class="ticker-wrap">
+  <div class="brand-block">
+    <div class="brand-title">CLIPZWORLD</div>
+    <div class="brand-live"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <div class="scroll-outer">
+    <div class="scroll-track" id="ticker-track">
+      <div class="no-games">Loading scores...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────
+var SCROLL_SPEED = 80; // pixels per second
+
+var LEAGUES = [
+  { key:'nba',    label:'NBA',        url:'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard' },
+  { key:'ncaam',  label:'NCAA MEN',   url:'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard' },
+  { key:'ncaaw',  label:'NCAA WOMEN', url:'https://site.api.espn.com/apis/site/v2/sports/basketball/womens-college-basketball/scoreboard' },
+  { key:'nhl',    label:'NHL',        url:'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard' },
+  { key:'mlb',    label:'MLB',        url:'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' },
+  { key:'nfl',    label:'NFL',        url:'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard' },
+  { key:'mls',    label:'MLS',        url:'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard' },
+  { key:'epl',    label:'EPL',        url:'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard' },
+];
+
+// ── STATE ───────────────────────────────────────────────────────────
+var allGames   = {};
+var fetchLog   = {};  // key -> 'ok(N)' or 'empty' or 'err:...'
+var scrollDur  = 60;
+var isScrolling = false;
+
+// ── HELPERS ─────────────────────────────────────────────────────────
+function dbg(msg) {
+  var el = document.getElementById('debug');
+  if (el) el.textContent = msg;
+}
+
+function periodLabel(k, p, c) {
+  if(k==='nba'||k==='wnba')      return 'Q'+p+' '+c;
+  if(k==='nfl'||k==='ncaaf')     return 'Q'+p+' '+c;
+  if(k==='nhl')                  return 'P'+p+' '+c;
+  if(k==='mlb')                  return 'INN '+p;
+  if(k==='mls'||k==='epl'||k==='ucl'||k==='laliga') return c+"'";
+  return p===1 ? '1H '+c : '2H '+c;
+}
+function endLabel(k, p) {
+  if(k==='nba'||k==='wnba'||k==='nfl'||k==='ncaaf') return 'END Q'+p;
+  if(k==='nhl') return 'END P'+p;
+  return p===1 ? 'END 1H' : 'END 2H';
+}
+
+function parseGame(ev, k) {
+  var comp  = ev.competitions[0];
+  var comps = comp.competitors;
+  var home=null, away=null;
+  for(var i=0;i<comps.length;i++){
+    if(comps[i].homeAway==='home') home=comps[i];
+    if(comps[i].homeAway==='away') away=comps[i];
+  }
+  if(!home) home=comps[1];
+  if(!away) away=comps[0];
+  if(!home||!away) return null;
+
+  var st=ev.status, stType=st.type.name, period=st.period||0, clock=st.displayClock||'';
+  var stateLabel='', stateClass='st-pre';
+
+  if(stType==='STATUS_FINAL'||stType==='STATUS_FULL_TIME'||stType==='STATUS_FINAL_AET'||stType==='STATUS_FINAL_PEN'){
+    stateLabel='FINAL'; stateClass='st-final';
+  } else if(stType==='STATUS_HALFTIME'){
+    stateLabel='HALF'; stateClass='st-half';
+  } else if(stType==='STATUS_IN_PROGRESS'||stType==='STATUS_IN_PROGRESS_2'){
+    stateLabel=periodLabel(k,period,clock); stateClass='st-live';
+  } else if(stType==='STATUS_END_PERIOD'){
+    stateLabel=endLabel(k,period); stateClass='st-half';
+  } else if(stType==='STATUS_OVERTIME'||stType==='STATUS_IN_OVERTIME'){
+    stateLabel='OT '+clock; stateClass='st-live';
+  } else if(stType==='STATUS_POSTPONED'){
+    stateLabel='PPD'; stateClass='st-final';
+  } else {
+    var d=new Date(ev.date);
+    stateLabel=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    stateClass='st-pre';
+  }
+
+  var awayScore=parseInt(away.score)||0;
+  var homeScore=parseInt(home.score)||0;
+  var isFinal=(stType==='STATUS_FINAL'||stType==='STATUS_FULL_TIME'||stType==='STATUS_FINAL_AET'||stType==='STATUS_FINAL_PEN');
+
+  return {
+    id:ev.id, league:k,
+    awayAbbr: away.team.abbreviation||away.team.shortDisplayName||'',
+    awayLogo: away.team.logo||'',
+    awayColor:'#'+(away.team.color||'333333'),
+    awayScore:awayScore,
+    awayRecord:(away.records&&away.records[0])?away.records[0].summary:'',
+    homeAbbr: home.team.abbreviation||home.team.shortDisplayName||'',
+    homeLogo: home.team.logo||'',
+    homeColor:'#'+(home.team.color||'333333'),
+    homeScore:homeScore,
+    homeRecord:(home.records&&home.records[0])?home.records[0].summary:'',
+    stateLabel:stateLabel, stateClass:stateClass, isFinal:isFinal
+  };
+}
+
+function logoHTML(url, abbr, color) {
+  var ab = (abbr||'??').slice(0,3);
+  if(url){
+    return '<div class="logo-wrap" style="background:'+color+'">'
+      +'<img src="'+url+'" onerror="this.style.display=\'none\'">'
+      +'</div>';
+  }
+  return '<div class="logo-wrap" style="background:'+color+'">'
+    +'<div class="logo-fallback">'+ab+'</div>'
+    +'</div>';
+}
+
+function gameChip(g) {
+  var awWin = g.isFinal && g.awayScore > g.homeScore;
+  var hmWin = g.isFinal && g.homeScore > g.awayScore;
+  return '<div class="game-chip">'
+    +'<div class="team-col away">'
+      +'<div class="t-abbr'+(awWin?' winner':'')+'">'+g.awayAbbr+'</div>'
+      +'<div class="t-record">'+g.awayRecord+'</div>'
+    +'</div>'
+    +logoHTML(g.awayLogo,g.awayAbbr,g.awayColor)
+    +'<div class="score-mid">'
+      +'<div class="score-row">'
+        +'<span class="sc'+(awWin?' win':'')+'">'+g.awayScore+'</span>'
+        +'<span class="sc-sep">·</span>'
+        +'<span class="sc'+(hmWin?' win':'')+'">'+g.homeScore+'</span>'
+      +'</div>'
+      +'<div class="game-state '+g.stateClass+'">'+g.stateLabel+'</div>'
+    +'</div>'
+    +logoHTML(g.homeLogo,g.homeAbbr,g.homeColor)
+    +'<div class="team-col home">'
+      +'<div class="t-abbr'+(hmWin?' winner':'')+'">'+g.homeAbbr+'</div>'
+      +'<div class="t-record">'+g.homeRecord+'</div>'
+    +'</div>'
+    +'</div>';
+}
+
+// ── BUILD TICKER ────────────────────────────────────────────────────
+function buildTicker() {
+  var track = document.getElementById('ticker-track');
+  var content = '';
+  var totalGames = 0;
+  var leaguesShown = 0;
+
+  for(var i=0;i<LEAGUES.length;i++){
+    var lg = LEAGUES[i];
+    var games = (allGames[lg.key]||[]).filter(function(g){ return g&&g.awayAbbr&&g.homeAbbr; });
+    if(!games.length) continue;
+    leaguesShown++;
+    content += '<div class="league-div"><span class="league-lbl">'+lg.label+'</span></div>';
+    for(var j=0;j<games.length;j++){
+      try{ content += gameChip(games[j]); totalGames++; } catch(e){}
+    }
+  }
+
+  // Build debug string
+  var logParts = [];
+  for(var i=0;i<LEAGUES.length;i++){
+    var k = LEAGUES[i].key;
+    logParts.push(k+':'+(fetchLog[k]||'?'));
+  }
+  dbg('Games:'+totalGames+' | '+logParts.join(' | '));
+
+  if(!totalGames){
+    track.innerHTML='<div class="no-games">No games scheduled — check back later</div>';
+    return;
+  }
+
+  // Insert single copy, wait for render, measure, then duplicate
+  track.style.animation = 'none';
+  track.innerHTML = content;
+
+  // Use setTimeout to let OBS render the frame before measuring
+  setTimeout(function() {
+    var singleW = 0;
+    var children = track.children;
+    if(children.length > 0) {
+      var last = children[children.length - 1];
+      singleW = last.offsetLeft + last.offsetWidth;
+    }
+    // Fallback
+    if(singleW < 200) singleW = (totalGames * 230) + (leaguesShown * 90);
+
+    var dur = Math.max(30, Math.round(singleW / SCROLL_SPEED));
+
+    track.innerHTML = content + content;
+    track.style.setProperty('--scroll-dist', '-' + singleW + 'px');
+    void track.offsetWidth;
+    track.style.animation = 'scroll-left ' + dur + 's linear infinite';
+  }, 200);
+}
+
+// ── FETCH ────────────────────────────────────────────────────────────
+function fetchLeague(lg, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', lg.url+'?limit=100', true);
+  xhr.timeout = 8000;
+  xhr.onload = function(){
+    if(xhr.status === 200){
+      try {
+        var data = JSON.parse(xhr.responseText);
+        var events = data.events||[];
+        var parsed = [];
+        for(var i=0;i<events.length;i++){
+          try{ var g=parseGame(events[i],lg.key); if(g) parsed.push(g); } catch(e){}
+        }
+        allGames[lg.key] = parsed;
+        fetchLog[lg.key] = parsed.length ? 'ok('+parsed.length+')' : 'empty';
+      } catch(e){
+        allGames[lg.key] = [];
+        fetchLog[lg.key] = 'parse-err';
+      }
+    } else {
+      if(!allGames[lg.key]) allGames[lg.key]=[];
+      fetchLog[lg.key] = 'http'+xhr.status;
+    }
+    if(callback) callback();
+  };
+  xhr.onerror = function(){
+    if(!allGames[lg.key]) allGames[lg.key]=[];
+    fetchLog[lg.key] = 'net-err';
+    if(callback) callback();
+  };
+  xhr.ontimeout = function(){
+    if(!allGames[lg.key]) allGames[lg.key]=[];
+    fetchLog[lg.key] = 'timeout';
+    if(callback) callback();
+  };
+  xhr.send();
+}
+
+function fetchAll(cb) {
+  var done = 0;
+  var total = LEAGUES.length;
+  for(var i=0;i<LEAGUES.length;i++){
+    fetchLeague(LEAGUES[i], function(){
+      done++;
+      if(done === total){
+        buildTicker();
+        if(cb) cb();
+      }
+    });
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+// Fetch all leagues at once — simpler and more reliable than staggered
+fetchAll();
+setInterval(fetchAll, 30000);
+</script>
+</body>
+</html>

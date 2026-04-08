@@ -1,0 +1,327 @@
+The Prompt for Claude: "Act as the Lead Systems Architect. Generate a CLAUDE.md file for this repository. It must include the technical stack, core MVP features, user journey maps, and specific 'Rules of Engagement' for other AIs (like Cursor and Aider) to follow to ensure architectural consistency."
+
+Claude, from now on, Gemini is the Primary Design Owner. Before you write any FFmpeg filters, assemble a split-screen, or generate a thumbnail, you must call Gemini to provide the Visual Intent.
+
+Gemini's specific design mandates include:
+
+Visual Hook Strategy: Identifying the exact frame/emotional hook for thumbnails.
+
+Placement & Safety: Determining X/Y coordinates to avoid UI overlap (TikTok/Reels).
+
+Scene Pacing: Analyzing 'Viewer Boredom' and suggesting where to burn in images.
+
+You are the Implementation Lead. Your job is to take Gemini’s visual metadata and execute it via VectCutAPI or FFmpeg. Do you understand the new design workflow?"
+
+Next Move for Claude Code
+Since you are in the terminal with Claude Code, run this command to start the automation of your one-off tasks:
+"Claude, analyze the VectCut API documentation on port 9001. Create a new helper function burnVisualAsset(jobId, assetPath, layoutType) that uses the coordinates in our new VISUAL_CONFIG. Ensure it applies a 5px gold border to every burned-in image."
+Summary of Next Steps:
+	1	Define Coordinates: Add the VISUAL_LAYOUTS to your config.
+	2	Update QA Gate 3: Tell Gemini to check if the "Burn-in" images are following the gold border brand rule.
+	3	Full Loop Test: Run one "Short" and one "Long-form" through the VectCut bridge to verify the scaling works.
+Command for Claude Code:
+"Claude, create a function getVectCutOverlayFilter(inputPath, layoutType) in server.js. It must return an FFmpeg filter string that:
+	1	Scales the input image to match CONFIG.VISUAL_LAYOUTS[layoutType].OVERLAY_ZONE.
+	2	Adds a 5px border of color #c7af4f.
+	3	Adds a shadow with 50% opacity.
+	4	Positions it at the X/Y coordinates defined in our VISUAL_CONFIG."
+
+The "Design Brief" Generator (Gemini Prompt)
+To get the best results for your one-off thumbnails and overlays, you need Gemini to act as a Prompt Engineer for your design tools (Midjourney/Nano Banana).
+Add this to your Gemini Scripting System Prompt:
+"When generating the visual_assets array for the script, use this format for each asset: { "type": "overlay", "prompt": "[Subject] in a [Style: Cinematic/3D/Minimalist] style, dark slate background, gold lighting accents, 8k resolution, photorealistic", "location": "OVERLAY_ZONE" }"
+3. Automated Thumbnail Generation Command
+Since you want to exceed expectations on "clickability," use this command to have Claude orchestrate a thumbnail "battle":
+Command for Claude Code:
+"Claude, create a new endpoint /generate-competitive-thumbnails. It should:
+	1	Send the video title to Gemini to generate 3 different 'Hooks'.
+	2	Send those hooks to the Nano Banana API to generate 3 thumbnail options.
+	3	Save all 3 to /output/thumbnails/ so I can pick the winner."
+4. Production-to-Publish "Design Health Check"
+Before the final publish, you want a command that ensures the design hasn't "drifted."
+Command for Claude Code:
+"Claude, implement a runDesignAudit() function that triggers after assembly. It should capture 3 screenshots from the video: one at the start, one during a streamer transition, and one with a burned-in image. Send these to Gemini for a 'Brand Consistency' check. If the gold color is off or the logo is obscured, flag a 'Gate 3' warning."
+
+Visual Map for Claude's "Spatial Awareness"
+When Claude is writing these functions, it needs to understand how the video is layered. Use this as a reference for your VISUAL_CONFIG:
+The "Short-Form" Split-Screen Command
+Since your AUTOMATION_STATUS.md mentions split-screen assembly as a pending feature, use this command to have Claude implement it via VectCut. This creates the professional "Reaction" look (Top: Clip, Bottom: Bobby G).
+Command for Claude Code:
+"Claude, use the VectCut API to implement the assembleShortForm function.
+	1	Set the canvas to 1080x1920.
+	2	Crop/Scale the Source Clip to the top 50% (1080x960).
+	3	Place the Bobby G Avatar in the bottom 50% (1080x960).
+	4	Apply the logo-80px.png at the top-right (W-w-15:15) as per our CLAUDE.md standard."
+For Twitch (Dynamic Text + Streamer)
+Command for Claude Code:
+"Claude, update the /generate-thumbnail endpoint to move beyond Canva.
+	1	Fetch the streamer's profile image from streamers.json.
+	2	Use FFmpeg to overlay the streamer onto a high-contrast background.
+	3	Burn the 'Episode Number' and 'Date' onto the bottom-left using font Arial-Bold in CWN Gold (#c7af4f)."
+For NBA/News (Dynamic Story Cards)
+Command for Claude Code:
+"Claude, implement a script that takes the 'Story Image' Gemini identified and uses the generateGameStoryCardPNG function logic to burn a TV-style border around it. Save this as the video thumbnail automatically."
+
+3. The "Aesthetic QA" Command (Gate 3 Extension)
+To ensure the design "exceeds expectations," you need Gemini to act as a Visual Auditor.
+Command for Claude Code:
+"Claude, update the Gate 3 QA prompt in server.js. Instruct Gemini to specifically look for:
+	•	Visual Balance: Is the burned-in image covering the streamer's face?
+	•	Text Contrast: Is the ticker at the bottom readable?
+	•	Brand Presence: Is the CWN logo visible and at 85% opacity? If any of these fail, deduct 15 points from the Gate 3 score."
+
+4. One-Click "Production-to-Publish" Command
+Once your design logic is coded, you can trigger a full run with a single terminal command.
+Command for Claude Code:
+"Claude, run a full production test for contentType: twitch and formType: short.
+	1	Generate the script.
+	2	Render segments.
+	3	Use VectCut for the split-screen assembly.
+	4	Generate the thumbnail with dynamic text.
+	5	Upload to Google Drive and return the metrics_id."
+
+🛠️ Visual Reference for Layouts
+When Claude implements these, ensure it follows these "Safe Zone" maps to avoid the dreaded "caption overlap" on TikTok/YouTube Shorts.
+Final Action Item
+Now that VectCut is healthy, I recommend you tell Claude: "Claude, review the VectCutAPI/capcut_server.py and write a Javascript wrapper in server.js called VectCutClient. This client should handle all POST requests for intro card positioning and split-screen layouts."
+This will centralize all your "Design Knowledge
+When Claude implements these, ensure it follows these "Safe Zone" maps to avoid the dreaded "caption overlap" on TikTok/YouTube Shorts.
+Final Action Item
+Now that VectCut is healthy, I recommend you tell Claude: "Claude, review the VectCutAPI/capcut_server.py and write a Javascript wrapper in server.js called VectCutClient. This client should handle all POST requests for intro card positioning and split-screen layouts."
+Command for Claude Code:
+"Claude, create a VectCutClient class in server.js. It should handle the connection to localhost:9001 and include these three specific methods:
+	1	createSplitScreen(clipPath, avatarPath, jobId): Configures the 1080x1920 portrait layout.
+	2	addGoldenOverlay(videoPath, imagePath, position): Scales an image, adds the #c7af4f border, and burns it into the video.
+	3	generateAutoThumbnail(framePath, streamerData): Layers streamer text and branding onto a video frame."
+2. Design Logic for the "Short-Form" Split-Screen
+Since the 12-Test Report noted this as a pending feature, here is the exact spatial coordinate logic for the 1080x1920 layout.
+Logic for Claude to implement:
+	•	Top (Source Clip): Scale to 1080x960, position at (0, 0).
+	•	Bottom (Bobby G): Scale to 1080x960, position at (0, 960).
+	•	Middle "Burn-In" Zone: This is the creative sweet spot. If Gemini suggests a "Visual Aid," it should be placed at center (540, 960) with a fade-in effect.
+3. Automated "Burn-In" with Brand Styling
+To move beyond default templates, we use the "Gold Ring" rule. Every image burned in must look like part of a professional broadcast.
+Command for Claude Code:
+"Claude, write the addGoldenOverlay method using this FFmpeg filter logic: scale=640:360,pad=650:370:5:5:color=#c7af4f,setsar=1 This ensures that even if Gemini provides a low-res image, it is upscaled, bordered in CWN Gold, and corrected for the 16:9 aspect ratio before being burned into the final assembly."
+4. Publishing Design Health-Check (The Final Gate)
+To ensure every video published exceeds expectations, we add a Vision Check to the Upload-Post integration.
+Command for Claude Code:
+"Claude, update the /publish endpoint. Before calling the Upload-Post API, take the final video path and have Gemini 2.5 Pro perform a 'Mobile Readability Audit.' Ask:
+	1	'Is the bottom-third text clear of the TikTok UI buttons?'
+	2	'Does the gold border on the intro card pop against the video background?'
+	3	'Is the avatar’s face visible throughout all overlays?'"
+Next Steps for Your Terminal:
+	1	Initialize the Wrapper: claude "Implement the VectCutClient class in server.js using port 9001."
+	2	Define Layouts: claude "Add the VISUAL_CONFIG object to server.js with coordinates for split-screen and TV-style overlays."
+	3	Run a Design Test: curl -X POST http://localhost:3000/test-split-screen -d '{"clip":"test_clip.mp4", "avatar":"test_avatar.mp4"}'
+Would you like me to provide the specific VectCutClient code block for Claude to copy-paste, or do you want Claude to generate it from scratch based on the API health check?
+
+Since the VectCut API is healthy and you're ready to integrate the design engine, let's finalize the VectCutClient implementation. This will turn your server into a "Design-Aware" production house.
+1. The VectCutClient Integration
+Have Claude Code implement this class. It acts as the bridge between your Node server and the Python-based video engine on port 9001.
+JavaScript
+
+const axios = require('axios');
+
+class VectCutClient {
+  constructor(port = 9001) {
+    this.url = `http://localhost:${port}`;
+  }
+
+  /**
+   * Short-Form (9:16) Split-Screen Assembly
+   * Layers the source clip on top and Bobby G on the bottom.
+   */
+  async assembleShortForm(asmId, clipPath, avatarPath) {
+    const payload = {
+      asmId,
+      canvas: { width: 1080, height: 1920 },
+      layers: [
+        { path: clipPath,   x: 0, y: 0,   w: 1080, h: 960, z: 1 }, // Top: Clip
+        { path: avatarPath, x: 0, y: 960, w: 1080, h: 960, z: 2 }  // Bottom: Bobby G
+      ],
+      logo: { path: 'assets/logo-80px.png', x: 985, y: 15, opacity: 0.85 }
+    };
+    return axios.post(`${this.url}/assemble-complex`, payload);
+  }
+
+  /**
+   * Branded "Gold Ring" Overlay
+   * Applies the CWN Gold border and shadow to any one-off design asset.
+   */
+  async burnBrandedOverlay(baseVideo, overlayImage, layout = 'TOP_RIGHT') {
+    const coords = layout === 'TOP_RIGHT' ? { x: 1240, y: 40 } : { x: 40, y: 40 };
+    return axios.post(`${this.url}/apply-overlay`, {
+      baseVideo,
+      overlayImage,
+      ...coords,
+      w: 640, h: 360,
+      border: { size: 5, color: '#c7af4f' },
+      shadow: true
+    });
+  }
+}
+
+module.exports = new VectCutClient();
+2. Implementation Commands for Claude Code
+Give these commands to Claude in the terminal to rewire the production flow:
+	•	For Split-Screen: "Claude, update the /assemble route. When formType === 'short', use the VectCutClient.assembleShortForm method instead of the standard FFmpeg concat. This will fix the pending split-screen requirement in AUTOMATION_STATUS.md."
+	•	For One-Off Designs: "Claude, implement a helper function processOneOffDesign(jobId, assetType). If Gemini identifies a 'Story Intro', have Claude call burnBrandedOverlay to place the news/NBA card in the Top-Right zone with the gold border."
+3. Untapping the "Creative Director" (Gemini)
+Now that the technical "hands" (VectCut) are ready, give the "eyes" (Gemini) the power to audit the design.
+Command for Claude Code:
+"Claude, update the Gate 3 QA Prompt. Instruct Gemini to analyze the final video for 'Visual Retention'. It should deduct points if:
+	1	The split-screen seam is misaligned.
+	2	A burned-in image is covering the avatar's face.
+	3	The video feels static for more than 5 seconds without a zoom or overlay."
+4. Publishing Strategy: The "Design Final Pass"
+Before pushing to Upload-Post, we add one final check to ensure the design is optimized for the platform UI (TikTok/Reels).
+Command for Claude Code:
+"Claude, in the /publish logic, add a pre-flight check. Have Gemini 2.5 Pro verify that the Bobby G avatar's mouth is not covered by the TikTok 'Description' overlay or the 'Like/Share' buttons on the right. If it is, have Claude re-run the VectCut assembly with a 50px Y-offset."
+Your Action Plan
+	1	Run: node server.js and ensure the VectCutClient initializes.
+	2	Test: Trigger a short-form assembly via the dashboard.
+	3	Review: Check output/run_metrics_{jobId}.json to see the timing for the new VectCut stage.
+
+You can paste this directly into your file under the "Core Architecture" section:
+Markdown
+
+## Visual Design & Brand Intelligence
+
+### Aesthetic Source of Truth
+- **Primary Color:** Gold (`#c7af4f`) for borders and highlights.
+- **Secondary Color:** Dark Slate (`#1a1a1a`) for backgrounds.
+- **Typography:** Bold Sans-Serif (Arial/Roboto) for high readability on mobile.
+
+### Agent Design Responsibilities
+1. **Gemini (Creative Lead):** Defines the 'Visual Hook' for thumbnails. Analyzes video frames to suggest the best 'Freeze Frame' for overlays.
+2. **Claude (Implementation Lead):** Writes the FFmpeg filters for the "burn-in" process. Ensures the 5px border and drop-shadow are applied consistently via VectCut API.
+3. **Nano Banana Pro (Graphic Artist):** Generates high-context assets for news 
+
+ince the VectCut API is healthy and you're ready to integrate the design engine, let's finalize the VectCutClient implementation. This will turn your server into a "Design-Aware" production house.
+1. The VectCutClient Integration
+Have Claude Code implement this class. It acts as the bridge between your Node server and the Python-based video engine on port 9001.
+JavaScript
+
+const axios = require('axios');
+
+class VectCutClient {
+  constructor(port = 9001) {
+    this.url = `http://localhost:${port}`;
+  }
+
+  /**
+   * Short-Form (9:16) Split-Screen Assembly
+   * Layers the source clip on top and Bobby G on the bottom.
+   */
+  async assembleShortForm(asmId, clipPath, avatarPath) {
+    const payload = {
+      asmId,
+      canvas: { width: 1080, height: 1920 },
+      layers: [
+        { path: clipPath,   x: 0, y: 0,   w: 1080, h: 960, z: 1 }, // Top: Clip
+        { path: avatarPath, x: 0, y: 960, w: 1080, h: 960, z: 2 }  // Bottom: Bobby G
+      ],
+      logo: { path: 'assets/logo-80px.png', x: 985, y: 15, opacity: 0.85 }
+    };
+    return axios.post(`${this.url}/assemble-complex`, payload);
+  }
+
+  /**
+   * Branded "Gold Ring" Overlay
+   * Applies the CWN Gold border and shadow to any one-off design asset.
+   */
+  async burnBrandedOverlay(baseVideo, overlayImage, layout = 'TOP_RIGHT') {
+    const coords = layout === 'TOP_RIGHT' ? { x: 1240, y: 40 } : { x: 40, y: 40 };
+    return axios.post(`${this.url}/apply-overlay`, {
+      baseVideo,
+      overlayImage,
+      ...coords,
+      w: 640, h: 360,
+      border: { size: 5, color: '#c7af4f' },
+      shadow: true
+    });
+  }
+}
+
+module.exports = new VectCutClient();
+2. Implementation Commands for Claude Code
+Give these commands to Claude in the terminal to rewire the production flow:
+	•	For Split-Screen: "Claude, update the /assemble route. When formType === 'short', use the VectCutClient.assembleShortForm method instead of the standard FFmpeg concat. This will fix the pending split-screen requirement in AUTOMATION_STATUS.md."
+	•	For One-Off Designs: "Claude, implement a helper function processOneOffDesign(jobId, assetType). If Gemini identifies a 'Story Intro', have Claude call burnBrandedOverlay to place the news/NBA card in the Top-Right zone with the gold border."
+3. Untapping the "Creative Director" (Gemini)
+Now that the technical "hands" (VectCut) are ready, give the "eyes" (Gemini) the power to audit the design.
+Command for Claude Code:
+"Claude, update the Gate 3 QA Prompt. Instruct Gemini to analyze the final video for 'Visual Retention'. It should deduct points if:
+	1	The split-screen seam is misaligned.
+	2	A burned-in image is covering the avatar's face.
+	3	The video feels static for more than 5 seconds without a zoom or overlay."
+4. Publishing Strategy: The "Design Final Pass"
+Before pushing to Upload-Post, we add one final check to ensure the design is optimized for the platform UI (TikTok/Reels).
+Command for Claude Code:
+"Claude, in the /publish logic, add a pre-flight check. Have Gemini 2.5 Pro verify that the Bobby G avatar's mouth is not covered by the TikTok 'Description' overlay or the 'Like/Share' buttons on the right. If it is, have Claude re-run the VectCut assembly with a 50px Y-offset."
+Your Action Plan
+	1	Run: node server.js and ensure the VectCutClient initializes.
+	2	Test: Trigger a short-form assembly via the dashboard.
+	3	Review: Check output/run_metrics_{jobId}.json to see the timing for the new VectCut stage.
+The Design Orchestrator (VectCutClient)
+Have Claude Code create or append this class. It is the core "Design Brain" that knows where every pixel should go.
+JavaScript
+
+const axios = require('axios');
+
+class VectCutClient {
+    constructor(port = 9001) {
+        this.baseUrl = `http://localhost:${port}`;
+    }
+
+    /**
+     * Short-Form Split (9:16)
+     * Clips on top, Avatar on bottom. 
+     */
+    async assembleShortForm(clipPath, avatarPath, jobId) {
+        console.log(`[VectCut] Orchestrating Split-Screen for ${jobId}`);
+        const payload = {
+            jobId,
+            canvas: { w: 1080, h: 1920 },
+            layers: [
+                { path: clipPath,   x: 0, y: 0,   w: 1080, h: 960, z: 1 },
+                { path: avatarPath, x: 0, y: 960, w: 1080, h: 960, z: 2 }
+            ],
+            branding: { path: 'assets/logo-80px.png', x: 985, y: 15 }
+        };
+        return axios.post(`${this.baseUrl}/assemble`, payload);
+    }
+
+    /**
+     * Branded Burn-In (16:9)
+     * Adds the "Gold Ring" border and shadow to overlays.
+     */
+    async addBrandedOverlay(videoPath, assetPath, layout = 'TOP_RIGHT') {
+        const x = layout === 'TOP_RIGHT' ? 1240 : 40;
+        return axios.post(`${this.baseUrl}/overlay`, {
+            videoPath,
+            assetPath,
+            x: x, y: 40, w: 640, h: 360,
+            style: { border: '5px #c7af4f', shadow: '0 4px 15px rgba(0,0,0,0.5)' }
+        });
+    }
+}
+
+module.exports = new VectCutClient();
+2. The Commands for Claude Code
+Run these specific instructions in your terminal to rewire the server.
+Task A: Integrate the Client
+"Claude, integrate the VectCutClient into the /assemble route. If formType is 'short', use assembleShortForm. If it's 'long' and has an NBA/News asset, use addBrandedOverlay."
+Task B: Empower the QA
+"Claude, update the Gate 3 QA logic in server.js. Instruct Gemini to watch the final video and deduct points if the split-screen seam is visible or if the gold border on an overlay is missing."
+Task C: Automated Thumbnail Logic
+"Claude, create a script that uses ffprobe to find a 'high-motion' frame in the video. Pass that frame to VectCutClient to burn the Episode Number and CWN Logo onto it for a 100% automated thumbnail."
+
+3. Visual Retention Audit (Gate 3 Extension)
+To "exceed expectations," we want the AI to judge the video like a human editor. Add this to your QA_GATES.md or system prompt:
+	•	Rule: Every 7 seconds, there must be a visual change (cut, zoom, or image burn).
+	•	Penalty: -10 points per "Static Zone" detected.
+	•	Fix: If a static zone is found, Claude should automatically trigger a "Burn-in" of a relevant image suggested by Gemini.
+
+

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>body{background:#111;color:#0f0;font-family:monospace;font-size:11px;padding:15px;}
+h3{color:#f39c12;margin:8px 0 4px;}pre{background:#1a1a1a;padding:8px;border-radius:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}</style>
+</head><body>
+<h3>RSS to JSON Services Test</h3>
+<div id="out">Testing...</div>
+<script>
+var out=''; var done=0; var total=4;
+function fin(l,s,t){ out+='<h3>'+l+' ('+s+')</h3><pre>'+t.slice(0,400)+'</pre>'; done++; if(done>=total) document.getElementById('out').innerHTML=out; }
+
+// rss2json.com - free tier 10k requests/month
+var xhr1=new XMLHttpRequest();
+xhr1.open('GET','https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://feeds.bbci.co.uk/news/business/rss.xml'),true);
+xhr1.timeout=10000;
+xhr1.onload=function(){
+  try{
+    var d=JSON.parse(xhr1.responseText);
+    if(d.items&&d.items.length){
+      fin('rss2json + BBC Business',xhr1.status,d.items.slice(0,4).map(function(i){return i.title;}).join('\n'));
+    } else fin('rss2json',xhr1.status,xhr1.responseText.slice(0,200));
+  }catch(e){fin('rss2json',xhr1.status,xhr1.responseText.slice(0,200));}
+};
+xhr1.onerror=xhr1.ontimeout=function(){fin('rss2json','ERR','failed');};
+xhr1.send();
+
+// Try with MarketWatch via rss2json
+var xhr2=new XMLHttpRequest();
+xhr2.open('GET','https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://feeds.marketwatch.com/marketwatch/topstories/'),true);
+xhr2.timeout=10000;
+xhr2.onload=function(){
+  try{
+    var d=JSON.parse(xhr2.responseText);
+    if(d.items&&d.items.length) fin('rss2json + MarketWatch',xhr2.status,d.items.slice(0,4).map(function(i){return i.title;}).join('\n'));
+    else fin('rss2json MarketWatch',xhr2.status,xhr2.responseText.slice(0,200));
+  }catch(e){fin('rss2json MarketWatch',xhr2.status,xhr2.responseText.slice(0,200));}
+};
+xhr2.onerror=xhr2.ontimeout=function(){fin('rss2json MarketWatch','ERR','failed');};
+xhr2.send();
+
+// Try Reuters via rss2json
+var xhr3=new XMLHttpRequest();
+xhr3.open('GET','https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://news.google.com/rss/search?q=stock+market+finance&hl=en-US&gl=US&ceid=US:en'),true);
+xhr3.timeout=10000;
+xhr3.onload=function(){
+  try{
+    var d=JSON.parse(xhr3.responseText);
+    if(d.items&&d.items.length) fin('rss2json + Google News Finance',xhr3.status,d.items.slice(0,4).map(function(i){return i.title;}).join('\n'));
+    else fin('rss2json Google',xhr3.status,xhr3.responseText.slice(0,200));
+  }catch(e){fin('rss2json Google',xhr3.status,xhr3.responseText.slice(0,200));}
+};
+xhr3.onerror=xhr3.ontimeout=function(){fin('rss2json Google','ERR','failed');};
+xhr3.send();
+
+// newsdata.io free tier
+var xhr4=new XMLHttpRequest();
+xhr4.open('GET','https://newsdata.io/api/1/news?apikey=pub_demo&category=business&language=en&country=us',true);
+xhr4.timeout=10000;
+xhr4.onload=function(){
+  try{
+    var d=JSON.parse(xhr4.responseText);
+    var items=d.results||[];
+    if(items.length) fin('newsdata.io',xhr4.status,items.slice(0,4).map(function(i){return i.title;}).join('\n'));
+    else fin('newsdata.io',xhr4.status,xhr4.responseText.slice(0,200));
+  }catch(e){fin('newsdata.io',xhr4.status,xhr4.responseText.slice(0,200));}
+};
+xhr4.onerror=xhr4.ontimeout=function(){fin('newsdata.io','ERR','failed');};
+xhr4.send();
+</script></body></html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { width:1920px; height:64px; background:transparent; overflow:hidden; font-family:Arial,sans-serif; }
+.ticker-wrap { width:1920px; height:64px; background:linear-gradient(90deg,#0d1524,#111f38,#0d1524); border-top:2px solid #c7af4f; border-bottom:2px solid #c7af4f; display:flex; align-items:stretch; overflow:hidden; }
+.ticker-label { flex-shrink:0; width:220px; background:linear-gradient(90deg,#22304b,#1a2538); border-right:3px solid #c7af4f; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; z-index:10; }
+.label-top { font-family:'Arial Black',Arial,sans-serif; font-size:12px; font-weight:900; color:#c7af4f; letter-spacing:3px; }
+.label-bot { font-size:9px; font-weight:700; color:rgba(255,255,255,0.4); letter-spacing:2px; }
+.live-row { display:flex; align-items:center; gap:5px; margin-top:1px; }
+.dot { width:7px; height:7px; border-radius:50%; background:#e74c3c; animation:pulse 1.2s ease-in-out infinite; }
+.live-txt { font-size:9px; font-weight:900; color:#e74c3c; letter-spacing:2px; }
+.ticker-track-wrap { flex:1; overflow:hidden; }
+.ticker-track { display:flex; align-items:center; height:64px; white-space:nowrap; will-change:transform; }
+.news-item { display:inline-flex; align-items:center; padding:0 28px; flex-shrink:0; }
+.news-bullet { width:6px; height:6px; border-radius:50%; background:#c7af4f; margin-right:14px; flex-shrink:0; }
+.news-source { font-size:10px; font-weight:900; color:#c7af4f; letter-spacing:2px; margin-right:10px; flex-shrink:0; }
+.news-text { font-size:15px; font-weight:700; color:#fff; }
+.news-div { display:inline-block; width:2px; height:32px; background:rgba(199,175,79,0.3); margin:0 16px; flex-shrink:0; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+</style>
+</head>
+<body>
+<div class="ticker-wrap">
+  <div class="ticker-label">
+    <div class="label-top">CLIPZWORLD</div>
+    <div class="label-bot">NEWS</div>
+    <div class="live-row"><div class="dot"></div><div class="live-txt">LIVE</div></div>
+  </div>
+  <div class="ticker-track-wrap">
+    <div class="ticker-track" id="track">
+      <div class="news-item"><div class="news-text" style="color:rgba(255,255,255,0.3)">Loading world news...</div></div>
+    </div>
+  </div>
+</div>
+<script>
+var FEEDS=[
+  {name:'AL JAZEERA',url:'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml')},
+  {name:'BBC',url:'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://feeds.bbci.co.uk/news/world/rss.xml')},
+  {name:'REUTERS',url:'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://feeds.reuters.com/reuters/worldNews')},
+  {name:'NPR',url:'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://feeds.npr.org/1004/rss.xml')},
+];
+var allItems=[],loaded=0,pos=0,trackWidth=0,animId=null,speed=1.2;
+
+function loadFeed(feed){
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',feed.url,true); xhr.timeout=10000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      if(d.status==='ok'){
+        (d.items||[]).forEach(function(item){
+          var t=(item.title||'').trim();
+          if(t.length>10) allItems.push({source:feed.name,title:t});
+        });
+      }
+    }catch(e){}
+    loaded++; if(loaded>=FEEDS.length) buildTicker();
+  };
+  xhr.onerror=xhr.ontimeout=function(){loaded++;if(loaded>=FEEDS.length)buildTicker();};
+  xhr.send();
+}
+
+function buildTicker(){
+  if(!allItems.length){allItems=[{source:'CWN',title:'World news loading — check connection'}];}
+  for(var i=allItems.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=allItems[i];allItems[i]=allItems[j];allItems[j]=t;}
+  var html='';
+  allItems.forEach(function(item){
+    html+='<div class="news-item"><div class="news-bullet"></div><div class="news-source">'+item.source+'</div><div class="news-text">'+item.title+'</div></div><div class="news-div"></div>';
+  });
+  html+=html;
+  document.getElementById('track').innerHTML=html;
+  setTimeout(function(){
+    trackWidth=document.getElementById('track').scrollWidth/2;
+    pos=0;
+    if(animId) cancelAnimationFrame(animId);
+    animate();
+  },100);
+}
+
+function animate(){
+  pos+=speed;
+  if(pos>=trackWidth) pos=0;
+  document.getElementById('track').style.transform='translateX(-'+pos+'px)';
+  animId=requestAnimationFrame(animate);
+}
+
+FEEDS.forEach(function(f){loadFeed(f);});
+setInterval(function(){allItems=[];loaded=0;FEEDS.forEach(function(f){loadFeed(f);});},300000);
+</script>
+</body>
+</html>

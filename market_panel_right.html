@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { width:260px; height:580px; background:rgba(13,20,36,0.95); border:1px solid rgba(199,175,79,0.15); border-radius:10px; overflow:hidden; font-family:Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+.panel-header { background:linear-gradient(90deg,#22304b,#1a2538); border-bottom:2px solid #c7af4f; padding:10px 12px; display:flex; align-items:center; justify-content:center; }
+.panel-title { font-family:'Arial Black',Arial,sans-serif; font-size:13px; font-weight:900; color:#c7af4f; letter-spacing:3px; }
+.panel-sub { font-size:8px; color:rgba(255,255,255,0.3); letter-spacing:1px; }
+.sec-lbl { font-size:8px; font-weight:900; color:rgba(199,175,79,0.55); letter-spacing:2px; padding:6px 12px 3px; }
+
+.mover-row { display:flex; align-items:center; padding:5px 12px; border-bottom:1px solid rgba(255,255,255,0.04); gap:6px; }
+.mover-ticker { font-size:10px; font-weight:900; color:#fff; min-width:44px; letter-spacing:0.5px; }
+.mover-name   { font-size:8px; color:rgba(255,255,255,0.35); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mover-price  { font-size:10px; color:rgba(255,255,255,0.6); font-family:Arial,sans-serif; min-width:46px; text-align:right; }
+.mover-chg    { font-size:10px; font-weight:900; min-width:44px; text-align:right; }
+.up { color:#27ae60; } .down { color:#e74c3c; }
+
+.news-section { padding:0; border-top:1px solid rgba(199,175,79,0.1); }
+.news-item { padding:6px 12px; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:background 0.15s; }
+.news-item:hover { background:rgba(199,175,79,0.08); }
+.news-item:first-child { background:rgba(199,175,79,0.05); }
+.news-item:first-child:hover { background:rgba(199,175,79,0.12); }
+.news-src  { font-size:7px; font-weight:900; color:rgba(199,175,79,0.5); letter-spacing:2px; margin-bottom:2px; }
+.news-hed  { font-size:10px; font-weight:600; color:rgba(255,255,255,0.8); line-height:1.3; }
+.news-link { font-size:7px; color:rgba(199,175,79,0.35); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.stats-row { display:flex; justify-content:space-between; padding:6px 12px; border-top:1px solid rgba(199,175,79,0.1); }
+.stat-item { display:flex; flex-direction:column; align-items:center; gap:1px; }
+.stat-lbl  { font-size:7px; color:rgba(255,255,255,0.3); letter-spacing:2px; }
+.stat-val  { font-size:12px; font-weight:900; color:#fff; font-family:Arial,sans-serif; }
+</style>
+</head>
+<body>
+<div class="panel-header">
+  <div class="panel-title">MOVERS</div>
+  
+</div>
+
+<div class="sec-lbl">TOP MOVERS TODAY</div>
+<div id="movers-list">
+  <div class="mover-row"><div class="mover-ticker">—</div><div class="mover-name">Loading...</div></div>
+</div>
+
+<div class="sec-lbl">HEADLINES</div>
+<div class="news-section" id="news-list">
+  <div class="news-item"><div class="news-src">MARKETS</div><div class="news-hed">Loading market news...</div></div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-item"><div class="stat-lbl">BTC</div><div class="stat-val" id="btc-mini">—</div></div>
+  <div class="stat-item"><div class="stat-lbl">ETH</div><div class="stat-val" id="eth-mini">—</div></div>
+  <div class="stat-item"><div class="stat-lbl">SOL</div><div class="stat-val" id="sol-mini">—</div></div>
+</div>
+
+<script>
+function g(id){ return document.getElementById(id); }
+
+function fmtP(p) {
+  var v=parseFloat(p); if(!v||isNaN(v)) return '—';
+  if(v>1000) return '$'+v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return '$'+v.toFixed(2);
+}
+
+function readData() {
+  try {
+    // All stocks combined for movers
+    var idx = JSON.parse(localStorage.getItem('mkt_indices')||'{}');
+    var stk = JSON.parse(localStorage.getItem('mkt_stocks')||'{}');
+    var all = {};
+    Object.keys(idx).forEach(function(k){ all[k]=idx[k]; });
+    Object.keys(stk).forEach(function(k){ all[k]=stk[k]; });
+
+    // Sort by absolute % change
+    var rows = [];
+    Object.keys(all).forEach(function(sym){
+      var q = all[sym];
+      if(q && q.pct !== undefined) rows.push({ticker:sym, name:q.name||sym, price:q.price, pct:q.pct});
+    });
+    rows.sort(function(a,b){ return Math.abs(parseFloat(b.pct))-Math.abs(parseFloat(a.pct)); });
+
+    var html='';
+    rows.slice(0,6).forEach(function(r){
+      var up=parseFloat(r.pct)>=0;
+      var sn=(r.name||r.ticker).replace(/ Inc\.| Corporation|, Inc\./g,'').slice(0,18);
+      html+='<div class="mover-row">'
+        +'<div class="mover-ticker">'+r.ticker+'</div>'
+        +'<div class="mover-name">'+sn+'</div>'
+        +'<div class="mover-price">'+fmtP(r.price)+'</div>'
+        +'<div class="mover-chg '+(up?'up':'down')+'">'+(up?'+':'')+parseFloat(r.pct).toFixed(2)+'%</div>'
+        +'</div>';
+    });
+    var ml=g('movers-list');
+    if(ml&&html) ml.innerHTML=html;
+
+    // News headlines
+    var news = JSON.parse(localStorage.getItem('mkt_news')||'[]');
+    if(news.length > 0) {
+      var nhtml='';
+      news.slice(0,4).forEach(function(item,i){
+        var title = typeof item==='object' ? item.title : item;
+        var url   = typeof item==='object' ? item.url   : '';
+        var onclick = url ? ' onclick="window.open(\'' + url.replace(/'/g,'') + '\')"' : '';
+        nhtml+='<div class="news-item"'+onclick+'>'
+          +'<div class="news-src">'+(i===0?'BREAKING':'CLIPZWORLD NEWS')+'</div>'
+          +'<div class="news-hed">'+title+'</div>'
+          +(url?'<div class="news-link">&#x1F517; tap to read</div>':'')
+          +'</div>';
+      });
+      var nl=g('news-list');
+      if(nl) nl.innerHTML=nhtml;
+    }
+
+    // Mini crypto + gold bar
+    var cry=JSON.parse(localStorage.getItem('mkt_crypto')||'{}');
+    var comm=JSON.parse(localStorage.getItem('mkt_commodities')||'{}');
+    if(cry.BTC&&g('btc-mini')) g('btc-mini').textContent='$'+parseInt(cry.BTC.price).toLocaleString();
+    if(cry.ETH&&g('eth-mini')) g('eth-mini').textContent='$'+parseInt(cry.ETH.price).toLocaleString();
+    if(cry.SOL&&g('sol-mini')) g('sol-mini').textContent='$'+parseFloat(cry.SOL.price).toFixed(2);
+
+  } catch(e){ console.error(e); }
+}
+
+readData();
+setInterval(readData, 5000);
+</script>
+</body>
+</html>

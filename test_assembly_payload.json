@@ -1,0 +1,59 @@
+{
+  "assemblyId": "asm_test1_twitch_20260407",
+  "jobTitle": "Test 1 - Twitch Compilation",
+  "contentType": "twitch",
+  "format": "mp4",
+  "transition": "crossfade",
+  "segmentData": [
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/6a7a9e5ad2fe4823a15c9584fed6a669.mp4?Expires=1776206346&Signature=OYgZINCDdcV070BiUHtaICKtTXWjGln01VG2EsrUe~6V8FwLu~P2AWWA-oUal7GaOayHQJwefwj-AJgYex6BYh2~bc3zpBx4cOSITJbXyHsUJ6sOXfGxcwrYePqjMI~Bp6~8xkIY4mTTpU09caIe9r75qSY4iI6sxtSzwc1txpHYxbBjH2gJYuwTX3ajpuJT-6OEgFY1DX7KL6gAIXA4RwBhYLSpp~tIvkg5wVzW9JYugTOR2YFjq8Y0XnpFVRIxDmJC-0BHVOi7Hgux-jHZtCIaxKwsXMhOhPxg9jn63VrtG92FFlvrnPraLD8CA9qJBXU77Iumn8UX5COFDBKlpg__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "JASON",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/9d66fe73e7334b4eaf4bc6a5b7fb85da.mp4?Expires=1776206344&Signature=OSDl0O~hKtiEZonQW6IeWrfE6zamV4Le0iHfyfpg-tMFYv6EpknmZzhbz4hCMSQeETsOIm7rS1CqDH1ez~rS6NWVoezRh~97OkvEICSpsHZf4BAgjOnNO4k~hH5H2Ah-39fCxZk2qdicCxdUCf7XGnY-V-h8GtL~buuIUj9SIp0~zEDfWXck-i1VGuutrYBuXi5nlnBL6pdaf65JlLX8xOcakg~nBUjGHZzep5wstb9t4kjq1QANxU18hbxIEY~TNPbw1ay4ol76L~Qam73pGwWNc1rvS2V6qfcN8bn-5mBMVoJCn5JHe8KpXrk44XWjqV5V0DHF2XXAMCVXAy04tA__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "HASAN",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/81194199579b453298d3ffe4359fe30a.mp4?Expires=1776206353&Signature=b0-LbhEZlVcF-0clfb87y3Aqwht6cuTTBOEuooHWHSS2SbN1CfUzVIg0BLKa9nBut~HSCzIIEx0ljWH6K~0n-HFQSJSjfRaxRPeT572i5iFF2meWGiLDZeLNl~sJWlpjA50cebQ4SMwCjLHp94Xw4cBYD4y9tXQLM8FYeEv5jppUBn7HsOz7aqvax94D3mEix1qSBFWVvIKNlQ~eHTsKIJw5lSB0wbYsXnI1LD~HYO2MBtTAKRoObBFjxMfREixlT48i-Hy0xT51g~Z7tvgxA1WjeHSCzPv-afL7406joczj-neeJJx27k0IZkULtEe4Q-7nmerbH4xW99M2yxbsCw__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "ADAPT",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/7e10a62ee9e5477484a93350be9cfa24.mp4?Expires=1776206356&Signature=fUKjiAtBpq6nGB7GLEP7LpIDsdAlKbCeBqK4oBpm32ZW3yzbi-1~Zs0BwOL3e7d5iRToXGMwM2DlGEZ7oy9IrCeB7Jb3xTK~uhWvNxXUThbKyprGfX68sfqzOhIlsfTaNxXaSNiPl07TyIPSQ7QHsIwxstF2razER9rwNcYjQNBAGlBxPX9dJjAW-Hbs16sGpqcxU6KHhYdap~D1pxwrHSuX0~hrn579i-m-SdTfnv5W~3E0ejhEy-Ifxj6v8O9NLKF9wD7GST3Jw~sYDdB5kKgQmt9aNCDI3d9-X7SuiG8A9eMDRy9mWTH5GRA8BIMa9iqCwt6md8rQHCqOwP0eog__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "RON",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/2dd89b08bfa548f79e2f5ef79ae1721d.mp4?Expires=1776206342&Signature=jECgvlN39DTpo1CxvL3rAgFskMj6AhJpXqlL16nxmXCs8wsisYARIOnCa8T321FvaP~K33Fbbnz6kMqcxhGu9WjxNQiLsxJNLHT~MZLOfgQhNO8KEqu2bB6VkADP1dQlsOGseGFcB-asonZMiXyFw8X0jV0frtMLY8yZ11DsXifLpMnXCFn-fyumoK~sXv-PgfdbgG2J2ynI1xeUGRV1z4RDAd9qFkzSp1TDaU-dGAEhXIHy3zig7wnLa4rbfUC5n5g7qZCkSZKkQaTzsG01BaDlmmh5WmVmBIj9so3NDk6Fi6AAWAPqm0mWGNrNOKCfAkqUu1VLENQE6~JIssZCzQ__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "LACY",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/0e5a6a76147244f392df84f0e453363f.mp4?Expires=1776206364&Signature=bpYHVUs00xbT8s7J8gtf3ppUMy~tmY4Wmuq21rSZfAyJvSKjjSQ5hmwP2hKdybxxX9yCwUYltOXg2QIca3Kyiatu5iJyiCPgJlVsgnqQnWM-wxfHrZZDR8szTXg4tVzFpVY8pbA9XxV4uSFSws-vs4ZlPsqqgXguG2Tg70wWOBSa3SaJLLtGACxuoXztKzj7nfJKQl4icyZx3eEClSRRreDJ1jS6s1sx3oMLcCfljmZemOQ4wkSAfWpY6IjowzDtrPaAEdIefY1DU3m3MvTJW3t-yPt-xeKlxFCyzFMRzMKYiTcTClTiB1rt1A7P-uIqN98kVGrFKE1QlcEfut3d5A__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "MARLON",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/0dd51f31797b48f1ad6e70bae406a5d9.mp4?Expires=1776206446&Signature=bbqYRL3W2KYU0n1aP1B2ckK1wbeI1nrUl~UiBA7IBscp3jG4cT43ZwoMC8S6u40nXg8or5Q-CXpjWXLzi8dpqVlXlvmTf6GwN7myr~PO73Jjf3IxaNLNoZgxl6Zs4gu-C8Vtn1-plfCkBu7A-oIJ0sa9Gmm5t~WgqtPnXQwjVmaMYL4HJk7WIPVmmO5KuUwG2-jXQN3uXg2dbVi~DqJI-l6-yuCYL41TRFwkKSW4M~HV6IOb-bZo3G9Lb6wV47u9pxsciH4kSdWibSy0Xhxtv2WsRj2DiRbhg4LGkFihm7hvEGuOCjTYxJkyqAFcGhC3JzzNhMROf11PPsZXkvk-QA__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "CINNA",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/89bf87a66f9e4b60adf80dd69c5b0ffc.mp4?Expires=1776206377&Signature=Un1ThNkKid-qLQqsulsfgSh78ngGIc7axjr1yor6Y7DQg3TUeyIlCu1o1mgTpE7MoeFoI3rQmdxWl-Q3uEonsvlM56ETgCGCmkih1kaa9JCSOxpFYgQjOeKKHrzKrP~8d7Enl00C7W3NH4FMpAdWyXnhCxWQU8Ffl0vrTqVDcLErdvFq1ukv-8BN8niDhN6osn9gOelYhLQzbxzunT2tJu4p3Y45t604Q1pzzVWWfhyaCYEN6-s7sJwoJEsvdZ0RB0T7sr3lHA5dgCfGTjgoqWCwkLngKiTL3rVL3giDpQ1A1zCJPspzC3FwverZspiZMwAubnp6bgrcRuE~9RWBWQ__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "YONNA",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/66dc50eb62a94ca1bc26c11c1eb458e3.mp4?Expires=1776206365&Signature=dwb1QdcCCYca2D1pFWEY59f7vSTbdQacxdFp7~oMYwKPD9wJYCTj0~jH23gHW2b~aFawqwI-gfJFOxBKNUpIujmsswPSfBbf6ofq6OSy~KwwCRb~I9L2KlJHkvQE4ZTpL-AwUzD7in7h7Zav2ttfekBrcqsgHj-baz8O74bXpoKtd0t2gLxXB9Ks6tknEPXcZ7OkDK0Dz6GiB3B72kVtou5SOb~F5gpY9~YBqUIeBQ3oy-jgOiDH0xW38sKUFL2LrSvS3XTcPewwvdviiZo6vHs8pVMCZtgfzy2I2HJ3LGpaUdnWBTT1LDvBE1c-NTAoR-DRl0pkztR8NqTuAge18w__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "EXTRAEMILY",
+      "type": "avatar"
+    },
+    {
+      "url": "https://files2.heygen.ai/aws_pacific/avatar_tmp/ac2ab3f8d5404c4f8c3fcb46abb43f46/df99cd34e8cb45a089ebde8ea9b1c21e.mp4?Expires=1776206273&Signature=KBBQfbVdDESOjGALkAG~jhyN99Prk2hYK1kGQNJlJzbdKVqL1g8D3MLHnJy9vILf3ismvH4THnEMm0jWm7uFvfL9o7oBucSuzIk-nlzW73PrlNhwISHuZPrWW9FuBACcFUmpwFm8t-MLMl9PLCuhs0lCIrwxuaC4ruJaw-qwolqlr6DxI~oYY~BHLaeMq7RFO6otPe7HqPcn0dvlZsqOs0eGB3Gf00y0Z-rxXeeBwe46SzIAzaBH9miGDGSlGiffSAWeYdIHgvFjK0omatVJidA0hsb2sn0jVZ1ri8RMSMzCXXUYgftJHaRD2j-iQtlID2pNIeIxFCuDslYbZWyfww__&Key-Pair-Id=K38HBHX5LX3X2H",
+      "label": "OUTRO",
+      "type": "avatar"
+    }
+  ]
+}

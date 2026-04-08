@@ -1,0 +1,52 @@
+{
+  "type": "twitch",
+  "date": "Tuesday, April 7, 2026",
+  "items": [
+    {
+      "streamer": "Jason",
+      "clips": [
+        {
+          "url": "https://clips.twitch.tv/PlaceholderClip1",
+          "thumbnailUrl": "https://clips-media-assets2.twitch.tv/placeholder1.jpg",
+          "title": "Jason's amazing play",
+          "game": "Just Chatting"
+        },
+        {
+          "url": "https://clips.twitch.tv/PlaceholderClip2",
+          "thumbnailUrl": "https://clips-media-assets2.twitch.tv/placeholder2.jpg",
+          "title": "Jason reacts",
+          "game": "Just Chatting"
+        },
+        {
+          "url": "https://clips.twitch.tv/PlaceholderClip3",
+          "thumbnailUrl": "https://clips-media-assets2.twitch.tv/placeholder3.jpg",
+          "title": "Jason funny moment",
+          "game": "Just Chatting"
+        }
+      ]
+    },
+    {
+      "streamer": "Hasan",
+      "clips": [
+        {
+          "url": "https://clips.twitch.tv/PlaceholderClip4",
+          "thumbnailUrl": "https://clips-media-assets2.twitch.tv/placeholder4.jpg",
+          "title": "Hasan's hot take",
+          "game": "Just Chatting"
+        },
+        {
+          "url": "https://clips.twitch.tv/PlaceholderClip5",
+          "thumbnailUrl": "https://clips-media-assets2.twitch.tv/placeholder5.jpg",
+          "title": "Hasan reacts",
+          "game": "Just Chatting"
+        },
+        {
+          "url": "https://clips.twitch.tv/PlaceholderClip6",
+          "thumbnailUrl": "https://clips-media-assets2.twitch.tv/placeholder6.jpg",
+          "title": "Hasan funny moment",
+          "game": "Just Chatting"
+        }
+      ]
+    }
+  ]
+}

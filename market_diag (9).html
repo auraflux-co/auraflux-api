@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>body{background:#111;color:#0f0;font-family:monospace;font-size:11px;padding:15px;}
+h3{color:#f39c12;margin:8px 0 4px;}pre{background:#1a1a1a;padding:8px;border-radius:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}</style>
+</head><body>
+<h3>News RSS Test</h3>
+<div id="out">Testing...</div>
+<script>
+var out=''; var done=0;
+var feeds=[
+  ['AP Business','https://feeds.apnews.com/rss/apf-business'],
+  ['Reuters','https://feeds.reuters.com/reuters/businessNews'],
+  ['CNBC','https://www.cnbc.com/id/100003114/device/rss/rss.html'],
+  ['MarketWatch','https://feeds.marketwatch.com/marketwatch/topstories/'],
+  ['Seeking Alpha','https://seekingalpha.com/market_currents.xml'],
+  ['Yahoo Finance','https://finance.yahoo.com/rss/topstories']
+];
+var total=feeds.length;
+function fin(l,s,t){ out+='<h3>'+l+' ('+s+')</h3><pre>'+t+'</pre>'; done++; if(done>=total) document.getElementById('out').innerHTML=out; }
+
+feeds.forEach(function(feed){
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET','https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(feed[1]),true);
+  xhr.timeout=10000;
+  xhr.onload=function(){
+    if(xhr.responseText.indexOf('Too Many')>-1||xhr.responseText.indexOf('rate')>-1){
+      fin(feed[0],'RATE LIMITED','');
+      return;
+    }
+    var titles=xhr.responseText.match(/<title[^>]*>(.*?)<\/title>/g)||[];
+    var clean=titles.slice(1,4).map(function(t){ return t.replace(/<!\[CDATA\[|\]\]>|<[^>]+>/g,'').trim(); });
+    fin(feed[0], xhr.status, clean.length ? clean.join('\n') : xhr.responseText.slice(0,100));
+  };
+  xhr.onerror=xhr.ontimeout=function(){ fin(feed[0],'ERR','failed'); };
+  xhr.send();
+});
+</script></body></html>
