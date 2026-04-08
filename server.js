@@ -42,6 +42,7 @@ const path       = require('path');
 const { execFile, exec } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
 const puppeteer  = require('puppeteer');
+const { logError, withRetry, getFallbackImage, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 
 const app  = express();
 
@@ -9154,6 +9155,19 @@ app.get('/disk-usage', (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// ── GET /errors — diagnostic endpoint for structured error log ────
+app.get('/errors', (req, res) => {
+  const n = parseInt(req.query.n) || 50;
+  const label = req.query.label || null;
+  const rate = getErrorRate();
+  let recent = getRecentErrors(n);
+  if (label) recent = recent.filter(e => e.label === label);
+  res.json({ ok: true, errorRate: rate, recent, logFile: ERROR_LOG });
+});
+
+// ── Express error middleware (must be last) ───────────────────────
+app.use(errorMiddleware);
 
 // ── Start ─────────────────────────────────────────────────────────
 app.listen(PORT, () => {
