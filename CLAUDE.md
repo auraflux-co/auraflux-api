@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Environment Setup
 
-**3 terminals required:**
+**4 terminals required:**
 
 ```bash
 # Terminal 1 — Static file server (dashboard at localhost:8765)
@@ -13,12 +13,18 @@ cd ~/cwn-production && python3 -m http.server 8765
 # Terminal 2 — Node API server (auto-restarts via nodemon)
 cd ~/cwn-production && nodemon server.js
 
-# Terminal 3 — CapCut MCP server (optional, for advanced assembly)
-cd ~/Downloads/VectCutAPI && source venv-capcut/bin/activate && python capcut_server.py
+# Terminal 3 — VectCut API server (port 9001, for video editing)
+cd ~/cwn-production/VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py
+
+# Terminal 4 — Dashboard monitor (optional, for real-time logs)
+cd ~/cwn-production && tail -f output/*.log
 ```
 
 **Dashboard:** http://localhost:8765/cwn_production.html
 **API:** http://localhost:3000
+**VectCut API:** http://localhost:9001
+
+**Note:** VectCut API is required for NBA/News intro card generation and short-form split-screen assembly
 
 ## Core Architecture
 
@@ -31,10 +37,12 @@ Script Gen → Gate 1 (≥90) → HeyGen Render → Gate 2 (≥85) → Assembly 
 ```
 
 **Key files:**
-- `server.js` — Node.js API (3000+ lines, all endpoints)
+- `server.js` — Node.js API (6000+ lines, all endpoints)
 - `cwn_production.html` — Dashboard UI (all production controls)
 - `streamers.json` — Streamer roster with intro card data
 - `cwn_style_guides.json` — Gemini-learned style fingerprints per content type
+- `IMPLEMENTATION_SPEC.md` — Technical spec for missing features (NBA/News cards, short-form layout)
+- `VectCutAPI/` — Python-based video editing API server (port 9001)
 
 ### Content Types & Forms
 
@@ -49,12 +57,29 @@ Script Gen → Gate 1 (≥90) → HeyGen Render → Gate 2 (≥85) → Assembly 
 
 ### Script Generation (`/generate-full-script`)
 
+**CRITICAL ROLE SWAP (as of April 2026):**
 1. **Gemini analyzes all clips/games** — watches video with audio when available (Twitch CDN URLs, ESPN highlights), falls back to thumbnail analysis
-2. **Claude writes complete script** — uses CWN voice rules (Jon Stewart + Norm MacDonald + Space Ghost)
-3. **Gate 1 QA (Gemini)** — reviews script quality, checks for placeholders, name errors, structural issues
+2. **Gemini writes complete script** — uses `geminiScriptGeneration()` with style guides from `cwn_style_guides.json`
+3. **Gate 1 QA (Claude)** — reviews Gemini's script via `claudeScriptQA()`, checks for placeholders, name errors, clip-to-streamer mismatches, scene count accuracy
 4. **Returns:** `script`, `orderedClipUrls[]`, `scriptQA` results
 
-**Critical:** Script must be 100% written (no `[YOUR OBSERVATION HERE]` placeholders). Gate 1 score ≥90 = auto-proceed to HeyGen, 70-89 = manual review, <70 = hard fail.
+**Why the swap:** Claude was generating only 11 scenes instead of 72 for Twitch content. Gemini now generates, Claude reviews.
+
+**Critical implementation details:**
+- Global Anthropic client initialized at `server.js:106` (required for Claude QA)
+- `claudeScriptQA()` function at `server.js:1522-1728` performs Gate 1 review
+- `geminiScriptGeneration()` function at `server.js:1437-1520` generates scripts with style guide integration
+- Style guides loaded from `cwn_style_guides.json` per content type
+- Expected scene count calculated: Twitch = `1 + (streamers × 7) + 1`, NBA/News = `1 + (items × 4) + 1`
+- Gate 1 score ≥90 = auto-proceed to HeyGen, 70-89 = manual review, <70 = hard fail
+- QA reports saved with "Scored by: Claude (did not write the script)" notation
+
+**RECENT FIX (April 8, 2026):** Gemini was also generating incorrect scene counts (65 instead of 72). Enhanced both system and user prompts with:
+- Explicit mathematical breakdown: "1 INTRO + (10 streamers × 7 scenes) + 1 OUTRO = 72 total"
+- Examples showing scene structure per streamer
+- Final validation reminder to count `=== HEADER ===` markers before submitting
+- Emphasized "DO NOT COMBINE" and "DO NOT SKIP" for each header
+- See `server.js:4594-4605` (system prompt) and `server.js:5460-5473` (user prompt)
 
 ### HeyGen Rendering (Frontend-driven)
 
@@ -186,12 +211,19 @@ Returns `request_id` (async) or `job_id` (scheduled). Frontend polls `/publish/s
 ANTHROPIC_API_KEY=         # Claude Sonnet 4
 GEMINI_API_KEY=            # Gemini 2.5 Flash
 HEYGEN_API_KEY=            # Avatar rendering
+HEYGEN_AVATAR_ID=          # Landscape avatar (16:9 compilations)
+HEYGEN_AVATAR_SHORT_ID=    # Portrait avatar (9:16 shorts)
+HEYGEN_VOICE_ID=           # Voice ID ("cw")
+HEYGEN_SPEAK_SPEED=        # 0.85 for compilations, 0.95 for shorts
 TWITCH_CLIENT_ID=          # Clip resolution
-TWITCH_CLIENT_TOKEN=       # GQL API
-DRIVE_CLIENT_ID=           # OAuth for Drive uploads
-DRIVE_CLIENT_SECRET=
+TWITCH_TOKEN=              # GQL API (formerly TWITCH_CLIENT_TOKEN)
+DRIVE_FOLDER_ID=           # Google Drive folder for uploads
 DRIVE_REFRESH_TOKEN=       # Run cwn-auth.js once to generate
 UPLOADPOST_API_KEY=        # Multi-platform publish
+UPLOADPOST_PROFILE=        # Upload-Post profile name
+TOPAZLABS_API_KEY=         # Topaz Labs upscaling (optional)
+CANVA_CLIENT_ID=           # Canva Connect API
+CANVA_CLIENT_SECRET=       # Canva Connect API
 ```
 
 **First-time Google Drive setup:**
@@ -302,9 +334,11 @@ git push
 3. **Maya/Emily clips expire fastest** — use early download cache (`tmp/early_clips/`) to survive long HeyGen render times
 4. **Gate 2 samples only 3 segments** — first, middle, last. Fast streamers get auto-pass even if some segments have minor issues
 5. **Ticker baked into video** — not a live overlay. Cached for 1 hour to avoid Puppeteer re-render overhead
-6. **Intro cards only for Twitch compilations** — NBA/news don't use profile circles
+6. **Intro cards only for Twitch compilations** — NBA/news use resized game thumbnails (640×360 TV shape)
 7. **`[CLIP PLAYS HERE]` is structural marker** — never spoken by avatar, replaced by source clip video during assembly
 8. **Assembly timeout: 30 minutes** — jobs abort if FFmpeg hangs (network issues, corrupted segment)
+9. **Logo overlay now on ALL long-form videos** — 120px CWN logo, top-right at `W-w-20:20`, 85% opacity (see `server.js:3359-3383`)
+10. **Short-form videos need 80px logo** — smaller size for 9:16 format, top-right at `W-w-15:15`
 
 ## File Locations
 
@@ -404,3 +438,45 @@ Gemini returns JSON-like output parsed by regex. If parsing fails, gate auto-pas
 - Total pipeline: <12min end-to-end (excluding HeyGen wait time)
 
 Metrics now tracked per job via `run_metrics_{jobId}.json` — use this to identify bottlenecks.
+
+## Pending Features (In Development)
+
+See `IMPLEMENTATION_SPEC.md` for full technical specifications.
+
+### 1. NBA Long-Form Intro Cards
+**Status:** Specification complete, implementation pending
+**What:** Resize `nba_thumbnail_generator.html` output to 640×360 TV-shaped overlay
+**When:** Display at each `GAME#_[TEAMS]_INTRO` scene
+**Position:** Right of Bobby G avatar at `overlay=W-640-40:H/2-180`
+**Requires:** VectCut API running on port 9001
+
+### 2. News Long-Form Intro Cards
+**Status:** Specification complete, implementation pending
+**What:** Scrape Open Graph images from article URLs, resize to 640×360
+**When:** Display at each `STORY#_INTRO` scene
+**Position:** Same as NBA cards (TV shape, right of avatar)
+**Dependencies:** `axios`, `cheerio` (already in package.json)
+
+### 3. Short-Form Split-Screen Layout
+**Status:** Specification complete, implementation pending
+**Format:** 1080×1920 portrait (9:16)
+**Layout:**
+- Top 50%: Source clip (1080×960, cropped/scaled)
+- Bottom 50%: Bobby G avatar (1080×960, from HeyGen)
+**Content Flow:** Intro → Clip plays → Reaction
+**Logo:** 80px CWN logo at `W-w-15:15` (smaller for vertical format)
+**Audio:** TBD - either mix both tracks or use source-only
+
+### 4. VectCut API Integration
+**Status:** Server running on port 9001, endpoints not yet implemented
+**Location:** `/Users/robertgregory/cwn-production/VectCutAPI`
+**Capabilities:** PiP, multi-track editing, video keyframes, overlay positioning
+**Use Cases:** NBA/News card positioning, short-form split-screen assembly
+
+### Implementation Priority
+1. Start VectCut API server (port 9001) ✅
+2. Add environment variables to .env
+3. Create NBA card endpoint
+4. Create News scraper endpoint
+5. Implement short-form split-screen assembly
+6. Run production test suite (`test_3_longform_production.js`)
