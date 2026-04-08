@@ -1602,19 +1602,39 @@ ${feedbackMsg}
 Please generate a COMPLETE REVISED script that fixes all the issues listed above.`;
   }
 
+  // Scale maxOutputTokens based on content type to prevent truncation
+  // Twitch Full (10 streamers × 3 clips = 72 scenes) needs ~20k tokens
+  // NBA/News Full (10 items × 4 scenes = 42 scenes) needs ~12k tokens
+  // Shorts need ~2k tokens
+  // Gemini 2.5 Flash supports up to 65,536 output tokens
+  const isShort = contentType.includes('-short');
+  const isTwitch = contentType === 'twitch' || contentType === 'twitch-short';
+  let maxOutputTokens;
+  if (isShort) {
+    maxOutputTokens = 2000;
+  } else if (isTwitch) {
+    // Twitch: 1 + N*(1 + clips*2) + 1 scenes — scales fast
+    // 10 streamers × 3 clips = 72 scenes → need ~20k tokens
+    maxOutputTokens = 32000;
+  } else {
+    // NBA/News: 1 + N*4 + 1 scenes
+    // 10 items = 42 scenes → need ~12k tokens
+    maxOutputTokens = 16000;
+  }
+
   try {
     const genResp = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
       {
         contents: [{ parts: [{ text: fullPrompt }] }],
         generationConfig: {
-          maxOutputTokens: 8000,
+          maxOutputTokens,
           temperature: 0.7,  // Slightly creative but controlled
           topP: 0.95,
           topK: 40
         }
       },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
+      { headers: { 'Content-Type': 'application/json' }, timeout: 120000 }
     );
 
     const script = (genResp.data?.candidates?.[0]?.content?.parts || [])
@@ -1953,7 +1973,7 @@ async function geminiScriptQA(script, clipAnalyses, opts = {}) {
     const scenesPerStreamer = 1 + clipsPerStreamer * 2;
     expectedScenes = 1 + streamers.length * scenesPerStreamer + 1;
   } else if (contentType === 'nba' || contentType === 'news') {
-    expectedScenes = 2 + streamers.length; // COLD OPEN + games/stories + OUTRO
+    expectedScenes = 1 + (streamers.length * 4) + 1; // 1 INTRO + (items × 4 scenes each: _INTRO, _SETUP, _CLIP_REACTION, _REACTION) + 1 OUTRO
   }
   // Shorts don't validate scene count (expectedScenes remains 0)
 
