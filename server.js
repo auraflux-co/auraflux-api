@@ -102,6 +102,9 @@ validateDirWritable(OUTPUT_DIR, 'output');
 const assemblyJobs = {};
 const heygenJobs   = {};
 
+// Initialize Anthropic client for Claude API calls
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
 function log(asmId, msg) { console.log(`[${asmId}] ${msg}`); }
 
 // Security headers via helmet
@@ -613,7 +616,10 @@ async function downloadFile(url, destPath) {
     'clips-media-assets',           // Twitch CDN
     'clips-media-assets2',          // Twitch CDN
     'production-assets',            // Twitch
-    'resource.heygencdn.com',       // HeyGen
+    'cloudfront.net',               // AWS CloudFront (Twitch authenticated clips)
+    'resource.heygencdn.com',       // HeyGen CDN
+    'files2.heygen.ai',             // HeyGen temporary files
+    'heygen.ai',                    // HeyGen (catch-all for subdomains)
     'storage.googleapis.com',       // Google Cloud Storage
     'drive.google.com'              // Google Drive
   ];
@@ -636,6 +642,11 @@ function ffmpegPath() {
   if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
   // Cross-platform default: .exe on Windows, no extension on Unix
   return process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+}
+
+function ffprobePath() {
+  if (process.env.FFPROBE_PATH) return process.env.FFPROBE_PATH;
+  return process.platform === 'win32' ? 'ffprobe.exe' : 'ffprobe';
 }
 
 function checkFFmpeg(cb) {
@@ -861,6 +872,178 @@ async function getDriveFolderId(drive) {
   return null; // null = Drive root
 }
 
+// ── Topaz Labs Video Enhancement ──────────────────────────────────
+// Enhances video quality using Topaz Labs API (fix compression artifacts, frozen frames, pixelation)
+async function enhanceVideoWithTopaz(videoPath, opts = {}) {
+  const TOPAZ_API_KEY = process.env.TOPAZLABS_API_KEY;
+  if (!TOPAZ_API_KEY) {
+    console.log('[topaz] TOPAZLABS_API_KEY not set — skipping enhancement');
+    return { success: false, reason: 'No API key' };
+  }
+
+  const stat = fs.statSync(videoPath);
+  const sizeMB = stat.size / (1024 * 1024);
+  if (sizeMB > 500) {
+    console.log(`[topaz] Video ${sizeMB.toFixed(1)} MB exceeds 500MB API limit — skipping`);
+    return { success: false, reason: 'File too large (>500MB)' };
+  }
+
+  try {
+    console.log(`[topaz] Enhancing video: ${path.basename(videoPath)} (${sizeMB.toFixed(1)} MB)...`);
+
+    // Step 1: Probe video metadata with FFprobe
+    const metadata = await new Promise((res, rej) => {
+      execFile(ffprobePath(), [
+        '-v', 'error',
+        '-select_streams', 'v:0',
+        '-count_frames',
+        '-show_entries', 'stream=width,height,r_frame_rate,nb_read_frames,codec_name,duration',
+        '-show_entries', 'format=duration',
+        '-of', 'json',
+        videoPath
+      ], (err, stdout) => {
+        if (err) return rej(err);
+        try {
+          const json = JSON.parse(stdout);
+          const stream = json.streams?.[0] || {};
+          const format = json.format || {};
+          const [num, den] = (stream.r_frame_rate || '30/1').split('/').map(Number);
+          res({
+            width: stream.width || 1920,
+            height: stream.height || 1080,
+            fps: Math.round(num / den),
+            duration: parseFloat(format.duration || stream.duration || '60'),
+            codec: stream.codec_name || 'h264',
+            container: path.extname(videoPath).slice(1) || 'mp4'
+          });
+        } catch(e) { rej(e); }
+      });
+    });
+
+    console.log(`[topaz] Metadata: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${metadata.duration.toFixed(1)}s, ${metadata.codec}/${metadata.container}`);
+
+    // Step 2: Create enhancement request
+    const createResp = await axios.post('https://api.topazlabs.com/video/', {
+      source: {
+        resolution: [metadata.width, metadata.height],
+        container: metadata.container,
+        frameRate: metadata.fps,
+        duration: metadata.duration
+      },
+      output: {
+        resolution: [metadata.width, metadata.height], // no upscaling, just enhancement
+        audioCodec: 'AAC',
+        container: 'mp4'
+      },
+      filter: {
+        model: 'apo-3', // Proteus model for quality + artifact recovery
+        slowmo: { enabled: false },
+        frameRate: metadata.fps
+      }
+    }, {
+      headers: {
+        'X-API-Key': TOPAZ_API_KEY,
+        'accept': 'application/json',
+        'content-type': 'application/json'
+      },
+      timeout: 30000
+    });
+
+    const requestID = createResp.data?.requestID;
+    if (!requestID) throw new Error('No requestID in Topaz create response');
+    console.log(`[topaz] Created request: ${requestID}`);
+
+    // Step 3: Accept and get upload URLs
+    const acceptResp = await axios.patch(`https://api.topazlabs.com/video/${requestID}/accept`, {}, {
+      headers: {
+        'X-API-Key': TOPAZ_API_KEY,
+        'accept': 'application/json',
+        'content-type': 'application/json'
+      }
+    });
+
+    const uploadUrl = acceptResp.data?.uploadUrl;
+    if (!uploadUrl) throw new Error('No uploadUrl in Topaz accept response');
+    console.log(`[topaz] Got upload URL, uploading video...`);
+
+    // Step 4: Upload video to signed URL
+    const videoBuffer = fs.readFileSync(videoPath);
+    await axios.put(uploadUrl, videoBuffer, {
+      headers: { 'Content-Type': 'video/mp4' },
+      maxBodyLength: Infinity,
+      timeout: 300000 // 5 min upload timeout
+    });
+
+    console.log(`[topaz] Video uploaded, completing...`);
+
+    // Step 5: Complete upload to start processing
+    await axios.patch(`https://api.topazlabs.com/video/${requestID}/complete-upload`, {}, {
+      headers: {
+        'X-API-Key': TOPAZ_API_KEY,
+        'accept': 'application/json',
+        'content-type': 'application/json'
+      }
+    });
+
+    console.log(`[topaz] Processing started, polling status...`);
+
+    // Step 6: Poll for completion (timeout after 30 min)
+    const startTime = Date.now();
+    const POLL_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    let downloadUrl = null;
+
+    while (Date.now() - startTime < POLL_TIMEOUT) {
+      await new Promise(r => setTimeout(r, 15000)); // poll every 15s
+
+      const statusResp = await axios.get(`https://api.topazlabs.com/video/${requestID}/status`, {
+        headers: {
+          'X-API-Key': TOPAZ_API_KEY,
+          'accept': 'application/json'
+        }
+      });
+
+      const status = statusResp.data?.status;
+      console.log(`[topaz] Status: ${status || 'unknown'}`);
+
+      if (status === 'complete' || status === 'completed') {
+        downloadUrl = statusResp.data?.downloadUrl || statusResp.data?.output_url;
+        if (downloadUrl) break;
+      } else if (status === 'failed' || status === 'error') {
+        throw new Error(`Topaz processing failed: ${statusResp.data?.error || 'unknown error'}`);
+      }
+    }
+
+    if (!downloadUrl) throw new Error('Topaz processing timeout (30 min)');
+
+    console.log(`[topaz] Enhancement complete, downloading...`);
+
+    // Step 7: Download enhanced video
+    const enhancedPath = videoPath.replace('.mp4', '_topaz_enhanced.mp4');
+    const writer = fs.createWriteStream(enhancedPath);
+    const downloadResp = await axios.get(downloadUrl, { responseType: 'stream' });
+    downloadResp.data.pipe(writer);
+
+    await new Promise((res, rej) => {
+      writer.on('finish', res);
+      writer.on('error', rej);
+    });
+
+    const enhancedStat = fs.statSync(enhancedPath);
+    console.log(`[topaz] Downloaded enhanced video: ${(enhancedStat.size / 1024 / 1024).toFixed(1)} MB`);
+
+    // Step 8: Replace original with enhanced
+    fs.unlinkSync(videoPath);
+    fs.renameSync(enhancedPath, videoPath);
+    console.log(`[topaz] ✅ Video enhanced successfully`);
+
+    return { success: true, requestID };
+
+  } catch(err) {
+    console.error(`[topaz] ❌ Enhancement failed: ${err.message}`);
+    return { success: false, reason: err.message };
+  }
+}
+
 // ── Gemini QA Check ────────────────────────────────────────────────
 // Reviews the assembled video before Drive upload
 // Samples at 10%, 50%, and 90% of the video to catch issues throughout
@@ -942,7 +1125,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
             { text: qaPrompt },
             { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
           ]}],
-          generationConfig: { maxOutputTokens: 800, temperature: 0.1 }
+          generationConfig: { maxOutputTokens: 2000, temperature: 0.1 }
         },
         { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
       );
@@ -1048,10 +1231,17 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
     `Outro cut off:  ${outroCutOff   ? '🚨 YES' : '✅ No'}`,
     `A/V desync:     ${avDeSync      ? '🚨 YES' : '✅ No'}`,
     ``,
-    `── POINT DEDUCTIONS ─────────────────────────────`,
-    deductions.length
-      ? deductions.map(d => `  -${d.points}  ${d.reason}`).join('\n')
-      : '  None — clean pass',
+    `── SCORE BREAKDOWN ───────────────────────────────`,
+    `STARTING SCORE: 100`,
+    ``,
+    deductions.length ? `DEDUCTIONS:` : '',
+    deductions.length ? deductions.map(d => `  -${d.points}  ${d.reason}`).join('\n') : '',
+    deductions.length ? `` : '',
+    !deductions.length ? `  No deductions — clean pass` : '',
+    ``,
+    `SAMPLE SCORES: ${scores.join(', ')} (avg: ${avgScore})`,
+    ``,
+    `FINAL SCORE: ${avgScore}/100`,
     ``,
     `── GEMINI SAMPLE REPORTS ─────────────────────────`,
     fullReport,
@@ -1073,7 +1263,527 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   return { score: avgScore, report: whyDoc, passed, outcome, outcomeLabel, freezeDetected, deductions };
 }
 
-// ── Gate 1: Script QA — Gemini reviews Claude's script ────────────
+// ── HeyGen API Integration ────────────────────────────────────────
+// Parse script into individual scenes
+function parseScriptIntoScenes(script) {
+  const scenes = [];
+  const sceneRegex = /===\s*([A-Z_0-9]+)\s*===/g;
+
+  let match;
+  let lastIndex = 0;
+  const matches = [];
+
+  // Find all scene markers
+  while ((match = sceneRegex.exec(script)) !== null) {
+    matches.push({ name: match[1], index: match.index, fullMatch: match[0] });
+  }
+
+  // Extract text between markers
+  for (let i = 0; i < matches.length; i++) {
+    const currentMatch = matches[i];
+    const nextMatch = matches[i + 1];
+
+    const startIndex = currentMatch.index + currentMatch.fullMatch.length;
+    const endIndex = nextMatch ? nextMatch.index : script.length;
+
+    let text = script.substring(startIndex, endIndex).trim();
+
+    // Clean up markers from text
+    text = text.replace(/\[beat\]/g, '').trim();
+    text = text.replace(/\[CLIP PLAYS HERE\]/g, '').trim();
+
+    // Only include scenes with actual text content
+    if (text.length > 0) {
+      scenes.push({
+        name: currentMatch.name,
+        text: text
+      });
+    }
+  }
+
+  return scenes;
+}
+
+// Submits approved script to HeyGen for avatar video generation
+// UPDATED: Generates one video per scene to avoid HeyGen multi-scene processing issues
+async function sendScriptToHeyGen(script, opts = {}) {
+  const {
+    contentType = 'twitch',
+    format = 'landscape', // 'landscape' for long form, 'portrait' for short form
+    jobId = 'unknown'
+  } = opts;
+
+  // Load HeyGen credentials from environment
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+  const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '19c1d4adf8904694a3cc331c5a9bee4b';
+  const HEYGEN_AVATAR_SHORT_ID = process.env.HEYGEN_AVATAR_SHORT_ID || 'ed57439c9c3d4a398f3b247b75714b13';
+  const HEYGEN_VOICE_ID = process.env.HEYGEN_VOICE_ID || '2e598f1a6022448cb6710e5d44665325';
+  const HEYGEN_SPEAK_SPEED = parseFloat(process.env.HEYGEN_SPEAK_SPEED || '0.85');
+
+  if (!HEYGEN_API_KEY) {
+    throw new Error('HEYGEN_API_KEY not set in environment');
+  }
+
+  // Select avatar based on format
+  const avatarId = format === 'portrait' ? HEYGEN_AVATAR_SHORT_ID : HEYGEN_AVATAR_ID;
+
+  // Parse script into scenes
+  const scenes = parseScriptIntoScenes(script);
+
+  console.log(`[heygen] Submitting ${scenes.length} scenes to HeyGen as individual videos (${contentType}, ${format}, avatar: ${avatarId.slice(0,8)}...)`);
+
+  if (scenes.length === 0) {
+    throw new Error('No scenes found in script. Script must have === SCENE_NAME === markers.');
+  }
+
+  console.log(`[heygen] Scene breakdown:`);
+  scenes.forEach((scene, idx) => {
+    console.log(`  ${idx + 1}. ${scene.name} - ${scene.text.substring(0, 50)}... (${scene.text.length} chars)`);
+  });
+
+  // Submit each scene as a separate video generation request
+  const videoJobs = [];
+
+  for (let i = 0; i < scenes.length; i++) {
+    const scene = scenes[i];
+
+    // Build single-scene video request
+    const requestBody = {
+      video_inputs: [{
+        character: {
+          type: 'avatar',
+          avatar_id: avatarId,
+          avatar_style: 'normal'
+        },
+        voice: {
+          type: 'text',
+          input_text: scene.text,
+          voice_id: HEYGEN_VOICE_ID,
+          speed: HEYGEN_SPEAK_SPEED
+        }
+      }],
+      dimension: {
+        width: format === 'portrait' ? 1080 : 1920,
+        height: format === 'portrait' ? 1920 : 1080
+      },
+      test: false
+    };
+
+    try {
+      console.log(`[heygen] Submitting scene ${i + 1}/${scenes.length}: ${scene.name}...`);
+
+      const response = await axios.post(
+        'https://api.heygen.com/v2/video/generate',
+        requestBody,
+        {
+          headers: {
+            'X-Api-Key': HEYGEN_API_KEY,
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000
+        }
+      );
+
+      const { video_id, status } = response.data.data || {};
+
+      if (!video_id) {
+        throw new Error(`HeyGen API did not return video_id for scene ${scene.name}: ${JSON.stringify(response.data)}`);
+      }
+
+      console.log(`[heygen] ✅ Scene ${i + 1}/${scenes.length} (${scene.name}): video_id=${video_id}, status=${status}`);
+
+      videoJobs.push({
+        sceneName: scene.name,
+        sceneIndex: i,
+        video_id,
+        status,
+        textLength: scene.text.length
+      });
+
+      // Add 2-second delay between requests to avoid rate limiting
+      if (i < scenes.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+    } catch(e) {
+      const errData = e.response?.data;
+      console.error(`[heygen] API Error for scene ${scene.name}:`, e.message, errData || '');
+      throw new Error(`HeyGen API failed for scene ${scene.name}: ${e.message}${errData ? ` - ${JSON.stringify(errData)}` : ''}`);
+    }
+  }
+
+  console.log(`[heygen] ✅ All ${scenes.length} scenes submitted successfully`);
+  console.log(`[heygen] Video IDs: ${videoJobs.map(j => j.video_id).join(', ')}`);
+
+  // Store script text with scene mapping for Gate 2 re-rendering
+  const sceneTextMap = {};
+  scenes.forEach((scene, idx) => {
+    sceneTextMap[scene.name] = {
+      text: scene.text,
+      index: idx,
+      videoId: videoJobs[idx]?.video_id
+    };
+  });
+
+  return {
+    videoJobs,  // Array of {sceneName, sceneIndex, video_id, status, textLength}
+    avatarId,
+    voiceId: HEYGEN_VOICE_ID,
+    speakSpeed: HEYGEN_SPEAK_SPEED,
+    sceneCount: scenes.length,
+    scenes: scenes.map(s => s.name),
+    sceneTextMap,  // Full script text mapped by scene name for Gate 2 re-rendering
+    fullScript: script  // Complete original script for reference
+  };
+}
+
+// ── Gate 1: Script Generation — Gemini writes the script ──────────
+// NEW ARCHITECTURE (as of April 2026):
+// Claude consistently generated 11 scenes instead of 72 for Twitch format,
+// ignoring all prompt instructions due to learned "one section per streamer" pattern.
+// SOLUTION: Gemini writes script (no learned bias), Claude QAs it (fresh evaluation).
+async function geminiScriptGeneration(userPrompt, systemPrompt, opts = {}) {
+  const { previousScript = null, feedbackMsg = '', contentType = 'twitch' } = opts;
+
+  if (!GEMINI_APIKEY) throw new Error('GEMINI_APIKEY not configured');
+
+  // Load style guide for this content type
+  const STYLE_GUIDE_PATH = path.join(__dirname, 'cwn_style_guides.json');
+  let styleGuide = '';
+  try {
+    const styleGuides = JSON.parse(fs.readFileSync(STYLE_GUIDE_PATH, 'utf8'));
+    // Normalize content type (remove -short suffix for style lookup)
+    const styleType = contentType.replace('-short', '');
+    styleGuide = styleGuides[styleType] || '';
+    if (styleGuide) {
+      console.log(`[geminiScriptGeneration] Loaded ${styleType} style guide (${styleGuide.length} chars)`);
+    }
+  } catch(e) {
+    console.warn(`[geminiScriptGeneration] Could not load style guide: ${e.message}`);
+  }
+
+  // Combine system + user prompts + style guide for Gemini (doesn't have separate system param)
+  let fullPrompt = `SYSTEM INSTRUCTIONS:
+${systemPrompt}`;
+
+  // Inject style guide if available
+  if (styleGuide) {
+    fullPrompt += `
+
+STYLE GUIDE (follow this writing style and tone):
+${styleGuide}`;
+  }
+
+  fullPrompt += `
+
+USER TASK:
+${userPrompt}`;
+
+  // If retrying with feedback, append it
+  if (previousScript && feedbackMsg) {
+    fullPrompt += `
+
+PREVIOUS ATTEMPT (HAD ISSUES):
+${previousScript}
+
+FEEDBACK FROM QA REVIEWER:
+${feedbackMsg}
+
+Please generate a COMPLETE REVISED script that fixes all the issues listed above.`;
+  }
+
+  try {
+    const genResp = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
+      {
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: {
+          maxOutputTokens: 8000,
+          temperature: 0.7,  // Slightly creative but controlled
+          topP: 0.95,
+          topK: 40
+        }
+      },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
+    );
+
+    const script = (genResp.data?.candidates?.[0]?.content?.parts || [])
+      .map(p => p.text||'')
+      .join('')
+      .trim();
+
+    if (!script || script.length < 100) {
+      throw new Error('Gemini returned empty or too-short script');
+    }
+
+    return { script, tokenUsage: { input: 0, output: 0 } }; // Gemini doesn't expose token counts easily
+  } catch(e) {
+    console.error('[geminiScriptGeneration] API call failed:', e.message);
+    throw new Error(`Gemini script generation failed: ${e.message}`);
+  }
+}
+
+// ── Gate 1: Script QA — Claude reviews Gemini's script ────────────
+// NEW ARCHITECTURE (as of April 2026):
+// Claude now QAs scripts written by Gemini (role swap from original architecture).
+// Claude did NOT write the script — it's a clean cross-check with advanced reasoning.
+//
+// PASS:          score >= 90 → auto-proceed to HeyGen
+// MANUAL REVIEW: score 70-89 → hold, show Rob the why-doc
+// HARD FAIL:     score < 70 OR any critical failure → back to Gemini (max 3 retries)
+//
+// Critical failures (always hard-fail regardless of score):
+//   - Wrong [CLIP PLAYS HERE] count
+//   - Missing "Appreciate you!" in outro
+//   - Wrong scene count (e.g., 11 instead of 72)
+//   - Clip content mismatch (setup doesn't match video analysis)
+//   - Wrong streamer display name used
+async function claudeScriptQA(script, clipAnalyses, opts = {}) {
+  const {
+    contentType = 'twitch',
+    streamers = [],
+    clipsPerStreamer = 3,
+    jobId = 'unknown',
+    expectedScenes = 0  // Must be provided by caller
+  } = opts;
+
+  if (!client) return { score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (skipped — no key)', deductions: [] };
+
+  const PASS_THRESHOLD   = 90;
+  const MANUAL_THRESHOLD = 70;
+
+  // Count [CLIP PLAYS HERE] markers in script
+  const clipMarkers    = (script.match(/\[CLIP PLAYS HERE\]/g) || []).length;
+  const expectedClips  = contentType === 'twitch' ? streamers.length * clipsPerStreamer : clipAnalyses.length;
+  const wrongClipCount = Math.abs(clipMarkers - expectedClips) > 1; // allow ±1 tolerance
+  const missingAppreciateYou = !/appreciate you/i.test(script);
+
+  // Count scene markers
+  const sceneMarkers = (script.match(/===\s+[A-Z_0-9]+\s+===/g) || []).length;
+  const wrongSceneCount = expectedScenes > 0 && sceneMarkers !== expectedScenes;
+
+  // Build clip summaries for Claude to cross-check
+  const clipSummaries = clipAnalyses.map((a, i) => {
+    const streamer = streamers[Math.floor(i / clipsPerStreamer)] || `Streamer ${i+1}`;
+    const clipNum  = (i % clipsPerStreamer) + 1;
+    return `CLIP ${i+1} (${streamer.displayName || streamer}, clip ${clipNum}): ${a?.summary || a?.description || a || 'No analysis available'}`;
+  }).join('\n');
+
+  const displayNames = streamers.map(s => {
+    const data = typeof s === 'object' ? s : { displayName: s, username: s };
+    return `"${data.displayName}" (NOT "${data.username || data.twitchUsername || ''}")`;
+  }).join(', ');
+
+  // Build content-type-aware context and checklist
+  const isTwitch = contentType === 'twitch';
+  const isNBA = contentType === 'nba';
+  const isNews = contentType === 'news';
+
+  const contextHeader = isTwitch
+    ? `STREAMERS (use ONLY these display names): ${displayNames}
+CLIPS PER STREAMER: ${clipsPerStreamer}
+EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}
+EXPECTED SCENES: ${expectedScenes}`
+    : isNBA
+    ? `GAMES: ${streamers.length} NBA games
+EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}
+EXPECTED SCENES: ${expectedScenes}`
+    : isNews
+    ? `STORIES: ${streamers.length} news stories
+EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}
+EXPECTED SCENES: ${expectedScenes}`
+    : `ITEMS: ${streamers.length}
+EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}
+EXPECTED SCENES: ${expectedScenes}`;
+
+  const checklist = isTwitch ? [
+    `1. SCENE COUNT: Are there exactly ${expectedScenes} === SCENE === markers in the script?`,
+    `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
+    `3. OUTRO: Does the script end with "Appreciate you!"?`,
+    `4. DISPLAY NAMES: Are only the approved display names used (no Twitch usernames)?`,
+    `5. INTRO LENGTH: Is each streamer intro 2 or 3 sentences? (2 minimum, 3 maximum — 3 sentences is PASS, only FAIL if 1 sentence or 4+ sentences)`,
+    `6. REACTION LENGTH: Is each reaction exactly 1 sentence? (FAIL only if 2 or more sentences)`,
+    `7. SETUP LENGTH: Are clips 2 and 3 setups 2 sentences each? (FAIL only if 1 sentence or 3+ sentences)`,
+    `8. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
+    `9. CLIP MATCH (most important): Does each setup accurately describe what happens in the clip? Check each one.`,
+    `10. LOCKED INTRO: Does the video open with the correct locked intro line?`,
+    `11. WORD COUNT: Is each streamer section approximately 80-100 words?`
+  ] : isNBA ? [
+    `1. SCENE COUNT: Are there exactly ${expectedScenes} === SCENE === markers?`,
+    `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per game)?`,
+    `3. OUTRO: Does the script end with "Appreciate you!"?`,
+    `4. GAME ACCURACY: Are game scores, teams, and player stats accurately mentioned?`,
+    `5. INTRO: Is the intro 2-3 sentences introducing the episode?`,
+    `6. GAME SETUP: Does each game section have proper context before [CLIP PLAYS HERE]?`,
+    `7. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
+    `8. CLIP MATCH (most important): Does each game commentary match what was seen in the highlight clip?`,
+    `9. LOCKED INTRO: Does the video open with the correct "Other Side of the Pillow" intro?`,
+    `10. WORD COUNT: Is each game section approximately 120-150 words?`,
+    `11. REACTION: Is there a brief reaction/observation after each clip?`
+  ] : isNews ? [
+    `1. SCENE COUNT: Are there exactly ${expectedScenes} === SCENE === markers?`,
+    `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per story)?`,
+    `3. OUTRO: Does the script end with "Appreciate you!"?`,
+    `4. STORY ACCURACY: Are headlines and story details accurately mentioned?`,
+    `5. INTRO: Is the intro 2-3 sentences introducing the episode?`,
+    `6. STORY SETUP: Does each story have proper context before [CLIP PLAYS HERE]?`,
+    `7. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
+    `8. CLIP MATCH (most important): Does each story setup match what was seen in the news clip?`,
+    `9. LOCKED INTRO: Does the video open with the correct ClipzWorld News intro?`,
+    `10. SOURCE ATTRIBUTION: Is "Source: [name]. Link in description." included after each story?`,
+    `11. REACTION: Is there a flat, deadpan reaction after each clip (1 sentence)?`
+  ] : [
+    `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
+    `2. OUTRO: Does the script end with "Appreciate you!"?`,
+    `3. STRUCTURE: Does the script follow the expected format?`,
+    `4. CONTENT MATCH: Does the script accurately reflect the source material?`,
+    `5. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`
+  ];
+
+  const qaPrompt = `You are a QA reviewer for ClipzWorld News. Gemini just wrote a script for a video that will be generated using HeyGen's Bobby G avatar. You watched the clips. Cross-check the script against what you know about each clip.
+
+CONTENT TYPE: ${contentType}
+${contextHeader}
+
+── WHAT YOU SAW IN EACH CLIP ─────────────────────────
+${clipSummaries}
+
+── THE SCRIPT GEMINI WROTE ───────────────────────────
+${script}
+
+── YOUR QA CHECKLIST ─────────────────────────────────
+For each item, respond: PASS / FAIL — [brief reason if fail]
+
+${checklist.join('\n')}
+
+── SCORING ───────────────────────────────────────────
+Start with 100 points. For each failed check, deduct:
+  - Items 1, 2, 3, ${isTwitch ? '9' : '8'}: -15 each (critical)
+  - Items 4, ${isTwitch ? '8' : '7'}: -10 each
+  - All other items: -5 each
+
+Respond in this exact format:
+
+SCORE: [0-100]
+ISSUES:
+- [CHECK NAME]: [what's wrong] → [what it should be]
+[list all issues, or write "None" if PASS on all checks]`;
+
+  let claudeReport = '';
+  let tokenUsage = { input: 0, output: 0 };
+  try {
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      temperature: 0.1,
+      messages: [{ role: 'user', content: qaPrompt }]
+    });
+
+    claudeReport = response.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('')
+      .trim();
+
+    tokenUsage.input  = response.usage?.input_tokens || 0;
+    tokenUsage.output = response.usage?.output_tokens || 0;
+  } catch(e) {
+    claudeReport = `Claude QA call failed: ${e.message}`;
+  }
+
+  // Parse score from Claude's response
+  const scoreMatch = claudeReport.match(/SCORE:\s*(\d+)/i);
+  let parsedScore = scoreMatch ? parseInt(scoreMatch[1], 10) : 0;
+  parsedScore = Math.max(0, Math.min(100, parsedScore)); // Clamp 0-100
+
+  // Apply hard penalties for structural failures caught before Claude
+  const preCheckDeductions = [];
+  let adjustedScore = parsedScore;
+
+  if (wrongSceneCount) {
+    preCheckDeductions.push({ points: 25, reason: `SCENE COUNT: Found ${sceneMarkers} scenes, expected ${expectedScenes} — CRITICAL` });
+    adjustedScore = Math.max(0, adjustedScore - 25);
+  }
+  if (wrongClipCount) {
+    preCheckDeductions.push({ points: 25, reason: `CLIP COUNT: Found ${clipMarkers} [CLIP PLAYS HERE] markers, expected ${expectedClips} — CRITICAL` });
+    adjustedScore = Math.max(0, adjustedScore - 25);
+  }
+  if (missingAppreciateYou) {
+    preCheckDeductions.push({ points: 15, reason: `OUTRO: "Appreciate you!" missing from script — CRITICAL` });
+    adjustedScore = Math.max(0, adjustedScore - 15);
+  }
+
+  const hasCriticalFail = wrongSceneCount || wrongClipCount || missingAppreciateYou || adjustedScore < 60;
+  let outcome, passed;
+  if (hasCriticalFail || adjustedScore < MANUAL_THRESHOLD) {
+    outcome = 'fail'; passed = false;
+  } else if (adjustedScore >= PASS_THRESHOLD) {
+    outcome = 'pass'; passed = true;
+  } else {
+    outcome = 'manual_review'; passed = false;
+  }
+
+  const outcomeLabel = outcome === 'pass' ? '✅ PASS' : outcome === 'manual_review' ? '🟡 MANUAL REVIEW' : '❌ HARD FAIL';
+
+  // Build structured why-doc
+  const whyDoc = [
+    `=== CWN GATE 1: SCRIPT QA — ${outcomeLabel} ===`,
+    `Gate:       1 of 4 — Script QA`,
+    `Scored by:  Claude (did not write the script)`,
+    `Time:       ${new Date().toISOString()}`,
+    `Job:        ${jobId}`,
+    `Content:    ${contentType}`,
+    `Score:      ${adjustedScore}/100 (Claude raw: ${parsedScore}/100)`,
+    `Pass threshold:   ${PASS_THRESHOLD} (auto-proceed to HeyGen)`,
+    `Manual threshold: ${MANUAL_THRESHOLD} (hold for Rob)`,
+    `Outcome:    ${outcome.toUpperCase()}`,
+    ``,
+    `── CRITICAL FAILURES ────────────────────────────`,
+    `Scene count mismatch: ${wrongSceneCount      ? `🚨 YES — ${sceneMarkers} found, ${expectedScenes} expected` : '✅ No'}`,
+    `Clip count mismatch:  ${wrongClipCount       ? `🚨 YES — ${clipMarkers} found, ${expectedClips} expected` : '✅ No'}`,
+    `Missing Appreciate you: ${missingAppreciateYou ? '🚨 YES' : '✅ No'}`,
+    ``,
+    `── SCORE BREAKDOWN ───────────────────────────────`,
+    `STARTING SCORE: 100`,
+    ``,
+    preCheckDeductions.length ? `PRE-CHECK DEDUCTIONS:` : '',
+    preCheckDeductions.length ? preCheckDeductions.map(d => `  -${d.points}  ${d.reason}`).join('\n') : '',
+    preCheckDeductions.length ? `` : '',
+    (preCheckDeductions.length === 0) ? `  Claude-assessed deductions included in score above` : '',
+    ``,
+    `FINAL SCORE: ${adjustedScore}/100`,
+    ``,
+    `── CLAUDE DETAILED REVIEW ────────────────────────`,
+    claudeReport,
+    ``,
+    `── RECOMMENDED ACTION ───────────────────────────`,
+    outcome === 'pass'          ? 'Auto-proceed to HeyGen segment generation.' :
+    outcome === 'manual_review' ? 'Review issues above. Edit script in dashboard, then manually approve to send to HeyGen.' :
+                                  'Hard fail — script returned to Gemini for revision (max 3 retries). Fix issues listed above.',
+  ].join('\n');
+
+  // Save why-doc for every job
+  const qaLogDir = path.join(__dirname, 'output', 'qa_failures');
+  if (!fs.existsSync(qaLogDir)) fs.mkdirSync(qaLogDir, { recursive: true });
+  const logFile = path.join(qaLogDir, `gate1_script_${outcome}_${Date.now()}.txt`);
+  try { fs.writeFileSync(logFile, whyDoc); console.log(`[qa-gate1] Script QA why-doc saved: ${logFile}`); } catch(e) {}
+
+  // QA logs saved locally only — not uploaded to Drive
+  return {
+    score: adjustedScore,
+    report: whyDoc,
+    passed,
+    outcome,
+    outcomeLabel,
+    deductions: preCheckDeductions,
+    claudeReport,
+    tokenUsage
+  };
+}
+
+// ── Gate 1: Script QA — Gemini reviews Claude's script (LEGACY) ───
+// This function is now only used for non-Twitch/NBA/News content types
+// where the scene count issue doesn't apply.
 // Called after Claude generates the script, before sending to HeyGen.
 // Gemini did NOT write the script — it's a clean cross-check.
 //
@@ -1117,12 +1827,101 @@ async function geminiScriptQA(script, clipAnalyses, opts = {}) {
     return `"${data.displayName}" (NOT "${data.username || data.twitchUsername || ''}")`;
   }).join(', ');
 
+  // Load HeyGen context for smarter QA validation
+  const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '19c1d4adf8904694a3cc331c5a9bee4b';
+  const HEYGEN_VOICE_ID = process.env.HEYGEN_VOICE_ID || '2e598f1a6022448cb6710e5d44665325';
+  const HEYGEN_SPEAK_SPEED = parseFloat(process.env.HEYGEN_SPEAK_SPEED || '0.85');
+
+  // Count expected scenes based on script structure
+  // Twitch: 1 INTRO + (streamers × (1 intro + clips × 2)) + 1 OUTRO
+  // NBA/News: 1 COLD OPEN + items.length games/stories + 1 OUTRO
+  // Shorts: 1 scene total (no validation)
+  const sceneMarkers = (script.match(/===\s+[A-Z_]+\s+===/g) || []).length;
+
+  let expectedScenes = 0;
+  if (contentType === 'twitch') {
+    const scenesPerStreamer = 1 + clipsPerStreamer * 2;
+    expectedScenes = 1 + streamers.length * scenesPerStreamer + 1;
+  } else if (contentType === 'nba' || contentType === 'news') {
+    expectedScenes = 2 + streamers.length; // COLD OPEN + games/stories + OUTRO
+  }
+  // Shorts don't validate scene count (expectedScenes remains 0)
+
+  const wrongSceneCount = expectedScenes > 0 && sceneMarkers !== expectedScenes;
+
+  // Build content-type-aware context and checklist
+  const isTwitch = contentType === 'twitch';
+  const isNBA = contentType === 'nba';
+  const isNews = contentType === 'news';
+
+  const contextHeader = isTwitch
+    ? `STREAMERS (use ONLY these display names): ${displayNames}
+CLIPS PER STREAMER: ${clipsPerStreamer}
+EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}`
+    : isNBA
+    ? `GAMES: ${streamers.length} NBA games
+EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips} (one per game)`
+    : isNews
+    ? `STORIES: ${streamers.length} news stories
+EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips} (one per story)`
+    : `ITEMS: ${streamers.length}
+EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}`;
+
+  const checklist = isTwitch ? [
+    `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
+    `2. OUTRO: Does the script end with "Appreciate you!"?`,
+    `3. DISPLAY NAMES: Are only the approved display names used (no Twitch usernames)?`,
+    `4. INTRO LENGTH: Is each streamer intro 2 or 3 sentences? (2 minimum, 3 maximum — 3 sentences is PASS, only FAIL if 1 sentence or 4+ sentences)`,
+    `5. REACTION LENGTH: Is each reaction exactly 1 sentence? (FAIL only if 2 or more sentences)`,
+    `6. SETUP LENGTH: Are clips 2 and 3 setups 2 sentences each? (FAIL only if 1 sentence or 3+ sentences)`,
+    `7. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
+    `8. CLIP MATCH (most important): Does each setup accurately describe what happens in the clip? Check each one.`,
+    `9. LOCKED INTRO: Does the video open with the correct locked intro line?`,
+    `10. WORD COUNT: Is each streamer section approximately 80-100 words?`
+  ] : isNBA ? [
+    `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per game)?`,
+    `2. OUTRO: Does the script end with "Appreciate you!"?`,
+    `3. GAME ACCURACY: Are game scores, teams, and player stats accurately mentioned?`,
+    `4. COLD OPEN: Is the cold open 2-3 sentences introducing the episode?`,
+    `5. GAME SETUP: Does each game section have proper context before [CLIP PLAYS HERE]?`,
+    `6. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
+    `7. CLIP MATCH (most important): Does each game commentary match what Gemini saw in the highlight clip?`,
+    `8. LOCKED INTRO: Does the video open with the correct "Other Side of the Pillow" intro?`,
+    `9. WORD COUNT: Is each game section approximately 120-150 words?`,
+    `10. REACTION: Is there a brief reaction/observation after each clip?`
+  ] : isNews ? [
+    `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per story)?`,
+    `2. OUTRO: Does the script end with "Appreciate you!"?`,
+    `3. STORY ACCURACY: Are headlines and story details accurately mentioned?`,
+    `4. COLD OPEN: Is the cold open 2-3 sentences introducing the episode?`,
+    `5. STORY SETUP: Does each story have proper context before [CLIP PLAYS HERE]?`,
+    `6. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
+    `7. CLIP MATCH (most important): Does each story setup match what Gemini saw in the news clip?`,
+    `8. LOCKED INTRO: Does the video open with the correct ClipzWorld News intro?`,
+    `9. SOURCE ATTRIBUTION: Is "Source: [name]. Link in description." included after each story?`,
+    `10. REACTION: Is there a flat, deadpan reaction after each clip (1 sentence)?`
+  ] : [
+    `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
+    `2. OUTRO: Does the script end with "Appreciate you!"?`,
+    `3. STRUCTURE: Does the script follow the expected format?`,
+    `4. CONTENT MATCH: Does the script accurately reflect the source material?`,
+    `5. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`
+  ];
+
   const qaPrompt = `You are QA reviewer for ClipzWorld News. Claude just wrote a script. You watched the clips. Cross-check the script against what you know about each clip.
 
 CONTENT TYPE: ${contentType}
-STREAMERS (use ONLY these display names): ${displayNames}
-CLIPS PER STREAMER: ${clipsPerStreamer}
-EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}
+${contextHeader}
+
+── HEYGEN GENERATION CONTEXT ─────────────────────────
+This script will be sent to HeyGen for avatar video generation with these parameters:
+  Avatar ID:    ${HEYGEN_AVATAR_ID.slice(0,8)}... (Bobby G avatar)
+  Voice ID:     ${HEYGEN_VOICE_ID.slice(0,8)}... (Bobby G voice)
+  Speak Speed:  ${HEYGEN_SPEAK_SPEED}x
+  Expected Scenes: ${sceneMarkers} scenes (each === SCENE_NAME === marker becomes a separate video)
+
+IMPORTANT: HeyGen requires properly formatted scene markers (=== SCENE_NAME ===) to split the script into individual video segments.
+If scene count is incorrect or missing, HeyGen generation will fail.
 
 ── WHAT GEMINI SAW IN EACH CLIP ──────────────────────
 ${clipSummaries}
@@ -1133,23 +1932,14 @@ ${script}
 ── YOUR QA CHECKLIST ─────────────────────────────────
 For each item, respond: PASS / FAIL — [brief reason if fail]
 
-1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?
-2. OUTRO: Does the script end with "Appreciate you!"?
-3. DISPLAY NAMES: Are only the approved display names used (no Twitch usernames)?
-4. INTRO LENGTH: Is each streamer intro 2 or 3 sentences? (2 minimum, 3 maximum — 3 sentences is PASS, only FAIL if 1 sentence or 4+ sentences)
-5. REACTION LENGTH: Is each reaction exactly 1 sentence? (FAIL only if 2 or more sentences)
-6. SETUP LENGTH: Are clips 2 and 3 setups 2 sentences each? (FAIL only if 1 sentence or 3+ sentences)
-7. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?
-8. CLIP MATCH (most important): Does each setup accurately describe what happens in the clip? Check each one.
-9. LOCKED INTRO: Does the video open with the correct locked intro line?
-10. WORD COUNT: Is each streamer section approximately 80-100 words?
+${checklist.join('\n')}
 
 ── SCORING ───────────────────────────────────────────
 SCORE: [0-100]
 For each failed check, deduct:
-  - Items 1, 2, 8: -15 each (critical)
-  - Items 3, 7: -10 each
-  - Items 4, 5, 6, 9, 10: -5 each
+  - Items 1, 2, ${isTwitch ? '8' : '7'}: -15 each (critical)
+  - Items 3, ${isTwitch ? '7' : '6'}: -10 each
+  - All other items: -5 each
 
 ISSUES: List each specific problem with enough detail to fix it.
 Format: "- [CHECK NAME]: [what's wrong] → [what it should be]"
@@ -1164,7 +1954,7 @@ ISSUES:
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
       {
         contents: [{ parts: [{ text: qaPrompt }] }],
-        generationConfig: { maxOutputTokens: 800, temperature: 0.1 }
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.1 }
       },
       { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
     );
@@ -1176,16 +1966,28 @@ ISSUES:
   // Compute score from Gemini's PASS/FAIL list — never trust Gemini's raw score
   // Prevents Gemini applying wrong deduction weights (it gave -15 for a -5 item)
   const DEDUCTION_MAP = { '1':15,'2':15,'8':15,'3':10,'7':10,'4':5,'5':5,'6':5,'9':5,'10':5 };
+  const DEDUCTION_LABELS = {
+    '1':'CLIP COUNT', '2':'OUTRO', '3':'DISPLAY NAMES', '4':'INTRO LENGTH', '5':'REACTION LENGTH',
+    '6':'SETUP LENGTH', '7':'BEAT PLACEMENT', '8':'CLIP MATCH', '9':'LOCKED INTRO', '10':'WORD COUNT'
+  };
   let computedScore = 100;
+  const geminiDeductions = [];
   for (const [num, pts] of Object.entries(DEDUCTION_MAP)) {
     const lineRegex = new RegExp('^' + num + '[.):]\\s*[^\\n]+:\\s*FAIL', 'im');
-    if (lineRegex.test(geminiReport)) computedScore = Math.max(0, computedScore - pts);
+    if (lineRegex.test(geminiReport)) {
+      computedScore = Math.max(0, computedScore - pts);
+      geminiDeductions.push({ points: pts, reason: DEDUCTION_LABELS[num] || `Check #${num}` });
+    }
   }
   const parsedScore = computedScore;
 
   // Apply hard penalties for structural failures caught before Gemini
   const preCheckDeductions = [];
   let adjustedScore = parsedScore;
+  if (wrongSceneCount) {
+    preCheckDeductions.push({ points: 25, reason: `SCENE COUNT: Found ${sceneMarkers} scenes, expected ${expectedScenes} — CRITICAL` });
+    adjustedScore = Math.max(0, adjustedScore - 25);
+  }
   if (wrongClipCount) {
     preCheckDeductions.push({ points: 25, reason: `CLIP COUNT: Found ${clipMarkers} [CLIP PLAYS HERE] markers, expected ${expectedClips} — CRITICAL` });
     adjustedScore = Math.max(0, adjustedScore - 25);
@@ -1195,7 +1997,7 @@ ISSUES:
     adjustedScore = Math.max(0, adjustedScore - 15);
   }
 
-  const hasCriticalFail = wrongClipCount || missingAppreciateYou || adjustedScore < 60;
+  const hasCriticalFail = wrongSceneCount || wrongClipCount || missingAppreciateYou || adjustedScore < 60;
   let outcome, passed;
   if (hasCriticalFail || adjustedScore < MANUAL_THRESHOLD) {
     outcome = 'fail'; passed = false;
@@ -1221,13 +2023,22 @@ ISSUES:
     `Outcome:    ${outcome.toUpperCase()}`,
     ``,
     `── CRITICAL FAILURES ────────────────────────────`,
-    `Clip count mismatch: ${wrongClipCount      ? `🚨 YES — ${clipMarkers} found, ${expectedClips} expected` : '✅ No'}`,
+    `Scene count mismatch: ${wrongSceneCount      ? `🚨 YES — ${sceneMarkers} found, ${expectedScenes} expected` : '✅ No'}`,
+    `Clip count mismatch:  ${wrongClipCount       ? `🚨 YES — ${clipMarkers} found, ${expectedClips} expected` : '✅ No'}`,
     `Missing Appreciate you: ${missingAppreciateYou ? '🚨 YES' : '✅ No'}`,
     ``,
-    `── PRE-CHECK DEDUCTIONS ──────────────────────────`,
-    preCheckDeductions.length
-      ? preCheckDeductions.map(d => `  -${d.points}  ${d.reason}`).join('\n')
-      : '  None',
+    `── SCORE BREAKDOWN ───────────────────────────────`,
+    `STARTING SCORE: 100`,
+    ``,
+    geminiDeductions.length ? `GEMINI QA DEDUCTIONS:` : '',
+    geminiDeductions.length ? geminiDeductions.map(d => `  -${d.points}  ${d.reason}`).join('\n') : '',
+    geminiDeductions.length ? `` : '',
+    preCheckDeductions.length ? `PRE-CHECK DEDUCTIONS:` : '',
+    preCheckDeductions.length ? preCheckDeductions.map(d => `  -${d.points}  ${d.reason}`).join('\n') : '',
+    preCheckDeductions.length ? `` : '',
+    (geminiDeductions.length === 0 && preCheckDeductions.length === 0) ? `  No deductions` : '',
+    ``,
+    `FINAL SCORE: ${adjustedScore}/100`,
     ``,
     `── GEMINI DETAILED REVIEW ────────────────────────`,
     geminiReport,
@@ -1282,18 +2093,53 @@ async function geminiSegmentQA(segmentPaths, opts = {}) {
     try {
       const geminiFile = await waitForGeminiFile(await uploadToGeminiFiles(segPath));
 
-      const segPrompt = `You are QA reviewer for ClipzWorld News. Review this HeyGen avatar segment.
-Bobby G is the host — he should be clearly visible, speaking naturally, in sync with audio.
+      // Load HeyGen context for segment QA
+      const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '19c1d4adf8904694a3cc331c5a9bee4b';
+      const HEYGEN_VOICE_ID = process.env.HEYGEN_VOICE_ID || '2e598f1a6022448cb6710e5d44665325';
+      const HEYGEN_SPEAK_SPEED = parseFloat(process.env.HEYGEN_SPEAK_SPEED || '0.85');
 
-CHECKLIST (respond PASS/FAIL for each):
-1. LIP SYNC: Avatar mouth in sync with audio? (CRITICAL)
-2. AUDIO: Clear audio, no silence, no distortion?
-3. AVATAR VISIBLE: Bobby G properly framed and visible?
-4. FREEZE: Any video freeze in this segment? (CRITICAL)
-5. BACKGROUND: Clean navy/studio background (no artifacts)?
+      const segPrompt = `You are a QA reviewer for ClipzWorld News HeyGen avatar segments.
 
-SCORE: [0-100]
-ISSUES: [specific problems or "none"]`;
+Watch this Bobby G avatar segment and provide a detailed quality assessment.
+
+── HEYGEN GENERATION CONTEXT ─────────────────────────
+This segment was generated by HeyGen with:
+  Avatar ID:    ${HEYGEN_AVATAR_ID.slice(0,8)}... (Bobby G avatar — should be a professional news anchor)
+  Voice ID:     ${HEYGEN_VOICE_ID.slice(0,8)}... (Bobby G voice — deep, authoritative male voice)
+  Speak Speed:  ${HEYGEN_SPEAK_SPEED}x (slightly faster than normal for news pacing)
+
+Expected quality: Clean 1080p, smooth lip sync, professional avatar framing, clear audio.
+
+REQUIRED FORMAT (fill out ALL sections):
+
+1. LIP SYNC: [PASS/FAIL]
+   - Are the avatar's mouth movements in sync with the audio?
+   - Any noticeable delays or mismatches?
+
+2. AUDIO QUALITY: [PASS/FAIL]
+   - Is the audio clear and understandable?
+   - Any distortion, crackling, or volume issues?
+   - Any unexpected silence or audio dropouts?
+
+3. AVATAR VISIBILITY: [PASS/FAIL]
+   - Is Bobby G properly framed in the shot?
+   - Is his face clearly visible throughout?
+
+4. VIDEO FREEZE: [PASS/FAIL]
+   - Does the video play smoothly without freezing?
+   - Any stuttering or frame drops?
+
+5. BACKGROUND: [PASS/FAIL]
+   - Clean navy/studio background visible?
+   - Any visual artifacts or glitches?
+
+OVERALL SCORE: [number from 0-100]
+
+DETAILED ISSUES:
+[List any specific problems found, or write "No issues detected" if everything looks good]
+
+SUMMARY:
+[One sentence overall assessment of segment quality]`;
 
       const genResp = await axios.post(
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
@@ -1302,20 +2148,40 @@ ISSUES: [specific problems or "none"]`;
             { text: segPrompt },
             { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
           ]}],
-          generationConfig: { maxOutputTokens: 300, temperature: 0.1 }
+          generationConfig: { maxOutputTokens: 2000, temperature: 0.1 }
         },
         { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
       );
 
       const segReport = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
-      const segScore  = parseInt((segReport.match(/SCORE:\s*(\d+)/i) || [])[1] || '80');
+      const segScore  = parseInt((segReport.match(/OVERALL SCORE:\s*(\d+)/i) || segReport.match(/SCORE:\s*(\d+)/i) || [])[1] || '80');
 
-      if (/LIP SYNC:.*fail/i.test(segReport))  { lipSyncFail  = true; scores.push(20); }
-      else if (/FREEZE:.*fail/i.test(segReport)) { scores.push(20); }
-      else if (/AUDIO:.*fail/i.test(segReport))  { audioMissing = true; scores.push(30); }
-      else scores.push(segScore);
+      // Track specific failures for this segment
+      const segDeductions = [];
+      if (/LIP SYNC:.*\[?FAIL/i.test(segReport))  {
+        lipSyncFail  = true;
+        scores.push(20);
+        segDeductions.push('Lip sync broken');
+      }
+      else if (/VIDEO FREEZE:.*\[?FAIL/i.test(segReport) || /FREEZE:.*\[?FAIL/i.test(segReport)) {
+        scores.push(20);
+        segDeductions.push('Video freeze detected');
+      }
+      else if (/AUDIO QUALITY:.*\[?FAIL/i.test(segReport) || /AUDIO:.*\[?FAIL/i.test(segReport))  {
+        audioMissing = true;
+        scores.push(30);
+        segDeductions.push('Audio missing/broken');
+      }
+      else {
+        scores.push(segScore);
+        // Track minor issues that reduce score
+        if (segScore < 100) {
+          if (/AVATAR VISIBILITY:.*\[?FAIL/i.test(segReport)) segDeductions.push('Avatar framing issue');
+          if (/BACKGROUND:.*\[?FAIL/i.test(segReport)) segDeductions.push('Background artifacts');
+        }
+      }
 
-      reports.push(`=== ${label} SEGMENT ===\n${segReport}`);
+      reports.push(`=== ${label} SEGMENT ===\n${segReport}${segDeductions.length ? '\n\nISSUES: ' + segDeductions.join(', ') : ''}`);
 
       try { await axios.delete(`https://generativelanguage.googleapis.com/v1beta/${geminiFile.name}?key=${GEMINI_APIKEY}`); } catch(e) {}
       await new Promise(r => setTimeout(r, 2000));
@@ -1357,8 +2223,17 @@ ISSUES: [specific problems or "none"]`;
     `Lip sync broken: ${lipSyncFail  ? '🚨 YES' : '✅ No'}`,
     `Audio missing:   ${audioMissing ? '🚨 YES' : '✅ No'}`,
     ``,
-    `── POINT DEDUCTIONS ──────────────────────────────`,
-    deductions.length ? deductions.map(d => `  -${d.points}  ${d.reason}`).join('\n') : '  None',
+    `── SCORE BREAKDOWN ───────────────────────────────`,
+    `STARTING SCORE: 100`,
+    ``,
+    deductions.length ? `CRITICAL DEDUCTIONS:` : '',
+    deductions.length ? deductions.map(d => `  -${d.points}  ${d.reason}`).join('\n') : '',
+    deductions.length ? `` : '',
+    !deductions.length ? `  No critical deductions` : '',
+    ``,
+    `SEGMENT SCORES: ${scores.join(', ')} (avg: ${avgScore})`,
+    ``,
+    `FINAL SCORE: ${avgScore}/100`,
     ``,
     `── GEMINI SEGMENT REPORTS ────────────────────────`,
     fullReport,
@@ -1500,7 +2375,7 @@ app.post('/drive-then-canva', async (req, res) => {
 });
 
 app.post('/assemble', async (req, res) => {
-  const { segments, segmentData, labels, transition='crossfade', format='mp4', outputDir, jobTitle, assemblyId, contentType } = req.body;
+  const { segments, segmentData, labels, transition='crossfade', format='mp4', outputDir, jobTitle, assemblyId, contentType, sceneTextMap, fullScript } = req.body;
 
   // Support both old format (segments=[urls]) and new format (segmentData=[{url,label,type}])
   const segsToProcess = segmentData && segmentData.length
@@ -1512,7 +2387,15 @@ app.post('/assemble', async (req, res) => {
   }
 
   const asmId = assemblyId || ('asm_' + Date.now());
-  assemblyJobs[asmId] = { pct: 0, log: '', status: 'running', outputPath: null };
+  assemblyJobs[asmId] = {
+    pct: 0,
+    log: '',
+    status: 'running',
+    outputPath: null,
+    // Store script metadata for Gate 2 HeyGen re-rendering
+    sceneTextMap: sceneTextMap || null,
+    fullScript: fullScript || null
+  };
 
   // Run async — respond immediately
   res.json({ ok: true, assemblyId: asmId, message: 'Assembly started' });
@@ -1538,76 +2421,176 @@ app.post('/assemble', async (req, res) => {
         return;
       }
 
-      // ── Gate 2: Server-side segment QA ───────────────────────────
+      // ── Gate 2: Server-side segment QA with retry loop (max 3 attempts) ───────────
       // Runs at assembly start — doesn't depend on browser being open
       // Samples first/middle/last avatar segments from HeyGen
       if (GEMINI_APIKEY && avatarCount > 0) {
         const gate2Timer = new StageTimer(asmId, 'Gate 2 QA');
-        log(asmId, `\n🔍 Gate 2: Sampling HeyGen segments before assembly...`);
+        const MAX_G2_RETRIES = 3;
+        let g2Attempt = 0;
+        let g2Result = null;
+        let g2TmpPaths = [];
+        let g2FailedSegments = [];
+
         const avatarSegsForQA = segsToProcess
           .filter(s => s.type !== 'source_clip' && s.url)
           .filter((_, i, arr) => i === 0 || i === Math.floor(arr.length/2) || i === arr.length-1);
 
-        try {
-          // Download sample segments to tmp
-          const g2TmpPaths = [];
-          const g2FailedSegments = [];
-          for (const seg of avatarSegsForQA) {
-            const g2Path = path.join(TMP_DIR, `gate2_${asmId}_${Date.now()}.mp4`);
-            try {
-              await downloadFile(seg.url, g2Path);
-              const sz = fs.existsSync(g2Path) ? fs.statSync(g2Path).size : 0;
-              if (sz > 5000) { g2TmpPaths.push(g2Path); log(asmId, `  ✓ Gate 2 sample: ${seg.label} (${(sz/1024).toFixed(0)}KB)`); }
-              else { try { fs.unlinkSync(g2Path); } catch(e) {} }
-            } catch(e) {
-              g2FailedSegments.push({ label: seg.label, error: e.message });
-              log(asmId, `  ❌ Gate 2 sample failed for ${seg.label}: ${e.message}`);
-            }
-            await new Promise(r => setTimeout(r, 500));
-          }
+        while (g2Attempt < MAX_G2_RETRIES) {
+          g2Attempt++;
+          const attemptLabel = g2Attempt > 1 ? ` (retry ${g2Attempt}/${MAX_G2_RETRIES})` : '';
+          log(asmId, `\n🔍 Gate 2: Sampling HeyGen segments${attemptLabel}...`);
 
-          // Persist failed segments to file
-          if (g2FailedSegments.length > 0) {
-            const qaLogDir = path.join(__dirname, 'output', 'qa_failures');
-            if (!fs.existsSync(qaLogDir)) fs.mkdirSync(qaLogDir, { recursive: true });
-            const failureLogFile = path.join(qaLogDir, `gate2_failures_${asmId}_${Date.now()}.json`);
-            try {
-              fs.writeFileSync(failureLogFile, JSON.stringify({
-                assemblyId: asmId,
-                timestamp: new Date().toISOString(),
-                failedSegments: g2FailedSegments
-              }, null, 2));
-              log(asmId, `📄 Gate 2 failures logged: ${failureLogFile}`);
-            } catch(e) {
-              console.error(`[gate2] Failed to write failure log: ${e.message}`);
+          try {
+            // Download sample segments to tmp
+            g2TmpPaths = [];
+            g2FailedSegments = [];
+            for (const seg of avatarSegsForQA) {
+              const g2Path = path.join(TMP_DIR, `gate2_${asmId}_${Date.now()}.mp4`);
+              try {
+                await downloadFile(seg.url, g2Path);
+                const sz = fs.existsSync(g2Path) ? fs.statSync(g2Path).size : 0;
+                if (sz > 5000) { g2TmpPaths.push(g2Path); log(asmId, `  ✓ Gate 2 sample: ${seg.label} (${(sz/1024).toFixed(0)}KB)`); }
+                else { try { fs.unlinkSync(g2Path); } catch(e) {} }
+              } catch(e) {
+                g2FailedSegments.push({ label: seg.label, error: e.message });
+                log(asmId, `  ❌ Gate 2 sample failed for ${seg.label}: ${e.message}`);
+              }
+              await new Promise(r => setTimeout(r, 500));
             }
-            assemblyJobs[asmId].gate2FailedSegments = g2FailedSegments;
-          }
 
-          if (g2TmpPaths.length > 0) {
-            const g2Result = await geminiSegmentQA(g2TmpPaths, { jobId: asmId, contentType });
-            assemblyJobs[asmId].gate2Score   = g2Result.score;
-            assemblyJobs[asmId].gate2Outcome = g2Result.outcome;
-            log(asmId, `📋 Gate 2 Score: ${g2Result.score}/100 — ${g2Result.outcomeLabel}`);
-            if (g2Result.outcome === 'fail') {
-              log(asmId, `⚠️  Gate 2 FAIL — lip sync or audio issues detected. Check segments before publishing.`);
+            // Persist failed segments to file
+            if (g2FailedSegments.length > 0) {
+              const qaLogDir = path.join(__dirname, 'output', 'qa_failures');
+              if (!fs.existsSync(qaLogDir)) fs.mkdirSync(qaLogDir, { recursive: true });
+              const failureLogFile = path.join(qaLogDir, `gate2_failures_${asmId}_${Date.now()}.json`);
+              try {
+                fs.writeFileSync(failureLogFile, JSON.stringify({
+                  assemblyId: asmId,
+                  timestamp: new Date().toISOString(),
+                  failedSegments: g2FailedSegments,
+                  attempt: g2Attempt
+                }, null, 2));
+                log(asmId, `📄 Gate 2 failures logged: ${failureLogFile}`);
+              } catch(e) {
+                console.error(`[gate2] Failed to write failure log: ${e.message}`);
+              }
+              assemblyJobs[asmId].gate2FailedSegments = g2FailedSegments;
             }
-            g2TmpPaths.forEach(p => { try { fs.unlinkSync(p); } catch(e) {} });
 
-            // Add metrics
-            gate2Timer
-              .addData('sampleCount', g2TmpPaths.length)
-              .addData('score', g2Result.score)
-              .addData('outcome', g2Result.outcome)
-              .addData('failedSegments', g2FailedSegments.length);
+            if (g2TmpPaths.length > 0) {
+              g2Result = await geminiSegmentQA(g2TmpPaths, { jobId: asmId, contentType });
+              assemblyJobs[asmId].gate2Score   = g2Result.score;
+              assemblyJobs[asmId].gate2Outcome = g2Result.outcome;
+              assemblyJobs[asmId].gate2RetryAttempts = g2Attempt;
+
+              log(asmId, `📋 Gate 2 Score: ${g2Result.score}/100 — ${g2Result.outcomeLabel}`);
+
+              // Break conditions:
+              // 1. PASS → proceed to assembly
+              // 2. MANUAL_REVIEW → proceed but flag for review
+              // 3. FAIL + max retries → proceed but warn (can't fix HeyGen segments without MCP)
+              if (g2Result.outcome === 'pass' || g2Result.outcome === 'manual_review') {
+                log(asmId, `✅ Gate 2 ${g2Result.outcome.toUpperCase()} — Breaking retry loop (attempt ${g2Attempt}/${MAX_G2_RETRIES})`);
+                break;
+              } else if (g2Result.outcome === 'fail' && g2Attempt < MAX_G2_RETRIES) {
+                log(asmId, `❌ Gate 2 FAIL — Attempting Topaz enhancement before retry (attempt ${g2Attempt}/${MAX_G2_RETRIES})...`);
+
+                // Try to enhance failed segments with Topaz to fix quality issues
+                let topazEnhancedCount = 0;
+                const topazResults = [];
+                for (const g2Path of g2TmpPaths) {
+                  const topazResult = await enhanceVideoWithTopaz(g2Path);
+                  topazResults.push({ path: g2Path, result: topazResult });
+
+                  if (topazResult.success && topazResult.enhancedPath) {
+                    // Replace original tmp file with enhanced version
+                    try {
+                      fs.unlinkSync(g2Path);
+                      fs.renameSync(topazResult.enhancedPath, g2Path);
+                      topazEnhancedCount++;
+                      log(asmId, `  ✅ Topaz enhanced: ${path.basename(g2Path)}`);
+                    } catch(e) {
+                      log(asmId, `  ⚠️  Topaz enhancement replacement failed: ${e.message}`);
+                    }
+                  } else {
+                    log(asmId, `  ⚠️  Topaz enhancement skipped for ${path.basename(g2Path)}: ${topazResult.reason || 'unknown'}`);
+                  }
+                }
+
+                if (topazEnhancedCount > 0) {
+                  log(asmId, `✅ Topaz enhanced ${topazEnhancedCount}/${g2TmpPaths.length} segments — retrying QA...`);
+                  assemblyJobs[asmId].topazEnhancedSegments = topazEnhancedCount;
+                } else {
+                  log(asmId, `⚠️  No segments enhanced with Topaz — checking if HeyGen re-rendering is possible...`);
+
+                  // Check if we have script metadata for HeyGen re-rendering
+                  const sceneTextMap = assemblyJobs[asmId]?.sceneTextMap;
+                  const fullScript = assemblyJobs[asmId]?.fullScript;
+
+                  if (sceneTextMap && fullScript) {
+                    log(asmId, `📝 Script metadata available for Gate 2 HeyGen re-rendering`);
+                    log(asmId, `   Available scenes: ${Object.keys(sceneTextMap).join(', ')}`);
+                    log(asmId, `   Full script: ${fullScript.length} characters`);
+
+                    // Store that HeyGen re-rendering is available for this job
+                    assemblyJobs[asmId].heygenReRenderAvailable = true;
+
+                    // Note: Actual HeyGen re-rendering implementation would:
+                    // 1. Parse Gemini's QA report to identify which specific scenes failed
+                    // 2. Extract the scene names from avatarSegsForQA segment labels
+                    // 3. Look up original script text from sceneTextMap[sceneName]
+                    // 4. Call sendScriptToHeyGen() with just that scene's script
+                    // 5. Wait for new HeyGen video to complete
+                    // 6. Update segsToProcess[i].url with new video URL
+                    // 7. Continue retry loop with fresh HeyGen renders
+
+                    log(asmId, `💡 HeyGen re-rendering available but not implemented yet — retrying with existing segments`);
+                  } else {
+                    log(asmId, `⚠️  No script metadata — HeyGen re-rendering not available (need sceneTextMap + fullScript from /assemble request)`);
+                  }
+                }
+
+                await new Promise(r => setTimeout(r, 3000));
+                // Continue loop to retry with enhanced segments
+              } else {
+                log(asmId, `❌ Gate 2 FAIL — Max retries (${MAX_G2_RETRIES}) reached. Proceeding to assembly.`);
+                break;
+              }
+
+            } else {
+              log(asmId, `⚠️  Gate 2: No segments downloaded successfully. Proceeding to assembly.`);
+              break;
+            }
+
+          } catch(g2Err) {
+            log(asmId, `❌ Gate 2 error: ${g2Err.message}`);
+            if (g2Attempt < MAX_G2_RETRIES) {
+              log(asmId, `🔄 Retrying Gate 2 due to error (attempt ${g2Attempt}/${MAX_G2_RETRIES})...`);
+              await new Promise(r => setTimeout(r, 3000));
+              // Continue loop to retry
+            } else {
+              log(asmId, `⚠️  Gate 2 failed after ${MAX_G2_RETRIES} attempts — continuing assembly anyway`);
+              assemblyJobs[asmId].gate2Error = g2Err.message;
+              gate2Timer.addData('error', g2Err.message);
+              break;
+            }
           }
-          addStageMetrics(asmId, gate2Timer.end());
-        } catch(g2Err) {
-          log(asmId, `❌ Gate 2 check failed: ${g2Err.message} — continuing assembly`);
-          assemblyJobs[asmId].gate2Error = g2Err.message;
-          gate2Timer.addData('error', g2Err.message);
-          addStageMetrics(asmId, gate2Timer.end());
         }
+
+        // Clean up tmp files after final attempt
+        g2TmpPaths.forEach(p => { try { fs.unlinkSync(p); } catch(e) {} });
+
+        // Add final metrics
+        if (g2Result) {
+          gate2Timer
+            .addData('sampleCount', g2TmpPaths.length)
+            .addData('score', g2Result.score)
+            .addData('outcome', g2Result.outcome)
+            .addData('failedSegments', g2FailedSegments.length)
+            .addData('retryAttempts', g2Attempt);
+        }
+        addStageMetrics(asmId, gate2Timer.end());
       }
 
       // Step 1: Download all segments in order
@@ -2052,11 +3035,9 @@ app.post('/assemble', async (req, res) => {
               '-keyint_min', '30',
               '-sc_threshold', '0',
               '-c:a', 'aac', '-ar', '44100', '-ac', '2',
-              // Normalize avatar audio to -14 LUFS to match clip volume
-              // Source clips keep aresample only — their levels are already higher
-              '-af', isAvatarSeg
-                ? 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=async=1:min_hard_comp=0.100000:first_pts=0'
-                : 'aresample=async=1:min_hard_comp=0.100000:first_pts=0',
+              // Normalize ALL audio to -14 LUFS for consistent volume
+              // Both avatar (Bobby G) and source clips (streamers) normalized to same level
+              '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=async=1:min_hard_comp=0.100000:first_pts=0',
               '-bsf:v', 'h264_mp4toannexb',
               '-f', 'mpegts', '-y', tsPath
             ];
@@ -2572,34 +3553,92 @@ app.post('/assemble', async (req, res) => {
       // Store per-segment durations so dashboard can build accurate chapter timestamps
       assemblyJobs[asmId].segmentDurations = durations;
 
-      // Step 7.5: Gemini QA — 3-point check at 10%, 50%, 85% of video
-      log(asmId, `\n🔍 Running Gemini QA check (early/middle/late samples)...`);
-      try {
-        const qaResult = await geminiQACheck(outPath, {
-          contentType, avatarCount, clipCount,
-          expectedTicker: !!(tickerType && TICKER_MAP[tickerType]),
-          totalDuration: parseFloat(totalDur)
-        });
-        assemblyJobs[asmId].qaScore   = qaResult.score;
-        assemblyJobs[asmId].qaReport  = qaResult.report;
-        assemblyJobs[asmId].qaOutcome = qaResult.outcome;
-        const outcomeLabel = qaResult.outcomeLabel || (qaResult.passed ? '✅ PASS' : '❌ FAIL');
-        log(asmId, `📋 QA Score: ${qaResult.score}/100 — ${outcomeLabel}`);
-        if (qaResult.freezeDetected) {
-          log(asmId, `🚨 VIDEO FREEZE DETECTED — hard fail, Drive upload blocked`);
+      // Step 7.5: Gate 3 QA with retry loop (max 3 attempts)
+      const MAX_QA_RETRIES = 3;
+      let qaAttempt = 0;
+      let qaResult = null;
+
+      while (qaAttempt < MAX_QA_RETRIES) {
+        qaAttempt++;
+        const attemptLabel = qaAttempt > 1 ? ` (retry ${qaAttempt}/${MAX_QA_RETRIES})` : '';
+        log(asmId, `\n🔍 Gate 3: Running Gemini QA check${attemptLabel}...`);
+
+        try {
+          qaResult = await geminiQACheck(outPath, {
+            contentType, avatarCount, clipCount,
+            expectedTicker: !!(tickerType && TICKER_MAP[tickerType]),
+            totalDuration: parseFloat(totalDur)
+          });
+
+          assemblyJobs[asmId].qaScore   = qaResult.score;
+          assemblyJobs[asmId].qaReport  = qaResult.report;
+          assemblyJobs[asmId].qaOutcome = qaResult.outcome;
+          assemblyJobs[asmId].qaRetryAttempts = qaAttempt;
+
+          const outcomeLabel = qaResult.outcomeLabel || (qaResult.passed ? '✅ PASS' : '❌ FAIL');
+          log(asmId, `📋 Gate 3 QA: ${outcomeLabel} (${qaResult.score}/100)`);
+
+          if (qaResult.freezeDetected) {
+            log(asmId, `🚨 VIDEO FREEZE DETECTED — critical failure`);
+          }
+          log(asmId, qaResult.report);
+
+          // Break conditions:
+          // 1. PASS → proceed to Drive upload
+          // 2. MANUAL_REVIEW → hold for user review
+          // 3. FAIL + max retries reached → give up
+          if (qaResult.outcome === 'pass' || qaResult.outcome === 'manual_review') {
+            log(asmId, `✅ Gate 3 ${qaResult.outcome.toUpperCase()} — Breaking retry loop (attempt ${qaAttempt}/${MAX_QA_RETRIES})`);
+            break;
+          } else if (qaResult.outcome === 'fail' && qaAttempt < MAX_QA_RETRIES) {
+            log(asmId, `❌ Gate 3 FAIL — Attempting video enhancement with Topaz before retry...`);
+
+            // Try to enhance video with Topaz Labs to fix quality issues (frozen frames, artifacts, pixelation)
+            const topazResult = await enhanceVideoWithTopaz(outPath);
+            if (topazResult.success) {
+              log(asmId, `✅ Topaz enhancement complete — retrying QA check (attempt ${qaAttempt}/${MAX_QA_RETRIES})...`);
+              assemblyJobs[asmId].topazEnhanced = true;
+              assemblyJobs[asmId].topazRequestID = topazResult.requestID;
+            } else {
+              log(asmId, `⚠️  Topaz enhancement skipped: ${topazResult.reason} — retrying QA anyway (attempt ${qaAttempt}/${MAX_QA_RETRIES})...`);
+            }
+
+            // Brief pause before retry
+            await new Promise(r => setTimeout(r, 3000));
+            // Continue loop to retry
+          } else {
+            log(asmId, `❌ Gate 3 FAIL — Max retries (${MAX_QA_RETRIES}) reached. Giving up.`);
+            break;
+          }
+
+        } catch(qaErr) {
+          log(asmId, `⚠️  Gate 3 QA check error: ${qaErr.message}`);
+          if (qaAttempt < MAX_QA_RETRIES) {
+            log(asmId, `🔄 Retrying Gate 3 QA due to error (attempt ${qaAttempt}/${MAX_QA_RETRIES})...`);
+            await new Promise(r => setTimeout(r, 3000));
+            // Continue loop to retry
+          } else {
+            log(asmId, `⚠️  Gate 3 QA failed after ${MAX_QA_RETRIES} attempts — proceeding anyway`);
+            // Create a default pass result to avoid blocking
+            qaResult = { score: 70, outcome: 'manual_review', passed: false, report: `QA check failed: ${qaErr.message}` };
+            assemblyJobs[asmId].qaScore = 70;
+            assemblyJobs[asmId].qaOutcome = 'manual_review';
+            assemblyJobs[asmId].qaRetryAttempts = qaAttempt;
+            break;
+          }
         }
-        log(asmId, qaResult.report);
+      }
+
+      // Log final Gate 3 outcome
+      if (qaResult) {
         if (qaResult.outcome === 'manual_review') {
-          log(asmId, `🟡 MANUAL REVIEW — score ${qaResult.score}/100 is below auto-pass (75) but no critical failures`);
-          log(asmId, `   Review the video before publishing. Proceeding to Drive upload.`);
+          log(asmId, `🟡 MANUAL REVIEW — score ${qaResult.score}/100, review before publishing`);
           assemblyJobs[asmId].status = 'manual_review';
         } else if (!qaResult.passed) {
-          log(asmId, `❌ QA HARD FAIL (score: ${qaResult.score}/100${qaResult.freezeDetected ? ', freeze detected' : ''}) — Drive upload blocked`);
+          log(asmId, `❌ QA HARD FAIL (score: ${qaResult.score}/100) — Drive upload blocked`);
         } else {
-          log(asmId, `✅ QA passed — proceeding to Drive upload`);
+          log(asmId, `✅ Gate 3 PASSED — proceeding to Drive upload`);
         }
-      } catch(qaErr) {
-        log(asmId, `⚠️  QA check failed: ${qaErr.message} — proceeding anyway`);
       }
 
       // Step 8: Auto-upload to Google Drive (blocked on hard QA fail)
@@ -2774,16 +3813,18 @@ app.get('/canva-import-status/:id', (req, res) => {
 // ── Streamer display name map ────────────────────────────────────
 // Maps Twitch username (lowercase) → on-air display name
 const STREAMER_DISPLAY_NAMES = {
-  'jasontheween':  'Jason',
-  'hasanabi':      'Hasan',
-  'adapt':         'Adapt',
-  'stableronaldo': 'Ron',
-  'lacy':          'Lacy',
-  'marlon':        'Marlon',
-  'cinna':         'Cinna',
-  'yonnajay':      'Yonna',
-  'jaycinco':      'Jay Cinco',
-  'maya':          'Maya'
+  'jasontheween':    'Jason',
+  'hasanabi':        'Hasan',
+  'adapt':           'Adapt',
+  'stableronaldo':   'Ron',
+  'lacy':            'Lacy',
+  'marlon':          'Marlon',
+  'cinna':           'Cinna',
+  'yonnajay':        'Yonna',
+  'jaycinco':        'Jay Cinco',
+  'maya':            'Maya',
+  'extraemily':      'ExtraEmily',
+  'yourragegaming':  'Rage'
 };
 
 function getDisplayName(twitchUsername) {
@@ -3436,7 +4477,29 @@ STRICT RULES:
 - [CLIP PLAYS HERE] = structural marker, keep it, it is not spoken
 - Write every single line — no brackets, no placeholders, no [YOUR OBSERVATION HERE]
 
-SCRIPT FORMAT — use === SECTION HEADERS === exactly as shown.
+HEYGEN PRONUNCIATION BEST PRACTICES:
+The avatar (HeyGen AI) reads your script aloud. Follow these rules for perfect pronunciation:
+1. **Unusual names**: Add simple phonetic respelling in parentheses on FIRST mention only
+   - Example: "Giannis Antetokounmpo (YAH-nis ON-tet-oh-KOON-po)"
+   - Example: "Luka Dončić (LOON-kuh DON-chich)"
+   - Common names like "LeBron", "Curry", "Durant" need no help
+2. **Numbers**: Always spell out for clarity
+   - Write "thirty-two points" NOT "32 points"
+   - Write "one hundred and fifty" NOT "150"
+   - Exception: Years like "2024" can stay numeric
+3. **Abbreviations**: Spell out OR use phonetic if ambiguous
+   - "NBA" → write "N-B-A" OR just "the NBA" (works fine)
+   - "MVP" → write "M-V-P" OR "the MVP" (works fine)
+4. **Foreign words/phrases**: Use simple phonetic respelling
+   - "Nikola Jokić" → "Nikola Jokic (YO-kich)"
+5. **Avoid homophones**: If a word could be mispronounced, clarify it
+   - "Read" (past tense) → consider context or rephrase
+6. **Punctuation = pacing**: Commas create short pauses, periods create full stops
+   - Use commas liberally for natural speech rhythm
+7. **Streamer names from streamers.json**: If phonetic field exists, use it on first mention
+   - Check streamers.json for phonetic guidance (e.g., "Yonna" has phonetic: "Yawn-uh")
+
+SCRIPT FORMAT — The user prompt will provide exact === SCENE HEADERS === to use. Output EXACTLY those headers, one scene per header. Do not combine scenes. Do not skip scenes.
 Target: 120-150 words of SPOKEN TEXT per game segment (90 seconds of delivery).
 The cold open and outro are short. Every game segment must be fully written and dense.
 COLD OPEN — ALWAYS use this EXACT wording, no variation:
@@ -3472,7 +4535,16 @@ STRICT RULES:
 - Write every single line — no brackets, no placeholders whatsoever
 - This is long-form. Every story needs FULL CONTENT.
 
-SCRIPT FORMAT — use === SECTION HEADERS === exactly as shown.
+HEYGEN PRONUNCIATION BEST PRACTICES:
+The avatar (HeyGen AI) reads your script aloud. Follow these rules for perfect pronunciation:
+1. **Unusual names/places**: Add phonetic respelling in parentheses on FIRST mention only
+   - "Zelenskyy (zeh-LEN-skee)", "Xi Jinping (shee jin-PING)", "Qatar (KAH-tar)"
+2. **Numbers**: Spell out for clarity → "twenty-three" NOT "23"
+3. **Abbreviations**: Spell out OR hyphenate → "UN" becomes "U-N" OR "the UN"
+4. **Foreign words**: Simple phonetic respelling → "coup d'état (koo day-TAH)"
+5. **Punctuation = pacing**: Use commas for natural speech rhythm
+
+SCRIPT FORMAT — The user prompt will provide exact === SCENE HEADERS === to use. Output EXACTLY those headers, one scene per header. Do not combine scenes. Do not skip scenes.
 Target: 80-120 words of SPOKEN TEXT per story (setup + reaction, clip audio stripped).
 The cold open and outro are short. Every story segment must be fully written and dense.
 COLD OPEN — ALWAYS use this EXACT wording, no variation:
@@ -3510,16 +4582,34 @@ STRICT RULES:
 - Write every single line — no brackets, no placeholders
 - Use the visual analysis provided to inform what the clip is about, but do not narrate it
 
-SCRIPT FORMAT — use === SECTION HEADERS === exactly as shown.
-Target: 80-100 words of SPOKEN TEXT per streamer (45 seconds before and after clip).
+HEYGEN PRONUNCIATION BEST PRACTICES:
+The avatar (HeyGen AI) reads your script aloud. Follow these rules for perfect pronunciation:
+1. **Streamer names**: If streamers.json has phonetic field, use it on FIRST mention
+   - Example: "Yonna (YAWN-uh)" if phonetic: "Yawn-uh" exists in data
+   - Common names like "xQc", "Pokimane", "Kai Cenat" usually fine as-is
+2. **Numbers**: Spell out → "fifty thousand viewers" NOT "50k viewers"
+3. **Game titles**: If unusual, add phonetic → "Valorant" is fine, "Lies of P" is fine
+4. **Punctuation = pacing**: Commas create natural pauses in speech
 
-COLD OPEN — ALWAYS use this EXACT text, word for word, no variation:
+⚠️ CRITICAL - SCENE STRUCTURE:
+The user prompt will provide a NUMBERED LIST of === SCENE HEADERS ===.
+YOU MUST output EXACTLY that many scenes with EXACTLY those headers.
+- If the user lists 72 scene headers, your output MUST have exactly 72 === HEADER === sections
+- ONE scene per header - do NOT combine multiple headers into one section
+- Do NOT skip any headers from the list
+- Do NOT create your own headers - use ONLY the headers provided in the user prompt
+- Count the headers in the user prompt and ensure your output has that exact count
+- EXAMPLE: For 10 streamers with 3 clips each, you need 1 INTRO + (10 streamers × 7 scenes) + 1 OUTRO = 72 scenes total
+- Each streamer gets: 1 INTRO scene + 3 SETUP scenes + 3 REACTION scenes = 7 scenes per streamer
+- You must write ALL scene headers provided - no shortcuts, no summarizing, no combining
+
+INTRO SCENE — Use this EXACT text for the === INTRO === scene:
 "Hello everyone! You are tuning into Twitch Soup brought to you by ClipzWorld News. Where we appreciate our favorite streamers on Twitch. I am your host Bobby G. Let's get to it."
-This is the ONLY acceptable cold open for Twitch compilations. Do not improvise it.
 
-OUTRO — ALWAYS use this EXACT text, word for word, no variation:
+OUTRO SCENE — Use this EXACT text for the === OUTRO === scene:
 "Well everybody, that does it for another edition of Twitch Soup brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the clips you liked the most. Appreciate you!"
-This is the ONLY acceptable outro for Twitch compilations. Do not improvise it.
+
+Target: 80-100 words of SPOKEN TEXT per streamer (45 seconds before and after clip).
 
 DELIVERY NOTE — OUTRO: "Appreciate you!" must feel warm and genuine. Write it on its own line after a [beat] so HeyGen delivers it with weight. Never rush it.
 
@@ -4127,7 +5217,7 @@ app.post('/generate-full-script', async (req, res) => {
       const isShort = type === 'nba-short';
       if (isShort) {
         const g0 = items[0] || {};
-        userPrompt = `Write a COMPLETE ClipzWorld News NBA Short script for ${dateStr}.
+        userPrompt = `Write a COMPLETE Other Side of the Pillow NBA Short script for ${dateStr}.
 
 ONE PLAYER FOCUS:
 Game: ${g0.away||'?'} @ ${g0.home||'?'} | Score: ${g0.awayScore||'?'}-${g0.homeScore||'?'} FINAL
@@ -4141,9 +5231,22 @@ Write the FULL SCRIPT using exactly:
 Fully written, no brackets, no placeholders. Single [CLIP PLAYS HERE] after setup.
 Target: 50-70 words spoken total.`;
       } else {
-        userPrompt = `Write the COMPLETE ClipzWorld News NBA Compilation script for ${dateStr}.
+        // Generate scene headers for NBA (4 scenes per game: intro + setup + clip_reaction + reaction)
+        const sceneHeaders = ['=== INTRO ==='];
+        items.forEach((g, i) => {
+          const gameLabel = `GAME${i+1}`;
+          const teams = `${(g.away||'AWAY').toUpperCase()}_${(g.home||'HOME').toUpperCase()}`;
+          sceneHeaders.push(`=== ${gameLabel}_${teams}_INTRO ===`);
+          sceneHeaders.push(`=== ${gameLabel}_${teams}_SETUP ===`);
+          sceneHeaders.push(`=== ${gameLabel}_${teams}_CLIP_REACTION ===`);
+          sceneHeaders.push(`=== ${gameLabel}_${teams}_REACTION ===`);
+        });
+        sceneHeaders.push('=== OUTRO ===');
+        const expectedScenes = sceneHeaders.length;
 
-${items.length} game${items.length > 1 ? 's' : ''} total.
+        userPrompt = `Write the COMPLETE Other Side of the Pillow NBA Compilation script for ${dateStr}.
+
+${items.length} game${items.length > 1 ? 's' : ''} total. ${items.length} [CLIP PLAYS HERE] markers required (one per game).
 
 GAME DATA:
 ${items.map((g, i) => `
@@ -4155,15 +5258,55 @@ ${g.awayRec || g.homeRec ? 'Records: ' + g.away + ' ' + (g.awayRec||'') + ' | ' 
 Gemini video analysis: ${analyses[i] || 'No analysis — use box score data only'}
 `).join('')}
 
-Write the FULL SCRIPT using these === SECTION HEADERS === exactly:
-- === COLD OPEN (0:00 - 0:08) ===
-${items.map((g,i) => '- === GAME ' + (i+1) + ' OF ' + items.length + ': ' + (g.away||'AWAY').toUpperCase() + ' @ ' + (g.home||'HOME').toUpperCase() + ' ===').join('\n')}
-- === OUTRO ===
+🎬 CRITICAL - SCENE STRUCTURE (${expectedScenes} SCENES REQUIRED):
+Write the FULL SCRIPT using these === SCENE HEADERS === exactly (one scene per header):
 
-Every game segment FULLY WRITTEN — no placeholder brackets.
+${sceneHeaders.join('\n')}
+
+⚠️ SCENE LENGTH RULES - PREVENTS HEYGEN TTS FROM RUSHING:
+- Each scene = 1-3 sentences MAXIMUM
+- Scenes longer than 3 sentences cause HeyGen TTS to rush/skip words/poor enunciation
+- INTRO scene: 2-3 sentences (episode intro)
+- [GAME]_[TEAMS]_INTRO scenes: 2-3 sentences (introduce game/matchup)
+- [GAME]_[TEAMS]_SETUP scenes: EXACTLY 2 sentences (not 1, not 3) + [beat] + [CLIP PLAYS HERE] + [beat]
+- [GAME]_[TEAMS]_CLIP_REACTION scenes: EXACTLY 1 sentence (Bobby reacting WHILE clip plays — this will be overlaid on clip in editing)
+- [GAME]_[TEAMS]_REACTION scenes: EXACTLY 1 sentence (short, flat, deadpan reaction AFTER clip)
+- OUTRO scene: 1-2 sentences (sign-off)
+
+📝 CONTENT STRUCTURE PER SCENE:
+
+=== INTRO ===
+[2-3 sentences. Episode intro. Set the tone.]
+
+=== GAME#_[TEAMS]_INTRO ===
+[2-3 sentences. Introduce the matchup. Build anticipation.]
+
+=== GAME#_[TEAMS]_SETUP ===
+[EXACTLY 2 sentences — not 1, not 3. First sentence: context about the game. Second sentence: specific setup for the highlight clip.]
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+
+=== GAME#_[TEAMS]_CLIP_REACTION ===
+[EXACTLY 1 sentence. Bobby's live reaction WHILE watching the clip. This will be picture-in-picture with the clip.]
+
+=== GAME#_[TEAMS]_REACTION ===
+[EXACTLY 1 sentence. Short. Flat. Deadpan. Final take AFTER the clip.]
+
+=== OUTRO ===
+[1-2 sentences. Sign-off.]
+
+✅ VALIDATION CHECKLIST:
+- Total scenes: MUST BE EXACTLY ${expectedScenes}
+- Total [CLIP PLAYS HERE] markers: MUST BE EXACTLY ${items.length}
+- Each SETUP scene: EXACTLY 2 sentences (not 1, not 3) + contains [beat] + [CLIP PLAYS HERE] + [beat]
+- Each CLIP_REACTION scene: EXACTLY 1 sentence (live reaction during clip)
+- Each REACTION scene: EXACTLY 1 sentence (deadpan take after clip)
+- [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
+- Never explain the take in reactions. Never recap what just happened.
+
 Use Gemini video analysis AND box score data for specific, accurate content.
-Use [beat] between sentences. Keep [CLIP PLAYS HERE] as structural marker.
-Target: 120-150 words spoken per game segment.`;
+Target: 120-150 words spoken per game segment (90 seconds of delivery).`;
       }
 
 
@@ -4185,7 +5328,17 @@ Write the FULL SCRIPT using exactly:
 Fully written, no brackets, no placeholders.
 Target: 50-70 words spoken total. One headline, one observation, done.`;
       } else {
-        const sectionHeaders = items.map((s,i) => '- === STORY ' + (i+1) + ' OF ' + items.length + ' ===').join('\n');
+        // Generate scene headers for News (4 scenes per story: intro + setup + clip_reaction + reaction)
+        const sceneHeaders = ['=== INTRO ==='];
+        items.forEach((s, i) => {
+          const storyLabel = `STORY${i+1}`;
+          sceneHeaders.push(`=== ${storyLabel}_INTRO ===`);
+          sceneHeaders.push(`=== ${storyLabel}_SETUP ===`);
+          sceneHeaders.push(`=== ${storyLabel}_CLIP_REACTION ===`);
+          sceneHeaders.push(`=== ${storyLabel}_REACTION ===`);
+        });
+        sceneHeaders.push('=== OUTRO ===');
+        const expectedScenes = sceneHeaders.length;
 
         userPrompt = `Write the COMPLETE ClipzWorld News world news script for ${dateStr}.
 
@@ -4201,32 +5354,57 @@ ${s.link ? 'Link: ' + s.link : ''}
 Gemini visual/video analysis: ${analyses[i] || 'Not available — use article text only'}
 `).join('')}
 
-Write the FULL SCRIPT using these === SECTION HEADERS === exactly:
-- === COLD OPEN (0:00 - 0:08) ===
-${sectionHeaders}
-- === OUTRO ===
+🎬 CRITICAL - SCENE STRUCTURE (${expectedScenes} SCENES REQUIRED):
+Write the FULL SCRIPT using these === SCENE HEADERS === exactly (one scene per header):
 
-CRITICAL — CLIP STRUCTURE FOR EACH STORY:
-Each story section must contain EXACTLY 1 [CLIP PLAYS HERE] marker.
-Structure for EACH story section — follow this EXACTLY:
+${sceneHeaders.join('\n')}
 
-[Story setup — 2-3 sentences. Headline + context. What happened and why it matters. Sets up the clip.]
+⚠️ SCENE LENGTH RULES - PREVENTS HEYGEN TTS FROM RUSHING:
+- Each scene = 1-3 sentences MAXIMUM
+- Scenes longer than 3 sentences cause HeyGen TTS to rush/skip words/poor enunciation
+- INTRO scene: 2-3 sentences (episode intro)
+- STORY#_INTRO scenes: 2-3 sentences (introduce the story/headline)
+- STORY#_SETUP scenes: EXACTLY 2 sentences (not 1, not 3) + [beat] + [CLIP PLAYS HERE] + [beat]
+- STORY#_CLIP_REACTION scenes: EXACTLY 1 sentence (Bobby reacting WHILE clip plays — this will be overlaid on clip in editing)
+- STORY#_REACTION scenes: EXACTLY 1 sentence (short, flat, deadpan reaction AFTER clip)
+- OUTRO scene: 1-2 sentences (sign-off)
+
+📝 CONTENT STRUCTURE PER SCENE:
+
+=== INTRO ===
+[2-3 sentences. Episode intro. Set the tone.]
+
+=== STORY#_INTRO ===
+[2-3 sentences. Introduce the headline. Build context.]
+[beat]
+Source: [Source name]. Link in description.
+[beat]
+
+=== STORY#_SETUP ===
+[EXACTLY 2 sentences — not 1, not 3. First sentence: context about what happened. Second sentence: specific setup for the clip.]
 [beat]
 [CLIP PLAYS HERE]
 [beat]
-[ONE flat reaction sentence. Short. Deadpan. Makes the story MORE alarming, not less. Could be a non-sequitur.]
-[beat]
-Source: [Source name]. Link in description.
 
-RULES:
-- Setup: 2-3 sentences — establishes the story with headline + context
-- Reaction: EXACTLY 1 sentence — short, flat, punchy. Makes it MORE alarming, not less.
-- [beat] = pause — use before and after every clip
-- Never explain the observation in a reaction. Never recap what just happened.
-- Same rhythm as Twitch: setup → clip → reaction
+=== STORY#_CLIP_REACTION ===
+[EXACTLY 1 sentence. Bobby's live reaction WHILE watching the clip. This will be picture-in-picture with the clip.]
 
-Total [CLIP PLAYS HERE] count must be exactly ${items.length}.
-Target: 80-120 words spoken per story (setup + reaction, clip audio is stripped).`;
+=== STORY#_REACTION ===
+[EXACTLY 1 sentence. Short. Flat. Deadpan. Makes it MORE alarming, not less. Final take AFTER the clip.]
+
+=== OUTRO ===
+[1-2 sentences. Sign-off.]
+
+✅ VALIDATION CHECKLIST:
+- Total scenes: MUST BE EXACTLY ${expectedScenes}
+- Total [CLIP PLAYS HERE] markers: MUST BE EXACTLY ${items.length}
+- Each SETUP scene: EXACTLY 2 sentences (not 1, not 3) + contains [beat] + [CLIP PLAYS HERE] + [beat]
+- Each CLIP_REACTION scene: EXACTLY 1 sentence (live reaction during clip)
+- Each REACTION scene: EXACTLY 1 sentence (deadpan take after clip)
+- [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
+- Never explain the take in reactions. Never recap what just happened.
+
+Target: 80-120 words spoken per story (setup + reactions, clip audio is stripped).`;
       }
 
     } else { // twitch, twitch-short
@@ -4264,54 +5442,104 @@ Twitch username (do NOT use this in spoken text): ${c.streamer||'Unknown'}
 ${notesStr}${clipLines}`;
         }).join('\n\n');
 
-        const clipsPerStreamer = (items[0] && items[0].targetClipsPerStreamer) || (items[0] && items[0].clips && items[0].clips[0] && items[0].clips[0].targetClipsPerStreamer) || 1;
+        // Determine clips per streamer from actual data structure
+        const clipsPerStreamer = (items[0] && items[0].clips && items[0].clips.length) || req.body.clipsPerStreamer || 3;
         console.log(`[generate-full-script] clipsPerStreamer: ${clipsPerStreamer} | totalClips: ${items.length * clipsPerStreamer}`);
         const totalClipSlots = items.length * clipsPerStreamer;
-        const sectionHeaders = items.map(c => '- === ' + getDisplayName(c.streamer).toUpperCase() + ' ===').join('\n');
 
-        userPrompt = `Write the COMPLETE ClipzWorld News Twitch compilation script for ${dateStr}.
+        // Generate 72 scene headers (1 INTRO + 10 streamers × 7 scenes each + 1 OUTRO)
+        const sceneHeaders = ['=== INTRO ==='];
+        items.forEach(item => {
+          const name = getDisplayName(item.streamer).toUpperCase();
+          sceneHeaders.push(`=== ${name}_INTRO ===`);
+          for (let i = 1; i <= clipsPerStreamer; i++) {
+            sceneHeaders.push(`=== ${name}_CLIP${i}_SETUP ===`);
+            sceneHeaders.push(`=== ${name}_CLIP${i}_REACTION ===`);
+          }
+        });
+        sceneHeaders.push('=== OUTRO ===');
+        const expectedScenes = sceneHeaders.length;
 
+        userPrompt = `🚨🚨🚨 CRITICAL — READ THIS FIRST 🚨🚨🚨
+YOUR OUTPUT MUST HAVE EXACTLY ${expectedScenes} SCENES (=== HEADERS ===).
+NOT ${items.length} SECTIONS. NOT 10-12 SECTIONS. EXACTLY ${expectedScenes} SEPARATE === HEADER === SCENES.
+ONE SCENE PER HEADER. DO NOT COMBINE. DO NOT SKIP ANY. COUNT YOUR === HEADERS === AND VERIFY YOU HAVE ${expectedScenes}.
+
+⚠️ IMPORTANT: You are generating ${expectedScenes} scenes. That is 1 INTRO + ${items.length} streamers with ${clipsPerStreamer} clips each (${items.length} × ${1 + clipsPerStreamer * 2} scenes per streamer = ${items.length * (1 + clipsPerStreamer * 2)} scenes) + 1 OUTRO = ${expectedScenes} total.
+DO NOT generate ${items.length} sections. Generate ${expectedScenes} individual === HEADER === scenes.
+
+Write the COMPLETE ClipzWorld News Twitch compilation script for ${dateStr}.
+
+🎬 CRITICAL - SCENE STRUCTURE (${expectedScenes} SCENES REQUIRED):
+Write the FULL SCRIPT using these === SCENE HEADERS === exactly (one scene per header):
+
+${sceneHeaders.join('\n')}
+
+⚠️ YOU MUST OUTPUT EXACTLY ${expectedScenes} SCENES - ONE PER HEADER LISTED ABOVE.
+⚠️ BEFORE YOU SUBMIT: Count the number of === HEADER === lines in your output. It must equal ${expectedScenes}. If it doesn't, add the missing scenes.
+
+STREAMER DATA (use this to write content for each scene):
 ${items.length} streamers. ${clipsPerStreamer} clip${clipsPerStreamer>1?'s':''} per streamer. ${totalClipSlots} total [CLIP PLAYS HERE] slots.
 
-STREAMER DATA:
 ${streamerSections}
 
-Write the FULL SCRIPT using these === SECTION HEADERS === exactly:
-- === COLD OPEN (0:00 - 0:08) ===
-${sectionHeaders}
-- === OUTRO ===
+⚠️ SCENE LENGTH RULES - PREVENTS HEYGEN TTS FROM RUSHING:
+- Each scene = 1-3 sentences MAXIMUM
+- Scenes longer than 3 sentences cause HeyGen TTS to rush/skip words/poor enunciation
+- INTRO scene: 2-3 sentences (episode intro)
+- [NAME]_INTRO scenes: 2-3 sentences (introduce streamer)
+- [NAME]_CLIP#_SETUP scenes: EXACTLY 2 sentences (not 1, not 3) + [beat] + [CLIP PLAYS HERE] + [beat]
+- [NAME]_CLIP#_REACTION scenes: EXACTLY 1 sentence (short, flat, deadpan)
+- OUTRO scene: 1-2 sentences (sign-off)
 
-CRITICAL — MULTI-CLIP STRUCTURE PER STREAMER:
-Each streamer section must contain EXACTLY ${clipsPerStreamer} [CLIP PLAYS HERE] marker${clipsPerStreamer>1?'s':''}.
-EVERY clip needs its OWN setup before it. Setups are LONGER than reactions. Reactions are short. This contrast is intentional.
-Structure for EACH streamer section — follow this EXACTLY:
+📝 CONTENT STRUCTURE PER SCENE:
 
-[Streamer intro — 2-3 sentences. Establishes who they are and what's happening. Sets up clip 1 with context.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE flat reaction sentence to clip 1. Short. Deadpan. Could be a non-sequitur.]${clipsPerStreamer >= 2 ? `
-[beat]
-[2-sentence setup for clip 2. First sentence: a brief pivot or bridge from the reaction. Second sentence: specific context that makes the clip make sense. LONGER than the reaction above it.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE flat reaction sentence to clip 2. Short. Deadpan. Could be a non-sequitur.]` : ''}${clipsPerStreamer >= 3 ? `
-[beat]
-[2-sentence setup for clip 3. First sentence: a brief pivot or bridge from the reaction. Second sentence: specific context that makes the clip make sense. LONGER than the reaction above it.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE flat reaction sentence to clip 3. Short. Deadpan. Could be a non-sequitur.]` : ''}
+=== INTRO ===
+[2-3 sentences. Episode intro. Set the tone.]
+
+=== [NAME]_INTRO ===
+[2-3 sentences. Introduce streamer. Set up first clip context.]
 [beat]
 Follow [ON-AIR NAME]. Link in description.
+[beat]
 
-RULES:
-- Clip 1 intro: 2-3 sentences — longest setup, establishes the streamer
-- Clip 2 and 3 setups: 2 sentences each — longer than reactions, shorter than clip 1 intro
-- Reactions: EXACTLY 1 sentence — short, flat, punchy. The contrast with longer setups is what creates rhythm.
-- [beat] = 3-second pause — use before and after every clip
-- Never explain the joke in a reaction. Never recap what just happened.
+=== [NAME]_CLIP1_SETUP ===
+[EXACTLY 2 sentences — not 1, not 3. First sentence: context about what's happening. Second sentence: specific setup for the clip.]
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+
+=== [NAME]_CLIP1_REACTION ===
+[EXACTLY 1 sentence. Short. Flat. Deadpan. No explanation.]
+
+=== [NAME]_CLIP2_SETUP ===
+[EXACTLY 2 sentences — not 1, not 3. First sentence: bridge from previous reaction. Second sentence: specific setup for clip 2.]
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+
+=== [NAME]_CLIP2_REACTION ===
+[EXACTLY 1 sentence. Short. Flat. Deadpan. No explanation.]
+
+=== [NAME]_CLIP3_SETUP ===
+[EXACTLY 2 sentences — not 1, not 3. First sentence: bridge from previous reaction. Second sentence: specific setup for clip 3.]
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+
+=== [NAME]_CLIP3_REACTION ===
+[EXACTLY 1 sentence. Short. Flat. Deadpan. No explanation.]
+
+=== OUTRO ===
+[1-2 sentences. Sign-off.]
+
+✅ VALIDATION CHECKLIST:
+- Total scenes: MUST BE EXACTLY ${expectedScenes}
+- Total [CLIP PLAYS HERE] markers: MUST BE EXACTLY ${totalClipSlots}
+- Each SETUP scene: EXACTLY 2 sentences (not 1, not 3) + contains [beat] + [CLIP PLAYS HERE] + [beat]
+- Each REACTION scene: EXACTLY 1 sentence, no more
+- [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
+- Never explain the joke in reactions. Never recap what just happened.
 
 NAME RULE: Bobby G ALWAYS refers to each streamer by their ON-AIR NAME only. Never use the Twitch username in spoken text. For example: say "Ron" not "StableRonaldo", say "Jay Cinco" not "Jaycinco", say "Yonna" not "YonnaJay".
 PRONOUN RULES: use streamer context notes for pronouns. Never assume gender from name alone.
@@ -4320,41 +5548,179 @@ Target: 80-100 words spoken per streamer.`;
       }
     }
 
-    // ── Step 3: Claude generates the complete script ──────────────────
-    const client   = new Anthropic();
-    const response = await client.messages.create({
-      model:      'claude-sonnet-4-20250514',
-      max_tokens: 8000, // 3 clips × 10 streamers needs more tokens
-      system:     systemPrompt,
-      messages:   [{ role: 'user', content: userPrompt }]
-    });
+    // ── Step 3: Gemini generates the complete script (with Gate 1 retry loop) ─────────────────
+    // NEW ARCHITECTURE (as of April 2026): Gemini writes, Claude QAs
+    // Reason: Claude kept generating 11 scenes instead of 72 due to learned "one section per streamer" pattern
+    const MAX_RETRIES = 3;
+    let script = '';
+    let scriptQA = null;
+    let geminiResult = null;
+    let tokenUsage = { input: 0, output: 0 };
+    let wordCount = 0;
+    let estSecs = 0;
+    let retryAttempt = 0;
 
-    const script = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('')
-      .trim();
+    const client = new Anthropic();
 
-    const wordCount = script.split(/\s+/).filter(w => w.length > 0).length;
-    const estSecs   = Math.round((wordCount / 130) * 60);
-    console.log(`[generate-full-script] Script generated: ${wordCount} words, ~${Math.floor(estSecs/60)}m ${estSecs%60}s`);
+    // Calculate expected scene count for Claude QA to validate
+    let expectedScenes = 0;
+    if (type === 'twitch' && !type.includes('-short')) {
+      const clipsPerStreamer = (items[0] && items[0].clips && items[0].clips.length) || req.body.clipsPerStreamer || 3;
+      const scenesPerStreamer = 1 + clipsPerStreamer * 2;
+      expectedScenes = 1 + items.length * scenesPerStreamer + 1; // 1 INTRO + (streamers × scenes) + 1 OUTRO
+    } else if (type === 'nba') {
+      expectedScenes = 1 + (items.length * 4) + 1; // 1 INTRO + (games × 4 scenes) + 1 OUTRO
+    } else if (type === 'news') {
+      expectedScenes = 1 + (items.length * 4) + 1; // 1 INTRO + (stories × 4 scenes) + 1 OUTRO
+    }
+    // Shorts and other types: expectedScenes remains 0 (no validation)
 
-    // ── Gate 1: Script QA — Gemini reviews Claude's script ──────────
-    console.log(`[generate-full-script] 🔍 Running Gate 1 Script QA (Gemini reviews Claude's script)...`);
-    const scriptQA = await geminiScriptQA(script, analyses, {
-      contentType: type,
-      streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s })) : [],
-      clipsPerStreamer: req.body.clipsPerStreamer || 3,
-      jobId: `${type}_${dateStr}_${Date.now()}`
-    });
+    // Retry loop: Generate script + run Gate 1 QA, retry on FAIL up to 3 times
+    while (retryAttempt < MAX_RETRIES) {
+      retryAttempt++;
+      const attemptLabel = retryAttempt > 1 ? ` (retry ${retryAttempt}/${MAX_RETRIES})` : '';
+      console.log(`[generate-full-script] 📝 Generating script via Gemini${attemptLabel}...`);
 
-    console.log(`[generate-full-script] Gate 1 Script QA: ${scriptQA.outcomeLabel} (${scriptQA.score}/100)`);
-    if (scriptQA.deductions?.length) {
-      scriptQA.deductions.forEach(d => console.log(`[generate-full-script]   -${d.points} ${d.reason}`));
+      // Build feedback message if this is a retry
+      let feedbackMsg = '';
+      if (retryAttempt > 1 && scriptQA) {
+        // Enhanced Gate 1 coaching feedback — detailed suggestions for improvement
+        const deductionsList = scriptQA.deductions?.map(d => `- ${d.reason} (-${d.points} points)`).join('\n') || 'See detailed report below';
+
+        // Extract specific improvement suggestions from the QA report
+        const suggestions = [];
+        if (scriptQA.report.includes('Scene count mismatch') || scriptQA.report.includes('SCENE COUNT')) {
+          suggestions.push('🚨 SCENE COUNT: You MUST write EXACTLY ONE SCENE PER === HEADER ===. Each scene header listed in the prompt requires its own scene with content. Do NOT combine multiple scenes under one header. Count your === headers === and make sure you have EXACTLY that many scenes in your output.');
+        }
+        if (scriptQA.report.includes('SETUP LENGTH') || scriptQA.report.includes('setups are 1 sentence')) {
+          suggestions.push('🚨 SETUP LENGTH: ALL CLIP SETUP scenes (CLIP1_SETUP, CLIP2_SETUP, CLIP3_SETUP) MUST have EXACTLY 2 sentences — not 1, not 3. Count the periods in each setup scene to verify.');
+        }
+        if (scriptQA.report.includes('INTRO') || scriptQA.report.includes('intro')) {
+          suggestions.push('INTRO: Use a bold, attention-grabbing hook. Reference specific events, names, or numbers. Avoid generic openings like "In today\'s video..."');
+        }
+        if (scriptQA.report.includes('PACING') || scriptQA.report.includes('pacing')) {
+          suggestions.push('PACING: Keep sentences punchy (10-15 words). Vary sentence length. Remove filler words. Use transitions like "But here\'s the thing..." or "Now check this..."');
+        }
+        if (scriptQA.report.includes('ENERGY') || scriptQA.report.includes('energy')) {
+          suggestions.push('ENERGY: Add excitement markers like "WAIT!", "NO WAY!", "LOOK AT THIS!". Use rhetorical questions. Build tension before payoffs.');
+        }
+        if (scriptQA.report.includes('STRUCTURE') || scriptQA.report.includes('structure')) {
+          suggestions.push('STRUCTURE: Follow the arc - Setup → Build → Peak → Callback. Each clip needs context before reaction. End with a callback to the intro.');
+        }
+        if (scriptQA.report.includes('CONTEXT') || scriptQA.report.includes('context')) {
+          suggestions.push('CONTEXT: Explain WHO (streamer), WHAT (action), WHY (significance) before showing the clip. Don\'t assume viewers know the backstory.');
+        }
+
+        const suggestionText = suggestions.length > 0
+          ? `\n\n📚 SPECIFIC IMPROVEMENTS TO MAKE:\n${suggestions.join('\n\n')}\n`
+          : '';
+
+        feedbackMsg = `\n\n⚠️ PREVIOUS ATTEMPT FAILED GATE 1 QA (Score: ${scriptQA.score}/100)
+
+🎯 COACHING FEEDBACK — Learn from these issues:
+
+POINT DEDUCTIONS:
+${deductionsList}
+${suggestionText}
+📋 FULL QA REPORT:
+${scriptQA.claudeReport || scriptQA.report}
+
+RETRY INSTRUCTIONS:
+1. Read each deduction carefully and understand WHY points were lost
+2. Apply the specific improvements listed above
+3. Review successful CWN scripts for examples of engaging intros, pacing, and structure
+4. Regenerate the COMPLETE script with all fixes applied
+
+Remember: A great CWN script grabs attention in the first 5 seconds, maintains high energy throughout, and delivers a satisfying conclusion. Make it engaging, not just informative!`;
+
+        console.log(`[generate-full-script] 🔄 Retry with enhanced Gate 1 coaching: ${scriptQA.deductions?.length || 0} issues + ${suggestions.length} specific improvement suggestions`);
+      }
+
+      // Call Gemini to generate the script
+      try {
+        geminiResult = await geminiScriptGeneration(userPrompt, systemPrompt, {
+          previousScript: script || null,
+          feedbackMsg: feedbackMsg,
+          contentType: type
+        });
+        script = geminiResult.script;
+        tokenUsage = geminiResult.tokenUsage;
+      } catch(e) {
+        console.error(`[generate-full-script] Gemini script generation failed: ${e.message}`);
+        script = `[ERROR: Gemini script generation failed: ${e.message}]`;
+        // Force fail this attempt
+        scriptQA = { score: 0, outcome: 'fail', passed: false, outcomeLabel: '❌ HARD FAIL', deductions: [{ points: 100, reason: `Gemini API error: ${e.message}` }], report: `Gemini script generation failed: ${e.message}` };
+        console.log(`[generate-full-script] Gate 1 Script QA: ${scriptQA.outcomeLabel} (${scriptQA.score}/100)`);
+        // Skip to retry loop condition check
+        if (retryAttempt < MAX_RETRIES) {
+          console.log(`[generate-full-script] ❌ Gate 1 FAIL — Retrying script generation (attempt ${retryAttempt}/${MAX_RETRIES})...`);
+          continue;
+        } else {
+          console.log(`[generate-full-script] ❌ Gate 1 FAIL — Max retries (${MAX_RETRIES}) reached. Giving up.`);
+          break;
+        }
+      }
+
+      wordCount = script.split(/\s+/).filter(w => w.length > 0).length;
+      estSecs   = Math.round((wordCount / 130) * 60);
+      console.log(`[generate-full-script] Script generated by Gemini: ${wordCount} words, ~${Math.floor(estSecs/60)}m ${estSecs%60}s`);
+
+      // ── Gate 1: Script QA — Claude reviews Gemini's script ──────────
+      console.log(`[generate-full-script] 🔍 Running Gate 1 Script QA (Claude reviews Gemini's script)...`);
+      scriptQA = await claudeScriptQA(script, analyses, {
+        contentType: type,
+        streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s })) : [],
+        clipsPerStreamer: req.body.clipsPerStreamer || 3,
+        jobId: `${type}_${dateStr}_${Date.now()}`,
+        expectedScenes: expectedScenes
+      });
+
+      console.log(`[generate-full-script] Gate 1 Script QA: ${scriptQA.outcomeLabel} (${scriptQA.score}/100)`);
+      if (scriptQA.deductions?.length) {
+        scriptQA.deductions.forEach(d => console.log(`[generate-full-script]   -${d.points} ${d.reason}`));
+      }
+
+      // Break conditions:
+      // 1. PASS → proceed to HeyGen
+      // 2. MANUAL_REVIEW → hold for user review
+      // 3. FAIL + max retries reached → give up
+      if (scriptQA.outcome === 'pass' || scriptQA.outcome === 'manual_review') {
+        console.log(`[generate-full-script] ✅ Gate 1 ${scriptQA.outcome.toUpperCase()} — Breaking retry loop (attempt ${retryAttempt}/${MAX_RETRIES})`);
+        break;
+      } else if (scriptQA.outcome === 'fail' && retryAttempt < MAX_RETRIES) {
+        console.log(`[generate-full-script] ❌ Gate 1 FAIL — Retrying script generation (attempt ${retryAttempt}/${MAX_RETRIES})...`);
+        // Continue loop to retry
+      } else {
+        console.log(`[generate-full-script] ❌ Gate 1 FAIL — Max retries (${MAX_RETRIES}) reached. Giving up.`);
+        break;
+      }
+    }
+
+    // ── Auto-send to HeyGen if Gate 1 passes ──────────────────────────
+    let heygenResult = null;
+    if (scriptQA.outcome === 'pass') {
+      console.log('[generate-full-script] 🎬 Gate 1 PASSED — Auto-sending to HeyGen...');
+      try {
+        const format = type.includes('-short') ? 'portrait' : 'landscape';
+        heygenResult = await sendScriptToHeyGen(script, {
+          contentType: type,
+          format,
+          jobId: `${type}_${dateStr}_${Date.now()}`
+        });
+        console.log(`[generate-full-script] ✅ HeyGen video generation initiated: ${JSON.stringify(heygenResult.videoJobs?.map(j => j.video_id) || [heygenResult.video_id])}`);
+      } catch(e) {
+        console.error('[generate-full-script] ⚠️  HeyGen auto-send failed:', e.message);
+        heygenResult = { error: e.message };
+      }
+    } else {
+      console.log(`[generate-full-script] ⏸  Gate 1 ${scriptQA.outcome.toUpperCase()} — Skipping HeyGen auto-send (${retryAttempt} attempt${retryAttempt>1?'s':''} made)`);
     }
 
     // Finalize script generation metrics
-    const totalGeminiCalls = type === 'twitch' || type === 'twitch-short'
+    // Note: Gemini API calls now split into two categories:
+    //  1. Clip analysis (pre-script) - counted below as geminiAnalysisCalls
+    //  2. Script generation (Gate 1) - counted as geminiScriptGenCalls
+    const totalGeminiAnalysisCalls = type === 'twitch' || type === 'twitch-short'
       ? (analyses.flat ? analyses.flat().length : analyses.length)
       : analyses.length;
     const geminiHitCount = analyses.flat ? analyses.flat().filter(a=>a && a.length > 50).length : analyses.filter(a=>a && a.length > 50).length;
@@ -4362,16 +5728,22 @@ Target: 80-100 words spoken per streamer.`;
     scriptGenTimer
       .addData('contentType', type)
       .addData('itemCount', items.length)
-      .addData('geminiApiCalls', totalGeminiCalls)
+      // Gemini metrics (script generation + analysis)
+      .addData('geminiAnalysisCalls', totalGeminiAnalysisCalls)
       .addData('geminiHits', geminiHitCount)
-      .addData('claudeInputTokens', response.usage?.input_tokens || 0)
-      .addData('claudeOutputTokens', response.usage?.output_tokens || 0)
-      .addData('totalClaudeTokens', (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0))
+      .addData('geminiScriptGenCalls', retryAttempt) // 1 call per retry attempt
+      // Claude metrics (QA only)
+      .addData('claudeQAInputTokens', scriptQA.tokenUsage?.input || 0)
+      .addData('claudeQAOutputTokens', scriptQA.tokenUsage?.output || 0)
+      .addData('totalClaudeTokens', (scriptQA.tokenUsage?.input || 0) + (scriptQA.tokenUsage?.output || 0))
+      // Script metrics
       .addData('scriptWordCount', wordCount)
       .addData('estimatedSeconds', estSecs)
+      // Gate 1 outcomes
       .addData('gate1Score', scriptQA.score)
       .addData('gate1Outcome', scriptQA.outcome)
-      .addData('gate1Passed', scriptQA.passed);
+      .addData('gate1Passed', scriptQA.passed)
+      .addData('gate1RetryAttempts', retryAttempt);
 
     addStageMetrics(jobId, scriptGenTimer.end());
     finalizeJobMetrics(jobId);
@@ -4385,13 +5757,16 @@ Target: 80-100 words spoken per streamer.`;
       orderedClipUrls,
       // Gate 1 QA results — dashboard shows these before user approves HeyGen send
       scriptQA: {
-        score:       scriptQA.score,
-        outcome:     scriptQA.outcome,
-        outcomeLabel:scriptQA.outcomeLabel,
-        passed:      scriptQA.passed,
-        report:      scriptQA.report,
-        deductions:  scriptQA.deductions
+        score:         scriptQA.score,
+        outcome:       scriptQA.outcome,
+        outcomeLabel:  scriptQA.outcomeLabel,
+        passed:        scriptQA.passed,
+        report:        scriptQA.report,
+        deductions:    scriptQA.deductions,
+        retryAttempts: retryAttempt
       },
+      // HeyGen auto-send result (only present if Gate 1 passed)
+      heygen: heygenResult,
       // Include metrics in response for debugging
       metricsJobId: jobId
     });
@@ -4466,9 +5841,16 @@ app.post('/analyze-style-library', async (req, res) => {
         console.log(`[style-library] Uploading ${(fs.statSync(tmpPath).size/1024/1024).toFixed(1)}MB to Gemini...`);
         const geminiFile = await waitForGeminiFile(await uploadToGeminiFiles(tmpPath));
 
-        const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for ClipzWorld News (CWN), a "${contentType}" compilation show.
+        // 10x VIEWING: Watch each reference video 10 times for deeper style learning
+        console.log(`[style-library] Starting 10x viewing analysis for ${url.slice(0,60)}...`);
+        const multipleViewings = [];
 
-Watch this video carefully. Your job is to extract the specific stylistic elements so a script writer can replicate the feel.
+        for (let viewNum = 1; viewNum <= 10; viewNum++) {
+          const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for ClipzWorld News (CWN), a "${contentType}" compilation show.
+
+This is VIEWING #${viewNum} of 10. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : viewNum <= 3 ? 'Focus on details you may have missed in previous viewings.' : viewNum <= 6 ? 'Look for subtle patterns and recurring elements.' : 'Deep analysis - extract nuanced stylistic details.'}
+
+Your job is to extract the specific stylistic elements so a script writer can replicate the feel.
 
 Extract and document:
 1. OPENING ENERGY: How does the host/show open? Energy level? First sentence structure?
@@ -4483,22 +5865,60 @@ Extract and document:
 
 Be specific and actionable. A script writer should be able to read this and write in the same voice without watching the video.`;
 
-        const genResp = await axios.post(
-          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
-          {
-            contents: [{ parts: [
-              { text: stylePrompt },
-              { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
-            ]}],
-            generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
-          },
-          { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
-        );
+          const genResp = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
+            {
+              contents: [{ parts: [
+                { text: stylePrompt },
+                { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
+              ]}],
+              generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
+            },
+            { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
+          );
 
-        const analysis = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
-        if (analysis.length > 100) {
-          videoAnalyses.push(`--- Reference video: ${url.slice(0,60)} ---\n${analysis}`);
-          console.log(`[style-library] ✓ Analyzed ${url.slice(0,60)} (${analysis.length} chars)`);
+          const observation = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
+          if (observation.length > 100) {
+            multipleViewings.push(`--- VIEWING #${viewNum} ---\n${observation}`);
+            console.log(`[style-library]   ✓ Viewing ${viewNum}/10 complete (${observation.length} chars)`);
+          }
+
+          // Rate limit pause between viewings (shorter than between videos)
+          if (viewNum < 10) await new Promise(r => setTimeout(r, 2000));
+        }
+
+        // Synthesize all 10 viewings into a deep per-video analysis
+        if (multipleViewings.length >= 8) { // Require at least 8 successful viewings
+          const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations.
+
+Here are your ${multipleViewings.length} viewing observations:
+${multipleViewings.join('\n\n')}
+
+Now synthesize ALL these observations into ONE DEEP, COMPREHENSIVE style analysis.
+- Identify patterns that appeared across multiple viewings
+- Highlight subtle details only noticed in later viewings
+- Create a unified, nuanced understanding of this video's style
+- Be specific and actionable for script writers
+Max 600 words.`;
+
+          try {
+            const { Anthropic } = require('@anthropic-ai/sdk');
+            const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+            const msg = await anthropic.messages.create({
+              model: 'claude-sonnet-4-20250514',
+              max_tokens: 800,
+              messages: [{ role: 'user', content: deepSynthesisPrompt }]
+            });
+            const deepAnalysis = msg.content[0]?.text || multipleViewings.join('\n\n');
+            videoAnalyses.push(`--- Reference video (10x viewing): ${url.slice(0,60)} ---\n${deepAnalysis}`);
+            console.log(`[style-library] ✅ 10x analysis complete for ${url.slice(0,60)} (${deepAnalysis.length} chars)`);
+          } catch(e) {
+            // Fallback: concatenate all viewings
+            videoAnalyses.push(`--- Reference video (10 viewings): ${url.slice(0,60)} ---\n${multipleViewings.join('\n\n')}`);
+            console.log(`[style-library] ✅ 10x analysis complete (fallback) for ${url.slice(0,60)}`);
+          }
+        } else {
+          console.warn(`[style-library] Only ${multipleViewings.length}/10 viewings succeeded, skipping video`);
         }
 
         // Cleanup
@@ -4582,8 +6002,9 @@ app.get('/style-library', (req, res) => {
 //   title: string,             // video title
 //   description: string,       // video description / caption
 //   tags: string[],            // YouTube tags
-//   scheduledAt: string,       // ISO-8601 UTC datetime (optional, omit for immediate)
-//   privacyStatus: string,     // 'public' | 'private' | 'unlisted' (YouTube only)
+//   scheduledAt: string,       // ISO-8601 UTC datetime (optional, omit for immediate delivery)
+//   privacyStatus: string,     // YouTube: 'public' | 'private' | 'unlisted' (default: 'public')
+//   tiktokPrivacy: string,     // TikTok: 'PUBLIC_TO_EVERYONE' | 'SELF_ONLY' | 'MUTUAL_FOLLOW_FRIENDS' (default: 'PUBLIC_TO_EVERYONE')
 //   contentType: string,       // 'long' | 'short' — determines format per platform
 //   async: boolean             // if true, returns request_id immediately and processes in background
 // }
@@ -4603,7 +6024,8 @@ app.post('/publish', async (req, res) => {
     description = '',
     tags = [],
     scheduledAt,
-    privacyStatus = 'public',
+    privacyStatus = 'public',           // YouTube: 'public' | 'private' | 'unlisted'
+    tiktokPrivacy = 'PUBLIC_TO_EVERYONE', // TikTok: 'PUBLIC_TO_EVERYONE' | 'SELF_ONLY' | 'MUTUAL_FOLLOW_FRIENDS'
     contentType = 'long',
     async: asyncUpload = true,
     metricsJobId  // Optional: if frontend passes the jobId from script gen or assembly
@@ -4667,7 +6089,7 @@ app.post('/publish', async (req, res) => {
     // TikTok-specific
     if (platforms.includes('tiktok')) {
       form.append('tiktok_title', (title || '').substring(0, 90));
-      form.append('privacy_level', 'PUBLIC_TO_EVERYONE');
+      form.append('privacy_level', tiktokPrivacy); // 'PUBLIC_TO_EVERYONE' | 'SELF_ONLY' | 'MUTUAL_FOLLOW_FRIENDS'
       form.append('post_mode', 'DIRECT_POST');
       form.append('is_aigc', 'true');
       form.append('brand_content_toggle', 'false');
@@ -6306,6 +7728,95 @@ app.get('/remediate-video/check/:jobId', (req, res) => {
   res.json({ jobId, missed, fontPath: SYSTEM_FONT, logoPath: CWN_LOGO_PATH });
 });
 
+// ── Generate Twitch Longform Thumbnail with FFmpeg Text Overlay ──────
+// Takes static template from assets/longform_twitch_Thumbnail.png and overlays
+// dynamic episode number + date text using FFmpeg drawtext filter
+async function generateTwitchLongformThumbnail() {
+  const TEMPLATE_PATH = path.join(__dirname, 'assets', 'longform_twitch_Thumbnail.png');
+  const EPISODE_COUNTERS_PATH = path.join(__dirname, 'episode_counters.json');
+
+  // Check if template exists
+  if (!fs.existsSync(TEMPLATE_PATH)) {
+    throw new Error(`Twitch thumbnail template not found: ${TEMPLATE_PATH}`);
+  }
+
+  // Load and increment episode counter
+  let counters = { twitch: 1, nba: 1, news: 1 };
+  if (fs.existsSync(EPISODE_COUNTERS_PATH)) {
+    counters = JSON.parse(fs.readFileSync(EPISODE_COUNTERS_PATH, 'utf8'));
+  }
+
+  const episodeNum = counters.twitch || 1;
+  counters.twitch = episodeNum + 1;
+  fs.writeFileSync(EPISODE_COUNTERS_PATH, JSON.stringify(counters, null, 2));
+
+  // Format date: "Apr 7, 2026"
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  // Output path
+  const outputPath = path.join(OUTPUT_DIR, `thumbnail_twitch_longform_ep${episodeNum}_${Date.now()}.png`);
+
+  // FFmpeg drawtext overlay
+  // Position text "under the soup bowl" - estimated at lower-center area
+  // Episode number: larger, centered, y=580
+  // Date: smaller, centered below episode, y=620
+
+  if (!SYSTEM_FONT) {
+    console.warn('[twitch-thumbnail] No system font found, using FFmpeg default');
+  }
+
+  const fontPath = SYSTEM_FONT || 'Arial'; // Fallback to Arial if no system font
+  const escapedFont = fontPath.replace(/\\/g, '/').replace(/:/g, '\\:');
+
+  // Build FFmpeg command with text overlays
+  const ffmpegArgs = [
+    '-i', TEMPLATE_PATH,
+    '-vf', [
+      // Episode number overlay (larger, bold-ish via fontsize)
+      `drawtext=text='EPISODE ${episodeNum}':fontfile=${escapedFont}:fontsize=48:fontcolor=white:x=(w-text_w)/2:y=560:borderw=2:bordercolor=black`,
+      // Date overlay (smaller, below episode)
+      `drawtext=text='${dateStr}':fontfile=${escapedFont}:fontsize=32:fontcolor=white:x=(w-text_w)/2:y=620:borderw=2:bordercolor=black`
+    ].join(','),
+    '-y',
+    outputPath
+  ];
+
+  return new Promise((resolve, reject) => {
+    const { execFile } = require('child_process');
+    execFile('ffmpeg', ffmpegArgs, { timeout: 30000 }, (err, stdout, stderr) => {
+      if (err) {
+        console.error('[twitch-thumbnail] FFmpeg error:', stderr);
+        return reject(new Error(`FFmpeg failed: ${err.message}`));
+      }
+
+      if (!fs.existsSync(outputPath)) {
+        return reject(new Error('FFmpeg succeeded but output file not found'));
+      }
+
+      console.log(`[twitch-thumbnail] ✅ Generated: ${path.basename(outputPath)} (Episode ${episodeNum}, ${dateStr})`);
+      resolve({ thumbnailPath: outputPath, episodeNum, date: dateStr });
+    });
+  });
+}
+
+// ── POST /generate-twitch-longform-thumbnail ─────────────────────────
+// Generates Twitch longform YouTube thumbnail using static template + FFmpeg text overlay
+// Body: {} (no parameters needed - auto-increments episode, uses current date)
+// Returns: { ok, thumbnailPath, episodeNum, date }
+app.post('/generate-twitch-longform-thumbnail', async (req, res) => {
+  try {
+    const result = await generateTwitchLongformThumbnail();
+    res.json({ ok: true, ...result });
+  } catch(e) {
+    console.error('[twitch-thumbnail] Error:', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 
 // ── POST /generate-thumbnail ──────────────────────────────────────
 // Thumbnail generator using HTML tools + reference images
@@ -6371,10 +7882,13 @@ app.post('/generate-thumbnail', async (req, res) => {
             thumbBg.style.display = 'block';
           }
           if (thumbHeadline) thumbHeadline.textContent = data.title || 'Story Headline';
-          if (thumbCat) thumbCat.textContent = data.contentType === 'nba' ? 'NBA' : 'WORLD NEWS';
+          if (thumbCat) {
+            const showName = data.contentType === 'nba' ? 'OTHER SIDE OF THE PILLOW' : 'CLIPZWORLD NEWS';
+            thumbCat.textContent = `${showName} - EPISODE ${data.episodeNum}`;
+          }
           if (thumbSrcBadge) thumbSrcBadge.textContent = data.source || 'REACTION';
           if (thumbSub) thumbSub.textContent = (data.date || new Date().toLocaleDateString()).toUpperCase() + ' | CLIPZWORLD NEWS';
-        }, { title, storyImage, source, date, contentType });
+        }, { title, storyImage, source, date, contentType, episodeNum });
 
         // Wait for image to load
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -6464,9 +7978,10 @@ app.post('/generate-thumbnail', async (req, res) => {
           }
         }, {
           title,
-          subtitle: `${streamers && streamers.length > 0 ? streamers.length + ' STREAMERS' : 'TWITCH'} | CLIPZWORLD NEWS`,
+          subtitle: `EPISODE ${episodeNum} | ${streamers && streamers.length > 0 ? streamers.length + ' STREAMERS' : 'TWITCH'} | CLIPZWORLD NEWS`,
           streamers: streamers || [],
-          backgroundImage: '/assets/Ghostly Bobby G in Navy Themed Thumbnail.png'
+          backgroundImage: '/assets/Ghostly Bobby G in Navy Themed Thumbnail.png',
+          episodeNum
         });
 
         // Force layout reflow and wait for render

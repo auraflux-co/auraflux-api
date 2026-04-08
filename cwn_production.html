@@ -1368,9 +1368,16 @@ function assembleJob(batchJobId) {
   var job = JOBS.find(function(j){ return j.id === batchJobId; });
   if (!job) return;
 
+  // Immediate visual feedback - show assembly panel
   var panelId = 'asm-panel-' + batchJobId;
   var panel = document.getElementById(panelId);
-  if (panel) panel.classList.add('open');
+  if (panel) {
+    panel.classList.add('open');
+    panel.style.border = '2px solid rgba(230,126,34,0.8)';
+  }
+
+  // Immediate log message
+  logAssembly(batchJobId, '⚙️  Starting assembly...');
 
   // Build the full ordered sequence: avatar segments (HeyGen URLs) + source_clip segments
   // Source clips that have a URL are included in order — FFmpeg downloads everything
@@ -1877,7 +1884,7 @@ function renderQueue() {
       +'<div style="margin-bottom:8px;">'+asmDoneList+'</div>'
       +'<div class="progress-wrap"><div class="progress-bar ffmpeg-bar" id="asm-progress-'+job.id+'" style="width:0%"></div></div>'
       +'<div class="btn-row" style="margin-top:8px;">'
-      +'<button onclick="assembleJob(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm">RUN FFMPEG ASSEMBLE</button>'
+      +'<button id="asm-btn-'+job.id+'" onclick="this.textContent=\'⚙️ ASSEMBLING...\';this.disabled=true;assembleJob(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm">RUN FFMPEG ASSEMBLE</button>'
       +'</div>'
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
@@ -2559,7 +2566,8 @@ function generateTwitch() {
             var backupClips=allValidClips.slice(clipsPerStreamer); // all remaining clips as backup
             if(validClips.length) {
               var nameKey = user.display_name.toLowerCase();
-              var allClipsToSend = validClips.concat(backupClips);
+              // Send only the requested clips — backups stay client-side for GQL fallback
+              var allClipsToSend = validClips;
               var DISPLAY_NAMES = {
                 'jasontheween':'Jason','hasanabi':'Hasan','adapt':'Adapt',
                 'stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon',

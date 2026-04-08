@@ -97,33 +97,25 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   BREAKING NEWS BANNER
+   BREAKING FLAG — top left corner
 ═══════════════════════════════════════ */
-.breaking {
+.breaking-flag {
   position: absolute;
-  top: 0; left: 0; right: 0;
-  display: flex;
-  align-items: stretch;
-  height: 52px;
-  transform: translateY(-100%);
-  animation: slideDown 0.4s cubic-bezier(0.22,1,0.36,1) 0.1s forwards;
-}
-
-@keyframes slideDown {
-  to { transform: translateY(0); }
-}
-
-.breaking-badge {
+  top: 60px;
+  left: 32px;
   background: var(--red);
   display: flex;
   align-items: center;
-  padding: 0 24px;
   gap: 10px;
-  flex-shrink: 0;
+  padding: 10px 20px;
+  clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
+  animation: slideInLeft 0.4s cubic-bezier(0.22,1,0.36,1) 0.2s forwards;
+  transform: translateX(-100%);
+  box-shadow: 2px 2px 12px rgba(0,0,0,0.4);
 }
 
 .breaking-pulse {
-  width: 8px; height: 8px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: #fff;
   animation: bpulse 1s ease-in-out infinite;
@@ -133,48 +125,9 @@ body {
 
 .breaking-label {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   color: #fff;
-  letter-spacing: 3px;
-}
-
-.breaking-text-wrap {
-  flex: 1;
-  background: var(--dark);
-  border-top: 2px solid var(--red);
-  border-bottom: 2px solid var(--red);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-}
-
-.breaking-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-  white-space: nowrap;
-  padding-left: 24px;
-  letter-spacing: 0.3px;
-  animation: marquee-break 18s linear infinite;
-}
-
-@keyframes marquee-break {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-.breaking-time {
-  background: var(--navy);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  color: var(--gold);
-  letter-spacing: 2px;
-  flex-shrink: 0;
-  border-top: 2px solid var(--red);
-  border-bottom: 2px solid var(--red);
+  letter-spacing: 4px;
 }
 
 /* ═══════════════════════════════════════
@@ -319,49 +272,50 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   SIDE STORY LIST — right panel
+   SIDE STORY LIST — right panel (BIGGER)
 ═══════════════════════════════════════ */
 .story-list {
   position: absolute;
   top: 120px;
   right: 32px;
-  width: 280px;
+  width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   animation: fadeIn 0.5s ease 0.6s both;
 }
 
 .story-item {
   background: rgba(13,20,36,0.92);
-  border-left: 3px solid var(--gold);
+  border-left: 4px solid var(--gold);
   border-radius: 0 4px 4px 0;
-  padding: 8px 12px;
+  padding: 14px 16px;
   backdrop-filter: blur(8px);
 }
 
 .story-item-cat {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--gold);
   letter-spacing: 3px;
-  margin-bottom: 3px;
+  margin-bottom: 5px;
 }
 
 .story-item-text {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: rgba(255,255,255,0.85);
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
 .story-item.active {
   border-left-color: var(--red);
+  border-left-width: 5px;
   background: rgba(34,48,75,0.95);
 }
 
 .story-item.active .story-item-cat { color: var(--red); }
-.story-item.active .story-item-text { color: #fff; }
+.story-item.active .story-item-text { color: #fff; font-weight: 700; }
 
 /* ═══════════════════════════════════════
    BOTTOM NEWS TICKER
@@ -469,13 +423,19 @@ body {
   </div>
 </div>
 
+<!-- BREAKING FLAG (top left) -->
+<div class="breaking-flag">
+  <div class="breaking-pulse"></div>
+  <div class="breaking-label">BREAKING</div>
+</div>
+
 <!-- SEGMENT TAG -->
 <div class="segment-tag">
   <div class="seg-label">NOW COVERING</div>
   <div class="seg-name">WORLD NEWS</div>
 </div>
 
-<!-- STORY LIST -->
+<!-- STORY LIST (BIGGER) -->
 <div class="story-list">
   <div class="story-item active">
     <div class="story-item-cat">▶ ON AIR</div>
@@ -493,21 +453,6 @@ body {
     <div class="story-item-cat">TECH</div>
     <div class="story-item-text">AI Regulation Bill Advances in Congress</div>
   </div>
-</div>
-
-<!-- BREAKING NEWS -->
-<div class="breaking">
-  <div class="breaking-badge">
-    <div class="breaking-pulse"></div>
-    <div class="breaking-label">BREAKING</div>
-  </div>
-  <div class="breaking-text-wrap">
-    <div class="breaking-text">
-      UCONN STUNS DUKE 73-72 ON HALF-COURT BUZZER BEATER — HUSKIES ADVANCE TO FINAL FOUR &nbsp;&nbsp;&nbsp;●&nbsp;&nbsp;&nbsp;
-      UCONN STUNS DUKE 73-72 ON HALF-COURT BUZZER BEATER — HUSKIES ADVANCE TO FINAL FOUR &nbsp;&nbsp;&nbsp;●&nbsp;&nbsp;&nbsp;
-    </div>
-  </div>
-  <div class="breaking-time" id="break-time">12:00 PM</div>
 </div>
 
 <!-- LOWER THIRD -->
