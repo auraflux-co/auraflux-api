@@ -161,7 +161,7 @@
       "payload": {
         "type": "news",
         "date": "Tuesday, April 7, 2026",
-        "stories": [
+        "items": [
           {"headline": "Major Tech Announcement", "source": "TechCrunch"},
           {"headline": "Political Development", "source": "Reuters"},
           {"headline": "Scientific Breakthrough", "source": "Nature"}
@@ -203,7 +203,7 @@
       "payload": {
         "type": "news",
         "date": "Tuesday, April 7, 2026",
-        "stories": [
+        "items": [
           {"headline": "Major Tech Announcement", "source": "TechCrunch"}
         ]
       }
