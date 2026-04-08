@@ -5,3 +5,4 @@ output/
 node_modules/
 cwn-drive-key.json
 .DS_Store
+.aider*

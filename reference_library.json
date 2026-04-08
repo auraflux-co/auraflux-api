@@ -1,0 +1,18 @@
+{
+  "library": {
+    "twitch": [
+      "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+      "https://www.youtube.com/watch?v=XUl-BynnmCc",
+      "https://www.youtube.com/watch?v=yXIWkk-p9mo"
+    ],
+    "nba": [
+      "https://www.youtube.com/watch?v=TWXHDa6Ta1s",
+      "https://www.youtube.com/watch?v=ke4zLK4MYTI"
+    ],
+    "news": [
+      "https://www.youtube.com/watch?v=WS0GkhUzJMc",
+      "https://www.youtube.com/watch?v=YKNYm6DpXs4",
+      "https://www.youtube.com/watch?v=j4vcHuc3VzI"
+    ]
+  }
+}
