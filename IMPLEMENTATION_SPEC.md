@@ -269,9 +269,54 @@ if (format === 'portrait' && (contentType.includes('-short'))) {
 17. Verify audio handling across all formats
 18. Final production test (3 long-form videos)
 
+### Phase 6: AI-Generated Burn-In Images (Future Enhancement)
+19. Add `design_brief` field to Gemini script output
+20. Implement burn-in image generation API integration (Midjourney/Nano Banana Pro)
+21. Create image overlay pipeline using VectCut at OVERLAY_ZONE
+22. Add image caching system to avoid regenerating existing assets
+
 ---
 
-## 8. Environment Variables to Add
+## 8. AI-Generated Burn-In Images (Phase 6 Concept)
+
+### Overview
+Automated visual content generation where Gemini suggests contextual images for each scene, and Claude orchestrates their generation and placement.
+
+### Workflow
+1. **Gemini's Task**: In script JSON output, add `design_brief` for each scene requiring visual content
+   ```javascript
+   {
+     "sceneType": "GAME1_INTRO",
+     "dialogue": "Tonight's matchup: Celtics versus Lakers...",
+     "design_brief": "A cinematic, high-detail 3D render of a gold trophy on a dark slate background, dramatic lighting, 4K quality"
+   }
+   ```
+
+2. **Claude's Task**: During assembly, process `design_brief` fields:
+   - Check if image already exists in cache (`/tmp/burn_in_images/[hash].png`)
+   - If not, trigger image generation API (Midjourney/Nano Banana Pro)
+   - Use VectCut to overlay at `CONFIG.VISUAL_LAYOUTS.OVERLAY_ZONE`
+
+3. **Image Generation APIs** (options):
+   - Midjourney API (high quality, slower)
+   - Nano Banana Pro (faster, good quality)
+   - DALL-E 3 (reliable, moderate speed)
+
+4. **Caching Strategy**:
+   - Hash the `design_brief` text
+   - Store generated images in `/tmp/burn_in_images/[hash].png`
+   - Reuse images across episodes if brief matches
+
+### Implementation Requirements
+- Add `BURN_IN_IMAGE_API_KEY` to .env
+- Add `BURN_IN_IMAGE_PROVIDER` to .env (midjourney|nanobananapro|dalle3)
+- Create `/generate-burn-in-image` endpoint
+- Enhance `geminiScriptGeneration()` to include design_brief instructions
+- Update Claude QA to validate design_brief presence for relevant scenes
+
+---
+
+## 9. Environment Variables to Add
 
 ```bash
 # VectCut API
