@@ -178,6 +178,23 @@ const CONFIG = {
     WIDTH: 1920,
     HEIGHT: 64,
     FPS: 15
+  },
+  VISUAL_LAYOUTS: {
+    LONG_FORM: {
+      WIDTH: 1920,
+      HEIGHT: 1080,
+      AVATAR_SAFE_ZONE: { x: 0, y: 720, w: 1920, h: 360 }, // Bottom third
+      OVERLAY_ZONE: { x: 1240, y: 40, w: 640, h: 360 },   // "TV Shape" Top Right
+      LOGO_POS: { x: 1780, y: 20, size: 120 }
+    },
+    SHORT_FORM: {
+      WIDTH: 1080,
+      HEIGHT: 1920,
+      CLIP_ZONE: { x: 0, y: 0, w: 1080, h: 960 },        // Top Half
+      AVATAR_ZONE: { x: 0, y: 960, w: 1080, h: 960 },    // Bottom Half
+      BURN_IN_ZONE: { x: 540, y: 960, anchor: 'center' }, // Floating middle
+      LOGO_POS: { x: 985, y: 15, size: 80 }
+    }
   }
 };
 
