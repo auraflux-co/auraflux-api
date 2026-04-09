@@ -203,7 +203,7 @@ const CONFIG = {
       WIDTH: 1920,
       HEIGHT: 1080,
       AVATAR_SAFE_ZONE: { x: 0, y: 720, w: 1920, h: 360 }, // Bottom third
-      OVERLAY_ZONE: { x: 1240, y: 40, w: 640, h: 360 },   // "TV Shape" Top Right
+      OVERLAY_ZONE: { x: 40, y: 40, w: 640, h: 360 },     // "TV Shape" Top Left (facing Bobby G)
       LOGO_POS: { x: 1780, y: 20, size: 120 }
     },
     SHORT_FORM: {
@@ -303,7 +303,7 @@ class VectCutClient {
   /**
    * Branded "Gold Ring" Overlay for Long-Form (16:9 Landscape)
    * Applies CWN Gold (#c7af4f) 5px border + drop shadow
-   * Position: TV-shaped card (640×360) at OVERLAY_ZONE (top-right)
+   * Position: TV-shaped card (640×360) at OVERLAY_ZONE (top-left, facing Bobby G)
    * Used for: NBA intro cards, News article images
    */
   async addBrandedOverlay(videoPath, assetPath, layout = 'LONG_FORM') {
@@ -3302,7 +3302,7 @@ app.post('/assemble',
               if (cardExists) {
                 burnArgs = [
                   "-i", inputForTS, "-i", cardPngPath,
-                  "-filter_complex", `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
+                  "-filter_complex", `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=40:y=40:enable='lte(t,${introDur})'[out]`,
                   "-map", "[out]", "-map", "0:a",
                   "-c:v", "libx264", "-preset", "fast", "-crf", "18",
                   "-pix_fmt", "yuv420p",
@@ -3452,7 +3452,7 @@ app.post('/assemble',
 
               const burnArgs = [
                 '-i', inputForTS, '-i', cardPngPath,
-                '-filter_complex', `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
+                '-filter_complex', `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=40:y=40:enable='lte(t,${introDur})'[out]`,
                 '-map', '[out]', '-map', '0:a',
                 '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
                 '-pix_fmt', 'yuv420p',
