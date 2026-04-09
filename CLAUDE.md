@@ -84,10 +84,11 @@ Use this policy for all implementation work so Rob can lead with ideas and revie
 3. **If behavior changes:** Ask for explicit approval before finalizing.
 
 **Commit guardrails:**
-1. Re-read `CLAUDE.md` and `AIDER_COMMIT_CHECKLIST.md` before every commit.
-2. Commit only files related to the request.
-3. Never commit secrets, `.env`, `tmp/`, `output/`, or credential files.
-4. Keep commit message focused on intent ("why"), not just file list.
+1. Re-read `CLAUDE.md` and `COMMIT_CHECKLIST.md` before every commit.
+2. **HARD REQUIREMENT:** Update `STATUS.md` → `🤖 Last Agent Action` table in every commit that changes code. A pre-commit hook will block commits that skip this. See `COMMIT_CHECKLIST.md` for the full requirement.
+3. Commit only files related to the request.
+4. Never commit secrets, `.env`, `tmp/`, `output/`, or credential files.
+5. Keep commit message focused on intent ("why"), not just file list.
 
 ### Multi-Stage Production Pipeline
 
