@@ -44,6 +44,7 @@ const Anthropic  = require('@anthropic-ai/sdk');
 const puppeteer  = require('puppeteer');
 const { logError, withRetry, getFallbackImage, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 const { requireFields, validateContentType, validateArrayLength, validateUrl, sanitizeStrings } = require('./lib/validation');
+const TwitchClient = require('./lib/clients/twitch_client');
 
 const app  = express();
 
@@ -106,6 +107,12 @@ const heygenJobs   = {};
 
 // Initialize Anthropic client for Claude API calls
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// Initialize Twitch client
+const twitchClient = new TwitchClient({
+  clientId: process.env.TWITCH_CLIENT_ID,
+  token: process.env.TWITCH_TOKEN
+});
 
 function log(asmId, msg, reqId = null) {
   const prefix = reqId ? `[${asmId}][${reqId}]` : `[${asmId}]`;
@@ -4894,67 +4901,13 @@ const TWITCH_GQL_CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
 // GQL persisted query hash for VideoAccessToken_Clip (stable, used by all major tools)
 const TWITCH_CLIP_QUERY_HASH = '36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11';
 
+// Use TwitchClient methods instead of standalone functions
 function extractTwitchSlug(urlOrSlug) {
-  if (!urlOrSlug) return '';
-  // Handle: https://clips.twitch.tv/SomeSlug
-  // Handle: https://www.twitch.tv/clips/SomeSlug
-  // Handle: https://www.twitch.tv/channelname/clip/SomeSlug  ← most common format from Helix API
-  const m = urlOrSlug.match(/(?:clips\.twitch\.tv\/|twitch\.tv\/clips\/|twitch\.tv\/[^/]+\/clip\/)([^?&/]+)/);
-  if (m) return m[1];
-  // Bare slug (no slashes, no protocol)
-  if (!urlOrSlug.includes('/') && !urlOrSlug.includes(':')) return urlOrSlug;
-  return '';
+  return twitchClient.extractSlug(urlOrSlug);
 }
 
 async function resolveTwitchClipMp4(slug, preferQuality) {
-  // preferQuality: 'low' = prefer 720p/480p (Gemini analysis), 'high' = prefer 1080p (assembly)
-  if (!slug) throw new Error('No clip slug provided');
-
-  const gqlBody = [{
-    operationName: 'VideoAccessToken_Clip',
-    variables: { slug },
-    extensions: {
-      persistedQuery: {
-        version: 1,
-        sha256Hash: TWITCH_CLIP_QUERY_HASH
-      }
-    }
-  }];
-
-  const resp = await axios.post('https://gql.twitch.tv/gql', gqlBody, {
-    headers: {
-      'Client-ID': TWITCH_GQL_CLIENT_ID,
-      'Content-Type': 'application/json'
-    },
-    timeout: 15000
-  });
-
-  const clip = resp.data?.[0]?.data?.clip;
-  if (!clip) throw new Error('Clip not found in GQL response');
-
-  const token    = clip.playbackAccessToken;
-  const qualities = clip.videoQualities || [];
-  if (!qualities.length) throw new Error('No video qualities returned');
-
-  // For Gemini analysis prefer 720p/480p (keeps files under 34MB limit)
-  // For assembly prefer 1080p (best quality for final video)
-  let best;
-  if (preferQuality === 'low') {
-    best = qualities.find(q => q.quality === '720')
-        || qualities.find(q => q.quality === '480')
-        || qualities.find(q => q.quality === '360')
-        || qualities[qualities.length - 1];
-  } else {
-    best = qualities.find(q => q.quality === '1080')
-        || qualities.find(q => q.quality === '720')
-        || qualities[0];
-  }
-  const baseUrl = best.sourceURL;
-
-  // Append auth tokens required by Twitch CDN
-  const mp4Url = `${baseUrl}?sig=${encodeURIComponent(token.signature)}&token=${encodeURIComponent(token.value)}`;
-
-  return { mp4Url, quality: best.quality + 'p', frameRate: best.frameRate };
+  return twitchClient.resolveClipMp4(slug, preferQuality);
 }
 
 app.post('/twitch-clip-url', async (req, res) => {
@@ -5613,12 +5566,9 @@ async function deleteGeminiFile(fileName) {
   }
 }
 
-// Derive Twitch MP4 URL from thumbnail URL
-// thumbnail: https://clips-media-assets2.twitch.tv/AT-cm|XXXX-preview-480x272.jpg
-// video:     https://clips-media-assets2.twitch.tv/AT-cm|XXXX.mp4
+// Use TwitchClient method
 function twitchThumbToMp4(thumbnailUrl) {
-  if (!thumbnailUrl) return '';
-  return thumbnailUrl.replace(/-preview-\d+x\d+\.jpg$/, '.mp4');
+  return twitchClient.thumbnailToMp4(thumbnailUrl);
 }
 
 async function geminiAnalyzeClip(videoUrl, thumbnailUrl, contentType, metadata) {
