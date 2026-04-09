@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Session Start
+
+**Read these two files at the start of every session:**
+1. `CLAUDE.md` — architecture, rules, gotchas
+2. `STATUS.md` — current tasks, phase progress, what's working, what's next
+
+Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
+
+---
+
 ## Development Environment Setup
 
 **4 terminals required:**

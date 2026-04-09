@@ -1,7 +1,7 @@
 # CWN Master Task List
 
 **Last Updated**: 2026-04-09
-**Status**: Active — Phase 2 + Phase 4 COMPLETE
+**Status**: Active — Phase 2 + Phase 3 + Phase 4 COMPLETE
 **Model Note**: Aider updated to Claude Sonnet ✅ (upgraded for better code quality)
 
 ---
@@ -79,31 +79,23 @@
 ---
 
 ## ✅ Phase 3: Caption & Prioritization Logic
-**Owner**: Aider  
-**Estimate**: 1-2 hours  
-**Status**: 🟡 READY TO START (no creative decision needed for logic)
+**Owner**: Aider
+**Estimate**: 1-2 hours
+**Status**: ✅ COMPLETE — commit `186ea3d`
 
 ### Tasks
 
 #### 3.1 Gemini Short-Form Caption Generator
-- [ ] Add new function `generateShortFormCaption(script, contentType)` in server.js
-- [ ] Gemini prompt:
-  - Input: assembled short-form script text + content type
-  - Output: caption ≤70 chars, platform-optimized
-  - Rules: keyword highlighting (bold key terms), hook in first 5 words
-  - Analyze video + audio transcript if available
-- [ ] Return: `{ caption, hashtags[], altText }`
-- [ ] Wire into `/generate-publish-copy` response for short-form
+- [x] Add new function `generateShortFormCaption(script, contentType)` in server.js
+- [x] Gemini prompt: caption ≤70 chars, platform-optimized, hook in first 5 words
+- [x] Return: `{ caption, hashtags[], altText }`
+- [x] Wire into `/generate-publish-copy` response for short-form
 
 #### 3.2 News Story Prioritization Logic
-- [ ] Add `prioritizeNewsStories(stories[])` function
-- [ ] Priority keywords (auto-bump to top): Trump, Iran, war, breaking, crisis, election
-- [ ] Logic:
-  1. Detect priority keywords in headline/summary
-  2. Bump matching stories to top of order
-  3. Weighted randomization for remaining stories (recency + engagement score)
-- [ ] Return: reordered `stories[]` array
-- [ ] Wire into `/generate-full-script` for news content type (before Gemini prompt)
+- [x] Add `prioritizeNewsStories(stories[])` function
+- [x] Priority keywords: trump, iran, war, breaking, crisis, election, attack, killed, dead, explosion, nuclear, sanctions, ceasefire, invasion, protest, arrest, indicted, verdict
+- [x] Keyword scoring (+10 pts each), stable-sort descending
+- [x] Wire into `/generate-full-script` for news content type (before Gemini analysis)
 
 ---
 
@@ -153,7 +145,7 @@ See `CREATIVE_VS_OPERATIONS.md` for the 7 creative decisions needed.
 |-------|-------|--------|--------|
 | Phase 1: Thumbnail Updates | Claude Code | 🟡 Ready to start | — |
 | Phase 2: Short-Form Infrastructure | Cline | ✅ COMPLETE | `88e20eb` |
-| Phase 3: Caption & Prioritization | Aider | 🟡 Ready to start | — |
+| Phase 3: Caption & Prioritization | Aider | ✅ COMPLETE | `186ea3d` |
 | Phase 4: Operations Fixes | Cline | ✅ COMPLETE | `9fa9340` |
 | Phase 5: Creative Layer | Claude→Cline | 🔴 Blocked (creative decisions) | — |
 
