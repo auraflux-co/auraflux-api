@@ -8520,11 +8520,16 @@ app.get('/remediate-video/check/:jobId', (req, res) => {
   res.json({ jobId, missed, fontPath: SYSTEM_FONT, logoPath: CWN_LOGO_PATH });
 });
 
-// ── Generate Twitch Longform Thumbnail with FFmpeg Text Overlay ──────
-// Takes static template from assets/longform_twitch_Thumbnail.png and overlays
-// dynamic episode number + date text using FFmpeg drawtext filter
-async function generateTwitchLongformThumbnail() {
-  const TEMPLATE_PATH = path.join(__dirname, 'assets', 'longform_twitch_Thumbnail.png');
+// ── Generate Twitch Longform Thumbnail with Canvas ────────────────────
+// Uses assets/twitchsoup_thumbnail.jpeg as base image (1024x1024 → scaled to 1280x720)
+// Overlays circular streamer profile images in a ring, plus episode number + date text
+//
+// Options:
+//   streamers: array of twitchUsername strings (e.g. ['adapt','hasanabi']) — max 11
+//              If omitted, uses all active streamers from streamers.json
+async function generateTwitchLongformThumbnail(options = {}) {
+  const { createCanvas, loadImage } = require('canvas');
+  const TEMPLATE_PATH = path.join(__dirname, 'assets', 'twitchsoup_thumbnail.jpeg');
   const EPISODE_COUNTERS_PATH = path.join(__dirname, 'episode_counters.json');
 
   // Check if template exists
@@ -8537,7 +8542,6 @@ async function generateTwitchLongformThumbnail() {
   if (fs.existsSync(EPISODE_COUNTERS_PATH)) {
     counters = JSON.parse(fs.readFileSync(EPISODE_COUNTERS_PATH, 'utf8'));
   }
-
   const episodeNum = counters.twitch || 1;
   counters.twitch = episodeNum + 1;
   fs.writeFileSync(EPISODE_COUNTERS_PATH, JSON.stringify(counters, null, 2));
@@ -8549,59 +8553,150 @@ async function generateTwitchLongformThumbnail() {
     year: 'numeric'
   });
 
-  // Output path
-  const outputPath = path.join(OUTPUT_DIR, `thumbnail_twitch_longform_ep${episodeNum}_${Date.now()}.png`);
+  // ── Canvas setup: 1280x720 (YouTube standard) ────────────────────
+  const W = 1280, H = 720;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext('2d');
 
-  // FFmpeg drawtext overlay
-  // Position text "under the soup bowl" - estimated at lower-center area
-  // Episode number: larger, centered, y=580
-  // Date: smaller, centered below episode, y=620
+  // ── Draw base image (scale 1024x1024 → fill 1280x720, center-crop) ──
+  const baseImg = await loadImage(TEMPLATE_PATH);
+  const srcW = baseImg.width, srcH = baseImg.height;
+  const scale = Math.max(W / srcW, H / srcH);
+  const drawW = srcW * scale, drawH = srcH * scale;
+  const drawX = (W - drawW) / 2, drawY = (H - drawH) / 2;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(baseImg, drawX, drawY, drawW, drawH);
 
-  if (!SYSTEM_FONT) {
-    console.warn('[twitch-thumbnail] No system font found, using FFmpeg default');
+  // ── Resolve streamer list ─────────────────────────────────────────
+  let roster = [];
+  try {
+    const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'streamers.json'), 'utf8'));
+    roster = data.roster || [];
+  } catch(e) {
+    console.warn('[twitch-thumbnail] Could not load streamers.json:', e.message);
   }
 
-  const fontPath = SYSTEM_FONT || 'Arial'; // Fallback to Arial if no system font
-  const escapedFont = fontPath.replace(/\\/g, '/').replace(/:/g, '\\:');
+  let activeStreamers;
+  if (options.streamers && options.streamers.length > 0) {
+    // Filter roster to requested usernames (preserve order)
+    activeStreamers = options.streamers
+      .map(slug => roster.find(s =>
+        s.twitchUsername?.toLowerCase() === slug.toLowerCase() ||
+        s.displayName?.toLowerCase() === slug.toLowerCase()
+      ))
+      .filter(Boolean);
+  } else {
+    activeStreamers = roster.filter(s => s.active);
+  }
+  // Cap at 11 circles
+  activeStreamers = activeStreamers.slice(0, 11);
 
-  // Build FFmpeg command with text overlays
-  const ffmpegArgs = [
-    '-i', TEMPLATE_PATH,
-    '-vf', [
-      // Episode number overlay (larger, bold-ish via fontsize)
-      `drawtext=text='EPISODE ${episodeNum}':fontfile=${escapedFont}:fontsize=48:fontcolor=white:x=(w-text_w)/2:y=560:borderw=2:bordercolor=black`,
-      // Date overlay (smaller, below episode)
-      `drawtext=text='${dateStr}':fontfile=${escapedFont}:fontsize=32:fontcolor=white:x=(w-text_w)/2:y=620:borderw=2:bordercolor=black`
-    ].join(','),
-    '-y',
-    outputPath
-  ];
+  // ── Streamer circle layout ────────────────────────────────────────
+  // Ring centered at (640, 360) with radius 280px
+  // Circles are 110px diameter with 6px gold border
+  const RING_CX = 640, RING_CY = 360;
+  const RING_R  = 280;   // radius of ring center-to-center
+  const CIRCLE_R = 55;   // radius of each streamer circle
+  const BORDER_W = 6;
+  const BORDER_COLOR = '#c7af4f'; // gold
 
-  return new Promise((resolve, reject) => {
-    const { execFile } = require('child_process');
-    execFile('ffmpeg', ffmpegArgs, { timeout: 30000 }, (err, stdout, stderr) => {
-      if (err) {
-        console.error('[twitch-thumbnail] FFmpeg error:', stderr);
-        return reject(new Error(`FFmpeg failed: ${err.message}`));
+  const n = activeStreamers.length;
+
+  for (let i = 0; i < n; i++) {
+    const streamer = activeStreamers[i];
+    // Distribute evenly around the ring, starting from top (-π/2)
+    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
+    const cx = RING_CX + RING_R * Math.cos(angle);
+    const cy = RING_CY + RING_R * Math.sin(angle);
+
+    // Try local file first, then remote URL
+    const username = streamer.twitchUsername || '';
+    const localPath = path.join(__dirname, 'assets', 'streamers', `${username}.png`);
+    const imgSrc = fs.existsSync(localPath)
+      ? localPath
+      : (streamer.profileImage || null);
+
+    // Draw circle clip
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, CIRCLE_R, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (imgSrc) {
+      try {
+        const img = await loadImage(imgSrc);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, cx - CIRCLE_R, cy - CIRCLE_R, CIRCLE_R * 2, CIRCLE_R * 2);
+      } catch(e) {
+        // Fallback: dark circle placeholder
+        ctx.fillStyle = '#1a2540';
+        ctx.fillRect(cx - CIRCLE_R, cy - CIRCLE_R, CIRCLE_R * 2, CIRCLE_R * 2);
+        console.warn(`[twitch-thumbnail] Profile image failed for ${streamer.displayName}: ${e.message}`);
       }
+    } else {
+      ctx.fillStyle = '#1a2540';
+      ctx.fillRect(cx - CIRCLE_R, cy - CIRCLE_R, CIRCLE_R * 2, CIRCLE_R * 2);
+    }
+    ctx.restore();
 
-      if (!fs.existsSync(outputPath)) {
-        return reject(new Error('FFmpeg succeeded but output file not found'));
-      }
+    // Gold border ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, CIRCLE_R + BORDER_W / 2, 0, Math.PI * 2);
+    ctx.strokeStyle = BORDER_COLOR;
+    ctx.lineWidth = BORDER_W;
+    ctx.stroke();
 
-      console.log(`[twitch-thumbnail] ✅ Generated: ${path.basename(outputPath)} (Episode ${episodeNum}, ${dateStr})`);
-      resolve({ thumbnailPath: outputPath, episodeNum, date: dateStr });
-    });
-  });
+    // Streamer name label below circle
+    const label = (streamer.onAirName || streamer.displayName || '').toUpperCase();
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 6;
+    ctx.fillText(label, cx, cy + CIRCLE_R + BORDER_W + 18);
+    ctx.shadowColor = 'transparent';
+  }
+
+  // ── Episode number (top-right) ────────────────────────────────────
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 36px Arial';
+  ctx.fillStyle = '#c7af4f';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 8;
+  ctx.fillText(`EP ${episodeNum}`, W - 24, 48);
+
+  // ── Date (top-left) ──────────────────────────────────────────────
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 28px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(dateStr, 24, 48);
+
+  ctx.shadowColor = 'transparent';
+
+  // ── Save PNG ─────────────────────────────────────────────────────
+  const outputPath = path.join(OUTPUT_DIR, `thumbnail_twitch_longform_ep${episodeNum}_${Date.now()}.png`);
+  const buf = canvas.toBuffer('image/png');
+  fs.writeFileSync(outputPath, buf);
+
+  console.log(`[twitch-thumbnail] ✅ Generated: ${path.basename(outputPath)} (Episode ${episodeNum}, ${dateStr}, ${n} streamers)`);
+  return { thumbnailPath: outputPath, episodeNum, date: dateStr, streamerCount: n };
 }
 
 // ── POST /generate-twitch-longform-thumbnail ─────────────────────────
-// Generates Twitch longform YouTube thumbnail using static template + FFmpeg text overlay
-// Body: {} (no parameters needed - auto-increments episode, uses current date)
-// Returns: { ok, thumbnailPath, episodeNum, date }
+// Generates Twitch longform YouTube thumbnail using twitchsoup_thumbnail.jpeg base
+// + canvas-drawn streamer circles in a ring + episode number + date
+//
+// Body: {
+//   streamers?: string[]  // optional array of twitchUsername slugs (e.g. ['adapt','hasanabi'])
+//                         // if omitted, uses all active streamers from streamers.json
+// }
+// Returns: { ok, thumbnailPath, episodeNum, date, streamerCount }
 app.post('/generate-twitch-longform-thumbnail', async (req, res) => {
   try {
-    const result = await generateTwitchLongformThumbnail();
+    const { streamers } = req.body || {};
+    const result = await generateTwitchLongformThumbnail({ streamers });
     res.json({ ok: true, ...result });
   } catch(e) {
     console.error('[twitch-thumbnail] Error:', e.message);
