@@ -2001,7 +2001,17 @@ function renderQueue() {
     }
     actions += '<button onclick="navToThumbnail(\'' + job.id + '\')" class="btn btn-outline btn-sm">🖼 THUMBNAIL</button>';
     actions += '<button onclick="navToPublishPrep(\'' + job.id + '\')" class="btn btn-outline btn-sm">📋 PUBLISH COPY'+(job.publishPrep?' ✓':'')+'</button>';
+    // Short-form only: portrait thumbnail + CapCut draft buttons
+    var isShortJob = (job.type||'').indexOf('short') > -1 || job.format === 'portrait';
+    if (isShortJob) {
+      actions += '<button onclick="generateShortThumbnail(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(199,175,79,0.4);color:#c7af4f;">📸 SHORT THUMB</button>';
+      actions += '<button onclick="sendToCapCut(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(145,70,255,0.4);color:#9146ff;">✂️ CAPCUT DRAFT</button>';
+    }
     actions += '</div>';
+    // Short-form status div (for thumbnail + CapCut feedback)
+    if (isShortJob) {
+      actions += '<div id="short-status-' + job.id + '" style="margin-top:4px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);"></div>';
+    }
 
     // SEGMENT TOGGLE
     var segHtml = '<div id="segs-'+job.id+'" style="display:none;margin-top:8px;border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;">';
@@ -4116,6 +4126,126 @@ function pollPublishStatus(jobId) {
     xhr.send();
   }
   check();
+}
+
+// ── Phase 2: Short-Form Thumbnail Generator ──────────────────────────────────
+function generateShortThumbnail(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  var statusEl = g('short-status-' + jobId);
+  if (!job) {
+    if (statusEl) statusEl.textContent = '❌ Job not found: ' + jobId;
+    return;
+  }
+  var videoPath = job.finalUrl || job.outputPath || '';
+  if (!videoPath) {
+    if (statusEl) statusEl.textContent = '❌ No video path on job';
+    return;
+  }
+  if (statusEl) statusEl.textContent = '⏳ Generating short-form thumbnail…';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/thumbnail-short', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 60000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (resp.thumbnailUrl || resp.outputPath) {
+        var url = resp.thumbnailUrl || resp.outputPath;
+        if (statusEl) statusEl.innerHTML = '✅ Thumbnail ready: <a href="' + url + '" target="_blank" style="color:#c7af4f;">' + url.split('/').pop() + '</a>';
+      } else {
+        if (statusEl) statusEl.textContent = '❌ ' + (resp.error || 'Unknown error');
+      }
+    } catch(e) {
+      if (statusEl) statusEl.textContent = '❌ Parse error: ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (statusEl) statusEl.textContent = '❌ Request failed / timed out';
+  };
+  xhr.send(JSON.stringify({ videoPath: videoPath, contentType: job.type || 'short', jobId: jobId }));
+}
+
+// ── Phase 2: Send Short-Form Job to CapCut Draft ─────────────────────────────
+function sendToCapCut(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  var statusEl = g('short-status-' + jobId);
+  if (!job) {
+    if (statusEl) statusEl.textContent = '❌ Job not found: ' + jobId;
+    return;
+  }
+  if (statusEl) statusEl.textContent = '⏳ Initialising CapCut draft…';
+
+  function post(url, data, cb) {
+    var x = new XMLHttpRequest();
+    x.open('POST', CFG.ffmpegUrl + url, true);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.timeout = 30000;
+    x.onload = function() {
+      try { cb(null, JSON.parse(x.responseText)); }
+      catch(e) { cb(e); }
+    };
+    x.onerror = x.ontimeout = function() { cb(new Error('Request failed')); };
+    x.send(JSON.stringify(data));
+  }
+
+  // Step 1: Init draft
+  post('/capcut/init', { jobId: jobId, format: 'portrait' }, function(err, initResp) {
+    if (err || !initResp || initResp.error) {
+      if (statusEl) statusEl.textContent = '❌ Init failed: ' + (err ? err.message : initResp.error);
+      return;
+    }
+    var draftId = initResp.draftId || initResp.draft_id || jobId;
+    if (statusEl) statusEl.textContent = '⏳ Draft created. Adding segments…';
+
+    // Step 2: Add segments (avatar + source clip)
+    var segments = job.segments || [];
+    var segIdx = 0;
+    function addNextSegment() {
+      if (segIdx >= segments.length) {
+        addTicker();
+        return;
+      }
+      var seg = segments[segIdx++];
+      post('/capcut/add-segment', { draftId: draftId, jobId: jobId, segment: seg }, function(e2) {
+        if (e2) { if (statusEl) statusEl.textContent = '⚠️ Segment ' + segIdx + ' failed, continuing…'; }
+        addNextSegment();
+      });
+    }
+
+    // Step 3: Add ticker
+    function addTicker() {
+      if (statusEl) statusEl.textContent = '⏳ Adding ticker…';
+      post('/capcut/ticker', { draftId: draftId, jobId: jobId }, function(e3) {
+        addLogo();
+      });
+    }
+
+    // Step 4: Add logo
+    function addLogo() {
+      if (statusEl) statusEl.textContent = '⏳ Adding logo…';
+      post('/capcut/logo', { draftId: draftId, jobId: jobId }, function(e4) {
+        finalizeDraft();
+      });
+    }
+
+    // Step 5: Finalize
+    function finalizeDraft() {
+      if (statusEl) statusEl.textContent = '⏳ Finalising draft…';
+      post('/capcut/finalize', { draftId: draftId, jobId: jobId }, function(e5, finalResp) {
+        if (e5 || !finalResp) {
+          if (statusEl) statusEl.textContent = '❌ Finalize failed: ' + (e5 ? e5.message : 'no response');
+          return;
+        }
+        var draftUrl = finalResp.draftUrl || finalResp.draft_url || '';
+        if (statusEl) {
+          statusEl.innerHTML = '✅ CapCut draft ready!'
+            + (draftUrl ? ' <a href="' + draftUrl + '" target="_blank" style="color:#9146ff;">Open Draft ↗</a>' : '');
+        }
+      });
+    }
+
+    addNextSegment();
+  });
 }
 
 function checkStreamerLanguageStatus() {

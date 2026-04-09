@@ -7786,6 +7786,296 @@ app.get('/capcut/status/:jobId', (req, res) => {
   });
 });
 
+// ── Phase 2.2: Portrait Thumbnail Frame Extraction ────────────────
+// POST /thumbnail-short
+// Body: { videoPath, contentType, jobId }
+// Finds highest-motion frame in assembled short-form video, applies
+// "BECAUSE THE LIGHT WAS ON" tagline + episode number overlay.
+// Output: thumbnail_short_{type}_ep{N}_{timestamp}.png in ./output/
+app.post('/thumbnail-short', async (req, res) => {
+  const { videoPath, contentType = 'twitch', jobId = '' } = req.body;
+  if (!videoPath) return res.status(400).json({ error: 'videoPath required' });
+
+  const localPath = videoPath.startsWith('http')
+    ? path.join(TMP_DIR, `thumb_src_${Date.now()}.mp4`)
+    : videoPath;
+
+  try {
+    // Download if remote URL
+    if (videoPath.startsWith('http')) {
+      console.log(`[thumbnail-short] Downloading video for frame extraction...`);
+      await new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(localPath);
+        const protocol = videoPath.startsWith('https') ? require('https') : require('http');
+        protocol.get(videoPath, (response) => {
+          response.pipe(file);
+          file.on('finish', () => { file.close(); resolve(); });
+        }).on('error', reject);
+      });
+    }
+
+    // Get video duration
+    const duration = await probeDuration(localPath);
+    console.log(`[thumbnail-short] Video duration: ${duration.toFixed(2)}s`);
+
+    // Find highest-motion frame using ffprobe scene detection
+    // scene=0.3 threshold — picks frames with significant visual change
+    let bestTimestamp = duration * 0.30; // fallback: 30% mark
+    try {
+      const sceneData = await new Promise((resolve, reject) => {
+        const args = [
+          '-i', localPath,
+          '-vf', 'select=gt(scene\\,0.3),showinfo',
+          '-vsync', 'vfr',
+          '-f', 'null', '-'
+        ];
+        execFile(ffmpegPath().replace('ffmpeg', 'ffprobe'), [
+          '-v', 'quiet', '-show_frames', '-select_streams', 'v',
+          '-read_intervals', `%+${Math.min(duration, 60)}`,
+          '-show_entries', 'frame=pkt_pts_time,pict_type',
+          '-of', 'csv=p=0', localPath
+        ], { maxBuffer: 10 * 1024 * 1024 }, (err, stdout) => {
+          if (err) { resolve(null); return; }
+          // Parse frame timestamps — find I-frames (scene changes)
+          const lines = stdout.trim().split('\n').filter(Boolean);
+          const iFrames = lines
+            .map(l => { const parts = l.split(','); return { t: parseFloat(parts[0]), type: parts[1] }; })
+            .filter(f => f.type === 'I' && f.t > 3 && f.t < duration - 3); // skip first/last 3s
+          if (iFrames.length > 0) {
+            // Pick the I-frame closest to 40% mark (usually peak action)
+            const target = duration * 0.40;
+            iFrames.sort((a, b) => Math.abs(a.t - target) - Math.abs(b.t - target));
+            resolve(iFrames[0].t);
+          } else {
+            resolve(null);
+          }
+        });
+      });
+      if (sceneData !== null) {
+        bestTimestamp = sceneData;
+        console.log(`[thumbnail-short] Best frame at ${bestTimestamp.toFixed(2)}s (scene detection)`);
+      } else {
+        console.log(`[thumbnail-short] Scene detection found no I-frames — using 30% mark (${bestTimestamp.toFixed(2)}s)`);
+      }
+    } catch(e) {
+      console.warn(`[thumbnail-short] Scene detection failed: ${e.message} — using fallback`);
+    }
+
+    // Get episode counter for this content type
+    const epCounters = (() => {
+      try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'episode_counters.json'), 'utf8')); }
+      catch(e) { return {}; }
+    })();
+    const epKey = `${contentType}_short`;
+    const epNum = (epCounters[epKey] || 0) + 1;
+    epCounters[epKey] = epNum;
+    try { fs.writeFileSync(path.join(__dirname, 'episode_counters.json'), JSON.stringify(epCounters, null, 2)); } catch(e) {}
+
+    // Build output path
+    const outDir = OUTPUT_DIR;
+    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+    const ts = Date.now();
+    const outFile = `thumbnail_short_${contentType}_ep${epNum}_${ts}.png`;
+    const outPath = path.join(outDir, outFile);
+
+    // Extract frame + apply overlays in one FFmpeg pass
+    // Overlays: "BECAUSE THE LIGHT WAS ON" tagline (bottom) + "EP N" badge (top-left)
+    const tagline = 'BECAUSE THE LIGHT WAS ON';
+    const epLabel = `EP ${epNum}`;
+
+    // Check if we have a font available
+    const fontPath = '/System/Library/Fonts/Supplemental/BebasNeue-Regular.ttf';
+    const fallbackFont = '/System/Library/Fonts/Helvetica.ttc';
+    const useFont = fs.existsSync(fontPath) ? fontPath : fallbackFont;
+
+    const drawTextFilters = [
+      // Dark gradient overlay at bottom for tagline readability
+      `drawbox=x=0:y=1560:w=1080:h=360:color=black@0.55:t=fill`,
+      // Tagline: "BECAUSE THE LIGHT WAS ON" — centered, bottom area
+      `drawtext=fontfile='${useFont}':text='${tagline}':fontsize=64:fontcolor=white:x=(w-text_w)/2:y=1680:shadowcolor=black:shadowx=2:shadowy=2`,
+      // Episode badge: "EP N" — top-left, gold
+      `drawtext=fontfile='${useFont}':text='${epLabel}':fontsize=36:fontcolor=#c7af4f:x=20:y=20:shadowcolor=black:shadowx=1:shadowy=1`
+    ].join(',');
+
+    await new Promise((resolve, reject) => {
+      const args = [
+        '-ss', bestTimestamp.toFixed(3),
+        '-i', localPath,
+        '-vframes', '1',
+        '-vf', drawTextFilters,
+        '-q:v', '2',
+        '-y', outPath
+      ];
+      const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
+      proc.on('close', code => code === 0 ? resolve() : reject(new Error(`Frame extract failed: ${code}`)));
+      proc.on('error', reject);
+    });
+
+    console.log(`[thumbnail-short] ✅ Thumbnail saved: ${outPath}`);
+
+    // Clean up downloaded temp file
+    if (videoPath.startsWith('http')) {
+      try { fs.unlinkSync(localPath); } catch(e) {}
+    }
+
+    res.json({
+      ok: true,
+      thumbnailPath: outPath,
+      thumbnailUrl: `/download/${outFile}`,
+      episode: epNum,
+      frameTimestamp: bestTimestamp,
+      contentType
+    });
+
+  } catch(e) {
+    console.error(`[thumbnail-short] Error: ${e.message}`);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Phase 2.3: TikTok / Reels Safety Zone Validation ─────────────
+// POST /safety-zone-check
+// Body: { jobId, contentType, avatarFaceX, avatarFaceY }
+// Validates Bobby G avatar face position doesn't overlap platform UI buttons.
+// Returns: { safe: true/false, warnings: [], zones: { tiktok, reels } }
+//
+// Safe zones per VISUAL_DESIGN_SPEC.md:
+//   TikTok: avoid bottom-right 200×400px (x=880, y=1520)
+//   Reels:  avoid bottom 150px (y=1770)
+app.post('/safety-zone-check', (req, res) => {
+  const {
+    jobId = '',
+    contentType = 'twitch',
+    // Avatar face center — defaults to center of AVATAR_ZONE (540, 1200)
+    avatarFaceX = 540,
+    avatarFaceY = 1200,
+    // Avatar face radius for overlap detection (pixels)
+    avatarFaceRadius = 120
+  } = req.body;
+
+  const SAFETY_ZONES = {
+    tiktok: { x: 880, y: 1520, w: 200, h: 400, label: 'TikTok like/share/comment buttons' },
+    reels:  { x: 0,   y: 1770, w: 1080, h: 150, label: 'Instagram Reels caption area' }
+  };
+
+  const warnings = [];
+  const results = {};
+
+  for (const [platform, zone] of Object.entries(SAFETY_ZONES)) {
+    // Check if avatar face circle overlaps the UI zone rectangle
+    // Simple AABB + circle overlap: closest point on rect to circle center
+    const closestX = Math.max(zone.x, Math.min(avatarFaceX, zone.x + zone.w));
+    const closestY = Math.max(zone.y, Math.min(avatarFaceY, zone.y + zone.h));
+    const distX = avatarFaceX - closestX;
+    const distY = avatarFaceY - closestY;
+    const distance = Math.sqrt(distX * distX + distY * distY);
+    const overlaps = distance < avatarFaceRadius;
+
+    results[platform] = {
+      safe: !overlaps,
+      zone,
+      avatarFace: { x: avatarFaceX, y: avatarFaceY, radius: avatarFaceRadius },
+      distance: Math.round(distance),
+      margin: Math.round(distance - avatarFaceRadius)
+    };
+
+    if (overlaps) {
+      const msg = `⚠️ [safety-zone] ${platform.toUpperCase()} OVERLAP DETECTED — avatar face at (${avatarFaceX}, ${avatarFaceY}) overlaps ${zone.label} (${zone.x},${zone.y} ${zone.w}×${zone.h}). Distance: ${Math.round(distance)}px, radius: ${avatarFaceRadius}px`;
+      warnings.push(msg);
+      console.warn(msg);
+    } else {
+      console.log(`[safety-zone] ✅ ${platform.toUpperCase()} safe — avatar face ${Math.round(distance)}px from UI zone (margin: ${Math.round(distance - avatarFaceRadius)}px)`);
+    }
+  }
+
+  const allSafe = warnings.length === 0;
+  res.json({
+    ok: true,
+    safe: allSafe,
+    jobId,
+    contentType,
+    warnings,
+    zones: results,
+    recommendation: allSafe
+      ? '✅ Avatar position is safe for all platforms'
+      : '⚠️ Avatar overlaps platform UI — flag for Rob review before publishing'
+  });
+});
+
+// ── Phase 2: CapCut Thumbnail Extraction ──────────────────────────
+// POST /capcut/thumbnail
+// Body: { jobId, videoPath, timestamp }
+// Extracts a frame from the assembled video and adds it to the CapCut draft as cover
+app.post('/capcut/thumbnail', async (req, res) => {
+  const { jobId, videoPath, timestamp } = req.body;
+  if (!jobId || !videoPath) return res.status(400).json({ error: 'jobId and videoPath required' });
+
+  const draft = capcutDrafts[jobId];
+  if (!draft) return res.status(404).json({ error: `No draft for ${jobId} — call /capcut/init first` });
+
+  try {
+    // Extract frame at given timestamp (or 30% mark)
+    const duration = await probeDuration(videoPath);
+    const ts = timestamp || (duration * 0.30);
+    const thumbPath = path.join(TMP_DIR, `capcut_thumb_${jobId}_${Date.now()}.png`);
+
+    await new Promise((resolve, reject) => {
+      const args = [
+        '-ss', ts.toFixed(3),
+        '-i', videoPath,
+        '-vframes', '1',
+        '-q:v', '2',
+        '-y', thumbPath
+      ];
+      const proc = execFile(ffmpegPath(), args, { maxBuffer: 10 * 1024 * 1024 });
+      proc.on('close', code => code === 0 ? resolve() : reject(new Error(`Frame extract failed: ${code}`)));
+      proc.on('error', reject);
+    });
+
+    // Send thumbnail to CapCut draft as cover image
+    const thumbUrl = `http://localhost:3000/download/${path.basename(thumbPath)}`;
+    // Copy to output dir so it's accessible via /download/
+    const outThumbPath = path.join(OUTPUT_DIR, path.basename(thumbPath));
+    fs.copyFileSync(thumbPath, outThumbPath);
+
+    await capcut('/add_image', {
+      draft_id: draft.draftId,
+      image_url: thumbUrl,
+      start: 0,
+      end: 1,
+      transform_x: 0,
+      transform_y: 0,
+      scale_x: 1.0,
+      scale_y: 1.0,
+      is_cover: true
+    });
+
+    try { fs.unlinkSync(thumbPath); } catch(e) {}
+    console.log(`[capcut/thumbnail] ✅ Cover frame set at ${ts.toFixed(2)}s`);
+    res.json({ ok: true, timestamp: ts, thumbUrl });
+  } catch(e) {
+    console.error('[capcut/thumbnail] Error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Phase 2: Short-Form Assembly Status ───────────────────────────
+// GET /short-form-status/:jobId
+// Returns current status of a short-form assembly job
+app.get('/short-form-status/:jobId', (req, res) => {
+  const { jobId } = req.params;
+  const asmJob = assemblyJobs[jobId];
+  if (!asmJob) return res.status(404).json({ error: 'No assembly job found', jobId });
+  res.json({
+    ok: true,
+    jobId,
+    status: asmJob.status || 'unknown',
+    pct: asmJob.pct || 0,
+    outputPath: asmJob.outputPath || null,
+    format: asmJob.format || 'portrait'
+  });
+});
+
 // ── Teach Gemini Streamer Language ────────────────────────────────
 // One-off task: Gemini watches ~10 recent VOD clips per streamer
 // Stores vocabulary, recurring bits, and community references in cwn_style_guides.json
@@ -8874,11 +9164,12 @@ app.post('/generate-thumbnail', async (req, res) => {
           }
           if (thumbHeadline) thumbHeadline.textContent = data.title || 'Story Headline';
           if (thumbCat) {
-            const showName = data.contentType === 'nba' ? 'OTHER SIDE OF THE PILLOW' : 'CLIPZWORLD NEWS';
+            const showName = data.contentType === 'nba' ? 'OTHER SIDE OF THE PILLOW' : 'BECAUSE THE LIGHT WAS ON';
             thumbCat.textContent = `${showName} - EPISODE ${data.episodeNum}`;
           }
           if (thumbSrcBadge) thumbSrcBadge.textContent = data.source || 'REACTION';
-          if (thumbSub) thumbSub.textContent = (data.date || new Date().toLocaleDateString()).toUpperCase() + ' | CLIPZWORLD NEWS';
+          const brandName = data.contentType === 'nba' ? 'OTHER SIDE OF THE PILLOW' : 'BECAUSE THE LIGHT WAS ON';
+          if (thumbSub) thumbSub.textContent = (data.date || new Date().toLocaleDateString()).toUpperCase() + ' | ' + brandName;
         }, { title, storyImage, source, date, contentType, episodeNum });
 
         // Wait for image to load
