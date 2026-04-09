@@ -6232,7 +6232,9 @@ ${notesStr}${clipLines}`;
         // Generate 72 scene headers (1 INTRO + 10 streamers × 7 scenes each + 1 OUTRO)
         const sceneHeaders = ['=== INTRO ==='];
         items.forEach(item => {
-          const name = getDisplayName(item.streamer).toUpperCase();
+          // Fix: replace spaces with underscores to prevent Gemini header parsing failures
+          // e.g. "Jay Cinco" → "JAY_CINCO" not "JAY CINCO" (URGENT_TEST_FAILURE_INVESTIGATION.md Fix #1)
+          const name = getDisplayName(item.streamer).toUpperCase().replace(/\s+/g, '_');
           sceneHeaders.push(`=== ${name}_INTRO ===`);
           for (let i = 1; i <= clipsPerStreamer; i++) {
             sceneHeaders.push(`=== ${name}_CLIP${i}_SETUP ===`);
