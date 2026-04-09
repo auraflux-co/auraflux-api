@@ -1,8 +1,8 @@
 # CWN Production Automation Status
 
-**Last Updated**: 2026-04-08
-**Session**: Multi-Agent Parallel Track (Cline + Aider + Claude Code)
-**Next Phase**: 12-Test Framework Execution
+**Last Updated**: 2026-04-09
+**Session**: Cline — Scene Header Normalization Fix + Test Validation
+**Next Phase**: 12-Test Framework Execution (Tests 1-12)
 
 ---
 
@@ -168,6 +168,36 @@ show-model-warnings: false
 **Solution**: Removed stale entries, 35 → 31 clean permissions
 
 **Status**: ✅ COMPLETE
+
+---
+
+### 13. Scene Header Normalization Fix (commit 93aa22f)
+**File**: `server.js:6519-6528`
+**Problem**: Gemini writes `=== JAY CINCO_INTRO ===` (space) in script output despite prompt using `JAY_CINCO` (underscore). Claude's Gate 1 QA regex `[A-Z_0-9]+` doesn't match names with spaces — those scenes were invisible to the scene counter. Test 2 showed 30/37 scenes, Test 4 showed 18/22 scenes. Both were HARD FAIL (60/100 and 45/100).
+
+**Root Cause**: Prompt-level fix (line 6321) generates correct underscored headers in the template, but Gemini ignores the format in its actual output text.
+
+**Solution**: Two-layer fix:
+1. **Prompt-level** (line 6321): `getDisplayName().toUpperCase().replace(/\s+/g, '_')` — prevents spaces in the prompt template
+2. **Output-level post-processing** (lines 6519-6528): After `script = geminiResult.script`, normalize ALL `=== HEADER ===` names in Gemini's output:
+```javascript
+if (script && typeof script === 'string') {
+  script = script.replace(/===\s+([^=]+?)\s+===/g, (match, name) => {
+    const normalized = name.trim().replace(/\s+/g, '_');
+    return `=== ${normalized} ===`;
+  });
+}
+```
+
+**Test Results After Fix**:
+| Test | Before | After | Scene Count |
+|------|--------|-------|-------------|
+| Test 2 (Twitch/Jay Cinco) | 60/100 ❌ HARD FAIL | 85/100 🟡 MANUAL REVIEW | 37/37 ✅ |
+| Test 4 (NBA/Trail Blazers) | 45/100 ❌ HARD FAIL | 85/100 🟡 MANUAL REVIEW | 22/22 ✅ |
+
+**Remaining -15**: Expected — empty clip arrays in test payloads = unverifiable clip accuracy. Not a structural failure.
+
+**Status**: ✅ FIXED & VERIFIED (2026-04-09)
 
 ---
 
