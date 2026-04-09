@@ -196,10 +196,11 @@ body {
 }
 
 .top-show {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.7);
-  letter-spacing: 3px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--gold);
+  letter-spacing: 4px;
 }
 
 .top-right {
@@ -272,13 +273,15 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   SIDE STORY LIST — right panel (BIGGER)
+   SIDE STORY LIST — right panel
+   NOTE: Video card (640×360 TV-shaped) will be positioned LEFT of Bobby G
+   All long-form shows (News, NBA, Twitch) use same layout: TV on left facing Bobby G
 ═══════════════════════════════════════ */
 .story-list {
   position: absolute;
   top: 120px;
   right: 32px;
-  width: 420px;
+  width: 360px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -411,15 +414,15 @@ body {
 
 <!-- TOP BAR -->
 <div class="top-bar">
-  <div class="top-brand">CLIPZWORLD</div>
+  <div class="top-brand">ClipzWorld News</div>
   <div class="top-divider"></div>
-  <div class="top-show">WORLD NEWS & SPORTS</div>
+  <div class="top-show" id="show-info">EPISODE 1</div>
   <div class="top-right">
     <div class="top-live">
       <div class="top-live-dot"></div>
       <div class="top-live-text">LIVE</div>
     </div>
-    <div class="top-time" id="clock">12:00 PM</div>
+    <div class="top-time" id="date-display">MARCH 30, 2026</div>
   </div>
 </div>
 
@@ -471,7 +474,7 @@ body {
 <!-- BOTTOM TICKER -->
 <div class="news-ticker">
   <div class="ticker-brand">
-    <div class="ticker-brand-text">CZW NEWS</div>
+    <div class="ticker-brand-text">BREAKING NEWS</div>
   </div>
   <div class="ticker-scroll">
     <div class="ticker-content">
@@ -504,21 +507,57 @@ body {
 </div>
 
 <script>
-// Live clock
-function updateClock() {
+// Live date display
+function updateDate() {
   var now = new Date();
-  var h = now.getHours();
-  var m = now.getMinutes();
-  var ampm = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  var str = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
-  var el = document.getElementById('clock');
-  var el2 = document.getElementById('break-time');
-  if (el) el.textContent = str;
-  if (el2) el2.textContent = str;
+  var months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  var dateStr = months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+  var el = document.getElementById('date-display');
+  if (el) el.textContent = dateStr;
 }
-updateClock();
-setInterval(updateClock, 1000);
+updateDate();
+setInterval(updateDate, 60000); // Update every minute
+
+// Story tracking system (like ESPN game IDs)
+// URL params: ?activeStory=2 to highlight story #2
+function setActiveStory(storyId) {
+  var items = document.querySelectorAll('.story-item');
+  items.forEach(function(item, index) {
+    item.classList.remove('active');
+    var cat = item.querySelector('.story-item-cat');
+    if (index === storyId - 1) {
+      item.classList.add('active');
+      if (cat) cat.textContent = '▶ ON AIR';
+    } else {
+      // Reset to original category (you can customize this per story)
+      var categories = ['WORLD', 'SPORTS', 'TECH', 'POLITICS'];
+      if (cat && index < categories.length) cat.textContent = categories[index];
+    }
+  });
+}
+
+// Check URL params on load
+var urlParams = new URLSearchParams(window.location.search);
+var activeStory = urlParams.get('activeStory');
+if (activeStory) {
+  setActiveStory(parseInt(activeStory));
+}
+
+// Optional: Listen for postMessage from parent (for OBS integration)
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'setActiveStory') {
+    setActiveStory(event.data.storyId);
+  }
+  if (event.data && event.data.type === 'updateLowerThird') {
+    var data = event.data;
+    var headline = document.querySelector('.lt-headline');
+    var category = document.querySelectorAll('.lt-category')[0];
+    var sub = document.querySelector('.lt-sub');
+    if (headline && data.headline) headline.textContent = data.headline;
+    if (category && data.category) category.textContent = data.category;
+    if (sub && data.date) sub.textContent = data.date;
+  }
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0",
+  "created": "2026-04-09T00:00:00.000Z",
+  "description": "CWN publish tracking database — logs every /publish attempt with status, platform, timestamps, and jobId",
+  "uploads": []
+}
