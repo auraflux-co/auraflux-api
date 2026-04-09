@@ -3,6 +3,7 @@
 **Last Updated:** 2026-04-09 (1:45 PM ET)
 **Branch:** main | **Latest Commit:** `186ea3d` — Phase 3: generateShortFormCaption + prioritizeNewsStories
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
+**Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
 ---
 
@@ -142,6 +143,9 @@ These are blocked on Phase 5 creative alignment:
 | `.aider.conf.yml` | Aider config (claude-sonnet-4-20250514) |
 | `VISUAL_DESIGN_SPEC.md` | Short-form layout spec (1080×1920, zones, safety) |
 | `CREATIVE_VS_OPERATIONS.md` | 7 creative decisions needed for Phase 5 |
+| `MORNING_BRIEFING.md` | What Aider did overnight — read every morning before touching code |
+| `OVERNIGHT_TASKS.md` | Aider's overnight task queue (1am-7am ET window) |
+| `SERVER_SPLIT_PLAN.md` | Plan to split server.js into modules (pending approval) |
 
 ---
 
