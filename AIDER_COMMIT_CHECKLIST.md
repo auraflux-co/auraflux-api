@@ -28,4 +28,16 @@ Quick reference:
 /drop server.js       # remove when done
 /clear                # reset history between tasks
 /tokens               # check current context usage
+/map                  # view the current repository map
 ```
+
+---
+
+## Repository Map
+
+Aider automatically constructs a map of your entire git repository. If you don't `/add` files, the model uses this map to understand how functions are called across files — often eliminating the need to add them at all.
+
+- **Try describing your task first without adding files** — Aider's repo map may already have enough context
+- Use `/map` to see what Aider currently knows about the codebase
+- Only `/add` a file if Aider needs to see its full contents to make the edit
+- The repo map is much smaller than full file contents, so it saves tokens significantly
