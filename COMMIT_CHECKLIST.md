@@ -6,6 +6,26 @@
 
 ---
 
+## ⛔ HARD REQUIREMENT — STATUS.md Must Be Updated
+
+**This is not optional. A pre-commit hook will block your commit if you skip this.**
+
+Before every commit that changes code (`.js`, `.html`, `.py`, `.json`, `.sh`):
+
+1. Open `STATUS.md`
+2. Update the **`🤖 Last Agent Action`** table — your agent name, task, files changed, timestamp
+3. Update the **Phase Progress** table if a phase status changed
+4. Update the **`Last Updated`** date at the top of the file
+5. `git add STATUS.md` before committing
+
+**To bypass** (use only for docs-only commits or emergencies):
+```bash
+git commit --no-verify -m "docs: ... [skip STATUS — docs only]"
+```
+Always document WHY you bypassed in the commit message.
+
+---
+
 ## Pre-Commit Checklist
 
 ### 1. Descriptive Commit Messages with File Locations

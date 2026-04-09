@@ -17,6 +17,16 @@
 
 ---
 
+## 🤖 Last Agent Action
+
+> **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
+
+| Agent | Task Completed | Files Changed | Commit | Timestamp |
+|-------|---------------|---------------|--------|-----------|
+| Cline | Added pre-commit hook + STATUS enforcement | `.git/hooks/pre-commit`, `STATUS.md`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | pending | 2026-04-09 7:00 PM ET |
+
+---
+
 ## 📊 Phase Progress
 
 | Phase | Owner | Status | Commit |
