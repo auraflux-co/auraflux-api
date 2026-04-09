@@ -14,7 +14,8 @@ body { background:#0a0e1a; color:#fff; font-family:'Barlow Condensed',Arial,sans
 #status { font-size:11px; color:rgba(255,255,255,0.4); font-family:monospace; }
 #thumb { width:1280px; height:720px; position:relative; overflow:hidden; background:#060a12; z-index:1; }
 .tbg { position:absolute; inset:0; }
-.tbg-static { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(0.4) saturate(0.7); z-index:0; }
+.tbg-static { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(0.4) saturate(0.7) blur(8px); transform:scale(1.05); z-index:0; }
+.tbg-overlay { position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.75) 100%); z-index:1; }
 .tfloor { position:absolute; bottom:0; left:0; right:0; height:300px; overflow:hidden; }
 .tfloor::before { content:''; position:absolute; bottom:0; left:-30%; right:-30%; height:480px; background:repeating-linear-gradient(90deg,rgba(255,255,255,0.025) 0,rgba(255,255,255,0.025) 1px,transparent 1px,transparent 64px),repeating-linear-gradient(0deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 44px); transform:perspective(280px) rotateX(72deg); transform-origin:bottom center; }
 .tfloor::after { content:''; position:absolute; bottom:0; left:0; right:0; height:180px; background:linear-gradient(0deg,#060a12 0%,transparent 100%); }
@@ -74,6 +75,7 @@ body { background:#0a0e1a; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
 <div id="thumb">
   <img class="tbg-static" src="assets/nba_long_form thumbnail.jpg" alt="">
+  <div class="tbg-overlay"></div>
   <div class="tbg" id="tbg"></div>
   <div class="tfloor"></div>
   <div id="panel-a"></div>
@@ -96,7 +98,7 @@ body { background:#0a0e1a; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="trec" id="h-rec"></div>
     </div>
   </div>
-  <div class="brand">CLIPZWORLD NEWS</div>
+  <div class="brand">BECAUSE THE LIGHT WAS ON</div>
 
   <div id="game-tag">NBA - LIVE COVERAGE</div>
   <div class="tctr">
