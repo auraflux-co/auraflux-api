@@ -6677,13 +6677,73 @@ app.get('/style-library', (req, res) => {
 //   contentType: string,       // 'long' | 'short' — determines format per platform
 //   async: boolean             // if true, returns request_id immediately and processes in background
 // }
+// ── Upload Status Tracking DB ─────────────────────────────────────────────────
+// Reads/writes data/upload_status.json to track every publish attempt
+const UPLOAD_STATUS_PATH = path.join(__dirname, 'data', 'upload_status.json');
+
+function readUploadStatus() {
+  try {
+    return JSON.parse(fs.readFileSync(UPLOAD_STATUS_PATH, 'utf8'));
+  } catch (e) {
+    return { schema_version: '1.0', created: new Date().toISOString(), uploads: [] };
+  }
+}
+
+function writeUploadStatus(db) {
+  fs.writeFileSync(UPLOAD_STATUS_PATH, JSON.stringify(db, null, 2));
+}
+
+function logUploadAttempt(entry) {
+  const db = readUploadStatus();
+  db.uploads.unshift(entry); // newest first
+  // Keep last 500 entries
+  if (db.uploads.length > 500) db.uploads = db.uploads.slice(0, 500);
+  writeUploadStatus(db);
+}
+
+// GET /publish/upload-status — read the upload tracking database
+app.get('/publish/upload-status', (req, res) => {
+  const db = readUploadStatus();
+  const limit = parseInt(req.query.limit) || 50;
+  const platform = req.query.platform || null;
+  const status = req.query.status || null;
+
+  let uploads = db.uploads;
+  if (platform) uploads = uploads.filter(u => u.platforms && u.platforms.includes(platform));
+  if (status)   uploads = uploads.filter(u => u.status === status);
+
+  res.json({
+    total: db.uploads.length,
+    filtered: uploads.length,
+    uploads: uploads.slice(0, limit)
+  });
+});
+
+// GET /upload-status/:trackingId — look up a specific publish attempt by trackingId
+app.get('/upload-status/:trackingId', (req, res) => {
+  const db = readUploadStatus();
+  const entry = db.uploads.find(u => u.trackingId === req.params.trackingId);
+  if (!entry) return res.status(404).json({ error: 'trackingId not found', trackingId: req.params.trackingId });
+  const overallStatus = entry.status === 'submitted' ? 'uploading' : entry.status;
+  res.json({
+    trackingId: entry.trackingId,
+    overallStatus,
+    platforms: entry.platforms,
+    title: entry.title,
+    timestamp: entry.timestamp,
+    request_id: entry.request_id || null,
+    job_id: entry.job_id || null,
+    error: entry.error || null
+  });
+});
+
 app.post('/publish',
   requireFields('platforms'),
   validateArrayLength('platforms', 1),
   sanitizeStrings('title', 'description'),
   async (req, res) => {
   const UPLOADPOST_API_KEY = process.env.UPLOADPOST_API_KEY;
-  const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipznashite';
+  const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipzworldnews';
 
   if (!UPLOADPOST_API_KEY) {
     return res.status(400).json({ error: 'UPLOADPOST_API_KEY not set in .env' });
@@ -6810,8 +6870,28 @@ app.post('/publish',
     addStageMetrics(jobId, publishTimer.end());
     if (!metricsJobId) finalizeJobMetrics(jobId);
 
+    // Generate trackingId for this publish attempt
+    const trackingId = `pub_${Date.now()}_${req.body.testId || 'manual'}`;
+
+    // Log successful publish attempt to upload_status.json
+    logUploadAttempt({
+      id: Date.now(),
+      trackingId,
+      timestamp: new Date().toISOString(),
+      status: 'submitted',
+      platforms,
+      title,
+      contentType,
+      driveUrl: videoUrl,
+      request_id: request_id || null,
+      job_id: job_id || null,
+      scheduledAt: scheduledAt || null,
+      metricsJobId: jobId
+    });
+
     res.json({
       ok: true,
+      trackingId,
       request_id,
       job_id,
       results,
@@ -6827,6 +6907,19 @@ app.post('/publish',
   } catch(e) {
     const errData = e.response?.data;
     console.error('[upload-post] Publish failed:', e.message, errData || '');
+
+    // Log failed publish attempt to upload_status.json
+    logUploadAttempt({
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      status: 'failed',
+      platforms,
+      title,
+      contentType,
+      driveUrl: videoUrl || driveUrl || null,
+      error: e.message,
+      metricsJobId: jobId
+    });
 
     // Track failed publish
     publishTimer
@@ -7272,7 +7365,7 @@ app.get('/publish/history', async (req, res) => {
 // GET /publish/queue — queue settings for profile
 app.get('/publish/queue', async (req, res) => {
   const UPLOADPOST_API_KEY = process.env.UPLOADPOST_API_KEY;
-  const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipznashite';
+  const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipzworldnews';
   if (!UPLOADPOST_API_KEY) return res.status(400).json({ error: 'UPLOADPOST_API_KEY not set' });
 
   try {
@@ -7289,7 +7382,7 @@ app.get('/publish/queue', async (req, res) => {
 // POST /publish/queue — update queue settings
 app.post('/publish/queue', async (req, res) => {
   const UPLOADPOST_API_KEY = process.env.UPLOADPOST_API_KEY;
-  const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipznashite';
+  const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipzworldnews';
   if (!UPLOADPOST_API_KEY) return res.status(400).json({ error: 'UPLOADPOST_API_KEY not set' });
 
   try {
@@ -8104,7 +8197,7 @@ app.get('/teach-streamer-language/status', (req, res) => {
 // Run once after connecting social accounts. Can be re-run to update schedule.
 app.post('/publish/setup-queue', async (req, res) => {
   const UPLOADPOST_API_KEY = process.env.UPLOADPOST_API_KEY;
-  const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipznashite';
+  const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipzworldnews';
   if (!UPLOADPOST_API_KEY) return res.status(400).json({ error: 'UPLOADPOST_API_KEY not set' });
 
   // CWN Publishing Schedule (derived from research + Rob's parameters):
