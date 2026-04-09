@@ -1,10 +1,10 @@
 read:
   - CLAUDE.md
+  - STATUS.md
   - COMMIT_CHECKLIST.md
-  - AUTOMATION_STATUS.md
   - QA_GATES.md
 
-# Use Anthropic API directly (Claude Sonnet 3.5)
+# Use Anthropic API directly (Claude Sonnet 4)
 anthropic-api-key: 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
-model: anthropic/claude-3-5-sonnet-20241022
+model: claude-sonnet-4-20250514
 show-model-warnings: false
