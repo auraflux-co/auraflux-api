@@ -6012,7 +6012,11 @@ Target: 50-70 words spoken total.`;
         const sceneHeaders = ['=== INTRO ==='];
         items.forEach((g, i) => {
           const gameLabel = `GAME${i+1}`;
-          const teams = `${(g.away||'AWAY').toUpperCase()}_${(g.home||'HOME').toUpperCase()}`;
+          // Fix: replace spaces with underscores to prevent Gemini header parsing failures
+          // e.g. "Trail Blazers" → "TRAIL_BLAZERS" not "TRAIL BLAZERS" (URGENT_TEST_FAILURE_INVESTIGATION.md Fix #2)
+          const awayClean = (g.away||'AWAY').toUpperCase().replace(/\s+/g, '_');
+          const homeClean = (g.home||'HOME').toUpperCase().replace(/\s+/g, '_');
+          const teams = `${awayClean}_${homeClean}`;
           sceneHeaders.push(`=== ${gameLabel}_${teams}_INTRO ===`);
           sceneHeaders.push(`=== ${gameLabel}_${teams}_SETUP ===`);
           sceneHeaders.push(`=== ${gameLabel}_${teams}_CLIP_REACTION ===`);
