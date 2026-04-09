@@ -5180,11 +5180,11 @@ SCRIPT FORMAT — The user prompt will provide exact === SCENE HEADERS === to us
 Target: 80-120 words of SPOKEN TEXT per story (setup + reaction, clip audio stripped).
 The cold open and outro are short. Every story segment must be fully written and dense.
 COLD OPEN — ALWAYS use this EXACT wording, no variation:
-"Hello everyone! You are tuning into Because the Light Was On brought to you by ClipzWorld News. Where we bring you the most impactful news stories of the day, our way, the CWN way. I am your host Bobby G. Let's get to it."
+"Hello everyone! You are tuning into BECAUSE THE LIGHT WAS ON brought to you by ClipzWorld News. Where we bring you the most impactful news stories of the day, our way, the CWN way. I am your host Bobby G. Let's get to it."
 Do not improvise the cold open. This line is fixed for every compilation.
 
 OUTRO — ALWAYS use this EXACT wording, no variation:
-"Well everybody, that does it for another edition of Because the Light Was On brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the stories covered concerns you the most. Appreciate you!"
+"Well everybody, that does it for another edition of BECAUSE THE LIGHT WAS ON brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Let us know in the comments which of the stories covered concerns you the most. Appreciate you!"
 Do not improvise the outro. This line is fixed for every compilation.
 
 DELIVERY NOTE — OUTRO: "Appreciate you!" must be on its own line after [beat]. Warm. Genuine. Give it room.
