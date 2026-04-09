@@ -43,6 +43,7 @@ const { execFile, exec } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
 const puppeteer  = require('puppeteer');
 const { logError, withRetry, getFallbackImage, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
+const { requireFields, validateContentType, validateArrayLength, validateUrl, sanitizeStrings } = require('./lib/validation');
 
 const app  = express();
 
@@ -2628,7 +2629,10 @@ app.post('/drive-then-canva', async (req, res) => {
   }
 });
 
-app.post('/assemble', async (req, res) => {
+app.post('/assemble',
+  requireFields('segments', 'segmentData'),
+  validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
+  async (req, res) => {
   const { segments, segmentData, labels, transition='crossfade', format='mp4', outputDir, jobTitle, assemblyId, contentType, sceneTextMap, fullScript } = req.body;
 
   // Support both old format (segments=[urls]) and new format (segmentData=[{url,label,type}])
@@ -5783,9 +5787,12 @@ async function geminiAnalyzeThumbnail(thumbnailUrl, contentType, metadata) {
 }
 
 
-app.post('/generate-full-script', async (req, res) => {
+app.post('/generate-full-script',
+  requireFields('type', 'items'),
+  validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
+  validateArrayLength('items', 1),
+  async (req, res) => {
   const { type, items, date } = req.body;
-  if (!items || !items.length) return res.status(400).json({ error: 'No items provided' });
   if (!GEMINI_APIKEY) return res.status(400).json({ error: 'GEMINI_API_KEY not set in .env' });
 
   const dateStr = date || new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
@@ -6845,7 +6852,11 @@ app.get('/style-library', (req, res) => {
 //   contentType: string,       // 'long' | 'short' — determines format per platform
 //   async: boolean             // if true, returns request_id immediately and processes in background
 // }
-app.post('/publish', async (req, res) => {
+app.post('/publish',
+  requireFields('platforms'),
+  validateArrayLength('platforms', 1),
+  sanitizeStrings('title', 'description'),
+  async (req, res) => {
   const UPLOADPOST_API_KEY = process.env.UPLOADPOST_API_KEY;
   const UPLOADPOST_PROFILE = process.env.UPLOADPOST_PROFILE || 'clipznashite';
 
