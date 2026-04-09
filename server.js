@@ -106,7 +106,10 @@ const heygenJobs   = {};
 // Initialize Anthropic client for Claude API calls
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-function log(asmId, msg) { console.log(`[${asmId}] ${msg}`); }
+function log(asmId, msg, reqId = null) {
+  const prefix = reqId ? `[${asmId}][${reqId}]` : `[${asmId}]`;
+  console.log(`${prefix} ${msg}`);
+}
 
 // Security headers via helmet
 app.use(helmet({
@@ -118,6 +121,13 @@ app.use(helmet({
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://localhost:8765', 'http://localhost:3000'];
+
+// Request ID middleware for tracing
+app.use((req, res, next) => {
+  req.id = `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  res.setHeader('X-Request-ID', req.id);
+  next();
+});
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -886,12 +896,101 @@ function probeDuration(filePath) {
 
 // ── Routes ────────────────────────────────────────────────────────
 
-// Health check
-app.get('/health', (req, res) => {
-  checkFFmpeg((err, version) => {
-    if (err) return res.status(500).json({ ok: false, error: err.message });
-    res.json({ ok: true, ffmpeg: version, version: '1.0.0', tmpDir: TMP_DIR, outputDir: OUTPUT_DIR });
+// Health check with dependency validation
+app.get('/health', async (req, res) => {
+  const health = {
+    ok: true,
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    dependencies: {},
+    directories: {},
+    errors: []
+  };
+
+  // Check FFmpeg
+  try {
+    const ffmpegVersion = await new Promise((resolve, reject) => {
+      checkFFmpeg((err, version) => {
+        if (err) reject(err);
+        else resolve(version);
+      });
+    });
+    health.dependencies.ffmpeg = { status: 'ok', version: ffmpegVersion };
+  } catch (err) {
+    health.ok = false;
+    health.dependencies.ffmpeg = { status: 'error', error: err.message };
+    health.errors.push('FFmpeg not available');
+  }
+
+  // Check API keys
+  const requiredKeys = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'];
+  requiredKeys.forEach(key => {
+    const exists = !!process.env[key];
+    health.dependencies[key] = { status: exists ? 'ok' : 'missing' };
+    if (!exists) {
+      health.ok = false;
+      health.errors.push(`${key} not configured`);
+    }
   });
+
+  // Check directories
+  const dirs = { tmp: TMP_DIR, output: OUTPUT_DIR };
+  for (const [name, dir] of Object.entries(dirs)) {
+    try {
+      const stats = fs.statSync(dir);
+      health.directories[name] = {
+        path: dir,
+        exists: true,
+        writable: true // Already validated on startup
+      };
+    } catch (err) {
+      health.ok = false;
+      health.directories[name] = {
+        path: dir,
+        exists: false,
+        error: err.message
+      };
+      health.errors.push(`${name} directory not accessible`);
+    }
+  }
+
+  // Check VectCut API (optional)
+  try {
+    const vectCutHealth = await vectCutClient.healthCheck();
+    health.dependencies.vectcut = vectCutHealth.healthy
+      ? { status: 'ok' }
+      : { status: 'offline', error: vectCutHealth.error };
+  } catch (err) {
+    health.dependencies.vectcut = { status: 'offline', error: err.message };
+    // VectCut is optional, don't fail health check
+  }
+
+  // Check disk space
+  try {
+    await new Promise((resolve, reject) => {
+      const { exec } = require('child_process');
+      exec(`df -k "${OUTPUT_DIR}" | awk 'NR==2 {print $4}'`, (err, stdout) => {
+        if (err) return reject(err);
+        const freeKB = parseInt(stdout.trim());
+        const freeMB = Math.floor(freeKB / 1024);
+        const freeGB = (freeMB / 1024).toFixed(1);
+        health.directories.output.freeSpaceGB = parseFloat(freeGB);
+        
+        // Warn if less than 5GB free
+        if (freeMB < 5120) {
+          health.errors.push(`Low disk space: ${freeGB}GB remaining`);
+        }
+        resolve();
+      });
+    });
+  } catch (err) {
+    // Non-fatal, just log
+    health.directories.output.freeSpaceError = err.message;
+  }
+
+  const statusCode = health.ok ? 200 : 503;
+  res.status(statusCode).json(health);
 });
 
 // ── Serve HTML thumbnail/overlay tools ──────────────────────────────
@@ -9205,7 +9304,7 @@ app.get('/errors', (req, res) => {
 app.use(errorMiddleware);
 
 // ── Start ─────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
   console.log(`   FFmpeg path: ${ffmpegPath()}`);
   console.log(`   Tmp dir:     ${TMP_DIR}`);
@@ -9215,3 +9314,37 @@ app.listen(PORT, () => {
     else console.log('✅ FFmpeg:', v);
   });
 });
+
+// Graceful shutdown handler
+function gracefulShutdown(signal) {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  server.close(() => {
+    console.log('✅ HTTP server closed');
+    
+    // Clean up active jobs
+    const activeJobs = Object.keys(assemblyJobs).filter(id => 
+      assemblyJobs[id].status === 'running'
+    );
+    
+    if (activeJobs.length > 0) {
+      console.log(`⚠️  ${activeJobs.length} active assembly job(s) - allowing 30s to complete`);
+      setTimeout(() => {
+        console.log('⏱️  Shutdown timeout - exiting');
+        process.exit(0);
+      }, 30000);
+    } else {
+      console.log('✅ No active jobs - exiting cleanly');
+      process.exit(0);
+    }
+  });
+  
+  // Force exit after 35 seconds
+  setTimeout(() => {
+    console.error('❌ Forced shutdown after 35s timeout');
+    process.exit(1);
+  }, 35000);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
