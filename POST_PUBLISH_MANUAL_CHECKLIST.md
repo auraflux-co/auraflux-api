@@ -1,100 +1,57 @@
-# CWN Post-Publish Manual Checklist
+# Post-Publish Manual Tasks — Quick Reference
 
-After every successful `/publish` call, complete these manual steps within **24 hours** of the video going live.
-
----
-
-## YouTube
-
-### 1. Pin the First Comment
-- Open the video in YouTube Studio
-- Go to **Comments** tab
-- Find the auto-generated first comment (or post one manually)
-- Suggested format:
-  ```
-  🎬 Full episode timestamps in the description!
-  Subscribe for daily [NBA highlights / world news / Twitch clips]: @ClipzWorldNews
-  ```
-- Click the **three dots → Pin comment**
-
-### 2. Add Cards (mid-video)
-- In YouTube Studio → **Editor** → **Cards**
-- Add a **Video card** at the 30% mark pointing to the previous episode
-- Add a **Channel card** at the 80% mark
-
-### 3. Add End Screens (final 20 seconds)
-- In YouTube Studio → **Editor** → **End screen**
-- Add:
-  - **Subscribe button** (center)
-  - **Best for viewer** video recommendation (left)
-  - **Latest upload** video recommendation (right)
-- Duration: last 20 seconds of the video
-
-### 4. Verify Metadata
-- [ ] Title is under 100 characters
-- [ ] Description includes chapter timestamps (if applicable)
-- [ ] Tags include content-type-specific tags (#NBA, #Twitch, #WorldNews)
-- [ ] Thumbnail is set (auto-generated or custom)
-- [ ] `containsSyntheticMedia = true` is confirmed (AI avatar disclosure)
+**Owner:** Rob  
+**Purpose:** 20% of tasks that can't be automated via API  
+**Time:** ~10 min/video initially, ~5 min/video once routine
 
 ---
 
-## TikTok
+## ✅ YouTube — Per Video (5-7 min)
 
-### 1. Audit Post Status
-- Open TikTok Creator Center → **Content** tab
-- Verify the video is **Public** (not Under Review or Rejected)
-- If rejected: check the rejection reason and re-upload with adjustments
+### Immediate (< 5 min)
+- [ ] **Pin First Comment** → Studio → Comments → Find auto-comment → "⋮" → Pin
 
-### 2. Reply to Early Comments
-- Within the first 2 hours, reply to the first 3–5 comments
-- This boosts the video in TikTok's algorithm
+### Within 24 Hours (Long-Form Only)
+- [ ] **Add End Screen** → Editor → End screen → Use "Subscribe + 2 videos" template
+- [ ] **Add 2-3 Cards** → Editor → Cards → Add at key moments (highlights, mentions)
 
-### 3. Add to Playlist
-- Go to **Profile → Playlists**
-- Add the video to the appropriate playlist:
-  - "NBA Highlights" / "World News" / "Twitch Clips"
+### Weekly
+- [ ] **Check Analytics** → CTR >10%, Duration >50%, optimize underperformers
+- [ ] **Respond to Top 5 Comments** → Builds algorithm favorability
 
 ---
 
-## Instagram (Reels)
+## 📱 TikTok — Per Video (1-2 min)
 
-### 1. Verify Account Privacy
-- Confirm the account is set to **Public** (not Private)
-- Check: Profile → Settings → Account Privacy
+### Immediate
+- [ ] **Verify Privacy = "Only Me"** → Profile → Videos → Check lock icon
 
-### 2. Add to Highlights (optional)
-- If the Reel performs well (>1K views in 24h), add to a Story Highlight
-- Highlight name: "NBA" / "News" / "Twitch"
+### After Audit Approval (One-Time)
+- [ ] **Flip All Videos to Public** → Edit each → Privacy → Public
 
-### 3. Cross-post to Stories
-- Share the Reel to your Story within 1 hour of posting
-- Add a **sticker** or **poll** to drive engagement
+### Weekly
+- [ ] **Respond to First 10 Comments Within 1 Hour** → Algorithm boost
 
 ---
 
-## Tracking
+## 📸 Instagram — Per Reel (1-2 min)
 
-After completing the checklist, update the upload entry in `data/upload_status.json`:
+### Immediate
+- [ ] **Verify Account = Private** → Settings → Privacy → Private Account ON
 
-```bash
-# Find the entry by trackingId
-cat data/upload_status.json | jq '.uploads[] | select(.trackingId == "pub_XXXXX_manual")'
-```
+### After Testing (One-Time)
+- [ ] **Change Account to Public** → Settings → Privacy → Private Account OFF
 
-The `status` field will be `submitted` until Upload-Post confirms delivery.
-Poll `/publish/status?request_id=<request_id>` to check platform-specific status.
-
----
-
-## Quick Reference
-
-| Platform | Pin Comment | Cards/End Screens | Audit Status |
-|----------|-------------|-------------------|--------------|
-| YouTube  | ✅ Required  | ✅ Required        | Auto         |
-| TikTok   | ❌ N/A       | ❌ N/A             | ✅ Required   |
-| Instagram| ❌ N/A       | ❌ N/A             | ✅ Required   |
+### Weekly
+- [ ] **Respond to All DMs Within 24 Hours** → Increases Explore placement
 
 ---
 
-*Last updated: April 2026 — CWN Production Manual v1.0*
+## 🎯 Setup Steps for Cline
+
+1. ✅ **UPLOAD_API_SPEC.md created** — Ready for implementation
+2. ⏳ **Get TikTok credentials** → Enable "Content Posting API" product
+3. ⏳ **Get YouTube OAuth** → credentials
+4. ⏳ **Get Instagram access token** → Long-lived token
+
+**Cline should start with:** YouTube upload (Test Case #1)
