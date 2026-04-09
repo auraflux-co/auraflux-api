@@ -207,6 +207,16 @@ Multi-word names with spaces break scene headers in Gemini prompts.
 
 ## ✅ Recently Completed
 
+### [DONE] Aider Load Balancing + Cline Model Upgrade
+**Completed**: 2026-04-09
+
+**Changes**:
+- **Aider**: Implemented load balancing to handle Gemini 2.5 rate limiting
+- **Cline**: Upgraded to Gemini Pro Flash for better performance/reliability
+- Resolved rate limiting issues blocking Aider's fix implementation
+
+---
+
 ### [DONE] Requesty API + Aider Configuration
 **Completed**: 2026-04-08
 
