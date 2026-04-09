@@ -1,8 +1,8 @@
 # CWN Production Automation Status
 
-**Last Updated**: 2026-04-07
-**Session**: Post-QA Documentation
-**Next Phase**: Full End-to-End Automation
+**Last Updated**: 2026-04-08
+**Session**: Multi-Agent Parallel Track (Cline + Aider + Claude Code)
+**Next Phase**: 12-Test Framework Execution
 
 ---
 
@@ -16,7 +16,9 @@
 ```javascript
 '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=async=1:min_hard_comp=0.100000:first_pts=0',
 ```
-**Status**: ✅ FIXED - Ready to test
+**Status**: ✅ FIXED
+
+---
 
 ### 2. QA Gates Documentation
 **Files Created**:
@@ -26,7 +28,9 @@
 
 **12-Test Framework**: Documented with accelerated 3-day timeline (was 9 days)
 
-**Status**: ✅ COMPLETE - Ready for implementation
+**Status**: ✅ COMPLETE
+
+---
 
 ### 3. Gemini 10x Reference Video Training
 **File**: `server.js:4464-4530`
@@ -37,20 +41,7 @@
 - Synthesize all 10 viewings into deep per-video analysis using Claude
 - Final synthesis combines all deep analyses into unified style guide
 
-**Code**:
-```javascript
-// 10x VIEWING: Watch each reference video 10 times for deeper style learning
-for (let viewNum = 1; viewNum <= 10; viewNum++) {
-  const stylePrompt = `This is VIEWING #${viewNum} of 10...`;
-  // Gemini analyzes video with viewing-specific focus
-  multipleViewings.push(observation);
-}
-// Claude synthesizes all 10 viewings into deep analysis
-```
-
-**Impact**: Much deeper style understanding → Better script quality, tone matching, pacing accuracy
-
-**Status**: ✅ COMPLETE - Ready to test
+**Status**: ✅ COMPLETE
 
 ---
 
@@ -65,66 +56,25 @@ for (let viewNum = 1; viewNum <= 10; viewNum++) {
 - TikTok: `tiktokPrivacy` ('PUBLIC_TO_EVERYONE' | 'SELF_ONLY' | 'MUTUAL_FOLLOW_FRIENDS')
 - Instagram: Set to private account manually
 
-**Code Changes**:
-```javascript
-// server.js:4649-4650 - Added tiktokPrivacy parameter
-tiktokPrivacy = 'PUBLIC_TO_EVERYONE', // Configurable for testing
-
-// server.js:4713 - Use configurable privacy instead of hardcoded
-form.append('privacy_level', tiktokPrivacy);
-```
-
-**12-Test Framework Configuration**:
-```json
-{
-  "privacyStatus": "private",      // YouTube private
-  "tiktokPrivacy": "SELF_ONLY"     // TikTok only me
-}
-```
-
-**Status**: ✅ COMPLETE - Ready for 12-test framework
+**Status**: ✅ COMPLETE
 
 ---
 
 ### 5. Twitch Longform Thumbnail with FFmpeg Overlay
 **File**: `server.js:6354-6432`
-**Template**: `assets/longform_twitch_Thumbnail.png` (1280x720, 444KB)
+**Template**: `assets/twitchsoup_thumbnail.jpeg` (1280x720)
 **Endpoint**: `POST /generate-twitch-longform-thumbnail`
 
 **Implementation**:
-- Function `generateTwitchLongformThumbnail()` takes static template
-- Reads `episode_counters.json` and auto-increments twitch counter
+- Canvas-based rendering with streamer profile circles in a ring
+- Auto-increments twitch episode counter from `episode_counters.json`
 - Formats current date: "Apr 7, 2026"
-- FFmpeg `drawtext` filter overlays two lines of text:
-  - "EPISODE {N}" - fontsize 48, centered, y=560
-  - "{Date}" - fontsize 32, centered, y=620
-- Both with white text + black border for readability
+- Overlays episode number (top-right) and date (top-left)
 - Outputs to `output/thumbnail_twitch_longform_ep{N}_{timestamp}.png`
 
-**Code**:
-```javascript
-// server.js:6354-6432
-async function generateTwitchLongformThumbnail() {
-  // Load template + increment counter
-  const episodeNum = counters.twitch++;
-  const dateStr = new Date().toLocaleDateString('en-US', {...});
-
-  // FFmpeg drawtext overlay
-  const ffmpegArgs = ['-i', TEMPLATE_PATH, '-vf',
-    `drawtext=text='EPISODE ${episodeNum}':fontsize=48:x=(w-text_w)/2:y=560,` +
-    `drawtext=text='${dateStr}':fontsize=32:x=(w-text_w)/2:y=620`,
-    '-y', outputPath
-  ];
-
-  return { thumbnailPath, episodeNum, date: dateStr };
-}
-```
-
-**Status**: ✅ COMPLETE - Ready to test
+**Status**: ✅ COMPLETE
 
 ---
-
-## ✅ COMPLETED (Continued)
 
 ### 6. HeyGen Pronunciation Best Practices
 **Files Modified**: `server.js:3520-3540` (NBA), `server.js:3578-3585` (News), `server.js:3625-3632` (Twitch)
@@ -137,85 +87,116 @@ async function generateTwitchLongformThumbnail() {
 - Punctuation for pacing control
 - Reference to streamers.json phonetic fields
 
-**Code Example (NBA)**:
-```javascript
-HEYGEN PRONUNCIATION BEST PRACTICES:
-1. **Unusual names**: Add phonetic respelling on FIRST mention only
-   - "Giannis Antetokounmpo (YAH-nis ON-tet-oh-KOON-po)"
-2. **Numbers**: Always spell out → "thirty-two points" NOT "32 points"
-3. **Abbreviations**: "NBA" → "N-B-A" OR "the NBA" (works fine)
-```
-
-**Impact**: Claude now automatically applies HeyGen best practices when writing scripts, eliminating mispronunciations without manual phonetic field management
-
-**Status**: ✅ COMPLETE - Embedded in all script generation prompts
+**Status**: ✅ COMPLETE
 
 ---
 
 ### 7. HeyGen Scene Splitting Fix
 **File**: `server.js:1076-1200`
 **Problem**: HeyGen auto-send was sending entire script as single video instead of 12-14 separate scene videos
-**Root Cause**: `sendScriptToHeyGen()` function created only one video_input with full script text
 **Solution**: Parse script by `=== SCENE_NAME ===` markers, send each scene as separate video_input
 
+**Status**: ✅ COMPLETE
+
+---
+
+### 8. Wire Publish Button in Dashboard
+**File**: `cwn_production.html` — `pubGenerateSocialCopy()` function
+**Problem**: Was calling `api.anthropic.com` directly from browser (insecure, exposed API key)
+**Solution**: Now calls `CFG.ffmpegUrl + '/generate-publish-copy'` (server-side, secure)
+
+**New behavior**:
+- Sends: `{ contentType, formType, script, date, streamers, platforms: ['youtube', 'tiktok', 'instagram'] }`
+- Maps response: `resp.platforms.youtube` → ytTitle/ytDesc/ytComment, `resp.platforms.tiktok.caption` → tiktokCaption, `resp.platforms.instagram.caption/altText` → igCaption/igAlt
+- Falls back to flat response format for backward compat
+
+**Status**: ✅ COMPLETE
+
+---
+
+### 9. Gate 5: Gemini Final Video Review
+**File**: `server.js` — added before `/errors` endpoint
+**Endpoint**: `POST /gate5-review`
+**Trigger**: After assembly, before upload
+
 **Implementation**:
-```javascript
-// NEW: Parse script into individual scenes
-function parseScriptIntoScenes(script) {
-  const scenes = [];
-  const sceneRegex = /===\s*([A-Z_0-9]+)\s*===/g;
+- `runGate5Review()` function uploads assembled MP4 to Gemini Files API
+- Waits for Gemini to process the video
+- Scores on 4 dimensions (100 pts total):
+  - Visual Quality: 30 pts (no black screens, artifacts, avatar correct)
+  - Audio Quality: 30 pts (clear, balanced, no dropouts)
+  - Clip Integration: 30 pts (clips at correct timestamps, smooth transitions)
+  - Pacing: 10 pts (natural flow)
+- Pass threshold: ≥85 pts
+- Returns structured JSON with breakdown, deductions, and summary
+- Cleans up Gemini file after review
+- Gracefully skips if no `GEMINI_API_KEY`
 
-  // Find all scene markers and extract text between them
-  // Clean [beat] and [CLIP PLAYS HERE] markers
-  // Return array of {name, text} objects
-}
+**Body**: `{ videoPath, expectedDuration, contentType, formType, jobId }`
+**Returns**: `{ ok, score, passed, outcome, outcomeLabel, breakdown, deductions, report, jobId }`
 
-// UPDATED: sendScriptToHeyGen now uses scenes
-const scenes = parseScriptIntoScenes(script);
-const video_inputs = scenes.map(scene => ({
-  character: { type: 'avatar', avatar_id: avatarId },
-  voice: { type: 'text', input_text: scene.text, voice_id: HEYGEN_VOICE_ID }
-}));
+**Status**: ✅ COMPLETE
+
+---
+
+### 10. Requesty API Configuration (Aider)
+**File**: `.aider.conf.yml`
+**Configuration**:
+```yaml
+openai-api-base: https://router.requesty.ai/v1
+openai-api-key: rqsty-sk-...
+model: openai/coding/gemini-2.5-pro
+show-model-warnings: false
 ```
+**Status**: ✅ COMPLETE
 
-**Expected Scene Structure** (Twitch long form example):
-- INTRO (1 scene)
-- INTRO_ADAPT (1 scene)
-- CLIP_1_SETUP, CLIP_1_REACTION (2 scenes)
-- CLIP_2_SETUP, CLIP_2_REACTION (2 scenes)
-- CLIP_3_SETUP, CLIP_3_REACTION (2 scenes)
-- INTRO_YOURRAGE (1 scene)
-- CLIP_4_SETUP through CLIP_9_REACTION (12 scenes)
-- OUTRO (1 scene)
-- **Total: ~14 scenes** → 14 individual HeyGen videos
+---
 
-**Debugging Output**:
-```
-[heygen] Submitting 14 scenes to HeyGen (twitch, landscape, avatar: 19c1d4ad...)
-[heygen] Scene breakdown:
-  1. INTRO - What is up ClipzWorld, we got some INSANE Twitch...
-  2. INTRO_ADAPT - Let's kick it off with Adapt. He's from Bro...
-  3. CLIP_1_SETUP - In this clip, Adapt is playing Fortnite and...
-  ...
-```
+### 11. claude.json Performance Fix
+**File**: `~/.claude.json`
+**Problem**: 229KB file causing CLI freezes (201KB `cachedChangelog` blob)
+**Solution**: Cleared `cachedChangelog`, `cachedGrowthBookFeatures`, `cachedStatsigGates`, `cachedDynamicConfigs`
+**Result**: 229KB → 5.7KB (97% reduction)
 
-**Impact**: HeyGen will now create 12-14 individual scene videos that can be assembled with source clips in correct order
+**Status**: ✅ COMPLETE
 
-**Status**: ✅ COMPLETE - Ready to test in Test 1
+---
+
+### 12. settings.local.json Cleanup
+**File**: `.claude/settings.local.json`
+**Problem**: 4 stale permission entries (duplicate node, stale npx/echo/aider commands)
+**Solution**: Removed stale entries, 35 → 31 clean permissions
+
+**Status**: ✅ COMPLETE
 
 ---
 
 ## 📋 PENDING (Next Steps)
 
 ### 1. Gate 2A: Pronunciation Iteration Loop
+**Owner**: Aider
 **Depends On**: HeyGen MCP Server
 **Flow**: Gemini detects mispronunciation → Claude revises → HeyGen re-renders
 **Status**: 📋 BLOCKED (needs HeyGen MCP)
 
-### 2. Gate 5: Gemini Final Video Review
-**Trigger**: After assembly, before upload  
-**Action**: Gemini watches final MP4, scores quality  
-**Checklist**: Video playback, avatar segments, clip integration, pacing  
+### 2. Phonetic Auto-Injection
+**Owner**: Aider
+**Task**: Read `streamers.json` phonetic entries, auto-inject into HeyGen `input_text` on first mention
+**Status**: 📋 NOT STARTED
+
+### 3. Gate 6 Automation
+**Owner**: Claude Code
+**Task**: Auto-trigger publish after Gate 3 passes (currently manual)
+**Status**: 📋 NOT STARTED
+
+### 4. Split-Job + FFmpeg Stitch
+**Owner**: Aider
+**Task**: For production loads >5 items, split into parallel jobs and stitch
+**Status**: 📋 NOT STARTED
+
+### 5. End-to-End 12-Test Suite Validation
+**Owner**: Claude Code
+**Task**: Run all 12 test cases, validate QA gates, confirm private uploads
 **Status**: 📋 NOT STARTED
 
 ---
@@ -236,7 +217,7 @@ HEYGEN_VOICE_ID=2e598f1a6022448cb6710e5d44665325
 HEYGEN_SPEAK_SPEED=0.85
 
 # Gemini API (already exists)
-GEMINI_APIKEY=...
+GEMINI_API_KEY=...
 ```
 
 ---
@@ -257,18 +238,18 @@ GEMINI_APIKEY=...
 
 ---
 
-## 🎯 Priority 1 Tasks - ALL COMPLETE ✅
+## 🎯 QA Gate Implementation Status
 
-1. ✅ **Audio normalization fix** - Bobby G and streamer clips normalized to -14 LUFS
-2. ✅ **NBA show rename** - Changed to "Other Side of the Pillow"
-3. ✅ **10x reference video training** - Gemini watches each video 10 times for deeper learning
-4. ✅ **Upload-Post test privacy settings** - TikTok privacy configurable for 12-test framework
-5. ✅ **Twitch thumbnail with dynamic text** - FFmpeg overlay with episode number and date
-6. ✅ **HeyGen auto-send** - Automatic submission when Gate 1 score ≥90
-7. ✅ **HeyGen pronunciation best practices** - Embedded in all system prompts (NBA, News, Twitch)
-8. ✅ **HeyGen scene splitting fix** - Parse script into 12-14 separate scene videos (was sending single giant video)
-
-**All critical automation features are now implemented and ready for testing.**
+| Gate | Name | Status | Notes |
+|------|------|--------|-------|
+| Gate 1 | Script QA (Claude reviews Gemini's script) | ✅ Implemented | `claudeScriptQA()` in server.js |
+| Gate 2 | HeyGen Segment QA (Gemini samples 3 segments) | ✅ Implemented | `geminiSegmentQA()` in server.js |
+| Gate 2A | Pronunciation Iteration Loop | ❌ Not Implemented | Needs HeyGen MCP |
+| Gate 3 | Assembly QA (Gemini reviews assembled video) | ✅ Implemented | `geminiQACheck()` in server.js |
+| Gate 4 | Gemini Visual Audit (manual) | 🟡 Manual | Dashboard review |
+| Gate 5 | Gemini Final Video Review | ✅ Implemented | `POST /gate5-review` — `runGate5Review()` |
+| Gate 6 | Final MP4 Delivery + Upload Prep | 🟡 Partial | MP4 saved, metadata manual |
+| Gate 7 | Logic Audit (automated checks) | 🟡 Partial | Some checks in assembly flow |
 
 ---
 
@@ -277,6 +258,6 @@ GEMINI_APIKEY=...
 - Audio fix is CRITICAL - test first before 12-test framework
 - Upload-Post handles platform publishing (no need for individual platform APIs)
 - HeyGen credentials are in cwn_production.html (not .env yet)
-- Twitch thumbnail is ready, just needs dynamic text overlay
-- NBA show rename affects prompts and thumbnail text
-
+- Gate 5 (`/gate5-review`) accepts `videoPath` (local path to assembled MP4)
+- Gate 5 uploads full video to Gemini Files API — large files (>100MB) may take 30-60s to upload
+- Gate 5 auto-cleans Gemini file after review to avoid storage costs

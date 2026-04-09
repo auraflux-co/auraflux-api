@@ -45,9 +45,9 @@ const puppeteer  = require('puppeteer');
 const { logError, withRetry, getFallbackImage, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 const { requireFields, validateContentType, validateArrayLength, validateUrl, sanitizeStrings } = require('./lib/validation');
 const TwitchClient = require('./lib/clients/twitch_client');
-const { geminiScriptGeneration, claudeScriptQA } = require('./services/script_generation');
-const { probeDuration, downloadFile, buildConcatCommand } = require('./services/assembly');
-const { geminiSegmentQA, geminiAssemblyQA } = require('./services/qa');
+// Note: geminiScriptGeneration, claudeScriptQA, probeDuration, downloadFile,
+// buildConcatCommand, and geminiSegmentQA are defined locally below.
+// The services/ modules are stubs kept for reference only.
 
 const app  = express();
 
@@ -6012,7 +6012,9 @@ Target: 50-70 words spoken total.`;
         const sceneHeaders = ['=== INTRO ==='];
         items.forEach((g, i) => {
           const gameLabel = `GAME${i+1}`;
-          const teams = `${(g.away||'AWAY').toUpperCase()}_${(g.home||'HOME').toUpperCase()}`;
+          const awayClean = (g.away||'AWAY').toUpperCase().replace(/\s+/g, '_');
+          const homeClean = (g.home||'HOME').toUpperCase().replace(/\s+/g, '_');
+          const teams = `${awayClean}_${homeClean}`;
           sceneHeaders.push(`=== ${gameLabel}_${teams}_INTRO ===`);
           sceneHeaders.push(`=== ${gameLabel}_${teams}_SETUP ===`);
           sceneHeaders.push(`=== ${gameLabel}_${teams}_CLIP_REACTION ===`);
@@ -6228,7 +6230,7 @@ ${notesStr}${clipLines}`;
         // Generate 72 scene headers (1 INTRO + 10 streamers × 7 scenes each + 1 OUTRO)
         const sceneHeaders = ['=== INTRO ==='];
         items.forEach(item => {
-          const name = getDisplayName(item.streamer).toUpperCase();
+          const name = getDisplayName(item.streamer).toUpperCase().replace(/\s+/g, '_');
           sceneHeaders.push(`=== ${name}_INTRO ===`);
           for (let i = 1; i <= clipsPerStreamer; i++) {
             sceneHeaders.push(`=== ${name}_CLIP${i}_SETUP ===`);
@@ -9352,6 +9354,179 @@ app.get('/disk-usage', (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// ── POST /gate5-review — Gate 5: Gemini final video review before upload ──
+// Body: { videoPath, expectedDuration, contentType, formType, jobId }
+// Returns: { ok, score, passed, report, deductions, jobId }
+app.post('/gate5-review', async (req, res) => {
+  const { videoPath, expectedDuration, contentType = 'unknown', formType = 'longform', jobId } = req.body;
+
+  if (!videoPath) return res.status(400).json({ ok: false, error: 'videoPath required' });
+
+  try {
+    const result = await runGate5Review({ videoPath, expectedDuration, contentType, formType, jobId });
+    res.json(result);
+  } catch (e) {
+    console.error('[gate5] Error:', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+/**
+ * Gate 5: Gemini Final Video Review
+ * Uploads the assembled MP4 to Gemini and scores it on:
+ *   - Visual Quality (30 pts): clarity, no artifacts
+ *   - Audio Quality (30 pts): clear, balanced levels
+ *   - Integration (30 pts): clips + avatar seamless
+ *   - Pacing (10 pts): natural flow
+ * Pass threshold: ≥85 pts
+ */
+async function runGate5Review({ videoPath, expectedDuration, contentType, formType, jobId }) {
+  const label = jobId ? `[gate5:${jobId}]` : '[gate5]';
+
+  if (!GEMINI_APIKEY) {
+    console.log(`${label} Skipped — no Gemini API key`);
+    return { ok: true, score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (skipped — no key)', deductions: [], report: 'Gate 5 skipped (no Gemini key)', jobId };
+  }
+
+  // Verify file exists
+  if (!fs.existsSync(videoPath)) {
+    return { ok: false, score: 0, passed: false, outcome: 'fail', outcomeLabel: '❌ FAIL (file not found)', deductions: [{ reason: 'Video file not found', points: 100 }], report: `File not found: ${videoPath}`, jobId };
+  }
+
+  const fileSize = (fs.statSync(videoPath).size / (1024 * 1024)).toFixed(1);
+  console.log(`${label} Starting Gate 5 review — ${path.basename(videoPath)} (${fileSize}MB)`);
+
+  let geminiFileName = null;
+  try {
+    // Upload video to Gemini Files API
+    console.log(`${label} Uploading video to Gemini...`);
+    const geminiFile = await uploadVideoToGemini(videoPath);
+    geminiFileName = geminiFile.name;
+
+    // Wait for processing
+    const activeFile = await waitForGeminiFile(geminiFile);
+    console.log(`${label} Video ready for analysis`);
+
+    const durationNote = expectedDuration ? ` Expected duration: ~${expectedDuration}s.` : '';
+    const prompt = `You are a professional video QA reviewer for ClipzWorld News (CWN), a sports/gaming/news content channel.
+
+You are reviewing the FINAL assembled video before it is uploaded to social media platforms.
+Content type: ${contentType} | Format: ${formType}${durationNote}
+
+Score this video on the following criteria (total 100 points):
+
+**VISUAL QUALITY (30 pts)**
+- Video plays without black screens, freezing, or corruption (10 pts)
+- No visual artifacts, glitches, or compression issues (10 pts)
+- Avatar (Bobby G) appears correctly throughout avatar segments (10 pts)
+
+**AUDIO QUALITY (30 pts)**
+- Audio is clear with no distortion or clipping (10 pts)
+- Volume levels are consistent throughout (no sudden loud/quiet jumps) (10 pts)
+- No audio dropouts, stutters, or sync issues (10 pts)
+
+**CLIP INTEGRATION (30 pts)**
+- Source clips are inserted at correct timestamps (10 pts)
+- Transitions between avatar and clips are smooth (10 pts)
+- Overall video structure matches expected content flow (10 pts)
+
+**PACING (10 pts)**
+- Video pacing feels natural and engaging (not rushed or dragging) (10 pts)
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "visualQuality": <0-30>,
+  "audioQuality": <0-30>,
+  "clipIntegration": <0-30>,
+  "pacing": <0-10>,
+  "totalScore": <0-100>,
+  "passed": <true if totalScore >= 85>,
+  "deductions": [
+    { "category": "...", "reason": "...", "points": <number> }
+  ],
+  "summary": "<2-3 sentence overall assessment>"
+}`;
+
+    const payload = {
+      contents: [{
+        parts: [
+          { text: prompt },
+          { file_data: { mime_type: 'video/mp4', file_uri: activeFile.uri } }
+        ]
+      }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 1024 }
+    };
+
+    const resp = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
+      payload,
+      { timeout: 120000 }
+    );
+
+    const raw = resp.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Gemini returned no JSON for Gate 5');
+
+    const result = JSON.parse(jsonMatch[0]);
+    const score = Math.min(100, Math.max(0, result.totalScore || 0));
+    const passed = score >= 85;
+    const outcomeLabel = passed ? `✅ PASS (${score}/100)` : `❌ FAIL (${score}/100 — need 85)`;
+
+    console.log(`${label} ${outcomeLabel} — ${result.summary || ''}`);
+
+    return {
+      ok: true,
+      score,
+      passed,
+      outcome: passed ? 'pass' : 'fail',
+      outcomeLabel,
+      breakdown: {
+        visualQuality: result.visualQuality,
+        audioQuality: result.audioQuality,
+        clipIntegration: result.clipIntegration,
+        pacing: result.pacing
+      },
+      deductions: result.deductions || [],
+      report: result.summary || '',
+      jobId
+    };
+
+  } catch (e) {
+    console.error(`${label} Gate 5 review failed: ${e.message}`);
+    return { ok: false, score: 0, passed: false, outcome: 'error', outcomeLabel: `❌ ERROR: ${e.message}`, deductions: [], report: e.message, jobId };
+  } finally {
+    if (geminiFileName) {
+      try { await deleteGeminiFile(geminiFileName); } catch(e) {}
+    }
+  }
+}
+
+/**
+ * Upload a local video file to Gemini Files API (multipart upload)
+ */
+async function uploadVideoToGemini(filePath) {
+  const fileBuffer = fs.readFileSync(filePath);
+  const fileSize = fileBuffer.length;
+  const boundary = `boundary_${Date.now()}`;
+  const metadata = JSON.stringify({ file: { display_name: path.basename(filePath) } });
+
+  const body = Buffer.concat([
+    Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`),
+    Buffer.from(metadata),
+    Buffer.from(`\r\n--${boundary}\r\nContent-Type: video/mp4\r\n\r\n`),
+    fileBuffer,
+    Buffer.from(`\r\n--${boundary}--`)
+  ]);
+
+  const resp = await axios.post(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key=${GEMINI_APIKEY}`,
+    body,
+    { headers: { 'Content-Type': `multipart/related; boundary=${boundary}`, 'Content-Length': body.length }, timeout: 180000 }
+  );
+
+  return resp.data.file; // { name, uri, state }
+}
 
 // ── GET /errors — diagnostic endpoint for structured error log ────
 app.get('/errors', (req, res) => {

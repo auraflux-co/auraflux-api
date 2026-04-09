@@ -1043,6 +1043,15 @@ https://www.youtube.com/watch?v=j4vcHuc3VzI</textarea>
               <div id="ticker-precapture-status" style="margin-top:8px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);"></div>
             </div>
             <div id="ffmpeg-test-status" style="margin-top:10px;font-size:12px;"></div>
+            <!-- Disk Usage + Cleanup -->
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(199,175,79,0.1);">
+              <div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.5);letter-spacing:2px;margin-bottom:10px;">SERVER MAINTENANCE</div>
+              <div class="btn-row">
+                <button class="btn btn-outline btn-sm" onclick="checkDiskUsage()">💾 CHECK DISK USAGE</button>
+                <button class="btn btn-red btn-sm" onclick="cleanupOldFiles()">🗑 CLEANUP OLD FILES</button>
+              </div>
+              <div id="disk-usage-status" style="margin-top:10px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5);white-space:pre-wrap;"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1621,7 +1630,82 @@ function asmComplete(batchJobId, resp) {
     job.finalUrl = downloadUrl;
     job.assembledAt = new Date().toISOString();
     saveJobs(); renderQueue();
+    // ── Gate 5: Auto-trigger final video review after assembly ──
+    setTimeout(function() { triggerGate5(job); }, 2000);
   }
+}
+
+// ── GATE 5: Final Video Review (Gemini visual QA on assembled MP4) ──
+function triggerGate5(job) {
+  if (!job || !job.finalUrl) return;
+  if (job._gate5Running || job._gate5Done) return;
+  job._gate5Running = true;
+
+  var qaEl = document.getElementById('gate5-result-' + job.id);
+  if (qaEl) {
+    qaEl.style.display = '';
+    qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(52,152,219,0.4);border-radius:4px;">'
+      + '<span style="color:#3498db;font-size:11px;font-family:monospace;">⏳ GATE 5 — Gemini reviewing final assembled video...</span>'
+      + '</div>';
+  }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/gate5-review', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 300000; // 5 min — Gemini video upload can take time
+  xhr.onload = function() {
+    try {
+      var result = JSON.parse(xhr.responseText);
+      job._gate5Done = true;
+      job._gate5Running = false;
+      job.gate5 = result;
+      saveJobs();
+
+      var color = result.score >= 85 ? '#2ecc71' : result.score >= 70 ? '#c7af4f' : '#e74c3c';
+      var outcomeLabel = result.score >= 85 ? '✅ GATE 5 PASS — Ready to publish'
+        : result.score >= 70 ? '🟡 GATE 5 REVIEW — Minor issues, proceed with caution'
+        : '❌ GATE 5 FAIL — Issues detected, review before publishing';
+
+      var html = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid ' + color + ';border-radius:4px;">'
+        + '<div style="font-size:9px;letter-spacing:2px;color:' + color + ';font-weight:900;margin-bottom:4px;">GATE 5 — FINAL VIDEO QA (GEMINI)</div>'
+        + '<div style="font-size:18px;font-weight:700;color:' + color + ';">' + result.score + '/100</div>'
+        + '<div style="font-size:11px;color:' + color + ';margin-bottom:4px;">' + outcomeLabel + '</div>';
+
+      if (result.breakdown) {
+        var b = result.breakdown;
+        html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);font-family:monospace;">'
+          + 'Visual: ' + (b.visualQuality||0) + '/30 · Audio: ' + (b.audioQuality||0) + '/30 · Clips: ' + (b.clipIntegration||0) + '/30 · Pacing: ' + (b.pacing||0) + '/10'
+          + '</div>';
+      }
+      if (result.issues && result.issues.length) {
+        html += '<div style="font-size:10px;color:#e74c3c;margin-top:4px;">';
+        result.issues.forEach(function(issue) { html += '⚠ ' + issue + '<br>'; });
+        html += '</div>';
+      }
+      if (result.score >= 85) {
+        html += '<div style="font-size:10px;color:#2ecc71;margin-top:4px;">✅ Video quality confirmed — proceed to Publish Prep.</div>';
+      }
+      html += '</div>';
+
+      if (qaEl) qaEl.innerHTML = html;
+      renderQueue();
+    } catch(e) {
+      job._gate5Running = false;
+      if (qaEl) qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:4px;">'
+        + '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Gate 5 error: ' + e.message + '</span></div>';
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    job._gate5Running = false;
+    if (qaEl) qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:4px;">'
+      + '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Gate 5 skipped — server unreachable</span></div>';
+  };
+  xhr.send(JSON.stringify({
+    jobId:    job.id,
+    videoUrl: job.finalUrl,
+    jobTitle: job.title,
+    contentType: job.type || 'twitch'
+  }));
 }
 
 function asmFailed(batchJobId, errMsg) {
@@ -1680,6 +1764,57 @@ function precaptureTickers() {
   };
   xhr.onerror = xhr.ontimeout = function() { s.textContent = '❌ Server not reachable'; };
   xhr.send();
+}
+
+function checkDiskUsage() {
+  var statusEl = g('disk-usage-status');
+  if (statusEl) statusEl.textContent = '⏳ Checking disk usage...';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/disk-usage', true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      var lines = ['💾 DISK USAGE'];
+      if (d.outputDir) lines.push('Output MP4s: ' + d.outputDir.totalMB + ' MB (' + d.outputDir.fileCount + ' files)');
+      if (d.tmpDir) lines.push('Temp files: ' + d.tmpDir.totalMB + ' MB (' + d.tmpDir.fileCount + ' files)');
+      if (d.totalMB !== undefined) lines.push('Total: ' + d.totalMB + ' MB');
+      if (statusEl) statusEl.textContent = lines.join('\n');
+    } catch(e) {
+      if (statusEl) statusEl.textContent = '❌ ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (statusEl) statusEl.textContent = '❌ Server unreachable — is server.js running?';
+  };
+  xhr.send();
+}
+
+function cleanupOldFiles() {
+  if (!confirm('Delete old output files from the server? The 5 most recent files will be kept.')) return;
+  var statusEl = g('disk-usage-status');
+  if (statusEl) statusEl.textContent = '⏳ Cleaning up old files...';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/cleanup', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      var lines = ['🗑 CLEANUP COMPLETE'];
+      if (d.deleted !== undefined) lines.push('Deleted: ' + d.deleted + ' files');
+      if (d.kept !== undefined) lines.push('Kept: ' + d.kept + ' files');
+      if (d.freedMB !== undefined) lines.push('Freed: ' + d.freedMB + ' MB');
+      if (d.message) lines.push(d.message);
+      if (statusEl) statusEl.textContent = lines.join('\n');
+    } catch(e) {
+      if (statusEl) statusEl.textContent = '❌ ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (statusEl) statusEl.textContent = '❌ Server unreachable — is server.js running?';
+  };
+  xhr.send(JSON.stringify({ keepN: 5, cleanTmp: true }));
 }
 
 function testFFmpegServer() {
@@ -1899,7 +2034,7 @@ function renderQueue() {
       +'<div class="job-meta">'+(job.type||'video').toUpperCase().replace('-',' ')+' | '+new Date(job.created).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div></div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
+      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -4444,67 +4579,84 @@ function pubRenderText(type) {
 }
 
 function pubGenerateSocialCopy(type, title, desc, comment, endscreen, cards, twitchTitle, isShort, topLine) {
-  // First display YouTube copy immediately
+  // Show YouTube copy immediately (already generated client-side)
   pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, title,
-    'Generating TikTok + IG copy...', 'Generating Instagram copy...', '', isShort);
+    '⏳ Generating TikTok + IG copy via server...', '⏳ Generating Instagram copy...', '', isShort);
   g('pub-results').style.display = 'block';
 
-  var today = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  var contentTypeLabel = type.indexOf('nba')>-1?'NBA highlights':type.indexOf('news')>-1?'world news':'Twitch clips';
-  var prompt = 'Generate TikTok and Instagram Reels captions for @clipznashite (ClipzWorld News).\n\n'
-    + 'Channel: ClipzWorld News — deadpan sports and news. Norm MacDonald energy.\n'
-    + 'Date: ' + today + '\n'
-    + 'Content type: ' + contentTypeLabel + (isShort?' (short-form reel)':' (compilation)') + '\n'
-    + 'YouTube title: ' + title + '\n'
-    + (topLine ? 'Top story/player/moment: ' + topLine + '\n' : '')
-    + '\n'
-    + 'TIKTOK BEST PRACTICES:\n'
-    + '- First line = hook. Max 8 words. Must stop the scroll.\n'
-    + '- Visible chars before "see more": 150-300\n'
-    + '- Hashtags: EXACTLY 3-5. No more.\n'
-    + '- Tone: deadpan, direct, never corporate\n'
-    + '- End with: Follow @clipznashite\n'
-    + '- NO URLs (not clickable on TikTok)\n'
-    + '\n'
-    + 'INSTAGRAM REELS BEST PRACTICES:\n'
-    + '- First 125 chars = above fold. This is what people see without tapping "more".\n'
-    + '- Lead with the most interesting/compelling information\n'
-    + '- Use blank lines for spacing\n'
-    + '- Hashtags: 3-5 focused hashtags (not 20)\n'
-    + '- CTA: save this / share / follow / link in bio\n'
-    + '- Alt text: 125 chars max, describe the video for accessibility\n'
-    + '\n'
-    + 'Return ONLY a JSON object with these exact keys, no markdown, no explanation:\n'
-    + '{"tiktok_caption":"...","ig_caption":"...","ig_alt_text":"..."}\n'
-    + '\n'
-    + 'The tiktok_caption must start with the hook on line 1, then body, then hashtags.\n'
-    + 'The ig_caption must have the above-fold hook in the first 125 chars, then a blank line, then body, CTA, blank line, hashtags.';
+  // Build script context for the server endpoint
+  var job = getCurrentPubJob();
+  var scriptContext = (job && job.script) ? job.script.substring(0, 600)
+    : (topLine ? topLine + '\n\n' + title : title);
 
-  fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
+  // Determine content type key for server
+  var contentTypeKey = type.indexOf('nba') > -1 ? 'nba'
+    : type.indexOf('twitch') > -1 ? 'twitch' : 'news';
+
+  // Get streamers list if twitch job
+  var streamersList = [];
+  if (contentTypeKey === 'twitch' && job && job.streamers) {
+    streamersList = Array.isArray(job.streamers) ? job.streamers : [];
+  }
+
+  var today = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/generate-publish-copy', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 30000;
+
+  xhr.onload = function() {
     try {
-      var text = (data.content||[]).filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('');
-      var clean = text.replace(/```json|```/g,'').trim();
-      var parsed = JSON.parse(clean);
-      pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, title,
-        parsed.tiktok_caption||'', parsed.ig_caption||'', parsed.ig_alt_text||'', isShort);
+      var resp = JSON.parse(xhr.responseText);
+      if (resp.error) throw new Error(resp.error);
+
+      var tiktokCaption = '', igCaption = '', igAlt = '';
+      var ytTitle = title, ytDesc = desc, ytComment = comment;
+
+      if (resp.platforms) {
+        // Multi-platform response
+        var yt = resp.platforms.youtube;
+        var tt = resp.platforms.tiktok;
+        var ig = resp.platforms.instagram;
+        if (yt) {
+          ytTitle   = yt.title       || title;
+          ytDesc    = yt.description || desc;
+          ytComment = yt.pinnedComment || comment;
+        }
+        if (tt) tiktokCaption = tt.caption || '';
+        if (ig) { igCaption = ig.caption || ''; igAlt = ig.altText || ig.alt_text || ''; }
+      } else if (resp.ok) {
+        // Flat (YouTube-only) backward-compat response
+        ytTitle   = resp.title       || title;
+        ytDesc    = resp.description || desc;
+        ytComment = resp.pinnedComment || comment;
+      }
+
+      pubDisplay(ytTitle, ytDesc, ytComment, endscreen, cards, twitchTitle, ytTitle,
+        tiktokCaption, igCaption, igAlt, isShort);
+
     } catch(e) {
-      g('pub-tt-caption').textContent = 'Error generating TikTok copy: ' + e.message;
-      g('pub-ig-caption').textContent = 'Error generating IG copy: ' + e.message;
+      if (g('pub-tt-caption')) g('pub-tt-caption').textContent = 'Error: ' + e.message;
+      if (g('pub-ig-caption')) g('pub-ig-caption').textContent = 'Error: ' + e.message;
+      if (g('pub-status')) g('pub-status').textContent = '❌ Publish copy error: ' + e.message;
     }
-  })
-  .catch(function(e) {
-    g('pub-tt-caption').textContent = 'Network error: ' + e.message;
-  });
+  };
+
+  xhr.onerror = xhr.ontimeout = function() {
+    var msg = xhr.ontimeout ? 'Request timed out' : 'Server unreachable — is server.js running?';
+    if (g('pub-tt-caption')) g('pub-tt-caption').textContent = '❌ ' + msg;
+    if (g('pub-status')) g('pub-status').textContent = '❌ ' + msg;
+  };
+
+  xhr.send(JSON.stringify({
+    contentType: contentTypeKey,
+    formType:    isShort ? 'short' : 'long',
+    script:      scriptContext,
+    date:        today,
+    streamers:   streamersList,
+    platforms:   ['youtube', 'tiktok', 'instagram']
+  }));
 }
 
 function pubSwitchPlatform(tab) {
