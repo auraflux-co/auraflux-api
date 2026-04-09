@@ -127,13 +127,35 @@ When Aider runs overnight, it should:
 
 3. **Work on ONE task only** — don't try to do multiple in one session
 
-4. **After completing:**
+4. **⚠️ Context Limit Rules (CRITICAL — read before adding any files)**
+
+   Sonnet's context limit is 200k tokens. `server.js` alone is ~150k tokens.
+   Violating these rules causes `input length + max_tokens > 200000` errors.
+
+   **For tasks that DON'T touch server.js** (new files, small lib files):
+   - Add only the specific file(s) needed
+   - Do NOT add server.js to the chat
+   - Example: `.env.example`, `lib/error_logger.js`
+
+   **For tasks that DO touch server.js:**
+   - Start aider with: `aider --map-tokens 0 server.js`
+   - The `--map-tokens 0` flag disables repo mapping (saves ~20k tokens)
+   - Do NOT add any other large files to the chat
+   - If you still hit the limit, use `/drop` to remove read-only files
+
+   **If you hit a context error mid-session:**
+   - Run `/drop` to remove all files
+   - Re-add only the single file you need
+   - If still too large, note it in `MORNING_BRIEFING.md` and skip to next task
+
+5. **After completing:**
    - Run `node --check server.js` (or the affected file)
    - Commit with a clear message
+   - Update `STATUS.md` → `🤖 Last Agent Action` table (required by pre-commit hook)
    - Update `MORNING_BRIEFING.md` (see template below)
    - Mark task `[x]` in this file
 
-5. **If anything goes wrong:**
+6. **If anything goes wrong:**
    - Do NOT commit broken code
    - Write the error to `MORNING_BRIEFING.md` under "⚠️ Issues"
    - Leave the code unchanged
