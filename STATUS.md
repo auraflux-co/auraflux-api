@@ -38,7 +38,7 @@
 | Phase 3: Caption & Prioritization | Aider | ✅ COMPLETE | `186ea3d` |
 | Phase 4: Operations Fixes | Cline | ✅ COMPLETE | `9fa9340` |
 | Phase 5: Creative Layer | Claude Code + Rob | ✅ COMPLETE | `b3fcdff` |
-| Phase 6: Publish Integration | Cline | 🟡 In Progress — needs `UPLOAD_POST_API_KEY` in `.env` | — |
+| Phase 6: Publish Integration | Cline | 🟡 In Progress — ready to test | — |
 
 ---
 
@@ -65,15 +65,15 @@
 
 ## 🟡 Phase 6 — Publish Integration (Active)
 
-**One blocker:** `UPLOAD_POST_API_KEY` missing from `.env`
+**`UPLOADPOST_API_KEY` ✅ confirmed in `.env` — ready to test**
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Add `UPLOAD_POST_API_KEY` to `.env` | ⏳ Waiting on Rob | Sign up at upload-post.com, connect YT/TikTok/IG, get API key |
-| Test Case #1: Twitch Long → YouTube Private | ⏳ Blocked on key | Spec in `UPLOAD_API_SPEC.md` |
-| Test Case #2-5: Multi-platform | ⏳ Blocked on key | After Test #1 passes |
+| `UPLOADPOST_API_KEY` in `.env` | ✅ Done | JWT token confirmed present |
+| Test Case #1: Twitch Long → YouTube Private | 🟡 Ready to run | Spec in `UPLOAD_API_SPEC.md` — need a video in `output/` |
+| Test Case #2-5: Multi-platform | ⏳ After Test #1 passes | TikTok + Instagram + simultaneous |
 | Approve overnight queue (Aider) | ⏳ Waiting on Rob | See `OVERNIGHT_TASKS.md` |
-| Push 18 local commits to origin/main | ⏳ Waiting on Rob | `git push` when ready |
+| Push 19 local commits to origin/main | ⏳ Waiting on Rob | `git push` when ready |
 
 ---
 
