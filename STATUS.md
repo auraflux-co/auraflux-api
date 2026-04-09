@@ -25,7 +25,7 @@
 |-------|---------------|---------------|--------|-----------|
 | Cline | Added pre-commit hook + STATUS enforcement | `.git/hooks/pre-commit`, `STATUS.md`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | `a7b6698` | 2026-04-09 7:00 PM ET |
 | Claude Code | Newscast UI updates + NBA intro card handoff + Upload API spec | `tools/clipzworld_newscast.html`, `POST_PUBLISH_MANUAL_CHECKLIST.md`, `CLINE_HANDOFF_NBA_INTRO_CARD.md`, `UPLOAD_API_SPEC.md`, `data/upload_status.json` | `b3fcdff` | 2026-04-09 (earlier today) |
-| Cline | STATUS.md audit — updated phases to reflect actual built state | `STATUS.md` | pending | 2026-04-09 7:10 PM ET |
+| Cline | STATUS.md audit + OVERNIGHT_TASKS.md context limit fix | `STATUS.md`, `OVERNIGHT_TASKS.md` | pending | 2026-04-09 7:14 PM ET |
 
 ---
 
@@ -73,7 +73,7 @@
 | Test Case #1: Twitch Long → YouTube Private | 🟡 Ready to run | Spec in `UPLOAD_API_SPEC.md` — need a video in `output/` |
 | Test Case #2-5: Multi-platform | ⏳ After Test #1 passes | TikTok + Instagram + simultaneous |
 | Approve overnight queue (Aider) | ⏳ Waiting on Rob | See `OVERNIGHT_TASKS.md` |
-| Push 19 local commits to origin/main | ⏳ Waiting on Rob | `git push` when ready |
+| Push commits to origin/main | ✅ Done | Pushed `b7af98a` — GitHub synced |
 
 ---
 
