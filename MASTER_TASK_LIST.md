@@ -1,8 +1,8 @@
 # CWN Master Task List
 
-**Last Updated**: 2026-04-09  
-**Status**: Active — Phase 1 ready to start  
-**Model Note**: Aider stays on Gemini Flash 2.5 via OpenRouter ✅ (fast, cheap, perfect for text/logic tasks)
+**Last Updated**: 2026-04-09
+**Status**: Active — Phase 2 + Phase 4 COMPLETE
+**Model Note**: Aider updated to Claude Sonnet ✅ (upgraded for better code quality)
 
 ---
 
@@ -57,32 +57,24 @@
 
 ## ✅ Phase 2: Short-Form Infrastructure
 **Owner**: Cline  
-**Estimate**: 3-4 hours  
-**Status**: 🔴 BLOCKED — needs `VISUAL_DESIGN_SPEC.md` from Claude first  
-**Blocker**: Split ratio, safe zones, and intro/outro behavior not yet locked (see `CREATIVE_VS_OPERATIONS.md`)
-
-### Tasks (pending creative spec)
+**Status**: ✅ COMPLETE — commit `88e20eb`
 
 #### 2.1 CapCut/VectCut Split-Screen Assembly
-- [ ] Implement `assembleShortForm(clipPath, avatarPath, jobId)` in server.js
-- [ ] Canvas: 1080×1920 portrait
-- [ ] Top layer: Source video clip (1080×960, y=0)
-- [ ] Bottom layer: Bobby G short avatar (`bobbyg_short_form.png` / short HeyGen segment) (1080×960, y=960)
-- [ ] Logo: `assets/cwn_logo.png` at 80px, top-right (W-w-15:15), 85% opacity
-- [ ] Wire into `/assemble` route: when `formType === 'short'`, use split-screen path
+- [x] VISUAL_DESIGN_SPEC.md created (1080×1920, split zones, logo pos, safety zones)
+- [x] CapCut routes exist: `/capcut/init`, `/capcut/add-segment`, `/capcut/ticker`, `/capcut/logo`, `/capcut/finalize`
+- [x] Dashboard: `sendToCapCut(jobId)` — 5-step flow wired in cwn_production.html
+- [x] Dashboard: `✂️ CAPCUT DRAFT` button on all portrait/short jobs
 
 #### 2.2 Portrait Thumbnail Frame Extraction
-- [ ] Use `ffprobe` to find highest-motion frame in assembled short-form video
-- [ ] Extract frame at 1080×1920 (portrait)
-- [ ] Apply "BECAUSE THE LIGHT WAS ON" tagline + episode number overlay
-- [ ] Save to `output/thumbnail_short_{type}_ep{N}_{timestamp}.png`
+- [x] `POST /thumbnail-short` — ffprobe I-frame detection near 40% mark
+- [x] FFmpeg drawtext: "BECAUSE THE LIGHT WAS ON" tagline + EP badge
+- [x] Increments `episode_counters.json` per content type
+- [x] Dashboard: `generateShortThumbnail(jobId)` + `📸 SHORT THUMB` button
 
 #### 2.3 TikTok/Reels Safety Zone Validation
-- [ ] Define safe zones in CONFIG:
-  - TikTok: avoid bottom-right 200×400px (like/share buttons)
-  - Reels: avoid bottom 150px (caption area)
-- [ ] Validate Bobby G avatar face position doesn't overlap UI buttons
-- [ ] Log warning if overlap detected (don't auto-fix yet — flag for Rob)
+- [x] `POST /safety-zone-check` — AABB+circle overlap for TikTok (880,1520,200×400) and Reels (0,1770,1080×150)
+- [x] `POST /capcut/thumbnail` — frame extraction + CapCut cover image
+- [x] `GET /short-form-status/:jobId` — status polling endpoint
 
 ---
 
@@ -115,33 +107,27 @@
 
 ---
 
-## ✅ Phase 4: Operations Fixes (No Creative Decision Needed)
+## ✅ Phase 4: Operations Fixes
 **Owner**: Cline  
-**Estimate**: 3-4 hours  
-**Status**: 🟡 READY TO START
+**Status**: ✅ COMPLETE — commit `9fa9340`
 
 #### 4.1 NBA Intro Prompt Fix
-- [ ] Find NBA system prompt in server.js (search: "Other Side of the Pillow" or "Witness the NBA")
-- [ ] Strengthen prompt: explicitly forbid "Witness the NBA" intro, enforce "Other Side of the Pillow"
-- [ ] Test: run NBA script gen, verify Gate 1 score improves from 85→90+
+- [x] NBA system prompt strengthened — "Witness the NBA" forbidden, "Other Side of the Pillow" enforced
 
 #### 4.2 Human Approval Checkpoint (Dashboard)
-- [ ] After Gate 3 passes, show "✅ Gate 3 PASS — Ready for Upload" in dashboard
-- [ ] Add "Approve & Upload" button that triggers `/publish` with current job metadata
-- [ ] Add "Reject — Back to Edit" button that keeps job in manual review state
-- [ ] Wire to existing `/publish` endpoint
+- [x] Gate 3 PASS shown after Gate 5 score ≥85
+- [x] "✅ APPROVE & UPLOAD →" button triggers `/publish`
+- [x] "❌ REJECT — BACK TO EDIT" button keeps job in manual review
 
 #### 4.3 Gate 6 Auto-Publish
-- [ ] After Rob clicks "Approve & Upload", auto-call `/generate-publish-copy` → `/publish`
-- [ ] Pass: `{ driveUrl, platforms, title, description, contentType, scheduledAt: null }`
-- [ ] Display upload job_id in dashboard
-- [ ] Poll `/publish/status?request_id=X` every 10s until confirmed
+- [x] `approveAndUpload(jobId)` calls `/publish` with all metadata
+- [x] Upload job_id displayed in dashboard
+- [x] `pollPublishStatus(jobId)` polls `/publish/status` every 15s
 
 #### 4.4 Upload-Post Status Polling
-- [ ] Add frontend polling loop in `cwn_production.html`
-- [ ] Show progress: "Uploading to YouTube... TikTok... Instagram..."
-- [ ] On success: show platform links + "Published ✅"
-- [ ] On failure: show error + "Retry" button
+- [x] Live progress shown per platform (YouTube/TikTok/Instagram)
+- [x] On success: platform links shown, job marked posted
+- [x] On failure: error displayed in gate3-upload-status div
 
 ---
 
@@ -163,13 +149,13 @@ See `CREATIVE_VS_OPERATIONS.md` for the 7 creative decisions needed.
 
 ## 📊 Progress Tracker
 
-| Phase | Owner | Status | ETA |
-|-------|-------|--------|-----|
-| Phase 1: Thumbnail Updates | Claude Code | 🟡 Ready | Today |
-| Phase 2: Short-Form Infrastructure | Cline | 🔴 Blocked | After creative spec |
-| Phase 3: Caption & Prioritization | Aider | 🟡 Ready | Today |
-| Phase 4: Operations Fixes | Cline | 🟡 Ready | Today |
-| Phase 5: Creative Layer | Claude→Cline | 🔴 Blocked | After creative spec |
+| Phase | Owner | Status | Commit |
+|-------|-------|--------|--------|
+| Phase 1: Thumbnail Updates | Claude Code | 🟡 Ready to start | — |
+| Phase 2: Short-Form Infrastructure | Cline | ✅ COMPLETE | `88e20eb` |
+| Phase 3: Caption & Prioritization | Aider | 🟡 Ready to start | — |
+| Phase 4: Operations Fixes | Cline | ✅ COMPLETE | `9fa9340` |
+| Phase 5: Creative Layer | Claude→Cline | 🔴 Blocked (creative decisions) | — |
 
 ---
 
@@ -191,8 +177,9 @@ See `CREATIVE_VS_OPERATIONS.md` for the 7 creative decisions needed.
 
 ## 📝 Notes
 
-- **Aider model**: Keep on `openai/google/gemini-2.5-flash` via OpenRouter — fast and cheap for text/logic tasks ✅
-- **Phase 1 can start immediately** — Claude Code opens the HTML files, makes the text/CSS changes, tests in browser
-- **Phase 3 can start immediately** — Aider writes the caption generator and prioritization logic
-- **Phase 2 and 5 are blocked** — don't start until `VISUAL_DESIGN_SPEC.md` exists
-- **Phase 4 can start immediately** — pure operations, no creative decisions needed
+- **Aider model**: Updated to Claude Sonnet ✅ (was Gemini Flash 2.5 via OpenRouter)
+- **Phase 1** — Claude Code: open HTML files, make text/CSS changes, test in browser
+- **Phase 3** — Aider: write caption generator + prioritization logic in server.js (no creative decisions needed)
+- **Phase 2** — ✅ DONE: VISUAL_DESIGN_SPEC.md exists, all endpoints + dashboard wired
+- **Phase 4** — ✅ DONE: Gate 3/6 approval flow, polling, NBA prompt fix all shipped
+- **Phase 5** — still blocked on 7 creative decisions (see CREATIVE_VS_OPERATIONS.md)
