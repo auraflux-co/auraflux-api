@@ -1736,7 +1736,16 @@ Please generate a COMPLETE REVISED script that fixes all the issues listed above
       { headers: { 'Content-Type': 'application/json' }, timeout: 120000 }
     );
 
-    const script = (genResp.data?.candidates?.[0]?.content?.parts || [])
+    const candidate = genResp.data?.candidates?.[0];
+    const finishReason = candidate?.finishReason;
+
+    // Detect silent truncation — if Gemini hit token limit mid-output, the script will be incomplete
+    if (finishReason === 'MAX_TOKENS') {
+      console.error(`[geminiScriptGeneration] ⚠️ Gemini output TRUNCATED (finishReason=MAX_TOKENS, maxOutputTokens=${maxOutputTokens})`);
+      throw new Error(`Gemini output truncated at token limit (${maxOutputTokens} tokens) — script is incomplete`);
+    }
+
+    const script = (candidate?.content?.parts || [])
       .map(p => p.text||'')
       .join('')
       .trim();
@@ -1745,6 +1754,7 @@ Please generate a COMPLETE REVISED script that fixes all the issues listed above
       throw new Error('Gemini returned empty or too-short script');
     }
 
+    console.log(`[geminiScriptGeneration] ✅ Script complete (finishReason=${finishReason}, length=${script.length} chars)`);
     return { script, tokenUsage: { input: 0, output: 0 } }; // Gemini doesn't expose token counts easily
   } catch(e) {
     console.error('[geminiScriptGeneration] API call failed:', e.message);
@@ -6259,8 +6269,9 @@ ${notesStr}${clipLines}`;
         }).join('\n\n');
 
         // Determine clips per streamer from actual data structure
-        const clipsPerStreamer = (items[0] && items[0].clips && items[0].clips.length) || req.body.clipsPerStreamer || 3;
-        console.log(`[generate-full-script] clipsPerStreamer: ${clipsPerStreamer} | totalClips: ${items.length * clipsPerStreamer}`);
+        // FIX: Use > 0 check to avoid empty array [] evaluating as falsy (length=0)
+        const clipsPerStreamer = (items[0]?.clips?.length > 0 ? items[0].clips.length : null) ?? req.body.clipsPerStreamer ?? 3;
+        console.log(`[generate-full-script] clipsPerStreamer: ${clipsPerStreamer} (source: ${items[0]?.clips?.length > 0 ? 'items[0].clips' : req.body.clipsPerStreamer ? 'req.body' : 'default:3'}) | totalClips: ${items.length * clipsPerStreamer}`);
         const totalClipSlots = items.length * clipsPerStreamer;
 
         // Generate 72 scene headers (1 INTRO + 10 streamers × 7 scenes each + 1 OUTRO)
@@ -6381,7 +6392,8 @@ Target: 80-100 words spoken per streamer.`;
     // Calculate expected scene count for Claude QA to validate
     let expectedScenes = 0;
     if (type === 'twitch' && !type.includes('-short')) {
-      const clipsPerStreamer = (items[0] && items[0].clips && items[0].clips.length) || req.body.clipsPerStreamer || 3;
+      // FIX: Use > 0 check to avoid empty array [] evaluating as falsy (length=0) — matches line 6262
+      const clipsPerStreamer = (items[0]?.clips?.length > 0 ? items[0].clips.length : null) ?? req.body.clipsPerStreamer ?? 3;
       const scenesPerStreamer = 1 + clipsPerStreamer * 2;
       expectedScenes = 1 + items.length * scenesPerStreamer + 1; // 1 INTRO + (streamers × scenes) + 1 OUTRO
     } else if (type === 'nba') {
