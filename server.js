@@ -4129,6 +4129,91 @@ app.post('/assemble',
           log(asmId, `\n>> PASTE THIS IN CLAUDE CHAT TO IMPORT TO CANVA:`);
           log(asmId, `   ${driveUrl}`);
           assemblyJobs[asmId].driveUrl = driveUrl;
+
+          // ── Gate 6: Auto-publish after Gate 3 pass + Drive upload ──────────────
+          // Triggered when: Gate 3 outcome = 'pass' AND Drive upload succeeded
+          // Flow: /generate-publish-copy → /publish (Upload-Post)
+          // Skipped when: SKIP_AUTO_PUBLISH=true in .env OR Gate 3 was manual_review
+          if (qaResult && qaResult.outcome === 'pass' && process.env.SKIP_AUTO_PUBLISH !== 'true') {
+            log(asmId, `\n🚀 Gate 6: Auto-publish triggered (Gate 3 PASS + Drive upload complete)...`);
+            assemblyJobs[asmId].gate6Status = 'running';
+
+            try {
+              // Step 6a: Generate platform-specific publish copy
+              log(asmId, `  📝 Gate 6a: Generating publish copy via /generate-publish-copy...`);
+              const publishCopyResp = await axios.post(
+                `http://localhost:${process.env.PORT || 3000}/generate-publish-copy`,
+                {
+                  contentType: contentType || 'twitch',
+                  formType: (contentType && contentType.includes('-short')) ? 'short' : 'compilation',
+                  script: fullScript || assemblyJobs[asmId].fullScript || '',
+                  date: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+                  streamers: req.body.streamers || [],
+                  platforms: (process.env.AUTO_PUBLISH_PLATFORMS || 'youtube').split(',').map(p => p.trim())
+                },
+                { timeout: 60000 }
+              );
+
+              const publishCopy = publishCopyResp.data;
+              log(asmId, `  ✅ Gate 6a: Publish copy generated`);
+
+              // Extract YouTube metadata (primary platform)
+              const ytMeta = publishCopy.platforms?.youtube || publishCopy;
+              const title       = ytMeta.title       || jobTitle || outFile;
+              const description = ytMeta.description || '';
+              const tags        = ytMeta.hashtags     || [];
+
+              assemblyJobs[asmId].publishCopy = publishCopy;
+              log(asmId, `  📋 Title: ${title}`);
+
+              // Step 6b: Publish to platforms via /publish
+              log(asmId, `  📤 Gate 6b: Publishing via /publish...`);
+              const platforms = (process.env.AUTO_PUBLISH_PLATFORMS || 'youtube').split(',').map(p => p.trim());
+
+              const publishResp = await axios.post(
+                `http://localhost:${process.env.PORT || 3000}/publish`,
+                {
+                  driveUrl,
+                  platforms,
+                  title,
+                  description,
+                  tags,
+                  contentType: (contentType && contentType.includes('-short')) ? 'short' : 'long',
+                  async: true
+                },
+                { timeout: 120000 }
+              );
+
+              const publishResult = publishResp.data;
+              assemblyJobs[asmId].gate6Status     = 'done';
+              assemblyJobs[asmId].publishResult   = publishResult;
+              assemblyJobs[asmId].publishRequestId = publishResult.request_id || null;
+              assemblyJobs[asmId].publishJobId     = publishResult.job_id || null;
+
+              log(asmId, `  ✅ Gate 6b: Published to ${platforms.join(', ')}`);
+              if (publishResult.request_id) log(asmId, `  📋 Upload-Post request_id: ${publishResult.request_id}`);
+              if (publishResult.job_id)     log(asmId, `  📋 Upload-Post job_id: ${publishResult.job_id}`);
+              if (publishResult.statusUrl)  log(asmId, `  🔗 Status: ${publishResult.statusUrl}`);
+
+              log(asmId, `\n✅ Gate 6 COMPLETE — video published automatically`);
+
+            } catch(gate6Err) {
+              log(asmId, `⚠️  Gate 6 auto-publish failed: ${gate6Err.message}`);
+              assemblyJobs[asmId].gate6Status = 'failed';
+              assemblyJobs[asmId].gate6Error  = gate6Err.message;
+              log(asmId, `   Manual publish: use driveUrl above with /publish endpoint`);
+            }
+
+          } else if (qaResult && qaResult.outcome === 'manual_review') {
+            log(asmId, `\n⏸  Gate 6: Auto-publish SKIPPED — Gate 3 is MANUAL REVIEW (score ${qaResult.score}/100)`);
+            log(asmId, `   Review QA report, then manually trigger /publish with driveUrl above`);
+            assemblyJobs[asmId].gate6Status = 'skipped_manual_review';
+          } else if (process.env.SKIP_AUTO_PUBLISH === 'true') {
+            log(asmId, `\n⏸  Gate 6: Auto-publish SKIPPED (SKIP_AUTO_PUBLISH=true in .env)`);
+            log(asmId, `   Manual publish: use driveUrl above with /publish endpoint`);
+            assemblyJobs[asmId].gate6Status = 'skipped_env';
+          }
+
         } else {
           log(asmId, `⚠️  Drive upload skipped — add cwn-drive-key.json to enable`);
         }
