@@ -1,7 +1,7 @@
 # CWN Production QA Gates & Checklists
 
-**Last Updated**: 2026-04-07
-**Status**: Pre-Production Validation Phase
+**Last Updated**: 2026-04-09
+**Status**: Pre-Production Validation Phase — Gate 1 scene count bug FIXED
 **Deployment**: Localhost → Railway (after all 12 tests pass)
 
 ---
@@ -769,11 +769,21 @@ Create individual markdown files for each test:
 ### Current Implementation Status
 
 **✅ Implemented (Working Now)**:
-- Gate 1: Script QA (Gemini reviews Claude's script) - server.js:1077
+- Gate 1: Script QA (Claude reviews Gemini's script) - `claudeScriptQA()` server.js:1522
+  - ✅ Scene count validation (Twitch: 1+streamers×7+1, NBA/News: 1+items×4+1)
+  - ✅ Scene header normalization fix (commit 93aa22f, 2026-04-09): post-processes Gemini output to convert `=== JAY CINCO_INTRO ===` → `=== JAY_CINCO_INTRO ===` before QA runs
+  - ✅ Clip count validation
+  - ✅ Outro check ("Appreciate you!")
+  - ✅ Display name validation
 - Gate 2: HeyGen Segment QA (Gemini samples 3 segments for tech issues) - server.js:1251
 - Gate 3: Platform Upload Validation (manual)
 - Gate 4: Gemini Visual Audit (manual)
 - Phonetic field exists in streamers.json (e.g., Yonna: "Yawn-uh") - streamers.json:70
+
+**⚠️ Known Gate 1 Behavior**:
+- Score of 85/100 (MANUAL REVIEW) is expected when test payloads have empty clip arrays — Claude cannot verify clip accuracy without clip descriptions. This is NOT a failure.
+- Score ≥90 requires real clip data so Claude can verify clip-to-commentary match.
+- NBA intro line: Gemini sometimes uses "Witness the NBA" instead of "Other Side of the Pillow" — this causes a -15 deduction. Prompt tuning needed.
 
 **🔴 NOT Implemented (Critical Gaps)**:
 - **Gate 2A: Pronunciation & Clarity Check** - Detects mispronunciations, feeds back to Claude

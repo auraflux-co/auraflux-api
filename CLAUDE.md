@@ -132,6 +132,27 @@ Script Gen → Gate 1 (≥90) → HeyGen Render → Gate 2 (≥85) → Assembly 
 - Emphasized "DO NOT COMBINE" and "DO NOT SKIP" for each header
 - See `server.js:4594-4605` (system prompt) and `server.js:5460-5473` (user prompt)
 
+**CRITICAL FIX (April 9, 2026) — Scene Header Normalization (commit 93aa22f):**
+Root cause: Gemini writes `=== JAY CINCO_INTRO ===` (space) in script output despite prompt using `JAY_CINCO` (underscore). Claude's Gate 1 QA regex `[A-Z_0-9]+` doesn't match names with spaces, so those scenes were invisible to the scene counter.
+
+Two-layer fix applied:
+1. **Prompt-level** (line 6321): `getDisplayName().toUpperCase().replace(/\s+/g, '_')` — prevents spaces in the prompt template
+2. **Output-level post-processing** (lines 6519-6528): After `script = geminiResult.script`, normalize ALL headers in Gemini's output:
+```javascript
+if (script && typeof script === 'string') {
+  script = script.replace(/===\s+([^=]+?)\s+===/g, (match, name) => {
+    const normalized = name.trim().replace(/\s+/g, '_');
+    return `=== ${normalized} ===`;
+  });
+}
+```
+This converts `=== JAY CINCO_INTRO ===` → `=== JAY_CINCO_INTRO ===` and `=== TRAIL BLAZERS_INTRO ===` → `=== TRAIL_BLAZERS_INTRO ===` in the actual script before Gate 1 QA sees it.
+
+**Test results after fix:**
+- Test 2 (Twitch/Jay Cinco): 60/100 ❌ HARD FAIL → **85/100 🟡 MANUAL REVIEW** (37/37 scenes ✅)
+- Test 4 (NBA/Trail Blazers): 45/100 ❌ HARD FAIL → **85/100 🟡 MANUAL REVIEW** (22/22 scenes ✅)
+- Remaining -15 deduction is expected: empty clip arrays = unverifiable clip accuracy (not a structural failure)
+
 ### HeyGen Rendering (Frontend-driven)
 
 Dashboard sends each script segment to HeyGen API individually. Frontend polls `/heygen-status/:videoId` until `COMPLETED`, then logs metrics via `/log-heygen-metrics` (new endpoint tracking total segments, avg render time, retries).
