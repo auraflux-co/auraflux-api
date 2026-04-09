@@ -4,5 +4,5 @@ read:
 
 openai-api-base: https://router.requesty.ai/v1
 openai-api-key: rqsty-sk-3Zdkufv+RliVSPnLLnDuHEhXS4zcqzE6GFbg/0d6fME81AhlVCrNL0nTd8LHl256bWPHi9jyfRpbDbCkczyvtwgkriHz1nGJaoOAO41seQ0=
-model: openai/coding/gemini-2.5-pro
+model: openai/coding/gemini-2.5-flash
 show-model-warnings: false
