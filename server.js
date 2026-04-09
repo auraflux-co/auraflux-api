@@ -7064,6 +7064,54 @@ app.post('/publish',
   }
 });
 
+// ── generateShortFormCaption ─────────────────────────────────────────────────
+// Generates a platform-optimised short-form caption + hashtags + alt-text.
+// Returns: { caption: string, hashtags: string[], altText: string }
+// Called by /generate-publish-copy when formType === 'short'.
+async function generateShortFormCaption(script, contentType) {
+  const excerpt = script.substring(0, 400);
+
+  const typeLabel = { nba: 'NBA highlights', news: 'world news', twitch: 'Twitch clips' }[contentType] || 'content';
+
+  const systemPrompt = `You write ultra-short social captions for ClipzWorld News (@clipznashite) short-form vertical videos (60-90 seconds).
+
+Content type: ${typeLabel}
+Script excerpt:
+${excerpt}...
+
+Generate a JSON object with exactly these fields:
+{
+  "caption": "90-150 char hook with 1-2 emojis, punchy, no hashtags inline",
+  "hashtags": ["array", "of", "8-12", "tags", "no", "hash", "symbol"],
+  "altText": "1-sentence accessibility description of the video content, plain English, no emojis"
+}
+
+Rules:
+- caption: 90-150 chars, starts with the most compelling fact or hook, ends with a micro-CTA ("Watch 👆", "Full story 👆", "Highlights 👆")
+- hashtags: mix of broad (#Shorts #FYP #ForYou) + topic-specific; no # prefix in the array values
+- altText: screen-reader friendly, describes what happens in the video
+- Output ONLY valid JSON, no markdown, no explanation`;
+
+  const client = new Anthropic();
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 400,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: 'Generate the short-form caption JSON now.' }]
+  });
+
+  const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('generateShortFormCaption: could not parse JSON from Claude');
+
+  const result = JSON.parse(jsonMatch[0]);
+  // Normalise hashtags — strip any accidental # prefix
+  if (Array.isArray(result.hashtags)) {
+    result.hashtags = result.hashtags.map(h => h.replace(/^#/, ''));
+  }
+  return result;
+}
+
 // POST /generate-publish-copy — generates platform-specific publish metadata
 // Body: {
 //   contentType: 'nba' | 'news' | 'twitch',
@@ -7204,6 +7252,18 @@ STRICT RULES:
 - Use double quotes for all JSON strings`;
 
   try {
+    // ── Short-form: generate optimised caption + hashtags + altText first ──
+    // These are injected into the platform metadata for TikTok/Reels/Shorts
+    let shortCaption = null;
+    if (isShort) {
+      try {
+        shortCaption = await generateShortFormCaption(script, contentType);
+        console.log(`[publish-copy] Short-form caption generated: "${shortCaption.caption.slice(0, 60)}..." (${shortCaption.caption.length} chars)`);
+      } catch(e) {
+        console.warn(`[publish-copy] generateShortFormCaption failed: ${e.message} — continuing without short caption`);
+      }
+    }
+
     const client = new Anthropic();
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -7222,6 +7282,37 @@ STRICT RULES:
     }
 
     const metadata = JSON.parse(jsonMatch[0]);
+
+    // ── Inject short-form caption into platform metadata ──────────────
+    // For short-form: override TikTok/Instagram captions with the optimised
+    // short caption, and add altText + hashtags to all platforms.
+    if (isShort && shortCaption) {
+      if (metadata.tiktok) {
+        metadata.tiktok.caption = shortCaption.caption + '\n\n' + shortCaption.hashtags.map(h => '#' + h).join(' ');
+        metadata.tiktok.altText = shortCaption.altText;
+      }
+      if (metadata.instagram) {
+        metadata.instagram.caption = shortCaption.caption + '\n\n' + shortCaption.hashtags.map(h => '#' + h).join(' ');
+        metadata.instagram.altText = shortCaption.altText;
+      }
+      if (metadata.youtube) {
+        // For YouTube Shorts: append #Shorts to title if not already there
+        if (metadata.youtube.title && !metadata.youtube.title.includes('#Shorts')) {
+          metadata.youtube.title = metadata.youtube.title.trim() + ' #Shorts';
+          if (metadata.youtube.title.length > 100) {
+            metadata.youtube.title = metadata.youtube.title.substring(0, 97) + '...';
+          }
+        }
+        metadata.youtube.altText = shortCaption.altText;
+        // Add short-form hashtags to YouTube hashtags array
+        if (Array.isArray(metadata.youtube.hashtags)) {
+          const shortHashtags = shortCaption.hashtags.filter(h => !metadata.youtube.hashtags.includes(h));
+          metadata.youtube.hashtags = [...metadata.youtube.hashtags, ...shortHashtags].slice(0, 15);
+        }
+      }
+      // Attach raw short caption data for dashboard display
+      metadata._shortCaption = shortCaption;
+    }
 
     // Validate platform-specific metadata
     if (needsYouTube && metadata.youtube) {
@@ -9067,6 +9158,14 @@ async function generateTwitchLongformThumbnail(options = {}) {
   ctx.fillStyle = '#ffffff';
   ctx.fillText(dateStr, 24, 48);
 
+  // ── Tagline (bottom-center) ──────────────────────────────────────
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 32px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('TALK SOUP', W / 2, H - 32);
+
   ctx.shadowColor = 'transparent';
 
   // ── Save PNG ─────────────────────────────────────────────────────
@@ -9256,11 +9355,11 @@ app.post('/generate-thumbnail', async (req, res) => {
 
           // Set subtitle
           if (thumbSub) {
-            thumbSub.textContent = data.subtitle || 'TWITCH REACTION | CLIPZWORLD NEWS';
+            thumbSub.textContent = data.subtitle || 'TWITCH REACTION | TALK SOUP';
           }
         }, {
           title,
-          subtitle: `EPISODE ${episodeNum} | ${streamers && streamers.length > 0 ? streamers.length + ' STREAMERS' : 'TWITCH'} | CLIPZWORLD NEWS`,
+          subtitle: `EPISODE ${episodeNum} | ${streamers && streamers.length > 0 ? streamers.length + ' STREAMERS' : 'TWITCH'} | TALK SOUP`,
           streamers: streamers || [],
           backgroundImage: '/assets/Ghostly Bobby G in Navy Themed Thumbnail.png',
           episodeNum

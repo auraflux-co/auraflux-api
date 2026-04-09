@@ -4,7 +4,7 @@ read:
   - AUTOMATION_STATUS.md
   - QA_GATES.md
 
-openai-api-base: https://openrouter.ai/api/v1
-openai-api-key: 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
-model: openai/google/gemini-2.5-flash
+# Use Anthropic API directly (Claude Sonnet 3.5)
+anthropic-api-key: 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
+model: anthropic/claude-3-5-sonnet-20241022
 show-model-warnings: false
