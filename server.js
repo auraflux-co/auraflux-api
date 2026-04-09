@@ -6515,6 +6515,17 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
         });
         script = geminiResult.script;
         tokenUsage = geminiResult.tokenUsage;
+
+        // ── Post-process: normalize spaces→underscores inside === HEADERS ===
+        // Gemini sometimes writes "=== JAY CINCO_INTRO ===" despite prompt using "JAY_CINCO"
+        // This replaces spaces within the header name (between === and ===) with underscores
+        // e.g. "=== JAY CINCO_INTRO ===" → "=== JAY_CINCO_INTRO ===" (server.js:~6516)
+        if (script && typeof script === 'string') {
+          script = script.replace(/===\s+([^=]+?)\s+===/g, (match, name) => {
+            const normalized = name.trim().replace(/\s+/g, '_');
+            return `=== ${normalized} ===`;
+          });
+        }
       } catch(e) {
         console.error(`[generate-full-script] Gemini script generation failed: ${e.message}`);
         script = `[ERROR: Gemini script generation failed: ${e.message}]`;
