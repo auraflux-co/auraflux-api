@@ -136,10 +136,10 @@ These are blocked on Phase 5 creative alignment:
 | `COMMIT_CHECKLIST.md` | Pre-commit rules for Aider/Cline |
 | `server.js` | Node.js API (6000+ lines, all endpoints) |
 | `cwn_production.html` | Dashboard UI |
-| `streamers.json` | Streamer roster + display names + phonetics |
-| `cwn_style_guides.json` | Gemini-learned style fingerprints per content type |
-| `test_suite_12cases.json` | 12-test validation suite |
-| `episode_counters.json` | Episode tracking (twitch/nba/news) |
+| `data/streamers.json` | Streamer roster + display names + phonetics |
+| `data/cwn_style_guides.json` | Gemini-learned style fingerprints per content type |
+| `test/test_suite_12cases.json` | 12-test validation suite |
+| `data/episode_counters.json` | Episode tracking (twitch/nba/news) |
 | `.aider.conf.yml` | Aider config (claude-sonnet-4-20250514) |
 | `VISUAL_DESIGN_SPEC.md` | Short-form layout spec (1080×1920, zones, safety) |
 | `CREATIVE_VS_OPERATIONS.md` | 7 creative decisions needed for Phase 5 |
