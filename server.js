@@ -6044,6 +6044,13 @@ app.post('/generate-full-script',
       console.log(`[generate-full-script] Got ${nbaHits}/${items.length} NBA analyses (${nbaHits} video, ${items.length - nbaHits} thumbnail/fallback)`);
 
     } else {
+      // News: prioritize stories by urgency before Gemini analysis
+      if (type === 'news' || type === 'news-short') {
+        const prioritized = prioritizeNewsStories(items);
+        const priorityChange = prioritized.map((s, i) => `${i+1}. ${(s.title||'').slice(0, 40)}`).join(', ');
+        console.log(`[generate-full-script] Story priority order: ${priorityChange}`);
+        items.splice(0, items.length, ...prioritized);
+      }
       // News: try video URL from RSS enclosure first, then thumbnail + full article text
       console.log(`[generate-full-script] Analyzing ${items.length} news stories...`);
       analyses = await Promise.all(
@@ -7063,6 +7070,31 @@ app.post('/publish',
     res.status(500).json({ error: e.message, details: errData || null });
   }
 });
+
+// ── prioritizeNewsStories ─────────────────────────────────────────────────────
+// Reorders news stories by urgency score before Gemini analysis.
+// High-priority keywords get a score bump so they appear first in the script.
+// Returns: stories[] sorted by descending priority score (stable sort)
+function prioritizeNewsStories(stories) {
+  const HIGH_PRIORITY_KEYWORDS = [
+    'trump', 'iran', 'war', 'breaking', 'crisis', 'election',
+    'attack', 'killed', 'dead', 'explosion', 'nuclear', 'sanctions',
+    'ceasefire', 'invasion', 'protest', 'arrest', 'indicted', 'verdict'
+  ];
+
+  const scored = stories.map(story => {
+    const text = ((story.title || '') + ' ' + (story.desc || '')).toLowerCase();
+    let score = 0;
+    for (const kw of HIGH_PRIORITY_KEYWORDS) {
+      if (text.includes(kw)) score += 10;
+    }
+    return { story, score };
+  });
+
+  // Stable sort: higher score first, preserve original order for ties
+  scored.sort((a, b) => b.score - a.score);
+  return scored.map(s => s.story);
+}
 
 // ── generateShortFormCaption ─────────────────────────────────────────────────
 // Generates a platform-optimised short-form caption + hashtags + alt-text.
