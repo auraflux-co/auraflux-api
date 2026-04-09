@@ -1688,6 +1688,24 @@ function triggerGate5(job) {
       html += '</div>';
 
       if (qaEl) qaEl.innerHTML = html;
+
+      // ── Gate 3: Show human approval checkpoint when Gate 5 passes ──
+      if (result.score >= 85) {
+        var approvalEl = document.getElementById('gate3-approval-' + job.id);
+        if (approvalEl) {
+          approvalEl.style.display = '';
+          approvalEl.innerHTML = '<div style="margin-top:8px;padding:10px 12px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.4);border-radius:4px;">'
+            + '<div style="font-size:9px;letter-spacing:2px;color:#2ecc71;font-weight:900;margin-bottom:6px;">✅ GATE 3 — READY FOR UPLOAD</div>'
+            + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;">Gate 5 passed (' + result.score + '/100). Approve to publish to all platforms, or reject to keep in review.</div>'
+            + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+            + '<button onclick="approveAndUpload(\'' + job.id + '\')" class="btn btn-gold btn-sm">✅ APPROVE &amp; UPLOAD →</button>'
+            + '<button onclick="rejectJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(231,76,60,0.5);color:#e74c3c;">❌ REJECT — BACK TO EDIT</button>'
+            + '</div>'
+            + '<div id="gate3-upload-status-' + job.id + '" style="margin-top:6px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);"></div>'
+            + '</div>';
+        }
+      }
+
       renderQueue();
     } catch(e) {
       job._gate5Running = false;
@@ -2034,7 +2052,7 @@ function renderQueue() {
       +'<div class="job-meta">'+(job.type||'video').toUpperCase().replace('-',' ')+' | '+new Date(job.created).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div></div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
+      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+'<div id="gate3-approval-'+job.id+'" style="display:'+(job._gate3Approved||job._gate3Rejected?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -3941,6 +3959,163 @@ function checkPublishStatus() {
     } catch(e) { if (statusEl) statusEl.textContent = '❌ ' + e.message; }
   };
   xhr.send();
+}
+
+// ── GATE 3: Human Approval + Gate 6 Auto-Publish ─────────────────
+// Called when Rob clicks "APPROVE & UPLOAD →" in the Gate 3 checkpoint
+function approveAndUpload(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  if (!job) return;
+
+  var statusEl = document.getElementById('gate3-upload-status-' + jobId);
+  if (statusEl) statusEl.textContent = '⏳ Approving — triggering Gate 6 auto-publish...';
+
+  // Mark job as approved
+  job._gate3Approved = true;
+  job._gate3Rejected = false;
+  saveJobs();
+
+  // Determine platforms based on content type
+  var contentType = (job.format === 'portrait' || (job.type||'').indexOf('short') > -1) ? 'short' : 'long';
+  var platforms = contentType === 'short'
+    ? ['tiktok', 'instagram', 'youtube']
+    : ['youtube'];
+
+  var prep = job.publishPrep || {};
+  if (statusEl) statusEl.textContent = '⏳ Sending to Upload-Post for ' + platforms.join(', ') + '...';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/publish', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 120000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (resp.error) throw new Error(resp.error);
+
+      var gate4Pass = !!(resp.request_id || resp.job_id);
+      if (gate4Pass) {
+        var jobRef = resp.job_id ? resp.job_id : resp.request_id;
+        if (statusEl) statusEl.innerHTML = '<span style="color:#2ecc71;font-weight:700;">✅ GATE 6 — UPLOAD TRIGGERED</span><br>'
+          + 'job_id: ' + jobRef + '<br>'
+          + 'Platforms: ' + platforms.join(', ') + '<br>'
+          + '<button onclick="pollPublishStatus(\'' + jobId + '\')" class="btn btn-outline btn-sm" style="margin-top:6px;">🔍 POLL STATUS</button>';
+
+        // Save publish record
+        job.publishRecord = {
+          requestId:   resp.request_id,
+          jobId:       resp.job_id,
+          platforms:   platforms,
+          publishedAt: new Date().toISOString(),
+          gate4:       'pass',
+          gate6:       'triggered'
+        };
+        saveJobs();
+
+        // Auto-start polling
+        setTimeout(function() { pollPublishStatus(jobId); }, 5000);
+      } else {
+        if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ GATE 6 FAIL — no job_id returned from Upload-Post</span>';
+      }
+    } catch(e) {
+      if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ Upload error: ' + e.message + '</span>';
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ Server unreachable — is server.js running?</span>';
+  };
+
+  xhr.send(JSON.stringify({
+    driveUrl:      job.driveUrl || '',
+    filename:      job.filename || '',
+    platforms:     platforms,
+    title:         prep.title || job.title || 'ClipzWorld News',
+    description:   prep.description || prep.ytDescription || '',
+    tags:          prep.tags || [],
+    contentType:   contentType,
+    thumbnailUrl:  prep.thumbnailUrl || job.thumbnailUrl || '',
+    pinnedComment: prep.pinnedComment || prep.comment || '',
+    async:         true
+  }));
+}
+
+// Called when Rob clicks "REJECT — BACK TO EDIT"
+function rejectJob(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  if (!job) return;
+
+  job._gate3Rejected = true;
+  job._gate3Approved = false;
+  saveJobs();
+
+  var approvalEl = document.getElementById('gate3-approval-' + jobId);
+  if (approvalEl) {
+    approvalEl.innerHTML = '<div style="margin-top:8px;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.4);border-radius:4px;">'
+      + '<div style="font-size:9px;letter-spacing:2px;color:#e74c3c;font-weight:900;margin-bottom:4px;">❌ GATE 3 — REJECTED</div>'
+      + '<div style="font-size:11px;color:rgba(255,255,255,0.6);">Job kept in manual review. Re-assemble or edit script before re-submitting.</div>'
+      + '</div>';
+  }
+}
+
+// Polls /publish/status for a job and shows live progress in the gate3-upload-status div
+function pollPublishStatus(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  if (!job || !job.publishRecord) return;
+
+  var rec = job.publishRecord;
+  var statusEl = document.getElementById('gate3-upload-status-' + jobId);
+  var param = rec.requestId ? 'request_id=' + rec.requestId : 'job_id=' + rec.jobId;
+  var attempts = 0;
+
+  function check() {
+    attempts++;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', CFG.ffmpegUrl + '/publish/status?' + param, true);
+    xhr.timeout = 15000;
+    xhr.onload = function() {
+      try {
+        var resp = JSON.parse(xhr.responseText);
+        var statusColor = resp.status === 'completed' ? '#2ecc71'
+          : resp.status === 'failed' ? '#e74c3c' : '#c7af4f';
+
+        var platformLines = '';
+        if (resp.results) {
+          Object.keys(resp.results).forEach(function(plt) {
+            var r = resp.results[plt];
+            var icon = r.status === 'published' ? '✅' : r.status === 'failed' ? '❌' : '⏳';
+            platformLines += icon + ' ' + plt.toUpperCase() + ': ' + (r.status || 'pending');
+            if (r.url) platformLines += ' — <a href="' + r.url + '" target="_blank" style="color:#c7af4f;">View ↗</a>';
+            platformLines += '<br>';
+          });
+        }
+
+        if (statusEl) statusEl.innerHTML = '<span style="color:' + statusColor + ';font-weight:700;">'
+          + (resp.status||'unknown').toUpperCase() + '</span><br>'
+          + platformLines
+          + '<span style="font-size:10px;color:rgba(255,255,255,0.3);">Poll ' + attempts + ' · ' + new Date().toLocaleTimeString() + '</span>';
+
+        // Mark platforms as posted on success
+        if (resp.status === 'completed') {
+          if (!job.platforms) job.platforms = {};
+          (rec.platforms || []).forEach(function(plt) {
+            job.platforms[plt] = 'posted';
+          });
+          saveJobs();
+          renderQueue();
+        } else if (resp.status !== 'failed' && attempts < 30) {
+          // Keep polling every 15s until done or 30 attempts (~7.5 min)
+          setTimeout(check, 15000);
+        }
+      } catch(e) {
+        if (statusEl) statusEl.textContent = '❌ Poll error: ' + e.message;
+      }
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+      if (attempts < 30) setTimeout(check, 20000);
+    };
+    xhr.send();
+  }
+  check();
 }
 
 function checkStreamerLanguageStatus() {

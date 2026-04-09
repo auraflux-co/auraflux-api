@@ -5365,12 +5365,14 @@ SCRIPT FORMAT — The user prompt will provide exact === SCENE HEADERS === to us
 Target: 120-150 words of SPOKEN TEXT per game segment (90 seconds of delivery).
 The cold open and outro are short. Every game segment must be fully written and dense.
 COLD OPEN — ALWAYS use this EXACT wording, no variation:
-"Hello everyone! You are tuning into Witness the NBA brought to you by ClipzWorld News. Where we appreciate all of yesterday's games in the association. I am your host Bobby G. Let's get to it."
+"Hello everyone! You are tuning into The Other Side of the Pillow brought to you by ClipzWorld News. Where we appreciate all of yesterday's games in the association. I am your host Bobby G. Let's get to it."
 Do not improvise the cold open. This line is fixed for every compilation.
+CRITICAL: Do NOT use "Witness the NBA" — the show is called "The Other Side of the Pillow". This is non-negotiable.
 
 OUTRO — ALWAYS use this EXACT wording, no variation:
-"Well everybody, that does it for another edition of Witness the NBA brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Go play a pick-up game today. Let us know how you did in the comments. Appreciate you!"
+"Well everybody, that does it for another edition of The Other Side of the Pillow brought to you by ClipzWorld News. Don't forget to like, comment, share and subscribe. Go play a pick-up game today. Let us know how you did in the comments. Appreciate you!"
 Do not improvise the outro. This line is fixed for every compilation.
+CRITICAL: Do NOT use "Witness the NBA" in the outro — the show is called "The Other Side of the Pillow".
 
 DELIVERY NOTE — OUTRO: "Appreciate you!" must be on its own line after [beat]. Warm. Genuine. Give it room.
 
