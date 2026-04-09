@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-09 (7:05 PM ET)
-**Branch:** main | **Latest Commit:** `a7b6698` — chore: enforce STATUS.md updates via pre-commit hook
+**Last Updated:** 2026-04-09 (7:10 PM ET)
+**Branch:** main | **Latest Commit:** `b3fcdff` — docs+feat: Claude Code session
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -24,7 +24,8 @@
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
 | Cline | Added pre-commit hook + STATUS enforcement | `.git/hooks/pre-commit`, `STATUS.md`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | `a7b6698` | 2026-04-09 7:00 PM ET |
-| Claude Code | Newscast UI updates + NBA intro card handoff + Upload API spec | `tools/clipzworld_newscast.html`, `POST_PUBLISH_MANUAL_CHECKLIST.md`, `CLINE_HANDOFF_NBA_INTRO_CARD.md`, `UPLOAD_API_SPEC.md`, `data/upload_status.json` | pending | 2026-04-09 (earlier today) |
+| Claude Code | Newscast UI updates + NBA intro card handoff + Upload API spec | `tools/clipzworld_newscast.html`, `POST_PUBLISH_MANUAL_CHECKLIST.md`, `CLINE_HANDOFF_NBA_INTRO_CARD.md`, `UPLOAD_API_SPEC.md`, `data/upload_status.json` | `b3fcdff` | 2026-04-09 (earlier today) |
+| Cline | STATUS.md audit — updated phases to reflect actual built state | `STATUS.md` | pending | 2026-04-09 7:10 PM ET |
 
 ---
 
@@ -32,38 +33,12 @@
 
 | Phase | Owner | Status | Commit |
 |-------|-------|--------|--------|
-| Phase 1: Thumbnail Updates | Claude Code | 🟡 In progress | — |
+| Phase 1: Thumbnail Updates | Claude Code | ✅ COMPLETE | `767aecf` |
 | Phase 2: Short-Form Infrastructure | Cline | ✅ COMPLETE | `88e20eb` |
 | Phase 3: Caption & Prioritization | Aider | ✅ COMPLETE | `186ea3d` |
 | Phase 4: Operations Fixes | Cline | ✅ COMPLETE | `9fa9340` |
-| Phase 5: Creative Layer | Claude Code → Cline | 🔴 Blocked (creative session in progress) | — |
-
----
-
-## 🟡 Phase 1 — Long-Form Thumbnail Updates
-**Owner:** Claude Code | **Est:** 2-3 hours
-
-| Task | File | What |
-|------|------|------|
-| 1.1 News Thumbnail | `cwn_news_tool.html` | Tagline → "BECAUSE THE LIGHT WAS ON", 40-60% dark overlay, 8px blur |
-| 1.2 NBA Thumbnail | `nba_thumbnail_generator.html` | Same tagline + overlay + blur |
-| 1.3 Twitch Longform | `server.js` (Canvas code ~line 6354) | Refactor to use `assets/twitchsoup_thumbnail.jpeg` as base |
-| 1.4 Validation | All 3 | Text readable at 1280×720, blur consistent, episode counter still works |
-
----
-
-## 🔴 Phase 5 — Creative Layer (Blocked)
-**Owner:** Claude Code (decisions) → Cline/Aider (build)
-**Status:** Creative alignment session in progress with Rob + Claude
-
-7 decisions needed before implementation can start:
-1. Short-form split-screen layout (safe zones, intro/outro timing)
-2. NBA intro card design (content, timing, border style)
-3. News intro card design (fallback image, headline, attribution)
-4. Gold border brand rules (scope, shadow spec, no-go zones)
-5. Gate 3 visual retention rules (7-second rule vs CWN style)
-6. Thumbnail strategy (3-option battle vs auto-select)
-7. Bobby G voice standard (style guide accuracy)
+| Phase 5: Creative Layer | Claude Code + Rob | ✅ COMPLETE | `b3fcdff` |
+| Phase 6: Publish Integration | Cline | 🟡 In Progress — needs `UPLOAD_POST_API_KEY` in `.env` | — |
 
 ---
 
@@ -72,36 +47,33 @@
 - **Full pipeline:** Script Gen → Gate 1 → HeyGen → Gate 2 → Assembly → Gate 3 → Drive Upload → Publish
 - **All 3 content types:** Twitch, NBA, News (long-form + short-form)
 - **Scene headers:** spaces → underscores (no more broken Gemini parsing)
-- **Multi-platform publish:** YouTube, TikTok, Instagram via Upload-Post API
+- **Multi-platform publish:** YouTube, TikTok, Instagram via Upload-Post API (`server.js:6782`)
 - **Short-form captions:** `generateShortFormCaption()` — 90-150 char + hashtags + altText
 - **News prioritization:** `prioritizeNewsStories()` — 18 urgency keywords, score-sorted
-- **Thumbnails:** FFmpeg-based for all 3 content types, episode auto-increment
+- **Thumbnails:** FFmpeg-based for all 3 content types, episode auto-increment — tagline "BECAUSE THE LIGHT WAS ON" ✅
+- **NBA intro card:** `/nba/generate-intro-card` — Puppeteer → 640×360 PNG (`server.js:9800`) ✅
+- **News intro card:** `/news/generate-intro-card` — OG image scraper → 640×360 (`server.js:4615`) ✅
+- **Split-screen short-form:** `/capcut/split-screen` + `assembleShortForm()` — 9:16 portrait (`server.js:8358`) ✅
 - **CapCut routes:** `/capcut/init`, `/capcut/add-segment`, `/capcut/ticker`, `/capcut/logo`, `/capcut/finalize`
 - **Safety zone check:** TikTok + Reels AABB+circle overlap validation
 - **Gate 3/6 approval flow:** Human checkpoint → approve → auto-publish with status polling
 - **Disk usage + cleanup:** `GET /disk-usage`, `POST /cleanup`
 - **VectCutClient:** `assembleShortForm()`, `addBrandedOverlay()`, `healthCheck()`
+- **Upload status tracking:** `GET /upload-status/:trackingId` + `data/upload_status.json`
 
 ---
 
-## ⏸️ Next Up (After Phase 5 Creative Decisions)
+## 🟡 Phase 6 — Publish Integration (Active)
 
-These are blocked on Phase 5 creative alignment:
+**One blocker:** `UPLOAD_POST_API_KEY` missing from `.env`
 
-1. **NBA intro card endpoint** (`/nba/generate-intro-card`)
-   - Resize `nba_thumbnail_generator.html` output to 640×360 TV shape
-   - Overlay at `VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE` (right of Bobby G)
-
-2. **News article image scraper** (`/news/generate-intro-card`)
-   - Scrape Open Graph images from article URLs
-   - Resize to 640×360, position right of Bobby G avatar
-
-3. **Short-form split-screen assembly** (in `/assemble`)
-   - Use `VectCutClient.assembleShortForm()` for 9:16 layout
-   - Top 50%: source clip (1080×960), Bottom 50%: Bobby G (1080×960)
-
-4. **Gate 3 visual retention checks**
-   - Add visual balance + brand presence checks (gold borders, logo opacity)
+| Task | Status | Notes |
+|------|--------|-------|
+| Add `UPLOAD_POST_API_KEY` to `.env` | ⏳ Waiting on Rob | Sign up at upload-post.com, connect YT/TikTok/IG, get API key |
+| Test Case #1: Twitch Long → YouTube Private | ⏳ Blocked on key | Spec in `UPLOAD_API_SPEC.md` |
+| Test Case #2-5: Multi-platform | ⏳ Blocked on key | After Test #1 passes |
+| Approve overnight queue (Aider) | ⏳ Waiting on Rob | See `OVERNIGHT_TASKS.md` |
+| Push 18 local commits to origin/main | ⏳ Waiting on Rob | `git push` when ready |
 
 ---
 
