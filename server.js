@@ -47,6 +47,7 @@ const { requireFields, validateContentType, validateArrayLength, validateUrl, sa
 const TwitchClient = require('./lib/clients/twitch_client');
 const { geminiScriptGeneration, claudeScriptQA } = require('./services/script_generation');
 const { probeDuration, downloadFile, buildConcatCommand } = require('./services/assembly');
+const { geminiSegmentQA, geminiAssemblyQA } = require('./services/qa');
 
 const app  = express();
 
@@ -1263,11 +1264,14 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
   }
 }
 
-// ── Gemini QA Check ────────────────────────────────────────────────
-// Reviews the assembled video before Drive upload
-// Samples at 10%, 50%, and 90% of the video to catch issues throughout
-// Returns { score: 0-100, report: string, passed: boolean }
+// Gate 3 QA function moved to services/qa.js
+// Import and use: const { geminiAssemblyQA } = require('./services/qa');
 async function geminiQACheck(videoPath, opts = {}) {
+  // Wrapper for backward compatibility - calls new service
+  return geminiAssemblyQA(videoPath, opts);
+}
+
+async function geminiQACheck_DEPRECATED(videoPath, opts = {}) {
   const { contentType, avatarCount, clipCount, expectedTicker, totalDuration } = opts;
   if (!GEMINI_APIKEY) return { score: 100, report: 'QA skipped — no Gemini API key', passed: true };
   if (!fs.existsSync(videoPath)) return { score: 0, report: 'QA failed — video file not found', passed: false };
@@ -2323,15 +2327,9 @@ ISSUES:
   return { score: adjustedScore, report: whyDoc, passed, outcome, outcomeLabel, deductions: preCheckDeductions, geminiReport };
 }
 
-// ── Gate 2: Segment QA — Gemini reviews HeyGen segments ───────────
-// Called after all HeyGen segments complete, before assembly.
-// Samples the first, middle, and last avatar segments.
-// PASS: score >= 85 → auto-proceed to CapCut/FFmpeg assembly
-// MANUAL REVIEW: score 65-84 → hold for Rob
-// HARD FAIL: score < 65 OR critical failure → back to HeyGen (max 3 retries)
-//
-// Critical failures: freeze in avatar, lip sync broken, audio missing, wrong avatar
-async function geminiSegmentQA(segmentPaths, opts = {}) {
+// Gate 2 QA function moved to services/qa.js
+// Import and use: const { geminiSegmentQA } = require('./services/qa');
+async function geminiSegmentQA_DEPRECATED(segmentPaths, opts = {}) {
   const { jobId = 'unknown', contentType = 'twitch' } = opts;
 
   if (!GEMINI_APIKEY) return { score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (skipped)', deductions: [] };
