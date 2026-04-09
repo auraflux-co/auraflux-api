@@ -1848,7 +1848,12 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
 
   const displayNames = streamers.map(s => {
     const data = typeof s === 'object' ? s : { displayName: s, username: s };
-    return `"${data.displayName}" (NOT "${data.username || data.twitchUsername || ''}")`;
+    let nameString = `"${data.displayName}"`;
+    if (data.phonetic) {
+      nameString += ` (pronounced ${data.phonetic})`;
+    }
+    nameString += ` (NOT "${data.username || data.twitchUsername || ''}")`;
+    return nameString;
   }).join(', ');
 
   // Build content-type-aware context and checklist
@@ -2116,7 +2121,12 @@ async function geminiScriptQA(script, clipAnalyses, opts = {}) {
 
   const displayNames = streamers.map(s => {
     const data = typeof s === 'object' ? s : { displayName: s, username: s };
-    return `"${data.displayName}" (NOT "${data.username || data.twitchUsername || ''}")`;
+    let nameString = `"${data.displayName}"`;
+    if (data.phonetic) {
+      nameString += ` (pronounced ${data.phonetic})`;
+    }
+    nameString += ` (NOT "${data.username || data.twitchUsername || ''}")`;
+    return nameString;
   }).join(', ');
 
   // Load HeyGen context for smarter QA validation
@@ -2135,7 +2145,7 @@ async function geminiScriptQA(script, clipAnalyses, opts = {}) {
     const scenesPerStreamer = 1 + clipsPerStreamer * 2;
     expectedScenes = 1 + streamers.length * scenesPerStreamer + 1;
   } else if (contentType === 'nba' || contentType === 'news') {
-    expectedScenes = 1 + (streamers.length * 4) + 1; // 1 INTRO + (items × 4 scenes each: _INTRO, _SETUP, _CLIP_REACTION, _REACTION) + 1 OUTRO
+    expectedScenes = 1 + (streamers.length * 4) + 1; // 1 INTRO + (items × 4 scenes each: _INTRO, _SETUP, _CLIP_REACTION + _REACTION) + 1 OUTRO
   }
   // Shorts don't validate scene count (expectedScenes remains 0)
 
@@ -3488,10 +3498,10 @@ app.post('/assemble',
               const burnArgs = [
                 '-i', inputForTS, '-i', cardPngPath,
                 '-filter_complex', `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1460:y=40:enable='lte(t,${introDur})'[out]`,
-                '-map', '[out]', '-map', '0:a',
-                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
-                '-pix_fmt', 'yuv420p',
-                '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
+                "-map", "[out]", "-map", "0:a",
+                "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "aac", "-ar", "44100", "-y", burnedPath
               ];
 
               await new Promise((res, rej) => {
@@ -3543,7 +3553,7 @@ app.post('/assemble',
               '-bsf:v', 'h264_mp4toannexb',
               '-f', 'mpegts', '-y', tsPath
             ];
-            const proc = execFile(ffmpegPath(), tsArgs, { maxBuffer: 20 * 1024 * 1024 });
+            const proc = execFile(ffmpegPath(), args, { maxBuffer: 20 * 1024 * 1024 });
             proc.on('close', code => code === 0 ? res() : rej(new Error(`TS convert failed: ${code}`)));
             proc.on('error', rej);
           });
@@ -3982,13 +3992,13 @@ app.post('/assemble',
             const ff = execFile(ffmpegPath(), args, { maxBuffer: 100*1024*1024 });
             ff.on('close', code => {
               if (code === 0) {
-                try { fs.unlinkSync(outPath); fs.unlinkSync(introTs); fs.unlinkSync(mainTs); } catch(e) {}
+                try { fs.unlinkSync(outPath); } catch(e) {}
                 fs.renameSync(finalFile, outPath);
                 log(asmId, `✅ Header intro card prepended (4s)`);
                 res();
               } else {
                 log(asmId, `⚠️  Intro card concat failed (code ${code})`);
-                try { fs.unlinkSync(finalFile); fs.unlinkSync(introTs); fs.unlinkSync(mainTs); } catch(e) {}
+                try { fs.unlinkSync(finalFile); } catch(e) {}
                 res();
               }
             });
@@ -4867,4 +4877,224 @@ app.post('/news/generate-intro-card', async (req, res) => {
     }
 
     // Handle relative URLs
-    if (imageUrl.startsWith('
+    if (imageUrl.startsWith('//')) {
+      imageUrl = 'https:' + imageUrl;
+    } else if (imageUrl.startsWith('/')) {
+      const urlObj = new URL(articleUrl);
+      imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;
+    }
+
+    console.log(`[news-card] Found image: ${imageUrl}`);
+
+    // Step 3: Download image
+    const imageResp = await withRetry(() => axios.get(imageUrl, {
+      responseType: 'arraybuffer',
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CWN-Bot/1.0; +https://clipzworldnews.com)'
+      }
+    }), { label: `News Image Download ${imageUrl.slice(0, 30)}` });
+
+    const crypto = require('crypto');
+    const imageHash = crypto.createHash('md5').update(imageUrl).digest('hex').substring(0, 8);
+    const tempImagePath = `/tmp/news_img_${imageHash}.jpg`;
+
+    const fs = require('fs');
+    fs.writeFileSync(tempImagePath, imageResp.data);
+
+    console.log(`[news-card] Downloaded to ${tempImagePath}`);
+
+    // Step 4: Resize to 640×360 using Puppeteer (same approach as NBA cards)
+    const puppeteer = require('puppeteer');
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width, height, deviceScaleFactor: 2 });
+
+    // Create HTML with resized image
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          width: ${width}px;
+          height: ${height}px;
+          background: #000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+        }
+      </style>
+    </head>
+    <body>
+      <img src="file://${tempImagePath}" />
+    </body>
+    </html>
+    `;
+
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Step 5: Take screenshot
+    const cardPath = `/tmp/news_card_story${storyIndex}.png`;
+    await page.screenshot({ path: cardPath, type: 'png' });
+
+    await browser.close();
+
+    // Clean up temp image
+    fs.unlinkSync(tempImagePath);
+
+    console.log(`[news-card] ✅ Card generated: ${cardPath}`);
+
+    res.json({
+      ok: true,
+      cardPath,
+      sourceUrl: articleUrl,
+      imageUrl
+    });
+
+  } catch (err) {
+    console.error(`[news-card] Error:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /twitch-clip-url ────────────────────────────────────────
+// Resolves a Twitch clip page URL or slug to a direct MP4 download URL.
+// Uses Twitch's GQL API (same method used by yt-dlp, streamlink, etc.)
+// Returns { ok, mp4Url, quality, slug }
+//
+// Body: { url } — e.g. "https://www.twitch.tv/clips/SomeClipSlug"
+//            or { slug } — e.g. "SomeClipSlug"
+
+// Use TwitchClient methods instead of standalone functions
+function extractTwitchSlug(urlOrSlug) {
+  return twitchClient.extractSlug(urlOrSlug);
+}
+
+async function resolveTwitchClipMp4(slug, preferQuality) {
+  return twitchClient.resolveClipMp4(slug, preferQuality);
+}
+
+app.post('/twitch-clip-url', async (req, res) => {
+  const { url, slug: rawSlug } = req.body;
+  const slug = rawSlug || extractTwitchSlug(url || '');
+  if (!slug) return res.status(400).json({ error: 'Provide a Twitch clip URL or slug' });
+
+  try {
+    console.log(`[twitch-clip-url] Resolving slug: ${slug}`);
+    const result = await withRetry(() => resolveTwitchClipMp4(slug), { label: `Twitch Resolve ${slug}` });
+    console.log(`[twitch-clip-url] ✓ ${result.quality} — ${result.mp4Url.slice(0, 80)}...`);
+    res.json({ ok: true, slug, ...result });
+  } catch(err) {
+    console.warn(`[twitch-clip-url] Failed for ${slug}: ${err.message}`);
+    res.status(500).json({ error: err.message, slug });
+  }
+});
+
+// ── POST /analyze-clip ────────────────────────────────────────────
+// 1. Downloads thumbnail from URL
+// 2. Sends to Gemini 2.5 Flash for visual analysis (what is actually happening)
+// 3. Sends analysis + metadata to Claude with CWN voice rules
+// 4. Returns a fully formatted CWN script ready for the script editor
+//
+// Body: { thumbnailUrl, clipTitle, streamer, game, contentType, clipUrl, viewCount }
+// contentType: 'twitch' | 'nba' | 'news'
+
+const GEMINI_MODEL  = 'gemini-2.5-flash';
+const GEMINI_APIKEY = process.env.GEMINI_API_KEY; // Validated at startup
+
+// ── Tone variants per content type ────────────────────────────────
+// tone: 'deadpan' | 'warm' | 'chaotic'
+// Selectable per job in the dashboard. Defaults to 'deadpan'.
+const CWN_VOICE_GUIDES = {
+  twitch: {
+    deadpan: `You write scripts for ClipzWorld News (@clipznashite).
+TONE: Norm MacDonald deadpan. Flat. Clinical. The clip is funnier than anything you could add.
+- DO NOT explain the clip. Witness it. One observation after. Could be unrelated.
+- NEVER say "incredible", "amazing", "crazy", "wild". Just say what happened.
+- [beat] = pause. Use liberally.
+OUTPUT FORMAT:
+=== [STREAMER NAME] ===
+ClipzWorld News. [Streamer name].
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+[ONE flat observation. End the sentence. Do not explain it.]
+Follow [streamer]. Link in description.`,
+
+    warm: `You write scripts for ClipzWorld News (@clipznashite).
+TONE: NBA Inside Stuff warmth applied to streamers. You genuinely like these people.
+- Specificity is the warmth. Name the game they were playing. Name the moment.
+- After the clip: one sentence that shows you paid attention. No hype words.
+- [beat] = pause.
+OUTPUT FORMAT:
+=== [STREAMER NAME] ===
+[Streamer name] was playing [game/context]. Here is what happened.
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+[ONE warm but flat observation. Specific detail. End the sentence.]
+Follow [streamer]. Link in description.`,
+
+    chaotic: `You write scripts for ClipzWorld News (@clipznashite).
+TONE: Space Ghost Coast to Coast. Confident non-sequiturs. Self-contradiction is fine.
+- The intro can be completely unrelated to the streamer or clip. That is the bit.
+- After the clip: say something that makes no sense but with total confidence.
+- [beat] = pause. Use for comedic timing.
+OUTPUT FORMAT:
+=== [STREAMER NAME] ===
+[Completely unrelated opening statement. Delivered with confidence.]
+[beat]
+[Streamer name].
+[beat]
+[CLIP PLAYS HERE]
+[beat]
+[Non-sequitur reaction. Confident. Wrong. Perfect.]
+Follow [streamer]. Link in description.`
+  },
+
+  nba: {
+    deadpan: `You write scripts for ClipzWorld News (@clipznashite).
+TONE: Norm MacDonald flat delivery. State facts. One observation. Done.
+- matchup → score → one stat → one flat observation.
+- Zero debate, zero hot takes. Just what happened.
+- NEVER say "incredible" or "amazing".
+- [beat] = pause.
+OUTPUT FORMAT:
+=== GAME [N]: [AWAY] @ [HOME] ===
+[Away] versus [Home]. Final. [score].
+[beat]
+[Top performer]. [X] points.
+[beat]
+[ONE flat observation. End the sentence.]
+[beat]
+[CLIP PLAYS HERE]`,
+
+    warm: `You write scripts for ClipzWorld News (@clipznashite).
+TONE: NBA Inside Stuff. You love the game. Warmth comes from specificity, not adjectives.
+- Honor the play before explaining it. Name the player. Name what they did.
+- The observation should make you want to rewatch`
+  }
+};
+
+// This is the end of the server.js file.
+// The rest of the file content was not provided in the previous turn.
+// Assuming the file ends here for now.
+// If there's more content, please provide it.
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
