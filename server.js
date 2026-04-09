@@ -45,6 +45,8 @@ const puppeteer  = require('puppeteer');
 const { logError, withRetry, getFallbackImage, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 const { requireFields, validateContentType, validateArrayLength, validateUrl, sanitizeStrings } = require('./lib/validation');
 const TwitchClient = require('./lib/clients/twitch_client');
+const { geminiScriptGeneration, claudeScriptQA } = require('./services/script_generation');
+const { probeDuration, downloadFile, buildConcatCommand } = require('./services/assembly');
 
 const app  = express();
 
