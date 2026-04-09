@@ -391,7 +391,7 @@
     <div class="show-name">CLIPZWORLD<br>NEWS</div>
     <div class="sub">Production Manual</div>
   </div>
-  <div class="sidebar-version">v2.0 — April 2026</div>
+  <div class="sidebar-version">v2.1 — April 8, 2026</div>
 
   <div class="nav-section-label">Overview</div>
   <a class="nav-item" href="#overview">🎙 Show Identity</a>
@@ -549,9 +549,18 @@
         </div>
       </div>
       <div class="pipeline-step">
+        <div class="pipeline-connector"><div class="pipeline-dot" style="background:#74b9e8; border-color:#74b9e8"></div><div class="pipeline-line"></div></div>
+        <div class="pipeline-card" style="border-color:rgba(52,152,219,0.3)">
+          <div class="step-label">Step 6 — Gate 5 · Final QA</div>
+          <div class="step-title">Final Video Review (Gemini)</div>
+          <div class="step-desc">Gemini reviews the fully assembled MP4 — ticker baked, logo burned. Scores 4 dimensions: Visual quality, Audio quality, Clip content, Pacing. Total 100 points. Pass threshold: ≥85. Triggered automatically 2 seconds after assembly completes. Results displayed on the job card in the queue.</div>
+          <div class="step-qa">🔍 Gate 5: Visual (30) + Audio (30) + Clips (30) + Pacing (10) = 100 · Pass ≥85 · Endpoint: POST /gate5-review</div>
+        </div>
+      </div>
+      <div class="pipeline-step">
         <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
         <div class="pipeline-card">
-          <div class="step-label">Step 6 — Google Drive</div>
+          <div class="step-label">Step 7 — Google Drive</div>
           <div class="step-title">Upload & Store</div>
           <div class="step-desc">Auto-upload to Drive folder 1LJKU3DwQY4nwbLXBeNROpHc9o6tZbUyB. Sets public sharing. Failed QA reports saved as separate Drive documents. Local copy saved to ~/Downloads/output/.</div>
         </div>
@@ -559,7 +568,7 @@
       <div class="pipeline-step">
         <div class="pipeline-connector"><div class="pipeline-dot" style="background:var(--success)"></div><div class="pipeline-line" style="background:rgba(46,204,113,0.2)"></div></div>
         <div class="pipeline-card" style="border-color:rgba(46,204,113,0.2)">
-          <div class="step-label">Step 7 — Upload-Post API</div>
+          <div class="step-label">Step 8 — Upload-Post API</div>
           <div class="step-title">Publish & Schedule</div>
           <div class="step-desc">Upload-Post handles simultaneous distribution: YouTube (long form), TikTok, Instagram Reels, with scheduling based on content type and platform-specific optimal times.</div>
         </div>
@@ -587,7 +596,7 @@
       <tr><td>Google Drive API</td><td>Video storage, QA log storage</td><td><span class="badge badge-done">ACTIVE</span></td><td>OAuth2 with real client credentials</td></tr>
       <tr><td>Puppeteer</td><td>Ticker frame capture (60s at 15fps)</td><td><span class="badge badge-done">ACTIVE</span></td><td>Captures cwn_twitch_ticker.html</td></tr>
       <tr><td>CapCut MCP</td><td>Advanced assembly, thumbnails, creative</td><td><span class="badge badge-new">PLANNED</span></td><td>VectCutAPI open source MCP server</td></tr>
-      <tr><td>Upload-Post API</td><td>Multi-platform publishing, scheduling</td><td><span class="badge badge-new">PLANNED</span></td><td>YouTube, TikTok, Instagram, etc.</td></tr>
+      <tr><td>Upload-Post API</td><td>Multi-platform publishing, scheduling</td><td><span class="badge badge-done">ACTIVE</span></td><td>YouTube, TikTok, Instagram — endpoints wired in server.js</td></tr>
       <tr><td>Railway</td><td>Cloud hosting for server.js</td><td><span class="badge badge-pending">LATER</span></td><td>After codebase is stable</td></tr>
     </table>
   </section>
@@ -665,6 +674,20 @@ cd ~/Downloads && node server.js
       <tr><td>CLIP READY</td><td>Source clip URL resolved, ready for assembly</td></tr>
       <tr><td>❌ CTYP / empty</td><td>Clip expired, CDN token invalid. Skipped in assembly.</td></tr>
     </table>
+
+    <h3>Server Maintenance (Settings → FFmpeg Server)</h3>
+    <p>Two maintenance tools are available in the Settings → FFmpeg Server tab under the <strong>SERVER MAINTENANCE</strong> section:</p>
+
+    <table>
+      <tr><th>Button</th><th>Endpoint</th><th>What It Does</th></tr>
+      <tr><td>CHECK DISK USAGE</td><td>GET /disk-usage</td><td>Shows size of ~/Downloads/output/ (final MP4s) and ~/Downloads/tmp/ (temp files). Helps identify when disk is filling up.</td></tr>
+      <tr><td>CLEANUP OLD FILES</td><td>POST /cleanup</td><td>Confirms before running. Keeps the 5 most recent output MP4s, deletes the rest. Also clears all temp files in ~/Downloads/tmp/.</td></tr>
+    </table>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">💡</div>
+      <div>Run CLEANUP after every 5–10 productions. A single long-form compilation can be 2–4 GB. The tmp/ folder accumulates TS segments and ticker captures that are safe to delete after assembly.</div>
+    </div>
   </section>
 
   <!-- STREAMERS -->
@@ -835,6 +858,30 @@ Google Drive: same folder as video outputs (1LJKU3DwQY4nwbLXBeNROpHc9o6tZbUyB)
 Local:        ~/Downloads/output/qa_failures/
 Filename:     qa_fail_{asmId}_{timestamp}.txt
     </div>
+
+    <h3>Gate 5 — Final Video QA</h3>
+    <p>Gate 5 is the last QA gate before Drive upload. Gemini reviews the fully assembled MP4 (ticker baked, logo burned) and scores it across 4 dimensions. Triggered automatically 2 seconds after assembly completes. Score and breakdown displayed on the job card in the queue.</p>
+
+    <table>
+      <tr><th>Dimension</th><th>Max Points</th><th>What Gemini Checks</th></tr>
+      <tr><td>Visual Quality</td><td>30</td><td>1080p clarity, no artifacts, logo visible, ticker rendered correctly</td></tr>
+      <tr><td>Audio Quality</td><td>30</td><td>Clear speech, no distortion, consistent levels, no dropout</td></tr>
+      <tr><td>Clip Content</td><td>30</td><td>Clips match script context, no black frames, content appropriate</td></tr>
+      <tr><td>Pacing</td><td>10</td><td>Transitions smooth, no jarring cuts, avatar/clip rhythm natural</td></tr>
+    </table>
+
+    <div class="code">
+Total:           100 points
+Pass threshold:  ≥85
+Result display:  Score shown on job card — green (pass) / yellow (review) / red (fail)
+Endpoint:        POST /gate5-review
+Trigger:         Auto-fires 2s after asmComplete() in dashboard
+    </div>
+
+    <div class="alert alert-ok">
+      <div class="alert-icon">✅</div>
+      <div>Gate 5 is non-blocking by design — it flags issues for review but does not halt the Drive upload. A score below 85 shows a red warning on the job card so you can decide whether to re-assemble before publishing.</div>
+    </div>
   </section>
 
   <!-- THUMBNAILS -->
@@ -866,15 +913,34 @@ Filename:     qa_fail_{asmId}_{timestamp}.txt
     <div class="section-badge">DISTRIBUTION</div>
     <h2>PUBLISHING — UPLOAD-POST</h2>
 
-    <p>Upload-Post API handles simultaneous multi-platform distribution. Endpoints built in server.js at <code style="font-family:monospace; color:var(--gold)">/publish/youtube</code>, <code style="font-family:monospace; color:var(--gold)">/publish/tiktok</code>, <code style="font-family:monospace; color:var(--gold)">/publish/instagram</code>.</p>
+    <p>Upload-Post API handles simultaneous multi-platform distribution. All three publish endpoints are wired in server.js and triggered from the dashboard's Publish Prep page. Each platform button POSTs to its respective endpoint with the video file path, title, description, and hashtags.</p>
 
-    <h3>Platform Configuration</h3>
+    <h3>Wired Endpoints</h3>
     <table>
-      <tr><th>Platform</th><th>Format</th><th>Content Type</th><th>Status</th></tr>
-      <tr><td>YouTube</td><td>16:9 MP4</td><td>Long form compilations</td><td><span class="badge badge-pending">SETUP NEEDED</span></td></tr>
-      <tr><td>TikTok</td><td>9:16 MP4</td><td>Shorts only</td><td><span class="badge badge-pending">SETUP NEEDED</span></td></tr>
-      <tr><td>Instagram</td><td>9:16 MP4</td><td>Reels only</td><td><span class="badge badge-pending">SETUP NEEDED</span></td></tr>
+      <tr><th>Platform</th><th>Endpoint</th><th>Format</th><th>Content Type</th><th>Status</th></tr>
+      <tr><td>YouTube</td><td>POST /publish/youtube</td><td>16:9 MP4</td><td>Long form compilations</td><td><span class="badge badge-done">WIRED</span></td></tr>
+      <tr><td>TikTok</td><td>POST /publish/tiktok</td><td>9:16 MP4</td><td>Shorts only</td><td><span class="badge badge-done">WIRED</span></td></tr>
+      <tr><td>Instagram</td><td>POST /publish/instagram</td><td>9:16 MP4</td><td>Reels only</td><td><span class="badge badge-done">WIRED</span></td></tr>
+      <tr><td>All Platforms</td><td>POST /publish/all</td><td>Both</td><td>Simultaneous publish</td><td><span class="badge badge-done">WIRED</span></td></tr>
     </table>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">💡</div>
+      <div>Endpoints are wired and functional — API credentials still need to be configured. Add <code style="font-family:monospace; color:var(--gold)">UPLOADPOST_API_KEY</code> to .env and connect your Upload-Post account to activate live publishing.</div>
+    </div>
+
+    <h3>Dashboard Publish Flow</h3>
+    <div class="code">
+1. Job Queue → job card → PUBLISH COPY button
+   → Copies title, description, hashtags to clipboard
+
+2. Publish Prep page → select job
+   → Edit title / description / hashtags
+   → Click: PUBLISH TO YOUTUBE / TIKTOK / INSTAGRAM / ALL
+   → Dashboard POSTs to server endpoint
+   → Server calls Upload-Post API
+   → Status returned and displayed
+    </div>
 
     <h3>Required .env Keys for Publishing</h3>
     <div class="code">
@@ -1013,11 +1079,20 @@ node server.js
       <tr><td>Pronunciation library scan — identify all mispronounced names from first video</td><td>🟡 High</td></tr>
     </table>
 
+    <h3>Completed This Session ✅</h3>
+    <table>
+      <tr><th>Item</th><th>Status</th></tr>
+      <tr><td>Gate 5 — Final video QA (Gemini, 100pt scoring, auto-trigger after assembly)</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>Cleanup / Disk Usage — buttons wired in Settings → FFmpeg Server</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>Publish endpoints wired — /publish/youtube, /tiktok, /instagram, /all</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>Full dashboard audit — all features verified against server endpoints</td><td><span class="badge badge-done">DONE</span></td></tr>
+    </table>
+
     <h3>Near Term</h3>
     <table>
       <tr><th>Item</th><th>Status</th></tr>
       <tr><td>CapCut MCP integration (VectCutAPI)</td><td><span class="badge badge-new">PLANNED</span></td></tr>
-      <tr><td>Upload-Post multi-platform publishing</td><td><span class="badge badge-new">PLANNED</span></td></tr>
+      <tr><td>Upload-Post API credentials — add UPLOADPOST_API_KEY to .env</td><td><span class="badge badge-pending">PENDING</span></td></tr>
       <tr><td>Canva thumbnail templates (16:9 + 9:16)</td><td><span class="badge badge-new">PLANNED</span></td></tr>
       <tr><td>News compilation first run</td><td><span class="badge badge-new">PLANNED</span></td></tr>
       <tr><td>NBA compilation first run</td><td><span class="badge badge-new">PLANNED</span></td></tr>

@@ -1,0 +1,34 @@
+# Compiled assets
+dist/
+build/
+out/
+output/
+
+# Large library folders
+node_modules/
+
+# Massive data files
+*.log
+*.csv
+
+# Hidden IDE folders
+.cursor/
+.vscode/
+
+# Python virtual environments
+venv/
+venv-capcut/
+__pycache__/
+*.pyc
+
+# Temporary and cache files
+tmp/
+.cache/
+*.tmp
+
+# Git folder
+.git/
+
+# OS files
+.DS_Store
+Thumbs.db

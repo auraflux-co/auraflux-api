@@ -1,6 +1,6 @@
 # CWN Production Backlog
 
-**Last Updated**: 2026-04-07
+**Last Updated**: 2026-04-09
 **Deployment Target**: Localhost (Railway migration blocked until benchmarks met)
 **QA Gate**: Gemini visual + logic audit for all "Done" tasks
 
@@ -13,236 +13,230 @@
 #### [DONE] Dynamic Episode Counter Integration
 **Status**: ✅ Completed 2026-04-07
 **Actual Time**: 1.5 hours
-**Owner**: Claude (Solo Agile Lead)
-
-**Technical Tasks**:
-- [x] Read existing episode counter implementation
-- [x] Update `server.js` to pass episodeNum to page.evaluate
-- [x] Update news thumbnail generation to display dynamic episode
-- [x] Update NBA thumbnail generation to display dynamic episode
-- [x] Update Twitch thumbnail generation to display dynamic episode
-- [x] Remove hardcoded "EPISODE 1" from HTML files
-- [x] Test episode increment across thumbnail generations
-- [x] QA Handoff: Screenshots captured in qa_sessions/
 
 **Changes Made**:
-- server.js:6374: Now passes episodeNum and constructs episode text dynamically
-- server.js:6470: Twitch subtitle includes episode number
-- cwn_news_tool.html: Removed hardcoded "EPISODE 1"
-- nba_thumbnail_generator.html: Restored original "NBA - LIVE COVERAGE" label
-
-**Test Results**:
-- News episode counter: 9 → 10 (incremented successfully)
-- Thumbnail generated: `thumbnail_news_ep9_1775565332301.png`
-- Episode persists across server restarts
-
-**Gemini Audit Focus**:
-- Visual: Episode number renders clearly in thumbnails
-- Logic: Counter increments atomically per content type
+- server.js: Now passes episodeNum to page.evaluate
+- News/NBA/Twitch thumbnail generation display dynamic episode
+- Removed hardcoded "EPISODE 1" from HTML files
+- Episode counter increments atomically per content type
 
 ---
 
 #### [DONE] Automated Visual Regression Tests
 **Status**: ✅ Completed 2026-04-08
-**Actual Time**: 0.5 hours
 
 **Changes Made**:
 - `qa/visual_regression.js`: Playwright-based screenshot comparison against baselines
-- `qa/baselines/`: Stored baseline PNGs (run `npm run qa:baseline` to create)
-- `output/visual_regression/`: Per-run screenshots + JSON reports
+- `qa/baselines/`: Stored baseline PNGs
 - `package.json`: Added `qa:baseline` and `qa:regression` scripts
-
-**Usage**:
-- `npm run qa:baseline` — capture baselines (run once after UI is stable)
-- `npm run qa:regression` — compare current vs baselines (exits 1 on regression)
 
 ---
 
 #### [DONE] Performance Benchmarking Suite
 **Status**: ✅ Completed 2026-04-08
-**Actual Time**: 0.5 hours
 
 **Changes Made**:
 - `qa/benchmark.js`: Measures response times + memory for all key endpoints
 - `PERFORMANCE.md`: Auto-generated after each benchmark run
 - `package.json`: Added `benchmark` and `benchmark:concurrent` scripts
 
-**Usage**:
-- `npm run benchmark` — run benchmarks (requires server running)
-- `npm run benchmark:concurrent` — includes 10-simultaneous-request stress test
-
-**Railway Migration Blocker**: Run benchmarks and confirm all pass before deploying.
-
 ---
 
 #### [DONE] Error Handling Improvements
 **Status**: ✅ Completed 2026-04-08
-**Actual Time**: 0.5 hours
 
 **Changes Made**:
-- `lib/error_logger.js`: Structured JSON logging to `logs/errors.jsonl`
-  - `logError(label, err, context)` — log any error with label + context
-  - `withRetry(fn, opts)` — exponential backoff retry for external API calls
-  - `getFallbackImage(url, category)` — fallback images for broken story images
-  - `validateImageUrl(url, category)` — HEAD-check image URLs before use
-  - `getErrorRate()` — rolling 5-minute error rate by label
-  - `errorMiddleware` — Express error handler (logs all unhandled errors)
-- `server.js`: Wired in error logger + added `GET /errors` diagnostic endpoint
+- `lib/error_logger.js`: Structured JSON logging, retry logic, fallback images
+- `server.js`: Wired in error logger + `GET /errors` diagnostic endpoint
 - `logs/errors.jsonl`: Structured error log (auto-rotates at 10MB)
-
-**Usage**:
-- `GET /errors` — view recent errors + error rate
-- `GET /errors?label=ESPN_FETCH` — filter by label
-- `GET /errors?n=100` — get last 100 errors
 
 ---
 
-#### [PENDING] Twitch Thumbnail Integration
-#### [PENDING] Twitch Thumbnail Integration
-**Status**: 🔴 Blocked - waiting on `twitchsoup_thumbnail.jpeg`
-**Estimate**: 1 hour (once asset received)
-**Owner**: Claude (Solo Agile Lead)
+#### [DONE] Twitch Thumbnail Integration
+**Status**: ✅ Completed 2026-04-08
 
-**Technical Tasks**:
-- [ ] Receive `twitchsoup_thumbnail.jpeg` from user
-- [ ] Verify transparency/quality of asset
-- [ ] Update Twitch thumbnail generator to use base image
-- [ ] Position streamer circles around Bobby G correctly
-- [ ] Test with 2-5 streamers
-- [ ] QA Handoff: Record video of thumbnail generation with animation
+**Changes Made**:
+- `server.js`: Rewrote `generateTwitchLongformThumbnail()` to use Node.js canvas
+- `POST /generate-twitch-longform-thumbnail` accepts `{ streamers?: string[] }`
 
-**Gemini Audit Focus**:
-- Visual: Streamer circles positioned correctly, no overlap
-- Visual: Bobby G image clarity and transparency
-- Logic: Handles variable streamer count (1-10)
+---
+
+#### [DONE] Wire Publish Button in Dashboard
+**Status**: ✅ Completed 2026-04-08
+
+**Changes Made**:
+- `cwn_production.html`: `pubGenerateSocialCopy()` now calls server's `/generate-publish-copy` endpoint instead of hitting Anthropic API directly from the browser
+- Removed insecure direct `fetch('https://api.anthropic.com/v1/messages', ...)` call
+- Server handles all 3 platforms (YouTube, TikTok, Instagram) in one call
+- Response maps correctly to `pubDisplay()` for all platform tabs
+- Falls back gracefully if server is unreachable
+
+---
+
+#### [DONE] Fix Duplicate /generate-publish-copy Endpoint
+**Status**: ✅ Completed 2026-04-08
+
+**Changes Made**:
+- Removed simpler duplicate endpoint at line 6577 (used claude-opus-4-5, single-platform)
+- Kept comprehensive multi-platform endpoint at line 6973
+- Fixed `SyntaxError: Identifier 'downloadFile' has already been declared` crash
+
+---
+
+### High Priority (URGENT - BLOCKING)
+
+#### [READY FOR FIX] Root Cause Investigation - Multi-Word Name Bug CONFIRMED
+**Status**: ✅ ROOT CAUSE CONFIRMED → ⏳ Aider to implement fix
+**Started**: 2026-04-09T02:57:00Z
+**Completed (Investigation)**: 2026-04-09T03:24:00Z
+**Owner**: Cline (investigation ✅ COMPLETE) → Aider (fix implementation)
+**Priority**: P0 - BLOCKING
+
+**ROOT CAUSE CONFIRMED** (by Cline):
+Multi-word names with spaces break scene headers in Gemini prompts.
+
+**Two Bugs Identified**:
+
+1. **Bug 1: "Jay Cinco" → `=== JAY CINCO_INTRO ===`** (space in header)
+   - Gemini parses `JAY` as header, `CINCO_INTRO ===` as content
+   - Causes malformed scenes or QA failures
+
+2. **Bug 2: "Trail Blazers" → `=== GAME4_JAZZ_TRAIL BLAZERS_INTRO ===`**
+   - Gemini parses `GAME4_JAZZ_TRAIL` as header, `BLAZERS_INTRO ===` as content
+   - Causes scene count drops
+
+**Technical Tasks (Cline)** ✅ COMPLETE:
+- [x] Retrieved generated scripts from Test 2 live run
+- [x] Identified exact bug: spaces in scene headers break parsing
+- [x] Confirmed with live test data
+- [x] Documented exact code fixes in URGENT_TEST_FAILURE_INVESTIGATION.md
+
+**Technical Tasks (Aider - READY TO START)**:
+- [ ] Fix 1: Add `.replace(/\s+/g, '_')` to Twitch scene headers (server.js:~6231)
+- [ ] Fix 2: Add `.replace(/\s+/g, '_')` to NBA scene headers (server.js:~6015)
+- [ ] Fix 3: Change "ExtraEmily" → "Emily" in test_suite_12cases.json (Test 2, item 5)
+- [ ] Re-run Tests 2 and 4 to validate fix
+- [ ] Confirm 12/12 tests pass after fix
+
+**Investigation Docs**:
+- `/Users/robertgregory/cwn-production/URGENT_TEST_FAILURE_INVESTIGATION.md` (✅ ROOT CAUSE DOCUMENTED)
+- `/Users/robertgregory/cwn-production/TEST_RESULTS_FINAL_2026-04-09.md`
+- `/Users/robertgregory/cwn-production/test_suite_12cases.json`
 
 ---
 
 ### Medium Priority
 
-#### [TODO] Add Automated Visual Regression Tests
-**Status**: ⚪ Not started
-**Estimate**: 4 hours
-**Owner**: Claude (Solo Agile Lead)
+#### [TODO] End-to-End Testing Continuation
+**Status**: ⏳ TODO (Claude Code — after Cline/Aider fix)
+**Estimate**: Ongoing
+**Owner**: Claude Code
 
 **Technical Tasks**:
-- [ ] Set up Playwright visual comparison baseline
-- [ ] Create baseline screenshots for all thumbnail types
-- [ ] Add diff threshold configuration (e.g., 0.1% tolerance)
-- [ ] Integrate into CI/CD pipeline (localhost only for now)
-- [ ] Document baseline update process
-
-**Gemini Audit Focus**:
-- Logic: Visual diffs correctly identify regressions
-- Logic: Baseline management process is documented
+- [x] Run 12-test suite validation (completed 2026-04-09, 10/12 passed)
+- [ ] Monitor re-run after fix is implemented
+- [ ] Document final results and confirm 12/12 pass
 
 ---
 
-#### [TODO] Performance Benchmarking Suite
-**Status**: ⚪ Not started
-**Estimate**: 3 hours
-**Owner**: Claude (Solo Agile Lead)
+#### [TODO] Gate 6 Automation
+**Status**: ⏳ TODO (Claude Code — can start while investigation continues)
+**Estimate**: 2-3 hours
+**Owner**: Claude Code
 
 **Technical Tasks**:
-- [ ] Define performance targets (e.g., thumbnail gen < 2s)
-- [ ] Create benchmark script for all endpoints
-- [ ] Measure memory usage during Puppeteer operations
-- [ ] Identify bottlenecks (FFmpeg, image processing, etc.)
-- [ ] Document results in `PERFORMANCE.md`
-
-**Railway Migration Blocker**:
-This must be complete before Railway deployment. Target benchmarks:
-- Thumbnail generation: < 3s per thumbnail
-- Memory usage: < 512MB peak
-- Concurrent requests: Handle 10 simultaneous thumbnail generations
+- [ ] Auto-trigger publish after Gate 3 passes
+- [ ] Wire Gate 3 pass → `/generate-publish-copy` → `/publish` sequence
+- [ ] Add status tracking in job manifest
 
 ---
 
-### Low Priority
+### Low Priority (DEFERRED until investigation complete)
 
-#### [TODO] Error Handling Improvements
-**Status**: ⚪ Not started
+#### [DEFERRED] Implement Split-Job + FFmpeg Stitch
+**Status**: ⏸️ DEFERRED (Aider — blocked by investigation)
+**Estimate**: 3-4 hours
+**Owner**: Aider
+**Blocked by**: Root cause investigation must complete first
+
+**Technical Tasks**:
+- [ ] Split large jobs (>5 items) into parallel sub-jobs
+- [ ] FFmpeg stitch sub-job outputs into final video
+- [ ] Handle progress tracking across split jobs
+
+**Reason for deferral**: Must understand data-specific failures before implementing split-job logic to avoid replicating the bug.
+
+---
+
+#### [DEFERRED] Phonetic Auto-Injection from streamers.json
+**Status**: ⏸️ DEFERRED (Aider — blocked by investigation)
+**Estimate**: 30 min
+**Owner**: Aider
+**Blocked by**: Scene count fix must be validated first
+
+**Technical Tasks**:
+- [ ] Read `streamers.json` phonetic entries at script generation time
+- [ ] Auto-inject phonetic replacements into HeyGen `input_text` before sending
+- [ ] No manual pronunciation library entry needed for known streamers
+
+---
+
+#### [DEFERRED] Gate 2A Pronunciation Loop
+**Status**: ⏸️ DEFERRED (Aider — after phonetic injection)
 **Estimate**: 2 hours
-**Owner**: Claude (Solo Agile Lead)
+**Owner**: Aider
 
 **Technical Tasks**:
-- [ ] Add retry logic for ESPN API failures
-- [ ] Improve error messages for missing assets
-- [ ] Add fallback images for broken story images
-- [ ] Log errors to structured file (not just console)
-- [ ] Add error rate monitoring
+- [ ] Detect mispronounced names in HeyGen output (via HeyGen MCP)
+- [ ] Auto-retry with corrected phonetic spelling
+- [ ] Max 2 retry attempts per segment
+
+---
+
+#### [DEFERRED] Gate 5 Full Review
+**Status**: ⏸️ DEFERRED (Cline — after investigation)
+**Estimate**: 1-2 hours
+**Owner**: Cline
+
+**Technical Tasks**:
+- [ ] Gemini final video review after assembly
+- [ ] Check for visual/audio sync issues
+- [ ] Auto-flag for manual review if score < 80
 
 ---
 
 ## ✅ Recently Completed
 
-### [DONE] Dynamic Episode Counter Integration
-**Completed**: 2026-04-07
-**QA Status**: ✅ Ready for Gemini audit
-**Artifacts**: `output/qa_sessions/session_1775565876183.webm`
+### [DONE] Requesty API + Aider Configuration
+**Completed**: 2026-04-08
 
 **Changes**:
-- Removed hardcoded "EPISODE 1" from all thumbnail generators
-- Server now dynamically passes episode number to Puppeteer
-- Episode counter increments atomically per content type
-- Tested: News ep 9→10, counter persists across restarts
-
-**Files Modified**: server.js:6374, server.js:6470, cwn_news_tool.html, nba_thumbnail_generator.html
+- `.aider.conf.yml`: Added Requesty endpoint, API key, `coding/gemini-2.5-pro` model
+- Fixed API key (trailing `requestry` text removed)
+- Verified `coding/gemini-2.5-pro` works via Requesty ($0.0000125/call)
+- Added `show-model-warnings: false` to suppress interactive prompt
 
 ---
 
-### [DONE] Newscast Overlay Redesign
-**Completed**: 2026-04-07
-**QA Status**: ✅ Ready for Gemini audit
+### [DONE] ~/.claude.json Performance Fix
+**Completed**: 2026-04-08
 
 **Changes**:
-- Story list increased to 420px width
-- Font sizes increased (13px → 16px)
-- Breaking flag moved to top left
-- Top ticker removed completely
-- Bottom ticker retained
-
-**Artifacts**: `qa/record_session.js` captures screenshots
+- Cleared `cachedChangelog` (201KB bloat) → file reduced from 229KB to 5.7KB
+- Cleared `cachedGrowthBookFeatures`, `cachedStatsigGates`, `cachedDynamicConfigs`
+- Backup saved at `~/.claude.json.bak`
 
 ---
 
-### [DONE] News Thumbnail Visual Updates
-**Completed**: 2026-04-07
-**QA Status**: ✅ Ready for Gemini audit
+### [DONE] .claude/settings.local.json Cleanup
+**Completed**: 2026-04-08
 
 **Changes**:
-- Background lightening (brightness 0.25 → 0.45)
-- Source badges removed (ESPN/Al Jazeera)
-- Category text updated to "CLIPZWORLD NEWS - EPISODE 1"
-- Font size increased (14px → 20px)
-
-**Known Issue**: Episode number hardcoded (see Active Sprint)
-
----
-
-### [DONE] NBA Thumbnail Background System
-**Completed**: 2026-04-07
-**QA Status**: ✅ Ready for Gemini audit
-
-**Changes**:
-- Added `nba_long_form thumbnail.jpg` as constant background
-- Lightened background (brightness 0.4)
-- Reduced team color overlay opacity
-- Updated label to "CLIPZWORLD NBA - EPISODE 1"
-
-**Known Issue**: Episode number hardcoded (see Active Sprint)
-
----
-
-### [DONE] QA Automation Infrastructure
-**Completed**: 2026-04-07
-**QA Status**: ✅ Self-documenting
-
-**Changes**:
-- Installed Playwright
-- Created `qa/record_session.js` automated recorder
-- Generates video, screenshots, error logs
-- Generates QA Handoff markdown per session
+- Removed duplicate `"Bash(node:*)"` with extra quotes
+- Removed stale `Bash(echo HeyGen config)` permission
+- Removed huge inline `aider` command stored as permission
+- Removed one-time `npx skills add heygen-com/skills` install command
+- 35 entries → 31 clean permissions
 
 ---
 
@@ -250,7 +244,7 @@ This must be complete before Railway deployment. Target benchmarks:
 
 ### [BLOCKED] Railway Deployment
 **Reason**: Performance benchmarks not established
-**Next Action**: Complete "Performance Benchmarking Suite" task
+**Next Action**: Run `npm run benchmark` and confirm all pass
 
 ### [DEFERRED] Multi-language Support
 **Reason**: Not in scope for MVP
@@ -266,31 +260,17 @@ This must be complete before Railway deployment. Target benchmarks:
 | Newscast Overlay | Pending | Pending | Ready for audit | session_1775565876183 |
 | News Thumbnails | Pending | Pending | Ready for audit | session_1775565876183 |
 | NBA Thumbnails | Pending | Pending | Ready for audit | session_1775565876183 |
-| QA Recorder | N/A | Pending | Self-audit | session_1775565876183 |
+| Twitch Thumbnail Integration | Pending | Pending | Ready for audit | ep20_1775698264899 |
+| Publish Button Wiring | N/A | Pending | Ready for audit | — |
 
 **Target**: 90% pass rate across all audits before Railway migration
-
-**Latest QA Session**: session_1775565876183
-- Video: 130KB webm recording
-- Screenshots: health, newscast_overlay, news_tool, nba_generator
-- Errors: 3 console (non-critical), 0 page errors
-- Artifacts: `/output/qa_sessions/`
 
 ---
 
 ## 🔧 Tech Debt
 
-1. ~~**Hardcoded episode numbers**~~ - ✅ Fixed 2026-04-07 (Dynamic counter implemented)
-2. **Missing error logging** - Console only, no structured logs
-3. **No request throttling** - Could overwhelm Puppeteer under load
-4. **Asset path hardcoding** - Should use environment variables
-5. **QA recorder NBA endpoint** - Currently tests non-existent /generate-nba-thumbnail (should use /generate-thumbnail with contentType: 'nba')
-
----
-
-## 📝 Notes
-
-- All "Done" tasks include QA Handoff documentation
-- Gemini audit focuses on visual + logic correctness
-- Localhost deployment only until benchmarks met
-- Twitch thumbnail blocked on user-provided asset
+1. ~~**Hardcoded episode numbers**~~ — ✅ Fixed 2026-04-07
+2. ~~**Missing error logging**~~ — ✅ Fixed 2026-04-08
+3. **No request throttling** — Could overwhelm Puppeteer under load
+4. **Asset path hardcoding** — Should use environment variables
+5. **QA recorder NBA endpoint** — Should use `/generate-thumbnail` with `contentType: 'nba'`
