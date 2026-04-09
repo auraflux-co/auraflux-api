@@ -25,7 +25,8 @@
       "active": true,
       "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/adapt-profile_image-300x300.png",
       "origin": "Phoenix",
-      "fact": "Never faked a trickshot"
+      "fact": "Never faked a trickshot",
+      "phonetic": "AD-apt"
     },
     {
       "displayName": "Ron",
@@ -43,7 +44,8 @@
       "active": true,
       "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/lacy-profile_image-300x300.png",
       "origin": "Erie",
-      "fact": "Married to Drew"
+      "fact": "Married to Drew",
+      "phonetic": "LAY-see"
     },
     {
       "displayName": "Marlon",
