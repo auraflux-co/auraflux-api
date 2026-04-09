@@ -4895,12 +4895,6 @@ app.post('/news/generate-intro-card', async (req, res) => {
 // Body: { url } — e.g. "https://www.twitch.tv/clips/SomeClipSlug"
 //            or { slug } — e.g. "SomeClipSlug"
 
-// Twitch web app GQL client ID (public, used by browser)
-const TWITCH_GQL_CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
-
-// GQL persisted query hash for VideoAccessToken_Clip (stable, used by all major tools)
-const TWITCH_CLIP_QUERY_HASH = '36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11';
-
 // Use TwitchClient methods instead of standalone functions
 function extractTwitchSlug(urlOrSlug) {
   return twitchClient.extractSlug(urlOrSlug);
