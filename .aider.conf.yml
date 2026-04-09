@@ -1,8 +1,10 @@
 read:
   - CLAUDE.md
-  - AIDER_COMMIT_CHECKLIST.md
+  - COMMIT_CHECKLIST.md
+  - AUTOMATION_STATUS.md
+  - QA_GATES.md
 
-openai-api-base: https://router.requesty.ai/v1
-openai-api-key: rqsty-sk-3Zdkufv+RliVSPnLLnDuHEhXS4zcqzE6GFbg/0d6fME81AhlVCrNL0nTd8LHl256bWPHi9jyfRpbDbCkczyvtwgkriHz1nGJaoOAO41seQ0=
-model: openai/coding/gemini-2.5-flash
+openai-api-base: https://openrouter.ai/api/v1
+openai-api-key: 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
+model: openai/google/gemini-2.5-flash
 show-model-warnings: false
