@@ -6266,6 +6266,7 @@ Source: [Source name]. Link in description.
 
 === STORY#_REACTION ===
 [EXACTLY 1 sentence. Short. Flat. Deadpan. Makes it MORE alarming, not less. Final take AFTER the clip.]
+[5-second pause — hold on the source clip for 5 seconds after Bobby's reaction, then cut to next story]
 
 === OUTRO ===
 [1-2 sentences. Sign-off.]
@@ -6275,8 +6276,9 @@ Source: [Source name]. Link in description.
 - Total [CLIP PLAYS HERE] markers: MUST BE EXACTLY ${items.length}
 - Each SETUP scene: EXACTLY 2 sentences (not 1, not 3) + contains [beat] + [CLIP PLAYS HERE] + [beat]
 - Each CLIP_REACTION scene: EXACTLY 1 sentence (live reaction during clip)
-- Each REACTION scene: EXACTLY 1 sentence (deadpan take after clip)
+- Each REACTION scene: EXACTLY 1 sentence (deadpan take after clip) + [5-second pause — hold on source clip]
 - [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
+- After each REACTION scene: Add "[5-second pause — hold on source clip]" before moving to next story
 - Never explain the take in reactions. Never recap what just happened.
 
 Target: 80-120 words spoken per story (setup + reactions, clip audio is stripped).`;
