@@ -394,6 +394,100 @@ async function validateGate5(testCase, script) {
 }
 
 /**
+ * Gate 7: Publish Validation — calls /publish in skeleton mode for Test Case #1
+ * Verifies the endpoint accepts the request and logs to upload_status.json
+ */
+async function validateGate7(testCase, gate5) {
+  const gate = {
+    gate: 7,
+    name: 'Publish Validation',
+    passed: false,
+    outcome: 'skipped',
+    score: null,
+    issues: [],
+    requestId: null,
+    jobId: null,
+    uploadStatusLogged: false
+  };
+
+  try {
+    const title = (gate5 && gate5.title) ? gate5.title : 'Test Case 1 Validation — Twitch Soup';
+    const publishPayload = {
+      platforms: ['youtube'],
+      title,
+      description: 'Test Case #1 publish validation — skeleton mode',
+      driveUrl: 'https://drive.google.com/uc?export=download&id=TEST_PLACEHOLDER_ID',
+      contentType: 'long',
+      async: true
+    };
+
+    console.log(`      📤 Calling POST /publish (skeleton mode)...`);
+    let publishResp;
+    try {
+      publishResp = await axios.post(`${BASE_URL}/publish`, publishPayload, { timeout: 30000 });
+    } catch (publishErr) {
+      // /publish may return 400 if UPLOADPOST_API_KEY is not set — that's expected in test env
+      // Treat as skipped (not a failure) — endpoint is wired, API key just not configured
+      if (publishErr.response && publishErr.response.status === 400 &&
+          publishErr.response.data && publishErr.response.data.error &&
+          publishErr.response.data.error.includes('UPLOADPOST_API_KEY')) {
+        gate.outcome = 'skipped';
+        gate.passed = true; // skeleton is wired, API key just not configured in test env
+        gate.issues.push('UPLOADPOST_API_KEY not set — publish endpoint wired but API key missing (expected in test env)');
+        console.log(`      ⏭️  Gate 7 SKIPPED — UPLOADPOST_API_KEY not configured (endpoint is wired correctly)`);
+        return gate;
+      }
+      throw publishErr;
+    }
+
+    const publishData = publishResp.data;
+
+    // Check response structure
+    if (!publishData.ok) {
+      gate.issues.push(`/publish returned ok:false — ${publishData.error || 'unknown error'}`);
+      gate.outcome = 'fail';
+      return gate;
+    }
+
+    gate.requestId = publishData.request_id || null;
+    gate.jobId = publishData.job_id || null;
+
+    if (!gate.requestId && !gate.jobId) {
+      gate.issues.push('/publish response missing both request_id and job_id');
+    }
+
+    // Verify upload was logged to upload_status.json
+    try {
+      const statusResp = await axios.get(`${BASE_URL}/publish/upload-status?limit=1`, { timeout: 10000 });
+      const statusData = statusResp.data;
+      if (statusData.total > 0 && statusData.uploads && statusData.uploads.length > 0) {
+        const latest = statusData.uploads[0];
+        if (latest.title === title || (latest.platforms && latest.platforms.includes('youtube'))) {
+          gate.uploadStatusLogged = true;
+          console.log(`      ✅ Upload logged to upload_status.json (total: ${statusData.total})`);
+        } else {
+          gate.issues.push('Upload attempt not found in upload_status.json');
+        }
+      } else {
+        gate.issues.push('upload_status.json is empty after publish call');
+      }
+    } catch (statusErr) {
+      gate.issues.push(`Could not verify upload_status.json: ${statusErr.message}`);
+    }
+
+    gate.passed = gate.issues.length === 0;
+    gate.outcome = gate.passed ? 'pass' : 'fail';
+
+  } catch (err) {
+    gate.issues.push(`Gate 7 error: ${err.message}`);
+    gate.outcome = 'fail';
+    gate.passed = false;
+  }
+
+  return gate;
+}
+
+/**
  * Gate 6: Final pass/fail summary
  * A test case passes Gate 6 only if Gates 1-5 all pass (or are skipped with no errors)
  */
@@ -595,11 +689,31 @@ async function runTestCase(testCase) {
       gate6.issues.forEach(issue => console.log(`      ⚠️  ${issue}`));
     }
 
+    // ── Gate 7: Publish Validation (Test Case #1 only) ────────────────
+    let gate7 = null;
+    if (testCase.id === 1) {
+      console.log(`\n🚀 Gate 7: Publish Validation (Test Case #1 only)...`);
+      gate7 = await validateGate7(testCase, gate5);
+      result.gates.push(gate7);
+
+      const g7Icon = gate7.passed ? '✅' : (gate7.outcome === 'skipped' ? '⏭️' : '❌');
+      console.log(`   ${g7Icon} Gate 7: ${gate7.outcome?.toUpperCase() || 'UNKNOWN'}`);
+      if (gate7.requestId) console.log(`      📋 request_id: ${gate7.requestId}`);
+      if (gate7.jobId) console.log(`      📋 job_id: ${gate7.jobId}`);
+      if (gate7.uploadStatusLogged) console.log(`      📝 Logged to upload_status.json: ✅`);
+      if (gate7.issues.length > 0) {
+        gate7.issues.forEach(issue => {
+          console.log(`      ⚠️  ${issue}`);
+          result.warnings.push(`Gate 7: ${issue}`);
+        });
+      }
+    }
+
     // ── Determine final test status ───────────────────────────────────
     if (result.errors.length > 0) {
       result.status = 'error';
       console.log(`\n❌ TEST FAILED with ${result.errors.length} error(s)`);
-    } else if (!gate6.passed) {
+    } else if (!gate6.passed || (gate7 && !gate7.passed)) {
       result.status = 'failed';
       console.log(`\n❌ TEST FAILED — one or more required gates did not pass`);
     } else if (result.warnings.length > 0) {
@@ -607,7 +721,8 @@ async function runTestCase(testCase) {
       console.log(`\n⚠️  TEST PASSED with ${result.warnings.length} warning(s)`);
     } else {
       result.status = 'passed';
-      console.log(`\n✅ TEST PASSED — all 6 gates passed`);
+      const gateCount = testCase.id === 1 ? '7' : '6';
+      console.log(`\n✅ TEST PASSED — all ${gateCount} gates passed`);
     }
 
   } catch (error) {
@@ -640,7 +755,7 @@ function generateReport() {
 
   let report = `
 ${'='.repeat(80)}
-CWN PRODUCTION TEST SUITE RESULTS — ALL 6 GATES
+CWN PRODUCTION TEST SUITE RESULTS — ALL GATES (6 + Gate 7 for TC#1)
 ${'='.repeat(80)}
 
 Suite:     ${results.suite}
@@ -722,13 +837,13 @@ ${'='.repeat(80)}
 async function main() {
   console.log(`
 ${'='.repeat(80)}
-🧪 CWN PRODUCTION TEST SUITE RUNNER — ALL 6 GATES
+🧪 CWN PRODUCTION TEST SUITE RUNNER — ALL GATES (6 + Gate 7 for TC#1)
 ${'='.repeat(80)}
 
 Suite:  ${testSuite.test_suite}
 Tests:  ${testSuite.cases.length}
 Notes:  ${testSuite.notes}
-Gates:  1 (Script QA) → 2 (Segment QA) → 3 (Assembly QA) → 4 (Thumbnail) → 5 (Publish Metadata) → 6 (Final)
+Gates:  1 (Script QA) → 2 (Segment QA) → 3 (Assembly QA) → 4 (Thumbnail) → 5 (Publish Metadata) → 6 (Final) → 7 (Publish Validation, TC#1 only)
 
 Starting automated test execution...
 ${'='.repeat(80)}
