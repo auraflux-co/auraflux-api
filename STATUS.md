@@ -25,7 +25,7 @@
 |-------|---------------|---------------|--------|-----------|
 | Cline | Added pre-commit hook + STATUS enforcement | `.git/hooks/pre-commit`, `STATUS.md`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | `a7b6698` | 2026-04-09 7:00 PM ET |
 | Claude Code | Newscast UI updates + NBA intro card handoff + Upload API spec | `tools/clipzworld_newscast.html`, `POST_PUBLISH_MANUAL_CHECKLIST.md`, `CLINE_HANDOFF_NBA_INTRO_CARD.md`, `UPLOAD_API_SPEC.md`, `data/upload_status.json` | `b3fcdff` | 2026-04-09 (earlier today) |
-| Cline | STATUS.md audit + OVERNIGHT_TASKS.md context limit fix | `STATUS.md`, `OVERNIGHT_TASKS.md` | pending | 2026-04-09 7:14 PM ET |
+| Cline | Phase 1-6 acceptance test plan + rollback process | `test/PHASE_1_6_ACCEPTANCE_TEST.md`, `STATUS.md` | pending | 2026-04-09 7:26 PM ET |
 
 ---
 
