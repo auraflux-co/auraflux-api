@@ -35,6 +35,7 @@
 | Cline | Fix news long-form post-reaction pause: 5 seconds → 3 seconds (server.js lines 5951, 5961, 5963) | `server.js` | `e9ae7f7` | 2026-04-09 11:47 PM ET |
 | Cline | Fix overnight_runner.sh: add STATUS.md, OVERNIGHT_TASKS.md, MORNING_BRIEFING.md to Aider chat | `scripts/overnight_runner.sh`, `STATUS.md` | `afc0e7c` | 2026-04-10 8:52 AM ET |
 | Claude Code | Config updates: Aider → Gemini 2.5 Pro (avoid TPM limit), remove hardcoded API key, Emily active, dashboard clips/streamer default 3→2 | `.aider.conf.yml`, `data/streamers.json`, `cwn_production.html`, `STATUS.md` | `e269afc` | 2026-04-10 9:15 AM ET |
+| Cline | Add 🔄 REFRESH IDs button to dashboard job cards + refreshHeyGenIds() JS function; calls GET /heygen/latest-videos, matches by jobId_ prefix, updates segment URLs for Avatar V workaround | `cwn_production.html`, `server.js` | pending | 2026-04-10 11:40 AM ET |
 
 ---
 
