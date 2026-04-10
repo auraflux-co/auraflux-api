@@ -3158,6 +3158,13 @@ function sendToHeyGen() {
   var avatarJobs = batchJob.segments.filter(function(s){ return s.type==='avatar'; });
   var avatarIdx  = 0;
 
+  // Build a map from avatarIdx → full segment index (position in batchJob.segments)
+  // This is needed so the HeyGen title encodes the correct slot index for REFRESH IDs
+  var avatarToFullIdx = [];
+  batchJob.segments.forEach(function(s, i) {
+    if (s.type === 'avatar') avatarToFullIdx.push(i);
+  });
+
   function sendNext() {
     if (avatarIdx >= avatarOnly.length) {
       batchJob.status='all_sent'; batchJob.pct=50; saveJobs(); renderQueue(); return;
@@ -3168,7 +3175,11 @@ function sendToHeyGen() {
     batchJob.pct = Math.round((avatarIdx / avatarOnly.length) * 50);
     renderQueue();
 
-    generateVideo(seg.text, baseTitle+' -- '+seg.label, isPortrait, function(err, videoId) {
+    // Title format: batchId_XX_SCENENAME — used by REFRESH IDs to match back to the correct segment slot
+    var fullIdx = avatarToFullIdx[avatarIdx];
+    var hgTitle = batchId + '_' + String(fullIdx).padStart(2,'0') + '_' + seg.label.replace(/\s+/g,'_').toUpperCase();
+
+    generateVideo(seg.text, hgTitle, isPortrait, function(err, videoId) {
       if (err) {
         segJob.status='failed'; segJob.error=err.message;
         saveJobs(); renderQueue(); avatarIdx++; setTimeout(sendNext,2000); return;
