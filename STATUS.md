@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
 **Last Updated:** 2026-04-10 (9:15 AM ET)
-**Branch:** main | **Latest Commit:** `afc0e7c` — fix: overnight_runner.sh add STATUS.md/OVERNIGHT_TASKS.md/MORNING_BRIEFING.md to Aider chat
+**Branch:** main | **Latest Commit:** `e269afc` — config: Aider→Gemini 2.5 Pro + remove hardcoded API key + Emily active + clips/streamer 3→2
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -34,7 +34,7 @@
 | Cline | Add aider_plan.sh — one-shot full environment audit + multi-week plan generator | `scripts/aider_plan.sh` | `484248f` | 2026-04-09 11:44 PM ET |
 | Cline | Fix news long-form post-reaction pause: 5 seconds → 3 seconds (server.js lines 5951, 5961, 5963) | `server.js` | `e9ae7f7` | 2026-04-09 11:47 PM ET |
 | Cline | Fix overnight_runner.sh: add STATUS.md, OVERNIGHT_TASKS.md, MORNING_BRIEFING.md to Aider chat | `scripts/overnight_runner.sh`, `STATUS.md` | `afc0e7c` | 2026-04-10 8:52 AM ET |
-| Claude Code | Config updates: Aider → Gemini 2.5 Pro (avoid TPM limit), remove hardcoded API key, Emily active, dashboard clips/streamer default 3→2 | `.aider.conf.yml`, `data/streamers.json`, `cwn_production.html`, `STATUS.md` | pending | 2026-04-10 9:15 AM ET |
+| Claude Code | Config updates: Aider → Gemini 2.5 Pro (avoid TPM limit), remove hardcoded API key, Emily active, dashboard clips/streamer default 3→2 | `.aider.conf.yml`, `data/streamers.json`, `cwn_production.html`, `STATUS.md` | `e269afc` | 2026-04-10 9:15 AM ET |
 
 ---
 
@@ -77,16 +77,16 @@
 
 **`UPLOADPOST_API_KEY` ✅ confirmed in `.env` — ready to test**
 
-> ⚠️ **BLOCKER:** HeyGen Avatar V not yet available — waiting on HeyGen engineering team response. Phase 6 live testing is paused until Avatar V is confirmed. Rob is in contact with HeyGen directly.
+> ⚠️ **BLOCKER:** HeyGen Avatar V web console only — API/MCP access coming "in the coming months" per HeyGen support (no specific ETA). No workaround available (creating template in Avatar V won't work with API generation). Phase 6 testing continues with Avatar IV until V API is released.
 
 | Task | Status | Notes |
 |------|--------|-------|
 | `UPLOADPOST_API_KEY` in `.env` | ✅ Done | JWT token confirmed present |
-| HeyGen Avatar V access | 🔴 BLOCKED | Waiting on HeyGen engineering team — Rob has open ticket |
+| HeyGen Avatar V access | 🔴 BLOCKED | Web console only, API/MCP coming "in the coming months" — no ETA or workaround |
 | Test Case #1: Twitch Long → YouTube Private | 🟡 Ready to run (after Avatar V) | Spec in `UPLOAD_API_SPEC.md` — need a video in `output/` |
 | Test Case #2-5: Multi-platform | ⏳ After Test #1 passes | TikTok + Instagram + simultaneous |
 | Approve overnight queue (Aider) | ⏳ Waiting on Rob | See `OVERNIGHT_TASKS.md` |
-| Push commits to origin/main | ✅ Done | Pushed `e9ae7f7` — GitHub synced |
+| Push commits to origin/main | ✅ Done | Pushed `e269afc` — GitHub synced |
 
 ---
 
