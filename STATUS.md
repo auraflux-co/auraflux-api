@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (9:15 AM ET)
-**Branch:** main | **Latest Commit:** `e269afc` — config: Aider→Gemini 2.5 Pro + remove hardcoded API key + Emily active + clips/streamer 3→2
+**Last Updated:** 2026-04-10 (2:07 PM ET)
+**Branch:** main | **Latest Commit:** pending — Fix #2 clip mismatch: clipReportDataForQA wired to both claudeScriptQA call sites
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -37,7 +37,8 @@
 | Claude Code | Config updates: Aider → Gemini 2.5 Pro (avoid TPM limit), remove hardcoded API key, Emily active, dashboard clips/streamer default 3→2 | `.aider.conf.yml`, `data/streamers.json`, `cwn_production.html`, `STATUS.md` | `e269afc` | 2026-04-10 9:15 AM ET |
 | Cline | Add 🔄 REFRESH IDs button to dashboard job cards + refreshHeyGenIds() JS function; calls GET /heygen/latest-videos, matches by jobId_ prefix, updates segment URLs for Avatar V workaround | `cwn_production.html`, `server.js` | `ef5486a` | 2026-04-10 11:40 AM ET |
 | Cline | Fix sendToHeyGen() title format: now sets HeyGen video title as `batchId_XX_SCENENAME` so REFRESH IDs can match by index and preserve segment order | `cwn_production.html` | `16ce6fe` | 2026-04-10 12:37 PM ET |
-| Cline | Fix Twitch clip mismatch bug (Gate 1 85/100): analyses were mapped by array position instead of streamer name — now uses analysesByStreamer keyed map so Jason's analyses always go to Jason's item | `server.js` | pending | 2026-04-10 12:57 PM ET |
+| Cline | Fix #1 Twitch clip mismatch (Gate 1 85/100): analyses mapped by streamer name (analysesByStreamer), items[].clips updated to match analysisClips order, generateClipAvailabilityReport() added | `server.js` | pending | 2026-04-10 12:57 PM ET |
+| Cline | Fix #2 clip report wiring: clipReportDataForQA declared + assigned inside twitch block; passed to both claudeScriptQA call sites (initial QA + post-claudeScriptFix QA) | `server.js` | pending | 2026-04-10 2:07 PM ET |
 
 ---
 

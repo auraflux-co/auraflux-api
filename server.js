@@ -1633,6 +1633,65 @@ Please generate a COMPLETE REVISED script that fixes all the issues listed above
   }
 }
 
+// ── Gate 1: Clip Availability Report ─────────────────────────────
+// Appended to every Gate 1 why-doc (pass or fail) to show why some
+// streamers had fewer than the target number of clips.
+// Helps Rob understand shortfalls without digging through logs.
+function generateClipAvailabilityReport(items, allClips, streamerOrder, analysisClips) {
+  const report = [];
+  report.push('\n── CLIP AVAILABILITY REPORT ──────────────────────');
+
+  const targetPerStreamer = 2;
+  const expectedStreamers = 12;
+  const expectedTotal = expectedStreamers * targetPerStreamer;
+
+  const actualTotal = analysisClips.length;
+  const shortfall = expectedTotal - actualTotal;
+
+  report.push(`Target: ${expectedTotal} clips (${expectedStreamers} streamers × ${targetPerStreamer} clips each)`);
+  report.push(`Actual: ${actualTotal} clips`);
+  if (shortfall > 0) {
+    report.push(`Shortfall: ${shortfall} clips\n`);
+  } else {
+    report.push(`Status: ✅ Target met\n`);
+  }
+
+  // Per-streamer breakdown
+  streamerOrder.forEach(streamer => {
+    const streamerClips = allClips.filter(c => c.streamer === streamer);
+    const analyzedClips = analysisClips.filter(c => c.streamer === streamer);
+    const requested = targetPerStreamer;
+    const obtained = analyzedClips.length;
+
+    const good = streamerClips.filter(c => c.videoUrl && c.videoUrl.includes('sig='));
+    const bad  = streamerClips.filter(c => !c.videoUrl || !c.videoUrl.includes('sig='));
+
+    let reason = '';
+    if (obtained >= requested) {
+      reason = '✅ Target met';
+    } else if (good.length < requested) {
+      const expired = requested - good.length;
+      reason = `⚠️ ${expired} clips expired/deleted, used ${bad.length} backups`;
+    } else if (streamerClips.length < requested) {
+      reason = `⚠️ Only ${streamerClips.length} clips available (need ${requested})`;
+    } else {
+      reason = '⚠️ Unknown issue — check logs';
+    }
+
+    report.push(`${streamer}: ${obtained}/${requested} clips — ${reason}`);
+  });
+
+  // Check for streamers in roster but not in this episode
+  const rosterStreamers = Object.keys(STREAMER_DISPLAY_NAMES);
+  const missingStreamers = rosterStreamers.filter(s => !streamerOrder.includes(s));
+  if (missingStreamers.length > 0) {
+    report.push(`\nStreamers not in this episode: ${missingStreamers.join(', ')}`);
+  }
+
+  report.push('──────────────────────────────────────────────────\n');
+  return report.join('\n');
+}
+
 // ── Gate 1: Script QA — Claude reviews Gemini's script ────────────
 // NEW ARCHITECTURE (as of April 2026):
 // Claude now QAs scripts written by Gemini (role swap from original architecture).
@@ -1654,7 +1713,8 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
     streamers = [],
     clipsPerStreamer = 2,
     jobId = 'unknown',
-    expectedScenes = 0  // Must be provided by caller
+    expectedScenes = 0,  // Must be provided by caller
+    clipReportData = null
   } = opts;
 
   if (!client) return { score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (skipped — no key)', deductions: [] };
@@ -1892,6 +1952,16 @@ ISSUES:
   if (!fs.existsSync(qaLogDir)) fs.mkdirSync(qaLogDir, { recursive: true });
   const logFile = path.join(qaLogDir, `gate1_script_${outcome}_${Date.now()}.txt`);
   try { fs.writeFileSync(logFile, whyDoc); console.log(`[qa-gate1] Script QA why-doc saved: ${logFile}`); } catch(e) {}
+
+  // Append clip availability report if data was provided (Twitch only)
+  if (clipReportData && contentType === 'twitch') {
+    try {
+      const { items: rItems, allClips: rAllClips, streamerOrder: rOrder, analysisClips: rAnalysis } = clipReportData;
+      const clipReport = generateClipAvailabilityReport(rItems, rAllClips, rOrder, rAnalysis);
+      fs.appendFileSync(logFile, clipReport);
+      console.log(`[qa-gate1] Clip availability report appended to why-doc`);
+    } catch(e) { console.warn(`[qa-gate1] Clip report append failed: ${e.message}`); }
+  }
 
   // QA logs saved locally only — not uploaded to Drive
   return {
@@ -5525,6 +5595,7 @@ app.post('/generate-full-script',
     // For Twitch: analyze ALL clips across all streamers with full video
     let analyses = [];
     let orderedClipUrls = []; // populated by twitch block — returned alongside script
+    let clipReportDataForQA = null; // populated inside twitch block, passed to claudeScriptQA
     if (type === 'twitch' || type === 'twitch-short') {
       const allClips = [];
       items.forEach(item => {
@@ -5719,8 +5790,56 @@ app.post('/generate-full-script',
         analysesByStreamer[streamer] = flatAnalyses.slice(flatIdx, flatIdx + count);
         flatIdx += count;
       });
+      // Build clipsByStreamer map from analysisClips (the clips that were ACTUALLY analyzed)
+      // This ensures items[].clips matches the clips Gemini analyzed, not the original dashboard clips.
+      // Root cause of Gate 1 85/100: items[].clips pointed to original clips (e.g. VRChat),
+      // but analysisClips had backup clips (e.g. Driving) — Gemini wrote setup for VRChat
+      // using analysis of Driving → MISMATCH.
+      const clipsByStreamer = {};
+      let clipIdx = 0;
+      streamerOrder.forEach(streamer => {
+        const streamerClips = allClips.filter(c => c.streamer === streamer);
+        const target = (streamerClips[0] && streamerClips[0].targetClipsPerStreamer)
+          ? streamerClips[0].targetClipsPerStreamer
+          : Math.ceil(streamerClips.length / 2);
+        const count = Math.min(target, streamerClips.length);
+        // Slice from analysisClips (not allClips) to get the actual analyzed clips
+        clipsByStreamer[streamer] = analysisClips.slice(clipIdx, clipIdx + count);
+        clipIdx += count;
+      });
+
+      // Update items[].clips to match the clips that were actually analyzed
+      items.forEach(item => {
+        const analyzedClips = clipsByStreamer[item.streamer] || [];
+        item.clips = analyzedClips.map(c => ({
+          url:          c.pageUrl,
+          mp4Url:       c.videoUrl,
+          assemblyUrl:  c.assemblyUrl,
+          thumbnailUrl: c.thumbnailUrl,
+          title:        c.title,
+          game:         c.game,
+          streamer:     c.streamer,
+          isBackup:     c.isBackup || false
+        }));
+      });
+
+      console.log('[clip-mapping] Updated items[].clips to match analysisClips order');
+      items.forEach(item => {
+        console.log(`  ${item.streamer}: ${item.clips.length} clips - ${item.clips.map(c => (c.title||'').slice(0,30)).join(', ')}`);
+      });
       console.log('[clip-mapping] streamerOrder:', streamerOrder);
       console.log('[clip-mapping] items order:', items.map(i => i.streamer));
+
+      // Capture clip report data for Gate 1 why-doc (pass or fail)
+      // Snapshot allClips and analysisClips now — they may be mutated later
+      clipReportDataForQA = {
+        items,
+        allClips: [...analysisClips], // allClips was replaced with analysisClips above
+        streamerOrder: [...streamerOrder],
+        analysisClips: [...analysisClips]
+      };
+
+      // Map analyses by streamer name (c918cad fix preserved)
       analyses = items.map(item => analysesByStreamer[item.streamer] || []);
 
       const geminiHits = flatAnalyses.filter(a => a && a.length > 50).length;
@@ -6258,7 +6377,8 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
         streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s })) : [],
         clipsPerStreamer: req.body.clipsPerStreamer || 2,
         jobId: `${type}_${dateStr}_${Date.now()}`,
-        expectedScenes: expectedScenes
+        expectedScenes: expectedScenes,
+        clipReportData: clipReportDataForQA
       });
 
       console.log(`[generate-full-script] Gate 1 Script QA: ${scriptQA.outcomeLabel} (${scriptQA.score}/100)`);
@@ -6300,7 +6420,8 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
               streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s })) : [],
               clipsPerStreamer: req.body.clipsPerStreamer || 2,
               jobId: type + '_' + dateStr + '_' + Date.now(),
-              expectedScenes: expectedScenes
+              expectedScenes: expectedScenes,
+              clipReportData: clipReportDataForQA
             });
             console.log(`[generate-full-script] Gate 1 QA after Claude fix: ${scriptQA.outcomeLabel} (${scriptQA.score}/100)`);
             if (scriptQA.outcome === 'pass') {
