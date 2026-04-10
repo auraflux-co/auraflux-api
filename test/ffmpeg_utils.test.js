@@ -110,7 +110,7 @@ test('buildLogoOverlayCommand accepts custom size and opacity', () => {
   });
   
   assert(result.args.some(arg => arg.includes('scale=80')));
-  assert(result.args.some(arg => arg.includes('aa=0.5')));
+  assert(result.args.some(arg => arg.includes('colorchannelmixer=aa=0.5')));
 });
 
 test('buildValidateCommand returns correct structure', () => {
