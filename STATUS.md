@@ -82,8 +82,8 @@
 | Task | Status | Notes |
 |------|--------|-------|
 | `UPLOADPOST_API_KEY` in `.env` | ✅ Done | JWT token confirmed present |
-| HeyGen Avatar V access | 🔴 BLOCKED | Web console only, API/MCP coming "in the coming months" — no ETA or workaround |
-| Test Case #1: Twitch Long → YouTube Private | 🟡 Ready to run (after Avatar V) | Spec in `UPLOAD_API_SPEC.md` — need a video in `output/` |
+| HeyGen Avatar V access | 🟡 Waiting | API not yet available — when ready, just swap `HEYGEN_AVATAR_ID` + `HEYGEN_AVATAR_SHORT_ID` in `.env` (zero code changes) |
+| Test Case #1: Twitch Long → YouTube Private | 🟡 Ready to run | Spec in `UPLOAD_API_SPEC.md` — Avatar IV works fine, no need to wait for V |
 | Test Case #2-5: Multi-platform | ⏳ After Test #1 passes | TikTok + Instagram + simultaneous |
 | Approve overnight queue (Aider) | ⏳ Waiting on Rob | See `OVERNIGHT_TASKS.md` |
 | Push commits to origin/main | ✅ Done | Pushed `e269afc` — GitHub synced |
