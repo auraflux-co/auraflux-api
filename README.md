@@ -14,8 +14,8 @@ cd ~/cwn-production && python3 -m http.server 8765
 # Terminal 2 — Node API server (auto-restarts on save)
 cd ~/cwn-production && nodemon server.js
 
-# Terminal 3 — CapCut MCP
-cd ~/Downloads/VectCutAPI && source venv-capcut/bin/activate && python capcut_server.py
+# Terminal 3 — VectCut API (video editing)
+cd ~/cwn-production/VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py
 ```
 
 Dashboard: [http://localhost:8765/cwn_production.html](http://localhost:8765/cwn_production.html)
