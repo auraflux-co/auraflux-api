@@ -5864,6 +5864,24 @@ app.post('/generate-full-script',
       const geminiHits = flatAnalyses.filter(a => a && a.length > 50).length;
       console.log(`[generate-full-script] Gemini analyzed ${geminiHits}/${allClips.length} clips (${allClips.length - geminiHits} fell back to thumbnail)`);
 
+      // Fix #4: Filter out streamers with no analyzed clips before building the Gemini prompt.
+      // If a streamer has 0 clips in analysisClips (expired URLs, not submitted, GQL failure),
+      // Gemini will see "Analysis: No analysis" and HALLUCINATE clip content for that streamer.
+      // Only include streamers that have at least 1 real Gemini analysis (length > 50 chars).
+      const itemsBefore = items.length;
+      const filteredPairs = items
+        .map((item, i) => ({ item, analysis: analyses[i] }))
+        .filter(({ analysis }) => Array.isArray(analysis) && analysis.some(a => a && a.length > 50));
+      if (filteredPairs.length < itemsBefore) {
+        const dropped = items
+          .filter(item => !filteredPairs.find(p => p.item.streamer === item.streamer))
+          .map(item => item.streamer);
+        console.warn(`[generate-full-script] ⚠️  Dropping ${itemsBefore - filteredPairs.length} streamers with no real clip analyses: ${dropped.join(', ')}`);
+        items.splice(0, items.length, ...filteredPairs.map(p => p.item));
+        analyses = filteredPairs.map(p => p.analysis);
+      }
+      console.log(`[generate-full-script] Streamers with real clips: ${items.length}/${itemsBefore} — ${items.map(i => i.streamer).join(', ')}`);
+
 
     } else if (type === 'nba' || type === 'nba-short') {
       // NBA: use stored ESPN highlight clip URLs for full video analysis
