@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-09 (11:43 PM ET)
+**Last Updated:** 2026-04-09 (11:44 PM ET)
 **Branch:** main | **Latest Commit:** pending — fix: TV card overlay position → top-left (facing Bobby G)
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
@@ -30,7 +30,8 @@
 | Cline | Module split Phase 1: extract lib/config.js, lib/logger.js, lib/metrics.js from server.js; remove inline duplicates; server verified clean | `lib/config.js`, `lib/logger.js`, `lib/metrics.js`, `server.js`, `SERVER_SPLIT_PLAN.md` | `787f81f` | 2026-04-09 11:30 PM ET |
 | Cline | Upgrade pre-commit hook: add soft-warn for stale .md docs; update COMMIT_CHECKLIST + CLAUDE.md with doc-update rule | `scripts/pre-commit.sh`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | `d0ae35a` | 2026-04-09 11:35 PM ET |
 | Cline | Add git push step to COMMIT_CHECKLIST.md | `COMMIT_CHECKLIST.md` | `b719c51` | 2026-04-09 11:39 PM ET |
-| Cline | Add overnight automation: scripts/overnight_runner.sh + launchd plist (1am daily cron) | `scripts/overnight_runner.sh`, `scripts/com.cwn.overnight.plist`, `OVERNIGHT_TASKS.md` | pending | 2026-04-09 11:43 PM ET |
+| Cline | Add overnight automation: scripts/overnight_runner.sh + launchd plist (1am daily cron) | `scripts/overnight_runner.sh`, `scripts/com.cwn.overnight.plist`, `OVERNIGHT_TASKS.md` | `2563326` | 2026-04-09 11:43 PM ET |
+| Cline | Add aider_plan.sh — one-shot full environment audit + multi-week plan generator | `scripts/aider_plan.sh` | pending | 2026-04-09 11:44 PM ET |
 
 ---
 
