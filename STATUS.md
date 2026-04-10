@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-09 (11:47 PM ET)
-**Branch:** main | **Latest Commit:** pending — fix: TV card overlay position → top-left (facing Bobby G)
+**Last Updated:** 2026-04-09 (11:52 PM ET)
+**Branch:** main | **Latest Commit:** `e9ae7f7` — fix: news long-form post-reaction pause 5s → 3s
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -25,14 +25,14 @@
 |-------|---------------|---------------|--------|-----------|
 | Cline | Added pre-commit hook + STATUS enforcement | `.git/hooks/pre-commit`, `STATUS.md`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | `a7b6698` | 2026-04-09 7:00 PM ET |
 | Claude Code | Newscast UI updates + NBA intro card handoff + Upload API spec | `tools/clipzworld_newscast.html`, `POST_PUBLISH_MANUAL_CHECKLIST.md`, `CLINE_HANDOFF_NBA_INTRO_CARD.md`, `UPLOAD_API_SPEC.md`, `data/upload_status.json` | `b3fcdff` | 2026-04-09 (earlier today) |
-| Cline | Phase 1-6 acceptance test plan + rollback process | `test/PHASE_1_6_ACCEPTANCE_TEST.md`, `STATUS.md` | pending | 2026-04-09 7:26 PM ET |
-| Cline | Fix TV card overlay position: OVERLAY_ZONE + 2 hardcoded FFmpeg overlays → x=40 (top-left, facing Bobby G) | `server.js` | pending | 2026-04-09 7:37 PM ET |
+| Cline | Phase 1-6 acceptance test plan + rollback process | `test/PHASE_1_6_ACCEPTANCE_TEST.md`, `STATUS.md` | `787f81f` | 2026-04-09 7:26 PM ET |
+| Cline | Fix TV card overlay position: OVERLAY_ZONE + 2 hardcoded FFmpeg overlays → x=40 (top-left, facing Bobby G) | `server.js` | `787f81f` | 2026-04-09 7:37 PM ET |
 | Cline | Module split Phase 1: extract lib/config.js, lib/logger.js, lib/metrics.js from server.js; remove inline duplicates; server verified clean | `lib/config.js`, `lib/logger.js`, `lib/metrics.js`, `server.js`, `SERVER_SPLIT_PLAN.md` | `787f81f` | 2026-04-09 11:30 PM ET |
 | Cline | Upgrade pre-commit hook: add soft-warn for stale .md docs; update COMMIT_CHECKLIST + CLAUDE.md with doc-update rule | `scripts/pre-commit.sh`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | `d0ae35a` | 2026-04-09 11:35 PM ET |
 | Cline | Add git push step to COMMIT_CHECKLIST.md | `COMMIT_CHECKLIST.md` | `b719c51` | 2026-04-09 11:39 PM ET |
 | Cline | Add overnight automation: scripts/overnight_runner.sh + launchd plist (1am daily cron) | `scripts/overnight_runner.sh`, `scripts/com.cwn.overnight.plist`, `OVERNIGHT_TASKS.md` | `2563326` | 2026-04-09 11:43 PM ET |
 | Cline | Add aider_plan.sh — one-shot full environment audit + multi-week plan generator | `scripts/aider_plan.sh` | `484248f` | 2026-04-09 11:44 PM ET |
-| Cline | Fix news long-form post-reaction pause: 5 seconds → 3 seconds (server.js lines 5951, 5961, 5963) | `server.js` | pending | 2026-04-09 11:47 PM ET |
+| Cline | Fix news long-form post-reaction pause: 5 seconds → 3 seconds (server.js lines 5951, 5961, 5963) | `server.js` | `e9ae7f7` | 2026-04-09 11:47 PM ET |
 
 ---
 
@@ -75,13 +75,16 @@
 
 **`UPLOADPOST_API_KEY` ✅ confirmed in `.env` — ready to test**
 
+> ⚠️ **BLOCKER:** HeyGen Avatar V not yet available — waiting on HeyGen engineering team response. Phase 6 live testing is paused until Avatar V is confirmed. Rob is in contact with HeyGen directly.
+
 | Task | Status | Notes |
 |------|--------|-------|
 | `UPLOADPOST_API_KEY` in `.env` | ✅ Done | JWT token confirmed present |
-| Test Case #1: Twitch Long → YouTube Private | 🟡 Ready to run | Spec in `UPLOAD_API_SPEC.md` — need a video in `output/` |
+| HeyGen Avatar V access | 🔴 BLOCKED | Waiting on HeyGen engineering team — Rob has open ticket |
+| Test Case #1: Twitch Long → YouTube Private | 🟡 Ready to run (after Avatar V) | Spec in `UPLOAD_API_SPEC.md` — need a video in `output/` |
 | Test Case #2-5: Multi-platform | ⏳ After Test #1 passes | TikTok + Instagram + simultaneous |
 | Approve overnight queue (Aider) | ⏳ Waiting on Rob | See `OVERNIGHT_TASKS.md` |
-| Push commits to origin/main | ✅ Done | Pushed `b7af98a` — GitHub synced |
+| Push commits to origin/main | ✅ Done | Pushed `e9ae7f7` — GitHub synced |
 
 ---
 
