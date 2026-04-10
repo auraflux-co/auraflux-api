@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (2:09 PM ET)
-**Branch:** main | **Latest Commit:** `3b5e9d0` — Fix #2 clip mismatch: clipReportDataForQA wired to both claudeScriptQA call sites
+**Last Updated:** 2026-04-10 (2:23 PM ET)
+**Branch:** main | **Latest Commit:** `6467477` — docs: add Node.js restart step to COMMIT_CHECKLIST.md
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -39,6 +39,7 @@
 | Cline | Fix sendToHeyGen() title format: now sets HeyGen video title as `batchId_XX_SCENENAME` so REFRESH IDs can match by index and preserve segment order | `cwn_production.html` | `16ce6fe` | 2026-04-10 12:37 PM ET |
 | Cline | Fix #1 Twitch clip mismatch (Gate 1 85/100): analyses mapped by streamer name (analysesByStreamer), items[].clips updated to match analysisClips order, generateClipAvailabilityReport() added | `server.js` | `3b5e9d0` | 2026-04-10 12:57 PM ET |
 | Cline | Fix #2 clip report wiring: clipReportDataForQA declared + assigned inside twitch block; passed to both claudeScriptQA call sites (initial QA + post-claudeScriptFix QA) | `server.js` | `3b5e9d0` | 2026-04-10 2:09 PM ET |
+| Cline | Add Node.js restart step to COMMIT_CHECKLIST.md (after push section) | `COMMIT_CHECKLIST.md` | pending | 2026-04-10 2:23 PM ET |
 
 ---
 
