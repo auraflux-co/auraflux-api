@@ -101,9 +101,18 @@ async function recordSession() {
 
     // 4. Test NBA Thumbnail Generation
     console.log('   → Testing NBA thumbnail generation...');
-    const nbaResponse = await page.request.post(`${BASE_URL}/generate-nba-thumbnail`, {
+    const nbaResponse = await page.request.post(`${BASE_URL}/generate-thumbnail`, {
       data: {
-        gameId: '401810957'
+        contentType: 'nba',
+        title: 'QA Test: NBA Highlights',
+        games: [
+          {
+            homeTeam: 'Lakers',
+            awayTeam: 'Celtics',
+            homeScore: 108,
+            awayScore: 102
+          }
+        ]
       }
     });
     console.log(`      Status: ${nbaResponse.status()}`);
@@ -213,7 +222,7 @@ Generated: ${new Date().toISOString()}
 ### 3. API Endpoints
 - [ ] POST /generate-thumbnail (news) returns 200
 - [ ] POST /generate-thumbnail (twitch) returns 200
-- [ ] POST /generate-nba-thumbnail returns 200
+- [ ] POST /generate-thumbnail (nba) returns 200
 - [ ] GET /health returns 200
 
 ## Potential Visual Glitch Areas
