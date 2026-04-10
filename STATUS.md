@@ -71,6 +71,34 @@
 - **Disk usage + cleanup:** `GET /disk-usage`, `POST /cleanup`
 - **VectCutClient:** `assembleShortForm()`, `addBrandedOverlay()`, `healthCheck()`
 - **Upload status tracking:** `GET /upload-status/:trackingId` + `data/upload_status.json`
+- **Avatar V hybrid workflow:** 🔄 REFRESH IDs button in dashboard syncs manually-upgraded HeyGen videos (`GET /heygen/latest-videos`) ✅
+
+---
+
+## 🎬 Avatar V Production Workflow (Current Standard)
+
+> HeyGen Avatar V is **web-console only** — no API access yet. Use this hybrid workflow for all productions until the API is released.
+
+### Step-by-step
+
+| Step | Where | Action | Automated? |
+|------|-------|--------|-----------|
+| 1 | CWN Dashboard | Generate script → click **SEND TO HEYGEN** | ✅ Auto |
+| 2 | HeyGen web UI | Wait for all segments to finish rendering (green ✓) | 👤 Manual wait |
+| 3 | HeyGen web UI | For each segment: click **Regenerate** → switch to **Avatar V** → confirm. Repeat for all segments | 👤 Manual |
+| 4 | CWN Dashboard | Click **🔄 REFRESH IDs** on the job card | 👤 One click |
+| 5 | CWN Dashboard | Click **⚙ ASSEMBLE** | 👤 One click |
+| 6 | Background | FFmpeg downloads all segments, stitches, adds ticker/logo/overlays | ✅ Auto |
+| 7 | Background | Gate 5: Gemini visual QA on assembled video | ✅ Auto |
+| 8 | CWN Dashboard | Gate 3: Review Gate 5 score → click **✅ APPROVE & UPLOAD →** | 👤 One click |
+| 9 | Background | Upload-Post publishes to YouTube + TikTok + Instagram as **private drafts** | ✅ Auto |
+| 10 | YouTube / TikTok / IG | Review private video → flip to **public** when ready | 👤 Manual |
+
+### Notes
+- **REFRESH IDs** matches by title prefix `jobId_XX_SCENENAME` — only works for jobs sent after Apr 10 2026 (when title format was added to `sendScriptToHeyGen()`)
+- Older jobs without titles: paste URLs manually into segment fields, or re-send
+- When Avatar V API launches: swap `HEYGEN_AVATAR_ID` in `.env` — zero code changes needed
+- HeyGen queue cleanup: use the node script in session history to delete all but last N videos
 
 ---
 
@@ -78,7 +106,7 @@
 
 **`UPLOADPOST_API_KEY` ✅ confirmed in `.env` — ready to test**
 
-> ⚠️ **BLOCKER:** HeyGen Avatar V web console only — API/MCP access coming "in the coming months" per HeyGen support (no specific ETA). No workaround available (creating template in Avatar V won't work with API generation). Phase 6 testing continues with Avatar IV until V API is released.
+> ⚠️ **Avatar V Status:** API/MCP access coming "in the coming months" per HeyGen support (no ETA). **Hybrid workaround now available:** Generate with Avatar IV via API → manually upgrade to Avatar V in HeyGen web console → click 🔄 REFRESH IDs button in dashboard to sync upgraded URLs → continue automated pipeline (ASSEMBLE → Gate 3 → Publish). Phase 6 testing can proceed with this workflow.
 
 | Task | Status | Notes |
 |------|--------|-------|
