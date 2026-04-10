@@ -1,9 +1,7 @@
-# cwn-production
-CWN Production
 # CWN Production — ClipzWorld News
 **Channel:** [@clipznashite](https://youtube.com/@clipznashite) · **Host:** Bobby G · **Brand:** Navy `#22304b` / Gold `#c7af4f`
 
-> **Full production manual:** [CWN_Production_Manual.html](file:///Users/robertgregory/Downloads/CWN_Production_Manual.html)
+> **AI-powered news and reaction show featuring Bobby G**
 
 ---
 
