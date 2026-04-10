@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (4:54 PM ET)
-**Branch:** main | **Latest Commit:** `64c2f70` — fix: flatten 2D clipAnalyses in claudeScriptQA (Fix #3 — root cause of 100% Twitch Gate 1 failures)
+**Last Updated:** 2026-04-10 (5:13 PM ET)
+**Branch:** main | **Latest Commit:** `b5cac55` — fix: filter streamers with no real clip analyses before Gemini prompt (Fix #4 — prevents hallucination for 0-clip streamers)
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -41,7 +41,7 @@
 | Cline | Fix #2 clip report wiring: clipReportDataForQA declared + assigned inside twitch block; passed to both claudeScriptQA call sites (initial QA + post-claudeScriptFix QA) | `server.js` | `3b5e9d0` | 2026-04-10 2:09 PM ET |
 | Cline | Add Node.js restart step to COMMIT_CHECKLIST.md (after push section) | `COMMIT_CHECKLIST.md` | `5e8a13c` | 2026-04-10 2:23 PM ET |
 | Cline | Fix #3 ROOT CAUSE: claudeScriptQA() received 2D clipAnalyses array for Twitch; flatAnalyses() now iterates streamer×clip so attribution is always correct; NBA/News flat arrays unchanged | `server.js` | `64c2f70` | 2026-04-10 4:54 PM ET |
-| Cline | Fix #4: Filter streamers with no real clip analyses before Gemini prompt — prevents hallucination for 0-clip streamers (only include streamers with ≥1 analysis > 50 chars) | `server.js` | PENDING | 2026-04-10 5:12 PM ET |
+| Cline | Fix #4: Filter streamers with no real clip analyses before Gemini prompt — prevents hallucination for 0-clip streamers (only include streamers with ≥1 analysis > 50 chars) | `server.js` | `b5cac55` | 2026-04-10 5:13 PM ET |
 
 ---
 
