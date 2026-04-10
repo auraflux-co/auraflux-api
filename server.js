@@ -1426,7 +1426,9 @@ async function sendScriptToHeyGen(script, opts = {}) {
     const scene = scenes[i];
 
     // Build single-scene video request
+    // title is set to scene name so we can match videos back by title when refreshing IDs
     const requestBody = {
+      title: `${jobId}_${String(i).padStart(2,'0')}_${scene.name}`,
       video_inputs: [{
         character: {
           type: 'avatar',
@@ -7237,6 +7239,92 @@ STRICT RULES:
 //     { index: number, renderTimeMs: number, retries: number }
 //   ]
 // }
+// GET /heygen/latest-videos — fetch most recent N videos from HeyGen account
+// Used by dashboard "REFRESH IDs" button to get new video_ids after Avatar V web UI renders
+// Returns videos sorted by created_at desc, with download URLs fetched for completed ones
+// Query params: ?limit=20 (default 20, max 50)
+app.get('/heygen/latest-videos', async (req, res) => {
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+  if (!HEYGEN_API_KEY) return res.status(400).json({ error: 'HEYGEN_API_KEY not set' });
+
+  const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+
+  try {
+    // Step 1: List recent videos
+    const listResp = await axios.get(
+      `https://api.heygen.com/v1/video.list?limit=${limit}`,
+      { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 15000 }
+    );
+
+    const videos = listResp.data?.data?.videos || [];
+    console.log(`[heygen/latest-videos] Fetched ${videos.length} videos`);
+
+    // Step 2: For completed videos, fetch download URLs in parallel (max 10 at a time)
+    const completedVideos = videos.filter(v => v.status === 'completed');
+    const batchSize = 10;
+    const withUrls = [];
+
+    for (let i = 0; i < completedVideos.length; i += batchSize) {
+      const batch = completedVideos.slice(i, i + batchSize);
+      const results = await Promise.all(batch.map(async (v) => {
+        try {
+          const statusResp = await axios.get(
+            `https://api.heygen.com/v1/video_status.get?video_id=${v.video_id}`,
+            { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
+          );
+          const data = statusResp.data?.data || {};
+          return {
+            video_id: v.video_id,
+            title: v.video_title || v.video_id,
+            status: v.status,
+            created_at: v.created_at,
+            video_url: data.video_url || data.url || null,
+            duration: data.duration || null
+          };
+        } catch(e) {
+          return {
+            video_id: v.video_id,
+            title: v.video_title || v.video_id,
+            status: v.status,
+            created_at: v.created_at,
+            video_url: null,
+            error: e.message
+          };
+        }
+      }));
+      withUrls.push(...results);
+      if (i + batchSize < completedVideos.length) {
+        await new Promise(r => setTimeout(r, 500)); // brief pause between batches
+      }
+    }
+
+    // Include non-completed videos (no URL fetch needed)
+    const nonCompleted = videos
+      .filter(v => v.status !== 'completed')
+      .map(v => ({
+        video_id: v.video_id,
+        title: v.video_title || v.video_id,
+        status: v.status,
+        created_at: v.created_at,
+        video_url: null
+      }));
+
+    // Merge and sort by created_at desc
+    const allVideos = [...withUrls, ...nonCompleted]
+      .sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+
+    res.json({
+      ok: true,
+      count: allVideos.length,
+      videos: allVideos
+    });
+
+  } catch(e) {
+    console.error('[heygen/latest-videos] Error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/log-heygen-metrics', async (req, res) => {
   const { jobId, segmentCount, totalWaitTimeMs, avgRenderTimeMs, segments } = req.body;
 

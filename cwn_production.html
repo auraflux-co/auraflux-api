@@ -2007,6 +2007,9 @@ function renderQueue() {
       actions += '<button onclick="generateShortThumbnail(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(199,175,79,0.4);color:#c7af4f;">📸 SHORT THUMB</button>';
       actions += '<button onclick="sendToCapCut(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(145,70,255,0.4);color:#9146ff;">✂️ CAPCUT DRAFT</button>';
     }
+    if (totalSegs > 0) {
+      actions += '<button onclick="refreshHeyGenIds(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(231,76,60,0.5);color:#e74c3c;" title="Fetch latest HeyGen video IDs and update segment URLs">🔄 REFRESH IDs</button>';
+    }
     actions += '</div>';
     // Short-form status div (for thumbnail + CapCut feedback)
     if (isShortJob) {
@@ -2119,6 +2122,81 @@ function retrySegment(jobId, segIndex) {
       }
     );
   });
+}
+
+// ── REFRESH HEYGEN IDs ────────────────────────────────────────────
+// Fetches latest HeyGen videos, matches by title prefix (jobId_XX_SCENENAME),
+// and updates segment URLs so assembly can proceed after manual Avatar V upgrade.
+function refreshHeyGenIds(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  if (!job) return;
+
+  var btn = document.querySelector('button[onclick="refreshHeyGenIds(\'' + jobId + '\')"]');
+  if (btn) { btn.textContent = '⏳ FETCHING...'; btn.disabled = true; }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/heygen/latest-videos?limit=50', true);
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Server error');
+
+      var videos = resp.videos || [];
+      var prefix = jobId + '_';
+      var matched = videos.filter(function(v) { return v.title && v.title.startsWith(prefix); });
+
+      if (!matched.length) {
+        cwn_log('[refreshIds] No HeyGen videos found with prefix "' + prefix + '" — have you sent segments yet?', true);
+        if (btn) { btn.textContent = '⚠ NO MATCH'; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 3000); }
+        return;
+      }
+
+      var updated = 0;
+      matched.forEach(function(v) {
+        if (!v.video_url) return; // skip if no download URL yet
+        // Parse index from title: jobId_00_SCENENAME → index 0
+        var rest = v.title.slice(prefix.length); // "00_SCENENAME"
+        var parts = rest.split('_');
+        var idx = parseInt(parts[0], 10);
+        var sceneName = parts.slice(1).join('_').toUpperCase();
+
+        // Find matching segment by index or scene name
+        var seg = null;
+        if (!isNaN(idx) && job.segments && job.segments[idx] && job.segments[idx].type === 'avatar') {
+          seg = job.segments[idx];
+        } else if (job.segments) {
+          // Fallback: match by label containing scene name
+          seg = job.segments.find(function(s) {
+            return s.type === 'avatar' && s.label && s.label.toUpperCase().indexOf(sceneName) > -1;
+          });
+        }
+
+        if (seg) {
+          seg.url = v.video_url;
+          seg.videoId = v.video_id;
+          seg.status = 'completed';
+          updated++;
+        }
+      });
+
+      saveJobs();
+      renderQueue();
+
+      var msg = '✅ ' + updated + '/' + matched.length + ' segments updated';
+      cwn_log('[refreshIds] ' + msg + ' for job ' + jobId, false);
+      if (btn) { btn.textContent = msg; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 4000); }
+
+    } catch(e) {
+      cwn_log('[refreshIds] Error: ' + e.message, true);
+      if (btn) { btn.textContent = '❌ ERROR'; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 3000); }
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    cwn_log('[refreshIds] Server unreachable — is server.js running?', true);
+    if (btn) { btn.textContent = '❌ OFFLINE'; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 3000); }
+  };
+  xhr.send();
 }
 
 function triggerDriveCanva(jobId, filename, title) {
