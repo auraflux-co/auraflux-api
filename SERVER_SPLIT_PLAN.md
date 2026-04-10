@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-09
 **Why:** server.js is 9,938 lines / 435KB. Aider hits the 200K token context limit when loading it.
-**Status:** PLAN ONLY — do not implement until Rob approves and all agents are notified
+**Status:** IN PROGRESS — first 3 modules extracted and verified ✅
 
 ---
 
@@ -162,10 +162,10 @@ Several variables are used across multiple route handlers and must be handled ca
 
 ## Recommended Split Order (Safest First)
 
-1. `lib/config.js` — CONFIG object (no dependencies, pure data)
-2. `lib/logger.js` — log() function (no dependencies)
-3. `lib/metrics.js` — StageTimer, initJobMetrics, addStageMetrics, finalizeJobMetrics
-4. `lib/streamers.js` — STREAMER_DISPLAY_NAMES, getDisplayName()
+1. ✅ `lib/config.js` — CONFIG object (no dependencies, pure data) — **DONE 2026-04-09**
+2. ✅ `lib/logger.js` — log() function (no dependencies) — **DONE 2026-04-09**
+3. ✅ `lib/metrics.js` — StageTimer, initJobMetrics, addStageMetrics, finalizeJobMetrics — **DONE 2026-04-09**
+4. `lib/streamers.js` — STREAMER_DISPLAY_NAMES, getDisplayName() — **NEXT UP**
 5. `lib/services/ffmpeg.js` — ffmpegPath, ffprobePath, buildConcatCommand, probeDuration
 6. `lib/services/drive.js` — getDriveClient, getDriveFolderId, uploadToDrive
 7. `lib/services/heygen.js` — parseScriptIntoScenes, sendScriptToHeyGen
@@ -189,9 +189,18 @@ Several variables are used across multiple route handlers and must be handled ca
 
 ---
 
-## DO NOT START until:
-- [ ] Rob approves this plan
-- [ ] Claude Code is notified and agrees
-- [ ] All agents pause feature work
-- [ ] A test run of the current server passes (baseline)
-- [ ] SERVER_MAP.md template is created
+## Phase 1 Complete ✅
+
+Items 1-3 extracted and verified:
+- `lib/config.js` — CONFIG object
+- `lib/logger.js` — log() function
+- `lib/metrics.js` — StageTimer + metrics functions
+- `node --check server.js` passes ✅
+- Server starts cleanly, `/health` returns `"ok": true` ✅
+
+## DO NOT START (original checklist — now resolved):
+- [x] Rob approves this plan
+- [x] Claude Code is notified and agrees
+- [x] All agents pause feature work
+- [x] A test run of the current server passes (baseline)
+- [ ] SERVER_MAP.md template is created — **still pending**

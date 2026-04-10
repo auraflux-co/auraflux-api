@@ -45,6 +45,9 @@ const puppeteer  = require('puppeteer');
 const { logError, withRetry, getFallbackImage, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 const { requireFields, validateContentType, validateArrayLength, validateUrl, sanitizeStrings } = require('./lib/validation');
 const TwitchClient = require('./lib/clients/twitch_client');
+const { CONFIG } = require('./lib/config');
+const { log } = require('./lib/logger');
+const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
 
 const app  = express();
 
@@ -114,11 +117,6 @@ const twitchClient = new TwitchClient({
   token: process.env.TWITCH_TOKEN
 });
 
-function log(asmId, msg, reqId = null) {
-  const prefix = reqId ? `[${asmId}][${reqId}]` : `[${asmId}]`;
-  console.log(`${prefix} ${msg}`);
-}
-
 // Security headers via helmet
 app.use(helmet({
   contentSecurityPolicy: false, // Disabled for local dashboard with inline scripts
@@ -156,97 +154,6 @@ app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 
 
 const PORT = process.env.PORT || 3000;
-
-// ── Configuration Constants ────────────────────────────────────────
-const CONFIG = {
-  INTRO_CARD: {
-    CANVAS_WIDTH: 720,
-    CANVAS_HEIGHT: 840,
-    CIRCLE_CENTER_Y: 330,
-    CIRCLE_RADIUS: 260,
-    NAME_FONT_SIZE: 68,
-    ORIGIN_FONT_SIZE: 44,
-    FACT_FONT_SIZE_START: 44,
-    FACT_FONT_SIZE_MIN: 28,
-    DURATION_SECONDS: 3.5
-  },
-  TRANSITIONS: {
-    DISSOLVE_DURATION: 0.7,
-    CROSSFADE_DURATION: 0.3,
-    FADE_DURATION: 0.5
-  },
-  GEMINI: {
-    MAX_FILE_SIZE: 34 * 1024 * 1024, // 34MB
-    MAX_VIDEO_RETRIES: 3,
-    UPLOAD_TIMEOUT: 120000
-  },
-  VIDEO: {
-    ANALYSIS_QUALITIES: ['720', '480', '360'],
-    ASSEMBLY_QUALITIES: ['1080', '720', 'best'],
-    MIN_SEGMENT_SIZE: 100000, // 100KB
-    MAX_SEGMENT_SIZE: 2 * 1024 * 1024 * 1024 // 2GB
-  },
-  ASSEMBLY: {
-    ESTIMATED_SIZE_PER_SEGMENT_MB: 20,
-    OVERHEAD_MB: 500,
-    TIMEOUT_MS: 1800000 // 30 minutes
-  },
-  TICKER: {
-    CACHE_TTL_MS: 3600000, // 1 hour
-    DURATION_SECONDS: 60,
-    WIDTH: 1920,
-    HEIGHT: 64,
-    FPS: 15
-  },
-  VISUAL_LAYOUTS: {
-    LONG_FORM: {
-      WIDTH: 1920,
-      HEIGHT: 1080,
-      AVATAR_SAFE_ZONE: { x: 0, y: 720, w: 1920, h: 360 }, // Bottom third
-      OVERLAY_ZONE: { x: 40, y: 40, w: 640, h: 360 },     // "TV Shape" Top Left (facing Bobby G)
-      LOGO_POS: { x: 1780, y: 20, size: 120 }
-    },
-    SHORT_FORM: {
-      WIDTH: 1080,
-      HEIGHT: 1920,
-      CLIP_ZONE: { x: 0, y: 0, w: 1080, h: 960 },        // Top Half
-      AVATAR_ZONE: { x: 0, y: 960, w: 1080, h: 960 },    // Bottom Half
-      BURN_IN_ZONE: { x: 540, y: 960, anchor: 'center' }, // Floating middle
-      LOGO_POS: { x: 985, y: 15, size: 80 }
-    }
-  }
-};
-
-// ── Stage Timer for Performance Metrics ────────────────────────────
-// Tracks wall time, token usage, and results for each production stage
-class StageTimer {
-  constructor(jobId, stageName) {
-    this.jobId = jobId;
-    this.stageName = stageName;
-    this.startTime = Date.now();
-    this.metrics = {
-      stage: stageName,
-      startedAt: new Date().toISOString(),
-      wallTimeMs: null,
-      wallTimeSec: null
-    };
-  }
-
-  // Add custom data to metrics (tokens, file sizes, pass/fail, etc.)
-  addData(key, value) {
-    this.metrics[key] = value;
-    return this;
-  }
-
-  // Complete the stage and calculate duration
-  end() {
-    const endTime = Date.now();
-    this.metrics.wallTimeMs = endTime - this.startTime;
-    this.metrics.wallTimeSec = (this.metrics.wallTimeMs / 1000).toFixed(2);
-    this.metrics.completedAt = new Date().toISOString();
-    return this.metrics;
-  }
-}
 
 // ── VectCut Design Orchestrator ─────────────────────────────────────
 // Bridge between Node.js and Python video engine (port 9001)
@@ -339,52 +246,6 @@ class VectCutClient {
 
 // Initialize singleton instance
 const vectCutClient = new VectCutClient();
-
-// Global metrics store: { jobId: { stages: [], totalTime: X } }
-const jobMetrics = {};
-
-function initJobMetrics(jobId) {
-  jobMetrics[jobId] = {
-    jobId,
-    startedAt: new Date().toISOString(),
-    stages: [],
-    totalTimeMs: null,
-    totalTimeSec: null
-  };
-}
-
-function addStageMetrics(jobId, stageMetrics) {
-  if (!jobMetrics[jobId]) initJobMetrics(jobId);
-  jobMetrics[jobId].stages.push(stageMetrics);
-  console.log(`[metrics:${jobId}] ${stageMetrics.stage} completed in ${stageMetrics.wallTimeSec}s`);
-}
-
-function finalizeJobMetrics(jobId) {
-  if (!jobMetrics[jobId]) return;
-
-  const firstStage = jobMetrics[jobId].stages[0];
-  const lastStage = jobMetrics[jobId].stages[jobMetrics[jobId].stages.length - 1];
-
-  if (firstStage && lastStage) {
-    const start = new Date(firstStage.startedAt).getTime();
-    const end = new Date(lastStage.completedAt).getTime();
-    jobMetrics[jobId].totalTimeMs = end - start;
-    jobMetrics[jobId].totalTimeSec = (jobMetrics[jobId].totalTimeMs / 1000).toFixed(2);
-    jobMetrics[jobId].completedAt = lastStage.completedAt;
-  }
-
-  // Save to file
-  const metricsFile = path.join(OUTPUT_DIR, `run_metrics_${jobId}.json`);
-  try {
-    fs.writeFileSync(metricsFile, JSON.stringify(jobMetrics[jobId], null, 2));
-    console.log(`[metrics:${jobId}] ✅ Metrics saved: ${metricsFile}`);
-    console.log(`[metrics:${jobId}] Total pipeline time: ${jobMetrics[jobId].totalTimeSec}s`);
-  } catch (e) {
-    console.error(`[metrics:${jobId}] Failed to save metrics: ${e.message}`);
-  }
-
-  return jobMetrics[jobId];
-}
 
 // ── CWN Branding assets (place in ~/Downloads/) ───────────────────
 function findBrandingAsset(name) {
@@ -1532,7 +1393,7 @@ async function sendScriptToHeyGen(script, opts = {}) {
 
   // Load HeyGen credentials from environment
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
-  const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '19c1d4adf8904694a3cc331c5a9bee4b';
+  const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '1a5d4e9130d2467fa01d9e1580aff829';
   const HEYGEN_AVATAR_SHORT_ID = process.env.HEYGEN_AVATAR_SHORT_ID || 'ed57439c9c3d4a398f3b247b75714b13';
   const HEYGEN_VOICE_ID = process.env.HEYGEN_VOICE_ID || '2e598f1a6022448cb6710e5d44665325';
   const HEYGEN_SPEAK_SPEED = parseFloat(process.env.HEYGEN_SPEAK_SPEED || '0.85');
@@ -1789,7 +1650,7 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
   const {
     contentType = 'twitch',
     streamers = [],
-    clipsPerStreamer = 3,
+    clipsPerStreamer = 2,
     jobId = 'unknown',
     expectedScenes = 0  // Must be provided by caller
   } = opts;
@@ -1797,7 +1658,7 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
   if (!client) return { score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (skipped — no key)', deductions: [] };
 
   const PASS_THRESHOLD   = 90;
-  const MANUAL_THRESHOLD = 70;
+  const MANUAL_THRESHOLD = 90;
 
   // Count [CLIP PLAYS HERE] markers in script
   const clipMarkers    = (script.match(/\[CLIP PLAYS HERE\]/g) || []).length;
@@ -2043,6 +1904,59 @@ ISSUES:
   };
 }
 
+// ── Claude Script Fix — surgically rewrites broken clip sections ──────────────
+// Called after Gate 1 FAIL when the only issue is CLIP MATCH (descriptions don't
+// match actual clip content). Claude rewrites ONLY the broken SETUP/REACTION
+// sections using the actual Gemini clip analyses, preserving all structure.
+//
+// Returns: { script: string, fixed: boolean }
+async function claudeScriptFix(script, clipAnalyses, opts = {}) {
+  const {
+    contentType = 'twitch',
+    streamers = [],
+    clipsPerStreamer = 2,
+    qaReport = '',
+    jobId = 'unknown'
+  } = opts;
+
+  if (!client) return { script, fixed: false };
+
+  // Build clip reference block for Claude
+  const clipRef = streamers.map((s, si) => {
+    const name = (s.displayName || s.twitchUsername || '').toUpperCase().replace(/\s+/g, '_');
+    const analysesList = Array.isArray(clipAnalyses[si]) ? clipAnalyses[si] : [clipAnalyses[si] || ''];
+    return analysesList.map((a, ci) =>
+      name + ' CLIP ' + (ci+1) + ': ' + (a || 'No analysis available')
+    ).join('\n');
+  }).join('\n');
+
+  const fixPrompt = 'You are a script editor for ClipzWorld News (CWN). A script was written by Gemini but failed QA because some CLIP_SETUP and CLIP_REACTION sections describe the wrong clip content.\n\nYOUR TASK: Fix ONLY the broken sections. Do NOT change any other part of the script. Preserve all === HEADERS ===, [CLIP PLAYS HERE] markers, [beat] markers, word counts, and structure exactly.\n\nACTUAL CLIP CONTENT (what Gemini actually saw in each video):\n' + clipRef + '\n\nQA FAILURE REPORT (shows which sections are wrong):\n' + qaReport + '\n\nRULES FOR FIXING:\n1. CLIP_SETUP: Exactly 2 sentences. First sentence: what the streamer is doing/saying. Second sentence: tease what happens next.\n2. CLIP_REACTION: Exactly 1 sentence. React to what just happened — no recap, just energy/commentary.\n3. Use the streamer ON-AIR display name only (never Twitch username).\n4. Keep [beat] markers exactly where they are.\n5. Keep [CLIP PLAYS HERE] markers exactly where they are.\n6. Do NOT change INTRO, streamer INTRO sections, or OUTRO.\n7. Return the COMPLETE script with ONLY the broken sections fixed.\n\nCURRENT SCRIPT TO FIX:\n' + script + '\n\nReturn ONLY the fixed script with no explanation, no preamble, no markdown code blocks.';
+
+  try {
+    console.log('[claude-fix] Asking Claude to surgically fix clip match issues...');
+    const response = await client.messages.create({
+      model: 'claude-opus-4-5',
+      max_tokens: 8000,
+      messages: [{ role: 'user', content: fixPrompt }]
+    });
+
+    const fixedScript = response.content[0]?.text?.trim() || script;
+
+    // Normalize headers (same post-processing as Gemini)
+    const normalizedScript = fixedScript.replace(/===\s+([^=]+?)\s+===/g, (match, name) => {
+      const normalized = name.trim().replace(/\s+/g, '_');
+      return '=== ' + normalized + ' ===';
+    });
+
+    console.log('[claude-fix] Script fix complete (' + normalizedScript.length + ' chars)');
+    return { script: normalizedScript, fixed: true };
+  } catch(e) {
+    console.error('[claude-fix] Claude fix failed: ' + e.message);
+    return { script, fixed: false };
+  }
+}
+
+
 // ── Gate 1: Script QA — Gemini reviews Claude's script (LEGACY) ───
 // This function is now only used for non-Twitch/NBA/News content types
 // where the scene count issue doesn't apply.
@@ -2062,7 +1976,7 @@ async function geminiScriptQA(script, clipAnalyses, opts = {}) {
   const {
     contentType = 'twitch',
     streamers = [],
-    clipsPerStreamer = 3,
+    clipsPerStreamer = 2,
     jobId = 'unknown'
   } = opts;
 
@@ -2090,7 +2004,7 @@ async function geminiScriptQA(script, clipAnalyses, opts = {}) {
   }).join(', ');
 
   // Load HeyGen context for smarter QA validation
-  const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '19c1d4adf8904694a3cc331c5a9bee4b';
+  const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '1a5d4e9130d2467fa01d9e1580aff829';
   const HEYGEN_VOICE_ID = process.env.HEYGEN_VOICE_ID || '2e598f1a6022448cb6710e5d44665325';
   const HEYGEN_SPEAK_SPEED = parseFloat(process.env.HEYGEN_SPEAK_SPEED || '0.85');
 
@@ -2356,7 +2270,7 @@ async function geminiSegmentQA(segmentPaths, opts = {}) {
       const geminiFile = await waitForGeminiFile(await uploadToGeminiFiles(segPath));
 
       // Load HeyGen context for segment QA
-      const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '19c1d4adf8904694a3cc331c5a9bee4b';
+      const HEYGEN_AVATAR_ID = process.env.HEYGEN_AVATAR_ID || '1a5d4e9130d2467fa01d9e1580aff829';
       const HEYGEN_VOICE_ID = process.env.HEYGEN_VOICE_ID || '2e598f1a6022448cb6710e5d44665325';
       const HEYGEN_SPEAK_SPEED = parseFloat(process.env.HEYGEN_SPEAK_SPEED || '0.85');
 
@@ -5621,7 +5535,7 @@ app.post('/generate-full-script',
           title:                 clip.title || '',
           game:                  clip.game || '',
           isBackup:              clip.isBackup || false,
-          targetClipsPerStreamer: item.targetClipsPerStreamer || 1
+          targetClipsPerStreamer: item.targetClipsPerStreamer || 2
         }));
       });
 
@@ -5685,7 +5599,7 @@ app.post('/generate-full-script',
         const streamerClips = allClips.filter(c => c.streamer === streamer);
         const target = streamerClips[0] && streamerClips[0].targetClipsPerStreamer
           ? streamerClips[0].targetClipsPerStreamer
-          : Math.ceil(streamerClips.length / 3);
+          : Math.ceil(streamerClips.length / 2);
 
         const good = streamerClips.filter(c => c.videoUrl && c.videoUrl.includes('sig='));
         const bad  = streamerClips.filter(c => !c.videoUrl || !c.videoUrl.includes('sig='));
@@ -6089,8 +6003,8 @@ ${notesStr}${clipLines}`;
 
         // Determine clips per streamer from actual data structure
         // FIX: Use > 0 check to avoid empty array [] evaluating as falsy (length=0)
-        const clipsPerStreamer = (items[0]?.clips?.length > 0 ? items[0].clips.length : null) ?? req.body.clipsPerStreamer ?? 3;
-        console.log(`[generate-full-script] clipsPerStreamer: ${clipsPerStreamer} (source: ${items[0]?.clips?.length > 0 ? 'items[0].clips' : req.body.clipsPerStreamer ? 'req.body' : 'default:3'}) | totalClips: ${items.length * clipsPerStreamer}`);
+        const clipsPerStreamer = (items[0]?.clips?.length > 0 ? items[0].clips.length : null) ?? req.body.clipsPerStreamer ?? 2;
+        console.log(`[generate-full-script] clipsPerStreamer: ${clipsPerStreamer} (source: ${items[0]?.clips?.length > 0 ? 'items[0].clips' : req.body.clipsPerStreamer ? 'req.body' : 'default:2'}) | totalClips: ${items.length * clipsPerStreamer}`);
         const totalClipSlots = items.length * clipsPerStreamer;
 
         // Generate 72 scene headers (1 INTRO + 10 streamers × 7 scenes each + 1 OUTRO)
@@ -6214,7 +6128,7 @@ Target: 80-100 words spoken per streamer.`;
     let expectedScenes = 0;
     if (type === 'twitch' && !type.includes('-short')) {
       // FIX: Use > 0 check to avoid empty array [] evaluating as falsy (length=0) — matches line 6262
-      const clipsPerStreamer = (items[0]?.clips?.length > 0 ? items[0].clips.length : null) ?? req.body.clipsPerStreamer ?? 3;
+      const clipsPerStreamer = (items[0]?.clips?.length > 0 ? items[0].clips.length : null) ?? req.body.clipsPerStreamer ?? 2;
       const scenesPerStreamer = 1 + clipsPerStreamer * 2;
       expectedScenes = 1 + items.length * scenesPerStreamer + 1; // 1 INTRO + (streamers × scenes) + 1 OUTRO
     } else if (type === 'nba') {
@@ -6330,7 +6244,7 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
       scriptQA = await claudeScriptQA(script, analyses, {
         contentType: type,
         streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s })) : [],
-        clipsPerStreamer: req.body.clipsPerStreamer || 3,
+        clipsPerStreamer: req.body.clipsPerStreamer || 2,
         jobId: `${type}_${dateStr}_${Date.now()}`,
         expectedScenes: expectedScenes
       });
@@ -6341,18 +6255,56 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
       }
 
       // Break conditions:
-      // 1. PASS → proceed to HeyGen
-      // 2. MANUAL_REVIEW → hold for user review
-      // 3. FAIL + max retries reached → give up
-      if (scriptQA.outcome === 'pass' || scriptQA.outcome === 'manual_review') {
-        console.log(`[generate-full-script] ✅ Gate 1 ${scriptQA.outcome.toUpperCase()} — Breaking retry loop (attempt ${retryAttempt}/${MAX_RETRIES})`);
+      // 1. PASS (score >= 90) → proceed to HeyGen
+      // 2. FAIL due to CLIP MATCH only → try claudeScriptFix before next Gemini retry
+      // 3. FAIL + max retries reached → give up (no manual_review zone — threshold is 90)
+      if (scriptQA.outcome === 'pass') {
+        console.log(`[generate-full-script] ✅ Gate 1 PASS — Breaking retry loop (attempt ${retryAttempt}/${MAX_RETRIES})`);
         break;
-      } else if (scriptQA.outcome === 'fail' && retryAttempt < MAX_RETRIES) {
-        console.log(`[generate-full-script] ❌ Gate 1 FAIL — Retrying script generation (attempt ${retryAttempt}/${MAX_RETRIES})...`);
-        // Continue loop to retry
       } else {
-        console.log(`[generate-full-script] ❌ Gate 1 FAIL — Max retries (${MAX_RETRIES}) reached. Giving up.`);
-        break;
+        // Check if the ONLY issue is clip match (no structural failures)
+        const hasStructuralFail = scriptQA.deductions && scriptQA.deductions.length > 0;
+        const isClipMatchOnly = !hasStructuralFail &&
+          scriptQA.claudeReport &&
+          scriptQA.claudeReport.includes('CLIP MATCH') &&
+          !scriptQA.claudeReport.includes('SCENE COUNT') &&
+          !scriptQA.claudeReport.includes('CLIP COUNT') &&
+          !scriptQA.claudeReport.includes('Appreciate you');
+
+        if (isClipMatchOnly) {
+          console.log('[generate-full-script] [FIX] Gate 1 FAIL (clip match only) -- Trying Claude surgical fix...');
+          const fixResult = await claudeScriptFix(script, analyses, {
+            contentType: type,
+            streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s })) : [],
+            clipsPerStreamer: req.body.clipsPerStreamer || 2,
+            qaReport: scriptQA.claudeReport || scriptQA.report,
+            jobId: type + '_' + dateStr + '_' + Date.now()
+          });
+          if (fixResult.fixed) {
+            script = fixResult.script;
+            console.log('[generate-full-script] [FIX] Claude fix applied -- re-running Gate 1 QA...');
+            scriptQA = await claudeScriptQA(script, analyses, {
+              contentType: type,
+              streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s })) : [],
+              clipsPerStreamer: req.body.clipsPerStreamer || 2,
+              jobId: type + '_' + dateStr + '_' + Date.now(),
+              expectedScenes: expectedScenes
+            });
+            console.log(`[generate-full-script] Gate 1 QA after Claude fix: ${scriptQA.outcomeLabel} (${scriptQA.score}/100)`);
+            if (scriptQA.outcome === 'pass') {
+              console.log('[generate-full-script] [FIX] Claude fix worked -- Gate 1 PASS');
+              break;
+            }
+          }
+        }
+
+        if (retryAttempt < MAX_RETRIES) {
+          console.log(`[generate-full-script] ❌ Gate 1 FAIL — Retrying script generation (attempt ${retryAttempt}/${MAX_RETRIES})...`);
+          // Continue loop to retry
+        } else {
+          console.log(`[generate-full-script] ❌ Gate 1 FAIL — Max retries (${MAX_RETRIES}) reached. Giving up.`);
+          break;
+        }
       }
     }
 
@@ -6757,8 +6709,8 @@ app.post('/publish',
     description = '',
     tags = [],
     scheduledAt,
-    privacyStatus = 'public',           // YouTube: 'public' | 'private' | 'unlisted'
-    tiktokPrivacy = 'PUBLIC_TO_EVERYONE', // TikTok: 'PUBLIC_TO_EVERYONE' | 'SELF_ONLY' | 'MUTUAL_FOLLOW_FRIENDS'
+    privacyStatus = 'private',           // YouTube: 'public' | 'private' | 'unlisted'
+    tiktokPrivacy = 'SELF_ONLY', // TikTok: 'PUBLIC_TO_EVERYONE' | 'SELF_ONLY' | 'MUTUAL_FOLLOW_FRIENDS'
     contentType = 'long',
     async: asyncUpload = true,
     metricsJobId  // Optional: if frontend passes the jobId from script gen or assembly
@@ -6803,7 +6755,7 @@ app.post('/publish',
       form.append('youtube_title', ytTitle);
       form.append('youtube_description', description || title);
       if (tags.length) tags.forEach(t => form.append('tags[]', t));
-      form.append('privacyStatus', privacyStatus || 'public');
+      form.append('privacyStatus', privacyStatus || 'private');
       form.append('categoryId', '24'); // Entertainment
       form.append('containsSyntheticMedia', 'true');
       form.append('madeForKids', 'false');
@@ -8576,7 +8528,7 @@ function getPlatformEffects(platform, contentType) {
 app.get('/shorts/avatar-ids', (req, res) => {
   res.json({
     landscape: {
-      avatarId: '19c1d4adf8904694a3cc331c5a9bee4b',
+      avatarId: '1a5d4e9130d2467fa01d9e1580aff829',
       dimensions: '1920x1080',
       format: 'landscape',
       useFor: 'YouTube long form compilations'
@@ -8905,7 +8857,7 @@ app.get('/remediate-video/check/:jobId', (req, res) => {
 // Overlays circular streamer profile images in a ring, plus episode number + date text
 //
 // Options:
-//   streamers: array of twitchUsername strings (e.g. ['adapt','hasanabi']) — max 11
+//   streamers: array of twitchUsername strings (e.g. ['adapt','hasanabi']) — max 12
 //              If omitted, uses all active streamers from streamers.json
 async function generateTwitchLongformThumbnail(options = {}) {
   const { createCanvas, loadImage } = require('canvas');
@@ -8969,8 +8921,8 @@ async function generateTwitchLongformThumbnail(options = {}) {
   } else {
     activeStreamers = roster.filter(s => s.active);
   }
-  // Cap at 11 circles
-  activeStreamers = activeStreamers.slice(0, 11);
+  // Cap at 12 circles
+  activeStreamers = activeStreamers.slice(0, 12);
 
   // ── Streamer circle layout ────────────────────────────────────────
   // Ring centered at (640, 360) with radius 280px
@@ -9447,7 +9399,7 @@ app.post('/generate-thumbnail', async (req, res) => {
     return res.status(400).json({ error: 'streamers.json not found' });
   }
 
-  // Get active streamers in configured order (max 11 for the circles)
+  // Get active streamers in configured order (max 12 for the circles)
   const activeStreamers = roster
     .filter(s => s.active)
     .slice(0, THUMBNAIL_CIRCLE_ELEMENT_IDS.length);

@@ -208,7 +208,7 @@ All gates use `gemini-2.5-flash` with structured prompts + point deduction scori
 
 ### Metrics Tracking (NEW)
 
-`StageTimer` class tracks performance for each pipeline stage:
+`StageTimer` class tracks performance for each pipeline stage — now in `lib/metrics.js` (moved from server.js:222 during module split Phase 1):
 
 ```javascript
 const timer = new StageTimer(jobId, 'Script Generation');
@@ -216,6 +216,8 @@ timer.addData('claudeTokens', 5420).addData('gate1Score', 95);
 addStageMetrics(jobId, timer.end());
 finalizeJobMetrics(jobId); // Saves to run_metrics_{jobId}.json
 ```
+
+**Import:** `const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');`
 
 **Tracked metrics:**
 - Script gen: Gemini calls, Claude tokens, Gate 1 score
@@ -387,7 +389,7 @@ Scripts follow **Jon Stewart + Norm MacDonald + Space Ghost** blend:
 
 ## Configuration Constants
 
-**Magic numbers extracted to CONFIG object** (server.js:137-177):
+**Magic numbers extracted to CONFIG object** — now in `lib/config.js` (moved from server.js:137-177 during module split Phase 1):
 
 ```javascript
 CONFIG.INTRO_CARD.CIRCLE_RADIUS = 160;    // Intro card circle size
@@ -396,6 +398,8 @@ CONFIG.GEMINI.MAX_FILE_SIZE = 34 * 1024 * 1024;  // 34MB upload limit
 CONFIG.VIDEO.MIN_SEGMENT_SIZE = 100000;   // 100KB minimum valid video
 CONFIG.TICKER.CACHE_TTL_MS = 3600000;     // 1 hour
 ```
+
+**Import:** `const { CONFIG } = require('./lib/config');`
 
 Change these instead of hardcoding values throughout codebase.
 
