@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-09 (11:30 PM ET)
+**Last Updated:** 2026-04-09 (11:35 PM ET)
 **Branch:** main | **Latest Commit:** pending — fix: TV card overlay position → top-left (facing Bobby G)
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
@@ -27,7 +27,8 @@
 | Claude Code | Newscast UI updates + NBA intro card handoff + Upload API spec | `tools/clipzworld_newscast.html`, `POST_PUBLISH_MANUAL_CHECKLIST.md`, `CLINE_HANDOFF_NBA_INTRO_CARD.md`, `UPLOAD_API_SPEC.md`, `data/upload_status.json` | `b3fcdff` | 2026-04-09 (earlier today) |
 | Cline | Phase 1-6 acceptance test plan + rollback process | `test/PHASE_1_6_ACCEPTANCE_TEST.md`, `STATUS.md` | pending | 2026-04-09 7:26 PM ET |
 | Cline | Fix TV card overlay position: OVERLAY_ZONE + 2 hardcoded FFmpeg overlays → x=40 (top-left, facing Bobby G) | `server.js` | pending | 2026-04-09 7:37 PM ET |
-| Cline | Module split Phase 1: extract lib/config.js, lib/logger.js, lib/metrics.js from server.js; remove inline duplicates; server verified clean | `lib/config.js`, `lib/logger.js`, `lib/metrics.js`, `server.js`, `SERVER_SPLIT_PLAN.md` | pending | 2026-04-09 11:30 PM ET |
+| Cline | Module split Phase 1: extract lib/config.js, lib/logger.js, lib/metrics.js from server.js; remove inline duplicates; server verified clean | `lib/config.js`, `lib/logger.js`, `lib/metrics.js`, `server.js`, `SERVER_SPLIT_PLAN.md` | `787f81f` | 2026-04-09 11:30 PM ET |
+| Cline | Upgrade pre-commit hook: add soft-warn for stale .md docs; update COMMIT_CHECKLIST + CLAUDE.md with doc-update rule | `scripts/pre-commit.sh`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | pending | 2026-04-09 11:35 PM ET |
 
 ---
 

@@ -28,6 +28,15 @@ Always document WHY you bypassed in the commit message.
 
 ## Pre-Commit Checklist
 
+### 0. Update ALL Referencing .md Docs First ⚠️
+- [ ] Before staging anything, search for `.md` files that mention the files you changed
+- [ ] Update every doc where the work is listed, described, or referenced
+- [ ] Common docs to check: `STATUS.md`, `CLAUDE.md`, `OVERNIGHT_TASKS.md`, `SERVER_SPLIT_PLAN.md`, `README.md`, `MORNING_BRIEFING.md`
+- [ ] The pre-commit hook will **warn** you about docs you may have missed (5-second pause)
+- [ ] Example: if you change `server.js`, check every `.md` that mentions `server.js` line numbers, architecture, or functions
+
+**Why:** Other agents (Aider, Claude Code, Cline) read these docs at session start. Stale docs = agents working from wrong assumptions.
+
 ### 1. Descriptive Commit Messages with File Locations
 - [ ] Include specific file paths and line numbers where changes were made
 - [ ] Example: `fix: add .replace(/\s+/g, '_') to scene headers (server.js:6231, server.js:6015)`
@@ -242,6 +251,14 @@ Ready for test suite re-run (expecting 12/12 pass).
 ```
 
 ---
+
+## Hook Install / Update
+
+The pre-commit hook is tracked at `scripts/pre-commit.sh`. If you're on a fresh clone or the hook was updated:
+
+```bash
+cp scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+```
 
 **Last Updated**: 2026-04-09
 **Maintained by**: CWN Production Team
