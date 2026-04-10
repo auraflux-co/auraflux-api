@@ -1641,8 +1641,13 @@ function generateClipAvailabilityReport(items, allClips, streamerOrder, analysis
   const report = [];
   report.push('\n── CLIP AVAILABILITY REPORT ──────────────────────');
 
-  const targetPerStreamer = 2;
-  const expectedStreamers = 12;
+  // Fix #6: Derive target dynamically from actual data — no hardcoded numbers.
+  // targetPerStreamer = clips per streamer from the first item's clips array.
+  // expectedStreamers = number of streamers actually in this episode (streamerOrder).
+  const targetPerStreamer = (items && items[0] && items[0].clips && items[0].clips.length > 0)
+    ? items[0].clips.length
+    : 2;
+  const expectedStreamers = streamerOrder ? streamerOrder.length : Object.keys(STREAMER_DISPLAY_NAMES).length;
   const expectedTotal = expectedStreamers * targetPerStreamer;
 
   const actualTotal = analysisClips.length;
@@ -1656,9 +1661,14 @@ function generateClipAvailabilityReport(items, allClips, streamerOrder, analysis
     report.push(`Status: ✅ Target met\n`);
   }
 
-  // Per-streamer breakdown - show ALL 12 roster streamers (not just those in this episode)
+  // Per-streamer breakdown — show streamers in this episode + any roster streamers not included
   const rosterStreamers = Object.keys(STREAMER_DISPLAY_NAMES);
-  rosterStreamers.forEach(streamer => {
+  // Show episode streamers first (in order), then any roster streamers not in this episode
+  const allStreamersToShow = [
+    ...(streamerOrder || []),
+    ...rosterStreamers.filter(s => !(streamerOrder || []).includes(s))
+  ];
+  allStreamersToShow.forEach(streamer => {
     const streamerClips = allClips.filter(c => c.streamer === streamer);
     const analyzedClips = analysisClips.filter(c => c.streamer === streamer);
     const requested = targetPerStreamer;
@@ -2025,7 +2035,11 @@ async function claudeScriptFix(script, clipAnalyses, opts = {}) {
     ).join('\n');
   }).join('\n');
 
-  const fixPrompt = 'You are a script editor for ClipzWorld News (CWN). A script was written by Gemini but failed QA because some CLIP_SETUP and CLIP_REACTION sections describe the wrong clip content.\n\nYOUR TASK: Fix ONLY the broken sections. Do NOT change any other part of the script. Preserve all === HEADERS ===, [CLIP PLAYS HERE] markers, [beat] markers, word counts, and structure exactly.\n\nACTUAL CLIP CONTENT (what Gemini actually saw in each video):\n' + clipRef + '\n\nQA FAILURE REPORT (shows which sections are wrong):\n' + qaReport + '\n\nRULES FOR FIXING:\n1. CLIP_SETUP: Exactly 2 sentences. First sentence: what the streamer is doing/saying. Second sentence: tease what happens next.\n2. CLIP_REACTION: Exactly 1 sentence. React to what just happened — no recap, just energy/commentary.\n3. Use the streamer ON-AIR display name only (never Twitch username).\n4. Keep [beat] markers exactly where they are.\n5. Keep [CLIP PLAYS HERE] markers exactly where they are.\n6. Do NOT change INTRO, streamer INTRO sections, or OUTRO.\n7. Return the COMPLETE script with ONLY the broken sections fixed.\n\nCURRENT SCRIPT TO FIX:\n' + script + '\n\nReturn ONLY the fixed script with no explanation, no preamble, no markdown code blocks.';
+  // Fix #6E: Added Rule 3 (CLIP ORDER) so Claude explicitly swaps CLIP1/CLIP2 content
+  // when the QA report indicates the sections are describing the wrong clip.
+  // Previously the prompt only said "fix broken sections" with no swap instruction,
+  // so Claude would rewrite content in-place rather than reorder the sections.
+  const fixPrompt = 'You are a script editor for ClipzWorld News (CWN). A script was written by Gemini but failed QA because some CLIP_SETUP and CLIP_REACTION sections describe the wrong clip content.\n\nYOUR TASK: Fix ONLY the broken sections. Do NOT change any other part of the script. Preserve all === HEADERS ===, [CLIP PLAYS HERE] markers, [beat] markers, word counts, and structure exactly.\n\nACTUAL CLIP CONTENT (what Gemini actually saw in each video):\n' + clipRef + '\n\nQA FAILURE REPORT (shows which sections are wrong):\n' + qaReport + '\n\nRULES FOR FIXING:\n1. CLIP_SETUP: Exactly 2 sentences. First sentence: what the streamer is doing/saying. Second sentence: tease what happens next.\n2. CLIP_REACTION: Exactly 1 sentence. React to what just happened — no recap, just energy/commentary.\n3. CLIP ORDER: If the QA report indicates that CLIP1_SETUP describes what is actually in CLIP2 (or vice versa), you MUST SWAP the content of those sections — move the CLIP1_SETUP+CLIP1_REACTION text to the CLIP2 slot and the CLIP2_SETUP+CLIP2_REACTION text to the CLIP1 slot. Each CLIP_SETUP and CLIP_REACTION must match the analysis for that clip number as listed in ACTUAL CLIP CONTENT above. Do NOT rewrite content in-place when the clips are simply in the wrong order — swap them.\n4. Use the streamer ON-AIR display name only (never Twitch username).\n5. Keep [beat] markers exactly where they are.\n6. Keep [CLIP PLAYS HERE] markers exactly where they are.\n7. Do NOT change INTRO, streamer INTRO sections, or OUTRO.\n8. Return the COMPLETE script with ONLY the broken sections fixed.\n\nCURRENT SCRIPT TO FIX:\n' + script + '\n\nReturn ONLY the fixed script with no explanation, no preamble, no markdown code blocks.';
 
   try {
     console.log('[claude-fix] Asking Claude to surgically fix clip match issues...');
@@ -5794,6 +5808,11 @@ app.post('/generate-full-script',
         const waveResults = await Promise.all(
           waves[wi].map(c => geminiAnalyzeClip(c.videoUrl, c.thumbnailUrl, 'twitch', {
             streamer: c.streamer, title: c.title, game: c.game, pageUrl: c.pageUrl
+          }).then(analysis => {
+            // Tag thumbnail-only analyses so Fix #6 can filter them out.
+            // A clip is "video-analyzed" only if it had a signed CDN URL (sig=).
+            const isVideoAnalyzed = !!(c.videoUrl && c.videoUrl.includes('sig='));
+            return { analysis, isVideoAnalyzed };
           }))
         );
         flatAnalyses.push(...waveResults);
@@ -5802,7 +5821,9 @@ app.post('/generate-full-script',
       // Build analyses indexed by streamer name (not array position) to avoid order mismatch.
       // flatAnalyses is in streamerOrder sequence; items may be in a different order.
       // Keying by streamer name ensures Jason's analyses always go to Jason's item, etc.
+      // Fix #6: flatAnalyses now contains {analysis, isVideoAnalyzed} objects — extract text + track video flag.
       const analysesByStreamer = {};
+      const videoAnalyzedByStreamer = {}; // tracks how many clips had real video (sig=) per streamer
       let flatIdx = 0;
       streamerOrder.forEach(streamer => {
         const streamerClips = allClips.filter(c => c.streamer === streamer);
@@ -5810,7 +5831,11 @@ app.post('/generate-full-script',
           ? streamerClips[0].targetClipsPerStreamer
           : Math.ceil(streamerClips.length / 2);
         const count = Math.min(target, streamerClips.length);
-        analysesByStreamer[streamer] = flatAnalyses.slice(flatIdx, flatIdx + count);
+        const slice = flatAnalyses.slice(flatIdx, flatIdx + count);
+        // Extract plain text analyses (backward-compatible with both string and {analysis,isVideoAnalyzed} formats)
+        analysesByStreamer[streamer] = slice.map(a => (a && typeof a === 'object') ? a.analysis : a);
+        // Count how many clips had real video analysis (not thumbnail fallback)
+        videoAnalyzedByStreamer[streamer] = slice.filter(a => (a && typeof a === 'object') ? a.isVideoAnalyzed : (a && a.length > 50)).length;
         flatIdx += count;
       });
       // Build clipsByStreamer map from analysisClips (the clips that were ACTUALLY analyzed)
@@ -5864,14 +5889,16 @@ app.post('/generate-full-script',
       const geminiHits = flatAnalyses.filter(a => a && a.length > 50).length;
       console.log(`[generate-full-script] Gemini analyzed ${geminiHits}/${allClips.length} clips (${allClips.length - geminiHits} fell back to thumbnail)`);
 
-      // Fix #4: Filter out streamers with no analyzed clips before building the Gemini prompt.
-      // If a streamer has 0 clips in analysisClips (expired URLs, not submitted, GQL failure),
-      // Gemini will see "Analysis: No analysis" and HALLUCINATE clip content for that streamer.
-      // Only include streamers that have at least 1 real Gemini analysis (length > 50 chars).
+      // Fix #6: Filter out streamers without enough REAL video clips (sig= URL).
+      // Thumbnail fallback analyses are also >50 chars, so the old length check was broken —
+      // it let streamers with 0 real clips through, causing Gemini to hallucinate content.
+      // Now we require ≥N real video-analyzed clips (isVideoAnalyzed flag set in Fix #6A).
+      // targetClipsPerStreamer is derived dynamically from actual data, not hardcoded.
+      const targetClipsPerStreamer = (items[0]?.clips?.length > 0 ? items[0].clips.length : null) ?? req.body.clipsPerStreamer ?? 2;
       const itemsBefore = items.length;
       const filteredPairs = items
         .map((item, i) => ({ item, analysis: analyses[i] }))
-        .filter(({ analysis }) => Array.isArray(analysis) && analysis.some(a => a && a.length > 50));
+        .filter(({ item }) => (videoAnalyzedByStreamer[item.streamer] || 0) >= targetClipsPerStreamer);
       if (filteredPairs.length < itemsBefore) {
         const dropped = items
           .filter(item => !filteredPairs.find(p => p.item.streamer === item.streamer))
