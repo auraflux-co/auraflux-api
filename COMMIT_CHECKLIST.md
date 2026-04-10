@@ -271,6 +271,32 @@ git push origin main
 
 ---
 
+## After Pushing — Restart Node.js (if server.js changed)
+
+**`server.js` changes are NOT live until the server restarts.**
+
+If you changed `server.js` (or any file it `require()`s like `lib/config.js`, `lib/logger.js`, `lib/metrics.js`):
+
+```bash
+# If running with nodemon (auto-restarts on file save — already handled):
+nodemon server.js
+
+# If running with plain node, kill and restart manually:
+pkill -f "node server.js" && node server.js
+
+# Or if nodemon is already running, just touch the file to trigger reload:
+touch server.js
+```
+
+**When to restart:**
+- ✅ Always after committing `server.js` changes
+- ✅ Always after committing changes to `lib/` modules
+- ⏭️ Skip if only `.md`, `.html`, or `data/` files changed (no server restart needed)
+
+> **Note:** nodemon (configured in `nodemon.json`) watches `server.js` and `lib/` automatically — if you're running `nodemon server.js`, it will restart itself on save. A manual restart is only needed if you're running plain `node server.js`.
+
+---
+
 ## Hook Install / Update
 
 The pre-commit hook is tracked at `scripts/pre-commit.sh`. If you're on a fresh clone or the hook was updated:
