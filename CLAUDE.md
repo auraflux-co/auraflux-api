@@ -86,9 +86,10 @@ Use this policy for all implementation work so Rob can lead with ideas and revie
 **Commit guardrails:**
 1. Re-read `CLAUDE.md` and `COMMIT_CHECKLIST.md` before every commit.
 2. **HARD REQUIREMENT:** Update `STATUS.md` → `🤖 Last Agent Action` table in every commit that changes code. A pre-commit hook will block commits that skip this. See `COMMIT_CHECKLIST.md` for the full requirement.
-3. Commit only files related to the request.
-4. Never commit secrets, `.env`, `tmp/`, `output/`, or credential files.
-5. Keep commit message focused on intent ("why"), not just file list.
+3. **HARD REQUIREMENT:** Before staging files, search all `.md` files for references to the files you changed. Update every doc where the work is listed or described. The pre-commit hook will warn (5-second pause) about docs you may have missed. Stale docs = other agents working from wrong assumptions.
+4. Commit only files related to the request.
+5. Never commit secrets, `.env`, `tmp/`, `output/`, or credential files.
+6. Keep commit message focused on intent ("why"), not just file list.
 
 ### Multi-Stage Production Pipeline
 
