@@ -1656,37 +1656,36 @@ function generateClipAvailabilityReport(items, allClips, streamerOrder, analysis
     report.push(`Status: ✅ Target met\n`);
   }
 
-  // Per-streamer breakdown
-  streamerOrder.forEach(streamer => {
+  // Per-streamer breakdown - show ALL 12 roster streamers (not just those in this episode)
+  const rosterStreamers = Object.keys(STREAMER_DISPLAY_NAMES);
+  rosterStreamers.forEach(streamer => {
     const streamerClips = allClips.filter(c => c.streamer === streamer);
     const analyzedClips = analysisClips.filter(c => c.streamer === streamer);
     const requested = targetPerStreamer;
     const obtained = analyzedClips.length;
 
-    const good = streamerClips.filter(c => c.videoUrl && c.videoUrl.includes('sig='));
-    const bad  = streamerClips.filter(c => !c.videoUrl || !c.videoUrl.includes('sig='));
-
     let reason = '';
-    if (obtained >= requested) {
+    if (!streamerOrder.includes(streamer)) {
+      reason = '⚠️ Not in this episode';
+    } else if (obtained >= requested) {
       reason = '✅ Target met';
-    } else if (good.length < requested) {
-      const expired = requested - good.length;
-      reason = `⚠️ ${expired} clips expired/deleted, used ${bad.length} backups`;
-    } else if (streamerClips.length < requested) {
-      reason = `⚠️ Only ${streamerClips.length} clips available (need ${requested})`;
+    } else if (streamerClips.length === 0) {
+      reason = '⚠️ No clips available from dashboard';
     } else {
-      reason = '⚠️ Unknown issue — check logs';
+      const good = streamerClips.filter(c => c.videoUrl && c.videoUrl.includes('sig='));
+      const bad  = streamerClips.filter(c => !c.videoUrl || !c.videoUrl.includes('sig='));
+      if (good.length < requested) {
+        const expired = requested - good.length;
+        reason = `⚠️ ${expired} clips expired/deleted${bad.length > 0 ? `, used ${bad.length} backups` : ''}`;
+      } else if (streamerClips.length < requested) {
+        reason = `⚠️ Only ${streamerClips.length} clips available (need ${requested})`;
+      } else {
+        reason = '⚠️ Unknown issue — check logs';
+      }
     }
 
     report.push(`${streamer}: ${obtained}/${requested} clips — ${reason}`);
   });
-
-  // Check for streamers in roster but not in this episode
-  const rosterStreamers = Object.keys(STREAMER_DISPLAY_NAMES);
-  const missingStreamers = rosterStreamers.filter(s => !streamerOrder.includes(s));
-  if (missingStreamers.length > 0) {
-    report.push(`\nStreamers not in this episode: ${missingStreamers.join(', ')}`);
-  }
 
   report.push('──────────────────────────────────────────────────\n');
   return report.join('\n');
@@ -1732,11 +1731,35 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
   const sceneMarkers = (script.match(/===\s+[A-Z_0-9]+\s+===/g) || []).length;
   const wrongSceneCount = expectedScenes > 0 && sceneMarkers !== expectedScenes;
 
-  // Build clip summaries for Claude to cross-check
-  const clipSummaries = clipAnalyses.map((a, i) => {
-    const streamer = streamers[Math.floor(i / clipsPerStreamer)] || `Streamer ${i+1}`;
-    const clipNum  = (i % clipsPerStreamer) + 1;
-    return `CLIP ${i+1} (${streamer.displayName || streamer}, clip ${clipNum}): ${a?.summary || a?.description || a || 'No analysis available'}`;
+  // Build clip summaries for Claude to cross-check.
+  // For Twitch, clipAnalyses is a 2D array: [[s0c0, s0c1], [s1c0, s1c1], ...]
+  // For NBA/News, clipAnalyses is a flat array: [c0, c1, c2, ...]
+  // Flatten to a single list with correct streamer attribution before mapping.
+  const flatAnalyses = (() => {
+    if (contentType === 'twitch' && Array.isArray(clipAnalyses[0])) {
+      // 2D → flat: iterate streamer × clip so attribution is always correct
+      const flat = [];
+      clipAnalyses.forEach((streamerClips, si) => {
+        const s = streamers[si] || `Streamer ${si + 1}`;
+        (Array.isArray(streamerClips) ? streamerClips : [streamerClips]).forEach((clip, ci) => {
+          flat.push({ streamer: s, clipNum: ci + 1, analysis: clip });
+        });
+      });
+      return flat;
+    } else {
+      // Already flat (NBA / News)
+      return clipAnalyses.map((clip, i) => ({
+        streamer: streamers[Math.floor(i / clipsPerStreamer)] || `Streamer ${i + 1}`,
+        clipNum: (i % clipsPerStreamer) + 1,
+        analysis: clip
+      }));
+    }
+  })();
+
+  const clipSummaries = flatAnalyses.map((item, i) => {
+    const name = item.streamer?.displayName || item.streamer || `Streamer ${i + 1}`;
+    const a = item.analysis;
+    return `CLIP ${i + 1} (${name}, clip ${item.clipNum}): ${a?.summary || a?.description || a || 'No analysis available'}`;
   }).join('\n');
 
   const displayNames = streamers.map(s => {
@@ -5791,10 +5814,7 @@ app.post('/generate-full-script',
         flatIdx += count;
       });
       // Build clipsByStreamer map from analysisClips (the clips that were ACTUALLY analyzed)
-      // This ensures items[].clips matches the clips Gemini analyzed, not the original dashboard clips.
-      // Root cause of Gate 1 85/100: items[].clips pointed to original clips (e.g. VRChat),
-      // but analysisClips had backup clips (e.g. Driving) — Gemini wrote setup for VRChat
-      // using analysis of Driving → MISMATCH.
+      // analysisClips is in streamerOrder, so we must iterate streamerOrder to slice correctly.
       const clipsByStreamer = {};
       let clipIdx = 0;
       streamerOrder.forEach(streamer => {
@@ -5803,7 +5823,6 @@ app.post('/generate-full-script',
           ? streamerClips[0].targetClipsPerStreamer
           : Math.ceil(streamerClips.length / 2);
         const count = Math.min(target, streamerClips.length);
-        // Slice from analysisClips (not allClips) to get the actual analyzed clips
         clipsByStreamer[streamer] = analysisClips.slice(clipIdx, clipIdx + count);
         clipIdx += count;
       });
