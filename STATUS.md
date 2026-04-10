@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (4:52 PM ET)
-**Branch:** main | **Latest Commit:** pending — fix: flatten 2D clipAnalyses in claudeScriptQA (Fix #3 — root cause of 100% Twitch Gate 1 failures)
+**Last Updated:** 2026-04-10 (4:54 PM ET)
+**Branch:** main | **Latest Commit:** `64c2f70` — fix: flatten 2D clipAnalyses in claudeScriptQA (Fix #3 — root cause of 100% Twitch Gate 1 failures)
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -40,7 +40,7 @@
 | Cline | Fix #1 Twitch clip mismatch (Gate 1 85/100): analyses mapped by streamer name (analysesByStreamer), items[].clips updated to match analysisClips order, generateClipAvailabilityReport() added | `server.js` | `3b5e9d0` | 2026-04-10 12:57 PM ET |
 | Cline | Fix #2 clip report wiring: clipReportDataForQA declared + assigned inside twitch block; passed to both claudeScriptQA call sites (initial QA + post-claudeScriptFix QA) | `server.js` | `3b5e9d0` | 2026-04-10 2:09 PM ET |
 | Cline | Add Node.js restart step to COMMIT_CHECKLIST.md (after push section) | `COMMIT_CHECKLIST.md` | `5e8a13c` | 2026-04-10 2:23 PM ET |
-| Cline | Fix #3 ROOT CAUSE: claudeScriptQA() received 2D clipAnalyses array for Twitch; flatAnalyses() now iterates streamer×clip so attribution is always correct; NBA/News flat arrays unchanged | `server.js` | pending | 2026-04-10 4:52 PM ET |
+| Cline | Fix #3 ROOT CAUSE: claudeScriptQA() received 2D clipAnalyses array for Twitch; flatAnalyses() now iterates streamer×clip so attribution is always correct; NBA/News flat arrays unchanged | `server.js` | `64c2f70` | 2026-04-10 4:54 PM ET |
 
 ---
 
@@ -182,6 +182,7 @@
 ## 📜 Recent Commits
 
 ```
+64c2f70  fix: flatten 2D clipAnalyses in claudeScriptQA — correct streamer attribution for Twitch (Fix #3)
 186ea3d  Phase 3: generateShortFormCaption + prioritizeNewsStories
 b40ee6a  fix: correct Twitch longform tagline to TALK SOUP + switch Aider to Anthropic API
 2c0878a  docs: update MASTER_TASK_LIST.md — Phase 2 + Phase 4 marked complete
