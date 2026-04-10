@@ -90,7 +90,7 @@ These tasks were identified by Aider in its session but couldn't be completed du
 **Risk:** Low — stubs only, no logic
 **Estimate:** 30 min
 
-#### [ ] Add `.env.example` File
+#### [x] Add `.env.example` File
 **File:** New `.env.example`
 **What:** Document all required env vars with placeholder values (no real keys)
 **Why:** New agents/sessions don't know what's needed without reading CLAUDE.md
