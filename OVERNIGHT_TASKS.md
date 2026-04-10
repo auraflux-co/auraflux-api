@@ -3,7 +3,7 @@
 **Window:** 1:00 AM – 7:00 AM Eastern (daily)
 **Agent:** Aider (claude-sonnet-4-20250514)
 **Output:** Morning briefing written to `MORNING_BRIEFING.md` after each run
-**Status:** PENDING APPROVAL — do not run until Rob confirms
+**Status:** APPROVED — all tasks cleared to run during overnight window
 
 ---
 
@@ -27,10 +27,10 @@ cat MORNING_BRIEFING.md
 Tasks are listed in priority order. Aider works through them top-to-bottom each night.
 Mark `[x]` when complete. Add new tasks at the bottom with a date.
 
-### 🔴 BLOCKED — Waiting for Approval
+### 🟢 APPROVED — Ready to Run (1am-7am ET)
 
-#### [BLOCKED] server.js Module Split
-**Blocked by:** Rob + Claude Code approval (see SERVER_SPLIT_PLAN.md)
+#### [ ] server.js Module Split
+**Priority:** High — reduces context limit issues for all agents
 **Estimate:** 2-3 modules per night × 5 nights
 **Why overnight:** Safe to do when no one is actively using the server
 **What Aider does each night:**
@@ -40,11 +40,9 @@ Mark `[x]` when complete. Add new tasks at the bottom with a date.
 - Commit each module separately with clear message
 - Write summary to MORNING_BRIEFING.md
 
----
+### 🟡 QUEUED — Ready When Module Split Reduces Context
 
-### 🟡 QUEUED — Ready When Aider Context Issue is Resolved
-
-These tasks were identified by Aider in its session but couldn't be completed due to the server.js context limit error. Once the module split is done, these become executable.
+These tasks were identified by Aider but couldn't be completed due to the server.js context limit error. Once the module split reduces server.js size, these become executable.
 
 #### [ ] Input Validation & Sanitization (Security)
 **File:** `server.js` → after split: `lib/routes/*.js`
