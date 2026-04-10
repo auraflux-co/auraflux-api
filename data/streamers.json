@@ -97,21 +97,10 @@
       "displayName": "Emily",
       "twitchUsername": "extraemily",
       "onAirName": "Emily",
-      "active": false,
-      "expansion": true,
+      "active": true,
       "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/extraemily-profile_image-300x300.png",
       "origin": "Omaha",
       "fact": "Engaged to Maya"
-    },
-    {
-      "displayName": "YourRage",
-      "twitchUsername": "yourrage",
-      "onAirName": "YourRage",
-      "active": false,
-      "expansion": true,
-      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/yourrage-profile_image-300x300.png",
-      "origin": "South Florida",
-      "fact": "Founder of Huzz and Gyatt"
     },
     {
       "displayName": "Rage",

@@ -4,7 +4,11 @@ read:
   - COMMIT_CHECKLIST.md
   - QA_GATES.md
 
-# Use Anthropic API directly (Claude Sonnet 4)
-anthropic-api-key: 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
-model: claude-sonnet-4-20250514
+# Use Gemini 2.5 Pro — 1M token context, no TPM rate limit issues
+# Anthropic API was hitting 30k TPM org limit (free tier) with large server.js
+# API key is passed via GEMINI_API_KEY env var (set in shell or .env)
+model: gemini/gemini-2.5-pro
 show-model-warnings: false
+
+# Disable repo map to avoid context overhead (server.js is ~150k tokens)
+map-tokens: 0

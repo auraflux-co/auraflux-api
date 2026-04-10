@@ -260,8 +260,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <label>CLIPS PER STREAMER</label>
               <select id="twitch-clips-per-main" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:13px;letter-spacing:1px;font-weight:700;">
                 <option value="1">1 clip</option>
-                <option value="2">2 clips</option>
-                <option value="3" selected>3 clips</option>
+                <option value="2" selected>2 clips</option>
+                <option value="3">3 clips</option>
                 <option value="4">4 clips</option>
                 <option value="5">5 clips</option>
               </select>
@@ -2695,7 +2695,7 @@ function resolveTwitchClipUrls(clips, callback) {
 
 function generateTwitch() {
   var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
-  var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '3');
+  var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
   var streamerNotes = parseStreamerNotes();
   CURRENT_TYPE = 'twitch';
   CURRENT_META = { streamers: streamers, clipMp4Urls: {} };
