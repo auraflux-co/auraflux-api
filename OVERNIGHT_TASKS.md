@@ -1,7 +1,7 @@
 # CWN Overnight Task Schedule
 
 **Window:** 1:00 AM – 7:00 AM Eastern (daily)
-**Agent:** Aider (claude-sonnet-4-20250514)
+**Agent:** Aider (gemini/gemini-2.5-pro)
 **Output:** Morning briefing written to `MORNING_BRIEFING.md` after each run
 **Status:** APPROVED — all tasks cleared to run during overnight window
 
@@ -29,12 +29,14 @@ Mark `[x]` when complete. Add new tasks at the bottom with a date.
 
 ### 🟢 APPROVED — Ready to Run (1am-7am ET)
 
-#### [ ] server.js Module Split
+#### [~] server.js Module Split — IN PROGRESS
 **Priority:** High — reduces context limit issues for all agents
 **Estimate:** 2-3 modules per night × 5 nights
 **Why overnight:** Safe to do when no one is actively using the server
+**Phase 1 DONE (Cline, 2026-04-09):** lib/config.js, lib/logger.js, lib/metrics.js extracted ✅
+**Next:** lib/streamers.js (item 4 in SERVER_SPLIT_PLAN.md)
 **What Aider does each night:**
-- Extract 2-3 modules per the order in SERVER_SPLIT_PLAN.md
+- Extract 2-3 modules per the order in SERVER_SPLIT_PLAN.md (start at item 4)
 - Run `node --check server.js` after each extraction
 - Update SERVER_MAP.md with new function locations
 - Commit each module separately with clear message
@@ -136,8 +138,8 @@ When Aider runs overnight, it should:
    - Example: `.env.example`, `lib/error_logger.js`
 
    **For tasks that DO touch server.js:**
-   - Start aider with: `aider --map-tokens 0 server.js`
-   - The `--map-tokens 0` flag disables repo mapping (saves ~20k tokens)
+   - Start aider with: `aider server.js` (map-tokens 0 is set globally in .aider.conf.yml)
+   - Gemini 2.5 Pro has a 1M token context window — server.js fits comfortably
    - Do NOT add any other large files to the chat
    - If you still hit the limit, use `/drop` to remove read-only files
 
