@@ -6160,9 +6160,11 @@ Target: 40-60 words spoken total (before + after clip).`;
           const clipAnalyses = Array.isArray(analyses[i]) ? analyses[i] : [analyses[i]||''];
           const notesStr = c.notes ? 'Streamer context: ' + c.notes : '';
           const displayName = getDisplayName(c.streamer);
+          const sceneNameBase = displayName.toUpperCase().replace(/\s+/g, '_');
           const clipLines = clips.map((clip, ci) => `
-  Clip ${ci+1}: "${clip.title||'N/A'}" | ${clip.views ? clip.views.toLocaleString()+' views' : ''} | ${clip.game||''}
-  Analysis: ${clipAnalyses[ci] || 'No analysis'}`).join('');
+  ── CLIP ${ci+1} → feeds scenes === ${sceneNameBase}_CLIP${ci+1}_SETUP === and === ${sceneNameBase}_CLIP${ci+1}_REACTION ===
+  Title: "${clip.title||'N/A'}" | ${clip.views ? clip.views.toLocaleString()+' views' : ''} | ${clip.game||''}
+  Analysis (write CLIP${ci+1}_SETUP and CLIP${ci+1}_REACTION based on THIS analysis ONLY): ${clipAnalyses[ci] || 'No analysis'}`).join('');
           return `STREAMER ${i+1}:
 ON-AIR NAME (use this name ONLY — never use the Twitch username): ${displayName}
 Twitch username (do NOT use this in spoken text): ${c.streamer||'Unknown'}

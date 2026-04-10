@@ -42,6 +42,7 @@
 | Cline | Add Node.js restart step to COMMIT_CHECKLIST.md (after push section) | `COMMIT_CHECKLIST.md` | `5e8a13c` | 2026-04-10 2:23 PM ET |
 | Cline | Fix #3 ROOT CAUSE: claudeScriptQA() received 2D clipAnalyses array for Twitch; flatAnalyses() now iterates streamer×clip so attribution is always correct; NBA/News flat arrays unchanged | `server.js` | `64c2f70` | 2026-04-10 4:54 PM ET |
 | Cline | Fix #4: Filter streamers with no real clip analyses before Gemini prompt — prevents hallucination for 0-clip streamers (only include streamers with ≥1 analysis > 50 chars) | `server.js` | `b5cac55` | 2026-04-10 5:13 PM ET |
+| Cline | Fix #5: Explicit scene→clip mapping in Gemini prompt — each clip block now labels which SETUP/REACTION scenes it feeds, preventing Gemini from swapping clip 1 and clip 2 analyses | `server.js` | PENDING | 2026-04-10 5:27 PM ET |
 
 ---
 
