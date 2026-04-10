@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- CWN Overnight Aider Runner — runs at 1:00 AM daily -->
+    <!-- INSTALL: cp scripts/com.cwn.overnight.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.cwn.overnight.plist -->
+    <!-- UNINSTALL: launchctl unload ~/Library/LaunchAgents/com.cwn.overnight.plist -->
+    <!-- STATUS: launchctl list | grep cwn -->
+
+    <key>Label</key>
+    <string>com.cwn.overnight</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/robertgregory/cwn-production/scripts/overnight_runner.sh</string>
+    </array>
+
+    <!-- Run at 1:00 AM every day -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>1</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Log stdout and stderr to dated log files -->
+    <key>StandardOutPath</key>
+    <string>/Users/robertgregory/cwn-production/logs/launchd_overnight.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/robertgregory/cwn-production/logs/launchd_overnight_err.log</string>
+
+    <!-- Run even if the scheduled time was missed (e.g. Mac was asleep) -->
+    <!-- Note: launchd will run it next time the Mac is awake after 1am -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Keep alive = false: run once and exit, don't restart on failure -->
+    <key>KeepAlive</key>
+    <false/>
+
+    <!-- Working directory -->
+    <key>WorkingDirectory</key>
+    <string>/Users/robertgregory/cwn-production</string>
+
+    <!-- Environment variables needed by Aider + git -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>/Users/robertgregory</string>
+    </dict>
+</dict>
+</plist>

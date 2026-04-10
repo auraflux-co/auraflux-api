@@ -9,16 +9,34 @@
 
 ## How the Overnight System Works
 
-1. Aider runs tasks from this file during the 1am-7am window
-2. After completing each task, Aider updates `MORNING_BRIEFING.md` with what changed
-3. When Rob/Claude/Cline start their day, they read `MORNING_BRIEFING.md` first
-4. If anything broke or changed behavior, it's documented there before anyone touches code
+1. `launchd` triggers `scripts/overnight_runner.sh` at 1:00 AM daily (macOS scheduler)
+2. The runner script starts Aider non-interactively with `--message` — no terminal needed
+3. Aider reads this file, picks the first `[ ]` task, works on it, commits, and pushes
+4. After completing, Aider updates `MORNING_BRIEFING.md` with what changed
+5. When Rob/Claude/Cline start their day, they read `MORNING_BRIEFING.md` first
 
 **Morning startup command:**
 ```bash
 # Read this first every morning before touching anything
 cat MORNING_BRIEFING.md
 ```
+
+## Automation Setup (One-Time Install)
+
+```bash
+# Install the launchd scheduler (runs overnight_runner.sh at 1am daily)
+cp scripts/com.cwn.overnight.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.cwn.overnight.plist
+
+# Verify it's loaded
+launchctl list | grep cwn
+```
+
+**To check if it ran:** `cat logs/overnight_$(date +%Y-%m-%d).log`
+**To run manually right now:** `bash scripts/overnight_runner.sh`
+**To stop/uninstall:** `launchctl unload ~/Library/LaunchAgents/com.cwn.overnight.plist`
+
+**Important:** Your Mac must be awake at 1am for launchd to fire. If it's asleep, the job runs the next time the Mac wakes up after 1am. Keep the Mac plugged in and awake overnight (or use `pmset` to schedule a wake).
 
 ---
 
