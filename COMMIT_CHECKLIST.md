@@ -252,6 +252,25 @@ Ready for test suite re-run (expecting 12/12 pass).
 
 ---
 
+## After Committing — Push to GitHub
+
+**`git commit` only saves locally. GitHub is not updated until you push.**
+
+```bash
+git push origin main
+```
+
+Run this at the end of every work session. There is no queue — GitHub updates instantly on push.
+
+**Quick full deploy sequence:**
+```bash
+git add -A
+git commit -m "your message"
+git push origin main
+```
+
+---
+
 ## Hook Install / Update
 
 The pre-commit hook is tracked at `scripts/pre-commit.sh`. If you're on a fresh clone or the hook was updated:
