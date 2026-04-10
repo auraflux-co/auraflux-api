@@ -54,12 +54,16 @@ TASK_PROMPT="Read OVERNIGHT_TASKS.md carefully. Find the FIRST task marked [ ] (
 
 # Run Aider non-interactively with --message flag
 # --yes-always: auto-confirm file edits (no interactive prompts)
-# --no-auto-commits: we handle commits in the task prompt
-# server.js is added as the main editable file; others are read-only via .aider.conf.yml
+# All files Aider may need to edit are listed here so it never has to ask interactively.
+# STATUS.md, OVERNIGHT_TASKS.md, MORNING_BRIEFING.md are always needed for the commit workflow.
+# server.js is included for tasks that touch it; Aider will ignore it if not needed.
 "$AIDER" \
   --message "$TASK_PROMPT" \
   --yes-always \
   server.js \
+  STATUS.md \
+  OVERNIGHT_TASKS.md \
+  MORNING_BRIEFING.md \
   >> "$LOG_FILE" 2>&1
 
 EXIT_CODE=$?
