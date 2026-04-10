@@ -36,7 +36,8 @@
 | Cline | Fix overnight_runner.sh: add STATUS.md, OVERNIGHT_TASKS.md, MORNING_BRIEFING.md to Aider chat | `scripts/overnight_runner.sh`, `STATUS.md` | `afc0e7c` | 2026-04-10 8:52 AM ET |
 | Claude Code | Config updates: Aider → Gemini 2.5 Pro (avoid TPM limit), remove hardcoded API key, Emily active, dashboard clips/streamer default 3→2 | `.aider.conf.yml`, `data/streamers.json`, `cwn_production.html`, `STATUS.md` | `e269afc` | 2026-04-10 9:15 AM ET |
 | Cline | Add 🔄 REFRESH IDs button to dashboard job cards + refreshHeyGenIds() JS function; calls GET /heygen/latest-videos, matches by jobId_ prefix, updates segment URLs for Avatar V workaround | `cwn_production.html`, `server.js` | `ef5486a` | 2026-04-10 11:40 AM ET |
-| Cline | Fix sendToHeyGen() title format: now sets HeyGen video title as `batchId_XX_SCENENAME` so REFRESH IDs can match by index and preserve segment order | `cwn_production.html` | pending | 2026-04-10 12:37 PM ET |
+| Cline | Fix sendToHeyGen() title format: now sets HeyGen video title as `batchId_XX_SCENENAME` so REFRESH IDs can match by index and preserve segment order | `cwn_production.html` | `16ce6fe` | 2026-04-10 12:37 PM ET |
+| Cline | Fix Twitch clip mismatch bug (Gate 1 85/100): analyses were mapped by array position instead of streamer name — now uses analysesByStreamer keyed map so Jason's analyses always go to Jason's item | `server.js` | pending | 2026-04-10 12:57 PM ET |
 
 ---
 

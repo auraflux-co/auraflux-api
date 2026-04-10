@@ -5705,13 +5705,23 @@ app.post('/generate-full-script',
         flatAnalyses.push(...waveResults);
       }
 
+      // Build analyses indexed by streamer name (not array position) to avoid order mismatch.
+      // flatAnalyses is in streamerOrder sequence; items may be in a different order.
+      // Keying by streamer name ensures Jason's analyses always go to Jason's item, etc.
+      const analysesByStreamer = {};
       let flatIdx = 0;
-      analyses = items.map(item => {
-        const clips = item.clips && item.clips.length ? item.clips : [{}];
-        const streamerAnalyses = flatAnalyses.slice(flatIdx, flatIdx + clips.length);
-        flatIdx += clips.length;
-        return streamerAnalyses;
+      streamerOrder.forEach(streamer => {
+        const streamerClips = allClips.filter(c => c.streamer === streamer);
+        const target = (streamerClips[0] && streamerClips[0].targetClipsPerStreamer)
+          ? streamerClips[0].targetClipsPerStreamer
+          : Math.ceil(streamerClips.length / 2);
+        const count = Math.min(target, streamerClips.length);
+        analysesByStreamer[streamer] = flatAnalyses.slice(flatIdx, flatIdx + count);
+        flatIdx += count;
       });
+      console.log('[clip-mapping] streamerOrder:', streamerOrder);
+      console.log('[clip-mapping] items order:', items.map(i => i.streamer));
+      analyses = items.map(item => analysesByStreamer[item.streamer] || []);
 
       const geminiHits = flatAnalyses.filter(a => a && a.length > 50).length;
       console.log(`[generate-full-script] Gemini analyzed ${geminiHits}/${allClips.length} clips (${allClips.length - geminiHits} fell back to thumbnail)`);
