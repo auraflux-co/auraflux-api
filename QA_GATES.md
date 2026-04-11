@@ -1,8 +1,47 @@
 # CWN Production QA Gates & Checklists
 
-**Last Updated**: 2026-04-09
-**Status**: Pre-Production Validation Phase — Gate 1 scene count bug FIXED
+**Last Updated**: 2026-04-09 (content) / 2026-04-11 (deprecation banner)
+**Status**: ⚠️ PARTIALLY SUPERSEDED by `GATED_PIPELINE_ARCHITECTURE.md`
 **Deployment**: Localhost → Railway (after all 12 tests pass)
+
+---
+
+## ⚠️ IMPORTANT — Gate numbering changed on 2026-04-11
+
+This document uses the ORIGINAL gate numbering scheme (Apr 9 draft). On 2026-04-11, Rob established the Gated Self-Healing Pipeline architecture in `GATED_PIPELINE_ARCHITECTURE.md` which uses a DIFFERENT gate numbering scheme. **The new architecture doc is authoritative for all new code and handoffs going forward.** This doc (QA_GATES.md) is preserved for:
+
+- Historical reference (how gates were originally planned)
+- Test case definitions (the 12 test matrix — still valid)
+- Definition of Done criteria (still valid)
+- Gate-specific checklist content (useful reference, numbering notwithstanding)
+
+### Gate numbering reconciliation
+
+| This doc (QA_GATES.md, old) | New doc (GATED_PIPELINE_ARCHITECTURE.md) | Notes |
+|---|---|---|
+| Gate 1: Content Generation | Gate 1: Claude Script QA | New doc narrower in scope (script only, not thumbnail/title/description) |
+| Gate 2: HeyGen Segment Rendering | Gate 3: HeyGen Segment Render QA | Renumbered because new doc inserts Gate 2 (Segment Structure) between Script QA and HeyGen |
+| Gate 2A: Pronunciation (NOT IMPL) | — (absorbed into Gate 3) | Pronunciation concerns move into Gate 3's fix strategies |
+| Gate 3: Platform Upload Validation | Gate 6: Publish Delivery QA | Renumbered |
+| Gate 4: Gemini Visual Audit | Gate 4: Assembly Structure QA (NEW) | Same number, different scope |
+| Gate 5: Gemini Final Video Review | Gate 5: Full Video Playback QA (NEW) | Same number, same intent, now implementable |
+| Gate 6: Final MP4 Delivery | Gate 6: Publish Delivery QA | Merged into Gate 6 |
+| Gate 7: Logic Audit | — (distributed across all gates) | Logic checks now live inside each gate's pure-code validation |
+| — (new concept) | Gate 2: Segment Structure QA (NEW, Phase 1 shipping now) | Script→segment parsing validator, catches parseSegments bug class |
+| — (new concept) | Gate 7: Rob Platform Private-Draft Review | Formalizes Rob's role as final approver on YouTube/TikTok/IG drafts |
+
+### Which doc to read for what
+
+- **Architecture, principles, dialogue loop, rollback mechanics, fix strategies:** `GATED_PIPELINE_ARCHITECTURE.md`
+- **12 test cases, test execution framework, production readiness checklist:** This doc (QA_GATES.md)
+- **Current pipeline state, what's shipped, what's pending:** `STATUS.md`
+- **In-progress handoffs:** `CLINE_HANDOFF_GATE2_SEGMENT_STRUCTURE.md`, `CLINE_HANDOFF_GATE1_CLIP_DIAGNOSTIC_UPGRADE.md`
+
+### Migration path
+
+Over time, sections of this doc will be extracted into the architecture doc or absorbed into the relevant gate spec in `GATED_PIPELINE_ARCHITECTURE.md`. Eventually this doc will contain ONLY the 12-test matrix and production readiness criteria. The per-gate checklists will migrate out as each gate is implemented in the new architecture.
+
+---
 
 ---
 
