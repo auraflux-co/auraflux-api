@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (5:47 PM ET)
-**Branch:** main | **Latest Commit:** `67527e5` — fix: Fix #6A-E — real video clip filtering + dynamic report numbers + explicit CLIP ORDER swap in claudeScriptFix
+**Last Updated:** 2026-04-10 (8:10 PM ET)
+**Branch:** main | **Latest Commit:** pending — feat: add job persistence (GET /jobs endpoint + saveJobCard) — survives server restarts
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -44,6 +44,7 @@
 | Cline | Fix #4: Filter streamers with no real clip analyses before Gemini prompt — prevents hallucination for 0-clip streamers (only include streamers with ≥1 analysis > 50 chars) | `server.js` | `b5cac55` | 2026-04-10 5:13 PM ET |
 | Cline | Fix #5: Explicit scene→clip mapping in Gemini prompt — each clip block now labels which SETUP/REACTION scenes it feeds, preventing Gemini from swapping clip 1 and clip 2 analyses | `server.js` | `84a780c` | 2026-04-10 5:28 PM ET |
 | Cline | Fix #6A-E: Real video clip filtering (isVideoAnalyzed flag), dynamic report numbers, explicit CLIP ORDER swap in claudeScriptFix | `server.js`, `STATUS.md` | `67527e5` | 2026-04-10 5:47 PM ET |
+| Cline | Add job persistence: persistedJobs loaded from data/jobs.json on startup, saveJobCard() writes to disk with 7-day pruning, GET /jobs endpoint for dashboard recovery after server restart | `server.js`, `STATUS.md` | pending | 2026-04-10 8:10 PM ET |
 
 ---
 

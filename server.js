@@ -108,6 +108,35 @@ validateDirWritable(OUTPUT_DIR, 'output');
 const assemblyJobs = {};
 const heygenJobs   = {};
 
+// ── Job Card Persistence ─────────────────────────────────────────────────────
+// Saves completed script+HeyGen jobs to disk so server restarts don't lose them.
+// Dashboard calls GET /jobs on load to restore the job queue.
+const JOBS_FILE = path.join(__dirname, 'data', 'jobs.json');
+let persistedJobs = {};
+try {
+  persistedJobs = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+  console.log(`[jobs] Loaded ${Object.keys(persistedJobs).length} persisted jobs from disk`);
+} catch(e) {
+  persistedJobs = {};
+}
+
+function saveJobCard(jobId, card) {
+  persistedJobs[jobId] = { ...card, savedAt: new Date().toISOString() };
+  // Prune jobs older than 7 days to keep file small
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  for (const id of Object.keys(persistedJobs)) {
+    const saved = new Date(persistedJobs[id].savedAt || 0).getTime();
+    if (saved < cutoff) delete persistedJobs[id];
+  }
+  try {
+    fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
+  } catch(e) {
+    console.error('[jobs] Failed to save jobs.json:', e.message);
+  }
+}
+
+// NOTE: GET /jobs endpoint is registered after app is initialized (see below near line 796+)
+
 // Initialize Anthropic client for Claude API calls
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -860,6 +889,14 @@ app.get('/health', async (req, res) => {
 
   const statusCode = health.ok ? 200 : 503;
   res.status(statusCode).json(health);
+});
+
+// GET /jobs — return all persisted job cards for dashboard recovery after server restart
+// Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
+app.get('/jobs', (req, res) => {
+  const jobs = Object.values(persistedJobs)
+    .sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+  res.json({ ok: true, count: jobs.length, jobs });
 });
 
 // ── Serve HTML thumbnail/overlay tools ──────────────────────────────
@@ -6590,6 +6627,26 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
       // Include metrics in response for debugging
       metricsJobId: jobId
     });
+
+    // ── Persist job card to disk so server restarts don't lose it ──
+    // Saved whenever Gate 1 passes and HeyGen is submitted.
+    // Dashboard calls GET /jobs on load to restore the job queue.
+    if (scriptQA.outcome === 'pass' && heygenResult && !heygenResult.error) {
+      saveJobCard(jobId, {
+        jobId,
+        contentType: type,
+        date: dateStr,
+        script,
+        wordCount,
+        estSecs,
+        orderedClipUrls,
+        heygen: heygenResult,
+        gate1Score: scriptQA.score,
+        streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s.streamer || s })) : [],
+        clipsPerStreamer: req.body.clipsPerStreamer || 2
+      });
+      console.log(`[jobs] ✅ Job card persisted to disk: ${jobId}`);
+    }
 
   } catch(err) {
     console.error('[generate-full-script] Error:', err.message);
