@@ -31,6 +31,9 @@
 - [ ] Rate Limiting per Endpoint — PAUSE (touches server.js)
 - [ ] Remove Duplicate `/generate-thumbnail` Route — PAUSE (touches server.js)
 - [ ] Fix Legacy Publish Stub Routes — PAUSE (touches server.js)
+- [ ] **Fix News Thumbnail 500 Error** — PAUSE (touches server.js /generate-thumbnail endpoint — despite the "Safe for Aider" note added to this task later in the file, the atomic-staging rule applies to ANY concurrent server.js write. Hold this until Cline's Gate 2 commit lands, then resume.)
+- [ ] **Fix NBA Thumbnail 500 Error** — PAUSE (same reason as News thumbnail fix)
+- [ ] **Investigate QA Session Console Errors** — PAUSE if the fix requires touching server.js; SAFE if it's diagnostic-only and produces only a report/doc output
 
 **Resume normal schedule:** Once Cline commits the Gate 2 implementation (expected morning of 2026-04-11 or early afternoon), the pause lifts. Rob or Claude Code will remove this banner.
 
