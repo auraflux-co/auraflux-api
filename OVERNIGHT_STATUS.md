@@ -224,6 +224,20 @@ The whole point of this architecture is that you don't have to be an expert debu
 
 ---
 
+## Final commit summary (5 commits shipped overnight by Claude Code)
+
+All docs-only, no code touched, no conflicts with Cline's Gate 2 work:
+
+| Commit | Purpose |
+|---|---|
+| `2e2a0a1` | 🚨 Gated Pipeline architecture (~950 lines) + Gate 2 handoff (~1200 lines) + Gate 1 handoff (~700 lines) + STATUS.md update |
+| `966efbb` | CLAUDE.md session-start pointer to architecture doc + gotcha #6 content-type fix + OVERNIGHT_TASKS.md Aider pause banner + this OVERNIGHT_STATUS.md file + test/GATE2_TEST_CASES.md + deleted stray `you` file |
+| `889e0a1` | OVERNIGHT_TASKS.md: added explicit BLOCK entries for the 3 new thumbnail/QA tasks Aider wanted to run (they touch server.js — concurrency risk during Cline's Gate 2 work) |
+| `d53f2fa` | OVERNIGHT_STATUS.md: clarified contradiction between Aider's MORNING_BRIEFING.md interpretation ("focus on server-side fixes") and my authoritative pause banner ("no server.js work tonight") |
+| `5a68b03` | QA_GATES.md: deprecation banner + gate numbering reconciliation table (maps old Apr 9 numbering to new Apr 11 architecture numbering) |
+
+**Net result:** Architecture is documented and committed. Cline has a complete implementation spec. Aider is paused on risky tasks. QA_GATES.md is reconciled. Rob's morning read is set up. No loose ends.
+
 ## Good morning. Go have coffee.
 
 You built something important last night. The pipeline is finally starting to heal itself instead of requiring your constant eyeballs. Gate 2 is the first small proof of that — once it's shipped, every future "scenes out of order" bug gets caught automatically.
