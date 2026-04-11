@@ -1954,23 +1954,10 @@ function restoreJobsFromServer(showAlert) {
 
         videoJobs.forEach(function(vj) {
           var sceneName = vj.sceneName || ('Scene ' + (segments.length + 1));
-          var isReaction = sceneName.toUpperCase().indexOf('REACTION') > -1;
-          var isIntro    = sceneName.toUpperCase().indexOf('INTRO') > -1;
-
-          // Insert source clip BEFORE reaction (after intro)
-          if (isReaction && clipUrls[clipIdx]) {
-            var clip = clipUrls[clipIdx++];
-            segments.push({
-              type:        'source_clip',
-              label:       sceneName.replace(/_REACTION.*/i, '') + ' (CLIP ' + clipIdx + ')',
-              status:      'ready',
-              clipUrl:     clip.url || '',
-              pageUrl:     clip.pageUrl || '',
-              url:         clip.url || '',
-              clipDuration: null,
-              videoId:     null
-            });
-          }
+          // Insert clip AFTER SETUP scenes (matches server.js startHeyGenPoller logic)
+          // Script order: INTRO → STREAMER_INTRO → CLIP1_SETUP → [CLIP1] → CLIP1_REACTION → ...
+          // Do NOT use isReaction — CLIP_REACTION also contains "REACTION" and would insert clip in wrong place
+          var isSetup = sceneName.toUpperCase().indexOf('SETUP') > -1;
 
           segments.push({
             type:    'avatar',
@@ -1980,6 +1967,21 @@ function restoreJobsFromServer(showAlert) {
             url:     null,
             truncated: false
           });
+
+          // Insert source clip AFTER SETUP scene (correct order: SETUP → [CLIP] → REACTION)
+          if (isSetup && clipUrls[clipIdx]) {
+            var clip = clipUrls[clipIdx++];
+            segments.push({
+              type:        'source_clip',
+              label:       sceneName.replace(/_SETUP.*/i, '') + ' (CLIP ' + clipIdx + ')',
+              status:      'ready',
+              clipUrl:     clip.url || '',
+              pageUrl:     clip.pageUrl || '',
+              url:         clip.url || '',
+              clipDuration: null,
+              videoId:     null
+            });
+          }
         });
 
         // Second pass: fill source_clip segments that still have no URL from orderedClipUrls sequentially.
