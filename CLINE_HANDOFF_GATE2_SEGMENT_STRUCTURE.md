@@ -1007,29 +1007,20 @@ Scope discipline is critical. This handoff does one thing: ships the first gate 
 
 ---
 
-## Part 9.5 — Post-smoke-test verification (Twitch circle intro card)
+## Part 9.5 — Post-smoke-test verification (CONSISTENT TV-rectangle intro cards across all 3 content types)
 
-After the Gate 2 smoke test passes and produces a clean MP4, Cline must manually verify one additional item that's unrelated to Gate 2 but is a known pre-existing concern from Rob:
+**UPDATED 2026-04-11:** Rob reversed the previous Twitch-circle-vs-NBA-TV-rectangle spec. All 3 content types (Twitch, NBA, News) now use the **SAME TV-rectangle design** for brand consistency.
 
-**Twitch intro cards should use the CIRCLE design, NOT the TV rectangle.**
+After the Gate 2 smoke test passes and produces a clean MP4, Cline should verify:
 
-The intro card design differs by content type per `GATED_PIPELINE_ARCHITECTURE.md` → "Intro card design by content type":
+1. **Extract a frame** at the JASON_INTRO timestamp (around t=12-16s based on segment durations)
+2. **Verify the intro card visible in the top-right `OVERLAY_ZONE`** (x=1240, y=40, 640×360) shows whatever design the current code renders
+3. **Expected outcome:** the card may still be the LEGACY 720×840 circle design (720×840 canvas rendering a circular profile in a gold ring with text below) because the Twitch migration to TV-rectangle is a SEPARATE handoff (`CLINE_HANDOFF_TWITCH_INTRO_CARD_TO_TV_DESIGN.md`).
+4. **If the card is still the legacy circle design, that's OK for Phase 1** — Gate 2 is about segment structure, not intro card design. Flag the circle design as "still pending TV migration" in your commit notes and move on.
 
-| Content type | Design |
-|---|---|
-| Twitch | Circular profile PNG in a gold ring, with name/origin/fact text UNDERNEATH the circle |
-| NBA | 640×360 rectangle with game thumbnail + team logos + scores |
-| News | 640×360 rectangle with Open Graph article image + headline |
+The legacy circle design lives in `generateIntroCardPNG()` at `server.js:500-670`. NBA and News use separate rendering paths that already produce 640×360 TV-rectangle output. The TV migration handoff will update Twitch to match.
 
-After Gate 2 ships and the smoke test assembly completes, Cline should:
-1. Extract a frame at the JASON_INTRO timestamp (around t=12-16s based on segment durations)
-2. Verify the intro card visible in the top-right OVERLAY_ZONE shows a **circle** with Jason's profile image, NOT a TV-rectangle
-3. Confirm the name/origin/fact text renders correctly underneath the circle
-4. If the card is a rectangle instead of a circle, flag it — the code in `server.js:3442-3506` (the Twitch intro-card path) may be rendering the wrong template
-
-This is NOT a Phase 1 fix — it's a Phase 1 verification step. If the Twitch circle design is wrong, it becomes a separate small handoff (probably 30 min to fix) after the main Gate 2 work ships.
-
-Also: while you're there, update `CLAUDE.md` gotcha #6 which currently says "Intro cards only for Twitch compilations — NBA/news use resized game thumbnails (640×360 TV shape)." This is misleading because ALL 3 content types have intro cards. Replace with: "Intro cards on all 3 content types, with different visual designs per type — Twitch uses circle+profile, NBA/News use 640×360 TV rectangle. See `GATED_PIPELINE_ARCHITECTURE.md` → Intro card design by content type for the authoritative reference."
+**Do NOT attempt to migrate Twitch to TV design as part of this Gate 2 handoff.** Scope discipline. Ship Gate 2 only. The TV migration is a separate handoff with its own spec.
 
 ---
 

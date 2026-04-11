@@ -7,17 +7,17 @@
 
 ---
 
-## CRITICAL LAYOUT CHANGE
+## CRITICAL LAYOUT CHANGE (updated 2026-04-11)
 
 **All long-form videos (News, NBA, Twitch) now use the same layout:**
-- **Video card positioned LEFT of Bobby G** (not right)
-- TV-shaped card (640×360 aspect ratio)
-- Content-specific display in the TV:
-  - **News**: Article image from story
-  - **NBA**: Game thumbnail + PPG leaders + W/L records
-  - **Twitch**: Streamer profile pics (existing text moves underneath)
+- **Video card positioned TOP-RIGHT of the frame** at `OVERLAY_ZONE = {x: 1240, y: 40, w: 640, h: 360}` — on Bobby G's facing direction (the new avatar faces viewer's left). Previously stated "LEFT of Bobby G" but that was for the old avatar; flipped to right in commit `0d13fb0` on 2026-04-11.
+- **TV-shaped card** (640×360 aspect ratio) with gold 5px `#c7af4f` border and drop shadow
+- Content inside the TV rectangle differs per type:
+  - **News**: Open Graph scraped article image + headline + source
+  - **NBA**: Game thumbnail + team logos + scores + PPG leaders + W/L records
+  - **Twitch**: Streamer profile image + name + origin + fact — all rendered INSIDE the 640×360 TV rectangle (not the legacy 720×840 circle-with-text-below design; see `CLINE_HANDOFF_TWITCH_INTRO_CARD_TO_TV_DESIGN.md` for the migration spec)
 
-This creates **visual consistency across all 3 content types** — TV on left facing Bobby G.
+This creates **visual consistency across all 3 content types** — same TV rectangle, same position, same border treatment. Only the content inside the rectangle differs.
 
 ---
 
@@ -132,15 +132,15 @@ If you choose Option A:
 **Where this gets called:**
 - During NBA long-form video assembly (in `/assemble` endpoint)
 - For each game in the script, generate intro card before HeyGen send
-- Card displayed at `VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE` (left of Bobby G)
+- Card displayed at `VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE` (top-right of frame, x=1240 y=40 — on Bobby G's facing side since the new avatar faces viewer's left)
 
 **Example flow:**
 ```
 1. User generates NBA long-form script with 3 games
 2. For each game, call /nba/generate-intro-card with gameId
 3. Store intro card PNG in output/
-4. During video assembly, overlay intro card LEFT of Bobby G at intro timing
-5. Same pattern as News (article image) and Twitch (profile pics)
+4. During video assembly, overlay intro card TOP-RIGHT of frame (x=1240 y=40) at intro timing — on Bobby G's facing direction since the current avatar faces viewer's left
+5. Same pattern as News (article image) and Twitch (profile image + text — once Twitch is migrated to TV design per `CLINE_HANDOFF_TWITCH_INTRO_CARD_TO_TV_DESIGN.md`)
 ```
 
 ---

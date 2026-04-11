@@ -802,22 +802,28 @@ The current pipeline has many of the patterns this architecture forbids:
 
 ## Intro card design by content type — authoritative reference
 
-All 3 content types have intro cards, but they use **two different visual designs**. Gates and handoffs must not conflate them.
+**As of 2026-04-11, all 3 content types use the SAME TV-rectangle visual design** for brand consistency. Gates and handoffs must treat them uniformly.
 
 | Content type | Intro card style | Source data | Example |
 |---|---|---|---|
-| **Twitch** | **Circular streamer card** — 160px radius circle with the streamer's profile PNG inside a gold ring (5px #c7af4f border), drop shadow, with name/origin/fact text **underneath** the circle | `data/streamers.json` roster entries (profileImage, displayName, origin, fact) | Jason circle with "Jason / Arlington / Dep Gai guy" below |
-| **NBA** | **TV-shape rectangle** — 640×360 with game thumbnail, team logos, scores, PPG leaders, W/L records, gold 5px border, shadow | ESPN API game data + SEASON_LEADERS object | Lakers vs Celtics card with scores and leaders |
-| **News** | **TV-shape rectangle** — 640×360 with Open Graph scraped article image, headline, source, gold 5px border, shadow | Scraped from article URL (OG image + headline) | "Major Tech Announcement / TechCrunch" card |
+| **Twitch** | **TV-shape rectangle** — 640×360 with streamer profile image, name, origin, fact, gold 5px #c7af4f border, drop shadow | `data/streamers.json` roster entries (profileImage, displayName, origin, fact) | "Jason / Arlington / Dep Gai guy" card with his profile image |
+| **NBA** | **TV-shape rectangle** — 640×360 with game thumbnail, team logos, scores, PPG leaders, W/L records, gold 5px border, drop shadow | ESPN API game data + SEASON_LEADERS object | Lakers vs Celtics card with scores and leaders |
+| **News** | **TV-shape rectangle** — 640×360 with Open Graph scraped article image, headline, source, gold 5px border, drop shadow | Scraped from article URL (OG image + headline) | "Major Tech Announcement / TechCrunch" card |
 
-Both Twitch (circle) and NBA/News (rectangle) burn into the same `OVERLAY_ZONE` at `{x: 1240, y: 40, w: 640, h: 360}` as of commit `0d13fb0`. The circle design for Twitch uses the zone's height (360px) as its canvas but renders a different visual treatment — the circle + text is vertically arranged within the zone's bounding box.
+All 3 cards burn into the same `OVERLAY_ZONE` at `{x: 1240, y: 40, w: 640, h: 360}` as of commit `0d13fb0`. All 3 share the same dimensions, border, shadow, and positioning — only the content inside the rectangle differs.
 
-**Historical confusion:** `CLAUDE.md` gotcha #6 previously said "Intro cards only for Twitch compilations — NBA/news use resized game thumbnails (640×360 TV shape)." This is misleading. ALL 3 content types have intro cards. The difference is the VISUAL DESIGN, not the existence of the card. Agents reading old docs may be misled by this line — always refer to this table as the source of truth.
+**Historical context — design reversal 2026-04-11:**
 
-**Gate 4 implication:** when Gate 4 checks for "intro card visible top-right at streamer intro timestamps," it must know which visual design to expect per content type. The check logic differs:
-- Twitch: look for a circular shape with a gold ring in the OVERLAY_ZONE
-- NBA: look for a rectangular card with team logos + scores in the OVERLAY_ZONE
-- News: look for a rectangular card with an article image + headline in the OVERLAY_ZONE
+Until 2026-04-11, Twitch used a different design: a 720×840 canvas with a circular streamer profile image (160px radius) in a gold ring, with name/origin/fact text rendered BELOW the circle. NBA and News used the 640×360 TV-shape rectangle.
+
+Rob reversed this spec on 2026-04-11 morning for brand consistency: **all 3 content types now use the TV rectangle.** The Twitch circle design is deprecated.
+
+**Code status:**
+- NBA and News already render as TV-shape rectangles (no change needed)
+- Twitch still renders the legacy 720×840 circle design via `generateIntroCardPNG()` at `server.js:500`
+- Migration spec: `CLINE_HANDOFF_TWITCH_INTRO_CARD_TO_TV_DESIGN.md` (Cline to implement)
+
+**Gate 4 implication:** when Gate 4 checks for "intro card visible top-right at streamer intro timestamps," it should look for the **SAME visual pattern across all 3 content types**: a rectangular card with gold border at `OVERLAY_ZONE`. This simplifies Gate 4's detection logic (single visual pattern to recognize) vs. the previous version (2 different patterns to distinguish). **Do not build Gate 4 detection logic until Twitch migration to TV design is complete** — otherwise Gate 4 would need transition-period logic to handle both styles.
 
 ---
 
