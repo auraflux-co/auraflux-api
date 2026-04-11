@@ -170,6 +170,67 @@ Recommend also writing to `logs/errors.jsonl` server-side with `{level: 'warn', 
 
 ---
 
+## Publish-Time Privacy (Rollback's Last Line of Defense)
+
+Rollback from `published → assembled` clears the local publish record but **does NOT unpublish on YouTube / TikTok / Instagram** — those platforms already have the video. Upload-Post does not support post-publish deletion programmatically. This means **privacy defaults at publish time ARE your real rollback mechanism for the publish stage.** If everything lands as private/draft, a mistake on any platform is low-stakes: you delete the private video on that platform's web UI.
+
+### Current state (verified 2026-04-10 against Upload-Post API docs)
+
+| Platform | Upload-Post parameter | Current default | Effect |
+|---|---|---|---|
+| **YouTube** | `privacyStatus` | `private` (`server.js:6973, 7019`) | Strong — only you + invited viewers can see it. Zero public exposure. |
+| **TikTok** | `privacy_level` | `SELF_ONLY` (`server.js:6974, 7038`) | Strong — "Only me" visibility. Hidden from profile visitors. |
+| **Instagram Reels** | *(no API privacy flag exists)* | Policy: **account-wide private** | Strong while in effect, but blocks marketing/discovery long-term |
+
+### Instagram — why there is no API-level safety net
+
+Upload-Post exposes Instagram via `media_type=REELS` but has **no `draft`, `private`, `visibility`, or `publish_mode` parameter for Instagram.** All Instagram uploads go live immediately (or at `scheduled_date` if scheduled). Confirmed 2026-04-10 via Upload-Post API docs.
+
+The only Upload-Post knobs that affect Instagram visibility are:
+- `share_mode=CUSTOM` (default) — publishes normally to followers
+- `share_mode=TRIAL_REELS_SHARE_TO_FOLLOWERS_IF_LIKED` — Trial Reels, auto-shares if non-followers engage
+- `share_mode=TRIAL_REELS_DONT_SHARE_TO_FOLLOWERS` — Trial Reels, **never auto-shares to followers** (closest thing to a draft)
+
+**Trial Reels caveats:**
+- Instagram's consumer documentation says Trial Reels requires **a public account with ≥1,000 followers**
+- Unclear whether Upload-Post's Graph API call inherits that gate or if it's only enforced in the IG app UI
+- Three possible outcomes if we set `share_mode=TRIAL_REELS_DONT_SHARE_TO_FOLLOWERS` on an account that doesn't meet requirements: (a) API accepts and Trial behavior works, (b) API rejects with error, (c) API silently ignores the flag and publishes as a normal public Reel — outcome (c) is the dangerous one
+
+### Current policy (as of 2026-04-10)
+
+**Instagram account stays account-wide private until 10 successful Reels have shipped through the full pipeline.**
+
+Rationale: new account, zero followers, still learning which content/form types produce quality output. An account-wide private account means every auto-publish lands as a private post that only the account owner can see — zero risk of bad content leaking while we build confidence in the pipeline.
+
+**Exit criteria (when to revisit):**
+1. 10 Reels shipped end-to-end with no content issues at Gate 3 or after publish
+2. Run the Trial Reels API test (see below) to determine which of the three outcomes Upload-Post actually produces
+3. Based on test result:
+   - **Outcome (a) — Trial Reels works:** flip IG account public, add `share_mode=TRIAL_REELS_DONT_SHARE_TO_FOLLOWERS` to `server.js:7030-7033` Instagram block, marketing resumes
+   - **Outcome (b) — API rejects:** flip IG account public, drop `'instagram'` from default `platforms` array in `/publish` calls until account hits 1,000 followers, IG remains manual via the IG app
+   - **Outcome (c) — silently publishes public:** do NOT trust `share_mode`, either (i) keep account-wide private indefinitely or (ii) drop IG from auto-publish entirely
+
+**Trial Reels API test (run when ready to revisit):**
+
+```bash
+# Prerequisite: IG account is public. Use a throwaway video you don't care about.
+curl -X POST https://api.upload-post.com/api/upload \
+  -H "Authorization: Apikey $UPLOADPOST_API_KEY" \
+  -F "user=$UPLOADPOST_PROFILE" \
+  -F "video=<URL of test MP4>" \
+  -F "title=Trial Reels API test — delete me" \
+  -F "platform[]=instagram" \
+  -F "media_type=REELS" \
+  -F "share_mode=TRIAL_REELS_DONT_SHARE_TO_FOLLOWERS" \
+  -F "instagram_title=API test, delete"
+```
+
+Then check: (1) does Upload-Post return success or error, (2) does the Reel appear in IG at all, (3) is it labeled "Trial" in the IG app UI, (4) is it visible on your public profile grid.
+
+Tracked as **STATUS.md Tech Debt #6**.
+
+---
+
 ## Testing Checklist
 
 Once dashboard integration lands, verify in this order:
