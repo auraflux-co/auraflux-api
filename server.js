@@ -261,15 +261,18 @@ async function startHeyGenPoller(jobId, card) {
       const contentType = card.contentType || 'twitch';
       const format = contentType.includes('-short') ? 'portrait' : 'landscape';
 
-      // Pre-warm ticker cache before assembly so it's ready when FFmpeg needs it
-      // captureTicker takes ~2-3 min (900 frames) — do it now while assembly starts
+      // Pre-warm ticker cache BEFORE assembly so it's ready when FFmpeg needs it
+      // captureTicker takes ~2-3 min (900 frames) — await it here so assembly never races ahead
       if (!contentType.includes('short')) {
         const tickerContentType = contentType.replace(/-short$/, '');
-        console.log(`[heygen-poller:${jobId}] 🎞 Pre-warming ${tickerContentType} ticker cache...`);
-        captureTicker(tickerContentType).then(p => {
-          if (p) console.log(`[heygen-poller:${jobId}] ✅ Ticker pre-warmed: ${p}`);
+        console.log(`[heygen-poller:${jobId}] 🎞 Pre-warming ${tickerContentType} ticker cache (awaiting)...`);
+        try {
+          const tickerPrewarmPath = await captureTicker(tickerContentType);
+          if (tickerPrewarmPath) console.log(`[heygen-poller:${jobId}] ✅ Ticker pre-warmed: ${tickerPrewarmPath}`);
           else console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm failed — assembly will proceed without ticker`);
-        }).catch(e => console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm error: ${e.message}`));
+        } catch(e) {
+          console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm error: ${e.message} — continuing without ticker`);
+        }
       }
 
       console.log(`[heygen-poller:${jobId}] 🎬 Triggering auto-assembly (assemblyId: ${assemblyId})...`);
@@ -503,16 +506,16 @@ function findSystemFont() {
 const SYSTEM_FONT = findSystemFont();
 
 // ── Generate intro card PNG using Node Canvas ─────────────────────
-// No FFmpeg drawtext dependency — works regardless of FFmpeg build flags
+// TV Rectangle design (1280×720 canvas → 640×360 final after FFmpeg scale)
+// All 3 content types (Twitch, NBA, News) use this same TV-rectangle design
+// for CWN brand consistency. Layout: profile image left, text right.
 // Returns path to PNG file, or null if canvas not installed
 async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   const canvasModule = require('canvas');
   const { createCanvas, loadImage } = canvasModule;
-  const https = require('https');
-  const http  = require('http');
 
-  // ── Dimensions (2x resolution for sharpness) ─────────────────────
-  const W = 720, H = 840;
+  // ── Dimensions (2× resolution for sharpness — final output 640×360 after FFmpeg scale) ──
+  const W = 1280, H = 720;
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
 
@@ -521,7 +524,7 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
   const origin = (streamerData.origin  || '').replace(/\\'/g, "'").replace(/\\"/g, '"');
   const fact   = (streamerData.fact    || '').replace(/\\'/g, "'").replace(/\\"/g, '"');
 
-  // Check for local profile image first, fallback to remote URL
+  // ── Profile image loading: local file first, fallback to remote URL ──
   const twitchUsername = streamerData.twitchUsername || streamerData.name || '';
   const displayName = streamerData.displayName || '';
   const onAirName = streamerData.onAirName || '';
@@ -536,9 +539,8 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
     { name: onAirName, label: 'onAirName' },
     { name: displayName ? `profile_${displayName.replace(/ /g, '_')}` : '', label: 'profile_displayName_underscore' },
     { name: onAirName ? `profile_${onAirName.replace(/ /g, '_')}` : '', label: 'profile_onAirName_underscore' }
-  ].filter(p => p.name); // Remove empty patterns
+  ].filter(p => p.name);
 
-  // Try multiple extensions: .png, .jpeg, .jpg, and no extension
   const extensions = ['.png', '.jpeg', '.jpg', ''];
 
   console.log(`[intro-card] Looking for profile image for: ${name} (twitchUsername: ${twitchUsername}, displayName: ${displayName}, onAirName: ${onAirName})`);
@@ -556,126 +558,126 @@ async function generateIntroCardPNG(streamerData, outputPath, variant = 'cwn') {
         break;
       }
     }
-    if (localImagePath) break; // Stop if we found a match
+    if (localImagePath) break;
   }
 
   if (!localImagePath) {
     console.log(`[intro-card] ✗ No local file found - using remote URL`);
   }
 
-  // ── Color schemes ────────────────────────────────────────────────
-  const scheme = variant === 'twitch'
-    ? { bg: '#9146FF', ring: '#c7af4f', text1: '#ffffff', text2: '#ffffff', text3: '#e8e0f5', hasBg: true  }
-    : { bg: 'transparent', ring: '#c7af4f', text1: '#c7af4f', text2: '#ffffff', text3: '#aaaaaa', hasBg: false };
+  // ── Dark slate background (CWN brand) ────────────────────────────
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, W, H);
 
-  // ── Clear canvas ─────────────────────────────────────────────────
-  ctx.clearRect(0, 0, W, H);
+  // ── Layout: Image left (600×600), Text right ──────────────────────
+  const imgSize = 600;
+  const imgX    = 60;
+  const imgY    = (H - imgSize) / 2;  // vertically centered
 
-  const CX = W / 2, CY = 330, R = 260;
-
-  // ── Background (Twitch variant only) ─────────────────────────────
-  if (scheme.hasBg) {
-    ctx.fillStyle = scheme.bg;
-    const pad = 24;
-    ctx.beginPath();
-    ctx.roundRect(pad, pad, W - pad * 2, H - pad * 2, 40);
-    ctx.fill();
-  }
-
-  // ── Profile image clipped to circle ──────────────────────────────
+  // ── Profile image (rounded square clip) ──────────────────────────
   if (imgUrl) {
     try {
       const img = await loadImage(imgUrl);
       ctx.save();
-      // Enable high-quality image smoothing
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
+      // Clip to rounded rectangle
+      const r = 20;
       ctx.beginPath();
-      ctx.arc(CX, CY, R - 12, 0, Math.PI * 2);
+      ctx.moveTo(imgX + r, imgY);
+      ctx.arcTo(imgX + imgSize, imgY, imgX + imgSize, imgY + imgSize, r);
+      ctx.arcTo(imgX + imgSize, imgY + imgSize, imgX, imgY + imgSize, r);
+      ctx.arcTo(imgX, imgY + imgSize, imgX, imgY, r);
+      ctx.arcTo(imgX, imgY, imgX + imgSize, imgY, r);
+      ctx.closePath();
       ctx.clip();
-      ctx.drawImage(img, CX - R + 12, CY - R + 12, (R - 12) * 2, (R - 12) * 2);
+      ctx.drawImage(img, imgX, imgY, imgSize, imgSize);
       ctx.restore();
     } catch (e) {
-      // Profile image failed — draw placeholder
+      // Profile image failed — draw dark placeholder square
       ctx.save();
-      ctx.beginPath();
-      ctx.arc(CX, CY, R - 12, 0, Math.PI * 2);
       ctx.fillStyle = '#1a2540';
-      ctx.fill();
+      ctx.fillRect(imgX, imgY, imgSize, imgSize);
       ctx.restore();
       console.warn(`[intro-card] Profile image failed for ${name}: ${e.message}`);
     }
+  } else {
+    // No image URL — draw dark placeholder
+    ctx.fillStyle = '#1a2540';
+    ctx.fillRect(imgX, imgY, imgSize, imgSize);
   }
 
-  // ── Gold ring ────────────────────────────────────────────────────
-  ctx.beginPath();
-  ctx.arc(CX, CY, R, 0, Math.PI * 2);
-  ctx.strokeStyle = scheme.ring;
-  ctx.lineWidth   = 10;
-  ctx.stroke();
+  // ── Text column: right of image ───────────────────────────────────
+  const textX = imgX + imgSize + 80;  // 80px gap between image and text
+  const maxTextWidth = W - textX - 60; // right margin 60px
 
-  // ── Drop shadow behind text (subtle) ────────────────────────────
-  ctx.shadowColor   = 'rgba(0,0,0,0.7)';
-  ctx.shadowBlur    = 16;
+  // Drop shadow for all text
+  ctx.shadowColor   = 'rgba(0,0,0,0.8)';
+  ctx.shadowBlur    = 8;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 4;
+  ctx.textAlign     = 'left';
 
-  // ── Line 1: Streamer name (gold / white) ─────────────────────────
-  ctx.textAlign    = 'center';
-  ctx.fillStyle    = scheme.text1;
-  ctx.font         = 'bold 96px Arial';
-  ctx.fillText(name, CX, CY + R + 96);
+  // ── Name (gold, bold, 136pt) ──────────────────────────────────────
+  ctx.fillStyle = '#c7af4f';
+  ctx.font      = 'bold 136px Arial';
+  // Shrink name font if it overflows
+  let nameFontSize = 136;
+  while (nameFontSize >= 60 && ctx.measureText(name).width > maxTextWidth) {
+    nameFontSize -= 4;
+    ctx.font = `bold ${nameFontSize}px Arial`;
+  }
+  ctx.fillText(name, textX, 260);
 
-  // ── Line 2: Origin ───────────────────────────────────────────────
-  ctx.fillStyle = scheme.text2;
-  ctx.font      = 'normal 64px Arial';
-  ctx.fillText(origin, CX, CY + R + 164);
+  // ── Origin (white, 88pt) ──────────────────────────────────────────
+  ctx.fillStyle = '#ffffff';
+  ctx.font      = '88px Arial';
+  ctx.fillText(origin, textX, 380);
 
-  // ── Line 3: Fact (italic) ────────────────────────────────────────
-  ctx.fillStyle = scheme.text3;
+  // ── Fact (grey italic, word-wrapped) ─────────────────────────────
+  ctx.fillStyle = '#aaaaaa';
 
-  // Dynamic font sizing: reduce by 1px if text exceeds 2 lines, down to 14px minimum
-  // (at 2x resolution: start 44px, reduce by 2px, min 28px) - never truncate
-  let fontSize = 44;
-  let lines = [];
-  const maxLines = 2;
-  const maxWidth = W - 60;
+  // Dynamic font sizing: start at 64pt, reduce until fact fits in 2 lines
+  let factFontSize = 64;
+  let factLines    = [];
+  const factMaxLines = 2;
 
-  while (fontSize >= 28) {
-    ctx.font = `italic ${fontSize}px Arial`;
-    lines = [];
+  while (factFontSize >= 36) {
+    ctx.font = `italic ${factFontSize}px Arial`;
+    factLines = [];
     const words = fact.split(' ');
     let line = '';
-
     for (const w of words) {
       const test = line ? line + ' ' + w : w;
-      if (ctx.measureText(test).width > maxWidth) {
-        lines.push(line);
+      if (ctx.measureText(test).width > maxTextWidth) {
+        if (line) factLines.push(line);
         line = w;
       } else {
         line = test;
       }
     }
-    if (line) lines.push(line);
-
-    if (lines.length <= maxLines) break;
-    fontSize -= 2;
+    if (line) factLines.push(line);
+    if (factLines.length <= factMaxLines) break;
+    factFontSize -= 4;
   }
 
-  // Draw the lines
-  const lineHeight = fontSize;
-  let y = CY + R + 228;
-  for (const line of lines) {
-    ctx.fillText(line, CX, y);
-    y += lineHeight;
+  let factY = 490;
+  for (const line of factLines) {
+    ctx.fillText(line, textX, factY);
+    factY += factFontSize + 10;
   }
 
   ctx.shadowColor = 'transparent';
 
-  // ── Save PNG ─────────────────────────────────────────────────────
+  // ── Gold border (10px at 2× = 5px final) ─────────────────────────
+  ctx.strokeStyle = '#c7af4f';
+  ctx.lineWidth   = 10;
+  ctx.strokeRect(5, 5, W - 10, H - 10);
+
+  // ── Save PNG ──────────────────────────────────────────────────────
   const buf = canvas.toBuffer('image/png');
   require('fs').writeFileSync(outputPath, buf);
-  console.log(`[intro-card] ✅ ${variant.toUpperCase()} card written: ${require('path').basename(outputPath)} (${name})`);
+  console.log(`[intro-card] ✅ TV card written: ${require('path').basename(outputPath)} (${name})`);
 }
 
 // ── Generate NBA/News Intro Card (Square Design) ────────────────────
