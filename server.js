@@ -3998,11 +3998,15 @@ app.post('/assemble',
         const concatInput = 'concat:' + tsFiles.join('|');
         ffArgs = ['-i', concatInput, '-c:v', 'copy', '-c:a', 'aac', '-ar', '44100', '-ac', '2',
           '-bsf:a', 'aac_adtstoasc', '-movflags', '+faststart', '-y', outPath];
-      } else if (tsFiles.length > 30) {
-        // Large job — use concat demuxer for reliable A/V sync
+      } else if (tsFiles.length > 30 || clipCount > 0) {
+        // Large job OR any source clips present — use concat demuxer for reliable A/V sync
         // xfade filter_complex with 30+ files causes A/V drift accumulation
-        // and hits macOS file descriptor limits
-        log(asmId, `  ℹ️  ${tsFiles.length} segments — using concat demuxer (reliable A/V sync)`);
+        // and hits macOS file descriptor limits.
+        // CRITICAL: xfade offset math is broken when mixing avatar crossfades (0.3s) with
+        // clip hard cuts (0.001s) — cumulativeDur accumulates wrong offsets causing the video
+        // to freeze on the last frame of the clip for the rest of the video duration.
+        // Concat demuxer gives hard cuts everywhere but is rock-solid reliable with mixed content.
+        log(asmId, `  ℹ️  ${tsFiles.length} segments${clipCount > 0 ? ` (${clipCount} source clips)` : ''} — using concat demuxer (reliable A/V sync)`);
         const listPath = outPath.replace(/\.[^.]+$/, '_concat_list.txt');
         const listContent = tsFiles.map(f => `file '${f.replace(/'/g, "'\\''")}'`).join('\n');
         fs.writeFileSync(listPath, listContent);
