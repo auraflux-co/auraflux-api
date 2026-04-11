@@ -917,7 +917,7 @@ app.post('/job/:id/rollback', (req, res) => {
     card.stage = 'assembled';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: published → assembled`);
-    return res.json({ ok: true, jobId, from: 'published', to: 'assembled', message: 'Publish record cleared — re-approve to re-publish.' });
+    return res.json({ ok: true, jobId, before: 'published', after: 'assembled', message: 'Publish record cleared — re-approve to re-publish.' });
   }
 
   if (before === 'assembled') {
@@ -937,7 +937,7 @@ app.post('/job/:id/rollback', (req, res) => {
     card.stage = 'all_sent';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: assembled → all_sent`);
-    return res.json({ ok: true, jobId, from: 'assembled', to: 'all_sent', message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.' });
+    return res.json({ ok: true, jobId, before: 'assembled', after: 'all_sent', message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.' });
   }
 
   if (before === 'all_sent') {
@@ -949,7 +949,7 @@ app.post('/job/:id/rollback', (req, res) => {
     card.stage = 'script_ready';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: all_sent → script_ready`);
-    return res.json({ ok: true, jobId, from: 'all_sent', to: 'script_ready', message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.' });
+    return res.json({ ok: true, jobId, before: 'all_sent', after: 'script_ready', message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.' });
   }
 
   return res.json({ ok: false, error: `Job is at stage "${before}" — nothing to roll back to.` });
@@ -975,7 +975,7 @@ app.post('/job/:id/advance', (req, res) => {
     card.stage = 'gate1_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: script_ready → gate1 force-passed`);
-    return res.json({ ok: true, jobId, from: 'script_ready', to: 'gate1_forced', message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.' });
+    return res.json({ ok: true, jobId, before: 'script_ready', after: 'gate1_forced', message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.' });
   }
 
   if (stage === 'all_sent') {
@@ -995,7 +995,7 @@ app.post('/job/:id/advance', (req, res) => {
     card.stage = 'gate2_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: all_sent → gate2 force-passed (${forced} segments marked)`);
-    return res.json({ ok: true, jobId, from: 'all_sent', to: 'gate2_forced', message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.` });
+    return res.json({ ok: true, jobId, before: 'all_sent', after: 'gate2_forced', message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.` });
   }
 
   if (stage === 'assembled') {
@@ -1008,7 +1008,7 @@ app.post('/job/:id/advance', (req, res) => {
     card.stage = 'gate5_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: assembled → gate5 force-passed`);
-    return res.json({ ok: true, jobId, from: 'assembled', to: 'gate5_forced', message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.' });
+    return res.json({ ok: true, jobId, before: 'assembled', after: 'gate5_forced', message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.' });
   }
 
   return res.json({ ok: false, error: `Job is at stage "${stage}" — cannot advance further (already at publish stage or unknown stage).` });
