@@ -3,6 +3,8 @@ read:
   - STATUS.md
   - COMMIT_CHECKLIST.md
   - QA_GATES.md
+  - OVERNIGHT_TASKS.md
+  - MORNING_BRIEFING.md
 
 # Use Gemini 2.5 Pro — 1M token context, no TPM rate limit issues
 # Anthropic API was hitting 30k TPM org limit (free tier) with large server.js
@@ -12,3 +14,22 @@ show-model-warnings: false
 
 # Disable repo map to avoid context overhead (server.js is ~150k tokens)
 map-tokens: 0
+
+# COORDINATION RULES FOR OVERNIGHT RUNS
+# =====================================
+# CRITICAL: Cline is working on Gate 2 implementation in cwn_production.html
+# 
+# DO NOT TOUCH during overnight runs:
+# - cwn_production.html (Cline's active work)
+# - server.js lines 1818-2500 (Gate 1 QA logic)
+# - server.js lines 3040-4200 (assembly flow)
+# - lib/config.js (recently modified, stable)
+#
+# SAFE TO WORK ON:
+# - Thumbnail generation endpoints (isolated server-side logic)
+# - Error investigation and logging
+# - Input validation (additive only)
+# - Documentation updates
+# - New utility files
+#
+# IF TASK CONFLICTS: Skip to next safe task, document in MORNING_BRIEFING.md
