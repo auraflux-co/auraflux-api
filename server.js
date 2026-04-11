@@ -5742,7 +5742,7 @@ Be factual, 3-4 sentences.`
             { text: videoPrompts[contentType] || videoPrompts.twitch },
             { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
           ]}],
-          generationConfig: { maxOutputTokens: 500, temperature: 0.2 }
+          generationConfig: { maxOutputTokens: 2000, temperature: 0.2 }
         },
         { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
       );
