@@ -3177,13 +3177,30 @@ function cleanAvatarText(raw) {
     .trim();
 }
 
-// parseSegments: splits script into ordered sequence of avatar + source_clip segments.
+// ─────────────────────────────────────────────────────────────────────
+// Feature flag: true = use v2 (fixed), false = use v1 (legacy, buggy)
+// Flip to false only if v2 causes unexpected regressions in production
+// ─────────────────────────────────────────────────────────────────────
+var USE_PARSE_SEGMENTS_V2 = true;
+
+// parseSegments: A/B wrapper — routes to v2 (default) or v1 (legacy fallback)
+function parseSegments(script) {
+  if (USE_PARSE_SEGMENTS_V2) {
+    return parseSegments_v2(script);
+  } else {
+    return parseSegments_v1(script);
+  }
+}
+
+// parseSegments_v1: LEGACY — splits script into ordered sequence of avatar + source_clip segments.
 // Each section containing [CLIP PLAYS HERE] produces 3 entries:
 //   { type:'avatar', label:'X (INTRO)', text:'...', ... }
 //   { type:'source_clip', label:'X (CLIP)', clipUrl:'...', clipDuration:null }
 //   { type:'avatar', label:'X (REACTION)', text:'...', ... }
 // Sections without [CLIP PLAYS HERE] produce a single avatar entry.
-function parseSegments(script) {
+// BUG: Over-splits Style-B scripts (separate REACTION headers) → zombie fragments + duplicate labels.
+// Use parseSegments_v2 instead. Keep this for emergency rollback only.
+function parseSegments_v1(script) {
   var clean = script.replace(/\/\/[^\n]*/g, '').replace(/\n{3,}/g, '\n\n').trim();
   var lines = clean.split('\n');
   var rawSections = []; var cur = { label:'', lines:[] };
@@ -3298,6 +3315,509 @@ function parseSegments(script) {
 }
 
 
+// ─────────────────────────────────────────────────────────────────────
+// parseSegments_v2 — single segment per === HEADER === section
+// ─────────────────────────────────────────────────────────────────────
+//
+// Fixes the "scenes out of order" bug by NEVER splitting a section into
+// sub-segments. Each === HEADER === produces exactly one avatar segment
+// (and one source_clip if the section contains [CLIP PLAYS HERE]).
+//
+// Key differences from v1:
+// - Labels match Gemini's headers exactly (no "(INTRO)" / "(REACTION 1)" suffixes)
+// - Text before AND after [CLIP PLAYS HERE] in a single section is combined
+//   into one avatar segment — no zombie fragments
+// - Global clipInsertIdx counter assigns clips in order across all sections
+// - Deterministic output: N streamers × M clips → exactly
+//   1 + N × (1 + M × 2) + 1 segments for Twitch (matches QA_GATES expected)
+//
+function parseSegments_v2(script) {
+  var clean = script.replace(/\/\/[^\n]*/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  var lines = clean.split('\n');
+  var rawSections = [];
+  var cur = { label: '', lines: [] };
+
+  // Phase 1: Split script into raw sections by === HEADER === markers
+  lines.forEach(function(line) {
+    var m = line.match(/===\s*(.+?)\s*===/);
+    if (m) {
+      if (cur.label || cur.lines.length) rawSections.push(cur);
+      cur = { label: m[1].trim(), lines: [] };
+    } else {
+      cur.lines.push(line);
+    }
+  });
+  if (cur.label || cur.lines.length) rawSections.push(cur);
+
+  // Phase 2: Process each section as a single logical unit
+  var result = [];
+  var orderedUrls = (window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || [];
+  var mp4Map = (window.CURRENT_META && window.CURRENT_META.clipMp4Urls) || {};
+  var clipInsertIdx = 0;  // Global counter for clip position
+
+  rawSections.forEach(function(sec) {
+    if (!sec.label) return;
+
+    var fullText = sec.lines.join('\n');
+    var hasClipMarker = /\[CLIP PLAYS HERE[^\]]*\]/i.test(fullText);
+
+    // Extract avatar text: remove [CLIP PLAYS HERE] marker line, keep everything else
+    var avatarText = cleanAvatarText(
+      fullText.replace(/\[CLIP PLAYS HERE[^\]]*\]/gi, '').trim()
+    );
+
+    // Emit the avatar segment for this section
+    if (avatarText) {
+      var wc = avatarText.split(/\s+/).filter(Boolean).length;
+      if (wc >= 3) {
+        result.push({
+          type: 'avatar',
+          label: sec.label,
+          text: avatarText,
+          wordCount: wc,
+          estSecs: Math.round((wc / 130) * 60),
+          truncated: false
+        });
+      } else {
+        console.warn('[parseSegments_v2] Skipping ' + sec.label + ' — only ' + wc + ' words, too short');
+      }
+    }
+
+    // If this section contains a clip marker, emit the source_clip AFTER the avatar segment
+    if (hasClipMarker) {
+      var clipUrl = '';
+      var clipDuration = null;
+      var pageUrl = '';
+
+      if (orderedUrls[clipInsertIdx]) {
+        clipUrl = orderedUrls[clipInsertIdx].url || '';
+        clipDuration = orderedUrls[clipInsertIdx].duration || null;
+        pageUrl = orderedUrls[clipInsertIdx].pageUrl || '';
+      } else {
+        console.warn('[parseSegments_v2] No clip URL for clipInsertIdx=' + clipInsertIdx +
+                     ' (section: ' + sec.label + ')');
+      }
+
+      // Resolve MP4 URL if we have a mapping
+      if (clipUrl && mp4Map[clipUrl]) {
+        clipUrl = mp4Map[clipUrl];
+      }
+
+      result.push({
+        type: 'source_clip',
+        label: sec.label + ' (CLIP ' + (clipInsertIdx + 1) + ')',
+        clipUrl: clipUrl,
+        pageUrl: pageUrl,
+        clipDuration: clipDuration,
+        status: 'ready'
+      });
+
+      clipInsertIdx++;
+    }
+  });
+
+  // Phase 3: Enforce HeyGen char limit on avatar segments
+  result.forEach(function(seg) {
+    if (seg.type !== 'avatar') return;
+    if (seg.text && seg.text.length > HEYGEN_CHAR_LIMIT) {
+      seg.text = seg.text.slice(0, HEYGEN_CHAR_LIMIT);
+      seg.truncated = true;
+    }
+  });
+
+  console.log('[parseSegments_v2] Produced ' + result.length + ' segments (' +
+              result.filter(function(s){return s.type==='avatar';}).length + ' avatar + ' +
+              result.filter(function(s){return s.type==='source_clip';}).length + ' source_clip)');
+
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Gate 2 — Segment Structure QA (pure code)
+// ─────────────────────────────────────────────────────────────────────
+function gate2_validateSegmentStructure(segments, config, attemptNumber, attemptHistory) {
+  var issues = [];
+  var fixStrategies = [];
+  var jobId = (window._currentJobId) || ('job_' + Date.now());
+  var timestamp = new Date().toISOString();
+
+  var N = (config.streamers || []).length;
+  var M = config.clipsPerStreamer || 2;
+  var expectedSegmentCount, expectedClipCount, expectedPattern;
+
+  if (config.contentType === 'twitch') {
+    expectedSegmentCount = 1 + N * (1 + M * 2) + 1;
+    expectedClipCount = N * M;
+    expectedPattern = buildTwitchExpectedPattern(config.streamers, M);
+  } else if (config.contentType === 'nba' || config.contentType === 'news') {
+    expectedSegmentCount = 1 + N * 3 + 1;
+    expectedClipCount = N;
+    expectedPattern = buildNbaNewsExpectedPattern(config.streamers, config.contentType);
+  } else if ((config.contentType || '').indexOf('-short') > -1) {
+    expectedSegmentCount = 1 + N * 2 + 1;
+    expectedClipCount = N;
+    expectedPattern = null;
+  }
+
+  var actualAvatarCount = segments.filter(function(s) { return s.type === 'avatar'; }).length;
+  var actualClipCount = segments.filter(function(s) { return s.type === 'source_clip'; }).length;
+
+  // Check 1: Segment count
+  if (expectedSegmentCount && segments.length !== expectedSegmentCount) {
+    issues.push({
+      severity: 'critical',
+      kind: 'segment_count_mismatch',
+      issue: 'Expected ' + expectedSegmentCount + ' segments, got ' + segments.length,
+      evidence: 'Config: ' + N + ' streamers × ' + M + ' clips = ' + expectedSegmentCount + ' expected. Got: ' + actualAvatarCount + ' avatar + ' + actualClipCount + ' source_clip = ' + segments.length + ' total.',
+      impact: 'Pipeline will produce a video with wrong number of segments.'
+    });
+  }
+
+  // Check 2: Source clip count
+  if (expectedClipCount !== undefined && actualClipCount !== expectedClipCount) {
+    issues.push({
+      severity: 'critical',
+      kind: 'clip_count_mismatch',
+      issue: 'Expected ' + expectedClipCount + ' source clips, got ' + actualClipCount,
+      evidence: 'Script generated ' + actualClipCount + ' [CLIP PLAYS HERE] insertions, but config expects ' + expectedClipCount + ' (N=' + N + ' × M=' + M + ').',
+      impact: 'Some clips will be missing from the final video OR extra clip markers have no matching URL.'
+    });
+  }
+
+  // Check 3: No duplicate labels
+  var labelCounts = {};
+  segments.forEach(function(s) {
+    labelCounts[s.label] = (labelCounts[s.label] || 0) + 1;
+  });
+  var duplicates = Object.keys(labelCounts).filter(function(l) { return labelCounts[l] > 1; });
+  if (duplicates.length > 0) {
+    issues.push({
+      severity: 'critical',
+      kind: 'duplicate_labels',
+      issue: 'Duplicate segment labels detected: ' + duplicates.join(', '),
+      evidence: duplicates.map(function(l) { return l + ' (×' + labelCounts[l] + ')'; }).join('; '),
+      impact: 'FFmpeg intermediate filenames will collide; scene ordering becomes unreliable.'
+    });
+  }
+
+  // Check 4: No empty/too-short avatar segments
+  segments.forEach(function(s, i) {
+    if (s.type !== 'avatar') return;
+    var wc = (s.text || '').trim().split(/\s+/).filter(Boolean).length;
+    if (wc < 3) {
+      issues.push({
+        severity: 'critical',
+        kind: 'empty_avatar_segment',
+        issue: 'Segment ' + i + ' (' + s.label + ') has only ' + wc + ' words',
+        evidence: 'Text: "' + (s.text || '(empty)') + '"',
+        impact: 'HeyGen will render a near-empty avatar clip (~1-2 seconds), breaking video pacing.'
+      });
+    }
+  });
+
+  // Check 5: Every source_clip has a URL
+  segments.forEach(function(s, i) {
+    if (s.type !== 'source_clip') return;
+    if (!s.clipUrl) {
+      issues.push({
+        severity: 'critical',
+        kind: 'missing_clip_url',
+        issue: 'Source clip at index ' + i + ' (' + s.label + ') has no clipUrl',
+        evidence: 'CURRENT_META.orderedClipUrls may not have been populated before parseSegments ran.',
+        impact: 'FFmpeg will fail to download this clip and the segment will be skipped.'
+      });
+    }
+  });
+
+  // Check 6: Segment order matches expected pattern
+  if (expectedPattern) {
+    var actualPattern = segments.map(function(s) {
+      return s.type === 'source_clip' ? '<CLIP>' : s.label;
+    });
+    for (var i = 0; i < Math.min(expectedPattern.length, actualPattern.length); i++) {
+      if (expectedPattern[i] !== actualPattern[i]) {
+        issues.push({
+          severity: 'critical',
+          kind: 'segment_order_mismatch',
+          issue: 'Position ' + i + ': expected "' + expectedPattern[i] + '", got "' + actualPattern[i] + '"',
+          evidence: 'Expected: [' + expectedPattern.join(', ') + ']. Actual: [' + actualPattern.join(', ') + ']',
+          impact: 'Scenes will play in wrong order, breaking the script narrative.'
+        });
+        break;
+      }
+    }
+  }
+
+  var passed = issues.length === 0;
+  var score = Math.max(0, 100 - issues.length * 20);
+  var outcome, rollbackTo;
+
+  if (passed) {
+    outcome = 'pass';
+    rollbackTo = null;
+  } else {
+    var hasStructuralIssue = issues.some(function(issue) {
+      return issue.kind === 'segment_count_mismatch' ||
+             issue.kind === 'duplicate_labels' ||
+             issue.kind === 'empty_avatar_segment' ||
+             issue.kind === 'segment_order_mismatch';
+    });
+    var hasClipIssue = issues.some(function(issue) {
+      return issue.kind === 'clip_count_mismatch' || issue.kind === 'missing_clip_url';
+    });
+
+    if (hasStructuralIssue) {
+      fixStrategies.push({
+        id: 'reparse_with_v2',
+        description: 'Re-run parseSegments with parseSegments_v2 explicitly',
+        confidence: 0.6,
+        action: { type: 'fix_in_place', function: 'parseSegments_v2', args: { script: 'current_script' } },
+        estimatedDuration: '1s',
+        reasoning: 'If segments came from parseSegments_v1, re-parsing with v2 should fix structure.'
+      });
+      fixStrategies.push({
+        id: 'rollback_to_gate1_regenerate',
+        description: 'Rollback to Gate 1 and regenerate the script from Gemini',
+        confidence: 0.8,
+        action: { type: 'rollback', targetGate: 'gate1', params: { reason: 'segment_structure_invalid', issues: issues.map(function(i) { return i.kind; }) } },
+        estimatedDuration: '60s',
+        reasoning: 'If re-parsing with v2 does not resolve, the script itself may have unusual structure.'
+      });
+      outcome = 'fail_fix_in_place';
+      rollbackTo = 'gate1';
+    } else if (hasClipIssue) {
+      fixStrategies.push({
+        id: 'reresolve_clip_urls',
+        description: 'Re-resolve Twitch clip URLs via CURRENT_META.orderedClipUrls',
+        confidence: 0.7,
+        action: { type: 'fix_in_place', function: 'resolveTwitchClipUrls', args: { clips: 'orderedClipUrls' } },
+        estimatedDuration: '10s',
+        reasoning: 'If clip URLs are missing, CURRENT_META.orderedClipUrls may have been empty when parseSegments ran.'
+      });
+      outcome = 'fail_fix_in_place';
+      rollbackTo = null;
+    }
+  }
+
+  return {
+    gateName: 'gate2_segment_structure',
+    jobId: jobId,
+    timestamp: timestamp,
+    attemptNumber: attemptNumber || 1,
+    passed: passed,
+    score: score,
+    outcome: outcome,
+    diagnosis: issues,
+    fixStrategies: fixStrategies,
+    rollbackTo: rollbackTo,
+    escalationCriteria: 'If parseSegments_v2 re-parse fails AND regenerate from Gate 1 produces the same issues, escalate to Rob.',
+    learningNote: issues.length > 0 ?
+      'Detected ' + issues.length + ' structural issues at Gate 2. Most common: ' + (issues[0] && issues[0].kind) + '.'
+      : null,
+    attemptHistory: attemptHistory || []
+  };
+}
+
+function buildTwitchExpectedPattern(streamers, clipsPerStreamer) {
+  var pattern = ['INTRO'];
+  (streamers || []).forEach(function(s) {
+    var sName = (typeof s === 'string' ? s : (s.twitchUsername || s.username || s.displayName || '')).toUpperCase().replace(/\s+/g, '_');
+    pattern.push(sName + '_INTRO');
+    for (var c = 1; c <= clipsPerStreamer; c++) {
+      pattern.push(sName + '_CLIP' + c + '_SETUP');
+      pattern.push('<CLIP>');
+      pattern.push(sName + '_CLIP' + c + '_REACTION');
+    }
+  });
+  pattern.push('OUTRO');
+  return pattern;
+}
+
+function buildNbaNewsExpectedPattern(items, contentType) {
+  var pattern = ['INTRO'];
+  (items || []).forEach(function(item, i) {
+    var prefix = (contentType === 'nba' ? 'GAME' : 'STORY') + (i + 1);
+    pattern.push(prefix + '_SETUP');
+    pattern.push('<CLIP>');
+    pattern.push(prefix + '_REACTION');
+  });
+  pattern.push('OUTRO');
+  return pattern;
+}
+
+function logGateFix(gateOutput, strategyTriedId, strategyResult) {
+  var logEntry = {
+    timestamp: new Date().toISOString(),
+    jobId: gateOutput.jobId,
+    gate: gateOutput.gateName,
+    attemptNumber: gateOutput.attemptNumber,
+    strategyTriedId: strategyTriedId,
+    strategyResult: strategyResult,
+    priorDiagnosis: gateOutput.diagnosis.map(function(d) { return d.kind; }),
+    priorScore: gateOutput.score,
+    learningNote: gateOutput.learningNote
+  };
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/gate-fix-log', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.send(JSON.stringify(logEntry));
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Gate 2 fix loop — handleGate2Failure
+// ─────────────────────────────────────────────────────────────────────
+function handleGate2Failure(segments, gateOutput, script) {
+  console.warn('[gate2] FAIL:', gateOutput);
+  cwn_log('❌ Gate 2 failed with ' + gateOutput.diagnosis.length + ' issues. Trying fix strategies...', false);
+  displayGate2FailureUI(gateOutput);
+
+  var strategies = (gateOutput.fixStrategies || []).slice().sort(function(a, b) {
+    return (b.confidence || 0) - (a.confidence || 0);
+  });
+
+  if (strategies.length === 0) {
+    escalateGate2ToRob(gateOutput, 'No fix strategies available');
+    return;
+  }
+
+  var topStrategy = strategies[0];
+  cwn_log('🔧 Gate 2 attempting fix: ' + topStrategy.id + ' (confidence ' + topStrategy.confidence + ')', false);
+
+  executeGate2FixStrategy(topStrategy, segments, script, function(newSegments, err) {
+    if (err) {
+      cwn_log('❌ Strategy ' + topStrategy.id + ' failed: ' + err.message, true);
+      logGateFix(gateOutput, topStrategy.id, 'fail');
+      tryNextGate2Strategy(segments, gateOutput, script, strategies.slice(1));
+      return;
+    }
+
+    var newHistory = (gateOutput.attemptHistory || []).concat([{
+      attemptNumber: gateOutput.attemptNumber,
+      strategyTried: topStrategy.id,
+      resultOutcome: 'retry_pending',
+      timestampTried: gateOutput.timestamp
+    }]);
+
+    var newGateOutput = gate2_validateSegmentStructure(newSegments, {
+      contentType: CURRENT_TYPE,
+      streamers: (CURRENT_META && CURRENT_META.streamers) || [],
+      clipsPerStreamer: parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2')
+    }, (gateOutput.attemptNumber || 1) + 1, newHistory);
+
+    if (newGateOutput.passed) {
+      cwn_log('✅ Gate 2 PASS after fix: ' + topStrategy.id, false);
+      logGateFix(newGateOutput, topStrategy.id, 'pass');
+      proceedToHeyGenWithSegments(newSegments);
+    } else {
+      cwn_log('⚠️ Gate 2 still failing after ' + topStrategy.id + ', trying next strategy', true);
+      logGateFix(newGateOutput, topStrategy.id, 'fail');
+      handleGate2Failure(newSegments, newGateOutput, script);
+    }
+  });
+}
+
+function executeGate2FixStrategy(strategy, segments, script, callback) {
+  if (strategy.action.type === 'fix_in_place') {
+    if (strategy.action.function === 'parseSegments_v2') {
+      var newSegments = parseSegments_v2(script);
+      callback(newSegments, null);
+      return;
+    }
+    if (strategy.action.function === 'resolveTwitchClipUrls') {
+      resolveTwitchClipUrls(window.CURRENT_META.orderedClipUrls || [], function() {
+        var newSegments = parseSegments(script);
+        callback(newSegments, null);
+      });
+      return;
+    }
+  } else if (strategy.action.type === 'rollback') {
+    if (strategy.action.targetGate === 'gate1') {
+      cwn_log('↩ Rolling back to Gate 1 (regenerating script)...', false);
+      regenScript();
+      callback(null, new Error('Rollback in progress — pipeline will re-run from Gate 1'));
+      return;
+    }
+  }
+  callback(null, new Error('Unknown strategy action: ' + strategy.action.type));
+}
+
+function tryNextGate2Strategy(segments, gateOutput, script, remaining) {
+  if (remaining.length === 0) {
+    escalateGate2ToRob(gateOutput, 'All fix strategies exhausted');
+    return;
+  }
+  var newOutput = Object.assign({}, gateOutput, { fixStrategies: remaining });
+  handleGate2Failure(segments, newOutput, script);
+}
+
+function escalateGate2ToRob(gateOutput, reason) {
+  cwn_log('🚨 ESCALATING to Rob: ' + reason, true);
+  displayGate2EscalationUI(gateOutput, reason);
+}
+
+function proceedToHeyGenWithSegments(segments) {
+  // Called after Gate 2 auto-fix passes — continue the sendToHeyGen flow with fixed segments
+  // This is a simplified version that skips the confirm() dialog since Gate 2 already validated
+  cwn_log('✅ Gate 2 auto-fix passed — proceeding to HeyGen with ' + segments.length + ' segments', false);
+  displayGate2Pass({ score: 100, gateName: 'gate2_segment_structure' });
+  // Re-trigger sendToHeyGen — the fixed segments are now in parseSegments output
+  // (USE_PARSE_SEGMENTS_V2 is true so next call will use v2)
+  sendToHeyGen();
+}
+
+function displayGate2FailureUI(gateOutput) {
+  var container = document.getElementById('gate2-panel-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'gate2-panel-container';
+    var target = document.querySelector('.script-editor') || g('main-script');
+    if (target && target.parentNode) target.parentNode.insertBefore(container, target.nextSibling);
+  }
+  container.innerHTML =
+    '<div style="margin-top:10px;padding:12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.4);border-radius:4px;">'
+    + '<div style="font-size:10px;letter-spacing:3px;color:#e74c3c;font-weight:900;margin-bottom:6px;">GATE 2 — SEGMENT STRUCTURE FAIL (score ' + gateOutput.score + '/100)</div>'
+    + gateOutput.diagnosis.map(function(issue) {
+        return '<div style="margin-bottom:6px;padding:6px 8px;background:rgba(0,0,0,0.3);border-radius:3px;">'
+          + '<strong style="color:#e74c3c;">' + issue.kind + ':</strong> <span style="color:#fff;">' + issue.issue + '</span><br>'
+          + '<small style="color:rgba(255,255,255,0.5);">' + issue.evidence + '</small><br>'
+          + '<em style="color:rgba(255,255,255,0.4);">Impact: ' + issue.impact + '</em>'
+          + '</div>';
+      }).join('')
+    + '<div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.5);">Attempted fix strategies: '
+    + gateOutput.fixStrategies.map(function(s) { return s.description + ' (confidence ' + s.confidence + ')'; }).join(' · ')
+    + '</div></div>';
+}
+
+function displayGate2Pass(gateOutput) {
+  cwn_log('✅ Gate 2 PASS (' + gateOutput.score + '/100) — segment structure validated', false);
+  var container = document.getElementById('gate2-panel-container');
+  if (container) {
+    container.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.3);border-radius:4px;font-size:11px;color:#2ecc71;">✅ Gate 2 PASS (' + gateOutput.score + '/100) — segment structure validated</div>';
+  }
+}
+
+function displayGate2EscalationUI(gateOutput, reason) {
+  var container = document.getElementById('gate2-panel-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'gate2-panel-container';
+    var target = g('main-script');
+    if (target && target.parentNode) target.parentNode.insertBefore(container, target.nextSibling);
+  }
+  container.innerHTML =
+    '<div style="margin-top:10px;padding:12px;background:rgba(231,76,60,0.15);border:2px solid #e74c3c;border-radius:4px;">'
+    + '<div style="font-size:10px;letter-spacing:3px;color:#e74c3c;font-weight:900;margin-bottom:6px;">🚨 GATE 2 ESCALATED — ' + reason + '</div>'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;">All automatic fix strategies failed. Manual review required.</div>'
+    + '<button onclick="gate2ManualOverride()" class="btn btn-red btn-sm">⚠️ MANUAL OVERRIDE — SKIP GATE 2</button>'
+    + '</div>';
+}
+
+function gate2ManualOverride() {
+  if (!confirm('Skip Gate 2 validation and send to HeyGen anyway?\n\nThis may produce a video with wrong scene ordering or zombie fragments.')) return;
+  cwn_log('⚠️ Gate 2 manually overridden by Rob — proceeding to HeyGen', true);
+  sendToHeyGen();
+}
+
 function updateScriptStats() {
   var el = g('script-stats');
   if (!el) return;
@@ -3328,6 +3848,20 @@ function sendToHeyGen() {
 
   // Parse and validate before sending anything
   var allParsed = parseSegments(script);
+
+  // ── Gate 2: Segment Structure QA (pure code, client-side) ────────────────
+  var gate2Config = {
+    contentType: CURRENT_TYPE || 'twitch',
+    streamers: (CURRENT_META && CURRENT_META.streamers) || [],
+    clipsPerStreamer: parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10)
+  };
+  var gate2Result = gate2_validateSegmentStructure(allParsed, gate2Config, 1, []);
+  if (!gate2Result.passed) {
+    handleGate2Failure(allParsed, gate2Result, script);
+    return; // Gate 2 fix loop takes over
+  }
+  displayGate2Pass(gate2Result);
+  // ── End Gate 2 ────────────────────────────────────────────────────────────
 
   // Also parse without the 15-word minimum to catch stripped/empty segments
   var rawSegments = (function() {

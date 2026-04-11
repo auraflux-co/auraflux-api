@@ -4128,7 +4128,7 @@ app.post('/assemble',
         } catch(introErr) {
           log(asmId, `⚠️  Intro card step failed: ${introErr.message}`);
         }
-      } else if (!isShort) {
+      } else if (!isShortContent) {
         log(asmId, `  ℹ️  Intro card skipped — add cwn_header.png to ~/Downloads to enable`);
       }
 
@@ -9124,6 +9124,20 @@ app.post('/shorts/cut-from-long', async (req, res) => {
   }
 });
 
+
+// POST /gate-fix-log — append Gate 2 fix attempt to logs/gate_fixes.jsonl
+// Called by client-side handleGate2Failure after each fix strategy attempt.
+app.post('/gate-fix-log', (req, res) => {
+  const entry = req.body;
+  if (!entry) return res.json({ ok: false, error: 'No body' });
+  const logPath = path.join(__dirname, 'logs', 'gate_fixes.jsonl');
+  try {
+    fs.appendFileSync(logPath, JSON.stringify(entry) + '\n');
+    res.json({ ok: true });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
 
 // POST /gate2-segment-qa — Gate 2: Gemini reviews completed HeyGen segments
 // Called automatically by dashboard when all avatar segments finish polling.
