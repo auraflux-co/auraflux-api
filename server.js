@@ -239,7 +239,7 @@ class VectCutClient {
   /**
    * Branded "Gold Ring" Overlay for Long-Form (16:9 Landscape)
    * Applies CWN Gold (#c7af4f) 5px border + drop shadow
-   * Position: TV-shaped card (640×360) at OVERLAY_ZONE (top-left, facing Bobby G)
+   * Position: TV-shaped card (640×360) at OVERLAY_ZONE (top-right, facing Bobby G who faces viewer's left)
    * Used for: NBA intro cards, News article images
    */
   async addBrandedOverlay(videoPath, assetPath, layout = 'LONG_FORM') {
@@ -2577,8 +2577,9 @@ REQUIRED FORMAT (fill out ALL sections):
    - Any stuttering or frame drops?
 
 5. BACKGROUND: [PASS/FAIL]
-   - Clean navy/studio background visible?
-   - Any visual artifacts or glitches?
+   - Bobby G's background is a warm home-office/studio setting (bookshelf, lamp) — this is CORRECT and expected
+   - FAIL only if there are visual artifacts, glitches, green screen bleed, or the avatar is missing entirely
+   - Do NOT fail for the bookshelf/room background — that is Bobby G's standard HeyGen background
 
 OVERALL SCORE: [number from 0-100]
 
@@ -3192,6 +3193,14 @@ app.post('/assemble',
       // Top half: random source clip (1080×960), Bottom half: all avatar segments concatenated (1080×960)
       const isShortForm = contentType && contentType.includes('-short') && format === 'portrait';
 
+      // Declare outPath/outFile/totalDur/tickerType in outer scope so Gate 3 QA + Drive upload can access them
+      // regardless of whether short-form or long-form branch ran.
+      let outPath = '';
+      let outFile = '';
+      let totalDur = '0';
+      const isShortContent = contentType && contentType.includes('short');
+      const tickerType = !isShortContent && contentType ? contentType.replace(/-short$/,'') : null;
+
       if (isShortForm) {
         log(asmId, `\n📱 SHORT-FORM DETECTED — Using split-screen assembly (9:16 portrait)`);
         const assemblyTimer = new StageTimer(asmId, 'Short-Form Split-Screen Assembly');
@@ -3199,8 +3208,8 @@ app.post('/assemble',
         // Build output path
         const outDir = outputDir || OUTPUT_DIR;
         if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-        const outFile = `${(jobTitle||"cwn_short").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.mp4`;
-        const outPath = path.join(outDir, outFile);
+        outFile = `${(jobTitle||"cwn_short").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.mp4`;
+        outPath = path.join(outDir, outFile);
 
         // Separate segments by type
         const avatarFiles = [];
@@ -3395,8 +3404,8 @@ app.post('/assemble',
         // Step 3: Build output path
         const outDir    = outputDir || OUTPUT_DIR;
         if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-        const outFile   = `${(jobTitle||"cwn").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
-        const outPath   = path.join(outDir, outFile);
+        outFile   = `${(jobTitle||"cwn").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
+        outPath   = path.join(outDir, outFile);
 
       // Step 4: Normalize all segments to TS (handles mixed codecs + moov atom issues)
       // Then apply smart per-segment transitions via xfade filter on normalized files
@@ -3438,12 +3447,13 @@ app.post('/assemble',
 
         // ── Intro card burn (Twitch, NBA, News) ─────────────────────
         // If this is an INTRO segment (not cold open, not outro), burn the intro card
-        const isIntro = /\(INTRO\)/i.test(label) && !/cold.open/i.test(label);
+        // Handles "JASON (INTRO)", "JASON_INTRO", and "JASON INTRO" label formats
+        const isIntro = (/\(INTRO\)/i.test(label) || /[_ ]INTRO$/i.test(label)) && !/cold.open/i.test(label) && !/^INTRO$/i.test(label);
 
         if (isIntro && contentType === 'twitch' && streamerRoster.length) {
           // ── Twitch: Circular streamer card ────────────────────────
-          // Extract streamer name from label e.g. "JASON (INTRO)" → "Jason"
-          const streamerMatch = label.match(/^(.+?)\s*\(INTRO\)/i);
+          // Extract streamer name from label e.g. "JASON (INTRO)" → "Jason", "JASON_INTRO" → "Jason", "JASON INTRO" → "Jason"
+          const streamerMatch = label.match(/^(.+?)\s*\(INTRO\)/i) || label.match(/^(.+?)[_ ]INTRO$/i);
           const streamerName  = streamerMatch ? streamerMatch[1].trim() : '';
           const streamerData  = streamerRoster.find(s =>
             s.displayName?.toLowerCase() === streamerName.toLowerCase() ||
@@ -3487,13 +3497,13 @@ app.post('/assemble',
               if (cardExists) {
                 burnArgs = [
                   "-i", inputForTS, "-i", cardPngPath,
-                  "-filter_complex", `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=40:y=40:enable='lte(t,${introDur})'[out]`,
+                  "-filter_complex", `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1240:y=40:enable='lte(t,${introDur})'[out]`,
                   "-map", "[out]", "-map", "0:a",
                   "-c:v", "libx264", "-preset", "fast", "-crf", "18",
                   "-pix_fmt", "yuv420p",
                   "-c:a", "aac", "-ar", "44100", "-y", burnedPath
                 ];
-                console.log(`[intro-card] Canvas PNG ready for ${name}, overlaying top-right (2x render, scaled to 360px w/ lanczos)`);
+                console.log(`[intro-card] Canvas PNG ready for ${name}, overlaying top-right at x=1240,y=40 (2x render, scaled to 360px w/ lanczos)`);
               } else {
                 console.warn(`[intro-card] No card for ${streamerName} - skipping burn`);
                 burnArgs = null;
@@ -3637,7 +3647,7 @@ app.post('/assemble',
 
               const burnArgs = [
                 '-i', inputForTS, '-i', cardPngPath,
-                '-filter_complex', `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=40:y=40:enable='lte(t,${introDur})'[out]`,
+                '-filter_complex', `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1240:y=40:enable='lte(t,${introDur})'[out]`,
                 '-map', '[out]', '-map', '0:a',
                 '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
                 '-pix_fmt', 'yuv420p',
@@ -3923,8 +3933,7 @@ app.post('/assemble',
 
       // Step 6: Ticker overlay (if content type has a ticker and puppeteer is installed)
       // Shorts/reels never get a ticker
-      const isShort = contentType && contentType.includes('short');
-      const tickerType = !isShort && contentType ? contentType.replace(/-short$/,'') : null;
+      // Note: isShortContent and tickerType are declared in outer scope above
 
       if (tickerType && TICKER_MAP[tickerType]) {
         log(asmId, `\n🎞  Baking ${tickerType} ticker overlay...`);
@@ -4025,7 +4034,7 @@ app.post('/assemble',
               '-i', outPath,
               '-i', logoPng,
               '-filter_complex',
-              '[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=W-w-20:20[vout]',
+              '[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=20:20[vout]',
               '-map', '[vout]', '-map', '0:a?',
               '-c:v', 'libx264', '-preset', 'fast', '-crf', '18', '-pix_fmt', 'yuv420p',
               '-c:a', 'copy',
@@ -4168,7 +4177,7 @@ app.post('/assemble',
       // Step 7: Done
       const stat     = fs.statSync(outPath);
       const sizeMB   = (stat.size / 1024 / 1024).toFixed(1);
-      const totalDur = durations.reduce((a,b) => a+b, 0).toFixed(1);
+      totalDur = durations.reduce((a,b) => a+b, 0).toFixed(1);
 
       log(asmId, `\n✅ Assembly complete!`);
       log(asmId, `  File: ${outFile}`);
@@ -4577,9 +4586,9 @@ function getDisplayName(twitchUsername) {
 }
 
 const TICKER_MAP = {
-  nba:    'sports_ticker.html',       // sports_ticker.html in Downloads
-  news:   'cwn_combined_ticker.html', // cwn_combined_ticker.html in Downloads
-  twitch: 'cwn_twitch_ticker.html'    // cwn_twitch_ticker.html in Downloads
+  nba:    'tools/sports_ticker.html',       // sports_ticker.html in tools/
+  news:   'tools/cwn_combined_ticker.html', // cwn_combined_ticker.html in tools/
+  twitch: 'tools/cwn_twitch_ticker.html'    // cwn_twitch_ticker.html in tools/
 };
 const TICKER_CACHE = {}; // { nba: { path: '...', cachedAt: timestamp }, ... }
 const TICKER_CACHE_TTL = 3600000; // 1 hour cache validity
@@ -9296,7 +9305,7 @@ app.post('/remediate-video', async (req, res) => {
             const args = [
               '-i', currentFile, '-i', logoPng,
               '-filter_complex',
-              '[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=W-w-20:20[vout]',
+              '[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=20:20[vout]',
               '-map', '[vout]', '-map', '0:a?',
               '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'copy',
               '-movflags', '+faststart', '-y', logoOutput
