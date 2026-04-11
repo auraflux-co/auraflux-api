@@ -55,6 +55,7 @@
 | Cline | Fix REFRESH IDs for pre-title-format jobs: add `POST /heygen/video-urls` endpoint to server.js (batch video_id → URL lookup via HeyGen v1/video_status.get); add direct video_id fallback to `refreshHeyGenIds()` in dashboard — when prefix match returns 0, checks segments with videoId but no url, calls new endpoint, updates segment URLs + status. Fixes job `script_twitch_1775866928172` (sent before title fix) | `server.js`, `cwn_production.html`, `STATUS.md` | `12863ef` | 2026-04-10 10:00 PM ET |
 | Claude Code | Document Upload-Post publish-time privacy policy in ROLLBACK_FORCE_ADVANCE_SPEC.md: new "Publish-Time Privacy (Rollback's Last Line of Defense)" section covering YT `private` / TikTok `SELF_ONLY` / IG account-wide private; Upload-Post API research (no IG draft flag, only `share_mode` with Trial Reels variants); current policy = IG account-wide private until 10 Reels shipped; exit criteria + Trial Reels API test curl; added Tech Debt #6 linking to the spec | `ROLLBACK_FORCE_ADVANCE_SPEC.md`, `STATUS.md` | pending | 2026-04-10 11:10 PM ET |
 | Claude Code | Full diagnostic investigation + Cline handoff for broken Apr 10 Twitch long-form MP4: extracted 10+ frames across 5 reference videos (Apr 4-10) pinpointing pillarbox regression to Apr 10; downloaded raw HeyGen segment via API and ffprobe-verified 1920×1080 container with baked-in portrait pillarbox (HeyGen Avatar V glitch confirmed); root-caused "Error response" ticker bug to commit `b31533f` moving ticker HTMLs to `tools/` without updating `TICKER_MAP`; Rob identified new landscape-native 4K avatar `842f20b75ce242aea397f5030aa018aa`; wrote `CLINE_HANDOFF_AVATAR_AND_TICKER_FIX.md` with exact diffs for 4 fixes (avatar swap, OVERLAY_ZONE flip to top-right `x=1240`, LOGO_POS flip to top-left `x=20` to avoid collision, ticker `tools/` path fix); wrote `FUTURE_4K_MIGRATION_PLAN.md` parking doc for eventual 4K canvas migration (recommendation: stay at 1080p, benefit from supersampling); added corrections header to `CLAUDE_DIAGNOSIS_BROKEN_TWITCH_LONGFORM.md`. Cline owns all code edits; Claude Code wrote docs only. | `CLINE_HANDOFF_AVATAR_AND_TICKER_FIX.md`, `CLAUDE_DIAGNOSIS_BROKEN_TWITCH_LONGFORM.md`, `FUTURE_4K_MIGRATION_PLAN.md`, `STATUS.md` | pending | 2026-04-11 12:30 AM ET |
+| Cline | **Avatar swap + overlay flip + ticker path fix (atomic):** swap portrait avatar `1a5d4e9130d2467fa01d9e1580aff829` → landscape-native 4K avatar `842f20b75ce242aea397f5030aa018aa` in `.env`, `cwn_production.html` (2 locations), `lib/config.js`; flip OVERLAY_ZONE x=40→x=1240 (TV card top-right, Bobby G faces viewer's left); flip LOGO_POS x=1780→x=20 (logo top-left to avoid collision); update 2 FFmpeg overlay burns in `server.js` (x=1240:y=40); update 2 logo overlay burns (overlay=20:20); fix TICKER_MAP paths: add `tools/` prefix to all 3 ticker HTML paths (broken since commit b31533f moved files without updating map); clean cached ticker MP4s + frames | `.env`, `cwn_production.html`, `lib/config.js`, `server.js`, `STATUS.md`, `CLAUDE.md` | pending | 2026-04-11 1:06 AM ET |
 
 ---
 
@@ -82,7 +83,7 @@
 - **Thumbnails:** FFmpeg-based for all 3 content types, episode auto-increment — tagline "BECAUSE THE LIGHT WAS ON" ✅
 - **NBA intro card:** `/nba/generate-intro-card` — Puppeteer → 640×360 PNG (`server.js:9800`) ✅
 - **News intro card:** `/news/generate-intro-card` — OG image scraper → 640×360 (`server.js:4615`) ✅
-- **TV card position:** All 3 overlay positions (OVERLAY_ZONE + 2 FFmpeg burns) → `x=40` top-left, facing Bobby G ✅
+- **TV card position:** All 3 overlay positions (OVERLAY_ZONE + 2 FFmpeg burns) → `x=1240` top-right (Bobby G faces viewer's left; logo moved to top-left `20:20` to avoid collision) ✅
 - **Split-screen short-form:** `/capcut/split-screen` + `assembleShortForm()` — 9:16 portrait (`server.js:8358`) ✅
 - **CapCut routes:** `/capcut/init`, `/capcut/add-segment`, `/capcut/ticker`, `/capcut/logo`, `/capcut/finalize`
 - **Safety zone check:** TikTok + Reels AABB+circle overlap validation
@@ -166,7 +167,7 @@
 - **CWN Gold:** `#c7af4f`
 - **Border:** `5px solid` + `0 4px 15px rgba(0,0,0,0.5)` shadow at 50% opacity
 - **Logo Opacity:** 85% (0.85)
-- **Long-form Logo:** 120px at `W-w-20:20` (top-right, 20px margins)
+- **Long-form Logo:** 120px at `20:20` (top-LEFT, 20px margins — moved from top-right to avoid collision with TV card at x=1240)
 - **Short-form Logo:** 80px at `W-w-15:15` (top-right, 15px margins)
 - **Tagline:** "BECAUSE THE LIGHT WAS ON" (all thumbnails)
 

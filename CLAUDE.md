@@ -113,7 +113,7 @@ Script Gen → Gate 1 (≥90) → HeyGen Render → Gate 2 (≥85) → Assembly 
 **2 form types:** `compilation` (long-form 16:9, 5-10min) or `short` (9:16, 45-60sec)
 
 **Avatar IDs:**
-- 16:9 compilations: `19c1d4adf890...`
+- 16:9 compilations: `842f20b75ce242aea397f5030aa018aa` (landscape-native 4K, "ClipzWorld at his studio desk" — Bobby G faces viewer's LEFT)
 - 9:16 shorts: `ed57439c9c3d...`
 
 **Voice:** ID `2e598f1a6022448cb6710e5d44665325` ("cw") at 0.85 speed (compilations) or 0.95 speed (shorts)
@@ -469,8 +469,9 @@ git push
 6. **Intro cards only for Twitch compilations** — NBA/news use resized game thumbnails (640×360 TV shape)
 7. **`[CLIP PLAYS HERE]` is structural marker** — never spoken by avatar, replaced by source clip video during assembly
 8. **Assembly timeout: 30 minutes** — jobs abort if FFmpeg hangs (network issues, corrupted segment)
-9. **Logo overlay now on ALL long-form videos** — 120px CWN logo, top-right at `W-w-20:20`, 85% opacity (see `server.js:3359-3383`)
+9. **Logo overlay now on ALL long-form videos** — 120px CWN logo, **top-LEFT at `20:20`**, 85% opacity. Moved from top-right to avoid collision with TV card (now top-right at x=1240). See `lib/config.js` LOGO_POS and `server.js` overlay burns.
 10. **Short-form videos need 80px logo** — smaller size for 9:16 format, top-right at `W-w-15:15`
+11. **TV card (OVERLAY_ZONE) is top-RIGHT at x=1240** — Bobby G (avatar `842f20b75ce242aea397f5030aa018aa`) faces viewer's LEFT, so the TV card sits on his facing side = viewer's right. If avatar changes and faces right, flip OVERLAY_ZONE back to x=40 and LOGO_POS back to x=1780.
 
 ## File Locations
 

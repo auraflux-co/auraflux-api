@@ -855,7 +855,7 @@ maya: she/her</textarea>
         <div class="card"><div class="card-header"><div class="card-title">HEYGEN CONFIG</div></div>
           <div class="card-body">
             <div class="field"><label>API KEY (DEV)</label><input id="cfg-hg-key" type="password" value="sk_V2_hgu_kL8r4S5DK0n_4pqhaul6CA5niyZIA2ymUk7O2jgiF101"></div>
-            <div class="field"><label>AVATAR ID — COMPILATIONS</label><input id="cfg-avatar-id" value="19c1d4adf8904694a3cc331c5a9bee4b" placeholder="HeyGen avatar ID for NBA/News/Twitch compilations"></div>
+            <div class="field"><label>AVATAR ID — COMPILATIONS</label><input id="cfg-avatar-id" value="842f20b75ce242aea397f5030aa018aa" placeholder="HeyGen avatar ID for NBA/News/Twitch compilations"></div>
             <div class="field"><label>AVATAR ID — SHORTS / REELS</label><input id="cfg-avatar-short-id" value="ed57439c9c3d4a398f3b247b75714b13" placeholder="HeyGen avatar ID for Shorts/TikTok/IG Reels"></div>
             <div class="field"><label>VOICE ID</label><input id="cfg-voice-id" value="2e598f1a6022448cb6710e5d44665325"></div>
             <div class="field"><label>SPEAKING SPEED</label><input id="cfg-speak-speed" type="number" min="0.5" max="1.5" step="0.05" value="0.85" style="width:80px"> <span style="opacity:.5;font-size:11px">(0.85 = slightly slower, 1.0 = normal, range 0.5–1.5)</span></div>
@@ -1081,7 +1081,7 @@ https://www.youtube.com/watch?v=j4vcHuc3VzI</textarea>
 // ── CONFIG ────────────────────────────────────────────────────────
 var CFG = {
   hgKey: 'sk_V2_hgu_kL8r4S5DK0n_4pqhaul6CA5niyZIA2ymUk7O2jgiF101',
-  avatarId: '19c1d4adf8904694a3cc331c5a9bee4b',
+  avatarId: '842f20b75ce242aea397f5030aa018aa',
   avatarShortId: 'ed57439c9c3d4a398f3b247b75714b13',
   voiceId: '2e598f1a6022448cb6710e5d44665325',
   speakSpeed: 0.85,
@@ -1982,6 +1982,20 @@ function restoreJobsFromServer(showAlert) {
           });
         });
 
+        // Second pass: fill source_clip segments that still have no URL from orderedClipUrls sequentially.
+        // This handles cases where clip.url was empty during the first pass (e.g. older job format
+        // where orderedClipUrls entries have the URL at a different key, or the object structure differs).
+        var fillIdx = 0;
+        segments.forEach(function(seg) {
+          if (seg.type !== 'source_clip') return;
+          if (!seg.clipUrl && clipUrls[fillIdx]) {
+            seg.clipUrl = clipUrls[fillIdx].url || '';
+            seg.url     = seg.clipUrl;
+            seg.pageUrl = clipUrls[fillIdx].pageUrl || '';
+          }
+          if (clipUrls[fillIdx]) fillIdx++;
+        });
+
         // If no videoJobs (older format), create placeholder segments from script
         if (!segments.length && serverJob.script) {
           var sceneMatches = serverJob.script.match(/===\s*(.+?)\s*===/g) || [];
@@ -2094,9 +2108,9 @@ function renderQueue() {
     var hgDone = doneSegs.length===totalSegs&&totalSegs>0;
     pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
     pipe += pipeStep('FFMPEG', !!job.assembledAt, !!(status==='all_sent'&&doneSegs.length>0&&!job.assembledAt), '#e67e22');
-    pipe += pipeStep('CANVA', !!job.canvaUrl, false, '#8b3dff');
-    pipe += pipeStep('THUMBNAIL', !!job.thumbnail, false, '#2980b9');
-    pipe += pipeStep('PUBLISH COPY', !!(job.publishPrep&&job.publishPrep.title), false, '#27ae60');
+    pipe += pipeStep('GATE 5 QA', !!(job.gate5&&job.gate5.score>=85), !!(job.assembledAt&&!job.gate5), '#3498db');
+    pipe += pipeStep('GATE 3 APPROVE', !!(job._gate3Approved), !!(job.gate5&&job.gate5.score>=85&&!job._gate3Approved&&!job._gate3Rejected), '#c7af4f');
+    pipe += pipeStep('PUBLISHED', !!(job.publishRecord&&job.publishRecord.gate4==='pass'), !!(job._gate3Approved&&!(job.publishRecord&&job.publishRecord.gate4==='pass')), '#27ae60');
     pipe += '</div>';
 
     // PLATFORM STATUS
