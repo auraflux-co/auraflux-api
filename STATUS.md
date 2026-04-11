@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (10:00 PM ET)
-**Branch:** main | **Latest Commit:** `12863ef` — fix: REFRESH IDs direct video_id fallback + POST /heygen/video-urls endpoint
+**Last Updated:** 2026-04-10 (11:10 PM ET)
+**Branch:** main | **Latest Commit:** `7405efc` — docs: add Atomic Staging rule to COMMIT_CHECKLIST after concurrent-commit incident. **Note:** `6ce68c4` message is mislabeled — see Last Agent Action rows 52-54.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -53,6 +53,7 @@
 | Claude Code | Clarify commit history: commit `6ce68c4` message says "pass title to HeyGen API in generateVideo()" but actually contains Claude Code's docs-sync work (6 docs files, 0 lines of HTML). Concurrent commit activity mislabeled the commit. The real generateVideo() title fix is still unstaged in cwn_production.html (see row above). This STATUS entry exists so future agents reading git log aren't confused — the content is correct, only the message is wrong. | `STATUS.md` | `54650ed` | 2026-04-10 10:30 PM ET |
 | Claude Code | Add Atomic Staging rule to COMMIT_CHECKLIST.md after concurrent-commit incident: documents the git-index race condition between multiple agents, the `git add && git commit` atomic pattern, practical guidance (chain with `&&`, explicit file lists, check reflog after committing), and a postmortem of the 2026-04-10 incident so future agents don't repeat it | `COMMIT_CHECKLIST.md`, `STATUS.md` | `54650ed` | 2026-04-10 10:45 PM ET |
 | Cline | Fix REFRESH IDs for pre-title-format jobs: add `POST /heygen/video-urls` endpoint to server.js (batch video_id → URL lookup via HeyGen v1/video_status.get); add direct video_id fallback to `refreshHeyGenIds()` in dashboard — when prefix match returns 0, checks segments with videoId but no url, calls new endpoint, updates segment URLs + status. Fixes job `script_twitch_1775866928172` (sent before title fix) | `server.js`, `cwn_production.html`, `STATUS.md` | `12863ef` | 2026-04-10 10:00 PM ET |
+| Claude Code | Document Upload-Post publish-time privacy policy in ROLLBACK_FORCE_ADVANCE_SPEC.md: new "Publish-Time Privacy (Rollback's Last Line of Defense)" section covering YT `private` / TikTok `SELF_ONLY` / IG account-wide private; Upload-Post API research (no IG draft flag, only `share_mode` with Trial Reels variants); current policy = IG account-wide private until 10 Reels shipped; exit criteria + Trial Reels API test curl; added Tech Debt #6 linking to the spec | `ROLLBACK_FORCE_ADVANCE_SPEC.md`, `STATUS.md` | pending | 2026-04-10 11:10 PM ET |
 
 ---
 
@@ -143,6 +144,7 @@
 3. QA recorder NBA endpoint — should use `/generate-thumbnail` with `contentType: 'nba'`
 4. 12-test suite re-run pending — Tests 2 & 4 fixed, need confirmed 12/12 pass
 5. **Audit trail for rollback/force-advance** — neither dashboard log nor `logs/errors.jsonl` records rollback/advance events. Dashboard should append to job card log; server should write `{level:'warn', kind:'rollback'|'advance', jobId, before, after, at}` to `logs/errors.jsonl`. See `ROLLBACK_FORCE_ADVANCE_SPEC.md` → "Audit trail" section.
+6. **Revisit Instagram publish strategy after 10 successful Reels** — Upload-Post has no IG draft/private API parameter (confirmed 2026-04-10). Current policy: IG account stays account-wide private until 10 Reels shipped end-to-end with no content issues. After that, run the Trial Reels API test (documented in `ROLLBACK_FORCE_ADVANCE_SPEC.md` → "Publish-Time Privacy" section) to determine whether `share_mode=TRIAL_REELS_DONT_SHARE_TO_FOLLOWERS` actually works on a new account without the 1,000-follower minimum. Based on outcome: (a) wire it into `server.js:7030-7033` and flip account public, (b) drop IG from default `platforms` array until follower count grows, or (c) keep account private indefinitely. YouTube (`private`) + TikTok (`SELF_ONLY`) are already handled correctly at the API level.
 
 ---
 
