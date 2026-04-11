@@ -3,45 +3,43 @@
 **Window:** 1:00 AM – 7:00 AM Eastern (daily)
 **Agent:** Aider (gemini/gemini-2.5-pro)
 **Output:** Morning briefing written to `MORNING_BRIEFING.md` after each run
-**Status:** ⚠️ PARTIAL PAUSE (2026-04-11) — see banner below
+**Status:** 🟢 OPEN (2026-04-11 evening) — pause lifted. See context banner below for recent activity and preference ordering.
 
 ---
 
-## ⚠️ 2026-04-11 OVERNIGHT PAUSE — Cline is actively working on server.js and cwn_production.html
+## 🟢 2026-04-11 Evening — Sprint wind-down, queue fully open
 
-**Do NOT** run any Aider task tonight (2026-04-11 → 2026-04-12) that touches:
-- `server.js`
-- `cwn_production.html`
-- `lib/config.js`
-- `.env`
+**Context:** Cline completed a massive shipping day on 2026-04-11:
 
-**Reason:** Cline is implementing the Gate 2 Self-Healing Pipeline (Phase 1) overnight. See `CLINE_HANDOFF_GATE2_SEGMENT_STRUCTURE.md` for the full scope. Cline will touch all of the files listed above in a single atomic commit. If Aider touches any of them concurrently, we will get another concurrent-commit incident like the one on 2026-04-10 (commit `6ce68c4` mislabeling — see COMMIT_CHECKLIST.md Atomic Staging rule).
+- `a1439b6` — Gate 2 parseSegments_v2 + validator (Phase 1 of gated pipeline)
+- `8929a47` — Gemini clip analysis truncation fix (Task #14, Gate 1 100/100)
+- `7016d6b` — Ticker pre-warm + clip ordering restore
+- `6cd184a` — Video freeze fix (xfade cumulativeDur drift → concat demuxer)
+- `1503a37` — Gate 3 false positive + CTA placement
+- `919eb19` — Dashboard clear jobs server sync
+- `09f9502` — Human-readable auto-assembly filenames
+- `6028820` — Ticker `await` + Twitch circle→TV migration
+- `0497b19` — Dashboard persistence after auto-assembly
+- `33ed559` — Layout dimensions (TV 840×472, logo 80/10/100, ticker 72px, config-driven filters)
+- `f4b5577` — Handoff confirmations (handoffs 1-4 marked shipped)
+- **`0b613af` — TV card exact 16:9 (720×405 at 1160,100) + ticker FPS 15→30** (latest)
 
-**Aider SAFE tasks for this overnight window:**
-- Documentation updates (any `.md` file EXCEPT the handoff docs actively in use)
-- `lib/error_logger.js` enhancements (isolated from Cline's scope)
-- `.env.example` (new file, no conflict)
-- Any pure text / prompt engineering work that doesn't touch JavaScript
-- `data/cwn_style_guides.json` updates if any queued
+**Pipeline status:** 4 full smoke tests run today (Jason 2-clip), Gate 1 scoring 100/100, Gate 2/3 passing, scenes in correct order, ticker visible, logo clear of mic arm. **5th smoke test pending** to verify the exact-16:9 TV card + 30fps ticker fixes. Rob handles manual testing; Claude Code verifies frames.
 
-**Aider BLOCKED tasks for this overnight window:**
-- [~] Server.js Module Split (next: lib/streamers.js) — PAUSE until Cline finishes Gate 2
-- [ ] Phonetic Auto-Injection from streamers.json — PAUSE (touches HeyGen send logic in server.js)
-- [ ] Input Validation & Sanitization — PAUSE (touches server.js POST endpoints)
-- [ ] Rate Limiting per Endpoint — PAUSE (touches server.js)
-- [ ] Remove Duplicate `/generate-thumbnail` Route — PAUSE (touches server.js)
-- [ ] Fix Legacy Publish Stub Routes — PAUSE (touches server.js)
-- [ ] **Fix News Thumbnail 500 Error** — PAUSE (touches server.js /generate-thumbnail endpoint — despite the "Safe for Aider" note added to this task later in the file, the atomic-staging rule applies to ANY concurrent server.js write. Hold this until Cline's Gate 2 commit lands, then resume.)
-- [ ] **Fix NBA Thumbnail 500 Error** — PAUSE (same reason as News thumbnail fix)
-- [ ] **Investigate QA Session Console Errors** — PAUSE if the fix requires touching server.js; SAFE if it's diagnostic-only and produces only a report/doc output
+**Active handoffs remaining in repo root:**
+- `CLINE_HANDOFF_GATE1_CLIP_DIAGNOSTIC_UPGRADE.md` — Phase 2 of gated pipeline, not yet shipped, lower priority
+- `CLINE_HANDOFF_LAYOUT_DIMENSIONS_AND_HANDOFF_CONFIRMATION.md` — shipped as `33ed559`, kept until 4th smoke test final sign-off
+- `CLINE_HANDOFF_TICKER_STABILITY_TV_REPOSITION.md` — shipped as `0b613af`, will archive after 5th smoke test passes
 
-**Resume normal schedule:** Once Cline commits the Gate 2 implementation (expected morning of 2026-04-11 or early afternoon), the pause lifts. Rob or Claude Code will remove this banner.
+**Aider queue: fully open.** Previous narrow pause lifted. All tasks available, including the new INDEPENDENT section below. Standard atomic-staging rules still apply per COMMIT_CHECKLIST.md — if two agents try to write to the same file concurrently, we still lose.
 
-**If Aider has already started a server.js task tonight before this banner was added:** abort the task, revert any uncommitted changes, note it in MORNING_BRIEFING.md, and move to a SAFE task instead.
+**Coordination hint for Aider:** tasks in the new "🟢 INDEPENDENT — Safe Any Night" section below are explicitly designed to NOT touch `server.js` or `cwn_production.html`, so they're safe even if Cline picks up another handoff mid-week. Prefer these tasks over the legacy "QUEUED" section until the 12-test suite completes a full clean run.
+
+**If Aider hit a stale version of this file and ran a blocked task tonight:** abort, revert any uncommitted changes, note in `MORNING_BRIEFING.md`, and move to a task in the "🟢 INDEPENDENT" section.
 
 ---
 
-**Normal Status:** APPROVED — all tasks cleared to run during overnight window (restores after pause lifts)
+**Normal Status:** APPROVED — all tasks cleared to run during overnight window
 
 ---
 
@@ -187,6 +185,199 @@ These tasks were identified by Aider but couldn't be completed due to the server
 **Risk:** Medium — touches HeyGen send logic
 **Estimate:** 1 hour
 **Blocked by:** Scene count fix must be validated first ✅ (done)
+
+---
+
+### 🟢 INDEPENDENT — Safe Any Night (no server.js edits required)
+
+Added 2026-04-11 evening after Rob asked what else Aider could do beyond the nightly module split. These tasks are explicitly designed to NOT touch `server.js` or `cwn_production.html`, so they're safe regardless of whether Cline is mid-handoff on those files. Prefer these over the legacy `🟡 QUEUED` section until the 12-test suite completes a full clean run.
+
+Each task is self-contained — Aider picks one per night, ships it, moves on. Do not bundle multiple unless they're explicitly related.
+
+---
+
+#### [ ] Write unit tests for `parseSegments_v2` + Gate 2 validator
+**Files:** NEW `test/parseSegmentsV2.test.js` and `test/gate2_validator.test.js`
+**What:** Take the 10 test cases documented in `test/GATE2_TEST_CASES.md` and turn them into executable Jest or node:test test cases. Each test asserts segment count, labels, clip order against a hand-crafted script input. Second file tests the `gate2_validateSegmentStructure` 6-check logic with good/bad inputs.
+**Why:** Gate 2 is the foundation of the gated pipeline (Phase 1). Having automated tests that prove parseSegments_v2 produces exactly 9 segments for a 2-clip Jason script prevents regressions when future changes land.
+**How:**
+1. Read `test/GATE2_TEST_CASES.md` for the test case descriptions
+2. Read `cwn_production.html` to understand how `parseSegments_v2` and `gate2_validateSegmentStructure` are exposed
+3. Extract the functions into a testable form (either duplicate the logic in the test file, or refactor them into `lib/parseSegments.js` — caution: refactor path touches cwn_production.html, stay in test-file-only mode)
+4. Write the test file with `node:test` (built-in, no new dependency)
+5. Add `npm test` script to `package.json`
+6. Commit the test files + package.json update
+**Risk:** Low — new files only, doesn't touch existing code
+**Estimate:** 2 hours
+**Dependencies:** none
+**Safe for Aider:** ✅ Pure new-file creation
+
+---
+
+#### [ ] Write `/health` endpoint as `lib/routes/health.js`
+**File:** NEW `lib/routes/health.js`
+**What:** A tiny Express route module exporting a `/health` endpoint that returns 200 OK plus a JSON summary: `{status: "ok", uptime, version, node_version, memory_usage_mb, active_jobs_count, last_commit_hash}`. Read `active_jobs_count` from `data/jobs.json` without importing server.js. Version from `package.json`. Last commit from `git rev-parse HEAD` via `child_process.execSync`.
+**Why:** Railway (and any load balancer) needs a `/health` endpoint to know if the instance is alive. Currently there's no lightweight health check — load balancers would fall back to TCP checks or hit a heavy endpoint.
+**How:**
+1. Create `lib/routes/health.js` with a single `module.exports = function(app) { app.get('/health', handler); }` pattern
+2. Handler returns the JSON above with <10ms latency (no FFmpeg, no external API calls)
+3. Requires registration in `server.js` via `require('./lib/routes/health')(app);` — **this IS a server.js edit so coordinate with Cline timing**. Alternatively, make the route module self-registering via a `register(app)` export and leave the server.js wire-up as a separate follow-up task for Cline.
+4. Test: `curl http://localhost:3000/health` returns 200 + JSON
+**Risk:** Low — new file + 1-line server.js edit
+**Estimate:** 45 min
+**Dependencies:** none
+**Safe for Aider:** ✅ New file; server.js 1-line edit can be skipped if concurrent Cline work is active — leave a note in MORNING_BRIEFING.md asking Cline to wire it up
+
+---
+
+#### [ ] Write `/metrics` endpoint as `lib/routes/metrics.js`
+**File:** NEW `lib/routes/metrics.js`
+**What:** Prometheus-format metrics endpoint returning counters and gauges for: total_jobs_processed, jobs_per_gate_pass, jobs_per_gate_fail, ffmpeg_assembly_seconds_histogram, gemini_api_calls_total, heygen_segment_count_total, current_active_jobs. Read from `data/jobs.json` + parse `logs/gate_fixes.jsonl`.
+**Why:** Enables Grafana dashboard integration when we deploy to Railway. Prometheus scraping is the standard pattern for SaaS monitoring. Getting this early means the production deploy already has observability hooks in place.
+**How:**
+1. Create `lib/routes/metrics.js` with a metrics collector that reads from `persistedJobs` and `logs/gate_fixes.jsonl`
+2. Format output as Prometheus exposition format (plain text, specific syntax: `# HELP`, `# TYPE`, `metric_name{label="value"} value`)
+3. Register via `require('./lib/routes/metrics')(app);` in server.js (same coordination caveat as /health)
+4. Test: `curl http://localhost:3000/metrics` returns text/plain with metrics
+**Risk:** Low — new file + 1-line server.js edit
+**Estimate:** 2 hours
+**Dependencies:** requires `/health` route module pattern established first
+**Safe for Aider:** ✅ New file primarily
+
+---
+
+#### [ ] Clean up old files in `output/qa_failures/`
+**File:** NEW `scripts/rotate_qa_failures.sh`
+**What:** Write a bash script that keeps the N=50 most recent files per gate kind (`gate1_*.txt`, `gate2_*.txt`, etc.) and compresses older files into `output/qa_failures/archive_YYYY-MM-DD.tar.gz`. Delete the original `.txt` files after successful compression. Delete the tar.gz archives older than 90 days.
+**Why:** `output/qa_failures/` currently has 343 files and growing. At production scale with 100 jobs/day × 6 gates = 600 files/day = 18,000/month. Without rotation, the directory becomes unreadable and disk space blows up.
+**How:**
+1. Create `scripts/rotate_qa_failures.sh` with the rotation logic
+2. Add a cron entry (via `scripts/com.cwn.overnight.plist` or a new plist) to run nightly at 2am ET
+3. Test manually: `bash scripts/rotate_qa_failures.sh` — verify it preserves the 50 newest per kind and archives the rest
+4. Commit the script + plist update
+**Risk:** Low — only touches `output/qa_failures/` which is not in git
+**Estimate:** 45 min
+**Dependencies:** none
+**Safe for Aider:** ✅ Pure script, no code edits
+
+---
+
+#### [ ] Backup `data/*.json` to Google Drive nightly
+**File:** NEW `scripts/backup_data_to_drive.js`
+**What:** Node script that reads `data/jobs.json`, `data/streamers.json`, `data/cwn_style_guides.json`, `data/episode_counters.json`, `data/upload_status.json`, tar.gz them, and uploads to a `cwn-backups` folder in the existing Google Drive account (reuse `DRIVE_REFRESH_TOKEN` from `.env`). Retains 30 days of backups in Drive.
+**Why:** `data/` files are runtime state, not in git. Losing them loses job history, episode counters, streamer config. Nightly backup is cheap insurance.
+**How:**
+1. Create `scripts/backup_data_to_drive.js` using existing Google Drive auth code from `cwn-auth.js`
+2. Bundle logic: `tar -czf /tmp/cwn-backup-YYYY-MM-DD.tar.gz data/*.json`
+3. Upload via Google Drive API
+4. Clean old backups (list existing, delete any older than 30 days)
+5. Cron entry in `scripts/com.cwn.overnight.plist` at 3am ET
+**Risk:** Low — new file, uses existing auth
+**Estimate:** 1.5 hours
+**Dependencies:** none
+**Safe for Aider:** ✅ New script, no server.js edits
+
+---
+
+#### [ ] Audit `logs/errors.jsonl` and write known-errors catalog
+**File:** NEW `docs/KNOWN_ERRORS_CATALOG.md`
+**What:** Parse `logs/errors.jsonl`, group errors by pattern (same error message, same stack trace), count frequency per pattern. Write a markdown catalog documenting each known error with: pattern signature, frequency, root cause (if known), fix strategy (if known), example occurrences.
+**Why:** When a new error surfaces in production, the first question is "have we seen this before?" A searchable catalog cuts diagnosis time from hours to minutes. Also serves as input data for the Gate 1 diagnostic upgrade (Phase 2) which needs to distinguish specific failure modes.
+**How:**
+1. Read all lines from `logs/errors.jsonl` (currently 2.1KB, small)
+2. Group by normalized message (strip file paths, line numbers, timestamps)
+3. For each group, write a markdown section with the pattern + examples
+4. Start with the 3 existing known errors (JSON parse, ENOENT tools HTML files, etc.)
+5. Commit the catalog doc
+**Risk:** Low — read-only analysis, new doc only
+**Estimate:** 1 hour
+**Dependencies:** none
+**Safe for Aider:** ✅ Pure docs
+
+---
+
+#### [ ] Write `scripts/jira_sync.js` (once Rob has Jira set up)
+**File:** NEW `scripts/jira_sync.js`
+**What:** Deterministic sync script that reads `STATUS.md` Last Agent Action table + `logs/gate_fixes.jsonl` + commit log, creates or updates Jira tickets via the Atlassian REST API. Handles: STATUS.md row → Jira ticket creation, stale ticket detection (no git activity >7d), label enforcement from file path patterns.
+**Why:** Atlassian's native GitHub integration handles commit↔issue linking automatically. This script handles the custom sync needs (STATUS.md → Jira, stale detection) that the native integration doesn't cover. See `JIRA_CONFLUENCE_MIGRATION_PLAN.md` when it exists for full spec.
+**How:**
+1. **BLOCKED until Rob sets up Jira and `JIRA_CONFLUENCE_MIGRATION_PLAN.md` is written**
+2. Read the migration plan for project key, ticket ID format, label taxonomy
+3. Use `fetch` or `axios` to call Atlassian REST API with credentials from `.env` (new keys: `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN`)
+4. Cron entry in `scripts/com.cwn.overnight.plist` at 4am ET (after backup, before next day's work)
+5. Log results to `MORNING_BRIEFING.md`
+**Risk:** Medium — hits a live SaaS API with write access
+**Estimate:** 3 hours
+**Dependencies:** BLOCKED on Jira setup + migration plan
+**Safe for Aider:** ✅ New script once unblocked
+
+---
+
+#### [ ] Extract `cleanAvatarText` helper into `lib/text_cleanup.js`
+**File:** NEW `lib/text_cleanup.js`
+**What:** Extract the `cleanAvatarText` function (currently defined inline in `cwn_production.html` parseSegments) into a shared library module so both client and server can use it. Note: this requires a companion change in `cwn_production.html` to import from the module — coordinate with Cline timing.
+**Why:** `cleanAvatarText` is used in both `parseSegments_v2` (client) and potentially server-side Gate 2 validation. Duplicating the logic means inconsistencies. Extracting to a shared module is good hygiene.
+**How:**
+1. Identify the function in `cwn_production.html` (search for `function cleanAvatarText`)
+2. Create `lib/text_cleanup.js` with the same function exported
+3. **Leave the client-side copy in place** (don't edit `cwn_production.html`) — let Cline wire it up in a separate task
+4. Write a unit test for `cleanAvatarText` in `test/text_cleanup.test.js`
+**Risk:** Low — new file + test only; no production wire-up
+**Estimate:** 1 hour
+**Dependencies:** none (intentionally stops short of the client-side rewire)
+**Safe for Aider:** ✅ New files only
+
+---
+
+#### [ ] Write `scripts/lint_markdown_links.js` (catch broken cross-references)
+**File:** NEW `scripts/lint_markdown_links.js`
+**What:** Node script that walks every `.md` file in the repo, extracts all markdown links (`[text](path)` and `[text](#anchor)`), and verifies each link target exists. Reports broken links to stdout, exits 1 if any are broken.
+**Why:** The doc corpus has grown to 15+ handoff files plus CLAUDE.md, STATUS.md, architecture docs, etc. Cross-references go stale as files move (e.g., the handoffs that got archived to `docs/archive/` — any doc referencing them by old path is now broken).
+**How:**
+1. Walk `*.md` files (exclude `node_modules`, `docs/archive/`)
+2. Regex extract `\]\(([^)]+)\)` — match markdown link targets
+3. For each target: if relative path, check file exists; if anchor, check the anchor exists in target file; if URL, skip
+4. Report broken links with file:line context
+5. Add to pre-commit hook as optional check (not blocking initially)
+**Risk:** Low — read-only analysis
+**Estimate:** 1.5 hours
+**Dependencies:** none
+**Safe for Aider:** ✅ New script only
+
+---
+
+#### [ ] Prompt engineering: review and refine `cwn_style_guides.json`
+**File:** `data/cwn_style_guides.json`
+**What:** Review the current style guide for each content type (twitch/nba/news) and refine based on observed script quality. Add specific examples of good/bad Bobby G lines. Add per-streamer nuances (e.g., Yonna = YAWN-uh phonetic).
+**Why:** `cwn_style_guides.json` drives Gemini's script generation. As production data accumulates, patterns emerge — some lines consistently land, some don't. Refining the guide improves every future script.
+**How:**
+1. Read the current `cwn_style_guides.json`
+2. Read recent Gate 1 passing reports in `output/qa_failures/gate1_script_pass_*.txt` to see what Gemini is producing
+3. Read `STREAMER_DISPLAY_NAMES` in `server.js` + `data/streamers.json` for phonetic entries
+4. Propose refinements as a diff: specific "do this" / "don't do this" examples
+5. Commit the updated JSON
+**Risk:** Low — data file only, no code
+**Estimate:** 2 hours
+**Dependencies:** none
+**Safe for Aider:** ✅ Pure text/data editing
+
+---
+
+### Scheduling notes for INDEPENDENT tasks
+
+- Pick one task per night, not multiple
+- Order preference: test coverage → observability → backup → housekeeping → refactors → prompt engineering
+- If a task in the 🟡 QUEUED section has unblocked (e.g., Cline committed the pending work and it's safe), prefer the queued task over an INDEPENDENT task
+- When a task completes, mark `[x]` and add a line to the COMPLETED section below
+- If ALL INDEPENDENT tasks are done and the QUEUED section is still blocked, write a new useful task instead of idling — Aider should never skip a night
+
+### Future INDEPENDENT tasks to add later
+
+- Database migration scripts (when we move from JSON files → SQLite/Postgres for multi-tenant)
+- TypeScript type definitions for the Gate Output Contract
+- Structured logging refactor (`lib/error_logger.js` improvements)
+- Pre-commit hook improvements (auto-run markdown link linter, file size check, secrets scan)
+- Dependency vulnerability audit (`npm audit` + automated patch PRs)
 
 ---
 
