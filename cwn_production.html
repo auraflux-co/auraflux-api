@@ -300,6 +300,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="sec-title">JOB QUEUE <span class="badge" id="queue-count">0 JOBS</span></div>
       <div class="btn-row" style="margin-bottom:12px">
         <button class="btn btn-outline btn-sm" onclick="refreshQueue()">REFRESH STATUS</button>
+        <button class="btn btn-outline btn-sm" onclick="restoreJobsFromServer(true)" style="border-color:rgba(199,175,79,0.5);color:#c7af4f;" title="Reload jobs from server — use after page refresh or server restart">↩ RESTORE JOBS</button>
         <button class="btn btn-red btn-sm" onclick="clearDone()">CLEAR COMPLETED</button>
         <button class="btn btn-red btn-sm" onclick="clearAllJobs()">CLEAR ALL JOBS</button>
         <button class="btn btn-outline btn-sm" onclick="toggleErrorLog()">SHOW ERROR LOG</button>
@@ -1911,6 +1912,136 @@ function clearAllJobs() {
   saveJobs();
   renderQueue();
   cwn_log('All jobs cleared', false);
+}
+
+// ── RESTORE JOBS FROM SERVER ──────────────────────────────────────
+// Fetches GET /jobs from server.js and merges any jobs not already in
+// localStorage. Called on init (silent) and via ↩ RESTORE JOBS button.
+// Server persists job cards when Gate 1 passes + HeyGen is submitted.
+// Reconstructs segments in 'rendering' status so REFRESH IDs button appears.
+function restoreJobsFromServer(showAlert) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/jobs', true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok || !resp.jobs || !resp.jobs.length) {
+        if (showAlert) cwn_log('[restore] No persisted jobs found on server', false);
+        return;
+      }
+
+      var existingIds = {};
+      JOBS.forEach(function(j) { existingIds[j.id] = true; });
+
+      var added = 0;
+      resp.jobs.forEach(function(serverJob) {
+        // Skip if already in dashboard queue
+        if (existingIds[serverJob.jobId]) return;
+
+        // Reconstruct a dashboard-compatible job card from the server's persisted data
+        // Server saves: jobId, contentType, date, script, heygen (videoJobs array), orderedClipUrls
+        var heygenData = serverJob.heygen || {};
+        var videoJobs  = heygenData.videoJobs || [];
+        var clipUrls   = serverJob.orderedClipUrls || [];
+
+        // Build segments array: interleave avatar + source_clip in script order
+        // videoJobs = [{sceneName, video_id}] — no URL yet (HeyGen renders async)
+        // clipUrls  = [{url, pageUrl, streamer, displayName}]
+        var segments = [];
+        var clipIdx = 0;
+
+        videoJobs.forEach(function(vj) {
+          var sceneName = vj.sceneName || ('Scene ' + (segments.length + 1));
+          var isReaction = sceneName.toUpperCase().indexOf('REACTION') > -1;
+          var isIntro    = sceneName.toUpperCase().indexOf('INTRO') > -1;
+
+          // Insert source clip BEFORE reaction (after intro)
+          if (isReaction && clipUrls[clipIdx]) {
+            var clip = clipUrls[clipIdx++];
+            segments.push({
+              type:        'source_clip',
+              label:       sceneName.replace(/_REACTION.*/i, '') + ' (CLIP ' + clipIdx + ')',
+              status:      'ready',
+              clipUrl:     clip.url || '',
+              pageUrl:     clip.pageUrl || '',
+              url:         clip.url || '',
+              clipDuration: null,
+              videoId:     null
+            });
+          }
+
+          segments.push({
+            type:    'avatar',
+            label:   sceneName.replace(/_/g, ' '),
+            status:  'rendering',   // HeyGen is rendering — REFRESH IDs will populate URL
+            videoId: vj.video_id || null,
+            url:     null,
+            truncated: false
+          });
+        });
+
+        // If no videoJobs (older format), create placeholder segments from script
+        if (!segments.length && serverJob.script) {
+          var sceneMatches = serverJob.script.match(/===\s*(.+?)\s*===/g) || [];
+          sceneMatches.forEach(function(m) {
+            var label = m.replace(/===/g, '').trim();
+            segments.push({ type:'avatar', label:label, status:'rendering', videoId:null, url:null });
+          });
+        }
+
+        var contentType = serverJob.contentType || 'twitch';
+        var dateLabel = serverJob.date || new Date(serverJob.savedAt || Date.now()).toLocaleDateString([],{month:'short',day:'numeric'});
+        var avatarCount = segments.filter(function(s){ return s.type==='avatar'; }).length;
+        var clipCount   = segments.filter(function(s){ return s.type==='source_clip'; }).length;
+
+        var restoredJob = {
+          id:       serverJob.jobId,
+          type:     contentType,
+          title:    contentType.toUpperCase() + ' ' + dateLabel + ' (' + avatarCount + ' avatar + ' + clipCount + ' clips)',
+          status:   'all_sent',   // HeyGen was submitted — waiting for renders
+          created:  serverJob.savedAt || new Date().toISOString(),
+          segments: segments,
+          script:   serverJob.script || '',
+          meta:     {
+            streamers:      (serverJob.streamers || []).map(function(s){ return s.twitchUsername || s; }),
+            orderedClipUrls: clipUrls
+          },
+          url: null, pct: 50,
+          finalUrl: null, assembledAt: null,
+          canvaUrl: null, thumbnail: null, publishPrep: null,
+          platforms: { youtube: 'pending', tiktok: 'pending', instagram: 'pending' },
+          _restoredFromServer: true
+        };
+
+        JOBS.push(restoredJob);
+        existingIds[serverJob.jobId] = true;
+        added++;
+      });
+
+      if (added > 0) {
+        // Sort newest first
+        JOBS.sort(function(a, b) { return new Date(b.created) - new Date(a.created); });
+        saveJobs();
+        renderQueue();
+        cwn_log('[restore] ✅ Restored ' + added + ' job(s) from server — click 🔄 REFRESH IDs to sync HeyGen URLs', false);
+        if (showAlert) {
+          alert('✅ Restored ' + added + ' job(s) from server.\n\nNext steps:\n1. Click 🔄 REFRESH IDs on each job card\n2. Once segments show COMPLETED, click ⚙ ASSEMBLE');
+        }
+      } else {
+        cwn_log('[restore] Server has ' + resp.jobs.length + ' job(s) — all already in queue', false);
+        if (showAlert) alert('All server jobs are already in your queue (' + resp.jobs.length + ' found).');
+      }
+    } catch(e) {
+      cwn_log('[restore] Error parsing server jobs: ' + e.message, true);
+      if (showAlert) alert('❌ Could not restore jobs: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    cwn_log('[restore] Server unreachable — is server.js running on ' + CFG.ffmpegUrl + '?', true);
+    if (showAlert) alert('❌ Server unreachable — make sure server.js is running on ' + CFG.ffmpegUrl);
+  };
+  xhr.send();
 }
 
 function toggleErrorLog() {
@@ -5532,6 +5663,7 @@ loadPronunciations();
 loadStreamerList();
 setTimeout(loadStyleGuides, 1000);
 setTimeout(renderPronunciationList, 500); // check for stored guides after server connects
+setTimeout(function(){ restoreJobsFromServer(false); }, 1500); // auto-restore persisted jobs from server on page load
 </script>
 </body>
 </html>
