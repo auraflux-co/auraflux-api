@@ -274,6 +274,14 @@ async function startHeyGenPoller(jobId, card) {
 
       console.log(`[heygen-poller:${jobId}] 🎬 Triggering auto-assembly (assemblyId: ${assemblyId})...`);
 
+      // Build a human-readable job title for the output filename
+      // e.g. "TWITCH Saturday, April 11, 2026 (7 avatar + 2 clips)"
+      const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
+      const _dateLabel = _cardDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const _avatarCount = sortedAvatarSegs.length;
+      const _clipCount   = clipIdx;
+      const _humanTitle  = `${contentType.toUpperCase()} ${_dateLabel} (${_avatarCount} avatar + ${_clipCount} clips)`;
+
       try {
         await axios.post(`http://localhost:${PORT}/assemble`, {
           segments:    segmentData.map(s => s.url),
@@ -282,7 +290,7 @@ async function startHeyGenPoller(jobId, card) {
           transition:  'crossfade',
           format:      'mp4',
           assemblyId,
-          jobTitle:    jobId,
+          jobTitle:    _humanTitle,
           contentType,
           sceneTextMap: card.heygen?.sceneTextMap || null,
           fullScript:   card.script || null,
@@ -1073,6 +1081,21 @@ app.get('/jobs', (req, res) => {
   const jobs = Object.values(persistedJobs)
     .sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
   res.json({ ok: true, count: jobs.length, jobs });
+});
+
+// DELETE /job/:id — remove a job from persistedJobs + jobs.json
+// Called by dashboard clearAllJobs() and clearDone() so cleared jobs don't reappear on restore
+app.delete('/job/:id', (req, res) => {
+  const jobId = req.params.id;
+  if (!persistedJobs[jobId]) return res.json({ ok: false, error: 'Job not found: ' + jobId });
+  delete persistedJobs[jobId];
+  try {
+    fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
+  } catch(e) {
+    console.error('[jobs] Failed to save jobs.json after delete:', e.message);
+  }
+  console.log(`[jobs] Deleted job: ${jobId}`);
+  res.json({ ok: true, deleted: jobId });
 });
 
 // ── POST /job/:id/rollback — roll a job back to the previous pipeline stage ──
