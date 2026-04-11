@@ -297,6 +297,53 @@ touch server.js
 
 ---
 
+## ⚠️ Atomic Staging (Multi-Agent Concurrency Rule)
+
+**When multiple agents (Claude Code, Cline, Aider) may be committing concurrently, staging and committing MUST happen as a single atomic operation. Never leave files staged between tool calls.**
+
+### Why this matters
+
+The git index is shared global state. If Agent A stages `fileA.md` and then Agent B runs `git commit` for their own work before Agent A commits, Agent B's commit will sweep in Agent A's staged files under Agent B's commit message. The result: mislabeled commits in git history, and Agent A's commit silently fails with no clear error.
+
+### The rule
+
+✅ **Atomic — safe:**
+```bash
+git add file1.md file2.md file3.md && git commit -m "..."
+```
+
+❌ **Non-atomic — risky in multi-agent sessions:**
+```bash
+git add file1.md file2.md file3.md
+# ... any other tool call or delay here opens a race window ...
+git commit -m "..."
+```
+
+### Practical guidance
+
+1. **Chain `git add` and `git commit` with `&&`** in a single `Bash` tool call. Don't split them across tool calls when other agents are active.
+2. **Stage by explicit file list**, never `git add -A` or `git add .` — concurrent edits from another agent will hitchhike.
+3. **Before staging, run `git status` in the same tool call** to verify nothing unexpected is already in the index: `git status --short && git add <files> && git commit -m "..."`
+4. **If you see another agent's files in the staged set**, use `git restore --staged <their-file>` to unstage before committing. But be aware that this itself opens a race window — the other agent may re-stage their work mid-operation.
+5. **Watch the commit hash in reflog after committing.** If `git reflog -3` doesn't show your commit at `HEAD@{0}`, your commit was stolen — investigate immediately rather than retrying blindly.
+6. **Retry strategy for lost commits**: Do NOT retry the same `git commit` blindly. First run `git log --stat HEAD~5..HEAD` to see if your files landed under a different agent's commit message. If they did, consider a follow-up clarification commit (rather than reverting and re-committing, which risks another collision).
+
+### Historical incident (2026-04-10)
+
+Claude Code was writing a docs-sync commit (`CLAUDE.md`, `.gitignore`, `ROLLBACK_FORCE_ADVANCE_SPEC.md`, archived handoffs, `scripts/claude_consult.sh`). Cline was concurrently committing a one-line fix to `cwn_production.html` (`generateVideo()` title payload). The timeline:
+
+1. Claude Code ran `git add <6 files>` as one Bash call
+2. Claude Code ran `git commit -m "..."` as a separate Bash call
+3. Between steps 1 and 2, Cline's `git commit` executed — picking up Claude Code's 6 staged files under Cline's message "fix: pass title to HeyGen API in generateVideo()"
+4. Cline's actual `cwn_production.html` change was NOT committed (still unstaged as of this writing)
+5. Result: commit `6ce68c4` has a misleading message; Claude Code had to add a follow-up `54650ed` clarifying the mislabeling in STATUS.md
+
+**Root cause:** Non-atomic `git add` + `git commit`. If Claude Code had chained them with `&&` in a single Bash tool call, the race window would not have existed.
+
+**See:** STATUS.md Last Agent Action rows 51-53 for the full postmortem.
+
+---
+
 ## Hook Install / Update
 
 The pre-commit hook is tracked at `scripts/pre-commit.sh`. If you're on a fresh clone or the hook was updated:
@@ -305,5 +352,5 @@ The pre-commit hook is tracked at `scripts/pre-commit.sh`. If you're on a fresh 
 cp scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 ```
 
-**Last Updated**: 2026-04-09
+**Last Updated**: 2026-04-10 (added Atomic Staging rule after concurrent-commit incident)
 **Maintained by**: CWN Production Team
