@@ -308,6 +308,55 @@ async function startHeyGenPoller(jobId, card) {
         cardNow.autoAssembledAt = new Date().toISOString();
         saveJobCard(jobId, cardNow);
 
+        // ── Poll assemblyJobs in-process until done, then persist final state ──
+        // assemblyJobs[assemblyId] is in-memory in the same Node process.
+        // Poll every 15s until status is 'done', 'failed', or 'manual_review',
+        // then write assembledAt + stage + outputPath + driveUrl to the persisted job card
+        // so the dashboard shows the correct state after any page reload.
+        const ASM_POLL_INTERVAL = 15000;
+        const ASM_POLL_MAX = 120; // 30 min max (120 × 15s)
+        let asmPollCount = 0;
+        const pollAssemblyCompletion = () => {
+          asmPollCount++;
+          const asmJob = assemblyJobs[assemblyId];
+          if (!asmJob) {
+            if (asmPollCount < ASM_POLL_MAX) setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+            return;
+          }
+          const isDone = asmJob.status === 'done' || asmJob.status === 'manual_review' || asmJob.status === 'failed';
+          if (!isDone && asmPollCount < ASM_POLL_MAX) {
+            setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+            return;
+          }
+          // Assembly finished — update persisted job card
+          const finalCard = persistedJobs[jobId] || cardNow;
+          if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
+            finalCard.assembledAt = new Date().toISOString();
+            finalCard.stage = 'assembled';
+            if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
+            if (asmJob.driveUrl)   finalCard.finalUrl   = asmJob.driveUrl;
+            if (asmJob.qaScore !== undefined) {
+              finalCard.gate5 = finalCard.gate5 || {};
+              finalCard.gate5.score   = asmJob.qaScore;
+              finalCard.gate5.outcome = asmJob.qaOutcome || 'manual_review';
+              finalCard.gate5.report  = asmJob.qaReport  || '';
+              if (asmJob.qaOutcome === 'pass') {
+                finalCard._gate5Done = true;
+                finalCard.stage = 'gate5_forced'; // treat auto-pass same as force-pass for dashboard
+              }
+            }
+            if (asmJob.publishResult) {
+              finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
+              finalCard.stage = 'published';
+            }
+            saveJobCard(jobId, finalCard);
+            console.log(`[heygen-poller:${jobId}] ✅ Persisted assembly completion: stage=${finalCard.stage}, outputPath=${asmJob.outputPath || 'n/a'}, driveUrl=${asmJob.driveUrl || 'n/a'}`);
+          } else {
+            console.warn(`[heygen-poller:${jobId}] ⚠️ Assembly ended with status=${asmJob.status} — job card not updated to assembled`);
+          }
+        };
+        setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+
       } catch(assembleErr) {
         console.error(`[heygen-poller:${jobId}] ❌ Auto-assembly POST failed: ${assembleErr.message} — manual ASSEMBLE required`);
       }
