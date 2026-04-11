@@ -1476,7 +1476,7 @@ async function geminiQACheck(videoPath, opts = {}) {
   const samplePoints = [
     { label: 'EARLY',  start: Math.max(0, dur * 0.10 - 10) },
     { label: 'MIDDLE', start: Math.max(0, dur * 0.50 - 10) },
-    { label: 'LATE',   start: Math.max(0, Math.floor(dur) - 25) },
+    { label: 'LATE',   start: Math.max(0, Math.floor(dur) - 35) },
   ];
 
   const reports = [];
@@ -1601,7 +1601,11 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
 
   // Detect critical failures from report text
   const tickerMissing   = reports.filter(r => /TICKER:.*no/i.test(r)).length === reports.length;
-  const outroCutOff     = /outro.*no|cut.*off|appreciate you.*missing/i.test(fullReport);
+  // outroCutOff: only fire when Gemini explicitly marks OUTRO as FAIL in the late sample.
+  // Do NOT match "cuts off abruptly" — that phrase appears when the 20s sample window ends
+  // before the video does, which is a false positive (sample window artifact, not a real problem).
+  const lateReport      = reports[2] || '';
+  const outroCutOff     = /OUTRO:.*FAIL/i.test(lateReport) && !/abrupt.*cut|cut.*abrupt|sample.*end/i.test(lateReport);
   const avDeSync        = /a\/v.*desync|audio.*ahead|video.*behind/i.test(fullReport);
   const hasCriticalFail = freezeDetected || tickerMissing || outroCutOff || avDeSync;
 
@@ -6614,9 +6618,6 @@ ${streamerSections}
 
 === [NAME]_INTRO ===
 [2-3 sentences. Introduce streamer. Set up first clip context.]
-[beat]
-Follow [ON-AIR NAME]. Link in description.
-[beat]
 
 === [NAME]_CLIP1_SETUP ===
 [EXACTLY 2 sentences — not 1, not 3. First sentence: context about what's happening. Second sentence: specific setup for the clip.]
@@ -6644,6 +6645,8 @@ Follow [ON-AIR NAME]. Link in description.
 
 === [NAME]_CLIP3_REACTION ===
 [EXACTLY 1 sentence. Short. Flat. Deadpan. No explanation.]
+[beat]
+Follow [ON-AIR NAME]. Link in description.
 
 === OUTRO ===
 [1-2 sentences. Sign-off.]
