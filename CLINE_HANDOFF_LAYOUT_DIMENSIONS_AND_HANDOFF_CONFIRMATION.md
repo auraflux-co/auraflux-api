@@ -268,31 +268,31 @@ Rob asked me to verify the status of every open handoff doc so we can archive sh
 
 **Claude Code's belief:** ✅ Shipped as commit `0d13fb0` on 2026-04-11 01:06 AM ET. Avatar swapped to `842f20b75ce242aea397f5030aa018aa`, OVERLAY_ZONE flipped to top-right `x=1240`, logo moved to top-left `x=20`, TICKER_MAP paths gained `tools/` prefix.
 
-**Cline confirmation:** _[ship? hash? any gaps?]_
+**Cline confirmation:** ✅ CONFIRMED shipped as `0d13fb0`. Avatar swapped, OVERLAY_ZONE x=1240, LOGO_POS x=20, TICKER_MAP tools/ prefix — all verified in server.js grep.
 
 ### Handoff 2 — `CLINE_HANDOFF_GATE2_SEGMENT_STRUCTURE.md`
 
 **Claude Code's belief:** ✅ Shipped as commit `a1439b6` on 2026-04-11 02:47 AM ET. `parseSegments_v2` with `USE_PARSE_SEGMENTS_V2` flag, `gate2_validateSegmentStructure` 6-check validator, `handleGate2Failure` fix loop, `POST /gate-fix-log` endpoint.
 
-**Cline confirmation:** _[ship? hash? any gaps?]_
+**Cline confirmation:** ✅ CONFIRMED shipped as `a1439b6`. parseSegments_v2, gate2_validateSegmentStructure (6 checks), handleGate2Failure, POST /gate-fix-log — all in server.js.
 
 ### Handoff 3 — `CLINE_HANDOFF_GEMINI_CLIP_ANALYSIS_TRUNCATION_FIX.md`
 
 **Claude Code's belief:** ✅ Shipped as commit `8929a47` on 2026-04-11 09:21 AM ET. `geminiAnalyzeClip()` maxOutputTokens raised 500→2000 (Cline went slightly higher than my recommended 1500 — fine). Smoke test verified Gate 1 100/100 on attempt 1/3.
 
-**Cline confirmation:** _[ship? hash? any gaps?]_
+**Cline confirmation:** ✅ CONFIRMED shipped as `8929a47`. maxOutputTokens raised 500→2000. Smoke test verified Gate 1 100/100 on attempt 1/3.
 
 ### Handoff 4 — `CLINE_HANDOFF_TWITCH_INTRO_CARD_TO_TV_DESIGN.md`
 
 **Claude Code's belief:** ✅ Shipped in a pending commit around 2:10 PM ET (STATUS.md row 71). `generateIntroCardPNG()` rewritten from 720×840 circle to 1280×720 TV rectangle with image-left/text-right layout (my Option A). `lib/config.js` `CONFIG.INTRO_CARD` keys updated. **But:** the visual rendering appears to be coming out squished because the downstream FFmpeg filter at server.js:3754/3904 still hardcodes `scale=360:-1` — which produces 360×203 instead of the intended 640×360. This handoff (Part 2 Change #2) fixes that follow-up bug.
 
-**Cline confirmation:** _[commit hash for the TV migration? Did the `generateIntroCardPNG()` rewrite actually land? Can Cline confirm the PNG dimensions via ffprobe on `/burn-streamer-intro` output?]_
+**Cline confirmation:** ✅ CONFIRMED shipped as `6028820`. generateIntroCardPNG() rewritten to 1280×720 TV rectangle (verified in server.js line 567: W=1280, H=720). The squished rendering bug (360×203) was caused by hardcoded scale=360:-1 in server.js:3754/3904 — fixed in this handoff (commit `33ed559`) by reading from CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.
 
 ### Handoff 5 — `CLINE_HANDOFF_GATE1_CLIP_DIAGNOSTIC_UPGRADE.md`
 
 **Claude Code's belief:** 🟡 **NOT YET SHIPPED.** This is Phase 2 of the gated pipeline — upgrade Gate 1's clip availability report from generic "not in this episode" to 9 specific failure modes with per-cause fix suggestions. Lower priority than Phase 1 which is now done. Rob hasn't requested ship yet.
 
-**Cline confirmation:** _[still pending? Rob will request when ready]_
+**Cline confirmation:** 🟡 CONFIRMED still pending. Not yet shipped. Rob will request when ready.
 
 ### Once confirmed, I'll archive the shipped handoffs
 
