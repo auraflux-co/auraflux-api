@@ -4,11 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Session Start
 
-**Read these two files at the start of every session:**
-1. `CLAUDE.md` — architecture, rules, gotchas
+**Read these three files at the start of every session, in this order:**
+1. `CLAUDE.md` — architecture, rules, gotchas (this file)
 2. `STATUS.md` — current tasks, phase progress, what's working, what's next
+3. **`GATED_PIPELINE_ARCHITECTURE.md`** — the authoritative spec for the Gated Self-Healing Pipeline (9 principles, 7 gates, Gate Output Contract, collaborative QA dialogue pattern). Every agent touching pipeline code must read this. Supersedes the ad-hoc retry logic patterns in legacy code.
 
-Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
+Tell Cline: _"Read CLAUDE.md, STATUS.md, and GATED_PIPELINE_ARCHITECTURE.md and tell me what we're working on"_
+
+**Currently in-progress handoffs (as of 2026-04-11):**
+- `CLINE_HANDOFF_GATE2_SEGMENT_STRUCTURE.md` — Phase 1: parseSegments_v2 + Gate 2 pure-code validator (BLOCKS smoke testing, ship first)
+- `CLINE_HANDOFF_GATE1_CLIP_DIAGNOSTIC_UPGRADE.md` — Phase 2: specific clip failure diagnostics (ship after Phase 1)
+- `CLINE_HANDOFF_AVATAR_AND_TICKER_FIX.md` — ✅ shipped as commit `0d13fb0`
 
 ---
 
@@ -466,7 +472,7 @@ git push
 3. **Maya/Emily clips expire fastest** — use early download cache (`tmp/early_clips/`) to survive long HeyGen render times
 4. **Gate 2 samples only 3 segments** — first, middle, last. Fast streamers get auto-pass even if some segments have minor issues
 5. **Ticker baked into video** — not a live overlay. Cached for 1 hour to avoid Puppeteer re-render overhead
-6. **Intro cards only for Twitch compilations** — NBA/news use resized game thumbnails (640×360 TV shape)
+6. **Intro cards on ALL 3 content types — different visual designs per type** — Twitch uses a **circular streamer card** (160px radius circle with profile PNG in gold ring + name/origin/fact text underneath). NBA and News use the **640×360 TV-shape rectangle** (team logos + scores for NBA, Open Graph scraped image + headline for News). Both designs burn into the same OVERLAY_ZONE at `{x:1240, y:40, w:640, h:360}`. See `GATED_PIPELINE_ARCHITECTURE.md` → "Intro card design by content type" for the authoritative reference. Do NOT say "intro cards only for Twitch" — that's misleading.
 7. **`[CLIP PLAYS HERE]` is structural marker** — never spoken by avatar, replaced by source clip video during assembly
 8. **Assembly timeout: 30 minutes** — jobs abort if FFmpeg hangs (network issues, corrupted segment)
 9. **Logo overlay now on ALL long-form videos** — 120px CWN logo, **top-LEFT at `20:20`**, 85% opacity. Moved from top-right to avoid collision with TV card (now top-right at x=1240). See `lib/config.js` LOGO_POS and `server.js` overlay burns.

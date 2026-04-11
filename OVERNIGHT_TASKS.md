@@ -99,6 +99,33 @@ Mark `[x]` when complete. Add new tasks at the bottom with a date.
 
 These tasks were identified by Aider but couldn't be completed due to the server.js context limit error. Once the module split reduces server.js size, these become executable.
 
+#### [ ] Fix News Thumbnail Generation 500 Error
+**File:** `server.js` (thumbnail generation endpoint)
+**What:** Debug and fix 500 error in `/generate-thumbnail` for `contentType: 'news'`
+**Evidence:** QA session shows `POST /generate-thumbnail` (news) returns 500 status
+**Likely causes:** Missing image processing, invalid Canvas operations, or missing dependencies
+**Risk:** Low — isolated to news thumbnail logic, doesn't affect other content types
+**Estimate:** 1 hour
+**Safe for Aider:** ✅ Thumbnail generation is separate from dashboard JS and assembly flow
+
+#### [ ] Fix NBA Thumbnail Generation 500 Error  
+**File:** `server.js` (thumbnail generation endpoint)
+**What:** Debug and fix 500 error in `/generate-thumbnail` for `contentType: 'nba'`
+**Evidence:** QA session shows `POST /generate-thumbnail` (nba) returns 500 status
+**Likely causes:** Missing NBA background image, team color processing, or Canvas issues
+**Risk:** Low — isolated to NBA thumbnail logic
+**Estimate:** 1 hour
+**Safe for Aider:** ✅ Thumbnail generation is separate from dashboard JS and assembly flow
+
+#### [ ] Investigate QA Session Console Errors
+**File:** `output/qa_sessions/errors_*.json` + related server code
+**What:** Review and fix 3 console errors detected during automated QA session
+**Evidence:** QA recorder detected 3 console errors during endpoint testing
+**Action:** Read error log, identify root causes, fix underlying issues
+**Risk:** Low — diagnostic task, fixes likely small
+**Estimate:** 30 min
+**Safe for Aider:** ✅ Error investigation doesn't touch dashboard JS
+
 #### [ ] Input Validation & Sanitization (Security)
 **File:** `server.js` → after split: `lib/routes/*.js`
 **What:** Add `express-validator` checks to all POST endpoints
