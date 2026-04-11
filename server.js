@@ -135,6 +135,182 @@ function saveJobCard(jobId, card) {
   }
 }
 
+// ── startHeyGenPoller() — Auto-poll HeyGen until all segments complete, then auto-assemble ──
+// Called after Gate 1 passes and HeyGen video IDs are saved to the job card.
+// Implements the fully-automatic pipeline: Gate 1 → HeyGen render → auto-assemble → Gate 3 → Drive → Gate 6 publish (private)
+// Rob's only role: review private drafts on YouTube/TikTok/Instagram and flip to public.
+async function startHeyGenPoller(jobId, card) {
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+  if (!HEYGEN_API_KEY) {
+    console.error(`[heygen-poller:${jobId}] No HEYGEN_API_KEY — cannot poll`);
+    return;
+  }
+
+  const videoJobs = card.heygen?.videoJobs || [];
+  if (!videoJobs.length) {
+    console.error(`[heygen-poller:${jobId}] No videoJobs in card — cannot poll`);
+    return;
+  }
+
+  const POLL_INTERVAL_MS = 30000; // 30 seconds between polls
+  const MAX_POLL_MINUTES = 60;    // Give up after 60 minutes (safety net)
+  const MAX_POLLS = (MAX_POLL_MINUTES * 60 * 1000) / POLL_INTERVAL_MS;
+  let pollCount = 0;
+
+  console.log(`[heygen-poller:${jobId}] 🔄 Starting — polling ${videoJobs.length} segments every 30s (max ${MAX_POLL_MINUTES}min)`);
+
+  const poll = async () => {
+    pollCount++;
+    if (pollCount > MAX_POLLS) {
+      console.error(`[heygen-poller:${jobId}] ⏰ Timeout after ${MAX_POLL_MINUTES}min — giving up. Manual REFRESH IDs + ASSEMBLE required.`);
+      return;
+    }
+
+    try {
+      // Check status of all video IDs in parallel
+      const statuses = await Promise.all(videoJobs.map(async (job) => {
+        try {
+          const resp = await axios.get(
+            `https://api.heygen.com/v1/video_status.get?video_id=${job.video_id}`,
+            { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
+          );
+          const data = resp.data?.data || {};
+          return {
+            video_id: job.video_id,
+            sceneName: job.sceneName,
+            sceneIndex: job.sceneIndex,
+            status: data.status,
+            video_url: data.video_url || null
+          };
+        } catch(e) {
+          return { video_id: job.video_id, sceneName: job.sceneName, sceneIndex: job.sceneIndex, status: 'error', video_url: null };
+        }
+      }));
+
+      const completed = statuses.filter(s => s.status === 'completed' && s.video_url);
+      const pending   = statuses.filter(s => s.status !== 'completed');
+      const failed    = statuses.filter(s => s.status === 'failed');
+
+      console.log(`[heygen-poller:${jobId}] Poll ${pollCount}: ${completed.length}/${videoJobs.length} completed, ${pending.length} pending, ${failed.length} failed`);
+
+      if (failed.length > 0) {
+        console.error(`[heygen-poller:${jobId}] ❌ ${failed.length} segment(s) failed in HeyGen: ${failed.map(f => f.sceneName).join(', ')} — manual intervention required`);
+        // Don't give up entirely — HeyGen sometimes marks as failed then recovers. Keep polling.
+      }
+
+      if (completed.length < videoJobs.length) {
+        // Not all done yet — schedule next poll
+        setTimeout(poll, POLL_INTERVAL_MS);
+        return;
+      }
+
+      // ── All segments completed — build segmentData and trigger assembly ──
+      console.log(`[heygen-poller:${jobId}] ✅ All ${videoJobs.length} HeyGen segments completed — building segmentData for auto-assembly`);
+
+      // Sort completed segments by sceneIndex to preserve script order
+      const sortedAvatarSegs = [...completed].sort((a, b) => a.sceneIndex - b.sceneIndex);
+
+      // Build the interleaved segmentData array:
+      // Avatar segments come from HeyGen URLs (sorted by sceneIndex)
+      // Source clips come from orderedClipUrls (in order, inserted after their SETUP scene)
+      // The script structure is: INTRO, STREAMER_INTRO, CLIP1_SETUP, [CLIP1], CLIP1_REACTION, CLIP2_SETUP, [CLIP2], CLIP2_REACTION, ..., OUTRO
+      // Avatar segments: INTRO, STREAMER_INTRO, CLIP1_SETUP, CLIP1_REACTION, CLIP2_SETUP, CLIP2_REACTION, OUTRO
+      // Source clips: inserted after each SETUP scene
+      const orderedClipUrls = card.orderedClipUrls || [];
+      const segmentData = [];
+      let clipIdx = 0;
+
+      for (const avatarSeg of sortedAvatarSegs) {
+        // Add the avatar segment
+        segmentData.push({
+          url:   avatarSeg.video_url,
+          label: avatarSeg.sceneName,
+          type:  'avatar'
+        });
+
+        // If this is a SETUP scene, insert the corresponding source clip after it
+        if (/SETUP/i.test(avatarSeg.sceneName) && clipIdx < orderedClipUrls.length) {
+          const clip = orderedClipUrls[clipIdx];
+          segmentData.push({
+            url:     clip.clipUrl || clip.url || '',
+            pageUrl: clip.pageUrl || '',
+            label:   clip.label || `CLIP_${clipIdx + 1}`,
+            type:    'source_clip',
+            clipUrl: clip.clipUrl || clip.url || ''
+          });
+          clipIdx++;
+        }
+      }
+
+      console.log(`[heygen-poller:${jobId}] Built segmentData: ${segmentData.length} segments (${sortedAvatarSegs.length} avatar + ${clipIdx} source_clips)`);
+
+      // Update job card with completed URLs before assembly
+      const updatedCard = persistedJobs[jobId] || card;
+      updatedCard.heygen = updatedCard.heygen || {};
+      updatedCard.heygen.videoJobs = statuses.map(s => ({
+        ...(videoJobs.find(j => j.video_id === s.video_id) || {}),
+        status: s.status,
+        video_url: s.video_url
+      }));
+      updatedCard.stage = 'all_sent';
+      saveJobCard(jobId, updatedCard);
+
+      // Trigger assembly via internal HTTP call (same as dashboard ASSEMBLE button)
+      const PORT = process.env.PORT || 3000;
+      const assemblyId = `asm_${Date.now()}`;
+      const contentType = card.contentType || 'twitch';
+      const format = contentType.includes('-short') ? 'portrait' : 'landscape';
+
+      // Pre-warm ticker cache before assembly so it's ready when FFmpeg needs it
+      // captureTicker takes ~2-3 min (900 frames) — do it now while assembly starts
+      if (!contentType.includes('short')) {
+        const tickerContentType = contentType.replace(/-short$/, '');
+        console.log(`[heygen-poller:${jobId}] 🎞 Pre-warming ${tickerContentType} ticker cache...`);
+        captureTicker(tickerContentType).then(p => {
+          if (p) console.log(`[heygen-poller:${jobId}] ✅ Ticker pre-warmed: ${p}`);
+          else console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm failed — assembly will proceed without ticker`);
+        }).catch(e => console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm error: ${e.message}`));
+      }
+
+      console.log(`[heygen-poller:${jobId}] 🎬 Triggering auto-assembly (assemblyId: ${assemblyId})...`);
+
+      try {
+        await axios.post(`http://localhost:${PORT}/assemble`, {
+          segments:    segmentData.map(s => s.url),
+          segmentData: segmentData,
+          labels:      segmentData.map(s => s.label),
+          transition:  'crossfade',
+          format:      'mp4',
+          assemblyId,
+          jobTitle:    jobId,
+          contentType,
+          sceneTextMap: card.heygen?.sceneTextMap || null,
+          fullScript:   card.script || null,
+          streamers:    card.streamers || []
+        }, { timeout: 10000 }); // Just fire — assembly runs async
+
+        console.log(`[heygen-poller:${jobId}] ✅ Auto-assembly triggered (assemblyId: ${assemblyId}) — Gate 3 → Drive → Gate 6 will run automatically`);
+
+        // Update job card to reflect assembly started
+        const cardNow = persistedJobs[jobId] || updatedCard;
+        cardNow.assemblyId = assemblyId;
+        cardNow.autoAssembledAt = new Date().toISOString();
+        saveJobCard(jobId, cardNow);
+
+      } catch(assembleErr) {
+        console.error(`[heygen-poller:${jobId}] ❌ Auto-assembly POST failed: ${assembleErr.message} — manual ASSEMBLE required`);
+      }
+
+    } catch(pollErr) {
+      console.error(`[heygen-poller:${jobId}] Poll error: ${pollErr.message} — retrying in 30s`);
+      setTimeout(poll, POLL_INTERVAL_MS);
+    }
+  };
+
+  // Start first poll after 30s (give HeyGen time to begin processing)
+  setTimeout(poll, POLL_INTERVAL_MS);
+}
+
 // NOTE: GET /jobs endpoint is registered after app is initialized (see below near line 796+)
 
 // Initialize Anthropic client for Claude API calls
@@ -6771,7 +6947,7 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
     // Saved whenever Gate 1 passes and HeyGen is submitted.
     // Dashboard calls GET /jobs on load to restore the job queue.
     if (scriptQA.outcome === 'pass' && heygenResult && !heygenResult.error) {
-      saveJobCard(jobId, {
+      const jobCard = {
         jobId,
         contentType: type,
         date: dateStr,
@@ -6783,8 +6959,18 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
         gate1Score: scriptQA.score,
         streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s.streamer || s })) : [],
         clipsPerStreamer: req.body.clipsPerStreamer || 2
-      });
+      };
+      saveJobCard(jobId, jobCard);
       console.log(`[jobs] ✅ Job card persisted to disk: ${jobId}`);
+
+      // ── Auto-poll HeyGen → auto-assemble → auto-publish ──────────────
+      // Starts a background poller that checks HeyGen every 30s until all
+      // segments are completed, then automatically triggers assembly.
+      // Gate 3 → Drive upload → Gate 6 publish (private) all run inside /assemble.
+      // Rob's only role: review private drafts on YouTube/TikTok/Instagram.
+      startHeyGenPoller(jobId, jobCard).catch(e => {
+        console.error(`[heygen-poller:${jobId}] Poller startup error: ${e.message}`);
+      });
     }
 
   } catch(err) {
