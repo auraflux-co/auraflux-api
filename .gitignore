@@ -7,6 +7,12 @@ cwn-drive-key.json
 .DS_Store
 .aider*
 
+# Runtime state — never commit
+# NOTE: data/episode_counters.json and logs/errors.jsonl are already tracked;
+# leaving them tracked so episode numbers survive fresh clones and error logs
+# stay accessible to the overnight runner. Only brand-new runtime files go here.
+data/jobs.json
+
 # Binary / media assets — keep locally or in Google Drive
 *.mp4
 *.mov

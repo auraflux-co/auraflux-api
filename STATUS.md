@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (9:36 PM ET)
-**Branch:** main | **Latest Commit:** `eac1073` — feat: rollback + force-advance for every pipeline stage
+**Last Updated:** 2026-04-10 (10:15 PM ET)
+**Branch:** main | **Latest Commit:** `eaf6ff8` — docs: update STATUS.md with commit hash eac1073 (rollback/advance shipped)
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -47,7 +47,9 @@
 | Cline | Add job persistence: persistedJobs loaded from data/jobs.json on startup, saveJobCard() writes to disk with 7-day pruning, GET /jobs endpoint for dashboard recovery after server restart | `server.js`, `STATUS.md` | `33a8800` | 2026-04-10 8:11 PM ET |
 | Cline | Fix ASSEMBLE button missing after page refresh: add restoreJobsFromServer() + ↩ RESTORE JOBS button + auto-call on init (1.5s delay); reconstructs segments from server's persisted job cards so REFRESH IDs → ASSEMBLE flow works after any page reload | `cwn_production.html`, `STATUS.md` | `cfe2200` | 2026-04-10 9:30 PM ET |
 | Cline | Add pipeline rollback + force-advance: POST /job/:id/rollback + POST /job/:id/advance + detectStage() in server.js; ↩ ROLLBACK + ⏭ FORCE ADVANCE buttons on every job card; rollbackJob() + advanceJob() JS functions call server then refresh queue | `server.js`, `cwn_production.html`, `STATUS.md` | `eac1073` | 2026-04-10 9:36 PM ET |
-| Cline | Fix rollback/advance key mismatch: all 6 JSON responses now use `before`/`after` keys (dashboard JS reads resp.before/resp.after); 4 responses were incorrectly using `from`/`to` | `server.js` | pending | 2026-04-10 9:41 PM ET |
+| Cline | Fix rollback/advance key mismatch: all 6 JSON responses now use `before`/`after` keys (dashboard JS reads resp.before/resp.after); 4 responses were incorrectly using `from`/`to` | `server.js` | `472718f` | 2026-04-10 9:41 PM ET |
+| Cline | Fix generateVideo() missing title: add `title: title \|\| undefined` to HeyGen API payload so REFRESH IDs can match videos by `batchId_XX_SCENENAME` prefix (was returning 0/50 matches) | `cwn_production.html` | pending | 2026-04-10 9:48 PM ET |
+| Claude Code | Docs sync: write ROLLBACK_FORCE_ADVANCE_SPEC.md documenting shipped feature (stage machine, endpoint contracts, test checklist, open questions); add Job Persistence + Pipeline Controls + Zoom-to-Fill sections to CLAUDE.md; add data/jobs.json to .gitignore; archive two stale CLINE_HANDOFF_CLIP_MISMATCH_*.md to docs/archive/; delete empty scripts/trigger_assemble.js; commit scripts/claude_consult.sh (peer-agent consultation tool) | `ROLLBACK_FORCE_ADVANCE_SPEC.md`, `CLAUDE.md`, `.gitignore`, `STATUS.md`, `docs/archive/CLINE_HANDOFF_CLIP_MISMATCH_BUG.md`, `docs/archive/CLINE_HANDOFF_CLIP_MISMATCH_FIX_V2.md`, `scripts/claude_consult.sh` | pending | 2026-04-10 10:15 PM ET |
 
 ---
 
@@ -137,6 +139,7 @@
 2. Asset path hardcoding — should use environment variables
 3. QA recorder NBA endpoint — should use `/generate-thumbnail` with `contentType: 'nba'`
 4. 12-test suite re-run pending — Tests 2 & 4 fixed, need confirmed 12/12 pass
+5. **Audit trail for rollback/force-advance** — neither dashboard log nor `logs/errors.jsonl` records rollback/advance events. Dashboard should append to job card log; server should write `{level:'warn', kind:'rollback'|'advance', jobId, before, after, at}` to `logs/errors.jsonl`. See `ROLLBACK_FORCE_ADVANCE_SPEC.md` → "Audit trail" section.
 
 ---
 
