@@ -899,6 +899,131 @@ app.get('/jobs', (req, res) => {
   res.json({ ok: true, count: jobs.length, jobs });
 });
 
+// ── POST /job/:id/rollback — roll a job back to the previous pipeline stage ──
+// Stages (in order): script_ready → all_sent → assembled → published
+// Rollback clears the data from the current stage so the previous stage's
+// action button re-appears in the dashboard.
+app.post('/job/:id/rollback', (req, res) => {
+  const jobId = req.params.id;
+  const card  = persistedJobs[jobId];
+  if (!card) return res.json({ ok: false, error: 'Job not found: ' + jobId });
+
+  const before = card.stage || detectStage(card);
+
+  if (before === 'published') {
+    // Roll back from published → assembled (clear publish record, keep finalUrl)
+    delete card.publishRecord;
+    delete card._gate3Approved;
+    card.stage = 'assembled';
+    saveJobCard(jobId, card);
+    console.log(`[rollback] ${jobId}: published → assembled`);
+    return res.json({ ok: true, jobId, from: 'published', to: 'assembled', message: 'Publish record cleared — re-approve to re-publish.' });
+  }
+
+  if (before === 'assembled') {
+    // Roll back from assembled → all_sent (clear assembly + Gate 5 data)
+    delete card.assembledAt;
+    delete card.finalUrl;
+    delete card.outputPath;
+    delete card.gate5;
+    delete card._gate5Done;
+    delete card._gate5Running;
+    delete card._gate3Approved;
+    delete card._gate3Rejected;
+    // Reset all avatar segments back to 'rendering' so REFRESH IDs re-appears
+    if (card.heygen && card.heygen.videoJobs) {
+      card.heygen.videoJobs.forEach(vj => { vj._url = null; });
+    }
+    card.stage = 'all_sent';
+    saveJobCard(jobId, card);
+    console.log(`[rollback] ${jobId}: assembled → all_sent`);
+    return res.json({ ok: true, jobId, from: 'assembled', to: 'all_sent', message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.' });
+  }
+
+  if (before === 'all_sent') {
+    // Roll back from all_sent → script_ready (clear HeyGen video IDs)
+    if (card.heygen && card.heygen.videoJobs) {
+      card.heygen.videoJobs.forEach(vj => { delete vj.video_id; });
+    }
+    delete card.gate2;
+    card.stage = 'script_ready';
+    saveJobCard(jobId, card);
+    console.log(`[rollback] ${jobId}: all_sent → script_ready`);
+    return res.json({ ok: true, jobId, from: 'all_sent', to: 'script_ready', message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.' });
+  }
+
+  return res.json({ ok: false, error: `Job is at stage "${before}" — nothing to roll back to.` });
+});
+
+// ── POST /job/:id/advance — force-advance a stuck job to the next stage ──
+// Use when a gate is stuck (HeyGen timeout, Gate 5 server error, etc.)
+// Does NOT skip quality checks — it marks the current gate as "force-passed"
+// so the next action button appears in the dashboard.
+app.post('/job/:id/advance', (req, res) => {
+  const jobId = req.params.id;
+  const card  = persistedJobs[jobId];
+  if (!card) return res.json({ ok: false, error: 'Job not found: ' + jobId });
+
+  const stage = card.stage || detectStage(card);
+
+  if (stage === 'script_ready') {
+    // Force-advance: mark Gate 1 as force-passed so SEND TO HEYGEN is unblocked
+    card.gate1 = card.gate1 || {};
+    card.gate1.outcome = 'force_pass';
+    card.gate1.score   = card.gate1.score || 0;
+    card.gate1.forcedAt = new Date().toISOString();
+    card.stage = 'gate1_forced';
+    saveJobCard(jobId, card);
+    console.log(`[advance] ${jobId}: script_ready → gate1 force-passed`);
+    return res.json({ ok: true, jobId, from: 'script_ready', to: 'gate1_forced', message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.' });
+  }
+
+  if (stage === 'all_sent') {
+    // Force-advance: mark all rendering segments as completed with a placeholder URL
+    // so the ASSEMBLE button appears. The placeholder will be replaced by REFRESH IDs.
+    const videoJobs = (card.heygen && card.heygen.videoJobs) || [];
+    let forced = 0;
+    videoJobs.forEach(vj => {
+      if (!vj._url && vj.video_id) {
+        vj._forcedComplete = true;
+        forced++;
+      }
+    });
+    card.gate2 = card.gate2 || {};
+    card.gate2.outcome  = 'force_pass';
+    card.gate2.forcedAt = new Date().toISOString();
+    card.stage = 'gate2_forced';
+    saveJobCard(jobId, card);
+    console.log(`[advance] ${jobId}: all_sent → gate2 force-passed (${forced} segments marked)`);
+    return res.json({ ok: true, jobId, from: 'all_sent', to: 'gate2_forced', message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.` });
+  }
+
+  if (stage === 'assembled') {
+    // Force-advance: mark Gate 5 as force-passed so APPROVE button appears
+    card.gate5 = card.gate5 || {};
+    card.gate5.score    = card.gate5.score || 0;
+    card.gate5.outcome  = 'force_pass';
+    card.gate5.forcedAt = new Date().toISOString();
+    card._gate5Done     = true;
+    card.stage = 'gate5_forced';
+    saveJobCard(jobId, card);
+    console.log(`[advance] ${jobId}: assembled → gate5 force-passed`);
+    return res.json({ ok: true, jobId, from: 'assembled', to: 'gate5_forced', message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.' });
+  }
+
+  return res.json({ ok: false, error: `Job is at stage "${stage}" — cannot advance further (already at publish stage or unknown stage).` });
+});
+
+// Helper: detect current pipeline stage from persisted job card fields
+function detectStage(card) {
+  if (!card) return 'unknown';
+  if (card.publishRecord && card.publishRecord.publishedAt) return 'published';
+  if (card.assembledAt || card.finalUrl) return 'assembled';
+  if (card.heygen && card.heygen.videoJobs && card.heygen.videoJobs.length) return 'all_sent';
+  if (card.script && card.script.length > 10) return 'script_ready';
+  return 'unknown';
+}
+
 // ── Serve HTML thumbnail/overlay tools ──────────────────────────────
 app.get('/news-tool', (req, res) => {
   res.sendFile(path.join(__dirname, 'cwn_news_tool.html'));

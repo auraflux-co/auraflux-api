@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (9:30 PM ET)
-**Branch:** main | **Latest Commit:** pending — fix: dashboard auto-restores jobs from server on page load (ASSEMBLE button fix)
+**Last Updated:** 2026-04-10 (9:36 PM ET)
+**Branch:** main | **Latest Commit:** pending — feat: rollback + force-advance for every pipeline stage
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -45,7 +45,8 @@
 | Cline | Fix #5: Explicit scene→clip mapping in Gemini prompt — each clip block now labels which SETUP/REACTION scenes it feeds, preventing Gemini from swapping clip 1 and clip 2 analyses | `server.js` | `84a780c` | 2026-04-10 5:28 PM ET |
 | Cline | Fix #6A-E: Real video clip filtering (isVideoAnalyzed flag), dynamic report numbers, explicit CLIP ORDER swap in claudeScriptFix | `server.js`, `STATUS.md` | `67527e5` | 2026-04-10 5:47 PM ET |
 | Cline | Add job persistence: persistedJobs loaded from data/jobs.json on startup, saveJobCard() writes to disk with 7-day pruning, GET /jobs endpoint for dashboard recovery after server restart | `server.js`, `STATUS.md` | `33a8800` | 2026-04-10 8:11 PM ET |
-| Cline | Fix ASSEMBLE button missing after page refresh: add restoreJobsFromServer() + ↩ RESTORE JOBS button + auto-call on init (1.5s delay); reconstructs segments from server's persisted job cards so REFRESH IDs → ASSEMBLE flow works after any page reload | `cwn_production.html`, `STATUS.md` | pending | 2026-04-10 9:30 PM ET |
+| Cline | Fix ASSEMBLE button missing after page refresh: add restoreJobsFromServer() + ↩ RESTORE JOBS button + auto-call on init (1.5s delay); reconstructs segments from server's persisted job cards so REFRESH IDs → ASSEMBLE flow works after any page reload | `cwn_production.html`, `STATUS.md` | `cfe2200` | 2026-04-10 9:30 PM ET |
+| Cline | Add pipeline rollback + force-advance: POST /job/:id/rollback + POST /job/:id/advance + detectStage() in server.js; ↩ ROLLBACK + ⏭ FORCE ADVANCE buttons on every job card; rollbackJob() + advanceJob() JS functions call server then refresh queue | `server.js`, `cwn_production.html`, `STATUS.md` | pending | 2026-04-10 9:36 PM ET |
 
 ---
 

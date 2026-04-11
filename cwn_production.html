@@ -2141,6 +2141,9 @@ function renderQueue() {
     if (totalSegs > 0) {
       actions += '<button onclick="refreshHeyGenIds(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(231,76,60,0.5);color:#e74c3c;" title="Fetch latest HeyGen video IDs and update segment URLs">🔄 REFRESH IDs</button>';
     }
+    // Rollback / Force-Advance pipeline controls
+    actions += '<button onclick="rollbackJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(231,76,60,0.35);color:#e74c3c;opacity:0.7;" title="Roll back this job to the previous pipeline stage">↩ ROLLBACK</button>';
+    actions += '<button onclick="advanceJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(46,204,113,0.35);color:#2ecc71;opacity:0.7;" title="Force-advance this job to the next pipeline stage (use if stuck)">⏭ FORCE ADVANCE</button>';
     actions += '</div>';
     // Short-form status div (for thumbnail + CapCut feedback)
     if (isShortJob) {
@@ -2328,6 +2331,83 @@ function refreshHeyGenIds(jobId) {
     if (btn) { btn.textContent = '❌ OFFLINE'; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 3000); }
   };
   xhr.send();
+}
+
+// ── ROLLBACK / FORCE-ADVANCE ──────────────────────────────────────
+// Calls server-side POST /job/:id/rollback or /job/:id/advance
+// then refreshes the queue from server so the correct action buttons appear.
+function rollbackJob(jobId) {
+  if (!confirm('Roll back job "' + jobId + '" to the previous pipeline stage?\n\nThis will clear the current stage data so you can re-run it.')) return;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/rollback', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Rollback failed');
+      cwn_log('[rollback] ' + jobId + ': ' + resp.before + ' → ' + resp.after, false);
+      // Update local job state to match server
+      var job = JOBS.find(function(j){ return j.id === jobId; });
+      if (job) {
+        job.stage = resp.after;
+        // Clear local fields that match what server cleared
+        if (resp.before === 'published') { job.publishRecord = null; }
+        if (resp.before === 'assembled') { job.assembledAt = null; job.finalUrl = null; job.gate5 = null; job._gate5Done = false; }
+        if (resp.before === 'all_sent')  { job.segments = (job.segments||[]).map(function(s){ if(s.type==='avatar'){s.status='queued';s.url=null;s.videoId=null;} return s; }); }
+        saveJobs();
+      }
+      restoreJobsFromServer(false);
+      alert('✅ Rolled back: ' + resp.before + ' → ' + resp.after + '\n\n' + (resp.message || ''));
+    } catch(e) {
+      cwn_log('[rollback] Error: ' + e.message, true);
+      alert('❌ Rollback failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    cwn_log('[rollback] Server unreachable', true);
+    alert('❌ Server unreachable — is server.js running?');
+  };
+  xhr.send(JSON.stringify({}));
+}
+
+function advanceJob(jobId) {
+  if (!confirm('Force-advance job "' + jobId + '" to the next pipeline stage?\n\nUse this only if the job is stuck and you want to skip the current gate.')) return;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/advance', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Advance failed');
+      cwn_log('[advance] ' + jobId + ': ' + resp.before + ' → ' + resp.after, false);
+      // Update local job state to match server
+      var job = JOBS.find(function(j){ return j.id === jobId; });
+      if (job) {
+        job.stage = resp.after;
+        if (resp.before === 'all_sent') {
+          // Mark all avatar segments as completed so ASSEMBLE button appears
+          (job.segments||[]).forEach(function(s){ if(s.type==='avatar' && !s.url){ s.status='completed'; s.url='forced'; } });
+        }
+        if (resp.before === 'assembled') {
+          job._gate5Done = true;
+          if (!job.gate5) job.gate5 = { score: 100, outcome: 'force_passed', _forced: true };
+        }
+        saveJobs();
+      }
+      restoreJobsFromServer(false);
+      alert('✅ Force-advanced: ' + resp.before + ' → ' + resp.after + '\n\n' + (resp.message || ''));
+    } catch(e) {
+      cwn_log('[advance] Error: ' + e.message, true);
+      alert('❌ Force-advance failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    cwn_log('[advance] Server unreachable', true);
+    alert('❌ Server unreachable — is server.js running?');
+  };
+  xhr.send(JSON.stringify({}));
 }
 
 function triggerDriveCanva(jobId, filename, title) {
