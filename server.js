@@ -3751,7 +3751,7 @@ app.post('/assemble',
               if (cardExists) {
                 burnArgs = [
                   "-i", inputForTS, "-i", cardPngPath,
-                  "-filter_complex", `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1240:y=40:enable='lte(t,${introDur})'[out]`,
+                  "-filter_complex", `[1:v]scale=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.w}:${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.h}:flags=lanczos[card];[0:v][card]overlay=x=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.x}:y=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.y}:enable='lte(t,${introDur})'[out]`,
                   "-map", "[out]", "-map", "0:a",
                   "-c:v", "libx264", "-preset", "fast", "-crf", "18",
                   "-pix_fmt", "yuv420p",
@@ -3901,7 +3901,7 @@ app.post('/assemble',
 
               const burnArgs = [
                 '-i', inputForTS, '-i', cardPngPath,
-                '-filter_complex', `[1:v]scale=360:-1:flags=lanczos[card];[0:v][card]overlay=x=1240:y=40:enable='lte(t,${introDur})'[out]`,
+                '-filter_complex', `[1:v]scale=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.w}:${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.h}:flags=lanczos[card];[0:v][card]overlay=x=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.x}:y=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.y}:enable='lte(t,${introDur})'[out]`,
                 '-map', '[out]', '-map', '0:a',
                 '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
                 '-pix_fmt', 'yuv420p',
@@ -4204,7 +4204,7 @@ app.post('/assemble',
             const tickerTotalSec = durations.reduce((a,b) => a+b, 0);
             const timeoutMs = Math.max(60000, tickerTotalSec * 3 * 1000); // 3x video duration, min 60s
             await new Promise((res, rej) => {
-              // Overlay ticker at bottom: y=H-64 (64px ticker height)
+              // Overlay ticker at bottom: y=H-${CONFIG.TICKER.HEIGHT} (ticker height from config)
               // eof_action=repeat loops the ticker when it ends (stream_loop -1 handles this too)
               // Do NOT use shortest=1 — it would truncate the output to ticker duration (20s)
               // -t tickerTotalSec: tells FFmpeg exactly when to stop — prevents stalling at end
@@ -4214,7 +4214,7 @@ app.post('/assemble',
                 '-i', outPath,
                 '-stream_loop', '-1', '-i', tickerPath,
                 '-t', (tickerTotalSec + 2.0).toFixed(3), // +2s buffer prevents outro truncation
-                '-filter_complex', '[0:v][1:v]overlay=x=0:y=H-64:eof_action=repeat[vout]',
+                '-filter_complex', `[0:v][1:v]overlay=x=0:y=H-${CONFIG.TICKER.HEIGHT}:eof_action=repeat[vout]`,
                 '-map', '[vout]', '-map', '0:a?',
                 '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac',
                 '-movflags', '+faststart', '-y', tickeredPath
@@ -4292,7 +4292,7 @@ app.post('/assemble',
               '-i', outPath,
               '-i', logoPng,
               '-filter_complex',
-              '[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=20:20[vout]',
+              `[1:v]scale=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.size}:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.x}:${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.y}[vout]`,
               '-map', '[vout]', '-map', '0:a?',
               '-c:v', 'libx264', '-preset', 'fast', '-crf', '18', '-pix_fmt', 'yuv420p',
               '-c:a', 'copy',
@@ -9586,7 +9586,7 @@ app.post('/remediate-video', async (req, res) => {
             const args = [
               '-i', currentFile, '-i', logoPng,
               '-filter_complex',
-              '[1:v]scale=120:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=20:20[vout]',
+              `[1:v]scale=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.size}:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.x}:${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.y}[vout]`,
               '-map', '[vout]', '-map', '0:a?',
               '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'copy',
               '-movflags', '+faststart', '-y', logoOutput
