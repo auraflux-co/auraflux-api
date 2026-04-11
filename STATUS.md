@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-10 (11:10 PM ET)
-**Branch:** main | **Latest Commit:** `7405efc` — docs: add Atomic Staging rule to COMMIT_CHECKLIST after concurrent-commit incident. **Note:** `6ce68c4` message is mislabeled — see Last Agent Action rows 52-54.
+**Last Updated:** 2026-04-11 (12:30 AM ET)
+**Branch:** main | **Latest Commit:** _(pending this commit)_ — docs: Cline handoff for avatar swap + overlay flip + ticker fix + 4K migration parking doc. **Blocking Test 1 — Cline to ship the code fixes next.**
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
 
@@ -54,6 +54,7 @@
 | Claude Code | Add Atomic Staging rule to COMMIT_CHECKLIST.md after concurrent-commit incident: documents the git-index race condition between multiple agents, the `git add && git commit` atomic pattern, practical guidance (chain with `&&`, explicit file lists, check reflog after committing), and a postmortem of the 2026-04-10 incident so future agents don't repeat it | `COMMIT_CHECKLIST.md`, `STATUS.md` | `54650ed` | 2026-04-10 10:45 PM ET |
 | Cline | Fix REFRESH IDs for pre-title-format jobs: add `POST /heygen/video-urls` endpoint to server.js (batch video_id → URL lookup via HeyGen v1/video_status.get); add direct video_id fallback to `refreshHeyGenIds()` in dashboard — when prefix match returns 0, checks segments with videoId but no url, calls new endpoint, updates segment URLs + status. Fixes job `script_twitch_1775866928172` (sent before title fix) | `server.js`, `cwn_production.html`, `STATUS.md` | `12863ef` | 2026-04-10 10:00 PM ET |
 | Claude Code | Document Upload-Post publish-time privacy policy in ROLLBACK_FORCE_ADVANCE_SPEC.md: new "Publish-Time Privacy (Rollback's Last Line of Defense)" section covering YT `private` / TikTok `SELF_ONLY` / IG account-wide private; Upload-Post API research (no IG draft flag, only `share_mode` with Trial Reels variants); current policy = IG account-wide private until 10 Reels shipped; exit criteria + Trial Reels API test curl; added Tech Debt #6 linking to the spec | `ROLLBACK_FORCE_ADVANCE_SPEC.md`, `STATUS.md` | pending | 2026-04-10 11:10 PM ET |
+| Claude Code | Full diagnostic investigation + Cline handoff for broken Apr 10 Twitch long-form MP4: extracted 10+ frames across 5 reference videos (Apr 4-10) pinpointing pillarbox regression to Apr 10; downloaded raw HeyGen segment via API and ffprobe-verified 1920×1080 container with baked-in portrait pillarbox (HeyGen Avatar V glitch confirmed); root-caused "Error response" ticker bug to commit `b31533f` moving ticker HTMLs to `tools/` without updating `TICKER_MAP`; Rob identified new landscape-native 4K avatar `842f20b75ce242aea397f5030aa018aa`; wrote `CLINE_HANDOFF_AVATAR_AND_TICKER_FIX.md` with exact diffs for 4 fixes (avatar swap, OVERLAY_ZONE flip to top-right `x=1240`, LOGO_POS flip to top-left `x=20` to avoid collision, ticker `tools/` path fix); wrote `FUTURE_4K_MIGRATION_PLAN.md` parking doc for eventual 4K canvas migration (recommendation: stay at 1080p, benefit from supersampling); added corrections header to `CLAUDE_DIAGNOSIS_BROKEN_TWITCH_LONGFORM.md`. Cline owns all code edits; Claude Code wrote docs only. | `CLINE_HANDOFF_AVATAR_AND_TICKER_FIX.md`, `CLAUDE_DIAGNOSIS_BROKEN_TWITCH_LONGFORM.md`, `FUTURE_4K_MIGRATION_PLAN.md`, `STATUS.md` | pending | 2026-04-11 12:30 AM ET |
 
 ---
 
