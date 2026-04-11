@@ -228,6 +228,47 @@ finalizeJobMetrics(jobId); // Saves to run_metrics_{jobId}.json
 
 All jobs produce `output/run_metrics_{jobId}.json` with per-stage wall time + totals.
 
+### Job Persistence & Pipeline Controls (April 2026)
+
+The pipeline is now a fully persistent, recoverable state machine. Three closely-related features work together — if you touch any of them, touch the others too.
+
+**1. Persistent job cards (`33a8800`)**
+- In-memory `persistedJobs` object loaded from `data/jobs.json` at server startup (`server.js:115-120`)
+- `saveJobCard(jobId, card)` writes to memory + disk on every mutation, prunes entries older than 7 days
+- `GET /jobs` (`server.js:894-920`) returns the list for dashboard restore
+- `data/jobs.json` is **runtime state** — must be gitignored, never committed
+- Jobs are persisted starting at Gate 1 pass (`server.js:~6763`) and updated at every subsequent stage
+
+**2. Dashboard auto-restore (`cfe2200`)**
+- `restoreJobsFromServer()` in `cwn_production.html` calls `GET /jobs` on page init with a 1.5s delay, silently merges server-side cards not already in localStorage
+- `↩ RESTORE JOBS` button in queue header = manual trigger
+- Segments restored in `rendering` state so the `🔄 REFRESH IDs` button appears immediately, letting the operator recover any in-flight job after a page reload or server restart
+- **Why this matters:** `loadJobs()` previously only read localStorage; a page refresh wiped the queue and orphaned any HeyGen-rendered segments
+
+**3. Rollback + Force-Advance (`eac1073`)**
+Pipeline state machine: `script_ready → all_sent → assembled → published`
+
+- `POST /job/:id/rollback` — clears current-stage data, steps back one stage. Per-stage cleanup rules (`published→assembled` keeps `finalUrl`; `assembled→all_sent` resets segment URLs; `all_sent→script_ready` deletes `video_id`s)
+- `POST /job/:id/advance` — force-passes the current gate (`gate1_forced`/`gate2_forced`/`gate5_forced`) so the next action button unlocks. **Does NOT fabricate URLs, does NOT skip file downloads** — if real data isn't ready, the next stage still fails loudly
+- `detectStage(card)` helper infers stage from card fields for older cards without an explicit `card.stage`
+- Dashboard: `↩ ROLLBACK` + `⏭ FORCE ADVANCE` buttons on every job card (`cwn_production.html:2145-2146`), calling `rollbackJob()` / `advanceJob()` with confirm() dialogs
+- **Full spec + test checklist:** see `ROLLBACK_FORCE_ADVANCE_SPEC.md`
+- **Known gap:** no audit trail yet — neither dashboard log nor `logs/errors.jsonl` record rollback/advance events. Follow-up work.
+
+**Recovery flow after server crash or page reload:**
+```
+Page loads → restoreJobsFromServer() → GET /jobs → cards rebuilt from data/jobs.json
+  → segments in "rendering" state → 🔄 REFRESH IDs → segments "completed"
+  → ⚙ ASSEMBLE button appears → continue automated pipeline
+If anything is stuck: ⏭ FORCE ADVANCE; if anything is wrong: ↩ ROLLBACK
+```
+
+### Source Clip Zoom-to-Fill Crop (`45f8980`)
+
+Twitch clips often have white/black letterbox bars baked into the video itself (streamer's OBS scene is mispositioned). During assembly, source clips are now **zoom-to-fill cropped** rather than scale-to-fit letterboxed — the FFmpeg filter scales to cover the target frame and crops overflow, eliminating the baked-in borders. Trade-off: slight content loss at edges is acceptable; borders on every clip are not.
+
+This is why the "hybrid manual Avatar V web-console upgrade" workflow is no longer needed — Avatar V renders with bordered frames, but the assembly-time crop now handles it automatically, restoring full API-driven automation.
+
 ## Publishing Workflow
 
 ### Title/Description Generation (`/generate-publish-copy`)
