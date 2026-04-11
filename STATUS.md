@@ -47,6 +47,7 @@
 | Cline | Add job persistence: persistedJobs loaded from data/jobs.json on startup, saveJobCard() writes to disk with 7-day pruning, GET /jobs endpoint for dashboard recovery after server restart | `server.js`, `STATUS.md` | `33a8800` | 2026-04-10 8:11 PM ET |
 | Cline | Fix ASSEMBLE button missing after page refresh: add restoreJobsFromServer() + ↩ RESTORE JOBS button + auto-call on init (1.5s delay); reconstructs segments from server's persisted job cards so REFRESH IDs → ASSEMBLE flow works after any page reload | `cwn_production.html`, `STATUS.md` | `cfe2200` | 2026-04-10 9:30 PM ET |
 | Cline | Add pipeline rollback + force-advance: POST /job/:id/rollback + POST /job/:id/advance + detectStage() in server.js; ↩ ROLLBACK + ⏭ FORCE ADVANCE buttons on every job card; rollbackJob() + advanceJob() JS functions call server then refresh queue | `server.js`, `cwn_production.html`, `STATUS.md` | `eac1073` | 2026-04-10 9:36 PM ET |
+| Cline | Fix rollback/advance key mismatch: all 6 JSON responses now use `before`/`after` keys (dashboard JS reads resp.before/resp.after); 4 responses were incorrectly using `from`/`to` | `server.js` | pending | 2026-04-10 9:41 PM ET |
 
 ---
 
