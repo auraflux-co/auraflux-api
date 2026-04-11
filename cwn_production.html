@@ -1909,6 +1909,13 @@ function updateJob(jobId, updates) {
 
 function clearAllJobs() {
   if (!confirm('Clear ALL jobs from queue? This cannot be undone.')) return;
+  // Delete all jobs from server so they don't reappear on restore
+  JOBS.forEach(function(j) {
+    if (!j.id) return;
+    var xhr2 = new XMLHttpRequest();
+    xhr2.open('DELETE', CFG.ffmpegUrl + '/job/' + encodeURIComponent(j.id), true);
+    xhr2.send();
+  });
   JOBS = [];
   saveJobs();
   renderQueue();
@@ -2012,22 +2019,40 @@ function restoreJobsFromServer(showAlert) {
         var avatarCount = segments.filter(function(s){ return s.type==='avatar'; }).length;
         var clipCount   = segments.filter(function(s){ return s.type==='source_clip'; }).length;
 
+        // Determine correct status based on server-side pipeline stage
+        var serverStage = serverJob.stage || '';
+        var isAssembled = !!(serverJob.assembledAt || serverStage === 'assembled' || serverStage === 'published');
+        var restoredStatus = isAssembled ? 'completed' : 'all_sent';
+
+        // If assembled, mark all avatar segments as completed so ASSEMBLE button appears
+        if (isAssembled) {
+          segments.forEach(function(seg) {
+            if (seg.type === 'avatar') {
+              seg.status = 'completed';
+              // Use stored URL if available from videoJobs
+              if (!seg.url) seg.url = seg.videoId ? ('heygen://' + seg.videoId) : 'assembled';
+            }
+          });
+        }
+
         var restoredJob = {
-          id:       serverJob.jobId,
-          type:     contentType,
-          title:    contentType.toUpperCase() + ' ' + dateLabel + ' (' + avatarCount + ' avatar + ' + clipCount + ' clips)',
-          status:   'all_sent',   // HeyGen was submitted — waiting for renders
-          created:  serverJob.savedAt || new Date().toISOString(),
-          segments: segments,
-          script:   serverJob.script || '',
-          meta:     {
-            streamers:      (serverJob.streamers || []).map(function(s){ return s.twitchUsername || s; }),
+          id:          serverJob.jobId,
+          type:        contentType,
+          title:       contentType.toUpperCase() + ' ' + dateLabel + ' (' + avatarCount + ' avatar + ' + clipCount + ' clips)',
+          status:      restoredStatus,
+          created:     serverJob.savedAt || new Date().toISOString(),
+          segments:    segments,
+          script:      serverJob.script || '',
+          meta:        {
+            streamers:       (serverJob.streamers || []).map(function(s){ return s.twitchUsername || s; }),
             orderedClipUrls: clipUrls
           },
-          url: null, pct: 50,
-          finalUrl: null, assembledAt: null,
-          canvaUrl: null, thumbnail: null, publishPrep: null,
-          platforms: { youtube: 'pending', tiktok: 'pending', instagram: 'pending' },
+          url:         null,
+          pct:         isAssembled ? 100 : 50,
+          finalUrl:    serverJob.finalUrl || null,
+          assembledAt: serverJob.assembledAt || null,
+          canvaUrl:    null, thumbnail: null, publishPrep: null,
+          platforms:   { youtube: 'pending', tiktok: 'pending', instagram: 'pending' },
           _restoredFromServer: true
         };
 
@@ -2624,6 +2649,14 @@ function refreshQueue() {
 }
 
 function clearDone() {
+  // Delete completed jobs from server so they don't reappear on restore
+  var completed = JOBS.filter(function(j){ return j.status === 'completed'; });
+  completed.forEach(function(j) {
+    if (!j.id) return;
+    var xhr2 = new XMLHttpRequest();
+    xhr2.open('DELETE', CFG.ffmpegUrl + '/job/' + encodeURIComponent(j.id), true);
+    xhr2.send();
+  });
   JOBS = JOBS.filter(function(j){ return j.status !== 'completed'; });
   saveJobs(); renderQueue();
 }
