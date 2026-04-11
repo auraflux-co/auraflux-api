@@ -3553,9 +3553,14 @@ app.post('/assemble',
         try {
           await new Promise((res, rej) => {
             const isAvatarSeg = segTypes[tsFiles.length] !== 'source_clip';
+            // Source clips: zoom-to-fill (crop) to eliminate baked-in letterbox/pillarbox borders
+            // Avatar segs: letterbox (decrease+pad) since HeyGen output is always clean 16:9
+            const vfFilter = isAvatarSeg
+              ? 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
+              : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=fps=30';
           const tsArgs = [
               '-i', inputForTS,
-              '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30',
+              '-vf', vfFilter,
               '-pix_fmt', 'yuv420p',
               '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
               '-g', '30',
