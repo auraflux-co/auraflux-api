@@ -3081,6 +3081,7 @@ function generateTwitch() {
   CURRENT_META = { streamers: streamers, clipMp4Urls: {} };
   setGeneratingState('twitch-gen-status', 'TWITCH — Fetching ' + clipsPerStreamer + ' clip(s) per streamer...');
   var items = []; var done = 0;
+  var droppedStreamers = []; // streamers returning 0 valid clips from dashboard fetch
   streamers.forEach(function(name) {
     var xU = new XMLHttpRequest();
     xU.open('GET','https://api.twitch.tv/helix/users?login='+name,true);
@@ -3090,8 +3091,12 @@ function generateTwitch() {
     xU.onload=function(){
       try{
         var u=JSON.parse(xU.responseText); var user=u.data&&u.data[0];
-        if(!user){done++;check();return;}
-        var since=new Date(Date.now()-86400000).toISOString();
+        if(!user){
+          droppedStreamers.push({name: name, reason: 'Twitch user not found'});
+          console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch user not found');
+          done++;check();return;
+        }
+        var since=new Date(Date.now()-86400000*7).toISOString();  // 7-day window (was 24h — too narrow for less-active streamers)
         // Fetch up to 20 clips per streamer — GQL fails on ~50% so we need a large backup pool
         // This is equivalent to: twitch.tv/STREAMER/clips?filter=clips&range=24hr
         var fetchCount = Math.max(clipsPerStreamer * 5, 20);
@@ -3114,7 +3119,8 @@ function generateTwitch() {
               var DISPLAY_NAMES = {
                 'jasontheween':'Jason','hasanabi':'Hasan','adapt':'Adapt',
                 'stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon',
-                'cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya'
+                'cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya',
+                'extraemily':'ExtraEmily','yourragegaming':'Rage'
               };
               var displayName = DISPLAY_NAMES[nameKey] || user.display_name;
               items.push({
@@ -3141,17 +3147,38 @@ function generateTwitch() {
                 game:         validClips[0].game_name||'',
                 thumbnailUrl: validClips[0].thumbnail_url||''
               });
+            } else {
+              var rawCount = (cd.data || []).length;
+              var reason = rawCount === 0
+                ? 'No clips in 7d window'
+                : 'All ' + rawCount + ' clips had invalid titles (filtered by isRealTitle)';
+              droppedStreamers.push({name: name, reason: reason});
+              console.warn('[generateTwitch] DROPPED: ' + name + ' — ' + reason);
             }
           }catch(e){}
           done++;check();
         };
-        xC.onerror=xC.ontimeout=function(){done++;check();}; xC.send();
+        xC.onerror=xC.ontimeout=function(){
+          droppedStreamers.push({name: name, reason: 'Twitch clips API timeout/error'});
+          console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch clips API timeout/error');
+          done++;check();
+        }; xC.send();
       }catch(e){done++;check();}
     };
-    xU.onerror=xU.ontimeout=function(){done++;check();}; xU.send();
+    xU.onerror=xU.ontimeout=function(){
+      droppedStreamers.push({name: name, reason: 'Twitch users API timeout/error'});
+      console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch users API timeout/error');
+      done++;check();
+    }; xU.send();
   });
   function check(){
     if(done>=streamers.length){
+      if (droppedStreamers.length > 0) {
+        var dropMsg = 'TWITCH — Dropped ' + droppedStreamers.length + ' streamers: ' +
+          droppedStreamers.map(function(d){ return d.name + ' (' + d.reason + ')'; }).join(', ');
+        console.warn('[generateTwitch] ' + dropMsg);
+        setGeneratingState('twitch-gen-status', dropMsg);
+      }
       g('script-type-label').textContent = 'TWITCH — Resolving clip URLs...';
       // Sort items back into configured streamer order (async fetches complete randomly)
       items.sort(function(a, b) {
