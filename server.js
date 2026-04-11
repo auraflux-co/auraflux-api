@@ -4587,7 +4587,27 @@ app.post('/assemble',
           log(asmId, `   ${driveUrl}`);
           assemblyJobs[asmId].driveUrl = driveUrl;
 
-          // ── Gate 6: Auto-publish after Gate 3 pass + Drive upload ──────────────
+              // Upload extracted thumbnail frame to Drive so Upload-Post can hand YouTube
+              // a real custom thumbnail instead of a random auto-generated frame.
+              if (assemblyJobs[asmId].thumbFrame && fs.existsSync(assemblyJobs[asmId].thumbFrame)) {
+                try {
+                  const thumbDriveUrl = await uploadToDrive(
+                    assemblyJobs[asmId].thumbFrame,
+                    assemblyJobs[asmId].thumbFilename,
+                    `Thumbnail — ${jobTitle || outFile}`
+                  );
+                  if (thumbDriveUrl) {
+                    assemblyJobs[asmId].thumbDriveUrl = thumbDriveUrl;
+                    log(asmId, `  🖼  Thumbnail uploaded to Drive: ${thumbDriveUrl}`);
+                  } else {
+                    log(asmId, `  ⚠️  Thumbnail Drive upload returned null — YouTube will auto-generate`);
+                  }
+                } catch(thumbErr) {
+                  log(asmId, `  ⚠️  Thumbnail Drive upload failed: ${thumbErr.message} — YouTube will auto-generate`);
+                }
+              }
+
+              // ── Gate 6: Auto-publish after Gate 3 pass + Drive upload ──────────────
           // Triggered when: Gate 3 outcome = 'pass' AND Drive upload succeeded
           // Flow: /generate-publish-copy → /publish (Upload-Post)
           // Skipped when: SKIP_AUTO_PUBLISH=true in .env OR Gate 3 was manual_review
@@ -4620,26 +4640,94 @@ app.post('/assemble',
               const description = ytMeta.description || '';
               const tags        = ytMeta.hashtags     || [];
 
+              // Pinned comment: use hardcoded template by content type (ignore Claude's freestyle)
+              const baseContentType = (contentType || '').replace('-short', '').toLowerCase();
+              const pinnedComment = PINNED_COMMENT_TEMPLATES[baseContentType] || '';
+
+              // Build YouTube chapters from segments + probed durations
+              function buildYouTubeChapters(segments, segmentDurations) {
+                if (!Array.isArray(segments) || segments.length === 0) return '';
+                let currentSec = 0;
+                const chapters = [];
+                let lastStreamerName = '';
+                segments.forEach((seg, i) => {
+                  const label = (seg.label || '').toUpperCase();
+                  const isClip     = seg.type === 'source_clip';
+                  const isColdOpen = label.indexOf('COLD OPEN') > -1;
+                  const isIntro    = label.indexOf('INTRO') > -1 && !isColdOpen;
+                  const isOutro    = label.indexOf('OUTRO') > -1;
+                  if (isColdOpen || isIntro || isOutro) {
+                    const mm = Math.floor(currentSec / 60);
+                    const ss = Math.floor(currentSec % 60);
+                    const ts = `${mm}:${ss < 10 ? '0' : ''}${ss}`;
+                    let chapterTitle = null;
+                    if (isColdOpen) {
+                      chapterTitle = '0:00 Intro';
+                    } else if (isOutro) {
+                      chapterTitle = `${ts} Outro`;
+                    } else {
+                      const nameMatch = label.match(/^(.+?)\s*\(INTRO\)/);
+                      let streamerName = nameMatch ? nameMatch[1].trim() : label.replace('(INTRO)', '').trim();
+                      streamerName = streamerName.charAt(0) + streamerName.slice(1).toLowerCase();
+                      streamerName = streamerName.replace(/\s+([a-z])/g, (m, l) => ' ' + l.toUpperCase());
+                      if (streamerName && streamerName !== lastStreamerName) {
+                        chapterTitle = `${ts} ${streamerName}`;
+                        lastStreamerName = streamerName;
+                      }
+                    }
+                    if (chapterTitle && chapters.indexOf(chapterTitle) === -1) {
+                      chapters.push(chapterTitle);
+                    }
+                  }
+                  let dur = (segmentDurations && segmentDurations[i]) || seg.duration || seg.clipDuration || null;
+                  if (!dur) {
+                    if (isClip) { dur = 45; }
+                    else {
+                      const wc = seg.wordCount || (seg.text ? seg.text.split(/\s+/).filter(Boolean).length : 15);
+                      dur = (wc / 130) * 60;
+                    }
+                  }
+                  currentSec += dur;
+                });
+                return chapters.join('\n');
+              }
+
+              const chapterText = buildYouTubeChapters(req.body.segments || [], assemblyJobs[asmId].segmentDurations);
+              if (chapterText) {
+                log(asmId, `  📑 Chapters built (${chapterText.split('\n').length} markers)`);
+              } else {
+                log(asmId, `  ⚠️  No chapters built — segments or durations missing`);
+              }
+
+              const descriptionWithChapters = chapterText
+                ? `${description}\n\n⏱ CHAPTERS\n${chapterText}`
+                : description;
+
+              log(asmId, `  📋 Description length: ${descriptionWithChapters.length} chars${chapterText ? ' (includes chapters)' : ''}`);
+
               assemblyJobs[asmId].publishCopy = publishCopy;
               log(asmId, `  📋 Title: ${title}`);
+              if (pinnedComment) log(asmId, `  💬 Pinned comment: ${pinnedComment.slice(0, 60)}...`);
 
               // Step 6b: Publish to platforms via /publish
               log(asmId, `  📤 Gate 6b: Publishing via /publish...`);
               const platforms = (process.env.AUTO_PUBLISH_PLATFORMS || 'youtube').split(',').map(p => p.trim());
 
-              const publishResp = await axios.post(
-                `http://localhost:${process.env.PORT || 3000}/publish`,
-                {
-                  driveUrl,
-                  platforms,
-                  title,
-                  description,
-                  tags,
-                  contentType: (contentType && contentType.includes('-short')) ? 'short' : 'long',
-                  async: true
-                },
-                { timeout: 120000 }
-              );
+            const publishResp = await axios.post(
+              `http://localhost:${process.env.PORT || 3000}/publish`,
+              {
+                driveUrl,
+                platforms,
+                title,
+                description: descriptionWithChapters,
+                tags,
+                pinnedComment: pinnedComment || undefined,
+                thumbnailUrl: assemblyJobs[asmId].thumbDriveUrl || undefined,
+                contentType: (contentType && contentType.includes('-short')) ? 'short' : 'long',
+                async: true
+              },
+              { timeout: 120000 }
+            );
 
               const publishResult = publishResp.data;
               assemblyJobs[asmId].gate6Status     = 'done';
@@ -4836,6 +4924,15 @@ const STREAMER_DISPLAY_NAMES = {
   'maya':            'Maya',
   'extraemily':      'ExtraEmily',
   'yourragegaming':  'Rage'
+};
+
+// ── Pinned first-comment templates (fixed per content type) ──────
+// Used by autonomous Gate 6 publish to set the YouTube first comment.
+// Rob's canonical wording — do NOT let Claude freestyle these.
+const PINNED_COMMENT_TEMPLATES = {
+  twitch: "What was your favorite streamer clip? Let me know below! 👇 If you enjoyed this, consider subscribing for more Twitch Soup episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
+  nba:    "What was your favorite game highlight? Let me know below! 👇 If you enjoyed this, consider subscribing for more Other Side of the Pillow episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
+  news:   "What was your favorite news story? Let me know below! 👇 If you enjoyed this, consider subscribing for more Because the Light Was On episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1"
 };
 
 function getDisplayName(twitchUsername) {
