@@ -184,7 +184,7 @@ Dashboard sends each script segment to HeyGen API individually. Frontend polls `
 **Process:**
 1. **Gate 2 QA** — samples first/middle/last HeyGen segments, checks lip sync, audio, rendering quality
 2. **Download segments** — uses cached files when possible, validates file size (≥100KB min)
-3. **Intro cards** — Node Canvas renders circle profile image + 3 text lines for Twitch compilations
+3. **Intro cards** — Node Canvas renders a 640×360 TV-shape rectangle with profile image + name/origin/fact for Twitch compilations (matching the NBA and News TV-card design for brand consistency — updated 2026-04-11). Legacy 720×840 circle design deprecated; see `CLINE_HANDOFF_TWITCH_INTRO_CARD_TO_TV_DESIGN.md` for the migration spec.
 4. **FFmpeg assembly:**
    - Normalize audio levels
    - Build concat list (avatar segments + source clips in order)
@@ -472,7 +472,7 @@ git push
 3. **Maya/Emily clips expire fastest** — use early download cache (`tmp/early_clips/`) to survive long HeyGen render times
 4. **Gate 2 samples only 3 segments** — first, middle, last. Fast streamers get auto-pass even if some segments have minor issues
 5. **Ticker baked into video** — not a live overlay. Cached for 1 hour to avoid Puppeteer re-render overhead
-6. **Intro cards on ALL 3 content types — different visual designs per type** — Twitch uses a **circular streamer card** (160px radius circle with profile PNG in gold ring + name/origin/fact text underneath). NBA and News use the **640×360 TV-shape rectangle** (team logos + scores for NBA, Open Graph scraped image + headline for News). Both designs burn into the same OVERLAY_ZONE at `{x:1240, y:40, w:640, h:360}`. See `GATED_PIPELINE_ARCHITECTURE.md` → "Intro card design by content type" for the authoritative reference. Do NOT say "intro cards only for Twitch" — that's misleading.
+6. **Intro cards on ALL 3 content types — CONSISTENT TV-rectangle design** — all 3 content types (Twitch, NBA, News) use the **640×360 TV-shape rectangle** with gold 5px border and drop shadow, rendered into the same `OVERLAY_ZONE` at `{x:1240, y:40, w:640, h:360}`. Content differs per type: **Twitch** = streamer profile image + name + origin + fact; **NBA** = game thumbnail + team logos + scores + PPG leaders + W/L records; **News** = Open Graph scraped article image + headline + source. Visual consistency across content types is the explicit spec (updated 2026-04-11 from previous "Twitch uses circle, NBA/News use TV" design — reverted for brand consistency). See `GATED_PIPELINE_ARCHITECTURE.md` → "Intro card design by content type" for the authoritative reference. **Code status:** NBA and News currently render as TV rectangles; Twitch still renders the legacy circle design in `generateIntroCardPNG()` at `server.js:500` using a 720×840 canvas. `CLINE_HANDOFF_TWITCH_INTRO_CARD_TO_TV_DESIGN.md` is the handoff for migrating Twitch from circle → TV rectangle.
 7. **`[CLIP PLAYS HERE]` is structural marker** — never spoken by avatar, replaced by source clip video during assembly
 8. **Assembly timeout: 30 minutes** — jobs abort if FFmpeg hangs (network issues, corrupted segment)
 9. **Logo overlay now on ALL long-form videos** — 120px CWN logo, **top-LEFT at `20:20`**, 85% opacity. Moved from top-right to avoid collision with TV card (now top-right at x=1240). See `lib/config.js` LOGO_POS and `server.js` overlay burns.
