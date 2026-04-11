@@ -7709,6 +7709,58 @@ app.get('/heygen/latest-videos', async (req, res) => {
   }
 });
 
+// POST /heygen/video-urls — fetch video URLs for a specific list of video IDs
+// Used by dashboard REFRESH IDs fallback when title-prefix matching returns 0 results
+// (jobs sent before the title format was added to generateVideo())
+// Body: { videoIds: ["abc123", "def456", ...] }
+app.post('/heygen/video-urls', async (req, res) => {
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+  if (!HEYGEN_API_KEY) return res.status(400).json({ error: 'HEYGEN_API_KEY not set' });
+
+  const { videoIds } = req.body;
+  if (!Array.isArray(videoIds) || !videoIds.length) {
+    return res.status(400).json({ error: 'videoIds array required' });
+  }
+  if (videoIds.length > 100) {
+    return res.status(400).json({ error: 'Max 100 video IDs per request' });
+  }
+
+  console.log(`[heygen/video-urls] Fetching URLs for ${videoIds.length} video IDs`);
+
+  const batchSize = 10;
+  const results = [];
+
+  for (let i = 0; i < videoIds.length; i += batchSize) {
+    const batch = videoIds.slice(i, i + batchSize);
+    const batchResults = await Promise.all(batch.map(async (videoId) => {
+      try {
+        const statusResp = await axios.get(
+          `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
+          { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
+        );
+        const data = statusResp.data?.data || {};
+        return {
+          video_id: videoId,
+          status: data.status || 'unknown',
+          video_url: data.video_url || data.url || null,
+          duration: data.duration || null
+        };
+      } catch(e) {
+        return { video_id: videoId, status: 'error', video_url: null, error: e.message };
+      }
+    }));
+    results.push(...batchResults);
+    if (i + batchSize < videoIds.length) {
+      await new Promise(r => setTimeout(r, 300)); // brief pause between batches
+    }
+  }
+
+  const completed = results.filter(r => r.video_url).length;
+  console.log(`[heygen/video-urls] ${completed}/${videoIds.length} have URLs`);
+
+  res.json({ ok: true, count: results.length, videos: results });
+});
+
 app.post('/log-heygen-metrics', async (req, res) => {
   const { jobId, segmentCount, totalWaitTimeMs, avgRenderTimeMs, segments } = req.body;
 

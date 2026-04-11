@@ -1268,6 +1268,7 @@ function generateVideo(script, title, isPortrait, cb) {
       background: { type:'color', value:CFG.bgColor }
     }],
     dimension: { width:w, height:h },
+    title: title || undefined,
     test: false
   };
   hgPost('v2/video/generate', payload, function(err, data) {
@@ -2281,8 +2282,49 @@ function refreshHeyGenIds(jobId) {
       var matched = videos.filter(function(v) { return v.title && v.title.startsWith(prefix); });
 
       if (!matched.length) {
-        cwn_log('[refreshIds] No HeyGen videos found with prefix "' + prefix + '" — have you sent segments yet?', true);
-        if (btn) { btn.textContent = '⚠ NO MATCH'; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 3000); }
+        // Fallback: direct video_id lookup for jobs sent before title format was added
+        var segsWithIds = (job.segments || []).filter(function(s) {
+          return s.type === 'avatar' && s.videoId && !s.url;
+        });
+        if (!segsWithIds.length) {
+          cwn_log('[refreshIds] No HeyGen videos found with prefix "' + prefix + '" — have you sent segments yet?', true);
+          if (btn) { btn.textContent = '⚠ NO MATCH'; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 3000); }
+          return;
+        }
+        cwn_log('[refreshIds] No title-prefix match — falling back to direct video_id lookup (' + segsWithIds.length + ' segments)...', false);
+        if (btn) btn.textContent = '⏳ DIRECT LOOKUP...';
+        var videoIds = segsWithIds.map(function(s) { return s.videoId; });
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open('POST', CFG.ffmpegUrl + '/heygen/video-urls', true);
+        xhr2.setRequestHeader('Content-Type', 'application/json');
+        xhr2.timeout = 60000;
+        xhr2.onload = function() {
+          try {
+            var resp2 = JSON.parse(xhr2.responseText);
+            if (!resp2.ok) throw new Error(resp2.error || 'Server error');
+            var updated = 0;
+            resp2.videos.forEach(function(v) {
+              if (!v.video_url) return;
+              var seg = (job.segments || []).find(function(s) {
+                return s.type === 'avatar' && s.videoId === v.video_id;
+              });
+              if (seg) { seg.url = v.video_url; seg.status = 'completed'; updated++; }
+            });
+            saveJobs();
+            renderQueue();
+            var msg = '✅ ' + updated + '/' + segsWithIds.length + ' (direct lookup)';
+            cwn_log('[refreshIds] ' + msg + ' for job ' + jobId, false);
+            if (btn) { btn.textContent = msg; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 4000); }
+          } catch(e) {
+            cwn_log('[refreshIds] Direct lookup error: ' + e.message, true);
+            if (btn) { btn.textContent = '❌ ERROR'; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 3000); }
+          }
+        };
+        xhr2.onerror = xhr2.ontimeout = function() {
+          cwn_log('[refreshIds] Direct lookup failed — server unreachable', true);
+          if (btn) { btn.textContent = '❌ OFFLINE'; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 3000); }
+        };
+        xhr2.send(JSON.stringify({ videoIds: videoIds }));
         return;
       }
 
