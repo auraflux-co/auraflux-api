@@ -3,7 +3,42 @@
 **Window:** 1:00 AM – 7:00 AM Eastern (daily)
 **Agent:** Aider (gemini/gemini-2.5-pro)
 **Output:** Morning briefing written to `MORNING_BRIEFING.md` after each run
-**Status:** APPROVED — all tasks cleared to run during overnight window
+**Status:** ⚠️ PARTIAL PAUSE (2026-04-11) — see banner below
+
+---
+
+## ⚠️ 2026-04-11 OVERNIGHT PAUSE — Cline is actively working on server.js and cwn_production.html
+
+**Do NOT** run any Aider task tonight (2026-04-11 → 2026-04-12) that touches:
+- `server.js`
+- `cwn_production.html`
+- `lib/config.js`
+- `.env`
+
+**Reason:** Cline is implementing the Gate 2 Self-Healing Pipeline (Phase 1) overnight. See `CLINE_HANDOFF_GATE2_SEGMENT_STRUCTURE.md` for the full scope. Cline will touch all of the files listed above in a single atomic commit. If Aider touches any of them concurrently, we will get another concurrent-commit incident like the one on 2026-04-10 (commit `6ce68c4` mislabeling — see COMMIT_CHECKLIST.md Atomic Staging rule).
+
+**Aider SAFE tasks for this overnight window:**
+- Documentation updates (any `.md` file EXCEPT the handoff docs actively in use)
+- `lib/error_logger.js` enhancements (isolated from Cline's scope)
+- `.env.example` (new file, no conflict)
+- Any pure text / prompt engineering work that doesn't touch JavaScript
+- `data/cwn_style_guides.json` updates if any queued
+
+**Aider BLOCKED tasks for this overnight window:**
+- [~] Server.js Module Split (next: lib/streamers.js) — PAUSE until Cline finishes Gate 2
+- [ ] Phonetic Auto-Injection from streamers.json — PAUSE (touches HeyGen send logic in server.js)
+- [ ] Input Validation & Sanitization — PAUSE (touches server.js POST endpoints)
+- [ ] Rate Limiting per Endpoint — PAUSE (touches server.js)
+- [ ] Remove Duplicate `/generate-thumbnail` Route — PAUSE (touches server.js)
+- [ ] Fix Legacy Publish Stub Routes — PAUSE (touches server.js)
+
+**Resume normal schedule:** Once Cline commits the Gate 2 implementation (expected morning of 2026-04-11 or early afternoon), the pause lifts. Rob or Claude Code will remove this banner.
+
+**If Aider has already started a server.js task tonight before this banner was added:** abort the task, revert any uncommitted changes, note it in MORNING_BRIEFING.md, and move to a SAFE task instead.
+
+---
+
+**Normal Status:** APPROVED — all tasks cleared to run during overnight window (restores after pause lifts)
 
 ---
 
