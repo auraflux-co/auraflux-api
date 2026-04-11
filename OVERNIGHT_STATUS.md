@@ -64,7 +64,9 @@ Empty 0-byte file at repo root that appeared from some stray shell command. You 
 
 ### 1. Read `MORNING_BRIEFING.md` (standard step per CLAUDE.md)
 
-Aider will have overwritten it if it ran overnight. The banner I added should prevent Aider from touching any risky files, but it may still have run a SAFE task and updated the briefing. 30-second read.
+Aider already updated it in commit `d191f43`. **IMPORTANT — there's a contradiction to be aware of:** Aider's briefing says "Aider should focus on server-side thumbnail/error fixes tonight," but my `OVERNIGHT_TASKS.md` banner explicitly blocks ALL server.js work tonight regardless of which region. **My pause banner is authoritative** — Aider misread the pause scope. I added explicit BLOCK entries for Aider's 3 new thumbnail/QA tasks in commit `889e0a1` to make this clearer.
+
+**Bottom line:** if Aider ran any server.js task overnight (News Thumbnail fix, NBA Thumbnail fix, QA console errors fix), check `git log --oneline` for an Aider commit after `889e0a1`. If present, verify it didn't conflict with Cline's Gate 2 commit. If both exist and touched `server.js`, check the merge state carefully. Most likely case: Aider correctly aborted and the briefing is just stale.
 
 ### 2. Check for Cline's Gate 2 commit
 
