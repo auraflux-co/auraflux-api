@@ -1853,6 +1853,7 @@ async function sendScriptToHeyGen(script, opts = {}) {
         },
         voice: {
           type: 'text',
+          input_type: 'ssml',       // ← enables <break> tags and other SSML in input_text
           input_text: scene.text,
           voice_id: HEYGEN_VOICE_ID,
           speed: HEYGEN_SPEAK_SPEED
@@ -4978,7 +4979,7 @@ async function captureTicker(contentType) {
   const outPath    = path.join(TMP_DIR, `ticker_${contentType}.mp4`);
   const DURATION   = 60; // capture 60 seconds of ticker animation
   const WIDTH      = 1920;
-  const HEIGHT     = 64;
+  const HEIGHT     = CONFIG.TICKER.HEIGHT;   // sync with config (72) — was hardcoded 64
 
   console.log(`[ticker] Capturing ${contentType} ticker (${DURATION}s) from ${tickerUrl}...`);
 

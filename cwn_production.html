@@ -3230,9 +3230,14 @@ var HEYGEN_CHAR_LIMIT = 1400;
 
 function cleanAvatarText(raw) {
   return raw
-    .replace(/\[beat\]/gi, '...')
+    // Replace [beat] with SSML break tag — HeyGen honors this when input_type: 'ssml'
+    // 500ms is the starting value — tune up/down based on delivery feel after real runs
+    .replace(/\[beat\]/gi, '<break time="500ms"/>')
     .replace(/\[CLIP PLAYS HERE[^\]]*\]/gi, '')
     .replace(/\[TRANSITION[^\]]*\]/gi, '')
+    // IMPORTANT: the [...] strip below must come AFTER the [beat] → <break> replacement
+    // so we don't accidentally strip the break tags. Only strip things that still look
+    // like bracketed directives, which <break ... /> no longer does.
     .replace(/\[[^\]]*\]/g, '')
     .replace(/\.{4,}/g, '...')
     .replace(/\s{2,}/g, ' ')
