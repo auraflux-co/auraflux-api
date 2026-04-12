@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-12 (12:30 AM ET)
-**Branch:** main | **Latest Commit:** pending — Ticker HEIGHT reverted 72→64 (fixes gap), intro card duration 3.5→10s (config-driven), long-form clip window 7d→48h, POST_PUBLISH_TASKS.md created with all findings from the "best ever" Twitch long-form compilation review. Aider overnight queue ready — first INDEPENDENT task (parseSegments_v2 unit tests) fires at 1am.
+**Last Updated:** 2026-04-12 (5:30 PM ET)
+**Branch:** main | **Latest Commit:** `ca56ccb` — Fix 4/4 News long-form pipeline: concat demuxer for 22-segment all-avatar jobs. Full 4-fix series: orderedClipUrls (e17e647), cardData+newsItems (eb67b0e), Gate 3 clip detection (9271297), concat demuxer (ca56ccb).
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
