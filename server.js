@@ -2278,7 +2278,7 @@ EXPECTED SCENES: ${expectedScenes}`;
    - DO NOT try to count in your head
    - Expected: exactly ${expectedScenes} markers
    - Method: Search through script and list each header you find, then count your list
-   - Remember: STORY1_INTRO, STORY1_SETUP, STORY1_CLIP_REACTION, STORY1_REACTION are 4 SEPARATE scenes
+   - Remember: STORY1_INTRO, STORY1_SETUP, STORY1_SUMMARY, STORY1_REACTION are 4 SEPARATE scenes
    - Are there exactly ${expectedScenes} === SCENE === markers?`,
     `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per story)?`,
     `3. OUTRO: Does the script end with "Appreciate you!"?`,
@@ -6662,7 +6662,7 @@ Target: 50-70 words spoken total. One headline, one observation, done.`;
           const storyLabel = `STORY${i+1}`;
           sceneHeaders.push(`=== ${storyLabel}_INTRO ===`);
           sceneHeaders.push(`=== ${storyLabel}_SETUP ===`);
-          sceneHeaders.push(`=== ${storyLabel}_CLIP_REACTION ===`);
+          sceneHeaders.push(`=== ${storyLabel}_SUMMARY ===`);
           sceneHeaders.push(`=== ${storyLabel}_REACTION ===`);
         });
         sceneHeaders.push('=== OUTRO ===');
@@ -6692,9 +6692,9 @@ ${sceneHeaders.join('\n')}
 - Scenes longer than 3 sentences cause HeyGen TTS to rush/skip words/poor enunciation
 - INTRO scene: 2-3 sentences (episode intro)
 - STORY#_INTRO scenes: 2-3 sentences (introduce the story/headline)
-- STORY#_SETUP scenes: EXACTLY 2 sentences (not 1, not 3) + [beat] + [CLIP PLAYS HERE] + [beat]
-- STORY#_CLIP_REACTION scenes: EXACTLY 1 sentence (Bobby reacting WHILE clip plays — this will be overlaid on clip in editing)
-- STORY#_REACTION scenes: EXACTLY 1 sentence (short, flat, deadpan reaction AFTER clip)
+- STORY#_SETUP scenes: EXACTLY 1 sentence — a NEW fact or hook (not a summary, not a restatement of INTRO). Give the viewer a reason to watch the clip. Then [beat] + [CLIP PLAYS HERE] + [beat]
+- STORY#_SUMMARY scenes: 1-2 sentences — factual recap of what just played in the clip. No reactions, no quips, no opinions. Sets up the REACTION scene that follows.
+- STORY#_REACTION scenes: EXACTLY 1 sentence (short, flat, deadpan take on the story. Makes it MORE alarming, not less.)
 - OUTRO scene: 1-2 sentences (sign-off)
 
 📝 CONTENT STRUCTURE PER SCENE:
@@ -6709,16 +6709,16 @@ Source: [Source name]. Link in description.
 [beat]
 
 === STORY#_SETUP ===
-[EXACTLY 2 sentences — not 1, not 3. First sentence: context about what happened. Second sentence: specific setup for the clip.]
+[EXACTLY 1 sentence. A NEW fact or hook that gives the viewer a reason to watch the clip. Do NOT restate the INTRO. Do NOT summarize the story. Introduce information the INTRO did not mention — a specific angle, an unexpected detail, a stake.]
 [beat]
 [CLIP PLAYS HERE]
 [beat]
 
-=== STORY#_CLIP_REACTION ===
-[EXACTLY 1 sentence. Bobby's live reaction WHILE watching the clip. This will be picture-in-picture with the clip.]
+=== STORY#_SUMMARY ===
+[1-2 sentences. Factual recap of what just played in the clip. Describe what the viewer saw in neutral, descriptive language. No opinions, no reactions, no quips. This is the bridge between the clip and Bobby G's take.]
 
 === STORY#_REACTION ===
-[EXACTLY 1 sentence. Short. Flat. Deadpan. Makes it MORE alarming, not less. Final take AFTER the clip.]
+[EXACTLY 1 sentence. Short. Flat. Deadpan. Bobby G's take on the story. Makes it MORE alarming, not less. Never explain. Never recap — that's the SUMMARY's job.]
 [3-second pause — hold on the source clip for 3 seconds after Bobby's reaction, then cut to next story]
 
 === OUTRO ===
@@ -6727,14 +6727,14 @@ Source: [Source name]. Link in description.
 ✅ VALIDATION CHECKLIST:
 - Total scenes: MUST BE EXACTLY ${expectedScenes}
 - Total [CLIP PLAYS HERE] markers: MUST BE EXACTLY ${items.length}
-- Each SETUP scene: EXACTLY 2 sentences (not 1, not 3) + contains [beat] + [CLIP PLAYS HERE] + [beat]
-- Each CLIP_REACTION scene: EXACTLY 1 sentence (live reaction during clip)
-- Each REACTION scene: EXACTLY 1 sentence (deadpan take after clip) + [3-second pause — hold on source clip]
+- Each SETUP scene: EXACTLY 1 sentence (new fact or hook, not a restatement of INTRO) + contains [beat] + [CLIP PLAYS HERE] + [beat]
+- Each SUMMARY scene: 1-2 sentences (factual recap of clip, no opinions or reactions)
+- Each REACTION scene: EXACTLY 1 sentence (deadpan take, no recap) + [3-second pause — hold on source clip]
 - [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
 - After each REACTION scene: Add "[3-second pause — hold on source clip]" before moving to next story
-- Never explain the take in reactions. Never recap what just happened.
+- Never explain the take in reactions. Never recap what just happened — that's SUMMARY's job.
 
-Target: 80-120 words spoken per story (setup + reactions, clip audio is stripped).`;
+Target: 100-140 words spoken per story (setup + summary + reaction, clip audio is stripped).`;
       }
 
     } else { // twitch, twitch-short
