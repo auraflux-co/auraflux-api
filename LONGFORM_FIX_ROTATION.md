@@ -79,6 +79,8 @@ Anyone picking up this work can re-verify these files independently:
 
 ---
 
+---
+
 ## 🔴 Postmortem — News batch 1 scope miss (2026-04-12)
 
 News batch 1 shipped 4 technically-correct fixes but the underlying problem was wrong. The `22_avatar_0_clips` signature on last night's runs looked like a plumbing bug (Fix 1 missing `orderedClipUrls` build for News), so that's what got dispatched. The real root cause was older and lived in a completely different part of the code: **commit `b31533f` (Apr 11 00:30 ET, "refactor: reorganize root into folders") moved `clipzworld_newscast.html` into `tools/` but `server.js:1300`'s `/newscast-overlay` route kept pointing at the repo-root path.** Every News run since Apr 11 has been:
@@ -138,6 +140,19 @@ Two possible directions for News as a content type:
 **Untouched:** NBA, Twitch, short-form code paths.
 **Next:** Rob runs News long-form smoke test #2. Expected: newscast overlay now visible in assembled video. Road A vs Road B decision to be made after that run.
 
+### News long-form batch 3 — shipped 2026-04-12
+
+**Handoff:** `CLINE_HANDOFF_NEWS_LONGFORM_FIXES_BATCH3.md`
+**Dispatched:** 2026-04-12 (post-smoke-test-1 script review)
+**Shipped:** 2026-04-12, 1 commit pushed to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 6 | pending | `fix(news): rewrite Gemini prompt to eliminate INTRO/SETUP repetition (server.js:6685-6737)` — SETUP rewritten to EXACTLY 1 sentence (new fact or hook, not a restatement of INTRO); CLIP_REACTION renamed to SUMMARY (1-2 sentences factual recap of what just played, no opinions/reactions/quips); REACTION tightened to deadpan take only (must not recap — that's SUMMARY's job); word count target 80-120 → 100-140 per story; Gate 1 QA comment + sceneHeaders push updated to STORY1_SUMMARY. Scene count unchanged (42 for 10 stories). No downstream code changes. |
+
+**Untouched:** NBA, Twitch, short-form code paths.
+**Next:** Rob runs News long-form smoke test #3. Expected: no INTRO/SETUP repetition, structurally distinct 4-beat story flow (INTRO/SETUP/SUMMARY/REACTION).
+
 ---
 
 ## Rotation log
@@ -150,3 +165,4 @@ Two possible directions for News as a content type:
 | 2026-04-12 | Appended 3 new items to `🔴 To Fix`: Twitch reaction/CTA split (reopened), cross-cutting intro card duration per type (10/8/12), cross-cutting outro freeze-hold. |
 | 2026-04-12 | News smoke test #1 ran end-to-end — Gate 1 100/100, Gate 2 80/100 MANUAL, Gate 3 90/100 PASS, Drive + Upload-Post published to YouTube private draft. Rob QA in YouTube Studio: no news clips (expected — root cause is News has no video source), no TV card (real bug — Fix 5 root-caused to broken `/newscast-overlay` route HTTP 500 from stale `server.js:1300` path), logo + ticker visible, outro clean (Gate 3 LATE-sample OUTRO false positive on a clean outro — known scoring bug, parked as cross-cutting). Fix 5 dispatched as News batch 2 one-line fix. |
 | 2026-04-12 | News batch 2 shipped — Fix 5 `fix(news): /newscast-overlay route path — tools/ prefix missing (server.js:1300)` pushed to `origin/main`. Verified HTTP:200 SIZE:15964 before commit. Awaiting Rob's smoke test #2 to confirm newscast overlay visible in assembled video. |
+| 2026-04-12 | News batch 3 dispatched as `CLINE_HANDOFF_NEWS_LONGFORM_FIXES_BATCH3.md` — Fix 6 News Gemini prompt rewrite (INTRO/SETUP repetition + CLIP_REACTION→SUMMARY rename) before running smoke test #2, so script flow issue and newscast overlay fix validate together in one run. |
