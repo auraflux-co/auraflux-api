@@ -271,6 +271,26 @@ git push origin main
 
 ---
 
+## After Pushing — Restart Python Dashboard Server (if cwn_production.html changed)
+
+**Dashboard changes are NOT live until the Python server is restarted from the correct directory.**
+
+If you changed `cwn_production.html`:
+
+```bash
+kill $(lsof -ti :8765) 2>/dev/null; cd /Users/robertgregory/cwn-production && python3 -m http.server 8765 &
+```
+
+Then do a **normal refresh** (Cmd+R) at `http://localhost:8765/cwn_production.html`.
+
+**Why this is needed:** The Python `http.server` must be started from `/Users/robertgregory/cwn-production` to serve the correct file. If it was started from a different directory (e.g. home directory), it will serve a stale or missing version of the dashboard regardless of hard refreshes.
+
+**When to restart:**
+- ✅ Always after committing `cwn_production.html` changes
+- ⏭️ Skip if only `server.js`, `.md`, or `data/` files changed
+
+---
+
 ## After Pushing — Restart Node.js (if server.js changed)
 
 **`server.js` changes are NOT live until the server restarts.**
