@@ -3711,7 +3711,12 @@ app.post('/assemble',
           // Extract streamer name from label e.g. "JASON (INTRO)" → "Jason", "JASON_INTRO" → "Jason", "JASON INTRO" → "Jason"
           const streamerMatch = label.match(/^(.+?)\s*\(INTRO\)/i) || label.match(/^(.+?)[_ ]INTRO$/i);
           const streamerName  = streamerMatch ? streamerMatch[1].trim() : '';
+          // Normalize underscores→spaces for multi-word names (e.g. JAY_CINCO → jay cinco)
+          // Scene headers use underscores (commit 93aa22f), displayNames use spaces
+          const normalizedName = streamerName.toLowerCase().replace(/_/g, ' ');
           const streamerData  = streamerRoster.find(s =>
+            s.displayName?.toLowerCase() === normalizedName ||
+            s.twitchUsername?.toLowerCase() === normalizedName ||
             s.displayName?.toLowerCase() === streamerName.toLowerCase() ||
             s.twitchUsername?.toLowerCase() === streamerName.toLowerCase()
           );
