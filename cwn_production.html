@@ -258,7 +258,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
             <div class="field" style="margin-bottom:8px;">
               <label>CLIPS PER STREAMER</label>
-              <select id="twitch-clips-per-main" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:13px;letter-spacing:1px;font-weight:700;">
+              <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:13px;letter-spacing:1px;font-weight:700;">
                 <option value="1">1 clip</option>
                 <option value="2" selected>2 clips</option>
                 <option value="3">3 clips</option>
@@ -3109,10 +3109,12 @@ function generateTwitch() {
             var cd=JSON.parse(xC.responseText);
             // Fetch all valid clips — server picks first N that resolve via GQL
             // Extra clips act as backups for deleted/expired ones
-            var allValidClips=(cd.data||[]).filter(function(c){ return isRealTitle(c.title); });
+            var allValidClips=(cd.data||[]).filter(function(c){
+              return isRealTitle(c.title) && !isClipUsed(c.url);
+            });
             var validClips=allValidClips.slice(0, clipsPerStreamer);
             var backupClips=allValidClips.slice(clipsPerStreamer); // all remaining clips as backup
-            if(validClips.length) {
+            if(validClips.length >= clipsPerStreamer) {
               var nameKey = user.display_name.toLowerCase();
               // Send only the requested clips — backups stay client-side for GQL fallback
               var allClipsToSend = validClips;
@@ -3219,6 +3221,14 @@ function generateTwitch() {
         });
         console.log('[generateTwitch] Stored ' + CURRENT_META.orderedClipUrls.length + ' clip URLs for assembly');
         console.log('[generateTwitch] Clips by streamer:', Object.keys(CURRENT_META.clipsByStreamer).map(function(k){ return k + ':' + CURRENT_META.clipsByStreamer[k].length; }).join(', '));
+        // Lock used clips BEFORE sending to server — prevents re-use on next run
+        var primaryClipUrls = [];
+        items.forEach(function(item) {
+          (item.clips || []).forEach(function(clip) {
+            if (!clip.isBackup && clip.url) primaryClipUrls.push(clip.url);
+          });
+        });
+        markClipsUsed(primaryClipUrls);
         g('script-type-label').textContent = 'TWITCH — Gemini + Claude writing full script...';
         callFullScriptServer('twitch', items, 'twitch-gen-status', null);
       });
@@ -5461,6 +5471,78 @@ function saveStreamerList() {
   if (cfgEl) cfgEl.value = el.value.split(',').map(function(s){return s.trim();}).join('\n');
 }
 
+function saveClipsPerStreamer() {
+  try {
+    var sel = g('twitch-clips-per-main');
+    if (sel && sel.value) localStorage.setItem('cwn_clips_per_streamer', sel.value);
+  } catch(e) {}
+}
+
+function loadClipsPerStreamer() {
+  try {
+    var saved = localStorage.getItem('cwn_clips_per_streamer');
+    var sel = g('twitch-clips-per-main');
+    if (saved && sel) sel.value = saved;
+  } catch(e) {}
+}
+
+// ── Client-side clip dedup — prevents re-shipping clips across runs ──
+// Stores clip IDs (from the Twitch clip URL) for 7 days. Clips older than
+// 7 days are auto-pruned on every load so the cache never grows unbounded.
+var CLIP_DEDUP_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function extractClipId(clipUrl) {
+  // Twitch clip URL patterns:
+  //   https://clips.twitch.tv/{ClipSlug}
+  //   https://www.twitch.tv/{channel}/clip/{ClipSlug}
+  // Return the slug as the stable ID.
+  if (!clipUrl) return '';
+  var m = clipUrl.match(/\/clip\/([^/?]+)/) || clipUrl.match(/clips\.twitch\.tv\/([^/?]+)/);
+  return m ? m[1] : clipUrl; // fallback: use full URL as ID
+}
+
+function loadUsedClips() {
+  try {
+    var raw = localStorage.getItem('cwn_used_clips');
+    if (!raw) return {};
+    var data = JSON.parse(raw);
+    // Prune anything older than TTL
+    var now = Date.now();
+    var pruned = {};
+    Object.keys(data).forEach(function(id) {
+      if (data[id] && (now - data[id]) < CLIP_DEDUP_TTL_MS) {
+        pruned[id] = data[id];
+      }
+    });
+    // Persist the pruned version
+    if (Object.keys(pruned).length !== Object.keys(data).length) {
+      localStorage.setItem('cwn_used_clips', JSON.stringify(pruned));
+    }
+    return pruned;
+  } catch(e) {
+    return {};
+  }
+}
+
+function markClipsUsed(clipUrls) {
+  try {
+    if (!clipUrls || !clipUrls.length) return;
+    var used = loadUsedClips();
+    var now = Date.now();
+    clipUrls.forEach(function(url) {
+      var id = extractClipId(url);
+      if (id) used[id] = now;
+    });
+    localStorage.setItem('cwn_used_clips', JSON.stringify(used));
+  } catch(e) {}
+}
+
+function isClipUsed(clipUrl) {
+  var used = loadUsedClips();
+  var id = extractClipId(clipUrl);
+  return !!(id && used[id]);
+}
+
 function loadStreamerList() {
   var saved = localStorage.getItem('CWN_STREAMERS');
   if (!saved) return;
@@ -6398,6 +6480,7 @@ initHeader();
 loadReferenceLibrary();
 loadPronunciations();
 loadStreamerList();
+loadClipsPerStreamer();
 setTimeout(loadStyleGuides, 1000);
 setTimeout(renderPronunciationList, 500); // check for stored guides after server connects
 setTimeout(function(){ restoreJobsFromServer(false); }, 1500); // auto-restore persisted jobs from server on page load
