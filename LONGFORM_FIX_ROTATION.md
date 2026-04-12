@@ -133,7 +133,7 @@ Two possible directions for News as a content type:
 
 | Fix | Commit | What |
 |-----|--------|------|
-| 5 | pending | `fix(news): /newscast-overlay route path — tools/ prefix missing (server.js:1300)` — commit `b31533f` moved `clipzworld_newscast.html` into `tools/` but `server.js:1300` kept pointing at repo root. `res.sendFile` threw ENOENT → Express HTTP 500 → Puppeteer screenshotted blank PNG → FFmpeg blended blank over Bobby G → invisible newscast overlay for every News run since Apr 11. Same class of bug as ticker path fix in `0d13fb0`. Fix: add `tools/` prefix. Verified: `curl http://localhost:3000/newscast-overlay` returns HTTP:200 SIZE:15964. |
+| 5 | `971429d` | `fix(news): /newscast-overlay route path — tools/ prefix missing (server.js:1300)` — commit `b31533f` moved `clipzworld_newscast.html` into `tools/` but `server.js:1300` kept pointing at repo root. `res.sendFile` threw ENOENT → Express HTTP 500 → Puppeteer screenshotted blank PNG → FFmpeg blended blank over Bobby G → invisible newscast overlay for every News run since Apr 11. Same class of bug as ticker path fix in `0d13fb0`. Fix: add `tools/` prefix. Verified: `curl http://localhost:3000/newscast-overlay` returns HTTP:200 SIZE:15964. |
 
 **Untouched:** NBA, Twitch, short-form code paths.
 **Next:** Rob runs News long-form smoke test #2. Expected: newscast overlay now visible in assembled video. Road A vs Road B decision to be made after that run.
