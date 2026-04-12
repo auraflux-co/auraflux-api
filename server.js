@@ -228,6 +228,23 @@ async function startHeyGenPoller(jobId, card) {
           type:  'avatar'
         });
 
+        // For News: attach cardData to STORY#_INTRO segments so the assembly
+        // can burn the correct TV card overlay (title, category, image) per story
+        if ((card.contentType || 'twitch') === 'news' && /STORY(\d+)_INTRO/i.test(avatarSeg.sceneName)) {
+          const storyMatch = avatarSeg.sceneName.match(/STORY(\d+)_INTRO/i);
+          const storyIdx   = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
+          const storyItem  = (card.newsItems || [])[storyIdx];
+          if (storyItem) {
+            segmentData[segmentData.length - 1].cardData = {
+              title:    storyItem.title    || `Story ${storyIdx + 1}`,
+              category: storyItem.category || storyItem.source || 'WORLD NEWS',
+              storyId:  `story_${storyIdx + 1}`,
+              imageUrl: storyItem.thumbnailUrl || storyItem.imageUrl || null,
+              source:   storyItem.source || ''
+            };
+          }
+        }
+
         // If this is a SETUP scene, insert the corresponding source clip after it
         if (/SETUP/i.test(avatarSeg.sceneName) && clipIdx < orderedClipUrls.length) {
           const clip = orderedClipUrls[clipIdx];
@@ -3809,7 +3826,7 @@ app.post('/assemble',
             // Collect all intro segments to show in the story list
             const allNewsIntros = segsToProcess.filter(s => {
               const lbl = s.label || '';
-              return lbl.match(/\(INTRO\)/i) && s.cardData;
+              return (/STORY\d+_INTRO/i.test(lbl) || /\(INTRO\)/i.test(lbl)) && s.cardData;
             });
 
             const allStories = allNewsIntros.map((introSeg, idx) => ({
@@ -7166,7 +7183,15 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
         heygen: heygenResult,
         gate1Score: scriptQA.score,
         streamers: type === 'twitch' ? items.map(s => ({ displayName: s.displayName || s.name || s, twitchUsername: s.username || s.streamer || s })) : [],
-        clipsPerStreamer: req.body.clipsPerStreamer || 2
+        clipsPerStreamer: req.body.clipsPerStreamer || 2,
+        newsItems: type === 'news' ? items.map(s => ({
+          title:        s.title || '',
+          source:       s.source || '',
+          category:     s.category || 'WORLD NEWS',
+          thumbnailUrl: s.thumbnailUrl || s.imageUrl || '',
+          videoUrl:     s.videoUrl || s.clipUrl || '',
+          link:         s.link || s.url || ''
+        })) : []
       };
       saveJobCard(jobId, jobCard);
       console.log(`[jobs] ✅ Job card persisted to disk: ${jobId}`);
