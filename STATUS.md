@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-11 (8:16 PM ET)
+**Last Updated:** 2026-04-11 (9:22 PM ET)
 **Branch:** main | **Latest Commit:** `0b613af` — Cline shipped exact 16:9 TV card `{x:1160, y:100, w:720, h:405}` + ticker FPS 15→30 + cache bust. **Pending:** 5th smoke test to visually verify. Rob confirmed Jira+Confluence as task tracking stack (will handle Atlassian signup himself, migration plan writing parked until 12-test suite completes first clean run). Aider queue expanded with "🟢 INDEPENDENT — Safe Any Night" section covering unit tests, `/health` + `/metrics` endpoints, qa_failures rotation, Drive backups, errors catalog, Jira sync script (blocked on Atlassian setup), text_cleanup extraction, markdown link linter, style guide refinement. Pause banner narrowed to reflect Cline's morning shipping spree is done.
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
@@ -28,6 +28,7 @@
 | Claude Code | Newscast UI updates + NBA intro card handoff + Upload API spec | `tools/clipzworld_newscast.html`, `POST_PUBLISH_MANUAL_CHECKLIST.md`, `CLINE_HANDOFF_NBA_INTRO_CARD.md`, `UPLOAD_API_SPEC.md`, `data/upload_status.json` | `b3fcdff` | 2026-04-09 (earlier today) |
 | Cline | Phase 1-6 acceptance test plan + rollback process | `test/PHASE_1_6_ACCEPTANCE_TEST.md`, `STATUS.md` | `787f81f` | 2026-04-09 7:26 PM ET |
 | Cline | Fix TV card overlay position: OVERLAY_ZONE + 2 hardcoded FFmpeg overlays → x=40 (top-left, facing Bobby G) | `server.js` | `787f81f` | 2026-04-09 7:37 PM ET |
+| Cline | Strict clip quota + client-side dedup (7d TTL) + dropdown persistence | `cwn_production.html` | TBD | 2026-04-11 9:22 PM ET |
 | Cline | Module split Phase 1: extract lib/config.js, lib/logger.js, lib/metrics.js from server.js; remove inline duplicates; server verified clean | `lib/config.js`, `lib/logger.js`, `lib/metrics.js`, `server.js`, `SERVER_SPLIT_PLAN.md` | `787f81f` | 2026-04-09 11:30 PM ET |
 | Cline | Upgrade pre-commit hook: add soft-warn for stale .md docs; update COMMIT_CHECKLIST + CLAUDE.md with doc-update rule | `scripts/pre-commit.sh`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | `d0ae35a` | 2026-04-09 11:35 PM ET |
 | Cline | Add git push step to COMMIT_CHECKLIST.md | `COMMIT_CHECKLIST.md` | `b719c51` | 2026-04-09 11:39 PM ET |
