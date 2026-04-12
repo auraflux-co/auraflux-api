@@ -3232,7 +3232,7 @@ function cleanAvatarText(raw) {
   return raw
     // Replace [beat] with SSML break tag — HeyGen honors this when input_type: 'ssml'
     // 500ms is the starting value — tune up/down based on delivery feel after real runs
-    .replace(/\[beat\]/gi, '<break time="500ms"/>')
+    .replace(/\[beat\]/gi, '<break time="1000ms"/>')
     .replace(/\[CLIP PLAYS HERE[^\]]*\]/gi, '')
     .replace(/\[TRANSITION[^\]]*\]/gi, '')
     // IMPORTANT: the [...] strip below must come AFTER the [beat] → <break> replacement
