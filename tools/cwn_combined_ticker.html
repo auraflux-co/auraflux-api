@@ -187,7 +187,7 @@ function startScroll() {
   cancelAnimationFrame(animId);
   scrollX = 0;
   var lastTime = null;
-  var PX_PER_SEC = 80; // adjust this number to change speed on all devices equally
+  var PX_PER_SEC = 50; // synced with Twitch ticker speed (was 80, too fast) — 2026-04-12
   function step(ts) {
     if (lastTime === null) lastTime = ts;
     var delta = ts - lastTime;
