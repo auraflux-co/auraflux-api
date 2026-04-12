@@ -9944,6 +9944,118 @@ async function generateTwitchLongformThumbnail(options = {}) {
   return { thumbnailPath: outputPath, episodeNum, date: dateStr, streamerCount: n };
 }
 
+// ── Generate News/NBA Thumbnail with Canvas ───────────────────────
+// Replaces the Puppeteer/HTML-based generation for news and NBA thumbnails
+// to fix 500 errors. Returns a buffer.
+async function generateNewsNbaThumbnail(options = {}) {
+  const { createCanvas, loadImage } = require('canvas');
+  const {
+    contentType,
+    episodeNum,
+    date,
+    title,
+    storyImage,
+    source
+  } = options;
+
+  const W = 1280, H = 720;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  let backgroundImage;
+  if (contentType === 'news' && storyImage) {
+    try {
+      backgroundImage = await loadImage(storyImage);
+    } catch (e) {
+      console.warn(`[thumbnail] Could not load storyImage for news: ${e.message}`);
+    }
+  } else if (contentType === 'nba') {
+    const nbaTemplatePath = path.join(__dirname, 'assets', 'nba_thumbnail_background.jpeg');
+    if (fs.existsSync(nbaTemplatePath)) {
+      try {
+        backgroundImage = await loadImage(nbaTemplatePath);
+      } catch (e) {
+        console.warn(`[thumbnail] Could not load NBA background image: ${e.message}`);
+      }
+    }
+  }
+
+  if (backgroundImage) {
+    const srcW = backgroundImage.width, srcH = backgroundImage.height;
+    const scale = Math.max(W / srcW, H / srcH);
+    const drawW = srcW * scale, drawH = srcH * scale;
+    const drawX = (W - drawW) / 2, drawY = (H - drawH) / 2;
+    ctx.drawImage(backgroundImage, drawX, drawY, drawW, drawH);
+  } else {
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, H);
+  gradient.addColorStop(0, 'rgba(0,0,0,0)');
+  gradient.addColorStop(0.5, 'rgba(0,0,0,0)');
+  gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+
+  const dateStr = date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const tagline = contentType === 'nba' ? 'OTHER SIDE OF THE PILLOW' : 'BECAUSE THE LIGHT WAS ON';
+  const epLabel = `EP ${episodeNum}`;
+
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 8;
+
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 36px Arial';
+  ctx.fillStyle = '#c7af4f';
+  ctx.fillText(epLabel, W - 24, 48);
+
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 28px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(dateStr.toUpperCase(), 24, 48);
+
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 64px "Bebas Neue", sans-serif';
+  ctx.fillStyle = '#ffffff';
+
+  const words = (title || '').split(' ');
+  let line = '';
+  const lines = [];
+  const maxWidth = W - 80;
+  for(let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && n > 0) {
+      lines.push(line);
+      line = words[n] + ' ';
+    } else {
+      line = testLine;
+    }
+  }
+  lines.push(line);
+  if (lines.length > 2) {
+    lines.splice(2);
+    lines[1] = (lines[1] || '').trim() + '...';
+  }
+  let y = H - (lines.length * 70) - 20;
+  for (const l of lines) {
+      ctx.fillText(l.trim(), 40, y);
+      y += 70;
+  }
+
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 32px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(tagline, W - 40, H - 40);
+
+  ctx.shadowColor = 'transparent';
+
+  return canvas.toBuffer('image/png');
+}
+
+
 // ── POST /generate-twitch-longform-thumbnail ─────────────────────────
 // Generates Twitch longform YouTube thumbnail using twitchsoup_thumbnail.jpeg base
 // + canvas-drawn streamer circles in a ring + episode number + date
@@ -9998,62 +10110,16 @@ app.post('/generate-thumbnail', async (req, res) => {
 
     // ── Step 2: Generate thumbnail based on content type ───────────
     if (contentType === 'news' || contentType === 'nba') {
-      // ── Use Puppeteer with cwn_news_tool.html ──────────────────────
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      // ── Use Canvas to generate thumbnail ───────────────────────────
+      const buf = await generateNewsNbaThumbnail({
+        contentType,
+        episodeNum,
+        date,
+        title,
+        source,
+        storyImage
       });
-
-      try {
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 720 });
-
-        // Load cwn_news_tool.html
-        const toolUrl = `http://localhost:3000/news-tool`;
-        await page.goto(toolUrl, { waitUntil: 'networkidle0' });
-
-        // Inject story data into the page and make thumbnail visible
-        await page.evaluate((data) => {
-          // Make the gen-section visible (it's hidden by default)
-          const genSection = document.getElementById('gen-section');
-          if (genSection) genSection.style.display = 'block';
-
-          const thumbBg = document.getElementById('thumb-bg');
-          const thumbHeadline = document.getElementById('thumb-headline');
-          const thumbCat = document.getElementById('thumb-cat');
-          const thumbSrcBadge = document.getElementById('thumb-src-badge');
-          const thumbSub = document.getElementById('thumb-sub');
-
-          if (thumbBg && data.storyImage) {
-            thumbBg.src = data.storyImage;
-            thumbBg.style.display = 'block';
-          }
-          if (thumbHeadline) thumbHeadline.textContent = data.title || 'Story Headline';
-          if (thumbCat) {
-            const showName = data.contentType === 'nba' ? 'OTHER SIDE OF THE PILLOW' : 'BECAUSE THE LIGHT WAS ON';
-            thumbCat.textContent = `${showName} - EPISODE ${data.episodeNum}`;
-          }
-          if (thumbSrcBadge) thumbSrcBadge.textContent = data.source || 'REACTION';
-          const brandName = data.contentType === 'nba' ? 'OTHER SIDE OF THE PILLOW' : 'BECAUSE THE LIGHT WAS ON';
-          if (thumbSub) thumbSub.textContent = (data.date || new Date().toLocaleDateString()).toUpperCase() + ' | ' + brandName;
-        }, { title, storyImage, source, date, contentType, episodeNum });
-
-        // Wait for image to load
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Screenshot the thumbnail element
-        const thumbElement = await page.$('#thumb');
-        if (!thumbElement) {
-          throw new Error('Thumbnail element (#thumb) not found');
-        }
-
-        await thumbElement.screenshot({ path: outputPath });
-        console.log(`[Thumbnail] ✅ Generated ${contentType} thumbnail via Puppeteer: ${outputPath}`);
-
-      } finally {
-        await browser.close();
-      }
-
+      fs.writeFileSync(outputPath, buf);
     } else if (contentType === 'twitch') {
       // ── Use Puppeteer with cwn_twitch_tool.html ────────────────────
       const browser = await puppeteer.launch({

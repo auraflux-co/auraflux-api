@@ -100,7 +100,7 @@ Mark `[x]` when complete. Add new tasks at the bottom with a date.
 
 These tasks were identified by Aider but couldn't be completed due to the server.js context limit error. Once the module split reduces server.js size, these become executable.
 
-#### [ ] Fix News Thumbnail Generation 500 Error
+#### [x] Fix News Thumbnail Generation 500 Error
 **File:** `server.js` (thumbnail generation endpoint)
 **What:** Debug and fix 500 error in `/generate-thumbnail` for `contentType: 'news'`
 **Evidence:** QA session shows `POST /generate-thumbnail` (news) returns 500 status
@@ -109,7 +109,7 @@ These tasks were identified by Aider but couldn't be completed due to the server
 **Estimate:** 1 hour
 **Safe for Aider:** ✅ Thumbnail generation is separate from dashboard JS and assembly flow
 
-#### [ ] Fix NBA Thumbnail Generation 500 Error  
+#### [x] Fix NBA Thumbnail Generation 500 Error  
 **File:** `server.js` (thumbnail generation endpoint)
 **What:** Debug and fix 500 error in `/generate-thumbnail` for `contentType: 'nba'`
 **Evidence:** QA session shows `POST /generate-thumbnail` (nba) returns 500 status
