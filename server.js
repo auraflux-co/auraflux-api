@@ -3732,7 +3732,7 @@ app.post('/assemble',
               const name   = streamerData.displayName;
               const origin = streamerData.origin || '';
               const fact   = (streamerData.fact || '').replace(/'/g, "\\'").replace(/:/g, '\\:');
-              const introDur = 3.5;
+              const introDur = CONFIG.INTRO_CARD.DURATION_SECONDS;
 
               const cardPngPath = require("path").join(require("os").tmpdir(), `cwn_card_${Date.now()}_${(streamerData.name||"x").replace(/[^a-z0-9]/gi,"")}.png`);
               try {
@@ -3899,7 +3899,7 @@ app.post('/assemble',
               );
 
               const burnedPath = inputForTS.replace('.mp4', '_intro_burned.mp4');
-              const introDur = 3.5;
+              const introDur = CONFIG.INTRO_CARD.DURATION_SECONDS;
 
               const burnArgs = [
                 '-i', inputForTS, '-i', cardPngPath,

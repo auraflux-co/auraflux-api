@@ -3096,7 +3096,7 @@ function generateTwitch() {
           console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch user not found');
           done++;check();return;
         }
-        var since=new Date(Date.now()-86400000*7).toISOString();  // 7-day window (was 24h — too narrow for less-active streamers)
+        var since=new Date(Date.now()-86400000*2).toISOString();  // 48h window — Rob runs long-form every other day; 48h avoids duplicates without over-pulling (was 7d, was 24h before that)
         // Fetch up to 20 clips per streamer — GQL fails on ~50% so we need a large backup pool
         // This is equivalent to: twitch.tv/STREAMER/clips?filter=clips&range=24hr
         var fetchCount = Math.max(clipsPerStreamer * 5, 20);
