@@ -1595,12 +1595,14 @@ async function geminiQACheck(videoPath, opts = {}) {
         `3. VIDEO FREEZE: Does the video appear to FREEZE (video stuck, audio continues)? (yes/no) — CRITICAL`,
         `4. TRANSITIONS: Do cuts between segments look clean? (yes/partial/no)`,
         `5. AUDIO: Audio clear and continuous? (yes/partial/no)`,
+        `6. TV CARD: Is a TV-shaped overlay card visible in the top-right corner? (yes/no)`,
       ] : point.label === 'MIDDLE' ? [
         `1. VIDEO FREEZE: Does the video appear to FREEZE at any point? (yes/no) — CRITICAL`,
         `2. TICKER: Scrolling ticker still visible at bottom? (yes/no)`,
         `3. VIDEO QUALITY: 1080p, no pixelation, no black frames? (yes/partial/no)`,
         `4. AVATAR VISIBLE: Bobby G clearly visible and properly framed? (yes/no)`,
         `5. AUDIO: Audio clear and continuous? (yes/partial/no)`,
+        ...(clipCount > 0 ? [`6. SOURCE CLIPS: Are source clips (non-avatar footage) visible and playing? (yes/no)`] : []),
       ] : [
         `1. VIDEO FREEZE: Video frozen/stalled at any point? (yes/no) — CRITICAL`,
         `2. TICKER: Ticker still scrolling at end of video? (yes/no)`,
@@ -1697,8 +1699,9 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   // before the video does, which is a false positive (sample window artifact, not a real problem).
   const lateReport      = reports[2] || '';
   const outroCutOff     = /OUTRO:.*FAIL/i.test(lateReport) && !/abrupt.*cut|cut.*abrupt|sample.*end/i.test(lateReport);
-  const avDeSync        = /a\/v.*desync|audio.*ahead|video.*behind/i.test(fullReport);
-  const hasCriticalFail = freezeDetected || tickerMissing || outroCutOff || avDeSync;
+  const avDeSync               = /a\/v.*desync|audio.*ahead|video.*behind/i.test(fullReport);
+  const clipsExpectedButMissing = clipCount > 0 && /SOURCE CLIPS:.*no/i.test(fullReport);
+  const hasCriticalFail = freezeDetected || tickerMissing || outroCutOff || avDeSync || clipsExpectedButMissing;
 
   // Build structured deduction list for why-doc
   const deductions = [];
@@ -1706,6 +1709,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   if (tickerMissing)   deductions.push({ points: 20, reason: 'TICKER missing from all sample points — critical failure' });
   if (outroCutOff)     deductions.push({ points: 20, reason: 'OUTRO cut off — "Appreciate you!" not present in late sample' });
   if (avDeSync)        deductions.push({ points: 15, reason: 'A/V DESYNC detected in sample' });
+  if (clipsExpectedButMissing) deductions.push({ points: 25, reason: 'SOURCE CLIPS missing — expected clips but none detected in video' });
   scores.forEach((s, i) => {
     if (s < 80) deductions.push({ points: 80 - s, reason: `${samplePoints[i].label} sample scored ${s}/100 — see report for specifics` });
   });
@@ -1741,6 +1745,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
     `Ticker missing: ${tickerMissing  ? '🚨 YES' : '✅ No'}`,
     `Outro cut off:  ${outroCutOff   ? '🚨 YES' : '✅ No'}`,
     `A/V desync:     ${avDeSync      ? '🚨 YES' : '✅ No'}`,
+    `Clips missing:  ${clipsExpectedButMissing ? '🚨 YES' : '✅ No'}`,
     ``,
     `── SCORE BREAKDOWN ───────────────────────────────`,
     `STARTING SCORE: 100`,
