@@ -1863,6 +1863,7 @@ async function sendScriptToHeyGen(script, opts = {}) {
         width: format === 'portrait' ? 1080 : 1920,
         height: format === 'portrait' ? 1920 : 1080
       },
+      dynamic_duration: true,   // auto-adjust video length to match audio including SSML breaks
       test: false
     };
 
