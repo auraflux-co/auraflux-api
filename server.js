@@ -6473,6 +6473,22 @@ app.post('/generate-full-script',
       );
       const newsHits = analyses.filter(a => a && a.length > 50).length;
       console.log(`[generate-full-script] Got ${newsHits}/${items.length} news analyses`);
+
+      // Build orderedClipUrls for News — one entry per story, using the video URL
+      // that Gemini analyzed (same URL used for assembly — news clips don't expire like Twitch CDN)
+      // FIX: orderedClipUrls was only populated in the Twitch block (line 6172 comment says so).
+      // News and NBA were added later but this step was never added — causing 22_avatar_0_clips output.
+      if (type === 'news') {
+        orderedClipUrls = items.map((item, i) => ({
+          url:      item.videoUrl || item.clipUrl || '',
+          clipUrl:  item.videoUrl || item.clipUrl || '',
+          pageUrl:  item.link || item.url || '',
+          label:    `STORY${i + 1}_CLIP`,
+          streamer: `story_${i + 1}`,
+          title:    item.title || `Story ${i + 1}`
+        })).filter(c => c.url); // only include stories that have a real video URL
+        console.log(`[generate-full-script] Built News orderedClipUrls: ${orderedClipUrls.length}/${items.length} stories have clip URLs`);
+      }
     }
 
     // ── Step 2: Build the full Claude prompt ─────────────────────────
