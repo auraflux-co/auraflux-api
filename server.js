@@ -4105,8 +4105,8 @@ app.post('/assemble',
         const concatInput = 'concat:' + tsFiles.join('|');
         ffArgs = ['-i', concatInput, '-c:v', 'copy', '-c:a', 'aac', '-ar', '44100', '-ac', '2',
           '-bsf:a', 'aac_adtstoasc', '-movflags', '+faststart', '-y', outPath];
-      } else if (tsFiles.length > 30 || clipCount > 0) {
-        // Large job OR any source clips present — use concat demuxer for reliable A/V sync
+      } else if (tsFiles.length > 30 || clipCount > 0 || (contentType === 'news' && tsFiles.length > 10)) {
+        // Large job OR any source clips present OR News 22-segment all-avatar job — use concat demuxer for reliable A/V sync
         // xfade filter_complex with 30+ files causes A/V drift accumulation
         // and hits macOS file descriptor limits.
         // CRITICAL: xfade offset math is broken when mixing avatar crossfades (0.3s) with
