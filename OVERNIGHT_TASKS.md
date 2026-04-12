@@ -379,6 +379,19 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 - Pre-commit hook improvements (auto-run markdown link linter, file size check, secrets scan)
 - Dependency vulnerability audit (`npm audit` + automated patch PRs)
 
+### 🔒 BLOCKED UNTIL 12-TEST SUITE COMPLETES
+
+These tasks are scoped and ready, but must NOT ship until Rob signals the 12-test phase is done. They either touch `server.js` / `cwn_production.html` in ways that would collide with in-flight Cline work, or represent polish that should happen after the pipeline is proven stable.
+
+**Task POST-12-A — Dashboard metrics panel (unified per-run report)**
+
+- **What:** Build `/metrics/:jobId` endpoint in `lib/routes/metrics.js` that stitches the three separate `run_metrics_*.json` files (`script_twitch_*`, `asm_*`, `publish_*`) into one unified JSON response keyed by the top-level jobId. Then add a "📊 RUN METRICS" collapsible panel to each job card in `cwn_production.html` showing per-stage wall time + totals inline: Script Gen → Gate 1 → HeyGen → Gate 2 → Assembly → Gate 3 → Drive → Gate 6 Publish, with MM:SS format for each stage and a grand total at the bottom.
+- **Why:** Rob has been running tests for days and never sees timing data because metrics write to disk only — no UI surface. Three separate files per run instead of one unified report.
+- **Files:** `lib/routes/metrics.js` (new), `server.js` (route registration), `cwn_production.html` (UI panel)
+- **Dependencies:** Post-12-test signal from Rob; coordinate with any in-flight `server.js` handoffs
+- **Rob's decision:** 2026-04-11 — deferred to post-12-test polish (he chose "Option B" over a quick nodemon-log fallback)
+- **Scope reminder:** Read-only endpoint. Do NOT modify `finalizeJobMetrics` or the existing `StageTimer` class in `lib/metrics.js` — the data already exists, this task is strictly about surfacing it.
+
 ---
 
 ### ✅ COMPLETED OVERNIGHT TASKS
