@@ -1297,7 +1297,7 @@ app.get('/news-tool', (req, res) => {
 });
 
 app.get('/newscast-overlay', (req, res) => {
-  res.sendFile(path.join(__dirname, 'clipzworld_newscast.html'));
+  res.sendFile(path.join(__dirname, 'tools/clipzworld_newscast.html'));
 });
 
 app.get('/twitch-tool', (req, res) => {
