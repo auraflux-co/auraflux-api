@@ -3836,7 +3836,7 @@ app.post('/assemble',
             }, overlayPngPath, activeStoryIndex);
 
             const burnedPath = inputForTS.replace('.mp4', '_intro_burned.mp4');
-            const introDur = 3.5;
+            const introDur = CONFIG.INTRO_CARD.DURATION_SECONDS;
 
             // Full-screen overlay blend
             const burnArgs = [
