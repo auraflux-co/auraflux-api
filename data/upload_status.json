@@ -4,6 +4,38 @@
   "description": "CWN publish tracking database — logs every /publish attempt with status, platform, timestamps, and jobId",
   "uploads": [
     {
+      "id": 1776108395019,
+      "trackingId": "pub_1776108395019_manual",
+      "timestamp": "2026-04-13T19:26:35.019Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "BREAKING: Trump Threatens Oil Blockade as Global Tensions Explode | ClipzWorld News",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=10tAxjHyFpZe_s4m6qnFKqGU1Y8JvCSUx",
+      "request_id": "d027abd009dd4d4d9a305255760a65a5",
+      "job_id": "5de19ecd8152488f8b6bf7f3e1cfbfc3",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1776108383239"
+    },
+    {
+      "id": 1776082560996,
+      "trackingId": "pub_1776082560996_manual",
+      "timestamp": "2026-04-13T12:16:00.996Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "US Military Plans Iran Port Blockade - Could Worsen Global Energy Crisis | ClipzWorld News",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1T98j-jWPvPTRnBEr-4J-KJ3USTe1eddX",
+      "request_id": "03b6b47e530144f68cd8627d686cf59c",
+      "job_id": "19015ff8f1864780ac02c1eb2a12104d",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1776082549247"
+    },
+    {
       "id": 1776044759366,
       "trackingId": "pub_1776044759366_manual",
       "timestamp": "2026-04-13T01:45:59.366Z",
