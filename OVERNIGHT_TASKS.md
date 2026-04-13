@@ -196,6 +196,47 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 
 ---
 
+#### [ ] Jira morning report script (`scripts/jira_morning_report.js`)
+**Files:** NEW `scripts/jira_morning_report.js`, NEW output `MORNING_JIRA_REPORT.md`
+**What:** Node script that reads `JIRA_PROJECT_KEY` (=`CPD`) from `.env`, hits `/rest/api/3/search` via the `lib/clients/jira_client.js` built by the previous task, pulls issues in the active sprint / board, formats them into a markdown summary, and writes the result to `MORNING_JIRA_REPORT.md` at the repo root. Designed to run nightly alongside Aider's existing overnight work so Rob has a fresh Jira snapshot every morning next to `MORNING_BRIEFING.md`.
+**Why:** Rob wanted a "Rovo morning report" but Rovo has no public API and can't self-schedule. A deterministic Node-based report delivers the same capability (Jira state summarized to markdown) without waiting on Atlassian's Rovo rollout. If/when Rovo gets a real API, we can swap the script for an agent call — interface stays identical (markdown file in the repo root).
+**How:**
+1. Require `lib/clients/jira_client.js` (built by the previous task — this task is DEPENDENT on it shipping first)
+2. Load `.env` via `dotenv`, read `ATLASSIAN_DOMAIN`, `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN`, `JIRA_PROJECT_KEY`
+3. Instantiate the Jira client, run 3 JQL queries:
+   - `project = CPD AND sprint in openSprints()` — active sprint content
+   - `project = CPD AND status = "In Progress"` — currently-worked items
+   - `project = CPD AND created >= -1d` — new issues in last 24h
+4. For each query, extract `key`, `summary`, `status`, `assignee.displayName`, `priority.name`, `updated`
+5. Format output as:
+   ```markdown
+   # Jira Morning Report — YYYY-MM-DD
+
+   **Project:** CPD | **Generated:** ISO-8601 timestamp
+
+   ## 🏃 Active Sprint (N issues)
+   - **CPD-123** [In Progress] summary — @assignee (Priority: High, updated 2h ago)
+   - ...
+
+   ## 🔧 Currently In Progress (N issues)
+   - ...
+
+   ## 🆕 New Since Yesterday (N issues)
+   - ...
+   ```
+6. Write to `MORNING_JIRA_REPORT.md` at repo root (same folder as `MORNING_BRIEFING.md`). Overwrite each run.
+7. Exit 0 on success. Exit 1 with a clear error in stderr on failure (e.g., "Jira auth failed — check ATLASSIAN_API_TOKEN in .env")
+8. Add `"jira-report": "node scripts/jira_morning_report.js"` to `package.json` scripts
+9. Hook into `scripts/overnight_runner.sh` — after Aider's nightly task completes, add a line that runs `npm run jira-report` so the file regenerates every morning
+10. Add `MORNING_JIRA_REPORT.md` to `.gitignore` — it's runtime output, not source
+**Test:** After shipping, Rob runs `npm run jira-report` manually. If the file is created with real Jira data, task is done. If auth fails, Rob fills in `.env` and retries.
+**Risk:** Low — new script only, depends on the Jira client module from the prior task
+**Estimate:** 1.5 hours
+**Dependencies:** **BLOCKED until the "Rebuild Atlassian integration from scratch" task above ships.** If that task isn't complete yet, skip this task and run a different INDEPENDENT task instead.
+**Safe for Aider:** ✅ New file + 1-line overnight runner edit + 1-line package.json edit + 1-line .gitignore edit
+
+---
+
 #### [ ] Write unit tests for `parseSegments_v2` + Gate 2 validator
 **Files:** NEW `test/parseSegmentsV2.test.js` and `test/gate2_validator.test.js`
 **What:** Take the 10 test cases documented in `test/GATE2_TEST_CASES.md` and turn them into executable Jest or node:test test cases. Each test asserts segment count, labels, clip order against a hand-crafted script input. Second file tests the `gate2_validateSegmentStructure` 6-check logic with good/bad inputs.
