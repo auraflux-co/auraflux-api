@@ -2344,17 +2344,17 @@ EXPECTED SCENES: ${expectedScenes}`;
    - DO NOT try to count in your head
    - Expected: exactly ${expectedScenes} markers
    - Method: Search through script and list each header you find, then count your list
-   - Remember: GAME1_INTRO, GAME1_SETUP, GAME1_CLIP_REACTION, GAME1_REACTION are 4 SEPARATE scenes
+   - Remember: GAME1_INTRO, GAME1_NARRATION, GAME1_REACTION are 3 SEPARATE scenes
    - Are there exactly ${expectedScenes} === SCENE === markers?`,
     `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per game)?`,
     `3. OUTRO: Does the script end with "Appreciate you!"?`,
     `4. GAME ACCURACY: Are game scores, teams, and player stats accurately mentioned?`,
     `5. INTRO: Is the intro 2-3 sentences introducing the episode?`,
-    `6. GAME SETUP: Does each game section have proper context before [CLIP PLAYS HERE]?`,
+    `6. NARRATION: Does each game's NARRATION scene contain play-by-play commentary sized to cover the clip duration?`,
     `7. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
     `8. CLIP MATCH (most important): Does each game commentary match what was seen in the highlight clip?`,
     `9. LOCKED INTRO: Does the video open with the correct "Other Side of the Pillow" intro?`,
-    `10. WORD COUNT: Is each game section approximately 120-150 words?`,
+    `10. NARRATION WORD COUNT: Does each NARRATION scene match the per-game word count target from the prompt (±15% tolerance)?`,
     `11. REACTION: Is there a brief reaction/observation after each clip?`
   ] : isNews ? [
     `1. SCENE COUNT: Count every === HEADER === marker systematically through the ENTIRE script.
@@ -2651,7 +2651,7 @@ async function geminiScriptQA(script, clipAnalyses, opts = {}) {
     const scenesPerStreamer = 1 + clipsPerStreamer * 2;
     expectedScenes = 1 + streamers.length * scenesPerStreamer + 1;
   } else if (contentType === 'nba' || contentType === 'news') {
-    expectedScenes = 1 + (streamers.length * 4) + 1; // 1 INTRO + (items × 4 scenes each: _INTRO, _SETUP, _CLIP_REACTION, _REACTION) + 1 OUTRO
+    expectedScenes = 1 + (streamers.length * 3) + 1; // 1 INTRO + (items × 3 scenes each: _INTRO, _NARRATION, _REACTION) + 1 OUTRO
   }
   // Shorts don't validate scene count (expectedScenes remains 0)
 
@@ -2691,11 +2691,11 @@ EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}`;
     `2. OUTRO: Does the script end with "Appreciate you!"?`,
     `3. GAME ACCURACY: Are game scores, teams, and player stats accurately mentioned?`,
     `4. COLD OPEN: Is the cold open 2-3 sentences introducing the episode?`,
-    `5. GAME SETUP: Does each game section have proper context before [CLIP PLAYS HERE]?`,
+    `5. NARRATION: Does each game's NARRATION scene contain play-by-play commentary sized to cover the clip duration?`,
     `6. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
     `7. CLIP MATCH (most important): Does each game commentary match what Gemini saw in the highlight clip?`,
     `8. LOCKED INTRO: Does the video open with the correct "Other Side of the Pillow" intro?`,
-    `9. WORD COUNT: Is each game section approximately 120-150 words?`,
+    `9. NARRATION WORD COUNT: Does each NARRATION scene match the per-game word count target from the prompt (±15% tolerance)?`,
     `10. REACTION: Is there a brief reaction/observation after each clip?`
   ] : isNews ? [
     `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per story)?`,
@@ -6908,7 +6908,8 @@ Write the FULL SCRIPT using exactly:
 Fully written, no brackets, no placeholders. Single [CLIP PLAYS HERE] after setup.
 Target: 50-70 words spoken total.`;
       } else {
-        // Generate scene headers for NBA (4 scenes per game: intro + setup + clip_reaction + reaction)
+        // Generate scene headers for NBA (3 scenes per game: intro + narration + reaction)
+        // Wave 1-NBA: renamed SETUP→NARRATION, dropped CLIP_REACTION (PIP fiction — not implemented in assembly)
         const sceneHeaders = ['=== INTRO ==='];
         items.forEach((g, i) => {
           const gameLabel = `GAME${i+1}`;
@@ -6918,8 +6919,7 @@ Target: 50-70 words spoken total.`;
           const homeClean = (g.home||'HOME').toUpperCase().replace(/\s+/g, '_');
           const teams = `${awayClean}_${homeClean}`;
           sceneHeaders.push(`=== ${gameLabel}_${teams}_INTRO ===`);
-          sceneHeaders.push(`=== ${gameLabel}_${teams}_SETUP ===`);
-          sceneHeaders.push(`=== ${gameLabel}_${teams}_CLIP_REACTION ===`);
+          sceneHeaders.push(`=== ${gameLabel}_${teams}_NARRATION ===`);
           sceneHeaders.push(`=== ${gameLabel}_${teams}_REACTION ===`);
         });
         sceneHeaders.push('=== OUTRO ===');
@@ -6936,43 +6936,48 @@ Score: ${g.awayScore || '?'}-${g.homeScore || '?'} FINAL
 ${g.leader ? 'Top performer: ' + g.leader + (g.leaderStat ? ' — ' + g.leaderStat : '') : ''}
 ${g.injuries && g.injuries.length ? 'Out: ' + g.injuries.join(', ') : ''}
 ${g.awayRec || g.homeRec ? 'Records: ' + g.away + ' ' + (g.awayRec||'') + ' | ' + g.home + ' ' + (g.homeRec||'') : ''}
+ESPN highlight clip duration: ${g.clipDuration ? Math.round(g.clipDuration) + ' seconds' : 'unknown'}
+NARRATION word count target for this game: ${g.clipDuration ? Math.round(g.clipDuration * 2.5) + '-' + Math.round(g.clipDuration * 3) + ' words' : '70-90 words (default)'}
 Gemini video analysis: ${analyses[i] || 'No analysis — use box score data only'}
 `).join('')}
+
+⏱ CLIP DURATION GUIDANCE:
+Each game has an "ESPN highlight clip duration" in seconds. The NARRATION scene for that game
+is the audio track that plays OVER the highlight video (via the voiceover branch at assembly time).
+See the "NARRATION word count target for this game" line in each GAME DATA block above — use the
+upper end of that range to guarantee narration covers the full clip. Write in present tense.
+If clip duration is "unknown", target ~70-90 words of NARRATION as a reasonable default.
+If the clip is longer than 60 seconds, split the action into 2-3 sentences of present-tense
+play-by-play instead of one long run-on sentence.
 
 🎬 CRITICAL - SCENE STRUCTURE (${expectedScenes} SCENES REQUIRED):
 Write the FULL SCRIPT using these === SCENE HEADERS === exactly (one scene per header):
 
 ${sceneHeaders.join('\n')}
 
-⚠️ SCENE LENGTH RULES - PREVENTS HEYGEN TTS FROM RUSHING:
-- Each scene = 1-3 sentences MAXIMUM
-- Scenes longer than 3 sentences cause HeyGen TTS to rush/skip words/poor enunciation
+⚠️ SCENE LENGTH RULES:
 - INTRO scene: 2-3 sentences (episode intro)
-- [GAME]_[TEAMS]_INTRO scenes: 2-3 sentences (introduce game/matchup)
-- [GAME]_[TEAMS]_SETUP scenes: EXACTLY 2 sentences (not 1, not 3) + [beat] + [CLIP PLAYS HERE] + [beat]
-- [GAME]_[TEAMS]_CLIP_REACTION scenes: EXACTLY 1 sentence (Bobby reacting WHILE clip plays — this will be overlaid on clip in editing)
-- [GAME]_[TEAMS]_REACTION scenes: EXACTLY 1 sentence (short, flat, deadpan reaction AFTER clip)
+- [GAME]_[TEAMS]_INTRO scenes: 2-3 sentences (introduce the matchup, teams, stakes). Bobby G is on screen during this scene with the game's TV card in the top-right corner.
+- [GAME]_[TEAMS]_NARRATION scenes: play-by-play calling the clip from the broadcast booth, sized to cover the full clip duration. See GAME DATA above for per-game target word counts — use the upper end of the range to guarantee narration covers the full clip. Write in present tense. If the clip is very short (<15 seconds), target ~35-40 words. If very long (>60 seconds), split into 2-3 short sentences instead of one long run-on.
+- [GAME]_[TEAMS]_REACTION scenes: EXACTLY 1 sentence. Bobby G is back on screen after the clip ends. Deadpan take on the play. Do NOT recap what happened — the narration already covered it. Just the take.
 - OUTRO scene: 1-2 sentences (sign-off)
 
 📝 CONTENT STRUCTURE PER SCENE:
 
 === INTRO ===
-[2-3 sentences. Episode intro. Set the tone.]
+[2-3 sentences. Episode intro. Set the tone. Bobby G on screen.]
 
 === GAME#_[TEAMS]_INTRO ===
-[2-3 sentences. Introduce the matchup. Build anticipation.]
+[2-3 sentences. Introduce the matchup — teams, stakes, storyline. Do NOT describe specific plays; save that for NARRATION. Bobby G on screen with the game's TV card visible in the top-right corner.]
 
-=== GAME#_[TEAMS]_SETUP ===
-[EXACTLY 2 sentences — not 1, not 3. First sentence: context about the game. Second sentence: specific setup for the highlight clip.]
+=== GAME#_[TEAMS]_NARRATION ===
+[4-8 sentences of play-by-play narration covering the ESPN highlight clip. Bobby G's audio plays OVER the clip video — avatar is NOT on screen during this scene, only the narration. Write in present tense as if you are calling the game from the booth. Describe the action visible in the clip (from Gemini's video analysis) with specific player names, numbers, outcomes. Length must cover the full clip duration — see NARRATION word count target in GAME DATA above.]
 [beat]
 [CLIP PLAYS HERE]
 [beat]
 
-=== GAME#_[TEAMS]_CLIP_REACTION ===
-[EXACTLY 1 sentence. Bobby's live reaction WHILE watching the clip. This will be picture-in-picture with the clip.]
-
 === GAME#_[TEAMS]_REACTION ===
-[EXACTLY 1 sentence. Short. Flat. Deadpan. Final take AFTER the clip.]
+[EXACTLY 1 sentence. Bobby G back on screen after the clip ends. Deadpan take on the play — what it means, what it tells us about the team, the season, the moment. Do NOT recap the play — NARRATION already called it. Just the take.]
 
 === OUTRO ===
 [1-2 sentences. Sign-off.]
@@ -6980,14 +6985,15 @@ ${sceneHeaders.join('\n')}
 ✅ VALIDATION CHECKLIST:
 - Total scenes: MUST BE EXACTLY ${expectedScenes}
 - Total [CLIP PLAYS HERE] markers: MUST BE EXACTLY ${items.length}
-- Each SETUP scene: EXACTLY 2 sentences (not 1, not 3) + contains [beat] + [CLIP PLAYS HERE] + [beat]
-- Each CLIP_REACTION scene: EXACTLY 1 sentence (live reaction during clip)
-- Each REACTION scene: EXACTLY 1 sentence (deadpan take after clip)
+- Each NARRATION scene: word count matches "NARRATION word count target for this game" in the GAME DATA section. Tolerance: ±15% around the upper bound. Contains [beat] + [CLIP PLAYS HERE] + [beat] after the narration text.
+- Each REACTION scene: EXACTLY 1 sentence (deadpan take, no recap)
 - [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
-- Never explain the take in reactions. Never recap what just happened.
+- Never recap the play in REACTION — NARRATION already called the action.
+- Never mention "watch this" or "check this out" in INTRO/NARRATION — just call the game like a broadcaster.
+- Play-by-play must be present-tense, specific (player names, jersey numbers, shot types), and cover the full clip duration without dead air.
 
 Use Gemini video analysis AND box score data for specific, accurate content.
-Target: 120-150 words spoken per game segment (90 seconds of delivery).`;
+Total script target: INTRO (~25 words) + per-game (INTRO ~25 + NARRATION [per GAME DATA] + REACTION ~15) + OUTRO (~25 words).`;
       }
 
 
@@ -7257,7 +7263,7 @@ Target: 80-100 words spoken per streamer.`;
       const scenesPerStreamer = 1 + clipsPerStreamer * 2;
       expectedScenes = 1 + items.length * scenesPerStreamer + 1; // 1 INTRO + (streamers × scenes) + 1 OUTRO
     } else if (type === 'nba') {
-      expectedScenes = 1 + (items.length * 4) + 1; // 1 INTRO + (games × 4 scenes) + 1 OUTRO
+      expectedScenes = 1 + (items.length * 3) + 1; // 1 INTRO + (games × 3 scenes: _INTRO, _NARRATION, _REACTION) + 1 OUTRO
     } else if (type === 'news') {
       expectedScenes = 1 + (items.length * 4) + 1; // 1 INTRO + (stories × 4 scenes) + 1 OUTRO
     }
