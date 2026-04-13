@@ -2967,7 +2967,7 @@ REQUIRED FORMAT (fill out ALL sections):
    - FAIL only if there are visual artifacts, glitches, green screen bleed, or the avatar is missing entirely
    - Do NOT fail for the bookshelf/room background — that is Bobby G's standard HeyGen background
 
-OVERALL SCORE: [number from 0-100]
+OVERALL SCORE: <number from 0-100>
 
 DETAILED ISSUES:
 [List any specific problems found, or write "No issues detected" if everything looks good]
@@ -2988,7 +2988,7 @@ SUMMARY:
       );
 
       const segReport = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
-      const segScore  = parseInt((segReport.match(/OVERALL SCORE:\s*(\d+)/i) || segReport.match(/SCORE:\s*(\d+)/i) || [])[1] || '80');
+      const segScore  = parseInt((segReport.match(/OVERALL SCORE:\s*\[?(\d+)\]?/i) || segReport.match(/SCORE:\s*\[?(\d+)\]?/i) || [])[1] || '80');
 
       // Track specific failures for this segment
       const segDeductions = [];
