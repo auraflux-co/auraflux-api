@@ -756,8 +756,10 @@ async function generateGameStoryCardPNG(cardData, outputPath, contentType) {
   const canvasModule = require('canvas');
   const { createCanvas, loadImage } = canvasModule;
 
-  // ── Dimensions (same as Twitch card for consistency) ────────────────
-  const W = 720, H = 840;
+  // ── Dimensions: 1040×586 = exact 2× pixel-doubled OVERLAY_ZONE (520×293, 16:9 landscape) ──
+  // Matches News card dimensions. FFmpeg downscales cleanly to 520×293 with no distortion.
+  // Previously 720×840 (portrait 6:7) which caused horizontal stretch + vertical squish.
+  const W = 1040, H = 586;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
 
@@ -786,71 +788,74 @@ async function generateGameStoryCardPNG(cardData, outputPath, contentType) {
   const subtitle = cardData.subtitle || cardData.score || '';
   const imageUrl = cardData.imageUrl || cardData.thumbnailUrl || null;
 
+  // ── Proportional layout constants (all relative to W/H) ─────────────
+  const pad = Math.round(W * 0.024);          // ~25px — outer padding
+  const IMG_W = Math.round(W * 0.42);         // ~437px — image width (left half)
+  const IMG_H = Math.round(H * 0.78);         // ~457px — image height
+  const IMG_X = Math.round(W * 0.03);         // ~31px — image left margin
+  const IMG_Y = Math.round((H - IMG_H) / 2);  // vertically centered
+  const TEXT_X = IMG_X + IMG_W + Math.round(W * 0.04); // text column start
+  const TEXT_W = W - TEXT_X - Math.round(W * 0.03);    // text column width
+
   // ── Clear canvas ─────────────────────────────────────────────────────
   ctx.clearRect(0, 0, W, H);
 
   // ── Background ───────────────────────────────────────────────────────
   ctx.fillStyle = scheme.bg;
-  const pad = 24;
   ctx.beginPath();
-  ctx.roundRect(pad, pad, W - pad * 2, H - pad * 2, 40);
+  ctx.roundRect(pad, pad, W - pad * 2, H - pad * 2, Math.round(W * 0.025));
   ctx.fill();
 
-  // ── Square image in center ───────────────────────────────────────────
-  const CX = W / 2, CY = 330;
-  const SQUARE_SIZE = 440; // 440x440 square
+  // ── Gold border ──────────────────────────────────────────────────────
+  ctx.strokeStyle = scheme.accent;
+  ctx.lineWidth = Math.round(W * 0.005);
+  ctx.beginPath();
+  ctx.roundRect(pad, pad, W - pad * 2, H - pad * 2, Math.round(W * 0.025));
+  ctx.stroke();
 
+  // ── Left-half image ──────────────────────────────────────────────────
   if (imageUrl) {
     try {
       const img = await loadImage(imageUrl);
       ctx.save();
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-
-      // Draw square image
-      const x = CX - SQUARE_SIZE / 2;
-      const y = CY - SQUARE_SIZE / 2;
-      ctx.drawImage(img, x, y, SQUARE_SIZE, SQUARE_SIZE);
-
-      // Border around image (accent color)
+      ctx.drawImage(img, IMG_X, IMG_Y, IMG_W, IMG_H);
+      // Accent border around image
       ctx.strokeStyle = scheme.accent;
-      ctx.lineWidth = 8;
-      ctx.strokeRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
-
+      ctx.lineWidth = Math.round(W * 0.006);
+      ctx.strokeRect(IMG_X, IMG_Y, IMG_W, IMG_H);
       ctx.restore();
     } catch (e) {
       // Image failed — draw placeholder
-      const x = CX - SQUARE_SIZE / 2;
-      const y = CY - SQUARE_SIZE / 2;
       ctx.fillStyle = '#2a3550';
-      ctx.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
+      ctx.fillRect(IMG_X, IMG_Y, IMG_W, IMG_H);
       ctx.strokeStyle = scheme.accent;
-      ctx.lineWidth = 8;
-      ctx.strokeRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
+      ctx.lineWidth = Math.round(W * 0.006);
+      ctx.strokeRect(IMG_X, IMG_Y, IMG_W, IMG_H);
       console.warn(`[game-story-card] Image failed for ${title}: ${e.message}`);
     }
   }
 
   // ── Drop shadow behind text ─────────────────────────────────────────
   ctx.shadowColor = 'rgba(0,0,0,0.7)';
-  ctx.shadowBlur = 16;
+  ctx.shadowBlur = 12;
   ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 4;
+  ctx.shadowOffsetY = 3;
 
-  // ── Title text (below image) ────────────────────────────────────────
-  ctx.textAlign = 'center';
+  // ── Title text (right column, word-wrapped) ─────────────────────────
+  ctx.textAlign = 'left';
   ctx.fillStyle = scheme.text1;
-  ctx.font = 'bold 64px Arial';
+  const titleFontSize = Math.round(H * 0.1);   // ~59px
+  ctx.font = `bold ${titleFontSize}px Arial`;
 
-  // Word wrap title if too long
-  const maxWidth = W - 80;
+  // Word wrap title
   let titleLines = [];
   const titleWords = title.split(' ');
   let currentLine = '';
-
   for (const word of titleWords) {
     const test = currentLine ? currentLine + ' ' + word : word;
-    if (ctx.measureText(test).width > maxWidth && currentLine) {
+    if (ctx.measureText(test).width > TEXT_W && currentLine) {
       titleLines.push(currentLine);
       currentLine = word;
     } else {
@@ -859,18 +864,21 @@ async function generateGameStoryCardPNG(cardData, outputPath, contentType) {
   }
   if (currentLine) titleLines.push(currentLine);
 
-  // Draw title lines
-  let y = CY + SQUARE_SIZE / 2 + 80;
-  for (const line of titleLines.slice(0, 2)) { // Max 2 lines
-    ctx.fillText(line, CX, y);
-    y += 72;
+  // Draw title lines (max 3 lines)
+  const lineH = Math.round(titleFontSize * 1.2);
+  let textY = Math.round(H * 0.28);
+  for (const line of titleLines.slice(0, 3)) {
+    ctx.fillText(line, TEXT_X, textY);
+    textY += lineH;
   }
 
   // ── Subtitle text (score/details) ───────────────────────────────────
   if (subtitle) {
     ctx.fillStyle = scheme.text2;
-    ctx.font = 'normal 48px Arial';
-    ctx.fillText(subtitle, CX, y);
+    const subtitleFontSize = Math.round(H * 0.075);  // ~44px
+    ctx.font = `normal ${subtitleFontSize}px Arial`;
+    textY += Math.round(H * 0.04);
+    ctx.fillText(subtitle, TEXT_X, textY);
   }
 
   ctx.shadowColor = 'transparent';
