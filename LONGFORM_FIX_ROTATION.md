@@ -263,6 +263,21 @@ Two possible directions for News as a content type:
 
 ---
 
+### News long-form Fix 7 + Fix 4 (newscast overlay CSS) — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_SMOKE_TEST_7_FIXES.md` (Fix 7 + Fix 4 of 10)
+**Dispatched:** 2026-04-13 (post smoke test #7 review — LIVE indicator flush right, flag flush left)
+**Shipped:** 2026-04-13
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 7+4 | pending | `fix(news): LIVE indicator margin-right:80px + flag flush left (Fix 7+4)` — Fix 7: added `margin-right: 80px` to `.top-right` CSS rule in `tools/clipzworld_newscast.html` — pulls LIVE indicator + date inward from right frame edge. Fix 4: `.lower-third` CSS — removed slide-in animation from `.visible` state, added explicit `transform: translateX(0)` and `margin-left: 0` to ensure flag leading edge is flush at x=0 of frame (no 8px inset). Both are CSS-only changes in the same file, bundled as one commit. |
+
+**Untouched:** NBA, Twitch, short-form code paths. Only `tools/clipzworld_newscast.html` CSS touched.
+**Next:** Continue with Fix 3 (source attribution removal from News Gemini prompt).
+
+---
+
 ## Rotation log
 
 | Date | Event |
