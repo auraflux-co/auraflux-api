@@ -3821,14 +3821,18 @@ app.post('/assemble',
               log(asmId, `  ⚠️  Intro card burn failed for ${streamerName}: ${e.message} — using original`);
             }
           }
-        } else if (isIntro && contentType === 'news') {
-          // ── News: Full newscast overlay ──────────────────────────────
+        } else if (contentType === 'news' && (segTypes[i] || 'avatar') === 'avatar') {
+          // ── News: Full newscast overlay (all avatar segments) ────────
+          // Two-state burn for STORY#_INTRO: PNG A (lower-third visible) for t=0..introDur,
+          //   PNG B (lower-third hidden) for t>introDur.
+          // Non-INTRO avatar segments: single-state burn (lower-third always hidden).
+          // Fix 7: replaces blend= (broken alpha) with overlay=0:0 (correct RGBA composite).
+          // Fix 7: omitBackground:true in generateNewscastOverlay() produces real RGBA PNG.
           try {
             const seg = segsToProcess.find((s, si) => localFiles[i].includes(`${asmId}_${si}_`));
             const cardData = seg?.cardData || {};
 
             // Build list of all news stories for the overlay sidebar
-            // Collect all intro segments to show in the story list
             const allNewsIntros = segsToProcess.filter(s => {
               const lbl = s.label || '';
               return (/STORY\d+_INTRO/i.test(lbl) || /\(INTRO\)/i.test(lbl)) && s.cardData;
@@ -3840,58 +3844,124 @@ app.post('/assemble',
               storyId: introSeg.cardData?.storyId || `story_${idx}`
             }));
 
-            // Find which story index this intro segment is
+            // Find which story index this segment is
             const currentStoryId = cardData.storyId || cardData.title;
             const storyIndex = allStories.findIndex(s =>
               s.storyId === currentStoryId || s.title === cardData.title
             );
             const activeStoryIndex = storyIndex >= 0 ? storyIndex : 0;
 
-            const overlayPngPath = path.join(TMP_DIR, `newscast_overlay_${Date.now()}.png`);
+            // Detect if this is a STORY#_INTRO segment (two-state burn)
+            const isStoryIntro = /^STORY\d+_INTRO$/i.test(label.trim());
 
-            // Generate full newscast overlay with current story highlighted
-            await generateNewscastOverlay({
+            // Get episode number for overlay
+            const epCountersPath = require('path').join(__dirname, 'data/episode_counters.json');
+            let newsEpNum = 1;
+            try {
+              const epC = JSON.parse(fs.readFileSync(epCountersPath, 'utf8'));
+              newsEpNum = epC.news || 1;
+            } catch(e) {}
+            const episodeNumber = `Episode ${newsEpNum}`;
+            const activeCategory = cardData.category || 'WORLD NEWS';
+
+            const overlayBase = {
               title: cardData.title || 'Breaking News Story',
-              category: cardData.category || 'WORLD NEWS',
-              date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase(),
+              category: activeCategory,
               allStories: allStories
-            }, overlayPngPath, activeStoryIndex);
+            };
 
-            const burnedPath = inputForTS.replace('.mp4', '_intro_burned.mp4');
+            const burnedPath = inputForTS.replace('.mp4', '_news_burned.mp4');
             const introDur = CONFIG.INTRO_CARD.DURATION_SECONDS;
 
-            // Full-screen overlay blend
-            const burnArgs = [
-              '-i', inputForTS, '-i', overlayPngPath,
-              '-filter_complex', `[0:v][1:v]blend=all_mode=normal:all_opacity=1:enable='lte(t,${introDur})'[out]`,
-              '-map', '[out]', '-map', '0:a',
-              '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
-              '-pix_fmt', 'yuv420p',
-              '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
-            ];
+            if (isStoryIntro) {
+              // ── Two-state burn: PNG A (lower-third visible) + PNG B (hidden) ──
+              const overlayVisiblePath = path.join(TMP_DIR, `newscast_overlay_vis_${Date.now()}.png`);
+              const overlayHiddenPath  = path.join(TMP_DIR, `newscast_overlay_hid_${Date.now()}.png`);
 
-            await new Promise((res, rej) => {
-              const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
-              let burnStderr = '';
-              proc.stderr && proc.stderr.on('data', d => { burnStderr += d.toString(); });
-              proc.on('close', code => {
-                if (code === 0) res();
-                else {
-                  const reason = burnStderr.slice(-300).replace(/\n/g, ' ').trim();
-                  console.error(`[intro-burn] FFmpeg exit ${code} for newscast overlay: ${reason}`);
-                  rej(new Error(`Newscast overlay burn failed: ${code} — ${reason}`));
-                }
+              await generateNewscastOverlay(overlayBase, overlayVisiblePath, activeStoryIndex, {
+                showLowerThird: true, episodeNumber, activeCategory
               });
-              proc.on('error', rej);
-            });
+              await generateNewscastOverlay(overlayBase, overlayHiddenPath, activeStoryIndex, {
+                showLowerThird: false, episodeNumber, activeCategory
+              });
 
-            if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
-              inputForTS = burnedPath;
-              log(asmId, `  📰 NEWS newscast overlay burned [${activeStoryIndex + 1}/${allStories.length}]: ${cardData.title || 'story'}`);
+              // Three-input FFmpeg: [0:v]=video, [1:v]=visible overlay, [2:v]=hidden overlay
+              // overlay=0:0:enable='lte(t,introDur)' composites visible PNG for first introDur seconds
+              // overlay=0:0:enable='gt(t,introDur)'  composites hidden PNG for remainder
+              const burnArgs = [
+                '-i', inputForTS,
+                '-i', overlayVisiblePath,
+                '-i', overlayHiddenPath,
+                '-filter_complex',
+                `[0:v][1:v]overlay=0:0:enable='lte(t,${introDur})'[mid];[mid][2:v]overlay=0:0:enable='gt(t,${introDur})'[out]`,
+                '-map', '[out]', '-map', '0:a',
+                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                '-pix_fmt', 'yuv420p',
+                '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
+              ];
+
+              await new Promise((res, rej) => {
+                const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
+                let burnStderr = '';
+                proc.stderr && proc.stderr.on('data', d => { burnStderr += d.toString(); });
+                proc.on('close', code => {
+                  if (code === 0) res();
+                  else {
+                    const reason = burnStderr.slice(-300).replace(/\n/g, ' ').trim();
+                    console.error(`[intro-burn] FFmpeg exit ${code} for news two-state overlay: ${reason}`);
+                    rej(new Error(`News two-state overlay burn failed: ${code} — ${reason}`));
+                  }
+                });
+                proc.on('error', rej);
+              });
+
+              try { if (fs.existsSync(overlayVisiblePath)) fs.unlinkSync(overlayVisiblePath); } catch(e) {}
+              try { if (fs.existsSync(overlayHiddenPath))  fs.unlinkSync(overlayHiddenPath);  } catch(e) {}
+
+              if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
+                inputForTS = burnedPath;
+                log(asmId, `  📰 NEWS two-state overlay burned [${activeStoryIndex + 1}/${allStories.length}]: ${cardData.title || 'story'}`);
+              }
+            } else {
+              // ── Single-state burn: lower-third always hidden ──────────
+              const overlayHiddenPath = path.join(TMP_DIR, `newscast_overlay_hid_${Date.now()}.png`);
+
+              await generateNewscastOverlay(overlayBase, overlayHiddenPath, activeStoryIndex, {
+                showLowerThird: false, episodeNumber, activeCategory
+              });
+
+              const burnArgs = [
+                '-i', inputForTS,
+                '-i', overlayHiddenPath,
+                '-filter_complex', `[0:v][1:v]overlay=0:0[out]`,
+                '-map', '[out]', '-map', '0:a',
+                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                '-pix_fmt', 'yuv420p',
+                '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
+              ];
+
+              await new Promise((res, rej) => {
+                const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
+                let burnStderr = '';
+                proc.stderr && proc.stderr.on('data', d => { burnStderr += d.toString(); });
+                proc.on('close', code => {
+                  if (code === 0) res();
+                  else {
+                    const reason = burnStderr.slice(-300).replace(/\n/g, ' ').trim();
+                    console.error(`[intro-burn] FFmpeg exit ${code} for news single-state overlay: ${reason}`);
+                    rej(new Error(`News single-state overlay burn failed: ${code} — ${reason}`));
+                  }
+                });
+                proc.on('error', rej);
+              });
+
+              try { if (fs.existsSync(overlayHiddenPath)) fs.unlinkSync(overlayHiddenPath); } catch(e) {}
+
+              if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
+                inputForTS = burnedPath;
+                log(asmId, `  📰 NEWS single-state overlay burned: ${label || 'segment'}`);
+              }
             }
-
-            // Clean up temp overlay PNG
-            try { if (fs.existsSync(overlayPngPath)) fs.unlinkSync(overlayPngPath); } catch(e) {}
           } catch(e) {
             log(asmId, `  ⚠️  NEWS newscast overlay burn failed: ${e.message} — using original`);
           }
@@ -4317,11 +4387,12 @@ app.post('/assemble',
           const loggedFile = outPath.replace('.mp4', '_logo.mp4');
           await new Promise((res, rej) => {
             // Overlay logo top-right: x=W-w-20, y=20, 120px wide, 85% opacity
+            const logoPos = (contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS;
             const args = [
               '-i', outPath,
               '-i', logoPng,
               '-filter_complex',
-              `[1:v]scale=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.size}:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.x}:${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.y}[vout]`,
+              `[1:v]scale=${logoPos.size}:-1,format=rgba,colorchannelmixer=aa=${logoPos.opacity || 0.85}[logo];[0:v][logo]overlay=${logoPos.x}:${logoPos.y}[vout]`,
               '-map', '[vout]', '-map', '0:a?',
               '-c:v', 'libx264', '-preset', 'fast', '-crf', '18', '-pix_fmt', 'yuv420p',
               '-c:a', 'copy',
@@ -9743,7 +9814,7 @@ app.post('/remediate-video', async (req, res) => {
             const args = [
               '-i', currentFile, '-i', logoPng,
               '-filter_complex',
-              `[1:v]scale=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.size}:-1,format=rgba,colorchannelmixer=aa=0.85[logo];[0:v][logo]overlay=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.x}:${CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS.y}[vout]`,
+              `[1:v]scale=${((contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).size}:-1,format=rgba,colorchannelmixer=aa=${((contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).opacity || 0.85}[logo];[0:v][logo]overlay=${((contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).x}:${((contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).y}[vout]`,
               '-map', '[vout]', '-map', '0:a?',
               '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'copy',
               '-movflags', '+faststart', '-y', logoOutput
@@ -10325,7 +10396,16 @@ app.post('/generate-thumbnail', async (req, res) => {
 // ── Generate Newscast Overlay PNG using Puppeteer ──────────────────
 // Renders clipzworld_newscast.html with story data for news intro segments
 // storyIndex: which story to highlight (0-based)
-async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0) {
+// options.showLowerThird: boolean — whether to add .lower-third.visible class
+// options.episodeNumber: string — e.g. "Episode 42"
+// options.activeCategory: string — category label for the current story
+async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, options = {}) {
+  const {
+    showLowerThird = false,
+    episodeNumber = null,
+    activeCategory = null
+  } = options;
+
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -10340,31 +10420,46 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0) {
     await page.goto(overlayUrl, { waitUntil: 'networkidle0' });
 
     // Inject story data into the page
-    await page.evaluate((data, activeIndex) => {
-      // Update lower third with current story info
-      const ltHeadline = document.querySelector('.lt-headline');
-      const ltCategory = document.querySelector('.lt-category');
-      const ltSub = document.querySelector('.lt-sub');
-
-      if (ltHeadline) ltHeadline.textContent = data.title || 'Breaking News';
-      if (ltCategory) ltCategory.textContent = data.category || 'WORLD NEWS';
-      if (ltSub) ltSub.textContent = data.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
-
-      // Update breaking news banner with current story
-      const breakingText = document.querySelector('.breaking-text');
-      if (breakingText) {
-        const breakingMsg = (data.title || 'BREAKING NEWS').toUpperCase();
-        breakingText.textContent = breakingMsg + ' ● ' + breakingMsg;
+    await page.evaluate((data, activeIndex, opts) => {
+      // ── Lower-third visibility toggle ──────────────────────────
+      const lowerThird = document.querySelector('.lower-third');
+      if (lowerThird) {
+        if (opts.showLowerThird) {
+          lowerThird.classList.add('visible');
+        } else {
+          lowerThird.classList.remove('visible');
+        }
       }
 
-      // Update story list with all stories, highlighting the active one
+      // ── Episode number ──────────────────────────────────────────
+      const showInfo = document.querySelector('#show-info');
+      if (showInfo && opts.episodeNumber) {
+        showInfo.textContent = opts.episodeNumber;
+      }
+
+      // ── Category label ──────────────────────────────────────────
+      const ltCategory = document.querySelector('.lt-category');
+      if (ltCategory) {
+        ltCategory.textContent = opts.activeCategory || data.category || 'WORLD NEWS';
+      }
+
+      // ── Headline ────────────────────────────────────────────────
+      const ltHeadline = document.querySelector('.lt-headline');
+      if (ltHeadline) ltHeadline.textContent = data.title || 'Breaking News';
+
+      // ── Segment name (seg-name) ─────────────────────────────────
+      const segName = document.querySelector('.seg-name');
+      if (segName && opts.activeCategory) {
+        segName.textContent = opts.activeCategory;
+      }
+
+      // ── Story list ──────────────────────────────────────────────
       if (data.allStories && data.allStories.length > 0) {
         const storyList = document.querySelector('.story-list');
         if (storyList) {
           storyList.innerHTML = '';
           data.allStories.forEach((story, idx) => {
             const storyItem = document.createElement('div');
-            // Highlight the current story being introduced
             storyItem.className = 'story-item' + (idx === activeIndex ? ' active' : '');
             storyItem.innerHTML = `
               <div class="story-item-cat">${idx === activeIndex ? '▶ ON AIR' : story.category || 'WORLD'}</div>
@@ -10374,14 +10469,15 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0) {
           });
         }
       }
-    }, storyData, storyIndex);
+    }, storyData, storyIndex, { showLowerThird, episodeNumber, activeCategory });
 
     // Wait for animations to settle
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Screenshot the full page
-    await page.screenshot({ path: outputPath, fullPage: false });
-    console.log(`[newscast-overlay] ✅ Generated overlay (story ${storyIndex}): ${outputPath}`);
+    // Screenshot — omitBackground:true is CRITICAL: without it, body{background:transparent}
+    // composites against a white canvas → pix_fmt=rgb24 (near-white) instead of RGBA with real alpha
+    await page.screenshot({ path: outputPath, fullPage: false, omitBackground: true });
+    console.log(`[newscast-overlay] ✅ Generated overlay (story ${storyIndex}, lowerThird=${showLowerThird}): ${outputPath}`);
 
   } finally {
     await browser.close();

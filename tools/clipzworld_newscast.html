@@ -1,4 +1,66 @@
 <!DOCTYPE html>
+<!--
+  ═══════════════════════════════════════════════════════════════════════════════
+  CWN NEWSCAST OVERLAY — LONG-FORM BROADCAST CHROME
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  Purpose:
+    Full-screen broadcast-graphics chrome that burns onto every News long-form
+    avatar segment (INTRO cold open, STORY#_INTRO, STORY#_SETUP, STORY#_SUMMARY,
+    STORY#_REACTION, OUTRO). Consumed by server.js generateNewscastOverlay() via
+    Puppeteer + omitBackground:true → real RGBA PNG → FFmpeg `overlay` filter.
+
+  Always-on elements (frame 0 → last word):
+    - Top bar: show name + Episode N + LIVE + date
+    - Right sidebar story list (420px, min 90px per item, red ▶ ON AIR highlight)
+    - Top-right segment-tag (NOW COVERING / category)
+    - CWN logo at LOGO_POS_NEWS = {x:1725, y:910, size:90, opacity:0.85}
+      (on Bobby G's coffee mug — News-specific override, not the shared LOGO_POS)
+    - Combined ticker at y=H-72 (baked at assembly layer via cwn_combined_ticker.html)
+
+  Timed element (TV card / lower-third):
+    - Hidden during cold open INTRO
+    - Visible for first CONFIG.INTRO_CARD.DURATION_SECONDS at each STORY#_INTRO
+    - Hidden for remainder of each STORY# cycle after timeout
+    - Hidden during OUTRO
+
+  State transitions per STORY# boundary:
+    - Sidebar highlight moves to next story
+    - TV card headline swaps to next story
+    - Segment-tag seg-name swaps to next story's category
+
+  ─────────────────────────────────────────────────────────────────────────────
+  FUTURE WORK — REBRAND TO TWITCH + NBA (post-test-case-completion)
+  ─────────────────────────────────────────────────────────────────────────────
+
+  Rob directive 2026-04-12 evening (after approving the Fix 7 preview composite):
+    "post test cases I want to rebrand this look for the other shows"
+
+  Meaning: after Twitch, NBA, and News long-form all pass their test cases, port
+  this same broadcast-graphics chrome design to Twitch and NBA long-form so all
+  three shows share the visual language. Key elements to replicate:
+
+    - Top bar with show name + Episode N + LIVE + date
+    - Right sidebar list of streamers (Twitch) / games (NBA) with ▶ ON AIR highlight
+    - Top-right segment-tag updating per active item
+    - TV card lower-third time-gated at each item's INTRO scene
+    - Logo on the coffee mug (LOGO_POS_NEWS coordinates, same mug across all shows)
+    - Same state machine: sidebar always-on, TV card timed
+
+  Currently Twitch uses a small top-right TV card at OVERLAY_ZONE =
+  {x:1360, y:60, w:520, h:293} and NBA uses the same zone with a different
+  Canvas-generated PNG. The rebrand replaces both with the full-chrome design.
+
+  Tracked in:
+    - ROADMAP.md → Bucket 4 Enterprise → Could-Have →
+      "Rebrand Twitch and NBA long-form to match the News newscast chrome design"
+    - LONGFORM_FIX_ROTATION.md rotation log entry dated 2026-04-12 evening
+
+  DO NOT start this work until News + Twitch + NBA long-form all pass test cases.
+  This comment exists so the decision is not lost if ROADMAP.md is archived or
+  rewritten between now and when the rebrand becomes active work.
+  ═══════════════════════════════════════════════════════════════════════════════
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -27,20 +89,29 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   LOWER THIRD — main topic/name bar
+   LOWER THIRD — TV card (top-left, timed)
+   Hidden by default; shown via .visible class toggle from generateNewscastOverlay()
 ═══════════════════════════════════════ */
 .lower-third {
   position: absolute;
-  bottom: 80px;
+  top: 48px;        /* sits directly below the 48px top bar */
   left: 0;
-  width: 860px;
+  width: 720px;     /* narrowed from 860px to pull back from Bobby G's face */
   display: flex;
   flex-direction: column;
-  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.lower-third.visible {
+  opacity: 1;
+  visibility: visible;
   animation: slideInLeft 0.5s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+  transform: translateX(0);
 }
 
 @keyframes slideInLeft {
+  from { transform: translateX(-100%); }
   to { transform: translateX(0); }
 }
 
@@ -61,13 +132,6 @@ body {
   line-height: 1;
 }
 
-.lt-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--dark);
-  opacity: 0.4;
-}
-
 .lt-bottom {
   background: var(--navy);
   padding: 10px 24px 10px 32px;
@@ -85,84 +149,6 @@ body {
   color: var(--white);
   letter-spacing: 0.5px;
   line-height: 1.1;
-}
-
-.lt-sub {
-  font-size: 14px;
-  color: rgba(255,255,255,0.55);
-  font-weight: 400;
-  letter-spacing: 1px;
-  white-space: nowrap;
-  margin-left: 20px;
-}
-
-/* ═══════════════════════════════════════
-   BREAKING FLAG — top left corner
-═══════════════════════════════════════ */
-.breaking-flag {
-  position: absolute;
-  top: 60px;
-  left: 32px;
-  background: var(--red);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
-  animation: slideInLeft 0.4s cubic-bezier(0.22,1,0.36,1) 0.2s forwards;
-  transform: translateX(-100%);
-  box-shadow: 2px 2px 12px rgba(0,0,0,0.4);
-}
-
-.breaking-pulse {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: #fff;
-  animation: bpulse 1s ease-in-out infinite;
-}
-
-@keyframes bpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-.breaking-label {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px;
-  color: #fff;
-  letter-spacing: 4px;
-}
-
-/* ═══════════════════════════════════════
-   ANCHOR NAMEPLATE
-═══════════════════════════════════════ */
-.nameplate {
-  position: absolute;
-  bottom: 80px;
-  left: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  animation: fadeUp 0.5s ease 0.6s both;
-}
-
-@keyframes fadeUp {
-  from { opacity:0; transform:translateY(12px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-
-.nameplate-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 38px;
-  color: #fff;
-  letter-spacing: 3px;
-  line-height: 1;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.8);
-}
-
-.nameplate-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gold);
-  letter-spacing: 4px;
-  text-transform: uppercase;
 }
 
 /* ═══════════════════════════════════════
@@ -226,6 +212,8 @@ body {
   animation: bpulse 1s ease-in-out infinite;
 }
 
+@keyframes bpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
 .top-live-text {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 14px;
@@ -273,15 +261,13 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   SIDE STORY LIST — right panel
-   NOTE: Video card (640×360 TV-shaped) will be positioned LEFT of Bobby G
-   All long-form shows (News, NBA, Twitch) use same layout: TV on left facing Bobby G
+   SIDE STORY LIST — right panel (420px wide, min 90px per item)
 ═══════════════════════════════════════ */
 .story-list {
   position: absolute;
   top: 120px;
   right: 32px;
-  width: 360px;
+  width: 420px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -294,6 +280,10 @@ body {
   border-radius: 0 4px 4px 0;
   padding: 14px 16px;
   backdrop-filter: blur(8px);
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .story-item-cat {
@@ -319,104 +309,15 @@ body {
 
 .story-item.active .story-item-cat { color: var(--red); }
 .story-item.active .story-item-text { color: #fff; font-weight: 700; }
-
-/* ═══════════════════════════════════════
-   BOTTOM NEWS TICKER
-═══════════════════════════════════════ */
-.news-ticker {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 40px;
-  background: var(--dark);
-  border-top: 2px solid var(--gold);
-  display: flex;
-  align-items: stretch;
-  overflow: hidden;
-}
-
-.ticker-brand {
-  background: var(--gold);
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  flex-shrink: 0;
-  gap: 8px;
-}
-
-.ticker-brand-text {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 14px;
-  color: var(--dark);
-  letter-spacing: 3px;
-}
-
-.ticker-scroll {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-}
-
-.ticker-content {
-  white-space: nowrap;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.85);
-  letter-spacing: 0.3px;
-  animation: ticker-scroll 40s linear infinite;
-  padding-left: 40px;
-}
-
-@keyframes ticker-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-.ticker-sep {
-  color: var(--gold);
-  margin: 0 16px;
-  font-size: 10px;
-}
-
-.ticker-cat {
-  color: var(--gold);
-  font-weight: 700;
-  letter-spacing: 2px;
-  font-size: 11px;
-  margin-right: 8px;
-}
-
-/* ═══════════════════════════════════════
-   COMEDY TAG — animated pop-in
-═══════════════════════════════════════ */
-.comedy-tag {
-  position: absolute;
-  top: 200px;
-  left: 50%;
-  transform: translateX(-50%) scale(0);
-  background: var(--gold);
-  color: var(--dark);
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 28px;
-  letter-spacing: 4px;
-  padding: 8px 28px;
-  border-radius: 4px;
-  box-shadow: 0 0 40px rgba(199,175,79,0.5);
-  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 1s forwards;
-}
-
-@keyframes popIn {
-  to { transform: translateX(-50%) scale(1); }
-}
 </style>
 </head>
 <body>
 
 <!-- TOP BAR -->
 <div class="top-bar">
-  <div class="top-brand">ClipzWorld News</div>
+  <div class="top-brand">BECAUSE THE LIGHT WAS ON</div>
   <div class="top-divider"></div>
-  <div class="top-show" id="show-info">EPISODE 1</div>
+  <div class="top-show" id="show-info">Episode 1</div>
   <div class="top-right">
     <div class="top-live">
       <div class="top-live-dot"></div>
@@ -426,19 +327,13 @@ body {
   </div>
 </div>
 
-<!-- BREAKING FLAG (top left) -->
-<div class="breaking-flag">
-  <div class="breaking-pulse"></div>
-  <div class="breaking-label">BREAKING</div>
-</div>
-
 <!-- SEGMENT TAG -->
 <div class="segment-tag">
   <div class="seg-label">NOW COVERING</div>
   <div class="seg-name">WORLD NEWS</div>
 </div>
 
-<!-- STORY LIST (BIGGER) -->
+<!-- STORY LIST -->
 <div class="story-list">
   <div class="story-item active">
     <div class="story-item-cat">▶ ON AIR</div>
@@ -458,51 +353,13 @@ body {
   </div>
 </div>
 
-<!-- LOWER THIRD -->
+<!-- LOWER THIRD (TV card — hidden by default, shown via .visible class) -->
 <div class="lower-third">
   <div class="lt-top">
     <div class="lt-category">WORLD NEWS</div>
-    <div class="lt-dot"></div>
-    <div class="lt-category">BREAKING</div>
   </div>
   <div class="lt-bottom">
     <div class="lt-headline">Global Markets React to Federal Reserve Rate Decision</div>
-    <div class="lt-sub">MARCH 30, 2026</div>
-  </div>
-</div>
-
-<!-- BOTTOM TICKER -->
-<div class="news-ticker">
-  <div class="ticker-brand">
-    <div class="ticker-brand-text">BREAKING NEWS</div>
-  </div>
-  <div class="ticker-scroll">
-    <div class="ticker-content">
-      <span class="ticker-cat">SPORTS</span>UConn defeats Duke 73-72 on Mullins half-court buzzer beater — Huskies advance to Final Four
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">MARKETS</span>Dow Jones up 0.4% following Fed announcement — tech stocks lead gains
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">NBA</span>Warriors host Nuggets tonight 10PM ET — Jokic seeks 36th triple-double of season
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">WORLD</span>UN Security Council convenes emergency session over escalating tensions in Eastern Europe
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">TECH</span>Congress advances AI regulation bill — vote expected next week
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">SPORTS</span>Michigan beats Tennessee 95-62 — Wolverines join UConn in Final Four
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">SPORTS</span>UConn defeats Duke 73-72 on Mullins half-court buzzer beater — Huskies advance to Final Four
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">MARKETS</span>Dow Jones up 0.4% following Fed announcement — tech stocks lead gains
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">NBA</span>Warriors host Nuggets tonight 10PM ET — Jokic seeks 36th triple-double of season
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">WORLD</span>UN Security Council convenes emergency session over escalating tensions in Eastern Europe
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">TECH</span>Congress advances AI regulation bill — vote expected next week
-      <span class="ticker-sep">◆</span>
-      <span class="ticker-cat">SPORTS</span>Michigan beats Tennessee 95-62 — Wolverines join UConn in Final Four
-      <span class="ticker-sep">◆</span>
-    </div>
   </div>
 </div>
 
@@ -552,10 +409,8 @@ window.addEventListener('message', function(event) {
     var data = event.data;
     var headline = document.querySelector('.lt-headline');
     var category = document.querySelectorAll('.lt-category')[0];
-    var sub = document.querySelector('.lt-sub');
     if (headline && data.headline) headline.textContent = data.headline;
     if (category && data.category) category.textContent = data.category;
-    if (sub && data.date) sub.textContent = data.date;
   }
 });
 </script>

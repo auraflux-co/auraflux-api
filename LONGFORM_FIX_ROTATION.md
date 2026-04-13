@@ -73,7 +73,7 @@ Anyone picking up this work can re-verify these files independently:
 
 ## 📤 Dispatched to Cline
 
-*(empty — all dispatched items shipped)*
+*(empty — Fix 7 shipped, see ✅ Shipped below)*
 
 ---
 
@@ -142,16 +142,17 @@ Two possible directions for News as a content type:
 
 ### News long-form batch 3 — shipped 2026-04-12
 
-**Handoff:** `CLINE_HANDOFF_NEWS_LONGFORM_FIXES_BATCH3.md`
-**Dispatched:** 2026-04-12 (post-smoke-test-1 script review)
-**Shipped:** 2026-04-12, 1 commit pushed to `origin/main`
+**Handoffs:** `CLINE_HANDOFF_NEWS_LONGFORM_FIXES_BATCH3.md` (Fix 6) + `CLINE_HANDOFF_NEWS_LONGFORM_FIXES_BATCH3_FIX7.md` (Fix 7)
+**Dispatched:** 2026-04-12 (Fix 6: post-smoke-test-1 script review; Fix 7: post-smoke-test-3 overlay root-cause)
+**Shipped:** 2026-04-12, 2 commits pushed to `origin/main`
 
 | Fix | Commit | What |
 |-----|--------|------|
 | 6 | `9a4fcc6` | `fix(news): rewrite Gemini prompt to eliminate INTRO/SETUP repetition (server.js:6685-6737)` — SETUP rewritten to EXACTLY 1 sentence (new fact or hook, not a restatement of INTRO); CLIP_REACTION renamed to SUMMARY (1-2 sentences factual recap of what just played, no opinions/reactions/quips); REACTION tightened to deadpan take only (must not recap — that's SUMMARY's job); word count target 80-120 → 100-140 per story; Gate 1 QA comment + sceneHeaders push updated to STORY1_SUMMARY. Scene count unchanged (42 for 10 stories). No downstream code changes. |
+| 7 | pending | `fix(news): newscast overlay RGBA alpha + logo position` — Complete rewrite of `tools/clipzworld_newscast.html` + `generateNewscastOverlay()` overhaul + burn loop state machine + `LOGO_POS_NEWS` in `lib/config.js`. Two critical rendering bugs fixed: (a) `omitBackground:true` in `page.screenshot()` — without it `body{background:transparent}` composites against white canvas → rgb24 PNG with YAVG~213 instead of real RGBA; (b) `overlay=0:0` replaces broken `blend=all_mode=normal:all_opacity=1` which doesn't composite RGBA alpha correctly. Two-state burn for `STORY#_INTRO` segments: PNG A (lower-third visible) for `t=0..introDur`, PNG B (lower-third hidden) for `t>introDur`. Logo override: `LOGO_POS_NEWS = {x:1725, y:910, size:90, opacity:0.85}` on Bobby G's coffee mug. Grep verified: `omitBackground` at 3830+10477+10479; `overlay=0:0` at 3829+3889+3890+3896+3936; `LOGO_POS_NEWS` at 4390+9817. `node -c server.js` exit 0. |
 
 **Untouched:** NBA, Twitch, short-form code paths.
-**Next:** Rob runs News long-form smoke test #3. Expected: no INTRO/SETUP repetition, structurally distinct 4-beat story flow (INTRO/SETUP/SUMMARY/REACTION).
+**Next:** Rob runs News long-form smoke test #4. Expected: newscast chrome (story list, lower-third, top bar, segment tag) now visible in assembled video for the first time since Apr 7.
 
 ---
 
@@ -166,4 +167,7 @@ Two possible directions for News as a content type:
 | 2026-04-12 | News smoke test #1 ran end-to-end — Gate 1 100/100, Gate 2 80/100 MANUAL, Gate 3 90/100 PASS, Drive + Upload-Post published to YouTube private draft. Rob QA in YouTube Studio: no news clips (expected — root cause is News has no video source), no TV card (real bug — Fix 5 root-caused to broken `/newscast-overlay` route HTTP 500 from stale `server.js:1300` path), logo + ticker visible, outro clean (Gate 3 LATE-sample OUTRO false positive on a clean outro — known scoring bug, parked as cross-cutting). Fix 5 dispatched as News batch 2 one-line fix. |
 | 2026-04-12 | News batch 2 shipped — Fix 5 `fix(news): /newscast-overlay route path — tools/ prefix missing (server.js:1300)` pushed to `origin/main`. Verified HTTP:200 SIZE:15964 before commit. Awaiting Rob's smoke test #2 to confirm newscast overlay visible in assembled video. |
 | 2026-04-12 | News batch 3 dispatched as `CLINE_HANDOFF_NEWS_LONGFORM_FIXES_BATCH3.md` — Fix 6 News Gemini prompt rewrite (INTRO/SETUP repetition + CLIP_REACTION→SUMMARY rename) before running smoke test #2, so script flow issue and newscast overlay fix validate together in one run. |
+| 2026-04-12 | News smoke test #3 (post-Fix 5 + Fix 6) — Gate 1 100/100, Gate 2 80/100 MANUAL, Gate 3 90/100 PASS (same score as test #1 — TV CARD check still failing Fix 3's informational criterion because the newscast overlay was STILL invisible in the final MP4). Rob QA in YouTube Studio: script flow confirmed much better (no more INTRO/SETUP repetition — Fix 6 verified clean), ticker + logo visible, but the newscast chrome layer (story list, lower-third, top bar, segment tag) was still NOT visible in the video. Root-caused via local preview experiment: (a) Puppeteer `page.screenshot()` without `omitBackground:true` composites `body{background:transparent}` against a white canvas producing rgb24 PNGs with YAVG~213, (b) FFmpeg `blend=all_mode=normal:all_opacity=1` does not composite alpha correctly for RGBA input (`overlay` filter is the correct primitive). Both bugs had been masking each other across Apr 7-12. |
+| 2026-04-12 evening | Extended design conversation — Rob progressively specified the final newscast chrome design via iterative preview composites in `/tmp/`. Locked: sidebar always-on from frame 0; TV card time-gated on `CONFIG.INTRO_CARD.DURATION_SECONDS` at each STORY#_INTRO; story 1 pre-highlighted on cold open; last story highlighted through outro; TV card hidden during cold open + outro; logo moved from top-left to on-the-mug at `{x:1725, y:910, size:90, opacity:0.85}` (News-specific override); top bar renamed to "BECAUSE THE LIGHT WAS ON | Episode N"; lower-third moved top-left 720px wide; breaking flag removed; internal duplicate ticker removed; story list 420px with uniform 90px min-height items; segment-tag seg-name updates per active story category. Final 4-layer composite at `/tmp/newscast_FINAL_with_ticker.jpg` approved. |
+| 2026-04-12 evening | News batch 3 Fix 7 dispatched as `CLINE_HANDOFF_NEWS_LONGFORM_FIXES_BATCH3_FIX7.md`. Covers template rewrite + server.js state machine + lib/config.js LOGO_POS_NEWS. Single commit. Rob's rebrand-to-Twitch/NBA directive parked in ROADMAP.md as post-test Could-Have. |
 | 2026-04-12 | News batch 3 shipped — Fix 6 `fix(news): rewrite Gemini prompt to eliminate INTRO/SETUP repetition (server.js:6685-6737)` committed `9a4fcc6` and pushed to `origin/main`. Grep verified: 0 CLIP_REACTION hits in News prompt block; STORY#_SUMMARY + 100-140 word count confirmed at lines 6696, 6717, 6731, 6737. Awaiting Rob's smoke test #3. |
