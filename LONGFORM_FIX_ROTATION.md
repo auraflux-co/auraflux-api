@@ -348,3 +348,16 @@ Two possible directions for News as a content type:
 | 2026-04-13 | Smoke test #9 pre-flight: Fix 25a/25b/25c + Fix 28 + Fix 27b shipped. Root cause of all News 0-clip runs identified: dashboard was fetching global Al Jazeera RSS (all.xml via rss2json, ~20-30% video hit rate) instead of US/Canada HTML section (/video/newsfeed/ paths, 100% video by construction). All 5 fixes shipped this session. Awaiting Rob's smoke test #9. |
 | 2026-04-13 | Track A (smoke test #10 pre-flight): Fix A1 + Fix A2 shipped. Fix A1: `server.js` line ~4377 — swapped `force_original_aspect_ratio=increase,crop=1920:1080` → `force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0d1424` (CWN dark navy letterbox). Fixes faces cropped chin-to-tie on Al Jazeera broadcast video. Fix A2: `NEWS_CLIP_MAX_SECONDS=25` hard cap — `buildTsArgs()` async IIFE runs silencedetect then takes `min(silencedetect, 25)`. Fixes 50-123s full news packages playing uncut. Lines 3800/3834 (short-form split-screen) untouched. `node -c server.js` → exit 0. Awaiting Rob's smoke test #10. |
 | 2026-04-13 | Track C (smoke test #10 pre-flight): Per-video validation pass + dashboard badges shipped. Extended GET /news/us-canada-videos with validateVideo(v) async function — 5 checks in parallel: (1) Brightcove URL HEAD 3s timeout, (2) yt-dlp --skip-download --dump-json 10s timeout, (3) dimensions >= 1280x720, (4) duration > 5s (warning if > 120s), (5) og:image HEAD 3s timeout. Each video gets validation: { status, checks, issues[] }. Response includes validationSummary: { passed, warnings, failed }. Validation skippable via ?validate=false. Dashboard: fetchCwnNewsVideos() preserves validation per item + validationSummary on response. thumbRenderNewsStoryGrid() shows summary bar (green/amber/red dot counts) + per-card badge dots + fail cards dimmed 60% opacity + pointer-events:none + UNUSABLE label. node -c server.js exit 0. Awaiting Rob's smoke test #10. |
+
+### News long-form Red 2 (Al Jazeera watermark mask) — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_FULL_FIX_BEFORE_TEST_10.md` (Red 2 of 4)
+**Dispatched:** 2026-04-13 (Rob directive: ship all 4 reds before test #10 fires)
+**Shipped:** 2026-04-13, 1 commit pending push to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| Red 2 | pending | `feat(news): mask Al Jazeera corner watermark with CWN navy box` — Appended `,drawbox=x=1780:y=960:w=120:h=80:color=0x0d1424@1.0:t=fill` to the non-avatar vfFilter chain in the News source_clip normalization pass (`server.js` ~line 4376). Condition: `contentType === 'news' && !isAvatarSeg`. Covers Al Jazeera bottom-right corner watermark (logo + 20px safety padding) with CWN navy `#0d1424` — matches letterbox bar color so it reads as intentional CWN framing. `node -c server.js` → exit 0. |
+
+**Untouched:** NBA, Twitch, short-form code paths. Only the vfFilter string in the News source_clip normalization pass touched.
+**Next:** Red 3 — clip intro skip via `-ss 5` before `-i` for News source_clip segments (effective clip window 5s-30s of source).
