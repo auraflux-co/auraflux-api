@@ -73,7 +73,7 @@ Anyone picking up this work can re-verify these files independently:
 
 ## 📤 Dispatched to Cline
 
-*(empty — Fix 7 shipped, see ✅ Shipped below)*
+*(empty — all dispatched items have shipped)*
 
 ---
 
@@ -154,6 +154,19 @@ Two possible directions for News as a content type:
 **Untouched:** NBA, Twitch, short-form code paths.
 **Next:** Rob runs News long-form smoke test #4. Expected: newscast chrome (story list, lower-third, top bar, segment tag) now visible in assembled video for the first time since Apr 7.
 
+### News long-form Fix 8B — shipped 2026-04-12 late evening
+
+**Handoff:** `CLINE_HANDOFF_NEWS_LONGFORM_FIX_8B.md`
+**Dispatched:** 2026-04-12 (post-smoke-test-4 code audit)
+**Shipped:** 2026-04-12, 1 commit pushed to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 8B | pending | `fix(news): Fix 8B — build News TV card (og:image scrape + OVERLAY_ZONE burn)` — All 6 pieces: (1) `scrapeArticleOgImage()` helper (axios + cheerio, extracts `<meta property="og:image">`); (2) News analysis block runs og:image scraping in parallel with Gemini, attaches `item.heroImageUrl`; (3) Job card save persists `heroImageUrl` in `newsItems[]`; (4) heygen-poller cardData extended with `heroImageUrl` for `STORY#_INTRO` segments; (5) `generateNewsStoryCardPNG()` Canvas renderer at 2× resolution (1040×586 for OVERLAY_ZONE 520×293) — hero image left-half, dark right panel, gold border, headline word-wrapped, source tag, category badge; (6) Second FFmpeg overlay burn inside Fix 7 `isStoryIntro` block — runs AFTER chrome burn, `enable='lte(t,introDur)'` time-gating, non-fatal on failure. `node -c server.js` → SYNTAX OK. Root cause of "no TV card" across all News smoke tests Apr 7–12: archived handoff asserted it was "already working" but `generateNewsStoryCardPNG` never existed in code. |
+
+**Untouched:** NBA, Twitch, short-form code paths.
+**Next:** Rob runs News long-form smoke test #5. Expected: TV card (og:image hero + headline + source) visible top-right at OVERLAY_ZONE during each STORY#_INTRO segment for first 10s.
+
 ---
 
 ## Rotation log
@@ -170,4 +183,6 @@ Two possible directions for News as a content type:
 | 2026-04-12 | News smoke test #3 (post-Fix 5 + Fix 6) — Gate 1 100/100, Gate 2 80/100 MANUAL, Gate 3 90/100 PASS (same score as test #1 — TV CARD check still failing Fix 3's informational criterion because the newscast overlay was STILL invisible in the final MP4). Rob QA in YouTube Studio: script flow confirmed much better (no more INTRO/SETUP repetition — Fix 6 verified clean), ticker + logo visible, but the newscast chrome layer (story list, lower-third, top bar, segment tag) was still NOT visible in the video. Root-caused via local preview experiment: (a) Puppeteer `page.screenshot()` without `omitBackground:true` composites `body{background:transparent}` against a white canvas producing rgb24 PNGs with YAVG~213, (b) FFmpeg `blend=all_mode=normal:all_opacity=1` does not composite alpha correctly for RGBA input (`overlay` filter is the correct primitive). Both bugs had been masking each other across Apr 7-12. |
 | 2026-04-12 evening | Extended design conversation — Rob progressively specified the final newscast chrome design via iterative preview composites in `/tmp/`. Locked: sidebar always-on from frame 0; TV card time-gated on `CONFIG.INTRO_CARD.DURATION_SECONDS` at each STORY#_INTRO; story 1 pre-highlighted on cold open; last story highlighted through outro; TV card hidden during cold open + outro; logo moved from top-left to on-the-mug at `{x:1725, y:910, size:90, opacity:0.85}` (News-specific override); top bar renamed to "BECAUSE THE LIGHT WAS ON | Episode N"; lower-third moved top-left 720px wide; breaking flag removed; internal duplicate ticker removed; story list 420px with uniform 90px min-height items; segment-tag seg-name updates per active story category. Final 4-layer composite at `/tmp/newscast_FINAL_with_ticker.jpg` approved. |
 | 2026-04-12 evening | News batch 3 Fix 7 dispatched as `CLINE_HANDOFF_NEWS_LONGFORM_FIXES_BATCH3_FIX7.md`. Covers template rewrite + server.js state machine + lib/config.js LOGO_POS_NEWS. Single commit. Rob's rebrand-to-Twitch/NBA directive parked in ROADMAP.md as post-test Could-Have. |
+| 2026-04-12 late evening | News smoke test #4 (post-Fix 7) — Gate 3 97/100 (up from 90), TV CARD check PASSED for first time (Gemini saw gold-bordered graphics in frame), newscast chrome visibly rendering in the assembled MP4 with logo on mug, sidebar, top bar, lower-third headline, top-right segment-tag all present. Rob QA feedback: "news overlay is good and working as we designed it, logo is good, ticker still good, so just video clips not present and no tv card." Root cause of "no tv card" surfaced via code audit: the cross-content top-right OVERLAY_ZONE TV card (which Twitch and NBA both have) was never wired up for News. Archived handoff `CLINE_HANDOFF_TWITCH_INTRO_CARD_TO_TV_DESIGN.md` line 57 asserted it was already working but grep verification against current code shows zero matches for `generateNewsStoryCardPNG` or equivalent. Separately confirmed via live curl against Al Jazeera RSS + article HTML: no video enclosures or embedded video tags exist in Al Jazeera content, meaning genuine video clips cannot be scraped from the locked source. og:image scraping IS viable — every tested article has `<meta property="og:image">` present with valid full-res URL. |
+| 2026-04-12 late evening | News Fix 8B dispatched as `CLINE_HANDOFF_NEWS_LONGFORM_FIX_8B.md` — build the News TV card code that was documented but never implemented. Scrape og:image per story at script-gen time, persist as `heroImageUrl`, new Canvas function `generateNewsStoryCardPNG()` matching Twitch/NBA 2×-resolution pattern, second FFmpeg overlay burn at OVERLAY_ZONE inside the Fix 7 `isStoryIntro` block after the chrome burn completes. Single commit. No new dependencies (axios + cheerio already in package.json). |
 | 2026-04-12 | News batch 3 shipped — Fix 6 `fix(news): rewrite Gemini prompt to eliminate INTRO/SETUP repetition (server.js:6685-6737)` committed `9a4fcc6` and pushed to `origin/main`. Grep verified: 0 CLIP_REACTION hits in News prompt block; STORY#_SUMMARY + 100-140 word count confirmed at lines 6696, 6717, 6731, 6737. Awaiting Rob's smoke test #3. |

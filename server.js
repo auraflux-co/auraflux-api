@@ -236,11 +236,12 @@ async function startHeyGenPoller(jobId, card) {
           const storyItem  = (card.newsItems || [])[storyIdx];
           if (storyItem) {
             segmentData[segmentData.length - 1].cardData = {
-              title:    storyItem.title    || `Story ${storyIdx + 1}`,
-              category: storyItem.category || storyItem.source || 'WORLD NEWS',
-              storyId:  `story_${storyIdx + 1}`,
-              imageUrl: storyItem.thumbnailUrl || storyItem.imageUrl || null,
-              source:   storyItem.source || ''
+              title:        storyItem.title    || `Story ${storyIdx + 1}`,
+              category:     storyItem.category || storyItem.source || 'WORLD NEWS',
+              storyId:      `story_${storyIdx + 1}`,
+              imageUrl:     storyItem.thumbnailUrl || storyItem.imageUrl || null,
+              heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
+              source:       storyItem.source || ''
             };
           }
         }
@@ -877,6 +878,88 @@ async function generateGameStoryCardPNG(cardData, outputPath, contentType) {
   const buf = canvas.toBuffer('image/png');
   require('fs').writeFileSync(outputPath, buf);
   console.log(`[game-story-card] ✅ ${contentType.toUpperCase()} card written: ${require('path').basename(outputPath)} (${title})`);
+}
+
+/**
+ * Generate a News TV card PNG for a single story.
+ * Renders at 2× resolution (1040×586) to match OVERLAY_ZONE 520×293 after lanczos scale.
+ * Fix 8B: uses scraped og:image as background, story headline as foreground text, gold border.
+ */
+async function generateNewsStoryCardPNG(storyData, outputPath) {
+  const { createCanvas, loadImage } = require('canvas');
+  const W = 1040, H = 586;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext('2d');
+  const title = (storyData.title || 'Breaking News').replace(/\s+/g, ' ').trim();
+  const source = (storyData.source || 'AL JAZEERA').toUpperCase();
+  const heroUrl = storyData.heroImageUrl || '';
+  // Navy fallback background
+  ctx.fillStyle = '#0d1424';
+  ctx.fillRect(0, 0, W, H);
+  // Load and draw hero image (scale-to-cover)
+  if (heroUrl) {
+    try {
+      const heroImg = await loadImage(heroUrl);
+      const iw = heroImg.width, ih = heroImg.height;
+      const scale = Math.max(W / iw, H / ih);
+      const sw = iw * scale, sh = ih * scale;
+      const sx = (W - sw) / 2, sy = (H - sh) / 2;
+      ctx.drawImage(heroImg, sx, sy, sw, sh);
+    } catch(e) {
+      console.warn(`[news-card] ⚠️  Failed to load hero image: ${e.message}`);
+    }
+  }
+  // Semi-transparent gradient at bottom
+  const gradY = H * 0.45;
+  const grad = ctx.createLinearGradient(0, gradY, 0, H);
+  grad.addColorStop(0, 'rgba(13, 20, 36, 0)');
+  grad.addColorStop(0.3, 'rgba(13, 20, 36, 0.7)');
+  grad.addColorStop(1, 'rgba(13, 20, 36, 0.95)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, gradY, W, H - gradY);
+  // Source tag (top-left, gold)
+  ctx.fillStyle = '#c7af4f';
+  ctx.font = 'bold 36px Arial';
+  ctx.textAlign = 'left';
+  ctx.shadowColor = 'rgba(0,0,0,0.8)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 2;
+  ctx.fillText(source, 40, 60);
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  // Headline text (word-wrapped)
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 56px Arial';
+  ctx.textAlign = 'left';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 4;
+  // Inline word-wrap
+  const maxW = W - 80;
+  const words = title.split(' ');
+  let line = '', lineY = gradY + 80;
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, 40, lineY);
+      line = w;
+      lineY += 68;
+      if (lineY > H - 20) break;
+    } else {
+      line = test;
+    }
+  }
+  if (line && lineY <= H - 20) ctx.fillText(line, 40, lineY);
+  ctx.shadowColor = 'transparent';
+  // Gold border
+  ctx.strokeStyle = '#c7af4f';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(5, 5, W - 10, H - 10);
+  // Save PNG
+  const buf = canvas.toBuffer('image/png');
+  await require('util').promisify(require('fs').writeFile)(outputPath, buf);
+  console.log(`[news-card] ✅ TV card written: ${require('path').basename(outputPath)} (${title.slice(0,40)})`);
 }
 
 
@@ -3922,6 +4005,51 @@ app.post('/assemble',
                 inputForTS = burnedPath;
                 log(asmId, `  📰 NEWS two-state overlay burned [${activeStoryIndex + 1}/${allStories.length}]: ${cardData.title || 'story'}`);
               }
+              // ── Fix 8B: Second overlay burn — News TV card at OVERLAY_ZONE ──
+              if (cardData.heroImageUrl || cardData.imageUrl) {
+                try {
+                  const newsCardPngPath = path.join(TMP_DIR, `news_story_card_${Date.now()}.png`);
+                  const storyCardData = {
+                    title: cardData.title || 'Breaking News',
+                    category: cardData.category || 'WORLD NEWS',
+                    source: cardData.source || 'AL JAZEERA',
+                    heroImageUrl: cardData.heroImageUrl || cardData.imageUrl
+                  };
+                  await generateNewsStoryCardPNG(storyCardData, newsCardPngPath);
+                  const cardBurnedPath = inputForTS.replace('.mp4', '_news_card_burned.mp4');
+                  const zone = CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE;
+                  const burnArgs = [
+                    '-i', inputForTS,
+                    '-i', newsCardPngPath,
+                    '-filter_complex',
+                    `[1:v]scale=${zone.w}:${zone.h}:flags=lanczos[card];[0:v][card]overlay=x=${zone.x}:y=${zone.y}:enable='lte(t,${introDur})'[out]`,
+                    '-map', '[out]', '-map', '0:a',
+                    '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                    '-pix_fmt', 'yuv420p',
+                    '-c:a', 'aac', '-ar', '44100', '-y', cardBurnedPath
+                  ];
+                  await new Promise((res, rej) => {
+                    const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
+                    let stderr = '';
+                    proc.stderr && proc.stderr.on('data', d => { stderr += d.toString(); });
+                    proc.on('close', code => {
+                      if (code === 0) res();
+                      else {
+                        console.error(`[news-card-burn] FFmpeg exit ${code}: ${stderr.slice(-300)}`);
+                        rej(new Error(`News TV card burn failed: ${code}`));
+                      }
+                    });
+                    proc.on('error', rej);
+                  });
+                  if (fs.existsSync(cardBurnedPath) && fs.statSync(cardBurnedPath).size > 10000) {
+                    inputForTS = cardBurnedPath;
+                    log(asmId, `  📺 NEWS TV card burned at OVERLAY_ZONE: ${cardData.title?.slice(0,40) || 'story'}`);
+                  }
+                  try { if (fs.existsSync(newsCardPngPath)) fs.unlinkSync(newsCardPngPath); } catch(e) {}
+                } catch(e) {
+                  log(asmId, `  ⚠️  News TV card burn failed (non-fatal): ${e.message}`);
+                }
+              }
             } else {
               // ── Single-state burn: lower-third always hidden ──────────
               const overlayHiddenPath = path.join(TMP_DIR, `newscast_overlay_hid_${Date.now()}.png`);
@@ -6074,6 +6202,44 @@ function twitchThumbToMp4(thumbnailUrl) {
   return twitchClient.thumbnailToMp4(thumbnailUrl);
 }
 
+/**
+ * Scrape the Open Graph image URL from an article page.
+ * Used for News TV card generation — each Al Jazeera article's og:image
+ * becomes the hero image on that story's top-right TV card.
+ * Fix 8B: axios + cheerio already in package.json, no new deps needed.
+ *
+ * @param {string} articleUrl - absolute URL to the article
+ * @returns {Promise<string|null>} - the og:image URL, or null if scraping fails
+ */
+async function scrapeArticleOgImage(articleUrl) {
+  if (!articleUrl) return null;
+  try {
+    const resp = await axios.get(articleUrl, {
+      timeout: 10000,
+      maxRedirects: 5,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36'
+      }
+    });
+    const cheerio = require('cheerio');
+    const $ = cheerio.load(resp.data);
+    // Try og:image first, fall back to twitter:image variants
+    const imgUrl = $('meta[property="og:image"]').attr('content')
+               || $('meta[name="twitter:image"]').attr('content')
+               || $('meta[name="twitter:image:src"]').attr('content')
+               || null;
+    if (imgUrl) {
+      console.log(`[og-scrape] ✅ ${articleUrl.slice(0, 60)}... → ${imgUrl.slice(0, 80)}`);
+    } else {
+      console.warn(`[og-scrape] ⚠️  No og:image found: ${articleUrl.slice(0, 60)}...`);
+    }
+    return imgUrl;
+  } catch (e) {
+    console.warn(`[og-scrape] ⚠️  Scrape failed for ${articleUrl.slice(0, 60)}...: ${e.message}`);
+    return null;
+  }
+}
+
 async function geminiAnalyzeClip(videoUrl, thumbnailUrl, contentType, metadata) {
   if (!GEMINI_APIKEY) return '';
 
@@ -6559,11 +6725,28 @@ app.post('/generate-full-script',
         console.log(`[generate-full-script] Story priority order: ${priorityChange}`);
         items.splice(0, items.length, ...prioritized);
       }
+      // ── Fix 8B: Scrape og:image per story for TV card background ──
+      // Populates item.heroImageUrl on each News item. Used later by assembly-time
+      // generateNewsStoryCardPNG() to render the top-right OVERLAY_ZONE TV card.
+      // Runs in parallel with Gemini analysis for speed.
+      console.log(`[generate-full-script] Scraping og:image for ${items.length} news articles...`);
+      const ogImagePromises = items.map(item => scrapeArticleOgImage(item.link || item.url || ''));
+
       // News: try video URL from RSS enclosure first, then thumbnail + full article text
       console.log(`[generate-full-script] Analyzing ${items.length} news stories...`);
-      analyses = await Promise.all(
-        items.map(item => geminiAnalyzeClip(item.videoUrl||'', item.thumbnailUrl||'', 'news', item))
-      );
+      const [ogImages, analysesResult] = await Promise.all([
+        Promise.all(ogImagePromises),
+        Promise.all(items.map(item => geminiAnalyzeClip(item.videoUrl||'', item.thumbnailUrl||'', 'news', item)))
+      ]);
+      analyses = analysesResult;
+
+      // Attach scraped og:image URLs to items
+      items.forEach((item, i) => {
+        item.heroImageUrl = ogImages[i] || item.thumbnailUrl || '';
+      });
+      const heroHits = items.filter(i => i.heroImageUrl).length;
+      console.log(`[generate-full-script] Got ${heroHits}/${items.length} og:image URLs (hero images for TV cards)`);
+
       const newsHits = analyses.filter(a => a && a.length > 50).length;
       console.log(`[generate-full-script] Got ${newsHits}/${items.length} news analyses`);
 
@@ -7265,6 +7448,7 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
           source:       s.source || '',
           category:     s.category || 'WORLD NEWS',
           thumbnailUrl: s.thumbnailUrl || s.imageUrl || '',
+          heroImageUrl: s.heroImageUrl || '',
           videoUrl:     s.videoUrl || s.clipUrl || '',
           link:         s.link || s.url || ''
         })) : []
