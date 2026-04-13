@@ -203,6 +203,21 @@ Two possible directions for News as a content type:
 
 ---
 
+### News long-form Gap #51 — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_GAP_51_STAGE_DIRECTION_LEAK.md`
+**Dispatched:** 2026-04-13 (smoke test #6 failed Gate 3 three times — `[3-second pause — hold on source clip]` burned as on-screen text)
+**Shipped:** 2026-04-13, 1 commit pending push to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| Gap #51 | pending | `fix(news): defensive cleanAvatarText in generateVideo() + remove [3-second pause] stage direction from Gemini prompt` — Root cause: Gemini prompt VALIDATION CHECKLIST had 3 references instructing it to write `[3-second pause — hold on source clip]` into every STORY#_REACTION scene. HeyGen renders bracket text as burned-in on-screen text. Root cause fix (server.js): (1) removed `+ [3-second pause — hold on source clip]` from REACTION scene rule; (2) replaced `Add "[3-second pause — hold on source clip]" before moving to next story` with `Between stories, the assembly layer will add a 3-second hold on the source clip before cutting to the next story. Do NOT write stage directions in the script — just end the REACTION scene with a single deadpan sentence.` Defensive fix (cwn_production.html): wrapped `script` in `cleanAvatarText()` inside `generateVideo()`'s HeyGen payload — `applyPronunciations(cleanAvatarText(script))` — so any bracket directives that slip through the prompt are stripped before reaching HeyGen API. `node -c server.js` → exit 0. |
+
+**Untouched:** NBA, Twitch, short-form code paths.
+**Next:** Rob runs News long-form smoke test #7. Expected: no `[3-second pause]` text burned into HeyGen renders — Gate 3 should pass on first attempt.
+
+---
+
 ## Rotation log
 
 | Date | Event |
