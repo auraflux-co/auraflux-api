@@ -889,6 +889,112 @@ async function generateGameStoryCardPNG(cardData, outputPath, contentType) {
   console.log(`[game-story-card] ✅ ${contentType.toUpperCase()} card written: ${require('path').basename(outputPath)} (${title})`);
 }
 
+// ── Fix 9: Detect trailing silence in a clip (for AJ outro branding removal) ──────────────
+/**
+ * Detect the timestamp where trailing silence begins in a clip.
+ * Uses FFmpeg silencedetect filter. Returns the silence-start timestamp
+ * if trailing silence is found, or null if the clip ends on speech.
+ *
+ * @param {string} clipPath - absolute path to input clip (mp4/ts/mkv)
+ * @returns {Promise<{totalDuration: number, silenceStart: number|null}>}
+ */
+async function detectTrailingSilence(clipPath) {
+  return new Promise((resolve, reject) => {
+    const args = [
+      '-i', clipPath,
+      '-af', 'silencedetect=noise=-30dB:duration=1.0',
+      '-f', 'null',
+      '-'
+    ];
+    const proc = execFile(ffmpegPath(), args, { maxBuffer: 10 * 1024 * 1024 });
+    let stderr = '';
+    proc.stderr && proc.stderr.on('data', d => { stderr += d.toString(); });
+    proc.on('close', code => {
+      if (code !== 0 && code !== 1) {  // ffmpeg returns 1 on null muxer, that's fine
+        return reject(new Error(`silencedetect exit ${code}`));
+      }
+      // Parse silencedetect output. Format:
+      //   [silencedetect @ 0x...] silence_start: 23.456
+      //   [silencedetect @ 0x...] silence_end: 28.123 | silence_duration: 4.667
+      const silenceStarts = [...stderr.matchAll(/silence_start:\s*([\d.]+)/g)].map(m => parseFloat(m[1]));
+      const silenceEnds = [...stderr.matchAll(/silence_end:\s*([\d.]+)/g)].map(m => parseFloat(m[1]));
+      const durationMatch = stderr.match(/Duration:\s*(\d+):(\d+):([\d.]+)/);
+      let totalDuration = 0;
+      if (durationMatch) {
+        totalDuration = parseInt(durationMatch[1]) * 3600 +
+                       parseInt(durationMatch[2]) * 60 +
+                       parseFloat(durationMatch[3]);
+      }
+      // A "trailing silence" is a silence_start with NO corresponding silence_end
+      // (or a silence_end that extends to the clip's total duration).
+      // If the last silence_start > last silence_end, that's trailing silence.
+      let trailingSilenceStart = null;
+      if (silenceStarts.length > 0) {
+        const lastStart = silenceStarts[silenceStarts.length - 1];
+        const lastEnd = silenceEnds.length > 0 ? silenceEnds[silenceEnds.length - 1] : -1;
+        if (lastStart > lastEnd) {
+          trailingSilenceStart = lastStart;
+        }
+      }
+      resolve({ totalDuration, silenceStart: trailingSilenceStart });
+    });
+    proc.on('error', reject);
+  });
+}
+
+/**
+ * Compute the output duration for a News source clip, stripping the
+ * Al Jazeera red outro branding card.
+ *
+ * Priority:
+ *   1. If silencedetect finds trailing silence starting before clip end,
+ *      trim to silence_start (that's where speech ended + branding began).
+ *   2. If no trailing silence detected (clip ends on speech), fall back
+ *      to trimming the last 5.0 seconds on the assumption the branding
+ *      frame is at the tail regardless.
+ *   3. Sanity guards:
+ *      - Never trim more than 30% of the clip duration (prevents aggressive
+ *        cuts on short clips where silencedetect is unreliable)
+ *      - Never return a duration less than 5 seconds (floor — below that,
+ *        the clip is too short to be useful regardless)
+ *
+ * @param {string} clipPath
+ * @returns {Promise<number>} - output duration in seconds
+ */
+async function computeNewsClipTrimDuration(clipPath) {
+  const { totalDuration, silenceStart } = await detectTrailingSilence(clipPath);
+
+  if (!totalDuration || totalDuration <= 0) {
+    throw new Error(`Invalid clip duration: ${totalDuration}`);
+  }
+
+  let trimTo;
+  if (silenceStart !== null && silenceStart > 0 && silenceStart < totalDuration) {
+    // Detected trailing silence — trim to silence start
+    trimTo = silenceStart;
+    console.log(`[news-clip-trim] ${path.basename(clipPath)}: silence detected at ${silenceStart.toFixed(2)}s of ${totalDuration.toFixed(2)}s → trim`);
+  } else {
+    // No trailing silence — fallback: trim last 5 seconds
+    trimTo = Math.max(totalDuration - 5.0, 5.0);
+    console.log(`[news-clip-trim] ${path.basename(clipPath)}: no silence detected → fallback trim last 5s (${totalDuration.toFixed(2)}s → ${trimTo.toFixed(2)}s)`);
+  }
+
+  // Sanity: never trim more than 30% of total duration
+  const minKeep = totalDuration * 0.7;
+  if (trimTo < minKeep) {
+    console.warn(`[news-clip-trim] ${path.basename(clipPath)}: computed trim ${trimTo.toFixed(2)}s < 70% floor ${minKeep.toFixed(2)}s — using 70% floor`);
+    trimTo = minKeep;
+  }
+
+  // Sanity: floor at 5s
+  if (trimTo < 5.0) {
+    console.warn(`[news-clip-trim] ${path.basename(clipPath)}: computed trim ${trimTo.toFixed(2)}s < 5s floor — keeping full clip`);
+    trimTo = totalDuration;
+  }
+
+  return trimTo;
+}
+
 /**
  * Generate a News TV card PNG for a single story.
  * Renders at 2× resolution (1040×586) to match OVERLAY_ZONE 520×293 after lanczos scale.
@@ -4218,55 +4324,43 @@ app.post('/assemble',
             const vfFilter = isAvatarSeg
               ? 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
               : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=fps=30';
-          const tsArgs = [
-              '-i', inputForTS,
-              '-vf', vfFilter,
-              '-pix_fmt', 'yuv420p',
-              '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-              '-g', '30',
-              '-keyint_min', '30',
-              '-sc_threshold', '0',
-              '-c:a', 'aac', '-ar', '44100', '-ac', '2',
-              // Normalize ALL audio to -14 LUFS for consistent volume
-              // Both avatar (Bobby G) and source clips (streamers) normalized to same level
-              '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=async=1:min_hard_comp=0.100000:first_pts=0',
-              '-bsf:v', 'h264_mp4toannexb',
-              '-f', 'mpegts', '-y', tsPath
-            ];
-            const proc = execFile(ffmpegPath(), tsArgs, { maxBuffer: 20 * 1024 * 1024 });
-            proc.on('close', code => code === 0 ? res() : rej(new Error(`TS convert failed: ${code}`)));
-            proc.on('error', rej);
+
+            // ── Fix 9: News source clips — compute trim duration to strip AJ red outro ──
+            // Runs async; we wrap the whole TS conversion in an async IIFE so we can await it.
+            // Non-News clips (Twitch, NBA) skip this step entirely.
+            const buildTsArgs = async () => {
+              const baseArgs = [
+                '-vf', vfFilter,
+                '-pix_fmt', 'yuv420p',
+                '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+                '-g', '30',
+                '-keyint_min', '30',
+                '-sc_threshold', '0',
+                '-c:a', 'aac', '-ar', '44100', '-ac', '2',
+                '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=async=1:min_hard_comp=0.100000:first_pts=0',
+                '-bsf:v', 'h264_mp4toannexb',
+                '-f', 'mpegts', '-y', tsPath
+              ];
+              if (contentType === 'news' && !isAvatarSeg) {
+                try {
+                  const trimDuration = await computeNewsClipTrimDuration(inputForTS);
+                  log(asmId, `  ✂️  Fix 9 trim: ${path.basename(inputForTS)} → ${trimDuration.toFixed(2)}s`);
+                  return ['-i', inputForTS, '-t', trimDuration.toFixed(3), ...baseArgs];
+                } catch(trimErr) {
+                  log(asmId, `  ⚠️  Fix 9 trim failed (non-fatal): ${trimErr.message} — using full clip`);
+                }
+              }
+              return ['-i', inputForTS, ...baseArgs];
+            };
+
+            buildTsArgs().then(tsArgs => {
+              const proc = execFile(ffmpegPath(), tsArgs, { maxBuffer: 20 * 1024 * 1024 });
+              proc.on('close', code => code === 0 ? res() : rej(new Error(`TS convert failed: ${code}`)));
+              proc.on('error', rej);
+            }).catch(rej);
           });
           tsFiles.push(tsPath);
           if (i % 10 === 0) log(asmId, `  🔄 Normalized ${i+1}/${localFiles.length} segments...`);
-
-          // Add 0.25s silence buffer after avatar segments before source clips
-          // Prevents Bobby G getting cut off mid-word when clip starts
-          const nextSeg = segsToProcess[i + 1];
-          const currSegType = segTypes[tsFiles.length - 1] || 'avatar';
-          const nextSegType = nextSeg && nextSeg.type === 'source_clip' ? 'source_clip' : 'avatar';
-          if (currSegType === 'avatar' && nextSegType === 'source_clip') {
-            const silencePath = tsPath.replace('.ts', '_silence.ts');
-            try {
-              await new Promise((res, rej) => {
-                const args = [
-                  '-f', 'lavfi', '-i', 'color=c=#000000:s=1920x1080:r=30:d=0.25',
-                  '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo:d=0.25',
-                  '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-                  '-c:a', 'aac', '-ar', '44100', '-ac', '2',
-                  '-bsf:v', 'h264_mp4toannexb',
-                  '-f', 'mpegts', '-y', silencePath
-                ];
-                const proc = execFile(ffmpegPath(), args, { maxBuffer: 5 * 1024 * 1024 });
-                proc.on('close', code => code === 0 ? res() : rej(new Error('silence gen failed')));
-                proc.on('error', rej);
-              });
-              tsFiles.push(silencePath);
-              segTypes.push('avatar'); // treat silence as avatar for transition logic
-            } catch(e) {
-              // non-fatal — skip silence if it fails
-            }
-          }
         } catch(e) {
           log(asmId, `  ⚠️  Skipping segment ${i+1}: ${e.message}`);
           segTypes.splice(tsFiles.length, 0);
