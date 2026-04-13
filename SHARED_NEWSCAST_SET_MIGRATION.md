@@ -160,3 +160,147 @@ Scope guardrails. These are out of scope and should not be pulled into any of th
 ## 9. Next action
 
 Rob reads this doc, answers the open questions in section 6, and either approves the phase plan as-is or pushes back on specific phases. After approval, Phase 2 gets its own handoff doc written from this spec and dispatched to Cline. Until then, no code changes.
+
+---
+
+## 10. Rob decisions 2026-04-13
+
+Section 6 questions answered in-thread. Locking the values here so Phase 2 has a concrete config to populate.
+
+### 10.1 Brand hex colors — unified CWN palette across all three types
+
+Rob picked Option C for both NBA (Q1) and Twitch (Q2): **CWN covering X** should look like CWN, not like X's own brand. The palette stays anchored on the News foundation.
+
+**Reference — News (already live in `tools/clipzworld_newscast.html:75-80`):**
+```css
+--navy:  #22304b   (primary background family)
+--gold:  #c7af4f   (accent — borders, highlights)
+--gold2: #f0d060   (accent highlight variant)
+--red:   #c0392b   (LIVE indicator)
+--white: #ffffff
+--dark:  #0d1424   (deep background)
+```
+
+**NBA (Q1 answer = C):**
+- Primary: `#0d1424` (deep dark, matches News `--dark`)
+- Accent: `#c7af4f` (gold, matches News `--gold`)
+- LIVE indicator red, white, and dark navy background all carry over from News unchanged.
+
+**Twitch (Q2 answer = C):**
+- Primary: `#6A4C93` (muted purple — recognizable as "Twitch-adjacent" without being Twitch's official `#9146FF`)
+- Accent: `#c7af4f` (gold, matches News)
+- LIVE indicator red, white, and dark navy background all carry over from News unchanged.
+
+**Why the gold stays constant:** gold is the CWN channel identity thread. News, NBA, and Twitch all share the same gold, same border strokes, same highlight dot. Primary color is the per-show differentiator. Viewer scanning the channel instantly recognizes "CWN show" via the gold, then identifies which CWN show via the primary (blue = news, dark = NBA, purple = Twitch).
+
+### 10.2 Show names per top bar (Q5 answer — derived from docs, not a letter choice)
+
+Discovered mid-handoff that CWN already has three distinct show names referenced in `CLINE_HANDOFF_AUTO_PUBLISH_THUMB_AND_COMMENT.md:28-30` and `:52-54` — these are baked into the pinned YouTube comment templates and have been live production values for multiple episodes. They're show titles, not a generic channel tagline.
+
+**Top bar show titles (format: `"{SHOW NAME} | EPISODE N"`):**
+- **News:** `"BECAUSE THE LIGHT WAS ON | EPISODE N"` (current, unchanged — already live)
+- **NBA:** `"OTHER SIDE OF THE PILLOW | EPISODE N"` (new — replaces whatever NBA's current top bar shows, if anything)
+- **Twitch:** `"TWITCH SOUP | EPISODE N"` (new — replaces whatever Twitch's current top bar shows, if anything)
+
+**Override to section 3.3 and section 6 Q5:** Q5's original wording ("keep News tagline universal vs invent variants") was the wrong framing. The correct framing is "use the established show name per content type." Each show is its own program on the ClipzWorld News channel; the top bar title is the show title, not the channel identity. Channel identity = the gold accent + `CWN` logo on mug, both of which are already shared.
+
+### 10.3 NBA segment tag label (Q3 answer = A)
+
+**Flat `"NBA"` on the top bar segment tag pill across the entire episode.** Static, doesn't change per-game.
+
+Rationale: NBA's TV card in the top-right already shows the active game matchup (Lakers @ Celtics, scores, records, PPG leaders). Putting the same matchup on the top bar segment tag pill is redundant chrome noise. Flat `"NBA"` lets the top bar stay stable and lets the TV card do the per-game differentiation.
+
+### 10.4 Twitch sidebar content and the 2-clip gate (Q4 answer — reframed)
+
+**Sidebar = streamer list for the current episode, one row per streamer, capped at 5.**
+
+Rob clarified the Twitch model mid-thread, correcting two earlier misunderstandings:
+
+**Misunderstanding A — the "7 clips per streamer" framing.** An earlier revision of this doc (and the first draft of the accompanying test #7 handoff) referenced a "7-clip Twitch model." That model never existed in code or production. Historical path: 3 clips per streamer (early) → 2 clips per streamer (current). Any language in earlier revisions suggesting 7 is a Claude Code mistake and should be treated as retracted.
+
+**Misunderstanding B — "2 clips per streamer" as a configurable setting.** The `cwn_production.html:3078` dashboard input (`twitch-clips-per-main` defaulting to `2`) looked like a tunable setting. It's not — **2 is the minimum gate, not a target.**
+
+**The gate rule (Rob 2026-04-13):** a streamer must have **at least 2 valid clips** resolvable via GQL to be included in an episode. Streamers with 0 or 1 usable clips are **dropped from the episode entirely** before HeyGen submission. The dashboard fetches up to 20 clips per streamer (`fetchCount = Math.max(clipsPerStreamer * 5, 20)` at `cwn_production.html:3102`) specifically to survive GQL's ~50% resolution failure rate and still hit the 2-clip floor. If the pool after resolution still has fewer than 2 valid clips, that streamer is cut.
+
+**Why this matters for the sidebar:** the 5-cap in the sidebar is a cap on streamers *that passed the 2-clip gate*, not a cap on streamers the user selected. A user could select 10 streamers in the comma-separated field, have 7 pass the gate, and end up with 5 in the episode (and optionally 2 more in a second episode via the multi-episode split logic in section 11.4).
+
+**Episode composition after the gate:**
+- User selects N streamers via comma-separated input (up to 12 active in roster)
+- GQL resolution filters to M streamers where each has ≥2 valid clips (M ≤ N)
+- Episode cap of 5 applies: first 5 of M go into episode 1, remaining go into episode 2, etc.
+- Each episode = exactly 5 streamers × exactly 2 clips = exactly 10 clips (deterministic)
+- Sidebar shows those 5 streamers, one row each (displayName + avatar + optional category)
+
+**Edge case — fewer than 5 streamers pass the gate.** If a user selects 3 streamers and all 3 pass, the episode has 3 streamers in the sidebar, not 5. The sidebar renders 3 rows, no empty slots. Not a failure mode, just a smaller episode.
+
+**Edge case — 0 streamers pass the gate.** Hard fail at the pre-HeyGen stage. User sees an error in the dashboard telling them no selected streamers had 2 resolvable clips, try a different set or wait for the Twitch GQL layer to recover. No HeyGen tokens burned on a dead episode.
+
+**News parallel:** the same gate concept applies to News. A story must have scraped og:image metadata (for the TV card) to pass the gate. Stories that fail og:image scraping are dropped. Optional extension: News stories must also have a scrape-able clip video to pass if Rob wants to force clip presence on every story — currently News allows avatar-only stories with missing clips. Decision point for a future handoff.
+
+### 10.5 Episode counter reset (Q6 answer — deferred)
+
+**Do NOT reset `data/episode_counters.json` now.** Current values stay: `{twitch: 38, nba: 27, news: 32}`.
+
+**Reset trigger:** after BOTH News long-form AND NBA long-form pass smoke tests cleanly (Rob's definition of "locked"). At that point, reset to `{twitch: 0, nba: 0, news: 0}`, and the first successfully-produced-and-published episode for each content type after the reset becomes that type's Episode 1. This is a clean-slate marker, not a renumbering of past episodes.
+
+**What this means for in-flight work:** smoke tests #8, #9, #10+ all continue using the current counter (news: 32 → 33 → 34 etc) because they're throwaway test runs, not production episodes. The reset happens at a specific moment Rob declares.
+
+**Per-type counters stay — no global counter.** Each show has its own continuity arc.
+
+---
+
+## 11. Episode length targets (new, 2026-04-13)
+
+Rob's strategic call during the Q4 discussion: **all CWN long-form episodes target the 8-15 minute YouTube mid-roll ad window.** This replaces the previous "fit all source material into one episode" assumption.
+
+### 11.1 The target range
+
+- **Lower bound: 8 minutes.** Below 8 min = video is too short for mid-roll ads, loses monetization potential.
+- **Upper bound: 15 minutes.** Above 15 min = diminishing engagement returns, harder to hit retention metrics that drive YouTube recommendation.
+- **Sweet spot:** 10-12 min.
+
+Source: YouTube monetization guidance for long-form content — 8 min is the minimum video length that unlocks mid-roll ad insertion; 15 min is roughly where viewer retention starts dropping off steeply for non-tentpole content.
+
+### 11.2 Enforcement at Gate 3
+
+**New Gate 3 deduction rule:** videos with `ffprobeDuration < 480 seconds` (8 minutes) lose **10-15 points** from the full-video QA sample (the one that watches the entire assembled MP4 end-to-end, not the 20-second early/middle/late samples).
+
+This is a soft incentive, not a hard fail. An 7:30 episode can still pass Gate 3 if it scores high enough on content quality; it just takes a penalty that pushes future episodes to hit the 8+ min target.
+
+**No upper-bound Gate 3 deduction** — if a specific episode genuinely needs to run 17 minutes because the story arc demands it, that's fine. The target is a floor for monetization and a soft ceiling for retention, not a hard box.
+
+### 11.3 Multi-episode splitting
+
+When source material would exceed the target range in a single episode, split into multiple episodes at the natural boundary:
+
+- **News:** 10 stories → 2 episodes of 5 (already the case as of smoke test #8)
+- **NBA:** N games → episodes of 3-4 games each, targeting the 8-15 min window based on average per-game narration length
+- **Twitch:** N streamers → episodes of 5 streamers each (2 clips per = 10 clips per episode)
+- **NFL (August):** Same constraint. TBD on per-game word count and episode composition.
+
+**This replaces the dynamic sidebar rotation feature** that was previously proposed as a Fix 5 sub-item. Static 5-cap + multi-episode splitting is a simpler architecture that solves the "more than 5 items doesn't fit the sidebar" problem at the episode boundary instead of trying to rotate within a single episode.
+
+**BUT: Rob wants to still try to build dynamic rotation as a test #9 candidate.** If it works within the existing 0.75s transition timing budget from Fix 5's state machine, it ships and unlocks single-episode "10 story" News/NBA/Twitch runs. If it doesn't work, permanent fallback = multi-episode splitting. The rotation experiment is additive, not a replacement for the split logic.
+
+### 11.4 Dashboard auto-split (new gap for test #9 handoff)
+
+When the dashboard's story count / streamer count / game count input exceeds 5 for a given content type, the dashboard should automatically produce N separate jobs of 5 items each instead of one job of N items. Examples:
+
+- User selects 10 News stories → dashboard fires 2 jobs: stories 1-5 as episode M, stories 6-10 as episode M+1
+- User selects 8 Twitch streamers → dashboard fires 2 jobs: streamers 1-5 as episode K, streamers 6-8 as episode K+1 (3 streamers in the second episode is OK, just below the cap)
+- User selects 4 NBA games → dashboard fires 1 job of 4 games (fits)
+
+**This is a new gap for the test #9 handoff cycle** or whenever Rob decides to scope it. Added to `LONGFORM_FIX_ROTATION.md` → cross-cutting section.
+
+---
+
+## 12. What changes in this doc vs. earlier revisions
+
+Before Rob's 2026-04-13 clarifications, earlier revisions of this doc (and the first draft of the accompanying handoff) referenced:
+
+- **A "7-clip Twitch model" that never existed.** Claude Code misread the Twitch history — there was never a 7-clip-per-streamer production mode. Always 3 (early) → 2 (current). Any doc language suggesting 7 is a Claude Code error and should be treated as retracted.
+- **"2 clips per streamer" as a configurable setting with a dashboard toggle.** Wrong — it's a **gate**, not a setting. Streamers with fewer than 2 valid clips after GQL resolution are dropped from the episode entirely. The dashboard input's default of 2 reflects the gate floor, not a tunable target. See section 10.4 for the full gate semantics.
+- **"Universal tagline" vs "per-type variants" as the framing for Q5.** Wrong framing — the correct framing is "each content type is a distinct show with its own established show name, already baked into `CLINE_HANDOFF_AUTO_PUBLISH_THUMB_AND_COMMENT.md`." Show names are: News = "Because the Light Was On", NBA = "Other Side of the Pillow", Twitch = "Twitch Soup".
+- **Dynamic sidebar rotation as the Fix 5 sub-item.** Now reframed: static 5-cap is the baseline, dynamic rotation is a "try to build it" experiment for test #9, multi-episode splitting is the permanent fallback if rotation can't hit the timing budget.
+
+Sections 3.3, 3.4, 6 Q4, 6 Q5 in the body of this doc are superseded by sections 10 and 11. Don't re-interpret the earlier sections without reading the decisions here.
