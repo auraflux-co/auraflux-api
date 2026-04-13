@@ -250,14 +250,19 @@ async function startHeyGenPoller(jobId, card) {
         // If this is a SETUP scene, insert the corresponding source clip after it
         if (/SETUP/i.test(avatarSeg.sceneName) && clipIdx < orderedClipUrls.length) {
           const clip = orderedClipUrls[clipIdx];
-          segmentData.push({
-            url:     clip.clipUrl || clip.url || '',
-            pageUrl: clip.pageUrl || '',
-            label:   clip.label || `CLIP_${clipIdx + 1}`,
-            type:    'source_clip',
-            clipUrl: clip.clipUrl || clip.url || ''
-          });
-          clipIdx++;
+          clipIdx++;  // Fix 6: always increment to maintain story-index alignment
+          // Fix 6: skip null entries (stories without clips) — null preserved for index alignment
+          if (clip && clip.url) {
+            segmentData.push({
+              url:     clip.clipUrl || clip.url || '',
+              pageUrl: clip.pageUrl || '',
+              label:   clip.label || `CLIP_${clipIdx}`,
+              type:    'source_clip',
+              clipUrl: clip.clipUrl || clip.url || ''
+            });
+          } else {
+            console.log(`[heygen-poller] Fix6: null clip at storyIndex ${clip ? clip.storyIndex : clipIdx - 1} — skipping segment insert, index alignment preserved`);
+          }
         }
       }
 
@@ -7002,15 +7007,24 @@ app.post('/generate-full-script',
       // FIX: orderedClipUrls was only populated in the Twitch block (line 6172 comment says so).
       // News and NBA were added later but this step was never added — causing 22_avatar_0_clips output.
       if (type === 'news') {
-        orderedClipUrls = items.map((item, i) => ({
-          url:      item.videoUrl || item.clipUrl || '',
-          clipUrl:  item.videoUrl || item.clipUrl || '',
-          pageUrl:  item.link || item.url || '',
-          label:    `STORY${i + 1}_CLIP`,
-          streamer: `story_${i + 1}`,
-          title:    item.title || `Story ${i + 1}`
-        })).filter(c => c.url); // only include stories that have a real video URL
-        console.log(`[generate-full-script] Built News orderedClipUrls: ${orderedClipUrls.length}/${items.length} stories have clip URLs`);
+        // Fix 6: preserve story-index alignment — keep null entries for stories without clips.
+        // Previously .filter(c => c.url) dropped failed scrapes, destroying index alignment:
+        // stories 1/2/4 scraped → filtered array [clip1,clip2,clip4] → poller mispairs clip4 to STORY3_SETUP.
+        // Now: null entries are preserved; heygen-poller skips them cleanly.
+        orderedClipUrls = items.map((item, i) => {
+          const videoUrl = item.videoUrl || item.clipUrl || null;
+          return {
+            url:        videoUrl,
+            clipUrl:    videoUrl,
+            pageUrl:    item.link || item.url || '',
+            label:      `STORY${i + 1}_CLIP`,
+            streamer:   `story_${i + 1}`,
+            title:      item.title || `Story ${i + 1}`,
+            storyIndex: i  // explicit index tag for alignment verification
+          };
+        });
+        const clipsWithUrl = orderedClipUrls.filter(c => c.url).length;
+        console.log(`[generate-full-script] Built News orderedClipUrls: ${clipsWithUrl}/${items.length} stories have clip URLs (${items.length - clipsWithUrl} null placeholders preserved for index alignment)`);
       }
     }
 
