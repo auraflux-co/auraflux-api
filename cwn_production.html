@@ -2992,6 +2992,7 @@ function fetchCwnNewsVideos(callback) {
       var d = JSON.parse(xhr.responseText);
       if (!d.ok) { callback(null, 'Server error: ' + (d.error || 'unknown')); return; }
       // Adapt to legacy rss2json item shape expected by all callers
+      // Track C: preserve validation data per-item and summary
       var items = (d.videos || []).map(function(v) {
         return {
           title:       v.title || '',
@@ -2999,10 +3000,11 @@ function fetchCwnNewsVideos(callback) {
           pubDate:     v.publishedAt || '',
           thumbnail:   v.thumbnail || '',
           description: '',
-          enclosure:   {}
+          enclosure:   {},
+          validation:  v.validation || null   // Track C: per-video validation result
         };
       });
-      callback({ items: items, source: d.source, totalFound: d.totalFound }, null);
+      callback({ items: items, source: d.source, totalFound: d.totalFound, validationSummary: d.validationSummary || null }, null);
     } catch(e) { callback(null, e.message); }
   };
   xhr.onerror = xhr.ontimeout = function() { callback(null, 'Network error fetching news videos'); };
@@ -6267,7 +6269,8 @@ function thumbLoadNewsStories(feedUrl) {
     g('news-thumb-status').textContent='Loading stories from job source...';
     fetchCwnNewsVideos(function(d, err) {
       if (err || !d) { g('news-thumb-status').textContent='Error: '+(err||'no data'); return; }
-      thumbRenderNewsStoryGrid(d.items||[]);
+      // Track C: pass validationSummary through to the grid renderer
+      thumbRenderNewsStoryGrid(d.items||[], d.validationSummary||null);
     });
     return;
   }
@@ -6279,35 +6282,92 @@ function thumbLoadNewsStories(feedUrl) {
     try{
       var d=JSON.parse(xhr.responseText);
       var stories=(d.items||[]).slice(0,12);
-      thumbRenderNewsStoryGrid(stories);
+      thumbRenderNewsStoryGrid(stories, null);
     }catch(e){ g('news-thumb-status').textContent='Error: '+e.message; }
   };
   xhr.onerror=xhr.ontimeout=function(){g('news-thumb-status').textContent='Network error';};
   xhr.send();
 }
 
-function thumbRenderNewsStoryGrid(stories) {
+function thumbRenderNewsStoryGrid(stories, validationSummary) {
   stories = (stories||[]).slice(0,12);
   var grid=g('news-thumb-stories');
   grid.innerHTML='';
+
+  // Track C: render validation summary bar above grid
+  var statusEl = g('news-thumb-status');
+  if (validationSummary && (validationSummary.passed !== undefined)) {
+    var p = validationSummary.passed || 0;
+    var w = validationSummary.warnings || 0;
+    var f = validationSummary.failed || 0;
+    var summaryHtml = '<span style="color:rgba(255,255,255,0.5);">'
+      + stories.length + ' stories loaded</span>'
+      + (p ? ' &nbsp;<span style="color:#2ecc71;font-weight:700;">● ' + p + ' verified</span>' : '')
+      + (w ? ' &nbsp;<span style="color:#f39c12;font-weight:700;">● ' + w + ' warning' + (w>1?'s':'') + '</span>' : '')
+      + (f ? ' &nbsp;<span style="color:#e74c3c;font-weight:700;">● ' + f + ' unusable</span>' : '');
+    if (statusEl) statusEl.innerHTML = summaryHtml;
+  } else {
+    if (statusEl) statusEl.textContent = stories.length + ' stories loaded';
+  }
+
   stories.forEach(function(s,i){
     var img=(s.enclosure&&s.enclosure.link)||s.thumbnail||'';
     var title=(s.title||'').trim();
     var desc=(s.description||'').replace(/<[^>]+>/g,'').trim().slice(0,120);
+
+    // Track C: determine validation status for this story
+    var val = s.validation || null;
+    var valStatus = val ? val.status : null; // 'ok' | 'warning' | 'fail' | null
+    var isFail = valStatus === 'fail';
+    var isWarn = valStatus === 'warning';
+
+    // Badge dot: green=ok, amber=warning, red=fail, grey=no data
+    var badgeDot = '';
+    if (valStatus === 'ok') {
+      badgeDot = '<span title="Verified — video accessible" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2ecc71;margin-right:4px;flex-shrink:0;"></span>';
+    } else if (valStatus === 'warning') {
+      badgeDot = '<span title="Warning — check issues" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-right:4px;flex-shrink:0;"></span>';
+    } else if (valStatus === 'fail') {
+      badgeDot = '<span title="Unusable — video inaccessible" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74c3c;margin-right:4px;flex-shrink:0;"></span>';
+    }
+
+    // Issues tooltip text
+    var issueText = (val && val.issues && val.issues.length) ? val.issues.join(' · ') : '';
+
     var card=document.createElement('div');
-    card.style.cssText='background:#0d1524;border:1px solid rgba(199,175,79,0.15);border-radius:6px;overflow:hidden;cursor:pointer;transition:border-color 0.2s;';
+    // Fail cards: dimmed + not selectable
+    var cardStyle = 'background:#0d1524;border:1px solid rgba(199,175,79,0.15);border-radius:6px;overflow:hidden;transition:border-color 0.2s;';
+    if (isFail) {
+      cardStyle += 'opacity:0.6;pointer-events:none;cursor:default;';
+    } else {
+      cardStyle += 'cursor:pointer;';
+    }
+    card.style.cssText = cardStyle;
+
+    var titleRow = '<div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;">'
+      + badgeDot
+      + '<div style="font-size:12px;font-weight:700;color:#fff;line-height:1.3;flex:1;">' + title + '</div>'
+      + '</div>';
+
+    var issueRow = (issueText && !isFail) ? '<div style="font-size:9px;color:#f39c12;margin-bottom:4px;font-family:monospace;">' + issueText.slice(0,80) + '</div>' : '';
+    var failRow  = (isFail && issueText) ? '<div style="font-size:9px;color:#e74c3c;margin-bottom:4px;font-family:monospace;">' + issueText.slice(0,80) + '</div>' : '';
+
     card.innerHTML=(img?'<img src="'+img+'" style="width:100%;height:120px;object-fit:cover;display:block;">':'')+
       '<div style="padding:10px 12px;">'
-      +'<div style="font-size:12px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:4px;">'+title+'</div>'
-      +'<div style="font-size:10px;color:rgba(255,255,255,0.4);">'+desc+'</div>'
-      +'<button onclick="thumbSelectNewsStory('+i+')" style="margin-top:8px;background:rgba(199,175,79,0.15);border:1px solid rgba(199,175,79,0.3);color:#c7af4f;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:2px;padding:4px 12px;border-radius:3px;cursor:pointer;">USE THIS STORY</button>'
+      + titleRow
+      + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px;">'+desc+'</div>'
+      + issueRow + failRow
+      +(isFail
+        ? '<div style="font-size:10px;color:#e74c3c;font-family:Bebas Neue,sans-serif;letter-spacing:1px;margin-top:6px;">UNUSABLE</div>'
+        : '<button onclick="thumbSelectNewsStory('+i+')" style="margin-top:8px;background:rgba(199,175,79,0.15);border:1px solid rgba(199,175,79,0.3);color:#c7af4f;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:2px;padding:4px 12px;border-radius:3px;cursor:pointer;">USE THIS STORY</button>')
       +'</div>';
     card.setAttribute('data-idx',i);
-    card.onclick=function(){ thumbSelectNewsStory(parseInt(this.getAttribute('data-idx'))); };
+    if (!isFail) {
+      card.onclick=function(){ thumbSelectNewsStory(parseInt(this.getAttribute('data-idx'))); };
+    }
     grid.appendChild(card);
   });
   window._newsThumbStories=stories;
-  g('news-thumb-status').textContent=stories.length+' stories loaded';
   g('news-thumb-stories').style.display='grid';
 }
 
