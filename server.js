@@ -4375,7 +4375,11 @@ app.post('/assemble',
             // NOTE: do NOT change lines 3800/3834 — those are short-form split-screen slots that legitimately need zoom-to-fill
             const vfFilter = isAvatarSeg
               ? 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
-              : 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0d1424,fps=fps=30';
+              : 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0d1424,fps=fps=30' +
+                // Red 2: mask Al Jazeera bottom-right corner watermark with CWN navy box
+                // 120x80 region at (1780, 960) covers logo + 20px safety padding
+                // Matches letterbox bar color so it reads as intentional CWN framing
+                (contentType === 'news' && !isAvatarSeg ? ',drawbox=x=1780:y=960:w=120:h=80:color=0x0d1424@1.0:t=fill' : '');
 
             // ── Fix 10: News source clips — silencedetect trim + 25s hard cap ──
             // Runs async; we wrap the whole TS conversion in an async IIFE so we can await it.
