@@ -709,6 +709,14 @@ These are NOT blockers for Phase 1 but must be resolved before or during the pha
 
 **Q-T8. Video delivery CDN (by Phase 5):** produced MP4s need to be served to customers for download. Google Drive works for Rob + a few customers but doesn't scale. Cloudflare R2 or S3 at scale.
 
+**Q-T7/T8 preferred answer (Rob direction 2026-04-13):** when CWN moves off localhost to Railway, binary asset storage follows a 3-tier pattern:
+
+- **Tier 1 — Railway persistent volume:** hot/active job state only (tmp/ renders in flight, job cards, current pipeline artifacts). Wiped on container redeploy tolerable because data is short-lived.
+- **Tier 2 — Cloudflare R2 (preferred) or S3:** cold storage for music library (`assets/audio/*`), customer-uploaded source material, produced MP4 archive, Gemini-uploaded QA evidence. R2 preferred over S3 because zero egress fees save money on video delivery at scale. S3-compatible API so existing Node libraries (aws-sdk, @aws-sdk/client-s3) work without rewrite.
+- **Tier 3 — CDN (Cloudflare, Bunny) for customer-facing downloads:** produced MP4s served via signed URLs to customers who downloaded their own content. Not needed until multi-customer Phase 2+.
+
+**Current state (localhost, 2026-04-13):** everything lives on Rob's MacBook disk — `assets/audio/` music library, `tmp/` hot state, `output/` MP4 archive, `data/jobs.json` persisted state. Works fine because single-operator single-machine. MP3 library committed to git is fine at current scale because file count is low (~10) and size is small (few MB each). This entire architecture migrates during the Phase 2 → Phase 3 transition when Railway becomes the primary host.
+
 ---
 
 ## 10. Cross-references
