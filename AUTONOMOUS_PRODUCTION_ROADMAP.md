@@ -693,9 +693,11 @@ Intentional scope limits:
 
 These are NOT blockers for Phase 1 but must be resolved before or during the phases noted.
 
-**Q-T1. Database choice (by end of Phase 2):** SQLite vs Postgres on Railway. Depends on expected customer count in Phase 3.
+**Q-T0. Stack architecture (Rob locked 2026-04-13):** split frontend from backend. See section 12 for full decision.
 
-**Q-T2. Authentication library (by start of Phase 2):** Passport.js vs Auth0 vs roll-your-own session auth. Simplest path is roll-your-own session auth for launch, migrate if we hit scale issues.
+**Q-T1. Database choice (by end of Phase 2):** SQLite vs Postgres on Railway. Depends on expected customer count in Phase 3. **Updated 2026-04-13:** Postgres on Railway is the preferred answer per Q-T0 stack decision — the frontend/backend split means the database lives with the backend in Railway, and Postgres is the natural choice for a multi-tenant SaaS dashboard (vs SQLite which is single-writer and doesn't scale past ~10 customers).
+
+**Q-T2. Authentication library (by start of Phase 2):** ~~Passport.js vs Auth0 vs roll-your-own session auth~~. **Updated 2026-04-13 per Q-T0:** with Next.js as the frontend, the preferred answer is **Clerk** (Next.js-native, drop-in auth components, free tier covers first customers) or **Supabase Auth** (if we use Supabase for anything else). Clerk is the default unless Supabase enters the stack for another reason. Both have first-class Next.js App Router integration. Passport.js and roll-your-own are retracted — neither matches the frontend stack anymore.
 
 **Q-T3. Billing integration (by start of Phase 4):** Stripe directly vs Stripe via Paddle for international tax. Rob's call based on target customer geography.
 
@@ -709,7 +711,7 @@ These are NOT blockers for Phase 1 but must be resolved before or during the pha
 
 **Q-T8. Video delivery CDN (by Phase 5):** produced MP4s need to be served to customers for download. Google Drive works for Rob + a few customers but doesn't scale. Cloudflare R2 or S3 at scale.
 
-**Q-T7/T8 preferred answer (Rob direction 2026-04-13):** when CWN moves off localhost to Railway, binary asset storage follows a 3-tier pattern:
+**Q-T7/T8 preferred answer (Rob direction 2026-04-13):** see section 12 for the full stack architecture. Binary asset storage follows a 3-tier pattern:
 
 - **Tier 1 — Railway persistent volume:** hot/active job state only (tmp/ renders in flight, job cards, current pipeline artifacts). Wiped on container redeploy tolerable because data is short-lived.
 - **Tier 2 — Cloudflare R2 (preferred) or S3:** cold storage for music library (`assets/audio/*`), customer-uploaded source material, produced MP4 archive, Gemini-uploaded QA evidence. R2 preferred over S3 because zero egress fees save money on video delivery at scale. S3-compatible API so existing Node libraries (aws-sdk, @aws-sdk/client-s3) work without rewrite.
@@ -719,7 +721,142 @@ These are NOT blockers for Phase 1 but must be resolved before or during the pha
 
 ---
 
-## 10. Cross-references
+## 12. Stack architecture — locked 2026-04-13
+
+Captured from Rob's stack decision 2026-04-13 PM. This is the target architecture for Phase 2 onward. Phase 1 (current) continues on localhost Node + vanilla HTML dashboard with no changes — the stack migration happens at the Phase 1 → Phase 2 transition.
+
+### 12.1 The split
+
+**Frontend** and **backend** are separate deployments on separate hosts:
+
+```
+┌─────────────────────────────┐         ┌──────────────────────────────┐
+│  Frontend (Vercel)          │         │  Backend (Railway)           │
+│                             │         │                              │
+│  Next.js (App Router)       │  HTTPS  │  Node / Express              │
+│  Tailwind + shadcn/ui       │ ──────▶ │  FFmpeg pipeline             │
+│  Clerk or Supabase Auth     │         │  HeyGen / Gemini / Claude    │
+│                             │  JSON   │  Upload-Post integration     │
+│  UI only                    │ ◀────── │  Job queue + gates           │
+│  calls backend API          │         │  Postgres (Railway add-on)   │
+└─────────────────────────────┘         └──────────────────────────────┘
+                                                       │
+                                                       ▼
+                                        ┌──────────────────────────────┐
+                                        │  Storage (Cloudflare R2)     │
+                                        │                              │
+                                        │  Music library               │
+                                        │  Customer uploads            │
+                                        │  Produced MP4 archive        │
+                                        │  Gemini QA evidence          │
+                                        └──────────────────────────────┘
+```
+
+### 12.2 Why this split beats Railway-only
+
+**Rob's rule:** *"Railway is PERFECT for your engine. But not ideal for your UI."*
+
+Frontend on Vercel:
+- Instant page loads via edge caching and static generation
+- Global CDN for landing pages and dashboard assets
+- Built-in Next.js optimization (image, font, code splitting)
+- First-class auth integrations (Clerk, Supabase Auth)
+- Preview deployments per git branch for QA
+
+Backend on Railway:
+- Persistent long-running processes (FFmpeg, Puppeteer, Gemini polling)
+- Persistent volume for hot job state
+- Postgres add-on native
+- Health checks + auto-restart on container failure
+- Predictable pricing for compute-heavy workloads (FFmpeg is NOT cheap on serverless)
+
+Splitting them means each host does what it's best at. A Railway-only option exists (Next.js can run on Railway) but **loses the edge rendering and global performance** that make the customer-facing dashboard feel professional.
+
+### 12.3 The full stack
+
+| Layer | Technology | Host | Why |
+|---|---|---|---|
+| **Frontend framework** | Next.js (App Router) | Vercel | Full-stack capability, SSR + client rendering, best-in-class SaaS dashboard tooling |
+| **UI components** | Tailwind CSS + shadcn/ui | Vercel (static) | Unstyled accessible primitives + utility-first styling, no runtime cost |
+| **Auth** | Clerk (default) OR Supabase Auth | Vercel (client-side SDK) | Drop-in Next.js integration, free tier covers launch, role-based permissions built in |
+| **API layer** | Node / Express REST | Railway | Existing `server.js` migrates as-is, minimal refactor, Railway-native |
+| **Job queue** | In-process + persistent job cards | Railway | Current pattern works; upgrade to BullMQ+Redis later if needed |
+| **Video pipeline** | FFmpeg + Puppeteer + HeyGen/Gemini/Claude SDKs | Railway | Compute-heavy, existing code, requires persistent disk for tmp/ |
+| **Database** | Postgres (Railway add-on) | Railway | Multi-tenant SaaS standard, supersedes JSON file persistence |
+| **Hot storage** | Railway persistent volume | Railway | tmp/ renders in flight, job cards, pipeline artifacts |
+| **Cold storage** | Cloudflare R2 | external | Music library, customer uploads, MP4 archive, zero egress fees |
+| **CDN delivery** | Cloudflare (default) | external | Customer-facing MP4 download, signed URLs |
+| **Monitoring** | Slack webhook `#cwn-alerts` | external | Alert destination, no PagerDuty until Phase 5+ |
+| **Error tracking** | TBD — Sentry candidate | Vercel + Railway | Probably Phase 3, not launch blocker |
+
+### 12.4 Phase-by-phase migration path
+
+**Phase 1 (now):** everything on Rob's MacBook. Vanilla HTML dashboard. Node server.js. JSON file persistence. MP3s in local `assets/audio/`. No change.
+
+**Phase 2 (first external customer):** **First touch of the new stack.**
+- Spin up a Vercel project with Next.js App Router skeleton
+- Stand up a Railway project with `server.js` deployed
+- Railway Postgres add-on provisioned, `data/jobs.json` migrated to schema via one-time script
+- Clerk auth integrated on Vercel frontend
+- Customer dashboard (Next.js) calls Railway API for job state
+- Operator dashboard (vanilla HTML on localhost) still functional as admin override — Rob uses both during transition
+- Music library and customer uploads migrated to Cloudflare R2
+
+**Phase 3 (automation layer):** operator dashboard retired in favor of Next.js admin panel with role-based views. Both frontend and backend fully on hosted infra.
+
+**Phase 4 (SaaS prep):** onboarding wizard + billing integration (Stripe) on Next.js. Customer self-serve flows.
+
+**Phase 5 (SaaS MVP):** public launch from the Next.js + Railway + R2 stack that's been soak-tested for 30 days.
+
+### 12.5 What this does NOT change about Phase 1 work
+
+- Current localhost smoke test loop continues unchanged
+- Current dashboard (`cwn_production.html`) stays as operator UI until Phase 3
+- Current `server.js` Node/Express backend is the SAME code that deploys to Railway — no rewrite
+- Current JSON file persistence stays until Phase 2 migration
+- Music library stays committed to git at current scale (Rob's call 2026-04-13)
+
+**The stack decision is a destination, not an immediate action item.** Phase 1 work (smoke tests, fixes, chrome migration) all ships on localhost as it does today. Migration begins at Phase 2 start.
+
+### 12.6 Rob's anti-patterns list
+
+Rules captured from Rob's stack notes to prevent scope drift:
+
+1. **Customer dashboard must be "stupid simple"** — the backend is extremely advanced, the UI should feel trivial to use
+2. **Do NOT expose pipeline view to customers** — no Gate 3 deductions, no segment counts, no internal job state
+3. **Do NOT expose QA gate detail to customers** — they see "processing / posted / failed," nothing else
+4. **Do NOT expose technical controls to customers** — no rollback, no force-advance, no manual overrides (those are operator-only)
+5. **Customer UI contains only three things:** onboarding (enter source + select platforms + click start), dashboard (videos generated + status + later performance), and billing
+
+### 12.7 Figma → dev workflow (Rob's preferred)
+
+When Phase 2 frontend work begins, the path is:
+
+1. **Design in Figma** — onboarding wizard, dashboard, video card component
+2. **Componentize** — extract buttons, cards, status indicators as shadcn/ui components
+3. **Hand to dev (or build directly)** — Next.js + Tailwind + shadcn is the stack, no framework debates
+
+### 12.8 Binary storage 3-tier detail (consolidated from Q-T7/T8)
+
+- **Tier 1 — Railway persistent volume:** hot/active job state only (tmp/ renders in flight, job cards being written, current pipeline artifacts). Wiped on container redeploy is tolerable because data is short-lived.
+- **Tier 2 — Cloudflare R2 (preferred) or S3:** cold storage for music library (`assets/audio/*`), customer-uploaded source material, produced MP4 archive, Gemini-uploaded QA evidence. R2 preferred over S3 because zero egress fees save money on video delivery at scale. S3-compatible API so existing Node libraries work without rewrite.
+- **Tier 3 — CDN (Cloudflare default):** customer-facing MP4 download via signed URLs. Not needed until multi-customer Phase 2+.
+
+### 12.9 What's still open
+
+Even with the stack locked, some sub-decisions remain:
+
+- **Clerk vs Supabase Auth** — lean Clerk unless we add Supabase for another reason
+- **Sentry vs Logtail vs Railway native logs** — pick during Phase 2 when we're actually shipping errors
+- **Next.js App Router vs Pages Router** — App Router is the default (newer, preferred), Pages Router only if shadcn or Clerk has integration gaps
+- **Deployment branching strategy** — Vercel preview per PR, Railway staging vs prod — design during Phase 2 ops planning
+- **Domain / DNS** — which domain points where, Cloudflare as registrar or not
+
+None of these block Phase 1 work.
+
+---
+
+## 13. Cross-references
 
 This doc is ONE OF SEVEN active planning docs. Agents working on CWN must read the relevant ones for their task:
 
@@ -737,7 +874,7 @@ Old handoff docs in `docs/archive/` are historical reference only.
 
 ---
 
-## 11. Next action
+## 14. Next action
 
 Rob reads both `BUSINESS_STRATEGY.md` and `AUTONOMOUS_PRODUCTION_ROADMAP.md`, pushes back on anything that doesn't match his read, approves.
 
