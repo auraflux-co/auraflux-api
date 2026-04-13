@@ -1,5 +1,11 @@
 require('dotenv').config();
 
+// ── Red 4: Proactive chrome directive architecture ─────────────────────────
+// Feature flag — default true. Set USE_DIRECTIVE_CHROME=false to fall back
+// to the legacy Fix 5/7 reactive state machine (emergency rollback only).
+const USE_DIRECTIVE_CHROME = process.env.USE_DIRECTIVE_CHROME !== 'false';
+const { validateScript: validateChromeScript, directiveToOverlayParams } = require('./lib/chromeDirectives');
+
 // Validate required environment variables on startup
 function validateRequiredEnv() {
   const required = [
@@ -2585,6 +2591,32 @@ ISSUES:
   const preCheckDeductions = [];
   let adjustedScore = parsedScore;
 
+  // ── Red 4: JSON schema validation for News scripts ─────────────────────────
+  // When USE_DIRECTIVE_CHROME=true, Gemini outputs JSON instead of plain text.
+  // Validate that the script is parseable JSON with the expected scene structure.
+  // Deduct 20 points if JSON is invalid or missing required fields.
+  let jsonValidationDeduction = null;
+  if (contentType === 'news' && USE_DIRECTIVE_CHROME) {
+    try {
+      const parsed = typeof script === 'string' ? JSON.parse(script) : script;
+      if (!parsed || !Array.isArray(parsed.scenes) || parsed.scenes.length === 0) {
+        jsonValidationDeduction = { points: 20, reason: 'NEWS JSON DIRECTIVE: script parsed but missing scenes[] array — CRITICAL' };
+      } else {
+        // Validate each scene has required fields
+        const missingFields = parsed.scenes.filter(s => !s.id || !s.type || !s.chrome).map(s => s.id || '(no id)');
+        if (missingFields.length > 0) {
+          jsonValidationDeduction = { points: 10, reason: `NEWS JSON DIRECTIVE: ${missingFields.length} scene(s) missing required fields (id/type/chrome): ${missingFields.slice(0,3).join(', ')}` };
+        }
+      }
+    } catch(e) {
+      jsonValidationDeduction = { points: 20, reason: `NEWS JSON DIRECTIVE: script is not valid JSON — ${e.message.slice(0, 80)}` };
+    }
+    if (jsonValidationDeduction) {
+      preCheckDeductions.push(jsonValidationDeduction);
+      adjustedScore = Math.max(0, adjustedScore - jsonValidationDeduction.points);
+    }
+  }
+
   if (wrongSceneCount) {
     preCheckDeductions.push({ points: 25, reason: `SCENE COUNT: Found ${sceneMarkers} scenes, expected ${expectedScenes} — CRITICAL` });
     adjustedScore = Math.max(0, adjustedScore - 25);
@@ -4070,6 +4102,34 @@ app.post('/assemble',
           // Non-INTRO avatar segments: single-state burn (lower-third always hidden).
           // Fix 7: replaces blend= (broken alpha) with overlay=0:0 (correct RGBA composite).
           // Fix 7: omitBackground:true in generateNewscastOverlay() produces real RGBA PNG.
+
+          // ── Red 4: Directive path (USE_DIRECTIVE_CHROME=true, script is JSON) ──────
+          let _directiveHandled = false;
+          if (USE_DIRECTIVE_CHROME) {
+            const rawScript = assemblyJobs[asmId]?.fullScript;
+            if (rawScript) {
+              let parsedDirectiveScript = null;
+              try {
+                parsedDirectiveScript = typeof rawScript === 'string' ? JSON.parse(rawScript) : rawScript;
+              } catch(e) { /* legacy plain-text script — fall through to legacy */ }
+              if (parsedDirectiveScript && parsedDirectiveScript.scenes) {
+                const scene = parsedDirectiveScript.scenes.find(s => s.id === label || s.id === label.trim());
+                if (scene) {
+                  try {
+                    inputForTS = await burnSceneChromeFromDirective(scene, inputForTS, asmId, parsedDirectiveScript);
+                    _directiveHandled = true;
+                  } catch(e) {
+                    log(asmId, `  ⚠️  Directive chrome burn failed (falling back to legacy): ${e.message}`);
+                  }
+                } else {
+                  log(asmId, `  ℹ️  No directive found for scene "${label}" — using legacy chrome`);
+                }
+              }
+            }
+          }
+
+          if (!_directiveHandled) {
+          // ── Legacy Fix 5/7 reactive state machine ────────────────────
           try {
             const seg = segsToProcess.find((s, si) => localFiles[i].includes(`${asmId}_${si}_`));
             const cardData = seg?.cardData || {};
@@ -4294,6 +4354,7 @@ app.post('/assemble',
           } catch(e) {
             log(asmId, `  ⚠️  NEWS newscast overlay burn failed: ${e.message} — using original`);
           }
+          } // end if (!_directiveHandled)
         } else if (isIntro && contentType === 'nba') {
           // ── NBA: Square game card with game-specific highlight ─────────
           try {
@@ -7549,7 +7610,42 @@ SOURCE ATTRIBUTION RULE (STRICT):
   RIGHT: "Israeli forces fired tear gas into a Palestinian schoolchildren's crowd."
 - This rule applies to ALL 10 stories, every scene type, no exceptions.
 
-Target: 100-140 words spoken per story (setup + summary + reaction, clip audio is stripped).`;
+Target: 100-140 words spoken per story (setup + summary + reaction, clip audio is stripped).
+
+── Red 4: JSON CHROME DIRECTIVE FORMAT ──────────────────────────────────────
+Output your ENTIRE script as a single JSON object (no markdown fences, no plain text outside the JSON).
+
+Top-level structure:
+{
+  "storyList": ["Story 1 headline", "Story 2 headline", ...],
+  "brandConfig": { "primaryHex": "#22304b", "accentHex": "#c7af4f" },
+  "scenes": [ ... ]
+}
+
+Each scene object:
+{
+  "id": "scene_label_matching_assembly",
+  "type": "avatar" | "source_clip",
+  "spokenText": "The exact words the anchor speaks (empty string for source_clip scenes)",
+  "chrome": {
+    "layout": "COLD_OPEN" | "STORY_INTRO" | "STORY_BODY" | "OUTRO",
+    "showLowerThird": true | false,
+    "hideSidebar": true | false,
+    "activeStoryIndex": 0,
+    "activeCategory": "BREAKING" | "POLITICS" | "BUSINESS" | "SPORTS" | "TECH" | "ENTERTAINMENT" | "WORLD" | "HEALTH" | "SCIENCE" | "WEATHER"
+  }
+}
+
+Layout rules:
+- Scene 1 (cold open / intro): layout="COLD_OPEN", showLowerThird=false, hideSidebar=true
+- First avatar scene of each story: layout="STORY_INTRO", showLowerThird=true, hideSidebar=false
+- Subsequent avatar scenes of same story: layout="STORY_BODY", showLowerThird=false, hideSidebar=false
+- source_clip scenes: layout="STORY_BODY", showLowerThird=false, hideSidebar=true
+- Final outro scene: layout="OUTRO", showLowerThird=false, hideSidebar=true
+- activeStoryIndex: 0-based index of the current story (0 for cold open/outro)
+- The "id" field must exactly match the scene label used in assembly (e.g. "scene_01", "scene_02", etc.)
+
+IMPORTANT: The JSON must be valid and parseable. Do not include any text before or after the JSON object.`;
       }
 
     } else { // twitch, twitch-short
@@ -11157,6 +11253,57 @@ app.post('/generate-thumbnail',
     res.status(500).json({ ok: false, error: error.message });
   }
 });
+
+// ── Red 4: Directive-driven chrome burn per scene ─────────────────────────
+// Burns a single scene's chrome overlay using its JSON directive.
+// Returns the burned output path (or inputTs unchanged on source_clip / error).
+async function burnSceneChromeFromDirective(scene, inputTs, asmId, parsedScript) {
+  if (scene.type === 'source_clip') return inputTs; // no chrome burn for clips
+  const chrome = scene.chrome;
+  const epCountersPath = path.join(__dirname, 'data/episode_counters.json');
+  let newsEpNum = 1;
+  try { const epC = JSON.parse(fs.readFileSync(epCountersPath, 'utf8')); newsEpNum = epC.news || 1; } catch(e) {}
+  const context = {
+    storyList: parsedScript.storyList || [],
+    episodeNumber: `Episode ${newsEpNum}`,
+    brandPrimary: parsedScript.brandConfig?.primaryHex || '#22304b',
+    brandAccent: parsedScript.brandConfig?.accentHex || '#c7af4f'
+  };
+  const overlayPng = await generateChromeOverlayFromDirective(chrome, context);
+  const burnedPath = inputTs.replace('.mp4', '_directive_burned.mp4');
+  const burnArgs = [
+    '-i', inputTs, '-i', overlayPng,
+    '-filter_complex', '[0:v][1:v]overlay=0:0[out]',
+    '-map', '[out]', '-map', '0:a',
+    '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+    '-pix_fmt', 'yuv420p',
+    '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
+  ];
+  await new Promise((res, rej) => {
+    const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
+    proc.on('close', code => code === 0 ? res() : rej(new Error(`Directive chrome burn failed: ${code}`)));
+    proc.on('error', rej);
+  });
+  try { if (fs.existsSync(overlayPng)) fs.unlinkSync(overlayPng); } catch(e) {}
+  if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
+    log(asmId, `  📰 NEWS directive chrome burned: ${scene.id}`);
+    return burnedPath;
+  }
+  return inputTs;
+}
+
+// ── Red 4: Directive-driven overlay wrapper ────────────────────────────────
+// Converts a ChromeDirectiveSchema object into generateNewscastOverlay() params
+// and renders the overlay PNG. Returns the output path.
+async function generateChromeOverlayFromDirective(directive, context) {
+  const { storyData, storyIndex, showLowerThird, hideSidebar, episodeNumber, activeCategory } =
+    directiveToOverlayParams(directive, context);
+  const outputPath = path.join(TMP_DIR, `chrome_directive_${Date.now()}.png`);
+  await generateNewscastOverlay(storyData, outputPath, storyIndex, {
+    showLowerThird, hideSidebar, episodeNumber, activeCategory
+  });
+  return outputPath;
+}
 
 // ── Generate Newscast Overlay PNG using Puppeteer ──────────────────
 // Renders clipzworld_newscast.html with story data for news intro segments
