@@ -3920,7 +3920,11 @@ app.post('/assemble',
         // Step 3: Build output path
         const outDir    = outputDir || OUTPUT_DIR;
         if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-        outFile   = `${(jobTitle||"cwn").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,50)}_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
+        // Fix 28: Use actual clip count from segsToProcess (not the count embedded in jobTitle string)
+        // jobTitle may say "22 avatar + 5 clips" but actual downloaded clips may differ
+        const actualClipCount = segsToProcess.filter(s => s.type === 'source_clip').length;
+        const baseTitle = (jobTitle||"cwn").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,40);
+        outFile   = `${baseTitle}_${actualClipCount}clips_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
         outPath   = path.join(outDir, outFile);
 
       // Step 4: Normalize all segments to TS (handles mixed codecs + moov atom issues)
@@ -5571,6 +5575,92 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
   }
 });
 
+// ── GET /news/us-canada-videos ────────────────────────────────────
+// Fix 25a: Scrapes aljazeera.com/us-canada/ for /video/newsfeed/ article URLs.
+// Returns 100% video-guaranteed stories (vs ~20-30% hit rate from global RSS feed).
+// Supports NEWS_RSS_URL env var override for future RSS.app migration (Fix 30).
+//
+// Response: { ok, source, lookbackHours, totalFound, recentCount, videos[] }
+// Each video: { url, href, title, thumbnail, publishedAt, dateString }
+
+const NEWS_SOURCE_URL = process.env.NEWS_RSS_URL || 'https://www.aljazeera.com/us-canada/';
+const NEWS_LOOKBACK_HOURS = 24;
+
+app.get('/news/us-canada-videos', async (req, res) => {
+  try {
+    const resp = await axios.get(NEWS_SOURCE_URL, {
+      timeout: 15000,
+      maxRedirects: 5,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36'
+      }
+    });
+    const html = resp.data || '';
+    const cheerio = require('cheerio');
+    const $ = cheerio.load(html);
+    const videoUrls = new Set();
+
+    $('a[href^="/video/newsfeed/"]').each((i, el) => {
+      const href = $(el).attr('href');
+      if (!href || href === '/video/newsfeed/' || href === '/video/newsfeed') return;
+      if (href.includes('/live')) return;
+      const dateMatch = href.match(/\/video\/newsfeed\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
+      if (!dateMatch) return;
+      videoUrls.add(href);
+    });
+
+    const videos = [];
+    for (const href of videoUrls) {
+      const absoluteUrl = `https://www.aljazeera.com${href}`;
+      const dateMatch = href.match(/\/video\/newsfeed\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
+      const [_, yyyy, mm, dd] = dateMatch;
+      const publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T00:00:00Z`);
+
+      let title = '';
+      $(`a[href="${href}"]`).each((i, el) => {
+        if (title) return;
+        const anchorText = $(el).text().trim();
+        if (anchorText && anchorText.length > 10) { title = anchorText; return; }
+        const parentHeading = $(el).closest('article, div').find('h3, h2, h1').first().text().trim();
+        if (parentHeading) title = parentHeading;
+      });
+
+      let thumbnail = null;
+      $(`a[href="${href}"]`).each((i, el) => {
+        if (thumbnail) return;
+        const img = $(el).find('img').first();
+        if (img.length) thumbnail = img.attr('src') || img.attr('data-src') || null;
+      });
+
+      videos.push({
+        url: absoluteUrl,
+        href,
+        title: title || '(untitled)',
+        thumbnail,
+        publishedAt: publishedAt.toISOString(),
+        dateString: `${yyyy}/${mm}/${dd}`
+      });
+    }
+
+    const cutoff = new Date(Date.now() - NEWS_LOOKBACK_HOURS * 60 * 60 * 1000);
+    const recent = videos.filter(v => new Date(v.publishedAt) >= cutoff);
+    recent.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+
+    console.log(`[news/us-canada-videos] Found ${videos.length} video URLs, ${recent.length} within ${NEWS_LOOKBACK_HOURS}h lookback`);
+    res.json({
+      ok: true,
+      source: 'https://www.aljazeera.com/us-canada/',
+      lookbackHours: NEWS_LOOKBACK_HOURS,
+      totalFound: videos.length,
+      recentCount: recent.length,
+      videos: recent
+    });
+  } catch (e) {
+    console.error(`[news/us-canada-videos] Fetch failed: ${e.message}`);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ── POST /news/generate-intro-card ───────────────────────────────
 // Scrapes header image from news article URL and generates 640×360 card
 // Extracts og:image or twitter:image meta tags for video overlay
@@ -7043,6 +7133,31 @@ app.post('/generate-full-script',
 
       const newsHits = analyses.filter(a => a && a.length > 50).length;
       console.log(`[generate-full-script] Got ${newsHits}/${items.length} news analyses`);
+
+      // ── Fix 25c: Pre-Gate-0 hard gate — block episode if any story lacks video ──
+      // Fires BEFORE any Gemini/Claude/HeyGen spend.
+      // Root cause: global RSS feed has ~20-30% video hit rate; /video/newsfeed/ URLs
+      // have 100% hit rate. If the dashboard still sends mixed stories, gate them here.
+      if (type === 'news') {
+        const expectedClipCount = items.length;
+        const actualClipCount = items.filter(i => i.videoUrl && typeof i.videoUrl === 'string').length;
+        if (actualClipCount < expectedClipCount) {
+          const missingStories = items
+            .filter(i => !i.videoUrl)
+            .map(i => i.title || i.link || '(unknown)');
+          const errorMsg = `NEWS_CLIP_GATE_FAIL: ${actualClipCount} of ${expectedClipCount} selected stories have video. Missing: ${missingStories.join(' | ')}. Retry with a different selection or wait for fresh content.`;
+          console.error(`[news-clip-gate] ${errorMsg}`);
+          return res.status(400).json({
+            ok: false,
+            error: errorMsg,
+            errorCode: 'NEWS_CLIP_GATE_FAIL',
+            expectedClipCount,
+            actualClipCount,
+            missingStories
+          });
+        }
+        console.log(`[news-clip-gate] ✅ PASS — ${actualClipCount}/${expectedClipCount} stories have video, proceeding to Gemini analysis`);
+      }
 
       // Build orderedClipUrls for News — one entry per story, using the video URL
       // that Gemini analyzed (same URL used for assembly — news clips don't expire like Twitch CDN)
