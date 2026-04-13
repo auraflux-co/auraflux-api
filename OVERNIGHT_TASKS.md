@@ -127,7 +127,7 @@ These tasks were identified by Aider but couldn't be completed due to the server
 **Estimate:** 30 min
 **Safe for Aider:** ✅ Error investigation doesn't touch dashboard JS
 
-#### [ ] Input Validation & Sanitization (Security)
+#### [x] Input Validation & Sanitization (Security)
 **File:** `server.js` → after split: `lib/routes/*.js`
 **What:** Add `express-validator` checks to all POST endpoints
 **Specific endpoints needing validation:**

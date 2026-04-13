@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-12 (6:00 PM ET)
+**Last Updated:** 2026-04-13 (1:30 AM ET)
 **Branch:** main | **Latest Commit:** `971429d` — Fix 5 — fix(news): /newscast-overlay route path — tools/ prefix missing (server.js:1300). Full 5-fix series: orderedClipUrls (e17e647), cardData+newsItems (eb67b0e), Gate 3 clip detection (9271297), concat demuxer (ca56ccb), newscast-overlay path (971429d).
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
@@ -24,6 +24,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Aider | Add `express-validator` checks to POST endpoints for security. | `server.js`, `OVERNIGHT_TASKS.md`, `STATUS.md`, `MORNING_BRIEFING.md` | pending | 2026-04-13 1:30 AM ET |
 | Aider | Fix News/NBA thumbnail 500 errors by replacing Puppeteer with node-canvas. | `server.js`, `OVERNIGHT_TASKS.md`, `STATUS.md`, `MORNING_BRIEFING.md` | pending | 2026-04-12 1:30 AM ET |
 | Cline | Added pre-commit hook + STATUS enforcement | `.git/hooks/pre-commit`, `STATUS.md`, `COMMIT_CHECKLIST.md`, `CLAUDE.md` | `a7b6698` | 2026-04-09 7:00 PM ET |
 | Claude Code | Newscast UI updates + NBA intro card handoff + Upload API spec | `tools/clipzworld_newscast.html`, `POST_PUBLISH_MANUAL_CHECKLIST.md`, `CLINE_HANDOFF_NBA_INTRO_CARD.md`, `UPLOAD_API_SPEC.md`, `data/upload_status.json` | `b3fcdff` | 2026-04-09 (earlier today) |
