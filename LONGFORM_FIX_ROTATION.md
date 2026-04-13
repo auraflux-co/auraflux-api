@@ -248,6 +248,21 @@ Two possible directions for News as a content type:
 
 ---
 
+### NBA TV card Fix 10 (canvas 720×840 → 1040×586 landscape) — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_SMOKE_TEST_7_FIXES.md` (Fix 10 of 10)
+**Dispatched:** 2026-04-13 (Rob-approved 1-line exception — NBA TV card canvas was portrait 6:7, causing horizontal stretch + vertical squish in OVERLAY_ZONE)
+**Shipped:** 2026-04-13
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 10 | pending | `fix(nba): NBA TV card canvas 720×840→1040×586 landscape layout` — Root cause: `generateGameStoryCardPNG()` used 720×840 portrait canvas (6:7 ratio) but OVERLAY_ZONE is 520×293 (16:9 landscape). FFmpeg lanczos scale squished the portrait card into landscape, distorting all text and images. Fix: rewrite canvas from `720×840` to `1040×586` (exact 2× pixel-doubled OVERLAY_ZONE). Layout changed from portrait (center image, text below) to landscape (image left-half at 42%W × 78%H, text right column starting at 44%W). Gold border added around entire card. Title font `Math.round(H*0.1)` (~59px), subtitle `Math.round(H*0.075)` (~44px), text starts at `Math.round(H*0.28)` from top. All pixel values proportional to W/H. `node -c server.js` → exit 0. Rob-approved exception to News-only scope rule. |
+
+**Untouched:** News, Twitch, short-form code paths. Only `generateGameStoryCardPNG()` in server.js touched.
+**Next:** Continue shipping remaining News fixes from `CLINE_HANDOFF_NEWS_SMOKE_TEST_7_FIXES.md`.
+
+---
+
 ## Rotation log
 
 | Date | Event |
