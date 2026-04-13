@@ -4399,20 +4399,24 @@ app.post('/assemble',
                 '-f', 'mpegts', '-y', tsPath
               ];
               if (contentType === 'news' && !isAvatarSeg) {
+                // Red 3: skip Al Jazeera intro branding cards (first 5s of every clip)
+                // -ss BEFORE -i = fast-seek (keyframe-accurate, no decode overhead)
+                // Effective clip window: 5s-30s of source (25s cap still applies after offset)
+                const NEWS_CLIP_INTRO_SKIP = 5;
                 try {
                   const silenceTrimDur = await computeNewsClipTrimDuration(inputForTS);
                   let finalTrim;
                   if (silenceTrimDur && silenceTrimDur > 0 && silenceTrimDur < NEWS_CLIP_MAX_SECONDS) {
                     finalTrim = silenceTrimDur;
-                    log(asmId, `  ✂️  News clip ${path.basename(inputForTS)}: trimming to ${finalTrim.toFixed(1)}s (silencedetect, below ${NEWS_CLIP_MAX_SECONDS}s cap)`);
+                    log(asmId, `  ✂️  News clip ${path.basename(inputForTS)}: skipping ${NEWS_CLIP_INTRO_SKIP}s intro, trimming to ${finalTrim.toFixed(1)}s (silencedetect, below ${NEWS_CLIP_MAX_SECONDS}s cap)`);
                   } else {
                     finalTrim = NEWS_CLIP_MAX_SECONDS;
-                    log(asmId, `  ✂️  News clip ${path.basename(inputForTS)}: capping at ${NEWS_CLIP_MAX_SECONDS}s hard (silencedetect returned ${silenceTrimDur || 'null'})`);
+                    log(asmId, `  ✂️  News clip ${path.basename(inputForTS)}: skipping ${NEWS_CLIP_INTRO_SKIP}s intro, capping at ${NEWS_CLIP_MAX_SECONDS}s hard (silencedetect returned ${silenceTrimDur || 'null'})`);
                   }
-                  return ['-i', inputForTS, '-t', finalTrim.toFixed(3), ...baseArgs];
+                  return ['-ss', String(NEWS_CLIP_INTRO_SKIP), '-i', inputForTS, '-t', finalTrim.toFixed(3), ...baseArgs];
                 } catch(trimErr) {
-                  log(asmId, `  ⚠️  News clip trim failed (non-fatal): ${trimErr.message} — capping at ${NEWS_CLIP_MAX_SECONDS}s`);
-                  return ['-i', inputForTS, '-t', String(NEWS_CLIP_MAX_SECONDS), ...baseArgs];
+                  log(asmId, `  ⚠️  News clip trim failed (non-fatal): ${trimErr.message} — skipping ${NEWS_CLIP_INTRO_SKIP}s intro, capping at ${NEWS_CLIP_MAX_SECONDS}s`);
+                  return ['-ss', String(NEWS_CLIP_INTRO_SKIP), '-i', inputForTS, '-t', String(NEWS_CLIP_MAX_SECONDS), ...baseArgs];
                 }
               }
               return ['-i', inputForTS, ...baseArgs];
