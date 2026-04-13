@@ -207,14 +207,29 @@ Two possible directions for News as a content type:
 
 **Handoff:** `CLINE_HANDOFF_GAP_51_STAGE_DIRECTION_LEAK.md`
 **Dispatched:** 2026-04-13 (smoke test #6 failed Gate 3 three times — `[3-second pause — hold on source clip]` burned as on-screen text)
+**Shipped:** 2026-04-13, commit `d5c53ea` pushed to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| Gap #51 | `d5c53ea` | `fix(news): defensive cleanAvatarText in generateVideo() + remove [3-second pause] stage direction from Gemini prompt` — Root cause: Gemini prompt VALIDATION CHECKLIST had 3 references instructing it to write `[3-second pause — hold on source clip]` into every STORY#_REACTION scene. HeyGen renders bracket text as burned-in on-screen text. Root cause fix (server.js): (1) removed `+ [3-second pause — hold on source clip]` from REACTION scene rule; (2) replaced `Add "[3-second pause — hold on source clip]" before moving to next story` with `Between stories, the assembly layer will add a 3-second hold on the source clip before cutting to the next story. Do NOT write stage directions in the script — just end the REACTION scene with a single deadpan sentence.` Defensive fix (cwn_production.html): wrapped `script` in `cleanAvatarText()` inside `generateVideo()`'s HeyGen payload — `applyPronunciations(cleanAvatarText(script))` — so any bracket directives that slip through the prompt are stripped before reaching HeyGen API. `node -c server.js` → exit 0. |
+
+**Untouched:** NBA, Twitch, short-form code paths.
+**Next:** Rob runs News long-form smoke test #7. Expected: no `[3-second pause]` text burned into HeyGen renders — Gate 3 should pass on first attempt.
+
+---
+
+### News long-form Fix 9b — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_FIX_9B_HLS_DOWNLOAD.md`
+**Dispatched:** 2026-04-13 (smoke test #7 unblocked — Fix 9 returns Brightcove HLS URLs but `downloadFile()` blocked them)
 **Shipped:** 2026-04-13, 1 commit pending push to `origin/main`
 
 | Fix | Commit | What |
 |-----|--------|------|
-| Gap #51 | pending | `fix(news): defensive cleanAvatarText in generateVideo() + remove [3-second pause] stage direction from Gemini prompt` — Root cause: Gemini prompt VALIDATION CHECKLIST had 3 references instructing it to write `[3-second pause — hold on source clip]` into every STORY#_REACTION scene. HeyGen renders bracket text as burned-in on-screen text. Root cause fix (server.js): (1) removed `+ [3-second pause — hold on source clip]` from REACTION scene rule; (2) replaced `Add "[3-second pause — hold on source clip]" before moving to next story` with `Between stories, the assembly layer will add a 3-second hold on the source clip before cutting to the next story. Do NOT write stage directions in the script — just end the REACTION scene with a single deadpan sentence.` Defensive fix (cwn_production.html): wrapped `script` in `cleanAvatarText()` inside `generateVideo()`'s HeyGen payload — `applyPronunciations(cleanAvatarText(script))` — so any bracket directives that slip through the prompt are stripped before reaching HeyGen API. `node -c server.js` → exit 0. |
+| 9b | pending | `fix(downloadFile): allow Brightcove CDN + handle HLS manifests via FFmpeg` — Fix 9's `scrapeArticleVideo()` returns Brightcove HLS manifest URLs (e.g. `https://manifest.prod.boltdns.net/manifest/v1/hls/v3/clear/...`) but `downloadFile()` blocked them at the SSRF whitelist with "URL blocked: not from trusted domain". Even if whitelisted, naive axios streaming downloads the ~2KB text manifest, not the actual video segments. Two changes to `downloadFile()` in `server.js`: (1) Added Brightcove + Al Jazeera domains to `trustedDomains[]`: `boltdns.net`, `brightcove.net`, `brightcove.com`, `edge.api.brightcove.com`, `aljazeera.com`, `aljazeera.net`. (2) HLS detection branch: `/\.m3u8(\?|$)/i.test(url) \|\| /\/hls\//i.test(url)` routes to `execFile(ffmpegPath(), ['-i', url, '-c', 'copy', '-bsf:a', 'aac_adtstoasc', '-movflags', '+faststart', '-y', destPath])` with 120s timeout — FFmpeg resolves all HLS segments and muxes to MP4. Axios streaming path unchanged for non-HLS URLs. `node -c server.js` → exit 0. |
 
 **Untouched:** NBA, Twitch, short-form code paths.
-**Next:** Rob runs News long-form smoke test #7. Expected: no `[3-second pause]` text burned into HeyGen renders — Gate 3 should pass on first attempt.
+**Next:** Rob runs News long-form smoke test #7. Expected: Al Jazeera HLS clips now download successfully via FFmpeg — assembled video should show `N_avatar_M_clips` with M > 0 for the first time.
 
 ---
 
