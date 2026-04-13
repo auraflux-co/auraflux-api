@@ -311,6 +311,18 @@ body {
 
 .story-item.active .story-item-cat { color: var(--red); }
 .story-item.active .story-item-text { color: #fff; font-weight: 700; }
+
+/* Fix 5a — Static 5-card cap: cards 6+ are never shown (no rotation logic) */
+.story-list .story-item:nth-child(n+6) {
+  display: none;
+}
+
+/* Fix 5b — Mutual exclusion: sidebar hides when flag+TV card are active */
+body.sidebar-hidden .story-list {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
 </style>
 </head>
 <body>

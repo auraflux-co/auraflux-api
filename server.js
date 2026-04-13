@@ -4091,6 +4091,8 @@ app.post('/assemble',
 
             // Detect if this is a STORY#_INTRO segment (two-state burn)
             const isStoryIntro = /^STORY\d+_INTRO$/i.test(label.trim());
+            // Fix 5c: Detect STORY#_SETUP/SUMMARY/REACTION (flag visible, sidebar visible)
+            const isStoryBody = /^STORY\d+_(SETUP|SUMMARY|REACTION)$/i.test(label.trim());
 
             // Get episode number for overlay
             const epCountersPath = require('path').join(__dirname, 'data/episode_counters.json');
@@ -4112,15 +4114,16 @@ app.post('/assemble',
             const introDur = CONFIG.INTRO_CARD.DURATION_SECONDS;
 
             if (isStoryIntro) {
-              // ── Two-state burn: PNG A (lower-third visible) + PNG B (hidden) ──
+              // ── Two-state burn: PNG A (flag+sidebar hidden) + PNG B (flag visible, sidebar hidden) ──
+              // Fix 5b/5c: Both states hide sidebar; after introDur flag stays visible (no TV card)
               const overlayVisiblePath = path.join(TMP_DIR, `newscast_overlay_vis_${Date.now()}.png`);
               const overlayHiddenPath  = path.join(TMP_DIR, `newscast_overlay_hid_${Date.now()}.png`);
 
               await generateNewscastOverlay(overlayBase, overlayVisiblePath, activeStoryIndex, {
-                showLowerThird: true, episodeNumber, activeCategory
+                showLowerThird: true, hideSidebar: true, episodeNumber, activeCategory
               });
               await generateNewscastOverlay(overlayBase, overlayHiddenPath, activeStoryIndex, {
-                showLowerThird: false, episodeNumber, activeCategory
+                showLowerThird: true, hideSidebar: true, episodeNumber, activeCategory
               });
 
               // Three-input FFmpeg: [0:v]=video, [1:v]=visible overlay, [2:v]=hidden overlay
@@ -4205,12 +4208,51 @@ app.post('/assemble',
                   log(asmId, `  ⚠️  News TV card burn failed (non-fatal): ${e.message}`);
                 }
               }
+            } else if (isStoryBody) {
+              // ── Fix 5c: SETUP/SUMMARY/REACTION — flag VISIBLE, sidebar VISIBLE ──
+              const overlayBodyPath = path.join(TMP_DIR, `newscast_overlay_body_${Date.now()}.png`);
+
+              await generateNewscastOverlay(overlayBase, overlayBodyPath, activeStoryIndex, {
+                showLowerThird: true, hideSidebar: false, episodeNumber, activeCategory
+              });
+
+              const burnArgs = [
+                '-i', inputForTS,
+                '-i', overlayBodyPath,
+                '-filter_complex', `[0:v][1:v]overlay=0:0[out]`,
+                '-map', '[out]', '-map', '0:a',
+                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                '-pix_fmt', 'yuv420p',
+                '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
+              ];
+
+              await new Promise((res, rej) => {
+                const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
+                let burnStderr = '';
+                proc.stderr && proc.stderr.on('data', d => { burnStderr += d.toString(); });
+                proc.on('close', code => {
+                  if (code === 0) res();
+                  else {
+                    const reason = burnStderr.slice(-300).replace(/\n/g, ' ').trim();
+                    console.error(`[story-body-burn] FFmpeg exit ${code} for news body overlay: ${reason}`);
+                    rej(new Error(`News body overlay burn failed: ${code} — ${reason}`));
+                  }
+                });
+                proc.on('error', rej);
+              });
+
+              try { if (fs.existsSync(overlayBodyPath)) fs.unlinkSync(overlayBodyPath); } catch(e) {}
+
+              if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
+                inputForTS = burnedPath;
+                log(asmId, `  📰 NEWS body overlay burned [flag+sidebar visible]: ${label || 'segment'}`);
+              }
             } else {
-              // ── Single-state burn: lower-third always hidden ──────────
+              // ── COLD_OPEN / OUTRO: flag HIDDEN, sidebar VISIBLE ──────────
               const overlayHiddenPath = path.join(TMP_DIR, `newscast_overlay_hid_${Date.now()}.png`);
 
               await generateNewscastOverlay(overlayBase, overlayHiddenPath, activeStoryIndex, {
-                showLowerThird: false, episodeNumber, activeCategory
+                showLowerThird: false, hideSidebar: false, episodeNumber, activeCategory
               });
 
               const burnArgs = [
@@ -10878,11 +10920,13 @@ app.post('/generate-thumbnail',
 // Renders clipzworld_newscast.html with story data for news intro segments
 // storyIndex: which story to highlight (0-based)
 // options.showLowerThird: boolean — whether to add .lower-third.visible class
+// options.hideSidebar: boolean — adds body.sidebar-hidden class (mutual exclusion with flag+TVcard)
 // options.episodeNumber: string — e.g. "Episode 42"
 // options.activeCategory: string — category label for the current story
 async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, options = {}) {
   const {
     showLowerThird = false,
+    hideSidebar = false,
     episodeNumber = null,
     activeCategory = null
   } = options;
@@ -10912,6 +10956,29 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
         }
       }
 
+      // ── Fix 5b: Sidebar mutual exclusion ───────────────────────
+      // body.sidebar-hidden hides .story-list via CSS (opacity:0, visibility:hidden)
+      // Applied when flag+TV card are active (STORY#_INTRO state)
+      if (opts.hideSidebar) {
+        document.body.classList.add('sidebar-hidden');
+      } else {
+        document.body.classList.remove('sidebar-hidden');
+      }
+
+      // ── Fix 5c/D: Update lower-third text for current story ────
+      // Flag persists across SETUP/SUMMARY/REACTION — text must reflect active story
+      const activeStory = data.allStories && data.allStories[activeIndex];
+      if (activeStory) {
+        const ltHeadline = document.querySelector('.lower-third .lt-headline');
+        if (ltHeadline) ltHeadline.textContent = activeStory.title || data.title || 'Breaking News';
+        const ltCat = document.querySelector('.lower-third .lt-category');
+        if (ltCat) ltCat.textContent = opts.activeCategory || activeStory.category || 'WORLD NEWS';
+      } else {
+        // Fallback: use storyData directly
+        const ltHeadline = document.querySelector('.lower-third .lt-headline');
+        if (ltHeadline) ltHeadline.textContent = data.title || 'Breaking News';
+      }
+
       // ── Episode number ──────────────────────────────────────────
       const showInfo = document.querySelector('#show-info');
       if (showInfo && opts.episodeNumber) {
@@ -10923,10 +10990,6 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
       if (ltCategory) {
         ltCategory.textContent = opts.activeCategory || data.category || 'WORLD NEWS';
       }
-
-      // ── Headline ────────────────────────────────────────────────
-      const ltHeadline = document.querySelector('.lt-headline');
-      if (ltHeadline) ltHeadline.textContent = data.title || 'Breaking News';
 
       // ── Segment name (seg-name) ─────────────────────────────────
       const segName = document.querySelector('.seg-name');
@@ -10950,7 +11013,7 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
           });
         }
       }
-    }, storyData, storyIndex, { showLowerThird, episodeNumber, activeCategory });
+    }, storyData, storyIndex, { showLowerThird, hideSidebar, episodeNumber, activeCategory });
 
     // Wait for animations to settle
     await new Promise(resolve => setTimeout(resolve, 500));

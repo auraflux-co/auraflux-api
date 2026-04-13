@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-13 (7:22 AM ET)
-**Branch:** main | **Latest Commit:** `c742c16` — feat(security): add input validation to POST endpoints (Aider overnight). Prior fixes: Fix 9 Al Jazeera yt-dlp (8a908a0), Fix 8B News TV card (9b78580), NBA 3-scene NARRATION (6801b5d), Fix 7 newscast overlay RGBA (4a2ac67), Fix 6 Gemini prompt rewrite (9a4fcc6), Fix 5 newscast-overlay path (971429d).
+**Last Updated:** 2026-04-13 (11:06 AM ET)
+**Branch:** main | **Latest Commit:** Fix 5 sidebar 5-cap + mutual exclusion + flag persistence (pending). Prior: Fix 6 heygen-poller null-skip (edf7586), c742c16 security validation, Fix 9 Al Jazeera yt-dlp (8a908a0), Fix 8B News TV card (9b78580).
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
@@ -24,6 +24,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline | **Fix 5 (smoke test #8) — fix(news): sidebar 5-cap + mutual exclusion + flag persistence**: Fix 5a: CSS `nth-child(n+6)` caps sidebar at 5 story cards. Fix 5b: `body.sidebar-hidden` mutual exclusion hides sidebar when flag+TV card are active. Fix 5c: state machine split into `isStoryIntro`/`isStoryBody`/default branches — INTRO: `hideSidebar:true` on both overlay PNGs; SETUP/SUMMARY/REACTION: `showLowerThird:true, hideSidebar:false` (flag persists); COLD_OPEN/OUTRO: `showLowerThird:false, hideSidebar:false`. | `server.js`, `tools/clipzworld_newscast.html`, `STATUS.md` | pending | 2026-04-13 11:06 AM ET |
 | Cline | Fix 6: orderedClipUrls null-preserve alignment — heygen-poller null-skip: `clipIdx++` always increments (index alignment), then only pushes to `segmentData` if `clip && clip.url`. Null entries (stories without clips) are skipped without crashing. | server.js, STATUS.md | pending | 2026-04-13 AM ET |
 | Cline | Fix 1+9: Force 16:9 aspect ratio on News source clips (scale+crop FFmpeg pass) + strip Al Jazeera red outro branding (silencedetect trim). Two helpers: `detectTrailingSilence()` + `computeNewsClipTrimDuration()`. Async `buildTsArgs()` IIFE in normalization pass — for News non-avatar segs, computes trim duration and adds `-t trimDuration` to FFmpeg args. | server.js, STATUS.md, LONGFORM_FIX_ROTATION.md | pending | 2026-04-13 AM ET |
 | Cline | Fix 3: Remove spoken source attribution from News Gemini prompt + claudeScriptQA Gate 1 QA (Bobby G must never speak source names) | server.js, STATUS.md, LONGFORM_FIX_ROTATION.md | pending | 2026-04-13 AM ET |
