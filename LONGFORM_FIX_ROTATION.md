@@ -361,3 +361,16 @@ Two possible directions for News as a content type:
 
 **Untouched:** NBA, Twitch, short-form code paths. Only the vfFilter string in the News source_clip normalization pass touched.
 **Next:** Red 3 — clip intro skip via `-ss 5` before `-i` for News source_clip segments (effective clip window 5s-30s of source).
+
+### News long-form Red 3 (Al Jazeera intro card skip) — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_FULL_FIX_BEFORE_TEST_10.md` (Red 3 of 4)
+**Dispatched:** 2026-04-13 (Rob directive: ship all 4 reds before test #10 fires)
+**Shipped:** 2026-04-13, 1 commit pending push to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| Red 3 | pending | `feat(news): skip Al Jazeera intro branding cards with -ss 5 fast-seek` — Added `NEWS_CLIP_INTRO_SKIP = 5` constant and prepended `-ss 5` BEFORE `-i` in FFmpeg args for News source_clip segments in `buildTsArgs()` (`server.js` ~line 4401). Fast-seek mode (keyframe-accurate, no decode overhead). Effective clip window: 5s-30s of source (25s cap still applies after offset). Condition: `contentType === 'news' && !isAvatarSeg`. `node -c server.js` → exit 0. |
+
+**Untouched:** NBA, Twitch, short-form code paths. Only the `buildTsArgs()` return path for News source_clip segments touched.
+**Next:** Red 4 — proactive chrome directive architecture (full rewrite: lib/chromeDirectives.js Zod schema, News Gemini prompt JSON output, Gate 1 QA JSON validation, assembly chrome burn rewrite, feature flag USE_DIRECTIVE_CHROME).
