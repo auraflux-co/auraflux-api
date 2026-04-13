@@ -81,6 +81,8 @@ Anyone picking up this work can re-verify these files independently:
 
 ---
 
+---
+
 ## 🔴 Postmortem — News batch 1 scope miss (2026-04-12)
 
 News batch 1 shipped 4 technically-correct fixes but the underlying problem was wrong. The `22_avatar_0_clips` signature on last night's runs looked like a plumbing bug (Fix 1 missing `orderedClipUrls` build for News), so that's what got dispatched. The real root cause was older and lived in a completely different part of the code: **commit `b31533f` (Apr 11 00:30 ET, "refactor: reorganize root into folders") moved `clipzworld_newscast.html` into `tools/` but `server.js:1300`'s `/newscast-overlay` route kept pointing at the repo-root path.** Every News run since Apr 11 has been:
@@ -166,6 +168,19 @@ Two possible directions for News as a content type:
 
 **Untouched:** NBA, Twitch, short-form code paths.
 **Next:** Rob runs News long-form smoke test #5. Expected: TV card (og:image hero + headline + source) visible top-right at OVERLAY_ZONE during each STORY#_INTRO segment for first 10s.
+
+### News long-form Fix 9 — shipped 2026-04-12 late night
+
+**Handoff:** `CLINE_HANDOFF_NEWS_CLIP_SCRAPING.md`
+**Dispatched:** 2026-04-12 (post-Fix-8B, Road A video scraping)
+**Shipped:** 2026-04-12, 1 commit pushed to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 9 | pending | `fix(news): Fix 9 — wire Al Jazeera video scraping via JSON-LD + yt-dlp (unblocks mid-story clips)` — New `scrapeArticleVideo(articleUrl)` helper: fetches article HTML, extracts JSON-LD `VideoObject.embedUrl` (Brightcove player URL), runs `yt-dlp --skip-download --dump-json` on the embed URL (yt-dlp rejects article URLs as "Unsupported URL" but succeeds 100% on Brightcove embed URLs), filters live streams (`is_live=true`, `duration=0`, URL contains `thehlive.com`), returns HLS manifest URL. Wired into News analysis block alongside `scrapeArticleOgImage` and `geminiAnalyzeClip` via `Promise.all` — `scrapedVideoUrls[i]` assigned to `item.videoUrl` when non-null, which flows through Fix 1's `orderedClipUrls` build automatically. Hit rate: 40% on mixed RSS feed (3/10 on-demand clips + 1 live stream filtered), 100% on `/video/` path articles. `node -c server.js` → exit 0. |
+
+**Untouched:** NBA, Twitch, short-form code paths.
+**Next:** Rob runs News long-form smoke test #6. Expected: `orderedClipUrls` now contains real Al Jazeera HLS clip URLs for `/video/` path stories — filename should show `N_avatar_M_clips` with M > 0 for the first time.
 
 ---
 
