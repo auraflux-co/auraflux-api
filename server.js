@@ -7100,7 +7100,6 @@ Source: [Source name]. Link in description.
 
 === STORY#_REACTION ===
 [EXACTLY 1 sentence. Short. Flat. Deadpan. Bobby G's take on the story. Makes it MORE alarming, not less. Never explain. Never recap — that's the SUMMARY's job.]
-[3-second pause — hold on the source clip for 3 seconds after Bobby's reaction, then cut to next story]
 
 === OUTRO ===
 [1-2 sentences. Sign-off.]
@@ -7110,9 +7109,9 @@ Source: [Source name]. Link in description.
 - Total [CLIP PLAYS HERE] markers: MUST BE EXACTLY ${items.length}
 - Each SETUP scene: EXACTLY 1 sentence (new fact or hook, not a restatement of INTRO) + contains [beat] + [CLIP PLAYS HERE] + [beat]
 - Each SUMMARY scene: 1-2 sentences (factual recap of clip, no opinions or reactions)
-- Each REACTION scene: EXACTLY 1 sentence (deadpan take, no recap) + [3-second pause — hold on source clip]
+- Each REACTION scene: EXACTLY 1 sentence (deadpan take, no recap)
 - [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
-- After each REACTION scene: Add "[3-second pause — hold on source clip]" before moving to next story
+- Between stories, the assembly layer will add a 3-second hold on the source clip before cutting to the next story. Do NOT write stage directions in the script — just end the REACTION scene with a single deadpan sentence.
 - Never explain the take in reactions. Never recap what just happened — that's SUMMARY's job.
 
 Target: 100-140 words spoken per story (setup + summary + reaction, clip audio is stripped).`;

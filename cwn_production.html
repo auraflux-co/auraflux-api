@@ -1258,7 +1258,7 @@ function generateVideo(script, title, isPortrait, cb) {
   var payload = {
     video_inputs: [{
       character: { type:'avatar', avatar_id:(isPortrait ? (CFG.avatarShortId||CFG.avatarId) : CFG.avatarId), avatar_style:'normal' },
-      voice: { type:'text', input_text:applyPronunciations(script), voice_id:CFG.voiceId, speed: (function(){
+      voice: { type:'text', input_text:applyPronunciations(cleanAvatarText(script)), voice_id:CFG.voiceId, speed: (function(){
         // Reactions are short punchy sentences — slightly faster sounds more natural
         // Intros, cold open, outro use base speed
         var lbl = (title || '').toUpperCase();
