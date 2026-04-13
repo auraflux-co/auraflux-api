@@ -77,6 +77,25 @@ Anyone picking up this work can re-verify these files independently:
 
 ---
 
+### NBA long-form Wave 1+2 — shipped 2026-04-13
+
+**Handoff:** `CLINE_DISPATCH_PAIRED_20260411.md` + `CLINE_DISPATCH_PAIRED_LATE_20260411.md`
+**Dispatched:** 2026-04-11 (Wave 1: NBA prompt rewrite; Wave 2a/2b: Gate 1 QA alignment)
+**Shipped:** 2026-04-13 12:18 AM ET, 1 commit pending push to `origin/main`
+
+| Wave | Commit | What |
+|------|--------|------|
+| Wave 1 | (prior session) | NBA Gemini prompt rewrite: 4-scene pattern (INTRO+SETUP+CLIP_REACTION+REACTION) → 3-scene pattern (INTRO+NARRATION+REACTION). NARRATION = Bobby G audio plays OVER the ESPN highlight clip (voiceover branch). CLIP_REACTION dropped — PIP was never implemented in assembly (fiction). Word count formula: `clipDuration × 2.5` (lower) to `clipDuration × 3` (upper) words per game. Per-game word count targets injected into GAME DATA block. sceneHeaders push updated to `GAME#_TEAMS_NARRATION`. |
+| Wave 2a | pending | `claudeScriptQA()` Gate 1 NBA alignment: (1) checklist comment updated to 3-scene pattern (`GAME1_INTRO, GAME1_NARRATION, GAME1_REACTION are 3 SEPARATE scenes`); (2) `expectedScenes` NBA: `1 + (items.length * 4) + 1` → `1 + (items.length * 3) + 1`; (3) checklist item 6: GAME SETUP → NARRATION (play-by-play commentary sized to cover clip duration); (4) checklist item 10: word count → per-game NARRATION targets (±15% tolerance). |
+| Wave 2b | pending | `geminiScriptQA()` legacy Gate 1 NBA alignment: (1) `expectedScenes` NBA: `1 + (streamers.length * 4) + 1` → `1 + (streamers.length * 3) + 1`; (2) checklist item 5: GAME SETUP → NARRATION; (3) checklist item 9: word count → per-game NARRATION targets. Also: `generate-full-script` endpoint `expectedScenes` NBA: `* 4` → `* 3`. |
+
+**Grep verified:** 0 `CLIP_REACTION` hits in NBA QA/prompt blocks; 15+ `NARRATION` hits across Gate 1 QA (lines 2347, 2353, 2357, 2654, 2694, 2698) and NBA prompt block (lines 6912–7266). `node -c server.js` → exit 0.
+
+**Untouched:** News, Twitch, short-form code paths.
+**Next:** Rob runs NBA long-form smoke test. Expected: Gate 1 passes with 3-scene NARRATION structure. Assembly branch (NBA narration-over-clip mode) is the next architectural piece — tracked separately in `🔴 To Fix → NBA long-form → item 1`.
+
+---
+
 ---
 
 ---
