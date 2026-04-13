@@ -2982,33 +2982,47 @@ function generateNBA() {
   });
 }
 
-function generateNews() {
-  CURRENT_TYPE = 'news';
-  var newsSrc = g('news-source') ? g('news-source').value : 'aljazeera';
-  var newsFeedUrls = {
-    aljazeera: 'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml'),
-    bbc:       'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://feeds.bbci.co.uk/news/world/rss.xml'),
-    npr:       'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://feeds.npr.org/1004/rss.xml'),
-    all:       'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml')
-  };
-  CURRENT_META = { source: newsSrc, feedUrl: newsFeedUrls[newsSrc] || newsFeedUrls['aljazeera'] };
-  setGeneratingState('news-status', 'NEWS — Fetching stories...');
+// ── Fix 25b: Adapter — fetch CWN US/Canada video stories from server endpoint ──
+// Calls /news/us-canada-videos and adapts response to legacy rss2json item shape.
+function fetchCwnNewsVideos(callback) {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', CURRENT_META.feedUrl, true); xhr.timeout=10000;
+  xhr.open('GET', '/news/us-canada-videos', true); xhr.timeout = 15000;
   xhr.onload = function() {
     try {
       var d = JSON.parse(xhr.responseText);
+      if (!d.ok) { callback(null, 'Server error: ' + (d.error || 'unknown')); return; }
+      // Adapt to legacy rss2json item shape expected by all callers
+      var items = (d.videos || []).map(function(v) {
+        return {
+          title:       v.title || '',
+          link:        v.url || '',
+          pubDate:     v.publishedAt || '',
+          thumbnail:   v.thumbnail || '',
+          description: '',
+          enclosure:   {}
+        };
+      });
+      callback({ items: items, source: d.source, totalFound: d.totalFound }, null);
+    } catch(e) { callback(null, e.message); }
+  };
+  xhr.onerror = xhr.ontimeout = function() { callback(null, 'Network error fetching news videos'); };
+  xhr.send();
+}
+
+function generateNews() {
+  CURRENT_TYPE = 'news';
+  var newsSrc = g('news-source') ? g('news-source').value : 'aljazeera';
+  CURRENT_META = { source: newsSrc, feedUrl: '/news/us-canada-videos' };
+  setGeneratingState('news-status', 'NEWS — Fetching stories...');
+  fetchCwnNewsVideos(function(d, err) {
+    if (err || !d) { g('news-status').innerHTML = 'ERROR: ' + (err || 'no data'); return; }
+    try {
       var count = parseInt(g('news-count').value)||10;
-      var sourceName = newsSrc==='bbc'?'BBC World News':newsSrc==='npr'?'NPR News':'Al Jazeera';
+      var sourceName = 'Al Jazeera';
       var items = (d.items||[]).slice(0,count).map(function(it){
-        var enc = it.enclosure || {};
-        var encType = enc.type || '';
-        var encLink = enc.link || '';
-        // Check if enclosure is a video — use for Gemini video analysis
-        var videoUrl = (encType.indexOf('video') === 0 && encLink) ? encLink : '';
-        // Thumbnail: prefer non-video enclosure
-        var img = (!videoUrl && encLink) ? encLink : (it.thumbnail || '');
-        // Full article text — not truncated, gives Gemini and Claude real context
+        // New endpoint items already have video URLs via server-side scrape
+        // thumbnailUrl comes from thumbnail field; videoUrl resolved server-side
+        var img = it.thumbnail || '';
         var fullDesc = (it.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
         return {
           title:        (it.title||'').trim(),
@@ -3016,7 +3030,7 @@ function generateNews() {
           source:       sourceName,
           link:         it.link||'',
           thumbnailUrl: img,
-          videoUrl:     videoUrl,
+          videoUrl:     '',
           pubDate:      it.pubDate||''
         };
       });
@@ -3025,9 +3039,7 @@ function generateNews() {
     } catch(e) {
       g('news-status').innerHTML = 'ERROR: ' + e.message;
     }
-  };
-  xhr.onerror = xhr.ontimeout = function() { g('news-status').innerHTML = 'Network error fetching RSS'; };
-  xhr.send();
+  });
 }
 
 function parseStreamerNotes() {
@@ -4353,30 +4365,25 @@ function generateShort(type) {
 
   } else if (type === 'news') {
     // Fetch top story matching keywords (for shorts we take the #1 keyword match or just #1 story)
-    var feedUrl='https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml');
+    // Fix 25b: use new CWN endpoint instead of rss2json
     var keywords=(g('shorts-keywords')&&g('shorts-keywords').value||'Iran,Trump,Gaza,Ukraine,tariffs').toLowerCase().split(',').map(function(k){return k.trim();});
-    var xhr=new XMLHttpRequest();
-    xhr.open('GET',feedUrl,true); xhr.timeout=10000;
-    xhr.onload=function(){
+    fetchCwnNewsVideos(function(d, err) {
+      if (err || !d) { g('script-type-label').textContent='NEWS SHORT -- error: '+(err||'no data'); return; }
       try{
-        var d=JSON.parse(xhr.responseText); var all=(d.items||[]).slice(0,20);
+        var all=(d.items||[]).slice(0,20);
         // Prefer keyword match, else top story
         var story = all.find(function(it){ var t=(it.title||'').toLowerCase(); return keywords.some(function(k){return t.indexOf(k)>-1;}); }) || all[0];
         if(!story){ g('script-type-label').textContent='NEWS SHORT -- no stories'; return; }
-        var enc=story.enclosure||{}; var encType=enc.type||''; var encLink=enc.link||'';
-        var videoUrl=(encType.indexOf('video')===0&&encLink)?encLink:'';
-        var img=(!videoUrl&&encLink)?encLink:(story.thumbnail||'');
+        var img=story.thumbnail||'';
         var item = {
           title: (story.title||'').trim(),
           desc: (story.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
-          source: 'Al Jazeera', link: story.link||'', thumbnailUrl: img, videoUrl: videoUrl, pubDate: story.pubDate||''
+          source: 'Al Jazeera', link: story.link||'', thumbnailUrl: img, videoUrl: '', pubDate: story.pubDate||''
         };
         CURRENT_META = { source: 'aljazeera' };
         callFullScriptServer('news-short', [item], 'news-short-status', null);
       }catch(e){ g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
-    };
-    xhr.onerror=xhr.ontimeout=function(){ g('script-type-label').textContent='NEWS SHORT -- offline'; };
-    xhr.send();
+    });
 
   } else if (type === 'twitch') {
     // Fetch top clip from first configured streamer
@@ -4608,12 +4615,12 @@ function nbaUseSelected() {
 }
 
 function fetchNewsStories() {
+  // Fix 25b: use new CWN endpoint instead of rss2json
   g('news-stories-found').innerHTML='Fetching...';
-  var feedUrl='https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml');
-  var xhr=new XMLHttpRequest(); xhr.open('GET',feedUrl,true); xhr.timeout=10000;
-  xhr.onload=function(){
+  fetchCwnNewsVideos(function(d, err) {
+    if (err || !d) { g('news-stories-found').innerHTML='Error: '+(err||'no data'); return; }
     try{
-      var d=JSON.parse(xhr.responseText); var stories=(d.items||[]).slice(0,10);
+      var stories=(d.items||[]).slice(0,10);
       var keywords=(g('shorts-keywords').value||'').toLowerCase().split(',').map(function(k){return k.trim();});
       var html='<div style="font-size:12px;font-family:Arial,sans-serif;">';
       stories.forEach(function(s,i){
@@ -4625,9 +4632,8 @@ function fetchNewsStories() {
           +'</div>';
       });
       html+='</div>'; g('news-stories-found').innerHTML=html;
-    }catch(e){g('news-stories-found').innerHTML='Error';}
-  };
-  xhr.send();
+    }catch(e){g('news-stories-found').innerHTML='Error: '+e.message;}
+  });
 }
 
 function fetchTwitchClips() {
@@ -6148,9 +6154,8 @@ function thumbJobSelected() {
       g('thumb-job-info').textContent += ' | ⚠ No game IDs in job manifest';
     }
   } else if (type === 'news') {
-    var feedUrl = (job.meta && job.meta.feedUrl)
-      || 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml');
-    thumbLoadNewsStories(feedUrl);
+    // Fix 25b: use new CWN endpoint instead of rss2json
+    thumbLoadNewsStories('/news/us-canada-videos');
   } else if (type === 'twitch') {
     var streamers = (job.meta && job.meta.streamers) || [];
     if (!streamers.length) {
@@ -6256,7 +6261,17 @@ function thumbRenderNBA(data) {
 
 // ── NEWS THUMBNAIL ────────────────────────────────────────────
 function thumbLoadNewsStories(feedUrl) {
-  feedUrl = feedUrl || 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml');
+  // Fix 25b: if feedUrl is the new CWN endpoint, use fetchCwnNewsVideos adapter
+  var isCwnEndpoint = !feedUrl || feedUrl === '/news/us-canada-videos';
+  if (isCwnEndpoint) {
+    g('news-thumb-status').textContent='Loading stories from job source...';
+    fetchCwnNewsVideos(function(d, err) {
+      if (err || !d) { g('news-thumb-status').textContent='Error: '+(err||'no data'); return; }
+      thumbRenderNewsStoryGrid(d.items||[]);
+    });
+    return;
+  }
+  // Legacy path: direct URL fetch (rss2json or other)
   g('news-thumb-status').textContent='Loading stories from job source...';
   var xhr=new XMLHttpRequest();
   xhr.open('GET',feedUrl,true); xhr.timeout=10000;
@@ -6264,31 +6279,36 @@ function thumbLoadNewsStories(feedUrl) {
     try{
       var d=JSON.parse(xhr.responseText);
       var stories=(d.items||[]).slice(0,12);
-      var grid=g('news-thumb-stories');
-      grid.innerHTML='';
-      stories.forEach(function(s,i){
-        var img=(s.enclosure&&s.enclosure.link)||s.thumbnail||'';
-        var title=(s.title||'').trim();
-        var desc=(s.description||'').replace(/<[^>]+>/g,'').trim().slice(0,120);
-        var card=document.createElement('div');
-        card.style.cssText='background:#0d1524;border:1px solid rgba(199,175,79,0.15);border-radius:6px;overflow:hidden;cursor:pointer;transition:border-color 0.2s;';
-        card.innerHTML=(img?'<img src="'+img+'" style="width:100%;height:120px;object-fit:cover;display:block;">':'')+
-          '<div style="padding:10px 12px;">'
-          +'<div style="font-size:12px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:4px;">'+title+'</div>'
-          +'<div style="font-size:10px;color:rgba(255,255,255,0.4);">'+desc+'</div>'
-          +'<button onclick="thumbSelectNewsStory('+i+')" style="margin-top:8px;background:rgba(199,175,79,0.15);border:1px solid rgba(199,175,79,0.3);color:#c7af4f;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:2px;padding:4px 12px;border-radius:3px;cursor:pointer;">USE THIS STORY</button>'
-          +'</div>';
-        card.setAttribute('data-idx',i);
-        card.onclick=function(){ thumbSelectNewsStory(parseInt(this.getAttribute('data-idx'))); };
-        grid.appendChild(card);
-      });
-      window._newsThumbStories=stories;
-      g('news-thumb-status').textContent=stories.length+' stories loaded';
-      g('news-thumb-stories').style.display='grid';
+      thumbRenderNewsStoryGrid(stories);
     }catch(e){ g('news-thumb-status').textContent='Error: '+e.message; }
   };
   xhr.onerror=xhr.ontimeout=function(){g('news-thumb-status').textContent='Network error';};
   xhr.send();
+}
+
+function thumbRenderNewsStoryGrid(stories) {
+  stories = (stories||[]).slice(0,12);
+  var grid=g('news-thumb-stories');
+  grid.innerHTML='';
+  stories.forEach(function(s,i){
+    var img=(s.enclosure&&s.enclosure.link)||s.thumbnail||'';
+    var title=(s.title||'').trim();
+    var desc=(s.description||'').replace(/<[^>]+>/g,'').trim().slice(0,120);
+    var card=document.createElement('div');
+    card.style.cssText='background:#0d1524;border:1px solid rgba(199,175,79,0.15);border-radius:6px;overflow:hidden;cursor:pointer;transition:border-color 0.2s;';
+    card.innerHTML=(img?'<img src="'+img+'" style="width:100%;height:120px;object-fit:cover;display:block;">':'')+
+      '<div style="padding:10px 12px;">'
+      +'<div style="font-size:12px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:4px;">'+title+'</div>'
+      +'<div style="font-size:10px;color:rgba(255,255,255,0.4);">'+desc+'</div>'
+      +'<button onclick="thumbSelectNewsStory('+i+')" style="margin-top:8px;background:rgba(199,175,79,0.15);border:1px solid rgba(199,175,79,0.3);color:#c7af4f;font-family:Bebas Neue,sans-serif;font-size:11px;letter-spacing:2px;padding:4px 12px;border-radius:3px;cursor:pointer;">USE THIS STORY</button>'
+      +'</div>';
+    card.setAttribute('data-idx',i);
+    card.onclick=function(){ thumbSelectNewsStory(parseInt(this.getAttribute('data-idx'))); };
+    grid.appendChild(card);
+  });
+  window._newsThumbStories=stories;
+  g('news-thumb-status').textContent=stories.length+' stories loaded';
+  g('news-thumb-stories').style.display='grid';
 }
 
 function thumbSelectNewsStory(idx) {

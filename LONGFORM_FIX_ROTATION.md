@@ -307,6 +307,26 @@ Two possible directions for News as a content type:
 
 ---
 
+
+### News long-form smoke test #9 pre-flight — Fix 25a/25b/25c + Fix 28 + Fix 27b — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_SMOKE_TEST_9_FIXES.md`
+**Dispatched:** 2026-04-13 (root cause: dashboard fetched global Al Jazeera RSS, not US/Canada video section)
+**Shipped:** 2026-04-13, pending push to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 25a | (prev session) | `feat(news): GET /news/us-canada-videos endpoint` — HTML scrapes `aljazeera.com/us-canada/`, extracts only `/video/newsfeed/` article URLs (100% video hit rate by construction). Returns `{ ok, source, lookbackHours, totalFound, recentCount, videos: [{url, href, title, thumbnail, publishedAt, dateString}] }`. Env-var override `NEWS_FEED_URL` for future RSS.app swap. |
+| 25b | pending | `feat(news): dashboard switches to /news/us-canada-videos` — All 5 rss2json references in `cwn_production.html` replaced with `fetchCwnNewsVideos()` adapter function. Adapter converts new response shape to legacy rss2json item shape. `thumbLoadNewsStories()` refactored; `thumbRenderNewsStoryGrid()` extracted as separate function. `grep -n "rss2json" cwn_production.html` returns only comments — zero live URL references. |
+| 25c | (prev session) | `feat(news): pre-Gate-0 hard gate NEWS_CLIP_GATE_FAIL` — blocks episode production in `server.js` News block before any Gemini/Claude/HeyGen spend if any selected story lacks a video URL. Returns `{ok:false, error:'NEWS_CLIP_GATE_FAIL', ...}` with per-story breakdown. |
+| 28 | pending | `fix(assembly): filename uses actual clip count from segsToProcess` — filename generator now uses `actualClipCount = segsToProcess.filter(s => s.type === 'source_clip').length` instead of count embedded in jobTitle string. Fixes misleading `0_clips` in filenames when clips were present. |
+| 27b | pending | `docs(arch): Gemini hallucination rule in GATED_PIPELINE_ARCHITECTURE.md` — added "AI Video Analysis — Known Reliability Limits" section. Documents: Gemini 2.5 Flash fabricates clip presence/timestamps when prompted with expected count (smoke test #8 evidence: 4 of 5 clips fabricated at temperature 0.1); rule: never prompt Gemini with expected clip counts; safe vs unsafe uses of Gemini video analysis; consequence: `scripts/audit_news_clips.js` deleted (commit `76779ee`). |
+
+**Untouched:** NBA, Twitch, short-form code paths.
+**Next:** Rob runs News long-form smoke test #9. Expected: dashboard now fetches only `/video/newsfeed/` articles → `orderedClipUrls` populated with real Brightcove HLS URLs → assembled video shows `N_avatar_M_clips` with M > 0. Pre-Gate-0 hard gate blocks any run where selected stories lack video before HeyGen spend.
+
+---
+
 ## Rotation log
 
 | Date | Event |
@@ -325,3 +345,4 @@ Two possible directions for News as a content type:
 | 2026-04-12 late evening | News Fix 8B dispatched as `CLINE_HANDOFF_NEWS_LONGFORM_FIX_8B.md` — build the News TV card code that was documented but never implemented. Scrape og:image per story at script-gen time, persist as `heroImageUrl`, new Canvas function `generateNewsStoryCardPNG()` matching Twitch/NBA 2×-resolution pattern, second FFmpeg overlay burn at OVERLAY_ZONE inside the Fix 7 `isStoryIntro` block after the chrome burn completes. Single commit. No new dependencies (axios + cheerio already in package.json). |
 | 2026-04-12 | News batch 3 shipped — Fix 6 `fix(news): rewrite Gemini prompt to eliminate INTRO/SETUP repetition (server.js:6685-6737)` committed `9a4fcc6` and pushed to `origin/main`. Grep verified: 0 CLIP_REACTION hits in News prompt block; STORY#_SUMMARY + 100-140 word count confirmed at lines 6696, 6717, 6731, 6737. Awaiting Rob's smoke test #3. |
 | 2026-04-13 | Fix 5 (smoke test #8 batch) — sidebar 5-cap + mutual exclusion + flag persistence — committed `d218ebe` and pushed to `origin/main`. Three sub-fixes: (5a) CSS `nth-child(n+6)` caps sidebar at 5 cards; (5b) `body.sidebar-hidden` mutual exclusion hides sidebar when flag+TV card active; (5c) state machine split into `isStoryIntro`/`isStoryBody`/default branches so flag persists across SETUP/SUMMARY/REACTION scenes. **⚠️ Fix 2 parking note:** Bobby G double-pronunciation of story headlines observed in smoke test #7 — Bobby G reads the headline in STORY#_INTRO, then the STORY#_SETUP scene opens with the same headline restated. Root cause: Gemini prompt SETUP rule says "1 new fact or hook" but Gemini occasionally opens SETUP with a restatement of the INTRO headline before adding the new fact. Not a code fix — a prompt tightening. Parked here for post-smoke-test-#8 assessment: if still present after Fix 6 (SETUP rewrite) has had a full clean run, add a Gate 1 QA check that fires -10 if SETUP scene text contains >50% word overlap with the preceding INTRO scene text. |
+| 2026-04-13 | Smoke test #9 pre-flight: Fix 25a/25b/25c + Fix 28 + Fix 27b shipped. Root cause of all News 0-clip runs identified: dashboard was fetching global Al Jazeera RSS (all.xml via rss2json, ~20-30% video hit rate) instead of US/Canada HTML section (/video/newsfeed/ paths, 100% video by construction). All 5 fixes shipped this session. Awaiting Rob's smoke test #9. |

@@ -549,6 +549,38 @@ All three conditions are ORed together. Any one triggers escalation to Rob with 
 
 ---
 
+## AI Video Analysis — Known Reliability Limits
+
+### Gemini video analysis — known reliability limits (smoke test #8 finding)
+
+**Finding (April 2026, smoke test #8):** Gemini 2.5 Flash fabricates clip presence and timestamps when prompted with an expected count.
+
+**What happened:** The Gate 3 QA prompt included the phrase "there should be N clips" in the context block. Gemini reported 5 clips with plausible-sounding timestamps even though only 1 real Brightcove HLS clip existed in the assembled video. Frame extraction via FFmpeg proved 4 of the 5 reported clips were fabricated — Gemini invented timestamps and described content that was not present.
+
+**Root cause:** Large language models (including Gemini) are susceptible to anchoring bias when given an expected count. The model pattern-matches to satisfy the stated expectation rather than reporting what it actually observes.
+
+**Rule — never prompt Gemini with expected clip counts:**
+- ❌ WRONG: "There should be 5 clips in this video. Verify each one."
+- ✅ RIGHT: "Watch this video and report how many distinct source clips you observe, if any."
+
+**Verification method:** Always use ffprobe/FFmpeg frame extraction to verify clip presence — not Gemini. Gemini is reliable for qualitative QA (lip sync, audio quality, freeze detection) but unreliable for counting discrete segments when primed with an expected number.
+
+**Consequence:** The `scripts/audit_news_clips.js` script was deleted (commit `76779ee`) because it used Gemini for clip verification with an expected-count prompt — actively misleading. Do not recreate it.
+
+**Safe uses of Gemini video analysis:**
+- Lip sync quality (PASS/FAIL)
+- Audio clarity (PASS/FAIL)
+- Video freeze detection (PASS/FAIL)
+- Avatar framing (PASS/FAIL)
+- Qualitative content description (what is happening in the video)
+
+**Unsafe uses of Gemini video analysis:**
+- Counting clips when primed with an expected number
+- Verifying exact timestamps of segment boundaries
+- Any task where the prompt contains "there should be N" or "verify that N clips exist"
+
+---
+
 ## Save Points and Rollback Mechanics
 
 Each stage's successful output is persisted via `saveJobCard()` to `data/jobs.json`. This gives the pipeline cheap rollback — you don't re-run previous successful stages on retry, you reuse their saved output.
