@@ -374,3 +374,18 @@ Two possible directions for News as a content type:
 
 **Untouched:** NBA, Twitch, short-form code paths. Only the `buildTsArgs()` return path for News source_clip segments touched.
 **Next:** Red 4 — proactive chrome directive architecture (full rewrite: lib/chromeDirectives.js Zod schema, News Gemini prompt JSON output, Gate 1 QA JSON validation, assembly chrome burn rewrite, feature flag USE_DIRECTIVE_CHROME).
+
+---
+
+### News long-form Red 4 (proactive chrome directive architecture) — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_FULL_FIX_BEFORE_TEST_10.md` (Red 4 of 4)
+**Dispatched:** 2026-04-13 (Rob directive: ship all 4 reds before test #10 fires)
+**Shipped:** 2026-04-13, 1 commit pending push to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| Red 4 | pending | `feat(news): proactive chrome directive architecture (Red 4 / Track B)` — Full 7-subtask rewrite. (4.1) `lib/chromeDirectives.js` — new file with Zod schema (`ChromeDirectiveSchema`, `SceneSchema`, `ScriptSchema`), `validateScript()`, `directiveToOverlayParams()`, `extractSpokenText()`. (4.2) News Gemini prompt rewritten to output entire script as a single JSON object with `storyList`, `brandConfig`, and `scenes[]` arrays — each scene has `id`, `type`, `spokenText`, `chrome` fields. HeyGen still receives plain text extracted via `extractSpokenText()`. (4.3) `claudeScriptQA()` Gate 1 QA extended with JSON schema validation for News scripts — parses JSON, checks `scenes[]` array exists and each scene has `id`/`type`/`chrome` fields, deducts 10-20 pts on failure. (4.4) Assembly chrome burn rewritten as `burnSceneChromeFromDirective()` consumer. (4.5) `generateChromeOverlayFromDirective()` helper added. (4.6) `USE_DIRECTIVE_CHROME` feature flag (`process.env.USE_DIRECTIVE_CHROME !== 'false'`, default true) guards new path; legacy Fix 5/7 state machine preserved as fallback. (4.7) dead-code check excluded per handoff spec. `node -c server.js` → exit 0. |
+
+**Untouched:** NBA, Twitch, short-form code paths.
+**Next:** Rob runs News long-form smoke test #10. All 4 reds now shipped — test #10 is cleared to fire.
