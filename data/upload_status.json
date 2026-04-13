@@ -2,5 +2,182 @@
   "schema_version": "1.0",
   "created": "2026-04-09T00:00:00.000Z",
   "description": "CWN publish tracking database — logs every /publish attempt with status, platform, timestamps, and jobId",
-  "uploads": []
+  "uploads": [
+    {
+      "id": 1776044759366,
+      "trackingId": "pub_1776044759366_manual",
+      "timestamp": "2026-04-13T01:45:59.366Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "US Military to Blockade Iran's Strait of Hormuz Starting Monday | ClipzWorld News",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1iPEbI6PcN12nMbls9BUygbnQJ_oJ55wo",
+      "request_id": "5303e442eff141d09fa6ba514ad16e63",
+      "job_id": "ff343b5bbb23480f821a0f999dbce77e",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1776044750265"
+    },
+    {
+      "id": 1776034119035,
+      "trackingId": "pub_1776034119035_manual",
+      "timestamp": "2026-04-12T22:48:39.035Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "🚨 UN Warning: Iran Conflict Could Trigger Global Food Crisis | ClipzWorld News April 12",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1di5H-8l2zNdEsxq1QC_JfhFoiROKJQ59",
+      "request_id": "7fff42150aa94d49b250afa48707e4d3",
+      "job_id": "bf856e172ae84bdeb175a50e1b8b71b2",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1776034112110"
+    },
+    {
+      "id": 1776030174138,
+      "trackingId": "pub_1776030174138_manual",
+      "timestamp": "2026-04-12T21:42:54.138Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Iran-US Ceasefire Fragile: Will Peace Last? | ClipzWorld News April 12, 2026",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1Q-uGV3F7d5O7uOcZtn25vVS44HHHQcqK",
+      "request_id": "d5fe99a7a67c4766aab4013dfbc31846",
+      "job_id": "6d3f241342ca499ea82be2094bb2860f",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1776030160985"
+    },
+    {
+      "id": 1775973548184,
+      "trackingId": "pub_1775973548184_manual",
+      "timestamp": "2026-04-12T05:59:08.184Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "VP Vance Iran Talks FAIL - No Deal Reached | ClipzWorld News",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1Ry2d1dHUt8yOxAww-6tmuSszuiFc1vBI",
+      "request_id": "11fddfbe9b6b4e7492d227903fac8ae6",
+      "job_id": "aa858844c51f417ea63d242946ab30fb",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1775973540658"
+    },
+    {
+      "id": 1775968586510,
+      "trackingId": "pub_1775968586510_manual",
+      "timestamp": "2026-04-12T04:36:26.510Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "VP Vance's Iran Talks FAIL as Middle East Tensions Escalate | ClipzWorld News",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1VOJKe29Ns-DW-qZfZtqI2OYkrzeyCDll",
+      "request_id": "e2427f893910468ebe1cc5e794dddf7b",
+      "job_id": "a8fc3565857c4c1b8e20f1cc409d92a0",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1775968578724"
+    },
+    {
+      "id": 1775963844591,
+      "trackingId": "pub_1775963844591_manual",
+      "timestamp": "2026-04-12T03:17:24.591Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Jason Gets Reality Check + 11 More WILD Twitch Moments! | ClipzWorld News",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=13soEWBd2VxDNaG3wHI2GzGlUDAlvFGux",
+      "request_id": "d805d46595cd4499ae0b740c27e7ffdf",
+      "job_id": "4f131043fc604a83b4222e1ac8afd393",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1775963822588"
+    },
+    {
+      "id": 1775960482687,
+      "trackingId": "pub_1775960482687_manual",
+      "timestamp": "2026-04-12T02:21:22.687Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Jason's WILD VRChat Journey + Music Vibes! 🎵 | Twitch Clips Compilation",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=12kRJlD5MbWX7mlVgZBj_R7zziH9F-fQR",
+      "request_id": "0b1f273aea264c379565c733a9e53a7e",
+      "job_id": "548da66fd99e44009a0dc6e6a4e91f57",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1775960474444"
+    },
+    {
+      "id": 1775948487259,
+      "trackingId": "pub_1775948487259_manual",
+      "timestamp": "2026-04-11T23:01:27.259Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Jason Gets Distracted by Mooda's Setup + Epic Twitch Fails | ClipzWorld News",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1ruSC-yUWTJMOjQhuu_OeyQqtJsl9q6aw",
+      "request_id": "8e5a1f2a46864247b550417a24990009",
+      "job_id": "6e04603003254748b24ce6ad6b701239",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1775948447627"
+    },
+    {
+      "id": 1775942412543,
+      "trackingId": "pub_1775942412543_manual",
+      "timestamp": "2026-04-11T21:20:12.543Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Jason's Most UNHINGED Twitch Moments You Won't Believe 😂 | ClipzWorld News",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1KjrGt25Ab_PoNx6-072uyOsIkrjulQdh",
+      "request_id": "aaeba89f01e445e78d5591117fb9dbfb",
+      "job_id": "b7cb43afebe0432d96699c113257fe1e",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1775942405274"
+    },
+    {
+      "id": 1775938392135,
+      "trackingId": "pub_1775938392135_manual",
+      "timestamp": "2026-04-11T20:13:12.135Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Jason's Hilarious Twitch Moments Will Make You Cry Laughing! 😂",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1Ju5GpQ69BGBiu7a5KOVGslMGAP7NpCkc",
+      "request_id": "85dca09241f34c8283c98d6c05c36aab",
+      "job_id": "9c94980c823641bb82faee0cdef7a066",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1775938384666"
+    },
+    {
+      "id": 1775933321768,
+      "trackingId": "pub_1775933321768_manual",
+      "timestamp": "2026-04-11T18:48:41.768Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Jason's VTuber Interaction Goes WILD! | Twitch Clips Compilation",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1COH3QAEbCvWz-NrQXEAgOion0DMR3PKC",
+      "request_id": "b3251b91810144e7bbb914315321352a",
+      "job_id": "014a657ff4b04d4ea506694b8431535a",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1775933314268"
+    }
+  ]
 }

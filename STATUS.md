@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-13 (1:30 AM ET)
-**Branch:** main | **Latest Commit:** `971429d` — Fix 5 — fix(news): /newscast-overlay route path — tools/ prefix missing (server.js:1300). Full 5-fix series: orderedClipUrls (e17e647), cardData+newsItems (eb67b0e), Gate 3 clip detection (9271297), concat demuxer (ca56ccb), newscast-overlay path (971429d).
+**Last Updated:** 2026-04-13 (7:22 AM ET)
+**Branch:** main | **Latest Commit:** `c742c16` — feat(security): add input validation to POST endpoints (Aider overnight). Prior fixes: Fix 9 Al Jazeera yt-dlp (8a908a0), Fix 8B News TV card (9b78580), NBA 3-scene NARRATION (6801b5d), Fix 7 newscast overlay RGBA (4a2ac67), Fix 6 Gemini prompt rewrite (9a4fcc6), Fix 5 newscast-overlay path (971429d).
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
