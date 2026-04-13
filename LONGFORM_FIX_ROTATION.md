@@ -292,6 +292,21 @@ Two possible directions for News as a content type:
 
 ---
 
+### News long-form Fix 1+9 (16:9 crop + AJ outro trim) — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_SMOKE_TEST_7_FIXES.md` (Fix 1 + Fix 9 of 10, bundled)
+**Dispatched:** 2026-04-13 (same FFmpeg normalization pass — bundled to avoid double-touching the TS loop)
+**Shipped:** 2026-04-13
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 1+9 | pending | `fix(news): force 16:9 aspect ratio + strip Al Jazeera red outro branding (Fix 1 + Fix 9 of 9)` — Two helper functions added before `generateNewsStoryCardPNG`: (1) `detectTrailingSilence(clipPath)` — runs FFmpeg `silencedetect=noise=-30dB:duration=1.0` on the clip, parses stderr for `silence_start` timestamp, returns the silence start time or null if no trailing silence found. (2) `computeNewsClipTrimDuration(clipPath)` — calls `detectTrailingSilence()`, falls back to `(totalDuration - 5)` if silence detected within last 5s, otherwise returns full duration. Normalization pass rewritten as async `buildTsArgs()` IIFE: for News non-avatar segments (`contentType === 'news' && !isAvatarSeg`), awaits `computeNewsClipTrimDuration(inputForTS)` and adds `-t trimDuration` to FFmpeg args before the `-vf scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080` filter (already present). `buildTsArgs().then(tsArgs => { ... }).catch(rej)` replaces the old synchronous `const tsArgs = [...]` + `execFile()` pattern. Non-News and avatar segments use the same base args without `-t`. `node -c server.js` → exit 0. |
+
+**Untouched:** NBA, Twitch, short-form code paths. Only the TS normalization loop in `server.js` touched.
+**Next:** Fix 6 — orderedClipUrls null-preserve alignment.
+
+---
+
 ## Rotation log
 
 | Date | Event |
