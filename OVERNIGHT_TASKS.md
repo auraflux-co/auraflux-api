@@ -296,6 +296,30 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 
 ---
 
+#### [ ] Rebuild Atlassian integration from scratch (replaces deleted 7eb780f scaffolding)
+**Files:** NEW `lib/clients/jira_client.js`, NEW `lib/clients/confluence_client.js`, NEW `scripts/jira_ping.js`
+**What:** Rob deleted the 2026-04-12 Atlassian scaffolding (`scripts/atlassian_setup.js`, `scripts/jira_sync.js`, `scripts/confluence_sync.js`, `docs/JIRA_CONFLUENCE_MIGRATION_PLAN.md`) on 2026-04-13 because it was half-built — the scripts imported `lib/clients/jira_client` and `lib/clients/confluence_client` which were never written. Rebuild the CLIENT layer only, no sync logic yet. Goal: prove the pipe is open and reachable from localhost.
+**Atlassian details (confirmed by Rob):**
+- Domain: `robertsworkspace-18914505.atlassian.net`
+- Jira project key: `CPD` (NOT `CWN` — the old scaffolding guessed wrong)
+- Confluence space key: `CP`
+- Auth: API token from https://id.atlassian.com/manage-profile/security/api-tokens + Rob's Atlassian email, both via `.env` (`ATLASSIAN_DOMAIN`, `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN`, `JIRA_PROJECT_KEY=CPD`, `CONFLUENCE_SPACE_KEY=CP`)
+**How:**
+1. Create `lib/clients/jira_client.js` — ~100 lines, axios-based. Exports a class with constructor `{domain, email, apiToken, projectKey}`, Basic auth header (`Buffer.from(email+':'+apiToken).toString('base64')`), and methods: `healthCheck()` (hits `/rest/api/3/myself`, returns `{status, accountId, email, displayName}`), `getProject()` (hits `/rest/api/3/project/{projectKey}`), `listIssues(jql, maxResults)` (hits `/rest/api/3/search` with JQL). No write methods yet — read-only proof of pipe.
+2. Create `lib/clients/confluence_client.js` — same shape, constructor `{domain, email, apiToken, spaceKey}`, methods: `healthCheck()` (hits `/wiki/rest/api/user/current`), `getSpace()` (hits `/wiki/rest/api/space/{spaceKey}`), `listPages(limit)` (hits `/wiki/rest/api/space/{spaceKey}/content/page`). Read-only.
+3. Create `scripts/jira_ping.js` — a ~40-line CLI script that loads `.env` via dotenv, instantiates both clients, calls `healthCheck()` + `getProject()` + `getSpace()`, and prints results. Exit 0 on success, exit 1 with a clear error message on failure. This is the smoke test that proves Rob's credentials work.
+4. Add `.env.example` entries for the 5 new variables (leave the actual values for Rob to fill in manually — NEVER commit a real token).
+5. **DO NOT** write `scripts/jira_sync.js`, `scripts/confluence_sync.js`, or any sync/write logic in this task. That's a follow-up task once the pipe is proven open.
+6. **DO NOT** add `npm run` script entries in `package.json` for anything beyond maybe `"jira-ping": "node scripts/jira_ping.js"`.
+7. **DO NOT** recreate the deleted migration plan doc — Rob is rewriting that with Claude Code.
+**Test:** Rob runs `node scripts/jira_ping.js` the next morning. If it prints his account + project `CPD` + space `CP`, task is done. If it errors, leave a clear message in `MORNING_BRIEFING.md` under Issues.
+**Risk:** Low — all new files, no server.js or dashboard edits. Only package.json touch is optional (one script entry).
+**Estimate:** 1.5 hours
+**Dependencies:** Rob must fill in `.env` with real credentials before the test runs (otherwise ping script errors with `ATLASSIAN_API_TOKEN not set`, which is the expected failure mode — Aider still ships the code, Rob does the auth separately)
+**Safe for Aider:** ✅ Pure new-file creation, read-only API client layer
+
+---
+
 #### [ ] Write `scripts/jira_sync.js` (once Rob has Jira set up)
 **File:** NEW `scripts/jira_sync.js`
 **What:** Deterministic sync script that reads `STATUS.md` Last Agent Action table + `logs/gate_fixes.jsonl` + commit log, creates or updates Jira tickets via the Atlassian REST API. Handles: STATUS.md row → Jira ticket creation, stale ticket detection (no git activity >7d), label enforcement from file path patterns.
