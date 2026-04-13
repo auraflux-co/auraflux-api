@@ -4370,15 +4370,17 @@ app.post('/assemble',
         try {
           await new Promise((res, rej) => {
             const isAvatarSeg = segTypes[tsFiles.length] !== 'source_clip';
-            // Source clips: zoom-to-fill (crop) to eliminate baked-in letterbox/pillarbox borders
+            // Source clips: letterbox-fit (decrease+pad) with CWN dark navy — preserves framing on broadcast video
             // Avatar segs: letterbox (decrease+pad) since HeyGen output is always clean 16:9
+            // NOTE: do NOT change lines 3800/3834 — those are short-form split-screen slots that legitimately need zoom-to-fill
             const vfFilter = isAvatarSeg
               ? 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
-              : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=fps=30';
+              : 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0d1424,fps=fps=30';
 
-            // ── Fix 9: News source clips — compute trim duration to strip AJ red outro ──
+            // ── Fix 10: News source clips — silencedetect trim + 25s hard cap ──
             // Runs async; we wrap the whole TS conversion in an async IIFE so we can await it.
             // Non-News clips (Twitch, NBA) skip this step entirely.
+            const NEWS_CLIP_MAX_SECONDS = 25;
             const buildTsArgs = async () => {
               const baseArgs = [
                 '-vf', vfFilter,
@@ -4394,11 +4396,19 @@ app.post('/assemble',
               ];
               if (contentType === 'news' && !isAvatarSeg) {
                 try {
-                  const trimDuration = await computeNewsClipTrimDuration(inputForTS);
-                  log(asmId, `  ✂️  Fix 9 trim: ${path.basename(inputForTS)} → ${trimDuration.toFixed(2)}s`);
-                  return ['-i', inputForTS, '-t', trimDuration.toFixed(3), ...baseArgs];
+                  const silenceTrimDur = await computeNewsClipTrimDuration(inputForTS);
+                  let finalTrim;
+                  if (silenceTrimDur && silenceTrimDur > 0 && silenceTrimDur < NEWS_CLIP_MAX_SECONDS) {
+                    finalTrim = silenceTrimDur;
+                    log(asmId, `  ✂️  News clip ${path.basename(inputForTS)}: trimming to ${finalTrim.toFixed(1)}s (silencedetect, below ${NEWS_CLIP_MAX_SECONDS}s cap)`);
+                  } else {
+                    finalTrim = NEWS_CLIP_MAX_SECONDS;
+                    log(asmId, `  ✂️  News clip ${path.basename(inputForTS)}: capping at ${NEWS_CLIP_MAX_SECONDS}s hard (silencedetect returned ${silenceTrimDur || 'null'})`);
+                  }
+                  return ['-i', inputForTS, '-t', finalTrim.toFixed(3), ...baseArgs];
                 } catch(trimErr) {
-                  log(asmId, `  ⚠️  Fix 9 trim failed (non-fatal): ${trimErr.message} — using full clip`);
+                  log(asmId, `  ⚠️  News clip trim failed (non-fatal): ${trimErr.message} — capping at ${NEWS_CLIP_MAX_SECONDS}s`);
+                  return ['-i', inputForTS, '-t', String(NEWS_CLIP_MAX_SECONDS), ...baseArgs];
                 }
               }
               return ['-i', inputForTS, ...baseArgs];
