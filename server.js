@@ -975,12 +975,36 @@ async function downloadFile(url, destPath) {
     'files2.heygen.ai',             // HeyGen temporary files
     'heygen.ai',                    // HeyGen (catch-all for subdomains)
     'storage.googleapis.com',       // Google Cloud Storage
-    'drive.google.com'              // Google Drive
+    'drive.google.com',             // Google Drive
+    'boltdns.net',                  // Brightcove CDN (Al Jazeera HLS manifests)
+    'brightcove.net',               // Brightcove
+    'brightcove.com',               // Brightcove
+    'edge.api.brightcove.com',      // Brightcove edge API
+    'aljazeera.com',                // Al Jazeera direct
+    'aljazeera.net'                 // Al Jazeera CDN
   ];
 
   const isTrusted = trustedDomains.some(domain => url.includes(domain));
   if (!isTrusted) {
     throw new Error(`URL blocked: not from trusted domain. URL: ${url.slice(0, 100)}`);
+  }
+
+  // HLS manifest detection — route to FFmpeg instead of naive axios streaming
+  // Axios would download the ~2KB text manifest, not the actual video segments
+  const isHls = /\.m3u8(\?|$)/i.test(url) || /\/hls\//i.test(url);
+  if (isHls) {
+    return new Promise((res, rej) => {
+      const args = [
+        '-i', url,
+        '-c', 'copy',
+        '-bsf:a', 'aac_adtstoasc',
+        '-movflags', '+faststart',
+        '-y', destPath
+      ];
+      const proc = execFile(ffmpegPath(), args, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
+      proc.on('close', code => code === 0 ? res() : rej(new Error(`FFmpeg HLS download failed with code ${code}`)));
+      proc.on('error', rej);
+    });
   }
 
   const writer = fs.createWriteStream(destPath);
