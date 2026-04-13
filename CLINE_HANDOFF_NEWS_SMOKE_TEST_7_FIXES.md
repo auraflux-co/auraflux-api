@@ -45,8 +45,11 @@ Decomposed into 7 independent gaps:
 |---|-----|-----------|--------|
 | 8 | Gate 2 regex extractor fails on Gemini's `OVERALL SCORE: [98]` bracket format, every segment defaults to 80/100, every smoke test stalls at MANUAL_REVIEW even when real scores are 95-98 | `server.js:2991` | Claude Code found during test #7 review |
 | 9 | Al Jazeera branded red outro frame remains at tail of every News clip (~5s of AJ logo / "more at aljazeera.com" branding after real content ends). Credit is already in the video description — we don't need to show their brand card on every clip. | Clip TS conversion / FFmpeg trim | Rob added mid-handoff 2026-04-13 |
+| 10 | **NBA TV card canvas uses legacy 720×840 portrait dimensions** (from the deprecated circle design). FFmpeg downscales 720×840 → 520×293 which forces a 6:7 portrait into a 16:9 landscape — everything inside gets horizontally stretched and vertically crushed. News canvas is 1040×586 (exact 2× pixel-doubled 16:9) and Twitch is 1280×720 (clean 16:9). NBA is the visual odd-one-out. | `server.js` NBA card generator Canvas call | Claude Code found via TV-card dimension audit 2026-04-13 |
 
-**Total: 9 fixes. Ship all before test #8.**
+**Total: 10 fixes. Ship all before test #8.**
+
+**⚠️ Scope note for Fix 10:** this is the ONLY NBA-touching fix in this handoff. Rob's "News only this cycle" rule has a single exception: Fix 10 is a 1-line canvas dimension change with zero News code impact, low risk, and it resolves a visual consistency problem Rob has been noticing across tests. Ship it alongside the News fixes rather than carrying it forward to the NBA cycle.
 
 ---
 
@@ -55,15 +58,16 @@ Decomposed into 7 independent gaps:
 Fix order is flexible but this sequence minimizes cross-file collisions and maximizes chance of clean atomic commits:
 
 1. **Fix 8** — Gate 2 regex (1 line, pure infrastructure, independent)
-2. **Fix 7** — LIVE indicator margin (1-line CSS, independent)
-3. **Fix 4** — Flag left alignment (1-line CSS, independent)
-4. **Fix 3** — Source attribution removal (Gemini prompt edit, independent)
-5. **Fix 1 + Fix 9** — Clip aspect ratio force 16:9 + Al Jazeera outro trim (both live in the same FFmpeg clip normalization pass — ship as ONE commit)
-6. **Fix 6** — Clips stopping after story 3 (`orderedClipUrls` alignment bug, assembly file)
-7. **Fix 5** — Sidebar capacity cap + mutual exclusion + flag persistence (biggest — template + server.js state machine)
-8. **Fix 2** — Bobby G double-pronunciation (diagnosis-first, Hungary story ~2:15 is the anchor timestamp)
+2. **Fix 10** — NBA TV card canvas dimensions (1 line, independent, pure NBA)
+3. **Fix 7** — LIVE indicator margin (1-line CSS, independent)
+4. **Fix 4** — Flag left alignment (1-line CSS, independent)
+5. **Fix 3** — Source attribution removal (Gemini prompt edit, independent)
+6. **Fix 1 + Fix 9** — Clip aspect ratio force 16:9 + Al Jazeera outro trim (both live in the same FFmpeg clip normalization pass — ship as ONE commit)
+7. **Fix 6** — Clips stopping after story 3 (`orderedClipUrls` alignment bug, assembly file)
+8. **Fix 5** — Sidebar capacity cap + mutual exclusion + flag persistence (biggest — template + server.js state machine)
+9. **Fix 2** — Bobby G double-pronunciation (diagnosis-first, Hungary story ~2:15 is the anchor timestamp)
 
-Ship as ~8 atomic commits. Fix 1 and Fix 9 are explicitly bundled because they both modify the same FFmpeg clip normalization pass and would conflict if split.
+Ship as ~9 atomic commits. Fix 1 and Fix 9 are explicitly bundled because they both modify the same FFmpeg clip normalization pass and would conflict if split.
 
 ---
 
@@ -154,6 +158,93 @@ Discovered while reviewing News smoke test #7 Gate 2 output:
   Gate 2 extracted: 80, 80, 80        (avg 80 → MANUAL_REVIEW)
 
 References: LONGFORM_FIX_ROTATION.md, News smoke test #7 review
+```
+
+---
+
+## Fix 10 — NBA TV card canvas dimensions (legacy portrait → 16:9 landscape)
+
+**File:** `server.js` NBA card generator function (search for `createCanvas(720, 840)` in NBA card code — comment at ~line 759 says "same as Twitch card for consistency" which is the wrong comment on the wrong number)
+**Effort:** 5 minutes. 1-line change + comment fix.
+**⚠️ This is the only NBA-touching fix in the entire handoff.** Rob approved the scope exception 2026-04-13 because it's a 1-line change, zero News impact, low risk, and fixes a visual consistency issue visible across all NBA tests to date.
+
+### Current state
+
+The NBA TV card PNG is rendered to a `720×840` canvas (portrait 6:7 aspect ratio). This is a leftover from the deprecated circle-design Twitch intro card (pre-Fix 7 rebrand, before Rob locked all 3 content types on the TV-rectangle layout).
+
+FFmpeg then burns this PNG via the overlay filter, which downscales it to fit `CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE` = `520×293` at position `x:1360, y:60` (16:9 landscape). The downscale from `720×840` to `520×293` forces a 6:7 portrait image into a 16:9 landscape target — everything inside the card gets horizontally stretched and vertically crushed. Text looks wrong, team logos look wrong, NBA game thumb looks wrong.
+
+**Comparison across content types (burn target same, source canvas different):**
+
+| Content type | Canvas dimensions | Canvas aspect | Downscale to 520×293 |
+|---|---|---|---|
+| **Twitch** | 1280×720 | 16:9 | Clean (2.46× downscale, aspect preserved) |
+| **News** | 1040×586 | Exact 2× of 520×293 | Perfect (2× pixel-doubled, aspect preserved) |
+| **NBA** | **720×840** | **6:7 portrait** | **Distorted (non-uniform squish)** |
+
+NBA is the visual odd-one-out.
+
+### The fix
+
+Change the NBA card canvas dimensions to match News exactly (`1040×586`). This is the "exact 2× pixel-doubled target for OVERLAY_ZONE" and produces the cleanest downscale.
+
+In `server.js`, find the NBA card generator's `createCanvas(720, 840)` call. Change to:
+
+```javascript
+// BEFORE:
+const canvas = createCanvas(720, 840);  // "same as Twitch card for consistency" — this comment was wrong and the number was wrong
+
+// AFTER:
+const canvas = createCanvas(1040, 586);  // Match News 2× pixel-doubled OVERLAY_ZONE (520×293 × 2). Clean 16:9 landscape downscale.
+```
+
+After changing canvas dimensions, **the internal layout coordinates inside the draw calls also need to be rescaled** — any hardcoded `x`, `y`, `width`, `height` values that were computed against the old 720×840 canvas will be in the wrong position on the new 1040×586 canvas. Specifically:
+
+1. Grep the NBA card generator function for hardcoded pixel values (any number in the 0–840 range used as x/y/w/h in `ctx.fillRect`, `ctx.drawImage`, `ctx.fillText`, etc.)
+2. For each hardcoded value, recompute against the new canvas:
+   - x-values scale by `1040/720 = 1.444×`
+   - y-values scale by `586/840 = 0.697×`
+3. OR (preferred) rewrite the internal layout to use percentage-based / proportional coordinates so this never happens again: `const W = canvas.width; const H = canvas.height; ctx.fillRect(W * 0.05, H * 0.10, W * 0.9, H * 0.1)` etc.
+
+**Recommended approach:** proportional rewrite. It's more work than a 1-line canvas change but it's the right pattern and matches how News (`generateNewsStoryCardPNG`) and Twitch (`generateIntroCardPNG` post-Fix-7) already draw their layouts.
+
+### Verification
+
+1. **Before/after PNG comparison:** burn the NBA card to disk both ways (via `/burn-streamer-intro` equivalent or test harness), compare the two 1040×586 PNGs — the new one should have correct proportions (no horizontal stretch, no vertical squish).
+2. **Scale the new 1040×586 PNG to 520×293 in an image viewer** — should look crisp, text readable, team logos undistorted. This simulates what FFmpeg does at burn time.
+3. **Next NBA smoke test (separate cycle, post-News-lock):** open the assembled MP4, scrub to any `GAMEN_INTRO` segment, confirm the TV card in the top-right looks visually consistent with the News TV card on the same burn target.
+4. **Rob's visual sign-off:** the card should no longer look stretched or crushed.
+
+### Commit message
+
+```
+fix(nba): TV card canvas dimensions 720×840 → 1040×586 (Fix 10 of 10)
+
+NBA TV card was using legacy 720×840 portrait canvas from the
+deprecated circle-design Twitch intro card. FFmpeg downscales to
+CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE (520×293, 16:9) via the
+overlay filter — forcing a 6:7 portrait image into 16:9 landscape
+stretched everything horizontally and crushed it vertically.
+
+News already uses 1040×586 (exact 2× pixel-doubled OVERLAY_ZONE).
+Twitch already uses 1280×720 (clean 16:9). NBA was the visual
+odd-one-out across all long-form content types.
+
+Fix: align NBA canvas to News dimensions (1040×586). Internal layout
+coordinates rewritten proportionally so future canvas dimension
+changes won't require recomputing hardcoded pixel values.
+
+NBA-only fix. Zero News/Twitch/short-form code touched. Shipped as
+part of the News smoke test #7 handoff cycle per Rob's scope exception
+(1-line canvas change, low risk, visible issue across all prior NBA
+tests).
+
+Verification: 1040×586 canvas renders with correct proportions,
+downscales cleanly to 520×293 at burn time, no horizontal stretch
+or vertical squish.
+
+References: News smoke test #7 handoff Fix 10, TV card dimension
+audit 2026-04-13
 ```
 
 ---
@@ -971,7 +1062,11 @@ Per Rob's new smoke-test contract (2026-04-13):
 8. Twitch adopts the News chrome set (same layout, Twitch hex + brand text)
 9. Short-form rework happens last, across all 3 content types simultaneously
 
-**Do NOT touch NBA or Twitch code in this handoff.** All 8 fixes above are News-only, except Fix 8 (Gate 2 regex) which is cross-cutting infrastructure and benefits every content type.
+**Do NOT touch NBA or Twitch code in this handoff** — with two explicit exceptions:
+- Fix 8 (Gate 2 regex) — cross-cutting infrastructure, benefits every content type
+- Fix 10 (NBA TV card canvas) — Rob-approved scope exception, 1-line canvas dimension change with proportional layout rewrite, zero News code impact
+
+Every other fix is News-only.
 
 ---
 
