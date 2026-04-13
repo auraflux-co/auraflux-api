@@ -233,6 +233,21 @@ Two possible directions for News as a content type:
 
 ---
 
+### News long-form Fix 8 (Gate 2 regex) — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_SMOKE_TEST_7_FIXES.md` (Fix 8 of 10)
+**Dispatched:** 2026-04-13 (post smoke test #7 review — Gate 2 regex blind to bracketed scores)
+**Shipped:** 2026-04-13, 1 commit pending push to `origin/main`
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 8 | pending | `fix(gate2): Gate 2 score regex handles bracketed numbers + prompt uses angle brackets` — Root cause: Gate 2 Gemini prompt used `[number from 0-100]` bracket notation in the `OVERALL SCORE` field. Gemini mimics the format and outputs `OVERALL SCORE: [85]` with literal brackets. The `segScore` regex `/OVERALL SCORE:\s*(\d+)/i` fails to match — every segment defaulted to 80/100, causing every smoke test to stall at MANUAL_REVIEW even when real Gemini scores were 95-98. Fix A (server.js:2991): regex updated to `/OVERALL SCORE:\s*\[?(\d+)\]?/i` — optional brackets. Fix B (server.js:2970): prompt placeholder changed from `[number from 0-100]` to `<number from 0-100>` to discourage future bracket copying. Cross-cutting fix — benefits News, NBA, and Twitch Gate 2 scoring. |
+
+**Untouched:** News, Twitch, short-form code paths. NBA Gate 2 prompt also benefits (same regex).
+**Next:** Continue shipping remaining 9 fixes from `CLINE_HANDOFF_NEWS_SMOKE_TEST_7_FIXES.md`.
+
+---
+
 ## Rotation log
 
 | Date | Event |
