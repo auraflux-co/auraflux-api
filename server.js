@@ -5596,6 +5596,91 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
 const NEWS_SOURCE_URL = process.env.NEWS_RSS_URL || 'https://www.aljazeera.com/us-canada/';
 const NEWS_LOOKBACK_HOURS = 24;
 
+// ── Track C: per-video validation pass ───────────────────────────────────────
+// 5 checks run in parallel per video before the dashboard renders story cards.
+// Results flow back as video.validation = { status, checks, issues[] }
+// status: 'ok' | 'warning' | 'fail'
+async function validateVideo(v) {
+  const checks = {};
+  const issues = [];
+
+  // Check 1: Brightcove URL reachable (HEAD, 3s timeout)
+  try {
+    const headResp = await axios.head(v.url, { timeout: 3000, maxRedirects: 3 });
+    checks.brightcoveReachable = headResp.status < 400;
+    if (!checks.brightcoveReachable) issues.push(`Article URL returned HTTP ${headResp.status}`);
+  } catch (e) {
+    checks.brightcoveReachable = false;
+    issues.push(`Article URL unreachable: ${e.message}`);
+  }
+
+  // Check 2: yt-dlp extraction (--skip-download --dump-json, 10s timeout)
+  let ytInfo = null;
+  try {
+    const ytOut = await new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('yt-dlp timeout')), 10000);
+      const { execFile } = require('child_process');
+      execFile('yt-dlp', ['--skip-download', '--dump-json', '--no-warnings', v.url], { timeout: 10000 }, (err, stdout) => {
+        clearTimeout(t);
+        if (err) return reject(err);
+        resolve(stdout);
+      });
+    });
+    ytInfo = JSON.parse(ytOut.trim().split('\n').pop());
+    checks.ytdlpExtract = true;
+  } catch (e) {
+    checks.ytdlpExtract = false;
+    issues.push(`yt-dlp extract failed: ${e.message}`);
+  }
+
+  // Check 3: source dimensions >= 1280x720
+  if (ytInfo) {
+    const w = ytInfo.width || 0;
+    const h = ytInfo.height || 0;
+    checks.dimensionsOk = (w >= 1280 && h >= 720);
+    if (!checks.dimensionsOk) issues.push(`Source dimensions ${w}x${h} below 1280x720`);
+  } else {
+    checks.dimensionsOk = null; // unknown
+  }
+
+  // Check 4: source duration > 5s (warning if > 120s)
+  if (ytInfo) {
+    const dur = ytInfo.duration || 0;
+    if (dur <= 5) {
+      checks.durationOk = false;
+      issues.push(`Clip too short: ${dur}s`);
+    } else if (dur > 120) {
+      checks.durationOk = 'warning';
+      issues.push(`Clip very long: ${dur}s (will be capped at 25s)`);
+    } else {
+      checks.durationOk = true;
+    }
+  } else {
+    checks.durationOk = null;
+  }
+
+  // Check 5: og:image reachable (HEAD, 3s timeout)
+  if (v.thumbnail) {
+    try {
+      const imgResp = await axios.head(v.thumbnail, { timeout: 3000, maxRedirects: 3 });
+      checks.ogImageReachable = imgResp.status < 400;
+      if (!checks.ogImageReachable) issues.push(`og:image returned HTTP ${imgResp.status}`);
+    } catch (e) {
+      checks.ogImageReachable = false;
+      issues.push(`og:image unreachable: ${e.message}`);
+    }
+  } else {
+    checks.ogImageReachable = null; // no thumbnail to check
+  }
+
+  // Derive overall status
+  const hasFail = checks.brightcoveReachable === false || checks.ytdlpExtract === false || checks.durationOk === false;
+  const hasWarning = checks.dimensionsOk === false || checks.durationOk === 'warning' || checks.ogImageReachable === false;
+  const status = hasFail ? 'fail' : hasWarning ? 'warning' : 'ok';
+
+  return { ...v, validation: { status, checks, issues } };
+}
+
 app.get('/news/us-canada-videos', async (req, res) => {
   try {
     const resp = await axios.get(NEWS_SOURCE_URL, {
@@ -5657,13 +5742,37 @@ app.get('/news/us-canada-videos', async (req, res) => {
     recent.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
     console.log(`[news/us-canada-videos] Found ${videos.length} video URLs, ${recent.length} within ${NEWS_LOOKBACK_HOURS}h lookback`);
+
+    // ── Track C: run 5-check parallel validation pass ──────────────────────────
+    // Each video gets validation: { status, checks, issues[] }
+    // status: 'ok' | 'warning' | 'fail'
+    // Runs AFTER date filter so we only validate stories the dashboard will show.
+    let validatedVideos = recent;
+    let validationSummary = null;
+    const skipValidation = req.query.validate === 'false';
+    if (!skipValidation && recent.length > 0) {
+      try {
+        console.log(`[news/us-canada-videos] Running Track C validation on ${recent.length} videos...`);
+        validatedVideos = await Promise.all(recent.map(v => validateVideo(v)));
+        const passed   = validatedVideos.filter(v => v.validation.status === 'ok').length;
+        const warnings = validatedVideos.filter(v => v.validation.status === 'warning').length;
+        const failed   = validatedVideos.filter(v => v.validation.status === 'fail').length;
+        validationSummary = { passed, warnings, failed };
+        console.log(`[news/us-canada-videos] Validation: ${passed} ok, ${warnings} warning, ${failed} fail`);
+      } catch(valErr) {
+        console.warn(`[news/us-canada-videos] Validation pass failed (non-fatal): ${valErr.message}`);
+        validatedVideos = recent; // fall back to unvalidated
+      }
+    }
+
     res.json({
       ok: true,
       source: 'https://www.aljazeera.com/us-canada/',
       lookbackHours: NEWS_LOOKBACK_HOURS,
       totalFound: videos.length,
       recentCount: recent.length,
-      videos: recent
+      validationSummary,
+      videos: validatedVideos
     });
   } catch (e) {
     console.error(`[news/us-canada-videos] Fetch failed: ${e.message}`);
