@@ -274,7 +274,21 @@ Two possible directions for News as a content type:
 | 7+4 | pending | `fix(news): LIVE indicator margin-right:80px + flag flush left (Fix 7+4)` — Fix 7: added `margin-right: 80px` to `.top-right` CSS rule in `tools/clipzworld_newscast.html` — pulls LIVE indicator + date inward from right frame edge. Fix 4: `.lower-third` CSS — removed slide-in animation from `.visible` state, added explicit `transform: translateX(0)` and `margin-left: 0` to ensure flag leading edge is flush at x=0 of frame (no 8px inset). Both are CSS-only changes in the same file, bundled as one commit. |
 
 **Untouched:** NBA, Twitch, short-form code paths. Only `tools/clipzworld_newscast.html` CSS touched.
-**Next:** Continue with Fix 3 (source attribution removal from News Gemini prompt).
+
+---
+
+### News long-form Fix 3 (source attribution removal) — shipped 2026-04-13
+
+**Handoff:** `CLINE_HANDOFF_NEWS_SMOKE_TEST_7_FIXES.md` (Fix 3 of 10)
+**Dispatched:** 2026-04-13 (Bobby G must NEVER speak source names on air)
+**Shipped:** 2026-04-13
+
+| Fix | Commit | What |
+|-----|--------|------|
+| 3 | pending | `fix(news): remove spoken source attribution from News Gemini prompt + Gate 1 QA (Fix 3)` — Added SOURCE ATTRIBUTION RULE (STRICT) block to News long-form Gemini userPrompt VALIDATION CHECKLIST (before `Target: 100-140 words` line). Changed claudeScriptQA News checklist item 10 from checking that source attribution IS present to checking that NO spoken source attribution exists (FAIL hard -25 if any found). Bobby G must never say 'According to [source]', 'Sources at [source]', or '[source] reports'. |
+
+**Untouched:** NBA, Twitch, short-form code paths. Only `server.js` News Gemini prompt + claudeScriptQA touched.
+**Next:** Continue with Fix 1+9 (clip 16:9 crop + AJ outro trim, bundled FFmpeg pass).
 
 ---
 

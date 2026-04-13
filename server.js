@@ -2404,7 +2404,7 @@ EXPECTED SCENES: ${expectedScenes}`;
     `7. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
     `8. CLIP MATCH (most important): Does each story setup match what was seen in the news clip?`,
     `9. LOCKED INTRO: Does the video open with the correct ClipzWorld News intro?`,
-    `10. SOURCE ATTRIBUTION: Is "Source: [name]. Link in description." included after each story?`,
+    `10. SOURCE ATTRIBUTION (STRICT): Does the script contain ANY spoken source attribution? Check every scene for phrases like "According to Al Jazeera", "Sources report", "Al Jazeera's coverage", "[source] reports". FAIL hard (-25) if any found — Bobby G must NEVER speak the source name.`,
     `11. REACTION: Is there a flat, deadpan reaction after each clip (1 sentence)?`
   ] : [
     `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
@@ -7145,6 +7145,17 @@ Source: [Source name]. Link in description.
 - [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
 - Between stories, the assembly layer will add a 3-second hold on the source clip before cutting to the next story. Do NOT write stage directions in the script — just end the REACTION scene with a single deadpan sentence.
 - Never explain the take in reactions. Never recap what just happened — that's SUMMARY's job.
+
+SOURCE ATTRIBUTION RULE (STRICT):
+- NEVER speak the source name in any scene (INTRO, SETUP, SUMMARY, REACTION, OUTRO).
+- Bobby G does not say "According to Al Jazeera", "Sources report", "Al Jazeera's coverage", or any variation.
+- Source names are already tracked in the story metadata and will be published in the video description automatically.
+- If a story is uniquely identifiable only by its source, rephrase to describe the event without the publication name.
+  WRONG: "According to Al Jazeera, Iran's army seized US plans..."
+  RIGHT: "Iran's army reportedly seized US plans..."
+  WRONG: "Al Jazeera reports that Israeli forces fired tear gas..."
+  RIGHT: "Israeli forces fired tear gas into a Palestinian schoolchildren's crowd."
+- This rule applies to ALL 10 stories, every scene type, no exceptions.
 
 Target: 100-140 words spoken per story (setup + summary + reaction, clip audio is stripped).`;
       }
