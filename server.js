@@ -42,6 +42,7 @@ const path       = require('path');
 const { execFile, exec } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
 const puppeteer  = require('puppeteer');
+const { body, validationResult } = require('express-validator');
 const { logError, withRetry, getFallbackImage, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 const { requireFields, validateContentType, validateArrayLength, validateUrl, sanitizeStrings } = require('./lib/validation');
 const TwitchClient = require('./lib/clients/twitch_client');
@@ -3184,6 +3185,17 @@ app.post('/drive-then-canva', async (req, res) => {
 });
 
 app.post('/assemble',
+  body('asmId').optional().isString().trim(),
+  body('segments').isArray(),
+  body('contentType').isString(),
+  body('formType').optional().isString(),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
   requireFields('segments', 'segmentData'),
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
   async (req, res) => {
@@ -6493,6 +6505,16 @@ async function geminiAnalyzeThumbnail(thumbnailUrl, contentType, metadata) {
 
 
 app.post('/generate-full-script',
+  body('type').isString(),
+  body('items').isArray(),
+  body('formType').optional().isString(),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
   requireFields('type', 'items'),
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
   validateArrayLength('items', 1),
@@ -7869,6 +7891,16 @@ app.get('/upload-status/:trackingId', (req, res) => {
 });
 
 app.post('/publish',
+  body('driveUrl').optional().isURL(),
+  body('platforms').isArray(),
+  body('title').isString(),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
   requireFields('platforms'),
   validateArrayLength('platforms', 1),
   sanitizeStrings('title', 'description'),
@@ -10497,7 +10529,17 @@ app.post('/generate-twitch-longform-thumbnail', async (req, res) => {
 // Body: { contentType, date, storyTitle, storyImage, streamers[] }
 // Returns: { ok, thumbnailPath, episodeNum, contentType }
 
-app.post('/generate-thumbnail', async (req, res) => {
+app.post('/generate-thumbnail', 
+  body('contentType').isString().isIn(['twitch', 'nba', 'news']),
+  body('streamers').optional().isArray(),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+  async (req, res) => {
   try {
     const { contentType, date, storyImage = null, title = '', source = 'REACTION', streamers = [] } = req.body;
 
