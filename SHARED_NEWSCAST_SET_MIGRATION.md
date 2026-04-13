@@ -218,9 +218,18 @@ Rob clarified the Twitch model mid-thread, correcting two earlier misunderstandi
 
 **Misunderstanding A — the "7 clips per streamer" framing.** An earlier revision of this doc (and the first draft of the accompanying test #7 handoff) referenced a "7-clip Twitch model." That model never existed in code or production. Historical path: 3 clips per streamer (early) → 2 clips per streamer (current). Any language in earlier revisions suggesting 7 is a Claude Code mistake and should be treated as retracted.
 
-**Misunderstanding B — "2 clips per streamer" as a configurable setting.** The `cwn_production.html:3078` dashboard input (`twitch-clips-per-main` defaulting to `2`) looked like a tunable setting. It's not — **2 is the minimum gate, not a target.**
+**Misunderstanding B — "2 clips per streamer" as a fixed hardcoded gate floor.** I had this doc language as "2 is the gate floor, always." That's wrong. Rob clarified further 2026-04-13:
 
-**The gate rule (Rob 2026-04-13):** a streamer must have **at least 2 valid clips** resolvable via GQL to be included in an episode. Streamers with 0 or 1 usable clips are **dropped from the episode entirely** before HeyGen submission. The dashboard fetches up to 20 clips per streamer (`fetchCount = Math.max(clipsPerStreamer * 5, 20)` at `cwn_production.html:3102`) specifically to survive GQL's ~50% resolution failure rate and still hit the 2-clip floor. If the pool after resolution still has fewer than 2 valid clips, that streamer is cut.
+**The setting (user-facing, dashboard):** user picks clip count from a dropdown — **multiple values allowed**, e.g. 1, 2, 3, 4, 5. The default for **Twitch Soup production** is 2 clips per streamer (not 1). Users CAN set the dropdown to 1 if they want (testing, special episode), but production default is 2. The `cwn_production.html:3078` input reads the user's selection at script-gen time.
+
+**The gate (code-enforced):** a streamer must have **at least `clipsPerStreamer` valid clips** resolvable via GQL to be included in an episode. Streamers with fewer than the selected count are **dropped from the episode entirely** before HeyGen submission. The dashboard fetches up to `max(clipsPerStreamer * 5, 20)` clips per streamer per `cwn_production.html:3102` specifically to survive GQL's ~50% resolution failure rate and still hit the selected floor.
+
+**Production policy (Twitch Soup specifically):** never set `clipsPerStreamer = 1`. Rob's rule: *"for twitch soup and our production, i dont want to pull just 1 clip for a streamer."* Solo-clip streamers aren't interesting enough for the Twitch Soup show format. This is a policy expressed via the user's dropdown selection (always ≥2 for production), not a hardcoded code constraint. A one-off "1 clip per streamer" run for testing is fine; a one-off "5 clips per streamer" run for a highlight episode is also fine.
+
+**Gate floor = user-selected clipsPerStreamer value**, not a fixed "2". The gate rule is:
+- User picks `N` in dropdown (Twitch Soup production default = 2, min = 1, max = unbounded in theory but practically ≤5)
+- Gate drops any streamer with fewer than `N` valid clips
+- Dashboard fetches `max(N * 5, 20)` clips per streamer upstream to absorb GQL failure rate
 
 **Why this matters for the sidebar:** the 5-cap in the sidebar is a cap on streamers *that passed the 2-clip gate*, not a cap on streamers the user selected. A user could select 10 streamers in the comma-separated field, have 7 pass the gate, and end up with 5 in the episode (and optionally 2 more in a second episode via the multi-episode split logic in section 11.4).
 
@@ -299,7 +308,7 @@ When the dashboard's story count / streamer count / game count input exceeds 5 f
 Before Rob's 2026-04-13 clarifications, earlier revisions of this doc (and the first draft of the accompanying handoff) referenced:
 
 - **A "7-clip Twitch model" that never existed.** Claude Code misread the Twitch history — there was never a 7-clip-per-streamer production mode. Always 3 (early) → 2 (current). Any doc language suggesting 7 is a Claude Code error and should be treated as retracted.
-- **"2 clips per streamer" as a configurable setting with a dashboard toggle.** Wrong — it's a **gate**, not a setting. Streamers with fewer than 2 valid clips after GQL resolution are dropped from the episode entirely. The dashboard input's default of 2 reflects the gate floor, not a tunable target. See section 10.4 for the full gate semantics.
+- **"2 clips per streamer as a hardcoded gate floor."** Wrong in the other direction — it IS a user-configurable dropdown selection, AND it's a gate, but the gate floor is whatever the user picked (not a fixed 2). Rob's production policy for Twitch Soup is "never 1," expressed through always picking 2+ in the dropdown, not through code enforcement. See section 10.4 for the full gate semantics including the user-selection-as-floor mechanic.
 - **"Universal tagline" vs "per-type variants" as the framing for Q5.** Wrong framing — the correct framing is "each content type is a distinct show with its own established show name, already baked into `CLINE_HANDOFF_AUTO_PUBLISH_THUMB_AND_COMMENT.md`." Show names are: News = "Because the Light Was On", NBA = "Other Side of the Pillow", Twitch = "Twitch Soup".
 - **Dynamic sidebar rotation as the Fix 5 sub-item.** Now reframed: static 5-cap is the baseline, dynamic rotation is a "try to build it" experiment for test #9, multi-episode splitting is the permanent fallback if rotation can't hit the timing budget.
 
