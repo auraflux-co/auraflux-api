@@ -1,8 +1,22 @@
 # AGENT_FILE_REGISTRY.md
 
 **Author:** Claude Code, 2026-04-14  
-**Purpose:** Standing file ownership and lock protocol for all agents (Cline, Aider, Claude Code). Read this before touching any file. Prevents two agents from corrupting the same file simultaneously.  
+**Purpose:** Standing file ownership and lock protocol for all agents. Read this before touching any file. Prevents two agents from corrupting the same file simultaneously.  
 **Enforced by:** Honor system + STATUS.md lock declarations. Pre-commit hook warns but cannot block concurrent edits.
+
+---
+
+## Agent roster
+
+| Agent | Terminal | Default file ownership | Best for |
+|---|---|---|---|
+| **Cline-A** | Terminal 1 | `server.js`, `lib/`, `scripts/` | Backend pipeline fixes, server endpoints |
+| **Cline-B** | Terminal 2 | `cwn_production.html`, `tools/`, `assets/` | Dashboard UI, Puppeteer chrome renderer |
+| **Cline-C** | Terminal 3 | AuraFlux UI, Railway config, new standalone features | New features, full-stack work, overflow |
+| **Aider** | Overnight | Non-breaking files, docs, migrations, new scripts | Batch tasks, Jira/Confluence, anything running 1-6am |
+| **Claude Code** | This session | Architecture, handoffs, reviews, Gemini consults | Planning, diagnosis, spec writing, diff review |
+
+**Handoff header convention:** Every handoff written by Claude Code will start with `→ Agent: Cline-A` (or B/C/Aider) so it's immediately clear who executes it. Jira tickets will use the same names in the Assignee field once the project is set up.
 
 ---
 
