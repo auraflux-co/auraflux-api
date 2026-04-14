@@ -568,3 +568,124 @@ Next tasks scheduled:
 - **Do not run server.js split** until all agents have been notified and paused feature work
 - **Aider should exit cleanly** by 6:45 AM ET to leave buffer before workday starts
 - **If Aider hits context limit** — skip that task, note it in MORNING_BRIEFING.md, move to next task
+
+---
+
+## 🟢 2026-04-14 Night — Atlassian architecture + migration plan + morning report script
+
+**Context:** Atlassian pipe is now open and verified (`node scripts/jira_ping.js` → ✅). Jira project **CPD** (CWN Production Dev) and Confluence space **CP** (CWN Production) are both live. Client files exist at `lib/clients/jira_client.js` and `lib/clients/confluence_client.js`. There are 75 `.md` files in the repo (38 `CLINE_HANDOFF_*.md` docs) that will migrate to Jira/Confluence — but NOT tonight. Tonight is research + foundation only.
+
+**Do NOT create any Jira tickets or Confluence pages tonight.** Deliver written proposals for Rob to review first.
+
+---
+
+### Task A — Answer 4 architecture questions and write `JIRA_CONFLUENCE_MIGRATION_PLAN.md`
+
+This is a **research and writing task** — no code yet. Answer all four questions by reading the repo docs listed, then write answers into a new file `JIRA_CONFLUENCE_MIGRATION_PLAN.md`.
+
+**Q1 — Git commit key linking**
+
+Going forward, should every commit reference a Jira ticket key (e.g. `CPD-12`) in the commit message so GitHub↔Jira smart commit linking works automatically? What is the correct format Jira expects (prefix, placement, syntax)? Does it require anything to be configured in the Jira project settings or GitHub integration first?
+
+Write answer under `## Git Commit Linking` in `JIRA_CONFLUENCE_MIGRATION_PLAN.md`.
+
+---
+
+**Q2 — Epic/Story/Task/Subtask hierarchy**
+
+Read `STATUS.md`, `ROADMAP.md`, and the list of active `CLINE_HANDOFF_*.md` files (any that don't have a `✅ SHIPPED` marker). Propose a Jira hierarchy:
+
+- What are the epics? (suggested: News Long-Form Lock, NBA Long-Form, Short-Form, AuraFlux Phase 2 SaaS, Infrastructure & DevOps)
+- How do current CLINE_HANDOFF docs map to stories vs tasks?
+- What label taxonomy makes sense for this project? (suggested seed labels: `chrome`, `pipeline`, `qa-gate`, `heygen`, `ffmpeg`, `dashboard`, `atlassian`, `auraflux`, `bug`, `cleanup`)
+- For a 2-person team, is story → task flat enough, or do we need subtasks?
+
+Write answer under `## Jira Hierarchy Proposal` in `JIRA_CONFLUENCE_MIGRATION_PLAN.md`. Do NOT create any Jira tickets — proposal only.
+
+---
+
+**Q3 — Parse current + future work into a draft ticket table**
+
+Read these files:
+- `STATUS.md`
+- `ROADMAP.md`
+- All `CLINE_HANDOFF_*.md` files that are NOT yet shipped
+
+Produce a markdown table of draft tickets showing how each piece of work maps to the proposed hierarchy:
+
+```
+| Epic | Story/Task title (≤60 chars) | Type (Story/Task/Bug) | Labels | Notes |
+```
+
+Include a total count. Flag any items that look like duplicates or superseded work (e.g., older CLINE_HANDOFF_NEWS_LONGFORM_FIX_8B vs newer NEWS_CHROME_FIX — older is superseded).
+
+Write under `## Draft Ticket List` in `JIRA_CONFLUENCE_MIGRATION_PLAN.md`.
+
+---
+
+**Q4 — Confluence page tree for the 75 .md files**
+
+Propose a Confluence page tree for space **CP** that organises the 75 `.md` files logically. Categories to consider:
+
+- Architecture & Specs (CLAUDE.md, GATED_PIPELINE_ARCHITECTURE.md, SET_DESIGN_SPEC_NEWS.md, VISUAL_DESIGN_SPEC.md, CHROME_DIRECTIVE_ARCHITECTURE.md, etc.)
+- Active handoffs (in-flight CLINE_HANDOFF_*.md)
+- Shipped/archived handoffs (completed CLINE_HANDOFF_*.md — these can go in an archive section)
+- Operational runbooks (COMMIT_CHECKLIST.md, POST_PUBLISH_MANUAL_CHECKLIST.md, POST_PUBLISH_TASKS.md, etc.)
+- Strategy & Business (BUSINESS_STRATEGY.md, PHASE_2_BUILD_SPEC.md, PHASE_2_DESIGN_PACKAGE.md, AURAFLUX_BRAND.md, ROADMAP.md, etc.)
+- Ephemeral ops logs (MORNING_BRIEFING.md, OVERNIGHT_TASKS.md, CODE_REVIEW.md — these are runtime output, probably shouldn't live in Confluence long-term)
+
+Format as an indented list showing parent → child page relationships. Do NOT create any Confluence pages — proposal only.
+
+Write under `## Confluence Page Tree` in `JIRA_CONFLUENCE_MIGRATION_PLAN.md`.
+
+---
+
+**Commit for Task A:**
+- Files: `JIRA_CONFLUENCE_MIGRATION_PLAN.md`, `STATUS.md` (Last Agent Action update)
+- Message: `docs(atlassian): Jira/Confluence migration plan — hierarchy proposal and .md inventory`
+- Do NOT use a CPD ticket key in this commit (no tickets exist yet)
+
+---
+
+### Task B — Build `scripts/jira_morning_report.js`
+
+**Only start after Task A is committed.**
+
+Build a standalone script that generates `MORNING_JIRA_REPORT.md` each night. Uses `lib/clients/jira_client.js` and git log.
+
+**Report sections:**
+
+1. **Open tickets in CPD** — status `In Progress` or `To Do`, sorted by priority. JQL: `project = CPD AND status in ("In Progress", "To Do") ORDER BY priority ASC`
+2. **Recently closed** — tickets moved to Done in last 24h. JQL: `project = CPD AND status = Done AND updated >= -1d`
+3. **Unlinked commits** — commits from last 24h whose messages don't contain `CPD-`. Read via `execSync('git log --oneline --since="24 hours ago"')` and filter.
+4. **Suggested next ticket** — highest-priority `To Do` with no assignee. JQL: `project = CPD AND status = "To Do" AND assignee is EMPTY ORDER BY priority ASC`
+
+**Requirements:**
+- Handles 0-result JQL gracefully (print "No open tickets" etc., don't crash)
+- Writes `MORNING_JIRA_REPORT.md` (overwrite each run)
+- Add `"jira-report": "node scripts/jira_morning_report.js"` to `package.json`
+- Add `MORNING_JIRA_REPORT.md` to `.gitignore` (runtime output, not source)
+- `require('dotenv').config()` at top so it picks up `.env`
+
+**Test:** Run `node scripts/jira_morning_report.js` after writing. With zero tickets in CPD it should produce a valid (mostly empty) report without crashing.
+
+**Commit for Task B:**
+- Files: `scripts/jira_morning_report.js`, `package.json`, `.gitignore`, `STATUS.md`
+- Message: `feat(atlassian): jira morning report script — open tickets, recent closes, unlinked commits`
+- Do NOT use a CPD ticket key in this commit (no tickets exist yet)
+
+---
+
+### Aider file context for tonight
+
+**Task A** — do NOT load server.js (not needed). Load:
+- `STATUS.md`
+- `ROADMAP.md`
+- A sample of CLINE_HANDOFF_*.md files (pick 5-6 representative ones, not all 38)
+
+**Task B** — do NOT load server.js. Load:
+- `lib/clients/jira_client.js`
+- `package.json`
+- `.gitignore`
+- `scripts/jira_ping.js` (as reference for pattern)
+
