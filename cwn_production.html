@@ -1420,7 +1420,8 @@ function assembleJob(batchJobId) {
       };
     });
 
-  var payload = {
+  
+var payload = {
     segmentData: segmentData,
     segments: segmentData.map(function(s){ return s.url; }),
     labels:   segmentData.map(function(s){ return s.label; }),
@@ -1428,7 +1429,8 @@ function assembleJob(batchJobId) {
     format: CFG.outputFmt,
     outputDir: CFG.outputDir,
     jobTitle: job.title,
-    contentType: job.type || 'twitch'
+    contentType: job.type || 'twitch',
+    jobId: (window.CURRENT_META && window.CURRENT_META.scriptJobId) || job.scriptJobId || ''
   };
 
   // Update segment status indicators
@@ -2881,7 +2883,8 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
 
       // CRITICAL: Use the clip URLs the server resolved (same ones Gemini analyzed)
       // These are in the exact order the script was written — do NOT override with dashboard's own resolution
-      if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
+      
+if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
         if (!window.CURRENT_META) window.CURRENT_META = {};
         window.CURRENT_META.orderedClipUrls = resp.orderedClipUrls;
         // Also build clipsByStreamer index for debugging
@@ -2893,6 +2896,13 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
         });
         console.log('[script] Stored ' + resp.orderedClipUrls.length + ' clip URLs from server (authoritative order)');
         console.log('[script] Clips by streamer:', Object.keys(window.CURRENT_META.clipsByStreamer).map(function(k){ return k+':'+window.CURRENT_META.clipsByStreamer[k].length; }).join(', '));
+      }
+
+      // Store the script generation jobId so assembly can load the directive sidecar
+      if (resp.metricsJobId) {
+        window.CURRENT_META = window.CURRENT_META || {};
+        window.CURRENT_META.scriptJobId = resp.metricsJobId;
+        console.log('[script] Stored scriptJobId for directive sidecar:', resp.metricsJobId);
       }
 
       g('main-script').scrollIntoView({behavior:'smooth'});

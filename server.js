@@ -8064,10 +8064,10 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
         break;
       } else {
         // Check if the ONLY issue is clip match (no structural failures)
-        const hasStructuralFail = scriptQA.deductions && scriptQA.deductions.length > 0;
-        const isClipMatchOnly = !hasStructuralFail &&
-          scriptQA.claudeReport &&
-          scriptQA.claudeReport.includes('CLIP MATCH') &&
+const hasStructuralFail = scriptQA.deductions && scriptQA.deductions.some(d => d.type !== 'clip_match');
+const isClipMatchOnly = !hasStructuralFail &&
+  scriptQA.claudeReport &&
+  scriptQA.claudeReport.includes('CLIP MATCH') &&
           !scriptQA.claudeReport.includes('SCENE COUNT') &&
           !scriptQA.claudeReport.includes('CLIP COUNT') &&
           !scriptQA.claudeReport.includes('Appreciate you');
