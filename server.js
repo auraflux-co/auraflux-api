@@ -2442,19 +2442,14 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
     }
   }
 
-  // Count [CLIP PLAYS HERE] markers
-  // Red 4 hotfix 5: Cline's News Gemini prompt is HYBRID — JSON wrapper with
-  // scene objects, but each scene's spokenText field still contains the legacy
-  // text format including literal [CLIP PLAYS HERE] markers embedded in STORY#_SETUP
-  // scenes. None of the scenes have type:'source_clip' because the prompt never
-  // instructs Gemini to create standalone clip scenes. Clips are inline text
-  // markers inside SETUP scenes (prompt lines 7629-7633). So the count has to
-  // scan spokenText, not filter by scene type. Same regex as legacy mode, just
-  // applied to concatenated spokenText from all scenes.
+  // Count clip markers / scenes
+  // Red 4 hotfix 6: News prompt now produces standalone STORY#_CLIP scenes with
+  // type="source_clip". Count by filtering scene.type instead of scanning spokenText
+  // (hotfix 5's approach, now obsolete for News directive mode). Legacy text mode
+  // still uses the [CLIP PLAYS HERE] regex for Twitch/NBA and non-directive News.
   let clipMarkers;
   if (parsedDirectiveJson) {
-    const _allSpoken = parsedDirectiveJson.scenes.map(s => s.spokenText || '').join('\n');
-    clipMarkers = (_allSpoken.match(/\[CLIP PLAYS HERE\]/g) || []).length;
+    clipMarkers = parsedDirectiveJson.scenes.filter(s => s.type === 'source_clip').length;
   } else {
     clipMarkers = (script.match(/\[CLIP PLAYS HERE\]/g) || []).length;
   }
@@ -2572,22 +2567,22 @@ EXPECTED SCENES: ${expectedScenes}`;
     `10. NARRATION WORD COUNT: Does each NARRATION scene match the per-game word count target from the prompt (±15% tolerance)?`,
     `11. REACTION: Is there a brief reaction/observation after each clip?`
   ] : isNews ? [
-    `1. SCENE COUNT: Count every === HEADER === marker systematically through the ENTIRE script.
+    `1. SCENE COUNT: Count every scene in the JSON scenes[] array systematically.
    - DO NOT try to count in your head
-   - Expected: exactly ${expectedScenes} markers
-   - Method: Search through script and list each header you find, then count your list
-   - Remember: STORY1_INTRO, STORY1_SETUP, STORY1_SUMMARY, STORY1_REACTION are 4 SEPARATE scenes
-   - Are there exactly ${expectedScenes} === SCENE === markers?`,
-    `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per story)?`,
-    `3. OUTRO: Does the script end with "Appreciate you!"?`,
-    `4. STORY ACCURACY: Are headlines and story details accurately mentioned?`,
-    `5. INTRO: Is the intro 2-3 sentences introducing the episode?`,
-    `6. STORY SETUP: Does each story have proper context before [CLIP PLAYS HERE]?`,
-    `7. BEAT PLACEMENT: Is [beat] present before AND after every [CLIP PLAYS HERE]?`,
-    `8. CLIP MATCH (most important): Does each story setup match what was seen in the news clip?`,
-    `9. LOCKED INTRO: Does the video open with the correct ClipzWorld News intro?`,
-    `10. SOURCE ATTRIBUTION (STRICT): Does the script contain ANY spoken source attribution? Check every scene for phrases like "According to Al Jazeera", "Sources report", "Al Jazeera's coverage", "[source] reports". FAIL hard (-25) if any found — Bobby G must NEVER speak the source name.`,
-    `11. REACTION: Is there a flat, deadpan reaction after each clip (1 sentence)?`
+   - Expected: exactly ${expectedScenes} scenes
+   - Method: list each scene.id you find, then count your list
+   - Remember: STORY1_INTRO, STORY1_SETUP, STORY1_CLIP, STORY1_SUMMARY, STORY1_REACTION are 5 SEPARATE scenes (Red 4 hotfix 6: clip is now a standalone source_clip scene, not a text marker)
+   - Are there exactly ${expectedScenes} scenes in the JSON?`,
+    `2. CLIP COUNT: Are there exactly ${expectedClips} scenes with type="source_clip" in the scenes[] array (one STORY#_CLIP per story)?`,
+    `3. OUTRO: Does the OUTRO scene's spokenText contain "Appreciate you"?`,
+    `4. STORY ACCURACY: Are headlines and story details accurately mentioned in the spokenText of each STORY#_INTRO scene?`,
+    `5. INTRO: Is the INTRO scene's spokenText 2-3 sentences introducing the episode?`,
+    `6. STORY SETUP: Does each STORY#_SETUP scene's spokenText give proper context for the clip that follows?`,
+    `7. CLIP SCENES: Do all STORY#_CLIP scenes have type="source_clip" and empty spokenText ""?`,
+    `8. STORY MATCH (most important): Does each story's setup/summary/reaction text accurately reflect the story's topic?`,
+    `9. LOCKED INTRO: Does the INTRO scene open with the correct ClipzWorld News intro?`,
+    `10. SOURCE ATTRIBUTION (STRICT): Does any scene's spokenText contain ANY spoken source attribution? Check every scene for phrases like "According to Al Jazeera", "Sources report", "Al Jazeera's coverage", "[source] reports". FAIL hard (-25) if any found — Bobby G must NEVER speak the source name.`,
+    `11. REACTION: Does each STORY#_REACTION scene have a flat, deadpan reaction in spokenText (1 sentence)?`
   ] : [
     `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
     `2. OUTRO: Does the script end with "Appreciate you!"?`,
@@ -7583,12 +7578,19 @@ Write the FULL SCRIPT using exactly:
 Fully written, no brackets, no placeholders.
 Target: 50-70 words spoken total. One headline, one observation, done.`;
       } else {
-        // Generate scene headers for News (4 scenes per story: intro + setup + clip_reaction + reaction)
+        // Red 4 hotfix 6: generate scene headers for News (5 scenes per story:
+        // intro + setup + CLIP + summary + reaction). Clip is now a standalone
+        // source_clip scene with empty spokenText, matching the architecturally
+        // correct proactive directive pattern. Previous 4-scene-per-story pattern
+        // with [CLIP PLAYS HERE] text markers inside SETUP scene spokenText was
+        // the source of a 5-hotfix ladder tonight because Gemini couldn't decide
+        // between text markers and standalone clip scenes from the hybrid prompt.
         const sceneHeaders = ['=== INTRO ==='];
         items.forEach((s, i) => {
           const storyLabel = `STORY${i+1}`;
           sceneHeaders.push(`=== ${storyLabel}_INTRO ===`);
           sceneHeaders.push(`=== ${storyLabel}_SETUP ===`);
+          sceneHeaders.push(`=== ${storyLabel}_CLIP ===`);
           sceneHeaders.push(`=== ${storyLabel}_SUMMARY ===`);
           sceneHeaders.push(`=== ${storyLabel}_REACTION ===`);
         });
@@ -7597,7 +7599,7 @@ Target: 50-70 words spoken total. One headline, one observation, done.`;
 
         userPrompt = `Write the COMPLETE ClipzWorld News world news script for ${dateStr}.
 
-${items.length} stor${items.length > 1 ? 'ies' : 'y'} total. ${items.length} [CLIP PLAYS HERE] markers required (one per story).
+${items.length} stor${items.length > 1 ? 'ies' : 'y'} total. Each story MUST have its own standalone CLIP scene (type="source_clip") in the JSON output — ${items.length} source_clip scenes required total.
 
 STORY DATA:
 ${items.map((s, i) => `
@@ -7615,11 +7617,12 @@ Write the FULL SCRIPT using these === SCENE HEADERS === exactly (one scene per h
 ${sceneHeaders.join('\n')}
 
 ⚠️ SCENE LENGTH RULES - PREVENTS HEYGEN TTS FROM RUSHING:
-- Each scene = 1-3 sentences MAXIMUM
+- Each avatar scene = 1-3 sentences MAXIMUM
 - Scenes longer than 3 sentences cause HeyGen TTS to rush/skip words/poor enunciation
 - INTRO scene: 2-3 sentences (episode intro)
 - STORY#_INTRO scenes: 2-3 sentences (introduce the story/headline)
-- STORY#_SETUP scenes: EXACTLY 1 sentence — a NEW fact or hook (not a summary, not a restatement of INTRO). Give the viewer a reason to watch the clip. Then [beat] + [CLIP PLAYS HERE] + [beat]
+- STORY#_SETUP scenes: EXACTLY 1 sentence — a NEW fact or hook (not a summary, not a restatement of INTRO). Give the viewer a reason to watch the clip that follows.
+- STORY#_CLIP scenes: source_clip type with EMPTY spokenText (""). These are non-spoken scenes — the Al Jazeera source video plays here. Assembly fills them with real clip content.
 - STORY#_SUMMARY scenes: 1-2 sentences — factual recap of what just played in the clip. No reactions, no quips, no opinions. Sets up the REACTION scene that follows.
 - STORY#_REACTION scenes: EXACTLY 1 sentence (short, flat, deadpan take on the story. Makes it MORE alarming, not less.)
 - OUTRO scene: 1-2 sentences (sign-off)
@@ -7627,37 +7630,44 @@ ${sceneHeaders.join('\n')}
 📝 CONTENT STRUCTURE PER SCENE:
 
 === INTRO ===
-[2-3 sentences. Episode intro. Set the tone.]
+type: avatar
+spokenText: [2-3 sentences. Episode intro. Set the tone.]
 
 === STORY#_INTRO ===
-[2-3 sentences. Introduce the headline. Build context.]
-[beat]
-Source: [Source name]. Link in description.
-[beat]
+type: avatar
+spokenText: [2-3 sentences. Introduce the headline. Build context. NO source attribution. NO "According to..." phrases.]
 
 === STORY#_SETUP ===
-[EXACTLY 1 sentence. A NEW fact or hook that gives the viewer a reason to watch the clip. Do NOT restate the INTRO. Do NOT summarize the story. Introduce information the INTRO did not mention — a specific angle, an unexpected detail, a stake.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
+type: avatar
+spokenText: [EXACTLY 1 sentence. A NEW fact or hook that gives the viewer a reason to watch the clip. Do NOT restate the INTRO. Do NOT summarize the story. Introduce information the INTRO did not mention — a specific angle, an unexpected detail, a stake.]
+
+=== STORY#_CLIP ===
+type: source_clip
+spokenText: "" (EMPTY STRING — this scene has no spoken narration, the Al Jazeera video plays here)
 
 === STORY#_SUMMARY ===
-[1-2 sentences. Factual recap of what just played in the clip. Describe what the viewer saw in neutral, descriptive language. No opinions, no reactions, no quips. This is the bridge between the clip and Bobby G's take.]
+type: avatar
+spokenText: [1-2 sentences. Factual recap of what just played in the clip. Describe what the viewer saw in neutral, descriptive language. No opinions, no reactions, no quips. This is the bridge between the clip and Bobby G's take.]
 
 === STORY#_REACTION ===
-[EXACTLY 1 sentence. Short. Flat. Deadpan. Bobby G's take on the story. Makes it MORE alarming, not less. Never explain. Never recap — that's the SUMMARY's job.]
+type: avatar
+spokenText: [EXACTLY 1 sentence. Short. Flat. Deadpan. Bobby G's take on the story. Makes it MORE alarming, not less. Never explain. Never recap — that's the SUMMARY's job.]
 
 === OUTRO ===
-[1-2 sentences. Sign-off.]
+type: avatar
+spokenText: [1-2 sentences. Sign-off. MUST contain the phrase "Appreciate you" as the final send-off.]
 
 ✅ VALIDATION CHECKLIST:
-- Total scenes: MUST BE EXACTLY ${expectedScenes}
-- Total [CLIP PLAYS HERE] markers: MUST BE EXACTLY ${items.length}
-- Each SETUP scene: EXACTLY 1 sentence (new fact or hook, not a restatement of INTRO) + contains [beat] + [CLIP PLAYS HERE] + [beat]
+- Total scenes: MUST BE EXACTLY ${expectedScenes} (1 INTRO + ${items.length} × 5 per story + 1 OUTRO)
+- Total source_clip scenes: MUST BE EXACTLY ${items.length} (one STORY#_CLIP per story)
+- STORY#_CLIP scenes have type="source_clip" and empty spokenText ""
+- All other scenes have type="avatar" and non-empty spokenText
+- Each SETUP scene: EXACTLY 1 sentence (new fact or hook, not a restatement of INTRO)
 - Each SUMMARY scene: 1-2 sentences (factual recap of clip, no opinions or reactions)
 - Each REACTION scene: EXACTLY 1 sentence (deadpan take, no recap)
-- [beat] = 3-second pause — use before and after every [CLIP PLAYS HERE]
-- Between stories, the assembly layer will add a 3-second hold on the source clip before cutting to the next story. Do NOT write stage directions in the script — just end the REACTION scene with a single deadpan sentence.
+- OUTRO must contain "Appreciate you" in the spokenText
+- DO NOT write [beat] markers in spokenText — the TTS engine handles pacing automatically
+- DO NOT write [CLIP PLAYS HERE] markers anywhere — clips are standalone source_clip scenes now, not text markers
 - Never explain the take in reactions. Never recap what just happened — that's SUMMARY's job.
 
 SOURCE ATTRIBUTION RULE (STRICT — ABSOLUTE PROHIBITION):
@@ -7895,7 +7905,9 @@ Target: 80-100 words spoken per streamer.`;
     } else if (type === 'nba') {
       expectedScenes = 1 + (items.length * 3) + 1; // 1 INTRO + (games × 3 scenes: _INTRO, _NARRATION, _REACTION) + 1 OUTRO
     } else if (type === 'news') {
-      expectedScenes = 1 + (items.length * 4) + 1; // 1 INTRO + (stories × 4 scenes) + 1 OUTRO
+      // Red 4 hotfix 6: News uses 5 scenes per story (intro + setup + CLIP + summary + reaction)
+      // Clip is now a standalone source_clip scene instead of [CLIP PLAYS HERE] text marker.
+      expectedScenes = 1 + (items.length * 5) + 1; // 1 INTRO + (stories × 5 scenes each) + 1 OUTRO
     }
     // Shorts and other types: expectedScenes remains 0 (no validation)
 
