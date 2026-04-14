@@ -3642,22 +3642,40 @@ function gate2_validateSegmentStructure(segments, config, attemptNumber, attempt
   var jobId = (window._currentJobId) || ('job_' + Date.now());
   var timestamp = new Date().toISOString();
 
-  var N = (config.streamers || []).length;
-  var M = config.clipsPerStreamer || 2;
-  var expectedSegmentCount, expectedClipCount, expectedPattern;
+  // Red 4 hotfix 9: News uses 5 scenes per story (INTRO/SETUP/CLIP/SUMMARY/REACTION)
+  // per hotfix 6's prompt rewrite — NOT 3 scenes like NBA NARRATION pattern.
+  // News also derives N from items/orderedClipUrls since config.streamers is empty
+  // for News (stories aren't streamers).
+  var N, M, expectedSegmentCount, expectedClipCount, expectedPattern;
+  M = config.clipsPerStreamer || 2;
 
-  if (config.contentType === 'twitch') {
+  if (config.contentType === 'news') {
+    // For News, derive N from the items array OR from orderedClipUrls length
+    // (set by callFullScriptServer's xhr.onload when the server returns the script)
+    N = (config.items && config.items.length)
+        || (window.CURRENT_META && window.CURRENT_META.orderedClipUrls && window.CURRENT_META.orderedClipUrls.length)
+        || (config.streamers && config.streamers.length)
+        || 0;
+    expectedSegmentCount = 1 + N * 5 + 1; // INTRO + (stories × 5 scenes) + OUTRO
+    expectedClipCount = N;
+    expectedPattern = null; // News directive mode has dynamic labels (scene_01..scene_NN), not a fixed pattern
+  } else if (config.contentType === 'twitch') {
+    N = (config.streamers || []).length;
     expectedSegmentCount = 1 + N * (1 + M * 2) + 1;
     expectedClipCount = N * M;
     expectedPattern = buildTwitchExpectedPattern(config.streamers, M);
-  } else if (config.contentType === 'nba' || config.contentType === 'news') {
-    expectedSegmentCount = 1 + N * 3 + 1;
+  } else if (config.contentType === 'nba') {
+    N = (config.streamers || []).length;
+    expectedSegmentCount = 1 + N * 3 + 1; // NBA NARRATION pattern — 3 scenes per game
     expectedClipCount = N;
     expectedPattern = buildNbaNewsExpectedPattern(config.streamers, config.contentType);
   } else if ((config.contentType || '').indexOf('-short') > -1) {
+    N = (config.streamers || []).length;
     expectedSegmentCount = 1 + N * 2 + 1;
     expectedClipCount = N;
     expectedPattern = null;
+  } else {
+    N = (config.streamers || []).length;
   }
 
   var actualAvatarCount = segments.filter(function(s) { return s.type === 'avatar'; }).length;
@@ -4051,9 +4069,13 @@ function sendToHeyGen() {
   var allParsed = parseSegments(script);
 
   // ── Gate 2: Segment Structure QA (pure code, client-side) ────────────────
+  // Red 4 hotfix 9: pass items for News (stories aren't streamers), keep
+  // streamers for Twitch/NBA. Gate 2 validator's News branch reads from items
+  // or orderedClipUrls.length to compute N.
   var gate2Config = {
     contentType: CURRENT_TYPE || 'twitch',
     streamers: (CURRENT_META && CURRENT_META.streamers) || [],
+    items: (CURRENT_META && CURRENT_META.orderedClipUrls) || [],
     clipsPerStreamer: parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10)
   };
   var gate2Result = gate2_validateSegmentStructure(allParsed, gate2Config, 1, []);
