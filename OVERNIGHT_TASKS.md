@@ -83,6 +83,11 @@ Mark `[x]` when complete. Add new tasks at the bottom with a date.
 
 ### 🟢 APPROVED — Ready to Run (1am-7am ET)
 
+> **⭐ TONIGHT'S PRIORITY (2026-04-14) — Atlassian rebuild first.**
+> Before picking up any other `[ ]` task tonight, scroll down to **"Rebuild Atlassian integration from scratch"** (around line 340). That task builds `lib/clients/jira_client.js`, `lib/clients/confluence_client.js`, and `scripts/jira_ping.js` — it unblocks the Jira morning report and the eventual `jira_sync.js`. Rob is moving toward Jira (epics/stories/tasks/subtasks) + Confluence as the canonical home for work tracking and reference docs, which means the current `CLINE_HANDOFF_*.md` / `STATUS.md` / `ROADMAP.md` ecosystem is transitional — it goes away once Atlassian is live. Getting the pipe open tonight is the first step. Task is fully specced, all new files, zero risk to `server.js` or the dashboard. If Rob's `.env` isn't filled in yet, ship the code anyway — the ping script's "ATLASSIAN_API_TOKEN not set" error is the expected failure mode and Rob handles auth separately.
+>
+> After the Atlassian task ships, fall back to normal top-to-bottom queue order (server.js module split next, then the QUEUED section).
+
 #### [~] server.js Module Split — IN PROGRESS
 **Priority:** High — reduces context limit issues for all agents
 **Estimate:** 2-3 modules per night × 5 nights
@@ -337,7 +342,9 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 
 ---
 
-#### [ ] Rebuild Atlassian integration from scratch (replaces deleted 7eb780f scaffolding)
+#### [ ] ⭐ TONIGHT'S PRIORITY — Rebuild Atlassian integration from scratch (replaces deleted 7eb780f scaffolding)
+**Priority bumped 2026-04-14:** Rob is transitioning work tracking from `CLINE_HANDOFF_*.md` / `STATUS.md` / `ROADMAP.md` to Jira (epics/stories/tasks/subtasks) + Confluence (reference docs). This task proves the Atlassian pipe is open so follow-up tasks (Jira morning report, jira_sync.js, Confluence page sync) can unblock. **Run this FIRST tonight before any other `[ ]` task.** See priority banner at the top of the APPROVED section for full context.
+
 **Files:** NEW `lib/clients/jira_client.js`, NEW `lib/clients/confluence_client.js`, NEW `scripts/jira_ping.js`
 **What:** Rob deleted the 2026-04-12 Atlassian scaffolding (`scripts/atlassian_setup.js`, `scripts/jira_sync.js`, `scripts/confluence_sync.js`, `docs/JIRA_CONFLUENCE_MIGRATION_PLAN.md`) on 2026-04-13 because it was half-built — the scripts imported `lib/clients/jira_client` and `lib/clients/confluence_client` which were never written. Rebuild the CLIENT layer only, no sync logic yet. Goal: prove the pipe is open and reachable from localhost.
 **Atlassian details (confirmed by Rob):**
