@@ -7624,12 +7624,29 @@ Each scene object:
 {
   "id": "scene_label_matching_assembly",
   "type": "avatar" | "source_clip",
+  "storyIndex": 0, // Required Zod field — which story this scene belongs to (0-based)
   "spokenText": "The exact words the anchor speaks (empty string for source_clip scenes)",
   "estimatedDurationSec": 15, // Required for avatar scenes
   "chrome": {
     "flag": { "visible": true, "text": "HEADLINE TEXT", "source": "Al Jazeera" },
     "tvCard": { "visible": true, "imageUrl": "https://example.com/image.jpg", "headline": "Full Article Headline", "sourceName": "Al Jazeera" },
     "sidebar": { "visible": true, "activeIndex": 0, "cap": 5 },
+    "ticker": { "visible": true },
+    "logo": { "visible": true }
+  }
+}
+
+// source_clip scene (NO spokenText field — Zod will reject it):
+{
+  "id": "scene_04",
+  "type": "source_clip",
+  "storyIndex": 0,
+  "clipUrl": "https://example.com/clip.mp4",
+  "clipMaxDurationSec": 25,
+  "chrome": {
+    "flag": { "visible": false },
+    "tvCard": { "visible": false },
+    "sidebar": { "visible": false, "activeIndex": 0, "cap": 5 },
     "ticker": { "visible": true },
     "logo": { "visible": true }
   }
