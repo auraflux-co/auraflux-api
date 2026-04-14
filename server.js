@@ -2442,10 +2442,19 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
     }
   }
 
-  // Count [CLIP PLAYS HERE] markers (text mode) OR source_clip scenes (directive mode)
+  // Count [CLIP PLAYS HERE] markers
+  // Red 4 hotfix 5: Cline's News Gemini prompt is HYBRID — JSON wrapper with
+  // scene objects, but each scene's spokenText field still contains the legacy
+  // text format including literal [CLIP PLAYS HERE] markers embedded in STORY#_SETUP
+  // scenes. None of the scenes have type:'source_clip' because the prompt never
+  // instructs Gemini to create standalone clip scenes. Clips are inline text
+  // markers inside SETUP scenes (prompt lines 7629-7633). So the count has to
+  // scan spokenText, not filter by scene type. Same regex as legacy mode, just
+  // applied to concatenated spokenText from all scenes.
   let clipMarkers;
   if (parsedDirectiveJson) {
-    clipMarkers = parsedDirectiveJson.scenes.filter(s => s.type === 'source_clip').length;
+    const _allSpoken = parsedDirectiveJson.scenes.map(s => s.spokenText || '').join('\n');
+    clipMarkers = (_allSpoken.match(/\[CLIP PLAYS HERE\]/g) || []).length;
   } else {
     clipMarkers = (script.match(/\[CLIP PLAYS HERE\]/g) || []).length;
   }
