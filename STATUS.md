@@ -18,6 +18,16 @@
 
 ---
 
+## 🔒 Active File Locks
+
+> **Two agents running simultaneously? Declare your file lock here before editing. Check this table before opening any Tier 1/2 file. See `AGENT_FILE_REGISTRY.md` for full protocol.**
+
+| File | Agent | Handoff | Locked At |
+|------|-------|---------|-----------|
+| (none) | — | — | — |
+
+---
+
 ## 🤖 Last Agent Action
 
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**

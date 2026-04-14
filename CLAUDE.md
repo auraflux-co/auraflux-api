@@ -4,17 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Session Start
 
-**Read these three files at the start of every session, in this order:**
+**Read these files at the start of every session, in this order:**
 1. `CLAUDE.md` — architecture, rules, gotchas (this file)
-2. `STATUS.md` — current tasks, phase progress, what's working, what's next
-3. **`GATED_PIPELINE_ARCHITECTURE.md`** — the authoritative spec for the Gated Self-Healing Pipeline (9 principles, 7 gates, Gate Output Contract, collaborative QA dialogue pattern). Every agent touching pipeline code must read this. Supersedes the ad-hoc retry logic patterns in legacy code.
+2. `STATUS.md` — current tasks, active file locks, what's working, what's next
+3. `AGENT_FILE_REGISTRY.md` — file ownership tiers, handoff size rules, multi-agent lock protocol. **Read before touching any file.**
+4. **`GATED_PIPELINE_ARCHITECTURE.md`** — the authoritative spec for the Gated Self-Healing Pipeline. Every agent touching pipeline code must read this.
 
-Tell Cline: _"Read CLAUDE.md, STATUS.md, and GATED_PIPELINE_ARCHITECTURE.md and tell me what we're working on"_
+Tell Cline: _"Read CLAUDE.md, STATUS.md, AGENT_FILE_REGISTRY.md and tell me what we're working on"_
 
-**Currently in-progress handoffs (as of 2026-04-11):**
-- `CLINE_HANDOFF_GATE2_SEGMENT_STRUCTURE.md` — Phase 1: parseSegments_v2 + Gate 2 pure-code validator (BLOCKS smoke testing, ship first)
-- `CLINE_HANDOFF_GATE1_CLIP_DIAGNOSTIC_UPGRADE.md` — Phase 2: specific clip failure diagnostics (ship after Phase 1)
-- `CLINE_HANDOFF_AVATAR_AND_TICKER_FIX.md` — ✅ shipped as commit `0d13fb0`
+**Multi-agent rule:** If two agents are running simultaneously, check `STATUS.md → 🔒 Active File Locks` before editing any Tier 1 or Tier 2 file. Declare your lock before your first edit. See `AGENT_FILE_REGISTRY.md` for the full protocol.
+
+**Currently in-progress handoffs (as of 2026-04-14) — read these after CLAUDE.md + STATUS.md:**
+- `CLINE_HANDOFF_NEWS_CHROME_FIX.md` — ⚡ SHIP NEXT. 6 fixes to get TV card, lower-third flag, and sidebar rendering in News long-form. Root cause: assembly payload never sent `jobId` so directive sidecar was never found. All 6 fixes documented with exact file + line locations.
+- `CLINE_HANDOFF_WAVE_0_CLEANUP.md` — 16 non-blocking cleanup items (dead code, unused imports, etc.). Do after News chrome is locked.
+- `CLINE_HANDOFF_NBA_VOICEOVER_FFMPEG_V2.md` — NBA long-form voiceover assembly. Start after News long-form is locked and passing smoke tests.
 
 ---
 
