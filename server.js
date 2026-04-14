@@ -1834,7 +1834,7 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
 // Samples at 10%, 50%, and 90% of the video to catch issues throughout
 // Returns { score: 0-100, report: string, passed: boolean }
 async function geminiQACheck(videoPath, opts = {}) {
-  const { contentType, avatarCount, clipCount, expectedTicker, totalDuration } = opts;
+  const { contentType, avatarCount, clipCount, downloadedClipCount, expectedTicker, totalDuration } = opts;
   if (!GEMINI_APIKEY) return { score: 100, report: 'QA skipped — no Gemini API key', passed: true };
   if (!fs.existsSync(videoPath)) return { score: 0, report: 'QA failed — video file not found', passed: false };
 
@@ -1880,7 +1880,7 @@ async function geminiQACheck(videoPath, opts = {}) {
         `3. VIDEO QUALITY: 1080p, no pixelation, no black frames? (yes/partial/no)`,
         `4. AVATAR VISIBLE: Bobby G clearly visible and properly framed? (yes/no)`,
         `5. AUDIO: Audio clear and continuous? (yes/partial/no)`,
-        ...(clipCount > 0 ? [`6. SOURCE CLIPS: Are source clips (non-avatar footage) visible and playing? (yes/no)`] : []),
+        ...((( downloadedClipCount ?? clipCount) > 0) ? [`6. SOURCE CLIPS: Are source clips (non-avatar footage) visible and playing? (yes/no)`] : []),
       ] : [
         `1. VIDEO FREEZE: Video frozen/stalled at any point? (yes/no) — CRITICAL`,
         `2. TICKER: Ticker still scrolling at end of video? (yes/no)`,
@@ -1890,7 +1890,7 @@ async function geminiQACheck(videoPath, opts = {}) {
 
       const qaPrompt = `You are QA reviewer for ClipzWorld News YouTube compilations.
 Review this 20-second ${point.label} sample (from ~${Math.round(point.start)}s into an ${Math.round(dur)}s video).
-Context: ${avatarCount} avatar segments, ${clipCount} source clips.
+Context: ${avatarCount} avatar segments, ${clipCount} source clips requested, ${downloadedClipCount ?? clipCount} downloaded.
 
 CHECKLIST — answer every item, even if the answer is PASS:
 ${checklist.join('\n')}
@@ -1978,7 +1978,10 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   const lateReport      = reports[2] || '';
   const outroCutOff     = /OUTRO:.*FAIL/i.test(lateReport) && !/abrupt.*cut|cut.*abrupt|sample.*end/i.test(lateReport);
   const avDeSync               = /a\/v.*desync|audio.*ahead|video.*behind/i.test(fullReport);
-  const clipsExpectedButMissing = clipCount > 0 && /SOURCE CLIPS:.*no/i.test(fullReport);
+  // Fix 1: structural fail when clips requested but none downloaded; Gemini-detected fail when downloaded but not visible
+  const effectiveClipCount = downloadedClipCount ?? clipCount;
+  const clipsExpectedButMissing = (clipCount > 0 && effectiveClipCount === 0) ||
+    (effectiveClipCount > 0 && /SOURCE CLIPS:.*no/i.test(fullReport));
   const hasCriticalFail = freezeDetected || tickerMissing || outroCutOff || avDeSync || clipsExpectedButMissing;
 
   // Build structured deduction list for why-doc
@@ -5142,6 +5145,7 @@ app.post('/assemble',
         try {
           qaResult = await geminiQACheck(outPath, {
             contentType, avatarCount, clipCount,
+            downloadedClipCount,         // Fix 1: actual downloaded vs requested
             expectedTicker: !!(tickerType && TICKER_MAP[tickerType]),
             totalDuration: parseFloat(totalDur)
           });
