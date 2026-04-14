@@ -3721,6 +3721,24 @@ app.post('/assemble',
             }
           }
 
+          // ── News clips: re-scrape Brightcove HLS URL at assembly time ──
+          // Brightcove fastly_token expires in ~1 hour (same as Twitch CDN tokens).
+          // HeyGen render takes 30-60 min — always re-scrape rather than use stored URL.
+          // seg.pageUrl for News source_clips = the Al Jazeera article URL.
+          if (contentType === 'news' && seg.pageUrl && seg.pageUrl.includes('aljazeera')) {
+            try {
+              const freshHls = await scrapeArticleVideo(seg.pageUrl);
+              if (freshHls) {
+                url = freshHls;
+                log(asmId, `🔄 Fresh Brightcove HLS for ${label} (re-scraped from article)`);
+              } else {
+                log(asmId, `⚠️  Re-scrape returned null for ${label} — trying stored URL`);
+              }
+            } catch(e) {
+              log(asmId, `⚠️  Re-scrape failed for ${label}: ${e.message} — trying stored URL`);
+            }
+          }
+
           let clipSlug = seg.pageUrl ? extractTwitchSlug(seg.pageUrl) : '';
 
           // Fallback: extract slug from CDN URL token parameter (for old jobs without pageUrl)
@@ -4047,6 +4065,52 @@ app.post('/assemble',
         const baseTitle = (jobTitle||"cwn").toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,40);
         outFile   = `${baseTitle}_${actualClipCount}clips_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
         outPath   = path.join(outDir, outFile);
+
+      // ── Gate 3 Pre-Flight: deterministic structural check, no Gemini tokens ─────────
+      // Fix 5: catches critical assembly failures BEFORE Gemini upload.
+      // Runs after download loop + segTypes build, before TS normalization.
+      function assemblyPreFlightCheck(localFiles, segTypes, segsToProcess, contentType) {
+        const issues = [];
+        const requestedClips  = segsToProcess.filter(s => s.type === 'source_clip').length;
+        const downloadedClips = localFiles.filter((_, i) => segTypes[i] === 'source_clip').length;
+
+        if (requestedClips > 0 && downloadedClips === 0) {
+          issues.push({
+            severity: 'CRITICAL',
+            check: 'SOURCE_CLIPS_ALL_MISSING',
+            detail: `${requestedClips} source clips requested, 0 downloaded — episode has no source footage`
+          });
+        } else if (downloadedClips < requestedClips) {
+          issues.push({
+            severity: 'WARNING',
+            check: 'SOURCE_CLIPS_PARTIAL',
+            detail: `${downloadedClips}/${requestedClips} source clips downloaded — partial footage loss`
+          });
+        }
+
+        return { issues };
+      }
+
+      // Fix 5: Deterministic pre-flight check — runs before Gemini, no token cost
+      const preFlightResult = assemblyPreFlightCheck(localFiles, segTypes, segsToProcess, contentType);
+      const preFlightCriticals = preFlightResult.issues.filter(i => i.severity === 'CRITICAL');
+      if (preFlightCriticals.length > 0) {
+        for (const issue of preFlightCriticals) {
+          log(asmId, `🚨 PRE-FLIGHT CRITICAL: [${issue.check}] ${issue.detail}`);
+        }
+        log(asmId, `❌ Gate 3 pre-flight failed — ${preFlightCriticals.length} critical issue(s). Aborting before Gemini upload.`);
+        assemblyJobs[asmId].status = 'failed';
+        assemblyJobs[asmId].error  = preFlightCriticals.map(i => i.detail).join('; ');
+        assemblyJobs[asmId].qaOutcome = 'pre_flight_fail';
+        assemblyJobs[asmId].qaReport  = preFlightCriticals.map(i => `CRITICAL: ${i.check} — ${i.detail}`).join('\n');
+        return;
+      }
+      for (const issue of preFlightResult.issues.filter(i => i.severity === 'WARNING')) {
+        log(asmId, `⚠️  PRE-FLIGHT WARNING: [${issue.check}] ${issue.detail}`);
+      }
+
+      // Also compute downloadedClipCount here for use in later commits
+      const downloadedClipCount = localFiles.filter((_, i) => segTypes[i] === 'source_clip').length;
 
       // Step 4: Normalize all segments to TS (handles mixed codecs + moov atom issues)
       // Then apply smart per-segment transitions via xfade filter on normalized files
@@ -11474,8 +11538,9 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
       }
     }, storyData, storyIndex, { showLowerThird, hideSidebar, episodeNumber, activeCategory, tvCard });
 
-    // Wait for animations to settle
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Wait for fonts to load + animations to settle
+    await page.evaluate(() => document.fonts.ready);
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Screenshot — omitBackground:true is CRITICAL: without it, body{background:transparent}
     // composites against a white canvas → pix_fmt=rgb24 (near-white) instead of RGBA with real alpha
