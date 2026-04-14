@@ -5,6 +5,13 @@ require('dotenv').config();
 // to the legacy Fix 5/7 reactive state machine (emergency rollback only).
 const USE_DIRECTIVE_CHROME = process.env.USE_DIRECTIVE_CHROME !== 'false';
 const { validateScript: validateChromeScript, directiveToOverlayParams } = require('./lib/chromeDirectives');
+const {
+  writeDirectiveForJob,
+  loadDirectiveForJob,
+  hasDirectiveForJob,
+  extractSpokenTextFromDirective,
+  pruneOldDirectives
+} = require('./lib/directives');
 
 // ── Option Y hotfix 1: browser-like headers to bypass Al Jazeera WAF ──────
 // axios default User-Agent (axios/1.x.x) gets blocked by Al Jazeera's bot
@@ -146,6 +153,7 @@ function validateDirWritable(dirPath, dirName) {
 cleanupOrphanedTempFiles();
 validateDirWritable(TMP_DIR, 'tmp');
 validateDirWritable(OUTPUT_DIR, 'output');
+pruneOldDirectives(); // Red 4 hotfix 12: prune directive sidecar files older than 7 days
 
 const assemblyJobs = {};
 const heygenJobs   = {};
@@ -360,6 +368,7 @@ async function startHeyGenPoller(jobId, card) {
           assemblyId,
           jobTitle:    _humanTitle,
           contentType,
+          jobId,
           sceneTextMap: card.heygen?.sceneTextMap || null,
           fullScript:   card.script || null,
           streamers:    card.streamers || []
@@ -3453,7 +3462,7 @@ app.post('/assemble',
   requireFields('segments', 'segmentData'),
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
   async (req, res) => {
-  const { segments, segmentData, labels, transition='crossfade', format='mp4', outputDir, jobTitle, assemblyId, contentType, sceneTextMap, fullScript } = req.body;
+  const { segments, segmentData, labels, transition='crossfade', format='mp4', outputDir, jobTitle, assemblyId, contentType, jobId: assemblyJobId, sceneTextMap, fullScript } = req.body;
 
   // Support both old format (segments=[urls]) and new format (segmentData=[{url,label,type}])
   const segsToProcess = segmentData && segmentData.length
@@ -4182,33 +4191,24 @@ app.post('/assemble',
           // Fix 7: replaces blend= (broken alpha) with overlay=0:0 (correct RGBA composite).
           // Fix 7: omitBackground:true in generateNewscastOverlay() produces real RGBA PNG.
 
-          // ── Red 4: Directive path (USE_DIRECTIVE_CHROME=true, script is JSON) ──────
+          // ── Red 4: Directive path (USE_DIRECTIVE_CHROME=true, sidecar loaded by jobId) ──────
           let _directiveHandled = false;
-          if (USE_DIRECTIVE_CHROME) {
-            const rawScript = assemblyJobs[asmId]?.fullScript;
-            if (rawScript) {
-              let parsedDirectiveScript = null;
-              try {
-                const cleanedRaw = typeof rawScript === 'string' ? stripCodeFences(rawScript) : rawScript;
-                parsedDirectiveScript = typeof cleanedRaw === 'string' ? JSON.parse(cleanedRaw) : cleanedRaw;
-                // Red 4 Fix 2: validate parsed script against ScriptSchema — catches schema drift silently
-                try { validateChromeScript(parsedDirectiveScript); } catch(validationErr) {
-                  log(asmId, `  ⚠️  Chrome directive schema validation warning: ${validationErr.message} — proceeding anyway`);
+          if (USE_DIRECTIVE_CHROME && assemblyJobId && hasDirectiveForJob(assemblyJobId)) {
+            try {
+              const _directive = loadDirectiveForJob(assemblyJobId);
+              const scene = _directive.scenes.find(s => s.id === label || s.id === label.trim());
+              if (scene) {
+                try {
+                  inputForTS = await burnSceneChromeFromDirective(scene, inputForTS, asmId, assemblyJobId);
+                  _directiveHandled = true;
+                } catch(e) {
+                  log(asmId, `  ⚠️  Directive chrome burn failed (falling back to legacy): ${e.message}`);
                 }
-              } catch(e) { /* legacy plain-text script — fall through to legacy */ }
-              if (parsedDirectiveScript && parsedDirectiveScript.scenes) {
-                const scene = parsedDirectiveScript.scenes.find(s => s.id === label || s.id === label.trim());
-                if (scene) {
-                  try {
-                    inputForTS = await burnSceneChromeFromDirective(scene, inputForTS, asmId, parsedDirectiveScript);
-                    _directiveHandled = true;
-                  } catch(e) {
-                    log(asmId, `  ⚠️  Directive chrome burn failed (falling back to legacy): ${e.message}`);
-                  }
-                } else {
-                  log(asmId, `  ℹ️  No directive found for scene "${label}" — using legacy chrome`);
-                }
+              } else {
+                log(asmId, `  ℹ️  No directive found for scene "${label}" — using legacy chrome`);
               }
+            } catch(e) {
+              log(asmId, `  ⚠️  Directive sidecar load failed (falling back to legacy): ${e.message}`);
             }
           }
 
@@ -4520,10 +4520,12 @@ app.post('/assemble',
             // NOTE: do NOT change lines 3800/3834 — those are short-form split-screen slots that legitimately need zoom-to-fill
             const vfFilter = isAvatarSeg
               ? 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
-              : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=fps=30' +
+              : "scale=w='if(gt(a,16/9),-2,1920)':h='if(gt(a,16/9),1080,-2)',crop=1920:1080,fps=fps=30" +
                 // Red 4 Fix 4: zoom-to-fill for News source clips (was letterbox — caused navy bars on portrait AJ videos)
                 // Red 2: mask Al Jazeera bottom-right corner watermark with CWN navy box
                 // 120x80 region at (1780, 960) covers logo + 20px safety padding
+                // Input-aware crop: scale=w='if(gt(a,16/9),-2,1920)':h='if(gt(a,16/9),1080,-2)' fixes
+                // negative crop offsets on portrait inputs (CLINE_HANDOFF_AUTO_ADVANCE_HARDENING)
                 (contentType === 'news' && !isAvatarSeg ? ',drawbox=x=1780:y=960:w=120:h=80:color=0x0d1424@1.0:t=fill' : '');
 
             // ── Fix 10: News source clips — silencedetect trim + 25s hard cap ──
@@ -4576,8 +4578,11 @@ app.post('/assemble',
           tsFiles.push(tsPath);
           if (i % 10 === 0) log(asmId, `  🔄 Normalized ${i+1}/${localFiles.length} segments...`);
         } catch(e) {
-          log(asmId, `  ⚠️  Skipping segment ${i+1}: ${e.message}`);
-          segTypes.splice(tsFiles.length, 0);
+          // Fail loud — silent skip was hiding scene_12 drops (CLINE_HANDOFF_AUTO_ADVANCE_HARDENING)
+          const errEntry = { ts: new Date().toISOString(), asmId, segment: i+1, error: e.message };
+          try { fs.appendFileSync(path.join(__dirname, 'logs', 'errors.jsonl'), JSON.stringify(errEntry) + '\n'); } catch(_) {}
+          log(asmId, `  ❌ HARD FAIL segment ${i+1}: ${e.message}`);
+          throw new Error(`TS normalize failed on segment ${i+1}: ${e.message}`);
         }
       }
       log(asmId, `  ✅ ${tsFiles.length} segments normalized`);
@@ -8106,13 +8111,28 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
       }
     }
 
+    // ── Red 4: For News directive mode, write sidecar + extract spoken text ──
+    // Must run BEFORE HeyGen send so HeyGen gets plain text, not raw JSON.
+    let scriptForHeygen = script;
+    if (type === 'news' && USE_DIRECTIVE_CHROME && scriptQA.outcome === 'pass') {
+      try {
+        const _cleaned = stripCodeFences(script);
+        const _parsedDirective = JSON.parse(_cleaned);
+        writeDirectiveForJob(jobId, _parsedDirective);
+        scriptForHeygen = extractSpokenTextFromDirective(_parsedDirective);
+        console.log(`[generate-full-script] ✅ Directive sidecar written for job ${jobId}, extracted ${scriptForHeygen.length} chars of spoken text`);
+      } catch(e) {
+        console.error(`[generate-full-script] ⚠️  Failed to write directive sidecar: ${e.message} — proceeding with raw script`);
+      }
+    }
+
     // ── Auto-send to HeyGen if Gate 1 passes ──────────────────────────
     let heygenResult = null;
     if (scriptQA.outcome === 'pass') {
       console.log('[generate-full-script] 🎬 Gate 1 PASSED — Auto-sending to HeyGen...');
       try {
         const format = type.includes('-short') ? 'portrait' : 'landscape';
-        heygenResult = await sendScriptToHeyGen(script, {
+        heygenResult = await sendScriptToHeyGen(scriptForHeygen, {
           contentType: type,
           format,
           jobId: `${type}_${dateStr}_${Date.now()}`
@@ -11363,12 +11383,15 @@ app.post('/generate-thumbnail',
 // ── Red 4: Directive-driven chrome burn per scene ─────────────────────────
 // Burns a single scene's chrome overlay using its JSON directive.
 // Returns the burned output path (or inputTs unchanged on source_clip / error).
-async function burnSceneChromeFromDirective(scene, inputTs, asmId, parsedScript) {
+// jobId: the pipeline job ID — used to load the directive sidecar from data/directives/{jobId}.json
+async function burnSceneChromeFromDirective(scene, inputTs, asmId, jobId) {
   if (scene.type === 'source_clip') return inputTs; // no chrome burn for clips
   const chrome = scene.chrome;
   const epCountersPath = path.join(__dirname, 'data/episode_counters.json');
   let newsEpNum = 1;
   try { const epC = JSON.parse(fs.readFileSync(epCountersPath, 'utf8')); newsEpNum = epC.news || 1; } catch(e) {}
+  // Load directive sidecar to get storyList + brandConfig
+  const parsedScript = loadDirectiveForJob(jobId);
   const context = {
     storyList: parsedScript.storyList || [],
     episodeNumber: `Episode ${newsEpNum}`,
