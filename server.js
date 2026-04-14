@@ -6,6 +6,23 @@ require('dotenv').config();
 const USE_DIRECTIVE_CHROME = process.env.USE_DIRECTIVE_CHROME !== 'false';
 const { validateScript: validateChromeScript, directiveToOverlayParams } = require('./lib/chromeDirectives');
 
+// ── Red 4 hotfix: strip markdown code fences from Gemini JSON output ──────
+// Gemini 2.5 Flash often wraps structured JSON output in ```json ... ```
+// markdown fences even when prompted to return raw JSON. JSON.parse chokes
+// on the backticks. This helper strips common fence patterns before parsing.
+// Safe no-op on already-raw JSON. Handles ```json, ```JSON, plain ``` variants.
+function stripCodeFences(text) {
+  if (!text || typeof text !== 'string') return text;
+  let t = text.trim();
+  if (t.startsWith('```')) {
+    // Opening fence: ```json\n, ```JSON\n, or ```\n
+    t = t.replace(/^```(?:json|JSON)?\s*\n?/, '');
+    // Closing fence: \n``` or ```
+    t = t.replace(/\n?```\s*$/, '');
+  }
+  return t.trim();
+}
+
 // Validate required environment variables on startup
 function validateRequiredEnv() {
   const required = [
@@ -2598,7 +2615,8 @@ ISSUES:
   let jsonValidationDeduction = null;
   if (contentType === 'news' && USE_DIRECTIVE_CHROME) {
     try {
-      const parsed = typeof script === 'string' ? JSON.parse(script) : script;
+      const cleaned = typeof script === 'string' ? stripCodeFences(script) : script;
+      const parsed = typeof cleaned === 'string' ? JSON.parse(cleaned) : cleaned;
       if (!parsed || !Array.isArray(parsed.scenes) || parsed.scenes.length === 0) {
         jsonValidationDeduction = { points: 20, reason: 'NEWS JSON DIRECTIVE: script parsed but missing scenes[] array — CRITICAL' };
       } else {
@@ -4110,7 +4128,8 @@ app.post('/assemble',
             if (rawScript) {
               let parsedDirectiveScript = null;
               try {
-                parsedDirectiveScript = typeof rawScript === 'string' ? JSON.parse(rawScript) : rawScript;
+                const cleanedRaw = typeof rawScript === 'string' ? stripCodeFences(rawScript) : rawScript;
+                parsedDirectiveScript = typeof cleanedRaw === 'string' ? JSON.parse(cleanedRaw) : cleanedRaw;
               } catch(e) { /* legacy plain-text script — fall through to legacy */ }
               if (parsedDirectiveScript && parsedDirectiveScript.scenes) {
                 const scene = parsedDirectiveScript.scenes.find(s => s.id === label || s.id === label.trim());
@@ -7599,13 +7618,30 @@ Source: [Source name]. Link in description.
 - Between stories, the assembly layer will add a 3-second hold on the source clip before cutting to the next story. Do NOT write stage directions in the script — just end the REACTION scene with a single deadpan sentence.
 - Never explain the take in reactions. Never recap what just happened — that's SUMMARY's job.
 
-SOURCE ATTRIBUTION RULE (STRICT):
-- NEVER speak the source name in any scene (INTRO, SETUP, SUMMARY, REACTION, OUTRO).
-- Bobby G does not say "According to Al Jazeera", "Sources report", "Al Jazeera's coverage", or any variation.
-- Source names are already tracked in the story metadata and will be published in the video description automatically.
-- If a story is uniquely identifiable only by its source, rephrase to describe the event without the publication name.
+SOURCE ATTRIBUTION RULE (STRICT — ABSOLUTE PROHIBITION):
+- NEVER speak the source name OR any organization name that published the story.
+- Bobby G NEVER uses attribution phrases of ANY kind. This includes but is not limited to:
+    "According to Al Jazeera"
+    "According to a direct statement from..."
+    "According to [any organization/government/body]"
+    "Sources report"
+    "Sources at..."
+    "Reports from..."
+    "A statement from..."
+    "Officials at [X] say..."
+    "[X] reports"
+    "[X] says"
+    "[X]'s coverage shows..."
+- Source names are tracked in story metadata and published in the video description automatically. Bobby G's spoken text NEVER references the publication, reporting body, or issuing organization.
+- If a story is uniquely identifiable only by its source, rephrase to describe the event without the attribution.
   WRONG: "According to Al Jazeera, Iran's army seized US plans..."
   RIGHT: "Iran's army reportedly seized US plans..."
+  WRONG: "According to a direct statement from the E-U, peace is not possible..."
+  RIGHT: "The E-U says peace is not possible..." — NO wait, that still attributes. Use instead: "Peace is not possible while Lebanon burns, officials warn..." or simply "Peace is not possible while Lebanon burns." Drop the attribution entirely.
+  WRONG: "Officials at the White House say Trump will not apologize..."
+  RIGHT: "Trump will not apologize..." — state the fact directly, no attribution wrapper.
+- When in doubt: remove the attribution phrase and state the fact as Bobby G's own observation.
+- Gate 1 Claude QA will scan every spokenText field for attribution patterns. Any match = hard -25 deduction = script regeneration. Do not waste the pipeline's retry budget.
   WRONG: "Al Jazeera reports that Israeli forces fired tear gas..."
   RIGHT: "Israeli forces fired tear gas into a Palestinian schoolchildren's crowd."
 - This rule applies to ALL 10 stories, every scene type, no exceptions.
