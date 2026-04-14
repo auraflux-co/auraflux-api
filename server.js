@@ -1873,7 +1873,7 @@ async function geminiQACheck(videoPath, opts = {}) {
         `3. VIDEO FREEZE: Does the video appear to FREEZE (video stuck, audio continues)? (yes/no) — CRITICAL`,
         `4. TRANSITIONS: Do cuts between segments look clean? (yes/partial/no)`,
         `5. AUDIO: Audio clear and continuous? (yes/partial/no)`,
-        `6. TV CARD: Is a TV-shaped overlay card visible in the top-right corner? (yes/no)`,
+        `6. TV CARD: Is a TV-shaped overlay card visible in the top-right corner? (yes/no) — IMPORTANT: for News, the TV card is ONLY correct on STORY_INTRO scenes. If visible on a non-intro scene (setup, summary, reaction, outro), flag as FAIL.`,
       ] : point.label === 'MIDDLE' ? [
         `1. VIDEO FREEZE: Does the video appear to FREEZE at any point? (yes/no) — CRITICAL`,
         `2. TICKER: Scrolling ticker still visible at bottom? (yes/no)`,
@@ -1890,7 +1890,7 @@ async function geminiQACheck(videoPath, opts = {}) {
 
       const qaPrompt = `You are QA reviewer for ClipzWorld News YouTube compilations.
 Review this 20-second ${point.label} sample (from ~${Math.round(point.start)}s into an ${Math.round(dur)}s video).
-Context: ${avatarCount} avatar segments, ${clipCount} source clips requested, ${downloadedClipCount ?? clipCount} downloaded.
+Context: ${avatarCount} avatar segments, ${clipCount} source clips requested, ${downloadedClipCount ?? clipCount} downloaded.${contentType === 'news' ? `\nNews chrome rules: TV card overlay must ONLY appear on story INTRO scenes. If TV card is visible on SETUP, SUMMARY, REACTION, or OUTRO scenes, it is a production bug — flag as FAIL.` : ''}
 
 CHECKLIST — answer every item, even if the answer is PASS:
 ${checklist.join('\n')}
@@ -1982,7 +1982,8 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   const effectiveClipCount = downloadedClipCount ?? clipCount;
   const clipsExpectedButMissing = (clipCount > 0 && effectiveClipCount === 0) ||
     (effectiveClipCount > 0 && /SOURCE CLIPS:.*no/i.test(fullReport));
-  const hasCriticalFail = freezeDetected || tickerMissing || outroCutOff || avDeSync || clipsExpectedButMissing;
+  const tvCardOnWrongScene  = contentType === 'news' && /TV CARD.*FAIL/i.test(fullReport);
+  const hasCriticalFail = freezeDetected || tickerMissing || outroCutOff || avDeSync || clipsExpectedButMissing || tvCardOnWrongScene;
 
   // Build structured deduction list for why-doc
   const deductions = [];
@@ -1991,6 +1992,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   if (outroCutOff)     deductions.push({ points: 20, reason: 'OUTRO cut off — "Appreciate you!" not present in late sample' });
   if (avDeSync)        deductions.push({ points: 15, reason: 'A/V DESYNC detected in sample' });
   if (clipsExpectedButMissing) deductions.push({ points: 25, reason: 'SOURCE CLIPS missing — expected clips but none detected in video' });
+  if (tvCardOnWrongScene)  deductions.push({ points: 15, reason: 'TV CARD on wrong scene type — visible outside STORY_INTRO scenes (News only)' });
   scores.forEach((s, i) => {
     if (s < 80) deductions.push({ points: 80 - s, reason: `${samplePoints[i].label} sample scored ${s}/100 — see report for specifics` });
   });
@@ -2027,6 +2029,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
     `Outro cut off:  ${outroCutOff   ? '🚨 YES' : '✅ No'}`,
     `A/V desync:     ${avDeSync      ? '🚨 YES' : '✅ No'}`,
     `Clips missing:  ${clipsExpectedButMissing ? '🚨 YES' : '✅ No'}`,
+    `TV card bleed: ${tvCardOnWrongScene ? '🚨 YES' : contentType === 'news' ? '✅ No' : 'N/A'}`,
     ``,
     `── SCORE BREAKDOWN ───────────────────────────────`,
     `STARTING SCORE: 100`,
