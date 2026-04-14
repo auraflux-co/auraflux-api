@@ -13,10 +13,39 @@
 
 ## 1. Purpose
 
+> **⚠️ STACK UPDATE — 2026-04-14 (supersedes earlier Vercel/TBD-marketing references below)**
+>
+> Rob locked the Phase 2 stack on 2026-04-14 after reviewing a SaaS architecture blueprint and making three decisions that override earlier placeholders in this doc and in `AUTONOMOUS_PRODUCTION_ROADMAP.md` section 12:
+>
+> 1. **Brand/domain:** Product name is **AuraFlux**, domain is **`auraflux.co`** (registered 2026-04-14). This replaces the earlier "AuraForge" brand — AuraForge had too many conflicting businesses + social handles. Rename across all Phase 2 docs is a pending Cline handoff. The "forge" metaphor ("we forge your content into assets that continuously generate reach") needs a rework to match "flux" — different semantic (flow, transformation, continuous motion). Icon system (hexagon/anvil/node network) mostly carries over but the anvil specifically was tied to "forge" and will need a flow/current-themed replacement.
+>
+> 2. **Marketing site:** Equinox template (purchased 2026-04-14) hosted on **Cloudflare Pages free tier**, not Vercel. Cloudflare Pages has unlimited bandwidth on free tier vs Vercel Hobby's 100 GB/mo cap; even Pro is $20/mo on both. Rob was going to be a Cloudflare customer anyway for DNS and SSL, so the Cloudflare ecosystem pairing (DNS + Pages + free SSL + edge CDN) wins on cost and simplicity. Vercel references in this doc below should be read as "Cloudflare Pages for marketing, Railway for app" going forward. Rob designs the Equinox template himself — no marketing wireframes need to be drafted by Claude Code.
+>
+> 3. **Domain routing:**
+>    - `auraflux.co` (root, apex) → Equinox marketing site on Cloudflare Pages
+>    - `app.auraflux.co` (subdomain) → Next.js App Router app on Railway (same Railway project as the Node API + Postgres, co-located for zero cross-cloud latency on API calls)
+>    - DNS currently at GoDaddy; will be flipped to Cloudflare nameservers before launch so Cloudflare can serve DNS for both records and issue free wildcard SSL
+>
+> **What stays the same from the earlier plan:**
+> - Next.js App Router + Tailwind CSS + shadcn/ui for the app UI
+> - PostgreSQL on Railway
+> - Drizzle ORM (not Prisma — lighter, no runtime migrations)
+> - Clerk for auth (not Better-auth — proven, Phase 2 spec already has integration plan)
+> - Stripe for payments
+> - Railway for API, worker, assembly services (all same project)
+> - Cloudflare R2 for binary storage (section 6.5)
+> - Monorepo structure, React Query, Zod, 6-week execution plan, API contract, Postgres schema
+>
+> **Railway "Open SaaS" template** is a fast-start option worth evaluating in week 1 before hand-rolling the Next.js app shell — could save 1-2 weeks of setup if its structure fits Rob's monorepo preferences. Not a hard commitment; evaluate and decide.
+>
+> **The Vercel mentions in sections 1, 12, 6.3 below are historical and should be mentally replaced with "Cloudflare Pages for marketing, Railway for the Next.js app."** A follow-up pass will clean up the inline Vercel references once Phase 2 actually starts; this addendum is authoritative until then.
+
+---
+
 This doc captures Rob's 6-week Phase 2 build plan for the customer-facing SaaS product. It is the bridge between:
 
 - **Current state:** localhost operator dashboard, vanilla HTML, JSON file persistence, single operator (Rob), Phase 1 smoke test loop
-- **Phase 2 end state:** Next.js + Vercel frontend calling Railway Node/Express backend with Postgres persistence, first paying customer onboarded, daily content shipping automatically, 3-5 closed alpha beta creators using the product
+- **Phase 2 end state:** Next.js (App Router) on Railway at `app.auraflux.co` calling Railway Node/Express backend with Postgres persistence, Equinox marketing site on Cloudflare Pages at `auraflux.co`, first paying customer onboarded, daily content shipping automatically, 3-5 closed alpha beta creators using the product
 
 Phase 2 is where CWN stops being Rob's personal production tool and becomes a product other people can use. The engineering side of that shift is captured here; the business side lives in `BUSINESS_STRATEGY.md` sections 5–9 (GTM, outreach, pricing, execution stack).
 

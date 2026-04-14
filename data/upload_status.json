@@ -4,6 +4,22 @@
   "description": "CWN publish tracking database — logs every /publish attempt with status, platform, timestamps, and jobId",
   "uploads": [
     {
+      "id": 1776115659610,
+      "trackingId": "pub_1776115659610_manual",
+      "timestamp": "2026-04-13T21:27:39.610Z",
+      "status": "submitted",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Trump Says Iran Wants Peace Deal But 'No Nukes' | ClipzWorld News Daily Briefing",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1i13N1njVyQ9XQ9ZPvPl3TAn6mlAsRJSO",
+      "request_id": "990a42357e6642e98118d49c91ef47f8",
+      "job_id": "0959c5080e8c44209a8bcaca98928ed4",
+      "scheduledAt": null,
+      "metricsJobId": "publish_1776115643059"
+    },
+    {
       "id": 1776108395019,
       "trackingId": "pub_1776108395019_manual",
       "timestamp": "2026-04-13T19:26:35.019Z",

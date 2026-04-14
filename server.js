@@ -5231,40 +5231,45 @@ app.post('/assemble',
               const pinnedComment = PINNED_COMMENT_TEMPLATES[baseContentType] || '';
 
               // Build YouTube chapters from segments + probed durations
-              function buildYouTubeChapters(segments, segmentDurations) {
+              function buildYouTubeChapters(segments, segmentDurations, contentType) {
                 if (!Array.isArray(segments) || segments.length === 0) return '';
                 let currentSec = 0;
                 const chapters = [];
-                let lastStreamerName = '';
+                let lastChapterLabel = '';
+
                 segments.forEach((seg, i) => {
                   const label = (seg.label || '').toUpperCase();
-                  const isClip     = seg.type === 'source_clip';
-                  const isColdOpen = label.indexOf('COLD OPEN') > -1;
-                  const isIntro    = label.indexOf('INTRO') > -1 && !isColdOpen;
-                  const isOutro    = label.indexOf('OUTRO') > -1;
-                  if (isColdOpen || isIntro || isOutro) {
-                    const mm = Math.floor(currentSec / 60);
-                    const ss = Math.floor(currentSec % 60);
-                    const ts = `${mm}:${ss < 10 ? '0' : ''}${ss}`;
-                    let chapterTitle = null;
-                    if (isColdOpen) {
+                  const isClip = seg.type === 'source_clip';
+                  const mm = Math.floor(currentSec / 60);
+                  const ss = Math.floor(currentSec % 60);
+                  const ts = `${mm}:${ss < 10 ? '0' : ''}${ss}`;
+                  let chapterTitle = null;
+
+                  if (label.includes('COLD OPEN') || label.includes('INTRO')) {
+                    if (currentSec === 0) {
                       chapterTitle = '0:00 Intro';
-                    } else if (isOutro) {
-                      chapterTitle = `${ts} Outro`;
-                    } else {
-                      const nameMatch = label.match(/^(.+?)\s*\(INTRO\)/);
+                    } else if (contentType === 'news' && label.includes('STORY')) {
+                      const storyNum = label.match(/STORY(\d+)/)?.[1];
+                      chapterTitle = `${ts} Story ${storyNum}`;
+                    } else if (contentType === 'nba' && label.includes('GAME')) {
+                      const gameNum = label.match(/GAME(\d+)/)?.[1];
+                      chapterTitle = `${ts} Game ${gameNum}`;
+                    } else if (contentType === 'twitch') {
+                      const nameMatch = label.match(/^(.+?)\s*\(INTRO\)/) || label.match(/^(.+?)[_ ]INTRO$/);
                       let streamerName = nameMatch ? nameMatch[1].trim() : label.replace('(INTRO)', '').trim();
                       streamerName = streamerName.charAt(0) + streamerName.slice(1).toLowerCase();
                       streamerName = streamerName.replace(/\s+([a-z])/g, (m, l) => ' ' + l.toUpperCase());
-                      if (streamerName && streamerName !== lastStreamerName) {
-                        chapterTitle = `${ts} ${streamerName}`;
-                        lastStreamerName = streamerName;
-                      }
+                      if (streamerName) chapterTitle = `${ts} ${streamerName}`;
                     }
-                    if (chapterTitle && chapters.indexOf(chapterTitle) === -1) {
-                      chapters.push(chapterTitle);
-                    }
+                  } else if (label.includes('OUTRO')) {
+                    chapterTitle = `${ts} Outro`;
                   }
+
+                  if (chapterTitle && chapterTitle !== lastChapterLabel) {
+                    chapters.push(chapterTitle);
+                    lastChapterLabel = chapterTitle;
+                  }
+
                   let dur = (segmentDurations && segmentDurations[i]) || seg.duration || seg.clipDuration || null;
                   if (!dur) {
                     if (isClip) { dur = 45; }
@@ -5278,7 +5283,7 @@ app.post('/assemble',
                 return chapters.join('\n');
               }
 
-              const chapterText = buildYouTubeChapters(req.body.segments || [], assemblyJobs[asmId].segmentDurations);
+              const chapterText = buildYouTubeChapters(req.body.segments || [], assemblyJobs[asmId].segmentDurations, contentType);
               if (chapterText) {
                 log(asmId, `  📑 Chapters built (${chapterText.split('\n').length} markers)`);
               } else {
@@ -5938,133 +5943,6 @@ app.get('/news/us-canada-videos', async (req, res) => {
 //
 // Body: { articleUrl, storyIndex?, width?, height? }
 // width/height default to 640×360 (TV shape for OVERLAY_ZONE)
-
-app.post('/news/generate-intro-card', async (req, res) => {
-  const { articleUrl, storyIndex = 0, width = 640, height = 360 } = req.body;
-  if (!articleUrl) return res.status(400).json({ error: 'articleUrl required' });
-
-  try {
-    console.log(`[news-card] Scraping header image from ${articleUrl}`);
-
-    // Step 1: Fetch article HTML
-    const articleResp = await axios.get(articleUrl, {
-      timeout: 10000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; CWN-Bot/1.0; +https://clipzworldnews.com)'
-      }
-    });
-
-    const $ = cheerio.load(articleResp.data);
-
-    // Step 2: Extract image from meta tags (prioritize og:image, then twitter:image)
-    let imageUrl = $('meta[property="og:image"]').attr('content')
-      || $('meta[property="og:image:url"]').attr('content')
-      || $('meta[name="twitter:image"]').attr('content')
-      || $('meta[name="twitter:image:src"]').attr('content');
-
-    // Fallback: find first article image
-    if (!imageUrl) {
-      const firstImg = $('article img').first().attr('src') || $('img').first().attr('src');
-      imageUrl = firstImg;
-    }
-
-    if (!imageUrl) {
-      throw new Error('No image found in article');
-    }
-
-    // Handle relative URLs
-    if (imageUrl.startsWith('//')) {
-      imageUrl = 'https:' + imageUrl;
-    } else if (imageUrl.startsWith('/')) {
-      const urlObj = new URL(articleUrl);
-      imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;
-    }
-
-    console.log(`[news-card] Found image: ${imageUrl}`);
-
-    // Step 3: Download image
-    const imageResp = await axios.get(imageUrl, {
-      responseType: 'arraybuffer',
-      timeout: 15000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; CWN-Bot/1.0; +https://clipzworldnews.com)'
-      }
-    });
-
-    const crypto = require('crypto');
-    const imageHash = crypto.createHash('md5').update(imageUrl).digest('hex').substring(0, 8);
-    const tempImagePath = `/tmp/news_img_${imageHash}.jpg`;
-
-    const fs = require('fs');
-    fs.writeFileSync(tempImagePath, imageResp.data);
-
-    console.log(`[news-card] Downloaded to ${tempImagePath}`);
-
-    // Step 4: Resize to 640×360 using Puppeteer (same approach as NBA cards)
-    const puppeteer = require('puppeteer');
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-
-    const page = await browser.newPage();
-    await page.setViewport({ width, height, deviceScaleFactor: 2 });
-
-    // Create HTML with resized image
-    const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-          width: ${width}px;
-          height: ${height}px;
-          background: #000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
-        img {
-          max-width: 100%;
-          max-height: 100%;
-          object-fit: contain;
-        }
-      </style>
-    </head>
-    <body>
-      <img src="file://${tempImagePath}" />
-    </body>
-    </html>
-    `;
-
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Step 5: Take screenshot
-    const cardPath = `/tmp/news_card_story${storyIndex}.png`;
-    await page.screenshot({ path: cardPath, type: 'png' });
-
-    await browser.close();
-
-    // Clean up temp image
-    fs.unlinkSync(tempImagePath);
-
-    console.log(`[news-card] ✅ Card generated: ${cardPath}`);
-
-    res.json({
-      ok: true,
-      cardPath,
-      sourceUrl: articleUrl,
-      imageUrl
-    });
-
-  } catch (err) {
-    console.error(`[news-card] Error:`, err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // ── POST /twitch-clip-url ────────────────────────────────────────
 // Resolves a Twitch clip page URL or slug to a direct MP4 download URL.
@@ -7725,8 +7603,20 @@ Output your ENTIRE script as a single JSON object (no markdown fences, no plain 
 
 Top-level structure:
 {
-  "storyList": ["Story 1 headline", "Story 2 headline", ...],
-  "brandConfig": { "primaryHex": "#22304b", "accentHex": "#c7af4f" },
+  "scriptVersion": 1,
+  "contentType": "news",
+  "clientId": "cwn",
+  "brandConfig": {
+    "primaryHex": "#22304b",
+    "accentHex": "#c7af4f",
+    "showName": "ClipzWorld News",
+    "episodeNumber": 123
+  },
+  "estimatedTotalDurationSec": 300,
+  "storyList": [
+    { "index": 0, "title": "Story 1 headline", "source": "Al Jazeera" },
+    { "index": 1, "title": "Story 2 headline", "source": "BBC News" }
+  ],
   "scenes": [ ... ]
 }
 
@@ -7735,22 +7625,23 @@ Each scene object:
   "id": "scene_label_matching_assembly",
   "type": "avatar" | "source_clip",
   "spokenText": "The exact words the anchor speaks (empty string for source_clip scenes)",
+  "estimatedDurationSec": 15, // Required for avatar scenes
   "chrome": {
-    "layout": "COLD_OPEN" | "STORY_INTRO" | "STORY_BODY" | "OUTRO",
-    "showLowerThird": true | false,
-    "hideSidebar": true | false,
-    "activeStoryIndex": 0,
-    "activeCategory": "BREAKING" | "POLITICS" | "BUSINESS" | "SPORTS" | "TECH" | "ENTERTAINMENT" | "WORLD" | "HEALTH" | "SCIENCE" | "WEATHER"
+    "flag": { "visible": true, "text": "HEADLINE TEXT", "source": "Al Jazeera" },
+    "tvCard": { "visible": true, "imageUrl": "https://example.com/image.jpg", "headline": "Full Article Headline", "sourceName": "Al Jazeera" },
+    "sidebar": { "visible": true, "activeIndex": 0, "cap": 5 },
+    "ticker": { "visible": true },
+    "logo": { "visible": true }
   }
 }
 
 Layout rules:
-- Scene 1 (cold open / intro): layout="COLD_OPEN", showLowerThird=false, hideSidebar=true
-- First avatar scene of each story: layout="STORY_INTRO", showLowerThird=true, hideSidebar=false
-- Subsequent avatar scenes of same story: layout="STORY_BODY", showLowerThird=false, hideSidebar=false
-- source_clip scenes: layout="STORY_BODY", showLowerThird=false, hideSidebar=true
-- Final outro scene: layout="OUTRO", showLowerThird=false, hideSidebar=true
-- activeStoryIndex: 0-based index of the current story (0 for cold open/outro)
+- Scene 1 (cold open / intro): flag.visible=false, tvCard.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
+- First avatar scene of each story: flag.visible=true, tvCard.visible=true, sidebar.visible=true, ticker.visible=true, logo.visible=true
+- Subsequent avatar scenes of same story: flag.visible=true, tvCard.visible=false, sidebar.visible=true, ticker.visible=true, logo.visible=true
+- source_clip scenes: flag.visible=false, tvCard.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
+- Final outro scene: flag.visible=false, tvCard.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
+- activeIndex: 0-based index of the current story (0 for cold open/outro)
 - The "id" field must exactly match the scene label used in assembly (e.g. "scene_01", "scene_02", etc.)
 
 IMPORTANT: The JSON must be valid and parseable. Do not include any text before or after the JSON object.`;
@@ -8125,7 +8016,7 @@ const isClipMatchOnly = !hasStructuralFail &&
           writeDirectiveForJob(jobId, _parsedDirective);
           console.log(`[generate-full-script] ✅ Directive sidecar written for job ${jobId}`);
         } catch(sidecarErr) {
-          console.warn(`[generate-full-script] ⚠️  Failed to write directive sidecar: ${sidecarErr.message} — continuing with extracted spoken text`);
+          console.error(`[generate-full-script] ❌ FATAL: Failed to write directive sidecar: ${sidecarErr.message} — this will cause missing chrome!`);
         }
       } catch(e) {
         console.error(`[generate-full-script] ⚠️  Failed to parse directive JSON: ${e.message} — proceeding with raw script`);
@@ -11471,7 +11362,7 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
     await page.goto(overlayUrl, { waitUntil: 'networkidle0' });
 
     // Inject story data into the page
-    await page.evaluate((data, activeIndex, opts) => {
+    await page.evaluate(async (data, activeIndex, opts) => {
       // ── Lower-third visibility toggle ──────────────────────────
       const lowerThird = document.querySelector('.lower-third');
       if (lowerThird) {
@@ -11546,7 +11437,16 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
         if (opts.tvCard && opts.tvCard.headline) {
           tvCardEl.style.display = 'block';
           const tvCardImg = tvCardEl.querySelector('.tv-card-image');
-          if (tvCardImg && opts.tvCard.imageUrl) tvCardImg.src = opts.tvCard.imageUrl;
+          if (tvCardImg && opts.tvCard && opts.tvCard.imageUrl) {
+            tvCardImg.src = opts.tvCard.imageUrl;
+            // Wait for image to load (with timeout). If 404 or timeout, card shows navy bg — acceptable.
+            await new Promise(resolve => {
+              if (tvCardImg.complete && tvCardImg.naturalWidth > 0) { resolve(); return; }
+              tvCardImg.onload = resolve;
+              tvCardImg.onerror = resolve; // accept failed load
+              setTimeout(resolve, 3000);  // 3s hard timeout
+            });
+          }
           const tvCardHeadline = tvCardEl.querySelector('.tv-card-headline');
           if (tvCardHeadline) tvCardHeadline.textContent = opts.tvCard.headline;
           const tvCardSource = tvCardEl.querySelector('.tv-card-source');
