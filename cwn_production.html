@@ -5375,6 +5375,18 @@ function displayScriptQA(scriptQA) {
 
   if (scriptQA.outcome === 'pass') {
     html.push('<div style="font-size:11px;color:rgba(255,255,255,0.6);">✅ Auto-proceeding to HeyGen — no issues found.</div>');
+    // Red 4 hotfix 8: the UI text said "auto-proceeding" but no code actually
+    // fired sendToHeyGen() on a clean Gate 1 pass. The legacy auto-advance
+    // behavior was lost somewhere in the Red 4 / Track C / hotfix series
+    // tonight. Re-add the auto-call. Small timeout lets displayScriptQA render
+    // + the callback store orderedClipUrls before parseSegments re-runs inside
+    // sendToHeyGen (avoids the race condition from the 22:34 ET test run).
+    setTimeout(function() {
+      if (typeof sendToHeyGen === 'function') {
+        console.log('[gate1] Auto-firing sendToHeyGen() after clean Gate 1 pass');
+        sendToHeyGen();
+      }
+    }, 500);
   } else if (scriptQA.outcome === 'manual_review') {
     html.push('<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;">Script is acceptable but below auto-pass threshold (90). Review issues below, then approve manually to send to HeyGen.</div>');
     if (scriptQA.deductions && scriptQA.deductions.length) {
