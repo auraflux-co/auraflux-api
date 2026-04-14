@@ -8180,7 +8180,7 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
 
     res.json({
       ok: true,
-      script,
+      script: scriptForHeygen,
       wordCount,
       estSecs,
       geminiHits: analyses.filter(a=>a).length,
