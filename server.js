@@ -4,7 +4,7 @@ require('dotenv').config();
 // Feature flag — default true. Set USE_DIRECTIVE_CHROME=false to fall back
 // to the legacy Fix 5/7 reactive state machine (emergency rollback only).
 const USE_DIRECTIVE_CHROME = process.env.USE_DIRECTIVE_CHROME !== 'false';
-const { validateScript: validateChromeScript, directiveToOverlayParams } = require('./lib/chromeDirectives');
+const { directiveToOverlayParams } = require('./lib/chromeDirectives');
 const {
   writeDirectiveForJob,
   loadDirectiveForJob,
@@ -87,16 +87,17 @@ const helmet     = require('helmet');
 const axios      = require('axios');
 const fs         = require('fs');
 const path       = require('path');
-const { execFile, exec } = require('child_process');
+const { execFile, exec, execSync } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
 const puppeteer  = require('puppeteer');
 const { body, validationResult } = require('express-validator');
-const { logError, withRetry, getFallbackImage, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
-const { requireFields, validateContentType, validateArrayLength, validateUrl, sanitizeStrings } = require('./lib/validation');
+const { logError, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
+const { requireFields, validateContentType, validateArrayLength, sanitizeStrings } = require('./lib/validation');
 const TwitchClient = require('./lib/clients/twitch_client');
 const { CONFIG } = require('./lib/config');
 const { log } = require('./lib/logger');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
+const cheerio = require('cheerio');
 
 const app  = express();
 
@@ -2060,7 +2061,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
 // Parse script into individual scenes
 function parseScriptIntoScenes(script) {
   const scenes = [];
-  const sceneRegex = /===\s*([A-Z_0-9]+)\s*===/g;
+  const sceneRegex = /===\s*([A-Za-z_0-9]+)\s*===/g;
 
   let match;
   let lastIndex = 0;
@@ -5328,9 +5329,10 @@ app.post('/assemble',
               log(asmId, `\n✅ Gate 6 COMPLETE — video published automatically`);
 
             } catch(gate6Err) {
-              log(asmId, `⚠️  Gate 6 auto-publish failed: ${gate6Err.message}`);
+              const gate6Detail = gate6Err.response?.data ? JSON.stringify(gate6Err.response.data) : gate6Err.message;
+              log(asmId, `⚠️  Gate 6 auto-publish failed: ${gate6Detail}`);
               assemblyJobs[asmId].gate6Status = 'failed';
-              assemblyJobs[asmId].gate6Error  = gate6Err.message;
+              assemblyJobs[asmId].gate6Error  = gate6Detail;
               log(asmId, `   Manual publish: use driveUrl above with /publish endpoint`);
             }
 
@@ -5835,7 +5837,6 @@ app.get('/news/us-canada-videos', async (req, res) => {
       headers: BROWSER_HEADERS
     });
     const html = resp.data || '';
-    const cheerio = require('cheerio');
     const $ = cheerio.load(html);
     const videoUrls = new Set();
 
@@ -5946,7 +5947,6 @@ app.post('/news/generate-intro-card', async (req, res) => {
     console.log(`[news-card] Scraping header image from ${articleUrl}`);
 
     // Step 1: Fetch article HTML
-    const cheerio = require('cheerio');
     const articleResp = await axios.get(articleUrl, {
       timeout: 10000,
       headers: {
@@ -6007,7 +6007,7 @@ app.post('/news/generate-intro-card', async (req, res) => {
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
-    const page = await puppeteer.newPage();
+    const page = await browser.newPage();
     await page.setViewport({ width, height, deviceScaleFactor: 2 });
 
     // Create HTML with resized image
@@ -6847,7 +6847,6 @@ async function scrapeArticleOgImage(articleUrl) {
       maxRedirects: 5,
         headers: BROWSER_HEADERS
     });
-    const cheerio = require('cheerio');
     const $ = cheerio.load(resp.data);
     // Try og:image first, fall back to twitter:image variants
     const imgUrl = $('meta[property="og:image"]').attr('content')
@@ -8118,11 +8117,18 @@ Remember: A great CWN script grabs attention in the first 5 seconds, maintains h
       try {
         const _cleaned = stripCodeFences(script);
         const _parsedDirective = JSON.parse(_cleaned);
-        writeDirectiveForJob(jobId, _parsedDirective);
+        // Extract spoken text FIRST — before writeDirectiveForJob which may throw on Zod validation.
+        // This ensures scriptForHeygen is always plain text even if the sidecar write fails.
         scriptForHeygen = extractSpokenTextFromDirective(_parsedDirective);
-        console.log(`[generate-full-script] ✅ Directive sidecar written for job ${jobId}, extracted ${scriptForHeygen.length} chars of spoken text`);
+        console.log(`[generate-full-script] ✅ Extracted ${scriptForHeygen.length} chars of spoken text from directive`);
+        try {
+          writeDirectiveForJob(jobId, _parsedDirective);
+          console.log(`[generate-full-script] ✅ Directive sidecar written for job ${jobId}`);
+        } catch(sidecarErr) {
+          console.warn(`[generate-full-script] ⚠️  Failed to write directive sidecar: ${sidecarErr.message} — continuing with extracted spoken text`);
+        }
       } catch(e) {
-        console.error(`[generate-full-script] ⚠️  Failed to write directive sidecar: ${e.message} — proceeding with raw script`);
+        console.error(`[generate-full-script] ⚠️  Failed to parse directive JSON: ${e.message} — proceeding with raw script`);
       }
     }
 
