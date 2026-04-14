@@ -2421,14 +2421,53 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
   const PASS_THRESHOLD   = 90;
   const MANUAL_THRESHOLD = 90;
 
-  // Count [CLIP PLAYS HERE] markers in script
-  const clipMarkers    = (script.match(/\[CLIP PLAYS HERE\]/g) || []).length;
+  // Red 4 hotfix 4: directive-mode-aware scene/clip/outro counting.
+  // When script is Gemini's JSON directive output (News + USE_DIRECTIVE_CHROME),
+  // the legacy text regexes don't match because JSON doesn't contain === HEADER ===
+  // markers or literal [CLIP PLAYS HERE] markers. Parse the JSON up-front (with
+  // stripCodeFences to handle markdown fence wrapping) and compute counts from the
+  // scenes[] array instead of text regex.
+  const isDirectiveMode = contentType === 'news' && USE_DIRECTIVE_CHROME && typeof script === 'string' && script.trim().length > 0;
+  let parsedDirectiveJson = null;
+  if (isDirectiveMode) {
+    try {
+      const _cleaned = stripCodeFences(script);
+      parsedDirectiveJson = JSON.parse(_cleaned);
+      if (!parsedDirectiveJson || !Array.isArray(parsedDirectiveJson.scenes)) {
+        parsedDirectiveJson = null; // fall through to legacy text regex below
+      }
+    } catch(e) {
+      // JSON parse failed — the Red 4 JSON validation block below will catch and deduct.
+      // Leave parsedDirectiveJson = null so legacy regex runs.
+    }
+  }
+
+  // Count [CLIP PLAYS HERE] markers (text mode) OR source_clip scenes (directive mode)
+  let clipMarkers;
+  if (parsedDirectiveJson) {
+    clipMarkers = parsedDirectiveJson.scenes.filter(s => s.type === 'source_clip').length;
+  } else {
+    clipMarkers = (script.match(/\[CLIP PLAYS HERE\]/g) || []).length;
+  }
   const expectedClips  = contentType === 'twitch' ? streamers.length * clipsPerStreamer : clipAnalyses.length;
   const wrongClipCount = Math.abs(clipMarkers - expectedClips) > 1; // allow ±1 tolerance
-  const missingAppreciateYou = !/appreciate you/i.test(script);
 
-  // Count scene markers
-  const sceneMarkers = (script.match(/===\s+[A-Z_0-9]+\s+===/g) || []).length;
+  // "Appreciate you" — text regex in legacy mode, search spokenText fields in directive mode
+  let missingAppreciateYou;
+  if (parsedDirectiveJson) {
+    const allSpoken = parsedDirectiveJson.scenes.map(s => s.spokenText || '').join(' ');
+    missingAppreciateYou = !/appreciate you/i.test(allSpoken);
+  } else {
+    missingAppreciateYou = !/appreciate you/i.test(script);
+  }
+
+  // Scene count: scenes[].length in directive mode, === HEADER === regex in legacy mode
+  let sceneMarkers;
+  if (parsedDirectiveJson) {
+    sceneMarkers = parsedDirectiveJson.scenes.length;
+  } else {
+    sceneMarkers = (script.match(/===\s+[A-Z_0-9]+\s+===/g) || []).length;
+  }
   const wrongSceneCount = expectedScenes > 0 && sceneMarkers !== expectedScenes;
 
   // Build clip summaries for Claude to cross-check.
