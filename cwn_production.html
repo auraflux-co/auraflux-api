@@ -3443,105 +3443,11 @@ function dashStripCodeFences(text) {
   return t.trim();
 }
 
-// Red 4 hotfix 7: parseSegments_v2_json — consume Gemini's directive JSON
-// output directly. News with USE_DIRECTIVE_CHROME=true produces pure JSON with
-// no === HEADER === markers and no [CLIP PLAYS HERE] text markers. Standalone
-// STORY#_CLIP scenes have type="source_clip" and empty spokenText.
-// Legacy text-format parseSegments_v2 below still runs for Twitch/NBA and
-// legacy News (when USE_DIRECTIVE_CHROME=false).
-function parseSegments_v2_json(parsed) {
-  var result = [];
-  var orderedUrls = (window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || [];
-  var mp4Map = (window.CURRENT_META && window.CURRENT_META.clipMp4Urls) || {};
-  var clipInsertIdx = 0;
-
-  if (!parsed || !Array.isArray(parsed.scenes)) {
-    console.error('[parseSegments_v2_json] Invalid parsed script — missing scenes[]');
-    return result;
-  }
-
-  parsed.scenes.forEach(function(scene) {
-    if (!scene || !scene.id) return;
-
-    if (scene.type === 'source_clip') {
-      // Standalone clip scene — resolve URL from orderedClipUrls by index
-      var clipUrl = '';
-      var clipDuration = null;
-      var pageUrl = '';
-      if (orderedUrls[clipInsertIdx]) {
-        clipUrl = orderedUrls[clipInsertIdx].url || '';
-        clipDuration = orderedUrls[clipInsertIdx].duration || null;
-        pageUrl = orderedUrls[clipInsertIdx].pageUrl || '';
-      } else {
-        console.warn('[parseSegments_v2_json] No clip URL for clipInsertIdx=' +
-                     clipInsertIdx + ' (scene: ' + scene.id + ')');
-      }
-      // Resolve MP4 URL if we have a mapping
-      if (clipUrl && mp4Map[clipUrl]) clipUrl = mp4Map[clipUrl];
-
-      result.push({
-        type: 'source_clip',
-        label: scene.id,
-        clipUrl: clipUrl,
-        pageUrl: pageUrl,
-        clipDuration: clipDuration,
-        status: 'ready',
-        chrome: scene.chrome || null
-      });
-      clipInsertIdx++;
-    } else {
-      // Avatar scene — emit with spokenText as the HeyGen input
-      var text = (scene.spokenText || '').trim();
-      if (!text) {
-        console.warn('[parseSegments_v2_json] Empty spokenText for avatar scene ' + scene.id + ' — skipping');
-        return;
-      }
-      text = typeof cleanAvatarText === 'function' ? cleanAvatarText(text) : text;
-      var wc = text.split(/\s+/).filter(Boolean).length;
-      if (wc < 3) {
-        console.warn('[parseSegments_v2_json] Scene ' + scene.id + ' — only ' + wc + ' words, too short');
-        return;
-      }
-      if (text.length > HEYGEN_CHAR_LIMIT) {
-        text = text.slice(0, HEYGEN_CHAR_LIMIT);
-      }
-      result.push({
-        type: 'avatar',
-        label: scene.id,
-        text: text,
-        wordCount: wc,
-        estSecs: Math.round((wc / 130) * 60),
-        truncated: text.length === HEYGEN_CHAR_LIMIT,
-        chrome: scene.chrome || null
-      });
-    }
-  });
-
-  console.log('[parseSegments_v2_json] Produced ' + result.length + ' segments (' +
-              result.filter(function(s){return s.type==='avatar';}).length + ' avatar + ' +
-              result.filter(function(s){return s.type==='source_clip';}).length + ' source_clip)');
-  return result;
-}
-
 function parseSegments_v2(script) {
-  // Red 4 hotfix 7: detect Gemini JSON directive output. If the script is
-  // JSON (starts with { after stripping markdown fences), route to the
-  // JSON-aware parser. Otherwise fall through to legacy text regex parsing.
-  if (typeof script === 'string') {
-    var probe = dashStripCodeFences(script);
-    if (probe.charAt(0) === '{') {
-      try {
-        var parsed = JSON.parse(probe);
-        if (parsed && Array.isArray(parsed.scenes)) {
-          return parseSegments_v2_json(parsed);
-        }
-      } catch(e) {
-        console.warn('[parseSegments_v2] JSON probe failed, falling through to legacy text parse: ' + e.message);
-      }
-    }
-  }
-
-  // Legacy text format path (Twitch, NBA, legacy News)
+  // Legacy text format path (Twitch, NBA, News)
+  // NOTE: parseSegments_v2_json deleted — directive sidecar architecture
+  // (CLINE_HANDOFF_DIRECTIVE_SIDECAR_REFACTOR) means the textarea always
+  // receives plain spoken text only. JSON parsing happens server-side.
   var clean = script.replace(/\/\/[^\n]*/g, '').replace(/\n{3,}/g, '\n\n').trim();
   var lines = clean.split('\n');
   var rawSections = [];
@@ -4226,28 +4132,63 @@ function sendToHeyGen() {
           saveJobs(); renderQueue();
 
           // ── Auto-advance: HeyGen done → Gate 2 segment QA → assembleJob ──
-          var avatarSegs = (batchJob.segments || []).filter(function(s){ return s.type === 'avatar'; });
-          var allDone = avatarSegs.length > 0 && avatarSegs.every(function(s){
-            return s.status === 'completed' || s.status === 'failed';
-          });
-          if (allDone && !batchJob._autoAssembleFired) {
-            batchJob._autoAssembleFired = true;
-            batchJob.status = 'all_sent';
-            batchJob.pct = 50;
-            saveJobs(); renderQueue();
-            cwn_log('[auto-advance] All HeyGen segments done — firing Gate 2 + assembleJob for ' + batchJob.id, false);
-            console.log('[auto-advance] HeyGen complete → triggerGate2 + assembleJob');
-            try { triggerGate2(batchJob); } catch(e) { console.error('[auto-advance] triggerGate2 threw:', e); }
-            setTimeout(function(){
-              try { assembleJob(batchJob.id); } catch(e) { console.error('[auto-advance] assembleJob threw:', e); }
-            }, 3000);
-          }
+          tryAutoAdvanceToAssembly(batchJob);
         }
       );
       avatarIdx++; setTimeout(sendNext,1500);
     });
   }
   sendNext();
+}
+
+// ── tryAutoAdvanceToAssembly — 5 defensive layers ──────────────────────────
+function tryAutoAdvanceToAssembly(batchJob) {
+  // Layer 1: null guard
+  if (!batchJob) { console.error('[auto-advance] batchJob is null/undefined'); return; }
+  // Layer 2: idempotency guard
+  if (batchJob._autoAssembleFired) { return; }
+  // Layer 3: must have at least one avatar segment
+  var avatarSegs = (batchJob.segments || []).filter(function(s){ return s.type === 'avatar'; });
+  if (!avatarSegs.length) {
+    showJobErrorBanner(batchJob.id, 'No avatar segments found — cannot auto-assemble');
+    return;
+  }
+  // Layer 4: all avatar segments must be done (completed or failed)
+  var allDone = avatarSegs.every(function(s){
+    return s.status === 'completed' || s.status === 'failed';
+  });
+  if (!allDone) { return; }
+  // All checks passed — fire
+  batchJob._autoAssembleFired = true;
+  batchJob.status = 'all_sent';
+  batchJob.pct = 50;
+  saveJobs(); renderQueue();
+  cwn_log('[auto-advance] All HeyGen segments done — firing Gate 2 + assembleJob for ' + batchJob.id, false);
+  console.log('[auto-advance] HeyGen complete → triggerGate2 + assembleJob');
+  try { triggerGate2(batchJob); } catch(e) {
+    console.error('[auto-advance] triggerGate2 threw:', e);
+    showJobErrorBanner(batchJob.id, 'Gate 2 failed: ' + e.message);
+  }
+  // Layer 5: wrap assembleJob in setTimeout + try/catch
+  setTimeout(function(){
+    try {
+      assembleJob(batchJob.id);
+    } catch(e) {
+      console.error('[auto-advance] assembleJob threw:', e);
+      showJobErrorBanner(batchJob.id, 'Assembly failed to start: ' + e.message);
+      batchJob._autoAssembleFired = false; // allow retry
+      saveJobs(); renderQueue();
+    }
+  }, 3000);
+}
+
+function showJobErrorBanner(jobId, message) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  if (job) {
+    job._errorBanner = message;
+    saveJobs(); renderQueue();
+  }
+  console.error('[job-error] ' + jobId + ': ' + message);
 }
 
 // sendToHeyGenManual — called from Gate 1 QA manual review approval button
