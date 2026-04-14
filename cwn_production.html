@@ -2884,7 +2884,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
       // CRITICAL: Use the clip URLs the server resolved (same ones Gemini analyzed)
       // These are in the exact order the script was written — do NOT override with dashboard's own resolution
       
-if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
+      if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
         if (!window.CURRENT_META) window.CURRENT_META = {};
         window.CURRENT_META.orderedClipUrls = resp.orderedClipUrls;
         // Also build clipsByStreamer index for debugging
@@ -2896,6 +2896,18 @@ if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
         });
         console.log('[script] Stored ' + resp.orderedClipUrls.length + ' clip URLs from server (authoritative order)');
         console.log('[script] Clips by streamer:', Object.keys(window.CURRENT_META.clipsByStreamer).map(function(k){ return k+':'+window.CURRENT_META.clipsByStreamer[k].length; }).join(', '));
+      }
+
+      // Store the script generation jobId so assembly can load the directive sidecar
+      if (resp.metricsJobId) {
+        window.CURRENT_META = window.CURRENT_META || {};
+        window.CURRENT_META.scriptJobId = resp.metricsJobId;
+        console.log('[script] Stored scriptJobId for directive sidecar:', resp.metricsJobId);
+        var currentJob = JOBS.find(function(j){ return j.status !== 'failed'; });
+        if (currentJob && resp.metricsJobId) {
+          currentJob.scriptJobId = resp.metricsJobId;
+          saveJobs();
+        }
       }
 
       // Store the script generation jobId so assembly can load the directive sidecar

@@ -9,6 +9,14 @@
 
 **Not a handoff.** Reference material for when Phase 2 actually starts. This doc contains the concrete text-wireframe content, component map, dev ticket list, and PRD that Rob drafted 2026-04-13. It becomes the source of truth for Figma wireframes, React component naming, and Jira story imports.
 
+> **⚠️ 2026-04-14 UPDATE — Marketing site scope + brand rename**
+>
+> This doc's scope is now **app-only** — marketing site wireframes are NOT needed. Rob purchased the **Equinox template** on 2026-04-14 for the marketing site and will design it himself directly from the template. Marketing site hosts on **Cloudflare Pages free tier** at `auraflux.co`. Brand renamed from AuraForge → **AuraFlux** (domain `auraflux.co`). App lives at `app.auraflux.co` on Railway.
+>
+> Any marketing-site references below (section 1021 "Public marketing site integrations", etc.) should be read as "handled separately by Rob via Equinox template customization, not part of this design package." The 19 app screens in this doc are still the source of truth for the customer-facing product UI at `app.auraflux.co`.
+>
+> See `PHASE_2_BUILD_SPEC.md` stack update addendum for the full Cloudflare Pages + Railway + AuraFlux + Equinox decision context.
+
 ---
 
 ## 1. Purpose
