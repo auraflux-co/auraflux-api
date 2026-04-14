@@ -342,7 +342,7 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 
 ---
 
-#### [ ] ⭐ TONIGHT'S PRIORITY — Rebuild Atlassian integration from scratch (replaces deleted 7eb780f scaffolding)
+#### [x] ⭐ TONIGHT'S PRIORITY — Rebuild Atlassian integration from scratch (replaces deleted 7eb780f scaffolding)
 **Priority bumped 2026-04-14:** Rob is transitioning work tracking from `CLINE_HANDOFF_*.md` / `STATUS.md` / `ROADMAP.md` to Jira (epics/stories/tasks/subtasks) + Confluence (reference docs). This task proves the Atlassian pipe is open so follow-up tasks (Jira morning report, jira_sync.js, Confluence page sync) can unblock. **Run this FIRST tonight before any other `[ ]` task.** See priority banner at the top of the APPROVED section for full context.
 
 **Files:** NEW `lib/clients/jira_client.js`, NEW `lib/clients/confluence_client.js`, NEW `scripts/jira_ping.js`
@@ -468,7 +468,7 @@ These tasks are scoped and ready, but must NOT ship until Rob signals the 12-tes
 
 ### ✅ COMPLETED OVERNIGHT TASKS
 
-_(None yet — system not yet active)_
+- **2026-04-14:** Rebuild Atlassian integration from scratch (replaces deleted 7eb780f scaffolding)
 
 ---
 

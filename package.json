@@ -13,6 +13,7 @@
     "cleanup": "curl -X POST http://localhost:3000/cleanup -H 'Content-Type: application/json' -d '{\"keepCount\":2,\"cleanTmp\":true,\"cleanQaLogs\":false}'",
     "disk-usage": "curl http://localhost:3000/disk-usage",
     "auth-drive": "node cwn-auth.js",
+    "jira-ping": "node scripts/jira_ping.js",
     "qa:install": "npx playwright install chromium",
     "qa:record": "node qa/record_session.js",
     "qa:clean": "rm -rf output/qa_sessions/*",
