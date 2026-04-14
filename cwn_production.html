@@ -1685,27 +1685,36 @@ function triggerGate5(job) {
         html += '</div>';
       }
       if (result.score >= 85) {
-        html += '<div style="font-size:10px;color:#2ecc71;margin-top:4px;">✅ Video quality confirmed — proceed to Publish Prep.</div>';
+        html += '<div style="font-size:10px;color:#2ecc71;margin-top:4px;">✅ Video quality confirmed — auto-publishing to platforms.</div>';
       }
       html += '</div>';
 
       if (qaEl) qaEl.innerHTML = html;
 
-      // ── Gate 3: Show human approval checkpoint when Gate 5 passes ──
-      if (result.score >= 85) {
+      // ── Auto-advance: Gate 5 PASS → generate publish copy → approveAndUpload ──
+      // Per GATED_PIPELINE_ARCHITECTURE.md Stage 5 → Stage 6 → Stage 7:
+      // Stage 5 PASS sets status='publishable' and Stage 6 (Drive + Upload-Post)
+      // is pure-code automation. The only human checkpoint is Stage 7 (Rob
+      // reviewing drafts on YouTube/TikTok/IG themselves — NOT in the dashboard).
+      // Any button here is a regression against the spec's "full automation
+      // runs without manual intervention" definition of done.
+      if (result.score >= 85 && !job._autoPublishFired) {
+        job._autoPublishFired = true;
         var approvalEl = document.getElementById('gate3-approval-' + job.id);
         if (approvalEl) {
           approvalEl.style.display = '';
           approvalEl.innerHTML = '<div style="margin-top:8px;padding:10px 12px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.4);border-radius:4px;">'
-            + '<div style="font-size:9px;letter-spacing:2px;color:#2ecc71;font-weight:900;margin-bottom:6px;">✅ GATE 3 — READY FOR UPLOAD</div>'
-            + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;">Gate 5 passed (' + result.score + '/100). Approve to publish to all platforms, or reject to keep in review.</div>'
-            + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-            + '<button onclick="approveAndUpload(\'' + job.id + '\')" class="btn btn-gold btn-sm">✅ APPROVE &amp; UPLOAD →</button>'
-            + '<button onclick="rejectJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(231,76,60,0.5);color:#e74c3c;">❌ REJECT — BACK TO EDIT</button>'
-            + '</div>'
-            + '<div id="gate3-upload-status-' + job.id + '" style="margin-top:6px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);"></div>'
+            + '<div style="font-size:9px;letter-spacing:2px;color:#2ecc71;font-weight:900;margin-bottom:6px;">✅ GATE 5 PASS — AUTO-PUBLISHING</div>'
+            + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;">Gate 5 passed (' + result.score + '/100). Generating publish copy → Upload-Post → YouTube/TikTok/IG as private draft.</div>'
+            + '<div id="gate3-upload-status-' + job.id + '" style="margin-top:6px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);">⏳ Generating title, description, and hashtags...</div>'
+            + '<button onclick="rejectJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="margin-top:6px;border-color:rgba(231,76,60,0.5);color:#e74c3c;">❌ REJECT — STOP AUTO-PUBLISH</button>'
             + '</div>';
         }
+        cwn_log('[auto-advance] Gate 5 PASS (' + result.score + '/100) — auto-generating publish copy then firing Upload-Post', false);
+        console.log('[auto-advance] Gate 5 → autoGeneratePublishPrep → approveAndUpload');
+        setTimeout(function(){
+          try { autoGeneratePublishPrep(job.id); } catch(e) { console.error('[auto-advance] autoGeneratePublishPrep threw:', e); }
+        }, 1500);
       }
 
       renderQueue();
@@ -4215,6 +4224,24 @@ function sendToHeyGen() {
           if(pollErr){ segJob.status='failed'; }
           else { segJob.status='completed'; segJob.url=data.video_url; }
           saveJobs(); renderQueue();
+
+          // ── Auto-advance: HeyGen done → Gate 2 segment QA → assembleJob ──
+          var avatarSegs = (batchJob.segments || []).filter(function(s){ return s.type === 'avatar'; });
+          var allDone = avatarSegs.length > 0 && avatarSegs.every(function(s){
+            return s.status === 'completed' || s.status === 'failed';
+          });
+          if (allDone && !batchJob._autoAssembleFired) {
+            batchJob._autoAssembleFired = true;
+            batchJob.status = 'all_sent';
+            batchJob.pct = 50;
+            saveJobs(); renderQueue();
+            cwn_log('[auto-advance] All HeyGen segments done — firing Gate 2 + assembleJob for ' + batchJob.id, false);
+            console.log('[auto-advance] HeyGen complete → triggerGate2 + assembleJob');
+            try { triggerGate2(batchJob); } catch(e) { console.error('[auto-advance] triggerGate2 threw:', e); }
+            setTimeout(function(){
+              try { assembleJob(batchJob.id); } catch(e) { console.error('[auto-advance] assembleJob threw:', e); }
+            }, 3000);
+          }
         }
       );
       avatarIdx++; setTimeout(sendNext,1500);
@@ -5076,6 +5103,70 @@ function checkPublishStatus() {
     } catch(e) { if (statusEl) statusEl.textContent = '❌ ' + e.message; }
   };
   xhr.send();
+}
+
+// ── Auto-fire publish copy generation (headless) ──────────────────
+function autoGeneratePublishPrep(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  if (!job) { console.error('[autoGeneratePublishPrep] Job not found:', jobId); return; }
+  var statusEl = document.getElementById('gate3-upload-status-' + jobId);
+  var setStatus = function(txt, isErr) {
+    if (statusEl) { statusEl.textContent = txt; statusEl.style.color = isErr ? '#e74c3c' : 'rgba(255,255,255,0.6)'; }
+  };
+  if (job.publishPrep && job.publishPrep.title) {
+    cwn_log('[autoGeneratePublishPrep] publishPrep already exists — skipping generation, firing approveAndUpload', false);
+    setStatus('⏳ Publish copy ready — firing Upload-Post...');
+    setTimeout(function(){ approveAndUpload(jobId); }, 500);
+    return;
+  }
+  setStatus('⏳ Generating title, description, and hashtags...');
+  var type = (job.type || 'twitch').toLowerCase();
+  var contentTypeKey = type.indexOf('nba') > -1 ? 'nba' : type.indexOf('twitch') > -1 ? 'twitch' : 'news';
+  var isShort = (job.format === 'portrait') || (type.indexOf('short') > -1);
+  var scriptContext = job.script || '';
+  var streamersList = (contentTypeKey === 'twitch' && Array.isArray(job.streamers)) ? job.streamers : [];
+  var today = new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/generate-publish-copy', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 60000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (resp.error) throw new Error(resp.error);
+      var yt = (resp.platforms && resp.platforms.youtube) || resp;
+      var tt = (resp.platforms && resp.platforms.tiktok) || {};
+      var ig = (resp.platforms && resp.platforms.instagram) || {};
+      job.publishPrep = {
+        title: yt.title || resp.title || job.title || 'ClipzWorld News',
+        description: yt.description || resp.description || '',
+        pinnedComment: yt.pinnedComment || resp.pinnedComment || '',
+        endscreen: yt.endscreen || '', cards: yt.cards || '', twitchTitle: yt.twitchTitle || '',
+        tiktokCaption: tt.caption || '', igCaption: ig.caption || '',
+        igAlt: ig.altText || ig.alt_text || '',
+        generatedAt: new Date().toISOString(), autoGenerated: true
+      };
+      saveJobs();
+      cwn_log('[autoGeneratePublishPrep] Publish copy generated for ' + jobId + ' — firing approveAndUpload', false);
+      setStatus('⏳ Publish copy ready — firing Upload-Post...');
+      renderQueue();
+      setTimeout(function(){ approveAndUpload(jobId); }, 500);
+    } catch(e) {
+      console.error('[autoGeneratePublishPrep] Parse error:', e);
+      setStatus('❌ Publish copy generation failed: ' + e.message + '. Click 📋 PUBLISH COPY to run manually.', true);
+      cwn_log('[autoGeneratePublishPrep] Failed: ' + e.message, true);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    var msg = xhr.ontimeout ? 'Request timed out' : 'Server unreachable';
+    setStatus('❌ ' + msg + '. Click 📋 PUBLISH COPY to run manually.', true);
+    cwn_log('[autoGeneratePublishPrep] ' + msg, true);
+  };
+  xhr.send(JSON.stringify({
+    contentType: contentTypeKey, formType: isShort ? 'short' : 'long',
+    script: scriptContext, date: today, streamers: streamersList,
+    platforms: ['youtube', 'tiktok', 'instagram']
+  }));
 }
 
 // ── GATE 3: Human Approval + Gate 6 Auto-Publish ─────────────────
