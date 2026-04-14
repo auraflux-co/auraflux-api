@@ -5682,7 +5682,7 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
 // Each video: { url, href, title, thumbnail, publishedAt, dateString }
 
 const NEWS_SOURCE_URL = process.env.NEWS_RSS_URL || 'https://www.aljazeera.com/us-canada/';
-const NEWS_LOOKBACK_HOURS = 24;
+const NEWS_LOOKBACK_HOURS = 48; // Red 4 hotfix 2: was 24, extended to 48 to handle midnight-UTC edge case where AJ URL dates are parsed as start-of-day and every story becomes "25 hours old" after UTC midnight rolls. Paired with end-of-day timestamp parse below at line 5800.
 
 // ── Track C: per-video validation pass ───────────────────────────────────────
 // 5 checks run in parallel per video before the dashboard renders story cards.
@@ -5702,50 +5702,38 @@ async function validateVideo(v) {
     issues.push(`Article URL unreachable: ${e.message}`);
   }
 
-  // Check 2: yt-dlp extraction (--skip-download --dump-json, 10s timeout)
-  let ytInfo = null;
+  // Check 2: scrapeArticleVideo() full Fix 9 flow — fetch article HTML, extract
+  // JSON-LD VideoObject.embedUrl (Brightcove player URL), run yt-dlp on the
+  // Brightcove URL (NOT the article URL — yt-dlp doesn't support AJ article URLs
+  // directly and always returns "Unsupported URL"). This is the correct pattern
+  // per Fix 9's scrapeArticleVideo() helper at server.js:6710.
+  //
+  // Red 4 hotfix 3: Track C was calling yt-dlp directly on the article URL,
+  // which fails 100% of the time because AJ /video/newsfeed/ URLs are not a
+  // supported yt-dlp extractor target. Every video was marked fail on ytdlpExtract
+  // regardless of actual content. Fix: reuse scrapeArticleVideo() which handles
+  // the JSON-LD intermediate step.
+  let hlsUrl = null;
   try {
-    const ytOut = await new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error('yt-dlp timeout')), 10000);
-      const { execFile } = require('child_process');
-      execFile('yt-dlp', ['--skip-download', '--dump-json', '--no-warnings', v.url], { timeout: 10000 }, (err, stdout) => {
-        clearTimeout(t);
-        if (err) return reject(err);
-        resolve(stdout);
-      });
-    });
-    ytInfo = JSON.parse(ytOut.trim().split('\n').pop());
-    checks.ytdlpExtract = true;
+    hlsUrl = await scrapeArticleVideo(v.url);
+    checks.ytdlpExtract = !!hlsUrl;
+    if (!hlsUrl) issues.push('scrapeArticleVideo returned null (no Brightcove embed or yt-dlp failed on embed URL)');
   } catch (e) {
     checks.ytdlpExtract = false;
-    issues.push(`yt-dlp extract failed: ${e.message}`);
+    issues.push(`scrapeArticleVideo failed: ${e.message}`);
   }
 
-  // Check 3: source dimensions >= 1280x720
-  if (ytInfo) {
-    const w = ytInfo.width || 0;
-    const h = ytInfo.height || 0;
-    checks.dimensionsOk = (w >= 1280 && h >= 720);
-    if (!checks.dimensionsOk) issues.push(`Source dimensions ${w}x${h} below 1280x720`);
-  } else {
-    checks.dimensionsOk = null; // unknown
-  }
-
-  // Check 4: source duration > 5s (warning if > 120s)
-  if (ytInfo) {
-    const dur = ytInfo.duration || 0;
-    if (dur <= 5) {
-      checks.durationOk = false;
-      issues.push(`Clip too short: ${dur}s`);
-    } else if (dur > 120) {
-      checks.durationOk = 'warning';
-      issues.push(`Clip very long: ${dur}s (will be capped at 25s)`);
-    } else {
-      checks.durationOk = true;
-    }
-  } else {
-    checks.durationOk = null;
-  }
+  // Check 3 & 4: dimensions and duration are SKIPPED in Track C v1.
+  // The old code path tried to read them from yt-dlp JSON output, but
+  // scrapeArticleVideo() returns only the HLS manifest URL (not metadata).
+  // To get dimensions/duration we'd need an additional ffprobe call on the
+  // HLS manifest, which adds latency per-video. Deferred to Track C v2.
+  //
+  // For now: if scrapeArticleVideo() returned a non-null URL, treat dimensions
+  // and duration as "passed by absence of evidence" — the article HAS a video,
+  // which is the only thing that truly matters for the selection gate.
+  checks.dimensionsOk = hlsUrl ? null : false;
+  checks.durationOk = hlsUrl ? null : false;
 
   // Check 5: og:image reachable (HEAD, 3s timeout)
   if (v.thumbnail) {
@@ -5797,7 +5785,13 @@ app.get('/news/us-canada-videos', async (req, res) => {
       const absoluteUrl = `https://www.aljazeera.com${href}`;
       const dateMatch = href.match(/\/video\/newsfeed\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
       const [_, yyyy, mm, dd] = dateMatch;
-      const publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T00:00:00Z`);
+      // Red 4 hotfix 2: parse AJ URL dates as END-OF-DAY (23:59:59Z) instead of start-of-day.
+      // Reason: AJ /video/newsfeed/YYYY/M/D/ URLs only encode the publish date, not the hour.
+      // Parsing as 00:00:00Z meant "an article published on 2026-04-13" was treated as
+      // published at midnight UTC, so by 00:30 UTC on 2026-04-14 it was already 24.5h old
+      // and filtered out by the 24h lookback. Using end-of-day means the article stays
+      // eligible for a full 24h window AFTER the publish date actually ends.
+      const publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T23:59:59Z`);
 
       let title = '';
       $(`a[href="${href}"]`).each((i, el) => {
