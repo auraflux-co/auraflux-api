@@ -4586,7 +4586,9 @@ app.post('/assemble',
         try {
           await new Promise((res, rej) => {
             const isAvatarSeg = segTypes[tsFiles.length] !== 'source_clip';
-            // Source clips: zoom-to-fill (increase+crop) — Red 4 Fix 4: eliminates navy bars on portrait AJ videos
+            // Source clips: zoom-to-fill (increase+crop) — all aspect ratios fill 1920x1080
+            // without letterbox bars. Covers portrait Al Jazeera clips (Red 4 Fix 4, 2026-04-13).
+            // Fix 4 verification (CLINE_HANDOFF_QA_GATE_HARDENING.md 2026-04-14): confirmed correct.
             // Avatar segs: letterbox (decrease+pad) since HeyGen output is always clean 16:9
             // NOTE: do NOT change lines 3800/3834 — those are short-form split-screen slots that legitimately need zoom-to-fill
             const vfFilter = isAvatarSeg
