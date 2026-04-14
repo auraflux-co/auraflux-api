@@ -4191,6 +4191,10 @@ app.post('/assemble',
               try {
                 const cleanedRaw = typeof rawScript === 'string' ? stripCodeFences(rawScript) : rawScript;
                 parsedDirectiveScript = typeof cleanedRaw === 'string' ? JSON.parse(cleanedRaw) : cleanedRaw;
+                // Red 4 Fix 2: validate parsed script against ScriptSchema — catches schema drift silently
+                try { validateChromeScript(parsedDirectiveScript); } catch(validationErr) {
+                  log(asmId, `  ⚠️  Chrome directive schema validation warning: ${validationErr.message} — proceeding anyway`);
+                }
               } catch(e) { /* legacy plain-text script — fall through to legacy */ }
               if (parsedDirectiveScript && parsedDirectiveScript.scenes) {
                 const scene = parsedDirectiveScript.scenes.find(s => s.id === label || s.id === label.trim());
@@ -4511,15 +4515,15 @@ app.post('/assemble',
         try {
           await new Promise((res, rej) => {
             const isAvatarSeg = segTypes[tsFiles.length] !== 'source_clip';
-            // Source clips: letterbox-fit (decrease+pad) with CWN dark navy — preserves framing on broadcast video
+            // Source clips: zoom-to-fill (increase+crop) — Red 4 Fix 4: eliminates navy bars on portrait AJ videos
             // Avatar segs: letterbox (decrease+pad) since HeyGen output is always clean 16:9
             // NOTE: do NOT change lines 3800/3834 — those are short-form split-screen slots that legitimately need zoom-to-fill
             const vfFilter = isAvatarSeg
               ? 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
-              : 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0d1424,fps=fps=30' +
+              : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=fps=30' +
+                // Red 4 Fix 4: zoom-to-fill for News source clips (was letterbox — caused navy bars on portrait AJ videos)
                 // Red 2: mask Al Jazeera bottom-right corner watermark with CWN navy box
                 // 120x80 region at (1780, 960) covers logo + 20px safety padding
-                // Matches letterbox bar color so it reads as intentional CWN framing
                 (contentType === 'news' && !isAvatarSeg ? ',drawbox=x=1780:y=960:w=120:h=80:color=0x0d1424@1.0:t=fill' : '');
 
             // ── Fix 10: News source clips — silencedetect trim + 25s hard cap ──
@@ -11398,11 +11402,12 @@ async function burnSceneChromeFromDirective(scene, inputTs, asmId, parsedScript)
 // Converts a ChromeDirectiveSchema object into generateNewscastOverlay() params
 // and renders the overlay PNG. Returns the output path.
 async function generateChromeOverlayFromDirective(directive, context) {
-  const { storyData, storyIndex, showLowerThird, hideSidebar, episodeNumber, activeCategory } =
+  // Red 4 Fix 3b: destructure tvCard from directiveToOverlayParams and pass it through
+  const { storyData, storyIndex, showLowerThird, hideSidebar, episodeNumber, activeCategory, tvCard } =
     directiveToOverlayParams(directive, context);
   const outputPath = path.join(TMP_DIR, `chrome_directive_${Date.now()}.png`);
   await generateNewscastOverlay(storyData, outputPath, storyIndex, {
-    showLowerThird, hideSidebar, episodeNumber, activeCategory
+    showLowerThird, hideSidebar, episodeNumber, activeCategory, tvCard
   });
   return outputPath;
 }
@@ -11419,7 +11424,8 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
     showLowerThird = false,
     hideSidebar = false,
     episodeNumber = null,
-    activeCategory = null
+    activeCategory = null,
+    tvCard = null  // Red 4 Fix 3c: accept tvCard for TV card overlay injection
   } = options;
 
   const browser = await puppeteer.launch({
@@ -11504,7 +11510,23 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
           });
         }
       }
-    }, storyData, storyIndex, { showLowerThird, hideSidebar, episodeNumber, activeCategory });
+
+      // ── Red 4 Fix 3c: TV card injection ────────────────────────
+      const tvCardEl = document.querySelector('.tv-card');
+      if (tvCardEl) {
+        if (opts.tvCard && opts.tvCard.headline) {
+          tvCardEl.style.display = 'block';
+          const tvCardImg = tvCardEl.querySelector('.tv-card-image');
+          if (tvCardImg && opts.tvCard.imageUrl) tvCardImg.src = opts.tvCard.imageUrl;
+          const tvCardHeadline = tvCardEl.querySelector('.tv-card-headline');
+          if (tvCardHeadline) tvCardHeadline.textContent = opts.tvCard.headline;
+          const tvCardSource = tvCardEl.querySelector('.tv-card-source');
+          if (tvCardSource && opts.tvCard.sourceName) tvCardSource.textContent = opts.tvCard.sourceName;
+        } else {
+          tvCardEl.style.display = 'none';
+        }
+      }
+    }, storyData, storyIndex, { showLowerThird, hideSidebar, episodeNumber, activeCategory, tvCard });
 
     // Wait for animations to settle
     await new Promise(resolve => setTimeout(resolve, 500));
