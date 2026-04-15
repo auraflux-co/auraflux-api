@@ -154,6 +154,7 @@ const {
   TICKER_CACHE,
   TICKER_MAP
 } = require('./lib/assembly');
+const { downloadFile } = require('./lib/downloader');
 const cheerio = require('cheerio');
 
 const app  = express();
@@ -760,57 +761,7 @@ const SYSTEM_FONT = findSystemFont();
  */
 
 
-async function downloadFile(url, destPath) {
-  // SSRF Protection: Validate URL is from trusted domains
-  const trustedDomains = [
-    'clips-media-assets',           // Twitch CDN
-    'clips-media-assets2',          // Twitch CDN
-    'production-assets',            // Twitch
-    'cloudfront.net',               // AWS CloudFront (Twitch authenticated clips)
-    'resource.heygencdn.com',       // HeyGen CDN
-    'files2.heygen.ai',             // HeyGen temporary files
-    'heygen.ai',                    // HeyGen (catch-all for subdomains)
-    'storage.googleapis.com',       // Google Cloud Storage
-    'drive.google.com',             // Google Drive
-    'boltdns.net',                  // Brightcove CDN (Al Jazeera HLS manifests)
-    'brightcove.net',               // Brightcove
-    'brightcove.com',               // Brightcove
-    'edge.api.brightcove.com',      // Brightcove edge API
-    'aljazeera.com',                // Al Jazeera direct
-    'aljazeera.net'                 // Al Jazeera CDN
-  ];
-
-  const isTrusted = trustedDomains.some(domain => url.includes(domain));
-  if (!isTrusted) {
-    throw new Error(`URL blocked: not from trusted domain. URL: ${url.slice(0, 100)}`);
-  }
-
-  // HLS manifest detection — route to FFmpeg instead of naive axios streaming
-  // Axios would download the ~2KB text manifest, not the actual video segments
-  const isHls = /\.m3u8(\?|$)/i.test(url) || /\/hls\//i.test(url);
-  if (isHls) {
-    return new Promise((res, rej) => {
-      const args = [
-        '-i', url,
-        '-c', 'copy',
-        '-bsf:a', 'aac_adtstoasc',
-        '-movflags', '+faststart',
-        '-y', destPath
-      ];
-      const proc = execFile(ffmpegPath(), args, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
-      proc.on('close', code => code === 0 ? res() : rej(new Error(`FFmpeg HLS download failed with code ${code}`)));
-      proc.on('error', rej);
-    });
-  }
-
-  const writer = fs.createWriteStream(destPath);
-  const resp   = await axios({ url, method: 'GET', responseType: 'stream', timeout: 120000 });
-  resp.data.pipe(writer);
-  return new Promise((res, rej) => {
-    writer.on('finish', res);
-    writer.on('error', rej);
-  });
-}
+// downloadFile moved to lib/downloader.js (imported above)
 
 function ffmpegPath() {
   if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
@@ -1142,9 +1093,8 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // One-time setup: https://console.cloud.google.com → Drive API → Service Account
 // Share your "CWN Videos" Drive folder with the service account email (Editor)
 
-const DRIVE_KEY_PATH   = path.join(__dirname, 'cwn-drive-key.json');
-const DRIVE_FOLDER_NAME = 'CWN Videos';
-let   _driveFolderId   = null; // cached after first lookup
+// DRIVE_KEY_PATH + DRIVE_FOLDER_NAME moved to lib/publish.js (only consumer after module split)
+let   _driveFolderId   = null; // cached after first lookup (getDriveFolderId is in lib/publish.js)
 
 
 
@@ -2188,151 +2138,7 @@ app.post('/twitch-clip-url', async (req, res) => {
 const GEMINI_MODEL  = 'gemini-2.5-flash';
 const GEMINI_APIKEY = process.env.GEMINI_API_KEY; // Validated at startup
 
-// ── Tone variants per content type ────────────────────────────────
-// tone: 'deadpan' | 'warm' | 'chaotic'
-// Selectable per job in the dashboard. Defaults to 'deadpan'.
-const CWN_VOICE_GUIDES = {
-  twitch: {
-    deadpan: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: Norm MacDonald deadpan. Flat. Clinical. The clip is funnier than anything you could add.
-- DO NOT explain the clip. Witness it. One observation after. Could be unrelated.
-- NEVER say "incredible", "amazing", "crazy", "wild". Just say what happened.
-- [beat] = pause. Use liberally.
-OUTPUT FORMAT:
-=== [STREAMER NAME] ===
-ClipzWorld News. [Streamer name].
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE flat observation. End the sentence. Do not explain it.]
-Follow [streamer]. Link in description.`,
-
-    warm: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: NBA Inside Stuff warmth applied to streamers. You genuinely like these people.
-- Specificity is the warmth. Name the game they were playing. Name the moment.
-- After the clip: one sentence that shows you paid attention. No hype words.
-- [beat] = pause.
-OUTPUT FORMAT:
-=== [STREAMER NAME] ===
-[Streamer name] was playing [game/context]. Here is what happened.
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE warm but flat observation. Specific detail. End the sentence.]
-Follow [streamer]. Link in description.`,
-
-    chaotic: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: Space Ghost Coast to Coast. Confident non-sequiturs. Self-contradiction is fine.
-- The intro can be completely unrelated to the streamer or clip. That is the bit.
-- After the clip: say something that makes no sense but with total confidence.
-- [beat] = pause. Use for comedic timing.
-OUTPUT FORMAT:
-=== [STREAMER NAME] ===
-[Completely unrelated opening statement. Delivered with confidence.]
-[beat]
-[Streamer name].
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[Non-sequitur reaction. Confident. Wrong. Perfect.]
-Follow [streamer]. Link in description.`
-  },
-
-  nba: {
-    deadpan: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: Norm MacDonald flat delivery. State facts. One observation. Done.
-- matchup → score → one stat → one flat observation.
-- Zero debate, zero hot takes. Just what happened.
-- NEVER say "incredible" or "amazing".
-- [beat] = pause.
-OUTPUT FORMAT:
-=== GAME [N]: [AWAY] @ [HOME] ===
-[Away] versus [Home]. Final. [score].
-[beat]
-[Top performer]. [X] points.
-[beat]
-[ONE flat observation. End the sentence.]
-[beat]
-[CLIP PLAYS HERE]`,
-
-    warm: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: NBA Inside Stuff. You love the game. Warmth comes from specificity, not adjectives.
-- Honor the play before explaining it. Name the player. Name what they did.
-- The observation should make you want to rewatch the clip.
-- [beat] = pause.
-OUTPUT FORMAT:
-=== GAME [N]: [AWAY] @ [HOME] ===
-[Away] versus [Home]. [Score]. [Top performer] had [stat].
-[beat]
-[Warm setup about the player or play. Specific. No superlatives.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE warm observation about what just happened. Honor the moment.]`,
-
-    chaotic: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: Color commentary that has gone off the rails. Technically accurate, socially unhinged.
-- State the play correctly. Then say something no color commentator would ever say.
-- The observation is technically true but the framing is completely wrong.
-- [beat] = pause.
-OUTPUT FORMAT:
-=== GAME [N]: [AWAY] @ [HOME] ===
-[Away] versus [Home]. [Score].
-[beat]
-[Technically correct setup delivered like breaking news.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[Accurate observation. Completely wrong framing. Delivered with authority.]`
-  },
-
-  news: {
-    deadpan: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: Norm MacDonald flat delivery. No warmth. The world is absurd. State it.
-- Headline exactly as it happened. No adjectives.
-- ONE observation that makes it MORE alarming, not less. Never explain it.
-- [beat] = pause.
-OUTPUT FORMAT:
-=== STORY [N] ===
-[Headline. Flat. Exactly as it happened.]
-[beat]
-[One sentence context if needed.]
-[beat]
-[ONE observation. Flat. Most absurd implication. Do not explain it.]
-That story via [source].`,
-
-    warm: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: Jon Stewart Daily Show. You care about this. One moment of controlled disbelief.
-- State the headline. Then find the ONE thing that should concern everyone but doesn't.
-- The observation lands harder if it sounds reasonable at first.
-- [beat] = pause.
-OUTPUT FORMAT:
-=== STORY [N] ===
-[Headline. Matter of fact.]
-[beat]
-[One sentence of context that sets up the observation.]
-[beat]
-[ONE observation. Sounds reasonable. Is actually devastating. Do not explain it.]
-[beat]
-That story via [source].`,
-
-    chaotic: `You write scripts for ClipzWorld News (@clipznashite).
-TONE: Local news anchor who has fully given up. Accurate reporting. Zero affect. Wrong emphasis.
-- Report the headline correctly. Emphasize the wrong detail with complete confidence.
-- The non-important part of the story gets treated as the main story.
-- [beat] = pause.
-OUTPUT FORMAT:
-=== STORY [N] ===
-[Headline. Correct. Delivered flatly.]
-[beat]
-[Zero-context pivot to the least important detail in the story.]
-[beat]
-[Treat that detail like it is the real story. Delivered with authority.]
-That story via [source].`
-  }
-};
-
-// Helper: get voice guide for type + tone
+// CWN_VOICE_GUIDES moved to lib/script_gen.js (only consumer — getVoiceGuide() is in that module)
 
 app.post('/analyze-clip', async (req, res) => {
   const { thumbnailUrl, clipTitle, streamer, game, contentType, clipUrl, viewCount } = req.body;
