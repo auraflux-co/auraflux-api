@@ -257,17 +257,43 @@ Ready for test suite re-run (expecting 12/12 pass).
 **`git commit` only saves locally. GitHub is not updated until you push.**
 
 ```bash
-git push origin main
+git push origin {your-branch-name}   # NOT main — push to your branch
 ```
 
-Run this at the end of every work session. There is no queue — GitHub updates instantly on push.
+Run this at the end of every task. There is no queue — GitHub updates instantly on push.
 
 **Quick full deploy sequence:**
 ```bash
-git add -A
-git commit -m "your message"
-git push origin main
+git add file1 file2 STATUS.md && git commit -m "your message"
+git push origin {your-branch-name}
 ```
+
+---
+
+## ⛔ HARD REQUIREMENT — Final Output When Done
+
+**After pushing, your last message MUST include:**
+
+1. The exact branch name you pushed to: `cline-a/your-branch-name`
+2. The commit hash(es): e.g. `abc1234`
+3. What was done (one line per task)
+4. `node -c` pass confirmation for every file you changed
+
+**Example final output:**
+```
+Task complete.
+Branch: cline-a/shorts-qa-errors-ffmpeg
+Commits: abc1234 (freeze-hold), def5678 (VideoToolbox)
+
+What was done:
+- lib/assembly.js: added tpad filter to OUTRO segment (Gap #45)
+- lib/assembly.js: ffmpegEncodeArgs() now platform-aware (darwin → h264_videotoolbox)
+
+node -c lib/assembly.js: passed
+STATUS.md: updated
+```
+
+**Why:** Claude Code reviews diffs and merges branches. Without the branch name and commit hash, the review cannot happen and your work stays unmerged.
 
 ---
 
