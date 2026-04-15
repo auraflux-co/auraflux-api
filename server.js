@@ -5589,6 +5589,92 @@ app.post('/assemble/:asmId/retry', async (req, res) => {
       assemblyJobs[asmId].outputPath = outPath;
       log(asmId, `✅ FFmpeg concat complete: ${outFile}`);
 
+      // Step 6b: Ticker bake — mirrors main assembly path
+      // Shorts never get a ticker; retry inherits same rule
+      const retryTickerType = contentType ? contentType.replace(/-short$/, '') : null;
+      let tickerBaked = false;
+      if (retryTickerType && TICKER_MAP[retryTickerType]) {
+        log(asmId, `\n🎞  Baking ${retryTickerType} ticker overlay (retry)...`);
+        assemblyJobs[asmId].pct = 85;
+        try {
+          const tickerPath = await captureTicker(retryTickerType);
+          if (tickerPath && fs.existsSync(tickerPath)) {
+            const tickeredFile = outFile.replace('.mp4', '_tickered.mp4');
+            const tickeredPath = path.join(OUTPUT_DIR, tickeredFile);
+            // Probe duration for ticker length
+            const tickerTotalSec = await new Promise((resolve) => {
+              execFile(ffprobePath(), [
+                '-v', 'error', '-show_entries', 'format=duration',
+                '-of', 'default=noprint_wrappers=1:nokey=1', outPath
+              ], (err, stdout) => resolve(err ? 300 : parseFloat(stdout.trim()) || 300));
+            });
+            const timeoutMs = Math.max(60000, tickerTotalSec * 3 * 1000);
+            await new Promise((res, rej) => {
+              const args = [
+                '-i', outPath,
+                '-stream_loop', '-1', '-i', tickerPath,
+                '-t', (tickerTotalSec + 2.0).toFixed(3),
+                '-filter_complex', `[0:v][1:v]overlay=x=0:y=H-${CONFIG.TICKER.HEIGHT}:eof_action=repeat[vout]`,
+                '-map', '[vout]', '-map', '0:a?',
+                '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac',
+                '-movflags', '+faststart', '-y', tickeredPath
+              ];
+              const ff2 = require('child_process').execFile(ffmpegPath(), args, { maxBuffer: 100*1024*1024 });
+              let lastProgressAt = Date.now();
+              const watchdog = setInterval(() => {
+                if (Date.now() - lastProgressAt > 90000) {
+                  clearInterval(watchdog);
+                  log(asmId, `⚠️  Ticker overlay stalled (retry) — killing, using un-tickered`);
+                  try { ff2.kill('SIGKILL'); } catch(e) {}
+                }
+              }, 10000);
+              const hardTimeout = setTimeout(() => {
+                clearInterval(watchdog);
+                log(asmId, `⚠️  Ticker overlay timeout (retry) — using un-tickered`);
+                try { ff2.kill('SIGKILL'); } catch(e) {}
+              }, timeoutMs);
+              ff2.stderr && ff2.stderr.on('data', (data) => {
+                lastProgressAt = Date.now();
+                const line = data.toString();
+                const timeMatch = line.match(/time=(\d+:\d+:\d+\.\d+)/);
+                if (timeMatch) {
+                  const parts = timeMatch[1].split(':');
+                  const elapsed = +parts[0]*3600 + +parts[1]*60 + +parts[2];
+                  const pct = Math.min(99, Math.round((elapsed / tickerTotalSec) * 100));
+                  if (pct % 10 === 0) log(asmId, `  🎞  Ticker (retry): ${timeMatch[1]} / ${Math.round(tickerTotalSec)}s (${pct}%)`);
+                  assemblyJobs[asmId].tickerPct = pct;
+                }
+              });
+              ff2.on('close', code => {
+                clearInterval(watchdog);
+                clearTimeout(hardTimeout);
+                if (code === 0) {
+                  try { fs.unlinkSync(outPath); } catch(e) {}
+                  fs.renameSync(tickeredPath, outPath);
+                  tickerBaked = true;
+                  log(asmId, `✅ Ticker baked in (retry)`);
+                  res();
+                } else {
+                  log(asmId, `⚠️  Ticker overlay failed (retry, code ${code}) — using un-tickered`);
+                  try { fs.unlinkSync(tickeredPath); } catch(e) {}
+                  res(); // non-fatal
+                }
+              });
+              ff2.on('error', e => {
+                clearInterval(watchdog);
+                clearTimeout(hardTimeout);
+                log(asmId, `⚠️  Ticker overlay error (retry): ${e.message}`);
+                res();
+              });
+            });
+          } else {
+            log(asmId, `⚠️  Ticker not available (retry) — install puppeteer: npm install puppeteer`);
+          }
+        } catch(tickerErr) {
+          log(asmId, `⚠️  Ticker step failed (retry): ${tickerErr.message} — continuing without ticker`);
+        }
+      }
+
       // Step 7: Gate 3 QA — probe duration first
       const totalDurResult = await new Promise((resolve) => {
         execFile(ffprobePath(), [
@@ -5603,7 +5689,7 @@ app.post('/assemble/:asmId/retry', async (req, res) => {
         avatarCount,
         clipCount: downloadedClipCount,
         downloadedClipCount,
-        expectedTicker: false,
+        expectedTicker: tickerBaked,
         totalDuration: parseFloat(totalDurResult) || 0
       });
 
