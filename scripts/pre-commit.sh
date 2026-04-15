@@ -6,6 +6,33 @@
 #
 # INSTALL: cp scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
+# ── HARD BLOCK: agents must never commit directly to main ────────────────────
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$CURRENT_BRANCH" = "main" ]; then
+  echo ""
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║       ⛔  CWN COMMIT BLOCKED — YOU ARE ON MAIN               ║"
+  echo "╠══════════════════════════════════════════════════════════════╣"
+  echo "║                                                              ║"
+  echo "║  Agents must never commit directly to main.                 ║"
+  echo "║  Every task has a feature branch — switch to it first.      ║"
+  echo "║                                                              ║"
+  echo "║  REQUIRED:                                                   ║"
+  echo "║  1. Run: git branch --show-current                          ║"
+  echo "║  2. If on main: git checkout <your-branch-name>             ║"
+  echo "║  3. Your branch name is in BRANCH_NOTES.md                  ║"
+  echo "║  4. Re-stage your files and commit there                     ║"
+  echo "║                                                              ║"
+  echo "║  Example: git checkout cline-a/heygen-templates             ║"
+  echo "║                                                              ║"
+  echo "║  Claude Code reviews + merges to main — agents do not.      ║"
+  echo "║                                                              ║"
+  echo "║  To bypass (Claude Code only): git commit --no-verify       ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo ""
+  exit 1
+fi
+
 # Files that require a STATUS.md update when changed
 CODE_PATTERN='\.(js|html|py|json|sh)$'
 
