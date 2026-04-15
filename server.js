@@ -7567,6 +7567,11 @@ app.post('/generate-full-script',
     } else if (type === 'nba' || type === 'nba-short') {
       // NBA: use stored ESPN highlight clip URLs for full video analysis
       // clipUrl comes from ESPN summary API links.source.HD.href or similar
+      // Gap #24: Warn before analysis if any game is missing a clipUrl
+      const missingClipUrl = items.filter(item => !item.clipUrl);
+      if (missingClipUrl.length > 0) {
+        console.warn(`[generate-full-script] ⚠️  Gap #24: ${missingClipUrl.length}/${items.length} NBA items have no clipUrl — will fall back to thumbnail analysis. Games: ${missingClipUrl.map(i => i.gameId || i.headline || '?').join(', ')}`);
+      }
       console.log(`[generate-full-script] Analyzing ${items.length} NBA highlight clips (video + audio)...`);
       analyses = await Promise.all(
         items.map(item => geminiAnalyzeClip(item.clipUrl||'', item.thumbnailUrl||'', 'nba', item))
