@@ -4283,7 +4283,7 @@ app.post('/assemble',
               const name   = streamerData.displayName;
               const origin = streamerData.origin || '';
               const fact   = (streamerData.fact || '').replace(/'/g, "\\'").replace(/:/g, '\\:');
-              const introDur = CONFIG.INTRO_CARD.DURATION_SECONDS;
+              const introDur = CONFIG.INTRO_CARD.DURATION_TWITCH;
 
               const cardPngPath = require("path").join(require("os").tmpdir(), `cwn_card_${Date.now()}_${(streamerData.name||"x").replace(/[^a-z0-9]/gi,"")}.png`);
               try {
@@ -4306,7 +4306,7 @@ app.post('/assemble',
                   "-i", inputForTS, "-i", cardPngPath,
                   "-filter_complex", `[1:v]scale=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.w}:${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.h}:flags=lanczos[card];[0:v][card]overlay=x=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.x}:y=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.y}:enable='lte(t,${introDur})'[out]`,
                   "-map", "[out]", "-map", "0:a",
-                  "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                  ...ffmpegEncodeArgs(true),
                   "-pix_fmt", "yuv420p",
                   "-c:a", "aac", "-ar", "44100", "-y", burnedPath
                 ];
@@ -4422,7 +4422,7 @@ app.post('/assemble',
             };
 
             const burnedPath = inputForTS.replace('.mp4', '_news_burned.mp4');
-            const introDur = CONFIG.INTRO_CARD.DURATION_SECONDS;
+            const introDur = CONFIG.INTRO_CARD.DURATION_NEWS;
 
             if (isStoryIntro) {
               // ── Two-state burn: PNG A (flag+sidebar hidden) + PNG B (flag visible, sidebar hidden) ──
@@ -4447,7 +4447,7 @@ app.post('/assemble',
                 '-filter_complex',
                 `[0:v][1:v]overlay=0:0:enable='lte(t,${introDur})'[mid];[mid][2:v]overlay=0:0:enable='gt(t,${introDur})'[out]`,
                 '-map', '[out]', '-map', '0:a',
-                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                ...ffmpegEncodeArgs(true),
                 '-pix_fmt', 'yuv420p',
                 '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
               ];
@@ -4487,7 +4487,7 @@ app.post('/assemble',
                 '-i', overlayBodyPath,
                 '-filter_complex', `[0:v][1:v]overlay=0:0[out]`,
                 '-map', '[out]', '-map', '0:a',
-                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                ...ffmpegEncodeArgs(true),
                 '-pix_fmt', 'yuv420p',
                 '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
               ];
@@ -4526,7 +4526,7 @@ app.post('/assemble',
                 '-i', overlayHiddenPath,
                 '-filter_complex', `[0:v][1:v]overlay=0:0[out]`,
                 '-map', '[out]', '-map', '0:a',
-                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                ...ffmpegEncodeArgs(true),
                 '-pix_fmt', 'yuv420p',
                 '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
               ];
@@ -4594,7 +4594,7 @@ app.post('/assemble',
                 '-i', inputForTS, '-i', cardPngPath,
                 '-filter_complex', `[1:v]scale=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.w}:${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.h}:flags=lanczos[card];[0:v][card]overlay=x=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.x}:y=${CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE.y}:enable='lte(t,${introDur})'[out]`,
                 '-map', '[out]', '-map', '0:a',
-                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                ...ffmpegEncodeArgs(true),
                 '-pix_fmt', 'yuv420p',
                 '-c:a', 'aac', '-ar', '44100', '-y', burnedPath
               ];
@@ -4793,7 +4793,7 @@ app.post('/assemble',
         fs.writeFileSync(listPath, listContent);
         ffArgs = [
           '-f', 'concat', '-safe', '0', '-i', listPath,
-          '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+          ...ffmpegEncodeArgs(false),
           '-c:a', 'aac', '-ar', '44100', '-ac', '2',
           '-af', 'aresample=async=1',
           '-movflags', '+faststart',
@@ -4845,7 +4845,7 @@ app.post('/assemble',
           ...inputArgs,
           '-filter_complex', filterParts.join(';'),
           '-map', '[vfinal]', '-map', '[afinal]',
-          '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+          ...ffmpegEncodeArgs(false),
           '-c:a', 'aac', '-movflags', '+faststart',
           '-y', outPath
         ];
@@ -5039,7 +5039,7 @@ app.post('/assemble',
               '-loop', '1', '-t', '4', '-i', headerPng,
               '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=#22304b,fade=in:0:15,fps=30',
               '-pix_fmt', 'yuv420p',
-              '-c:v', 'libx264', '-preset', 'fast',
+              ...ffmpegEncodeArgs(false),
               '-c:a', 'aac', '-ar', '44100', '-ac', '2',
               '-bsf:v', 'h264_mp4toannexb',
               '-f', 'mpegts', '-y', introTs
@@ -5054,7 +5054,7 @@ app.post('/assemble',
           await new Promise((res, rej) => {
             const args = [
               '-i', outPath,
-              '-c:v', 'libx264', '-preset', 'ultrafast',
+              ...ffmpegEncodeArgs(false),
               '-c:a', 'aac', '-ar', '44100', '-ac', '2',
               '-bsf:v', 'h264_mp4toannexb',
               '-f', 'mpegts', '-y', mainTs
