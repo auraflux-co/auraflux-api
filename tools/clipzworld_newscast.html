@@ -277,8 +277,11 @@ body {
 }
 
 .story-item {
-  background: rgba(13,20,36,0.97); /* Increased opacity — backdrop-filter removed (doesn't work in PNG overlay) */
+  background: rgba(8,14,28,1.0);
   border-left: 4px solid var(--gold);
+  border-top: 1px solid rgba(199,175,79,0.18);
+  border-bottom: 1px solid rgba(199,175,79,0.18);
+  border-right: 1px solid rgba(199,175,79,0.18);
   border-radius: 0 4px 4px 0;
   padding: 14px 16px;
   min-height: 90px;
@@ -288,7 +291,7 @@ body {
 }
 
 .story-item-cat {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--gold);
   letter-spacing: 3px;
@@ -296,16 +299,16 @@ body {
 }
 
 .story-item-text {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  color: rgba(255,255,255,0.85);
-  line-height: 1.4;
+  color: #ffffff;
+  line-height: 1.35;
 }
 
 .story-item.active {
   border-left-color: var(--red);
   border-left-width: 5px;
-  background: rgba(34,48,75,0.95);
+  background: rgba(34,48,75,1.0);
 }
 
 .story-item.active .story-item-cat { color: var(--red); }
