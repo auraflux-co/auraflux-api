@@ -5339,11 +5339,32 @@ app.post('/assemble',
                     if (currentSec === 0) {
                       chapterTitle = '0:00 Intro';
                     } else if (contentType === 'news' && label.includes('STORY')) {
-                      const storyNum = label.match(/STORY(\d+)/)?.[1];
-                      chapterTitle = `${ts} Story ${storyNum}`;
+                      // Gap #15+#33: use actual headline from cardData instead of generic "Story N"
+                      const headline = seg.cardData?.title || seg.headline || null;
+                      if (headline) {
+                        // Truncate to 60 chars for YouTube chapter readability
+                        const truncated = headline.length > 60 ? headline.slice(0, 57) + '...' : headline;
+                        chapterTitle = `${ts} ${truncated}`;
+                      } else {
+                        const storyNum = label.match(/STORY(\d+)/)?.[1];
+                        chapterTitle = `${ts} Story ${storyNum}`;
+                      }
                     } else if (contentType === 'nba' && label.includes('GAME')) {
-                      const gameNum = label.match(/GAME(\d+)/)?.[1];
-                      chapterTitle = `${ts} Game ${gameNum}`;
+                      // Gap #15+#33: use team matchup from label (GAME1_LAKERS_VS_CELTICS_INTRO) or cardData
+                      const teamsFromLabel = label.match(/GAME\d+[_\s]+(.+?)[_\s]+INTRO/)?.[1];
+                      const matchup = seg.cardData?.matchup || seg.cardData?.title || seg.headline || null;
+                      if (teamsFromLabel && teamsFromLabel.includes('_VS_')) {
+                        // Convert LAKERS_VS_CELTICS → Lakers vs Celtics
+                        const humanized = teamsFromLabel.replace(/_VS_/i, ' vs ').replace(/_/g, ' ')
+                          .replace(/\b\w/g, c => c.toUpperCase());
+                        chapterTitle = `${ts} ${humanized}`;
+                      } else if (matchup) {
+                        const truncated = matchup.length > 60 ? matchup.slice(0, 57) + '...' : matchup;
+                        chapterTitle = `${ts} ${truncated}`;
+                      } else {
+                        const gameNum = label.match(/GAME(\d+)/)?.[1];
+                        chapterTitle = `${ts} Game ${gameNum}`;
+                      }
                     } else if (contentType === 'twitch') {
                       const nameMatch = label.match(/^(.+?)\s*\(INTRO\)/) || label.match(/^(.+?)[_ ]INTRO$/);
                       let streamerName = nameMatch ? nameMatch[1].trim() : label.replace('(INTRO)', '').trim();
