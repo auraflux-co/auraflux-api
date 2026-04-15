@@ -8,7 +8,13 @@
 
 ## Decision Context
 
-Rob directive (confirmed 2026-04-15): Remove TV cards from ALL content types. News newscast chrome (`clipzworld_newscast.html`) is the universal creative template. Only show branding (show name + accent colors) differs per content type:
+Rob directive (2026-04-15): All three content types use the same `clipzworld_newscast.html` chrome. TV cards are removed from all sets. The chrome is already consistent — the only per-show differences are:
+
+1. **Top-left flag** — the show name text in `.top-brand` (e.g. "BECAUSE THE LIGHT WAS ON" vs "TALK SOUP")
+2. **Sidebar story cards** — what's listed (stories / games / streamers) and the active card highlight
+3. **Accent colors** — `--gold`, `--gold2`, `--red` CSS variables in `:root`
+
+Everything else (layout, top bar, sidebar position, logo, ticker, segment tag, LIVE badge) is identical across all three shows. This is a pure CSS + data injection — no structural HTML changes needed.
 
 | Content Type | Show Name | `--gold` | `--gold2` | `--red` |
 |---|---|---|---|---|
@@ -17,6 +23,8 @@ Rob directive (confirmed 2026-04-15): Remove TV cards from ALL content types. Ne
 | `nba` | OTHER SIDE OF THE PILLOW | `#17408B` | `#1a4fa8` | `#C9082A` |
 
 **News is the default** — already hardcoded in the HTML, no CSS override needed for News.
+
+**Scope reduction vs original spec:** The original plan included porting the TV card lower-third to Twitch/NBA. TV cards are now removed from all three sets, so that scope is gone. The `generateIntroCardPNG()` (Twitch circle card) and `generateGameStoryCardPNG()` (NBA TV card) burns are replaced by the newscast chrome sidebar highlight — the sidebar's active card IS the intro card. No separate overlay needed at INTRO scenes beyond what the chrome already shows.
 
 ---
 
@@ -111,30 +119,27 @@ await generateNewscastOverlay(storyData, outputPath, storyIndex, {
 
 ## Part 2: Wire Newscast Chrome Into NBA Assembly
 
-Currently NBA assembly calls `generateGameStoryCardPNG()` (TV card burn) and does NOT call `generateNewscastOverlay()`. This needs to change.
+Currently NBA assembly calls `generateGameStoryCardPNG()` (TV card PNG burn into OVERLAY_ZONE) and does NOT call `generateNewscastOverlay()`.
 
 ### What NBA scenes get the newscast overlay
 
-Per the universal chrome decision:
-- NBA uses the same newscast chrome as News
-- The **sidebar** shows the list of **games** (instead of stories)
-- The **flag** (`showLowerThird`) shows game/team info at `GAME#_INTRO` scenes
+- Every avatar segment (INTRO, NARRATION, REACTION, OUTRO) burns the full newscast chrome
+- The **sidebar** shows the list of **games** (matchup labels)
+- The active sidebar card highlights as each game's INTRO scene plays — this replaces the old TV card's purpose
+- No separate `showLowerThird` flag needed — the sidebar active state IS the intro card
 - Show name = "OTHER SIDE OF THE PILLOW", colors = blue/red skin
 
 ### Where in `server.js` NBA assembly currently burns its TV card
 
 Search for: `generateGameStoryCardPNG` — used around line ~3968-4038 in the NBA assembly branch.
 
-**Replace the NBA TV card burn block** with newscast overlay burns using the same pattern as News (lines 4373-4499), but adapted for NBA's `allStories` = game list from the script's storyList.
+**Replace the NBA TV card burn block** with newscast overlay burns using the same pattern as News (lines 4373-4499), adapted for NBA's game list.
 
-The `overlayBase` for NBA is the same: build it from `card.storyList` (array of `{ index, title, source }`) mapped to `{ title, category, storyId }` format expected by `generateNewscastOverlay()`.
-
-**Specific changes:**
-1. In the NBA `contentType === 'nba'` assembly branch, build `overlayBase` from `card.storyList`:
+Build `overlayBase` from `card.storyList`:
 ```javascript
 const overlayBase = {
   allStories: (card.storyList || []).map(s => ({
-    title:    s.title,
+    title:    s.title,          // e.g. "Lakers vs Celtics"
     category: 'NBA GAME',
     storyId:  `game_${s.index}`
   })),
@@ -144,30 +149,28 @@ const overlayBase = {
 const episodeNumber = card.episodeNumber || 'Episode 1';
 ```
 
-2. Apply the same scene-type detection logic as News:
-   - `isGameIntro` = scene name matches `/GAME\d+_.*_INTRO/i`
-   - `isGameOutro` = scene name matches `/OUTRO/i`
-   - `activeGameIndex` = parsed from scene name or `card.currentStoryIndex`
+Scene-type detection:
+- `activeGameIndex` = parsed from scene name (`GAME1_` → index 0, `GAME2_` → index 1, etc.)
+- Pass `activeGameIndex` as `storyIndex` to `generateNewscastOverlay()` so the correct sidebar card highlights
 
-3. Call `generateNewscastOverlay()` with `contentType: 'nba'` for every NBA avatar scene that needs chrome.
+Call `generateNewscastOverlay()` with `contentType: 'nba'` for every NBA avatar segment, passing the current `activeGameIndex`.
 
-4. **Remove** or **skip** the `generateGameStoryCardPNG()` call in the NBA branch — the newscast chrome replaces it.
+**Remove** the `generateGameStoryCardPNG()` call entirely — the newscast chrome sidebar replaces it.
 
 ---
 
 ## Part 3: Wire Newscast Chrome Into Twitch Assembly
 
-Same pattern as NBA.
-
 ### What Twitch scenes get the newscast overlay
 
-- The **sidebar** shows the list of **streamers** (Twitch usernames → display names)
-- The **flag** shows streamer name at `{STREAMER}_INTRO` scenes
+- Every avatar segment burns the full newscast chrome
+- The **sidebar** shows the list of **streamers** (display names)
+- The active sidebar card highlights as each streamer's INTRO scene plays — replaces the old circle intro card
 - Show name = "TALK SOUP", colors = purple skin
 
 ### Where in `server.js` Twitch assembly burns its intro card
 
-Search for: `generateIntroCardPNG` — called in the Twitch assembly branch (~line 500+ range, and in the assembly segment loop).
+Search for: `generateIntroCardPNG` — called in the Twitch assembly branch.
 
 **Replace the Twitch intro card burn** with newscast overlay burns using `contentType: 'twitch'`.
 
@@ -184,7 +187,9 @@ const overlayBase = {
 };
 ```
 
-Flag (`showLowerThird: true`) = active at `{STREAMER}_INTRO` scenes, hidden otherwise.
+Active index = parsed from scene name (`STREAMER_INTRO` → look up streamer index in the roster).
+
+**Remove** the `generateIntroCardPNG()` call — the sidebar active highlight replaces it.
 
 ---
 
