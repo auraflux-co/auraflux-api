@@ -152,6 +152,66 @@ Aider runs 1-6am and handles high-volume, tedious, data-intensive tasks that wou
 
 ---
 
+## Aider — Maintenance Windows (Scheduled)
+
+Maintenance windows are for system-wide tasks that cannot safely run under production load. Required when live customers are active — too much noise to run these tasks safely overnight.
+
+**Window format:** Customers notified in advance (e.g. "Sunday 2-4am ET — scheduled maintenance"). No new jobs accepted during window. In-flight jobs complete or are safely paused. Aider runs task list. System health report generated. Rob approves before window closes and production resumes.
+
+**Maintenance window task categories:**
+
+**Security:**
+- Dependency vulnerability scan (`npm audit`) + fix where safe
+- OWASP top 10 review pass on all user-facing endpoints
+- Input sanitization audit — verify all req.body inputs validated before use
+- Secrets detection — scan for hardcoded credentials, tokens, API keys in codebase
+- Log PII audit — ensure no customer data leaking into `logs/errors.jsonl`
+
+**Code quality:**
+- Dead code removal — functions defined but never called
+- Unused import cleanup
+- Console.log → structured logger replacement
+- Consistent error handling pass — bare `catch(e){}` blocks flagged
+- Duplicate function detection — same logic in multiple places, consolidate
+
+**Data sanitization:**
+- `data/jobs.json` compaction — prune jobs older than retention policy
+- `logs/` rotation — archive and compress old log files
+- `output/` cleanup — remove MP4s already confirmed on Drive
+- Stale `tmp/` files older than 48h
+
+**Refactoring:**
+- Extract repeated patterns into shared utilities
+- Module splits when a file exceeds size threshold
+- Rename internal variables to customer-facing names (per `PLATFORM_ARCHITECTURE.md` naming table)
+- Dead endpoint removal
+
+**Dependency maintenance:**
+- `npm audit fix` for non-breaking patches
+- Package version assessment — flag major version gaps for Claude Code review
+- Breaking change report → Jira ticket for Claude Code to spec the migration
+
+**System health report (generated at end of every window):**
+```
+=== MAINTENANCE WINDOW REPORT ===
+Window: [start] → [end]
+Tasks completed: N
+Files changed: [list]
+Security findings: [critical/high/medium/low counts]
+Dependencies updated: [list]
+Dead code removed: [line count]
+Data pruned: [MB freed]
+Flagged for Claude Code review: [list of items needing architectural decision]
+Status: READY TO RESUME / NEEDS ROB REVIEW
+```
+
+**What Aider does NOT do in maintenance windows:**
+- Does NOT make architectural decisions — creates Jira tickets for Claude Code
+- Does NOT change API contracts or gate logic — flags for sprint planning
+- Does NOT update customer-facing UI copy without PO approval
+
+---
+
 ## Agile Story Structure (Jira)
 
 **One story per feature — not separate BE/FE stories.** A story is not done until API is integrated AND UI works end-to-end.
