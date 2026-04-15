@@ -290,6 +290,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div style="margin-top:8px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);" id="script-stats"></div>
           <!-- Gate 1 Script QA Result — populated after script generation -->
           <div id="script-qa-result"></div>
+          <!-- Pre-flight inline panel (replaces confirm() dialog before HeyGen send) -->
+          <div id="preflight-panel" style="display:none; margin:10px 0; padding:12px 16px; border-radius:6px; font-size:12px; font-family:monospace; line-height:1.6; border:1px solid; max-height:220px; overflow-y:auto;"></div>
           <div class="alert alert-info" style="margin-top:8px">Use [beat] for pauses. Write in deadpan anchor voice. State facts flatly then ONE observation. Never explain the joke.</div>
         </div>
       </div>
@@ -4106,40 +4108,79 @@ function sendToHeyGen() {
   var hasPlaceholders = allParsed.some(function(seg) { return seg.wordCount < 20; });
   var droppedCount = rawSegments.length - allParsed.length;
 
-  // Build pre-flight report
+  // ── Pre-flight check (inline panel — no system confirm() popup) ──────────
   var totalWords = allParsed.reduce(function(a,s){ return a+s.wordCount; }, 0);
-  var totalSecs = allParsed.reduce(function(a,s){ return a+s.estSecs; }, 0);
-  var shortSegs = allParsed.filter(function(s){ return s.estSecs < 20; });
-
+  var totalSecs  = allParsed.reduce(function(a,s){ return a+s.estSecs; }, 0);
+  var shortSegs  = allParsed.filter(function(s){ return s.type==='avatar' && s.estSecs < 20; });
   var avatarSegs = allParsed.filter(function(s){ return s.type==='avatar'; });
   var clipSegs   = allParsed.filter(function(s){ return s.type==='source_clip'; });
   var missingClipUrls = clipSegs.filter(function(s){ return !s.clipUrl; }).length;
 
-  var report = '=== PRE-FLIGHT CHECK ===\n\n';
-  report += 'HeyGen avatar segments: ' + avatarSegs.length + '\n';
-  report += 'Source clip slots: ' + clipSegs.length + (missingClipUrls?' (⚠ '+missingClipUrls+' missing URL)':'') + '\n';
-  report += 'Est. avatar speech: ' + estDurFmt(totalSecs) + '\n';
+  var warnings = [];
   if (shortSegs.length) {
-    report += '\n⚠ SHORT AVATAR SEGMENTS (under 20s):\n';
-    shortSegs.forEach(function(s){ report += '  • ' + s.label + ' — ' + s.wordCount + ' words (~' + s.estSecs + 's)\n'; });
+    shortSegs.forEach(function(s){
+      warnings.push('⚠ Short segment: ' + s.label + ' — ' + s.wordCount + ' words (~' + s.estSecs + 's)');
+    });
   }
   if (missingClipUrls) {
-    report += '\n⚠ ' + missingClipUrls + ' clip(s) have no source URL — FFmpeg will skip those slots.\n';
-    report += '  Clips are fetched from ESPN/Twitch — refresh game picker if missing.\n';
+    warnings.push('⚠ ' + missingClipUrls + ' clip slot(s) have no source URL — FFmpeg will skip those slots');
   }
-  report += '\nFull sequence (in order):\n';
-  allParsed.forEach(function(s, i) {
-    if (s.type==='source_clip') {
-      report += (i+1) + '. [SOURCE CLIP] ' + s.label + (s.clipUrl?' ✓':' ⚠ NO URL') + '\n';
-    } else {
-      var flag = s.estSecs < 20 ? ' ⚠' : '';
-      report += (i+1) + '. [AVATAR] ' + s.label + ' — ' + s.wordCount + ' words ~' + s.estSecs + 's' + flag + '\n';
+
+  var hasWarnings = warnings.length > 0;
+  var panel = document.getElementById('preflight-panel');
+
+  if (!hasWarnings) {
+    // Clean run — show green status line, proceed immediately without waiting
+    if (panel) {
+      panel.style.display = 'block';
+      panel.style.background = 'rgba(46,204,113,0.08)';
+      panel.style.borderColor = 'rgba(46,204,113,0.3)';
+      panel.style.color = '#2ecc71';
+      panel.innerHTML = '✅ Pre-flight: ' + avatarSegs.length + ' avatar segments, ' + clipSegs.length + ' clips — ' + estDurFmt(totalSecs) + ' est. speech. Sending to HeyGen...';
+      setTimeout(function(){ if (panel) panel.style.display = 'none'; }, 3000);
     }
-  });
-  report += '\nSend ' + avatarSegs.length + ' segments to HeyGen?';
+    // Fall through immediately — no user action required
+  } else {
+    // Warnings present — show inline panel with Send Anyway / Cancel
+    if (!panel) return; // safety: if panel element missing, don't block
 
-  if (!confirm(report)) return;
+    var warnHtml = '<div style="font-weight:700;margin-bottom:8px;color:#f39c12;">⚠ Pre-flight warnings — review before sending</div>';
+    warnHtml += '<div style="margin-bottom:10px;">' + warnings.map(function(w){ return '<div>' + w + '</div>'; }).join('') + '</div>';
+    warnHtml += '<div style="color:#aaa;margin-bottom:12px;font-size:11px;">';
+    warnHtml += avatarSegs.length + ' avatar segments · ' + clipSegs.length + ' source clips · ~' + estDurFmt(totalSecs) + ' speech</div>';
+    warnHtml += '<div style="display:flex;gap:10px;">';
+    warnHtml += '<button onclick="preflightProceed()" style="padding:6px 16px;background:#f39c12;color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-size:12px;">⚠ Send Anyway</button>';
+    warnHtml += '<button onclick="preflightCancel()" style="padding:6px 16px;background:transparent;color:#aaa;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:12px;">✕ Cancel</button>';
+    warnHtml += '</div>';
 
+    panel.style.display = 'block';
+    panel.style.background = 'rgba(243,156,18,0.08)';
+    panel.style.borderColor = 'rgba(243,156,18,0.4)';
+    panel.style.color = '#e0e0e0';
+    panel.innerHTML = warnHtml;
+
+    window._preflightContinue = function() {
+      panel.style.display = 'none';
+      window._preflightContinue = null;
+      doSendToHeyGen(allParsed, avatarSegs, clipSegs);
+    };
+    return; // Wait for operator to click Send Anyway or Cancel
+  }
+  // ── End pre-flight check ──────────────────────────────────────────────────
+
+  doSendToHeyGen(allParsed, avatarSegs, clipSegs);
+}
+
+function preflightProceed() {
+  if (window._preflightContinue) window._preflightContinue();
+}
+function preflightCancel() {
+  var panel = document.getElementById('preflight-panel');
+  if (panel) panel.style.display = 'none';
+  window._preflightContinue = null;
+}
+
+function doSendToHeyGen(allParsed, avatarSegs, clipSegs) {
   var allSegments = allParsed;
   if (!allSegments.length) { alert('No segments found — generate script first.'); return; }
   var avatarOnly = allSegments.filter(function(s){ return s.type==='avatar'; });
