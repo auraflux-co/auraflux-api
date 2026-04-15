@@ -27,14 +27,14 @@ All pending work lives here. Archive after the associated commit lands.
 | `CLINE_HANDOFF_PUBLISH_COPY_REWRITE.md` | Cline-A | **PENDING** | Rewrite publish copy generator (Rob using ChatGPT instead) |
 | `CLINE_HANDOFF_QA_GATE_HARDENING.md` | Cline-A | **PENDING** | Gate 2/3 scoring hardening |
 | `CLINE_HANDOFF_GATE1_CLIP_DIAGNOSTIC_UPGRADE.md` | Cline-A | **PENDING** | Better Gate 1 clip diagnostics |
-| `CLINE_HANDOFF_GATE3_POLLER_RACE_FIX.md` | Cline-A | **SHIP NEXT** | Gate 3 / Drive / Upload-Post never ran — poller race condition fix |
+| `CLINE_HANDOFF_GATE3_POLLER_RACE_FIX.md` | Cline-A | **SHIPPED 2516d47** | Gate 3 / Drive / Upload-Post never ran — poller race condition fix |
 | `CLINE_HANDOFF_NEWS_CHROME_FIX.md` | Cline-A | **SHIP NEXT** | AL JAZEERA label fix (applied), dark story cards, seek corruption, thumbnail |
 | `CLINE_HANDOFF_SHARED_CHROME_SKINS.md` | Cline-A | **SHIP NEXT** | Universal newscast chrome — per-show CSS skins (Twitch/NBA), TV card removal, white trim fix |
 | `CLINE_HANDOFF_SHORTS_SCRIPT_QA_FIX.md` | Cline-A | **PENDING (after chrome skins)** | Short-form Gate 1 fixes — clip/scene count deductions, outro, random clip selection |
 | `CLINE_HANDOFF_SMOKE12_FIXES.md` | Cline-A | **SHIPPED 4fa8a9b** | TV card removed, portrait zoom-to-fill, category label, show name indent |
 | `CLINE_HANDOFF_WAVE_0_CLEANUP.md` | Cursor | **PENDING** | 16 dead-code / unused import cleanup items |
 | `CLINE_HANDOFF_PREFLIGHT_INLINE.md` | Cursor | **PENDING** | Replace confirm() popup with inline preflight panel |
-| `CLINE_HANDOFF_ROLLBACK_ADVANCE_GAPS.md` | Cline-B | **SHIP NEXT** | scriptJobId persist, dedup lock clear, rollback overshoot, audit trail |
+| `CLINE_HANDOFF_ROLLBACK_ADVANCE_GAPS.md` | Cline-B | **SHIPPED 96ca354** | scriptJobId persist, dedup lock clear, rollback overshoot, audit trail |
 | `CLINE_HANDOFF_JOB_DISMISS.md` | Cline-B | **PENDING** | Job card dismiss clears data/jobs.json not just localStorage |
 | `CLINE_HANDOFF_ASSEMBLY_DEDUP_LOCK.md` | Cline-A | **PENDING** | Prevent duplicate assembly runs on same job |
 | `CLINE_HANDOFF_STRICT_CLIPS_DEDUP_DROPDOWN.md` | Cline-A | **PENDING** | Deduplicate clips in dropdown |
