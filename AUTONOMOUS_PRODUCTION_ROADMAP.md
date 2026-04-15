@@ -211,7 +211,41 @@ Manual review holds only fire when:
 - Critical failure flag fires (e.g., clipsExpectedButMissing, video freeze)
 - Explicit customer setting to always-review
 
-**3.3 Scheduled publishing with backward-time calculation**
+**3.3 Model Routing by Task Type**
+
+Not every task needs the most capable (most expensive) model. Route each pipeline task to the model best matched to its requirements — quality where it matters, cost efficiency where it doesn't.
+
+**Routing table:**
+
+| Task | Current | Target Model | Reason |
+|---|---|---|---|
+| Script generation (Twitch/NBA/News) | Gemini 2.5 Flash | Gemini 2.5 Pro | Highest quality output — this is the creative core |
+| Gate 1 script QA | Claude Sonnet 4.6 | Claude Opus 4.6 | Deep reasoning on script structure and quality |
+| Gate 2 segment QA | Gemini 2.5 Flash | Gemini 2.5 Flash | Visual check — Flash is sufficient |
+| Gate 3 assembly QA | Gemini 2.5 Flash | Gemini 2.5 Flash | Visual check — Flash is sufficient |
+| Publish copy generation | Claude Sonnet 4.6 | Claude Sonnet 4.6 | SEO copywriting — Sonnet is right size |
+| Hook moment extraction | Claude Haiku 4.5 | Claude Haiku 4.5 | Simple extraction task — Haiku sufficient |
+| Clip scoring / ranking | Gemini 2.5 Flash | Gemini 2.5 Flash | Fast multi-clip analysis |
+| Error diagnosis / retry decisions | Claude Sonnet 4.6 | Claude Sonnet 4.6 | Reasoning on gate failures |
+
+**Implementation:** Add `modelConfig` to `channelConfig` per client. Operator-tunable per content type. Default routing table above is the baseline. High-volume clients can opt down to Flash/Haiku across the board for cost. Premium clients can opt up to Opus/Pro for max quality.
+
+```json
+{
+  "modelConfig": {
+    "scriptGeneration": "gemini-2.5-pro",
+    "gate1QA": "claude-opus-4-6",
+    "gate2QA": "gemini-2.5-flash",
+    "gate3QA": "gemini-2.5-flash",
+    "publishCopy": "claude-sonnet-4-6",
+    "hookExtraction": "claude-haiku-4-5"
+  }
+}
+```
+
+**Cost impact:** Routing script gen to Pro + Gate 1 to Opus adds ~$0.15/job. Routing everything else to Flash/Haiku saves ~$0.05/job. Net: ~$0.10/job premium for quality routing vs flat Flash. At 60 jobs/month = $6/month — negligible against HeyGen costs.
+
+**3.4 Scheduled publishing with backward-time calculation**
 
 Core feature of Phase 3. The current scheduling UI is a flat image placeholder. Phase 3 wires it up:
 
