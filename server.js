@@ -4588,7 +4588,7 @@ app.post('/assemble',
               );
 
               const burnedPath = inputForTS.replace('.mp4', '_intro_burned.mp4');
-              const introDur = CONFIG.INTRO_CARD.DURATION_SECONDS;
+              const introDur = CONFIG.INTRO_CARD.DURATION_NBA;
 
               const burnArgs = [
                 '-i', inputForTS, '-i', cardPngPath,
