@@ -47,30 +47,27 @@ cd ~/cwn-production && tail -f output/*.log
 
 ## Agent Model Routing
 
-Each agent role is assigned to the model best matched to its task type. Claude Code owns this routing table — update it here when models change.
+Claude Code owns this routing table. Update here when models change. Full domain split and file ownership in `AGENT_FILE_REGISTRY.md`.
 
-| Agent | Model | Assigned Task Types |
+| Agent | Model | Domain |
 |---|---|---|
-| **Claude Code** | Claude Sonnet 4.6 | Architecture, diagnosis, spec writing, handoff authoring, roadmap docs, bug root cause analysis, multi-file reasoning |
-| **Cline-A** | DeepSeek | Surgical code edits with exact line targets — S/M handoffs with `grep -n` + 50-line read + precise before/after blocks |
-| **Cline-B** | DeepSeek | Parallel surgical edits on non-overlapping files when Cline-A is locked |
+| **Claude Code** | Claude Sonnet 4.6 | Architecture, diagnosis, spec writing, handoff authoring, roadmap, model routing decisions |
+| **Cline-A** | Claude Sonnet | Backend pipeline — `server.js` pipeline functions, gates, FFmpeg, assembly, HeyGen, QA scoring |
+| **Cline-B** | DeepSeek | Backend API/data — `server.js` endpoints, `data/`, `logs/`, job persistence, publish integration |
+| **Cline-C** | GPT-4.5 / Codex | Frontend — `cwn_production.html`, `tools/`, `assets/`, AuraFlux React UI (Phase 2+) |
+| **Aider** | — | Overnight batch — docs, migrations, Jira/Confluence, non-breaking scripts |
 
-**DeepSeek Cline rules (critical — context window is small):**
-- NEVER read `server.js` in full — it is 9000+ lines
-- Always `grep -n` for exact line numbers first, then read only 50 lines around target
-- If context resets mid-task, re-read STATUS.md only (not CLAUDE.md + all handoffs)
-- One handoff at a time — do not batch multiple handoffs in one session
+**Jira labels:** `cline_sonnet`, `cline_deepseek`, `cline_gpt` — used in Assignee field on all tickets.
 
-**Claude Code rules:**
-- Owns all spec writing, handoff authoring, and roadmap docs
-- Owns diagnosis when logs/QA reports need interpretation
-- Does NOT commit production code to server.js/cwn_production.html — writes handoffs for Cline instead
-- Exception: handoff docs, roadmap docs, STATUS.md updates are committed directly
+**DeepSeek (Cline-B) rules — context window is small:**
+- NEVER read `server.js` in full — 9000+ lines
+- Always `grep -n` first, read only 50 lines around target
+- Re-read STATUS.md only after context reset — not CLAUDE.md + all handoffs
+- One handoff at a time
 
-**Model upgrade path:**
-- When Cline-A/B models change, update this table
-- Gemini as Cline is off the table — did not perform well on code tasks
-- For Phase 3 pipeline model routing (script gen, QA gates), see `AUTONOMOUS_PRODUCTION_ROADMAP.md` section 3.3
+**Gemini as Cline:** off the table — did not perform well on code tasks.
+
+**Phase 3 pipeline model routing** (script gen → Pro, Gate 1 → Opus, etc.): see `AUTONOMOUS_PRODUCTION_ROADMAP.md` section 3.3.
 
 ---
 
