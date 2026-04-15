@@ -35,6 +35,8 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline-A | **feat(heygen): use pre-baked avatar+bg templates with full-gen fallback** — Added HEYGEN_TEMPLATE_LANDSCAPE/HEYGEN_TEMPLATE_PORTRAIT env vars; templateBody tries pre-baked template (lower render cost), catches to fullGenBody on failure. Both template IDs hardcoded as defaults. Updated .env.example with new vars. | lib/script_gen.js, .env.example, STATUS.md | pending | 2026-04-15 6:08 PM ET |
+|-------|---------------|---------------|--------|-----------|
 | Cline-C | **verify(frontend-fixes): TASK 1 + TASK 2 already in main** — TASK 1 (story card visibility CSS: opaque bg, white text, gold borders in tools/clipzworld_newscast.html) and TASK 2 (Twitch clip window 48h, DISPLAY_NAMES ExtraEmily+Rage, silent-drop tracking in cwn_production.html) were already merged to main before branch creation. Branch closes with STATUS.md update only. | STATUS.md | pending | 2026-04-15 |
 | Cline-A | **feat(ffmpeg): VideoToolbox on macOS, libx264 fallback on Linux** — Added `ffmpegEncodeArgs(highQuality)` to lib/ffmpeg_utils.js: darwin=h264_videotoolbox -q:v 65/45, Linux=libx264 ultrafast -crf 23/20. Fixes undefined destructure in assembly.js. | lib/ffmpeg_utils.js, STATUS.md | pending | 2026-04-15 5:46 PM ET |
 | Cline-A | **fix(assembly): freeze-hold last frame of outro 0.75s (Gap #45)** — Added tpad=stop_mode=clone:stop_duration=0.75 FFmpeg pass before TS normalization in per-segment loop (lib/assembly.js:1977). Long-form only (!isShortForm). Non-fatal catch. | lib/assembly.js, STATUS.md | pending | 2026-04-15 5:46 PM ET |
