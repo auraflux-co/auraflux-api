@@ -5265,23 +5265,25 @@ app.post('/assemble',
 
               // Upload extracted thumbnail frame to Drive so Upload-Post can hand YouTube
               // a real custom thumbnail instead of a random auto-generated frame.
-              if (assemblyJobs[asmId].thumbFrame && fs.existsSync(assemblyJobs[asmId].thumbFrame)) {
-                try {
-                  const thumbDriveUrl = await uploadToDrive(
-                    assemblyJobs[asmId].thumbFrame,
-                    assemblyJobs[asmId].thumbFilename,
-                    `Thumbnail — ${jobTitle || outFile}`
-                  );
-                  if (thumbDriveUrl) {
-                    assemblyJobs[asmId].thumbDriveUrl = thumbDriveUrl;
-                    log(asmId, `  🖼  Thumbnail uploaded to Drive: ${thumbDriveUrl}`);
-                  } else {
-                    log(asmId, `  ⚠️  Thumbnail Drive upload returned null — YouTube will auto-generate`);
-                  }
-                } catch(thumbErr) {
-                  log(asmId, `  ⚠️  Thumbnail Drive upload failed: ${thumbErr.message} — YouTube will auto-generate`);
-                }
-              }
+              // COMMENTED OUT per CLINE_HANDOFF_NEWS_CHROME_FIX.md Issue 4 — thumbnail is a raw video frame, not designed
+              // The Canva-generated thumbnail handoffs are the long-term solution.
+              // if (assemblyJobs[asmId].thumbFrame && fs.existsSync(assemblyJobs[asmId].thumbFrame)) {
+              //   try {
+              //     const thumbDriveUrl = await uploadToDrive(
+              //       assemblyJobs[asmId].thumbFrame,
+              //       assemblyJobs[asmId].thumbFilename,
+              //       `Thumbnail — ${jobTitle || outFile}`
+              //     );
+              //     if (thumbDriveUrl) {
+              //       assemblyJobs[asmId].thumbDriveUrl = thumbDriveUrl;
+              //       log(asmId, `  🖼  Thumbnail uploaded to Drive: ${thumbDriveUrl}`);
+              //     } else {
+              //       log(asmId, `  ⚠️  Thumbnail Drive upload returned null — YouTube will auto-generate`);
+              //     }
+              //   } catch(thumbErr) {
+              //     log(asmId, `  ⚠️  Thumbnail Drive upload failed: ${thumbErr.message} — YouTube will auto-generate`);
+              //   }
+              // }
 
               // ── Gate 6: Auto-publish after Gate 3 pass + Drive upload ──────────────
           // Triggered when: Gate 3 outcome = 'pass' AND Drive upload succeeded
