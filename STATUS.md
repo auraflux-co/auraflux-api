@@ -35,6 +35,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 | Cline-B | **fix(publish): inject story headlines into News publish copy (Gap #13)** — Added `items = []` to `handleGeneratePublishCopy` destructuring. Built `newsHeadlines` from `items[].headline|title|story`. Injected as "Story headlines covered:" block into `news:` prompt before script excerpt. | lib/publish.js, STATUS.md | pending | 2026-04-15 |
+| Cline-B | **fix(publish): inject game data into NBA publish copy (Gap #34)** — Built `gameMatchups` from `items[].matchup|teams|title` + score fields. Injected as "Games covered:" block into `nba:` prompt before script excerpt. | lib/publish.js, STATUS.md | pending | 2026-04-15 |
 |-------|---------------|---------------|--------|-----------|
 | Cline-C | **fix(chrome): always show WORLD NEWS category — never outlet name** — Fixed `directiveToOverlayParams()` line 148 in lib/chromeDirectives.js: `category: directive.flag?.source || 'WORLD NEWS'` → `category: 'WORLD NEWS'`. No other .source refs used as visible labels. | lib/chromeDirectives.js, STATUS.md | pending | 2026-04-15 |
 | Cline-A | **feat(chrome): migrate NBA+Twitch assembly to newscast chrome overlay (Parts 2+3 + Sidebar B1/B2)** — Replaced legacy generateIntroCardPNG (Twitch) and generateGameStoryCardPNG (NBA) with two-state newscast chrome burns. Twitch allStories includes fact field. NBA allStories uses matchup, truncates at em-dash to 40 chars. Fixed epCountersPath bug. | lib/assembly.js, STATUS.md | 6663c4c | 2026-04-15 |
