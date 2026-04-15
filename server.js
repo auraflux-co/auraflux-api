@@ -2526,7 +2526,8 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
   } else {
     clipMarkers = (script.match(/\[CLIP PLAYS HERE\]/g) || []).length;
   }
-  const expectedClips  = contentType === 'twitch' ? streamers.length * clipsPerStreamer : clipAnalyses.length;
+  const isShortForm    = contentType.includes('-short');
+  const expectedClips  = isShortForm ? 1 : contentType === 'twitch' ? streamers.length * clipsPerStreamer : clipAnalyses.length;
   const wrongClipCount = Math.abs(clipMarkers - expectedClips) > 1; // allow ±1 tolerance
 
   // "Appreciate you" — text regex in legacy mode, search spokenText fields in directive mode
@@ -2545,7 +2546,7 @@ async function claudeScriptQA(script, clipAnalyses, opts = {}) {
   } else {
     sceneMarkers = (script.match(/===\s+[A-Z_0-9]+\s+===/g) || []).length;
   }
-  const wrongSceneCount = expectedScenes > 0 && sceneMarkers !== expectedScenes;
+  const wrongSceneCount = !isShortForm && expectedScenes > 0 && sceneMarkers !== expectedScenes;
 
   // Build clip summaries for Claude to cross-check.
   // For Twitch, clipAnalyses is a 2D array: [[s0c0, s0c1], [s1c0, s1c1], ...]
@@ -2605,6 +2606,9 @@ EXPECTED SCENES: ${expectedScenes}`
 EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}
 EXPECTED SCENES: ${expectedScenes}`;
 
+  // Short-form content types have different validation rules
+  const isShortForm = contentType === 'twitch-short' || contentType === 'nba-short' || contentType === 'news-short';
+  
   const checklist = isTwitch ? [
     `1. SCENE COUNT: Count every === HEADER === marker systematically through the ENTIRE script.
    - DO NOT try to count in your head
@@ -2612,7 +2616,7 @@ EXPECTED SCENES: ${expectedScenes}`;
    - Method: Search through script and list each header you find, then count your list
    - Remember: Scenes with numbers (CLIP1, CLIP2, CLIP3) are SEPARATE scenes, not one scene
    - Are there exactly ${expectedScenes} === SCENE === markers?`,
-    `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
+    `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?${isShortForm ? ' (Short-form: MUST be exactly 1 clip)' : ''}`,
     `3. OUTRO: Does the script end with "Appreciate you!"?`,
     `4. DISPLAY NAMES: Are only the approved display names used (no Twitch usernames)?`,
     `5. INTRO LENGTH: Is each streamer intro 2 or 3 sentences? (2 minimum, 3 maximum — 3 sentences is PASS, only FAIL if 1 sentence or 4+ sentences)`,
@@ -2628,8 +2632,8 @@ EXPECTED SCENES: ${expectedScenes}`;
    - Expected: exactly ${expectedScenes} markers
    - Method: Search through script and list each header you find, then count your list
    - Remember: GAME1_INTRO, GAME1_NARRATION, GAME1_REACTION are 3 SEPARATE scenes
-   - Are there exactly ${expectedScenes} === SCENE === markers?`,
-    `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per game)?`,
+   - Are there exactly ${expectedScenes} === SCENE === markers?${isShortForm ? ' (Short-form: expect fewer scenes - typically 3-4 total)' : ''}`,
+    `2. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers (one per game)?${isShortForm ? ' (Short-form: MUST be exactly 1 clip)' : ''}`,
     `3. OUTRO: Does the script end with "Appreciate you!"?`,
     `4. GAME ACCURACY: Are game scores, teams, and player stats accurately mentioned?`,
     `5. INTRO: Is the intro 2-3 sentences introducing the episode?`,
@@ -2645,8 +2649,8 @@ EXPECTED SCENES: ${expectedScenes}`;
    - Expected: exactly ${expectedScenes} scenes
    - Method: list each scene.id you find, then count your list
    - Remember: STORY1_INTRO, STORY1_SETUP, STORY1_CLIP, STORY1_SUMMARY, STORY1_REACTION are 5 SEPARATE scenes (Red 4 hotfix 6: clip is now a standalone source_clip scene, not a text marker)
-   - Are there exactly ${expectedScenes} scenes in the JSON?`,
-    `2. CLIP COUNT: Are there exactly ${expectedClips} scenes with type="source_clip" in the scenes[] array (one STORY#_CLIP per story)?`,
+   - Are there exactly ${expectedScenes} scenes in the JSON?${isShortForm ? ' (Short-form: expect fewer scenes - typically 3-4 total)' : ''}`,
+    `2. CLIP COUNT: Are there exactly ${expectedClips} scenes with type="source_clip" in the scenes[] array (one STORY#_CLIP per story)?${isShortForm ? ' (Short-form: MUST be exactly 1 clip)' : ''}`,
     `3. OUTRO: Does the OUTRO scene's spokenText contain "Appreciate you"?`,
     `4. STORY ACCURACY: Are headlines and story details accurately mentioned in the spokenText of each STORY#_INTRO scene?`,
     `5. INTRO: Is the INTRO scene's spokenText 2-3 sentences introducing the episode?`,
@@ -2657,7 +2661,7 @@ EXPECTED SCENES: ${expectedScenes}`;
     `10. SOURCE ATTRIBUTION (STRICT): Does any scene's spokenText contain ANY spoken source attribution? Check every scene for phrases like "According to Al Jazeera", "Sources report", "Al Jazeera's coverage", "[source] reports". FAIL hard (-25) if any found — Bobby G must NEVER speak the source name.`,
     `11. REACTION: Does each STORY#_REACTION scene have a flat, deadpan reaction in spokenText (1 sentence)?`
   ] : [
-    `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?`,
+    `1. CLIP COUNT: Are there exactly ${expectedClips} [CLIP PLAYS HERE] markers?${isShortForm ? ' (Short-form: MUST be exactly 1 clip)' : ''}`,
     `2. OUTRO: Does the script end with "Appreciate you!"?`,
     `3. STRUCTURE: Does the script follow the expected format?`,
     `4. CONTENT MATCH: Does the script accurately reflect the source material?`,
@@ -3946,12 +3950,11 @@ app.post('/assemble',
 
         log(asmId, `  📊 Segments: ${avatarFiles.length} avatar + ${clipFiles.length} source clips`);
 
-        // Select ONE random source clip for top half
+        // Use first source clip — clips are script-ordered, index 0 matches the script
         let selectedClip = null;
         if (clipFiles.length > 0) {
-          const randomIdx = Math.floor(Math.random() * clipFiles.length);
-          selectedClip = clipFiles[randomIdx];
-          log(asmId, `  🎲 Selected random clip ${randomIdx + 1}/${clipFiles.length}: ${path.basename(selectedClip)}`);
+          selectedClip = clipFiles[0];
+          log(asmId, `  🎯 Using script-matched clip: ${path.basename(selectedClip)}`);
         }
 
         if (avatarFiles.length === 0) {
