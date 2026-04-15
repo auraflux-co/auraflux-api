@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-15 (4:03 AM ET)
+**Last Updated:** 2026-04-15 (4:10 AM ET)
 **Branch:** main | **Latest Commit:** fix(news-chrome): AL JAZEERA label, backdrop-filter, Gate 3 poller race + shorts stack order
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
@@ -34,6 +34,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline | **docs(chrome): verify Part 1 of CLINE_HANDOFF_SHARED_CHROME_SKINS.md already shipped** — Verified `generateNewscastOverlay()` at server.js:11723 already has `contentType` param (line 11729), CSS skin injection code (lines 11747-11760), and all 5 call sites pass `contentType`. Part 1 (CSS skin injection + contentType param) was already implemented in a previous session. No code changes needed. | STATUS.md | pending | 2026-04-15 4:10 AM ET |
 | Cline | **fix(nba): prefer highlight videos over press conferences in ESPN scrape (Gap #20)** — Added highlight pattern filter in `/nba/scrape-game-highlight` before duration-sorting. Filters videos by headline/title/description matching highlight|top plays|key plays|best plays|game recap. Falls back to full pool if no matches. | server.js, STATUS.md | pending | 2026-04-15 4:09 AM ET |
 | Cline | **fix(dashboard): NBA generate guard — require SELECT GAMES flow (Gap #19)** — Added guard at top of `generateNBA()` in cwn_production.html: if `CURRENT_META.clipUrls` is empty/missing, show warning in `#nba-status` element and return early. Prevents script generation before highlight URLs are scraped. | cwn_production.html, STATUS.md | pending | 2026-04-15 4:08 AM ET |
 | Claude Code | **fix: Twitch white trim crop, scriptJobId persist, ESPN highlight filter** — (1) source clip vfFilter adds `crop=1880:1040` after zoom-to-fill to eliminate baked-in OBS border bars. (2) assemble payload falls back to `job.id` so directive sidecar loads after page restore. (3) `scriptJobId` saved to correct job card via id match, duplicate block removed. (4) NBA ESPN scrape filters press conferences before picking highlight video. | server.js, cwn_production.html, templates/nba_thumbnail_generator.html, STATUS.md | — | 2026-04-15 4:30 AM ET |
