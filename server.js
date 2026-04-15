@@ -6725,11 +6725,12 @@ STRICT RULES:
 - Write every single line — no brackets, no placeholders, no [YOUR OBSERVATION HERE]
 
 HEYGEN PRONUNCIATION BEST PRACTICES:
-The avatar (HeyGen AI) reads your script aloud. Follow these rules for perfect pronunciation:
-1. **Unusual names**: Add simple phonetic respelling in parentheses on FIRST mention only
-   - Example: "Giannis Antetokounmpo (YAH-nis ON-tet-oh-KOON-po)"
-   - Example: "Luka Dončić (LOON-kuh DON-chich)"
-   - Common names like "LeBron", "Curry", "Durant" need no help
+The avatar (HeyGen AI) reads your script aloud — EVERYTHING in the script is spoken, including parenthetical text.
+1. **Difficult names**: Write the phonetic spelling DIRECTLY as the spoken word. Do NOT add parenthetical hints.
+   - WRONG: "Giannis Antetokounmpo (YAH-nis)" — Bobby G will say both
+   - RIGHT: Write "Yan-is An-tet-oh-KOON-po" OR just "Giannis" (HeyGen handles common NBA names fine)
+   - Common names (LeBron, Curry, Durant, Luka) need no changes — HeyGen knows them
+   - Only respell if a name is genuinely unusual AND HeyGen will mispronounce it
 2. **Numbers**: Always spell out for clarity
    - Write "thirty-two points" NOT "32 points"
    - Write "one hundred and fifty" NOT "150"
@@ -6785,13 +6786,15 @@ STRICT RULES:
 - This is long-form. Every story needs FULL CONTENT.
 
 HEYGEN PRONUNCIATION BEST PRACTICES:
-The avatar (HeyGen AI) reads your script aloud. Follow these rules for perfect pronunciation:
-1. **Unusual names/places**: Add phonetic respelling in parentheses on FIRST mention only
-   - "Zelenskyy (zeh-LEN-skee)", "Xi Jinping (shee jin-PING)", "Qatar (KAH-tar)"
+The avatar (HeyGen AI) reads your script aloud — EVERYTHING in the script is spoken, including any text in parentheses.
+1. **Difficult names/places**: Write them as they should be HEARD. Do NOT add parenthetical pronunciation guides — they will be spoken aloud.
+   - WRONG: "Zelenskyy (zeh-LEN-skee)" → Bobby G says "Zelenskyy zeh-LEN-skee"
+   - RIGHT: "Zelenskyy" — HeyGen handles this fine. Or write "zeh-LEN-skee" directly if needed.
+   - Most common names (Iran, Qatar, Beijing, Ukraine) HeyGen pronounces correctly — leave them as-is.
+   - Only rewrite if the word is genuinely obscure AND you are certain HeyGen will mispronounce it.
 2. **Numbers**: Spell out for clarity → "twenty-three" NOT "23"
 3. **Abbreviations**: Spell out OR hyphenate → "UN" becomes "U-N" OR "the UN"
-4. **Foreign words**: Simple phonetic respelling → "coup d'état (koo day-TAH)"
-5. **Punctuation = pacing**: Use commas for natural speech rhythm
+4. **Punctuation = pacing**: Use commas for natural speech rhythm
 
 SCRIPT FORMAT — The user prompt will provide exact === SCENE HEADERS === to use. Output EXACTLY those headers, one scene per header. Do not combine scenes. Do not skip scenes.
 Target: 80-120 words of SPOKEN TEXT per story (setup + reaction, clip audio stripped).
@@ -6832,10 +6835,11 @@ STRICT RULES:
 - Use the visual analysis provided to inform what the clip is about, but do not narrate it
 
 HEYGEN PRONUNCIATION BEST PRACTICES:
-The avatar (HeyGen AI) reads your script aloud. Follow these rules for perfect pronunciation:
-1. **Streamer names**: If streamers.json has phonetic field, use it on FIRST mention
-   - Example: "Yonna (YAWN-uh)" if phonetic: "Yawn-uh" exists in data
-   - Common names like "xQc", "Pokimane", "Kai Cenat" usually fine as-is
+The avatar (HeyGen AI) reads your script aloud — EVERYTHING is spoken, including parenthetical text.
+1. **Streamer names**: If streamers.json has a phonetic field, use the phonetic spelling DIRECTLY as the spoken name.
+   - WRONG: "Yonna (YAWN-uh)" → Bobby G says "Yonna YAWN-uh"
+   - RIGHT: Write "YAWN-uh" directly in the script where the name is first spoken. After that, use the display name normally.
+   - Most streamer display names (xQc, Pokimane, Kai Cenat, Hasan) are fine as-is — HeyGen handles them.
 2. **Numbers**: Spell out → "fifty thousand viewers" NOT "50k viewers"
 3. **Game titles**: If unusual, add phonetic → "Valorant" is fine, "Lies of P" is fine
 4. **Punctuation = pacing**: Commas create natural pauses in speech
