@@ -101,6 +101,32 @@ const cheerio = require('cheerio');
 
 const app  = express();
 
+// ── FFmpeg encoder selection ─────────────────────────────────────────────────
+// macOS (local dev, M4 Pro): VideoToolbox hardware encoder — ~5x faster than libx264
+// Linux (Railway standard): libx264 ultrafast — no GPU on standard plan
+// Linux + GPU (Railway future): h264_nvenc — add when GPU instance available
+const _IS_MACOS  = process.platform === 'darwin';
+const _HW_AVAIL  = _IS_MACOS; // extend to check process.env.ENABLE_NVENC when Railway GPU added
+
+// Returns encoder + quality args for the current platform.
+// hwQuality=true for chrome burns (short segments, worth extra quality)
+// hwQuality=false for normalize/concat (large files, speed matters more)
+function ffmpegEncodeArgs(hwQuality = false) {
+  if (_HW_AVAIL) {
+    // Apple VideoToolbox — uses M4 Pro media engine, doesn't compete with CPU
+    return ['-c:v', 'h264_videotoolbox',
+            ...( hwQuality ? CONFIG.FFMPEG.HW_QUALITY_HQ : CONFIG.FFMPEG.HW_QUALITY_FLAG ),
+            ...CONFIG.FFMPEG.THREADS];
+  } else {
+    // Linux / Railway — software encode, ultrafast preset for speed
+    return ['-c:v', 'libx264',
+            ...( hwQuality ? CONFIG.FFMPEG.SW_QUALITY_HQ : CONFIG.FFMPEG.SW_QUALITY_FLAGS ),
+            ...CONFIG.FFMPEG.THREADS];
+  }
+}
+
+console.log(`[ffmpeg] Encoder: ${_HW_AVAIL ? 'h264_videotoolbox (hardware)' : 'libx264 (software)'} on ${process.platform}`);
+
 const TMP_DIR    = require('path').join(__dirname, 'tmp');
 const CWN_LOGO_PATH = path.join(__dirname, 'assets', 'cwn_logo.png');
 const CWN_BANNER_PATH = path.join(__dirname, 'assets', 'cwn_banner.png');
@@ -2606,9 +2632,8 @@ EXPECTED SCENES: ${expectedScenes}`
 EXPECTED [CLIP PLAYS HERE] COUNT: ${expectedClips}
 EXPECTED SCENES: ${expectedScenes}`;
 
-  // Short-form content types have different validation rules
-  const isShortForm = contentType === 'twitch-short' || contentType === 'nba-short' || contentType === 'news-short';
-  
+  // isShortForm already declared above (line ~2529) — used here for QA hint text
+
   const checklist = isTwitch ? [
     `1. SCENE COUNT: Count every === HEADER === marker systematically through the ENTIRE script.
    - DO NOT try to count in your head
@@ -3978,7 +4003,7 @@ app.post('/assemble',
           await new Promise((res, rej) => {
             const args = [
               '-f', 'concat', '-safe', '0', '-i', avatarListPath,
-              '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+              ...ffmpegEncodeArgs(false),
               '-c:a', 'aac', '-ar', '44100', '-ac', '2',
               '-y', avatarConcatPath
             ];
@@ -4004,7 +4029,7 @@ app.post('/assemble',
               '-i', selectedClip,
               '-t', avatarDuration.toFixed(3), // Match avatar duration
               '-vf', 'scale=1080:960:force_original_aspect_ratio=increase,crop=1080:960',
-              '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+              ...ffmpegEncodeArgs(true),
               '-an', // No audio for clip half
               '-y', clipHalfPath
             ];
@@ -4020,7 +4045,8 @@ app.post('/assemble',
           await new Promise((res, rej) => {
             const args = [
               '-f', 'lavfi', '-i', `color=c=black:s=1080x960:d=${avatarDuration.toFixed(3)}`,
-              '-c:v', 'libx264', '-preset', 'fast', '-pix_fmt', 'yuv420p',
+              ...ffmpegEncodeArgs(true),
+              '-pix_fmt', 'yuv420p',
               '-y', clipHalfPath
             ];
             const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
@@ -4039,7 +4065,7 @@ app.post('/assemble',
           const args = [
             '-i', avatarConcatPath,
             '-vf', 'scale=1080:960:force_original_aspect_ratio=increase,crop=1080:960',
-            '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+            ...ffmpegEncodeArgs(true),
             '-c:a', 'aac', '-ar', '44100', '-ac', '2',
             '-y', avatarHalfPath
           ];
@@ -4060,7 +4086,7 @@ app.post('/assemble',
             '-filter_complex', '[0:v][1:v]vstack=inputs=2[vstacked]',
             '-map', '[vstacked]',
             '-map', '0:a', // Use audio from avatar (input 0, top)
-            '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+            ...ffmpegEncodeArgs(true),
             '-c:a', 'aac',
             '-movflags', '+faststart',
             '-y', stackedPath
@@ -4629,7 +4655,7 @@ app.post('/assemble',
               const baseArgs = [
                 '-vf', vfFilter,
                 '-pix_fmt', 'yuv420p',
-                '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+                ...ffmpegEncodeArgs(false),
                 '-g', '30',
                 '-keyint_min', '30',
                 '-sc_threshold', '0',
