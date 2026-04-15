@@ -55,6 +55,10 @@ All pending work lives here. Archive after the associated commit lands.
 | `CLINE_HANDOFF_POST_SHIP_VERIFICATION_NEWS.md` | Cline-A | **PENDING** | Post-ship QA checklist for News |
 | `CLINE_HANDOFF_POST_SHIP_VERIFICATION_NBA.md` | Cline-A | **PENDING** | Post-ship QA checklist for NBA |
 | `CLINE_HANDOFF_SMOKE_TEST_BUGS.md` | Cline-A | **PENDING** | General smoke test bug fixes |
+| `CLINE_HANDOFF_STORY_CARD_VISIBILITY.md` | Cursor | **PENDING** | Story card text/bg contrast — white text, opaque bg, subtle border |
+| `CLINE_HANDOFF_PHONETIC_PRONUNCIATION.md` | Aider | **PENDING** | Bobby G speaks phonetic hints aloud — remove parenthetical hints from all 3 prompts |
+| `CLINE_HANDOFF_GATE3_AUTOPUBLISH_FIX.md` | Cline-A | **CRITICAL** | Gate 3 error fallback blocks Gate 6 — every April 15 assembly failed to upload |
+| `CLINE_HANDOFF_AJ_CLIP_QUALITY.md` | Cline-A | **PENDING** | Al Jazeera clip quality — constrain encode to libx264 + maxrate 4M |
 
 ---
 
