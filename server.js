@@ -3962,13 +3962,14 @@ app.post('/assemble',
           try { fs.unlinkSync(avatarListPath); } catch(e) {}
         }
 
-        // Step 2: Prepare top half (source clip OR black frame if no clip)
-        let topHalfPath;
+        // Step 2: Prepare clip half (source clip OR black frame if no clip)
+        // NOTE: clip goes on BOTTOM (below avatar) — Bobby G reaction on top is best practice for shorts
+        let clipHalfPath;
         const avatarDuration = await probeDuration(avatarConcatPath);
 
         if (selectedClip) {
-          log(asmId, `  🎥 Preparing top half: source clip (scaled + cropped to 1080×960)`);
-          topHalfPath = path.join(TMP_DIR, `${asmId}_top_half.mp4`);
+          log(asmId, `  🎥 Preparing clip half (bottom): source clip (scaled + cropped to 1080×960)`);
+          clipHalfPath = path.join(TMP_DIR, `${asmId}_clip_half.mp4`);
 
           await new Promise((res, rej) => {
             const args = [
@@ -3976,34 +3977,35 @@ app.post('/assemble',
               '-t', avatarDuration.toFixed(3), // Match avatar duration
               '-vf', 'scale=1080:960:force_original_aspect_ratio=increase,crop=1080:960',
               '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-              '-an', // No audio for top half
-              '-y', topHalfPath
+              '-an', // No audio for clip half
+              '-y', clipHalfPath
             ];
             const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
             proc.on('close', code => code === 0 ? res() : rej(new Error(`Top half prep failed: ${code}`)));
             proc.on('error', rej);
           });
-          log(asmId, `  ✅ Top half prepared (1080×960)`);
+          log(asmId, `  ✅ Clip half prepared (1080×960)`);
         } else {
-          log(asmId, `  ⚠️  No source clip — using black frame for top half`);
-          topHalfPath = path.join(TMP_DIR, `${asmId}_black_top.mp4`);
+          log(asmId, `  ⚠️  No source clip — using black frame for clip half`);
+          clipHalfPath = path.join(TMP_DIR, `${asmId}_black_clip.mp4`);
 
           await new Promise((res, rej) => {
             const args = [
               '-f', 'lavfi', '-i', `color=c=black:s=1080x960:d=${avatarDuration.toFixed(3)}`,
               '-c:v', 'libx264', '-preset', 'fast', '-pix_fmt', 'yuv420p',
-              '-y', topHalfPath
+              '-y', clipHalfPath
             ];
             const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
             proc.on('close', code => code === 0 ? res() : rej(new Error(`Black frame gen failed: ${code}`)));
             proc.on('error', rej);
           });
-          log(asmId, `  ✅ Black top half generated`);
+          log(asmId, `  ✅ Black clip half generated`);
         }
 
-        // Step 3: Prepare bottom half (avatar) - scale to 1080×960
-        log(asmId, `  🎙  Preparing bottom half: avatar (scaled to 1080×960)`);
-        const bottomHalfPath = path.join(TMP_DIR, `${asmId}_bottom_half.mp4`);
+        // Step 3: Prepare avatar half (TOP) - scale to 1080×960
+        // Bobby G reaction on top — best practice for shorts (face visible on scroll)
+        log(asmId, `  🎙  Preparing avatar half (top): Bobby G (scaled to 1080×960)`);
+        const avatarHalfPath = path.join(TMP_DIR, `${asmId}_avatar_half.mp4`);
 
         await new Promise((res, rej) => {
           const args = [
@@ -4011,25 +4013,25 @@ app.post('/assemble',
             '-vf', 'scale=1080:960:force_original_aspect_ratio=increase,crop=1080:960',
             '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
             '-c:a', 'aac', '-ar', '44100', '-ac', '2',
-            '-y', bottomHalfPath
+            '-y', avatarHalfPath
           ];
           const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
-          proc.on('close', code => code === 0 ? res() : rej(new Error(`Bottom half prep failed: ${code}`)));
+          proc.on('close', code => code === 0 ? res() : rej(new Error(`Avatar half prep failed: ${code}`)));
           proc.on('error', rej);
         });
-        log(asmId, `  ✅ Bottom half prepared (1080×960)`);
+        log(asmId, `  ✅ Avatar half prepared (1080×960)`);
 
-        // Step 4: Vertical stack (top + bottom = 1080×1920)
-        log(asmId, `  📐 Stacking top and bottom halves (1080×1920)...`);
+        // Step 4: Vertical stack — avatar on TOP, clip on BOTTOM (1080×1920)
+        log(asmId, `  📐 Stacking: avatar (top) + clip (bottom) = 1080×1920...`);
         const stackedPath = path.join(TMP_DIR, `${asmId}_stacked.mp4`);
 
         await new Promise((res, rej) => {
           const args = [
-            '-i', topHalfPath,
-            '-i', bottomHalfPath,
+            '-i', avatarHalfPath,   // input 0 = avatar (TOP)
+            '-i', clipHalfPath,     // input 1 = source clip (BOTTOM)
             '-filter_complex', '[0:v][1:v]vstack=inputs=2[vstacked]',
             '-map', '[vstacked]',
-            '-map', '1:a', // Use audio from bottom half (avatar)
+            '-map', '0:a', // Use audio from avatar (input 0, top)
             '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
             '-c:a', 'aac',
             '-movflags', '+faststart',
@@ -5089,7 +5091,7 @@ app.post('/assemble',
       log(asmId, `  Size: ${sizeMB} MB | Duration: ~${totalDur}s`);
 
       assemblyJobs[asmId].pct        = 100;
-      assemblyJobs[asmId].status     = 'done';
+      assemblyJobs[asmId].status     = 'ffmpeg_done'; // Gate 3 + Drive still pending — poller must not fire yet
       assemblyJobs[asmId].outputPath = outPath;
       assemblyJobs[asmId].filename   = outFile;
       assemblyJobs[asmId].duration   = totalDur;
@@ -5420,6 +5422,16 @@ app.post('/assemble',
         log(asmId, `⚠️  Drive upload failed: ${driveErr.message}`);
       }
       } // end SKIP_DRIVE_UPLOAD else
+
+      // Set final terminal status — poller fires only after this point
+      if (assemblyJobs[asmId].status === 'ffmpeg_done') {
+        const qaOutcome = assemblyJobs[asmId].qaOutcome;
+        if (qaOutcome === 'fail') {
+          assemblyJobs[asmId].status = 'failed'; // Gate 3 hard fail — poller will record this
+        } else {
+          assemblyJobs[asmId].status = 'done'; // Gate 3 pass or no QA result
+        }
+      }
 
       // Clean up tmp files
       localFiles.forEach(f => { try { fs.unlinkSync(f); } catch(e){} });
