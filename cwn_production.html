@@ -1099,6 +1099,7 @@ var CFG = {
 var JOBS = [];
 var CURRENT_TYPE = null;
 var CURRENT_META = {}; // stores extra per-job metadata (gameIds, headline, etc)
+var _assemblyFiredForJob = {}; // dedup lock to prevent multiple /assemble calls for same jobId
 
 // ── NAVIGATION ────────────────────────────────────────────────────
 function nav(page) {
@@ -1376,6 +1377,15 @@ function pollCanvaImport(jobId, statusEl, cb) {
 
 // ── FFMPEG ASSEMBLY ───────────────────────────────────────────────
 function assembleJob(batchJobId) {
+  // Frontend dedup guard — prevents multiple /assemble calls for same jobId
+  if (_assemblyFiredForJob[batchJobId]) {
+    console.warn('[assembleJob] Duplicate call blocked for jobId=' + batchJobId + ' — assembly already in progress');
+    return;
+  }
+  _assemblyFiredForJob[batchJobId] = true;
+  // Clear lock after 5 minutes
+  setTimeout(function() { delete _assemblyFiredForJob[batchJobId]; }, 5 * 60 * 1000);
+
   var job = JOBS.find(function(j){ return j.id === batchJobId; });
   if (!job) return;
 

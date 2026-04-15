@@ -3491,6 +3491,21 @@ app.post('/assemble',
     return res.status(400).json({ error: 'No segments provided' });
   }
 
+  // ── Assembly dedup lock ────────────────────────────────────────────────────
+  // Prevents auto-advance race condition: if 3 /assemble calls fire for the
+  // same jobId within seconds (confirmed smoke test 11, 2026-04-14), each
+  // gets a unique asm_timestamp asmId — no existing guard caught duplicates.
+  // Fix: check assemblyJobId (stable script job ID) against active assemblies.
+  if (assemblyJobId) {
+    const alreadyRunning = Object.values(assemblyJobs).some(job =>
+      job.sourceJobId === assemblyJobId && job.status === 'running'
+    );
+    if (alreadyRunning) {
+      console.warn(`[assemble] Duplicate /assemble rejected for jobId=${assemblyJobId} — assembly already running`);
+      return res.status(409).json({ error: 'Assembly already in progress for this job', jobId: assemblyJobId });
+    }
+  }
+
   const asmId = assemblyId || ('asm_' + Date.now());
   assemblyJobs[asmId] = {
     pct: 0,
@@ -5481,6 +5496,25 @@ app.get('/assemble-progress/:id', (req, res) => {
     downloadUrl:      job.filename ? `/download/${job.filename}` : null,
     thumbFilename:    job.thumbFilename || null
   });
+});
+
+// POST /assemble/:asmId/retry — clear the dedup lock so a stuck assembly can be retried
+// Clears the assemblyJobs entry for the given asmId (if status is not 'running')
+// so the dashboard can re-fire /assemble without getting a 409.
+app.post('/assemble/:asmId/retry', (req, res) => {
+  const { asmId } = req.params;
+  const job = assemblyJobs[asmId];
+  if (job && job.status === 'running') {
+    console.warn(`[assemble/retry] asmId=${asmId} is still running — cannot retry a live assembly`);
+    return res.status(409).json({ error: 'Assembly is still running — wait for it to finish or time out', asmId });
+  }
+  if (job) {
+    delete assemblyJobs[asmId];
+    console.log(`[assemble/retry] Cleared assemblyJobs entry for asmId=${asmId} — retry now allowed`);
+  } else {
+    console.log(`[assemble/retry] No assemblyJobs entry found for asmId=${asmId} — already clear`);
+  }
+  res.json({ ok: true, message: 'Assembly lock cleared — retry is now allowed', asmId });
 });
 
 // GET /download/:file — serve assembled video or thumbnail frame
