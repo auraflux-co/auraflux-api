@@ -156,14 +156,68 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 ---
 
+## Re-Assemble From Existing Segments (Skip HeyGen)
+
+After a crashed assembly, the downloaded `.mp4` segment files in `tmp/` are still valid. There is no need to re-run Gate 1, re-submit to HeyGen, or re-download anything. The FFmpeg concat step is the only thing that needs to re-run.
+
+**Confirmed for smoke test 11 crash:** Both `asm_1776214429562` and `asm_1776214260241` have 27 tmp files each fully downloaded.
+
+### Add `POST /assemble/:asmId/retry` endpoint to `server.js`
+
+This endpoint skips everything above the FFmpeg concat step — no Gate 2, no downloads, no HeyGen polling. It uses the existing `tmp/asm_{asmId}_*.mp4` files directly.
+
+```javascript
+app.post('/assemble/:asmId/retry', async (req, res) => {
+  const { asmId } = req.params;
+
+  // Find existing tmp files for this asmId
+  const tmpFiles = fs.readdirSync(TMP_DIR)
+    .filter(f => f.startsWith(asmId + '_') && f.endsWith('.mp4'))
+    .sort()
+    .map(f => path.join(TMP_DIR, f));
+
+  if (!tmpFiles.length) {
+    return res.status(404).json({ error: 'No tmp segments found for asmId — cannot retry', asmId });
+  }
+
+  // Restore assembly job state for progress tracking
+  assemblyJobs[asmId] = assemblyJobs[asmId] || { pct: 0, log: '', status: 'running' };
+  assemblyJobs[asmId].status = 'running';
+  assemblyJobs[asmId].pct = 45; // skip to FFmpeg step
+
+  res.json({ ok: true, asmId, segmentCount: tmpFiles.length, message: 'Re-assembly started from existing segments' });
+
+  // Re-run from FFmpeg concat step using existing tmp files
+  // Pass tmpFiles directly to the concat + Gate 3 portion of run()
+  // This requires extracting the FFmpeg concat + Gate 3 block from run() into
+  // a separate function: finalizeAssembly(asmId, localFiles, contentType, ...)
+  // For now: call run() with reuseSegments=true flag that skips download loop
+});
+```
+
+**The real fix:** extract the FFmpeg concat + normalize + ticker + Gate 3 block from `run()` into `finalizeAssembly(asmId, localFiles, segTypes, contentType, ...)`. Then:
+- `run()` calls `finalizeAssembly()` after downloads complete (no change to normal flow)
+- `/assemble/:asmId/retry` calls `finalizeAssembly()` directly with existing tmp files
+
+This is the cleanest architecture — one FFmpeg path, two entry points.
+
+### Dashboard: Add RETRY ASSEMBLY button
+
+On any job card where assembly failed (status shows error or Gate 3 fail), show a **↩ RETRY ASSEMBLY** button that calls `POST /assemble/{asmId}/retry`. The `asmId` is visible in the assembly job state.
+
+---
+
 ## Ship Order
 
 ```
 node -c server.js
-→ make server.js changes
-→ make cwn_production.html changes
+→ make server.js dedup lock changes
+→ make cwn_production.html dashboard guard changes
+→ add /assemble/:asmId/retry endpoint
+→ add RETRY ASSEMBLY button to dashboard
 → node -c server.js
 → git add server.js cwn_production.html STATUS.md && git commit
 → push
-→ THEN run next smoke test
+→ test retry on smoke test 11 crash (asmId: asm_1776214429562, 27 segments in tmp/)
+→ THEN run smoke test 12 fresh if retry works
 ```
