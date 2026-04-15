@@ -5498,23 +5498,143 @@ app.get('/assemble-progress/:id', (req, res) => {
   });
 });
 
-// POST /assemble/:asmId/retry — clear the dedup lock so a stuck assembly can be retried
-// Clears the assemblyJobs entry for the given asmId (if status is not 'running')
-// so the dashboard can re-fire /assemble without getting a 409.
-app.post('/assemble/:asmId/retry', (req, res) => {
+// POST /assemble/:asmId/retry — re-run FFmpeg assembly from existing tmp segments
+// Skips Gate 1, HeyGen, and downloads. Uses tmp/asm_{asmId}_*.mp4 files directly.
+// Use case: assembly crashed but HeyGen segments already downloaded — no need to re-burn credits.
+// References: CLINE_HANDOFF_RETRY_ASSEMBLY.md
+app.post('/assemble/:asmId/retry', async (req, res) => {
   const { asmId } = req.params;
-  const job = assemblyJobs[asmId];
-  if (job && job.status === 'running') {
+  const { contentType = 'news', jobTitle, assemblyJobId } = req.body;
+
+  // Block if still running
+  if (assemblyJobs[asmId] && assemblyJobs[asmId].status === 'running') {
     console.warn(`[assemble/retry] asmId=${asmId} is still running — cannot retry a live assembly`);
-    return res.status(409).json({ error: 'Assembly is still running — wait for it to finish or time out', asmId });
+    return res.status(409).json({ error: 'Assembly still running — wait for it to finish or restart server', asmId });
   }
-  if (job) {
-    delete assemblyJobs[asmId];
-    console.log(`[assemble/retry] Cleared assemblyJobs entry for asmId=${asmId} — retry now allowed`);
-  } else {
-    console.log(`[assemble/retry] No assemblyJobs entry found for asmId=${asmId} — already clear`);
+
+  // Find existing tmp files for this asmId, sorted by numeric index
+  // Naming pattern: asm_{asmId}_{index}_{name}.mp4
+  // Strip the "asm_{asmId}_" prefix to isolate "{index}_{name}.mp4" and parse index
+  const prefix = asmId + '_';
+  const tmpFiles = fs.readdirSync(TMP_DIR)
+    .filter(f => f.startsWith(prefix) && f.endsWith('.mp4'))
+    .sort((a, b) => {
+      const idxA = parseInt(a.slice(prefix.length).split('_')[0]) || 0;
+      const idxB = parseInt(b.slice(prefix.length).split('_')[0]) || 0;
+      return idxA - idxB;
+    })
+    .map(f => path.join(TMP_DIR, f));
+
+  if (!tmpFiles.length) {
+    return res.status(404).json({
+      error: 'No tmp segments found for this asmId — tmp/ may have been cleaned. Cannot retry.',
+      asmId,
+      hint: 'Run a fresh assembly from the dashboard.'
+    });
   }
-  res.json({ ok: true, message: 'Assembly lock cleared — retry is now allowed', asmId });
+
+  // Infer segTypes from filenames: files with 'clip' in name are source_clip, rest are avatar
+  const segTypes = tmpFiles.map(f => path.basename(f).toLowerCase().includes('clip') ? 'source_clip' : 'avatar');
+  const avatarCount = segTypes.filter(t => t === 'avatar').length;
+  const downloadedClipCount = segTypes.filter(t => t === 'source_clip').length;
+
+  log(asmId, `🔄 RETRY: Re-assembling from ${tmpFiles.length} existing tmp segments (skipping HeyGen)`);
+  log(asmId, `Segment types: ${avatarCount} avatar, ${downloadedClipCount} source_clip`);
+
+  // Reset assembly job state
+  assemblyJobs[asmId] = {
+    pct: 45,
+    log: '',
+    status: 'running',
+    outputPath: null,
+    sourceJobId: assemblyJobId || null,
+    isRetry: true
+  };
+
+  res.json({ ok: true, asmId, segmentCount: tmpFiles.length, message: 'Retry assembly started from existing segments' });
+
+  // ── Re-run from Step 5 (concat → Gate 3 → Drive upload) ──
+  const retryRun = async () => {
+    try {
+      // Build output path
+      const baseTitle = (jobTitle || 'cwn_retry').toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 40);
+      const outFile = `${baseTitle}_retry_${downloadedClipCount}clips_${Date.now()}.mp4`;
+      const outPath = path.join(OUTPUT_DIR, outFile);
+
+      // Step 5: Build concat list
+      log(asmId, `Building concat list from ${tmpFiles.length} segments...`);
+      const concatListPath = path.join(TMP_DIR, `concat_${asmId}.txt`);
+      const concatContent  = tmpFiles.map(f => `file '${f.replace(/'/g, "'\\''")}'`).join('\n');
+      fs.writeFileSync(concatListPath, concatContent);
+
+      // Step 6: FFmpeg concat (re-encode to normalize codecs/framerates across avatar + source_clip segments)
+      log(asmId, `Running FFmpeg concat...`);
+      assemblyJobs[asmId].pct = 55;
+      await new Promise((resolve, reject) => {
+        const args = [
+          '-f', 'concat', '-safe', '0', '-i', concatListPath,
+          '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+          '-c:a', 'aac', '-ar', '44100', '-ac', '2',
+          '-movflags', '+faststart',
+          '-y', outPath
+        ];
+        const proc = execFile(ffmpegPath(), args, { timeout: 30 * 60 * 1000 });
+        proc.stdout.on('data', d => log(asmId, d.toString().trim()));
+        proc.stderr.on('data', d => log(asmId, d.toString().trim()));
+        proc.on('close', code => code === 0 ? resolve() : reject(new Error(`FFmpeg concat failed: exit ${code}`)));
+        proc.on('error', reject);
+      });
+
+      assemblyJobs[asmId].pct = 80;
+      assemblyJobs[asmId].outputPath = outPath;
+      log(asmId, `✅ FFmpeg concat complete: ${outFile}`);
+
+      // Step 7: Gate 3 QA — probe duration first
+      const totalDurResult = await new Promise((resolve) => {
+        execFile(ffprobePath(), [
+          '-v', 'error', '-show_entries', 'format=duration',
+          '-of', 'default=noprint_wrappers=1:nokey=1', outPath
+        ], (err, stdout) => resolve(err ? '0' : stdout.trim()));
+      });
+
+      log(asmId, `\n🔍 Gate 3: Running Gemini QA check (retry)...`);
+      const qaResult = await geminiQACheck(outPath, {
+        contentType,
+        avatarCount,
+        clipCount: downloadedClipCount,
+        downloadedClipCount,
+        expectedTicker: false,
+        totalDuration: parseFloat(totalDurResult) || 0
+      });
+
+      assemblyJobs[asmId].qaScore   = qaResult.score;
+      assemblyJobs[asmId].qaReport  = qaResult.report;
+      assemblyJobs[asmId].qaOutcome = qaResult.outcome;
+
+      log(asmId, `Gate 3: ${qaResult.outcome} (${qaResult.score}/100)`);
+
+      if (qaResult.outcome === 'pass' || qaResult.outcome === 'manual_review') {
+        // Upload to Drive
+        log(asmId, `Uploading to Google Drive...`);
+        const driveUrl = await uploadToDrive(outPath, path.basename(outPath));
+        assemblyJobs[asmId].driveUrl = driveUrl;
+        assemblyJobs[asmId].status   = 'done';
+        assemblyJobs[asmId].pct      = 100;
+        log(asmId, `✅ RETRY COMPLETE — Drive: ${driveUrl}`);
+      } else {
+        assemblyJobs[asmId].status = 'failed';
+        assemblyJobs[asmId].error  = `Gate 3 failed on retry: ${qaResult.score}/100`;
+        log(asmId, `❌ Gate 3 failed on retry (${qaResult.score}/100) — manual review needed`);
+      }
+    } catch (err) {
+      assemblyJobs[asmId].status = 'failed';
+      assemblyJobs[asmId].error  = err.message;
+      log(asmId, `❌ Retry assembly error: ${err.message}`);
+      console.error('[assemble/retry] Error:', err);
+    }
+  };
+
+  retryRun();
 });
 
 // GET /download/:file — serve assembled video or thumbnail frame

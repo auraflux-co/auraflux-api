@@ -1494,8 +1494,34 @@ var payload = {
   // Stream progress via polling
   var assemblyId = 'asm_' + Date.now();
   payload.assemblyId = assemblyId;
+  // Store assemblyId on job so RETRY ASSEMBLY button can reference it
+  job.asmId = assemblyId;
+  saveJobs();
   xhr.send(JSON.stringify(payload));
   pollAssemblyProgress(batchJobId, assemblyId);
+}
+
+// ── RETRY ASSEMBLY ────────────────────────────────────────────────
+// Re-runs FFmpeg concat from existing tmp/asm_{asmId}_*.mp4 segments.
+// Skips Gate 1, HeyGen, and downloads — no credits used.
+// References: CLINE_HANDOFF_RETRY_ASSEMBLY.md
+function retryAssembly(asmId, contentType, jobTitle, assemblyJobId) {
+  if (!asmId) { alert('No assembly ID found — cannot retry'); return; }
+  if (!confirm('Re-run FFmpeg assembly from existing segments?\n\nThis skips HeyGen — no credits used.')) return;
+  fetch(CFG.ffmpegUrl + '/assemble/' + asmId + '/retry', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contentType: contentType, jobTitle: jobTitle, assemblyJobId: assemblyJobId })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.ok) {
+      cwn_log('🔄 Retry assembly started for ' + asmId + ' (' + d.segmentCount + ' segments)', false);
+    } else {
+      cwn_log('❌ Retry failed: ' + (d.error || JSON.stringify(d)), true);
+    }
+  })
+  .catch(function(e){ cwn_log('❌ Retry request error: ' + e.message, true); });
 }
 
 function pollAssemblyProgress(batchJobId, assemblyId) {
@@ -2227,6 +2253,12 @@ function renderQueue() {
     // Rollback / Force-Advance pipeline controls
     actions += '<button onclick="rollbackJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(231,76,60,0.35);color:#e74c3c;opacity:0.7;" title="Roll back this job to the previous pipeline stage">↩ ROLLBACK</button>';
     actions += '<button onclick="advanceJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(46,204,113,0.35);color:#2ecc71;opacity:0.7;" title="Force-advance this job to the next pipeline stage (use if stuck)">⏭ FORCE ADVANCE</button>';
+    // RETRY ASSEMBLY — show when asmId exists and assembly failed/QA failed
+    // Skips HeyGen + downloads — re-runs FFmpeg concat from existing tmp segments
+    var canRetryAsm = job.asmId && (status === 'failed' || job.qaOutcome === 'fail' || job.qaOutcome === 'pre_flight_fail');
+    if (canRetryAsm) {
+      actions += '<button onclick="retryAssembly(\'' + job.asmId + '\',\'' + (job.type||'news') + '\',\'' + (job.title||'').replace(/'/g,"\\'") + '\',\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(230,126,34,0.6);" title="Re-run FFmpeg assembly from existing tmp segments — skips HeyGen, no credits used">🔄 RETRY ASSEMBLY</button>';
+    }
     actions += '</div>';
     // Short-form status div (for thumbnail + CapCut feedback)
     if (isShortJob) {
