@@ -1424,9 +1424,20 @@ app.get('/health', async (req, res) => {
 // GET /jobs — return all persisted job cards for dashboard recovery after server restart
 // Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
 app.get('/jobs', (req, res) => {
-  const jobs = Object.values(persistedJobs)
-    .sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
-  res.json({ ok: true, count: jobs.length, jobs });
+  // Filter: only return jobs that are actionable (not failed, not published)
+  // Failed jobs restore as 'all_sent' which shows Assemble button on broken jobs
+  const actionableJobs = Object.values(persistedJobs).filter(job => {
+    const stage = job.stage || '';
+    const qaOutcome = job.qaOutcome || '';
+    const status = job.status || '';
+    return stage !== 'failed' &&
+           stage !== 'published' &&
+           qaOutcome !== 'fail' &&
+           qaOutcome !== 'pre_flight_fail' &&
+           status !== 'failed';
+  }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+  
+  res.json({ ok: true, count: actionableJobs.length, jobs: actionableJobs });
 });
 
 // DELETE /job/:id — remove a job from persistedJobs + jobs.json
