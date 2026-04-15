@@ -25,7 +25,7 @@
 
 | File | Agent | Handoff | Locked At |
 |------|-------|---------|-----------|
-| _(none)_ | — | — | — |
+| lib/assembly.js | Cline-A | cline-a/chrome-skins-parts-2-3 | 2026-04-15 3:39 PM ET |
 
 ---
 
@@ -35,6 +35,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Claude Code | **fix(gate3): remove stale TV card check** — TV card removed from all content types. Deleted: EARLY checklist item 6 (TV CARD), qaPrompt TV card context string, `tvCardOnWrongScene` parse, critical fail condition entry, deduction entry, summary line. Replaced item 6 with AVATAR FRAMING check. Zero TV card references remain in lib/qa.js. | lib/qa.js, STATUS.md | cline-b/gate3-tv-card-cleanup | 2026-04-15 ET |
 | Claude Code | **refactor(server): extract assembly pipeline to lib/assembly.js — Module 5 of 5** — Extracted `generateIntroCardPNG`, `generateGameStoryCardPNG`, `detectTrailingSilence`, `computeNewsClipTrimDuration`, `generateNewsStoryCardPNG`, `checkDiskSpace`, `buildConcatCommand`, `probeDuration`, `handleAssemble` (~2018 lines), `captureTicker` into lib/assembly.js (~2800 lines). `/assemble` endpoint wires to `(req, res) => handleAssemble(req, res, saveJobCard)`. TICKER_CACHE/TICKER_MAP exported from assembly.js for /ticker-status endpoint. server.js 8,048 → 5,371 lines. Split complete — production freeze LIFTED. | lib/assembly.js (new), server.js, STATUS.md | pending | 2026-04-15 3:30 PM ET |
 | Claude Code | **refactor(server): extract publish pipeline to lib/publish.js — Module 4 of 5** — Extracted `getDriveClient`, `getDriveFolderId`, `uploadToDrive`, `importToCanva`, `readUploadStatus`, `writeUploadStatus`, `logUploadAttempt`, `generateShortFormCaption`, `handlePublish`, `handleGeneratePublishCopy` (~680 lines). `/publish` and `/generate-publish-copy` endpoints wired to handlers. server.js 8,669 → 8,048 lines. | lib/publish.js (new), server.js, STATUS.md | pending | 2026-04-15 3:15 PM ET |
 | Claude Code | **refactor(server): extract script generation pipeline to lib/script_gen.js — Module 3 of 5** — Extracted `sendScriptToHeyGen`, `geminiScriptGeneration`, `getVoiceGuide`, `scrapeArticleVideo`, `scrapeArticleOgImage`, `geminiAnalyzeClip`, `geminiAnalyzeThumbnail`, `prioritizeNewsStories`, `handleGenerateFullScript` (~1900 lines) from server.js. `/generate-full-script` endpoint now wires to `handleGenerateFullScript`. server.js 10,457 → 8,669 lines. | lib/script_gen.js (new), server.js, STATUS.md | pending | 2026-04-15 3:00 PM ET |
