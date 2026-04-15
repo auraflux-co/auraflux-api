@@ -143,7 +143,37 @@ Customer does NOT see:
 - Token/cost metrics
 - Server logs
 
-**Exit trigger for Phase 2:** Customer 1 onboarded, posting daily for 30 consecutive days with ≤1 operator intervention per week. No data leakage between customers (Customer 1 cannot see Rob's jobs, Rob sees both with operator role). Job state isolation verified through manual + automated tests.
+**2.6 Autonomous Gate-to-Gate Progression (REQUIRED for Customer 1)**
+
+This is a hard requirement before the first customer goes live. A customer cannot be expected to manually intervene on gate failures — the system must handle recovery automatically.
+
+**Gate outcome → system action (per gate):**
+
+| Outcome | Action |
+|---|---|
+| `pass` | Auto-advance to next gate immediately |
+| `manual_review` | Retry up to 2x with same parameters. If still manual_review after retries → hold for operator alert |
+| `fail` | Rollback to previous gate, retry with adjusted parameters (see below). If still failing after retry cap → triple alert (customer dashboard + operator dashboard + Slack `#cwn-alerts`) |
+| `pre_flight_fail` | Call `/assemble/:asmId/retry` automatically — re-run FFmpeg from existing tmp segments before escalating. No HeyGen credits spent. |
+
+**Retry parameters per gate:**
+- **Gate 1 fail:** Re-run script generation with increased temperature / different style guide variant. Cap: 2 retries.
+- **Gate 2 fail:** Re-download failed segments from HeyGen. If HeyGen render actually failed, re-submit that segment only. Cap: 3 retries per segment.
+- **Gate 3 fail:** If `pre_flight_fail` → retry assembly from tmp segments. If Gemini QA fail → retry assembly (different random seed for ticker). Cap: 2 retries.
+- **Gate 6 fail:** Retry Upload-Post call. Cap: 3 retries with exponential backoff.
+
+**Rollback/force-advance buttons remain** — but as operator-only escape hatches when the autonomous loop exhausts its retry cap. Customers never see them.
+
+**Alert format (triple alert on cap exhaustion):**
+```
+Job {jobId} failed at Gate {N} after {retryCount} retries.
+Content type: {contentType} | Client: {clientId}
+Last error: {error}
+Gate report: {qaReport summary}
+Action required: [View Job] [Force Advance] [Rollback]
+```
+
+**Exit trigger for Phase 2:** Customer 1 onboarded, posting daily for 30 consecutive days with ≤1 operator intervention per week. No data leakage between customers (Customer 1 cannot see Rob's jobs, Rob sees both with operator role). Job state isolation verified through manual + automated tests. **Autonomous gate progression running with zero manual touchpoints on routine production.**
 
 **Estimated duration:** 4-8 weeks.
 
