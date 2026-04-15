@@ -1474,6 +1474,7 @@ app.post('/job/:id/rollback', (req, res) => {
     card.stage = 'assembled';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: published → assembled`);
+    logError('PIPELINE_ROLLBACK', `Job rolled back: published → assembled`, { jobId, before: 'published', after: 'assembled', at: new Date().toISOString() });
     return res.json({ ok: true, jobId, before: 'published', after: 'assembled', message: 'Publish record cleared — re-approve to re-publish.' });
   }
 
@@ -1501,6 +1502,7 @@ app.post('/job/:id/rollback', (req, res) => {
     card.stage = 'all_sent';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: assembled → all_sent`);
+    logError('PIPELINE_ROLLBACK', `Job rolled back: assembled → all_sent`, { jobId, before: 'assembled', after: 'all_sent', at: new Date().toISOString() });
     return res.json({ ok: true, jobId, before: 'assembled', after: 'all_sent', message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.' });
   }
 
@@ -1513,6 +1515,7 @@ app.post('/job/:id/rollback', (req, res) => {
     card.stage = 'script_ready';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: all_sent → script_ready`);
+    logError('PIPELINE_ROLLBACK', `Job rolled back: all_sent → script_ready`, { jobId, before: 'all_sent', after: 'script_ready', at: new Date().toISOString() });
     return res.json({ ok: true, jobId, before: 'all_sent', after: 'script_ready', message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.' });
   }
 
@@ -1539,6 +1542,7 @@ app.post('/job/:id/advance', (req, res) => {
     card.stage = 'gate1_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: script_ready → gate1 force-passed`);
+    logError('PIPELINE_ADVANCE', `Job force-advanced: script_ready → gate1_forced`, { jobId, before: 'script_ready', after: 'gate1_forced', at: new Date().toISOString() });
     return res.json({ ok: true, jobId, before: 'script_ready', after: 'gate1_forced', message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.' });
   }
 
@@ -1559,6 +1563,7 @@ app.post('/job/:id/advance', (req, res) => {
     card.stage = 'gate2_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: all_sent → gate2 force-passed (${forced} segments marked)`);
+    logError('PIPELINE_ADVANCE', `Job force-advanced: all_sent → gate2_forced`, { jobId, before: 'all_sent', after: 'gate2_forced', at: new Date().toISOString() });
     return res.json({ ok: true, jobId, before: 'all_sent', after: 'gate2_forced', message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.` });
   }
 
@@ -1572,6 +1577,7 @@ app.post('/job/:id/advance', (req, res) => {
     card.stage = 'gate5_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: assembled → gate5 force-passed`);
+    logError('PIPELINE_ADVANCE', `Job force-advanced: assembled → gate5_forced`, { jobId, before: 'assembled', after: 'gate5_forced', at: new Date().toISOString() });
     return res.json({ ok: true, jobId, before: 'assembled', after: 'gate5_forced', message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.' });
   }
 
@@ -1914,8 +1920,8 @@ async function geminiQACheck(videoPath, opts = {}) {
       ] : [
         `1. VIDEO FREEZE: Video frozen/stalled at any point? (yes/no) — CRITICAL`,
         `2. TICKER: Ticker still scrolling at end of video? (yes/no)`,
-        `3. OUTRO: Does the video end cleanly? (yes/no)`,
-        `4. AUDIO: Audio clear through to the end? (yes/partial/no)`,
+        `3. OUTRO: Does the OUTRO scene play cleanly — avatar visible, "Appreciate you!" audible? (yes/no) — NOTE: this 20-second sample window may end BEFORE the video ends; if the sample cuts off mid-sentence that is a sample-window boundary, NOT an OUTRO failure. Only mark FAIL if the OUTRO scene itself is broken (freeze, missing avatar, audio dropout).`,
+        `4. AUDIO: Audio clear through to the end of this sample? (yes/partial/no)`,
       ];
 
       const qaPrompt = `You are QA reviewer for ClipzWorld News YouTube compilations.

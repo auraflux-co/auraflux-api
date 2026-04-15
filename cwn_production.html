@@ -2094,6 +2094,7 @@ function restoreJobsFromServer(showAlert) {
 
         var restoredJob = {
           id:          serverJob.jobId,
+          scriptJobId: serverJob.scriptJobId || serverJob.jobId,
           type:        contentType,
           title:       contentType.toUpperCase() + ' ' + dateLabel + ' (' + avatarCount + ' avatar + ' + clipCount + ' clips)',
           status:      restoredStatus,
@@ -2493,6 +2494,7 @@ function rollbackJob(jobId) {
       var resp = JSON.parse(xhr.responseText);
       if (!resp.ok) throw new Error(resp.error || 'Rollback failed');
       cwn_log('[rollback] ' + jobId + ': ' + resp.before + ' → ' + resp.after, false);
+      delete _assemblyFiredForJob[jobId]; // clear dedup lock so immediate re-assemble works
       // Update local job state to match server
       var job = JOBS.find(function(j){ return j.id === jobId; });
       if (job) {
