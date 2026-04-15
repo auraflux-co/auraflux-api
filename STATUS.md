@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-14 (10:08 PM ET)
-**Branch:** main | **Latest Commit:** feat(assembly): add dedup lock + /assemble/:asmId/retry endpoint
+**Last Updated:** 2026-04-14 (10:31 PM ET)
+**Branch:** main | **Latest Commit:** feat: real retry assembly endpoint + dashboard button
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
@@ -34,6 +34,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline | **feat(assembly): real retry endpoint + RETRY ASSEMBLY dashboard button** — Replaced stub `/assemble/:asmId/retry` with full FFmpeg re-assembly: reads `tmp/asm_{asmId}_*.mp4` segments (sort fix: strip asmId prefix before parsing index), runs FFmpeg concat (libx264/aac) → ffprobe → Gate 3 Gemini QA → Drive upload. Skips Gate 1, HeyGen, downloads — no credits used. Returns 409 if running, 404 if no tmp files. Dashboard: `job.asmId` now stored on job object when `assembleJob()` fires. `retryAssembly()` function added. RETRY ASSEMBLY button shown on failed job cards when `job.asmId` exists AND `status=failed` OR `qaOutcome=fail/pre_flight_fail`. | cwn_production.html, server.js, STATUS.md | — | 2026-04-14 10:31 PM ET |
 | Cline | **feat(assembly): add dedup lock + /assemble/:asmId/retry endpoint** — Three-layer race condition fix for smoke test 11 (3 /assemble calls for same jobId within seconds). (1) cwn_production.html:1102: added `_assemblyFiredForJob = {}` global dedup map. (2) cwn_production.html:1381-1387: frontend guard at top of `assembleJob()` blocks duplicate calls, clears after 5min. (3) server.js: added POST `/assemble/:asmId/retry` endpoint — returns 409 if still running, clears lock otherwise. Server-side dedup via `assemblyJobs` sourceJobId+status check already present. | cwn_production.html, server.js, STATUS.md | — | 2026-04-14 10:08 PM ET |
 | Cline | **fix(dashboard): implement restore job filter fixes (CLINE_HANDOFF_RESTORE_JOB_FILTER.md)** — Two-layer fix: (1) dashboard restoreJobsFromServer() skips failed/published jobs before restoring as 'all_sent'; (2) server GET /jobs endpoint filters out failed/published jobs from persistedJobs. Prevents failed jobs with Assemble buttons reappearing on page load. | cwn_production.html, server.js | 2faa130 | 2026-04-14 8:32 PM ET |
 | Claude Code | **docs(assembly): verify News source clip zoom-to-fill is correct (Commit 4 of QA hardening)** — Verified source_clip vfFilter at server.js:4594 uses zoom-to-fill (increase+crop pattern) — Red 4 Fix 4 already correct. `decrease,pad` at 4593 is for avatar segs only (correct). Comment updated to confirm verification. No functional code change. All 4 QA hardening commits complete. | server.js, STATUS.md | — | 2026-04-14 ET |
