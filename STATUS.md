@@ -35,6 +35,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline-C | **fix(chrome): always show WORLD NEWS category — never outlet name** — Fixed `directiveToOverlayParams()` line 148 in lib/chromeDirectives.js: `category: directive.flag?.source || 'WORLD NEWS'` → `category: 'WORLD NEWS'`. No other .source refs used as visible labels. | lib/chromeDirectives.js, STATUS.md | pending | 2026-04-15 |
 | Cline-A | **feat(chrome): migrate NBA+Twitch assembly to newscast chrome overlay (Parts 2+3 + Sidebar B1/B2)** — Replaced legacy generateIntroCardPNG (Twitch) and generateGameStoryCardPNG (NBA) with two-state newscast chrome burns. Twitch allStories includes fact field. NBA allStories uses matchup, truncates at em-dash to 40 chars. Fixed epCountersPath bug. | lib/assembly.js, STATUS.md | 6663c4c | 2026-04-15 |
 | Claude Code (Cline-C) | **feat(sidebar+publish): story-item-fact CSS + chrome overlay fact div + fix @clipzworldnews handle + inject showName/voiceRules** | tools/clipzworld_newscast.html, lib/chrome_overlay.js, lib/publish.js, STATUS.md | 11a66e7 | 2026-04-15 |
 | Claude Code | **fix(gate3): remove stale TV card check** — Deleted TV CARD checklist item, context string, tvCardOnWrongScene parse, critical fail condition, deduction entry, summary line. Replaced with AVATAR FRAMING check. | lib/qa.js, STATUS.md | 63b8d84 | 2026-04-15 |
