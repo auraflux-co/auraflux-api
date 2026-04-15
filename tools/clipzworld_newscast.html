@@ -30,35 +30,35 @@
     - Segment-tag seg-name swaps to next story's category
 
   ─────────────────────────────────────────────────────────────────────────────
-  FUTURE WORK — REBRAND TO TWITCH + NBA (post-test-case-completion)
+  UNIVERSAL CHROME — ALL THREE SHOWS USE THIS FILE
   ─────────────────────────────────────────────────────────────────────────────
 
-  Rob directive 2026-04-12 evening (after approving the Fix 7 preview composite):
-    "post test cases I want to rebrand this look for the other shows"
+  Rob directive (2026-04-15): TV cards removed from all sets. This chrome is now
+  the single template for News, Twitch, and NBA long-form. All three shows are
+  visually identical in structure — the only differences injected at render time:
 
-  Meaning: after Twitch, NBA, and News long-form all pass their test cases, port
-  this same broadcast-graphics chrome design to Twitch and NBA long-form so all
-  three shows share the visual language. Key elements to replicate:
+    1. Show name (.top-brand text):
+         News   → "BECAUSE THE LIGHT WAS ON"
+         Twitch → "TALK SOUP"
+         NBA    → "OTHER SIDE OF THE PILLOW"
 
-    - Top bar with show name + Episode N + LIVE + date
-    - Right sidebar list of streamers (Twitch) / games (NBA) with ▶ ON AIR highlight
-    - Top-right segment-tag updating per active item
-    - TV card lower-third time-gated at each item's INTRO scene
-    - Logo on the coffee mug (LOGO_POS_NEWS coordinates, same mug across all shows)
-    - Same state machine: sidebar always-on, TV card timed
+    2. Sidebar story cards (right panel):
+         News   → story headlines + WORLD NEWS category labels
+         Twitch → streamer display names + ON STREAM category labels
+         NBA    → game matchup labels + NBA GAME category labels
 
-  Currently Twitch uses a small top-right TV card at OVERLAY_ZONE =
-  {x:1360, y:60, w:520, h:293} and NBA uses the same zone with a different
-  Canvas-generated PNG. The rebrand replaces both with the full-chrome design.
+    3. Accent colors (--gold, --gold2, --red CSS vars):
+         News   → gold #C7AF4F / #f0d060, red #C0392B  (default in :root)
+         Twitch → purple #6441A5 / #7d5bbe, red #6441A5
+         NBA    → blue #17408B / #1a4fa8, red #C9082A
 
-  Tracked in:
-    - ROADMAP.md → Bucket 4 Enterprise → Could-Have →
-      "Rebrand Twitch and NBA long-form to match the News newscast chrome design"
-    - LONGFORM_FIX_ROTATION.md rotation log entry dated 2026-04-12 evening
+  Colors + show name are injected via page.evaluate() in generateNewscastOverlay()
+  using the contentType param. News is the :root default — no override needed.
 
-  DO NOT start this work until News + Twitch + NBA long-form all pass test cases.
-  This comment exists so the decision is not lost if ROADMAP.md is archived or
-  rewritten between now and when the rebrand becomes active work.
+  The sidebar's active card highlight (red left border + bold text) serves as the
+  "intro card" for all three shows — no separate TV card or circle overlay needed.
+
+  Implementation: CLINE_HANDOFF_SHARED_CHROME_SKINS.md
   ═══════════════════════════════════════════════════════════════════════════════
 -->
 <html lang="en">
