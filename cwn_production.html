@@ -1440,7 +1440,7 @@ var payload = {
     outputDir: CFG.outputDir,
     jobTitle: job.title,
     contentType: job.type || 'twitch',
-    jobId: (window.CURRENT_META && window.CURRENT_META.scriptJobId) || job.scriptJobId || ''
+    jobId: (window.CURRENT_META && window.CURRENT_META.scriptJobId) || job.scriptJobId || job.id || ''
   };
 
   // Update segment status indicators
@@ -2955,18 +2955,14 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
         window.CURRENT_META = window.CURRENT_META || {};
         window.CURRENT_META.scriptJobId = resp.metricsJobId;
         console.log('[script] Stored scriptJobId for directive sidecar:', resp.metricsJobId);
-        var currentJob = JOBS.find(function(j){ return j.status !== 'failed'; });
+        // Save scriptJobId on the correct job card — find by jobId match first,
+        // then fall back to most recent non-failed job
+        var currentJob = JOBS.find(function(j){ return j.id === resp.metricsJobId; })
+                      || JOBS.find(function(j){ return j.status !== 'failed'; });
         if (currentJob && resp.metricsJobId) {
           currentJob.scriptJobId = resp.metricsJobId;
           saveJobs();
         }
-      }
-
-      // Store the script generation jobId so assembly can load the directive sidecar
-      if (resp.metricsJobId) {
-        window.CURRENT_META = window.CURRENT_META || {};
-        window.CURRENT_META.scriptJobId = resp.metricsJobId;
-        console.log('[script] Stored scriptJobId for directive sidecar:', resp.metricsJobId);
       }
 
       g('main-script').scrollIntoView({behavior:'smooth'});
@@ -2991,8 +2987,23 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
 function generateNBA() {
   var ids = g('nba-game-ids').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
   if (!ids.length) { nav('nba'); return; }
+  // Gap #19: Guard — require SELECT GAMES flow before generating script
+  // CURRENT_META.clipUrls is populated by nbaUseSelected() after scraping ESPN highlight URLs.
+  // If user typed game IDs directly without clicking SELECT GAMES, clipUrls is empty and
+  // the server receives games with no clipUrl → Gate 1 failure (empty Gemini analysis).
+  if (!CURRENT_META || !CURRENT_META.clipUrls || Object.keys(CURRENT_META.clipUrls).length === 0) {
+    var statusEl = g('nba-status');
+    if (statusEl) {
+      statusEl.textContent = '⚠️ Please click SELECT GAMES first to scrape highlight URLs before generating the script.';
+      statusEl.style.color = '#e8a020';
+    } else {
+      alert('Please click SELECT GAMES first to scrape highlight URLs before generating the script.');
+    }
+    nav('nba');
+    return;
+  }
   CURRENT_TYPE = 'nba';
-  CURRENT_META = { gameIds: ids };
+  CURRENT_META = { gameIds: ids, clipUrls: CURRENT_META.clipUrls };
   setGeneratingState('nba-status', 'NBA — Fetching ESPN data...');
 
   // Fetch summary for each game, then build items array for server

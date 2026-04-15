@@ -1491,6 +1491,13 @@ app.post('/job/:id/rollback', (req, res) => {
     if (card.heygen && card.heygen.videoJobs) {
       card.heygen.videoJobs.forEach(vj => { vj._url = null; });
     }
+    // Clear assembly dedup lock to allow re-assembly
+    Object.keys(assemblyJobs).forEach(asmId => {
+      if (assemblyJobs[asmId]?.sourceJobId === jobId) {
+        delete assemblyJobs[asmId];
+        console.log(`[rollback] ${jobId}: cleared assembly dedup lock for asmId=${asmId}`);
+      }
+    });
     card.stage = 'all_sent';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: assembled → all_sent`);
@@ -6027,11 +6034,23 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
 
     console.log(`[nba-scrape] Found ${videos.length} videos for game ${gameId}`);
 
-    // Step 2: Find video with highest duration
+    // Step 2: Filter for highlight videos first (Gap #20)
+    // ESPN often includes press conferences (30+ min) and interviews alongside actual highlights (~1-2 min).
+    // Prefer videos whose headline/title/description matches highlight-specific keywords.
+    // Fall back to unfiltered set if no matches — better to have a press conference than no clip.
+    const highlightPattern = /highlight|top\s+plays|key\s+plays|best\s+plays|game\s+recap/i;
+    const filteredVideos = videos.filter(v => {
+      const text = `${v.headline || ''} ${v.title || ''} ${v.description || ''}`;
+      return highlightPattern.test(text);
+    });
+    const videoPool = filteredVideos.length > 0 ? filteredVideos : videos;
+    console.log(`[nba-scrape]   Filtered ${filteredVideos.length}/${videos.length} videos matching "highlight" pattern — using ${videoPool.length} in pool`);
+
+    // Step 3: Find video with highest duration from the filtered pool
     let highestDurationVideo = null;
     let maxDuration = 0;
 
-    for (const video of videos) {
+    for (const video of videoPool) {
       const duration = video.duration || 0;
       const title = video.headline || video.title || video.description || '';
 
