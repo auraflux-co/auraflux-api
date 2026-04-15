@@ -4,7 +4,7 @@ require('dotenv').config();
 // Feature flag — default true. Set USE_DIRECTIVE_CHROME=false to fall back
 // to the legacy Fix 5/7 reactive state machine (emergency rollback only).
 const USE_DIRECTIVE_CHROME = process.env.USE_DIRECTIVE_CHROME !== 'false';
-const { directiveToOverlayParams } = require('./lib/chromeDirectives');
+const { directiveToOverlayParams, validateScript: validateChromeScript } = require('./lib/chromeDirectives');
 const {
   writeDirectiveForJob,
   loadDirectiveForJob,
@@ -8363,6 +8363,27 @@ const isClipMatchOnly = !hasStructuralFail &&
       try {
         const _cleaned = stripCodeFences(script);
         const _parsedDirective = JSON.parse(_cleaned);
+        // Red 4 Fix 2: validate Gemini's directive script against the strict Zod schema.
+        // Without this, schema drift between the prompt and the consumer is silent and
+        // degrades to placeholder fixture data on the rendered overlay.
+        // See: lib/chromeDirectives.js ScriptSchema for the canonical shape.
+        const _validation = validateChromeScript(_parsedDirective);
+        if (!_validation.ok) {
+          const _errorList = _validation.errors.join('\n  - ');
+          console.error(`[gate1-directive] ❌ Zod validation FAILED:\n  - ${_errorList}`);
+          // Hard-fail: return 400 with Zod errors so the operator sees exactly what's wrong
+          return res.status(400).json({
+            ok: false,
+            error: 'directive_validation_failed',
+            qaResult: {
+              outcome: 'fail',
+              score: 0,
+              deductions: _validation.errors.map(e => ({ points: 100, reason: e })),
+              validatorErrors: _validation.errors
+            }
+          });
+        }
+        console.log(`[gate1-directive] ✅ Zod validation passed (${_parsedDirective.scenes?.length || 0} scenes, ${_parsedDirective.storyList?.length || 0} stories)`);
         // Extract spoken text FIRST — before writeDirectiveForJob which may throw on Zod validation.
         // This ensures scriptForHeygen is always plain text even if the sidecar write fails.
         scriptForHeygen = extractSpokenTextFromDirective(_parsedDirective);
