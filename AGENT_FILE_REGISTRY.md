@@ -8,15 +8,29 @@
 
 ## Agent roster
 
-| Agent | Terminal | Default file ownership | Best for |
-|---|---|---|---|
-| **Cline-A** | Terminal 1 | `server.js`, `lib/`, `scripts/` | Backend pipeline fixes, server endpoints |
-| **Cline-B** | Terminal 2 | `cwn_production.html`, `tools/`, `assets/` | Dashboard UI, Puppeteer chrome renderer |
-| **Cline-C** | Terminal 3 | AuraFlux UI, Railway config, new standalone features | New features, full-stack work, overflow |
-| **Aider** | Overnight | Non-breaking files, docs, migrations, new scripts | Batch tasks, Jira/Confluence, anything running 1-6am |
-| **Claude Code** | This session | Architecture, handoffs, reviews, Gemini consults | Planning, diagnosis, spec writing, diff review |
+| Agent | Model | Terminal | Domain | Best for |
+|---|---|---|---|---|
+| **Cline-A** | Claude Sonnet | Terminal 1 | Backend — pipeline, gates, FFmpeg, assembly, HeyGen | Complex server logic, gate scoring, QA fixes, anything touching the production engine |
+| **Cline-B** | DeepSeek | Terminal 2 | Backend — API endpoints, data layer, job persistence | Endpoint additions, `data/jobs.json` schema, publish integration, formulaic surgical edits |
+| **Cline-C** | GPT-4.5 / Codex | Terminal 3 | Frontend — dashboard UI, AuraFlux React/Next.js | `cwn_production.html` today, full React UI for AuraFlux Phase 2+ |
+| **Aider** | — | Overnight | Docs, migrations, Jira/Confluence, non-breaking scripts | Batch tasks, anything running 1-6am |
+| **Claude Code** | Claude Sonnet 4.6 | This session | Architecture, handoffs, specs, diagnosis | Planning, root cause analysis, spec writing, roadmap, model routing decisions |
 
-**Handoff header convention:** Every handoff written by Claude Code will start with `→ Agent: Cline-A` (or B/C/Aider) so it's immediately clear who executes it. Jira tickets will use the same names in the Assignee field once the project is set up.
+**Model routing rationale:**
+- **Sonnet for Cline-A** — pipeline code is highest complexity and risk. Gate logic, FFmpeg, HeyGen, QA scoring all require strong reasoning.
+- **DeepSeek for Cline-B** — API endpoints and data layer are more formulaic. Surgical edits to well-defined patterns. Cost-efficient.
+- **GPT for Cline-C** — frontend is where GPT/Codex excels. React, UI components, CSS. `cwn_production.html` today, AuraFlux React UI in Phase 2.
+
+**Domain split (prevents file lock conflicts):**
+- Cline-A owns: `server.js` pipeline functions, `lib/`, assembly logic, gate scoring
+- Cline-B owns: `server.js` API endpoints only (app.get/app.post routes), `data/`, `logs/`
+- Cline-C owns: `cwn_production.html`, `tools/`, `assets/`, future `ui/` directory
+
+**Note:** When Cline-A and Cline-B both need `server.js`, Cline-A gets priority. Cline-B waits for Cline-A's lock to clear. API endpoint edits are always lower risk than pipeline function edits.
+
+**Jira assignment labels:** `cline_sonnet`, `cline_deepseek`, `cline_gpt` — use these in the Assignee field when tickets are created.
+
+**Handoff header convention:** Every handoff written by Claude Code will start with `→ Agent: Cline-A` (or B/C/Aider) so it's immediately clear who executes it.
 
 ---
 
