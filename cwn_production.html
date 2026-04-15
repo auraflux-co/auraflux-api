@@ -1505,23 +1505,13 @@ var payload = {
 // Re-runs FFmpeg concat from existing tmp/asm_{asmId}_*.mp4 segments.
 // Skips Gate 1, HeyGen, and downloads — no credits used.
 // References: CLINE_HANDOFF_RETRY_ASSEMBLY.md
-function retryAssembly(asmId, contentType, jobTitle, assemblyJobId) {
-  if (!asmId) { alert('No assembly ID found — cannot retry'); return; }
-  if (!confirm('Re-run FFmpeg assembly from existing segments?\n\nThis skips HeyGen — no credits used.')) return;
-  fetch(CFG.ffmpegUrl + '/assemble/' + asmId + '/retry', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contentType: contentType, jobTitle: jobTitle, assemblyJobId: assemblyJobId })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if (d.ok) {
-      cwn_log('🔄 Retry assembly started for ' + asmId + ' (' + d.segmentCount + ' segments)', false);
-    } else {
-      cwn_log('❌ Retry failed: ' + (d.error || JSON.stringify(d)), true);
-    }
-  })
-  .catch(function(e){ cwn_log('❌ Retry request error: ' + e.message, true); });
+function retryAssembly(jobId) {
+  // DISABLED 2026-04-14: retry path skips Puppeteer chrome pipeline.
+  // TV card / lower-third flag / story sidebar all absent from output.
+  // Fresh assembly is the correct path — HeyGen segments are cached in
+  // tmp/ and re-used automatically (no HeyGen credits spent).
+  // See: CLINE_HANDOFF_RETRY_ASSEMBLY_DISABLE.md
+  alert('Retry assembly is temporarily disabled.\n\nClick ASSEMBLE instead — existing HeyGen segments are already cached and will be re-used automatically. No HeyGen credits will be spent.');
 }
 
 function pollAssemblyProgress(batchJobId, assemblyId) {

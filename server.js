@@ -5502,6 +5502,19 @@ app.get('/assemble-progress/:id', (req, res) => {
 // Skips Gate 1, HeyGen, and downloads. Uses tmp/asm_{asmId}_*.mp4 files directly.
 // Use case: assembly crashed but HeyGen segments already downloaded — no need to re-burn credits.
 // References: CLINE_HANDOFF_RETRY_ASSEMBLY.md
+app.post('/assemble/:asmId/retry', (req, res) => {
+  // DISABLED 2026-04-14: retry path skips Puppeteer chrome pipeline.
+  // TV card / lower-third flag / story sidebar all absent from output.
+  // Fresh assembly from dashboard is the safe path — HeyGen segments are
+  // cached in tmp/ and re-used automatically (no HeyGen re-spend).
+  // Re-enable when retry is rewritten to enter main assembly at chrome step.
+  return res.status(501).json({
+    error: 'retry_disabled',
+    message: 'Retry assembly is temporarily disabled. Use the main ASSEMBLE button — existing HeyGen segments are cached in tmp/ and will be re-used without re-burning HeyGen credits.',
+  });
+});
+
+/* DISABLED 2026-04-14 - see CLINE_HANDOFF_RETRY_ASSEMBLY_DISABLE.md
 app.post('/assemble/:asmId/retry', async (req, res) => {
   const { asmId } = req.params;
   const { contentType = 'news', jobTitle, assemblyJobId } = req.body;
@@ -5722,6 +5735,7 @@ app.post('/assemble/:asmId/retry', async (req, res) => {
 
   retryRun();
 });
+*/
 
 // GET /download/:file — serve assembled video or thumbnail frame
 app.get('/download/:file', (req, res) => {
