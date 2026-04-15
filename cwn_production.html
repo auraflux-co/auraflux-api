@@ -2246,6 +2246,8 @@ function renderQueue() {
     // Rollback / Force-Advance pipeline controls
     actions += '<button onclick="rollbackJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(231,76,60,0.35);color:#e74c3c;opacity:0.7;" title="Roll back this job to the previous pipeline stage">↩ ROLLBACK</button>';
     actions += '<button onclick="advanceJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(46,204,113,0.35);color:#2ecc71;opacity:0.7;" title="Force-advance this job to the next pipeline stage (use if stuck)">⏭ FORCE ADVANCE</button>';
+    // Dismiss job card
+    actions += '<button onclick="dismissJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(155,89,182,0.35);color:#9b59b6;opacity:0.7;" title="Dismiss this job card (hides from dashboard, keeps in server history)">× DISMISS</button>';
     // RETRY ASSEMBLY — show when asmId exists and assembly failed/QA failed
     // Skips HeyGen + downloads — re-runs FFmpeg concat from existing tmp segments
     var canRetryAsm = job.asmId && (status === 'failed' || job.qaOutcome === 'fail' || job.qaOutcome === 'pre_flight_fail');
@@ -2555,6 +2557,34 @@ function advanceJob(jobId) {
   };
   xhr.onerror = xhr.ontimeout = function() {
     cwn_log('[advance] Server unreachable', true);
+    alert('❌ Server unreachable — is server.js running?');
+  };
+  xhr.send(JSON.stringify({}));
+}
+
+function dismissJob(jobId) {
+  if (!confirm('Dismiss job "' + jobId + '"?\n\nThis will hide the job card from the dashboard but keep it in server history for audit trail.')) return;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/dismiss', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Dismiss failed');
+      cwn_log('[dismiss] ' + jobId + ' dismissed', false);
+      // Remove job from local JOBS array
+      JOBS = JOBS.filter(function(j) { return j.id !== jobId; });
+      saveJobs();
+      renderQueue();
+      alert('✅ Job dismissed — removed from dashboard. Server keeps audit record.');
+    } catch(e) {
+      cwn_log('[dismiss] Error: ' + e.message, true);
+      alert('❌ Dismiss failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    cwn_log('[dismiss] Server unreachable', true);
     alert('❌ Server unreachable — is server.js running?');
   };
   xhr.send(JSON.stringify({}));
@@ -4110,8 +4140,8 @@ function sendToHeyGen() {
 
   // ── Pre-flight check (inline panel — no system confirm() popup) ──────────
   var totalWords = allParsed.reduce(function(a,s){ return a+s.wordCount; }, 0);
-  var totalSecs  = allParsed.reduce(function(a,s){ return a+s.estSecs; }, 0);
-  var shortSegs  = allParsed.filter(function(s){ return s.type==='avatar' && s.estSecs < 20; });
+  var totalSecs  = allParsed.reduce(function(a,s){ return a+(s.estSecs||0); }, 0);
+  var shortSegs  = allParsed.filter(function(s){ return s.type==='avatar' && s.estSecs < 10; });
   var avatarSegs = allParsed.filter(function(s){ return s.type==='avatar'; });
   var clipSegs   = allParsed.filter(function(s){ return s.type==='source_clip'; });
   var missingClipUrls = clipSegs.filter(function(s){ return !s.clipUrl; }).length;
