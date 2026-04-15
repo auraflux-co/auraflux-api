@@ -204,6 +204,53 @@ These two answers route the customer to the correct assembly track. Everything a
 
 ---
 
+## The Four Engines
+
+Every production track runs through four engines in sequence. These are the customer-facing names for what the pipeline does internally.
+
+### 1. Moment Engine
+**Finds clips.**
+Locates, resolves, and selects the best source footage — whether scraped from Twitch/ESPN/news, ingested from a URL the customer provides, or received directly from the customer's own files. For reverse assembly, analyzes a long-form to find the highest-value moments to extract.
+
+**Maps to:** Gate 2 (footage check), clip scraping, Twitch GQL resolution, Brightcove HLS re-scrape, content library (Phase 2)
+
+---
+
+### 2. Story Engine
+**Structures the video.**
+Writes the script, determines scene order, decides pacing, assigns which clips go where. For forward assembly this is Gemini script generation. For reverse assembly this is moment selection and short-form structure. For production upgrade this is the recut logic.
+
+**Maps to:** Gate 1 (script QA), `geminiScriptGeneration()`, directive sidecar, scene schema, `orderedClipUrls`
+
+---
+
+### 3. 🔥 Scene Engine
+**Controls visuals.**
+Renders everything the viewer sees: avatar host video (HeyGen), chrome overlays (TV card, lower-third flag, sidebar), ticker, intro cards, transitions, logo, zoom-to-fill crop, thumbnail. The visual production layer.
+
+**Maps to:** Gate 3 (assembly QA), HeyGen rendering, FFmpeg assembly, `generateNewscastOverlay()`, intro card generation, Puppeteer chrome, `assemblyPreFlightCheck()`
+
+---
+
+### 4. Distribution Engine
+**Publishes.**
+Generates SEO-optimized title/description/tags/thumbnail text, schedules publish time, uploads to YouTube/TikTok/Instagram, adds chapters, cards, end screens, playlists. Tracks post-publish performance and feeds it back into future episodes.
+
+**Maps to:** Gate 6 (publish), `/generate-publish-copy`, Upload-Post API, YouTube Data API v3 (Phase 2), content calendar (Phase 2)
+
+---
+
+### Engine → Gate Map
+
+| Engine | Gate | Pass Condition |
+|---|---|---|
+| Moment Engine | Gate 2 | Footage downloaded, tokens valid |
+| Story Engine | Gate 1 | Score ≥90, no placeholders |
+| Scene Engine | Gate 3 | Score ≥70, no freeze, no missing clips |
+| Distribution Engine | Gate 6 | Upload-Post returns job_id |
+
+---
+
 ## What This Is NOT
 
 - Not a content type selector (Twitch / NBA / News) — that's a sourcing detail, not a product decision
