@@ -3536,6 +3536,7 @@ app.post('/assemble',
         await checkDiskSpace(estimatedSizeMB);
       } catch (diskErr) {
         log(asmId, `❌ ${diskErr.message}`);
+        logError('ASSEMBLY_DISK_FAIL', diskErr.message, { asmId, jobId: assemblyJobId });
         assemblyJobs[asmId].status = 'failed';
         assemblyJobs[asmId].error = diskErr.message;
         return;
@@ -3852,7 +3853,9 @@ app.post('/assemble',
 
       if (!localFiles.length) {
         log(asmId, '❌ No segments could be downloaded. Aborting.');
+        logError('ASSEMBLY_NO_SEGMENTS', 'No segments could be downloaded', { asmId, jobId: assemblyJobId, contentType });
         assemblyJobs[asmId].status = 'failed';
+        assemblyJobs[asmId].error = 'No segments could be downloaded';
         return;
       }
 
@@ -4098,6 +4101,21 @@ app.post('/assemble',
         outFile   = `${baseTitle}_${actualClipCount}clips_${Date.now()}.${format === 'webm' ? 'webm' : format === 'mov' ? 'mov' : 'mp4'}`;
         outPath   = path.join(outDir, outFile);
 
+      // Build segTypes BEFORE pre-flight check — pre-flight needs it to count downloaded clips
+      const segTypes = [];
+      {
+        let localIdx = 0;
+        for (let i = 0; i < segsToProcess.length; i++) {
+          const seg = segsToProcess[i];
+          const segType = seg.type || 'avatar';
+          if (localIdx < localFiles.length && localFiles[localIdx] && localFiles[localIdx].includes(`${asmId}_${i}_`)) {
+            segTypes.push(segType);
+            localIdx++;
+          }
+        }
+        while (segTypes.length < localFiles.length) segTypes.push('avatar');
+      }
+
       // ── Gate 3 Pre-Flight: deterministic structural check, no Gemini tokens ─────────
       // Fix 5: catches critical assembly failures BEFORE Gemini upload.
       // Runs after download loop + segTypes build, before TS normalization.
@@ -4130,9 +4148,11 @@ app.post('/assemble',
         for (const issue of preFlightCriticals) {
           log(asmId, `🚨 PRE-FLIGHT CRITICAL: [${issue.check}] ${issue.detail}`);
         }
+        const preFlightMsg = preFlightCriticals.map(i => `[${i.check}] ${i.detail}`).join('; ');
         log(asmId, `❌ Gate 3 pre-flight failed — ${preFlightCriticals.length} critical issue(s). Aborting before Gemini upload.`);
+        logError('ASSEMBLY_PREFLIGHT_FAIL', preFlightMsg, { asmId, jobId: assemblyJobId, contentType, issues: preFlightCriticals });
         assemblyJobs[asmId].status = 'failed';
-        assemblyJobs[asmId].error  = preFlightCriticals.map(i => i.detail).join('; ');
+        assemblyJobs[asmId].error  = preFlightMsg;
         assemblyJobs[asmId].qaOutcome = 'pre_flight_fail';
         assemblyJobs[asmId].qaReport  = preFlightCriticals.map(i => `CRITICAL: ${i.check} — ${i.detail}`).join('\n');
         return;
@@ -4148,21 +4168,7 @@ app.post('/assemble',
       // Then apply smart per-segment transitions via xfade filter on normalized files
       log(asmId, `  ℹ️  Normalizing ${localFiles.length} segments to TS...`);
       const tsFiles = [];
-      const segTypes = []; // track type per localFile for transition logic
-
-      // Build segment type map from original segsToProcess order
-      let localIdx = 0;
-      for (let i = 0; i < segsToProcess.length; i++) {
-        const seg = segsToProcess[i];
-        const segType = seg.type || 'avatar';
-        // Only push type for segments that made it into localFiles
-        if (localIdx < localFiles.length && localFiles[localIdx] && localFiles[localIdx].includes(`${asmId}_${i}_`)) {
-          segTypes.push(segType);
-          localIdx++;
-        }
-      }
-      // Fallback: if mapping failed, default all to avatar
-      while (segTypes.length < localFiles.length) segTypes.push('avatar');
+      // segTypes already built above before pre-flight check
 
       // ── Load streamers.json for intro card burn ────────────────────
       // Used to burn circular profile image + origin + fact onto INTRO segments
@@ -5463,6 +5469,13 @@ app.post('/assemble',
 
     } catch (err) {
       log(asmId, `\n❌ Assembly error: ${err.message}\n${err.stack}`);
+      logError('ASSEMBLY_CRASH', err.message, {
+        asmId,
+        jobId: assemblyJobId,
+        contentType,
+        pct: assemblyJobs[asmId]?.pct,
+        stack: err.stack
+      });
       assemblyJobs[asmId].status = 'failed';
       assemblyJobs[asmId].error  = err.message;
     }

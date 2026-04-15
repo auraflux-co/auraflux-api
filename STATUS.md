@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-14 (11:10 PM ET)
-**Branch:** main | **Latest Commit:** fix(assembly): disable broken retry endpoint — chrome pipeline missing from retry path
+**Last Updated:** 2026-04-15 (12:18 AM ET)
+**Branch:** main | **Latest Commit:** fix(assembly): log all failure paths to errors.jsonl — survive server restart
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
@@ -24,7 +24,7 @@
 
 | File | Agent | Handoff | Locked At |
 |------|-------|---------|-----------|
-| server.js | Cline-A | CLINE_HANDOFF_SMOKE_TEST_BUGS.md + CLINE_HANDOFF_QA_GATE_HARDENING.md | 2026-04-14 6:03 PM ET |
+| server.js | Cline-A | CLINE_HANDOFF_ASSEMBLY_ERROR_LOGGING.md + CLINE_HANDOFF_HEYGEN_720P_DOWNSCALE.md | 2026-04-15 12:18 AM ET |
 
 ---
 
@@ -34,6 +34,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline | **fix(assembly): log all failure paths to errors.jsonl** — Added `logError()` calls at all 4 assembly failure sites: (1) diskErr catch → `ASSEMBLY_DISK_FAIL`; (2) no-segments check → `ASSEMBLY_NO_SEGMENTS`; (3) pre-flight critical fail → `ASSEMBLY_PREFLIGHT_FAIL` with issues array; (4) top-level catch → `ASSEMBLY_CRASH` with stack trace. `logError()` was already imported at line 94 but never called — failures were in-memory only and wiped on server restart. Now all failures persist to `logs/errors.jsonl`. | server.js, STATUS.md | — | 2026-04-15 12:18 AM ET |
 | Cline | **fix(assembly): disable broken retry endpoint** — `/assemble/:asmId/retry` now returns 501 with `retry_disabled` error. Old implementation commented out below stub. Dashboard `retryAssembly()` replaced with alert directing operator to use ASSEMBLE button instead (HeyGen segments cached in tmp/, re-used automatically, no credits spent). Root cause: retry path skipped Puppeteer chrome pipeline — TV card, lower-third flag, story sidebar all absent from smoke test 11 output. | server.js, cwn_production.html, STATUS.md | — | 2026-04-14 11:10 PM ET |
 | Cline | **feat(assembly): add ticker bake to retry path** — `/assemble/:asmId/retry` now bakes the content-type ticker overlay before Gate 3 QA, mirroring the main assembly path. `retryTickerType = contentType.replace(/-short$/, '')`, calls `captureTicker()`, runs FFmpeg overlay with watchdog + hard timeout. `expectedTicker` in Gate 3 QA call updated from hardcoded `false` to `tickerBaked` boolean. CLINE_HANDOFF_NEWS_CHROME_FIX.md: all 6 fixes confirmed already shipped. | server.js, STATUS.md | — | 2026-04-14 10:46 PM ET |
 | Cline | **feat(assembly): real retry endpoint + RETRY ASSEMBLY dashboard button** — Replaced stub `/assemble/:asmId/retry` with full FFmpeg re-assembly: reads `tmp/asm_{asmId}_*.mp4` segments (sort fix: strip asmId prefix before parsing index), runs FFmpeg concat (libx264/aac) → ffprobe → Gate 3 Gemini QA → Drive upload. Skips Gate 1, HeyGen, downloads — no credits used. Returns 409 if running, 404 if no tmp files. Dashboard: `job.asmId` now stored on job object when `assembleJob()` fires. `retryAssembly()` function added. RETRY ASSEMBLY button shown on failed job cards when `job.asmId` exists AND `status=failed` OR `qaOutcome=fail/pre_flight_fail`. | cwn_production.html, server.js, STATUS.md | — | 2026-04-14 10:31 PM ET |
