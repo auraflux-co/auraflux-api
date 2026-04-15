@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-15 (3:15 PM ET)
-**Branch:** main | **Latest Commit:** refactor(server): extract publish pipeline to lib/publish.js (~680 lines)
-**🚨 PRODUCTION FREEZE:** All agents hold commits until server split completes. server.js = 8,048 lines (was 12,440). Modules 1-4 done. Module 5 (assembly) pending.
+**Last Updated:** 2026-04-15 (3:30 PM ET)
+**Branch:** main | **Latest Commit:** refactor(server): extract assembly pipeline to lib/assembly.js (~2800 lines)
+**✅ PRODUCTION FREEZE LIFTED:** server.js split complete. server.js = 5,371 lines (was 12,440). All 5 modules shipped. Cline + Cursor + Aider may resume commits.
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
@@ -35,6 +35,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Claude Code | **refactor(server): extract assembly pipeline to lib/assembly.js — Module 5 of 5** — Extracted `generateIntroCardPNG`, `generateGameStoryCardPNG`, `detectTrailingSilence`, `computeNewsClipTrimDuration`, `generateNewsStoryCardPNG`, `checkDiskSpace`, `buildConcatCommand`, `probeDuration`, `handleAssemble` (~2018 lines), `captureTicker` into lib/assembly.js (~2800 lines). `/assemble` endpoint wires to `(req, res) => handleAssemble(req, res, saveJobCard)`. TICKER_CACHE/TICKER_MAP exported from assembly.js for /ticker-status endpoint. server.js 8,048 → 5,371 lines. Split complete — production freeze LIFTED. | lib/assembly.js (new), server.js, STATUS.md | pending | 2026-04-15 3:30 PM ET |
 | Claude Code | **refactor(server): extract publish pipeline to lib/publish.js — Module 4 of 5** — Extracted `getDriveClient`, `getDriveFolderId`, `uploadToDrive`, `importToCanva`, `readUploadStatus`, `writeUploadStatus`, `logUploadAttempt`, `generateShortFormCaption`, `handlePublish`, `handleGeneratePublishCopy` (~680 lines). `/publish` and `/generate-publish-copy` endpoints wired to handlers. server.js 8,669 → 8,048 lines. | lib/publish.js (new), server.js, STATUS.md | pending | 2026-04-15 3:15 PM ET |
 | Claude Code | **refactor(server): extract script generation pipeline to lib/script_gen.js — Module 3 of 5** — Extracted `sendScriptToHeyGen`, `geminiScriptGeneration`, `getVoiceGuide`, `scrapeArticleVideo`, `scrapeArticleOgImage`, `geminiAnalyzeClip`, `geminiAnalyzeThumbnail`, `prioritizeNewsStories`, `handleGenerateFullScript` (~1900 lines) from server.js. `/generate-full-script` endpoint now wires to `handleGenerateFullScript`. server.js 10,457 → 8,669 lines. | lib/script_gen.js (new), server.js, STATUS.md | pending | 2026-04-15 3:00 PM ET |
 | Claude Code | **refactor(server): extract QA gate functions to lib/qa.js — Module 2 of 5** — Extracted `geminiQACheck`, `parseScriptIntoScenes`, `generateClipAvailabilityReport`, `claudeScriptQA`, `claudeScriptFix`, `geminiScriptQA`, `geminiSegmentQA`, `callClaudeAPI`, `uploadToGeminiFiles`, `waitForGeminiFile`, `deleteGeminiFile` (~1300 lines) from server.js into new `lib/qa.js`. `require('./lib/qa')` added at server.js:108. `node -c server.js` passes. server.js 11,738 → 10,457 lines. | lib/qa.js (new), server.js, STATUS.md | pending | 2026-04-15 2:45 PM ET |
