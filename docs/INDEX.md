@@ -33,7 +33,7 @@ All pending work lives here. Archive after the associated commit lands.
 | `CLINE_HANDOFF_SHORTS_SCRIPT_QA_FIX.md` | Cline-A | **PENDING (after chrome skins)** | Short-form Gate 1 fixes — clip/scene count deductions, outro, random clip selection |
 | `CLINE_HANDOFF_SMOKE12_FIXES.md` | Cline-A | **SHIPPED 4fa8a9b** | TV card removed, portrait zoom-to-fill, category label, show name indent |
 | `CLINE_HANDOFF_WAVE_0_CLEANUP.md` | Cursor | **PENDING** | 16 dead-code / unused import cleanup items |
-| `CLINE_HANDOFF_PREFLIGHT_INLINE.md` | Cursor | **PENDING** | Replace confirm() popup with inline preflight panel |
+| `CLINE_HANDOFF_PREFLIGHT_INLINE.md` | Cursor | **SHIPPED 8a9362e** | Replace confirm() popup with inline preflight panel |
 | `CLINE_HANDOFF_ROLLBACK_ADVANCE_GAPS.md` | Cline-B | **SHIPPED 96ca354** | scriptJobId persist, dedup lock clear, rollback overshoot, audit trail |
 | `CLINE_HANDOFF_JOB_DISMISS.md` | Cline-B | **PENDING** | Job card dismiss clears data/jobs.json not just localStorage |
 | `CLINE_HANDOFF_ASSEMBLY_DEDUP_LOCK.md` | Cline-A | **PENDING** | Prevent duplicate assembly runs on same job |
