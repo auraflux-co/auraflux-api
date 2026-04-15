@@ -122,6 +122,57 @@ When two Cline instances or Cline + Aider are running simultaneously:
 
 ---
 
+## Aider — Overnight Junior Assistant
+
+Aider runs 1-6am and handles high-volume, tedious, data-intensive tasks that would interrupt active daytime workflows. Changes are reviewed at morning standup before taking full effect.
+
+**Jira management:**
+- Ticket triage — analyze new bugs/support requests, assign priority, categorize into correct request types
+- Backlog cleanup — identify stale/zombie tickets (no update in 14+ days), close or flag for review
+- Issue enrichment — link related Confluence docs, PRDs, and spec files to Jira tickets automatically
+- Subtask generation — break large epics into user stories + subtasks, pre-populate with acceptance criteria and story point estimates
+- Dependency management — when parent task marked complete, notify stakeholders and update dependent tickets
+
+**Confluence maintenance:**
+- Summarize long pages updated during the day into executive summaries
+- Archive inactive/obsolete pages
+- Scan new pages for action items → create corresponding Jira tickets
+- Generate draft docs from resolved Jira issues
+
+**Reporting:**
+- Daily status report on engineering activity → delivered to Rob's email/Slack by 6am
+- Proactive issue creation when recurring error patterns detected in `logs/errors.jsonl`
+
+**What Aider does NOT do overnight:**
+- Does NOT touch `server.js`, `cwn_production.html`, or any Tier 1 file
+- Does NOT commit code changes — only docs, scripts, Jira/Confluence updates
+- Does NOT make architectural decisions — flags for Claude Code review
+
+**Morning review rule:** Rob reviews Aider's overnight changes at standup. Nothing Aider creates goes live until reviewed. This solves the "audit problem" — high-volume AI activity doesn't confuse the human team.
+
+---
+
+## Agile Story Structure (Jira)
+
+**One story per feature — not separate BE/FE stories.** A story is not done until API is integrated AND UI works end-to-end.
+
+```
+EPIC: [Major feature, e.g. "Autonomous Gate Progression"]
+  STORY: As a customer, my failed job retries automatically without operator intervention
+    SUBTASK: [cline_sonnet] Implement gate retry loop in server.js
+    SUBTASK: [cline_deepseek] Add retryCount + alertSent fields to job persistence
+    SUBTASK: [cline_gpt] Show retry status + alert UI on job card
+    SUBTASK: [aider] Write acceptance criteria + link spec docs to ticket
+```
+
+**API-first workflow:**
+1. Claude Code writes the handoff (API contract)
+2. Cline-B (DeepSeek) stubs the endpoint first
+3. Cline-A (Sonnet) builds the logic, Cline-C (GPT) builds the UI in parallel against the stub
+4. Integration when both are done
+
+---
+
 ## Multi-agent dispatch rules
 
 When Rob runs two agents simultaneously:
