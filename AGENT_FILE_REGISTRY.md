@@ -1,6 +1,6 @@
 # AGENT_FILE_REGISTRY.md
 
-**Author:** Claude Code, 2026-04-14  
+**Author:** Claude Code, 2026-04-14 (updated 2026-04-15)
 **Purpose:** Standing file ownership and lock protocol for all agents. Read this before touching any file. Prevents two agents from corrupting the same file simultaneously.  
 **Enforced by:** Honor system + STATUS.md lock declarations. Pre-commit hook warns but cannot block concurrent edits.
 
@@ -8,29 +8,37 @@
 
 ## Agent roster
 
-| Agent | Model | Terminal | Domain | Best for |
+| Agent | Tool | Terminal | Domain | Best for |
 |---|---|---|---|---|
-| **Cline-A** | Claude Sonnet | Terminal 1 | Backend — pipeline, gates, FFmpeg, assembly, HeyGen | Complex server logic, gate scoring, QA fixes, anything touching the production engine |
-| **Cline-B** | DeepSeek | Terminal 2 | Backend — API endpoints, data layer, job persistence | Endpoint additions, `data/jobs.json` schema, publish integration, formulaic surgical edits |
-| **Cline-C** | GPT-4.5 / Codex | Terminal 3 | Frontend — dashboard UI, AuraFlux React/Next.js | `cwn_production.html` today, full React UI for AuraFlux Phase 2+ |
-| **Aider** | — | Overnight | Docs, migrations, Jira/Confluence, non-breaking scripts | Batch tasks, anything running 1-6am |
+| **Cline-A** | Cline + Claude Sonnet | Terminal 1 | Backend — pipeline, gates, FFmpeg, assembly, HeyGen | Complex server logic, gate scoring, QA fixes, anything touching the production engine |
+| **Cline-B** | Cline + DeepSeek | Terminal 2 | Backend — API endpoints, data layer, job persistence | Endpoint additions, `data/jobs.json` schema, publish integration, formulaic surgical edits |
+| **Cursor** | Cursor + Claude Sonnet | Cursor IDE | Frontend — dashboard UI, AuraFlux React/Next.js, codebase Q&A, cleanup | `cwn_production.html`, `tools/`, `assets/`, WAVE_0 cleanup, future AuraFlux React UI |
+| **Aider** | Aider | Overnight | Docs, migrations, Jira/Confluence, non-breaking scripts | Batch tasks, anything running 1-6am |
 | **Claude Code** | Claude Sonnet 4.6 | This session | Architecture, handoffs, specs, diagnosis | Planning, root cause analysis, spec writing, roadmap, model routing decisions |
 
 **Model routing rationale:**
 - **Sonnet for Cline-A** — pipeline code is highest complexity and risk. Gate logic, FFmpeg, HeyGen, QA scoring all require strong reasoning.
 - **DeepSeek for Cline-B** — API endpoints and data layer are more formulaic. Surgical edits to well-defined patterns. Cost-efficient.
-- **GPT for Cline-C** — frontend is where GPT/Codex excels. React, UI components, CSS. `cwn_production.html` today, AuraFlux React UI in Phase 2.
+- **Cursor for frontend** — replaces Cline-C (GPT). Cursor has stronger inline edit, tab completion, and multi-file context for HTML/CSS/JS. Uses Cursor's built-in Claude Sonnet allowance — reduces direct Anthropic API spend. Also used for codebase-wide Q&A (`@codebase`) and WAVE_0 cleanup tasks (multi-edit mode).
+- **Why Cursor over Cline-C** — already paid membership, Claude Sonnet available via Cursor's plan, better tooling for long HTML files like `cwn_production.html` (4000+ lines), superior symbol search and file navigation.
 
 **Domain split (prevents file lock conflicts):**
 - Cline-A owns: `server.js` pipeline functions, `lib/`, assembly logic, gate scoring
 - Cline-B owns: `server.js` API endpoints only (app.get/app.post routes), `data/`, `logs/`
-- Cline-C owns: `cwn_production.html`, `tools/`, `assets/`, future `ui/` directory
+- Cursor owns: `cwn_production.html`, `tools/`, `assets/`, future `ui/` directory
 
 **Note:** When Cline-A and Cline-B both need `server.js`, Cline-A gets priority. Cline-B waits for Cline-A's lock to clear. API endpoint edits are always lower risk than pipeline function edits.
 
-**Jira assignment labels:** `cline_sonnet`, `cline_deepseek`, `cline_gpt` — use these in the Assignee field when tickets are created.
+**Jira assignment labels:** `cline_sonnet`, `cline_deepseek`, `cursor` — use these in the Assignee field when tickets are created. Update from `cline_gpt` → `cursor` on any open Jira tickets.
 
-**Handoff header convention:** Every handoff written by Claude Code will start with `→ Agent: Cline-A` (or B/C/Aider) so it's immediately clear who executes it.
+**Handoff header convention:** Every handoff written by Claude Code will start with `→ Agent: Cline-A` (or B/Cursor/Aider) so it's immediately clear who executes it.
+
+**Cursor workflow notes:**
+- Cursor reads CLAUDE.md and the relevant handoff file at the start of each session (same as Cline)
+- Use `@file cwn_production.html` to pull the dashboard into context before editing
+- Use `Cmd+K` for inline rewrites of specific functions
+- Use `@codebase` for exploratory questions across the full repo — faster than grepping manually
+- Cursor does NOT have MCP connections (HeyGen, Canva, Jira) — those stay in Claude Code sessions
 
 ---
 
