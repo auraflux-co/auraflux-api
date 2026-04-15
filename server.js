@@ -1424,7 +1424,7 @@ app.get('/health', async (req, res) => {
 // GET /jobs — return all persisted job cards for dashboard recovery after server restart
 // Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
 app.get('/jobs', (req, res) => {
-  // Filter: only return jobs that are actionable (not failed, not published)
+  // Filter: only return jobs that are actionable (not failed, not published, not dismissed)
   // Failed jobs restore as 'all_sent' which shows Assemble button on broken jobs
   const actionableJobs = Object.values(persistedJobs).filter(job => {
     const stage = job.stage || '';
@@ -1434,7 +1434,8 @@ app.get('/jobs', (req, res) => {
            stage !== 'published' &&
            qaOutcome !== 'fail' &&
            qaOutcome !== 'pre_flight_fail' &&
-           status !== 'failed';
+           status !== 'failed' &&
+           status !== 'dismissed';
   }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
   
   res.json({ ok: true, count: actionableJobs.length, jobs: actionableJobs });
@@ -1568,6 +1569,17 @@ app.post('/job/:id/advance', (req, res) => {
   }
 
   return res.json({ ok: false, error: `Job is at stage "${stage}" — cannot advance further (already at publish stage or unknown stage).` });
+});
+
+// POST /job/:id/dismiss — operator closed the job card on the dashboard.
+// Marks the job dismissed so restoreJobsFromServer() skips it on next page load.
+// Does NOT delete the record — preserves audit trail in data/jobs.json.
+app.post('/job/:id/dismiss', (req, res) => {
+  const { id } = req.params;
+  const card = persistedJobs[id];
+  if (!card) return res.status(404).json({ error: 'Job not found', id });
+  saveJobCard(id, { ...card, status: 'dismissed' });
+  res.json({ ok: true, id, status: 'dismissed' });
 });
 
 // Helper: detect current pipeline stage from persisted job card fields
@@ -4377,10 +4389,10 @@ app.post('/assemble',
               const overlayHiddenPath  = path.join(TMP_DIR, `newscast_overlay_hid_${Date.now()}.png`);
 
               await generateNewscastOverlay(overlayBase, overlayVisiblePath, activeStoryIndex, {
-                showLowerThird: true, hideSidebar: true, episodeNumber, activeCategory
+                showLowerThird: true, hideSidebar: true, episodeNumber, activeCategory, contentType
               });
               await generateNewscastOverlay(overlayBase, overlayHiddenPath, activeStoryIndex, {
-                showLowerThird: true, hideSidebar: true, episodeNumber, activeCategory
+                showLowerThird: true, hideSidebar: true, episodeNumber, activeCategory, contentType
               });
 
               // Three-input FFmpeg: [0:v]=video, [1:v]=visible overlay, [2:v]=hidden overlay
@@ -4425,7 +4437,7 @@ app.post('/assemble',
               const overlayBodyPath = path.join(TMP_DIR, `newscast_overlay_body_${Date.now()}.png`);
 
               await generateNewscastOverlay(overlayBase, overlayBodyPath, activeStoryIndex, {
-                showLowerThird: true, hideSidebar: false, episodeNumber, activeCategory
+                showLowerThird: true, hideSidebar: false, episodeNumber, activeCategory, contentType
               });
 
               const burnArgs = [
@@ -4464,7 +4476,7 @@ app.post('/assemble',
               const overlayHiddenPath = path.join(TMP_DIR, `newscast_overlay_hid_${Date.now()}.png`);
 
               await generateNewscastOverlay(overlayBase, overlayHiddenPath, activeStoryIndex, {
-                showLowerThird: false, hideSidebar: false, episodeNumber, activeCategory
+                showLowerThird: false, hideSidebar: false, episodeNumber, activeCategory, contentType
               });
 
               const burnArgs = [
@@ -4586,7 +4598,8 @@ app.post('/assemble',
             // NOTE: do NOT change lines 3800/3834 — those are short-form split-screen slots that legitimately need zoom-to-fill
             const vfFilter = isAvatarSeg
               ? 'scale=1920:1080:flags=lanczos,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
-              : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=fps=30' +
+              : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1880:1040,scale=1920:1080,fps=fps=30' +
+                // Twitch white trim fix: crop 40px from width/height (20px each edge) before final rescale
                 // Smoke 12 Fix 2: zoom-to-fill for all aspect ratios (portrait AJ clips fill without letterbox bars)
                 // Red 2: mask Al Jazeera bottom-right corner watermark with CWN navy box
                 // 120x80 region at (1780, 960) covers logo + 20px safety padding
@@ -6255,14 +6268,6 @@ app.get('/news/us-canada-videos', async (req, res) => {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
-
-// ── POST /news/generate-intro-card ───────────────────────────────
-// Scrapes header image from news article URL and generates 640×360 card
-// Extracts og:image or twitter:image meta tags for video overlay
-// Returns { cardPath, sourceUrl, imageUrl }
-//
-// Body: { articleUrl, storyIndex?, width?, height? }
-// width/height default to 640×360 (TV shape for OVERLAY_ZONE)
 
 // ── POST /twitch-clip-url ────────────────────────────────────────
 // Resolves a Twitch clip page URL or slug to a direct MP4 download URL.
@@ -8469,6 +8474,7 @@ const isClipMatchOnly = !hasStructuralFail &&
     if (scriptQA.outcome === 'pass' && heygenResult && !heygenResult.error) {
       const jobCard = {
         jobId,
+        scriptJobId: jobId,   // ← ADD THIS LINE — same value, explicit field for restore path
         contentType: type,
         date: dateStr,
         script,
@@ -11682,7 +11688,8 @@ async function generateChromeOverlayFromDirective(directive, context) {
     directiveToOverlayParams(directive, context);
   const outputPath = path.join(TMP_DIR, `chrome_directive_${Date.now()}.png`);
   await generateNewscastOverlay(storyData, outputPath, storyIndex, {
-    showLowerThird, hideSidebar, episodeNumber, activeCategory
+    showLowerThird, hideSidebar, episodeNumber, activeCategory,
+    contentType: context.contentType || 'news'
   });
   return outputPath;
 }
@@ -11699,7 +11706,8 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
     showLowerThird = false,
     hideSidebar = false,
     episodeNumber = null,
-    activeCategory = null
+    activeCategory = null,
+    contentType = 'news'
   } = options;
 
   const browser = await puppeteer.launch({
@@ -11717,6 +11725,22 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
 
     // Inject story data into the page
     await page.evaluate(async (data, activeIndex, opts) => {
+      // ── Per-show CSS skin injection ─────────────────────────────
+      const skinMap = {
+        twitch: { gold: '#6441A5', gold2: '#7d5bbe', red: '#6441A5', showName: 'TALK SOUP' },
+        nba:    { gold: '#17408B', gold2: '#1a4fa8', red: '#C9082A', showName: 'OTHER SIDE OF THE PILLOW' }
+      };
+      const skin = skinMap[opts.contentType];
+      if (skin) {
+        const root = document.documentElement;
+        root.style.setProperty('--gold',  skin.gold);
+        root.style.setProperty('--gold2', skin.gold2);
+        root.style.setProperty('--red',   skin.red);
+        const topBrand = document.querySelector('.top-brand');
+        if (topBrand) topBrand.textContent = skin.showName;
+      }
+      // News: no override needed — defaults in :root CSS are already correct
+
       // ── Lower-third visibility toggle ──────────────────────────
       const lowerThird = document.querySelector('.lower-third');
       if (lowerThird) {
@@ -11785,7 +11809,7 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
         }
       }
 
-    }, storyData, storyIndex, { showLowerThird, hideSidebar, episodeNumber, activeCategory });
+    }, storyData, storyIndex, { showLowerThird, hideSidebar, episodeNumber, activeCategory, contentType });
 
     // Wait for fonts to load + animations to settle
     await page.evaluate(() => document.fonts.ready);
