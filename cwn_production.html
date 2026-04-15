@@ -2032,7 +2032,27 @@ function restoreJobsFromServer(showAlert) {
 
         // Determine correct status based on server-side pipeline stage
         var serverStage = serverJob.stage || '';
-        var isAssembled = !!(serverJob.assembledAt || serverStage === 'assembled' || serverStage === 'published');
+        var qaOutcome   = serverJob.qaOutcome || '';
+
+        // Skip failed jobs — do not restore as actionable
+        // A failed job restored as 'all_sent' will show the Assemble button and re-run the broken assembly
+        var isFailed = serverStage === 'failed' ||
+                       qaOutcome === 'fail' ||
+                       qaOutcome === 'pre_flight_fail' ||
+                       serverJob.status === 'failed';
+        if (isFailed) {
+          cwn_log('[restore] Skipping failed job ' + serverJob.jobId + ' (stage: ' + serverStage + ', qaOutcome: ' + qaOutcome + ')', false);
+          return;
+        }
+
+        // Skip already-published jobs — nothing to restore
+        var isPublished = serverStage === 'published' || !!serverJob.publishedAt;
+        if (isPublished) {
+          cwn_log('[restore] Skipping published job ' + serverJob.jobId + ' — already complete', false);
+          return;
+        }
+
+        var isAssembled = !!(serverJob.assembledAt || serverStage === 'assembled');
         var restoredStatus = isAssembled ? 'completed' : 'all_sent';
 
         // If assembled, mark all avatar segments as completed so ASSEMBLE button appears

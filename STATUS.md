@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-14 (7:20 PM ET)
+**Last Updated:** 2026-04-14 (8:31 PM ET)
 **Branch:** main | **Latest Commit:** fix(news): implement smoke test bug fixes 1+2 + Gate 3 pre-flight check
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
@@ -34,6 +34,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline | **fix(dashboard): implement restore job filter fixes (CLINE_HANDOFF_RESTORE_JOB_FILTER.md)** — Two-layer fix: (1) dashboard restoreJobsFromServer() skips failed/published jobs before restoring as 'all_sent'; (2) server GET /jobs endpoint filters out failed/published jobs from persistedJobs. Prevents failed jobs with Assemble buttons reappearing on page load. | cwn_production.html, server.js | pending | 2026-04-14 8:32 PM ET |
 | Claude Code | **docs(assembly): verify News source clip zoom-to-fill is correct (Commit 4 of QA hardening)** — Verified source_clip vfFilter at server.js:4594 uses zoom-to-fill (increase+crop pattern) — Red 4 Fix 4 already correct. `decrease,pad` at 4593 is for avatar segs only (correct). Comment updated to confirm verification. No functional code change. All 4 QA hardening commits complete. | server.js, STATUS.md | — | 2026-04-14 ET |
 | Claude Code | **fix(gate3): add News TV card scene-context check to Gemini QA prompt (Commit 3 of QA hardening)** — EARLY TV CARD checklist item now specifies card is only correct on STORY_INTRO scenes for News; visible on non-intro → FAIL. qaPrompt context line adds News chrome rule to all 3 sample prompts. tvCardOnWrongScene: news && /TV CARD.*FAIL/i → hasCriticalFail=true. 15-point deduction added. Why-doc critical failures section updated. | server.js, STATUS.md | — | 2026-04-14 ET |
 | Claude Code | **fix(gate3): pass downloadedClipCount into geminiQACheck (Commit 2 of QA hardening)** — Updated geminiQACheck signature to accept downloadedClipCount. MIDDLE sample SOURCE CLIPS item now uses `downloadedClipCount ?? clipCount`. Gemini context line shows "X requested, Y downloaded". clipsExpectedButMissing: hard-fails when clipCount>0 AND effectiveClipCount===0. Gate 3 call site at server.js:5143 now passes downloadedClipCount. Two-layer defense with pre-flight from Commit 1. | server.js, STATUS.md | — | 2026-04-14 ET |
