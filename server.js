@@ -2177,8 +2177,8 @@ async function sendScriptToHeyGen(script, opts = {}) {
         }
       }],
       dimension: {
-        width: format === 'portrait' ? 1080 : 1920,
-        height: format === 'portrait' ? 1920 : 1080
+        width: format === 'portrait' ? 720 : 1280,
+        height: format === 'portrait' ? 1280 : 720
       },
       dynamic_duration: true,   // auto-adjust video length to match audio including SSML breaks
       test: false
@@ -4624,7 +4624,7 @@ app.post('/assemble',
             // Avatar segs: letterbox (decrease+pad) since HeyGen output is always clean 16:9
             // NOTE: do NOT change lines 3800/3834 — those are short-form split-screen slots that legitimately need zoom-to-fill
             const vfFilter = isAvatarSeg
-              ? 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
+              ? 'scale=1920:1080:flags=lanczos,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
               : "scale=w='if(gt(a,16/9),-2,1920)':h='if(gt(a,16/9),1080,-2)',crop=1920:1080,fps=fps=30" +
                 // Red 4 Fix 4: zoom-to-fill for News source clips (was letterbox — caused navy bars on portrait AJ videos)
                 // Red 2: mask Al Jazeera bottom-right corner watermark with CWN navy box
