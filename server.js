@@ -6891,7 +6891,7 @@ VOICE: Same as Twitch compilation (Norm MacDonald deadpan + Space Ghost non-sequ
 One clip. One streamer. One reaction. Done.
 
 COLD OPEN (spoken): "The Daily Update. ClipzWorld News."
-OUTRO (spoken): "Follow [streamer]. Link in description. Subscribe."
+OUTRO (spoken): "Subscribe. Appreciate you."
 
 STRICT RULES:
 - 40-60 words TOTAL spoken content
