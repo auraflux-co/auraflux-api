@@ -3015,7 +3015,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
     g('script-type-label').textContent = 'ERROR: server.js not running on ' + CFG.ffmpegUrl;
     if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ server.js not running — start it first</span>';
   };
-  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type) }));
+  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {} }));
 }
 
 function generateNBA() {
@@ -3220,7 +3220,7 @@ function generateTwitch() {
   var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
   var streamerNotes = parseStreamerNotes();
   CURRENT_TYPE = 'twitch';
-  CURRENT_META = { streamers: streamers, clipMp4Urls: {} };
+  CURRENT_META = { streamers: streamers, clipMp4Urls: {}, clipFailureReasons: {} };
   setGeneratingState('twitch-gen-status', 'TWITCH — Fetching ' + clipsPerStreamer + ' clip(s) per streamer...');
   var items = []; var done = 0;
   var droppedStreamers = []; // streamers returning 0 valid clips from dashboard fetch
@@ -3235,6 +3235,7 @@ function generateTwitch() {
         var u=JSON.parse(xU.responseText); var user=u.data&&u.data[0];
         if(!user){
           droppedStreamers.push({name: name, reason: 'Twitch user not found'});
+          CURRENT_META.clipFailureReasons[name] = { cause: 'STREAMER_NOT_FOUND', evidence: 'Twitch /helix/users returned empty data array' };
           console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch user not found');
           done++;check();return;
         }
@@ -3297,6 +3298,7 @@ function generateTwitch() {
                 ? 'No clips in 7d window'
                 : 'All ' + rawCount + ' clips had invalid titles (filtered by isRealTitle)';
               droppedStreamers.push({name: name, reason: reason});
+              CURRENT_META.clipFailureReasons[name] = { cause: rawCount === 0 ? 'TWITCH_API_EMPTY' : 'NO_CLIPS_AFTER_FILTERING', evidence: reason };
               console.warn('[generateTwitch] DROPPED: ' + name + ' — ' + reason);
             }
           }catch(e){}
@@ -3304,6 +3306,7 @@ function generateTwitch() {
         };
         xC.onerror=xC.ontimeout=function(){
           droppedStreamers.push({name: name, reason: 'Twitch clips API timeout/error'});
+          CURRENT_META.clipFailureReasons[name] = { cause: 'TWITCH_API_ERROR', evidence: 'Twitch clips API request failed' };
           console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch clips API timeout/error');
           done++;check();
         }; xC.send();
@@ -3311,6 +3314,7 @@ function generateTwitch() {
     };
     xU.onerror=xU.ontimeout=function(){
       droppedStreamers.push({name: name, reason: 'Twitch users API timeout/error'});
+      CURRENT_META.clipFailureReasons[name] = { cause: 'TWITCH_API_ERROR', evidence: 'Twitch users API request failed' };
       console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch users API timeout/error');
       done++;check();
     }; xU.send();
