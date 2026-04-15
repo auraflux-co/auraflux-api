@@ -45,6 +45,35 @@ cd ~/cwn-production && tail -f output/*.log
 
 **Note:** VectCut API is required for NBA/News intro card generation and short-form split-screen assembly
 
+## Agent Model Routing
+
+Each agent role is assigned to the model best matched to its task type. Claude Code owns this routing table — update it here when models change.
+
+| Agent | Model | Assigned Task Types |
+|---|---|---|
+| **Claude Code** | Claude Sonnet 4.6 | Architecture, diagnosis, spec writing, handoff authoring, roadmap docs, bug root cause analysis, multi-file reasoning |
+| **Cline-A** | DeepSeek | Surgical code edits with exact line targets — S/M handoffs with `grep -n` + 50-line read + precise before/after blocks |
+| **Cline-B** | DeepSeek | Parallel surgical edits on non-overlapping files when Cline-A is locked |
+
+**DeepSeek Cline rules (critical — context window is small):**
+- NEVER read `server.js` in full — it is 9000+ lines
+- Always `grep -n` for exact line numbers first, then read only 50 lines around target
+- If context resets mid-task, re-read STATUS.md only (not CLAUDE.md + all handoffs)
+- One handoff at a time — do not batch multiple handoffs in one session
+
+**Claude Code rules:**
+- Owns all spec writing, handoff authoring, and roadmap docs
+- Owns diagnosis when logs/QA reports need interpretation
+- Does NOT commit production code to server.js/cwn_production.html — writes handoffs for Cline instead
+- Exception: handoff docs, roadmap docs, STATUS.md updates are committed directly
+
+**Model upgrade path:**
+- When Cline-A/B models change, update this table
+- Gemini as Cline is off the table — did not perform well on code tasks
+- For Phase 3 pipeline model routing (script gen, QA gates), see `AUTONOMOUS_PRODUCTION_ROADMAP.md` section 3.3
+
+---
+
 ## Core Architecture
 
 ### AI Design Hierarchy (April 2026 Update)
