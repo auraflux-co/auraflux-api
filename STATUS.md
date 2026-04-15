@@ -1,7 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-15 (12:23 AM ET)
-**Branch:** main | **Latest Commit:** perf(heygen): render at 720p + Lanczos upscale in normalize — reduce compute cost
+**Last Updated:** 2026-04-15 (1:28 AM ET)
+**Branch:** main | **Latest Commit:** fix(news-chrome): TV card removed, portrait clip zoom-to-fill, category label, show name indent
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
@@ -34,6 +34,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline | **fix(news-chrome): smoke test 12 — TV card removed, portrait clip zoom-to-fill, category label, show name flush left** — (1) TV card removed entirely: `.tv-card` CSS, HTML div, `ChromeTvCardSchema`, `tvCard` in schema/directive/overlay/prompt. (2) Portrait source clip vfFilter corrected to `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=fps=30`. (3) Category fallback: removed `storyItem.source` from chain — was causing "AL JAZEERA" in NOW COVERING box. (4) Top bar reordered: `#show-info` first (flush left), then divider, then `.top-brand`. | tools/clipzworld_newscast.html, lib/chromeDirectives.js, server.js, STATUS.md | — | 2026-04-15 1:28 AM ET |
 | Cline | **perf(heygen): render at 720p + Lanczos upscale in normalize** — HeyGen avatar render dimensions reduced from 1080p to 720p (portrait: 1080×1920 → 720×1280, landscape: 1920×1080 → 1280×720). Avatar vfFilter Lanczos upscale: replaced `force_original_aspect_ratio=decrease` with `flags=lanczos` in normalize step so 720p frames are upscaled cleanly to 1920×1080 output. Reduces HeyGen compute cost with no visible quality loss at final 1080p output. | server.js, STATUS.md | — | 2026-04-15 12:23 AM ET |
 | Cline | **fix(assembly): log all failure paths to errors.jsonl** — Added `logError()` calls at all 4 assembly failure sites: (1) diskErr catch → `ASSEMBLY_DISK_FAIL`; (2) no-segments check → `ASSEMBLY_NO_SEGMENTS`; (3) pre-flight critical fail → `ASSEMBLY_PREFLIGHT_FAIL` with issues array; (4) top-level catch → `ASSEMBLY_CRASH` with stack trace. `logError()` was already imported at line 94 but never called — failures were in-memory only and wiped on server restart. Now all failures persist to `logs/errors.jsonl`. | server.js, STATUS.md | 90927a7 | 2026-04-15 12:18 AM ET |
 | Cline | **fix(assembly): disable broken retry endpoint** — `/assemble/:asmId/retry` now returns 501 with `retry_disabled` error. Old implementation commented out below stub. Dashboard `retryAssembly()` replaced with alert directing operator to use ASSEMBLE button instead (HeyGen segments cached in tmp/, re-used automatically, no credits spent). Root cause: retry path skipped Puppeteer chrome pipeline — TV card, lower-third flag, story sidebar all absent from smoke test 11 output. | server.js, cwn_production.html, STATUS.md | — | 2026-04-14 11:10 PM ET |

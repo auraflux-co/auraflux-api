@@ -288,7 +288,7 @@ async function startHeyGenPoller(jobId, card) {
           if (storyItem) {
             segmentData[segmentData.length - 1].cardData = {
               title:        storyItem.title    || `Story ${storyIdx + 1}`,
-              category:     storyItem.category || storyItem.source || 'WORLD NEWS',
+              category:     storyItem.category || 'WORLD NEWS',
               storyId:      `story_${storyIdx + 1}`,
               imageUrl:     storyItem.thumbnailUrl || storyItem.imageUrl || null,
               heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
@@ -1982,7 +1982,10 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   const MANUAL_THRESHOLD = opts.manualThreshold  || 60;
 
   // Detect critical failures from report text
-  const tickerMissing   = reports.filter(r => /TICKER:.*no/i.test(r)).length === reports.length;
+  // tickerMissing: only fire when Gemini gives a clear negative verdict.
+  // Do NOT match "TICKER: PASS — No scrolling ticker..." — the word "no" in a PASS description
+  // is not a failure. Look for explicit FAIL verdict OR bare "no" answer (the prompt format).
+  const tickerMissing   = reports.filter(r => /TICKER:\s*(FAIL|no\b)/i.test(r) && !/TICKER:\s*PASS/i.test(r)).length === reports.length;
   // outroCutOff: only fire when Gemini explicitly marks OUTRO as FAIL in the late sample.
   // Do NOT match "cuts off abruptly" — that phrase appears when the 20s sample window ends
   // before the video does, which is a false positive (sample window artifact, not a real problem).
@@ -1992,7 +1995,7 @@ SUMMARY: [one sentence. Either "No issues found — video looks clean." or descr
   // Fix 1: structural fail when clips requested but none downloaded; Gemini-detected fail when downloaded but not visible
   const effectiveClipCount = downloadedClipCount ?? clipCount;
   const clipsExpectedButMissing = (clipCount > 0 && effectiveClipCount === 0) ||
-    (effectiveClipCount > 0 && /SOURCE CLIPS:.*no/i.test(fullReport));
+    (effectiveClipCount > 0 && /SOURCE CLIPS:\s*(FAIL|no\b)/i.test(fullReport) && !/SOURCE CLIPS:\s*PASS/i.test(fullReport));
   const tvCardOnWrongScene  = contentType === 'news' && /TV CARD.*FAIL/i.test(fullReport);
   const hasCriticalFail = freezeDetected || tickerMissing || outroCutOff || avDeSync || clipsExpectedButMissing || tvCardOnWrongScene;
 
@@ -4353,7 +4356,8 @@ app.post('/assemble',
               newsEpNum = epC.news || 1;
             } catch(e) {}
             const episodeNumber = `Episode ${newsEpNum}`;
-            const activeCategory = cardData.category || 'WORLD NEWS';
+            const activeCategory = (cardData.category && cardData.category !== cardData.source)
+              ? cardData.category : 'WORLD NEWS';
 
             const overlayBase = {
               title: cardData.title || 'Breaking News Story',
@@ -4413,51 +4417,6 @@ app.post('/assemble',
               if (fs.existsSync(burnedPath) && fs.statSync(burnedPath).size > 10000) {
                 inputForTS = burnedPath;
                 log(asmId, `  📰 NEWS two-state overlay burned [${activeStoryIndex + 1}/${allStories.length}]: ${cardData.title || 'story'}`);
-              }
-              // ── Fix 8B: Second overlay burn — News TV card at OVERLAY_ZONE ──
-              if (cardData.heroImageUrl || cardData.imageUrl) {
-                try {
-                  const newsCardPngPath = path.join(TMP_DIR, `news_story_card_${Date.now()}.png`);
-                  const storyCardData = {
-                    title: cardData.title || 'Breaking News',
-                    category: cardData.category || 'WORLD NEWS',
-                    source: cardData.source || 'AL JAZEERA',
-                    heroImageUrl: cardData.heroImageUrl || cardData.imageUrl
-                  };
-                  await generateNewsStoryCardPNG(storyCardData, newsCardPngPath);
-                  const cardBurnedPath = inputForTS.replace('.mp4', '_news_card_burned.mp4');
-                  const zone = CONFIG.VISUAL_LAYOUTS.LONG_FORM.OVERLAY_ZONE;
-                  const burnArgs = [
-                    '-i', inputForTS,
-                    '-i', newsCardPngPath,
-                    '-filter_complex',
-                    `[1:v]scale=${zone.w}:${zone.h}:flags=lanczos[card];[0:v][card]overlay=x=${zone.x}:y=${zone.y}:enable='lte(t,${introDur})'[out]`,
-                    '-map', '[out]', '-map', '0:a',
-                    '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
-                    '-pix_fmt', 'yuv420p',
-                    '-c:a', 'aac', '-ar', '44100', '-y', cardBurnedPath
-                  ];
-                  await new Promise((res, rej) => {
-                    const proc = execFile(ffmpegPath(), burnArgs, { maxBuffer: 50 * 1024 * 1024 });
-                    let stderr = '';
-                    proc.stderr && proc.stderr.on('data', d => { stderr += d.toString(); });
-                    proc.on('close', code => {
-                      if (code === 0) res();
-                      else {
-                        console.error(`[news-card-burn] FFmpeg exit ${code}: ${stderr.slice(-300)}`);
-                        rej(new Error(`News TV card burn failed: ${code}`));
-                      }
-                    });
-                    proc.on('error', rej);
-                  });
-                  if (fs.existsSync(cardBurnedPath) && fs.statSync(cardBurnedPath).size > 10000) {
-                    inputForTS = cardBurnedPath;
-                    log(asmId, `  📺 NEWS TV card burned at OVERLAY_ZONE: ${cardData.title?.slice(0,40) || 'story'}`);
-                  }
-                  try { if (fs.existsSync(newsCardPngPath)) fs.unlinkSync(newsCardPngPath); } catch(e) {}
-                } catch(e) {
-                  log(asmId, `  ⚠️  News TV card burn failed (non-fatal): ${e.message}`);
-                }
               }
             } else if (isStoryBody) {
               // ── Fix 5c: SETUP/SUMMARY/REACTION — flag VISIBLE, sidebar VISIBLE ──
@@ -4625,12 +4584,10 @@ app.post('/assemble',
             // NOTE: do NOT change lines 3800/3834 — those are short-form split-screen slots that legitimately need zoom-to-fill
             const vfFilter = isAvatarSeg
               ? 'scale=1920:1080:flags=lanczos,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,fps=fps=30'
-              : "scale=w='if(gt(a,16/9),-2,1920)':h='if(gt(a,16/9),1080,-2)',crop=1920:1080,fps=fps=30" +
-                // Red 4 Fix 4: zoom-to-fill for News source clips (was letterbox — caused navy bars on portrait AJ videos)
+              : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=fps=30' +
+                // Smoke 12 Fix 2: zoom-to-fill for all aspect ratios (portrait AJ clips fill without letterbox bars)
                 // Red 2: mask Al Jazeera bottom-right corner watermark with CWN navy box
                 // 120x80 region at (1780, 960) covers logo + 20px safety padding
-                // Input-aware crop: scale=w='if(gt(a,16/9),-2,1920)':h='if(gt(a,16/9),1080,-2)' fixes
-                // negative crop offsets on portrait inputs (CLINE_HANDOFF_AUTO_ADVANCE_HARDENING)
                 (contentType === 'news' && !isAvatarSeg ? ',drawbox=x=1780:y=960:w=120:h=80:color=0x0d1424@1.0:t=fill' : '');
 
             // ── Fix 10: News source clips — silencedetect trim + 25s hard cap ──
@@ -7980,7 +7937,6 @@ Each scene object:
   "estimatedDurationSec": 15, // Required for avatar scenes
   "chrome": {
     "flag": { "visible": true, "text": "HEADLINE TEXT", "source": "Al Jazeera" },
-    "tvCard": { "visible": true, "imageUrl": "https://example.com/image.jpg", "headline": "Full Article Headline", "sourceName": "Al Jazeera" },
     "sidebar": { "visible": true, "activeIndex": 0, "cap": 5 },
     "ticker": { "visible": true },
     "logo": { "visible": true }
@@ -7996,7 +7952,6 @@ Each scene object:
   "clipMaxDurationSec": 25,
   "chrome": {
     "flag": { "visible": false },
-    "tvCard": { "visible": false },
     "sidebar": { "visible": false, "activeIndex": 0, "cap": 5 },
     "ticker": { "visible": true },
     "logo": { "visible": true }
@@ -8004,11 +7959,11 @@ Each scene object:
 }
 
 Layout rules:
-- Scene 1 (cold open / intro): flag.visible=false, tvCard.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
-- First avatar scene of each story: flag.visible=true, tvCard.visible=true, sidebar.visible=true, ticker.visible=true, logo.visible=true
-- Subsequent avatar scenes of same story: flag.visible=true, tvCard.visible=false, sidebar.visible=true, ticker.visible=true, logo.visible=true
-- source_clip scenes: flag.visible=false, tvCard.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
-- Final outro scene: flag.visible=false, tvCard.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
+- Scene 1 (cold open / intro): flag.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
+- First avatar scene of each story: flag.visible=true, sidebar.visible=true, ticker.visible=true, logo.visible=true
+- Subsequent avatar scenes of same story: flag.visible=true, sidebar.visible=true, ticker.visible=true, logo.visible=true
+- source_clip scenes: flag.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
+- Final outro scene: flag.visible=false, sidebar.visible=false, ticker.visible=true, logo.visible=true
 - activeIndex: 0-based index of the current story (0 for cold open/outro)
 - The "id" field must exactly match the scene label used in assembly (e.g. "scene_01", "scene_02", etc.)
 
@@ -11711,12 +11666,11 @@ async function burnSceneChromeFromDirective(scene, inputTs, asmId, jobId) {
 // Converts a ChromeDirectiveSchema object into generateNewscastOverlay() params
 // and renders the overlay PNG. Returns the output path.
 async function generateChromeOverlayFromDirective(directive, context) {
-  // Red 4 Fix 3b: destructure tvCard from directiveToOverlayParams and pass it through
-  const { storyData, storyIndex, showLowerThird, hideSidebar, episodeNumber, activeCategory, tvCard } =
+  const { storyData, storyIndex, showLowerThird, hideSidebar, episodeNumber, activeCategory } =
     directiveToOverlayParams(directive, context);
   const outputPath = path.join(TMP_DIR, `chrome_directive_${Date.now()}.png`);
   await generateNewscastOverlay(storyData, outputPath, storyIndex, {
-    showLowerThird, hideSidebar, episodeNumber, activeCategory, tvCard
+    showLowerThird, hideSidebar, episodeNumber, activeCategory
   });
   return outputPath;
 }
@@ -11733,8 +11687,7 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
     showLowerThird = false,
     hideSidebar = false,
     episodeNumber = null,
-    activeCategory = null,
-    tvCard = null  // Red 4 Fix 3c: accept tvCard for TV card overlay injection
+    activeCategory = null
   } = options;
 
   const browser = await puppeteer.launch({
@@ -11820,31 +11773,7 @@ async function generateNewscastOverlay(storyData, outputPath, storyIndex = 0, op
         }
       }
 
-      // ── Red 4 Fix 3c: TV card injection ────────────────────────
-      const tvCardEl = document.querySelector('.tv-card');
-      if (tvCardEl) {
-        if (opts.tvCard && opts.tvCard.headline) {
-          tvCardEl.style.display = 'block';
-          const tvCardImg = tvCardEl.querySelector('.tv-card-image');
-          if (tvCardImg && opts.tvCard && opts.tvCard.imageUrl) {
-            tvCardImg.src = opts.tvCard.imageUrl;
-            // Wait for image to load (with timeout). If 404 or timeout, card shows navy bg — acceptable.
-            await new Promise(resolve => {
-              if (tvCardImg.complete && tvCardImg.naturalWidth > 0) { resolve(); return; }
-              tvCardImg.onload = resolve;
-              tvCardImg.onerror = resolve; // accept failed load
-              setTimeout(resolve, 3000);  // 3s hard timeout
-            });
-          }
-          const tvCardHeadline = tvCardEl.querySelector('.tv-card-headline');
-          if (tvCardHeadline) tvCardHeadline.textContent = opts.tvCard.headline;
-          const tvCardSource = tvCardEl.querySelector('.tv-card-source');
-          if (tvCardSource && opts.tvCard.sourceName) tvCardSource.textContent = opts.tvCard.sourceName;
-        } else {
-          tvCardEl.style.display = 'none';
-        }
-      }
-    }, storyData, storyIndex, { showLowerThird, hideSidebar, episodeNumber, activeCategory, tvCard });
+    }, storyData, storyIndex, { showLowerThird, hideSidebar, episodeNumber, activeCategory });
 
     // Wait for fonts to load + animations to settle
     await page.evaluate(() => document.fonts.ready);
