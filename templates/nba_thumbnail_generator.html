@@ -6,403 +6,158 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#0a0e1a; color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; }
-#ctrl { background:#111827; border-bottom:3px solid #c7af4f; padding:14px 20px; display:flex; align-items:center; gap:14px; position:relative; z-index:999; }
+
+#ctrl { background:#111827; border-bottom:3px solid #c7af4f; padding:14px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; position:relative; z-index:999; }
 #ctrl label { font-size:11px; font-weight:700; color:rgba(199,175,79,0.7); letter-spacing:2px; }
-#gid { background:#1a2538; border:1px solid rgba(199,175,79,0.3); color:#fff; font-family:monospace; font-size:14px; padding:7px 12px; border-radius:4px; width:180px; }
+.ctrl-field { background:#1a2538; border:1px solid rgba(199,175,79,0.3); color:#fff; font-family:monospace; font-size:14px; padding:7px 12px; border-radius:4px; }
+#ep-num  { width:70px; }
+#ep-date { width:160px; }
+#matchups { width:420px; }
 #gen-btn { background:#c7af4f; color:#0a0e1a; font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:3px; padding:8px 22px; border:none; border-radius:4px; cursor:pointer; }
 #gen-btn:hover { background:#f0d060; }
-#status { font-size:11px; color:rgba(255,255,255,0.4); font-family:monospace; }
-#thumb { width:1280px; height:720px; position:relative; overflow:hidden; background:#060a12; z-index:1; }
-.tbg { position:absolute; inset:0; }
-.tbg-static { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(0.4) saturate(0.7) blur(8px); transform:scale(1.05); z-index:0; }
-.tbg-overlay { position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.75) 100%); z-index:1; }
-.tfloor { position:absolute; bottom:0; left:0; right:0; height:300px; overflow:hidden; }
-.tfloor::before { content:''; position:absolute; bottom:0; left:-30%; right:-30%; height:480px; background:repeating-linear-gradient(90deg,rgba(255,255,255,0.025) 0,rgba(255,255,255,0.025) 1px,transparent 1px,transparent 64px),repeating-linear-gradient(0deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 44px); transform:perspective(280px) rotateX(72deg); transform-origin:bottom center; }
-.tfloor::after { content:''; position:absolute; bottom:0; left:0; right:0; height:180px; background:linear-gradient(0deg,#060a12 0%,transparent 100%); }
-#panel-a { position:absolute; top:0; left:0; bottom:0; width:500px; clip-path:polygon(0 0,100% 0,68% 100%,0 100%); }
-#panel-h { position:absolute; top:0; right:0; bottom:0; width:500px; clip-path:polygon(32% 0,100% 0,100% 100%,0 100%); }
-.vl { position:absolute; top:0; bottom:0; width:1px; background:linear-gradient(180deg,transparent,rgba(199,175,79,0.5) 50%,transparent); }
-#team-a { position:absolute; left:30px; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:22px; }
-#team-h { position:absolute; right:30px; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:22px; flex-direction:row-reverse; }
-.logo-wrap { width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; border:3px solid rgba(255,255,255,0.15); }
-.logo-wrap img { width:120px; height:120px; object-fit:contain; }
-.tcity { font-size:17px; font-weight:700; letter-spacing:6px; margin-bottom:2px; }
-.tname { font-family:'Bebas Neue',sans-serif; font-size:76px; line-height:0.9; color:#fff; text-shadow:0 4px 30px rgba(0,0,0,0.8); }
-.trec { font-size:14px; font-weight:600; letter-spacing:2px; margin-top:8px; opacity:0.55; }
-.htext { text-align:right; }
-.tctr { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:12px; z-index:10; }
-.vs-ring { width:118px; height:118px; border-radius:50%; background:radial-gradient(circle,#1a2840,#0d1524); border:3px solid rgba(199,175,79,0.55); box-shadow:0 0 60px rgba(199,175,79,0.28); display:flex; align-items:center; justify-content:center; }
-.vs-lbl { font-family:'Bebas Neue',sans-serif; font-size:46px; color:#c7af4f; letter-spacing:4px; }
-.live-pill { display:flex; align-items:center; gap:8px; background:rgba(192,30,30,0.92); padding:6px 22px; border-radius:3px; }
-.live-dot { width:8px; height:8px; border-radius:50%; background:#fff; }
-.live-txt { font-family:'Bebas Neue',sans-serif; font-size:17px; color:#fff; letter-spacing:5px; }
-#tip-time { font-family:'Bebas Neue',sans-serif; font-size:34px; color:#c7af4f; letter-spacing:4px; }
-#game-sub { font-size:13px; font-weight:600; color:rgba(255,255,255,0.38); letter-spacing:4px; text-align:center; }
-.brand { position:absolute; top:22px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.72); border:1px solid rgba(199,175,79,0.45); color:#c7af4f; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:8px; padding:6px 24px; border-radius:3px; white-space:nowrap; }
-#game-tag { position:absolute; top:64px; left:50%; transform:translateX(-50%); color:rgba(199,175,79,0.65); font-size:11px; font-weight:700; letter-spacing:4px; white-space:nowrap; }
-#copy-wrap { background:#111827; border-top:2px solid rgba(199,175,79,0.2); padding:20px; display:flex; gap:16px; position:relative; z-index:999; }
-.ccol { display:flex; flex-direction:column; gap:8px; flex:1; }
-.ccol.wide { flex:2; }
-.clbl { font-size:10px; font-weight:700; color:rgba(199,175,79,0.6); letter-spacing:3px; }
-.cbox { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:4px; padding:12px; font-family:Arial,sans-serif; font-size:12px; color:rgba(255,255,255,0.8); line-height:1.6; white-space:pre-wrap; min-height:80px; }
-.cbtn { background:rgba(199,175,79,0.15); border:1px solid rgba(199,175,79,0.3); color:#c7af4f; font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; padding:6px 16px; border-radius:3px; cursor:pointer; align-self:flex-start; }
-.cbtn:hover { background:rgba(199,175,79,0.25); }
+#ep-inc  { background:rgba(199,175,79,0.15); border:1px solid rgba(199,175,79,0.3); color:#c7af4f; font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; padding:7px 14px; border-radius:4px; cursor:pointer; }
+#ep-inc:hover { background:rgba(199,175,79,0.25); }
+#status  { font-size:11px; color:rgba(255,255,255,0.4); font-family:monospace; }
 
-/* SEO Status Bar */
-.seo-bar { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:4px; margin-top:8px; font-family:Arial,sans-serif; font-size:12px; cursor:pointer; }
-.seo-bar.all-pass { background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); color:#2ecc71; }
-.seo-bar.has-warn { background:rgba(243,156,18,0.1); border:1px solid rgba(243,156,18,0.3); color:#f39c12; }
-.seo-bar.has-fail { background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); color:#e74c3c; }
-.seo-bar-icon { font-size:14px; font-weight:900; }
-.seo-bar-txt { flex:1; font-weight:700; }
-.seo-bar-detail { font-size:10px; opacity:0.7; }
-.seo-issues { background:#0d1524; border:1px solid rgba(199,175,79,0.1); border-radius:4px; padding:10px 14px; margin-top:4px; display:none; }
-.seo-issues.show { display:block; }
-.seo-issue-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:11px; font-family:Arial,sans-serif; border-bottom:1px solid rgba(255,255,255,0.04); }
-.seo-issue-row:last-child { border-bottom:none; }
-.seo-badge { font-size:9px; font-weight:900; padding:2px 6px; border-radius:2px; flex-shrink:0; }
-.seo-badge.fail { background:rgba(231,76,60,0.2); color:#e74c3c; }
-.seo-badge.warn { background:rgba(243,156,18,0.2); color:#f39c12; }
+/* Thumbnail canvas */
+#thumb { width:1280px; height:720px; position:relative; overflow:hidden; background:#060a12; z-index:1; }
+.tbg-static { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(0.55) saturate(0.8); z-index:0; }
+.tbg-overlay { position:absolute; inset:0; background:linear-gradient(160deg,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.80) 100%); z-index:1; }
+.tbg-glow    { position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 50% 60%, rgba(199,175,79,0.08) 0%, transparent 70%); z-index:2; }
+
+/* Brand bar top-center */
+.t-brand { position:absolute; top:28px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); border:1px solid rgba(199,175,79,0.5); color:#c7af4f; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:8px; padding:6px 28px; border-radius:3px; white-space:nowrap; z-index:10; }
+
+/* Episode badge top-right */
+.t-epbadge { position:absolute; top:28px; right:36px; background:rgba(199,175,79,0.12); border:1px solid rgba(199,175,79,0.45); color:#c7af4f; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:4px; padding:6px 18px; border-radius:3px; z-index:10; }
+
+/* Bottom content block */
+.t-content { position:absolute; bottom:0; left:0; right:0; padding:0 48px 44px; z-index:10; }
+.t-label   { font-size:15px; font-weight:900; color:#c7af4f; letter-spacing:6px; margin-bottom:10px; }
+.t-headline { font-family:'Bebas Neue',sans-serif; font-size:82px; line-height:0.88; color:#fff; text-shadow:0 4px 32px rgba(0,0,0,0.9); max-width:1100px; }
+.t-matchups { font-size:22px; font-weight:700; color:rgba(255,255,255,0.65); letter-spacing:3px; margin-top:16px; }
+.t-date     { font-size:15px; font-weight:600; color:rgba(199,175,79,0.55); letter-spacing:4px; margin-top:8px; }
+
+/* Gold accent line */
+.t-line { position:absolute; bottom:0; left:0; right:0; height:4px; background:linear-gradient(90deg, transparent, #c7af4f 30%, #c7af4f 70%, transparent); z-index:10; }
+
+/* Below thumbnail */
+#thumb-wrap { overflow:auto; }
+.thumb-scaler { display:inline-block; transform-origin:top left; }
+#hint { background:#111827; border-top:2px solid rgba(199,175,79,0.15); padding:14px 20px; font-size:12px; color:rgba(255,255,255,0.35); font-family:monospace; letter-spacing:1px; }
 </style>
 </head>
 <body>
+
 <div id="ctrl">
-  <label>GAME ID</label>
-  <input id="gid" type="text" value="401810957">
+  <label>EP #</label>
+  <input id="ep-num" class="ctrl-field" type="number" min="1" value="1">
+  <button id="ep-inc" title="Save + increment episode number">+1 AFTER PUBLISH</button>
+
+  <label>DATE</label>
+  <input id="ep-date" class="ctrl-field" type="text">
+
+  <label>MATCHUPS</label>
+  <input id="matchups" class="ctrl-field" type="text" placeholder="HEAT vs MAGIC · WARRIORS vs GRIZZLIES">
+
   <button id="gen-btn">GENERATE</button>
-  <span id="status">Enter a game ID and click Generate</span>
+  <span id="status">Fill in matchups and click Generate</span>
 </div>
 
-<div id="thumb">
-  <img class="tbg-static" src="assets/nba_long_form thumbnail.jpg" alt="">
-  <div class="tbg-overlay"></div>
-  <div class="tbg" id="tbg"></div>
-  <div class="tfloor"></div>
-  <div id="panel-a"></div>
-  <div id="panel-h"></div>
-  <div class="vl" style="left:380px"></div>
-  <div class="vl" style="right:380px"></div>
-  <div id="team-a">
-    <div class="logo-wrap"><img id="a-logo" src="" alt=""></div>
-    <div>
-      <div class="tcity" id="a-city"></div>
-      <div class="tname" id="a-name">AWAY</div>
-      <div class="trec" id="a-rec"></div>
-    </div>
-  </div>
-  <div id="team-h">
-    <div class="logo-wrap"><img id="h-logo" src="" alt=""></div>
-    <div class="htext">
-      <div class="tcity" id="h-city"></div>
-      <div class="tname" id="h-name">HOME</div>
-      <div class="trec" id="h-rec"></div>
-    </div>
-  </div>
-  <div class="brand">OTHER SIDE OF THE PILLOW</div>
+<div id="thumb-wrap">
+  <div class="thumb-scaler" id="thumb-scaler">
+    <div id="thumb">
+      <img class="tbg-static" id="tbg-img"
+        src="https://a2.espncdn.com/combiner/i?img=%2Fphoto%2F2026%2F0414%2FNEW_NBAplayin16x9.png&w=1280&format=jpg"
+        crossorigin="anonymous" alt="">
+      <div class="tbg-overlay"></div>
+      <div class="tbg-glow"></div>
 
-  <div id="game-tag">NBA - LIVE COVERAGE</div>
-  <div class="tctr">
-    <div class="live-pill"><div class="live-dot"></div><div class="live-txt">LIVE TONIGHT</div></div>
-    <div class="vs-ring"><div class="vs-lbl">VS</div></div>
-    <div id="tip-time">-- PM ET</div>
-    <div id="game-sub">LOADING...</div>
+      <div class="t-brand">OTHER SIDE OF THE PILLOW</div>
+      <div class="t-epbadge" id="t-epbadge">EP 1</div>
+
+      <div class="t-content">
+        <div class="t-label">NBA PLAYOFFS REACTION</div>
+        <div class="t-headline" id="t-headline">TONIGHT'S GAMES</div>
+        <div class="t-matchups" id="t-matchups">—</div>
+        <div class="t-date" id="t-date">—</div>
+      </div>
+
+      <div class="t-line"></div>
+    </div>
   </div>
 </div>
 
-<div id="copy-wrap">
-  <div class="ccol">
-    <div class="clbl">TITLE</div>
-    <div class="cbox" id="c-title">Generate a game to see title...</div>
-    <button class="cbtn" id="copy-title-btn">COPY TITLE</button>
-  </div>
-  <div class="ccol wide">
-    <div class="clbl">DESCRIPTION + HASHTAGS</div>
-    <div class="cbox" id="c-desc" style="min-height:160px">Generate a game to see description...</div>
-    <button class="cbtn" id="copy-desc-btn">COPY DESCRIPTION</button>
-  </div>
+<div id="hint">
+  📸 Screenshot the thumbnail above at 1280×720 · Upload directly to YouTube ·
+  Click "+1 AFTER PUBLISH" once you've uploaded to increment the episode counter
 </div>
 
 <script>
-function g(id) { return document.getElementById(id); }
+var EP_KEY   = 'cwn_nba_ep_num';
+var DATE_KEY = 'cwn_nba_last_date';
 
-function doCopy(id) {
-  var el = g(id);
-  var ta = document.createElement('textarea');
-  ta.value = el.textContent;
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  document.body.removeChild(ta);
-  el.style.borderColor = '#c7af4f';
-  setTimeout(function() { el.style.borderColor = ''; }, 800);
+function todayStr() {
+  return new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
 }
 
-function fmtTime(str) {
-  var d = new Date(str);
-  var h = d.getHours(); var m = d.getMinutes();
-  var ap = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  return h + ':' + (m < 10 ? '0' + m : m) + ' ' + ap + ' ET';
+function shortDate() {
+  return new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }).toUpperCase();
 }
 
-function hexRgb(hex) {
-  hex = (hex || '').replace('#', '');
-  if (hex.length !== 6) return '100,100,100';
-  return parseInt(hex.slice(0,2),16) + ',' + parseInt(hex.slice(2,4),16) + ',' + parseInt(hex.slice(4,6),16);
+function scaleThumb() {
+  var wrap  = document.getElementById('thumb-wrap');
+  var scaler = document.getElementById('thumb-scaler');
+  var avail  = wrap.clientWidth || window.innerWidth;
+  var scale  = Math.min(1, (avail - 40) / 1280);
+  scaler.style.transform = 'scale(' + scale + ')';
+  scaler.style.width  = (1280 * scale) + 'px';
+  scaler.style.height = (720  * scale) + 'px';
+  wrap.style.height   = (720  * scale) + 'px';
 }
 
-var SEASON_LEADERS = {
-  ATL: { name:'T. Young',              espnId:'4278128', ppg:'23.1', rpg:'3.2', apg:'11.4' },
-  BOS: { name:'J. Brown',              espnId:'3917376', ppg:'27.2', rpg:'6.8', apg:'3.5'  },
-  BKN: { name:'C. Thomas',             espnId:'4066890', ppg:'21.3', rpg:'3.0', apg:'5.4'  },
-  CHA: { name:'L. Ball',               espnId:'4066421', ppg:'14.9', rpg:'4.1', apg:'8.0'  },
-  CHI: { name:'Z. LaVine',             espnId:'3032977', ppg:'24.1', rpg:'4.4', apg:'4.2'  },
-  CLE: { name:'D. Garland',            espnId:'4431679', ppg:'21.7', rpg:'3.0', apg:'7.0'  },
-  DAL: { name:'K. Irving',             espnId:'6442',    ppg:'25.8', rpg:'5.0', apg:'5.2'  },
-  DEN: { name:'N. Jokic',              espnId:'3112335', ppg:'29.6', rpg:'12.7',apg:'10.2' },
-  DET: { name:'C. Cunningham',         espnId:'4432816', ppg:'26.0', rpg:'4.4', apg:'9.2'  },
-  GSW: { name:'S. Curry',              espnId:'3975',    ppg:'24.5', rpg:'4.4', apg:'6.5'  },
-  HOU: { name:'A. Sengun',             espnId:'4432811', ppg:'21.1', rpg:'9.3', apg:'5.0'  },
-  IND: { name:'T. Haliburton',         espnId:'4432174', ppg:'20.4', rpg:'3.9', apg:'9.2'  },
-  LAC: { name:'J. Harden',             espnId:'3992',    ppg:'20.5', rpg:'5.0', apg:'8.7'  },
-  LAL: { name:'L. James',              espnId:'1966',    ppg:'23.5', rpg:'8.1', apg:'8.3'  },
-  MEM: { name:'J. Morant',             espnId:'4279888', ppg:'22.8', rpg:'5.3', apg:'8.1'  },
-  MIA: { name:'T. Herro',              espnId:'4278128', ppg:'24.5', rpg:'5.0', apg:'4.8'  },
-  MIL: { name:'G. Antetokounmpo',      espnId:'3032977', ppg:'32.7', rpg:'11.5',apg:'5.9'  },
-  MIN: { name:'A. Edwards',            espnId:'4431682', ppg:'27.4', rpg:'5.4', apg:'5.1'  },
-  NOP: { name:'Z. Williams',           espnId:'4278129', ppg:'19.0', rpg:'4.5', apg:'2.8'  },
-  NYK: { name:'J. Brunson',            espnId:'3934672', ppg:'26.3', rpg:'3.1', apg:'6.7'  },
-  OKC: { name:'S. Gilgeous-Alexander', espnId:'4278073', ppg:'32.3', rpg:'5.1', apg:'6.4'  },
-  ORL: { name:'P. Banchero',           espnId:'4432985', ppg:'25.6', rpg:'7.9', apg:'5.4'  },
-  PHI: { name:'J. Embiid',             espnId:'3059318', ppg:'24.6', rpg:'8.0', apg:'3.1'  },
-  PHX: { name:'K. Durant',             espnId:'3202',    ppg:'26.8', rpg:'7.3', apg:'4.0'  },
-  POR: { name:'S. Sharpe',             espnId:'4700724', ppg:'20.0', rpg:'5.5', apg:'3.5'  },
-  SAC: { name:'D. Fox',                espnId:'4065663', ppg:'24.7', rpg:'3.8', apg:'6.2'  },
-  SAS: { name:'V. Wembanyama',         espnId:'4898807', ppg:'24.3', rpg:'10.7',apg:'3.9'  },
-  TOR: { name:'I. Quickley',           espnId:'4432174', ppg:'18.6', rpg:'3.5', apg:'6.4'  },
-  UTA: { name:'L. Markkanen',          espnId:'4065682', ppg:'23.2', rpg:'8.2', apg:'2.0'  },
-  WAS: { name:'K. Kuzma',              espnId:'4066328', ppg:'22.5', rpg:'6.5', apg:'3.5'  }
-};
-
-function doGenerate() {
-  var gameId = g('gid').value.trim();
-  if (!gameId) return;
-  g('status').textContent = 'Fetching game ' + gameId + '...';
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=' + gameId, true);
-  xhr.timeout = 10000;
-  xhr.onload = function() {
-    if (xhr.status !== 200) { g('status').textContent = 'ESPN error ' + xhr.status; return; }
-    try {
-      var data = JSON.parse(xhr.responseText);
-      renderGame(data);
-    } catch(e) {
-      g('status').textContent = 'Parse error: ' + e.message;
-    }
-  };
-  xhr.onerror = function() { g('status').textContent = 'Network error'; };
-  xhr.ontimeout = function() { g('status').textContent = 'Timeout'; };
-  xhr.send();
+function loadState() {
+  var ep = parseInt(localStorage.getItem(EP_KEY), 10) || 1;
+  document.getElementById('ep-num').value  = ep;
+  document.getElementById('ep-date').value = todayStr();
 }
 
-function renderGame(data) {
-  var hc = data.header && data.header.competitions && data.header.competitions[0];
-  var comps = (hc && hc.competitors) || [];
-  var away = {team:{}}, home = {team:{}};
-  for (var i = 0; i < comps.length; i++) {
-    if (comps[i].homeAway === 'away') away = comps[i];
-    if (comps[i].homeAway === 'home') home = comps[i];
-  }
+function render() {
+  var ep       = parseInt(document.getElementById('ep-num').value, 10) || 1;
+  var dateStr  = document.getElementById('ep-date').value || todayStr();
+  var matchups = document.getElementById('matchups').value.trim();
 
-  var bst = (data.boxscore && data.boxscore.teams) || [];
-  var aColor = '1d428a', hColor = 'c41311';
-  var aAbbr = (away.team && away.team.abbreviation) || 'AWAY';
-  var hAbbr = (home.team && home.team.abbreviation) || 'HOME';
-  for (var t = 0; t < bst.length; t++) {
-    var bt = bst[t].team || {};
-    if (bt.abbreviation === aAbbr && bt.color) aColor = bt.color;
-    if (bt.abbreviation === hAbbr && bt.color) hColor = bt.color;
-  }
+  document.getElementById('t-epbadge').textContent  = 'EP ' + ep;
+  document.getElementById('t-matchups').textContent = matchups || '—';
+  document.getElementById('t-date').textContent     = dateStr.toUpperCase();
 
-  g('panel-a').style.background = 'linear-gradient(120deg,#' + aColor + '66 0%,#' + aColor + '22 60%,transparent 100%)';
-  g('panel-h').style.background = 'linear-gradient(240deg,#' + hColor + '66 0%,#' + hColor + '22 60%,transparent 100%)';
-  g('tbg').style.background = 'radial-gradient(ellipse 70% 90% at 15% 50%,rgba(' + hexRgb(aColor) + ',0.25) 0%,transparent 60%),radial-gradient(ellipse 70% 90% at 85% 50%,rgba(' + hexRgb(hColor) + ',0.2) 0%,transparent 60%),transparent';
+  // Persist ep number (not incremented yet — user clicks +1 after publishing)
+  localStorage.setItem(EP_KEY, ep);
 
-  var aLoc = (away.team && away.team.location) || '';
-  var aNick = (away.team && away.team.name) || '';
-  var aRec = (away.records && away.records[0] && away.records[0].summary) || '';
-  g('a-city').textContent = aLoc.toUpperCase();
-  g('a-city').style.color = 'rgba(' + hexRgb(aColor) + ',0.8)';
-  g('a-name').textContent = aNick.toUpperCase();
-  g('a-rec').textContent = aRec;
-  g('a-logo').src = 'https://a.espncdn.com/i/teamlogos/nba/500/' + aAbbr.toLowerCase() + '.png';
-
-  var hLoc = (home.team && home.team.location) || '';
-  var hNick = (home.team && home.team.name) || '';
-  var hRec = (home.records && home.records[0] && home.records[0].summary) || '';
-  g('h-city').textContent = hLoc.toUpperCase();
-  g('h-city').style.color = 'rgba(' + hexRgb(hColor) + ',0.8)';
-  g('h-name').textContent = hNick.toUpperCase();
-  g('h-rec').textContent = hRec;
-  g('h-logo').src = 'https://a.espncdn.com/i/teamlogos/nba/500/' + hAbbr.toLowerCase() + '.png';
-
-  var gi = data.gameInfo || {};
-  var venue = (gi.venue && gi.venue.fullName) || '';
-  var city = (gi.venue && gi.venue.address && gi.venue.address.city) || '';
-  g('tip-time').textContent = hc && hc.date ? fmtTime(hc.date) : '-- ET';
-  g('game-sub').textContent = venue.toUpperCase() + (city ? ' - ' + city.toUpperCase() : '');
-  g('game-tag').textContent = 'NBA - ' + (hc && hc.date ? new Date(hc.date).toLocaleDateString([],{month:'long',day:'numeric',year:'numeric'}).toUpperCase() : '');
-
-  var injData = data.injuries || [];
-  var aOuts = [], hOuts = [];
-  for (var ii = 0; ii < injData.length; ii++) {
-    var injT = injData[ii];
-    var tAb = (injT.team && injT.team.abbreviation) || '';
-    var ps = injT.injuries || [];
-    for (var ji = 0; ji < ps.length; ji++) {
-      if ((ps[ji].status || '').toLowerCase() === 'out') {
-        var pn = (ps[ji].athlete && ps[ji].athlete.shortName) || '';
-        if (tAb === aAbbr) aOuts.push(pn);
-        if (tAb === hAbbr) hOuts.push(pn);
-      }
-    }
-  }
-
-  buildCopy(data, aAbbr, hAbbr, aRec, hRec, venue, city, hc, aOuts, hOuts);
-  g('status').textContent = 'Done! Screenshot the thumbnail above.';
+  document.getElementById('status').textContent = 'EP ' + ep + ' — ' + dateStr + ' — screenshot when ready';
 }
 
+document.getElementById('gen-btn').addEventListener('click', render);
 
-function runSeoCheck(title, desc, opts) {
-  opts = opts || {};
-  var checks = [];
-  var tLen = (title || '').length;
-  var dLen = (desc || '').length;
-  var firstLine = (desc || '').split('\n')[0] || '';
-  var hashCount = ((desc || '').match(/#\w+/g) || []).length;
-  var hasTimestamps = (desc || '').indexOf('00:00') > -1;
-  var hasCTA = (desc || '').toLowerCase().indexOf('subscribe') > -1;
+document.getElementById('ep-inc').addEventListener('click', function() {
+  var ep  = parseInt(document.getElementById('ep-num').value, 10) || 1;
+  var next = ep + 1;
+  document.getElementById('ep-num').value = next;
+  localStorage.setItem(EP_KEY, next);
+  document.getElementById('status').textContent = 'Saved — next episode is EP ' + next;
+});
 
-  checks.push({ label:'Title length', pass:tLen<=60, warn:tLen>60&&tLen<=100, fail:tLen>100,
-    msg:tLen<=60?'Perfect ('+tLen+' chars)':tLen<=100?'OK but shorter is better ('+tLen+' chars)':'Too long, trim to under 100 ('+tLen+' chars)' });
+// Allow Enter key in matchups field
+document.getElementById('matchups').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') render();
+});
 
-  if (opts.teams && opts.teams.length >= 2) {
-    var both = title.indexOf(opts.teams[0])>-1 && title.indexOf(opts.teams[1])>-1;
-    checks.push({ label:'Names in title', pass:both, fail:!both,
-      msg:both?'Both names found':'Missing: '+opts.teams.join(' / ') });
-  }
+window.addEventListener('resize', scaleThumb);
 
-  checks.push({ label:'First line keywords', pass:firstLine.length>=40, warn:firstLine.length>=20&&firstLine.length<40, fail:firstLine.length<20,
-    msg:firstLine.length>=40?'Good ('+firstLine.length+' chars)':'First line too short, add keywords' });
-
-  checks.push({ label:'Timestamps', pass:hasTimestamps, fail:!hasTimestamps,
-    msg:hasTimestamps?'Timestamps included':'Add timestamps (00:00, 12:00 etc)' });
-
-  checks.push({ label:'Hashtags', pass:hashCount>=8&&hashCount<=20, warn:hashCount>0&&(hashCount<8||hashCount>20), fail:hashCount===0,
-    msg:hashCount+' hashtags '+(hashCount>=8&&hashCount<=20?'-- ideal':'-- aim for 8-20') });
-
-  checks.push({ label:'Subscribe CTA', pass:hasCTA, fail:!hasCTA,
-    msg:hasCTA?'CTA present':'Add a subscribe call to action' });
-
-  checks.push({ label:'Description length', pass:dLen>=300, warn:dLen>=100&&dLen<300, fail:dLen<100,
-    msg:dLen+' chars '+(dLen>=500?'-- great':dLen>=300?'-- good':'-- add more detail') });
-
-  var failures=checks.filter(function(c){return c.fail;});
-  var warnings=checks.filter(function(c){return c.warn&&!c.fail;});
-  var passes=checks.filter(function(c){return !c.fail&&!c.warn;});
-  return {checks:checks,failures:failures,warnings:warnings,passes:passes};
-}
-
-function renderSeoBar(containerId, title, desc, opts) {
-  var el = document.getElementById(containerId);
-  if (!el) return;
-  var r = runSeoCheck(title, desc, opts);
-  var f=r.failures.length, w=r.warnings.length, p=r.passes.length;
-  var cls = f>0?'has-fail':w>0?'has-warn':'all-pass';
-  var lbl = f>0?'ISSUES FOUND':w>0?'REVIEW SUGGESTED':'ALL CHECKS PASSED';
-  var msg = f>0?f+' thing'+(f>1?'s':'')+' to fix':w>0?w+' suggestion'+(w>1?'s':''):'Good to publish!';
-  var issHtml='';
-  if(f>0||w>0){
-    r.checks.forEach(function(c){
-      if(c.fail||c.warn){
-        issHtml+='<div class="seo-issue-row"><span class="seo-badge '+(c.fail?'fail':'warn')+'">'+(c.fail?'FIX':'TIP')+'</span><span>'+c.label+' -- '+c.msg+'</span></div>';
-      }
-    });
-  }
-  el.innerHTML='<div class="seo-bar '+cls+'" onclick="var i=document.getElementById(\''+containerId+'-iss\');if(i)i.classList.toggle(\'show\')">'
-    +'<span class="seo-bar-icon">'+(f>0?'!!':w>0?'i':'OK')+'</span>'
-    +'<span class="seo-bar-txt">SEO: '+lbl+' -- '+msg+'</span>'
-    +(f>0||w>0?'<span class="seo-bar-detail">click for details</span>':'')
-    +'</div>'
-    +(issHtml?'<div class="seo-issues" id="'+containerId+'-iss">'+issHtml+'</div>':'');
-}
-
-function buildCopy(data, aAbbr, hAbbr, aRec, hRec, venue, city, hc, aOuts, hOuts) {
-  var awayName = g('a-city').textContent + ' ' + g('a-name').textContent;
-  var homeName = g('h-city').textContent + ' ' + g('h-name').textContent;
-  var dateStr = hc && hc.date ? new Date(hc.date).toLocaleDateString([],{month:'long',day:'numeric',year:'numeric'}) : '';
-  var timeStr = hc && hc.date ? fmtTime(hc.date) : '';
-  var aL = SEASON_LEADERS[aAbbr];
-  var hL = SEASON_LEADERS[hAbbr];
-
-  // SEO Title - searchable terms first, under 60 chars ideal
-  var titleBase = awayName + ' vs ' + homeName;
-  var title = titleBase + ' | NBA Live Stream ' + dateStr;
-  if (title.length > 100) title = title.slice(0, 97) + '...';
-  g('c-title').textContent = title;
-
-  var pc = data.pickcenter && data.pickcenter[0];
-  var spread = pc ? (pc.details || '') : '';
-  var ou = pc ? ('O/U ' + (pc.overUnder || '')) : '';
-  var ss = data.seasonseries && data.seasonseries[0];
-  var series = (ss && ss.summary) || '';
-
-  // SEO Description - keyword-rich first 2 lines, then details
-  var desc = '';
-  // First 2 lines = most important for SEO (shown before "show more")
-  desc += awayName + ' vs ' + homeName + ' NBA Live Coverage -- ' + dateStr + '\n';
-  desc += 'Watch live at ' + timeStr + ' ET | ' + venue + (city ? ', ' + city : '') + '\n';
-  desc += '\n';
-  // Key player info
-  if (aL) desc += aAbbr + ' | ' + aL.name + ' ' + aL.ppg + ' PPG  ' + aL.rpg + ' RPG  ' + aL.apg + ' APG\n';
-  if (hL) desc += hAbbr + ' | ' + hL.name + ' ' + hL.ppg + ' PPG  ' + hL.rpg + ' RPG  ' + hL.apg + ' APG\n';
-  desc += '\n';
-  if (aOuts.length) desc += 'INJURIES OUT -- ' + aAbbr + ': ' + aOuts.join(', ') + '\n';
-  if (hOuts.length) desc += 'INJURIES OUT -- ' + hAbbr + ': ' + hOuts.join(', ') + '\n';
-  if (series) desc += 'Season Series: ' + series + '\n';
-  if (spread) desc += 'Vegas Line: ' + spread + '  ' + ou + '\n';
-  desc += '\n';
-  desc += 'ClipzWorld News covers the NBA live every night. Subscribe for live game coverage, daily sports news and world news every weekday at noon ET.\n';
-  desc += '\n';
-  // Timestamps placeholder
-  desc += '00:00 Pre-game\n';
-  desc += '12:00 1st Quarter\n';
-  desc += '24:00 2nd Quarter\n';
-  desc += '36:00 Halftime\n';
-  desc += '48:00 3rd Quarter\n';
-  desc += '1:00:00 4th Quarter\n';
-  desc += '\n';
-  // Hashtags - specific first, broad last
-  var tags = '#' + awayName.split(' ').join('') + ' #' + homeName.split(' ').join('') + ' #' + aAbbr + ' #' + hAbbr;
-  tags += ' #NBA #NBALive #Basketball #NBAgame #NBAToday #ClipzWorldNews #LiveSports #NBAHighlights';
-  desc += tags;
-
-  g('c-desc').textContent = desc;
-  // SEO check
-  var seoEl = document.getElementById('seo-status');
-  if (!seoEl) {
-    seoEl = document.createElement('div');
-    seoEl.id = 'seo-status';
-    var descBox = document.getElementById('c-desc');
-    if (descBox && descBox.parentNode) descBox.parentNode.appendChild(seoEl);
-  }
-  renderSeoBar('seo-status', g('c-title').textContent, g('c-desc').textContent, {teams:[awayName,homeName]});
-}
-
-g('gen-btn').addEventListener('click', doGenerate);
-g('gid').addEventListener('keydown', function(e) { if (e.key === 'Enter') doGenerate(); });
-g('copy-title-btn').addEventListener('click', function() { doCopy('c-title'); });
-g('copy-desc-btn').addEventListener('click', function() { doCopy('c-desc'); });
+// Init
+loadState();
+scaleThumb();
+render();
 </script>
 </body>
 </html>
