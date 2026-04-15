@@ -2345,7 +2345,7 @@ app.post('/generate-full-script',
   requireFields('type', 'items'),
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
   validateArrayLength('items', 1),
-  handleGenerateFullScript
+  (req, res) => handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller)
 );
 
 
