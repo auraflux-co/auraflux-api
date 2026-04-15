@@ -8,16 +8,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. `CLAUDE.md` — architecture, rules, gotchas (this file)
 2. `STATUS.md` — current tasks, active file locks, what's working, what's next
 3. `AGENT_FILE_REGISTRY.md` — file ownership tiers, handoff size rules, multi-agent lock protocol. **Read before touching any file.**
-4. **`GATED_PIPELINE_ARCHITECTURE.md`** — the authoritative spec for the Gated Self-Healing Pipeline. Every agent touching pipeline code must read this.
+4. **`docs/architecture/GATED_PIPELINE_ARCHITECTURE.md`** — the authoritative spec for the Gated Self-Healing Pipeline. Every agent touching pipeline code must read this.
 
 Tell Cline: _"Read CLAUDE.md, STATUS.md, AGENT_FILE_REGISTRY.md and tell me what we're working on"_
 
 **Multi-agent rule:** If two agents are running simultaneously, check `STATUS.md → 🔒 Active File Locks` before editing any Tier 1 or Tier 2 file. Declare your lock before your first edit. See `AGENT_FILE_REGISTRY.md` for the full protocol.
 
-**Currently in-progress handoffs (as of 2026-04-14) — read these after CLAUDE.md + STATUS.md:**
-- `CLINE_HANDOFF_NEWS_CHROME_FIX.md` — ⚡ SHIP NEXT. 6 fixes to get TV card, lower-third flag, and sidebar rendering in News long-form. Root cause: assembly payload never sent `jobId` so directive sidecar was never found. All 6 fixes documented with exact file + line locations.
-- `CLINE_HANDOFF_WAVE_0_CLEANUP.md` — 16 non-blocking cleanup items (dead code, unused imports, etc.). Do after News chrome is locked.
-- `CLINE_HANDOFF_NBA_VOICEOVER_FFMPEG_V2.md` — NBA long-form voiceover assembly. Start after News long-form is locked and passing smoke tests.
+**Doc structure (as of 2026-04-15):**
+- `docs/INDEX.md` — full index of all docs with descriptions. Read this to find anything.
+- `docs/handoffs/` — all active and pending Cline/Cursor handoffs
+- `docs/dispatches/` — multi-handoff dispatch orders
+- `docs/architecture/` — system design, pipeline specs, technical reference
+- `docs/specs/` — feature specs and design specs (forward-looking)
+- `docs/strategy/` — business strategy, roadmap, AuraFlux product plan, Phase 2 build spec
+- `docs/ops/` — operational runbooks, checklists, commit rules
+- `docs/archive/` — completed/superseded docs (historical reference only)
+
+**Currently pending handoffs — check `docs/INDEX.md` for full list. Priority order:**
+- `docs/handoffs/CLINE_HANDOFF_ASSEMBLY_ERROR_LOGGING.md` — Cline-A, wire logError() at 4 failure sites
+- `docs/handoffs/CLINE_HANDOFF_FFMPEG_PERFORMANCE.md` — Cline-A, VideoToolbox hardware encoder
+- `docs/handoffs/CLINE_HANDOFF_WAVE_0_CLEANUP.md` — Cursor, 16 dead-code cleanup items
+- `docs/handoffs/CLINE_HANDOFF_PREFLIGHT_INLINE.md` — Cursor, replace confirm() popup
+- `docs/handoffs/CLINE_HANDOFF_JOB_DISMISS.md` — Cline-B, job card dismiss fix
+- `docs/handoffs/CLINE_HANDOFF_NBA_VOICEOVER_FFMPEG_V2.md` — Cline-A, post-News lock
 
 ---
 
@@ -629,9 +642,9 @@ See `IMPLEMENTATION_SPEC.md` for full technical specifications.
 **Status:** Specification complete, implementation pending
 **Format:** 1080×1920 portrait (9:16)
 **Layout:**
-- Top 50%: Source clip (1080×960, cropped/scaled)
-- Bottom 50%: Bobby G avatar (1080×960, from HeyGen)
-**Content Flow:** Intro → Clip plays → Reaction
+- Top 50%: Bobby G avatar (1080×960, from HeyGen) — reaction visible on scroll
+- Bottom 50%: Source clip (1080×960, cropped/scaled)
+**Content Flow:** Intro → Bobby G reacts (top) while clip plays (bottom)
 **Logo:** 80px CWN logo at `W-w-15:15` (smaller for vertical format)
 **Audio:** TBD - either mix both tracks or use source-only
 
