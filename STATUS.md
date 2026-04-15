@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-15 (2:30 PM ET)
-**Branch:** main | **Latest Commit:** refactor(server): extract chrome overlay functions to lib/chrome_overlay.js (~700 lines)
-**🚨 PRODUCTION FREEZE:** All agents hold commits until Aider server split completes. server.js = 11,738 lines (was 12,440). Module 1 done (chrome_overlay). Modules 2-5 pending.
+**Last Updated:** 2026-04-15 (2:45 PM ET)
+**Branch:** main | **Latest Commit:** refactor(server): extract QA gate functions to lib/qa.js (~1300 lines)
+**🚨 PRODUCTION FREEZE:** All agents hold commits until server split completes. server.js = 10,457 lines (was 12,440). Modules 1+2 done. Modules 3-5 pending.
 **🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
 **Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
@@ -35,6 +35,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Claude Code | **refactor(server): extract QA gate functions to lib/qa.js — Module 2 of 5** — Extracted `geminiQACheck`, `parseScriptIntoScenes`, `generateClipAvailabilityReport`, `claudeScriptQA`, `claudeScriptFix`, `geminiScriptQA`, `geminiSegmentQA`, `callClaudeAPI`, `uploadToGeminiFiles`, `waitForGeminiFile`, `deleteGeminiFile` (~1300 lines) from server.js into new `lib/qa.js`. `require('./lib/qa')` added at server.js:108. `node -c server.js` passes. server.js 11,738 → 10,457 lines. | lib/qa.js (new), server.js, STATUS.md | pending | 2026-04-15 2:45 PM ET |
 | Claude Code | **refactor(server): extract chrome overlay to lib/chrome_overlay.js — Module 1 of 5** — Extracted `generateTwitchLongformThumbnail`, `generateNewsNbaThumbnail`, `burnSceneChromeFromDirective`, `generateChromeOverlayFromDirective`, `generateNewscastOverlay` (~700 lines) from server.js into new `lib/chrome_overlay.js`. `require('./lib/chrome_overlay')` added at server.js:100. `node -c server.js` passes. server.js 12,440 → 11,738 lines. Production freeze continues until Module 5 complete. | lib/chrome_overlay.js (new), server.js, STATUS.md | pending | 2026-04-15 2:30 PM ET |
 | Cline | **fix(chrome): story card text full white + opaque bg + subtle border** — Story cards barely readable after TV card removal. Fix 1 (line 279): `.story-item` background changed to `rgba(8,14,28,1.0)` (fully opaque), added thin gold borders on top/bottom/right. Fix 2 (line 291): `.story-item-cat` font-size 11px→12px. Fix 3 (line 298): `.story-item-text` font-size 16px→18px, color `rgba(255,255,255,0.85)`→`#ffffff`, line-height 1.4→1.35. Fix 4 (line 305): `.story-item.active` background `rgba(34,48,75,0.95)`→`rgba(34,48,75,1.0)`. Implements `CLINE_HANDOFF_STORY_CARD_VISIBILITY.md`. | tools/clipzworld_newscast.html, STATUS.md | pending | 2026-04-15 12:59 PM ET |
 | Cline | **fix(gate3): error fallback auto-passes + logError + move finalizeMetrics** — Gate 3 Gemini errors were setting `passed=false`, silently blocking Gate 6 auto-publish. Fix 1 (server.js:5249-5259): error fallback now sets `outcome='pass'` and `passed=true`, calls `logError('GATE3_QA_ERROR_FALLBACK')` to track errors. Fix 2 (server.js:5272): moved `finalizeJobMetrics(asmId)` after Gate 3 completes so metrics include QA stage. Fix 3 (server.js:5264-5269): added Gate 3 timing with StageTimer. Implements `CLINE_HANDOFF_GATE3_AUTOPUBLISH_FIX.md`. | server.js, STATUS.md | 69e6ce9 | 2026-04-15 12:58 PM ET |
