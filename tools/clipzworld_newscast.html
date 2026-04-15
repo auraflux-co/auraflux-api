@@ -324,66 +324,15 @@ body.sidebar-hidden .story-list {
   transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
-/* ═══════════════════════════════════════
-   TV CARD — OVERLAY_ZONE top-right (520×293 at x=1240, y=40)
-   Red 4 Fix 3d: hidden by default, shown via JS injection when tvCard data present
-═══════════════════════════════════════ */
-.tv-card {
-  display: none;
-  position: absolute;
-  left: 1240px;
-  top: 40px;
-  width: 520px;
-  height: 293px;
-  background: var(--navy);
-  border: 2px solid var(--gold);
-  border-radius: 4px;
-  overflow: hidden;
-  flex-direction: column;
-  animation: fadeIn 0.5s ease 0.3s both;
-}
-
-.tv-card-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  display: block;
-}
-
-.tv-card-meta {
-  padding: 8px 12px;
-  background: rgba(13,20,36,0.95);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
-
-.tv-card-headline {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  color: #fff;
-  letter-spacing: 1px;
-  line-height: 1.2;
-}
-
-.tv-card-source {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
 </style>
 </head>
 <body>
 
 <!-- TOP BAR -->
 <div class="top-bar">
-  <div class="top-brand">BECAUSE THE LIGHT WAS ON</div>
-  <div class="top-divider"></div>
   <div class="top-show" id="show-info">Episode 1</div>
+  <div class="top-divider"></div>
+  <div class="top-brand">BECAUSE THE LIGHT WAS ON</div>
   <div class="top-right">
     <div class="top-live">
       <div class="top-live-dot"></div>
@@ -401,16 +350,6 @@ body.sidebar-hidden .story-list {
 
 <!-- STORY LIST — populated dynamically by generateNewscastOverlay() via page.evaluate() -->
 <div class="story-list">
-</div>
-
-<!-- TV CARD — OVERLAY_ZONE top-right (520×293 at x=1240, y=40) -->
-<!-- Red 4 Fix 3d: hidden by default, shown via page.evaluate() JS injection when tvCard data present -->
-<div class="tv-card">
-  <img class="tv-card-image" src="" alt="">
-  <div class="tv-card-meta">
-    <div class="tv-card-headline">Breaking News</div>
-    <div class="tv-card-source">CWN</div>
-  </div>
 </div>
 
 <!-- LOWER THIRD (TV card — hidden by default, shown via .visible class) -->
