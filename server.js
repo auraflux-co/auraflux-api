@@ -2982,9 +2982,20 @@ Max 600 words.`;
 
     if (videoAnalyses.length > 0) {
       // Synthesize all analyses into one coherent style guide
+      const isShortForm = contentType.endsWith('-short');
+      const shortConstraints = isShortForm ? `
+
+SHORT-FORM SPECIFIC RULES (this is a 45-60 second vertical video):
+- ONE clip, ONE observation, done — no callbacks, no multi-part builds
+- Every sentence must earn its place — cut anything that doesn't land immediately
+- No setup longer than 2 sentences before the clip
+- Post-clip reaction: maximum 2 sentences
+- [beat] used once maximum per script
+- Must feel complete in under 60 seconds` : '';
+
       const synthesisPrompt = `You analyzed ${videoAnalyses.length} reference videos for Bobby G, host of ClipzWorld News (CWN) "${contentType}" show.
 
-Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority + Space Ghost non-sequitur. Flat delivery. Never explains the joke. Never hypes. State the fact, one observation, done.
+Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority + Space Ghost non-sequitur. Flat delivery. Never explains the joke. Never hypes. State the fact, one observation, done.${shortConstraints}
 
 Here are the individual analyses:
 ${videoAnalyses.join('\n\n')}
