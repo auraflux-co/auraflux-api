@@ -9,12 +9,27 @@
 
 ## Problem
 
-The current news clip pipeline has two failure modes:
+The current news clip pipeline is architecturally backwards:
 
-1. **Wrong source:** `GET /news/us-canada-videos` scrapes AJ `/video/newsfeed/` — these are 9:16 vertical social clips, wrong for 16:9 long-form assembly. They also lack US-topic filtering.
-2. **Wrong scraper:** `scrapeArticleVideo()` in `lib/script_gen.js` (lines 786-860) uses static HTML to find Brightcove embeds — it misses JS-rendered players that AJ articles use. Hit rate is too low.
+1. **Operator picks articles → system tries to find clips for them** — Dashboard sends specific article URLs in `items[]`. Then `scrapeArticleVideo()` hunts for a Brightcove video in each article (static HTML, low hit rate). Gate 0 fails when 1-2 articles have no video.
+2. **Wrong source:** `GET /news/us-canada-videos` was scraping AJ `/video/newsfeed/` — 9:16 vertical social clips, wrong for 16:9 long-form.
+3. **Wrong scraper:** Static HTML can't see Brightcove — AJ renders the player client-side via JavaScript. Only Puppeteer with network interception can capture HLS URLs.
 
-**Root cause:** Neither function uses Puppeteer. AJ's Brightcove players are rendered client-side. The only reliable way to capture HLS URLs is to intercept the Brightcove API network call (`/accounts/665003303001/videos/`) in a headless browser.
+**Correct architecture — pool-first:**
+
+```
+scrapeAjNewsVideos() → 8-12 confirmed-video topics
+  ↓
+Gemini receives confirmed pool as "available today's stories"
+  ↓
+Gemini writes episode from pool topics only
+  ↓
+Gate 0 (Gemini QA): confirms each story in the script has a clip from the pool
+  ↓  PASS → proceed
+  ↓  FAIL → Gemini rewrites with pool topics that do have clips
+```
+
+Gemini never writes about a story it doesn't have a clip for — because the pool is all it's given. Gate 0 is a Gemini QA check ("did you use clips from the pool?"), not a clip-hunting step.
 
 **Validated approach:** `scripts/test_aj_puppeteer_scrape.js` confirmed: sitemap-driven Puppeteer scraper → 20 candidates → 11 with video (6 native 16:9 + 5 portrait 9:16). Tested 2026-04-15.
 
@@ -29,10 +44,12 @@ The current news clip pipeline has two failure modes:
 | 1 | `fetchAjSitemapUrls(date, topicKeywords)` — axios sitemap fetch + filter | `server.js` |
 | 2 | `scrapeAjNewsVideos(topicKeywords, maxCheck)` — Puppeteer browser + Brightcove intercept | `server.js` |
 | 3 | `buildAjPillarboxFilter(w, h)` — FFmpeg filter for 9:16 clips | `server.js` |
-| 4 | Replace `GET /news/us-canada-videos` endpoint body | `server.js` |
-| 5 | Wire `scrapeAjNewsVideos()` at start of news script gen | `server.js` (near `lib/script_gen.js` line 1417) |
-| 6 | `matchStoryToAjVideo(storyTopic, ajVideoPool)` — keyword overlap matcher | `server.js` |
-| 7 | Apply `pillarboxFilter` in download phase if present on segment | `lib/assembly.js` |
+| 4 | Replace `GET /news/us-canada-videos` — run Puppeteer scraper, return confirmed-video pool only | `server.js` |
+| 5 | Wire `scrapeAjNewsVideos()` at `/generate-full-script` start; pass pool to `handleGenerateFullScript`; Gemini receives pool as the story list — **not** `items[]` from dashboard | `server.js` + `lib/script_gen.js` |
+| 6 | Gate 0 Gemini QA — validate each script story has a pool clip assigned; fail+rewrite if not | `lib/script_gen.js` or `lib/qa.js` |
+| 7 | Apply `pillarboxFilter` in assembly download phase if portrait clip | `lib/assembly.js` |
+
+**Note on Step 5:** The `items[]` input from the dashboard (selected article URLs) is bypassed for news. The Puppeteer pool becomes `items`. Dashboard only needs to send `type: 'news'` and `count: 5` — the server builds the story list from today's confirmed clips.
 
 ---
 
@@ -280,7 +297,9 @@ function buildAjPillarboxFilter(w, h) {
 
 ### Step 4 — Replace `GET /news/us-canada-videos` endpoint
 
-The existing endpoint (lines 2051-2151) scrapes `/video/newsfeed/` URLs. Replace its fetch + parse logic to use `fetchAjSitemapUrls` instead. Keep all validation logic (Track C / `validateVideo`) intact.
+**CRITICAL ARCHITECTURE NOTE:** The endpoint must run `scrapeAjNewsVideos()` (Puppeteer with Brightcove interception) and return **ONLY articles that have confirmed HLS video**. The dashboard shows these to Rob — if the endpoint returns text-only articles, Rob picks them, Gate 0 fails. The sitemap alone is not enough. Puppeteer confirmation is required.
+
+The existing endpoint (lines 2051-2151) scrapes `/video/newsfeed/` URLs. Replace the **entire try-block body** with `scrapeAjNewsVideos()`. Remove Track C validation entirely (Track C ran yt-dlp on /news/ article pages — it always failed on JS-rendered Brightcove pages; it was already removed).
 
 Find the block starting at line 2051:
 ```javascript
@@ -289,72 +308,60 @@ app.get('/news/us-canada-videos', async (req, res) => {
     const resp = await axios.get(NEWS_SOURCE_URL, {
 ```
 
-Replace the try-block body **up to (but not including) the Track C validation block** (`// ── Track C: run 5-check parallel validation pass ──`) with:
+Replace the **entire endpoint** with:
 
 ```javascript
 app.get('/news/us-canada-videos', async (req, res) => {
   try {
-    // ── Sitemap-driven article discovery (replaces /video/newsfeed/ scrape) ──
-    // Fetches today's + yesterday's AJ sitemaps, filters by US_KEYWORDS,
-    // returns article URLs (not /video/ vertical clips).
-    const today     = new Date();
-    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    // ── Puppeteer-confirmed AJ video pool ────────────────────────────────────
+    // Runs scrapeAjNewsVideos(): sitemap discovery → Puppeteer → Brightcove intercept.
+    // Returns ONLY articles with confirmed HLS video URLs.
+    // The dashboard shows these to the operator — text-only articles are excluded.
+    // Typical results: 6-12 confirmed videos from today+yesterday's sitemap.
+    console.log('[news/us-canada-videos] Running Puppeteer AJ scraper...');
+    const ajVideos = await scrapeAjNewsVideos(US_KEYWORDS, 20);
+    console.log(`[news/us-canada-videos] Scraped ${ajVideos.length} confirmed video articles`);
 
-    let allMatchingUrls = [];
-    try {
-      const [todayUrls, yestUrls] = await Promise.all([
-        fetchAjSitemapUrls(today,     US_KEYWORDS),
-        fetchAjSitemapUrls(yesterday, US_KEYWORDS)
-      ]);
-      allMatchingUrls = [...todayUrls, ...yestUrls];
-    } catch (sitemapErr) {
-      console.error(`[news/us-canada-videos] Sitemap fetch failed: ${sitemapErr.message}`);
-      // Fall through — will return 0 videos with error context
-    }
-
-    // Convert article URLs to the video object shape the dashboard expects
-    const videos = allMatchingUrls.map(articleUrl => {
-      // Extract date from AJ URL pattern: /YYYY/MM/DD/ or /YYYY/M/D/
-      const dateMatch = articleUrl.match(/\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
+    // Convert to the video object shape the dashboard expects
+    const videos = ajVideos.map(v => {
+      const dateMatch = v.articleUrl.match(/\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
       let publishedAt = new Date().toISOString();
-      let dateString  = '';
       if (dateMatch) {
         const [_, yyyy, mm, dd] = dateMatch;
         publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T23:59:59Z`).toISOString();
-        dateString  = `${yyyy}/${mm}/${dd}`;
       }
-      // Extract a human-readable title from the URL slug
-      const slug = articleUrl.split('/').filter(Boolean).pop() || '';
+      const slug = v.articleUrl.split('/').filter(Boolean).pop() || '';
       const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
       return {
-        url:         articleUrl,
-        href:        articleUrl.replace('https://www.aljazeera.com', ''),
-        title:       title || '(untitled)',
-        thumbnail:   null,
+        url:          v.articleUrl,
+        href:         v.articleUrl.replace('https://www.aljazeera.com', ''),
+        title:        title || '(untitled)',
+        thumbnail:    null,
         publishedAt,
-        dateString
+        hlsUrl:       v.hlsUrl,
+        orientation:  v.orientation,       // 'landscape' | 'portrait'
+        pillarboxFilter: v.pillarboxFilter  // null or FFmpeg filter string
       };
     });
 
-    const cutoff = new Date(Date.now() - NEWS_LOOKBACK_HOURS * 60 * 60 * 1000);
-    const recent = videos.filter(v => new Date(v.publishedAt) >= cutoff);
-    recent.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+    videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
-    console.log(`[news/us-canada-videos] Found ${videos.length} sitemap URLs, ${recent.length} within ${NEWS_LOOKBACK_HOURS}h lookback`);
-
-    // ── Track C: run 5-check parallel validation pass ──────────────────────────
+    return res.json({
+      videos,
+      recentCount: videos.length,
+      source: 'AJ sitemap (today+yesterday) — Puppeteer Brightcove confirmed',
+      landscape: videos.filter(v => v.orientation === 'landscape').length,
+      portrait:  videos.filter(v => v.orientation === 'portrait').length
+    });
+  } catch (err) {
+    console.error('[news/us-canada-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
 ```
 
-The rest of the endpoint (Track C validation block through the closing `res.json(...)` and catch) stays **exactly as-is**. Only replace up to the Track C comment.
-
-Also update the `res.json` source field at the bottom of the endpoint:
-```javascript
-// Change:
-source: 'https://www.aljazeera.com/us-canada/',
-// To:
-source: 'https://www.aljazeera.com/sitemap.xml (today+yesterday)',
-```
+**Note:** This replaces the entire endpoint body including Track C. Track C validation (`yt-dlp` on /news/ article pages) was removed in a prior fix — it always failed on JS-rendered Brightcove pages and produced false negatives. The Puppeteer `scrapeAjNewsVideos()` call IS the validation now — if Brightcove API fires, the clip is real.
 
 ---
 
@@ -570,8 +577,10 @@ axios.get('https://www.aljazeera.com/sitemap.xml?yyyy='+d.getFullYear()+'&mm='+m
   .catch(e => console.error(e.message));
 "
 
-# 2. Test endpoint (video pool not included — just article discovery)
-curl -s http://localhost:3000/news/us-canada-videos | jq '.recentCount, .videos[0].title'
+# 2. Test endpoint — runs Puppeteer, takes 30-45s, returns ONLY video-confirmed articles
+# (no jq timeout issues — just wait for the Puppeteer scrape to complete)
+curl -s --max-time 120 http://localhost:3000/news/us-canada-videos | jq '.recentCount, .landscape, .portrait, (.videos[0] | {title, orientation})'
+# Expected: recentCount: 6-12, landscape: 4-9, portrait: 2-5
 
 # 3. Full news script gen (triggers Puppeteer pre-scrape)
 # Use dashboard: Generate Full Script → News → select 5+ stories → Generate
