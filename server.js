@@ -2307,27 +2307,16 @@ app.get('/news/us-canada-videos', async (req, res) => {
 
     console.log(`[news/us-canada-videos] Found ${videos.length} sitemap URLs, ${recent.length} within ${NEWS_LOOKBACK_HOURS}h lookback`);
 
-    // ── Track C: run 5-check parallel validation pass ──────────────────────────
-    // Each video gets validation: { status, checks, issues[] }
-    // status: 'ok' | 'warning' | 'fail'
-    // Runs AFTER date filter so we only validate stories the dashboard will show.
-    let validatedVideos = recent;
-    let validationSummary = null;
-    const skipValidation = req.query.validate === 'false';
-    if (!skipValidation && recent.length > 0) {
-      try {
-        console.log(`[news/us-canada-videos] Running Track C validation on ${recent.length} videos...`);
-        validatedVideos = await Promise.all(recent.map(v => validateVideo(v)));
-        const passed   = validatedVideos.filter(v => v.validation.status === 'ok').length;
-        const warnings = validatedVideos.filter(v => v.validation.status === 'warning').length;
-        const failed   = validatedVideos.filter(v => v.validation.status === 'fail').length;
-        validationSummary = { passed, warnings, failed };
-        console.log(`[news/us-canada-videos] Validation: ${passed} ok, ${warnings} warning, ${failed} fail`);
-      } catch(valErr) {
-        console.warn(`[news/us-canada-videos] Validation pass failed (non-fatal): ${valErr.message}`);
-        validatedVideos = recent; // fall back to unvalidated
-      }
-    }
+    // ── Track C validation SKIPPED for sitemap-sourced URLs ────────────────────
+    // The old Track C validation used yt-dlp to verify /video/newsfeed/ clips.
+    // Sitemap URLs are /news/ article pages — yt-dlp can't extract from them.
+    // Real validation happens at script gen time via scrapeAjNewsVideos() (Puppeteer).
+    // That function intercepts Brightcove API responses and returns only articles
+    // with confirmed HLS manifests. This endpoint is now discovery-only.
+    const validationSummary = {
+      skipped: true,
+      reason: 'Sitemap URLs validated at script gen time via Puppeteer (scrapeAjNewsVideos)'
+    };
 
     res.json({
       ok: true,
@@ -2336,7 +2325,7 @@ app.get('/news/us-canada-videos', async (req, res) => {
       totalFound: videos.length,
       recentCount: recent.length,
       validationSummary,
-      videos: validatedVideos
+      videos: recent
     });
   } catch (e) {
     console.error(`[news/us-canada-videos] Fetch failed: ${e.message}`);
