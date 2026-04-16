@@ -4746,7 +4746,7 @@ function fetchNBAScoreboard(dateStr) {
         var xS = new XMLHttpRequest();
         xS.open('POST','http://localhost:3000/nba/scrape-game-highlight',true);
         xS.setRequestHeader('Content-Type','application/json');
-        xS.timeout=10000;
+        xS.timeout=60000;
         xS.onload=function(){
           try{
             var result=JSON.parse(xS.responseText);
