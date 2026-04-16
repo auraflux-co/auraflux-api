@@ -17,9 +17,7 @@
 | **Claude Code** | Claude Sonnet 4.6 | This session | Architecture, handoffs, specs, diagnosis | Planning, root cause analysis, spec writing, roadmap, model routing decisions |
 
 **Model routing rationale:**
-- **Sonnet 4.6 for Cline-A** — pipeline code is highest complexity and risk. Gate logic, FFmpeg, HeyGen, QA scoring all require strong reasoning.
-- **Haiku 4.5 for Cline-B** — API endpoints and data layer are more formulaic. Surgical edits to well-defined patterns. Cost-efficient.
-- **Sonnet 4.6 for Cline-C** — frontend HTML/CSS/JS requires strong reasoning for long files like cwn_production.html (4000+ lines).
+- **All 3 on Sonnet 4.6** — VS Code Cline extension uses one model setting across all instances. Can't run different models per terminal window. Claude Max is flat-rate so no cost difference. All 3 on Sonnet 4.6 for best output.
 - All 3 Clines run in terminal via Claude Code API (Claude Max subscription).
 
 **Domain split (prevents file lock conflicts):**
