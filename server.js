@@ -2887,24 +2887,24 @@ app.post('/analyze-style-library', async (req, res) => {
         const multipleViewings = [];
 
         for (let viewNum = 1; viewNum <= 10; viewNum++) {
-          const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for ClipzWorld News (CWN), a "${contentType}" compilation show.
+          const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for Bobby G, the host of ClipzWorld News (CWN), a "${contentType}" show.
+
+Bobby G's voice blend: Norm MacDonald (flat deadpan, never explains the joke) + Jon Stewart Daily Show (one alarming observation, controlled disbelief) + Stuart Scott ESPN (cultural authority, rhythm, cadence) + Space Ghost Coast to Coast (non-sequitur pivots are fine, chaos is fine).
+
+Bobby G NEVER does: hype phrases ("What's up everyone!"), exclamation energy, "This is insane!", "You won't believe this", audience callouts ("Drop a comment below"), explaining the joke, or warm enthusiasm.
 
 This is VIEWING #${viewNum} of 10. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : viewNum <= 3 ? 'Focus on details you may have missed in previous viewings.' : viewNum <= 6 ? 'Look for subtle patterns and recurring elements.' : 'Deep analysis - extract nuanced stylistic details.'}
 
-Your job is to extract the specific stylistic elements so a script writer can replicate the feel.
+Extract ONLY what applies to Bobby G's voice. Focus on:
+1. SENTENCE STRUCTURE: How short? How flat? State-the-fact pattern?
+2. TIMING & PACING: Where does the host pause? How long after a clip before speaking?
+3. OBSERVATION STYLE: Does the host make it MORE alarming or just note the absurdity?
+4. TRANSITION STRUCTURE: How does it move between topics? One word? One sentence?
+5. HUMOR TECHNIQUE: Understatement? Non-sequitur? Deadpan? What specifically?
+6. WHAT THIS HOST DOES NOT DO: Explicit list of avoided behaviors
+7. RHYTHM PATTERNS: Sentence length variation, [beat] placement, trailing off vs punchy endings
 
-Extract and document:
-1. OPENING ENERGY: How does the host/show open? Energy level? First sentence structure?
-2. PACING: How fast does it move? How long on each segment/topic?
-3. TONE: Specific adjectives for the delivery (deadpan? warm? sardonic? chaotic?)
-4. HUMOR TECHNIQUE: What makes it funny? (observation? timing? non-sequitur? understatement?)
-5. LANGUAGE PATTERNS: Specific phrases, sentence structures, or speech patterns that appear
-6. TRANSITIONS: How does it move between segments/topics?
-7. REACTION STYLE: How does the host respond to content? Length? Affect?
-8. WHAT TO AVOID: Things this show explicitly does NOT do (no hype, no explanation, etc.)
-9. SIGNATURE MOVES: Any recurring bits, catchphrases, or structural elements
-
-Be specific and actionable. A script writer should be able to read this and write in the same voice without watching the video.`;
+Do NOT extract: energy level, catchphrases, audience engagement tactics, hype language, or anything that conflicts with flat deadpan delivery. Those are surface features of the performer, not the voice Bobby G uses.`;
 
           const genResp = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
@@ -2930,16 +2930,19 @@ Be specific and actionable. A script writer should be able to read this and writ
 
         // Synthesize all 10 viewings into a deep per-video analysis
         if (multipleViewings.length >= 8) { // Require at least 8 successful viewings
-          const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations.
+          const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations for Bobby G, host of ClipzWorld News.
+
+Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority. Flat. Never explains the joke. State the fact, one observation, done.
 
 Here are your ${multipleViewings.length} viewing observations:
 ${multipleViewings.join('\n\n')}
 
-Now synthesize ALL these observations into ONE DEEP, COMPREHENSIVE style analysis.
+Synthesize these into ONE DEEP style analysis — but filter everything through Bobby G's voice constraints:
+- Keep: sentence structure, timing patterns, observation technique, transition rhythm, deadpan moves
+- Discard: hype energy, audience callouts, exclamation delivery, warm enthusiasm, catchphrase energy
 - Identify patterns that appeared across multiple viewings
-- Highlight subtle details only noticed in later viewings
-- Create a unified, nuanced understanding of this video's style
-- Be specific and actionable for script writers
+- Note subtle structural details only caught in later viewings
+- Be specific and actionable — a Gemini model should read this and write flat deadpan scripts
 Max 600 words.`;
 
           try {
@@ -2979,14 +2982,29 @@ Max 600 words.`;
 
     if (videoAnalyses.length > 0) {
       // Synthesize all analyses into one coherent style guide
-      const synthesisPrompt = `You analyzed ${videoAnalyses.length} reference videos for a "${contentType}" show on ClipzWorld News.
+      const synthesisPrompt = `You analyzed ${videoAnalyses.length} reference videos for Bobby G, host of ClipzWorld News (CWN) "${contentType}" show.
+
+Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority + Space Ghost non-sequitur. Flat delivery. Never explains the joke. Never hypes. State the fact, one observation, done.
 
 Here are the individual analyses:
 ${videoAnalyses.join('\n\n')}
 
-Now write a UNIFIED STYLE GUIDE that a script writer can use for every "${contentType}" script.
-Be specific, actionable, and concise. This will be injected into every script generation prompt.
-Format as clear bullet points under clear headings. Max 400 words.`;
+Write a UNIFIED STYLE GUIDE for Bobby G's "${contentType}" scripts. Extract the structural, rhythmic, and comedic patterns from the reference videos that are COMPATIBLE with Bobby G's flat deadpan delivery.
+
+INCLUDE:
+- Sentence structure patterns (how short, how flat, state-fact-then-observation)
+- Timing cues (where [beat] pauses belong, how long after a clip before speaking)
+- Transition structure (one word? one sentence? non-sequitur pivot?)
+- Observation technique (make it more alarming, not less — never explain)
+- What this voice NEVER does (explicit do-not list)
+
+DO NOT INCLUDE:
+- Hype phrases, exclamation energy, audience callouts
+- "What's up everyone", "This is insane", "You won't believe"
+- Warm enthusiasm or cheerleader energy
+- Anything that contradicts flat deadpan delivery
+
+Format as clear bullet points under clear headings. Max 400 words. This will be injected into every "${contentType}" script generation prompt.`;
 
       try {
         const { Anthropic } = require('@anthropic-ai/sdk');
