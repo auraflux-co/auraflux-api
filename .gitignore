@@ -1,8 +1,14 @@
 .env
 *.log
+*.bak
 tmp/
 output/
 node_modules/
+
+# Agent config/state files — local only
+.cline/
+.clinerules/
+data/assembly_jobs.json
 cwn-drive-key.json
 .DS_Store
 .aider*
