@@ -87,6 +87,7 @@ Authoritative technical reference. Read before touching any pipeline code.
 | `HEYGEN_OPTIONS_INVENTORY.md` | Every HeyGen lever available — templates, avatars, voices, quality settings |
 | `RAILWAY_MIGRATION_DECISION.md` | Why Railway, architecture decision record |
 | `SERVER_SPLIT_PLAN.md` | Plan to split server.js into modules (Phase 2 prep) |
+| `DASHBOARD_DECOUPLING_SPEC.md` | Target architecture — dashboard as read-only monitor, server owns all pipeline state and orchestration |
 | `FUTURE_4K_MIGRATION_PLAN.md` | Parked — 4K upgrade plan when bandwidth/storage allows |
 
 ---
