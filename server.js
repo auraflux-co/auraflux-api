@@ -152,7 +152,8 @@ const {
   checkDiskSpace,
   captureTicker,
   TICKER_CACHE,
-  TICKER_MAP
+  TICKER_MAP,
+  assemblyJobs
 } = require('./lib/assembly');
 const { downloadFile } = require('./lib/downloader');
 const cheerio = require('cheerio');
@@ -240,7 +241,7 @@ validateDirWritable(TMP_DIR, 'tmp');
 validateDirWritable(OUTPUT_DIR, 'output');
 pruneOldDirectives(); // Red 4 hotfix 12: prune directive sidecar files older than 7 days
 
-const assemblyJobs = {};
+// assemblyJobs imported from lib/assembly.js (shared in-memory state)
 const heygenJobs   = {};
 
 // ── Job Card Persistence ─────────────────────────────────────────────────────
