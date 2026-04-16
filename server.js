@@ -2082,12 +2082,39 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       });
     }
 
-    // Step 2: Puppeteer failed — fall back to ESPN API play clips (longest duration).
-    console.warn(`[nba-scrape] ⚠️ Video page Puppeteer failed — falling back to API play clips (longest duration)`);
+    // Step 2: Puppeteer failed — try article.video from ESPN summary API.
+    // article.video contains the compiled Game Highlights reel (87-115s).
+    // d.videos contains only individual play clips (16-40s each) — different field.
+    console.warn(`[nba-scrape] ⚠️ Video page Puppeteer failed — checking article.video for Game Highlights`);
 
     const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
     const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
-    const videos = summaryResp.data.videos || [];
+    const summaryData = summaryResp.data;
+
+    // Check article.video first — this is where the compiled highlights reel lives
+    const articleVideos = (summaryData.article && summaryData.article.video) || [];
+    if (articleVideos.length) {
+      const highlight = articleVideos[0]; // First is always the Game Highlights reel
+      const hlUrl = highlight.links && highlight.links.source && highlight.links.source.HD && highlight.links.source.HD.href;
+      if (hlUrl) {
+        console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s)`);
+        return res.json({
+          ok: true,
+          gate0: 'pass',
+          gameId,
+          videoUrl: hlUrl,
+          thumbnail: (highlight.thumbnail && highlight.thumbnail.href) || '',
+          title: highlight.headline || 'Game Highlights',
+          description: highlight.description || '',
+          duration: highlight.duration || 0,
+          source: 'article.video'
+        });
+      }
+    }
+
+    // Step 3: Fall back to play clips (d.videos) — longest duration
+    console.warn(`[nba-scrape] ⚠️ article.video empty — falling back to API play clips (longest duration)`);
+    const videos = summaryData.videos || [];
 
     if (!videos.length) {
       // Gate 0 FAIL: Puppeteer failed and API has no videos either
