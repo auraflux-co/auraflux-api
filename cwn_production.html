@@ -3108,6 +3108,7 @@ function fetchCwnNewsVideos(callback) {
           thumbnail:   v.thumbnail || '',
           description: '',
           enclosure:   {},
+          hlsUrl:      v.hlsUrl || '',
           validation:  v.validation || null   // Track C: per-video validation result
         };
       });
@@ -3139,7 +3140,7 @@ function generateNews() {
           source:       sourceName,
           link:         it.link||'',
           thumbnailUrl: img,
-          videoUrl:     '',
+          videoUrl:     it.hlsUrl || '',
           pubDate:      it.pubDate||''
         };
       });
