@@ -1999,7 +1999,7 @@ app.post('/capture-ticker', async (req, res) => {
  * @returns {Promise<{videoUrl: string, duration?: number, title?: string} | null>}
  */
 async function scrapeEspnGameVideoUrl(gameId) {
-  const gamePageUrl = `https://www.espn.com/nba/game/_/gameId/${gameId}`;
+  const gamePageUrl = `https://www.espn.com/nba/video/_/gameId/${gameId}`;
   let capturedHlsUrl = null;
   let browser;
 
@@ -2060,42 +2060,45 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
   if (!gameId) return res.status(400).json({ error: 'gameId required' });
 
   try {
-    console.log(`[nba-scrape] Fetching game summary for gameId: ${gameId}`);
+    console.log(`[nba-scrape] Fetching Game Highlights reel for gameId: ${gameId}`);
 
-    // Step 1: Fetch ESPN game summary API (contains videos)
+    // Step 1: Try Puppeteer on the ESPN video page first — this is where the
+    // Game Highlights reel (115s full recap) lives, at the top of the page.
+    // The API summary endpoint only returns individual play clips (16-40s each).
+    const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
+    if (puppeteerResult && puppeteerResult.videoUrl) {
+      console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights reel captured via video page (Puppeteer)`);
+      return res.json({
+        ok: true,
+        gate0: 'pass',
+        gameId,
+        videoUrl: puppeteerResult.videoUrl,
+        thumbnail: '',
+        title: 'Game Highlights',
+        description: '',
+        duration: 0,
+        videoCount: 0,
+        source: 'puppeteer'
+      });
+    }
+
+    // Step 2: Puppeteer failed — fall back to ESPN API play clips (longest duration).
+    console.warn(`[nba-scrape] ⚠️ Video page Puppeteer failed — falling back to API play clips (longest duration)`);
+
     const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
     const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
     const videos = summaryResp.data.videos || [];
 
     if (!videos.length) {
-      console.warn(`[nba-scrape] No videos found in ESPN API for game ${gameId} — trying Puppeteer fallback`);
-      
-      // Gate 0: Try Puppeteer fallback to capture HLS manifest
-      const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
-      if (puppeteerResult && puppeteerResult.videoUrl) {
-        return res.json({
-          ok: true,
-          gate0: 'pass',
-          gameId,
-          videoUrl: puppeteerResult.videoUrl,
-          thumbnail: '',
-          title: 'Game Highlights (Puppeteer)',
-          description: '',
-          duration: 0,
-          videoCount: 0,
-          source: 'puppeteer'
-        });
-      }
-
-      // Gate 0 FAIL: No videos in API and Puppeteer failed
+      // Gate 0 FAIL: Puppeteer failed and API has no videos either
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No videos found for game ${gameId} — ESPN API returned empty videos[]. Game may be too recent or too old.`
+        error: `No videos found for game ${gameId} — video page Puppeteer failed and ESPN API returned empty videos[]. Game may be too recent or too old.`
       });
     }
 
-    console.log(`[nba-scrape] Found ${videos.length} videos for game ${gameId}`);
+    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting longest`);
 
     // Step 2: Use full video pool — select longest duration video.
     // The game highlights reel is reliably the longest video (115s vs 40s for play clips).
@@ -2139,22 +2142,15 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       || links.mobile?.href
       || '';
 
-    // Gate 0: Validate the selected URL is usable (ESPN CDN URLs often return 500)
-    // If API URL is empty or fails validation, fall back to Puppeteer HLS capture
+    // Gate 0: Validate the selected URL is usable
+    // Puppeteer already ran first and failed, so no further fallback is available.
     if (!videoUrl) {
-      console.warn(`[nba-scrape] Gate 0: No usable video URL in API response — trying Puppeteer fallback`);
-      const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
-      if (puppeteerResult && puppeteerResult.videoUrl) {
-        videoUrl = puppeteerResult.videoUrl;
-        console.log(`[nba-scrape] Gate 0: Puppeteer fallback succeeded — using HLS manifest`);
-      } else {
-        console.error(`[nba-scrape] Gate 0 FAIL: No usable video URL found for game ${gameId}`);
-        return res.json({
-          ok: false,
-          gate0: 'fail',
-          error: `No valid highlight clip URL found for game ${gameId} — API returned metadata but no downloadable URL. Check ESPN API response at: ${summaryUrl}`
-        });
-      }
+      console.error(`[nba-scrape] Gate 0 FAIL: No usable video URL found for game ${gameId}`);
+      return res.json({
+        ok: false,
+        gate0: 'fail',
+        error: `No valid highlight clip URL found for game ${gameId} — Puppeteer failed and API returned metadata but no downloadable URL. Check ESPN API response at: ${summaryUrl}`
+      });
     }
 
     // Gate 0: Validate duration meets minimum threshold
