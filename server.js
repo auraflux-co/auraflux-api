@@ -2882,18 +2882,18 @@ app.post('/analyze-style-library', async (req, res) => {
         console.log(`[style-library] Uploading ${(fs.statSync(tmpPath).size/1024/1024).toFixed(1)}MB to Gemini...`);
         const geminiFile = await waitForGeminiFile(await uploadToGeminiFiles(tmpPath));
 
-        // 10x VIEWING: Watch each reference video 10 times for deeper style learning
-        console.log(`[style-library] Starting 10x viewing analysis for ${url.slice(0,60)}...`);
+        // 5x VIEWING: Watch each reference video 5 times for style learning
+        console.log(`[style-library] Starting 5x viewing analysis for ${url.slice(0,60)}...`);
         const multipleViewings = [];
 
-        for (let viewNum = 1; viewNum <= 10; viewNum++) {
+        for (let viewNum = 1; viewNum <= 5; viewNum++) {
           const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for Bobby G, the host of ClipzWorld News (CWN), a "${contentType}" show.
 
 Bobby G's voice blend: Norm MacDonald (flat deadpan, never explains the joke) + Jon Stewart Daily Show (one alarming observation, controlled disbelief) + Stuart Scott ESPN (cultural authority, rhythm, cadence) + Space Ghost Coast to Coast (non-sequitur pivots are fine, chaos is fine).
 
 Bobby G NEVER does: hype phrases ("What's up everyone!"), exclamation energy, "This is insane!", "You won't believe this", audience callouts ("Drop a comment below"), explaining the joke, or warm enthusiasm.
 
-This is VIEWING #${viewNum} of 10. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : viewNum <= 3 ? 'Focus on details you may have missed in previous viewings.' : viewNum <= 6 ? 'Look for subtle patterns and recurring elements.' : 'Deep analysis - extract nuanced stylistic details.'}
+This is VIEWING #${viewNum} of 5. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : viewNum <= 2 ? 'Focus on details you may have missed in the first viewing.' : viewNum <= 4 ? 'Look for subtle patterns and recurring elements.' : 'Deep analysis - extract nuanced stylistic details.'}
 
 Extract ONLY what applies to Bobby G's voice. Focus on:
 1. SENTENCE STRUCTURE: How short? How flat? State-the-fact pattern?
@@ -2937,15 +2937,15 @@ Do NOT extract: energy level, catchphrases, audience engagement tactics, hype la
           const observation = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
           if (observation.length > 100) {
             multipleViewings.push(`--- VIEWING #${viewNum} ---\n${observation}`);
-            console.log(`[style-library]   ✓ Viewing ${viewNum}/10 complete (${observation.length} chars)`);
+            console.log(`[style-library]   ✓ Viewing ${viewNum}/5 complete (${observation.length} chars)`);
           }
 
           // Rate limit pause between viewings (shorter than between videos)
-          if (viewNum < 10) await new Promise(r => setTimeout(r, 2000));
+          if (viewNum < 5) await new Promise(r => setTimeout(r, 2000));
         }
 
-        // Synthesize all 10 viewings into a deep per-video analysis
-        if (multipleViewings.length >= 8) { // Require at least 8 successful viewings
+        // Synthesize all 5 viewings into a deep per-video analysis
+        if (multipleViewings.length >= 4) { // Require at least 4 successful viewings
           const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations for Bobby G, host of ClipzWorld News.
 
 Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority. Flat. Never explains the joke. State the fact, one observation, done.
@@ -2970,15 +2970,15 @@ Max 600 words.`;
               messages: [{ role: 'user', content: deepSynthesisPrompt }]
             });
             const deepAnalysis = msg.content[0]?.text || multipleViewings.join('\n\n');
-            videoAnalyses.push(`--- Reference video (10x viewing): ${url.slice(0,60)} ---\n${deepAnalysis}`);
-            console.log(`[style-library] ✅ 10x analysis complete for ${url.slice(0,60)} (${deepAnalysis.length} chars)`);
+            videoAnalyses.push(`--- Reference video (5x viewing): ${url.slice(0,60)} ---\n${deepAnalysis}`);
+            console.log(`[style-library] ✅ 5x analysis complete for ${url.slice(0,60)} (${deepAnalysis.length} chars)`);
           } catch(e) {
             // Fallback: concatenate all viewings
-            videoAnalyses.push(`--- Reference video (10 viewings): ${url.slice(0,60)} ---\n${multipleViewings.join('\n\n')}`);
-            console.log(`[style-library] ✅ 10x analysis complete (fallback) for ${url.slice(0,60)}`);
+            videoAnalyses.push(`--- Reference video (5 viewings): ${url.slice(0,60)} ---\n${multipleViewings.join('\n\n')}`);
+            console.log(`[style-library] ✅ 5x analysis complete (fallback) for ${url.slice(0,60)}`);
           }
         } else {
-          console.warn(`[style-library] Only ${multipleViewings.length}/10 viewings succeeded, skipping video`);
+          console.warn(`[style-library] Only ${multipleViewings.length}/5 viewings succeeded, skipping video`);
         }
 
         // Cleanup
