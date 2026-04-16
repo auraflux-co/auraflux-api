@@ -5984,33 +5984,28 @@ function saveReferenceLibrary() {
 }
 
 function loadReferenceLibrary() {
-  // Pre-populate defaults if library not yet saved
-  var stored = localStorage.getItem('CWN_REF_LIBRARY');
-  if (!stored) {
-    var defaults = {
-      'twitch':       ['https://www.youtube.com/watch?v=ZopeSp8fK-0','https://www.youtube.com/watch?v=XUl-BynnmCc','https://www.youtube.com/watch?v=yXIWkk-p9mo'],
-      'nba':          ['https://www.youtube.com/watch?v=TWXHDa6Ta1s','https://www.youtube.com/watch?v=ke4zLK4MYTI'],
-      'news':         ['https://www.youtube.com/watch?v=WS0GkhUzJMc','https://www.youtube.com/watch?v=YKNYm6DpXs4','https://www.youtube.com/watch?v=j4vcHuc3VzI'],
-      'twitch-short': ['https://www.youtube.com/watch?v=ZopeSp8fK-0','https://www.youtube.com/watch?v=XUl-BynnmCc','https://www.youtube.com/watch?v=yXIWkk-p9mo'],
-      'nba-short':    ['https://www.youtube.com/watch?v=TWXHDa6Ta1s','https://www.youtube.com/watch?v=ke4zLK4MYTI'],
-      'news-short':   ['https://www.youtube.com/watch?v=WS0GkhUzJMc','https://www.youtube.com/watch?v=YKNYm6DpXs4','https://www.youtube.com/watch?v=j4vcHuc3VzI']
-    };
-    localStorage.setItem('CWN_REF_LIBRARY', JSON.stringify(defaults));
-  }
-  // Load saved library from localStorage
-  try {
-    var lib = JSON.parse(localStorage.getItem('CWN_REF_LIBRARY') || '{}');
-    // If no saved library yet, save the defaults from the textarea values
-    var hasAny = Object.keys(lib).some(function(k){ return lib[k] && lib[k].length; });
-    if (!hasAny) {
-      saveReferenceLibrary();
-    } else {
-      Object.keys(lib).forEach(function(t) {
-        var el = g('ref-' + t + '-urls');
-        if (el && lib[t] && lib[t].length) el.value = lib[t].join('\n');
-      });
-    }
-  } catch(e) {}
+  var defaults = {
+    'twitch':       ['https://www.youtube.com/watch?v=ZopeSp8fK-0','https://www.youtube.com/watch?v=XUl-BynnmCc','https://www.youtube.com/watch?v=yXIWkk-p9mo'],
+    'nba':          ['https://www.youtube.com/watch?v=TWXHDa6Ta1s','https://www.youtube.com/watch?v=ke4zLK4MYTI'],
+    'news':         ['https://www.youtube.com/watch?v=WS0GkhUzJMc','https://www.youtube.com/watch?v=YKNYm6DpXs4','https://www.youtube.com/watch?v=j4vcHuc3VzI'],
+    'twitch-short': ['https://www.youtube.com/watch?v=ZopeSp8fK-0','https://www.youtube.com/watch?v=XUl-BynnmCc','https://www.youtube.com/watch?v=yXIWkk-p9mo'],
+    'nba-short':    ['https://www.youtube.com/watch?v=TWXHDa6Ta1s','https://www.youtube.com/watch?v=ke4zLK4MYTI'],
+    'news-short':   ['https://www.youtube.com/watch?v=WS0GkhUzJMc','https://www.youtube.com/watch?v=YKNYm6DpXs4','https://www.youtube.com/watch?v=j4vcHuc3VzI']
+  };
+
+  // Merge stored library over defaults — ensures new keys (shorts) always appear
+  var stored = {};
+  try { stored = JSON.parse(localStorage.getItem('CWN_REF_LIBRARY') || '{}'); } catch(e) {}
+  var lib = Object.assign({}, defaults, stored);
+
+  // Always write back so shorts keys persist going forward
+  localStorage.setItem('CWN_REF_LIBRARY', JSON.stringify(lib));
+
+  // Populate textareas
+  Object.keys(lib).forEach(function(t) {
+    var el = g('ref-' + t + '-urls');
+    if (el && lib[t] && lib[t].length) el.value = lib[t].join('\n');
+  });
 }
 
 function getReferenceUrls(type) {
