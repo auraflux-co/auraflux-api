@@ -2068,11 +2068,30 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
     if (puppeteerResult && puppeteerResult.videoUrl) {
       console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights reel captured via video page (Puppeteer)`);
+      // Download immediately — ESPN CDN URLs expire within seconds
+      const tmpPathPup = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
+      let localPathPup = null;
+      try {
+        const { execFile } = require('child_process');
+        const ffmpegBin = ffmpegPath();
+        const ffmpegArgsPup = ['-i', puppeteerResult.videoUrl, '-t', '90', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', '-y', tmpPathPup];
+        await new Promise((resolve, reject) => {
+          execFile(ffmpegBin, ffmpegArgsPup, { timeout: 120000 }, (err) => err ? reject(err) : resolve());
+        });
+        const sizePup = fs.existsSync(tmpPathPup) ? fs.statSync(tmpPathPup).size : 0;
+        if (sizePup > 1000) {
+          localPathPup = tmpPathPup;
+          console.log(`[nba-scrape] ✅ Downloaded highlight to ${tmpPathPup} (${(sizePup/1024/1024).toFixed(1)}MB)`);
+        }
+      } catch(e) {
+        console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
+      }
       return res.json({
         ok: true,
         gate0: 'pass',
         gameId,
         videoUrl: puppeteerResult.videoUrl,
+        localPath: localPathPup,
         thumbnail: '',
         title: 'Game Highlights',
         description: '',
@@ -2098,11 +2117,30 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       const hlUrl = highlight.links && highlight.links.source && highlight.links.source.HD && highlight.links.source.HD.href;
       if (hlUrl) {
         console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s)`);
+        // Download immediately — ESPN CDN URLs expire within seconds
+        const tmpPathAv = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
+        let localPathAv = null;
+        try {
+          const { execFile } = require('child_process');
+          const ffmpegBin = ffmpegPath();
+          const ffmpegArgs = ['-i', hlUrl, '-t', '90', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', '-y', tmpPathAv];
+          await new Promise((resolve, reject) => {
+            execFile(ffmpegBin, ffmpegArgs, { timeout: 120000 }, (err) => err ? reject(err) : resolve());
+          });
+          const sizeAv = fs.existsSync(tmpPathAv) ? fs.statSync(tmpPathAv).size : 0;
+          if (sizeAv > 1000) {
+            localPathAv = tmpPathAv;
+            console.log(`[nba-scrape] ✅ Downloaded highlight to ${tmpPathAv} (${(sizeAv/1024/1024).toFixed(1)}MB)`);
+          }
+        } catch(e) {
+          console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
+        }
         return res.json({
           ok: true,
           gate0: 'pass',
           gameId,
           videoUrl: hlUrl,
+          localPath: localPathAv,
           thumbnail: (highlight.thumbnail && highlight.thumbnail.href) || '',
           title: highlight.headline || 'Game Highlights',
           description: highlight.description || '',
@@ -2193,23 +2231,41 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     // Also extract thumbnail
     const thumbnail = highestDurationVideo.thumbnail || '';
 
-    const result = {
+    console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected longest duration video: "${highestDurationVideo.headline || highestDurationVideo.title || 'Game Highlights'}" (${maxDuration}s)`);
+    console.log(`[nba-scrape]    URL: ${videoUrl.slice(0, 80)}...`);
+
+    // Download immediately — ESPN CDN URLs expire within seconds
+    const tmpPathApi = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
+    let localPathApi = null;
+    try {
+      const { execFile } = require('child_process');
+      const ffmpegBin = ffmpegPath();
+      const ffmpegArgs = ['-i', videoUrl, '-t', '90', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', '-y', tmpPathApi];
+      await new Promise((resolve, reject) => {
+        execFile(ffmpegBin, ffmpegArgs, { timeout: 120000 }, (err) => err ? reject(err) : resolve());
+      });
+      const sizeApi = fs.existsSync(tmpPathApi) ? fs.statSync(tmpPathApi).size : 0;
+      if (sizeApi > 1000) {
+        localPathApi = tmpPathApi;
+        console.log(`[nba-scrape] ✅ Downloaded highlight to ${tmpPathApi} (${(sizeApi/1024/1024).toFixed(1)}MB)`);
+      }
+    } catch(e) {
+      console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
+    }
+
+    res.json({
       ok: true,
       gate0: 'pass',
       gameId,
       videoUrl,
+      localPath: localPathApi,
       thumbnail,
       title: highestDurationVideo.headline || highestDurationVideo.title || 'Game Highlights',
       description: highestDurationVideo.description || '',
       duration: maxDuration,
       videoCount: videos.length,
       source: 'api'
-    };
-
-    console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected longest duration video: "${result.title}" (${maxDuration}s)`);
-    console.log(`[nba-scrape]    URL: ${videoUrl.slice(0, 80)}...`);
-
-    res.json(result);
+    });
 
   } catch (err) {
     console.error(`[nba-scrape] Error:`, err.message);
@@ -2537,6 +2593,7 @@ app.get('/news/us-canada-videos', async (req, res) => {
     videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
     return res.json({
+      ok: true,
       videos,
       recentCount: videos.length,
       source: 'AJ sitemap (today+yesterday) — Puppeteer Brightcove confirmed',
