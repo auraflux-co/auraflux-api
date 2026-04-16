@@ -1,13 +1,12 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-16 (12:30 AM ET)
-**Branch:** main | **Latest Commit:** cc6fada — docs(architecture): DASHBOARD_DECOUPLING_SPEC.md
-**✅ PRODUCTION FREEZE LIFTED:** server.js split complete. server.js = 5,371 lines (was 12,440). All 5 modules shipped. Cline + Cursor + Aider may resume commits.
-**🚨 NEW ARCHITECTURE DOC:** Every agent must read `GATED_PIPELINE_ARCHITECTURE.md` at the start of every session. It supersedes the ad-hoc retry logic patchwork and defines 9 principles + 7 gates + Gate Output Contract + collaborative QA dialogue pattern.
-**🚨 CRITICAL FOR CLINE-A:** Read `docs/handoffs/CLINE_HANDOFF_PIPELINE_RESILIENCE.md` first. 6 blocking fixes — assembly persistence, source clip restore, auto-trigger, Pino logging, gate self-healing, dashboard read-only. ~1500 HeyGen scenes burned due to these failures.
-**🔑 nodemon.json FIXED (8a6ff3f):** data/ and logs/ now ignored — no more mid-assembly restarts from saveJobCard/logError writes. lib/ now watched.
+**Last Updated:** 2026-04-17 (overnight session)
+**Branch:** main | **Latest Commit:** 337536d — docs(briefing): 6 tests per gate
+**✅ ALL GATES 0-4 HAVE FOUNDATIONAL WORK COMMITTED**
+**🧪 GATE_TEST_MODE=true IN .ENV** — Pipeline stops after Gate 1. No HeyGen auto-send until all 6 Gate 1 tests pass.
+**📋 SEE MORNING_BRIEFING.md** — Full test plan, gate status, Cline assignments for next round.
 **How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
-**Every morning:** `cat MORNING_BRIEFING.md` — see what Aider did overnight before touching anything
+**Every morning:** `cat MORNING_BRIEFING.md` — gate status + test plan before touching anything
 
 ---
 
@@ -37,6 +36,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Claude Code | **session(2026-04-17): Gates 0-4 foundational work complete** — GATE_TEST_MODE=true (.env), pipeline stops after Gate 1. Merged: pipeline-resilience, thumbnail-wire, stuck-job-dashboard, shorts-script-qa-fix, chrome-skins dead code removal, Gate 4 publish QA, poller restart recovery. 6 Gate 1 tests ready to run in morning (News/NBA/Twitch × long+short). See MORNING_BRIEFING.md. | multiple | 337536d | 2026-04-17 |
 | Cline-A | **feat(stuck): unified STUCK_JOB escalation across all gates** — markJobStuck(), checkContentTypeStuckPattern(), stuckPatternLog in server.js; POST /job/:id/stuck + GET /content-type-status endpoints; Gate 0 + Gate 1 stuck alarms wired in lib/script_gen.js; stuck card UI in cwn_production.html (stuck panel + Kill Job button + killJob() function); checkContentTypeStatus() on dashboard init | server.js, lib/script_gen.js, cwn_production.html, STATUS.md | pending | 2026-04-16 2:42 AM ET |
 | Cline-A | **feat(stuck): server-side stuck job system** — markJobStuck(), checkContentTypeStuckPattern(), stuckPatternLog in server.js; POST /job/:id/stuck + GET /content-type-status endpoints; Gate 0 + Gate 1 stuck alarms wired in lib/script_gen.js | server.js, lib/script_gen.js, STATUS.md | pending | 2026-04-16 |
 | Cline-C | **feat(thumbnail): wire canvaUrl + thumbDriveUrl into thumbnailUrl fallback chain** — Both publishViaUploadPost() (line 5208) and approveAndUpload() (line 5418) now use `prep.thumbnailUrl || job.canvaUrl || job.thumbDriveUrl || job.thumbnailUrl || ''`. Canva-generated thumbnails (canvaUrl) preferred over raw frames. Change 1 (server.js persist) skipped — thumbDriveUrl Drive upload block fully commented out in lib/assembly.js per CLINE_HANDOFF_NEWS_CHROME_FIX.md Issue 4; no-op. Branch: cline-c/thumbnail-wire. node -c ✅ | cwn_production.html, STATUS.md | pending | 2026-04-16 |
