@@ -2097,19 +2097,14 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
 
     console.log(`[nba-scrape] Found ${videos.length} videos for game ${gameId}`);
 
-    // Step 2: Filter for highlight videos first (Gap #20)
-    // ESPN often includes press conferences (30+ min) and interviews alongside actual highlights (~1-2 min).
-    // Prefer videos whose headline/title/description matches highlight-specific keywords.
-    // Fall back to unfiltered set if no matches — better to have a press conference than no clip.
-    const highlightPattern = /highlight|top\s+plays|key\s+plays|best\s+plays|game\s+recap/i;
-    const filteredVideos = videos.filter(v => {
-      const text = `${v.headline || ''} ${v.title || ''} ${v.description || ''}`;
-      return highlightPattern.test(text);
-    });
-    const videoPool = filteredVideos.length > 0 ? filteredVideos : videos;
-    console.log(`[nba-scrape]   Filtered ${filteredVideos.length}/${videos.length} videos matching "highlight" pattern — using ${videoPool.length} in pool`);
+    // Step 2: Use full video pool — select longest duration video.
+    // The game highlights reel is reliably the longest video (115s vs 40s for play clips).
+    // Keyword filtering on API metadata was removed: ESPN titles don't contain "highlight"
+    // even when the page shows "Game Highlights", so the filter always returned 0 matches.
+    const videoPool = videos;
+    console.log(`[nba-scrape]   Using full pool of ${videoPool.length} videos — will select longest duration`);
 
-    // Step 3: Find video with highest duration from the filtered pool
+    // Step 3: Find video with longest duration from the full pool
     let highestDurationVideo = null;
     let maxDuration = 0;
 
@@ -2188,7 +2183,7 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       source: 'api'
     };
 
-    console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected highest duration video: "${result.title}" (${maxDuration}s)`);
+    console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected longest duration video: "${result.title}" (${maxDuration}s)`);
     console.log(`[nba-scrape]    URL: ${videoUrl.slice(0, 80)}...`);
 
     res.json(result);
@@ -2287,14 +2282,7 @@ async function validateVideo(v) {
 // Fetches Al Jazeera's per-day sitemap XML, filters to US-topic news articles.
 // Excludes: /liveblog/ /video/ /longform/ /podcasts/ (no video or wrong format)
 // Returns array of article URL strings.
-const US_KEYWORDS = [
-  'us-', '-us-', 'trump', 'america', 'american', 'washington', 'congress',
-  'senate', 'white-house', 'pentagon', 'canada', 'mexico', 'nato', 'iran-us',
-  'us-iran', 'tariff', 'fentanyl', 'deportation', 'immigration', 'border',
-  'fbi', 'cia', 'doge'
-];
-
-async function fetchAjSitemapUrls(date = new Date(), topicKeywords = US_KEYWORDS) {
+async function fetchAjSitemapUrls(date = new Date()) {
   const yyyy = date.getFullYear();
   const mm   = String(date.getMonth() + 1).padStart(2, '0');
   const dd   = String(date.getDate()).padStart(2, '0');
@@ -2313,42 +2301,38 @@ async function fetchAjSitemapUrls(date = new Date(), topicKeywords = US_KEYWORDS
     .map(m => m.replace(/<\/?loc>/g, '').trim())
     .filter(u => u.startsWith('https://www.aljazeera.com/'));
 
-  // Exclude non-article paths
+  // Exclude non-article paths — return ALL remaining articles (no topic keyword filter)
   const EXCLUDE_PATHS = ['/liveblog/', '/video/', '/longform/', '/podcasts/', '/program/'];
   const articleUrls = allUrls.filter(u => !EXCLUDE_PATHS.some(p => u.includes(p)));
 
-  // Filter to topic-matching articles by keyword overlap on the URL slug
-  const matching = articleUrls.filter(u => {
-    const slug = u.toLowerCase();
-    return topicKeywords.some(kw => slug.includes(kw));
-  });
-
-  console.log(`[fetchAjSitemapUrls] ${allUrls.length} total → ${articleUrls.length} articles → ${matching.length} topic-matching`);
-  return matching;
+  console.log(`[fetchAjSitemapUrls] ${allUrls.length} total → ${articleUrls.length} articles (all topics)`);
+  return articleUrls;
 }
 
 // ── AJ Puppeteer video scraper ────────────────────────────────────────────────
-// Opens a Puppeteer browser, loads up to maxCheck articles, intercepts Brightcove
-// API network responses to capture HLS URLs directly, checks manifest dimensions.
+// Opens a Puppeteer browser, walks sitemap articles in order (today first, then
+// yesterday as fallback), intercepts Brightcove API network responses to capture
+// HLS URLs directly, checks manifest dimensions.
+// Stops as soon as targetCount confirmed videos are found (no hard article cap).
 // Returns array of { articleUrl, videoId, hlsUrl, orientation, pillarboxFilter }
 // orientation: 'landscape' (16:9) | 'portrait' (9:16)
 // pillarboxFilter: null for landscape, FFmpeg filter string for portrait
 //
 // Brightcove account: 665003303001
 // HLS served at manifest.prod.boltdns.net
-async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
+async function scrapeAjNewsVideos(targetCount = 5) {
   const puppeteer = require('puppeteer');
   const results = [];
 
-  // Fetch today's and yesterday's sitemap URLs
+  // Fetch today's and yesterday's sitemap URLs — today first, yesterday as fallback
   const today     = new Date();
   const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
 
   let candidateUrls = [];
   try {
     const [todayUrls, yestUrls] = await Promise.all([
-      fetchAjSitemapUrls(today, topicKeywords),
-      fetchAjSitemapUrls(yesterday, topicKeywords)
+      fetchAjSitemapUrls(today),
+      fetchAjSitemapUrls(yesterday)
     ]);
     candidateUrls = [...todayUrls, ...yestUrls];
   } catch (e) {
@@ -2361,8 +2345,7 @@ async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
     return [];
   }
 
-  const toCheck = candidateUrls.slice(0, maxCheck);
-  console.log(`[scrapeAjNewsVideos] Checking ${toCheck.length} articles with Puppeteer...`);
+  console.log(`[scrapeAjNewsVideos] Scanning for ${targetCount} videos (no article cap)...`);
 
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -2370,7 +2353,10 @@ async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
   });
 
   try {
-    for (const articleUrl of toCheck) {
+    for (const articleUrl of candidateUrls) {
+      // Stop as soon as we have enough confirmed videos
+      if (results.length >= targetCount) break;
+
       let capturedHls   = null;
       let capturedVideoId = null;
 
@@ -2499,7 +2485,7 @@ app.get('/news/us-canada-videos', async (req, res) => {
     // The dashboard shows these to the operator — text-only articles are excluded.
     // Typical results: 6-12 confirmed videos from today+yesterday's sitemap.
     console.log('[news/us-canada-videos] Running Puppeteer AJ scraper...');
-    const ajVideos = await scrapeAjNewsVideos(US_KEYWORDS, 20);
+    const ajVideos = await scrapeAjNewsVideos(5);
     console.log(`[news/us-canada-videos] Scraped ${ajVideos.length} confirmed video articles`);
 
     // Convert to the video object shape the dashboard expects
@@ -2793,12 +2779,13 @@ app.post('/generate-full-script',
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
   validateArrayLength('items', 1),
   async (req, res) => {
-    const { type } = req.body;
+    const { type, items } = req.body;
     let ajVideoPool = [];
     if (type === 'news' || type === 'news-short') {
       try {
+        const targetCount = Array.isArray(items) ? items.length : 5;
         console.log('[/generate-full-script] Pre-scraping AJ Puppeteer video pool...');
-        ajVideoPool = await scrapeAjNewsVideos(US_KEYWORDS, 20);
+        ajVideoPool = await scrapeAjNewsVideos(targetCount);
         console.log(`[/generate-full-script] ajVideoPool: ${ajVideoPool.length} videos (${ajVideoPool.filter(v=>v.orientation==='landscape').length} landscape, ${ajVideoPool.filter(v=>v.orientation==='portrait').length} portrait)`);
       } catch (e) {
         console.warn(`[/generate-full-script] AJ pre-scrape failed (non-fatal): ${e.message}`);
