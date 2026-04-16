@@ -45,16 +45,18 @@ Gate-by-gate testing infrastructure. All 5 gates (0-4) now have their foundation
 cd ~/cwn-production && nodemon server.js
 ```
 
-### Step 2 — Run 4 Gate 1 tests, paste scores back to Claude Code
+### Step 2 — Run 6 Gate 1 tests, paste scores back to Claude Code
 
 | # | Type | Form |
 |---|------|------|
 | 1 | News | Long |
-| 2 | NBA | Long |
-| 3 | Twitch | Long |
-| 4 | Twitch | Short |
+| 2 | News | Short |
+| 3 | NBA | Long |
+| 4 | NBA | Short |
+| 5 | Twitch | Long |
+| 6 | Twitch | Short |
 
-Pipeline stops after Gate 1 — no HeyGen credits burn. Pass = ≥90. Paste all 4 scores.
+Pipeline stops after Gate 1 — no HeyGen credits burn. Pass = ≥90. Paste all 6 scores.
 
 ### Step 3 — Claude Code diagnoses any failures, Clines fix
 ### Step 4 — All 4 pass → flip GATE_TEST_MODE=false → Gate 2 tests
