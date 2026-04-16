@@ -61,33 +61,81 @@ Do NOT persist the full `log` string on every update — it can grow to 50KB. Wr
 - Dashboard showed "14 avatar + 0 clips" after restore
 - Assembled video was avatar-only — Gate 3 would have reviewed a clipless cut
 
-**Fix — two parts:**
+**Fix — two parts (BOTH MUST SHIP TOGETHER):**
 
-**Part A: Save source_clip segments to jobs.json**
+> **⚠️ CRITICAL DEPENDENCY:** Part A and Part B are a single atomic fix. If only Part A ships, `card.sourceClipSegments` will be saved to disk but the dashboard won't read it — source clips still drop on restore. If only Part B ships, the dashboard will look for `card.sourceClipSegments` but it won't exist — source clips still drop. **Both parts must be committed and deployed together or the assembly will still run avatar-only after a restore.**
 
-In `saveJobCard()` (server.js), when the script contains `source_clip` scenes, build segment entries from `orderedClipUrls` and store them alongside avatar segments:
+**Part A: Save source_clip segments to jobs.json (server.js)**
 
+In `saveJobCard()` (server.js), when the script contains `source_clip` scenes, extract them from `script.scenes` and `orderedClipUrls` and save them as `card.sourceClipSegments`:
+
+**Where:** After Gate 1 pass, when `saveJobCard()` is called with the full script + orderedClipUrls
+
+**Implementation:**
 ```javascript
 // When saving job card with script + orderedClipUrls:
-const sourceClipSegments = (card.orderedClipUrls || []).map((clip, i) => ({
-  type: 'source_clip',
-  label: clip.label || `STORY${i+1}_CLIP`,
-  clipUrl: clip.clipUrl || clip.url,
-  pageUrl: clip.pageUrl || '',
-  storyIndex: clip.storyIndex,
-  status: 'ready'  // source clips don't render via HeyGen
-}));
+// Extract source_clip scenes from script.scenes
+const sourceClipScenes = (card.script?.scenes || []).filter(s => s.type === 'source_clip');
+
+// Build sourceClipSegments array by matching scenes to orderedClipUrls
+const sourceClipSegments = sourceClipScenes.map((scene, i) => {
+  const clipData = card.orderedClipUrls?.[i] || {};
+  return {
+    type: 'source_clip',
+    sceneId: scene.id,                          // e.g., "STORY1_CLIP"
+    label: scene.id || `STORY${i+1}_CLIP`,
+    clipUrl: clipData.clipUrl || clipData.url,
+    pageUrl: clipData.pageUrl || '',
+    storyIndex: clipData.storyIndex ?? i,
+    status: 'ready'  // source clips don't render via HeyGen
+  };
+});
+
 card.sourceClipSegments = sourceClipSegments;
 ```
 
-**Part B: Restore source_clip rows in dashboard**
+**Key fields:**
+- `sceneId` — matches `script.scenes[].id` so dashboard can interleave by scene order
+- `clipUrl` — the actual video URL (Brightcove HLS, YouTube, etc.)
+- `status: 'ready'` — source clips are already available, no HeyGen render needed
 
-In `restoreJobsFromServer()` (cwn_production.html), after rebuilding avatar segment rows from the job card, also insert `source_clip` rows at the correct positions using `card.sourceClipSegments` and the script's scene order:
+**Part B: Restore source_clip rows in dashboard (cwn_production.html)**
 
-- Walk `script.scenes` array
-- For each scene with `type: 'source_clip'`, find the matching `sourceClipSegments` entry by `label` or `storyIndex`
-- Insert it at the correct position in the segment list
-- Mark it `status: 'ready'` (not `rendering`) — source clips don't need HeyGen
+In `restoreJobsFromServer()` (cwn_production.html), after rebuilding avatar segment rows from `card.segments`, also insert `source_clip` rows at the correct positions using `card.sourceClipSegments`:
+
+**Where:** Inside the loop that rebuilds job cards from server data
+
+**Implementation:**
+```javascript
+// After rebuilding avatar segments from card.segments:
+if (card.sourceClipSegments && card.script?.scenes) {
+  // Walk script.scenes in order to determine correct insertion positions
+  card.script.scenes.forEach((scene, idx) => {
+    if (scene.type === 'source_clip') {
+      // Find matching sourceClipSegment by sceneId
+      const clipSeg = card.sourceClipSegments.find(s => s.sceneId === scene.id);
+      if (clipSeg) {
+        // Insert source_clip row at position idx in the segment list
+        job.segments.splice(idx, 0, {
+          type: 'source_clip',
+          sceneId: clipSeg.sceneId,
+          label: clipSeg.label,
+          clipUrl: clipSeg.clipUrl,
+          pageUrl: clipSeg.pageUrl,
+          status: 'ready'  // not 'rendering' — clips are already available
+        });
+      }
+    }
+  });
+}
+```
+
+**Result:** Dashboard shows "14 avatar + 3 clips" after restore, assembly receives full 17-segment sequence
+
+**Why both parts must ship together:**
+- Without Part A: `card.sourceClipSegments` doesn't exist → Part B has nothing to restore → clips drop
+- Without Part B: `card.sourceClipSegments` exists on disk but dashboard ignores it → clips drop
+- With both parts: Source clips persist to disk AND restore correctly → assembly runs with full sequence
 
 ---
 
@@ -97,12 +145,14 @@ In `restoreJobsFromServer()` (cwn_production.html), after rebuilding avatar segm
 
 **Fix — server-side auto-trigger:**
 
+> **⚠️ CRITICAL DEPENDENCY:** Fix 3 depends on Fix 2 being complete. The auto-trigger needs the full segment sequence (avatar + source_clip) to build the assembly payload. If Fix 2 (Part A + Part B) is not shipped, the auto-trigger will fire but the assembly will receive an avatar-only sequence because `card.sourceClipSegments` won't exist or won't be restored.
+
 In `startHeyGenPoller()` (server.js), after marking the last segment complete:
 
 ```javascript
 // After all avatar segments are completed:
 const allDone = card.segments.every(s => s.status === 'completed');
-if (allDone && card.sourceClipSegments) {
+if (allDone) {
   // Auto-trigger assembly
   const asmId = `asm_${Date.now()}`;
   const segmentData = buildSegmentSequence(card); // interleaves avatar + source_clip by scene order
@@ -117,6 +167,12 @@ if (allDone && card.sourceClipSegments) {
 - Source clip segments by matching `scene.type === 'source_clip'` → `card.sourceClipSegments[]`
 
 This produces the correct interleaved sequence without human coordination.
+
+**Why Fix 3 depends on Fix 2:**
+- `buildSegmentSequence()` reads `card.sourceClipSegments` to interleave clips with avatar segments
+- If Fix 2 Part A is missing: `card.sourceClipSegments` doesn't exist → `buildSegmentSequence()` returns avatar-only
+- If Fix 2 Part B is missing: Dashboard doesn't restore source clips → operator sees avatar-only queue → manual intervention required
+- With Fix 2 complete: `card.sourceClipSegments` exists on disk, restores correctly, and auto-trigger builds full sequence
 
 **Dashboard impact:** The ASSEMBLE button becomes a secondary fallback (visible but not primary). The primary flow is server-driven.
 

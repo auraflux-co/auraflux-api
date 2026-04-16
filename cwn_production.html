@@ -2030,6 +2030,56 @@ function restoreJobsFromServer(showAlert) {
           }
         });
 
+        // Fix 2 Part B: Restore source_clip segments from card.sourceClipSegments
+        // If the server saved sourceClipSegments (Fix 2 Part A), use those instead of
+        // rebuilding from orderedClipUrls. This preserves the exact scene order and
+        // ensures source clips don't drop on restore.
+        if (serverJob.sourceClipSegments && serverJob.sourceClipSegments.length > 0) {
+          // Walk script.scenes to determine correct insertion positions
+          var scriptScenes = (serverJob.script && serverJob.script.scenes) || [];
+          if (scriptScenes.length > 0) {
+            // Rebuild segments array with correct interleaving
+            var rebuiltSegments = [];
+            scriptScenes.forEach(function(scene, idx) {
+              if (scene.type === 'source_clip') {
+                // Find matching sourceClipSegment by sceneId
+                var clipSeg = serverJob.sourceClipSegments.find(function(s) {
+                  return s.sceneId === scene.id;
+                });
+                if (clipSeg) {
+                  rebuiltSegments.push({
+                    type: 'source_clip',
+                    sceneId: clipSeg.sceneId,
+                    label: clipSeg.label || scene.id,
+                    clipUrl: clipSeg.clipUrl || '',
+                    pageUrl: clipSeg.pageUrl || '',
+                    url: clipSeg.clipUrl || '',
+                    status: 'ready',
+                    videoId: null
+                  });
+                }
+              } else {
+                // Avatar segment - find matching videoJob by scene index
+                var vj = videoJobs[idx] || null;
+                if (vj) {
+                  rebuiltSegments.push({
+                    type: 'avatar',
+                    label: vj.sceneName ? vj.sceneName.replace(/_/g, ' ') : scene.id,
+                    status: 'rendering',
+                    videoId: vj.video_id || null,
+                    url: null,
+                    truncated: false
+                  });
+                }
+              }
+            });
+            // Replace segments with rebuilt array if we got a full sequence
+            if (rebuiltSegments.length > 0) {
+              segments = rebuiltSegments;
+            }
+          }
+        }
+
         // Second pass: fill source_clip segments that still have no URL from orderedClipUrls sequentially.
         // This handles cases where clip.url was empty during the first pass (e.g. older job format
         // where orderedClipUrls entries have the URL at a different key, or the object structure differs).
