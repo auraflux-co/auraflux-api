@@ -1874,6 +1874,67 @@ app.post('/capture-ticker', async (req, res) => {
   captureTicker(contentType).catch(e => console.warn('[ticker] Background capture failed:', e.message));
 });
 
+/**
+ * Scrape ESPN game page for HLS manifest URL using Puppeteer.
+ * ESPN uses BAMGrid/Hive player on Akamai CDN (not Brightcove).
+ * HLS manifests are at service-pkgespn.akamaized.net/opp/cmaf/espn/.../*.m3u8
+ * @param {string} gameId
+ * @returns {Promise<{videoUrl: string, duration?: number, title?: string} | null>}
+ */
+async function scrapeEspnGameVideoUrl(gameId) {
+  const gamePageUrl = `https://www.espn.com/nba/game/_/gameId/${gameId}`;
+  let capturedHlsUrl = null;
+  let browser;
+
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+    const page = await browser.newPage();
+
+    await page.setRequestInterception(true);
+    page.on('request', req => req.continue());
+    page.on('response', async resp => {
+      const url = resp.url();
+      // ESPN uses service-pkgespn.akamaized.net for HLS manifests
+      if (url.includes('service-pkgespn.akamaized.net') && url.includes('.m3u8')) {
+        capturedHlsUrl = url;
+        console.log(`[nba-scrape] HLS manifest captured: ${url.slice(0, 80)}...`);
+      }
+    });
+
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36');
+    await page.goto(gamePageUrl, { waitUntil: 'domcontentloaded', timeout: 25000 });
+
+    // Scroll to trigger lazy-loaded video player
+    for (let i = 0; i < 4; i++) {
+      await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    // Wait up to 5s for HLS manifest intercept
+    for (let i = 0; i < 10 && !capturedHlsUrl; i++) {
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    await browser.close();
+    browser = null;
+
+    if (capturedHlsUrl) {
+      console.log(`[nba-scrape] Puppeteer HLS captured for ${gameId}: ${capturedHlsUrl.slice(0, 80)}...`);
+      return { videoUrl: capturedHlsUrl };
+    }
+
+  } catch (e) {
+    console.warn(`[nba-scrape] Puppeteer fallback failed for ${gameId}: ${e.message}`);
+  } finally {
+    if (browser) { try { await browser.close(); } catch (_) {} }
+  }
+
+  return null;
+}
+
 // ── POST /nba/scrape-game-highlight ─────────────────────────────────
 // Scrapes the ESPN game page for the video with the highest duration
 // User requirement: "video on that page with the highest duration--top left of the game_id page"
@@ -1890,8 +1951,31 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     const videos = summaryResp.data.videos || [];
 
     if (!videos.length) {
-      console.warn(`[nba-scrape] No videos found for game ${gameId}`);
-      return res.json({ ok: false, error: 'No videos found' });
+      console.warn(`[nba-scrape] No videos found in ESPN API for game ${gameId} — trying Puppeteer fallback`);
+      
+      // Gate 0: Try Puppeteer fallback to capture HLS manifest
+      const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
+      if (puppeteerResult && puppeteerResult.videoUrl) {
+        return res.json({
+          ok: true,
+          gate0: 'pass',
+          gameId,
+          videoUrl: puppeteerResult.videoUrl,
+          thumbnail: '',
+          title: 'Game Highlights (Puppeteer)',
+          description: '',
+          duration: 0,
+          videoCount: 0,
+          source: 'puppeteer'
+        });
+      }
+
+      // Gate 0 FAIL: No videos in API and Puppeteer failed
+      return res.json({
+        ok: false,
+        gate0: 'fail',
+        error: `No videos found for game ${gameId} — ESPN API returned empty videos[]. Game may be too recent or too old.`
+      });
     }
 
     console.log(`[nba-scrape] Found ${videos.length} videos for game ${gameId}`);
@@ -1926,41 +2010,75 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
 
     if (!highestDurationVideo) {
       console.warn(`[nba-scrape] No valid video with duration found`);
-      return res.json({ ok: false, error: 'No video with duration found' });
+      return res.json({
+        ok: false,
+        gate0: 'fail',
+        error: `No video with duration >0 found for game ${gameId} — ESPN may not have processed highlights yet.`
+      });
     }
 
-    // Step 3: Extract best quality video URL
+    // Step 4: Extract best quality video URL from API
     const links = highestDurationVideo.links || {};
     const source = links.source || {};
-    const videoUrl = source.HD?.href
+    let videoUrl = source.HD?.href
       || source.mezzanine?.href
       || source.full?.href
       || source.href
       || links.mobile?.href
       || '';
 
+    // Gate 0: Validate the selected URL is usable (ESPN CDN URLs often return 500)
+    // If API URL is empty or fails validation, fall back to Puppeteer HLS capture
+    if (!videoUrl) {
+      console.warn(`[nba-scrape] Gate 0: No usable video URL in API response — trying Puppeteer fallback`);
+      const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
+      if (puppeteerResult && puppeteerResult.videoUrl) {
+        videoUrl = puppeteerResult.videoUrl;
+        console.log(`[nba-scrape] Gate 0: Puppeteer fallback succeeded — using HLS manifest`);
+      } else {
+        console.error(`[nba-scrape] Gate 0 FAIL: No usable video URL found for game ${gameId}`);
+        return res.json({
+          ok: false,
+          gate0: 'fail',
+          error: `No valid highlight clip URL found for game ${gameId} — API returned metadata but no downloadable URL. Check ESPN API response at: ${summaryUrl}`
+        });
+      }
+    }
+
+    // Gate 0: Validate duration meets minimum threshold
+    if (maxDuration > 0 && maxDuration < 10) {
+      console.warn(`[nba-scrape] Gate 0 WARN: Best video for game ${gameId} is only ${maxDuration}s — below 10s minimum`);
+      return res.json({
+        ok: false,
+        gate0: 'fail',
+        error: `No valid highlight clips found for game ${gameId} — longest clip is only ${maxDuration}s (minimum: 10s)`
+      });
+    }
+
     // Also extract thumbnail
     const thumbnail = highestDurationVideo.thumbnail || '';
 
     const result = {
       ok: true,
+      gate0: 'pass',
       gameId,
       videoUrl,
       thumbnail,
       title: highestDurationVideo.headline || highestDurationVideo.title || 'Game Highlights',
       description: highestDurationVideo.description || '',
       duration: maxDuration,
-      videoCount: videos.length
+      videoCount: videos.length,
+      source: 'api'
     };
 
-    console.log(`[nba-scrape] ✅ Selected highest duration video: "${result.title}" (${maxDuration}s)`);
+    console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected highest duration video: "${result.title}" (${maxDuration}s)`);
     console.log(`[nba-scrape]    URL: ${videoUrl.slice(0, 80)}...`);
 
     res.json(result);
 
   } catch (err) {
     console.error(`[nba-scrape] Error:`, err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, gate0: 'error' });
   }
 });
 
