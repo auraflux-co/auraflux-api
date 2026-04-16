@@ -5205,7 +5205,7 @@ function publishViaUploadPost(platforms, opts) {
     tags:         prep.tags || [],
     scheduledAt:  schedule || null,
     contentType:  contentType,
-    thumbnailUrl: prep.thumbnailUrl || job.thumbnailUrl || '',
+    thumbnailUrl: prep.thumbnailUrl || job.canvaUrl || job.thumbDriveUrl || job.thumbnailUrl || '',
     pinnedComment:prep.pinnedComment || prep.comment || '',
     async:        true
   }));
@@ -5415,7 +5415,7 @@ function approveAndUpload(jobId) {
     description:   prep.description || prep.ytDescription || '',
     tags:          prep.tags || [],
     contentType:   contentType,
-    thumbnailUrl:  prep.thumbnailUrl || job.thumbnailUrl || '',
+    thumbnailUrl:  prep.thumbnailUrl || job.canvaUrl || job.thumbDriveUrl || job.thumbnailUrl || '',
     pinnedComment: prep.pinnedComment || prep.comment || '',
     async:         true
   }));
