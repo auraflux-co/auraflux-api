@@ -16,6 +16,7 @@ All pending work lives here. Archive after the associated commit lands.
 
 | File | Agent | Status | What it does |
 |------|-------|--------|-------------|
+| `CLINE_HANDOFF_PIPELINE_RESILIENCE.md` | Cline-A | **PENDING — CRITICAL** | Assembly persistence, source clip restore, auto-trigger, Pino logging, gate self-healing |
 | `CLINE_HANDOFF_ASSEMBLY_ERROR_LOGGING.md` | Cline-A | **PENDING** | Wire logError() at 4 assembly failure sites → errors.jsonl |
 | `CLINE_HANDOFF_FFMPEG_PERFORMANCE.md` | Cline-A | **PENDING** | VideoToolbox on macOS, libx264 ultrafast on Linux — ~5x speedup |
 | `CLINE_HANDOFF_HEYGEN_TEMPLATES.md` | Cline-A | **PENDING** | Switch HeyGen to template IDs (long + short) |
