@@ -17,9 +17,13 @@ All pending work lives here. Archive after the associated commit lands.
 | File | Agent | Status | What it does |
 |------|-------|--------|-------------|
 | `CLINE_HANDOFF_PIPELINE_RESILIENCE.md` | Cline-A | **PENDING — CRITICAL** | Assembly persistence, source clip restore, auto-trigger, Pino logging, gate self-healing |
+| `CLINE_HANDOFF_POLLER_RESTART_RECOVERY.md` | Cline-A | **PENDING** | Boot-time recoverInFlightJobs() re-attaches HeyGen pollers after nodemon restart; dashboard auto-triggers assembly when restore finds all segments completed |
+| `CLINE_HANDOFF_GATE3_SURGICAL_FIX.md` | Cline-A | **PENDING** | Gate 3 surgical repair before retry: parseGate3Report() extracts freeze timestamp → remove offending segment + rebuild concat; audio issues → re-normalize at 44100Hz; pacing → informational note only |
+| `CLINE_HANDOFF_GATE1_QA_FEEDBACK_LOOP.md` | Cline-A | **PENDING** | Structured fix directive on Gate 1 retry — exact missing scenes, fabricated content, name errors back to Gemini |
 | `CLINE_HANDOFF_ASSEMBLY_ERROR_LOGGING.md` | Cline-A | **PENDING** | Wire logError() at 4 assembly failure sites → errors.jsonl |
 | `CLINE_HANDOFF_FFMPEG_PERFORMANCE.md` | Cline-A | **PENDING** | VideoToolbox on macOS, libx264 ultrafast on Linux — ~5x speedup |
-| `CLINE_HANDOFF_HEYGEN_TEMPLATES.md` | Cline-A | **PENDING** | Switch HeyGen to template IDs (long + short) |
+| `CLINE_HANDOFF_HEYGEN_TEMPLATES.md` | Cline-A | **SUPERSEDED by HEYGEN_TEMPLATE_FIX** | Original template wiring spec (targeted old server.js location) |
+| `CLINE_HANDOFF_HEYGEN_TEMPLATE_FIX.md` | Cline-A | **PENDING** | Diagnose + fix template 400s: log response body, confirm template IDs, fix body structure |
 | `CLINE_HANDOFF_HEYGEN_720P_DOWNSCALE.md` | Cline-A | **PENDING** | Render at 720p + Lanczos upscale in normalize step |
 | `CLINE_HANDOFF_NBA_VOICEOVER_FFMPEG_V2.md` | Cline-A | **PENDING (post-News lock)** | NBA live-narration voiceover over highlights |
 | `CLINE_HANDOFF_NBA_NARRATION_WORD_COUNT.md` | Cline-A | **PENDING (post-NBA prompt)** | Word count calibration for NBA narration style |
@@ -36,11 +40,14 @@ All pending work lives here. Archive after the associated commit lands.
 | `CLINE_HANDOFF_WAVE_0_CLEANUP.md` | Cursor | **PENDING** | 16 dead-code / unused import cleanup items |
 | `CLINE_HANDOFF_PREFLIGHT_INLINE.md` | Cursor | **SHIPPED 8a9362e** | Replace confirm() popup with inline preflight panel |
 | `CLINE_HANDOFF_ROLLBACK_ADVANCE_GAPS.md` | Cline-B | **SHIPPED 96ca354** | scriptJobId persist, dedup lock clear, rollback overshoot, audit trail |
-| `CLINE_HANDOFF_JOB_DISMISS.md` | Cline-B | **PENDING** | Job card dismiss clears data/jobs.json not just localStorage |
+| `CLINE_HANDOFF_JOB_DISMISS.md` | Cline-B | **SUPERSEDED by JOB_DISMISS_RESTORE** | Original dismiss spec — endpoint + dashboard function now shipped |
+| `CLINE_HANDOFF_JOB_DISMISS_RESTORE.md` | Cline-B | **PENDING** | Stage allowlist for GET /jobs + assembled skip in auto-restore (dismiss endpoint already done) |
 | `CLINE_HANDOFF_ASSEMBLY_DEDUP_LOCK.md` | Cline-A | **PENDING** | Prevent duplicate assembly runs on same job |
 | `CLINE_HANDOFF_STRICT_CLIPS_DEDUP_DROPDOWN.md` | Cline-A | **PENDING** | Deduplicate clips in dropdown |
-| `CLINE_HANDOFF_AL_JAZEERA_403_WORKAROUND.md` | Cline-A | **PENDING** | Al Jazeera 403 bypass |
-| `CLINE_HANDOFF_NEWS_CLIP_SCRAPING.md` | Cline-A | **PENDING** | News clip scraping improvements |
+| `CLINE_HANDOFF_AJ_NEWS_SCRAPER.md` | Cline-A | **SUPERSEDED by GATE0_NEWS_SCRAPER** | Puppeteer scraper for AJ /us-canada/ /news/ → 16:9 Brightcove HLS; replaces broken static cheerio scraper |
+| `CLINE_HANDOFF_GATE0_NEWS_SCRAPER.md` | Cline-A | **PENDING — replaces AJ_NEWS_SCRAPER with full implementation code** | Sitemap-driven Puppeteer scraper: fetchAjSitemapUrls + scrapeAjNewsVideos + buildAjPillarboxFilter + matchStoryToAjVideo; replaces /video/newsfeed/ endpoint; wired at news script gen start; pillarbox filter applied in assembly |
+| `CLINE_HANDOFF_AL_JAZEERA_403_WORKAROUND.md` | Cline-A | **SUPERSEDED by AJ_NEWS_SCRAPER** | Al Jazeera 403 bypass |
+| `CLINE_HANDOFF_NEWS_CLIP_SCRAPING.md` | Cline-A | **SUPERSEDED by AJ_NEWS_SCRAPER** | News clip scraping improvements |
 | `CLINE_HANDOFF_GAP_51_STAGE_DIRECTION_LEAK.md` | Cline-A | **PENDING** | Stage direction leak fix |
 | `CLINE_HANDOFF_SSML_BEAT_REPLACEMENT.md` | Cline-A | **PENDING** | Replace [beat] with SSML pauses |
 | `CLINE_HANDOFF_AUTO_ADVANCE_HARDENING.md` | Cline-A | **SHIPPED** | Auto-advance pipeline hardening |
@@ -52,7 +59,7 @@ All pending work lives here. Archive after the associated commit lands.
 | `CLINE_HANDOFF_VECTCUT_LONGFORM_FOUNDATION.md` | Cline-A | **PENDING** | VectCut long-form foundation |
 | `CLINE_HANDOFF_NBA_VECTCUT_VOICEOVER.md` | Cline-A | **PENDING** | NBA VectCut voiceover integration |
 | `CLINE_HANDOFF_LAYOUT_DIMENSIONS_AND_HANDOFF_CONFIRMATION.md` | Cline-A | **PENDING** | Layout dimension fixes |
-| `CLINE_HANDOFF_RESTORE_JOB_FILTER.md` | Cline-B | **PENDING** | Job filter restore on dashboard |
+| `CLINE_HANDOFF_RESTORE_JOB_FILTER.md` | Cline-B | **SUPERSEDED by JOB_DISMISS_RESTORE** | Failed/published skip logic now shipped; assembled skip + stage allowlist in new handoff |
 | `CLINE_HANDOFF_POST_SHIP_VERIFICATION_NEWS.md` | Cline-A | **PENDING** | Post-ship QA checklist for News |
 | `CLINE_HANDOFF_POST_SHIP_VERIFICATION_NBA.md` | Cline-A | **PENDING** | Post-ship QA checklist for NBA |
 | `CLINE_HANDOFF_SMOKE_TEST_BUGS.md` | Cline-A | **PENDING** | General smoke test bug fixes |
