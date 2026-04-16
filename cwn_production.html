@@ -204,7 +204,6 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
             <div class="btn-row">
               <button class="btn btn-gold" onclick="nav('nba')">SELECT GAMES</button>
-              <button class="btn btn-outline btn-sm" onclick="generateNBA()" id="nba-generate-btn" style="display:none;">GENERATE SCRIPT</button>
             </div>
           </div>
         </div>
@@ -3090,98 +3089,6 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
   xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {} }));
 }
 
-function generateNBA() {
-  var ids = g('nba-game-ids').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-  if (!ids.length) { nav('nba'); return; }
-  // Gap #19: Guard — require SELECT GAMES flow before generating script
-  // CURRENT_META.clipUrls is populated by nbaUseSelected() after scraping ESPN highlight URLs.
-  // If user typed game IDs directly without clicking SELECT GAMES, clipUrls is empty and
-  // the server receives games with no clipUrl → Gate 1 failure (empty Gemini analysis).
-  if (!CURRENT_META || !CURRENT_META.clipUrls || Object.keys(CURRENT_META.clipUrls).length === 0) {
-    var statusEl = g('nba-status');
-    if (statusEl) {
-      statusEl.textContent = '⚠️ Please click SELECT GAMES first to scrape highlight URLs before generating the script.';
-      statusEl.style.color = '#e8a020';
-    } else {
-      alert('Please click SELECT GAMES first to scrape highlight URLs before generating the script.');
-    }
-    nav('nba');
-    return;
-  }
-  CURRENT_TYPE = 'nba';
-  CURRENT_META = { gameIds: ids, clipUrls: CURRENT_META.clipUrls };
-  setGeneratingState('nba-status', 'NBA — Fetching ESPN data...');
-
-  // Fetch summary for each game, then build items array for server
-  var games = []; var done = 0;
-  ids.forEach(function(gameId) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event='+gameId,true);
-    xhr.timeout=10000;
-    xhr.onload=function(){
-      try {
-        var d=JSON.parse(xhr.responseText);
-        var hc=d.header&&d.header.competitions&&d.header.competitions[0];
-        var comps=(hc&&hc.competitors)||[];
-        var away={team:{}}, home={team:{}};
-        comps.forEach(function(c){ if(c.homeAway==='away')away=c; if(c.homeAway==='home')home=c; });
-        // Top scorer
-        var topPlayer=null, topPts=0;
-        ((d.boxscore&&d.boxscore.players)||[]).forEach(function(tp){
-          (tp.statistics||[]).forEach(function(sg){
-            (sg.athletes||[]).forEach(function(a){
-              var pts=parseInt((a.stats||[])[13]||0);
-              if(pts>topPts){topPts=pts;topPlayer={name:(a.athlete&&a.athlete.displayName)||'',pts:pts,reb:(a.stats||[])[6]||'?',ast:(a.stats||[])[7]||'?'};}
-            });
-          });
-        });
-        // Injuries
-        var outNames=[];
-        (d.injuries||[]).forEach(function(t){ (t.injuries||[]).forEach(function(p){ if((p.status||'').toLowerCase()==='out') outNames.push((p.athlete&&p.athlete.shortName)||''); }); });
-        // Team colors for thumbnail (optional visual hint)
-        var awayColor='22304b', homeColor='1a2538';
-        ((d.boxscore&&d.boxscore.teams)||[]).forEach(function(t){
-          var col=(t.team&&t.team.color)||'';
-          if(col&&(t.team&&t.team.abbreviation)===(away.team&&away.team.abbreviation)) awayColor=col;
-          if(col&&(t.team&&t.team.abbreviation)===(home.team&&home.team.abbreviation)) homeColor=col;
-        });
-        // Thumbnail from ESPN (team logo area as proxy)
-        var awayAbbr=(away.team&&away.team.abbreviation)||'';
-        var thumbUrl = awayAbbr ? 'https://a.espncdn.com/i/teamlogos/nba/500/'+awayAbbr.toLowerCase()+'.png' : '';
-        games.push({
-          gameId: gameId,
-          away:   (away.team&&away.team.displayName)||'Away',
-          home:   (home.team&&home.team.displayName)||'Home',
-          awayAbbr: awayAbbr,
-          homeAbbr: (home.team&&home.team.abbreviation)||'',
-          awayScore: away.score||'?',
-          homeScore: home.score||'?',
-          awayRec: (away.record&&away.record[0]&&away.record[0].displayValue)||'',
-          homeRec: (home.record&&home.record[0]&&home.record[0].displayValue)||'',
-          leader: topPlayer?topPlayer.name:'',
-          leaderStat: topPlayer?(topPlayer.pts+' PTS / '+topPlayer.reb+' REB / '+topPlayer.ast+' AST'):'',
-          injuries: outNames,
-          thumbnailUrl: thumbUrl
-        });
-      }catch(e){ games.push({gameId:gameId,away:'?',home:'?',awayScore:'?',homeScore:'?',leader:'',leaderStat:'',injuries:[],thumbnailUrl:''}); }
-      done++;
-      if (done>=ids.length) {
-        g('script-type-label').textContent = 'NBA — Gemini + Claude writing full script...';
-        // Attach clip URLs to each game item for the server
-        var clipUrlsMap = (CURRENT_META&&CURRENT_META.clipUrls)||{};
-        games.forEach(function(gm){ var cu=clipUrlsMap[gm.gameId]; if(cu){gm.clipUrl=cu.url;gm.clipDuration=cu.duration;} });
-        callFullScriptServer('nba', games, 'nba-status', null);
-      }
-    };
-    xhr.onerror=xhr.ontimeout=function(){
-      games.push({gameId:gameId,away:'?',home:'?',awayScore:'?',homeScore:'?',leader:'',leaderStat:'',injuries:[],thumbnailUrl:''});
-      done++;
-      if(done>=ids.length) callFullScriptServer('nba', games, 'nba-status', null);
-    };
-    xhr.send();
-  });
-}
-
 // ── Fix 25b: Adapter — fetch CWN US/Canada video stories from server endpoint ──
 // Calls /news/us-canada-videos and adapts response to legacy rss2json item shape.
 function fetchCwnNewsVideos(callback) {
@@ -4573,7 +4480,7 @@ function sendToHeyGenManual() {
 }
 
 function regenScript() {
-  if (CURRENT_TYPE === 'nba') generateNBA();
+  if (CURRENT_TYPE === 'nba') callFullScriptServer('nba', (CURRENT_META && CURRENT_META.items) || [], 'nba-status', null);
   else if (CURRENT_TYPE === 'news') generateNews();
   else if (CURRENT_TYPE === 'twitch') generateTwitch();
 }
@@ -4929,25 +4836,28 @@ function nbaUseSelected() {
   }
   g('nba-status').className = 'tag tag-done';
   g('nba-status').innerHTML = '<span class="tag-dot"></span> ' + ids.length + ' GAMES READY';
-  var genBtn = g('nba-generate-btn');
-  if (genBtn) genBtn.style.display = '';
-  // Generate the script using selected game data
+  // Build items array from selected game data — no ESPN API call needed, all data already on gm
   CURRENT_TYPE = 'nba';
-  var games = selected.map(function(gm){
+  var items = selected.map(function(gm){
     return {
-      away: gm.away, home: gm.home,
-      awayAbbr: gm.awayAbbr, homeAbbr: gm.homeAbbr,
-      score: gm.awayScore+'-'+gm.homeScore,
-      leader: null, leaderStat: null, injuries: []
+      gameId:       gm.id,
+      away:         gm.away,
+      home:         gm.home,
+      awayAbbr:     gm.awayAbbr,
+      homeAbbr:     gm.homeAbbr,
+      awayScore:    gm.awayScore,
+      homeScore:    gm.homeScore,
+      leader:       gm.leader || '',
+      leaderStat:   gm.leaderStat || '',
+      injuries:     gm.injuries || [],
+      clipUrl:      gm.clipUrl || '',
+      clipDuration: gm.clipDuration || null,
+      thumbnailUrl: gm.thumbnail || ''
     };
   });
-  g('script-type-label').textContent = 'NBA COMPILATION SCRIPT';
-  g('main-script').value = SCRIPTS.nba(games);
-  updateScriptStats();
-  g('nba-status').className = 'tag tag-processing';
-  g('nba-status').innerHTML = '<span class="tag-dot"></span> SCRIPT READY — ' + selected.length + ' games';
+  g('script-type-label').textContent = 'NBA — Gemini + Claude writing full script...';
   nav('generate');
-  g('main-script').scrollIntoView({behavior:'smooth'});
+  callFullScriptServer('nba', items, 'nba-status', null);
 }
 
 function fetchNewsStories() {
