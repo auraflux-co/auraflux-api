@@ -104,7 +104,7 @@ const { logError, getErrorRate, getRecentErrors, errorMiddleware } = require('./
 const { requireFields, validateContentType, validateArrayLength, sanitizeStrings } = require('./lib/validation');
 const TwitchClient = require('./lib/clients/twitch_client');
 const { CONFIG } = require('./lib/config');
-const { log } = require('./lib/logger');
+const logger = require('./lib/logger');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
 const {
   generateTwitchLongformThumbnail,
