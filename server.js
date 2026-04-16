@@ -2878,16 +2878,21 @@ app.post('/generate-full-script',
   validateArrayLength('items', 1),
   async (req, res) => {
     const { type, items } = req.body;
+    // Build ajVideoPool directly from items the dashboard already scraped —
+    // avoids a full second Puppeteer run that adds 3-5 minutes before Gemini starts.
+    // Items from fetchCwnNewsVideos() already carry hlsUrl, orientation, pillarboxFilter.
     let ajVideoPool = [];
-    if (type === 'news' || type === 'news-short') {
-      try {
-        const targetCount = Array.isArray(items) ? items.length : 5;
-        console.log('[/generate-full-script] Pre-scraping AJ Puppeteer video pool...');
-        ajVideoPool = await scrapeAjNewsVideos(targetCount);
-        console.log(`[/generate-full-script] ajVideoPool: ${ajVideoPool.length} videos (${ajVideoPool.filter(v=>v.orientation==='landscape').length} landscape, ${ajVideoPool.filter(v=>v.orientation==='portrait').length} portrait)`);
-      } catch (e) {
-        console.warn(`[/generate-full-script] AJ pre-scrape failed (non-fatal): ${e.message}`);
-      }
+    if ((type === 'news' || type === 'news-short') && Array.isArray(items)) {
+      ajVideoPool = items
+        .filter(it => it.hlsUrl || it.videoUrl)
+        .map(it => ({
+          articleUrl:      it.link || it.url || '',
+          title:           it.title || '',
+          hlsUrl:          it.hlsUrl || it.videoUrl || '',
+          orientation:     it.sourceOrientation || 'landscape',
+          pillarboxFilter: it.pillarboxFilter || null
+        }));
+      console.log(`[/generate-full-script] ajVideoPool built from request items: ${ajVideoPool.length} videos (no re-scrape)`);
     }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
   }
