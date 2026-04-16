@@ -37,6 +37,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline-C | **feat(qa): add geminiAnalyzeImage() + Gate 3 stuck alarm + stuck CSS** — geminiAnalyzeImage(imagePath, prompt) added to lib/qa.js using same upload pattern as geminiAnalyzeClip(); exported. Gate 3 stuck alarm wired in lib/assembly.js after MAX_QA_RETRIES exhausted — POSTs to /job/:id/stuck. Stuck panel CSS added to cwn_production.html. | lib/qa.js, lib/assembly.js, cwn_production.html, STATUS.md | pending | 2026-04-16 |
 | Cline-C | **verify(chrome-skins): all CLINE_HANDOFF_SHARED_CHROME_SKINS.md changes already in main** — CSS skinMap (twitch #6441A5, nba #17408B), contentType at all call sites, Twitch crop=1880:1040 — all already shipped. STATUS.md only. | STATUS.md | 28098e2 | 2026-04-16 |
 | Claude Code | **fix(restore): correct IN_FLIGHT_STAGES phantom stage** — 'assembling' is not a real stage value. Corrected to ['script_ready', 'all_sent']. | server.js, STATUS.md | d6ea961 | 2026-04-16 |
 | Cline-B | **feat(restore): job dismiss + assembled auto-restore skip** — GET /jobs IN_FLIGHT_STAGES allowlist. Dismissed excluded server-side. Assembled skips auto-restore, available on manual ↩ RESTORE JOBS. | server.js, cwn_production.html, STATUS.md | ad03a23 | 2026-04-16 |
