@@ -2906,17 +2906,33 @@ Extract ONLY what applies to Bobby G's voice. Focus on:
 
 Do NOT extract: energy level, catchphrases, audience engagement tactics, hype language, or anything that conflicts with flat deadpan delivery. Those are surface features of the performer, not the voice Bobby G uses.`;
 
-          const genResp = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
-            {
-              contents: [{ parts: [
-                { text: stylePrompt },
-                { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
-              ]}],
-              generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
-            },
-            { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
-          );
+          // Retry up to 3 times on 503 with exponential backoff
+          let genResp = null;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              genResp = await axios.post(
+                `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
+                {
+                  contents: [{ parts: [
+                    { text: stylePrompt },
+                    { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
+                  ]}],
+                  generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
+                },
+                { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
+              );
+              break; // success
+            } catch(retryErr) {
+              const is503 = retryErr.response && retryErr.response.status === 503;
+              if (is503 && attempt < 3) {
+                const backoff = attempt * 15000; // 15s, 30s
+                console.warn(`[style-library]   ⚠️ 503 on viewing ${viewNum} attempt ${attempt} — retrying in ${backoff/1000}s`);
+                await new Promise(r => setTimeout(r, backoff));
+              } else {
+                throw retryErr;
+              }
+            }
+          }
 
           const observation = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
           if (observation.length > 100) {
@@ -2971,8 +2987,8 @@ Max 600 words.`;
           await axios.delete(`https://generativelanguage.googleapis.com/v1beta/${geminiFile.name}?key=${GEMINI_APIKEY}`);
         } catch(e) {}
 
-        // Rate limit pause between videos
-        await new Promise(r => setTimeout(r, 3000));
+        // Rate limit pause between videos — longer to avoid 503s on rapid succession
+        await new Promise(r => setTimeout(r, 5000));
 
       } catch(e) {
         console.warn(`[style-library] Failed for ${url}: ${e.message}`);
@@ -3037,6 +3053,9 @@ Format as clear bullet points under clear headings. Max 400 words. This will be 
     } else {
       results[contentType] = { ok: false, error: 'No videos could be analyzed' };
     }
+
+    // Pause between content types to avoid Gemini 503 rate limits
+    await new Promise(r => setTimeout(r, 15000));
   }
 
   // Save style guides to disk
