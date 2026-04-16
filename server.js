@@ -124,7 +124,8 @@ const {
   callClaudeAPI,
   uploadToGeminiFiles,
   waitForGeminiFile,
-  deleteGeminiFile
+  deleteGeminiFile,
+  autoAction
 } = require('./lib/qa');
 const {
   sendScriptToHeyGen,
@@ -1669,6 +1670,31 @@ app.post('/assemble/:asmId/retry', async (req, res) => {
       assemblyJobs[asmId].qaOutcome = qaResult.outcome;
 
       log(asmId, `Gate 3: ${qaResult.outcome} (${qaResult.score}/100)`);
+
+      // ── Gate 3 Auto-Action (Fix 5) ──────────────────────────────────
+      const { action, directive, reason } = autoAction(3, qaResult.score, {
+        jobId: asmId,
+        contentType,
+        clipCount: downloadedClipCount,
+        retryCount: 0 // This is already a retry path
+      });
+      logger.info({ gate: 3, score: qaResult.score, action, directive, reason }, 'Gate 3 auto-action (retry path)');
+
+      if (action === 'proceed') {
+        log(asmId, `✅ Gate 3 AUTO-ACTION: ${action} — ${reason}`);
+        // Continue to Drive upload below
+      } else if (action === 'manual_review') {
+        log(asmId, `⏸  Gate 3 AUTO-ACTION: ${action} — ${reason}`);
+        assemblyJobs[asmId].status = 'manual_review';
+        assemblyJobs[asmId].autoAction = { action, directive, reason };
+        return; // Pause pipeline
+      } else if (action === 'retry_assembly') {
+        log(asmId, `🔄 Gate 3 AUTO-ACTION: ${action} — ${reason}`);
+        // Already in retry path — cannot retry again, escalate to manual review
+        assemblyJobs[asmId].status = 'manual_review';
+        assemblyJobs[asmId].autoAction = { action: 'manual_review', directive: 'Gate 3 retry failed — manual review required', reason };
+        return;
+      }
 
       if (qaResult.outcome === 'pass' || qaResult.outcome === 'manual_review') {
         // Upload to Drive
