@@ -5993,10 +5993,13 @@ function loadReferenceLibrary() {
     'news-short':   ['https://www.youtube.com/watch?v=WS0GkhUzJMc','https://www.youtube.com/watch?v=YKNYm6DpXs4','https://www.youtube.com/watch?v=j4vcHuc3VzI']
   };
 
-  // Merge stored library over defaults — ensures new keys (shorts) always appear
+  // Merge stored library over defaults — only use stored values if non-empty
   var stored = {};
   try { stored = JSON.parse(localStorage.getItem('CWN_REF_LIBRARY') || '{}'); } catch(e) {}
-  var lib = Object.assign({}, defaults, stored);
+  var lib = Object.assign({}, defaults);
+  Object.keys(stored).forEach(function(t) {
+    if (stored[t] && stored[t].length > 0) lib[t] = stored[t];
+  });
 
   // Always write back so shorts keys persist going forward
   localStorage.setItem('CWN_REF_LIBRARY', JSON.stringify(lib));
