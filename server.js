@@ -922,18 +922,18 @@ app.get('/health', async (req, res) => {
 // GET /jobs — return all persisted job cards for dashboard recovery after server restart
 // Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
 app.get('/jobs', (req, res) => {
-  // Filter: only return jobs that are actionable (not failed, not published, not dismissed)
-  // Failed jobs restore as 'all_sent' which shows Assemble button on broken jobs
+  // Only return in-flight jobs. Completed (assembled, published) and
+  // failed/dismissed jobs are excluded — they do not need to restore on page load.
+  // Operators can still manually retrieve any job with ↩ RESTORE JOBS if needed.
+  const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'assembling']);
+  
   const actionableJobs = Object.values(persistedJobs).filter(job => {
     const stage = job.stage || '';
-    const qaOutcome = job.qaOutcome || '';
     const status = job.status || '';
-    return stage !== 'failed' &&
-           stage !== 'published' &&
-           qaOutcome !== 'fail' &&
-           qaOutcome !== 'pre_flight_fail' &&
-           status !== 'failed' &&
-           status !== 'dismissed';
+    // Never return dismissed jobs regardless of stage
+    if (status === 'dismissed') return false;
+    // Only return in-flight stages (script ready, sent to HeyGen, currently assembling)
+    return IN_FLIGHT_STAGES.has(stage);
   }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
   
   res.json({ ok: true, count: actionableJobs.length, jobs: actionableJobs });
@@ -2376,78 +2376,50 @@ function buildAjPillarboxFilter(w, h) {
 
 app.get('/news/us-canada-videos', async (req, res) => {
   try {
-    // ── Sitemap-driven article discovery (replaces /video/newsfeed/ scrape) ──
-    // Fetches today's + yesterday's AJ sitemaps, filters by US_KEYWORDS,
-    // returns article URLs (not /video/ vertical clips).
-    const today     = new Date();
-    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    // ── Puppeteer-confirmed AJ video pool ────────────────────────────────────
+    // Runs scrapeAjNewsVideos(): sitemap discovery → Puppeteer → Brightcove intercept.
+    // Returns ONLY articles with confirmed HLS video URLs.
+    // The dashboard shows these to the operator — text-only articles are excluded.
+    // Typical results: 6-12 confirmed videos from today+yesterday's sitemap.
+    console.log('[news/us-canada-videos] Running Puppeteer AJ scraper...');
+    const ajVideos = await scrapeAjNewsVideos(US_KEYWORDS, 20);
+    console.log(`[news/us-canada-videos] Scraped ${ajVideos.length} confirmed video articles`);
 
-    let allMatchingUrls = [];
-    try {
-      const [todayUrls, yestUrls] = await Promise.all([
-        fetchAjSitemapUrls(today,     US_KEYWORDS),
-        fetchAjSitemapUrls(yesterday, US_KEYWORDS)
-      ]);
-      allMatchingUrls = [...todayUrls, ...yestUrls];
-    } catch (sitemapErr) {
-      console.error(`[news/us-canada-videos] Sitemap fetch failed: ${sitemapErr.message}`);
-      // Fall through — will return 0 videos with error context
-    }
-
-    // Convert article URLs to the video object shape the dashboard expects
-    const videos = allMatchingUrls.map(articleUrl => {
-      // Extract date from AJ URL pattern: /YYYY/MM/DD/ or /YYYY/M/D/
-      const dateMatch = articleUrl.match(/\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
+    // Convert to the video object shape the dashboard expects
+    const videos = ajVideos.map(v => {
+      const dateMatch = v.articleUrl.match(/\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
       let publishedAt = new Date().toISOString();
-      let dateString  = '';
       if (dateMatch) {
         const [_, yyyy, mm, dd] = dateMatch;
         publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T23:59:59Z`).toISOString();
-        dateString  = `${yyyy}/${mm}/${dd}`;
       }
-      // Extract a human-readable title from the URL slug
-      const slug = articleUrl.split('/').filter(Boolean).pop() || '';
+      const slug = v.articleUrl.split('/').filter(Boolean).pop() || '';
       const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
       return {
-        url:         articleUrl,
-        href:        articleUrl.replace('https://www.aljazeera.com', ''),
-        title:       title || '(untitled)',
-        thumbnail:   null,
+        url:          v.articleUrl,
+        href:         v.articleUrl.replace('https://www.aljazeera.com', ''),
+        title:        title || '(untitled)',
+        thumbnail:    null,
         publishedAt,
-        dateString
+        hlsUrl:       v.hlsUrl,
+        orientation:  v.orientation,       // 'landscape' | 'portrait'
+        pillarboxFilter: v.pillarboxFilter  // null or FFmpeg filter string
       };
     });
 
-    const cutoff = new Date(Date.now() - NEWS_LOOKBACK_HOURS * 60 * 60 * 1000);
-    const recent = videos.filter(v => new Date(v.publishedAt) >= cutoff);
-    recent.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+    videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
-    console.log(`[news/us-canada-videos] Found ${videos.length} sitemap URLs, ${recent.length} within ${NEWS_LOOKBACK_HOURS}h lookback`);
-
-    // ── Track C validation SKIPPED for sitemap-sourced URLs ────────────────────
-    // The old Track C validation used yt-dlp to verify /video/newsfeed/ clips.
-    // Sitemap URLs are /news/ article pages — yt-dlp can't extract from them.
-    // Real validation happens at script gen time via scrapeAjNewsVideos() (Puppeteer).
-    // That function intercepts Brightcove API responses and returns only articles
-    // with confirmed HLS manifests. This endpoint is now discovery-only.
-    const validationSummary = {
-      skipped: true,
-      reason: 'Sitemap URLs validated at script gen time via Puppeteer (scrapeAjNewsVideos)'
-    };
-
-    res.json({
-      ok: true,
-      source: 'https://www.aljazeera.com/us-canada/',
-      lookbackHours: NEWS_LOOKBACK_HOURS,
-      totalFound: videos.length,
-      recentCount: recent.length,
-      validationSummary,
-      videos: recent
+    return res.json({
+      videos,
+      recentCount: videos.length,
+      source: 'AJ sitemap (today+yesterday) — Puppeteer Brightcove confirmed',
+      landscape: videos.filter(v => v.orientation === 'landscape').length,
+      portrait:  videos.filter(v => v.orientation === 'portrait').length
     });
-  } catch (e) {
-    console.error(`[news/us-canada-videos] Fetch failed: ${e.message}`);
-    res.status(500).json({ ok: false, error: e.message });
+  } catch (err) {
+    console.error('[news/us-canada-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
   }
 });
 

@@ -2123,10 +2123,25 @@ function restoreJobsFromServer(showAlert) {
           return;
         }
 
+        // Skip dismissed jobs — operator explicitly closed these
+        if (serverJob.status === 'dismissed') {
+          cwn_log('[restore] Skipping dismissed job ' + serverJob.jobId, false);
+          return;
+        }
+
         // Skip already-published jobs — nothing to restore
         var isPublished = serverStage === 'published' || !!serverJob.publishedAt;
         if (isPublished) {
           cwn_log('[restore] Skipping published job ' + serverJob.jobId + ' — already complete', false);
+          return;
+        }
+
+        // On AUTO-restore (page load), skip assembled jobs too — they are done and awaiting manual publish.
+        // On MANUAL restore (operator clicked ↩ RESTORE JOBS), allow assembled jobs to come back
+        // so the operator can re-trigger publish if needed.
+        var isAssembledDone = !!(serverJob.assembledAt || serverStage === 'assembled');
+        if (isAssembledDone && !showAlert) {
+          cwn_log('[restore] Skipping assembled job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS to bring it back', false);
           return;
         }
 
