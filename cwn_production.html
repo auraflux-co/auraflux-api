@@ -3093,7 +3093,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
 // Calls /news/us-canada-videos and adapts response to legacy rss2json item shape.
 function fetchCwnNewsVideos(callback) {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', CFG.ffmpegUrl + '/news/us-canada-videos', true); xhr.timeout = 15000;
+  xhr.open('GET', CFG.ffmpegUrl + '/news/us-canada-videos', true); xhr.timeout = 480000;
   xhr.onload = function() {
     try {
       var d = JSON.parse(xhr.responseText);
