@@ -81,6 +81,15 @@ validateRequiredEnv();
  * Run:     node server.js
  */
 
+// ── Timestamp all console output ──────────────────────────────────────────────
+const _origLog   = console.log;
+const _origWarn  = console.warn;
+const _origError = console.error;
+const _ts = () => new Date().toISOString().replace('T',' ').slice(0,19);
+console.log   = (...a) => _origLog(`[${_ts()}]`,   ...a);
+console.warn  = (...a) => _origWarn(`[${_ts()}]`,  ...a);
+console.error = (...a) => _origError(`[${_ts()}]`, ...a);
+
 const express    = require('express');
 const cors       = require('cors');
 const helmet     = require('helmet');
