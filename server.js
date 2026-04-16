@@ -2441,9 +2441,27 @@ async function scrapeAjNewsVideos(targetCount = 5) {
 
       const page = await browser.newPage();
       try {
-        // Intercept Brightcove API calls to capture HLS manifests
+        // Spoof a real browser UA so AJ doesn't serve a bot-detection page
+        await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+        // Pre-accept GDPR/consent so the wall doesn't stall the page load
+        await page.setCookie(
+          { name: 'OptanonAlertBoxClosed', value: new Date().toISOString(), domain: '.aljazeera.com', path: '/' },
+          { name: 'OptanonConsent',        value: 'isGpcEnabled=0&datestamp=' + encodeURIComponent(new Date().toISOString()) + '&version=202209.1.0&isIABGlobal=false&hosts=&landingPath=NotLandingPage&groups=C0001%3A1%2CC0002%3A1%2CC0003%3A1%2CC0004%3A1&AwaitingReconsent=false', domain: '.aljazeera.com', path: '/' }
+        );
+        // Intercept requests: block heavy assets to speed up load, let Brightcove API through
         await page.setRequestInterception(true);
-        page.on('request', req => req.continue());
+        const BLOCK_TYPES = new Set(['image', 'font', 'media']);
+        const BLOCK_DOMAINS = ['googlesyndication.com', 'doubleclick.net', 'googletagmanager.com',
+          'google-analytics.com', 'facebook.net', 'scorecardresearch.com', 'quantserve.com'];
+        page.on('request', req => {
+          const url = req.url();
+          if (BLOCK_TYPES.has(req.resourceType()) ||
+              BLOCK_DOMAINS.some(d => url.includes(d))) {
+            req.abort();
+          } else {
+            req.continue();
+          }
+        });
 
         page.on('response', async resp => {
           const url = resp.url();
@@ -2468,7 +2486,7 @@ async function scrapeAjNewsVideos(targetCount = 5) {
           }
         });
 
-        await page.goto(articleUrl, { waitUntil: 'networkidle2', timeout: 20000 });
+        await page.goto(articleUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
         // Scroll to trigger lazy-loaded players
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
         await new Promise(r => setTimeout(r, 2000));
