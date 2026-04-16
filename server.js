@@ -2048,70 +2048,264 @@ async function validateVideo(v) {
   return { ...v, validation: { status, checks, issues } };
 }
 
+// ── AJ Sitemap-driven article discovery ──────────────────────────────────────
+// Fetches Al Jazeera's per-day sitemap XML, filters to US-topic news articles.
+// Excludes: /liveblog/ /video/ /longform/ /podcasts/ (no video or wrong format)
+// Returns array of article URL strings.
+const US_KEYWORDS = [
+  'us-', '-us-', 'trump', 'america', 'american', 'washington', 'congress',
+  'senate', 'white-house', 'pentagon', 'canada', 'mexico', 'nato', 'iran-us',
+  'us-iran', 'tariff', 'fentanyl', 'deportation', 'immigration', 'border',
+  'fbi', 'cia', 'doge'
+];
+
+async function fetchAjSitemapUrls(date = new Date(), topicKeywords = US_KEYWORDS) {
+  const yyyy = date.getFullYear();
+  const mm   = String(date.getMonth() + 1).padStart(2, '0');
+  const dd   = String(date.getDate()).padStart(2, '0');
+  const sitemapUrl = `https://www.aljazeera.com/sitemap.xml?yyyy=${yyyy}&mm=${mm}&dd=${dd}`;
+
+  console.log(`[fetchAjSitemapUrls] Fetching ${sitemapUrl}`);
+  const resp = await axios.get(sitemapUrl, {
+    timeout: 15000,
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CWN/1.0)' }
+  });
+
+  const xml = resp.data || '';
+  // Extract all <loc> URLs from the sitemap XML
+  const locMatches = xml.match(/<loc>([^<]+)<\/loc>/g) || [];
+  const allUrls = locMatches
+    .map(m => m.replace(/<\/?loc>/g, '').trim())
+    .filter(u => u.startsWith('https://www.aljazeera.com/'));
+
+  // Exclude non-article paths
+  const EXCLUDE_PATHS = ['/liveblog/', '/video/', '/longform/', '/podcasts/', '/program/'];
+  const articleUrls = allUrls.filter(u => !EXCLUDE_PATHS.some(p => u.includes(p)));
+
+  // Filter to topic-matching articles by keyword overlap on the URL slug
+  const matching = articleUrls.filter(u => {
+    const slug = u.toLowerCase();
+    return topicKeywords.some(kw => slug.includes(kw));
+  });
+
+  console.log(`[fetchAjSitemapUrls] ${allUrls.length} total → ${articleUrls.length} articles → ${matching.length} topic-matching`);
+  return matching;
+}
+
+// ── AJ Puppeteer video scraper ────────────────────────────────────────────────
+// Opens a Puppeteer browser, loads up to maxCheck articles, intercepts Brightcove
+// API network responses to capture HLS URLs directly, checks manifest dimensions.
+// Returns array of { articleUrl, videoId, hlsUrl, orientation, pillarboxFilter }
+// orientation: 'landscape' (16:9) | 'portrait' (9:16)
+// pillarboxFilter: null for landscape, FFmpeg filter string for portrait
+//
+// Brightcove account: 665003303001
+// HLS served at manifest.prod.boltdns.net
+async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
+  const puppeteer = require('puppeteer');
+  const results = [];
+
+  // Fetch today's and yesterday's sitemap URLs
+  const today     = new Date();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+
+  let candidateUrls = [];
+  try {
+    const [todayUrls, yestUrls] = await Promise.all([
+      fetchAjSitemapUrls(today, topicKeywords),
+      fetchAjSitemapUrls(yesterday, topicKeywords)
+    ]);
+    candidateUrls = [...todayUrls, ...yestUrls];
+  } catch (e) {
+    console.warn(`[scrapeAjNewsVideos] Sitemap fetch error: ${e.message}`);
+    return [];
+  }
+
+  if (candidateUrls.length === 0) {
+    console.warn('[scrapeAjNewsVideos] No candidate URLs from sitemap');
+    return [];
+  }
+
+  const toCheck = candidateUrls.slice(0, maxCheck);
+  console.log(`[scrapeAjNewsVideos] Checking ${toCheck.length} articles with Puppeteer...`);
+
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+  });
+
+  try {
+    for (const articleUrl of toCheck) {
+      let capturedHls   = null;
+      let capturedVideoId = null;
+
+      const page = await browser.newPage();
+      try {
+        // Intercept Brightcove API calls to capture HLS manifests
+        await page.setRequestInterception(true);
+        page.on('request', req => req.continue());
+
+        page.on('response', async resp => {
+          const url = resp.url();
+          // Brightcove playback API returns JSON with HLS sources
+          if (url.includes('edge.api.brightcove.com') ||
+              url.includes('/accounts/665003303001/videos/')) {
+            try {
+              const json = await resp.json();
+              const sources = json.sources || [];
+              // Prefer HLS manifest (application/x-mpegURL or .m3u8)
+              const hls = sources.find(s =>
+                (s.type === 'application/x-mpegURL' ||
+                 (s.src && s.src.includes('.m3u8'))) &&
+                s.src && s.src.includes('manifest.prod.boltdns.net')
+              );
+              if (hls && hls.src && !capturedHls) {
+                capturedHls = hls.src;
+                capturedVideoId = json.id || url.match(/videos\/(\d+)/)?.[1] || null;
+                console.log(`[scrapeAjNewsVideos] Captured HLS for ${articleUrl.slice(-60)}: ${hls.src.slice(0, 80)}`);
+              }
+            } catch (_) {}
+          }
+        });
+
+        await page.goto(articleUrl, { waitUntil: 'networkidle2', timeout: 20000 });
+        // Scroll to trigger lazy-loaded players
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
+        await new Promise(r => setTimeout(r, 2000));
+
+      } catch (e) {
+        console.warn(`[scrapeAjNewsVideos] Page error on ${articleUrl.slice(-60)}: ${e.message}`);
+      } finally {
+        await page.close();
+      }
+
+      if (!capturedHls) continue;
+
+      // Check manifest dimensions to determine orientation
+      let orientation   = 'landscape';
+      let pillarboxFilter = null;
+      let manifestWidth  = 1920;
+      let manifestHeight = 1080;
+      try {
+        const manifestResp = await axios.get(capturedHls, { timeout: 10000 });
+        const manifestText = manifestResp.data || '';
+        // HLS master manifests include RESOLUTION=WxH in variant lines
+        const resMatches = [...manifestText.matchAll(/RESOLUTION=(\d+)x(\d+)/g)];
+        if (resMatches.length > 0) {
+          // Use the largest variant for dimension check
+          const dims = resMatches.map(m => ({ w: parseInt(m[1]), h: parseInt(m[2]) }));
+          dims.sort((a, b) => (b.w * b.h) - (a.w * a.h));
+          manifestWidth  = dims[0].w;
+          manifestHeight = dims[0].h;
+          if (manifestHeight > manifestWidth) {
+            orientation = 'portrait';
+            pillarboxFilter = buildAjPillarboxFilter(manifestWidth, manifestHeight);
+          }
+        }
+      } catch (e) {
+        console.warn(`[scrapeAjNewsVideos] Manifest check failed: ${e.message}`);
+      }
+
+      results.push({
+        articleUrl,
+        videoId:        capturedVideoId,
+        hlsUrl:         capturedHls,
+        orientation,
+        pillarboxFilter,
+        sourceWidth:    manifestWidth,
+        sourceHeight:   manifestHeight
+      });
+
+      console.log(`[scrapeAjNewsVideos] ✅ ${orientation.toUpperCase()} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
+    }
+  } finally {
+    await browser.close();
+  }
+
+  const landscape = results.filter(r => r.orientation === 'landscape').length;
+  const portrait  = results.filter(r => r.orientation === 'portrait').length;
+  console.log(`[scrapeAjNewsVideos] Done: ${results.length} with video (${landscape} landscape, ${portrait} portrait)`);
+  return results;
+}
+
+// ── AJ pillarbox filter builder ───────────────────────────────────────────────
+// Builds an FFmpeg complex filter string that:
+//   1. Scale-pads a 9:16 portrait clip to 1920x1080 16:9 frame
+//   2. Fills side bars with Navy #22304b
+//   3. Draws 4px Gold #c7af4f seam borders between content and bars
+// w/h = source clip dimensions (e.g. 1080x1920)
+// Output: ready to pass as -vf value in ffmpeg call
+function buildAjPillarboxFilter(w, h) {
+  // Target output: 1920x1080 16:9
+  const targetW = 1920;
+  const targetH = 1080;
+
+  // Scale to fit height, then pad width with navy sides
+  // scale height to 1080, compute scaled width, center in 1920
+  const filter = [
+    // Step 1: scale to target height, preserve aspect
+    `scale=-2:${targetH}`,
+    // Step 2: pad to target width with navy background
+    `pad=${targetW}:${targetH}:(ow-iw)/2:(oh-ih)/2:color=0x22304b`,
+    // Step 3: gold seam left border (4px, full height)
+    `drawbox=x='(${targetW}-iw)/2-4':y=0:w=4:h=${targetH}:color=0xc7af4f@1.0:t=fill`,
+    // Step 4: gold seam right border (4px, full height)
+    `drawbox=x='(${targetW}+iw)/2':y=0:w=4:h=${targetH}:color=0xc7af4f@1.0:t=fill`
+  ].join(',');
+
+  return filter;
+}
+
 app.get('/news/us-canada-videos', async (req, res) => {
   try {
-    const resp = await axios.get(NEWS_SOURCE_URL, {
-      timeout: 15000,
-      maxRedirects: 5,
-      headers: BROWSER_HEADERS
-    });
-    const html = resp.data || '';
-    const $ = cheerio.load(html);
-    const videoUrls = new Set();
+    // ── Sitemap-driven article discovery (replaces /video/newsfeed/ scrape) ──
+    // Fetches today's + yesterday's AJ sitemaps, filters by US_KEYWORDS,
+    // returns article URLs (not /video/ vertical clips).
+    const today     = new Date();
+    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
 
-    $('a[href^="/video/newsfeed/"]').each((i, el) => {
-      const href = $(el).attr('href');
-      if (!href || href === '/video/newsfeed/' || href === '/video/newsfeed') return;
-      if (href.includes('/live')) return;
-      const dateMatch = href.match(/\/video\/newsfeed\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
-      if (!dateMatch) return;
-      videoUrls.add(href);
-    });
-
-    const videos = [];
-    for (const href of videoUrls) {
-      const absoluteUrl = `https://www.aljazeera.com${href}`;
-      const dateMatch = href.match(/\/video\/newsfeed\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
-      const [_, yyyy, mm, dd] = dateMatch;
-      // Red 4 hotfix 2: parse AJ URL dates as END-OF-DAY (23:59:59Z) instead of start-of-day.
-      // Reason: AJ /video/newsfeed/YYYY/M/D/ URLs only encode the publish date, not the hour.
-      // Parsing as 00:00:00Z meant "an article published on 2026-04-13" was treated as
-      // published at midnight UTC, so by 00:30 UTC on 2026-04-14 it was already 24.5h old
-      // and filtered out by the 24h lookback. Using end-of-day means the article stays
-      // eligible for a full 24h window AFTER the publish date actually ends.
-      const publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T23:59:59Z`);
-
-      let title = '';
-      $(`a[href="${href}"]`).each((i, el) => {
-        if (title) return;
-        const anchorText = $(el).text().trim();
-        if (anchorText && anchorText.length > 10) { title = anchorText; return; }
-        const parentHeading = $(el).closest('article, div').find('h3, h2, h1').first().text().trim();
-        if (parentHeading) title = parentHeading;
-      });
-
-      let thumbnail = null;
-      $(`a[href="${href}"]`).each((i, el) => {
-        if (thumbnail) return;
-        const img = $(el).find('img').first();
-        if (img.length) thumbnail = img.attr('src') || img.attr('data-src') || null;
-      });
-
-      videos.push({
-        url: absoluteUrl,
-        href,
-        title: title || '(untitled)',
-        thumbnail,
-        publishedAt: publishedAt.toISOString(),
-        dateString: `${yyyy}/${mm}/${dd}`
-      });
+    let allMatchingUrls = [];
+    try {
+      const [todayUrls, yestUrls] = await Promise.all([
+        fetchAjSitemapUrls(today,     US_KEYWORDS),
+        fetchAjSitemapUrls(yesterday, US_KEYWORDS)
+      ]);
+      allMatchingUrls = [...todayUrls, ...yestUrls];
+    } catch (sitemapErr) {
+      console.error(`[news/us-canada-videos] Sitemap fetch failed: ${sitemapErr.message}`);
+      // Fall through — will return 0 videos with error context
     }
+
+    // Convert article URLs to the video object shape the dashboard expects
+    const videos = allMatchingUrls.map(articleUrl => {
+      // Extract date from AJ URL pattern: /YYYY/MM/DD/ or /YYYY/M/D/
+      const dateMatch = articleUrl.match(/\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
+      let publishedAt = new Date().toISOString();
+      let dateString  = '';
+      if (dateMatch) {
+        const [_, yyyy, mm, dd] = dateMatch;
+        publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T23:59:59Z`).toISOString();
+        dateString  = `${yyyy}/${mm}/${dd}`;
+      }
+      // Extract a human-readable title from the URL slug
+      const slug = articleUrl.split('/').filter(Boolean).pop() || '';
+      const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+      return {
+        url:         articleUrl,
+        href:        articleUrl.replace('https://www.aljazeera.com', ''),
+        title:       title || '(untitled)',
+        thumbnail:   null,
+        publishedAt,
+        dateString
+      };
+    });
 
     const cutoff = new Date(Date.now() - NEWS_LOOKBACK_HOURS * 60 * 60 * 1000);
     const recent = videos.filter(v => new Date(v.publishedAt) >= cutoff);
     recent.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
-    console.log(`[news/us-canada-videos] Found ${videos.length} video URLs, ${recent.length} within ${NEWS_LOOKBACK_HOURS}h lookback`);
+    console.log(`[news/us-canada-videos] Found ${videos.length} sitemap URLs, ${recent.length} within ${NEWS_LOOKBACK_HOURS}h lookback`);
 
     // ── Track C: run 5-check parallel validation pass ──────────────────────────
     // Each video gets validation: { status, checks, issues[] }
@@ -2402,7 +2596,20 @@ app.post('/generate-full-script',
   requireFields('type', 'items'),
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
   validateArrayLength('items', 1),
-  (req, res) => handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller)
+  async (req, res) => {
+    const { type } = req.body;
+    let ajVideoPool = [];
+    if (type === 'news' || type === 'news-short') {
+      try {
+        console.log('[/generate-full-script] Pre-scraping AJ Puppeteer video pool...');
+        ajVideoPool = await scrapeAjNewsVideos(US_KEYWORDS, 20);
+        console.log(`[/generate-full-script] ajVideoPool: ${ajVideoPool.length} videos (${ajVideoPool.filter(v=>v.orientation==='landscape').length} landscape, ${ajVideoPool.filter(v=>v.orientation==='portrait').length} portrait)`);
+      } catch (e) {
+        console.warn(`[/generate-full-script] AJ pre-scrape failed (non-fatal): ${e.message}`);
+      }
+    }
+    handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
+  }
 );
 
 
