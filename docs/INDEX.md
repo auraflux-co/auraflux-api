@@ -68,6 +68,7 @@ All pending work lives here. Archive after the associated commit lands.
 | `CLINE_HANDOFF_GATE3_AUTOPUBLISH_FIX.md` | Cline-A | **CRITICAL** | Gate 3 error fallback blocks Gate 6 — every April 15 assembly failed to upload |
 | `CLINE_HANDOFF_AJ_CLIP_QUALITY.md` | Cline-A | **PENDING** | Al Jazeera clip quality — constrain encode to libx264 + maxrate 4M |
 | `CLINE_HANDOFF_STUCK_JOB_ESCALATION.md` | Cline-A | **PENDING — HIGH** | Unified stuck-job escalation across all gates: 2 auto-retries → STUCK_JOB alarm → dashboard card with Kill button → auto-disable content type after 3 stuck in 24h |
+| `CLINE_HANDOFF_GATE2_HEYGEN_RERENDER_ALERT.md` | Cline-A | **PENDING — HIGH** | Gate 2 STUCK alarm on max retries, CRITICAL alert when HeyGen re-render required (with $ cost estimate, operator approval required), Twitch CDN 50-min expiry warning, HeyGen poller 90-min timeout alert |
 
 ---
 
