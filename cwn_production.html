@@ -4857,6 +4857,7 @@ function nbaUseSelected() {
   });
   g('script-type-label').textContent = 'NBA — Gemini + Claude writing full script...';
   nav('generate');
+  CURRENT_META.items = items;
   callFullScriptServer('nba', items, 'nba-status', null);
 }
 
