@@ -47,14 +47,14 @@ cd ~/cwn-production && nodemon server.js
 
 ### Step 2 — Run 6 Gate 1 tests, paste scores back to Claude Code
 
-| # | Type | Form |
-|---|------|------|
-| 1 | News | Long |
-| 2 | News | Short |
-| 3 | NBA | Long |
-| 4 | NBA | Short |
-| 5 | Twitch | Long |
-| 6 | Twitch | Short |
+| # | Type | Form | Gate 4 destination |
+|---|------|------|--------------------|
+| 1 | Twitch | Long | YouTube |
+| 2 | News | Long | YouTube |
+| 3 | NBA | Long | YouTube |
+| 4 | Twitch | Short | YouTube Shorts + TikTok + Instagram |
+| 5 | News | Short | YouTube Shorts + TikTok + Instagram |
+| 6 | NBA | Short | YouTube Shorts + TikTok + Instagram |
 
 Pipeline stops after Gate 1 — no HeyGen credits burn. Pass = ≥90. Paste all 6 scores.
 
