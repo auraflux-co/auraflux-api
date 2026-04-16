@@ -64,6 +64,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .tag-processing { background:rgba(52,152,219,0.15); color:#3498db; border:1px solid rgba(52,152,219,0.3); }
 .tag-done { background:rgba(46,204,113,0.15); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
 .tag-failed { background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
+.tag-stuck { background:rgba(183,28,28,0.2); color:#ff5252; border:1px solid rgba(183,28,28,0.4); }
 .tag-canva { background:rgba(139,61,255,0.15); color:#a060ff; border:1px solid rgba(139,61,255,0.3); }
 .tag-dot { width:6px; height:6px; border-radius:50%; background:currentColor; animation:pulse 1.2s infinite; }
 
@@ -93,6 +94,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 /* CANVA STATUS */
 .canva-status { background:rgba(139,61,255,0.08); border:1px solid rgba(139,61,255,0.2); border-radius:4px; padding:8px 12px; margin-top:8px; font-size:11px; color:#a060ff; font-family:monospace; display:none; }
 .canva-status.open { display:block; }
+
+/* STUCK JOB PANEL */
+.stuck-panel { background:#1a0000; border:1px solid #b71c1c; border-radius:6px; padding:12px; margin-top:8px; }
+.stuck-panel .stuck-gate { color:#ff5252; font-weight:bold; margin-bottom:4px; font-size:11px; }
+.stuck-panel .stuck-reason { color:#ffcdd2; font-size:13px; margin-bottom:10px; white-space:pre-wrap; }
 
 .script-editor { background:#060a12; border:1px solid rgba(199,175,79,0.2); border-radius:6px; padding:14px; font-family:Arial,sans-serif; font-size:13px; line-height:1.8; color:rgba(255,255,255,0.85); width:100%; min-height:200px; resize:vertical; }
 
