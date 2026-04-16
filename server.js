@@ -302,6 +302,84 @@ function saveJobCard(jobId, card) {
   }
 }
 
+// ── markJobStuck() — Mark a job as stuck and trigger auto-disable pattern check ──
+// Called when a job fails hard gates (Gate 0, Gate 1, Gate 3) after max retries.
+// Sets card.status = 'stuck', card.stuckAt = gate, card.stuckReason = reason (human-readable).
+// Logs to errors.jsonl and checks if content type should be auto-disabled (3 stuck jobs in 24h).
+function markJobStuck(jobId, gate, reason, detail = {}) {
+  const card = persistedJobs[jobId];
+  if (!card) {
+    console.error(`[markJobStuck] Job ${jobId} not found in persistedJobs`);
+    return;
+  }
+
+  card.status = 'stuck';
+  card.stuckAt = gate;
+  card.stuckReason = reason;
+  card.stuckDetail = detail;
+  card.stuckTimestamp = new Date().toISOString();
+
+  console.log(`[markJobStuck:${jobId}] 🚨 STUCK at ${gate}: ${reason}`);
+
+  // Persist the stuck card
+  saveJobCard(jobId, card);
+
+  // Log to errors.jsonl for audit trail
+  logError(jobId, gate, reason, detail);
+
+  // Check if this content type should be auto-disabled (3 stuck jobs in 24h)
+  const contentType = card.contentType || 'twitch';
+  checkContentTypeStuckPattern(contentType, jobId);
+}
+
+// ── checkContentTypeStuckPattern() — Auto-disable content type after 3 stuck jobs in 24h ──
+// Maintains in-memory counter of stuck jobs per content type.
+// If 3+ stuck jobs in 24h window, auto-disable the content type to prevent wasted API spend.
+// Operator can re-enable via dashboard after fixing root cause.
+const stuckPatternLog = {}; // { contentType: [timestamp1, timestamp2, ...] }
+
+function checkContentTypeStuckPattern(contentType, jobId) {
+  const now = Date.now();
+  const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+  const THRESHOLD = 3; // 3 stuck jobs triggers auto-disable
+
+  // Initialize log for this content type if needed
+  if (!stuckPatternLog[contentType]) {
+    stuckPatternLog[contentType] = [];
+  }
+
+  // Prune entries older than 24h
+  stuckPatternLog[contentType] = stuckPatternLog[contentType].filter(ts => now - ts < WINDOW_MS);
+
+  // Add this stuck job
+  stuckPatternLog[contentType].push(now);
+
+  const stuckCount = stuckPatternLog[contentType].length;
+  console.log(`[checkContentTypeStuckPattern] ${contentType}: ${stuckCount} stuck jobs in last 24h`);
+
+  if (stuckCount >= THRESHOLD) {
+    // Auto-disable this content type
+    if (!global.disabledContentTypes) {
+      global.disabledContentTypes = {};
+    }
+
+    const disabledAt = new Date().toISOString();
+    const reason = `Auto-disabled: ${stuckCount} stuck jobs in 24h (last: ${jobId})`;
+    
+    global.disabledContentTypes[contentType] = {
+      disabledAt,
+      reason,
+      stuckCount,
+      lastJobId: jobId
+    };
+
+    console.error(`[checkContentTypeStuckPattern] 🚫 AUTO-DISABLED ${contentType}: ${reason}`);
+    
+    // Log to errors.jsonl
+    logError('SYSTEM', 'AUTO_DISABLE', reason, { contentType, stuckCount, jobId });
+  }
+}
+
 // ── startHeyGenPoller() — Auto-poll HeyGen until all segments complete, then auto-assemble ──
 // Called after Gate 1 passes and HeyGen video IDs are saved to the job card.
 // Implements the fully-automatic pipeline: Gate 1 → HeyGen render → auto-assemble → Gate 3 → Drive → Gate 6 publish (private)
@@ -1091,6 +1169,45 @@ app.post('/job/:id/dismiss', (req, res) => {
   if (!card) return res.status(404).json({ error: 'Job not found', id });
   saveJobCard(id, { ...card, status: 'dismissed' });
   res.json({ ok: true, id, status: 'dismissed' });
+});
+
+// POST /job/:id/stuck — mark a job as stuck (called by lib/assembly.js, lib/script_gen.js)
+// Prevents circular dependency by exposing markJobStuck() via HTTP endpoint.
+// Body: { gate, reason, detail }
+app.post('/job/:id/stuck', (req, res) => {
+  const { id } = req.params;
+  const { gate, reason, detail = {} } = req.body;
+  
+  if (!gate || !reason) {
+    return res.status(400).json({ error: 'gate and reason required' });
+  }
+  
+  if (!persistedJobs[id]) {
+    return res.status(404).json({ error: 'Job not found', id });
+  }
+  
+  markJobStuck(id, gate, reason, detail);
+  res.json({ ok: true, id, gate, reason });
+});
+
+// GET /content-type-status — return disabled content types + stuck counts
+// Dashboard polls this on init to show auto-disable warnings.
+app.get('/content-type-status', (req, res) => {
+  const disabled = global.disabledContentTypes || {};
+  const stuckCounts = {};
+  
+  // Build stuck counts from in-memory log
+  for (const [contentType, timestamps] of Object.entries(stuckPatternLog)) {
+    stuckCounts[contentType] = timestamps.length;
+  }
+  
+  res.json({
+    ok: true,
+    disabled,
+    stuckCounts,
+    threshold: 3,
+    windowHours: 24
+  });
 });
 
 // Helper: detect current pipeline stage from persisted job card fields

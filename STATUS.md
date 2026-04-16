@@ -37,6 +37,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Cline-A | **feat(stuck): server-side stuck job system** — markJobStuck(), checkContentTypeStuckPattern(), stuckPatternLog in server.js; POST /job/:id/stuck + GET /content-type-status endpoints; Gate 0 + Gate 1 stuck alarms wired in lib/script_gen.js | server.js, lib/script_gen.js, STATUS.md | pending | 2026-04-16 |
 | Cline-C | **feat(qa): add geminiAnalyzeImage() + Gate 3 stuck alarm + stuck CSS** — geminiAnalyzeImage(imagePath, prompt) added to lib/qa.js using same upload pattern as geminiAnalyzeClip(); exported. Gate 3 stuck alarm wired in lib/assembly.js after MAX_QA_RETRIES exhausted — POSTs to /job/:id/stuck. Stuck panel CSS added to cwn_production.html. | lib/qa.js, lib/assembly.js, cwn_production.html, STATUS.md | pending | 2026-04-16 |
 | Cline-C | **verify(chrome-skins): all CLINE_HANDOFF_SHARED_CHROME_SKINS.md changes already in main** — CSS skinMap (twitch #6441A5, nba #17408B), contentType at all call sites, Twitch crop=1880:1040 — all already shipped. STATUS.md only. | STATUS.md | 28098e2 | 2026-04-16 |
 | Claude Code | **fix(restore): correct IN_FLIGHT_STAGES phantom stage** — 'assembling' is not a real stage value. Corrected to ['script_ready', 'all_sent']. | server.js, STATUS.md | d6ea961 | 2026-04-16 |
