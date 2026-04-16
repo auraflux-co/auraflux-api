@@ -12,15 +12,15 @@
 |---|---|---|---|---|
 | **Cline-A** | Cline + Claude Sonnet | Terminal 1 | Backend — pipeline, gates, FFmpeg, assembly, HeyGen | Complex server logic, gate scoring, QA fixes, anything touching the production engine |
 | **Cline-B** | Cline + DeepSeek | Terminal 2 | Backend — API endpoints, data layer, job persistence | Endpoint additions, `data/jobs.json` schema, publish integration, formulaic surgical edits |
-| **Cursor** | Cursor + Claude Sonnet | Cursor IDE | Frontend — dashboard UI, AuraFlux React/Next.js, codebase Q&A, cleanup | `cwn_production.html`, `tools/`, `assets/`, WAVE_0 cleanup, future AuraFlux React UI |
+| **Cline-C** | Cline + Claude Sonnet 4.6 | Terminal 3 | Frontend — dashboard UI, AuraFlux React/Next.js, cleanup | `cwn_production.html`, `tools/`, `assets/`, WAVE_0 cleanup, future AuraFlux React UI |
 | **Aider** | Aider | Overnight | Docs, migrations, Jira/Confluence, non-breaking scripts | Batch tasks, anything running 1-6am |
 | **Claude Code** | Claude Sonnet 4.6 | This session | Architecture, handoffs, specs, diagnosis | Planning, root cause analysis, spec writing, roadmap, model routing decisions |
 
 **Model routing rationale:**
-- **Sonnet for Cline-A** — pipeline code is highest complexity and risk. Gate logic, FFmpeg, HeyGen, QA scoring all require strong reasoning.
-- **DeepSeek for Cline-B** — API endpoints and data layer are more formulaic. Surgical edits to well-defined patterns. Cost-efficient.
-- **Cursor for frontend** — replaces Cline-C (GPT). Cursor has stronger inline edit, tab completion, and multi-file context for HTML/CSS/JS. Uses Cursor's built-in Claude Sonnet allowance — reduces direct Anthropic API spend. Also used for codebase-wide Q&A (`@codebase`) and WAVE_0 cleanup tasks (multi-edit mode).
-- **Why Cursor over Cline-C** — already paid membership, Claude Sonnet available via Cursor's plan, better tooling for long HTML files like `cwn_production.html` (4000+ lines), superior symbol search and file navigation.
+- **Sonnet 4.6 for Cline-A** — pipeline code is highest complexity and risk. Gate logic, FFmpeg, HeyGen, QA scoring all require strong reasoning.
+- **Haiku 4.5 for Cline-B** — API endpoints and data layer are more formulaic. Surgical edits to well-defined patterns. Cost-efficient.
+- **Sonnet 4.6 for Cline-C** — frontend HTML/CSS/JS requires strong reasoning for long files like cwn_production.html (4000+ lines).
+- All 3 Clines run in terminal via Claude Code API (Claude Max subscription).
 
 **Domain split (prevents file lock conflicts):**
 - Cline-A owns: `server.js` pipeline functions, `lib/`, assembly logic, gate scoring
@@ -33,12 +33,10 @@
 
 **Handoff header convention:** Every handoff written by Claude Code will start with `→ Agent: Cline-A` (or B/Cursor/Aider) so it's immediately clear who executes it.
 
-**Cursor workflow notes:**
-- Cursor reads CLAUDE.md and the relevant handoff file at the start of each session (same as Cline)
-- Use `@file cwn_production.html` to pull the dashboard into context before editing
-- Use `Cmd+K` for inline rewrites of specific functions
-- Use `@codebase` for exploratory questions across the full repo — faster than grepping manually
-- Cursor does NOT have MCP connections (HeyGen, Canva, Jira) — those stay in Claude Code sessions
+**Cline-C workflow notes:**
+- All 3 Clines use the same terminal workflow — read CLAUDE.md + STATUS.md + handoff, then execute
+- Cline-C prompt must start with identity opener: "You are Cline-C. Your branch prefix is cline-c/."
+- Check git branch --show-current before every commit
 
 ---
 
