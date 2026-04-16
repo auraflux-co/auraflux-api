@@ -266,6 +266,27 @@ try {
 }
 
 function saveJobCard(jobId, card) {
+  // Fix 2 Part A: Extract source_clip segments from script and save to card
+  if (card.script && card.orderedClipUrls) {
+    const sourceClipScenes = (card.script.scenes || []).filter(s => s.type === 'source_clip');
+    if (sourceClipScenes.length > 0) {
+      const sourceClipSegments = sourceClipScenes.map((scene, i) => {
+        const clipData = card.orderedClipUrls[i] || {};
+        return {
+          type: 'source_clip',
+          sceneId: scene.id,
+          label: scene.id || `STORY${i+1}_CLIP`,
+          clipUrl: clipData.clipUrl || clipData.url || '',
+          pageUrl: clipData.pageUrl || '',
+          storyIndex: clipData.storyIndex ?? i,
+          status: 'ready'  // source clips don't render via HeyGen
+        };
+      });
+      card.sourceClipSegments = sourceClipSegments;
+      console.log(`[jobs] Saved ${sourceClipSegments.length} source_clip segments to job card ${jobId}`);
+    }
+  }
+
   persistedJobs[jobId] = { ...card, savedAt: new Date().toISOString() };
   // Prune jobs older than 7 days to keep file small
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
