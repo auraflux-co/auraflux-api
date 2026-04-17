@@ -188,22 +188,18 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <span class="tag tag-pending" id="nba-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
-            <!-- Game picker drives this — no manual ID entry needed -->
-            <div id="nba-selected-games-display" style="margin-bottom:12px;">
-              <div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.5);letter-spacing:2px;margin-bottom:6px;">SELECTED GAMES</div>
-              <div id="nba-games-summary" style="font-size:12px;color:rgba(255,255,255,0.35);font-family:monospace;">No games selected — click SELECT GAMES to pick from yesterday's schedule</div>
-            </div>
+            <div id="nba-games-summary" style="font-size:12px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:12px;">Auto-fetches yesterday's completed games with highlight clips.</div>
             <div class="field"><label>FORMAT</label>
               <select id="nba-format">
                 <option value="landscape">Landscape 1920x1080 (YouTube Long Form)</option>
                 <option value="portrait">Portrait 1080x1920 (Shorts/TikTok)</option>
               </select>
             </div>
-            <!-- Hidden — populated by the game picker -->
             <input id="nba-game-ids" type="hidden" value="">
             <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
-            <div class="btn-row">
-              <button class="btn btn-gold" onclick="nav('nba')">SELECT GAMES</button>
+            <div class="btn-row" style="align-items:center;gap:10px;">
+              <button class="btn btn-gold" onclick="generateNBA()">GENERATE NBA VIDEO</button>
+              <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
             </div>
           </div>
         </div>
@@ -327,35 +323,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="card"><div class="card-body"><div id="schedule-list" style="font-family:Arial,sans-serif;font-size:13px;line-height:2;color:rgba(255,255,255,0.8);"></div></div></div>
     </div>
 
-    <!-- NBA PAGE -->
-    <div class="page" id="page-nba">
-      <div class="sec-title">NBA COMPILATION CONFIG</div>
-      <div class="alert alert-info">Fetches yesterday's completed games. Only games with a <strong>Game Highlights</strong> video on ESPN will be included. Check the ones you want, then click Generate Script.</div>
-      <div class="card"><div class="card-body">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
-          <button class="btn btn-gold" onclick="fetchYesterdayGames()">FETCH YESTERDAY'S GAMES</button>
-          <input id="nba-date-input" type="date" style="background:#060a12;border:1px solid rgba(199,175,79,0.3);color:#fff;padding:8px 12px;border-radius:4px;font-size:13px;font-family:monospace;" title="Or pick a different date">
-          <button class="btn btn-outline btn-sm" onclick="fetchGamesForDate()">FETCH THIS DATE</button>
-          <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
-        </div>
-        <!-- Game picker grid -->
-        <div id="nba-game-picker" style="display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <span style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.5);letter-spacing:3px;">SELECT GAMES TO INCLUDE</span>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-outline btn-sm" onclick="nbaSelectAll(true)">SELECT ALL</button>
-              <button class="btn btn-outline btn-sm" onclick="nbaSelectAll(false)">DESELECT ALL</button>
-            </div>
-          </div>
-          <div id="nba-game-cards" style="display:flex;flex-direction:column;gap:8px;"></div>
-          <div class="btn-row" style="margin-top:14px;">
-            <button class="btn btn-gold" onclick="nbaUseSelected()">USE SELECTED GAMES → GENERATE SCRIPT</button>
-          </div>
-        </div>
-        <!-- Hidden inputs still needed for backward compat -->
-        <input id="nba-config-ids" type="hidden">
-        <div id="nba-games-found" style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.35);font-family:monospace;"></div>
-      </div></div>
+    <!-- NBA PAGE — retired, generate is now on main page -->
+    <div class="page" id="page-nba" style="display:none;">
+      <input id="nba-config-ids" type="hidden">
+      <input id="nba-date-input" type="hidden">
+      <div id="nba-games-found" style="display:none;"></div>
+      <div id="nba-game-cards" style="display:none;"></div>
+      <div id="nba-game-picker" style="display:none;"></div>
     </div>
 
     <!-- NEWS PAGE -->
@@ -4830,54 +4804,102 @@ function nbaSelectAll(checked) {
   });
 }
 
-function nbaUseSelected() {
-  var selected = NBA_GAMES.filter(function(gm, i){
-    var chk = document.getElementById('nba-chk-'+i);
-    return gm.hasHighlights && chk && chk.checked;
-  });
-  if (!selected.length) { alert('Select at least one game with highlights'); return; }
-  var ids = selected.map(function(gm){ return gm.id; });
-  g('nba-config-ids').value = ids.join(', ');
-  g('nba-game-ids').value   = ids.join(', ');
-  // Build clipUrls map: { gameId: { url, duration, title } }
-  var clipUrls = {};
-  selected.forEach(function(gm){ clipUrls[gm.id] = { url: gm.clipUrl||'', duration: gm.clipDuration||null, title: gm.highlightTitle||'Game Highlights' }; });
-  // Store in CURRENT_META for job manifest
-  CURRENT_META = { gameIds: ids, clipUrls: clipUrls };
-  var gameLabels = selected.map(function(gm){ return gm.awayAbbr+' @ '+gm.homeAbbr+' ('+gm.awayScore+'-'+gm.homeScore+')'; });
-  g('nba-games-found').textContent = ids.length + ' games selected';
-  // Update the generate card display
-  var summary = g('nba-games-summary');
-  if (summary) {
-    summary.style.color = '#c7af4f';
-    summary.textContent = ids.length + ' game'+(ids.length>1?'s':'')+' with highlights: ' + gameLabels.join(' · ');
-  }
-  g('nba-status').className = 'tag tag-done';
-  g('nba-status').innerHTML = '<span class="tag-dot"></span> ' + ids.length + ' GAMES READY';
-  // Build items array from selected game data — no ESPN API call needed, all data already on gm
-  CURRENT_TYPE = 'nba';
-  var items = selected.map(function(gm){
+function generateNBA() {
+  // Auto-fetch yesterday's games and go straight to script gen — no picker needed.
+  var statusEl = g('nba-fetch-status');
+  if (statusEl) statusEl.textContent = 'Fetching yesterday\'s games...';
+  var yesterday = localYesterday();
+  var dateKey = yesterday.replace(/-/g, '');
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + dateKey, true);
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try {
+      var data = JSON.parse(xhr.responseText);
+      var events = data.events || [];
+      var finalGames = events.filter(function(ev) {
+        return ev.status && ev.status.type && ev.status.type.completed;
+      });
+      if (!finalGames.length) {
+        if (statusEl) statusEl.textContent = 'No completed games found for ' + yesterday + '. Try again later.';
+        return;
+      }
+      if (statusEl) statusEl.textContent = 'Found ' + finalGames.length + ' game' + (finalGames.length !== 1 ? 's' : '') + ' — fetching highlight clips...';
+      // Build game entries and scrape clips in parallel
+      var gameEntries = [];
+      var done = 0;
+      finalGames.forEach(function(ev) {
+        var comp = (ev.competitions || [])[0] || {};
+        var competitors = comp.competitors || [];
+        var away = competitors.find(function(c){ return c.homeAway === 'away'; }) || competitors[0] || {};
+        var home = competitors.find(function(c){ return c.homeAway === 'home'; }) || competitors[1] || {};
+        var entry = {
+          gameId:    ev.id,
+          away:      (away.team && away.team.displayName) || 'Away',
+          home:      (home.team && home.team.displayName) || 'Home',
+          awayAbbr:  (away.team && away.team.abbreviation) || 'AWY',
+          homeAbbr:  (home.team && home.team.abbreviation) || 'HME',
+          awayScore: away.score || '',
+          homeScore: home.score || '',
+          clipUrl: '', clipDuration: null, thumbnail: '', leader: '', leaderStat: '', injuries: []
+        };
+        gameEntries.push(entry);
+        // Scrape highlight clip via backend
+        var xS = new XMLHttpRequest();
+        xS.open('POST', 'http://localhost:3000/nba/scrape-game-highlight', true);
+        xS.setRequestHeader('Content-Type', 'application/json');
+        xS.timeout = 60000;
+        xS.onload = function() {
+          try {
+            var result = JSON.parse(xS.responseText);
+            if (result.ok && result.videoUrl) {
+              entry.clipUrl      = result.videoUrl;
+              entry.clipDuration = result.duration || null;
+              entry.thumbnail    = result.thumbnail || '';
+            }
+          } catch(e) {}
+          done++;
+          if (done >= finalGames.length) launchNBAScriptGen(gameEntries, statusEl);
+        };
+        xS.onerror = xS.ontimeout = function() { done++; if (done >= finalGames.length) launchNBAScriptGen(gameEntries, statusEl); };
+        xS.send(JSON.stringify({ gameId: ev.id }));
+      });
+    } catch(e) {
+      if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() { if (statusEl) statusEl.textContent = 'Network error fetching scoreboard'; };
+  xhr.send();
+}
+
+function launchNBAScriptGen(gameEntries, statusEl) {
+  // Drop games with no clip — Gate 0 handles this server-side too but filter here for clarity
+  var items = gameEntries.map(function(gm) {
     return {
-      gameId:       gm.id,
-      away:         gm.away,
-      home:         gm.home,
-      awayAbbr:     gm.awayAbbr,
-      homeAbbr:     gm.homeAbbr,
-      awayScore:    gm.awayScore,
-      homeScore:    gm.homeScore,
-      leader:       gm.leader || '',
-      leaderStat:   gm.leaderStat || '',
-      injuries:     gm.injuries || [],
-      clipUrl:      gm.clipUrl || '',
-      clipDuration: gm.clipDuration || null,
+      gameId: gm.gameId, away: gm.away, home: gm.home,
+      awayAbbr: gm.awayAbbr, homeAbbr: gm.homeAbbr,
+      awayScore: gm.awayScore, homeScore: gm.homeScore,
+      leader: gm.leader || '', leaderStat: gm.leaderStat || '',
+      injuries: gm.injuries || [],
+      clipUrl: gm.clipUrl || '', clipDuration: gm.clipDuration || null,
       thumbnailUrl: gm.thumbnail || ''
     };
   });
+  var withClips = items.filter(function(i){ return !!i.clipUrl; });
+  var label = withClips.length + '/' + items.length + ' games have clips';
+  if (statusEl) statusEl.textContent = label + ' — generating script...';
+  CURRENT_TYPE = 'nba';
+  CURRENT_META = { gameIds: items.map(function(i){ return i.gameId; }), items: items };
+  var summary = g('nba-games-summary');
+  if (summary) { summary.style.color = '#c7af4f'; summary.textContent = label; }
+  g('nba-status').className = 'tag tag-done';
+  g('nba-status').innerHTML = '<span class="tag-dot"></span> ' + items.length + ' GAMES';
   g('script-type-label').textContent = 'NBA — Gemini + Claude writing full script...';
   nav('generate');
-  CURRENT_META.items = items;
   callFullScriptServer('nba', items, 'nba-status', null);
 }
+
+function nbaUseSelected() {} // legacy stub — no longer used
 
 function fetchNewsStories() {
   // Fix 25b: use new CWN endpoint instead of rss2json
