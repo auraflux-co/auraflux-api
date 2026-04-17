@@ -4,61 +4,190 @@
     "twitch": {
       "label": "Twitch Compilation",
       "formFactor": "long",
+      "source": {
+        "module": "./sources/twitch_source"
+      },
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
+      },
       "assembly": {
-        "chromeModule": "./assembly/chrome_twitch",
+        "chrome": { "skin": "twitch" },
         "ticker": "twitch",
         "sourceCrop": "crop=1880:1040,",
         "voiceover": false
+      },
+      "qa": {
+        "checklistModule": "./qa/checklists/twitch",
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "twitch",
+        "platforms": ["youtube"]
       }
     },
     "nba": {
-      "label": "NBA Compilation",
+      "label": "NBA Highlights",
       "formFactor": "long",
+      "source": {
+        "module": "./sources/nba_source"
+      },
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
+      },
       "assembly": {
-        "chromeModule": "./assembly/chrome_nba",
+        "chrome": { "skin": "nba" },
         "ticker": "nba",
         "sourceCrop": "crop=1920:1080,",
         "voiceover": true
+      },
+      "qa": {
+        "checklistModule": "./qa/checklists/nba",
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "nba",
+        "platforms": ["youtube"]
       }
     },
     "news": {
       "label": "World News",
       "formFactor": "long",
+      "source": {
+        "module": "./sources/news_source"
+      },
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
+      },
       "assembly": {
-        "chromeModule": "./assembly/chrome_news",
+        "chrome": { "skin": "news" },
         "ticker": "news",
         "sourceCrop": "crop=1920:1080,",
         "voiceover": false
+      },
+      "qa": {
+        "checklistModule": "./qa/checklists/news",
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "news",
+        "platforms": ["youtube"]
       }
     },
     "twitch-short": {
       "label": "Twitch Short",
       "formFactor": "short",
+      "source": {
+        "module": "./sources/twitch_source"
+      },
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
+      },
       "assembly": {
-        "chromeModule": null,
+        "chrome": { "skin": "twitch" },
         "ticker": "twitch",
+        "layout": "split-screen",
         "sourceCrop": "crop=1880:1040,",
         "voiceover": false
+      },
+      "qa": {
+        "checklistModule": "./qa/checklists/twitch-short",
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "twitch",
+        "platforms": ["youtube", "tiktok", "instagram"]
       }
     },
     "nba-short": {
       "label": "NBA Short",
       "formFactor": "short",
+      "source": {
+        "module": "./sources/nba_source"
+      },
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
+      },
       "assembly": {
-        "chromeModule": null,
+        "chrome": { "skin": "nba" },
         "ticker": "nba",
+        "layout": "split-screen",
         "sourceCrop": "crop=1920:1080,",
         "voiceover": false
+      },
+      "qa": {
+        "checklistModule": "./qa/checklists/nba-short",
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "nba",
+        "platforms": ["youtube", "tiktok", "instagram"]
       }
     },
     "news-short": {
       "label": "News Short",
       "formFactor": "short",
+      "source": {
+        "module": "./sources/news_source"
+      },
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
+      },
       "assembly": {
-        "chromeModule": null,
+        "chrome": { "skin": "news" },
         "ticker": "news",
+        "layout": "split-screen",
         "sourceCrop": "crop=1920:1080,",
         "voiceover": false
+      },
+      "qa": {
+        "checklistModule": "./qa/checklists/news-short",
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "news",
+        "platforms": ["youtube", "tiktok", "instagram"]
       }
     }
   }
