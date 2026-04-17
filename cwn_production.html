@@ -4866,6 +4866,7 @@ function generateNBA() {
               entry.clipUrl      = result.videoUrl;
               entry.clipDuration = result.duration || null;
               entry.thumbnail    = result.thumbnail || '';
+              entry.localPath    = result.localPath || '';
             }
           } catch(e) {}
           done++;
@@ -4892,7 +4893,8 @@ function launchNBAScriptGen(gameEntries, statusEl) {
       leader: gm.leader || '', leaderStat: gm.leaderStat || '',
       injuries: gm.injuries || [],
       clipUrl: gm.clipUrl || '', clipDuration: gm.clipDuration || null,
-      thumbnailUrl: gm.thumbnail || ''
+      thumbnailUrl: gm.thumbnail || '',
+      localPath: gm.localPath || ''
     };
   });
   var withClips = items.filter(function(i){ return !!i.clipUrl; });
