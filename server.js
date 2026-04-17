@@ -523,6 +523,32 @@ async function startHeyGenPoller(jobId, card) {
       updatedCard.stage = 'all_sent';
       saveJobCard(jobId, updatedCard);
 
+      // ── Gate 2: Segment QA — Gemini reviews HeyGen segments before assembly ──
+      console.log(`[heygen-poller:${jobId}] 🔍 Running Gate 2 segment QA...`);
+      try {
+        const avatarSegPaths = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
+        const gate2Result = await geminiSegmentQA(avatarSegPaths, {
+          jobId,
+          contentType: card.contentType || 'twitch'
+        });
+        updatedCard.gate2 = { score: gate2Result.score, outcome: gate2Result.outcome, checkedAt: new Date().toISOString() };
+        saveJobCard(jobId, updatedCard);
+        console.log(`[heygen-poller:${jobId}] Gate 2: ${gate2Result.outcomeLabel} (${gate2Result.score}/100)`);
+        if (gate2Result.outcome === 'fail') {
+          console.error(`[heygen-poller:${jobId}] ❌ Gate 2 HARD FAIL — blocking assembly. Review segments manually.`);
+          logError('GATE2_FAIL', `Gate 2 failed — assembly blocked for job ${jobId}`, { jobId, score: gate2Result.score });
+          updatedCard.stage = 'gate2_failed';
+          saveJobCard(jobId, updatedCard);
+          return; // Don't trigger assembly
+        }
+        // manual_review or pass — both proceed to assembly
+        if (gate2Result.outcome === 'manual_review') {
+          console.warn(`[heygen-poller:${jobId}] 🟡 Gate 2 MANUAL REVIEW (${gate2Result.score}/100) — proceeding to assembly anyway`);
+        }
+      } catch (gate2Err) {
+        console.warn(`[heygen-poller:${jobId}] ⚠️  Gate 2 QA error: ${gate2Err.message} — proceeding to assembly`);
+      }
+
       // Trigger assembly via internal HTTP call (same as dashboard ASSEMBLE button)
       const PORT = process.env.PORT || 3000;
       const assemblyId = `asm_${Date.now()}`;
@@ -2052,6 +2078,13 @@ async function scrapeEspnGameVideoUrl(gameId) {
   return null;
 }
 
+// downloadEspnVideo — thin wrapper around the universal downloader
+// Keeping this name so existing callers don't need changes.
+const { downloadVideoForAnalysis } = require('./lib/downloader');
+async function downloadEspnVideo(url, outPath) {
+  return downloadVideoForAnalysis(url, outPath, { maxSecs: 90 });
+}
+
 // ── POST /nba/scrape-game-highlight ─────────────────────────────────
 // Scrapes the ESPN game page for the video with the highest duration
 // User requirement: "video on that page with the highest duration--top left of the game_id page"
@@ -2072,17 +2105,7 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       const tmpPathPup = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
       let localPathPup = null;
       try {
-        const { execFile } = require('child_process');
-        const ffmpegBin = ffmpegPath();
-        const ffmpegArgsPup = ['-i', puppeteerResult.videoUrl, '-t', '90', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', '-y', tmpPathPup];
-        await new Promise((resolve, reject) => {
-          execFile(ffmpegBin, ffmpegArgsPup, { timeout: 120000 }, (err) => err ? reject(err) : resolve());
-        });
-        const sizePup = fs.existsSync(tmpPathPup) ? fs.statSync(tmpPathPup).size : 0;
-        if (sizePup > 1000) {
-          localPathPup = tmpPathPup;
-          console.log(`[nba-scrape] ✅ Downloaded highlight to ${tmpPathPup} (${(sizePup/1024/1024).toFixed(1)}MB)`);
-        }
+        localPathPup = await downloadEspnVideo(puppeteerResult.videoUrl, tmpPathPup);
       } catch(e) {
         console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
       }
@@ -2114,24 +2137,17 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     const articleVideos = (summaryData.article && summaryData.article.video) || [];
     if (articleVideos.length) {
       const highlight = articleVideos[0]; // First is always the Game Highlights reel
-      const hlUrl = highlight.links && highlight.links.source && highlight.links.source.HD && highlight.links.source.HD.href;
+      // Prefer Akamai HLS manifest (stable, no expiring token) over direct CDN MP4 (expires in seconds)
+      const hlsUrl = highlight.links?.source?.HLS?.HD?.href || highlight.links?.source?.HLS?.href;
+      const directMp4 = highlight.links?.source?.HD?.href;
+      const hlUrl = hlsUrl || directMp4;
       if (hlUrl) {
-        console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s)`);
+        console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s) [${hlsUrl ? 'HLS' : 'direct MP4'}]`);
         // Download immediately — ESPN CDN URLs expire within seconds
         const tmpPathAv = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
         let localPathAv = null;
         try {
-          const { execFile } = require('child_process');
-          const ffmpegBin = ffmpegPath();
-          const ffmpegArgs = ['-i', hlUrl, '-t', '90', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', '-y', tmpPathAv];
-          await new Promise((resolve, reject) => {
-            execFile(ffmpegBin, ffmpegArgs, { timeout: 120000 }, (err) => err ? reject(err) : resolve());
-          });
-          const sizeAv = fs.existsSync(tmpPathAv) ? fs.statSync(tmpPathAv).size : 0;
-          if (sizeAv > 1000) {
-            localPathAv = tmpPathAv;
-            console.log(`[nba-scrape] ✅ Downloaded highlight to ${tmpPathAv} (${(sizeAv/1024/1024).toFixed(1)}MB)`);
-          }
+          localPathAv = await downloadEspnVideo(hlUrl, tmpPathAv);
         } catch(e) {
           console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
         }
@@ -2582,8 +2598,42 @@ app.get('/news/us-canada-videos', async (req, res) => {
     // The dashboard shows these to the operator — text-only articles are excluded.
     // Typical results: 6-12 confirmed videos from today+yesterday's sitemap.
     console.log('[news/us-canada-videos] Running Puppeteer AJ scraper...');
-    const ajVideos = await scrapeAjNewsVideos(5);
+    let ajVideos = await scrapeAjNewsVideos(5);
     console.log(`[news/us-canada-videos] Scraped ${ajVideos.length} confirmed video articles`);
+
+    // ── Gate 0: Gemini recovery when scraper returns 0 videos ────────────────
+    // If Puppeteer found nothing (timeouts, Brightcove not firing), ask Gemini to
+    // pick the most video-likely articles from the sitemap and retry once.
+    if (ajVideos.length === 0) {
+      console.log('[news/us-canada-videos] Gate 0: 0 videos — asking Gemini to select best candidates for retry...');
+      try {
+        const [todayUrls, yestUrls] = await Promise.all([
+          fetchAjSitemapUrls(new Date()),
+          fetchAjSitemapUrls(new Date(Date.now() - 86400000))
+        ]);
+        const allUrls = [...todayUrls, ...yestUrls].slice(0, 60);
+        if (allUrls.length > 0) {
+          const slugList = allUrls.map((u, i) => `${i+1}. ${u.split('/').filter(Boolean).pop()}`).join('\n');
+          const geminiPrompt = `You are selecting news articles for a video show. From this list of Al Jazeera article slugs, pick the 8 most likely to have an embedded video (breaking news, conflict, politics, interviews tend to have video; opinion/analysis rarely do). Return ONLY a JSON array of the numbers you selected, e.g. [1,3,7,12,15,18,22,25]. No explanation.\n\n${slugList}`;
+          const geminiResp = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            { contents: [{ parts: [{ text: geminiPrompt }] }] },
+            { timeout: 15000 }
+          );
+          const geminiText = ((geminiResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text).join('') || '').trim();
+          const match = geminiText.match(/\[[\d,\s]+\]/);
+          if (match) {
+            const indices = JSON.parse(match[0]).map(n => n - 1).filter(n => n >= 0 && n < allUrls.length);
+            const candidateUrls = indices.map(n => allUrls[n]);
+            console.log(`[news/us-canada-videos] Gate 0 Gemini picked ${candidateUrls.length} candidates — retrying scrape...`);
+            ajVideos = await scrapeAjNewsVideos(5, candidateUrls);
+            console.log(`[news/us-canada-videos] Gate 0 retry: ${ajVideos.length} videos found`);
+          }
+        }
+      } catch (e) {
+        console.warn(`[news/us-canada-videos] Gate 0 Gemini recovery failed: ${e.message}`);
+      }
+    }
 
     // Convert to the video object shape the dashboard expects
     const videos = ajVideos.map(v => {
@@ -2962,18 +3012,18 @@ app.post('/analyze-style-library', async (req, res) => {
         console.log(`[style-library] Uploading ${(fs.statSync(tmpPath).size/1024/1024).toFixed(1)}MB to Gemini...`);
         const geminiFile = await waitForGeminiFile(await uploadToGeminiFiles(tmpPath));
 
-        // 5x VIEWING: Watch each reference video 5 times for style learning
-        console.log(`[style-library] Starting 5x viewing analysis for ${url.slice(0,60)}...`);
+        // 2x VIEWING: Watch each reference video 2 times for style learning
+        console.log(`[style-library] Starting 2x viewing analysis for ${url.slice(0,60)}...`);
         const multipleViewings = [];
 
-        for (let viewNum = 1; viewNum <= 5; viewNum++) {
+        for (let viewNum = 1; viewNum <= 2; viewNum++) {
           const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for Bobby G, the host of ClipzWorld News (CWN), a "${contentType}" show.
 
 Bobby G's voice blend: Norm MacDonald (flat deadpan, never explains the joke) + Jon Stewart Daily Show (one alarming observation, controlled disbelief) + Stuart Scott ESPN (cultural authority, rhythm, cadence) + Space Ghost Coast to Coast (non-sequitur pivots are fine, chaos is fine).
 
 Bobby G NEVER does: hype phrases ("What's up everyone!"), exclamation energy, "This is insane!", "You won't believe this", audience callouts ("Drop a comment below"), explaining the joke, or warm enthusiasm.
 
-This is VIEWING #${viewNum} of 5. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : viewNum <= 2 ? 'Focus on details you may have missed in the first viewing.' : viewNum <= 4 ? 'Look for subtle patterns and recurring elements.' : 'Deep analysis - extract nuanced stylistic details.'}
+This is VIEWING #${viewNum} of 2. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : 'Focus on details you may have missed in the first viewing — extract nuanced stylistic details and recurring patterns.'}
 
 Extract ONLY what applies to Bobby G's voice. Focus on:
 1. SENTENCE STRUCTURE: How short? How flat? State-the-fact pattern?
@@ -3017,15 +3067,15 @@ Do NOT extract: energy level, catchphrases, audience engagement tactics, hype la
           const observation = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
           if (observation.length > 100) {
             multipleViewings.push(`--- VIEWING #${viewNum} ---\n${observation}`);
-            console.log(`[style-library]   ✓ Viewing ${viewNum}/5 complete (${observation.length} chars)`);
+            console.log(`[style-library]   ✓ Viewing ${viewNum}/2 complete (${observation.length} chars)`);
           }
 
           // Rate limit pause between viewings (shorter than between videos)
-          if (viewNum < 5) await new Promise(r => setTimeout(r, 2000));
+          if (viewNum < 2) await new Promise(r => setTimeout(r, 2000));
         }
 
-        // Synthesize all 5 viewings into a deep per-video analysis
-        if (multipleViewings.length >= 4) { // Require at least 4 successful viewings
+        // Synthesize all 2 viewings into a deep per-video analysis
+        if (multipleViewings.length >= 1) { // Require at least 1 successful viewing
           const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations for Bobby G, host of ClipzWorld News.
 
 Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority. Flat. Never explains the joke. State the fact, one observation, done.
@@ -3037,7 +3087,6 @@ Synthesize these into ONE DEEP style analysis — but filter everything through 
 - Keep: sentence structure, timing patterns, observation technique, transition rhythm, deadpan moves
 - Discard: hype energy, audience callouts, exclamation delivery, warm enthusiasm, catchphrase energy
 - Identify patterns that appeared across multiple viewings
-- Note subtle structural details only caught in later viewings
 - Be specific and actionable — a Gemini model should read this and write flat deadpan scripts
 Max 600 words.`;
 
@@ -3050,15 +3099,15 @@ Max 600 words.`;
               messages: [{ role: 'user', content: deepSynthesisPrompt }]
             });
             const deepAnalysis = msg.content[0]?.text || multipleViewings.join('\n\n');
-            videoAnalyses.push(`--- Reference video (5x viewing): ${url.slice(0,60)} ---\n${deepAnalysis}`);
-            console.log(`[style-library] ✅ 5x analysis complete for ${url.slice(0,60)} (${deepAnalysis.length} chars)`);
+            videoAnalyses.push(`--- Reference video (2x viewing): ${url.slice(0,60)} ---\n${deepAnalysis}`);
+            console.log(`[style-library] ✅ 2x analysis complete for ${url.slice(0,60)} (${deepAnalysis.length} chars)`);
           } catch(e) {
             // Fallback: concatenate all viewings
-            videoAnalyses.push(`--- Reference video (5 viewings): ${url.slice(0,60)} ---\n${multipleViewings.join('\n\n')}`);
-            console.log(`[style-library] ✅ 5x analysis complete (fallback) for ${url.slice(0,60)}`);
+            videoAnalyses.push(`--- Reference video (2 viewings): ${url.slice(0,60)} ---\n${multipleViewings.join('\n\n')}`);
+            console.log(`[style-library] ✅ 2x analysis complete (fallback) for ${url.slice(0,60)}`);
           }
         } else {
-          console.warn(`[style-library] Only ${multipleViewings.length}/5 viewings succeeded, skipping video`);
+          console.warn(`[style-library] Only ${multipleViewings.length}/2 viewings succeeded, skipping video`);
         }
 
         // Cleanup
