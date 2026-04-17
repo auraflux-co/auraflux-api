@@ -167,6 +167,7 @@ const {
   assemblyJobs
 } = require('./lib/assembly');
 const { downloadFile } = require('./lib/downloader');
+const { ffmpegPath: _ffmpegDockerPath, ffprobePath: _ffprobeDockerPath } = require('./lib/ffmpeg_utils');
 const cheerio = require('cheerio');
 
 const app  = express();
@@ -1070,20 +1071,13 @@ const SYSTEM_FONT = findSystemFont();
 
 // downloadFile moved to lib/downloader.js (imported above)
 
-function ffmpegPath() {
-  if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
-  // Cross-platform default: .exe on Windows, no extension on Unix
-  return process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
-}
-
-function ffprobePath() {
-  if (process.env.FFPROBE_PATH) return process.env.FFPROBE_PATH;
-  return process.platform === 'win32' ? 'ffprobe.exe' : 'ffprobe';
-}
+// Delegate to lib/ffmpeg_utils — routes through Docker container (bin/ffmpeg-docker)
+function ffmpegPath() { return _ffmpegDockerPath(); }
+function ffprobePath() { return _ffprobeDockerPath(); }
 
 function checkFFmpeg(cb) {
-  exec(ffmpegPath() + ' -version', (err, stdout) => {
-    if (err) return cb(new Error('FFmpeg not found. Install ffmpeg and ensure it is in PATH.'));
+  execFile(ffmpegPath(), ['-version'], (err, stdout) => {
+    if (err) return cb(new Error('FFmpeg not found or Docker not running.'));
     const versionLine = stdout.split('\n')[0];
     cb(null, versionLine);
   });
@@ -3971,7 +3965,7 @@ app.post('/capcut/add-segment', async (req, res) => {
     // Get duration first
     const dur = await new Promise((resolve) => {
       const args = ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', url];
-      execFile(ffmpegPath().replace('ffmpeg', 'ffprobe'), args, (err, stdout) => {
+      execFile(ffprobePath(), args, (err, stdout) => {
         resolve(parseFloat(stdout) || 10);
       });
     });
@@ -4140,7 +4134,7 @@ app.post('/thumbnail-short', async (req, res) => {
           '-vsync', 'vfr',
           '-f', 'null', '-'
         ];
-        execFile(ffmpegPath().replace('ffmpeg', 'ffprobe'), [
+        execFile(ffprobePath(), [
           '-v', 'quiet', '-show_frames', '-select_streams', 'v',
           '-read_intervals', `%+${Math.min(duration, 60)}`,
           '-show_entries', 'frame=pkt_pts_time,pict_type',
