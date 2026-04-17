@@ -652,18 +652,55 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
   if (!segmentData) {
     const videoJobs = card.heygen?.videoJobs || [];
     const sourceClips = card.sourceClipSegments || [];
-    // Build avatar segments
-    const avatarSegs = videoJobs
-      .filter(vj => vj.status === 'completed' && vj.video_url)
-      .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0))
-      .map(vj => ({ type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex }));
-    // Interleave source clips using sourceClipSegments if available
-    if (sourceClips.length > 0) {
-      segmentData = [...avatarSegs]; // fallback: just avatar segs; poller rebuild not available
-    } else {
-      segmentData = avatarSegs;
+
+    // Build avatar lookup by sceneName for fast access
+    const avatarByName = {};
+    for (const vj of videoJobs) {
+      if (vj.status === 'completed' && vj.video_url) {
+        avatarByName[vj.sceneName] = vj;
+      }
     }
-    logger.warn({ jobId, avatarCount: avatarSegs.length }, 'heygen:all_complete — segmentData rebuilt from card (startup resume)');
+
+    // Use the script's scene order as the merge template so clips land in the right positions
+    const scriptScenes = card.script?.scenes || [];
+    if (scriptScenes.length > 0) {
+      let clipIdx = 0;
+      segmentData = [];
+      for (const scene of scriptScenes) {
+        if (scene.type === 'source_clip') {
+          // Insert source clip in scene order
+          const clip = sourceClips[clipIdx] || card.orderedClipUrls?.[clipIdx];
+          if (clip) {
+            segmentData.push({
+              type: 'source_clip',
+              url: clip.clipUrl || clip.url || '',
+              label: clip.label || scene.id || `CLIP_${clipIdx + 1}`,
+              pageUrl: clip.pageUrl || '',
+              storyIndex: clip.storyIndex ?? clipIdx,
+              sceneId: scene.id
+            });
+          }
+          clipIdx++;
+        } else if (scene.type === 'avatar') {
+          // Match avatar segment by scene id or position
+          const vj = avatarByName[scene.id] ||
+            Object.values(avatarByName).find(v => v.sceneName === scene.id);
+          if (vj) {
+            segmentData.push({ type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex });
+          }
+        }
+      }
+    } else {
+      // No script scenes — fall back to avatar-only in sceneIndex order
+      segmentData = videoJobs
+        .filter(vj => vj.status === 'completed' && vj.video_url)
+        .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0))
+        .map(vj => ({ type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex }));
+    }
+
+    const avatarCount = segmentData.filter(s => s.type === 'avatar').length;
+    const clipCount   = segmentData.filter(s => s.type === 'source_clip').length;
+    logger.warn({ jobId, avatarCount, clipCount }, 'heygen:all_complete — segmentData rebuilt from card (startup resume)');
   }
   logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
 
@@ -764,14 +801,16 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
         finalCard.stage = 'assembled';
         if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
         if (asmJob.driveUrl)   finalCard.finalUrl   = asmJob.driveUrl;
+        // Gate 3 = assembly QA (Gemini watches the assembled video)
         if (asmJob.qaScore !== undefined) {
-          finalCard.gate5 = finalCard.gate5 || {};
-          finalCard.gate5.score   = asmJob.qaScore;
-          finalCard.gate5.outcome = asmJob.qaOutcome || 'manual_review';
-          finalCard.gate5.report  = asmJob.qaReport  || '';
-          if (asmJob.qaOutcome === 'pass') {
-            finalCard._gate5Done = true;
-            finalCard.stage = 'gate5_forced';
+          finalCard.gate3 = {
+            score:   asmJob.qaScore,
+            outcome: asmJob.qaOutcome || 'manual_review',
+            report:  asmJob.qaReport  || '',
+            checkedAt: new Date().toISOString()
+          };
+          if (asmJob.qaOutcome === 'pass' || asmJob.qaOutcome === 'manual_review') {
+            finalCard.stage = 'assembled';
           }
         }
         if (asmJob.publishResult) {
@@ -779,7 +818,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
           finalCard.stage = 'published';
         }
         saveJobCard(jobId, finalCard);
-        logger.info({ jobId, stage: finalCard.stage, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
+        logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
         pipelineBus.emit('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
       } else {
         logger.warn({ jobId, asmStatus: asmJob.status }, 'Assembly ended without done/manual_review — card not updated');
