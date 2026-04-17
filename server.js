@@ -107,6 +107,7 @@ const { CONFIG } = require('./lib/config');
 const logger = require('./lib/logger');
 const pipelineBus = require('./lib/pipeline_events');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
+const db = require('./lib/db');
 const {
   generateTwitchLongformThumbnail,
   generateNewsNbaThumbnail,
@@ -268,6 +269,26 @@ try {
   persistedJobs = {};
 }
 
+// ── SQLite init + fallback load ───────────────────────────────────────────────
+// Initialize SQLite alongside jobs.json. During transition both run in parallel.
+// If SQLite has more jobs than the JSON file (e.g. after a partial migration),
+// prefer SQLite so no jobs are lost.
+try {
+  db.initDb();
+  const sqliteJobs = db.loadAllJobs();
+  if (sqliteJobs.length > Object.keys(persistedJobs).length) {
+    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
+    persistedJobs = {};
+    for (const card of sqliteJobs) {
+      if (card && card.jobId) persistedJobs[card.jobId] = card;
+    }
+  } else {
+    console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
+  }
+} catch (e) {
+  console.error('[db] SQLite init failed — falling back to jobs.json only:', e.message);
+}
+
 // Infer job stage from card fields for legacy jobs that predate the explicit stage field.
 // Used by /jobs filter and startup resume logic.
 function inferJobStage(job) {
@@ -317,6 +338,12 @@ function saveJobCard(jobId, card) {
     fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
   } catch(e) {
     console.error('[jobs] Failed to save jobs.json:', e.message);
+  }
+  // ── SQLite write (additive — runs alongside JSON during transition) ──────────
+  try {
+    db.saveJob(jobId, persistedJobs[jobId]);
+  } catch (e) {
+    console.error('[db] Failed to save job to SQLite:', e.message);
   }
 }
 
