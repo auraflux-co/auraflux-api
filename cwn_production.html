@@ -1379,7 +1379,9 @@ var isShortJob = (job.type || '').includes('-short');
     outputDir: CFG.outputDir,
     jobTitle: job.title,
     contentType: job.type || 'twitch',
-    jobId: (window.CURRENT_META && window.CURRENT_META.scriptJobId) || job.scriptJobId || job.id || ''
+    jobId: (window.CURRENT_META && window.CURRENT_META.scriptJobId) || job.scriptJobId || job.id || '',
+    captionText: job.captionText || null,
+    captionStyle: job.captionStyle || null
   };
 
   // Update segment status indicators
@@ -3018,6 +3020,12 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
           }
           if (resp.script) {
             currentJob.script = resp.script;
+          }
+          if (resp.captionText) {
+            currentJob.captionText = resp.captionText;
+          }
+          if (resp.captionStyle) {
+            currentJob.captionStyle = resp.captionStyle;
           }
           saveJobs();
         }
