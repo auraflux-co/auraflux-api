@@ -1369,12 +1369,13 @@ function assembleJob(batchJobId) {
     });
 
   
-var payload = {
+var isShortJob = (job.type || '').includes('-short');
+  var payload = {
     segmentData: segmentData,
     segments: segmentData.map(function(s){ return s.url; }),
     labels:   segmentData.map(function(s){ return s.label; }),
     transition: CFG.transition,
-    format: CFG.outputFmt,
+    format: isShortJob ? 'portrait' : CFG.outputFmt,
     outputDir: CFG.outputDir,
     jobTitle: job.title,
     contentType: job.type || 'twitch',
