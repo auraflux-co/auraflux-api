@@ -1031,6 +1031,13 @@ function localYesterday() {
   return etNow.getFullYear() + '-' + String(etNow.getMonth()+1).padStart(2,'0') + '-' + String(etNow.getDate()).padStart(2,'0');
 }
 
+// Returns a date N days ago as YYYY-MM-DD in Eastern Time (0 = yesterday, 1 = 2 days ago, etc.)
+function localDateMinus(daysBack) {
+  var etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  etNow.setDate(etNow.getDate() - 1 - (daysBack || 0));
+  return etNow.getFullYear() + '-' + String(etNow.getMonth()+1).padStart(2,'0') + '-' + String(etNow.getDate()).padStart(2,'0');
+}
+
 // Returns today's date as YYYY-MM-DD in Eastern Time.
 function localToday() {
   var etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
@@ -4882,13 +4889,14 @@ function nbaSelectAll(checked) {
   });
 }
 
-function generateNBA() {
-  // Auto-fetch yesterday's games and go straight to script gen — no picker needed.
-  lockGenerateButton('btn-gen-nba');
+function generateNBA(_daysBack) {
+  // Auto-fetch most recent completed games (up to 48h back) and go straight to script gen.
+  _daysBack = _daysBack || 0;
+  if (_daysBack === 0) lockGenerateButton('btn-gen-nba');
   var statusEl = g('nba-fetch-status');
-  if (statusEl) statusEl.textContent = 'Fetching yesterday\'s games...';
-  var yesterday = localYesterday();
-  var dateKey = yesterday.replace(/-/g, '');
+  var targetDate = localDateMinus(_daysBack);
+  var dateKey = targetDate.replace(/-/g, '');
+  if (statusEl) statusEl.textContent = 'Fetching games for ' + targetDate + '...';
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + dateKey, true);
   xhr.timeout = 15000;
@@ -4900,10 +4908,15 @@ function generateNBA() {
         return ev.status && ev.status.type && ev.status.type.completed;
       });
       if (!finalGames.length) {
-        if (statusEl) statusEl.textContent = 'No completed games found for ' + yesterday + '. Try again later.';
+        if (_daysBack < 2) {
+          if (statusEl) statusEl.textContent = 'No games on ' + targetDate + ', checking previous day...';
+          generateNBA(_daysBack + 1);
+          return;
+        }
+        if (statusEl) statusEl.textContent = 'No completed games found in the last 48 hours. Try again later.';
         unlockGenerateButtons(); return;
       }
-      if (statusEl) statusEl.textContent = 'Found ' + finalGames.length + ' game' + (finalGames.length !== 1 ? 's' : '') + ' — fetching highlight clips...';
+      if (statusEl) statusEl.textContent = 'Found ' + finalGames.length + ' game' + (finalGames.length !== 1 ? 's' : '') + ' from ' + targetDate + ' — fetching highlight clips...';
       // Build game entries and scrape clips in parallel
       var gameEntries = [];
       var done = 0;
