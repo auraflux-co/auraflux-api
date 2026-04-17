@@ -4798,14 +4798,14 @@ function renderNBAGamePicker() {
   cards.innerHTML = '';
   NBA_GAMES.forEach(function(gm, i) {
     var card = document.createElement('div');
-    card.style.cssText = 'background:#060a12;border:1px solid rgba(199,175,79,'+(gm.hasHighlights?'0.2':'0.06')+');border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;opacity:'+(gm.hasHighlights?'1':'0.45')+';';
+    card.style.cssText = 'background:#060a12;border:1px solid rgba(199,175,79,0.2);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;opacity:1;';
     var checkId = 'nba-chk-'+i;
     var score = gm.awayScore&&gm.homeScore ? gm.awayScore+'-'+gm.homeScore : 'N/A';
     var hlBadge = gm.hasHighlights
       ? '<span style="font-size:9px;font-weight:900;color:#2ecc71;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);padding:2px 8px;border-radius:10px;letter-spacing:1px;">✓ GAME HIGHLIGHTS</span>'
       : '<span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.25);letter-spacing:1px;">NO HIGHLIGHTS</span>';
     card.innerHTML =
-      '<input type="checkbox" id="'+checkId+'" '+(gm.selected&&gm.hasHighlights?'checked':'')+(gm.hasHighlights?'':' disabled')+' style="width:16px;height:16px;cursor:pointer;flex-shrink:0;">'
+      '<input type="checkbox" id="'+checkId+'" '+(gm.selected?'checked':'')+' style="width:16px;height:16px;cursor:pointer;flex-shrink:0;">'
       +'<div style="flex:1;">'
         +'<div style="font-size:14px;font-weight:700;color:#fff;font-family:Barlow Condensed,sans-serif;">'+gm.awayAbbr+' @ '+gm.homeAbbr+'</div>'
         +'<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;">'+gm.away+' vs '+gm.home+'</div>'
