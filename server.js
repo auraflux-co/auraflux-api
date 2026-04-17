@@ -686,7 +686,24 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
           const vj = avatarByName[scene.id] ||
             Object.values(avatarByName).find(v => v.sceneName === scene.id);
           if (vj) {
-            segmentData.push({ type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex });
+            const seg = { type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex };
+            // Attach cardData for news STORY#_INTRO segments so chrome overlay renders correctly
+            if (card.contentType === 'news' && /STORY(\d+)_INTRO/i.test(vj.sceneName)) {
+              const storyMatch = vj.sceneName.match(/STORY(\d+)_INTRO/i);
+              const storyIdx = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
+              const storyItem = (card.newsItems || [])[storyIdx];
+              if (storyItem) {
+                seg.cardData = {
+                  title:        storyItem.title    || `Story ${storyIdx + 1}`,
+                  category:     storyItem.category || 'WORLD NEWS',
+                  storyId:      `story_${storyIdx + 1}`,
+                  imageUrl:     storyItem.thumbnailUrl || storyItem.imageUrl || null,
+                  heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
+                  source:       storyItem.source || ''
+                };
+              }
+            }
+            segmentData.push(seg);
           }
         }
       }
