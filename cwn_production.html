@@ -4530,15 +4530,26 @@ function generateShort(type) {
   setGeneratingState(type+'-short-status', type.toUpperCase()+' SHORT — Fetching data...');
 
   if (type === 'nba') {
-    // Fetch yesterday's top game + top scorer then call server
-    var yesterday = localYesterday().replace(/-/g,'');
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+yesterday,true);
-    xhr.timeout=10000;
-    xhr.onload=function(){
-      try{
-        var d=JSON.parse(xhr.responseText); var events=d.events||[];
-        if(!events.length){ g('script-type-label').textContent='NBA SHORT -- no games'; return; }
+    // Fetch yesterday's top game — auto-expand to 48h if no games found
+    var shortDateStr = localYesterday();
+    function fetchNBAShortForDate(dateStr) {
+      var dateKey = dateStr.replace(/-/g,'');
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dateKey,true);
+      xhr.timeout=10000;
+      xhr.onload=function(){
+        try{
+          var d=JSON.parse(xhr.responseText); var events=d.events||[];
+          if(!events.length){
+            var tried = new Date(dateStr);
+            var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
+            if (dayBefore !== localYesterday()) { // only expand once
+              g('script-type-label').textContent='NBA SHORT -- no games on '+dateStr+', trying '+dayBefore;
+              fetchNBAShortForDate(dayBefore);
+              return;
+            }
+            g('script-type-label').textContent='NBA SHORT -- no games'; return;
+          }
         // Pick highest-scoring game
         var bestGame=null, best=0;
         events.forEach(function(ev){
@@ -4592,9 +4603,11 @@ function generateShort(type) {
         xhr2.onerror=xhr2.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- ESPN timeout'; };
         xhr2.send();
       }catch(e){ g('script-type-label').textContent='NBA SHORT -- error'; }
-    };
-    xhr.onerror=xhr.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- offline'; };
-    xhr.send();
+      };
+      xhr.onerror=xhr.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- offline'; };
+      xhr.send();
+    }
+    fetchNBAShortForDate(shortDateStr);
 
   } else if (type === 'news') {
     // Pick the single best story from today's feed — keyword match preferred, else top story
@@ -4698,10 +4711,41 @@ var NBA_GAMES = []; // [{id, away, home, awayAbbr, homeAbbr, awayScore, homeScor
 
 function fetchYesterdayGames() {
   var yesterday = localYesterday();
-  // Pre-fill date picker
   var dp = g('nba-date-input');
   if (dp) dp.value = yesterday;
-  fetchNBAScoreboard(yesterday);
+  // Smart lookback: try yesterday first, auto-expand to 48h if no games
+  fetchNBAScoreboardWithFallback(yesterday);
+}
+
+function fetchNBAScoreboardWithFallback(dateStr) {
+  var dateKey = dateStr.replace(/-/g,'');
+  g('nba-fetch-status').textContent = 'Fetching scoreboard for ' + dateStr + '...';
+  g('nba-game-picker').style.display = 'none';
+  NBA_GAMES = [];
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dateKey,true);
+  xhr.timeout=10000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      var events=(d.events||[]);
+      if (!events.length) {
+        // No games — auto-expand to day before
+        var tried = new Date(dateStr);
+        var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
+        g('nba-fetch-status').textContent = 'No games on ' + dateStr + ' — checking ' + dayBefore + '...';
+        var dp = g('nba-date-input');
+        if (dp) dp.value = dayBefore;
+        fetchNBAScoreboard(dayBefore);
+        return;
+      }
+      // Hand off to the main renderer with the found events
+      processNBAScoreboardEvents(events, dateStr);
+    }catch(e){ g('nba-fetch-status').textContent='Error: '+e.message; }
+  };
+  xhr.onerror=xhr.ontimeout=function(){ g('nba-fetch-status').textContent='Network error'; };
+  xhr.send();
 }
 
 function fetchGamesForDate() {
@@ -4725,7 +4769,14 @@ function fetchNBAScoreboard(dateStr) {
       var d=JSON.parse(xhr.responseText);
       var events=(d.events||[]);
       if (!events.length) { g('nba-fetch-status').textContent='No games found for '+dateStr; return; }
+      processNBAScoreboardEvents(events, dateStr);
+    }catch(e){ g('nba-fetch-status').textContent='Error: '+e.message; }
+  };
+  xhr.onerror=xhr.ontimeout=function(){ g('nba-fetch-status').textContent='Network error'; };
+  xhr.send();
+}
 
+function processNBAScoreboardEvents(events, dateStr) {
       var finalGames = events.filter(function(ev){
         var status=(ev.competitions&&ev.competitions[0]&&ev.competitions[0].status&&ev.competitions[0].status.type&&ev.competitions[0].status.type.name)||'';
         return status.indexOf('FINAL')>-1 || status.indexOf('STATUS_FINAL')>-1;
@@ -4782,10 +4833,6 @@ function fetchNBAScoreboard(dateStr) {
         xS.onerror=xS.ontimeout=function(){ done++; if(done>=finalGames.length) renderNBAGamePicker(); };
         xS.send(JSON.stringify({gameId:ev.id}));
       });
-    }catch(e){ g('nba-fetch-status').textContent='Error: '+e.message; }
-  };
-  xhr.onerror=xhr.ontimeout=function(){ g('nba-fetch-status').textContent='Network error'; };
-  xhr.send();
 }
 
 function renderNBAGamePicker() {
