@@ -31,6 +31,9 @@ services:
       USE_DOCKER_POLLER: "${USE_DOCKER_POLLER:-0}"
       # Allow requests from dashboard static server and localhost
       ALLOWED_ORIGINS: "http://localhost:8765,http://localhost:3000"
+      # New Relic APM (optional — agent only loads when key is set)
+      NEW_RELIC_LICENSE_KEY: "${NEW_RELIC_LICENSE_KEY:-}"
+      NEW_RELIC_APP_NAME: "${NEW_RELIC_APP_NAME:-CWN Production}"
       # Puppeteer uses system Chromium baked into the image
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
       PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium"

@@ -1,3 +1,5 @@
+if (process.env.NEW_RELIC_LICENSE_KEY) require('newrelic');
+
 require('dotenv').config();
 
 // ── Red 4: Proactive chrome directive architecture ─────────────────────────
@@ -170,6 +172,20 @@ const {
 const { downloadFile } = require('./lib/downloader');
 const { ffmpegPath: _ffmpegDockerPath, ffprobePath: _ffprobeDockerPath } = require('./lib/ffmpeg_utils');
 const cheerio = require('cheerio');
+
+// ── New Relic custom event helper ─────────────────────────────────────────────
+// Loaded lazily so the guard in line 1 (NEW_RELIC_LICENSE_KEY) stays authoritative.
+// nrEvent() is fire-and-forget — never throws, never blocks pipeline logic.
+const _newrelic = process.env.NEW_RELIC_LICENSE_KEY ? require('newrelic') : null;
+function nrEvent(name, attrs) {
+  if (_newrelic) {
+    try {
+      _newrelic.recordCustomEvent(name, { ...attrs, env: process.env.NODE_ENV || 'development' });
+    } catch (_) {
+      // silent — APM must never disrupt the pipeline
+    }
+  }
+}
 
 const app  = express();
 
@@ -769,6 +785,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
       gate2Passed = false;
       logError('GATE2_FAIL', `Gate 2 hard fail — assembly blocked`, { jobId, score: gate2Result.score });
       logger.error({ jobId, score: gate2Result.score }, 'Gate 2 HARD FAIL — assembly blocked');
+      nrEvent('PipelineGateFail', { gate: 2, jobId, score: gate2Result.score, contentType, reason: 'hard_fail' });
       const blockedCard = persistedJobs[jobId] || card;
       blockedCard.stage = 'gate2_failed';
       saveJobCard(jobId, blockedCard);
@@ -777,6 +794,9 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
     }
     if (gate2Result.outcome === 'manual_review') {
       logger.warn({ jobId, score: gate2Result.score }, 'Gate 2 MANUAL REVIEW — proceeding to assembly');
+      nrEvent('PipelineGatePass', { gate: 2, jobId, score: gate2Result.score, contentType, outcome: 'manual_review' });
+    } else {
+      nrEvent('PipelineGatePass', { gate: 2, jobId, score: gate2Result.score, contentType, outcome: gate2Result.outcome });
     }
   } catch (gate2Err) {
     logger.warn({ jobId, err: gate2Err.message }, 'Gate 2 QA error — proceeding to assembly');
@@ -871,6 +891,21 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
         saveJobCard(jobId, finalCard);
         logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
         pipelineBus.emit('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
+        // New Relic: Gate 3 outcome + assembly complete event
+        if (asmJob.qaScore !== undefined) {
+          const g3Outcome = asmJob.qaOutcome || 'manual_review';
+          if (g3Outcome === 'fail') {
+            nrEvent('PipelineGateFail', { gate: 3, jobId, score: asmJob.qaScore, contentType, reason: g3Outcome });
+          } else {
+            nrEvent('PipelineGatePass', { gate: 3, jobId, score: asmJob.qaScore, contentType, outcome: g3Outcome });
+          }
+        }
+        nrEvent('AssemblyComplete', {
+          jobId,
+          contentType,
+          durationMs: asmJob.durationMs || null,
+          clipCount:  (segmentData || []).filter(s => s.type === 'source_clip').length
+        });
       } else {
         logger.warn({ jobId, asmStatus: asmJob.status }, 'Assembly ended without done/manual_review — card not updated');
       }
