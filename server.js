@@ -545,12 +545,15 @@ async function startHeyGenPoller(jobId, card) {
           }
         }
 
-        // If this is a SETUP scene, insert the corresponding source clip after it
-        if (/SETUP/i.test(avatarSeg.sceneName) && clipIdx < orderedClipUrls.length) {
+        // Insert source clip after this avatar segment if the script says so.
+        // Twitch: clips go after SETUP scenes (CLIP1_SETUP, CLIP2_SETUP, ...)
+        // News:   clips go after STORY#_SETUP scenes (STORY1_SETUP, STORY2_SETUP, ...)
+        // NBA:    clips go after GAME#_NARRATION scenes
+        const isClipTrigger = /SETUP/i.test(avatarSeg.sceneName) || /NARRATION/i.test(avatarSeg.sceneName);
+        if (isClipTrigger && clipIdx < orderedClipUrls.length) {
           const clip = orderedClipUrls[clipIdx];
-          clipIdx++;  // Fix 6: always increment to maintain story-index alignment
-          // Fix 6: skip null entries (stories without clips) — null preserved for index alignment
-          if (clip && clip.url) {
+          clipIdx++;  // always increment to maintain story-index alignment
+          if (clip && (clip.url || clip.clipUrl)) {
             segmentData.push({
               url:     clip.clipUrl || clip.url || '',
               pageUrl: clip.pageUrl || '',
@@ -559,7 +562,7 @@ async function startHeyGenPoller(jobId, card) {
               clipUrl: clip.clipUrl || clip.url || ''
             });
           } else {
-            console.log(`[heygen-poller] Fix6: null clip at storyIndex ${clip ? clip.storyIndex : clipIdx - 1} — skipping segment insert, index alignment preserved`);
+            console.log(`[heygen-poller] null clip at index ${clipIdx - 1} — skipping, index alignment preserved`);
           }
         }
       }
