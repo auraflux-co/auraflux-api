@@ -107,6 +107,7 @@ const { CONFIG } = require('./lib/config');
 const logger = require('./lib/logger');
 const pipelineBus = require('./lib/pipeline_events');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
+const db = require('./lib/db');
 const {
   generateTwitchLongformThumbnail,
   generateNewsNbaThumbnail,
@@ -169,103 +170,6 @@ const {
 const { downloadFile } = require('./lib/downloader');
 const { ffmpegPath: _ffmpegDockerPath, ffprobePath: _ffprobeDockerPath } = require('./lib/ffmpeg_utils');
 const cheerio = require('cheerio');
-const rateLimit = require('express-rate-limit');
-const { RedisStore } = require('rate-limit-redis');
-const { getRedisConnection } = require('./lib/queue');
-
-// ── Redis helpers for server.js ────────────────────────────────────────────────
-// All Redis operations are non-fatal — wrapped in try/catch.
-// System falls back to in-memory behavior if Redis is down.
-
-async function setJobCardRedis(jobId, card) {
-  try {
-    const redis = getRedisConnection();
-    if (!redis) return;
-    await redis.set(`job:${jobId}`, JSON.stringify(card), 'EX', 86400); // 24hr TTL
-  } catch (e) { /* non-fatal */ }
-}
-
-async function getJobCardRedis(jobId) {
-  try {
-    const redis = getRedisConnection();
-    if (!redis) return null;
-    const val = await redis.get(`job:${jobId}`);
-    return val ? JSON.parse(val) : null;
-  } catch (e) { return null; }
-}
-
-// ── Redis pub/sub for pipelineBus ──────────────────────────────────────────────
-// Mirrors existing EventEmitter events to Redis pub/sub so multiple server
-// instances can communicate. The local EventEmitter still fires immediately —
-// Redis is purely additive for multi-instance support.
-const PIPELINE_CHANNEL = 'cwn:pipeline';
-
-async function publishPipelineEvent(event, data) {
-  try {
-    const redis = getRedisConnection();
-    if (!redis) return;
-    await redis.publish(PIPELINE_CHANNEL, JSON.stringify({ event, data, ts: Date.now() }));
-  } catch (e) { /* non-fatal */ }
-}
-
-function subscribePipelineEvents() {
-  try {
-    const redis = getRedisConnection();
-    if (!redis) return;
-    const sub = redis.duplicate();
-    sub.subscribe(PIPELINE_CHANNEL);
-    sub.on('message', (channel, message) => {
-      try {
-        const { event, data } = JSON.parse(message);
-        // Re-emit locally — allows multi-instance coordination
-        pipelineBus.emit(`redis:${event}`, data);
-      } catch (e) { /* ignore malformed messages */ }
-    });
-    sub.on('error', (err) => {
-      if (!err.message.includes('ECONNREFUSED')) {
-        console.warn('[pipelineBus] Redis pub/sub error:', err.message);
-      }
-    });
-    console.log('[pipelineBus] Redis pub/sub subscriber started');
-  } catch (e) {
-    console.warn('[pipelineBus] Redis pub/sub unavailable — local EventEmitter only:', e.message);
-  }
-}
-
-// ── Rate limiter factory ───────────────────────────────────────────────────────
-// Falls back to memory store (default) when Redis is unavailable.
-function makeRateLimiter({ windowMs, max, message }) {
-  const cfg = {
-    windowMs,
-    max,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: message || { error: 'Too many requests, please try again later.' },
-    skip: () => {
-      // Skip rate limiting if Redis is unavailable (dev/local fallback)
-      try {
-        const redis = getRedisConnection();
-        return !redis;
-      } catch { return true; }
-    },
-  };
-  // Attach Redis store if Redis is available
-  try {
-    const redis = getRedisConnection();
-    if (redis) {
-      cfg.store = new RedisStore({
-        sendCommand: (...args) => redis.call(...args),
-      });
-    }
-  } catch (e) {
-    console.warn('[rateLimit] Redis unavailable — using in-memory store:', e.message);
-  }
-  return rateLimit(cfg);
-}
-
-const scriptRateLimiter  = makeRateLimiter({ windowMs: 60 * 1000, max: 10,  message: { error: 'Script gen rate limit: max 10 req/min.' } });
-const assembleRateLimiter = makeRateLimiter({ windowMs: 60 * 1000, max: 5,   message: { error: 'Assembly rate limit: max 5 req/min.' } });
-const publishRateLimiter  = makeRateLimiter({ windowMs: 60 * 1000, max: 20,  message: { error: 'Publish rate limit: max 20 req/min.' } });
 
 const app  = express();
 
@@ -365,6 +269,26 @@ try {
   persistedJobs = {};
 }
 
+// ── SQLite init + fallback load ───────────────────────────────────────────────
+// Initialize SQLite alongside jobs.json. During transition both run in parallel.
+// If SQLite has more jobs than the JSON file (e.g. after a partial migration),
+// prefer SQLite so no jobs are lost.
+try {
+  db.initDb();
+  const sqliteJobs = db.loadAllJobs();
+  if (sqliteJobs.length > Object.keys(persistedJobs).length) {
+    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
+    persistedJobs = {};
+    for (const card of sqliteJobs) {
+      if (card && card.jobId) persistedJobs[card.jobId] = card;
+    }
+  } else {
+    console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
+  }
+} catch (e) {
+  console.error('[db] SQLite init failed — falling back to jobs.json only:', e.message);
+}
+
 // Infer job stage from card fields for legacy jobs that predate the explicit stage field.
 // Used by /jobs filter and startup resume logic.
 function inferJobStage(job) {
@@ -403,8 +327,7 @@ function saveJobCard(jobId, card) {
     }
   }
 
-  const cardToSave = { ...card, savedAt: new Date().toISOString() };
-  persistedJobs[jobId] = cardToSave;
+  persistedJobs[jobId] = { ...card, savedAt: new Date().toISOString() };
   // Prune jobs older than 7 days to keep file small
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   for (const id of Object.keys(persistedJobs)) {
@@ -416,8 +339,12 @@ function saveJobCard(jobId, card) {
   } catch(e) {
     console.error('[jobs] Failed to save jobs.json:', e.message);
   }
-  // Write-through to Redis (24hr TTL) — non-fatal
-  setJobCardRedis(jobId, cardToSave);
+  // ── SQLite write (additive — runs alongside JSON during transition) ──────────
+  try {
+    db.saveJob(jobId, persistedJobs[jobId]);
+  } catch (e) {
+    console.error('[db] Failed to save job to SQLite:', e.message);
+  }
 }
 
 // ── markJobStuck() — Mark a job as stuck and trigger auto-disable pattern check ──
@@ -671,15 +598,13 @@ async function startHeyGenPoller(jobId, card) {
 
       // ── Emit pipeline event — Gate 2 QA + assembly handled by pipelineBus listener ──
       const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
-      const _heygenCompleteData = {
+      pipelineBus.emit('heygen:all_complete', {
         jobId,
         contentType: card.contentType || 'twitch',
         segmentUrls,
         card: updatedCard,
         segmentData
-      };
-      pipelineBus.emit('heygen:all_complete', _heygenCompleteData);
-      publishPipelineEvent('heygen:all_complete', { jobId, contentType: card.contentType || 'twitch', segmentUrls });
+      });
       unregisterPoller(jobId);
       console.log(`[heygen-poller:${jobId}] 📡 heygen:all_complete emitted — Gate 2 + assembly handed off to pipeline bus`);
       return; // poller's job is done — pipelineBus listener owns Gate 2 + assembly
@@ -735,7 +660,6 @@ setImmediate(() => {
         pipelineBus.emit('heygen:all_complete', {
           jobId, contentType, formType, segmentUrls, card, segmentData: null
         });
-        publishPipelineEvent('heygen:all_complete', { jobId, contentType, segmentUrls });
       }, 2000);
     } else {
       console.log(`[startup-resume:${jobId}] Resuming HeyGen poller (${videoJobs.length} segments, not all complete)`);
@@ -840,7 +764,6 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
 
     logger.info({ jobId, score: gate2Result.score, outcome: gate2Result.outcome }, 'Gate 2 complete');
     pipelineBus.emit('gate2:complete', { jobId, contentType, score: gate2Result.score, outcome: gate2Result.outcome });
-    publishPipelineEvent('gate2:complete', { jobId, contentType, score: gate2Result.score, outcome: gate2Result.outcome });
 
     if (gate2Result.outcome === 'fail') {
       gate2Passed = false;
@@ -850,7 +773,6 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
       blockedCard.stage = 'gate2_failed';
       saveJobCard(jobId, blockedCard);
       pipelineBus.emit('gate2:fail', { jobId, score: gate2Result.score });
-      publishPipelineEvent('gate2:fail', { jobId, score: gate2Result.score });
       return;
     }
     if (gate2Result.outcome === 'manual_review') {
@@ -904,7 +826,6 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
 
     logger.info({ jobId, assemblyId }, 'Auto-assembly triggered — Gate 3 → Drive will run automatically');
     pipelineBus.emit('assembly:triggered', { jobId, assemblyId });
-    publishPipelineEvent('assembly:triggered', { jobId, assemblyId });
 
     const cardNow = persistedJobs[jobId] || card;
     cardNow.assemblyId = assemblyId;
@@ -950,7 +871,6 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
         saveJobCard(jobId, finalCard);
         logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
         pipelineBus.emit('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
-        publishPipelineEvent('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
       } else {
         logger.warn({ jobId, asmStatus: asmJob.status }, 'Assembly ended without done/manual_review — card not updated');
       }
@@ -1312,22 +1232,12 @@ app.get('/health', async (req, res) => {
 
 // GET /jobs — return all persisted job cards for dashboard recovery after server restart
 // Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
-// Tries Redis first for each job (warmer data after server restart), falls back to
-// in-memory persistedJobs map.
-app.get('/jobs', async (req, res) => {
+app.get('/jobs', (req, res) => {
   // Only return in-flight jobs. Completed (assembled, published) and
   // failed/dismissed jobs are excluded — they do not need to restore on page load.
   const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'assembling']);
 
-  // Build merged job list: prefer Redis-fresh copy over in-memory for each jobId
-  const jobIds = Object.keys(persistedJobs);
-  const mergedJobs = {};
-  for (const jobId of jobIds) {
-    const redisCard = await getJobCardRedis(jobId);
-    mergedJobs[jobId] = redisCard || persistedJobs[jobId];
-  }
-
-  const actionableJobs = Object.values(mergedJobs).filter(job => {
+  const actionableJobs = Object.values(persistedJobs).filter(job => {
     const status = job.status || '';
     // Never return dismissed jobs regardless of stage
     if (status === 'dismissed') return false;
@@ -1854,7 +1764,6 @@ app.post('/drive-then-canva', async (req, res) => {
 });
 
 app.post('/assemble',
-  assembleRateLimiter,
   body('asmId').optional().isString().trim(),
   body('segments').isArray(),
   body('contentType').isString(),
@@ -3211,7 +3120,6 @@ function twitchThumbToMp4(thumbnailUrl) {
 
 
 app.post('/generate-full-script',
-  scriptRateLimiter,
   body('type').isString(),
   body('items').isArray(),
   body('formType').optional().isString(),
@@ -3567,7 +3475,7 @@ app.get('/upload-status/:trackingId', (req, res) => {
   });
 });
 
-app.post('/publish', publishRateLimiter, handlePublish);
+app.post('/publish', handlePublish);
 
 // ── prioritizeNewsStories ─────────────────────────────────────────────────────
 // Reorders news stories by urgency score before Gemini analysis.
@@ -5729,8 +5637,6 @@ const server = app.listen(PORT, () => {
     if (err) console.warn('⚠️  FFmpeg not found:', err.message);
     else console.log('✅ FFmpeg:', v);
   });
-  // Start Redis pub/sub subscriber for multi-instance pipeline coordination
-  subscribePipelineEvents();
 });
 
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
