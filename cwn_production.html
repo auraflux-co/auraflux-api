@@ -3063,7 +3063,11 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
       var statusEl = g(statusElId);
       if (statusEl) statusEl.innerHTML = '<span class="tag-dot"></span> ERROR';
       g('script-type-label').textContent = 'ERROR: ' + e.message;
-      if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ ' + e.message + '</span>';
+      var isGate0 = e.message && e.message.indexOf('Gate 0 FAIL') !== -1;
+      var retryHtml = isGate0
+        ? '<br><button onclick="generateNBA()" class="btn btn-gold btn-sm" style="margin-top:8px;">↻ RETRY</button>'
+        : '';
+      if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ ' + e.message + '</span>' + retryHtml;
       cwn_log('[generate-full-script] ' + e.message, true);
     }
   };
