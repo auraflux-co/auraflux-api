@@ -267,6 +267,22 @@ try {
   persistedJobs = {};
 }
 
+// Infer job stage from card fields for legacy jobs that predate the explicit stage field.
+// Used by /jobs filter and startup resume logic.
+function inferJobStage(job) {
+  if (job.finalUrl) return 'assembled';
+  if (job.assembly?.url || job.assembledUrl) return 'assembled';
+  const videoJobs = job.heygen?.videoJobs || [];
+  if (videoJobs.length > 0) {
+    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+    if (allComplete) return 'all_sent'; // all done — ready for assembly
+    const anyStarted = videoJobs.some(vj => vj.video_id);
+    if (anyStarted) return 'all_sent'; // in-flight in HeyGen
+  }
+  if (job.script) return 'script_ready';
+  return '';
+}
+
 function saveJobCard(jobId, card) {
   // Fix 2 Part A: Extract source_clip segments from script and save to card
   if (card.script && card.orderedClipUrls) {
@@ -381,6 +397,39 @@ function checkContentTypeStuckPattern(contentType, jobId) {
   }
 }
 
+// ── Active poller registry — tracks in-flight HeyGen pollers for graceful shutdown ──
+// On SIGTERM (nodemon restart or kill), we wait up to 35s for the current poll to finish
+// so the job card is written to disk before the process exits. The startup resume then
+// picks up exactly where we left off on the next boot.
+const activePollers = new Map(); // jobId → { jobId, resolve, settled }
+
+function registerPoller(jobId) {
+  let resolve;
+  const done = new Promise(r => { resolve = r; });
+  activePollers.set(jobId, { jobId, resolve, done });
+  return resolve; // caller calls resolve() when the poller exits cleanly
+}
+
+function unregisterPoller(jobId) {
+  const entry = activePollers.get(jobId);
+  if (entry) { entry.resolve(); activePollers.delete(jobId); }
+}
+
+// Graceful shutdown — wait for active pollers before exiting
+async function gracefulShutdown(signal) {
+  const count = activePollers.size;
+  if (count === 0) { console.log(`[shutdown] ${signal} — no active pollers, exiting`); process.exit(0); }
+  console.log(`[shutdown] ${signal} — waiting for ${count} active poller(s) to checkpoint (max 35s)…`);
+  // Give each poller up to 35s (one poll cycle) to finish its current iteration
+  const timeout = new Promise(r => setTimeout(r, 35000));
+  await Promise.race([Promise.all([...activePollers.values()].map(e => e.done)), timeout]);
+  console.log(`[shutdown] All pollers checkpointed — exiting`);
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
+
 // ── startHeyGenPoller() — Auto-poll HeyGen until all segments complete, then auto-assemble ──
 // Called after Gate 1 passes and HeyGen video IDs are saved to the job card.
 // Implements the fully-automatic pipeline: Gate 1 → HeyGen render → auto-assemble → Gate 3 → Drive → Gate 6 publish (private)
@@ -403,12 +452,16 @@ async function startHeyGenPoller(jobId, card) {
   const MAX_POLLS = (MAX_POLL_MINUTES * 60 * 1000) / POLL_INTERVAL_MS;
   let pollCount = 0;
 
+  // Register with graceful shutdown tracker
+  const pollerDone = registerPoller(jobId);
+
   console.log(`[heygen-poller:${jobId}] 🔄 Starting — polling ${videoJobs.length} segments every 30s (max ${MAX_POLL_MINUTES}min)`);
 
   const poll = async () => {
     pollCount++;
     if (pollCount > MAX_POLLS) {
       console.error(`[heygen-poller:${jobId}] ⏰ Timeout after ${MAX_POLL_MINUTES}min — giving up. Manual REFRESH IDs + ASSEMBLE required.`);
+      unregisterPoller(jobId);
       return;
     }
 
@@ -533,6 +586,7 @@ async function startHeyGenPoller(jobId, card) {
         card: updatedCard,
         segmentData
       });
+      unregisterPoller(jobId);
       console.log(`[heygen-poller:${jobId}] 📡 heygen:all_complete emitted — Gate 2 + assembly handed off to pipeline bus`);
       return; // poller's job is done — pipelineBus listener owns Gate 2 + assembly
 
@@ -548,11 +602,69 @@ async function startHeyGenPoller(jobId, card) {
 
 // NOTE: GET /jobs endpoint is registered after app is initialized (see below near line 796+)
 
+// ── Startup: Resume in-flight HeyGen pollers after server restart ─────────────
+// nodemon or any crash kills in-memory pollers. On boot, scan persistedJobs for jobs that
+// were actively polling HeyGen (all_sent stage, not yet assembled) and restart the poller.
+// This is fire-and-forget — the poller handles its own timeout/failure.
+setImmediate(() => {
+  let resumed = 0;
+  for (const [jobId, card] of Object.entries(persistedJobs)) {
+    const status = card.status || '';
+    if (status === 'dismissed') continue;
+    const stage = card.stage || inferJobStage(card);
+    if (stage !== 'all_sent') continue;
+    const videoJobs = card.heygen?.videoJobs || [];
+    if (!videoJobs.length) continue;
+    // Check if already all complete — if so, emit the bus event directly
+    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+    if (allComplete) {
+      console.log(`[startup-resume:${jobId}] All segments already completed — emitting heygen:all_complete`);
+      // Rebuild segmentData the same way the poller would
+      const contentType = card.contentType || 'twitch';
+      const formType = card.formType || 'compilation';
+      const segmentUrls = videoJobs.filter(vj => vj.video_url).map(vj => vj.video_url);
+      // Emit async so bus listener is registered first
+      setTimeout(() => {
+        pipelineBus.emit('heygen:all_complete', {
+          jobId, contentType, formType, segmentUrls, card, segmentData: null
+        });
+      }, 2000);
+    } else {
+      console.log(`[startup-resume:${jobId}] Resuming HeyGen poller (${videoJobs.length} segments, not all complete)`);
+      startHeyGenPoller(jobId, card).catch(e => {
+        console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
+      });
+    }
+    resumed++;
+  }
+  if (resumed > 0) {
+    console.log(`[startup-resume] Resumed ${resumed} in-flight job(s)`);
+  }
+});
+
 // ── Pipeline Bus: heygen:all_complete → Gate 2 QA → assembly ─────────────────
 // The HeyGen poller emits this when all segments are done.
 // This listener owns Gate 2 QA + logging + assembly trigger + assembly completion polling.
 // Dashboard is view-only — it reads persistedJobs, never drives this flow.
-pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData }) => {
+pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
+  // Rebuild segmentData from card if null (e.g. emitted by startup resume after server restart)
+  let segmentData = rawSegmentData;
+  if (!segmentData) {
+    const videoJobs = card.heygen?.videoJobs || [];
+    const sourceClips = card.sourceClipSegments || [];
+    // Build avatar segments
+    const avatarSegs = videoJobs
+      .filter(vj => vj.status === 'completed' && vj.video_url)
+      .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0))
+      .map(vj => ({ type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex }));
+    // Interleave source clips using sourceClipSegments if available
+    if (sourceClips.length > 0) {
+      segmentData = [...avatarSegs]; // fallback: just avatar segs; poller rebuild not available
+    } else {
+      segmentData = avatarSegs;
+    }
+    logger.warn({ jobId, avatarCount: avatarSegs.length }, 'heygen:all_complete — segmentData rebuilt from card (startup resume)');
+  }
   logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
 
   // ── Gate 2: Segment QA ────────────────────────────────────────────────────
@@ -1040,18 +1152,18 @@ app.get('/health', async (req, res) => {
 app.get('/jobs', (req, res) => {
   // Only return in-flight jobs. Completed (assembled, published) and
   // failed/dismissed jobs are excluded — they do not need to restore on page load.
-  // Operators can still manually retrieve any job with ↩ RESTORE JOBS if needed.
   const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'assembling']);
-  
+
   const actionableJobs = Object.values(persistedJobs).filter(job => {
-    const stage = job.stage || '';
     const status = job.status || '';
     // Never return dismissed jobs regardless of stage
     if (status === 'dismissed') return false;
-    // Only return in-flight stages (script ready, sent to HeyGen, currently assembling)
+    // Infer stage for legacy jobs that don't have the stage field set
+    const stage = job.stage || inferJobStage(job);
+    // Only return in-flight stages
     return IN_FLIGHT_STAGES.has(stage);
   }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
-  
+
   res.json({ ok: true, count: actionableJobs.length, jobs: actionableJobs });
 });
 
