@@ -4559,15 +4559,14 @@ function generateShort(type) {
                 });
               });
             });
-            // Get clip URL
-            // Check s.videos first, then s.article.video (server-side prefers article.video)
+            var thumbUrl = (away.team&&away.team.abbreviation) ? 'https://a.espncdn.com/i/teamlogos/nba/500/'+(away.team.abbreviation||'').toLowerCase()+'.png' : '';
+            // Check s.videos first, then s.article.video
             var videos=s.videos||[]; var hlVid=null;
             for(var i=0;i<videos.length;i++){ if((videos[i].headline||'').toLowerCase().indexOf('highlights')>-1){hlVid=videos[i];break;} }
             if(!hlVid && s.article && s.article.video && s.article.video.length) hlVid=s.article.video[0];
             if(!hlVid && videos.length) hlVid=videos[0];
             var src=(hlVid&&hlVid.links&&hlVid.links.source)||{};
             var clipUrl=(src.HLS&&src.HLS.HD&&src.HLS.HD.href)||(src.HLS&&src.HLS.href)||src.HD&&src.HD.href||src.mezzanine&&src.mezzanine.href||src.href||'';
-            var thumbUrl = (away.team&&away.team.abbreviation) ? 'https://a.espncdn.com/i/teamlogos/nba/500/'+(away.team.abbreviation||'').toLowerCase()+'.png' : '';
 
             var item = {
               gameId: gameId,
