@@ -789,7 +789,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
       contentType,
       jobId,
       sceneTextMap: card.heygen?.sceneTextMap || null,
-      fullScript:   card.script || null,
+      fullScript:   (card.script && card.script.raw) ? card.script.raw : (card.script || null),
       streamers:    card.streamers || []
     }, { timeout: 10000 });
 
@@ -1425,7 +1425,7 @@ function detectStage(card) {
   if (card.publishRecord && card.publishRecord.publishedAt) return 'published';
   if (card.assembledAt || card.finalUrl) return 'assembled';
   if (card.heygen && card.heygen.videoJobs && card.heygen.videoJobs.length) return 'all_sent';
-  if (card.script && card.script.length > 10) return 'script_ready';
+  if (card.script && (card.script.raw || typeof card.script === 'string') && (card.script.raw || card.script).length > 10) return 'script_ready';
   return 'unknown';
 }
 
