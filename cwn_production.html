@@ -159,14 +159,6 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
-      <div class="sidebar-lbl">CONTENT TYPES</div>
-      <button class="sidebar-btn" onclick="nav('nba')"><span class="icon">B</span> NBA Compilation</button>
-      <button class="sidebar-btn" onclick="nav('news')"><span class="icon">N</span> News Compilation</button>
-      <button class="sidebar-btn" onclick="nav('twitch')"><span class="icon">T</span> Twitch Compilation</button>
-      <button class="sidebar-btn" onclick="nav('shorts')"><span class="icon">S</span> Shorts / Reels</button>
-    </div>
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-section">
       <div class="sidebar-lbl">TOOLS</div>
       <button class="sidebar-btn" onclick="nav('publish')"><span class="icon">Y</span> Publish Prep</button>
       <button class="sidebar-btn" onclick="nav('abtest')"><span class="icon">T</span> Thumbnails</button>
@@ -184,21 +176,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">NBA COMPILATION</div>
+            <div class="card-title">NBA</div>
             <span class="tag tag-pending" id="nba-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
             <div id="nba-games-summary" style="font-size:12px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:12px;">Auto-fetches yesterday's completed games with highlight clips.</div>
-            <div class="field"><label>FORMAT</label>
-              <select id="nba-format">
-                <option value="landscape">Landscape 1920x1080 (YouTube Long Form)</option>
-                <option value="portrait">Portrait 1080x1920 (Shorts/TikTok)</option>
-              </select>
-            </div>
             <input id="nba-game-ids" type="hidden" value="">
             <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
             <div class="btn-row" style="align-items:center;gap:10px;">
-              <button class="btn btn-gold" onclick="generateNBA()">GENERATE NBA VIDEO</button>
+              <button id="btn-gen-nba" class="btn btn-gold" onclick="generateNBA()">LONG FORM</button>
+              <button id="btn-gen-nba-short" class="btn btn-outline" onclick="generateShort('nba')">SHORT</button>
               <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
             </div>
           </div>
@@ -206,7 +193,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">NEWS COMPILATION</div>
+            <div class="card-title">NEWS</div>
             <span class="tag tag-pending" id="news-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
@@ -225,15 +212,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <option value="15">15 stories (~15 min)</option>
               </select>
             </div>
-            <div class="field"><label>FORMAT</label>
-              <select id="news-format">
-                <option value="landscape">Landscape 1920x1080 (YouTube Long Form)</option>
-                <option value="portrait">Portrait 1080x1920 (Shorts/TikTok)</option>
-              </select>
-            </div>
             <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
             <div class="btn-row">
-              <button class="btn btn-gold" onclick="generateNews()">GENERATE NEWS VIDEO</button>
+              <button id="btn-gen-news" class="btn btn-gold" onclick="generateNews()">LONG FORM</button>
+              <button id="btn-gen-news-short" class="btn btn-outline" onclick="generateShort('news')">SHORT</button>
               <button class="btn btn-outline btn-sm" onclick="nav('news')">CONFIGURE</button>
             </div>
           </div>
@@ -241,20 +223,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">TWITCH COMPILATION</div>
+            <div class="card-title">TWITCH</div>
             <span class="tag tag-pending" id="twitch-gen-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
             <div class="field"><label>STREAMERS (top clips from each)</label>
               <textarea id="twitch-streamers" style="min-height:60px" onchange="saveStreamerList()" oninput="saveStreamerList()">jasontheween, hasanabi, adapt, stableronaldo, lacy, marlon, cinna, yonnajay, jaycinco, maya</textarea>
               <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
-            </div>
-
-            <div class="field"><label>FORMAT</label>
-              <select id="twitch-format">
-                <option value="landscape">Landscape 1920x1080 (YouTube Long Form)</option>
-                <option value="portrait">Portrait 1080x1920 (Shorts/TikTok)</option>
-              </select>
             </div>
             <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
             <div class="field" style="margin-bottom:8px;">
@@ -269,7 +244,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:8px;">(applies to this generation)</span>
             </div>
             <div class="btn-row">
-              <button class="btn btn-gold" onclick="generateTwitch()">GENERATE TWITCH VIDEO</button>
+              <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitch()">LONG FORM</button>
+              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="generateShort('twitch')">SHORT</button>
               <button class="btn btn-outline btn-sm" onclick="nav('twitch')">CONFIGURE</button>
             </div>
           </div>
@@ -391,34 +367,7 @@ maya: she/her</textarea>
       </div></div>
     </div>
 
-    <!-- SHORTS PAGE -->
-    <div class="page" id="page-shorts">
-      <div class="sec-title">SHORTS / REELS / TIKTOK</div>
-      <div class="alert alert-info">All shorts are 9:16 (1080x1920). One per day per platform. Scheduled for late afternoon/evening.</div>
-      <div class="cards-grid">
-        <div class="card">
-          <div class="card-header"><div class="card-title">NBA SHORT</div></div>
-          <div class="card-body">
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;">Top scorer clip from yesterday's game.</p>
-            <div class="btn-row" style="align-items:center;gap:10px;"><button class="btn btn-gold btn-sm" onclick="generateShort('nba')">GENERATE NBA SHORT</button><span class="tag tag-pending" id="nba-short-status" style="font-size:9px;"><span class="tag-dot"></span>READY</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">NEWS SHORT</div></div>
-          <div class="card-body">
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;">Auto-selects stories with Iran or Trump.</p>
-            <div class="btn-row" style="align-items:center;gap:10px;"><button class="btn btn-gold btn-sm" onclick="generateShort('news')">GENERATE NEWS SHORT</button><span class="tag tag-pending" id="news-short-status" style="font-size:9px;"><span class="tag-dot"></span>READY</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">TWITCH SHORT</div></div>
-          <div class="card-body">
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;">Top viewed clip from your 10 streamers.</p>
-            <div class="btn-row" style="align-items:center;gap:10px;"><button class="btn btn-gold btn-sm" onclick="generateShort('twitch')">GENERATE TWITCH SHORT</button><span class="tag tag-pending" id="twitch-short-status" style="font-size:9px;"><span class="tag-dot"></span>READY</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- SHORTS PAGE — removed. Short buttons now live inline on the main Generate page (LONG FORM / SHORT per card). -->
 
     <!-- PUBLISH PREP PAGE -->
     <div class="page" id="page-publish">
@@ -2973,6 +2922,22 @@ function isRealTitle(title) {
 
 // ── GENERATE ACTIONS ──────────────────────────────────────────────
 // ── FULL SCRIPT GENERATION (server-side Gemini + Claude) ─────────
+var _activeGenerateBtn = null;
+
+function lockGenerateButton(btnId) {
+  _activeGenerateBtn = btnId;
+  var el = g(btnId);
+  if (el) { el.disabled = true; el.style.opacity = '0.4'; el.style.cursor = 'not-allowed'; }
+}
+
+function unlockGenerateButtons() {
+  if (_activeGenerateBtn) {
+    var el = g(_activeGenerateBtn);
+    if (el) { el.disabled = false; el.style.opacity = ''; el.style.cursor = ''; }
+    _activeGenerateBtn = null;
+  }
+}
+
 function setGeneratingState(statusElId, labelText) {
   g('script-type-label').textContent = labelText;
   g('main-script').value = '';
@@ -3058,6 +3023,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
       }
 
       g('main-script').scrollIntoView({behavior:'smooth'});
+      unlockGenerateButtons();
       if (onDone) onDone(resp);
     } catch(e) {
       var statusEl = g(statusElId);
@@ -3069,6 +3035,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
         : '';
       if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ ' + e.message + '</span>' + retryHtml;
       cwn_log('[generate-full-script] ' + e.message, true);
+      unlockGenerateButtons();
     }
   };
   xhr.onerror = xhr.ontimeout = function() {
@@ -3076,6 +3043,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
     if (statusEl) statusEl.innerHTML = '<span class="tag-dot"></span> SERVER UNREACHABLE';
     g('script-type-label').textContent = 'ERROR: server.js not running on ' + CFG.ffmpegUrl;
     if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ server.js not running — start it first</span>';
+    unlockGenerateButtons();
   };
   xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {} }));
 }
@@ -3111,12 +3079,13 @@ function fetchCwnNewsVideos(callback) {
 }
 
 function generateNews() {
+  lockGenerateButton('btn-gen-news');
   CURRENT_TYPE = 'news';
   var newsSrc = g('news-source') ? g('news-source').value : 'aljazeera';
   CURRENT_META = { source: newsSrc, feedUrl: '/news/us-canada-videos' };
   setGeneratingState('news-status', 'NEWS — Fetching stories...');
   fetchCwnNewsVideos(function(d, err) {
-    if (err || !d) { g('news-status').innerHTML = 'ERROR: ' + (err || 'no data'); return; }
+    if (err || !d) { g('news-status').innerHTML = 'ERROR: ' + (err || 'no data'); unlockGenerateButtons(); return; }
     try {
       var count = parseInt(g('news-count').value)||10;
       var sourceName = 'Al Jazeera';
@@ -3139,6 +3108,7 @@ function generateNews() {
       callFullScriptServer('news', items, 'news-status', null);
     } catch(e) {
       g('news-status').innerHTML = 'ERROR: ' + e.message;
+      unlockGenerateButtons();
     }
   });
 }
@@ -3188,6 +3158,8 @@ function resolveTwitchClipUrls(clips, callback) {
 
 function generateTwitch() {
   var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  if (!streamers.length) { alert('No streamers configured.'); return; }
+  lockGenerateButton('btn-gen-twitch');
   var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
   var streamerNotes = parseStreamerNotes();
   CURRENT_TYPE = 'twitch';
@@ -4482,9 +4454,13 @@ function sendToHeyGenManual() {
 }
 
 function regenScript() {
-  if (CURRENT_TYPE === 'nba') callFullScriptServer('nba', (CURRENT_META && CURRENT_META.items) || [], 'nba-status', null);
+  if (_activeGenerateBtn) { console.warn('[regenScript] Generate already in flight — skipping duplicate trigger'); return; }
+  if (CURRENT_TYPE === 'nba') generateNBA();
+  else if (CURRENT_TYPE === 'nba-short') generateShort('nba');
   else if (CURRENT_TYPE === 'news') generateNews();
+  else if (CURRENT_TYPE === 'news-short') generateShort('news');
   else if (CURRENT_TYPE === 'twitch') generateTwitch();
+  else if (CURRENT_TYPE === 'twitch-short') generateShort('twitch');
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────
@@ -4540,6 +4516,7 @@ function buildCalendar() {
 }
 
 function generateShort(type) {
+  lockGenerateButton('btn-gen-' + type + '-short');
   CURRENT_TYPE = type + '-short';
   setGeneratingState(type+'-short-status', type.toUpperCase()+' SHORT — Fetching data...');
 
@@ -4582,10 +4559,13 @@ function generateShort(type) {
               });
             });
             // Get clip URL
+            // Check s.videos first, then s.article.video (server-side prefers article.video)
             var videos=s.videos||[]; var hlVid=null;
             for(var i=0;i<videos.length;i++){ if((videos[i].headline||'').toLowerCase().indexOf('highlights')>-1){hlVid=videos[i];break;} }
+            if(!hlVid && s.article && s.article.video && s.article.video.length) hlVid=s.article.video[0];
+            if(!hlVid && videos.length) hlVid=videos[0];
             var src=(hlVid&&hlVid.links&&hlVid.links.source)||{};
-            var clipUrl=src.HD&&src.HD.href||src.mezzanine&&src.mezzanine.href||src.href||'';
+            var clipUrl=(src.HLS&&src.HLS.HD&&src.HLS.HD.href)||(src.HLS&&src.HLS.href)||src.HD&&src.HD.href||src.mezzanine&&src.mezzanine.href||src.href||'';
             var thumbUrl = (away.team&&away.team.abbreviation) ? 'https://a.espncdn.com/i/teamlogos/nba/500/'+(away.team.abbreviation||'').toLowerCase()+'.png' : '';
 
             var item = {
@@ -4609,71 +4589,98 @@ function generateShort(type) {
     xhr.send();
 
   } else if (type === 'news') {
-    // Fetch top story matching keywords (for shorts we take the #1 keyword match or just #1 story)
-    // Fix 25b: use new CWN endpoint instead of rss2json
-    var keywords=(g('shorts-keywords')&&g('shorts-keywords').value||'Iran,Trump,Gaza,Ukraine,tariffs').toLowerCase().split(',').map(function(k){return k.trim();});
+    // Pick the single best story from today's feed — keyword match preferred, else top story
+    var keywords = 'Iran,Trump,Gaza,Ukraine,tariffs,war,crisis,election'.toLowerCase().split(',').map(function(k){return k.trim();});
     fetchCwnNewsVideos(function(d, err) {
-      if (err || !d) { g('script-type-label').textContent='NEWS SHORT -- error: '+(err||'no data'); return; }
-      try{
-        var all=(d.items||[]).slice(0,20);
-        // Prefer keyword match, else top story
+      if (err || !d) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- error: '+(err||'no data'); return; }
+      try {
+        var all = (d.items||[]).slice(0,20);
         var story = all.find(function(it){ var t=(it.title||'').toLowerCase(); return keywords.some(function(k){return t.indexOf(k)>-1;}); }) || all[0];
-        if(!story){ g('script-type-label').textContent='NEWS SHORT -- no stories'; return; }
-        var img=story.thumbnail||'';
+        if (!story) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- no stories found'; return; }
         var item = {
-          title: (story.title||'').trim(),
-          desc: (story.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
-          source: 'Al Jazeera', link: story.link||'', thumbnailUrl: img, videoUrl: '', pubDate: story.pubDate||''
+          title:        (story.title||'').trim(),
+          desc:         (story.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
+          source:       'Al Jazeera',
+          link:         story.link||'',
+          thumbnailUrl: story.thumbnail||'',
+          videoUrl:     story.hlsUrl||'',
+          pubDate:      story.pubDate||''
         };
         CURRENT_META = { source: 'aljazeera' };
+        g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
         callFullScriptServer('news-short', [item], 'news-short-status', null);
-      }catch(e){ g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
+      } catch(e) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
     });
 
   } else if (type === 'twitch') {
-    // Fetch top clip from first configured streamer
-    var streamers = (g('twitch-config-streamers')&&g('twitch-config-streamers').value||'').split('\n').map(function(s){return s.trim().toLowerCase();}).filter(Boolean);
+    // Fetch top clip across ALL configured streamers — pick single highest-viewed clip
+    var streamers = g('twitch-streamers') ? g('twitch-streamers').value.split(',').map(function(s){return s.trim().toLowerCase();}).filter(Boolean) : [];
+    if (!streamers.length) { unlockGenerateButtons(); g('script-type-label').textContent='TWITCH SHORT -- no streamers configured'; return; }
     var notes = parseStreamerNotes ? parseStreamerNotes() : {};
-    var name = streamers[0];
-    if(!name){ g('script-type-label').textContent='TWITCH SHORT -- no streamers configured'; return; }
-    var xU=new XMLHttpRequest();
-    xU.open('GET','https://api.twitch.tv/helix/users?login='+name,true);
-    xU.setRequestHeader('Client-Id',CFG.twitchId); xU.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
-    xU.timeout=8000;
-    xU.onload=function(){
-      try{
-        var u=JSON.parse(xU.responseText); var user=u.data&&u.data[0];
-        if(!user){ g('script-type-label').textContent='TWITCH SHORT -- streamer not found'; return; }
-        var since=new Date(Date.now()-86400000).toISOString();
-        var xC=new XMLHttpRequest();
-        xC.open('GET','https://api.twitch.tv/helix/clips?broadcaster_id='+user.id+'&first=5&started_at='+since,true);
-        xC.setRequestHeader('Client-Id',CFG.twitchId); xC.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
-        xC.timeout=8000;
-        xC.onload=function(){
-          try{
-            var cd=JSON.parse(xC.responseText);
-            var topClip=(cd.data||[]).filter(function(c){return isRealTitle(c.title);})[0];
-            if(!topClip){ g('script-type-label').textContent='TWITCH SHORT -- no clips today'; return; }
-            var nameKey=user.display_name.toLowerCase();
-            var streamerKey = (user.display_name||'').toLowerCase().replace(/\s+/g,'');
-            var SMAP = {'jasontheween':'Jason','hasanabi':'Hasan','adapt':'Adapt','stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon','cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya'};
-            var item = {
-              streamer: user.display_name,
-              displayName: SMAP[streamerKey] || user.display_name,
-              notes: notes[nameKey]||notes[name]||'',
-              clips: [{ rank:1, title:topClip.title, url:topClip.url, views:topClip.view_count, game:topClip.game_name||'', thumbnailUrl:topClip.thumbnail_url||'' }],
-              title: topClip.title, url: topClip.url, views: topClip.view_count, game: topClip.game_name||'', thumbnailUrl: topClip.thumbnail_url||''
-            };
-            CURRENT_META = { streamers: [name] };
-            callFullScriptServer('twitch-short', [item], 'twitch-short-status', null);
-          }catch(e){ g('script-type-label').textContent='TWITCH SHORT -- error: '+e.message; }
-        };
-        xC.onerror=xC.ontimeout=function(){ g('script-type-label').textContent='TWITCH SHORT -- Twitch API timeout'; };
-        xC.send();
-      }catch(e){ g('script-type-label').textContent='TWITCH SHORT -- error'; }
-    };
-    xU.onerror=xU.ontimeout=function(){ g('script-type-label').textContent='TWITCH SHORT -- offline'; };
-    xU.send();
+    var since = new Date(Date.now() - 86400000 * 2).toISOString(); // 48h window
+    var SMAP = {'jasontheween':'Jason','hasanabi':'Hasan','adapt':'Adapt','stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon','cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya','extraemily':'ExtraEmily','yourragegaming':'Rage'};
+    var allCandidates = []; // {streamer, displayName, notes, clip}
+    var pending = streamers.length;
+
+    function onAllDone() {
+      if (!allCandidates.length) {
+        unlockGenerateButtons();
+        g('script-type-label').textContent = 'TWITCH SHORT -- no clips found across any streamer';
+        return;
+      }
+      // Pick highest-viewed clip across all streamers
+      allCandidates.sort(function(a,b){ return (b.clip.view_count||0)-(a.clip.view_count||0); });
+      var best = allCandidates[0];
+      var item = {
+        streamer:    best.streamer,
+        displayName: best.displayName,
+        notes:       best.notes,
+        clips: [{ rank:1, title:best.clip.title, url:best.clip.url, views:best.clip.view_count, game:best.clip.game_name||'', thumbnailUrl:best.clip.thumbnail_url||'' }],
+        title:       best.clip.title, url: best.clip.url, views: best.clip.view_count,
+        game:        best.clip.game_name||'', thumbnailUrl: best.clip.thumbnail_url||''
+      };
+      CURRENT_META = { streamers: [best.streamer.toLowerCase()] };
+      g('script-type-label').textContent = 'TWITCH SHORT — ' + best.displayName + ': "' + best.clip.title.slice(0,50) + '"';
+      callFullScriptServer('twitch-short', [item], 'twitch-short-status', null);
+    }
+
+    streamers.forEach(function(name) {
+      var xU = new XMLHttpRequest();
+      xU.open('GET','https://api.twitch.tv/helix/users?login='+name,true);
+      xU.setRequestHeader('Client-Id',CFG.twitchId); xU.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
+      xU.timeout = 8000;
+      xU.onload = function() {
+        try {
+          var u = JSON.parse(xU.responseText); var user = u.data&&u.data[0];
+          if (!user) { if(--pending===0) onAllDone(); return; }
+          var xC = new XMLHttpRequest();
+          xC.open('GET','https://api.twitch.tv/helix/clips?broadcaster_id='+user.id+'&first=10&started_at='+since,true);
+          xC.setRequestHeader('Client-Id',CFG.twitchId); xC.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
+          xC.timeout = 8000;
+          xC.onload = function() {
+            try {
+              var cd = JSON.parse(xC.responseText);
+              var topClip = (cd.data||[]).filter(function(c){return isRealTitle(c.title);})[0];
+              if (topClip) {
+                var streamerKey = (user.display_name||'').toLowerCase().replace(/\s+/g,'');
+                var nameKey = user.display_name.toLowerCase();
+                allCandidates.push({
+                  streamer:    user.display_name,
+                  displayName: SMAP[streamerKey] || user.display_name,
+                  notes:       notes[nameKey]||notes[name]||'',
+                  clip:        topClip
+                });
+              }
+            } catch(e) {}
+            if (--pending===0) onAllDone();
+          };
+          xC.onerror = xC.ontimeout = function() { if(--pending===0) onAllDone(); };
+          xC.send();
+        } catch(e) { if(--pending===0) onAllDone(); }
+      };
+      xU.onerror = xU.ontimeout = function() { if(--pending===0) onAllDone(); };
+      xU.send();
+    });
   }
 }
 
@@ -4816,6 +4823,7 @@ function nbaSelectAll(checked) {
 
 function generateNBA() {
   // Auto-fetch yesterday's games and go straight to script gen — no picker needed.
+  lockGenerateButton('btn-gen-nba');
   var statusEl = g('nba-fetch-status');
   if (statusEl) statusEl.textContent = 'Fetching yesterday\'s games...';
   var yesterday = localYesterday();
@@ -4832,7 +4840,7 @@ function generateNBA() {
       });
       if (!finalGames.length) {
         if (statusEl) statusEl.textContent = 'No completed games found for ' + yesterday + '. Try again later.';
-        return;
+        unlockGenerateButtons(); return;
       }
       if (statusEl) statusEl.textContent = 'Found ' + finalGames.length + ' game' + (finalGames.length !== 1 ? 's' : '') + ' — fetching highlight clips...';
       // Build game entries and scrape clips in parallel
@@ -4877,9 +4885,10 @@ function generateNBA() {
       });
     } catch(e) {
       if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+      unlockGenerateButtons();
     }
   };
-  xhr.onerror = xhr.ontimeout = function() { if (statusEl) statusEl.textContent = 'Network error fetching scoreboard'; };
+  xhr.onerror = xhr.ontimeout = function() { if (statusEl) statusEl.textContent = 'Network error fetching scoreboard'; unlockGenerateButtons(); };
   xhr.send();
 }
 
