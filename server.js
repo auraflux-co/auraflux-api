@@ -293,8 +293,8 @@ function saveJobCard(jobId, card) {
         const clipData = card.orderedClipUrls[i] || {};
         return {
           type: 'source_clip',
-          sceneId: scene.id,
-          label: scene.id || `STORY${i+1}_CLIP`,
+          sceneId: scene.name,
+          label: scene.name || `STORY${i+1}_CLIP`,
           clipUrl: clipData.clipUrl || clipData.url || '',
           pageUrl: clipData.pageUrl || '',
           storyIndex: clipData.storyIndex ?? i,
