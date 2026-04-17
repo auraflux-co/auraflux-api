@@ -10,13 +10,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. `AGENT_FILE_REGISTRY.md` — file ownership tiers, handoff size rules, multi-agent lock protocol. **Read before touching any file.**
 4. **`docs/architecture/GATED_PIPELINE_ARCHITECTURE.md`** — the authoritative spec for the Gated Self-Healing Pipeline. Every agent touching pipeline code must read this.
 
-Tell Cline: _"Read CLAUDE.md, STATUS.md, AGENT_FILE_REGISTRY.md and tell me what we're working on"_
+**Multi-agent rule:** If two sub-agents are running simultaneously, check `STATUS.md → 🔒 Active File Locks` before editing any Tier 1 or Tier 2 file. Declare your lock before your first edit. See `AGENT_FILE_REGISTRY.md` for the full protocol.
 
-**Multi-agent rule:** If two agents are running simultaneously, check `STATUS.md → 🔒 Active File Locks` before editing any Tier 1 or Tier 2 file. Declare your lock before your first edit. See `AGENT_FILE_REGISTRY.md` for the full protocol.
-
-**Doc structure (as of 2026-04-15):**
+**Doc structure (as of 2026-04-16):**
 - `docs/INDEX.md` — full index of all docs with descriptions. Read this to find anything.
-- `docs/handoffs/` — all active and pending Cline/Cursor handoffs
+- `docs/handoffs/` — all active and pending sub-agent task specs (named CLINE_HANDOFF_* for historical reasons)
 - `docs/dispatches/` — multi-handoff dispatch orders
 - `docs/architecture/` — system design, pipeline specs, technical reference
 - `docs/specs/` — feature specs and design specs (forward-looking)
@@ -42,8 +40,8 @@ Tell Cline: _"Read CLAUDE.md, STATUS.md, AGENT_FILE_REGISTRY.md and tell me what
 # Terminal 1 — Static file server (dashboard at localhost:8765)
 cd ~/cwn-production && python3 -m http.server 8765
 
-# Terminal 2 — Node API server (auto-restarts via nodemon)
-cd ~/cwn-production && nodemon server.js
+# Terminal 2 — Node API server (auto-restarts via nodemon, tees to logs/server.log)
+cd ~/cwn-production && nodemon server.js 2>&1 | tee -a logs/server.log
 
 # Terminal 3 — VectCut API server (port 9001, for video editing)
 cd ~/cwn-production/VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py
@@ -64,21 +62,18 @@ Claude Code owns this routing table. Update here when models change. Full domain
 
 | Agent | Model | Domain |
 |---|---|---|
-| **Claude Code** | Claude Sonnet 4.6 | Architecture, diagnosis, spec writing, handoff authoring, roadmap, model routing decisions |
-| **Cline-A** | Claude Sonnet | Backend pipeline — `server.js` pipeline functions, gates, FFmpeg, assembly, HeyGen, QA scoring |
-| **Cline-B** | DeepSeek | Backend API/data — `server.js` endpoints, `data/`, `logs/`, job persistence, publish integration |
-| **Cline-C** | GPT-4.5 / Codex | Frontend — `cwn_production.html`, `tools/`, `assets/`, AuraFlux React UI (Phase 2+) |
+| **Claude Code** | Claude Sonnet 4.6 (main session) | Architecture, diagnosis, spec writing, roadmap, model routing decisions |
+| **Sub-Agent A** | Claude Sonnet 4.6 (spawned) | Backend pipeline — `lib/`, `server.js` pipeline functions, gates, FFmpeg, assembly, HeyGen, QA scoring |
+| **Sub-Agent B** | Claude Haiku 4.5 (spawned) | Backend API/data — `server.js` endpoints, `data/`, `logs/`, job persistence, publish integration |
+| **Sub-Agent C** | Claude Sonnet 4.6 (spawned) | Frontend — `cwn_production.html`, `tools/`, `assets/`, AuraFlux React UI (Phase 2+) |
 | **Aider** | — | Overnight batch — docs, migrations, Jira/Confluence, non-breaking scripts |
 
-**Jira labels:** `cline_sonnet`, `cline_deepseek`, `cline_gpt` — used in Assignee field on all tickets.
+**Jira labels:** `sub_agent_a`, `sub_agent_b`, `sub_agent_c` — used in Assignee field on all tickets.
 
-**DeepSeek (Cline-B) rules — context window is small:**
-- NEVER read `server.js` in full — 9000+ lines
-- Always `grep -n` first, read only 50 lines around target
-- Re-read STATUS.md only after context reset — not CLAUDE.md + all handoffs
-- One handoff at a time
-
-**Gemini as Cline:** off the table — did not perform well on code tasks.
+**Sub-Agent B (Haiku) rules — smaller context window:**
+- NEVER read `server.js` in full — grep + targeted reads only
+- Read only 50 lines around the target function
+- One task at a time, no multi-file refactors
 
 **Phase 3 pipeline model routing** (script gen → Pro, Gate 1 → Opus, etc.): see `AUTONOMOUS_PRODUCTION_ROADMAP.md` section 3.3.
 
@@ -109,12 +104,7 @@ Use this policy for all implementation work so Rob can lead with ideas and revie
 - **Claude Code = General Manager** — plans work, breaks tasks into safe steps, keeps `CLAUDE.md` rules in force.
 - **Gemini Flash = Visual Director** — used for visual/frame decisions (thumbnail hooks, layout quality, clickability checks).
 - **Aider = Surgical Coder** — used for high-risk refactors or tightly scoped edits in large files.
-- **Cline = Human Review Layer** — present an English plan before changes; summarize what changed after edits.
-
-**Cline Implementation:**
-- See `CLINE_PLAN_TEMPLATE.md` for structured plan presentation format
-- See `CLINE_USAGE_GUIDE.md` for complete workflow documentation
-- Cline uses 8-section plan template: Task Summary, Affected Files, Implementation Steps, Agent Orchestration, Dependencies, Testing, Rollback, Commit Strategy
+- **Sub-Agents = Implementation layer** — Claude Code spawns them with a self-contained prompt; they read, edit, and commit. Claude Code reviews the result.
 
 **When to call Aider:**
 1. File is large (roughly >2000 lines) and change touches multiple functions/sections.
