@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "contentTypes": {
+    "twitch": {
+      "label": "Twitch Compilation",
+      "formFactor": "long",
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
+      },
+      "assembly": {
+        "chrome": { "skin": "twitch" },
+        "ticker": "twitch",
+        "sourceCrop": "crop=1880:1040,",
+        "voiceover": false
+      },
+      "qa": {
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "twitch",
+        "platforms": ["youtube"]
+      }
+    },
+    "nba": {
+      "label": "NBA Highlights",
+      "formFactor": "long",
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
+      },
+      "assembly": {
+        "chrome": { "skin": "nba" },
+        "ticker": "nba",
+        "sourceCrop": "crop=1920:1080,",
+        "voiceover": true
+      },
+      "qa": {
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "nba",
+        "platforms": ["youtube"]
+      }
+    },
+    "news": {
+      "label": "World News",
+      "formFactor": "long",
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
+      },
+      "assembly": {
+        "chrome": { "skin": "news" },
+        "ticker": "news",
+        "sourceCrop": "crop=1920:1080,",
+        "voiceover": false
+      },
+      "qa": {
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "news",
+        "platforms": ["youtube"]
+      }
+    },
+    "twitch-short": {
+      "label": "Twitch Short",
+      "formFactor": "short",
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
+      },
+      "assembly": {
+        "chrome": { "skin": "twitch" },
+        "ticker": "twitch",
+        "layout": "split-screen",
+        "sourceCrop": "crop=1880:1040,",
+        "voiceover": false
+      },
+      "qa": {
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "twitch",
+        "platforms": ["youtube", "tiktok", "instagram"]
+      }
+    },
+    "nba-short": {
+      "label": "NBA Short",
+      "formFactor": "short",
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
+      },
+      "assembly": {
+        "chrome": { "skin": "nba" },
+        "ticker": "nba",
+        "layout": "split-screen",
+        "sourceCrop": "crop=1920:1080,",
+        "voiceover": false
+      },
+      "qa": {
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "nba",
+        "platforms": ["youtube", "tiktok", "instagram"]
+      }
+    },
+    "news-short": {
+      "label": "News Short",
+      "formFactor": "short",
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
+      },
+      "assembly": {
+        "chrome": { "skin": "news" },
+        "ticker": "news",
+        "layout": "split-screen",
+        "sourceCrop": "crop=1920:1080,",
+        "voiceover": false
+      },
+      "qa": {
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "news",
+        "platforms": ["youtube", "tiktok", "instagram"]
+      }
+    }
+  }
+}
