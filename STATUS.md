@@ -1,22 +1,24 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-17 (overnight session)
-**Branch:** main | **Latest Commit:** 337536d — docs(briefing): 6 tests per gate
+**Last Updated:** 2026-04-16 (gate testing session — context carried over)
+**Branch:** main | **Latest Commit:** a0fb1dc — fix(intro): NBA intro card uses DURATION_NBA
 **✅ ALL GATES 0-4 HAVE FOUNDATIONAL WORK COMMITTED**
 **🧪 GATE_TEST_MODE=true IN .ENV** — Pipeline stops after Gate 1. No HeyGen auto-send until all 6 Gate 1 tests pass.
-**📋 SEE MORNING_BRIEFING.md** — Full test plan, gate status, Cline assignments for next round.
-**How to start a session:** Tell Cline: _"Read CLAUDE.md and STATUS.md and tell me what we're working on"_
-**Every morning:** `cat MORNING_BRIEFING.md` — gate status + test plan before touching anything
+**How to start a session:** Read CLAUDE.md → STATUS.md → tell the agent what to test next
 
 ---
 
 ## 🗂️ Agent Assignments
 
-| Agent | Role | Best For |
-|-------|------|----------|
-| **Claude Code** | Creative Director + Architect | HTML template design, brand decisions, spec writing |
-| **Cline** | Implementation Lead | server.js edits, API integration, pipeline wiring |
-| **Aider** | Surgical Coder | Text generation logic, prompt engineering, keyword detection |
+| Agent | Tool | Domain | Best For |
+|-------|------|--------|----------|
+| **Claude Code** | Claude Sonnet 4.6 (this session) | Architecture, diagnosis, spec writing, handoffs | Root cause analysis, planning, roadmap, model routing |
+| **Sub-Agent A** | Claude Sonnet 4.6 (spawned) | Backend pipeline — `lib/`, assembly, gates, FFmpeg | Complex server logic, gate scoring, QA fixes, production engine |
+| **Sub-Agent B** | Claude Haiku 4.5 (spawned) | Backend API/data — endpoints, `data/`, `logs/`, job persistence | Endpoint additions, job schema, publish integration, formulaic edits |
+| **Sub-Agent C** | Claude Sonnet 4.6 (spawned) | Frontend — `cwn_production.html`, `tools/`, `assets/` | Dashboard UI, WAVE_0 cleanup, AuraFlux React UI (Phase 2+) |
+| **Aider** | Aider (overnight) | Docs, migrations, Jira/Confluence, non-breaking scripts | Batch tasks, anything running 1–6am |
+
+**Model routing:** All sub-agents run via Claude Max subscription (flat-rate). Sub-Agent A = Sonnet for complex pipeline logic. Sub-Agent B = Haiku for formulaic API/data edits. Sub-Agent C = Sonnet for frontend work.
 
 ---
 
@@ -36,6 +38,8 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Sub-Agent C | **fix(dashboard): per-job orderedClipUrls storage — prevents multi-job race on CURRENT_META** — `callFullScriptServer` now stores `resp.orderedClipUrls` and `resp.script` directly on the job card (inside `if (currentJob && resp.metricsJobId)` block). Both `parseSegments` call paths now resolve `_activeJob` via `CURRENT_META.scriptJobId` and prefer `_activeJob.orderedClipUrls` over `CURRENT_META.orderedClipUrls`; falls back to global for backwards compatibility. | cwn_production.html, STATUS.md | — | 2026-04-16 |
+| Claude Code | **fix(shorts-qa): short-form Gate 1 now uses content-type-aware checklist** — Root cause: `isTwitch`/`isNBA`/`isNews` in `claudeScriptQA` excluded `-short` variants → all 3 short types fell through to generic 5-item checklist. Fixes: (1) Both `claudeScriptQA` and `claudeScriptFix` now include `-short` in all content type flags. (2) Short-form gets dedicated 7-8 item checklist (no scene count, word count check instead). (3) `news-short` has separate branch — 0 expected clips (Bobby G only, no video), different checklist items. (4) `expectedClips = 0` for `news-short`, `1` for `nba-short`/`twitch-short`. (5) NBA `shouldClaudeFix` scene guide now includes `GAME#_RECAP`. (6) `streamers` mapping in `script_gen.js` now covers all 6 types — shorts no longer send `[]` to QA. server.js `touch`ed to restart nodemon. | lib/qa.js, lib/script_gen.js | — | 2026-04-16 |
 | Cline-A | **fix(nba): scraper hits video page for Game Highlights reel, API play clips as fallback** — `scrapeEspnGameVideoUrl`: changed URL from `/nba/game/_/gameId/` to `/nba/video/_/gameId/` so Puppeteer targets the correct ESPN page where the 115s Game Highlights reel lives. `POST /nba/scrape-game-highlight`: restructured flow — Puppeteer now runs FIRST (not as fallback), returns Gate 0 PASS with `source: 'puppeteer'` and `title: 'Game Highlights'` on success. On Puppeteer failure, falls back to ESPN API play clips (longest duration). Removed now-redundant secondary Puppeteer call from `if (!videoUrl)` block. Blast radius: NBA Gate 0 only. Branch: cline-a/nba-video-page-fix | server.js, STATUS.md | pending | 2026-04-16 |
 | Cline-A | **fix(scrapers): news removes keyword filter + targetCount stop, nba selects longest-duration video + AD_TRIM_SECONDS config** — `fetchAjSitemapUrls`: removed `topicKeywords` param + US_KEYWORDS filter, now returns ALL articles minus EXCLUDE_PATHS. `scrapeAjNewsVideos`: replaced `maxCheck=20` with `targetCount=5`, stops loop as soon as targetCount confirmed videos found, today-first ordering preserved. Call sites updated: `/news/us-canada-videos` uses targetCount=5; `/generate-full-script` passes `items.length` as targetCount. NBA: removed `highlightPattern` filter from `/nba/scrape-game-highlight` (always returned 0 matches), now uses full video pool — longest duration reliably picks game highlights reel. `lib/config.js`: added `CONFIG.NBA.AD_TRIM_SECONDS = 15` (ESPN pre-roll trim, not yet wired). Log lines updated. Branch: cline-a/scraper-fixes | server.js, lib/config.js, STATUS.md | pending | 2026-04-16 |
 | Claude Code | **session(2026-04-17): Gates 0-4 foundational work complete** — GATE_TEST_MODE=true (.env), pipeline stops after Gate 1. Merged: pipeline-resilience, thumbnail-wire, stuck-job-dashboard, shorts-script-qa-fix, chrome-skins dead code removal, Gate 4 publish QA, poller restart recovery. 6 Gate 1 tests ready to run in morning (News/NBA/Twitch × long+short). See MORNING_BRIEFING.md. | multiple | 337536d | 2026-04-17 |
