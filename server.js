@@ -473,7 +473,8 @@ async function startHeyGenPoller(jobId, card) {
     return;
   }
 
-  const videoJobs = card.heygen?.videoJobs || [];
+  // Filter out source_clip placeholder entries — they were never avatar renders
+  const videoJobs = (card.heygen?.videoJobs || []).filter(vj => !/CLIP$/i.test(vj.sceneName) && vj.textLength !== 0);
   if (!videoJobs.length) {
     console.error(`[heygen-poller:${jobId}] No videoJobs in card — cannot poll`);
     return;
@@ -587,11 +588,13 @@ async function startHeyGenPoller(jobId, card) {
           clipIdx++;  // always increment to maintain story-index alignment
           if (clip && (clip.url || clip.clipUrl)) {
             segmentData.push({
-              url:     clip.clipUrl || clip.url || '',
-              pageUrl: clip.pageUrl || '',
-              label:   clip.label || `CLIP_${clipIdx}`,
-              type:    'source_clip',
-              clipUrl: clip.clipUrl || clip.url || ''
+              url:            clip.clipUrl || clip.url || '',
+              pageUrl:        clip.pageUrl || '',
+              label:          clip.label || `CLIP_${clipIdx}`,
+              type:           'source_clip',
+              clipUrl:        clip.clipUrl || clip.url || '',
+              pillarboxFilter: clip.pillarboxFilter || null,
+              orientation:    clip.orientation || 'landscape'
             });
           } else {
             console.log(`[heygen-poller] null clip at index ${clipIdx - 1} — skipping, index alignment preserved`);
@@ -723,17 +726,18 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
             segmentData.push({
               type: 'source_clip',
               url: clip.clipUrl || clip.url || '',
-              label: clip.label || scene.id || `CLIP_${clipIdx + 1}`,
+              label: clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
               pageUrl: clip.pageUrl || '',
               storyIndex: clip.storyIndex ?? clipIdx,
-              sceneId: scene.id
+              sceneId: scene.name || scene.id
             });
           }
           clipIdx++;
         } else if (scene.type === 'avatar') {
-          // Match avatar segment by scene id or position
-          const vj = avatarByName[scene.id] ||
-            Object.values(avatarByName).find(v => v.sceneName === scene.id);
+          // Match avatar segment by scene name (card.script.scenes uses .name, not .id)
+          const sceneKey = scene.name || scene.id;
+          const vj = avatarByName[sceneKey] ||
+            Object.values(avatarByName).find(v => v.sceneName === sceneKey);
           if (vj) {
             const seg = { type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex };
             // Attach cardData for news STORY#_INTRO segments so chrome overlay renders correctly
@@ -771,9 +775,39 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
   logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
 
   // ── Gate 2: Segment QA ────────────────────────────────────────────────────
+  // geminiSegmentQA expects local file paths (fs.existsSync), not CDN URLs.
+  // Download sample segments (first, middle, last) to tmp before running QA.
+  let gate2SamplePaths = [];
+  try {
+    const isShortForm = (contentType || '').indexOf('short') > -1;
+    const avatarUrls = segmentUrls.filter(u => u && typeof u === 'string' && u.startsWith('http'));
+    const toSample = isShortForm
+      ? [avatarUrls[0]].filter(Boolean)
+      : [
+          avatarUrls[0],
+          avatarUrls[Math.floor(avatarUrls.length / 2)],
+          avatarUrls[avatarUrls.length - 1]
+        ].filter(Boolean);
+    const uniqueSample = [...new Set(toSample)];
+    gate2SamplePaths = await Promise.all(uniqueSample.map(async (url, i) => {
+      const tmpPath = path.join(TMP_DIR, `gate2_${jobId}_${i}_${Date.now()}.mp4`);
+      try {
+        await downloadFile(url, tmpPath);
+        return tmpPath;
+      } catch (dlErr) {
+        logger.warn({ jobId, url, err: dlErr.message }, 'Gate 2 sample download failed — skipping segment');
+        return null;
+      }
+    }));
+    gate2SamplePaths = gate2SamplePaths.filter(Boolean);
+    logger.info({ jobId, sampled: gate2SamplePaths.length, total: avatarUrls.length }, 'Gate 2 samples downloaded');
+  } catch (dlErr) {
+    logger.warn({ jobId, err: dlErr.message }, 'Gate 2 sample download phase failed — passing with warning');
+  }
+
   let gate2Passed = true;
   try {
-    const gate2Result = await geminiSegmentQA(segmentUrls, { jobId, contentType });
+    const gate2Result = await geminiSegmentQA(gate2SamplePaths.length ? gate2SamplePaths : segmentUrls, { jobId, contentType });
     const cardNow = persistedJobs[jobId] || card;
     cardNow.gate2 = { score: gate2Result.score, outcome: gate2Result.outcome, checkedAt: new Date().toISOString() };
     saveJobCard(jobId, cardNow);
@@ -800,6 +834,11 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
     }
   } catch (gate2Err) {
     logger.warn({ jobId, err: gate2Err.message }, 'Gate 2 QA error — proceeding to assembly');
+  } finally {
+    // Clean up temp Gate 2 sample files
+    for (const p of gate2SamplePaths) {
+      try { fs.unlinkSync(p); } catch(e) {}
+    }
   }
 
   if (!gate2Passed) return;
@@ -818,6 +857,9 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
   }
 
   // ── Trigger assembly ──────────────────────────────────────────────────────
+  const _preAsmAvatars = (segmentData || []).filter(s => s.type !== 'source_clip').length;
+  const _preAsmClips   = (segmentData || []).filter(s => s.type === 'source_clip').length;
+  logger.info({ jobId, avatarSegs: _preAsmAvatars, srcClips: _preAsmClips, segmentUrlsCount: segmentUrls.length }, 'Pre-assembly segmentData');
   const PORT = process.env.PORT || 3000;
   const assemblyId = `asm_${Date.now()}`;
   const format = contentType.includes('-short') ? 'portrait' : 'landscape';
@@ -1169,6 +1211,12 @@ function checkFFmpeg(cb) {
 // ── Routes ────────────────────────────────────────────────────────
 
 // Health check with dependency validation
+app.get('/config', (req, res) => {
+  res.json({
+    heygenTestMode: process.env.HEYGEN_TEST_MODE === 'true'
+  });
+});
+
 app.get('/health', async (req, res) => {
   const health = {
     ok: true,
@@ -1388,6 +1436,18 @@ app.post('/job/:id/advance', (req, res) => {
     console.log(`[advance] ${jobId}: script_ready → gate1 force-passed`);
     logError('PIPELINE_ADVANCE', `Job force-advanced: script_ready → gate1_forced`, { jobId, before: 'script_ready', after: 'gate1_forced', at: new Date().toISOString() });
     return res.json({ ok: true, jobId, before: 'script_ready', after: 'gate1_forced', message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.' });
+  }
+
+  if (stage === 'gate2_failed') {
+    // Force-advance from gate2_failed: re-enable assembly path
+    card.gate2 = card.gate2 || {};
+    card.gate2.outcome  = 'force_pass';
+    card.gate2.forcedAt = new Date().toISOString();
+    card.stage = 'gate2_forced';
+    saveJobCard(jobId, card);
+    console.log(`[advance] ${jobId}: gate2_failed → gate2_forced`);
+    logError('PIPELINE_ADVANCE', `Job force-advanced: gate2_failed → gate2_forced`, { jobId, before: 'gate2_failed', after: 'gate2_forced', at: new Date().toISOString() });
+    return res.json({ ok: true, jobId, before: 'gate2_failed', after: 'gate2_forced', message: 'Gate 2 force-passed — click ASSEMBLE.' });
   }
 
   if (stage === 'all_sent') {
