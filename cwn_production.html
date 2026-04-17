@@ -4086,11 +4086,13 @@ function sendToHeyGen() {
     clipsPerStreamer: parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10)
   };
   var gate2Result = gate2_validateSegmentStructure(allParsed, gate2Config, 1, []);
+  // Structural pre-check is informational only — Gemini+Claude Gate 2 QA is the real gate.
+  // Do not block assembly on structural mismatches; they produce false positives on NBA/News.
   if (!gate2Result.passed) {
-    handleGate2Failure(allParsed, gate2Result, script);
-    return; // Gate 2 fix loop takes over
+    console.warn('[gate2] structural pre-check flagged issues (non-blocking):', gate2Result.diagnosis.map(function(d){return d.kind;}).join(', '));
+  } else {
+    displayGate2Pass(gate2Result);
   }
-  displayGate2Pass(gate2Result);
   // ── End Gate 2 ────────────────────────────────────────────────────────────
 
   // Also parse without the 15-word minimum to catch stripped/empty segments
