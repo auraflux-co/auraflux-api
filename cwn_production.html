@@ -4182,7 +4182,7 @@ function doSendToHeyGen(allParsed, avatarSegs, clipSegs) {
   var avatarOnly = allSegments.filter(function(s){ return s.type==='avatar'; });
   if (!avatarOnly.length) { alert('No avatar segments found to send to HeyGen.'); return; }
 
-  var isPortrait = (CURRENT_TYPE === 'short');
+  var isPortrait = (CURRENT_TYPE || '').indexOf('short') > -1;
   var dateStr = new Date().toLocaleDateString([],{month:'short',day:'numeric'});
   var baseTitle = (CURRENT_TYPE||'video').toUpperCase() + ' ' + dateStr;
   var hgCount = avatarOnly.length;
