@@ -1,0 +1,35 @@
+You are likely missing a robust docker-compose.yml to orchestrate the services, proper ffmpeg binary installation within the Node Dockerfile, and persistent storage configurations for Redis. You must also ensure network connectivity between containers and handle FFmpeg process management within Node.js to prevent zombie processes. 
+Redis
+
+
+Key Components & Considerations:
+docker-compose.yml Orchestration: Define services for app (server.js), poller, and redis to enable container communication.
+FFmpeg Installation: In your Dockerfile, ensure FFmpeg is installed via apk add ffmpeg (Alpine) or apt-get install ffmpeg (Debian). Alternatively, use ffmpeg-static in package.json.
+Redis Persistence: Use volumes in docker-compose.yml to persist Redis data, or it will be lost on container restart.
+Networking: Ensure the Node.js application connects to redis:6379 rather than localhost:6379, as they are separate containers.
+Process Management: Use a tool like tini or ensure your Node.js application properly handles FFmpeg process termination to avoid orphaned processes.
+Environment Variables: Pass necessary configuration (e.g., REDIS_HOST, FFMPEG_PATH) to containers. 
+Docker Community Forums
+
+ 
+Example docker-compose.yml Structure 
+yaml
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+  poller:
+    build: .
+    command: npm run poller
+    depends_on:
+      - redis
+  redis:
+    image: "redis:alpine"
+    volumes:
+      - redis_data:/data
+volumes:
+  redis_data:
