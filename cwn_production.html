@@ -1075,12 +1075,17 @@ var CFG = {
 var JOBS = [];
 var CURRENT_TYPE = null;
 
-// Returns yesterday's date as YYYY-MM-DD in local (browser) time.
-// Uses local date math so it works correctly at any hour in ET.
+// Returns yesterday's date as YYYY-MM-DD in Eastern Time.
 function localYesterday() {
-  var d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  var etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  etNow.setDate(etNow.getDate() - 1);
+  return etNow.getFullYear() + '-' + String(etNow.getMonth()+1).padStart(2,'0') + '-' + String(etNow.getDate()).padStart(2,'0');
+}
+
+// Returns today's date as YYYY-MM-DD in Eastern Time.
+function localToday() {
+  var etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  return etNow.getFullYear() + '-' + String(etNow.getMonth()+1).padStart(2,'0') + '-' + String(etNow.getDate()).padStart(2,'0');
 }
 var CURRENT_META = {}; // stores extra per-job metadata (gameIds, headline, etc)
 var _assemblyFiredForJob = {}; // dedup lock to prevent multiple /assemble calls for same jobId
