@@ -1,5 +1,21 @@
 # CWN Overnight Task Schedule
 
+## 🎬 RENDER READINESS — Next Session Priority
+
+**Status as of 2026-04-17:** Synth QA in progress (awaiting Rob visual approval on 4 outputs).
+
+**Once synth QA passes → render sequence:**
+1. `node test/synth_assembly_test.js` → all 4 PASS
+2. News render first (Gate 0→4)
+3. Twitch render second
+4. NBA render third
+5. Phase 1 locked → proceed to Phase 2 client layer
+
+**Runbook:** `docs/ops/RENDER_RUNBOOK.md`
+**Jira Epic:** CPD — "Phase 1 Production Render"
+
+---
+
 **Window:** 1:00 AM – 7:00 AM Eastern (daily)
 **Agent:** Aider (gemini/gemini-2.5-pro)
 **Output:** Morning briefing written to `MORNING_BRIEFING.md` after each run
