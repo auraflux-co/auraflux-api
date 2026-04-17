@@ -66,27 +66,35 @@ function withSegments(p) {
 }
 
 function newsPayload() {
-  // 1 COLD_OPEN + 1 story (INTRO/SETUP/SOURCE_CLIP/SUMMARY/REACTION) + 1 OUTRO
+  // COLD_OPEN + 3 stories (sidebar should show all 3 cards) + OUTRO
   const stories = [
-    { title: 'Ceasefire Holds In Lebanon', category: 'WORLD NEWS', storyId: 'story_1' }
+    { title: 'Ceasefire Holds In Lebanon', category: 'WORLD NEWS', storyId: 'story_1' },
+    { title: 'Markets Rally On Rate Cut', category: 'ECONOMY',     storyId: 'story_2' },
+    { title: 'Amazon Rainforest Record',  category: 'ENVIRONMENT', storyId: 'story_3' }
   ];
   return {
     jobTitle:   'news_synth_test',
     contentType: 'news',
     transition:  'cut',
     format:      'mp4',
-    expectedClips: 1,
+    expectedClips: 3,
     segmentData: [
       { ...avatar('COLD_OPEN',       'av_10s.mp4') },
-      { ...avatar('STORY1_INTRO',    'av_10s.mp4'),
-        cardData: { ...stories[0], imageUrl: null } },
-      { ...avatar('STORY1_SETUP',    'av_10s.mp4'),
-        cardData: { ...stories[0] } },
+      { ...avatar('STORY1_INTRO',    'av_10s.mp4'), cardData: { ...stories[0], imageUrl: null } },
+      { ...avatar('STORY1_SETUP',    'av_10s.mp4'), cardData: { ...stories[0] } },
       { ...clip(  'STORY1_CLIP',     'clip_9x16_10s.mp4') },
-      { ...avatar('STORY1_SUMMARY',  'av_10s.mp4'),
-        cardData: { ...stories[0] } },
-      { ...avatar('STORY1_REACTION', 'av_10s.mp4'),
-        cardData: { ...stories[0] } },
+      { ...avatar('STORY1_SUMMARY',  'av_10s.mp4'), cardData: { ...stories[0] } },
+      { ...avatar('STORY1_REACTION', 'av_10s.mp4'), cardData: { ...stories[0] } },
+      { ...avatar('STORY2_INTRO',    'av_10s.mp4'), cardData: { ...stories[1], imageUrl: null } },
+      { ...avatar('STORY2_SETUP',    'av_10s.mp4'), cardData: { ...stories[1] } },
+      { ...clip(  'STORY2_CLIP',     'clip_9x16_10s.mp4') },
+      { ...avatar('STORY2_SUMMARY',  'av_10s.mp4'), cardData: { ...stories[1] } },
+      { ...avatar('STORY2_REACTION', 'av_10s.mp4'), cardData: { ...stories[1] } },
+      { ...avatar('STORY3_INTRO',    'av_10s.mp4'), cardData: { ...stories[2], imageUrl: null } },
+      { ...avatar('STORY3_SETUP',    'av_10s.mp4'), cardData: { ...stories[2] } },
+      { ...clip(  'STORY3_CLIP',     'clip_9x16_10s.mp4') },
+      { ...avatar('STORY3_SUMMARY',  'av_10s.mp4'), cardData: { ...stories[2] } },
+      { ...avatar('STORY3_REACTION', 'av_10s.mp4'), cardData: { ...stories[2] } },
       { ...avatar('OUTRO',           'av_10s.mp4') },
     ]
   };
@@ -146,6 +154,16 @@ function shortPayload() {
     transition:  'cut',
     format:      'portrait',
     expectedClips: 1,
+    // Caption burned onto the split-screen — Twitch style: Impact font, purple box, top-center
+    captionText: 'THIS IS A TEST CAPTION',
+    captionStyle: {
+      font:       '/System/Library/Fonts/Supplemental/Impact.ttf',
+      fontsize:   72,
+      fontcolor:  'white',
+      boxcolor:   '0x6441A5@0.92',
+      boxborderw: 20,
+      position:   'top-center'
+    },
     segmentData: [
       { ...avatar('INTRO',       'av_9x16_10s.mp4') },
       { ...clip(  'JASON_CLIP1', 'clip_16x9_10s.mp4') },
