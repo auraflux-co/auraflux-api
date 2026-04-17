@@ -1101,14 +1101,13 @@ var CFG = {
 var JOBS = [];
 var CURRENT_TYPE = null;
 
-// Returns yesterday's date as YYYY-MM-DD in LOCAL time (not UTC).
-// new Date(Date.now()-86400000).toISOString() is UTC — wrong after 7PM ET.
+// Returns yesterday's date as YYYY-MM-DD in Eastern Time.
+// We target ET by formatting with the America/New_York locale — works regardless
+// of where the browser is running or what UTC offset it is locally.
 function localYesterday() {
-  var d = new Date();
-  d.setDate(d.getDate() - 1);
-  var mm = String(d.getMonth() + 1).padStart(2, '0');
-  var dd = String(d.getDate()).padStart(2, '0');
-  return d.getFullYear() + '-' + mm + '-' + dd;
+  var d = new Date(Date.now() - 86400000);
+  var parts = d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); // en-CA gives YYYY-MM-DD
+  return parts; // already YYYY-MM-DD
 }
 var CURRENT_META = {}; // stores extra per-job metadata (gameIds, headline, etc)
 var _assemblyFiredForJob = {}; // dedup lock to prevent multiple /assemble calls for same jobId
