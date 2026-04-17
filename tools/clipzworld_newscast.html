@@ -89,20 +89,19 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   LOWER THIRD — TV card (top-left, timed)
+   LOWER THIRD — flag (top-left)
    Hidden by default; shown via .visible class toggle from generateNewscastOverlay()
 ═══════════════════════════════════════ */
 .lower-third {
   position: absolute;
-  top: 48px;        /* sits directly below the 48px top bar */
+  top: 0;
   left: 0;
-  margin-left: 0;   /* explicit: no inherited offset */
-  width: 720px;     /* narrowed from 860px to pull back from Bobby G's face */
+  width: 620px;
   display: flex;
   flex-direction: column;
   opacity: 0;
   visibility: hidden;
-  transform: translateX(0); /* ensure flush at x=0 — no slide-in offset at capture time */
+  transform: translateX(0);
 }
 
 .lower-third.visible {
@@ -231,38 +230,6 @@ body {
 }
 
 /* ═══════════════════════════════════════
-   SEGMENT INDICATOR — top right corner
-═══════════════════════════════════════ */
-.segment-tag {
-  position: absolute;
-  top: 60px;
-  right: 32px;
-  background: var(--navy);
-  border: 1px solid var(--gold);
-  border-radius: 3px;
-  padding: 6px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  animation: fadeIn 0.5s ease 0.4s both;
-}
-
-.seg-label {
-  font-size: 9px;
-  color: rgba(199,175,79,0.6);
-  letter-spacing: 3px;
-  font-weight: 700;
-}
-
-.seg-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  color: #fff;
-  letter-spacing: 2px;
-}
-
-/* ═══════════════════════════════════════
    SIDE STORY LIST — right panel (420px wide, min 90px per item)
 ═══════════════════════════════════════ */
 .story-list {
@@ -354,12 +321,6 @@ body.sidebar-hidden .story-list {
     </div>
     <div class="top-time" id="date-display">MARCH 30, 2026</div>
   </div>
-</div>
-
-<!-- SEGMENT TAG -->
-<div class="segment-tag">
-  <div class="seg-label">NOW COVERING</div>
-  <div class="seg-name">WORLD NEWS</div>
 </div>
 
 <!-- STORY LIST — populated dynamically by generateNewscastOverlay() via page.evaluate() -->
