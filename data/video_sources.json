@@ -1,0 +1,182 @@
+{
+  "_comment": "Video source profiles. Each domain key maps to auth/download config. Add new sources here — no code changes needed.",
+  "sources": {
+    "akamaized.net": {
+      "name": "ESPN Akamai CDN",
+      "contentTypes": ["nba"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {
+        "SWID": "ESPN_SWID",
+        "espn_s2": "ESPN_S2"
+      },
+      "referer": "https://www.espn.com/",
+      "proxy": null,
+      "notes": "Akamai HLS streams for ESPN game highlights. Same auth as espn.com."
+    },
+    "espn.com": {
+      "name": "ESPN",
+      "contentTypes": ["nba"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {
+        "SWID": "ESPN_SWID",
+        "espn_s2": "ESPN_S2"
+      },
+      "referer": "https://www.espn.com/",
+      "proxy": null,
+      "notes": "SWID + espn_s2 from browser login. Rotate quarterly or when downloads fail."
+    },
+    "media.video-cdn.espn.com": {
+      "name": "ESPN CDN",
+      "contentTypes": ["nba"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {
+        "SWID": "ESPN_SWID",
+        "espn_s2": "ESPN_S2"
+      },
+      "referer": "https://www.espn.com/",
+      "proxy": null
+    },
+    "aljazeera.com": {
+      "name": "Al Jazeera",
+      "contentTypes": ["news"],
+      "downloadMethod": "puppeteer_intercept",
+      "impersonate": null,
+      "cookieEnvVars": {},
+      "referer": null,
+      "proxy": null,
+      "notes": "Brightcove HLS. Puppeteer intercepts the manifest URL, FFmpeg downloads segments."
+    },
+    "boltdns.net": {
+      "name": "Brightcove CDN (Al Jazeera)",
+      "contentTypes": ["news"],
+      "downloadMethod": "ffmpeg_hls",
+      "impersonate": null,
+      "cookieEnvVars": {},
+      "referer": "https://www.aljazeera.com/",
+      "proxy": null
+    },
+    "twitch.tv": {
+      "name": "Twitch",
+      "contentTypes": ["twitch"],
+      "downloadMethod": "api",
+      "impersonate": null,
+      "cookieEnvVars": {},
+      "apiKeyEnvVars": {
+        "clientId": "TWITCH_CLIENT_ID",
+        "token": "TWITCH_TOKEN"
+      },
+      "referer": null,
+      "proxy": null,
+      "notes": "Dev API access via GQL. Signed CDN URLs expire ~1hr."
+    },
+    "clips-media-assets2.twitch.tv": {
+      "name": "Twitch CDN",
+      "contentTypes": ["twitch"],
+      "downloadMethod": "direct",
+      "impersonate": null,
+      "cookieEnvVars": {},
+      "referer": "https://www.twitch.tv/",
+      "proxy": null
+    },
+    "youtube.com": {
+      "name": "YouTube",
+      "contentTypes": ["nba", "news", "twitch"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {},
+      "referer": null,
+      "proxy": null,
+      "notes": "Public videos work without auth. For age-gated or members-only, add YOUTUBE_COOKIES_FILE env var."
+    },
+    "youtu.be": {
+      "name": "YouTube (short)",
+      "contentTypes": ["nba", "news", "twitch"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {},
+      "referer": null,
+      "proxy": null
+    },
+    "twitter.com": {
+      "name": "Twitter/X",
+      "contentTypes": ["news"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {
+        "auth_token": "TWITTER_AUTH_TOKEN",
+        "ct0": "TWITTER_CT0"
+      },
+      "referer": "https://twitter.com/",
+      "proxy": null,
+      "notes": "auth_token + ct0 from browser cookies. Required for protected tweets."
+    },
+    "x.com": {
+      "name": "X (Twitter)",
+      "contentTypes": ["news"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {
+        "auth_token": "TWITTER_AUTH_TOKEN",
+        "ct0": "TWITTER_CT0"
+      },
+      "referer": "https://x.com/",
+      "proxy": null
+    },
+    "reddit.com": {
+      "name": "Reddit",
+      "contentTypes": ["news", "twitch"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {},
+      "referer": "https://www.reddit.com/",
+      "proxy": null
+    },
+    "instagram.com": {
+      "name": "Instagram",
+      "contentTypes": ["news"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {
+        "sessionid": "INSTAGRAM_SESSION_ID",
+        "csrftoken": "INSTAGRAM_CSRF_TOKEN"
+      },
+      "referer": "https://www.instagram.com/",
+      "proxy": null,
+      "notes": "Login required for non-public content. Get sessionid from browser cookies."
+    },
+    "tiktok.com": {
+      "name": "TikTok",
+      "contentTypes": ["news", "twitch"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {
+        "sessionid": "TIKTOK_SESSION_ID"
+      },
+      "referer": "https://www.tiktok.com/",
+      "proxy": null
+    },
+    "nba.com": {
+      "name": "NBA.com",
+      "contentTypes": ["nba"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {},
+      "referer": "https://www.nba.com/",
+      "proxy": null,
+      "notes": "Public highlights. No auth needed for game recaps."
+    },
+    "default": {
+      "name": "Unknown Source",
+      "contentTypes": ["news"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {},
+      "referer": null,
+      "proxy": null,
+      "notes": "Fallback for unrecognized domains. yt-dlp handles most public video sites."
+    }
+  }
+}
