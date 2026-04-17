@@ -223,15 +223,33 @@ Per streamer: INTRO → CLIP_1 → REACTION_1 → CLIP_2 → REACTION_2 → CLIP
 ### 6.3 Logo position
 - `LOGO_POS`: x=80, y=10, size=100px (top-left, no opacity reduction)
 
-### 6.4 Source clip rules
-- Zoom-to-fill `crop=1920:1080` (no border trim — ESPN clips are clean)
-- No intro skip
+### 6.4 Voiceover pipeline (NBA only — key difference from News and Twitch)
 
-### 6.5 Scene structure
+NBA is live narration over highlights. Bobby G talks WHILE the ESPN clip plays — his audio is mixed over the muted clip video. This is fundamentally different from News/Twitch where avatar and source clip are separate sequential segments.
+
+**Audio mix per game:**
+- Clip native audio: muted (0.0 volume)
+- Bobby G narration: full volume (1.0)
+- Background music bed from `assets/audio/nba/`: 0.20 volume
+
+**Implementation:** `orchestrateNBAVoiceoverVectCut()` via VectCutAPI (port 9001). See `CLINE_HANDOFF_NBA_VECTCUT_VOICEOVER.md` for full spec.
+
+**Fallback:** If VectCutAPI is down or music tracks missing, falls back gracefully — narration-only or original clip. Never hard fails assembly.
+
+**Music tracks:** Rob drops `.mp3`/`.wav` files into `assets/audio/nba/`. Selected randomly per episode.
+
+### 6.5 Source clip rules
+- Zoom-to-fill `crop=1920:1080` (ESPN clips are clean, no border trim needed)
+- No intro skip
+- Clip plays full duration — NOT truncated to narration length
+
+### 6.6 Scene structure
 `1 INTRO + (N games × 4 scenes) + 1 OUTRO`
 Per game: INTRO → NARRATION → SOURCE_CLIP → REACTION
 
-### 6.6 Chrome state matrix
+Note: NARRATION segment is avatar audio only — video is discarded. The NARRATION audio gets mixed onto the SOURCE_CLIP video by the voiceover pipeline.
+
+### 6.7 Chrome state matrix
 | Scene type | Flag | Sidebar |
 |---|---|---|
 | COLD_OPEN | ❌ | ❌ |
