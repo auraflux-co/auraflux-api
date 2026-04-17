@@ -105,6 +105,7 @@ const { requireFields, validateContentType, validateArrayLength, sanitizeStrings
 const TwitchClient = require('./lib/clients/twitch_client');
 const { CONFIG } = require('./lib/config');
 const logger = require('./lib/logger');
+const pipelineBus = require('./lib/pipeline_events');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
 const {
   generateTwitchLongformThumbnail,
@@ -523,138 +524,17 @@ async function startHeyGenPoller(jobId, card) {
       updatedCard.stage = 'all_sent';
       saveJobCard(jobId, updatedCard);
 
-      // ── Gate 2: Segment QA — Gemini reviews HeyGen segments before assembly ──
-      console.log(`[heygen-poller:${jobId}] 🔍 Running Gate 2 segment QA...`);
-      try {
-        const avatarSegPaths = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
-        const gate2Result = await geminiSegmentQA(avatarSegPaths, {
-          jobId,
-          contentType: card.contentType || 'twitch'
-        });
-        updatedCard.gate2 = { score: gate2Result.score, outcome: gate2Result.outcome, checkedAt: new Date().toISOString() };
-        saveJobCard(jobId, updatedCard);
-        console.log(`[heygen-poller:${jobId}] Gate 2: ${gate2Result.outcomeLabel} (${gate2Result.score}/100)`);
-        if (gate2Result.outcome === 'fail') {
-          console.error(`[heygen-poller:${jobId}] ❌ Gate 2 HARD FAIL — blocking assembly. Review segments manually.`);
-          logError('GATE2_FAIL', `Gate 2 failed — assembly blocked for job ${jobId}`, { jobId, score: gate2Result.score });
-          updatedCard.stage = 'gate2_failed';
-          saveJobCard(jobId, updatedCard);
-          return; // Don't trigger assembly
-        }
-        // manual_review or pass — both proceed to assembly
-        if (gate2Result.outcome === 'manual_review') {
-          console.warn(`[heygen-poller:${jobId}] 🟡 Gate 2 MANUAL REVIEW (${gate2Result.score}/100) — proceeding to assembly anyway`);
-        }
-      } catch (gate2Err) {
-        console.warn(`[heygen-poller:${jobId}] ⚠️  Gate 2 QA error: ${gate2Err.message} — proceeding to assembly`);
-      }
-
-      // Trigger assembly via internal HTTP call (same as dashboard ASSEMBLE button)
-      const PORT = process.env.PORT || 3000;
-      const assemblyId = `asm_${Date.now()}`;
-      const contentType = card.contentType || 'twitch';
-      const format = contentType.includes('-short') ? 'portrait' : 'landscape';
-
-      // Pre-warm ticker cache BEFORE assembly so it's ready when FFmpeg needs it
-      // captureTicker takes ~2-3 min (900 frames) — await it here so assembly never races ahead
-      if (!contentType.includes('short')) {
-        const tickerContentType = contentType.replace(/-short$/, '');
-        console.log(`[heygen-poller:${jobId}] 🎞 Pre-warming ${tickerContentType} ticker cache (awaiting)...`);
-        try {
-          const tickerPrewarmPath = await captureTicker(tickerContentType);
-          if (tickerPrewarmPath) console.log(`[heygen-poller:${jobId}] ✅ Ticker pre-warmed: ${tickerPrewarmPath}`);
-          else console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm failed — assembly will proceed without ticker`);
-        } catch(e) {
-          console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm error: ${e.message} — continuing without ticker`);
-        }
-      }
-
-      console.log(`[heygen-poller:${jobId}] 🎬 Triggering auto-assembly (assemblyId: ${assemblyId})...`);
-
-      // Build a human-readable job title for the output filename
-      // e.g. "TWITCH Saturday, April 11, 2026 (7 avatar + 2 clips)"
-      const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
-      const _dateLabel = _cardDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      const _avatarCount = sortedAvatarSegs.length;
-      const _clipCount   = clipIdx;
-      const _humanTitle  = `${contentType.toUpperCase()} ${_dateLabel} (${_avatarCount} avatar + ${_clipCount} clips)`;
-
-      try {
-        await axios.post(`http://localhost:${PORT}/assemble`, {
-          segments:    segmentData.map(s => s.url),
-          segmentData: segmentData,
-          labels:      segmentData.map(s => s.label),
-          transition:  'crossfade',
-          format:      'mp4',
-          assemblyId,
-          jobTitle:    _humanTitle,
-          contentType,
-          jobId,
-          sceneTextMap: card.heygen?.sceneTextMap || null,
-          fullScript:   card.script || null,
-          streamers:    card.streamers || []
-        }, { timeout: 10000 }); // Just fire — assembly runs async
-
-        console.log(`[heygen-poller:${jobId}] ✅ Auto-assembly triggered (assemblyId: ${assemblyId}) — Gate 3 → Drive → Gate 6 will run automatically`);
-
-        // Update job card to reflect assembly started
-        const cardNow = persistedJobs[jobId] || updatedCard;
-        cardNow.assemblyId = assemblyId;
-        cardNow.autoAssembledAt = new Date().toISOString();
-        saveJobCard(jobId, cardNow);
-
-        // ── Poll assemblyJobs in-process until done, then persist final state ──
-        // assemblyJobs[assemblyId] is in-memory in the same Node process.
-        // Poll every 15s until status is 'done', 'failed', or 'manual_review',
-        // then write assembledAt + stage + outputPath + driveUrl to the persisted job card
-        // so the dashboard shows the correct state after any page reload.
-        const ASM_POLL_INTERVAL = 15000;
-        const ASM_POLL_MAX = 120; // 30 min max (120 × 15s)
-        let asmPollCount = 0;
-        const pollAssemblyCompletion = () => {
-          asmPollCount++;
-          const asmJob = assemblyJobs[assemblyId];
-          if (!asmJob) {
-            if (asmPollCount < ASM_POLL_MAX) setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-            return;
-          }
-          const isDone = asmJob.status === 'done' || asmJob.status === 'manual_review' || asmJob.status === 'failed';
-          if (!isDone && asmPollCount < ASM_POLL_MAX) {
-            setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-            return;
-          }
-          // Assembly finished — update persisted job card
-          const finalCard = persistedJobs[jobId] || cardNow;
-          if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
-            finalCard.assembledAt = new Date().toISOString();
-            finalCard.stage = 'assembled';
-            if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
-            if (asmJob.driveUrl)   finalCard.finalUrl   = asmJob.driveUrl;
-            if (asmJob.qaScore !== undefined) {
-              finalCard.gate5 = finalCard.gate5 || {};
-              finalCard.gate5.score   = asmJob.qaScore;
-              finalCard.gate5.outcome = asmJob.qaOutcome || 'manual_review';
-              finalCard.gate5.report  = asmJob.qaReport  || '';
-              if (asmJob.qaOutcome === 'pass') {
-                finalCard._gate5Done = true;
-                finalCard.stage = 'gate5_forced'; // treat auto-pass same as force-pass for dashboard
-              }
-            }
-            if (asmJob.publishResult) {
-              finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
-              finalCard.stage = 'published';
-            }
-            saveJobCard(jobId, finalCard);
-            console.log(`[heygen-poller:${jobId}] ✅ Persisted assembly completion: stage=${finalCard.stage}, outputPath=${asmJob.outputPath || 'n/a'}, driveUrl=${asmJob.driveUrl || 'n/a'}`);
-          } else {
-            console.warn(`[heygen-poller:${jobId}] ⚠️ Assembly ended with status=${asmJob.status} — job card not updated to assembled`);
-          }
-        };
-        setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-
-      } catch(assembleErr) {
-        console.error(`[heygen-poller:${jobId}] ❌ Auto-assembly POST failed: ${assembleErr.message} — manual ASSEMBLE required`);
-      }
+      // ── Emit pipeline event — Gate 2 QA + assembly handled by pipelineBus listener ──
+      const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
+      pipelineBus.emit('heygen:all_complete', {
+        jobId,
+        contentType: card.contentType || 'twitch',
+        segmentUrls,
+        card: updatedCard,
+        segmentData
+      });
+      console.log(`[heygen-poller:${jobId}] 📡 heygen:all_complete emitted — Gate 2 + assembly handed off to pipeline bus`);
+      return; // poller's job is done — pipelineBus listener owns Gate 2 + assembly
 
     } catch(pollErr) {
       console.error(`[heygen-poller:${jobId}] Poll error: ${pollErr.message} — retrying in 30s`);
@@ -667,6 +547,138 @@ async function startHeyGenPoller(jobId, card) {
 }
 
 // NOTE: GET /jobs endpoint is registered after app is initialized (see below near line 796+)
+
+// ── Pipeline Bus: heygen:all_complete → Gate 2 QA → assembly ─────────────────
+// The HeyGen poller emits this when all segments are done.
+// This listener owns Gate 2 QA + logging + assembly trigger + assembly completion polling.
+// Dashboard is view-only — it reads persistedJobs, never drives this flow.
+pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData }) => {
+  logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
+
+  // ── Gate 2: Segment QA ────────────────────────────────────────────────────
+  let gate2Passed = true;
+  try {
+    const gate2Result = await geminiSegmentQA(segmentUrls, { jobId, contentType });
+    const cardNow = persistedJobs[jobId] || card;
+    cardNow.gate2 = { score: gate2Result.score, outcome: gate2Result.outcome, checkedAt: new Date().toISOString() };
+    saveJobCard(jobId, cardNow);
+
+    logger.info({ jobId, score: gate2Result.score, outcome: gate2Result.outcome }, 'Gate 2 complete');
+    pipelineBus.emit('gate2:complete', { jobId, contentType, score: gate2Result.score, outcome: gate2Result.outcome });
+
+    if (gate2Result.outcome === 'fail') {
+      gate2Passed = false;
+      logError('GATE2_FAIL', `Gate 2 hard fail — assembly blocked`, { jobId, score: gate2Result.score });
+      logger.error({ jobId, score: gate2Result.score }, 'Gate 2 HARD FAIL — assembly blocked');
+      const blockedCard = persistedJobs[jobId] || card;
+      blockedCard.stage = 'gate2_failed';
+      saveJobCard(jobId, blockedCard);
+      pipelineBus.emit('gate2:fail', { jobId, score: gate2Result.score });
+      return;
+    }
+    if (gate2Result.outcome === 'manual_review') {
+      logger.warn({ jobId, score: gate2Result.score }, 'Gate 2 MANUAL REVIEW — proceeding to assembly');
+    }
+  } catch (gate2Err) {
+    logger.warn({ jobId, err: gate2Err.message }, 'Gate 2 QA error — proceeding to assembly');
+  }
+
+  if (!gate2Passed) return;
+
+  // ── Pre-warm ticker cache (long-form only) ────────────────────────────────
+  if (!contentType.includes('short')) {
+    const tickerContentType = contentType.replace(/-short$/, '');
+    logger.info({ jobId, tickerContentType }, 'Pre-warming ticker cache');
+    try {
+      const tickerPath = await captureTicker(tickerContentType);
+      if (tickerPath) logger.info({ jobId, tickerPath }, 'Ticker pre-warmed');
+      else logger.warn({ jobId }, 'Ticker pre-warm returned null — assembly continues without ticker');
+    } catch(e) {
+      logger.warn({ jobId, err: e.message }, 'Ticker pre-warm error — continuing');
+    }
+  }
+
+  // ── Trigger assembly ──────────────────────────────────────────────────────
+  const PORT = process.env.PORT || 3000;
+  const assemblyId = `asm_${Date.now()}`;
+  const format = contentType.includes('-short') ? 'portrait' : 'landscape';
+  const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
+  const _dateLabel = _cardDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const _avatarCount = segmentUrls.length;
+  const _clipCount   = (segmentData || []).filter(s => s.type === 'source_clip').length;
+  const _humanTitle  = `${contentType.toUpperCase()} ${_dateLabel} (${_avatarCount} avatar + ${_clipCount} clips)`;
+
+  try {
+    await axios.post(`http://localhost:${PORT}/assemble`, {
+      segments:     (segmentData || []).map(s => s.url),
+      segmentData:  segmentData || [],
+      labels:       (segmentData || []).map(s => s.label),
+      transition:   'crossfade',
+      format:       'mp4',
+      assemblyId,
+      jobTitle:     _humanTitle,
+      contentType,
+      jobId,
+      sceneTextMap: card.heygen?.sceneTextMap || null,
+      fullScript:   card.script || null,
+      streamers:    card.streamers || []
+    }, { timeout: 10000 });
+
+    logger.info({ jobId, assemblyId }, 'Auto-assembly triggered — Gate 3 → Drive will run automatically');
+    pipelineBus.emit('assembly:triggered', { jobId, assemblyId });
+
+    const cardNow = persistedJobs[jobId] || card;
+    cardNow.assemblyId = assemblyId;
+    cardNow.autoAssembledAt = new Date().toISOString();
+    saveJobCard(jobId, cardNow);
+
+    // ── Poll assembly completion → persist final state ────────────────────
+    const ASM_POLL_INTERVAL = 15000;
+    const ASM_POLL_MAX = 120; // 30 min
+    let asmPollCount = 0;
+    const pollAssemblyCompletion = () => {
+      asmPollCount++;
+      const asmJob = assemblyJobs[assemblyId];
+      if (!asmJob) {
+        if (asmPollCount < ASM_POLL_MAX) setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+        return;
+      }
+      const isDone = asmJob.status === 'done' || asmJob.status === 'manual_review' || asmJob.status === 'failed';
+      if (!isDone && asmPollCount < ASM_POLL_MAX) { setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL); return; }
+
+      const finalCard = persistedJobs[jobId] || cardNow;
+      if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
+        finalCard.assembledAt = new Date().toISOString();
+        finalCard.stage = 'assembled';
+        if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
+        if (asmJob.driveUrl)   finalCard.finalUrl   = asmJob.driveUrl;
+        if (asmJob.qaScore !== undefined) {
+          finalCard.gate5 = finalCard.gate5 || {};
+          finalCard.gate5.score   = asmJob.qaScore;
+          finalCard.gate5.outcome = asmJob.qaOutcome || 'manual_review';
+          finalCard.gate5.report  = asmJob.qaReport  || '';
+          if (asmJob.qaOutcome === 'pass') {
+            finalCard._gate5Done = true;
+            finalCard.stage = 'gate5_forced';
+          }
+        }
+        if (asmJob.publishResult) {
+          finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
+          finalCard.stage = 'published';
+        }
+        saveJobCard(jobId, finalCard);
+        logger.info({ jobId, stage: finalCard.stage, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
+        pipelineBus.emit('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
+      } else {
+        logger.warn({ jobId, asmStatus: asmJob.status }, 'Assembly ended without done/manual_review — card not updated');
+      }
+    };
+    setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+
+  } catch(assembleErr) {
+    logger.error({ jobId, err: assembleErr.message }, 'Auto-assembly POST failed — manual ASSEMBLE required');
+  }
+});
 
 // Initialize Anthropic client for Claude API calls
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
