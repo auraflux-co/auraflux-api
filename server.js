@@ -416,19 +416,7 @@ function unregisterPoller(jobId) {
 }
 
 // Graceful shutdown — wait for active pollers before exiting
-async function gracefulShutdown(signal) {
-  const count = activePollers.size;
-  if (count === 0) { console.log(`[shutdown] ${signal} — no active pollers, exiting`); process.exit(0); }
-  console.log(`[shutdown] ${signal} — waiting for ${count} active poller(s) to checkpoint (max 35s)…`);
-  // Give each poller up to 35s (one poll cycle) to finish its current iteration
-  const timeout = new Promise(r => setTimeout(r, 35000));
-  await Promise.race([Promise.all([...activePollers.values()].map(e => e.done)), timeout]);
-  console.log(`[shutdown] All pollers checkpointed — exiting`);
-  process.exit(0);
-}
-
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
+// gracefulShutdown defined later — single implementation handles pollers + assembly
 
 // ── startHeyGenPoller() — Auto-poll HeyGen until all segments complete, then auto-assemble ──
 // Called after Gate 1 passes and HeyGen video IDs are saved to the job card.
@@ -5615,35 +5603,52 @@ const server = app.listen(PORT, () => {
   });
 });
 
-// Graceful shutdown handler
-function gracefulShutdown(signal) {
-  console.log(`\n${signal} received. Starting graceful shutdown...`);
-  
-  server.close(() => {
-    console.log('✅ HTTP server closed');
-    
-    // Clean up active jobs
-    const activeJobs = Object.keys(assemblyJobs).filter(id => 
-      assemblyJobs[id].status === 'running'
-    );
-    
-    if (activeJobs.length > 0) {
-      console.log(`⚠️  ${activeJobs.length} active assembly job(s) - allowing 30s to complete`);
-      setTimeout(() => {
-        console.log('⏱️  Shutdown timeout - exiting');
-        process.exit(0);
-      }, 30000);
-    } else {
-      console.log('✅ No active jobs - exiting cleanly');
-      process.exit(0);
-    }
-  });
-  
-  // Force exit after 35 seconds
-  setTimeout(() => {
-    console.error('❌ Forced shutdown after 35s timeout');
+// Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
+async function gracefulShutdown(signal) {
+  console.log(`\n[shutdown] ${signal} received — checking in-flight work...`);
+
+  const pollerCount   = activePollers.size;
+  const assemblyCount = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
+
+  if (pollerCount === 0 && assemblyCount === 0) {
+    console.log('[shutdown] No active pollers or assemblies — exiting cleanly');
+    process.exit(0);
+  }
+
+  console.log(`[shutdown] ${pollerCount} poller(s), ${assemblyCount} assembly job(s) in flight — waiting up to 35s...`);
+
+  // Hard exit after 35s no matter what
+  const forceTimer = setTimeout(() => {
+    console.error('[shutdown] 35s timeout — forcing exit');
     process.exit(1);
   }, 35000);
+  forceTimer.unref();
+
+  // Wait for all pollers to checkpoint their current poll cycle
+  if (pollerCount > 0) {
+    await Promise.race([
+      Promise.all([...activePollers.values()].map(e => e.done)),
+      new Promise(r => setTimeout(r, 33000))
+    ]);
+    console.log('[shutdown] Pollers checkpointed');
+  }
+
+  // Wait for running assembly jobs to finish (polls every 1s)
+  if (assemblyCount > 0) {
+    await Promise.race([
+      new Promise(resolve => {
+        const interval = setInterval(() => {
+          const still = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
+          if (still === 0) { clearInterval(interval); resolve(); }
+        }, 1000);
+      }),
+      new Promise(r => setTimeout(r, 30000))
+    ]);
+    console.log('[shutdown] Assemblies checkpointed');
+  }
+
+  console.log('[shutdown] Clean exit');
+  process.exit(0);
 }
 
 // ── POST /nba/generate-intro-card ────────────────────────────────────
