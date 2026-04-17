@@ -4532,7 +4532,8 @@ function generateShort(type) {
   if (type === 'nba') {
     // Fetch yesterday's top game — auto-expand to 48h if no games found
     var shortDateStr = localYesterday();
-    function fetchNBAShortForDate(dateStr) {
+    function fetchNBAShortForDate(dateStr, _daysBack) {
+      _daysBack = _daysBack || 0;
       var dateKey = dateStr.replace(/-/g,'');
       var xhr = new XMLHttpRequest();
       xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dateKey,true);
@@ -4541,14 +4542,14 @@ function generateShort(type) {
         try{
           var d=JSON.parse(xhr.responseText); var events=d.events||[];
           if(!events.length){
-            var tried = new Date(dateStr);
-            var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
-            if (dayBefore !== localYesterday()) { // only expand once
+            if (_daysBack < 2) {
+              var tried = new Date(dateStr);
+              var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
               g('script-type-label').textContent='NBA SHORT -- no games on '+dateStr+', trying '+dayBefore;
-              fetchNBAShortForDate(dayBefore);
+              fetchNBAShortForDate(dayBefore, _daysBack + 1);
               return;
             }
-            g('script-type-label').textContent='NBA SHORT -- no games'; return;
+            g('script-type-label').textContent='NBA SHORT -- no games found in last 48h'; return;
           }
         // Pick highest-scoring game
         var bestGame=null, best=0;
@@ -4717,7 +4718,8 @@ function fetchYesterdayGames() {
   fetchNBAScoreboardWithFallback(yesterday);
 }
 
-function fetchNBAScoreboardWithFallback(dateStr) {
+function fetchNBAScoreboardWithFallback(dateStr, _daysBack) {
+  _daysBack = _daysBack || 0;
   var dateKey = dateStr.replace(/-/g,'');
   g('nba-fetch-status').textContent = 'Fetching scoreboard for ' + dateStr + '...';
   g('nba-game-picker').style.display = 'none';
@@ -4731,13 +4733,17 @@ function fetchNBAScoreboardWithFallback(dateStr) {
       var d=JSON.parse(xhr.responseText);
       var events=(d.events||[]);
       if (!events.length) {
-        // No games — auto-expand to day before
-        var tried = new Date(dateStr);
-        var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
-        g('nba-fetch-status').textContent = 'No games on ' + dateStr + ' — checking ' + dayBefore + '...';
-        var dp = g('nba-date-input');
-        if (dp) dp.value = dayBefore;
-        fetchNBAScoreboard(dayBefore);
+        // No games — auto-expand up to 48h (2 days) back
+        if (_daysBack < 2) {
+          var tried = new Date(dateStr);
+          var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
+          g('nba-fetch-status').textContent = 'No games on ' + dateStr + ' — checking ' + dayBefore + '...';
+          var dp = g('nba-date-input');
+          if (dp) dp.value = dayBefore;
+          fetchNBAScoreboardWithFallback(dayBefore, _daysBack + 1);
+        } else {
+          g('nba-fetch-status').textContent = 'No NBA games found in the last 48 hours.';
+        }
         return;
       }
       // Hand off to the main renderer with the found events
