@@ -1,0 +1,56 @@
+# Dependencies — rebuilt inside container
+node_modules/
+npm-debug.log*
+
+# Secrets — never bake into image
+.env
+cwn-drive-key.json
+client_secret_*.json
+
+# Runtime state — bind-mounted at run time, not baked in
+output/
+tmp/
+logs/
+data/jobs.json
+
+# Dev / test artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Python virtualenv (VectCutAPI)
+VectCutAPI/venv*/
+VectCutAPI/__pycache__/
+**/__pycache__/
+**/*.py[cod]
+
+# Agent/IDE state
+.cline/
+.clinerules/
+.aider*
+
+# Media assets (sourced from Drive at runtime)
+*.mp4
+*.mov
+*.avi
+*.jpeg
+*.jpg
+*.png
+*.gif
+
+# Docs and planning
+docs/
+*.pdf
+*.md
+
+# Git
+.git/
+.gitignore
+
+# Test infrastructure (not needed at runtime)
+test/
+qa/

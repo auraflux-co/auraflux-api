@@ -1,0 +1,23 @@
+FROM node:lts-alpine
+
+WORKDIR /app
+
+# The poller only needs axios + dotenv — not canvas/puppeteer/ffmpeg.
+# Use a dedicated package.json instead of the monorepo one to avoid
+# native build deps (canvas requires Cairo/Python which aren't in Alpine).
+COPY docker/poller-package.json ./package.json
+RUN npm install --omit=dev
+
+COPY bin/heygen-poller.js ./bin/heygen-poller.js
+COPY data/                ./data/
+
+# data/jobs.json is a runtime volume — the COPY above is just for the initial
+# directory structure. Mount the real jobs.json at runtime:
+#   docker run -v $(pwd)/data:/app/data ...
+
+ENV NODE_ENV=production
+ENV CWN_SERVER_URL=http://host.docker.internal:3000
+ENV JOBS_FILE=/app/data/jobs.json
+
+ENTRYPOINT ["node", "bin/heygen-poller.js"]
+# CMD is the jobId — passed at runtime: docker run cwn-poller script_nba_123
