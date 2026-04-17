@@ -16,6 +16,7 @@
         "voiceover": false
       },
       "qa": {
+        "checklistModule": "./qa/checklists/twitch",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
@@ -43,6 +44,7 @@
         "voiceover": true
       },
       "qa": {
+        "checklistModule": "./qa/checklists/nba",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
@@ -70,6 +72,7 @@
         "voiceover": false
       },
       "qa": {
+        "checklistModule": "./qa/checklists/news",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
@@ -98,6 +101,7 @@
         "voiceover": false
       },
       "qa": {
+        "checklistModule": "./qa/checklists/twitch-short",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
@@ -126,6 +130,7 @@
         "voiceover": false
       },
       "qa": {
+        "checklistModule": "./qa/checklists/nba-short",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
@@ -154,6 +159,7 @@
         "voiceover": false
       },
       "qa": {
+        "checklistModule": "./qa/checklists/news-short",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
