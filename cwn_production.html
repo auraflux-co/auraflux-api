@@ -879,38 +879,32 @@ maya: she/her</textarea>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
               <div>
-                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">TWITCH COMPILATION</div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">TWITCH</div>
                 <textarea id="ref-twitch-urls" placeholder="One URL per line&#10;YouTube or Drive links" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;">https://www.youtube.com/watch?v=OzAQctMP53Q
 https://www.youtube.com/watch?v=ZopeSp8fK-0
 https://www.youtube.com/watch?v=XUl-BynnmCc
 https://www.youtube.com/watch?v=yXIWkk-p9mo</textarea>
+                <button class="btn btn-ffmpeg btn-sm" style="margin-top:6px;width:100%;" onclick="teach('twitch')">🎓 TEACH</button>
               </div>
               <div>
-                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">NBA COMPILATION</div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">NBA</div>
                 <textarea id="ref-nba-urls" placeholder="One URL per line&#10;YouTube or Drive links" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;">https://www.youtube.com/watch?v=TWXHDa6Ta1s
 https://www.youtube.com/watch?v=ke4zLK4MYTI</textarea>
+                <button class="btn btn-ffmpeg btn-sm" style="margin-top:6px;width:100%;" onclick="teach('nba')">🎓 TEACH</button>
               </div>
               <div>
-                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">NEWS COMPILATION</div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">NEWS</div>
                 <textarea id="ref-news-urls" placeholder="One URL per line&#10;YouTube or Drive links" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;">https://www.youtube.com/watch?v=WS0GkhUzJMc
 https://www.youtube.com/watch?v=YKNYm6DpXs4
 https://www.youtube.com/watch?v=j4vcHuc3VzI</textarea>
+                <button class="btn btn-ffmpeg btn-sm" style="margin-top:6px;width:100%;" onclick="teach('news')">🎓 TEACH</button>
               </div>
-              <div>
-                <div style="font-size:9px;font-weight:900;color:#9146ff;letter-spacing:2px;margin-bottom:6px;">TWITCH SHORTS</div>
-                <textarea id="ref-twitch-short-urls" placeholder="One URL per line" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(145,70,255,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;"></textarea>
-              </div>
-              <div>
-                <div style="font-size:9px;font-weight:900;color:#9146ff;letter-spacing:2px;margin-bottom:6px;">NBA SHORTS</div>
-                <textarea id="ref-nba-short-urls" placeholder="One URL per line" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(145,70,255,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;"></textarea>
-              </div>
-              <div>
-                <div style="font-size:9px;font-weight:900;color:#9146ff;letter-spacing:2px;margin-bottom:6px;">NEWS SHORTS</div>
-                <textarea id="ref-news-short-urls" placeholder="One URL per line" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(145,70,255,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;"></textarea>
-              </div>
+              <!-- Shorts inherit from base type guide automatically -->
+              <textarea id="ref-twitch-short-urls" style="display:none;"></textarea>
+              <textarea id="ref-nba-short-urls" style="display:none;"></textarea>
+              <textarea id="ref-news-short-urls" style="display:none;"></textarea>
             </div>
             <button class="btn btn-gold btn-sm" style="margin-top:10px;" onclick="saveReferenceLibrary()">💾 SAVE REFERENCE LIBRARY</button>
-            <button class="btn btn-ffmpeg btn-sm" style="margin-top:10px;margin-left:8px;" onclick="teachGemini()">🎓 TEACH GEMINI (one-time)</button>
             <span id="ref-save-status" style="margin-left:10px;font-size:11px;color:rgba(255,255,255,0.4);"></span>
             <div id="teach-status" style="margin-top:10px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5);white-space:pre-wrap;max-height:200px;overflow-y:auto;"></div>
             <div id="style-guide-preview" style="margin-top:12px;display:none;">
@@ -3066,6 +3060,12 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
                       || JOBS.find(function(j){ return j.status !== 'failed'; });
         if (currentJob && resp.metricsJobId) {
           currentJob.scriptJobId = resp.metricsJobId;
+          if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
+            currentJob.orderedClipUrls = resp.orderedClipUrls;
+          }
+          if (resp.script) {
+            currentJob.script = resp.script;
+          }
           saveJobs();
         }
       }
@@ -3435,7 +3435,12 @@ function parseSegments_v1(script) {
       // Split on ALL [CLIP PLAYS HERE] markers — supports 1, 2, or 3 clips per section
       var clipPattern = /\[CLIP PLAYS HERE[^\]]*\]/gi;
       var parts = fullText.split(clipPattern); // [before, between1, between2, ..., after]
-      var orderedUrls = (window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || [];
+      var _activeJob = (window.CURRENT_META && window.CURRENT_META.scriptJobId)
+        ? JOBS.find(function(j){ return j.id === window.CURRENT_META.scriptJobId || j.scriptJobId === window.CURRENT_META.scriptJobId; })
+        : null;
+      var orderedUrls = (_activeJob && _activeJob.orderedClipUrls && _activeJob.orderedClipUrls.length)
+        ? _activeJob.orderedClipUrls
+        : ((window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || []);
       var mp4Map      = (window.CURRENT_META && window.CURRENT_META.clipMp4Urls) || {};
 
       // Also fall back to legacy clipUrls
@@ -3570,7 +3575,12 @@ function parseSegments_v2(script) {
 
   // Phase 2: Process each section as a single logical unit
   var result = [];
-  var orderedUrls = (window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || [];
+  var _activeJob = (window.CURRENT_META && window.CURRENT_META.scriptJobId)
+    ? JOBS.find(function(j){ return j.id === window.CURRENT_META.scriptJobId || j.scriptJobId === window.CURRENT_META.scriptJobId; })
+    : null;
+  var orderedUrls = (_activeJob && _activeJob.orderedClipUrls && _activeJob.orderedClipUrls.length)
+    ? _activeJob.orderedClipUrls
+    : ((window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || []);
   var mp4Map = (window.CURRENT_META && window.CURRENT_META.clipMp4Urls) || {};
   var clipInsertIdx = 0;  // Global counter for clip position
 
@@ -5671,9 +5681,12 @@ function setupUploadPostQueue() {
   xhr.send(JSON.stringify({}));
 }
 
-function teachGemini() {
+// teach(filter) — single entry point for all TEACH buttons.
+// filter: 'twitch' | 'nba' | 'news' | null (null = all types)
+// Shorts inherit from base type automatically (script_gen.js:1626) — no separate guide needed.
+function teach(filter) {
   var lib = {};
-  var types = ['twitch','nba','news','twitch-short','nba-short','news-short'];
+  var types = filter ? [filter] : ['twitch', 'nba', 'news'];
   types.forEach(function(t) {
     var el = g('ref-' + t + '-urls');
     if (el && el.value.trim()) {
@@ -5683,13 +5696,15 @@ function teachGemini() {
   });
 
   if (!Object.keys(lib).length) {
-    alert('Add reference video URLs in the library textareas first, then save.');
+    var label = filter ? filter.toUpperCase() : 'any content type';
+    alert('Add reference video URLs for ' + label + ' first.');
     return;
   }
 
   var statusEl = g('teach-status');
   var totalVideos = Object.values(lib).reduce(function(a,b){ return a + b.length; }, 0);
-  if (statusEl) statusEl.textContent = '🎓 Teaching Gemini — watching ' + totalVideos + ' reference videos...\nThis takes 3-5 minutes. Do not close this tab.';
+  var typeLabel = filter ? filter.toUpperCase() + ' — ' : '';
+  if (statusEl) statusEl.textContent = '🎓 Teaching Gemini — ' + typeLabel + 'watching ' + totalVideos + ' video' + (totalVideos === 1 ? '' : 's') + '...\nThis takes 1-2 minutes per video. Do not close this tab.';
 
   var xhr = new XMLHttpRequest();
   xhr.open('POST', CFG.ffmpegUrl + '/analyze-style-library', true);
@@ -5705,7 +5720,7 @@ function teachGemini() {
         msg += '\n' + t + ': ' + (r.ok ? r.videoCount + ' videos analyzed, ' + r.chars + ' char style guide stored' : '❌ ' + r.error);
       });
       if (statusEl) statusEl.textContent = msg;
-      loadStyleGuides(); // show what was stored
+      loadStyleGuides();
     } catch(e) {
       if (statusEl) statusEl.textContent = '❌ Teaching failed: ' + e.message;
     }
