@@ -599,23 +599,36 @@ async function startHeyGenPoller(jobId, card) {
 // were actively polling HeyGen (all_sent stage, not yet assembled) and restart the poller.
 // This is fire-and-forget — the poller handles its own timeout/failure.
 setImmediate(() => {
+  // Safety: only resume jobs that were legitimately in-flight.
+  // MAX_RESUME_POLLERS prevents the 35-poller flood that burned 390 HeyGen credits.
+  const MAX_RESUME_POLLERS = 2;
   let resumed = 0;
-  for (const [jobId, card] of Object.entries(persistedJobs)) {
-    const status = card.status || '';
-    if (status === 'dismissed') continue;
+
+  const candidates = Object.entries(persistedJobs).filter(([jobId, card]) => {
+    if ((card.status || '') === 'dismissed') return false;
     const stage = card.stage || inferJobStage(card);
-    if (stage !== 'all_sent') continue;
+    if (stage !== 'all_sent') return false;
     const videoJobs = card.heygen?.videoJobs || [];
-    if (!videoJobs.length) continue;
-    // Check if already all complete — if so, emit the bus event directly
+    if (!videoJobs.length) return false;
+    // Skip if a poller is already running for this job (shouldn't happen at startup but guard anyway)
+    if (activePollers.has(jobId)) return false;
+    return true;
+  });
+
+  if (candidates.length > MAX_RESUME_POLLERS) {
+    console.warn(`[startup-resume] ⚠️  ${candidates.length} jobs eligible for resume — capping at ${MAX_RESUME_POLLERS} to prevent HeyGen flood. Remaining ${candidates.length - MAX_RESUME_POLLERS} jobs need manual re-trigger from dashboard.`);
+  }
+
+  const toResume = candidates.slice(0, MAX_RESUME_POLLERS);
+
+  for (const [jobId, card] of toResume) {
+    const videoJobs = card.heygen?.videoJobs || [];
     const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
     if (allComplete) {
       console.log(`[startup-resume:${jobId}] All segments already completed — emitting heygen:all_complete`);
-      // Rebuild segmentData the same way the poller would
       const contentType = card.contentType || 'twitch';
       const formType = card.formType || 'compilation';
       const segmentUrls = videoJobs.filter(vj => vj.video_url).map(vj => vj.video_url);
-      // Emit async so bus listener is registered first
       setTimeout(() => {
         pipelineBus.emit('heygen:all_complete', {
           jobId, contentType, formType, segmentUrls, card, segmentData: null
@@ -629,8 +642,9 @@ setImmediate(() => {
     }
     resumed++;
   }
+
   if (resumed > 0) {
-    console.log(`[startup-resume] Resumed ${resumed} in-flight job(s)`);
+    console.log(`[startup-resume] Resumed ${resumed} in-flight job(s) (cap: ${MAX_RESUME_POLLERS})`);
   }
 });
 
@@ -777,9 +791,10 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
       jobTitle:     _humanTitle,
       contentType,
       jobId,
-      sceneTextMap: card.heygen?.sceneTextMap || null,
-      fullScript:   (card.script && card.script.raw) ? card.script.raw : (card.script || null),
-      streamers:    card.streamers || []
+      sceneTextMap:  card.heygen?.sceneTextMap || null,
+      fullScript:    (card.script && card.script.raw) ? card.script.raw : (card.script || null),
+      streamers:     card.streamers || [],
+      expectedClips: card.expectedClips ?? 0  // Pipeline contract — Gate 3 asserts this
     }, { timeout: 10000 });
 
     logger.info({ jobId, assemblyId }, 'Auto-assembly triggered — Gate 3 → Drive will run automatically');
