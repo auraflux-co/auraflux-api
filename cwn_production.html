@@ -1439,8 +1439,9 @@ var isShortJob = (job.type || '').includes('-short');
     logAssembly(batchJobId, '❌ Server unreachable. Is server.js running on ' + CFG.ffmpegUrl + '?');
   };
 
-  // Stream progress via polling
-  var assemblyId = 'asm_' + Date.now();
+  // Use the script-gen jobId as the assembly ID so all files, logs, and metrics
+  // share one singular ID across every stage of the pipeline.
+  var assemblyId = batchJobId || ('asm_' + Date.now());
   payload.assemblyId = assemblyId;
   // Store assemblyId on job so RETRY ASSEMBLY button can reference it
   job.asmId = assemblyId;
