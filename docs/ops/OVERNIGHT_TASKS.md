@@ -435,7 +435,7 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 
 ---
 
-#### [ ] ⭐ Universal Architecture Review — full codebase audit (2026-04-17)
+#### [x] ⭐ Universal Architecture Review — full codebase audit (2026-04-17)
 **Files to READ (no edits tonight):** `server.js` (all endpoints + pipeline functions), `lib/` (all modules), `cwn_production.html` (all generate/assemble functions)
 **Output:** NEW `docs/architecture/UNIVERSAL_ARCHITECTURE_RECOMMENDATIONS.md`
 **What:** Full codebase audit to identify everywhere content-type (`twitch`/`nba`/`news`) and form-type (`compilation`/`short`) are hardcoded as branching conditions — and produce concrete recommendations for a universal data-driven architecture. Tonight is **REVIEW + RECOMMENDATIONS ONLY** — no code changes.
