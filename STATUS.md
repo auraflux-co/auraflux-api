@@ -38,6 +38,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Claude Code | **fix(twitch): locked intro "dumpster fire" → "this world of livestreaming"** — updated in script_gen.js, qa.js, qa/checklists/twitch.js | lib/script_gen.js, lib/qa.js, lib/qa/checklists/twitch.js | — | 2026-04-17 |
 | Claude Code | **fix(news): portrait AJ clips now pillarboxed with navy+gold instead of zoom-cropped** — `server.js`: carry `pillarboxFilter` + `orientation` through segmentData when building source_clip entries in heygen-poller. `lib/assembly.js`: news source clips now use `seg.pillarboxFilter` (navy #22304b sides + gold #c7af4f seam borders) when set, fall back to zoom-to-fill for landscape clips. Unblocks all 9:16 AJ portrait clips for news long-form. | server.js, lib/assembly.js, STATUS.md | — | 2026-04-17 |
 | Claude Code | **fix(gate0): add ESPN domains to SSRF whitelist — service-pkgespn.akamaized.net, media.video-cdn.espn.com, espncdn.com blocked NBA HLS downloads for Gemini analysis** | lib/downloader.js, STATUS.md | — | 2026-04-17 |
 | Claude Code | **fix(chrome): OUTRO/COLD_OPEN no chrome on all 3 shows, Twitch/NBA single-state burn, flag headline uppercase** — `lib/assembly.js`: Twitch/NBA INTRO two-state collapsed to single-state (sidebar always visible, spec §5.6/§6.7). OUTRO/COLD_OPEN skip chrome burn entirely on all 3 shows. `lib/chrome_overlay.js`: lt-headline forced toUpperCase() for twitch/nba (spec §5.1/§6.1). | lib/assembly.js, lib/chrome_overlay.js | — | 2026-04-17 |
