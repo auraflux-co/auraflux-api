@@ -1100,6 +1100,16 @@ var CFG = {
 
 var JOBS = [];
 var CURRENT_TYPE = null;
+
+// Returns yesterday's date as YYYY-MM-DD in LOCAL time (not UTC).
+// new Date(Date.now()-86400000).toISOString() is UTC — wrong after 7PM ET.
+function localYesterday() {
+  var d = new Date();
+  d.setDate(d.getDate() - 1);
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  var dd = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + mm + '-' + dd;
+}
 var CURRENT_META = {}; // stores extra per-job metadata (gameIds, headline, etc)
 var _assemblyFiredForJob = {}; // dedup lock to prevent multiple /assemble calls for same jobId
 
@@ -4554,7 +4564,7 @@ function generateShort(type) {
 
   if (type === 'nba') {
     // Fetch yesterday's top game + top scorer then call server
-    var yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0].replace(/-/g,'');
+    var yesterday = localYesterday().replace(/-/g,'');
     var xhr = new XMLHttpRequest();
     xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+yesterday,true);
     xhr.timeout=10000;
@@ -4691,7 +4701,7 @@ function generateShort(type) {
 var NBA_GAMES = []; // [{id, away, home, awayAbbr, homeAbbr, awayScore, homeScore, isFinal, hasHighlights, highlightTitle}]
 
 function fetchYesterdayGames() {
-  var yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0];
+  var yesterday = localYesterday();
   // Pre-fill date picker
   var dp = g('nba-date-input');
   if (dp) dp.value = yesterday;
@@ -4700,7 +4710,7 @@ function fetchYesterdayGames() {
 
 function fetchGamesForDate() {
   var dp = g('nba-date-input');
-  var date = dp ? dp.value : new Date(Date.now()-86400000).toISOString().split('T')[0];
+  var date = dp ? dp.value : localYesterday();
   if (!date) { alert('Pick a date first'); return; }
   fetchNBAScoreboard(date);
 }
