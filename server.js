@@ -3158,6 +3158,11 @@ app.post('/generate-full-script',
     } catch (specErr) {
       console.warn('[/generate-full-script] Job Spec creation failed (non-fatal):', specErr.message);
     }
+    // Override deliverySpec platforms if caller specified them (e.g. platform selector modal)
+    if (req.jobSpec && req.body.platforms && Array.isArray(req.body.platforms) && req.body.platforms.length > 0) {
+      req.jobSpec.deliverySpec.platforms = req.body.platforms;
+      console.log(`[/generate-full-script] deliverySpec.platforms overridden by request: ${req.body.platforms.join(', ')}`);
+    }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
   }
 );
