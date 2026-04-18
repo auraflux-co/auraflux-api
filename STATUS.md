@@ -1,10 +1,58 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-16 (gate testing session — context carried over)
-**Branch:** main | **Latest Commit:** a0fb1dc — fix(intro): NBA intro card uses DURATION_NBA
-**✅ ALL GATES 0-4 HAVE FOUNDATIONAL WORK COMMITTED**
+**Last Updated:** 2026-04-18 (architecture + planning session)
+**Branch:** aider/render-readiness-docs (local) | remote main has 04/18 planning note
 **🧪 GATE_TEST_MODE=true IN .ENV** — Pipeline stops after Gate 1. No HeyGen auto-send until all 6 Gate 1 tests pass.
-**How to start a session:** Read CLAUDE.md → STATUS.md → tell the agent what to test next
+**How to start a session:** Read CLAUDE.md → STATUS.md → tell the agent what to work on
+
+---
+
+## 🔖 2026-04-18 Session Summary — Read This When You Return
+
+**What was done today (planning + architecture only — no pipeline code touched):**
+
+### Docs written/updated:
+- `docs/architecture/PIPELINE_CONTRACT_SPEC.md` — NEW, authoritative. AuraFlux universal pipeline contract: Job Spec schema, Stage Interface (canProduce/commit/preview/run/selfTest), Provider Interface, Approval Layer, Pre-Generate phase, Gate Map (0-5 revised), Inter-Gate Intelligence (upstreamContext), Publishing System with platform API limits, Scheduling system, Confirmed infrastructure stack, Pain points + template-driven fixes, Customer 0 reference implementation. **Read this before touching any pipeline code.**
+- `docs/specs/PUBLISH_COPY_SPEC.md` — UPDATED. ChatGPT-quality format spec with Customer 0 reference example saved verbatim. Timestamps from segment durations, 5 A/B titles, 4 thumbnail text options, pinned comment with channel handle variable, per-platform schema, what's manual vs automated.
+- `docs/strategy/ROADMAP.md` — Added Bucket 5: Platform Ownership. Full strategy for removing Upload-Post (direct YouTube/TikTok/Instagram), TubeBuddy lite via YouTube Analytics API, audience-data content calendar. All platform limitations documented (cards/end screens/TikTok scheduling = no API, won't-have).
+- `docs/handoffs/CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md` — NEW. Sub-Agent B handoff: publish copy rewrite to spec, upload-post wiring fix (thumbnail+comment required), categoryId per content type, TikTok caption fix, post-publish outcome card, Gate 4 publish package audit, title switcher from stored Job Spec.
+
+### Code changed (small, approved):
+- `ecosystem.config.js` — NEW. PM2 config replacing nodemon for production. `npm run start` = PM2 single, `npm run start:cluster` = max CPUs, `npm run restart` = zero-downtime reload.
+- `package.json` — PM2 scripts added (start/stop/restart/logs/status). nodemon stays in devDependencies for `npm run dev`.
+- `newrelic.js` — app_name changed from `'CWN Production'` → `'AuraFlux'`.
+
+### Key decisions made today:
+1. **AuraFlux is the system. CWN/ClipzWorld is Customer 0.** No "CWN" in architecture docs.
+2. **Template scaffold system** — system generates script structure, provider fills dialogue only. Gate 1 becomes style-only. Structural failures become impossible.
+3. **Gate map revised** — Gate 0 (Gemini source confirm, format detection), Gate 1 (Claude style only), Gate 2 (provider-agnostic renders), Gate 3a (Gemini qualitative assembly), Gate 3b (Claude commitment verification), Gate 4 (Gemini full video broadcast ready = upload signal), Gate 5 (code upload confirm).
+4. **Inter-gate intelligence** — every gate reads all prior gate reports. `upstreamContext` block on every gate report with `confirmedClean`, `escalatedConcerns`, `downstreamHeadsUp`.
+5. **Commitment model** — every gate worker declares what it will produce before credits burn. Customer approves. Gemini issues "your job has started" signal when all approved.
+6. **Input vs output separation** — `order.inputs.sourceType` (what comes in) and `order.output.formFactor` (what gets delivered) are independent axes. `job_renders` source type = cut shorts from long-form renders, no new credits.
+7. **Source adapters** — url_list, site_scrape, repo, upload, job_renders, none. All produce same validated media contract.
+8. **Stack confirmed** — Render (not Railway), PM2, BullMQ+Redis, Docker, New Relic (AuraFlux), SQLite now → Postgres at Render deploy, Drizzle ORM.
+9. **Publish system** — thumbnail auto with upload (Gemini Imagen + Canva), title auto-selected (5 stored alternatives for post-publish switch), pinned comment auto, chapters in description (verify in Studio), end screen/cards manual (can't be automated — confirmed). Post-publish card = mostly ✅ + 3 Studio deep links.
+10. **Upload-Post → direct platform APIs** phased in Roadmap Bucket 5.
+
+### New Relic key issue (unresolved — fix when you return):
+You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js agent needs a 40-character **License Key**. They are different key types.
+**Fix:** Go to `one.newrelic.com/api-keys` → look for **License key** section (NOT "Ingest API key") → click to reveal full 40-character hex key → paste into `.env` as `NEW_RELIC_LICENSE_KEY`.
+
+### What to do when you return:
+1. **Install PM2** if not already: `npm install -g pm2`
+2. **Fix New Relic key** (see above)
+3. **Run PM2**: `npm run start` then `pm2 startup && pm2 save`
+4. **Gate/QA implementation** — this is the big one. Per `PIPELINE_CONTRACT_SPEC.md`:
+   - Gate 0: Gemini source confirmation (new — doesn't exist yet)
+   - Script scaffold system: system generates structure, provider fills dialogue
+   - Inter-gate report reading: every gate gets `jobSpec.state.gateResults` with prior reports
+   - `upstreamContext` block on every gate output
+   - Gate 3 split: 3a (Gemini qualitative) + 3b (Claude commitment verify)
+   - Gate 4 reframed: full video broadcast ready → upload signal
+5. **Synth test review** — review the 4 synth test outputs Rob already has open (News/Twitch/NBA/Short). QA notes in conversation: news sidebar cards visible ✅, artifact (black/white block ~x:1170 y:300) may be double-burn of logo — check assembly.js logo overlay for duplicate filters.
+6. **If tests keep failing → Render deploy** — Docker is ready, Dockerfile is complete. When Rob says go, spawn Sub-Agent A (render.yaml + server config) and Sub-Agent B (env vars, Postgres migration).
+
+---
 
 ---
 
@@ -38,6 +86,7 @@
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Sub-Agent A | **feat(gate-worker): scaffold gate worker system from clean slate** — Created `lib/gates/gate0.js` (Gemini source confirmation: URL reachable, ffprobe duration/format, title match, format mismatch hard fail). `lib/gates/gate1.js` (Claude style QA: hype words, entity names, prohibited language, outro check, Claude fabrication detection; sendback/escalate flow). `lib/gates/gate2.js` (render quality: ffprobe audio ground truth, freeze detection, framing check, batch-stop on first-segment fail). `lib/gates/gate3a.js` (Gemini assembly QA: 3-point EARLY/MIDDLE/LATE Gemini sample, freeze → targeted FFmpeg alarm, pass_with_notes to gate3b). `lib/gates/gate3b.js` (Claude commitment verification: analytical-only, compares committed designSpec against gate3a findings, mismatch_fixable vs mismatch_escalate). `lib/gates/gate4.js` (Gemini full video broadcast ready: complete video upload to Gemini, uploadSignal authorizes gate5). `lib/gates/gate5.js` (upload confirmation: hard-stops without uploadSignal, pre-publish validator for YouTube/TikTok/Instagram, platform-isolated retries). `lib/scaffold.js` (system scaffold generator: 6 templateIds, positionally-locked [CLIP PLAYS HERE], returns expectedSceneCount/expectedClipCount/sceneHeaders). `lib/monitoring.js` (pipeline monitor: silence detection, sendback loop escalation, recovery decision tree, killJobCleanly). Updated `lib/pipeline_events.js` with 6 new gate worker events (additive only). All files syntax-checked, full QA checklist passed. Branch: feature/gate-worker-system. | lib/gates/gate0.js (new), lib/gates/gate1.js (new), lib/gates/gate2.js (new), lib/gates/gate3a.js (new), lib/gates/gate3b.js (new), lib/gates/gate4.js (new), lib/gates/gate5.js (new), lib/scaffold.js (new), lib/monitoring.js (new), lib/pipeline_events.js, STATUS.md | pending | 2026-04-18 |
 | Aider | **docs(render): render readiness runbook, Jira tickets, overnight tasks update** — Created `docs/ops/RENDER_RUNBOOK.md`: full step-by-step production render runbook covering pre-render checklist, gate sequence table, per-content-type notes (News/Twitch/NBA/Shorts), recovery procedures, expected timings, post-render checklist, and dashboard button reference. Created `docs/ops/RENDER_JIRA_TICKETS.md`: Jira Epic + 4 Stories (News render, Twitch render, NBA render, Synth test suite lock) in markdown format for manual paste into CPD project — Jira MCP unavailable. Updated `docs/ops/OVERNIGHT_TASKS.md`: added "RENDER READINESS" priority section at top pointing to runbook and Jira epic. Branch: aider/render-readiness-docs. NO code files changed. | docs/ops/RENDER_RUNBOOK.md (new), docs/ops/RENDER_JIRA_TICKETS.md (new), docs/ops/OVERNIGHT_TASKS.md, STATUS.md | — | 2026-04-17 |
 | Claude Code | **fix(set): kill fadeIn animations on chrome overlay, fix logo positions, expand synth test** — tools/clipzworld_newscast.html: removed all 3 fadeIn animations (top-bar, segment-tag, story-list) that caused faded sidebar in Puppeteer screenshots; replaced with static opacity:1; deleted @keyframes fadeIn. lib/assembly.js: short-form logo burn now reads CONFIG.VISUAL_LAYOUTS.SHORT_FORM.LOGO_POS instead of hardcoded top-right. lib/config.js: SHORT_FORM.LOGO_POS updated to bottom-right mug (x:900, y:1800). test/synth_assembly_test.js: news payload expanded to 3 stories to verify full sidebar population; short payload now includes captionText+captionStyle to test caption burn. **DO NOT TOUCH CODE WITHOUT ROB'S APPROVAL — awaiting visual QA on all 4 synth test outputs.** | lib/assembly.js, lib/config.js, tools/clipzworld_newscast.html, test/synth_assembly_test.js, STATUS.md | — | 2026-04-17 |
 | Claude Code | **feat(set): logo bottom-right mug for all shows, sidebar font 22px, synth test harness** — LOGO_POS moved from top-left (80,10) to mug (1725,910) for Twitch/NBA to match News; sidebar .story-item-text 18px→22px; test/synth_assembly_test.js: permanent 4-show synthetic assembly test (news/twitch/nba/short) using FFmpeg lavfi testsrc+smptebars — verifies chrome burns without HeyGen credits. localhost added to TRUSTED_DOMAINS. | lib/config.js, tools/clipzworld_newscast.html, lib/downloader.js, test/synth_assembly_test.js, STATUS.md | — | 2026-04-17 |
