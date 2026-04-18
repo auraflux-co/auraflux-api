@@ -1,4 +1,14 @@
+require('newrelic');
 require('dotenv').config();
+
+// ── New Relic gate attribute helper ──────────────────────────────────────────
+function nrGateAttribute(jobId, gate, score, passed) {
+  try {
+    if (typeof newrelic !== 'undefined') {
+      newrelic.addCustomAttributes({ jobId, gate, gateScore: score, gatePassed: passed });
+    }
+  } catch(e) { /* non-fatal */ }
+}
 
 // ── Red 4: Proactive chrome directive architecture ─────────────────────────
 // Feature flag — default true. Set USE_DIRECTIVE_CHROME=false to fall back
@@ -108,6 +118,8 @@ const logger = require('./lib/logger');
 const pipelineBus = require('./lib/pipeline_events');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
 const db = require('./lib/db');
+const { createJobSpec, getJobSpec } = require('./lib/job_spec');
+const { startMonitoring } = require('./lib/monitoring');
 const {
   generateTwitchLongformThumbnail,
   generateNewsNbaThumbnail,
@@ -1777,8 +1789,30 @@ app.post('/assemble',
   },
   requireFields('segments', 'segmentData'),
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
-  (req, res) => handleAssemble(req, res, saveJobCard)
+  async (req, res) => {
+    // Load job spec for this job (created at script gen time)
+    const jobId = req.body.jobSpecId || req.body.asmId;
+    if (jobId) {
+      try {
+        req.jobSpec = await getJobSpec(jobId);
+      } catch (e) {
+        console.warn(`[assemble] No job spec found for ${jobId} — proceeding without`);
+      }
+    }
+    handleAssemble(req, res, saveJobCard);
+  }
 );
+
+// GET /job-spec/:jobId — fetch job spec state for a given job
+app.get('/job-spec/:jobId', async (req, res) => {
+  try {
+    const spec = await getJobSpec(req.params.jobId);
+    if (!spec) return res.status(404).json({ error: 'Job spec not found' });
+    res.json({ ok: true, jobSpec: spec });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // GET /assemble-progress/:id
 app.get('/assemble-progress/:id', (req, res) => {
@@ -3150,6 +3184,35 @@ app.post('/generate-full-script',
           pillarboxFilter: it.pillarboxFilter || null
         }));
       console.log(`[/generate-full-script] ajVideoPool built from request items: ${ajVideoPool.length} videos (no re-scrape)`);
+    }
+    // Create Job Spec at job start — single document every stage reads
+    try {
+      const { type: contentType, formType, itemCount, title } = req.body;
+      req.jobSpec = await createJobSpec({
+        customerId: req.body.customerId || 'c0',
+        showId: req.body.showId || null,
+        templateId: formType === 'short' ? 'short-form' : 'long-form',
+        contentType,
+        createdBy: 'dashboard',
+        order: {
+          inputs: {
+            sourceType: 'site_scrape',
+            sourceConfig: { siteTarget: contentType },
+            items: [],
+            itemCount: itemCount || 0
+          },
+          output: {
+            formFactor: formType === 'short' ? 'short' : 'long',
+            aspectRatio: formType === 'short' ? '9:16' : '16:9',
+            resolution: formType === 'short'
+              ? { width: 1080, height: 1920 }
+              : { width: 1920, height: 1080 }
+          },
+          meta: { title: title || null, scheduledAt: null }
+        }
+      });
+    } catch (specErr) {
+      console.warn('[/generate-full-script] Job Spec creation failed (non-fatal):', specErr.message);
     }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
   }
@@ -5637,6 +5700,7 @@ const server = app.listen(PORT, () => {
     if (err) console.warn('⚠️  FFmpeg not found:', err.message);
     else console.log('✅ FFmpeg:', v);
   });
+  startMonitoring(); // Start pipeline event monitoring
 });
 
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
