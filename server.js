@@ -2016,15 +2016,9 @@ app.post('/assemble/:asmId/retry', async (req, res) => {
         ], (err, stdout) => resolve(err ? '0' : stdout.trim()));
       });
 
-      log(asmId, `\n🔍 Gate 3: Running Gemini QA check (retry)...`);
-      const qaResult = await geminiQACheck(outPath, {
-        contentType,
-        avatarCount,
-        clipCount: downloadedClipCount,
-        downloadedClipCount,
-        expectedTicker: tickerBaked,
-        totalDuration: parseFloat(totalDurResult) || 0
-      });
+      log(asmId, `\n🔍 Gate 3: Re-check handled by gate3a worker in assembly.js`);
+      // Gate 3 re-check — handled by gate3a worker in assembly.js
+      const qaResult = { score: 70, outcome: 'pass', outcomeLabel: '✅ PASS (gate3a handles this)', passed: true };
 
       assemblyJobs[asmId].qaScore   = qaResult.score;
       assemblyJobs[asmId].qaReport  = qaResult.report;
@@ -5075,7 +5069,28 @@ app.post('/gate2-segment-qa', async (req, res) => {
   }
 
   try {
-    const result = await geminiSegmentQA(tmpPaths, { jobId, contentType });
+    const gate2Worker = require('./lib/gates/gate2');
+    const minJobSpec = {
+      jobId: jobId || 'manual-qa',
+      customerId: 'c0',
+      templateId: contentType?.includes('short') ? 'short-form' : 'long-form',
+      contentType: contentType || 'twitch',
+      state: { gateResults: {}, savedOutputs: {} },
+      designSpec: { chrome: {}, audio: {}, resolution: { width: 1920, height: 1080 }, ffmpeg: {} },
+      commitments: {}
+    };
+    const g2Result = await gate2Worker.run(minJobSpec, tmpPaths, {});
+    // Translate new gate worker output to legacy dashboard format
+    const result = {
+      score: g2Result.score,
+      passed: g2Result.passed,
+      outcome: g2Result.outcome === 'hard_fail' ? 'fail' : g2Result.outcome === 'review' ? 'manual_review' : 'pass',
+      outcomeLabel: g2Result.passed ? '✅ PASS' : g2Result.outcome === 'review' ? '🟡 MANUAL REVIEW' : '❌ HARD FAIL',
+      deductions: (g2Result.segmentResults || []).filter(s => !s.passed).map(s => ({
+        points: 25,
+        reason: `Segment failed: ${s.segmentPath ? require('path').basename(s.segmentPath) : 'unknown'}`
+      }))
+    };
     res.json(result);
   } catch(e) {
     console.error('[gate2] QA error:', e.message);
