@@ -182,10 +182,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div class="card-body">
             <div id="nba-games-summary" style="font-size:12px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:12px;">Auto-fetches yesterday's completed games with highlight clips.</div>
             <input id="nba-game-ids" type="hidden" value="">
+            <div class="field"><label>GAME COUNT</label>
+              <select id="nba-count">
+                <option value="1">1 game (test)</option>
+                <option value="3" selected>3 games (~5 min)</option>
+                <option value="5">5 games (~8 min)</option>
+              </select>
+            </div>
             <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
             <div class="btn-row" style="align-items:center;gap:10px;">
               <button id="btn-gen-nba" class="btn btn-gold" onclick="generateNBA()">LONG FORM</button>
-              <button id="btn-gen-nba-short" class="btn btn-outline" onclick="generateShort('nba')">SHORT</button>
+              <button id="btn-gen-nba-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('nba', platforms); })">SHORT</button>
               <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
             </div>
           </div>
@@ -207,6 +214,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             </div>
             <div class="field"><label>STORY COUNT</label>
               <select id="news-count">
+                <option value="1">1 story (test)</option>
                 <option value="5">5 stories (~5 min)</option>
                 <option value="10" selected>10 stories (~10 min)</option>
                 <option value="15">15 stories (~15 min)</option>
@@ -215,7 +223,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
             <div class="btn-row">
               <button id="btn-gen-news" class="btn btn-gold" onclick="generateNews()">LONG FORM</button>
-              <button id="btn-gen-news-short" class="btn btn-outline" onclick="generateShort('news')">SHORT</button>
+              <button id="btn-gen-news-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('news', platforms); })">SHORT</button>
               <button class="btn btn-outline btn-sm" onclick="nav('news')">CONFIGURE</button>
             </div>
           </div>
@@ -245,7 +253,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             </div>
             <div class="btn-row">
               <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitch()">LONG FORM</button>
-              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="generateShort('twitch')">SHORT</button>
+              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('twitch', platforms); })">SHORT</button>
               <button class="btn btn-outline btn-sm" onclick="nav('twitch')">CONFIGURE</button>
             </div>
           </div>
@@ -1018,7 +1026,7 @@ var CFG = {
   ffmpegUrl: 'http://localhost:3000',
   transition: 'crossfade',
   outputFmt: 'mp4',
-  outputDir: './output'
+  outputDir: './output',
 };
 
 var JOBS = [];
@@ -2960,7 +2968,7 @@ function setGeneratingState(statusElId, labelText) {
   if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:rgba(52,152,219,0.8);">⏳ Calling Gemini + Claude — this takes 15-30 seconds...</span>';
 }
 
-function callFullScriptServer(type, items, statusElId, onDone, tone) {
+function callFullScriptServer(type, items, statusElId, onDone, tone, platforms) {
   var dateStr = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   var xhr = new XMLHttpRequest();
   xhr.open('POST', CFG.ffmpegUrl + '/generate-full-script', true);
@@ -3062,7 +3070,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
     if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ server.js not running — start it first</span>';
     unlockGenerateButtons();
   };
-  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {} }));
+  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {}, platforms: platforms || null }));
 }
 
 // ── Fix 25b: Adapter — fetch CWN US/Canada video stories from server endpoint ──
@@ -4534,9 +4542,10 @@ function buildCalendar() {
   schedule.innerHTML = schedHtml;
 }
 
-function generateShort(type) {
+function generateShort(type, platforms) {
   lockGenerateButton('btn-gen-' + type + '-short');
   CURRENT_TYPE = type + '-short';
+  var _shortPlatforms = platforms || null;
   setGeneratingState(type+'-short-status', type.toUpperCase()+' SHORT — Fetching data...');
 
   if (type === 'nba') {
@@ -4608,7 +4617,7 @@ function generateShort(type) {
               injuries: [], clipUrl: clipUrl, thumbnailUrl: thumbUrl
             };
             CURRENT_META = { gameIds: [gameId] };
-            callFullScriptServer('nba-short', [item], 'nba-short-status', null);
+            callFullScriptServer('nba-short', [item], 'nba-short-status', null, null, _shortPlatforms);
           }catch(e){ g('script-type-label').textContent='NBA SHORT -- error: '+e.message; }
         };
         xhr2.onerror=xhr2.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- ESPN timeout'; };
@@ -4640,7 +4649,7 @@ function generateShort(type) {
         };
         CURRENT_META = { source: 'aljazeera' };
         g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
-        callFullScriptServer('news-short', [item], 'news-short-status', null);
+        callFullScriptServer('news-short', [item], 'news-short-status', null, null, _shortPlatforms);
       } catch(e) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
     });
 
@@ -4673,7 +4682,7 @@ function generateShort(type) {
       };
       CURRENT_META = { streamers: [best.streamer.toLowerCase()] };
       g('script-type-label').textContent = 'TWITCH SHORT — ' + best.displayName + ': "' + best.clip.title.slice(0,50) + '"';
-      callFullScriptServer('twitch-short', [item], 'twitch-short-status', null);
+      callFullScriptServer('twitch-short', [item], 'twitch-short-status', null, null, _shortPlatforms);
     }
 
     streamers.forEach(function(name) {
@@ -4983,6 +4992,9 @@ function launchNBAScriptGen(gameEntries, statusEl) {
       localPath: gm.localPath || ''
     };
   });
+  var nbaCountSel = g('nba-count');
+  var nbaLimit = nbaCountSel ? (parseInt(nbaCountSel.value) || 3) : 3;
+  items = items.slice(0, nbaLimit);
   var withClips = items.filter(function(i){ return !!i.clipUrl; });
   var label = withClips.length + '/' + items.length + ' games have clips';
   if (statusEl) statusEl.textContent = label + ' — generating script...';
@@ -7055,6 +7067,65 @@ async function checkContentTypeStatus() {
     };
     xhr.send();
   } catch(e) {}
+}
+</script>
+
+<!-- Platform Selector Modal — shown before SHORT FORM generate -->
+<div id="platform-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#1a2540;border:1px solid #c7af4f;border-radius:8px;padding:28px 32px;min-width:320px;max-width:400px;">
+    <div style="font-size:13px;color:#c7af4f;letter-spacing:2px;margin-bottom:16px;">SELECT PLATFORMS</div>
+    <div style="font-size:11px;color:#8899aa;margin-bottom:20px;">Choose where to publish this short-form video</div>
+    <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" id="plat-youtube" checked style="width:16px;height:16px;accent-color:#c7af4f;">
+      <span style="color:#fff;font-size:13px;">YouTube Shorts</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" id="plat-tiktok" checked style="width:16px;height:16px;accent-color:#c7af4f;">
+      <span style="color:#fff;font-size:13px;">TikTok</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;margin-bottom:20px;cursor:pointer;">
+      <input type="checkbox" id="plat-instagram" checked style="width:16px;height:16px;accent-color:#c7af4f;">
+      <span style="color:#fff;font-size:13px;">Instagram Reels</span>
+    </label>
+    <div style="display:flex;gap:12px;justify-content:flex-end;">
+      <button onclick="closePlatformModal()" style="background:transparent;border:1px solid #445;color:#8899aa;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:12px;">CANCEL</button>
+      <button onclick="confirmPlatformModal()" style="background:#c7af4f;border:none;color:#1a2540;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;">GENERATE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var _platformModalCallback = null;
+
+function showPlatformModal(callback) {
+  // Reset checkboxes to all checked
+  document.getElementById('plat-youtube').checked = true;
+  document.getElementById('plat-tiktok').checked = true;
+  document.getElementById('plat-instagram').checked = true;
+  _platformModalCallback = callback;
+  var modal = document.getElementById('platform-modal');
+  modal.style.display = 'flex';
+}
+
+function closePlatformModal() {
+  document.getElementById('platform-modal').style.display = 'none';
+  _platformModalCallback = null;
+}
+
+function confirmPlatformModal() {
+  var platforms = [];
+  if (document.getElementById('plat-youtube').checked) platforms.push('youtube');
+  if (document.getElementById('plat-tiktok').checked) platforms.push('tiktok');
+  if (document.getElementById('plat-instagram').checked) platforms.push('instagram');
+
+  if (platforms.length === 0) {
+    alert('Please select at least one platform.');
+    return;
+  }
+
+  document.getElementById('platform-modal').style.display = 'none';
+  if (_platformModalCallback) _platformModalCallback(platforms);
+  _platformModalCallback = null;
 }
 </script>
 </body>
