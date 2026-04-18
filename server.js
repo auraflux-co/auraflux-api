@@ -2334,42 +2334,12 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
   if (!gameId) return res.status(400).json({ error: 'gameId required' });
 
   try {
-    console.log(`[nba-scrape] Fetching Game Highlights reel for gameId: ${gameId}`);
+    console.log(`[nba-scrape] Fetching highlights for gameId: ${gameId} via ESPN Summary API`);
 
-    // Step 1: Try Puppeteer on the ESPN video page first — this is where the
-    // Game Highlights reel (115s full recap) lives, at the top of the page.
-    // The API summary endpoint only returns individual play clips (16-40s each).
-    const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
-    if (puppeteerResult && puppeteerResult.videoUrl) {
-      console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights reel captured via video page (Puppeteer)`);
-      // Download immediately — ESPN CDN URLs expire within seconds
-      const tmpPathPup = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
-      let localPathPup = null;
-      try {
-        localPathPup = await downloadEspnVideo(puppeteerResult.videoUrl, tmpPathPup);
-      } catch(e) {
-        console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
-      }
-      return res.json({
-        ok: true,
-        gate0: 'pass',
-        gameId,
-        videoUrl: puppeteerResult.videoUrl,
-        localPath: localPathPup,
-        thumbnail: '',
-        title: 'Game Highlights',
-        description: '',
-        duration: 0,
-        videoCount: 0,
-        source: 'puppeteer'
-      });
-    }
-
-    // Step 2: Puppeteer failed — try article.video from ESPN summary API.
-    // article.video contains the compiled Game Highlights reel (87-115s).
-    // d.videos contains only individual play clips (16-40s each) — different field.
-    console.warn(`[nba-scrape] ⚠️ Video page Puppeteer failed — checking article.video for Game Highlights`);
-
+    // Primary path: ESPN Summary API — returns Akamai HLS URLs (stable, no expiry)
+    // article.video = compiled highlights reel (87-115s) — not always present
+    // d.videos = individual play clips + highlights — longest duration = highlights reel
+    // Puppeteer removed: d.videos Akamai HLS is reliable and doesn't require a browser
     const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
     const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
     const summaryData = summaryResp.data;
@@ -2454,10 +2424,13 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       });
     }
 
-    // Step 4: Extract best quality video URL from API
+    // Step 4: Extract best quality video URL — prefer Akamai HLS (stable, no expiry)
+    // over direct CDN MP4 (expires within seconds of being generated)
     const links = highestDurationVideo.links || {};
     const source = links.source || {};
-    let videoUrl = source.HD?.href
+    let videoUrl = source.HLS?.HD?.href
+      || source.HLS?.href
+      || source.HD?.href
       || source.mezzanine?.href
       || source.full?.href
       || source.href
