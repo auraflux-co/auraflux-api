@@ -186,3 +186,4 @@ You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js
 | Cline | **Red 4 chrome bug fixes — 4 bugs from asm_1776140626023** | `server.js`, `lib/chromeDirectives.js`, `tools/clipzworld_newscast.html`, `STATUS.md` | pending | 2026-04-14 1:25 AM ET |
 
 | hotfix-11 | 2026-04-14 | fix(news): Red 4 chrome directive bugs — schema/prompt/consumer alignment + source clip crop | shipped |
+
