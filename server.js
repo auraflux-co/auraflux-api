@@ -766,35 +766,12 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
   }
   logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
 
-  // ── Gate 2: Segment QA ────────────────────────────────────────────────────
-  let gate2Passed = true;
-  try {
-    const gate2Result = await geminiSegmentQA(segmentUrls, { jobId, contentType });
-    const cardNow = persistedJobs[jobId] || card;
-    cardNow.gate2 = { score: gate2Result.score, outcome: gate2Result.outcome, checkedAt: new Date().toISOString() };
-    saveJobCard(jobId, cardNow);
-
-    logger.info({ jobId, score: gate2Result.score, outcome: gate2Result.outcome }, 'Gate 2 complete');
-    pipelineBus.emit('gate2:complete', { jobId, contentType, score: gate2Result.score, outcome: gate2Result.outcome });
-
-    if (gate2Result.outcome === 'fail') {
-      gate2Passed = false;
-      logError('GATE2_FAIL', `Gate 2 hard fail — assembly blocked`, { jobId, score: gate2Result.score });
-      logger.error({ jobId, score: gate2Result.score }, 'Gate 2 HARD FAIL — assembly blocked');
-      const blockedCard = persistedJobs[jobId] || card;
-      blockedCard.stage = 'gate2_failed';
-      saveJobCard(jobId, blockedCard);
-      pipelineBus.emit('gate2:fail', { jobId, score: gate2Result.score });
-      return;
-    }
-    if (gate2Result.outcome === 'manual_review') {
-      logger.warn({ jobId, score: gate2Result.score }, 'Gate 2 MANUAL REVIEW — proceeding to assembly');
-    }
-  } catch (gate2Err) {
-    logger.warn({ jobId, err: gate2Err.message }, 'Gate 2 QA error — proceeding to assembly');
-  }
-
-  if (!gate2Passed) return;
+  // ── Gate 2: Handled inside assembly.js after segments are downloaded ─────
+  // Removed pre-assembly Gate 2 here — segmentUrls are HeyGen video IDs/URLs,
+  // not local file paths. fs.existsSync(url) always returns false → score 0.
+  // Gate 2 (new gate worker) runs inside handleAssemble() after downloads complete
+  // where it has actual local file paths to ffprobe and analyze.
+  logger.info({ jobId }, 'heygen:all_complete — skipping pre-assembly Gate 2, assembly.js owns it');
 
   // ── Pre-warm ticker cache (long-form only) ────────────────────────────────
   if (!contentType.includes('short')) {
