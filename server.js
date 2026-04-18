@@ -3175,6 +3175,26 @@ app.post('/generate-full-script',
     // This allows gates to find the full job spec by scriptJobId during assembly
     if (req.jobSpec) {
       req.jobSpecId = req.jobSpec.jobId;
+
+      // ── JOB SPEC SIGN-OFF LOG ─────────────────────────────────────────────
+      // Printed at Generate time so operator can verify gate workers will receive
+      // correct spec BEFORE any HeyGen credits burn. Kill the job here if wrong.
+      console.log('\n' + '═'.repeat(60));
+      console.log(`[JOB SPEC] ✅ Generated — kill this job NOW if anything looks wrong`);
+      console.log(`[JOB SPEC] Job ID:       ${req.jobSpec.jobId}`);
+      console.log(`[JOB SPEC] Customer:     ${req.jobSpec.customerId}`);
+      console.log(`[JOB SPEC] Template:     ${req.jobSpec.templateId}`);
+      console.log(`[JOB SPEC] Content type: ${req.jobSpec.contentType}`);
+      console.log(`[JOB SPEC] Form factor:  ${req.jobSpec.order?.output?.formFactor} (${req.jobSpec.order?.output?.aspectRatio})`);
+      console.log(`[JOB SPEC] Resolution:   ${req.jobSpec.order?.output?.resolution?.width}×${req.jobSpec.order?.output?.resolution?.height}`);
+      console.log(`[JOB SPEC] Platforms:    ${req.jobSpec.deliverySpec?.platforms?.join(', ') || 'none'}`);
+      console.log(`[JOB SPEC] Chrome skin:  ${req.jobSpec.designSpec?.chrome?.skin || 'default'}`);
+      console.log(`[JOB SPEC] Audio mix:    ${req.jobSpec.designSpec?.audio?.mixMode || 'both'}`);
+      console.log(`[JOB SPEC] Avatar ID:    ${req.jobSpec.designSpec?.avatarId?.slice(0,8) || 'n/a'}...`);
+      console.log(`[JOB SPEC] Gate thresholds: Gate1≥${req.jobSpec.order?.qaThresholds?.gate1?.pass || '?'} Gate2≥${req.jobSpec.order?.qaThresholds?.gate2?.pass || '?'} Gate3a≥${req.jobSpec.order?.qaThresholds?.gate3a?.pass || '?'}`);
+      console.log(`[JOB SPEC] Source type:  ${req.jobSpec.order?.inputs?.sourceType}`);
+      console.log(`[JOB SPEC] Outro line:   ${req.jobSpec.designSpec?.voice?.outroLine || 'from customerConfig'}`);
+      console.log('═'.repeat(60) + '\n');
     }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
   }
