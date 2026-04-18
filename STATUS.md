@@ -1,5 +1,34 @@
 # CWN Production — Status & Task Tracker
 
+for 2026-04-18 
+Planning only no code touch for the following:
+Fetching, Script Writing, Scene Organization, Polling, Assembly, Uploading - code review to ensure that the code is universal to customer 0 but also ready for customer 1. Scope of inputs defined by production line based on what is determined as ready, only expanded when Product Owner (rob) adds to scope. before inupts are provided all the action workers mentioned in the production line need to confirm that they can produce for their part and when imputs are provided (Generate is the owner of input and all requirements selected by customer funnels through Generate) all action workers need to confirm they can produced what Generate is telling them not just gate 0 but all gates need to know whats coming and provide green light. This will not only help our future it will reduce the crashing production line we have today where everything is too specific to customer 0. 
+
+Every action for every gate needs to confim its readiness and one example is the synthetic addtion to the creative specs for assembly. Use that example as a way to provide same tool/action to ensure each gate can be ready before its called upon in the production line.
+
+Fetching - To ensure accurate video fetches from time-limited CDN sources, implement a robust, automated QA layer using retries with exponential backoff rather than a simple immediate re-fetch. This involves using an AbortController to handle timeouts, validating the file header (e.g., content-type, file size) to ensure it is not a 0-byte or corrupt file, and using a max-retry limit to prevent abuse. 
+Script writing - need to discuss this but would be a pre-draft script
+Scene Organization - would take the knowledge from inputs plus how many steps per scene
+Polling - this would take the script writing, scene organization, and avatar features via api, where we create the intro and view the intro first by pulling back that clip for Gemini
+Assembly - add synthetic step with all creative specs for the video for gemnini to QA prior to full assembly
+Uploading - not much to add here but be informed when upload starts and completes plus ensure we have sent all required specs from customer to API
+
+Only code touch - change from nodemon to PM2
+Nodemon stops processes or lacks production features, use these PM2 Process Management commands: 
+Start with Watch Mode (Dev-style): To replicate Nodemon's behavior (restart on save), run:
+pm2 start app.js --watch
+Start in Production (Recommended): Use Cluster Mode to utilize all CPU cores and enable zero-downtime reloads:
+pm2 start app.js -i max
+Graceful Reloads: After updating your code via Git or FTP, apply changes without dropping user connections:
+pm2 reload all
+Persistence on Reboot: Ensure your processes start automatically if the server restarts:
+pm2 startup (follow the terminal instructions) and then pm2 save
+Stop Processes: Use the PM2 Stop Command to halt a specific app or all of them:
+pm2 stop <app_name_or_id> 
+For complex configurations (like ignoring specific folders during a watch), it is best to use a PM2 Ecosystem File (ecosystem.config.js) to define your watch patterns and environment variables.
+
+Rob will review the last synth examples for the design specs/set reviews for twitch, news, nba
+
 **Last Updated:** 2026-04-17 (overnight session)
 **Branch:** main | **Latest Commit:** 337536d — docs(briefing): 6 tests per gate
 **✅ ALL GATES 0-4 HAVE FOUNDATIONAL WORK COMMITTED**
