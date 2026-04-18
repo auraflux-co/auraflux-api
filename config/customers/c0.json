@@ -45,7 +45,7 @@
       "voice": {
         "style": "jon-stewart-norm-macdonald-space-ghost",
         "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
-        "outroLine": "I'm Bobby G. See you tomorrow.",
+        "outroLine": "Goodnight and good luck.",
         "speakerName": "Bobby G"
       },
       "ffmpeg": {
