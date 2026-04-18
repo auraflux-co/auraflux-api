@@ -788,7 +788,13 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
 
   // ── Trigger assembly ──────────────────────────────────────────────────────
   const PORT = process.env.PORT || 3000;
-  const assemblyId = `asm_${Date.now()}`;
+  // Assembly ID derived from jobId — survives retries, keeps all gate results linked
+  // Retry attempts append _r2, _r3 etc. First attempt uses clean asm_{jobId}
+  const _existingAsmId = (persistedJobs[jobId] || card).assemblyId;
+  const _retryCount = (persistedJobs[jobId] || card)._assemblyRetryCount || 0;
+  const assemblyId = _existingAsmId && _retryCount === 0
+    ? _existingAsmId  // reuse on first auto-trigger after server restart
+    : `asm_${jobId}${_retryCount > 0 ? `_r${_retryCount + 1}` : ''}`;
   const format = contentType.includes('-short') ? 'portrait' : 'landscape';
   const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
   const _dateLabel = _cardDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -819,6 +825,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
     const cardNow = persistedJobs[jobId] || card;
     cardNow.assemblyId = assemblyId;
     cardNow.autoAssembledAt = new Date().toISOString();
+    cardNow._assemblyRetryCount = (_retryCount || 0) + 1;
     saveJobCard(jobId, cardNow);
 
     // ── Poll assembly completion → persist final state ────────────────────
