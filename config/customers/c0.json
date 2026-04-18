@@ -48,6 +48,23 @@
         "outroLine": "Goodnight and good luck.",
         "speakerName": "Bobby G"
       },
+      "thumbnail": {
+        "news": {
+          "templateType": "html",
+          "templatePath": "templates/cwn_news_tool.html",
+          "viewport": { "width": 1280, "height": 720 }
+        },
+        "clips": {
+          "templateType": "overlay",
+          "backgroundPath": "assets/twitchsoup_thumbnail.jpeg",
+          "viewport": { "width": 1280, "height": 720 }
+        },
+        "sports": {
+          "templateType": "html",
+          "templatePath": "templates/nba_thumbnail_generator.html",
+          "viewport": { "width": 1280, "height": 720 }
+        }
+      },
       "ffmpeg": {
         "codec": "h264_videotoolbox",
         "codecFallback": "libx264",
@@ -105,6 +122,23 @@
         "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
         "outroLine": "Subscribe. Appreciate you.",
         "speakerName": "Bobby G"
+      },
+      "thumbnail": {
+        "news": {
+          "templateType": "html",
+          "templatePath": "templates/cwn_news_tool.html",
+          "viewport": { "width": 1280, "height": 720 }
+        },
+        "clips": {
+          "templateType": "overlay",
+          "backgroundPath": "assets/twitchsoup_thumbnail.jpeg",
+          "viewport": { "width": 1280, "height": 720 }
+        },
+        "sports": {
+          "templateType": "html",
+          "templatePath": "templates/nba_thumbnail_generator.html",
+          "viewport": { "width": 1280, "height": 720 }
+        }
       },
       "ffmpeg": {
         "codec": "h264_videotoolbox",
