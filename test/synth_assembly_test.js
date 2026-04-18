@@ -154,7 +154,7 @@ function shortPayload() {
     transition:  'cut',
     format:      'portrait',
     expectedClips: 1,
-    // Caption burned onto the split-screen — Twitch style: Impact font, purple box, top-center
+    // Caption burned onto the split-screen — sits just above the split line on Bobby G's side
     captionText: 'THIS IS A TEST CAPTION',
     captionStyle: {
       font:       '/System/Library/Fonts/Supplemental/Impact.ttf',
@@ -162,7 +162,7 @@ function shortPayload() {
       fontcolor:  'white',
       boxcolor:   '0x6441A5@0.92',
       boxborderw: 20,
-      position:   'top-center'
+      position:   'above-split'
     },
     segmentData: [
       { ...avatar('INTRO',       'av_9x16_10s.mp4') },
