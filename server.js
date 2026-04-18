@@ -813,6 +813,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
       jobTitle:     _humanTitle,
       contentType,
       jobId,
+      jobSpecId:    card.jobSpecId || null,  // semantic job spec ID for gate workers to load full spec
       sceneTextMap:  card.heygen?.sceneTextMap || null,
       fullScript:    (card.script && card.script.raw) ? card.script.raw : (card.script || null),
       streamers:     card.streamers || [],
@@ -3169,6 +3170,11 @@ app.post('/generate-full-script',
     if (req.jobSpec && req.body.platforms && Array.isArray(req.body.platforms) && req.body.platforms.length > 0) {
       req.jobSpec.deliverySpec.platforms = req.body.platforms;
       console.log(`[/generate-full-script] deliverySpec.platforms overridden by request: ${req.body.platforms.join(', ')}`);
+    }
+    // Store the semantic jobSpecId on req so script_gen can cross-reference it into the job card
+    // This allows gates to find the full job spec by scriptJobId during assembly
+    if (req.jobSpec) {
+      req.jobSpecId = req.jobSpec.jobId;
     }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
   }
