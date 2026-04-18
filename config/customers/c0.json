@@ -1,0 +1,130 @@
+{
+  "customerId": "c0",
+  "showId": "cwn",
+  "showName": "ClipzWorld News",
+  "templates": {
+    "long-form": {
+      "contentTypes": ["news", "clips", "sports"],
+      "sceneFormulas": {
+        "news":   "1 + (items * 4) + 1",
+        "clips":  "1 + (items * 7) + 1",
+        "sports": "1 + (items * 4) + 1"
+      },
+      "maxItems": { "news": 5, "clips": 10, "sports": 5 },
+      "providers": {
+        "fetch":    "site_scrape",
+        "script":   "gemini",
+        "avatar":   "heygen",
+        "assembly": "internal",
+        "upload":   "upload-post"
+      },
+      "designDefaults": {
+        "chrome": {
+          "templateFile": "tools/clipzworld_newscast.html",
+          "skins": {
+            "news":   { "accentColor": "#C41E3A", "accentColor2": "#8B0000" },
+            "clips":  { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
+            "sports": { "accentColor": "#17408B", "accentColor2": "#C9082A" }
+          },
+          "logoPosition": "bottom-right-mug",
+          "logoSize": 120
+        },
+        "audio": { "mixMode": "both", "avatarTrack": true, "sourceTrack": true },
+        "resolution": { "width": 1920, "height": 1080 },
+        "avatarId": "842f20b75ce242aea397f5030aa018aa",
+        "voiceId": "2e598f1a6022448cb6710e5d44665325",
+        "speakSpeed": 0.85
+      },
+      "qaThresholds": {
+        "gate0":  { "minDurationSeconds": 10 },
+        "gate1":  { "pass": 90, "manualReview": 70 },
+        "gate2":  { "pass": 85, "manualReview": 65 },
+        "gate3a": { "pass": 70, "manualReview": 60 },
+        "gate4":  { "pass": 70 }
+      },
+      "voice": {
+        "style": "jon-stewart-norm-macdonald-space-ghost",
+        "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
+        "outroLine": "I'm Bobby G. See you tomorrow.",
+        "speakerName": "Bobby G"
+      },
+      "ffmpeg": {
+        "codec": "h264_videotoolbox",
+        "codecFallback": "libx264",
+        "resolution": "1920x1080",
+        "fps": 30,
+        "audioCodec": "aac",
+        "audioBitrate": "192k",
+        "dissolveSeconds": 0.7
+      }
+    },
+    "short-form": {
+      "contentTypes": ["news", "clips", "sports"],
+      "sceneFormulas": {
+        "news":   "1 + 1 + 1",
+        "clips":  "1 + 1 + 1 + 1 + 1",
+        "sports": "1 + 1 + 1 + 1"
+      },
+      "maxItems": { "news": 1, "clips": 1, "sports": 1 },
+      "providers": {
+        "fetch":    "site_scrape",
+        "script":   "gemini",
+        "avatar":   "heygen",
+        "assembly": "internal",
+        "upload":   "upload-post"
+      },
+      "designDefaults": {
+        "chrome": {
+          "templateFile": "tools/clipzworld_newscast.html",
+          "skins": {
+            "news":   { "accentColor": "#C41E3A", "accentColor2": "#8B0000" },
+            "clips":  { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
+            "sports": { "accentColor": "#17408B", "accentColor2": "#C9082A" }
+          },
+          "logoPosition": "bottom-right-mug",
+          "logoSize": 80,
+          "layout": "split-screen",
+          "splitTop": "clip",
+          "splitBottom": "avatar"
+        },
+        "audio": { "mixMode": "both" },
+        "resolution": { "width": 1080, "height": 1920 },
+        "avatarId": "ed57439c9c3d",
+        "voiceId": "2e598f1a6022448cb6710e5d44665325",
+        "speakSpeed": 0.95
+      },
+      "qaThresholds": {
+        "gate0":  { "minDurationSeconds": 10 },
+        "gate1":  { "pass": 90, "manualReview": 70 },
+        "gate2":  { "pass": 85, "manualReview": 65 },
+        "gate3a": { "pass": 70, "manualReview": 60 },
+        "gate4":  { "pass": 70 }
+      },
+      "voice": {
+        "style": "jon-stewart-norm-macdonald-space-ghost",
+        "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
+        "outroLine": "Subscribe. Appreciate you.",
+        "speakerName": "Bobby G"
+      },
+      "ffmpeg": {
+        "codec": "h264_videotoolbox",
+        "codecFallback": "libx264",
+        "resolution": "1080x1920",
+        "fps": 30,
+        "audioCodec": "aac",
+        "audioBitrate": "192k"
+      }
+    }
+  },
+  "delivery": {
+    "platforms": ["youtube", "tiktok", "instagram"],
+    "driveFolderId": "${DRIVE_FOLDER_ID}",
+    "uploadPostProfile": "${UPLOADPOST_PROFILE}",
+    "categoryIds": {
+      "news":   "25",
+      "clips":  "24",
+      "sports": "17"
+    },
+    "visibility": "private"
+  }
+}
