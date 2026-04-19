@@ -111,6 +111,15 @@ These must be done before onboarding any paying customer.
 
 ---
 
+### 1.5 HeyGen Template API Dynamic Text (Deferred)
+**Why deferred:** Template dynamic text injection never solved in April 2026 sessions.  
+**What was learned:** `/v2/template/{id}/generate` with `variables` is the correct endpoint. Variable must be `type: voice`. The `properties` object needs `type`, `input_type`, `input_text` fields mirroring the regular voice object. Template script area must have static text present for substitution. Short-form template (`b3da`) still needs the variable configured.  
+**What blocks it:** Duration test showed 6.45s (matching our text length) but Bobby G read the static placeholder text not our dynamic text. Variable substitution for speech not fully confirmed.  
+**When to revisit:** After stable production runs with avatar path. Contact HeyGen support with the specific variable structure question.  
+**Owner:** Claude Code
+
+---
+
 ## Already Tracked Elsewhere (Do Not Duplicate)
 
 These are in handoffs/ROADMAP and don't need to move here:
