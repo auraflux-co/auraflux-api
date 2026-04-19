@@ -206,34 +206,6 @@ Each gate worker operates in two phases: **Prebuild** (fires immediately on `job
 | Gate 4 | Score <70: one sendback with specific actionable blockers | Targeted assembly fix — not HeyGen rollback |
 | Gate 5 | Platform fails: retry that platform only (max 3) | Other platforms not affected |
 
-**Fix approach:** `mismatch_fixable` → targeted re-assembly of specific field. `mismatch_escalate` → human review.
-
----
-
-### Gate 4 — Gemini (Broadcast Ready)
-**Single question:** Is this video ready to air?
-**How work is produced:** Complete assembled video after all prior gates passed
-**Three states:**
-- `canProduce()`: Gate 3b passed? assembled file accessible? Gemini available?
-- `commit()`: "I will watch the complete video. My pass is the upload authorization."
-- `run()`: upload full video to Gemini, evaluate pacing/audio/accuracy/brand end-to-end
-
-**Fix approach:** `blockers` array must contain specific, actionable fixes with timestamps and instructions — not generic descriptions. Notes (non-blocking) surface to operator but don't block upload.
-
-**QA agent knows:** Complete production chain from Gate 0 through assembly. That its pass = upload authorization. Standard: "would I be comfortable if this aired tonight?"
-
----
-
-### Gate 5 — Code (Upload Confirmation)
-**Single question:** Did upload succeed on all platforms?
-**How work is produced:** Gate 4 issued uploadSignal
-**Three states:**
-- `canProduce()`: gate4.uploadSignal === true? Upload-Post API key? driveUrl saved?
-- `commit()`: "I will deliver to [platforms] as private drafts and confirm job_id per platform"
-- `run()`: pre-publish validator → Upload-Post API → poll for job_id confirmation
-
-**Fix approach:** Pre-publish validator corrects metadata violations before upload (truncates, reformats). Per-platform retry max 3. One platform failure does not stop others.
-
 ---
 
 ## Inter-Gate Intelligence
