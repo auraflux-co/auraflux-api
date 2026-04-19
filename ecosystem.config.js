@@ -48,12 +48,14 @@ module.exports = {
       env: {
         NODE_ENV: 'development',
         PORT: 3000,
+        GATE_TEST_MODE: 'true', // SAFE DEFAULT — change to 'false' only for intentional production runs
       },
 
       // Environment — production (Render or local production run)
       env_production: {
         NODE_ENV: 'production',
         PORT: 3000,
+        GATE_TEST_MODE: 'true', // SAFE DEFAULT — change to 'false' only for intentional production runs
       },
 
       // Ignore watch dirs (mirrors nodemon.json)
