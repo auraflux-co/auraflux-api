@@ -49,8 +49,8 @@ body { width:1920px; height:64px; background:transparent; overflow:hidden; font-
 </div>
 
 <script>
-var CLIENT_ID = 'nghzr9gr22acplvunvkm5c13784nit';
-var TOKEN = 'shcz8knnxikq8pz8rogp7nli8e84qm'; // hardcoded - re-auth if expired
+var CLIENT_ID = null;
+var TOKEN = null;
 var trackEl = document.getElementById('track');
 var scrollX = 0, animId, lastTime = null;
 var PX_PER_SEC = 50;
@@ -62,7 +62,7 @@ function fmtNum(n) {
 }
 
 function tw(path, cb) {
-  if (!TOKEN) { cb({data:[]}); return; }
+  if (!TOKEN || !CLIENT_ID) { cb({data:[]}); return; }
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'https://api.twitch.tv/helix/' + path, true);
   xhr.setRequestHeader('Client-Id', CLIENT_ID);
@@ -70,6 +70,24 @@ function tw(path, cb) {
   xhr.timeout = 10000;
   xhr.onload = function() { try { cb(JSON.parse(xhr.responseText)); } catch(e) { cb({data:[]}); } };
   xhr.onerror = xhr.ontimeout = function() { cb({data:[]}); };
+  xhr.send();
+}
+
+function fetchToken(cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://localhost:3000/twitch-token', true);
+  xhr.timeout = 5000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if (d.clientId && d.token) { CLIENT_ID = d.clientId; TOKEN = d.token; }
+    } catch(e) { console.warn('[twitch-ticker] token fetch parse error:', e.message); }
+    cb();
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    console.warn('[twitch-ticker] token fetch failed — Twitch API unavailable');
+    cb();
+  };
   xhr.send();
 }
 
@@ -138,12 +156,15 @@ function loadData() {
   tw('clips?game_id=518203&first=10&started_at=' + yesterday, function(d) { clips = d.data || []; check(); });
 }
 
-loadData();
-
-setInterval(function() {
-  lastTime = null;
+// Fetch token from server, then start loading data
+fetchToken(function() {
   loadData();
-}, 120000); // refresh every 2 min
+  setInterval(function() {
+    lastTime = null;
+    // Re-fetch token on each refresh cycle to pick up rotations
+    fetchToken(function() { loadData(); });
+  }, 120000); // refresh every 2 min
+});
 </script>
 </body>
 </html>

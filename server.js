@@ -1651,6 +1651,15 @@ app.get('/twitch-tool', (req, res) => {
   res.sendFile(path.join(__dirname, 'cwn_twitch_tool.html'));
 });
 
+// Returns Twitch credentials for browser-side Twitch API calls (ticker, etc.)
+// Token is read from env at request time so it picks up rotations without restart
+app.get('/twitch-token', (req, res) => {
+  const clientId = process.env.TWITCH_CLIENT_ID;
+  const token    = process.env.TWITCH_TOKEN;
+  if (!clientId || !token) return res.status(503).json({ error: 'Twitch credentials not configured' });
+  res.json({ clientId, token });
+});
+
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
