@@ -1252,10 +1252,18 @@ app.delete('/job/:id', (req, res) => {
   const jobId = req.params.id;
   if (!persistedJobs[jobId]) return res.json({ ok: false, error: 'Job not found: ' + jobId });
   delete persistedJobs[jobId];
+  // Write to jobs.json
   try {
     fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
   } catch(e) {
     console.error('[jobs] Failed to save jobs.json after delete:', e.message);
+  }
+  // Also delete from SQLite DB so job doesn't reappear on server restart
+  try {
+    const { deleteJob } = require('./lib/db');
+    if (typeof deleteJob === 'function') deleteJob(jobId);
+  } catch(e) {
+    // DB delete is best-effort — non-fatal
   }
   console.log(`[jobs] Deleted job: ${jobId}`);
   res.json({ ok: true, deleted: jobId });
