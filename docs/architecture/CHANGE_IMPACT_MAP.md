@@ -291,6 +291,7 @@ This is the highest-blast-radius change possible. It breaks:
 
 | Changing... | Must also update... |
 |-------------|-------------------|
+| HeyGen template ID (landscape or portrait) | .env HEYGEN_TEMPLATE_LANDSCAPE / HEYGEN_TEMPLATE_PORTRAIT, verify gate2 framing check still valid for new template dimensions. **NOTE:** HEYGEN_AVATAR_SHORT_ID and HEYGEN_TEMPLATE_PORTRAIT must always be the same value — the short-form "avatar" IS the template. |
 | Outro line (any content type) | customerConfig voice.outroLine, Gemini prompt, gate1 outroCheck, Roo gate-1-owner |
 | Scene header format | parseScriptIntoScenes, gate1 regex, assembly labels, HeyGen title format |
 | Short-form token limit | Check if scaffold fits within limit, test OUTRO presence in output |
