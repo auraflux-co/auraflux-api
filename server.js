@@ -1660,6 +1660,13 @@ app.get('/twitch-token', (req, res) => {
   res.json({ clientId, token });
 });
 
+app.get('/market-keys', (req, res) => {
+  res.json({
+    fmp:     process.env.FMP_API_KEY     || '',
+    finnhub: process.env.FINNHUB_API_KEY || ''
+  });
+});
+
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
