@@ -863,17 +863,18 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
             segmentData.push({
               type: 'source_clip',
               url: clip.clipUrl || clip.url || '',
-              label: clip.label || scene.id || `CLIP_${clipIdx + 1}`,
+              label: clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
               pageUrl: clip.pageUrl || '',
               storyIndex: clip.storyIndex ?? clipIdx,
-              sceneId: scene.id
+              sceneId: scene.name || scene.id
             });
           }
           clipIdx++;
         } else if (scene.type === 'avatar') {
-          // Match avatar segment by scene id or position
-          const vj = avatarByName[scene.id] ||
-            Object.values(avatarByName).find(v => v.sceneName === scene.id);
+          // Match avatar segment by scene name (script uses scene.name, HeyGen uses sceneName)
+          const sceneKey = scene.name || scene.id;
+          const vj = avatarByName[sceneKey] ||
+            Object.values(avatarByName).find(v => v.sceneName === sceneKey);
           if (vj) {
             const seg = { type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex };
             // Attach cardData for INTRO segments — chrome overlay reads this for flag + sidebar
