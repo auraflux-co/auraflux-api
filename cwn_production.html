@@ -224,7 +224,6 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="btn-row">
               <button id="btn-gen-news" class="btn btn-gold" onclick="generateNews()">LONG FORM</button>
               <button id="btn-gen-news-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('news', platforms); })">SHORT</button>
-              <button class="btn btn-outline btn-sm" onclick="nav('news')">CONFIGURE</button>
             </div>
           </div>
         </div>
@@ -254,7 +253,6 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="btn-row">
               <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitch()">LONG FORM</button>
               <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('twitch', platforms); })">SHORT</button>
-              <button class="btn btn-outline btn-sm" onclick="nav('twitch')">CONFIGURE</button>
             </div>
           </div>
         </div>
@@ -4567,15 +4565,21 @@ function generateShort(type, platforms) {
       xhr.onload=function(){
         try{
           var d=JSON.parse(xhr.responseText); var events=d.events||[];
+          var completedEvents = events.filter(function(ev){
+            var completed = ev.status && ev.status.type && ev.status.type.completed;
+            var evDate = (ev.date||'').slice(0,10);
+            return completed && (!evDate || evDate === dateStr);
+          });
+          if(!completedEvents.length){ events = []; } else { events = completedEvents; }
           if(!events.length){
-            if (_daysBack < 2) {
+            if (_daysBack < 1) {
               var tried = new Date(dateStr);
               var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
               g('script-type-label').textContent='NBA SHORT -- no games on '+dateStr+', trying '+dayBefore;
               fetchNBAShortForDate(dayBefore, _daysBack + 1);
               return;
             }
-            g('script-type-label').textContent='NBA SHORT -- no games found in last 48h'; return;
+            g('script-type-label').textContent='NBA SHORT -- no games found in last 24h'; return;
           }
         // Pick highest-scoring game
         var bestGame=null, best=0;
@@ -4689,7 +4693,12 @@ function generateShort(type, platforms) {
       };
       CURRENT_META = { streamers: [best.streamer.toLowerCase()] };
       g('script-type-label').textContent = 'TWITCH SHORT — ' + best.displayName + ': "' + best.clip.title.slice(0,50) + '"';
-      callFullScriptServer('twitch-short', [item], 'twitch-short-status', null, null, _shortPlatforms);
+      resolveTwitchClipUrls([item.clips[0]], function(resolved) {
+        if (resolved && resolved[0] && resolved[0].mp4Url) {
+          item.clips[0].mp4Url = resolved[0].mp4Url;
+        }
+        callFullScriptServer('twitch-short', [item], 'twitch-short-status', null, null, _shortPlatforms);
+      });
     }
 
     streamers.forEach(function(name) {
