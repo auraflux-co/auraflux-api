@@ -13,11 +13,6 @@
 const assert = require('assert');
 const { parseScriptIntoScenes } = require('../lib/qa');
 
-// ── Test harness ────────────────────────────────────────────────────────────
-
-const tests = [];
-function test(name, fn) { tests.push({ name, fn }); }
-
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Build a minimal Twitch script with N streamers, each having a clip marker */
@@ -301,36 +296,3 @@ test('Startup resume: skips jobs already in activePollers', () => {
   assert.strictEqual(toResume.length, 2, `Should resume 2 (both eligible, under cap)`);
 });
 
-// ── Test Runner ──────────────────────────────────────────────────────────────
-
-async function runTests() {
-  console.log('\n🧪 Running Pipeline QA Tests\n');
-
-  let passed = 0;
-  let failed = 0;
-
-  for (const { name, fn } of tests) {
-    try {
-      await fn();
-      console.log(`  ✅ ${name}`);
-      passed++;
-    } catch (err) {
-      console.log(`  ❌ ${name}`);
-      console.log(`     ${err.message}`);
-      if (err.stack) {
-        const frames = err.stack.split('\n').slice(1, 3).map(l => l.trim());
-        console.log(`     ${frames.join('\n     ')}`);
-      }
-      failed++;
-    }
-  }
-
-  console.log(`\n  ${passed} passed, ${failed} failed\n`);
-  process.exit(failed > 0 ? 1 : 0);
-}
-
-if (require.main === module) {
-  runTests();
-}
-
-module.exports = { runTests };
