@@ -759,3 +759,18 @@ Build a standalone script that generates `MORNING_JIRA_REPORT.md` each night. Us
 - `.gitignore`
 - `scripts/jira_ping.js` (as reference for pattern)
 
+# CWN Overnight Task Schedule
+
+**Window:** 1:00 AM – 7:00 AM Eastern (daily)
+**Agent:** Aider
+
+---
+## Aider Task Queue
+
+Tasks are listed in priority order. Aider works through them top-to-bottom each night.
+
+### 🟢 APPROVED — Ready to Run
+
+- [ ] Health check code review — `/health` endpoint audit
+- [~] `server.js` Module Split — IN PROGRESS
+- [ ] Jira morning report script (`scripts/jira_morning_report.js`)
