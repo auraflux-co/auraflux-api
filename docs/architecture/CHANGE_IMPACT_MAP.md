@@ -114,6 +114,11 @@ These are the fields that cross layer boundaries. If you rename or restructure a
 - Roo gate-1-owner.yaml — its fix logic references scene header format
 - qa/checklists/ — short-form checklist references scene structure
 
+**Current short-form scaffold (as of 2026-04-19):**
+Short-form is 3 scenes only: HOOK → CLIP → REACTION. No INTRO. No OUTRO.
+Gate 1 skips outro check for short-form. Gate 3a knows EARLY sample (10%) is HOOK scene — avatar-only is correct.
+Assembly uses localFileTypes[] parallel array for type tracking (no filename pattern matching).
+
 ---
 
 ### If you change SCRIPT GEN (lib/script_gen.js) — Gemini prompt
@@ -227,6 +232,11 @@ These are the fields that cross layer boundaries. If you rename or restructure a
 - gate3a-owner.yaml fix logic if outcome types or findingfields change
 - gate3b.js field reads if sampleFindings structure changes — **this is the most fragile seam in the pipeline**
 
+**Current Gate 3a behavior (as of 2026-04-19):**
+Gate 3a reads sceneHeaders and totalScenes from jobSpec.designSpec.sceneStructure.
+Gemini prompt now includes source clip positions so it knows if EARLY sample (10%) is HOOK — avatar-only is correct there.
+clipSceneIndices mapped from sceneHeaders where header name contains 'CLIP'.
+
 ---
 
 ### If you change GATE 3b (lib/gates/gate3b.js)
@@ -247,6 +257,12 @@ These are the fields that cross layer boundaries. If you rename or restructure a
 - This is the most dangerous gate to change — one wrong field name = zero videos ever publish
 
 **Talk to Rob before changing Gate 4.**
+
+**Current Gate 4 behavior (as of 2026-04-19):**
+Gate 4 reads contentType, chromeName (from designSpec.chrome.skin), sceneCount, and clipCount from jobSpec.
+Gemini prompt includes showName (TWITCH SOUP / OTHER SIDE OF THE PILLOW / BECAUSE THE LIGHT WAS ON) and station brand.
+Gemini explicitly instructed: ticker right side station brand is always correct — never flag it.
+uploadSignal field name is unchanged — Gate 5 hard stop still reads gate4Report.uploadSignal === true.
 
 ---
 

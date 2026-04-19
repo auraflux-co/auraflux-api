@@ -2695,6 +2695,12 @@ async function scrapeAjNewsVideos(targetCount = 5) {
         console.warn(`[scrapeAjNewsVideos] Manifest check failed: ${e.message}`);
       }
 
+      // Fix 2: portrait-only for news-short — landscape clips dropped silently
+      if (orientation !== 'portrait') {
+        console.log(`[scrapeAjNewsVideos] ⏭  LANDSCAPE dropped (${manifestWidth}x${manifestHeight}): ${articleUrl.slice(-60)}`);
+        continue;
+      }
+
       results.push({
         articleUrl,
         videoId:        capturedVideoId,
@@ -2705,7 +2711,7 @@ async function scrapeAjNewsVideos(targetCount = 5) {
         sourceHeight:   manifestHeight
       });
 
-      console.log(`[scrapeAjNewsVideos] ✅ ${orientation.toUpperCase()} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
+      console.log(`[scrapeAjNewsVideos] ✅ PORTRAIT ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
     }
   } finally {
     await browser.close();
@@ -2815,13 +2821,19 @@ app.get('/news/us-canada-videos', async (req, res) => {
 
     videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
+    // Safety net: endpoint always returns portrait-only (scraper already filters, this is belt+suspenders)
+    const portraitVideos = videos.filter(v => v.orientation === 'portrait');
+    if (portraitVideos.length < videos.length) {
+      console.log(`[news/us-canada-videos] Safety filter: dropped ${videos.length - portraitVideos.length} landscape clips (scraper should have dropped these)`);
+    }
+
     return res.json({
       ok: true,
-      videos,
-      recentCount: videos.length,
-      source: 'AJ sitemap (today+yesterday) — Puppeteer Brightcove confirmed',
-      landscape: videos.filter(v => v.orientation === 'landscape').length,
-      portrait:  videos.filter(v => v.orientation === 'portrait').length
+      videos: portraitVideos,
+      recentCount: portraitVideos.length,
+      source: 'AJ sitemap (today+yesterday) — Puppeteer Brightcove confirmed (portrait only)',
+      landscape: 0,
+      portrait:  portraitVideos.length
     });
   } catch (err) {
     console.error('[news/us-canada-videos] Error:', err.message);
