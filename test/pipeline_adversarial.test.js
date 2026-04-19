@@ -53,9 +53,6 @@
 const assert = require('assert');
 const { parseScriptIntoScenes } = require('../lib/qa');
 
-const tests = [];
-function test(name, fn) { tests.push({ name, fn }); }
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
@@ -350,37 +347,3 @@ test('F8 — Contract: clipCount fallback used when downloadedClipCount is 0', (
     'Proper check: downloadedClipCount=0 with expectedClips=5 is a contract violation');
 });
 
-// ── Test Runner ───────────────────────────────────────────────────────────────
-
-async function runTests() {
-  console.log('\n💥 Running Pipeline Adversarial Tests\n');
-  console.log('  (simulating real failure modes from production logs — 2026-04-17)\n');
-
-  let passed = 0;
-  let failed = 0;
-
-  for (const { name, fn } of tests) {
-    try {
-      await fn();
-      console.log(`  ✅ ${name}`);
-      passed++;
-    } catch (err) {
-      console.log(`  ❌ ${name}`);
-      console.log(`     ${err.message}`);
-      if (err.stack) {
-        const frames = err.stack.split('\n').slice(1, 3).map(l => l.trim());
-        console.log(`     ${frames.join('\n     ')}`);
-      }
-      failed++;
-    }
-  }
-
-  console.log(`\n  ${passed} passed, ${failed} failed\n`);
-  process.exit(failed > 0 ? 1 : 0);
-}
-
-if (require.main === module) {
-  runTests();
-}
-
-module.exports = { runTests };
