@@ -992,7 +992,11 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
       sceneTextMap:  card.heygen?.sceneTextMap || null,
       fullScript:    (card.script && card.script.raw) ? card.script.raw : (card.script || null),
       streamers:     card.streamers || [],
-      expectedClips: card.expectedClips ?? 0  // Pipeline contract — Gate 3 asserts this
+      expectedClips: card.expectedClips ?? 0,  // Pipeline contract — Gate 3 asserts this
+      designSpec:    card.designSpec || null,
+      nbaItems:      card.nbaItems || [],
+      captionText:   card.captionText || null,
+      captionStyle:  card.captionStyle || null
     }, { timeout: 10000 });
 
     logger.info({ jobId, assemblyId }, 'Auto-assembly triggered — Gate 3 → Drive will run automatically');
