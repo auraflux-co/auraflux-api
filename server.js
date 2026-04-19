@@ -3191,7 +3191,8 @@ app.post('/generate-full-script',
       console.log(`[JOB SPEC] Chrome skin:  ${req.jobSpec.designSpec?.chrome?.skin || 'default'}`);
       console.log(`[JOB SPEC] Audio mix:    ${req.jobSpec.designSpec?.audio?.mixMode || 'both'}`);
       console.log(`[JOB SPEC] Avatar ID:    ${req.jobSpec.designSpec?.avatarId?.slice(0,8) || 'n/a'}...`);
-      console.log(`[JOB SPEC] Gate thresholds: Gate1≥${req.jobSpec.order?.qaThresholds?.gate1?.pass || '?'} Gate2≥${req.jobSpec.order?.qaThresholds?.gate2?.pass || '?'} Gate3a≥${req.jobSpec.order?.qaThresholds?.gate3a?.pass || '?'}`);
+      console.log(`[JOB SPEC] Expected clips: ${req.jobSpec.designSpec?.expectedClipCount ?? 'n/a'}`);
+      console.log(`[JOB SPEC] Gate thresholds: Gate1≥${req.jobSpec.designSpec?.qaThresholds?.gate1?.pass || '?'} Gate2≥${req.jobSpec.designSpec?.qaThresholds?.gate2?.pass || '?'} Gate3a≥${req.jobSpec.designSpec?.qaThresholds?.gate3a?.pass || '?'}`);
       console.log(`[JOB SPEC] Source type:  ${req.jobSpec.order?.inputs?.sourceType}`);
       console.log(`[JOB SPEC] Outro line:   ${req.jobSpec.designSpec?.voice?.outroLine || 'from customerConfig'}`);
       console.log('═'.repeat(60) + '\n');
