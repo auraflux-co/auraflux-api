@@ -7,7 +7,9 @@
       "contentTypes": [
         "news",
         "clips",
-        "sports"
+        "sports",
+        "twitch",
+        "nba"
       ],
       "sceneFormulas": {
         "news": "1 + (items * 4) + 1",
@@ -156,7 +158,9 @@
       "contentTypes": [
         "news",
         "clips",
-        "sports"
+        "sports",
+        "twitch",
+        "nba"
       ],
       "sceneFormulas": {
         "news": "1 + 1 + 1",
