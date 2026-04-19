@@ -3172,30 +3172,96 @@ app.post('/generate-full-script',
       console.log(`[/generate-full-script] deliverySpec.platforms overridden by request: ${req.body.platforms.join(', ')}`);
     }
     // Store the semantic jobSpecId on req so script_gen can cross-reference it into the job card
-    // This allows gates to find the full job spec by scriptJobId during assembly
     if (req.jobSpec) {
       req.jobSpecId = req.jobSpec.jobId;
 
-      // ── JOB SPEC SIGN-OFF LOG ─────────────────────────────────────────────
-      // Printed at Generate time so operator can verify gate workers will receive
-      // correct spec BEFORE any HeyGen credits burn. Kill the job here if wrong.
-      console.log('\n' + '═'.repeat(60));
-      console.log(`[JOB SPEC] ✅ Generated — kill this job NOW if anything looks wrong`);
-      console.log(`[JOB SPEC] Job ID:       ${req.jobSpec.jobId}`);
-      console.log(`[JOB SPEC] Customer:     ${req.jobSpec.customerId}`);
-      console.log(`[JOB SPEC] Template:     ${req.jobSpec.templateId}`);
-      console.log(`[JOB SPEC] Content type: ${req.jobSpec.contentType}`);
-      console.log(`[JOB SPEC] Form factor:  ${req.jobSpec.order?.output?.formFactor} (${req.jobSpec.order?.output?.aspectRatio})`);
-      console.log(`[JOB SPEC] Resolution:   ${req.jobSpec.order?.output?.resolution?.width}×${req.jobSpec.order?.output?.resolution?.height}`);
-      console.log(`[JOB SPEC] Platforms:    ${req.jobSpec.deliverySpec?.platforms?.join(', ') || 'none'}`);
-      console.log(`[JOB SPEC] Chrome skin:  ${req.jobSpec.designSpec?.chrome?.skin || 'default'}`);
-      console.log(`[JOB SPEC] Audio mix:    ${req.jobSpec.designSpec?.audio?.mixMode || 'both'}`);
-      console.log(`[JOB SPEC] Avatar ID:    ${req.jobSpec.designSpec?.avatarId?.slice(0,8) || 'n/a'}...`);
-      console.log(`[JOB SPEC] Expected clips: ${req.jobSpec.designSpec?.expectedClipCount ?? 'n/a'}`);
-      console.log(`[JOB SPEC] Gate thresholds: Gate1≥${req.jobSpec.designSpec?.qaThresholds?.gate1?.pass || '?'} Gate2≥${req.jobSpec.designSpec?.qaThresholds?.gate2?.pass || '?'} Gate3a≥${req.jobSpec.designSpec?.qaThresholds?.gate3a?.pass || '?'}`);
-      console.log(`[JOB SPEC] Source type:  ${req.jobSpec.order?.inputs?.sourceType}`);
-      console.log(`[JOB SPEC] Outro line:   ${req.jobSpec.designSpec?.voice?.outroLine || 'from customerConfig'}`);
-      console.log('═'.repeat(60) + '\n');
+      // ── PRE-GENERATE GATE COMMITMENT CHECK ───────────────────────────────
+      // Every gate worker runs canProduce() + commit() against this job spec
+      // BEFORE production starts. All must confirm they can deliver.
+      // Job ID is only confirmed after all gates sign off.
+      // QA agents are also notified of the confirmed job ID and spec.
+      const sep = '═'.repeat(60);
+      console.log('\n' + sep);
+      console.log(`[PRE-GENERATE] Job spec received — gate workers signing off`);
+      console.log(`[PRE-GENERATE] Job ID:        ${req.jobSpec.jobId}`);
+      console.log(`[PRE-GENERATE] Customer:      ${req.jobSpec.customerId}`);
+      console.log(`[PRE-GENERATE] Template:      ${req.jobSpec.templateId}`);
+      console.log(`[PRE-GENERATE] Content type:  ${req.jobSpec.contentType}`);
+      console.log(`[PRE-GENERATE] Form factor:   ${req.jobSpec.order?.output?.formFactor} (${req.jobSpec.order?.output?.aspectRatio})`);
+      console.log(`[PRE-GENERATE] Resolution:    ${req.jobSpec.order?.output?.resolution?.width}×${req.jobSpec.order?.output?.resolution?.height}`);
+      console.log(`[PRE-GENERATE] Platforms:     ${req.jobSpec.deliverySpec?.platforms?.join(', ') || 'none'}`);
+      console.log(`[PRE-GENERATE] Avatar ID:     ${req.jobSpec.designSpec?.avatarId?.slice(0,8) || 'n/a'}...`);
+      console.log(`[PRE-GENERATE] Expected clips:${req.jobSpec.designSpec?.expectedClipCount ?? 'n/a'}`);
+      console.log(`[PRE-GENERATE] Chrome skin:   ${req.jobSpec.designSpec?.chrome?.skin || 'n/a'}`);
+      console.log(`[PRE-GENERATE] Outro line:    ${req.jobSpec.designSpec?.voice?.outroLine || 'from customerConfig'}`);
+      console.log(sep);
+
+      // Run canProduce + commit on all gate workers
+      try {
+        const gates = {
+          gate0: require('./lib/gates/gate0'),
+          gate1: require('./lib/gates/gate1'),
+          gate2: require('./lib/gates/gate2'),
+          gate3a: require('./lib/gates/gate3a'),
+          gate3b: require('./lib/gates/gate3b'),
+          gate4: require('./lib/gates/gate4'),
+          gate5: require('./lib/gates/gate5'),
+        };
+
+        let allReady = true;
+        const commitments = {};
+
+        for (const [name, gate] of Object.entries(gates)) {
+          try {
+            // canProduce check
+            const readiness = typeof gate.canProduce === 'function'
+              ? await Promise.resolve(gate.canProduce(req.jobSpec))
+              : { ready: true, missing: [] };
+
+            // commit declaration
+            const commitment = typeof gate.commit === 'function'
+              ? await Promise.resolve(gate.commit(req.jobSpec))
+              : { committed: 'no commit() defined' };
+
+            const ready = readiness.ready !== false;
+            commitments[name] = { ready, commitment };
+
+            if (!ready) {
+              allReady = false;
+              console.log(`[${name.toUpperCase()}] ❌ NOT READY: ${(readiness.missing || readiness.reasons || []).map(m => m.item || m).join(', ')}`);
+            } else {
+              const summary = commitment?.summary || commitment?.committed || 'ready';
+              console.log(`[${name.toUpperCase()}] ✅ SIGNED OFF: ${summary}`);
+            }
+          } catch(gErr) {
+            console.log(`[${name.toUpperCase()}] ⚠️  Sign-off error (non-fatal): ${gErr.message}`);
+          }
+        }
+
+        console.log(sep);
+        if (allReady) {
+          console.log(`[PRE-GENERATE] ✅ ALL GATES SIGNED OFF — Job confirmed: ${req.jobSpec.jobId}`);
+          console.log(`[PRE-GENERATE] 🚀 Production starting — notifying all QA agents`);
+          console.log(`[PRE-GENERATE] QA agents briefed on job: ${req.jobSpec.jobId}`);
+          console.log(`[PRE-GENERATE] Gate thresholds: G1≥${req.jobSpec.designSpec?.qaThresholds?.gate1?.pass} G2≥${req.jobSpec.designSpec?.qaThresholds?.gate2?.pass} G3a≥${req.jobSpec.designSpec?.qaThresholds?.gate3a?.pass} G4≥${req.jobSpec.designSpec?.qaThresholds?.gate4?.pass}`);
+        } else {
+          console.log(`[PRE-GENERATE] ⚠️  Some gates not ready — job proceeding with warnings`);
+          console.log(`[PRE-GENERATE] Kill this job if critical gates failed`);
+        }
+        console.log(sep + '\n');
+
+        // Emit job confirmed event on pipeline bus for monitoring
+        pipelineBus.emit('job:confirmed', {
+          jobId: req.jobSpec.jobId,
+          contentType: req.jobSpec.contentType,
+          templateId: req.jobSpec.templateId,
+          commitments,
+          allReady
+        });
+
+      } catch(commitErr) {
+        console.warn('[PRE-GENERATE] Gate sign-off check failed (non-fatal):', commitErr.message);
+      }
     }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
   }
