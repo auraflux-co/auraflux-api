@@ -42,6 +42,7 @@ All pending work lives here. Archive after the associated commit lands.
 | `CLINE_HANDOFF_ROLLBACK_ADVANCE_GAPS.md` | Cline-B | **SHIPPED 96ca354** | scriptJobId persist, dedup lock clear, rollback overshoot, audit trail |
 | `CLINE_HANDOFF_JOB_DISMISS.md` | Cline-B | **SUPERSEDED by JOB_DISMISS_RESTORE** | Original dismiss spec — endpoint + dashboard function now shipped |
 | `CLINE_HANDOFF_JOB_DISMISS_RESTORE.md` | Cline-B | **PENDING** | Stage allowlist for GET /jobs + assembled skip in auto-restore (dismiss endpoint already done) |
+| `CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md` | Cline-B | **PENDING — HIGH PRIORITY** | Full publish system overhaul: ChatGPT-quality copy format, upload-post wiring (thumbnail+comment required), categoryId per content type, TikTok caption fix, post-publish outcome card, Gate 4 publish package audit, title switcher from stored alternatives |
 | `CLINE_HANDOFF_ASSEMBLY_DEDUP_LOCK.md` | Cline-A | **PENDING** | Prevent duplicate assembly runs on same job |
 | `CLINE_HANDOFF_STRICT_CLIPS_DEDUP_DROPDOWN.md` | Cline-A | **PENDING** | Deduplicate clips in dropdown |
 | `CLINE_HANDOFF_AJ_NEWS_SCRAPER.md` | Cline-A | **SUPERSEDED by GATE0_NEWS_SCRAPER** | Puppeteer scraper for AJ /us-canada/ /news/ → 16:9 Brightcove HLS; replaces broken static cheerio scraper |
@@ -86,7 +87,8 @@ Authoritative technical reference. Read before touching any pipeline code.
 
 | File | What it covers |
 |------|---------------|
-| `GATED_PIPELINE_ARCHITECTURE.md` | **READ THIS FIRST** — the complete 4-gate pipeline spec. Authoritative. |
+| `PIPELINE_CONTRACT_SPEC.md` | **READ THIS FIRST** — universal pipeline contract: Job Spec schema, Stage Interface, Provider Interface. Supersedes CWN-specific assumptions. Customer 0 (CWN) is a reference implementation, not the architecture. |
+| `GATED_PIPELINE_ARCHITECTURE.md` | Gate logic, retry loop, Gate Output Contract, learning records. Still authoritative for gate mechanics. Read alongside PIPELINE_CONTRACT_SPEC.md. |
 | `CHROME_DIRECTIVE_ARCHITECTURE.md` | Directive sidecar system — how per-scene chrome overlays work |
 | `PLATFORM_ARCHITECTURE.md` | Naming conventions, content type definitions, platform targets |
 | `CWN_ENVIRONMENT_MAP.md` | Full environment map — every API, library, tool, service with definitions and diagram |
@@ -109,7 +111,7 @@ Forward-looking specs for features in progress or upcoming. Not handoffs — the
 | `SET_DESIGN_SPEC_NEWS.md` | News set design — authoritative spec for what the overlay should look like |
 | `SHARED_NEWSCAST_SET_MIGRATION.md` | Migration plan for shared newscast set across all content types |
 | `VISUAL_DESIGN_SPEC.md` | Visual design standards — colors, typography, overlay layout rules |
-| `PUBLISH_COPY_SPEC.md` | Title/description/hashtag generation spec per platform |
+| `PUBLISH_COPY_SPEC.md` | **UPDATED 2026-04-18** — Full publish copy spec: ChatGPT-quality description format, timestamps from segment durations, 5 A/B titles, pinned comment with channel handle variable, thumbnail text options, per-platform schema, what's manual vs automated |
 | `PHASE_2_BUILD_SPEC.md` | **AuraFlux Phase 2** — full 6-week build plan, stack locked, prerequisites |
 | `PHASE_2_DESIGN_PACKAGE.md` | AuraFlux design package — UI patterns, component decisions |
 | `AURAFLUX_BRAND.md` | AuraFlux brand identity — name, domain, visual direction |
@@ -145,6 +147,8 @@ How to run the operation day-to-day. Checklists, agent schedules, commit rules.
 | `POST_PUBLISH_TASKS.md` | Full post-publish task list (discovered during Twitch long-form review) |
 | `CREATIVE_VS_OPERATIONS.md` | What needs Rob + Claude creative alignment vs pure automation |
 | `CODE_REVIEW.md` | Latest Cline code review report — findings, dead code, cleanup candidates |
+| `POST_RENDER_TASKS.md` | **Post-Render migration task list** — everything deferred until after Render deploy. Priority 1: NR alerts, monitoring.js escalation file write, TZ=UTC. Priority 2: chrome rename, designSpec decoupling, module split. Priority 3: Customer 1 gate docs, brand rename, Twelve Labs, Runway. Priority 4: direct platform APIs. |
+| `RENDER_RUNBOOK.md` | Step-by-step production render runbook — pre-render checklist, gate sequence, per-content-type notes, recovery procedures, expected timings |
 
 ---
 
