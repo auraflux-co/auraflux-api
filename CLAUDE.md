@@ -653,42 +653,70 @@ See `IMPLEMENTATION_SPEC.md` for full technical specifications.
 
 ## Roo Code Integration
 
-**Roo Code gate owners run persistently in VS Code**, watching the pipeline bus for gate events.
-Each gate has a dedicated owner mode (`.roo/modes/gate-{N}-owner.yaml`).
-A Pipeline Orchestrator (`pipeline-orchestrator.yaml`) aggregates all gate reports.
+**Roo Code is the production intelligence layer.** It runs persistently in VS Code with full
+visibility into everything: the pipeline heartbeat (New Relic, PM2), every job spec at every
+stage, all gate worker and QA agent inputs/outputs, and the delta between what was expected
+vs what actually happened. It closes gaps autonomously where possible and escalates to Claude
+Code with specific, actionable improvement proposals.
+
+### Architecture
+```
+New Relic (GateResult, JobConfirmed, VideoPublished, GateSendback)
+PM2 health (uptime, restart count, memory)
+SQLite DB (gate_results, jobs, job_metrics, heygen_renders, publish_results)
+Pipeline Bus events (gate:pass, gate:hard_fail, gate:sendback)
+Job Spec at pre-generate (designSpec, deliverySpec, commitments, qaThresholds)
+         ↓ all fed into ↓
+Pipeline Orchestrator (pipeline-orchestrator.yaml)
+         ↓ coordinates ↓
+Gate Owners (gate-0 through gate-5 owner modes)
+         ↓ escalates to ↓
+Claude Code (architect) → Rob (product owner)
+```
 
 ### Roles
-| Role | Owner | Boundary |
-|---|---|---|
-| Gate 0 — Source Confirmation | Roo gate-0-owner | URL retry, ESPN HLS refresh, backup clip |
-| Gate 1 — Script Style QA | Roo gate-1-owner | Script retry, reject 0-scene scripts |
-| Gate 2 — Render Quality | Roo gate-2-owner | HeyGen re-render for silent/short |
-| Gate 3a — Assembly QA | Roo gate-3a-owner | Assembly retry (max 3) |
-| Gate 3b — Commitment Verification | Roo gate-3b-owner | Chrome re-burn on fixable mismatch |
-| Gate 4 — Broadcast Ready | Roo gate-4-owner | Surface blockers, note thumbnail |
-| Gate 5 — Publish | Roo gate-5-owner | Platform retry (max 3) |
-| Pipeline Orchestrator | Roo pipeline-orchestrator | Cross-gate pattern detection |
+| Role | Mode | Owns | Can Fix | Escalates |
+|---|---|---|---|---|
+| Gate 0 Owner | gate-0-owner | Source confirmation | URL retry, ESPN HLS refresh | Scraper code broken, new format |
+| Gate 1 Owner | gate-1-owner | Script style QA | Retry with fixDirective, reject 0-scene | Scaffold/prompt mismatch, persistent format failure |
+| Gate 2 Owner | gate-2-owner | Render quality | HeyGen re-render for silent/short | New silence pattern, ffprobe tuning |
+| Gate 3a Owner | gate-3a-owner | Assembly QA | Assembly retry (max 3) | Sub-80 pattern, Gemini prompt update |
+| Gate 3b Owner | gate-3b-owner | Commitment verification | Chrome re-burn (fixable) | mismatch_escalate, resolution bug |
+| Gate 4 Owner | gate-4-owner | Broadcast ready | Surface blockers, note thumbnail gap | Recurring content issues, audio normalization |
+| Gate 5 Owner | gate-5-owner | Publish | Platform retry (max 3) | API format change, auth failure, poll timeout |
+| **Pipeline Orchestrator** | **pipeline-orchestrator** | **Full pipeline intelligence** | **Cross-gate coordination** | **All code fixes, all strategic improvements** |
+
+### Pipeline Orchestrator — Full Access
+The orchestrator receives and reads:
+- **New Relic**: GateResult events (scores, concerns, deductions), JobConfirmed, VideoPublished, GateSendback — queried every cycle
+- **PM2**: process health, restart count, uptime — `pm2 list` + `pm2 logs`
+- **SQLite**: all 7 tables — gate_results, jobs, job_metrics, heygen_renders, publish_results, assembly_jobs, gate_fixes
+- **Job Spec**: full jobSpec at every stage — designSpec.sceneStructure, qaThresholds, commitments, deliverySpec
+- **Gate owner reports**: docs/reports/roo/hourly.md (all 7 gate owners append here)
+
+Core loop: **Expected** (jobSpec commitments) vs **Actual** (gate_results) → diagnose gap → fix or escalate.
 
 ### Reporting Cadence
-- **Hourly**: `docs/reports/roo/hourly.md` — live run outcomes, failures, fixes applied
-- **Daily**: `docs/reports/roo/daily_{date}.md` — pattern summary, pass rates
-- **Monthly**: `docs/reports/roo/monthly_{month}.md` — trends, improvement recommendations
+- **Hourly**: `docs/reports/roo/hourly.md` — NR query results, PM2 health, gate outcomes, gaps found, fixes applied, top improvement
+- **Daily**: `docs/reports/roo/daily_{YYYY-MM-DD}.md` — full KPI dashboard, cross-gate patterns, git correlation, top 3 improvements
+- **Monthly**: `docs/reports/roo/monthly_{YYYY-MM}.md` — trends, cost analysis, Customer 1 readiness, strategic recommendations
 
 ### Escalation Protocol
-Roo escalates to Claude Code when:
-1. A fix requires code changes (not just retry/re-render)
-2. Same failure pattern appears 3+ times in a day
-3. A new failure mode not covered by existing gate logic
-4. Performance degradation trend detected
+Write `docs/reports/roo/escalation_{timestamp}.md` when:
+1. Code change required (not just retry/re-render)
+2. Same failure pattern 3+ times in one day
+3. Multiple gates failing simultaneously (systemic)
+4. NR alert policy violation
+5. PM2 restart count > 3 in one hour
+6. KPI target missed >10% for 2+ consecutive days
 
-Escalation format: structured report in `docs/reports/roo/escalation_{timestamp}.md`
-Claude Code reads escalations at session start and acts as architect.
+Escalation includes: NR evidence, DB evidence, git correlation, expected vs actual gap,
+proposed fix with exact files to change, estimated impact, Rob approval needed yes/no.
 
-### What Claude Code Receives
-Every report includes:
-1. Gate outcomes (pass/fail counts, scores)
-2. Root causes diagnosed
-3. Fixes applied autonomously
-4. **Improvement suggestions ranked by impact** — Claude Code reviews with Rob
+### Claude Code at Session Start
+Read in this order:
+1. `docs/reports/roo/escalation_*.md` — immediate action items
+2. `docs/reports/roo/daily_{today}.md` — overnight summary
+3. Review with Rob, implement approved improvements, commit
 
 Claude Code does NOT touch live execution — Roo owns that layer.
