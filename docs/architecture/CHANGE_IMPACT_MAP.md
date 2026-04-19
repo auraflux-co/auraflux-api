@@ -287,6 +287,20 @@ This is the highest-blast-radius change possible. It breaks:
 
 ---
 
+## Job Spec Distribution Rule
+
+**Every gate QA prompt must receive the full confirmed job spec. No cherry-picking.**
+
+When changing any gate's QA prompt or adding a new jobSpec field:
+- Gates 0-5 `run()` functions must pass full `jobSpec` to any Gemini/Claude call
+- Specifically: `designSpec.sceneStructure`, `designSpec.chrome`, `order.inputs.items`, prior gate commitments, `qaThresholds`
+- If you add a field to jobSpec → update every gate QA prompt that is relevant to that field
+- If you change a gate's QA criteria → verify it reads from jobSpec, not hardcoded assumptions
+
+See `PIPELINE_CONTRACT_SPEC.md` for the full rule and rationale.
+
+---
+
 ## Quick Lookup: "I'm changing X, who needs to know?"
 
 | Changing... | Must also update... |
