@@ -54,14 +54,15 @@ tail -n 50 logs/errors.jsonl
 Filter for: PIPELINE_ESCALATION, JOB_KILLED, MONITORING_CODE_FIX_NEEDED.
 Each one needs a docs/reports/roo/escalation_{timestamp}.md if not already filed.
 
-### Step 6 — Check trigger file
+### Step 6 — Check notification file
 ```
-cat logs/roo_trigger.json
+cat logs/roo_notification.md
 ```
-If this file exists and `handled: false` — a new job just confirmed. Begin
-active watch mode for that jobId. Acknowledge by setting handled: true:
+If this file exists and is non-empty — a new job was detected by roo_watcher.sh.
+Read the jobId and content type, begin active watch mode for that job.
+Delete the file after reading so it doesn't repeat:
 ```
-node -e "const fs=require('fs'); const t=JSON.parse(fs.readFileSync('logs/roo_trigger.json')); t.handled=true; t.handledAt=new Date().toISOString(); fs.writeFileSync('logs/roo_trigger.json', JSON.stringify(t,null,2));"
+rm logs/roo_notification.md
 ```
 
 ---
