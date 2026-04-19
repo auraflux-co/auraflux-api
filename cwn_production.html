@@ -3577,10 +3577,17 @@ function parseSegments_v2(script) {
 
     var fullText = sec.lines.join('\n');
     var hasClipMarker = /\[CLIP PLAYS HERE[^\]]*\]/i.test(fullText);
+    // New script format: STORY#_CLIP sections use "type: source_clip" instead of [CLIP PLAYS HERE]
+    var isSourceClipSection = /type:\s*source_clip/i.test(fullText);
+    if (isSourceClipSection) hasClipMarker = true;
 
-    // Extract avatar text: remove [CLIP PLAYS HERE] marker line, keep everything else
+    // Extract avatar text: remove [CLIP PLAYS HERE] marker line and type/spokenText metadata lines
     var avatarText = cleanAvatarText(
-      fullText.replace(/\[CLIP PLAYS HERE[^\]]*\]/gi, '').trim()
+      fullText
+        .replace(/\[CLIP PLAYS HERE[^\]]*\]/gi, '')
+        .replace(/^type:\s*(avatar|source_clip)\s*$/gim, '')
+        .replace(/^spokenText:\s*/gim, '')
+        .trim()
     );
 
     // Emit the avatar segment for this section

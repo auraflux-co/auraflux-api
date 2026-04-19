@@ -594,6 +594,16 @@ async function startHeyGenPoller(jobId, card) {
       const pending   = statuses.filter(s => s.status !== 'completed');
       const failed    = statuses.filter(s => s.status === 'failed');
 
+      // Detect silent placeholder renders: source_clip scenes submitted to HeyGen produce 5s silent videos.
+      // Flag them in logs so we can diagnose — they will be excluded at segmentData build time (type: source_clip skipped).
+      const silentSuspects = completed.filter(s => {
+        const name = (s.sceneName || '').toUpperCase();
+        return name.includes('_CLIP') && !name.includes('_CLIP1') && !name.includes('_CLIP2') && !name.includes('_CLIP3') && !name.includes('SETUP') && !name.includes('REACTION') && !name.includes('RECAP');
+      });
+      if (silentSuspects.length > 0) {
+        console.warn(`[heygen-poller:${jobId}] ⚠️  SILENT RENDER DETECTED: ${silentSuspects.map(s => s.sceneName).join(', ')} — these are source_clip scenes that should not have been submitted to HeyGen. They will be excluded from assembly. Check parseSegments_v2 or sendScriptToHeyGen for source_clip skip logic.`);
+      }
+
       // Persist completed/failed render statuses to DB (non-fatal)
       try {
         const { saveHeyGenRender } = require('./lib/db');
