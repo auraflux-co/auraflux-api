@@ -642,10 +642,12 @@ async function startHeyGenPoller(jobId, card) {
           type:  'avatar'
         });
 
-        // For News: attach cardData to STORY#_INTRO segments so the assembly
-        // can burn the correct TV card overlay (title, category, image) per story
-        if ((card.contentType || 'twitch') === 'news' && /STORY(\d+)_INTRO/i.test(avatarSeg.sceneName)) {
-          const storyMatch = avatarSeg.sceneName.match(/STORY(\d+)_INTRO/i);
+        // Attach cardData to INTRO segments — chrome overlay reads this for flag + sidebar
+        // Works for all content types — not just News
+        const _sceneName = avatarSeg.sceneName || '';
+        const _ct = card.contentType || 'twitch';
+        if (_ct === 'news' && /STORY(\d+)_INTRO/i.test(_sceneName)) {
+          const storyMatch = _sceneName.match(/STORY(\d+)_INTRO/i);
           const storyIdx   = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
           const storyItem  = (card.newsItems || [])[storyIdx];
           if (storyItem) {
@@ -656,6 +658,34 @@ async function startHeyGenPoller(jobId, card) {
               imageUrl:     storyItem.thumbnailUrl || storyItem.imageUrl || null,
               heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
               source:       storyItem.source || ''
+            };
+          }
+        } else if (_ct === 'nba' && /GAME(\d+)[_ ].*INTRO/i.test(_sceneName)) {
+          const gameMatch = _sceneName.match(/GAME(\d+)/i);
+          const gameIdx   = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
+          const rawName   = _sceneName.replace(/^GAME\d+[_ ]/i,'').replace(/[_ ]INTRO$/i,'').replace(/_/g,' ');
+          const nbaItem   = (card.nbaItems || [])[gameIdx];
+          segmentData[segmentData.length - 1].cardData = {
+            title:    nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+            matchup:  nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+            category: 'NBA GAME',
+            storyId:  `game_${gameIdx + 1}`,
+            gameId:   nbaItem?.gameId || null
+          };
+        } else if (_ct === 'twitch' && /[_ ]INTRO$/i.test(_sceneName)) {
+          const namePart = _sceneName.replace(/[_ ]INTRO$/i,'').replace(/_/g,' ').toLowerCase();
+          const streamer = (card.streamers || []).find(s =>
+            (s.displayName||'').toLowerCase() === namePart ||
+            (s.twitchUsername||'').toLowerCase() === namePart
+          ) || (card.streamers||[])[0];
+          if (streamer) {
+            segmentData[segmentData.length - 1].cardData = {
+              title:    streamer.displayName || namePart,
+              category: 'ON STREAM',
+              storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
+              fact:     [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0,60),
+              imageUrl: streamer.profileImage || null,
+              twitchUsername: streamer.twitchUsername || streamer.username || null
             };
           }
         }
@@ -819,7 +849,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
             Object.values(avatarByName).find(v => v.sceneName === scene.id);
           if (vj) {
             const seg = { type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex };
-            // Attach cardData for news STORY#_INTRO segments so chrome overlay renders correctly
+            // Attach cardData for INTRO segments — chrome overlay reads this for flag + sidebar
             if (card.contentType === 'news' && /STORY(\d+)_INTRO/i.test(vj.sceneName)) {
               const storyMatch = vj.sceneName.match(/STORY(\d+)_INTRO/i);
               const storyIdx = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
@@ -832,6 +862,37 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
                   imageUrl:     storyItem.thumbnailUrl || storyItem.imageUrl || null,
                   heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
                   source:       storyItem.source || ''
+                };
+              }
+            } else if (card.contentType === 'nba' && /GAME(\d+)[_ ].*INTRO/i.test(vj.sceneName)) {
+              // NBA: attach game matchup data to INTRO segments for flag + sidebar
+              const gameMatch = vj.sceneName.match(/GAME(\d+)/i);
+              const gameIdx = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
+              // Extract matchup from scene name: GAME1_CHARLOTTE_HORNETS_ORLANDO_MAGIC_INTRO
+              const rawName = vj.sceneName.replace(/^GAME\d+[_ ]/i, '').replace(/[_ ]INTRO$/i, '').replace(/_/g, ' ');
+              const nbaItem = (card.nbaItems || [])[gameIdx];
+              seg.cardData = {
+                title:   nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+                matchup: nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+                category: 'NBA GAME',
+                storyId:  `game_${gameIdx + 1}`,
+                gameId:   nbaItem?.gameId || null
+              };
+            } else if (card.contentType === 'twitch' && /[_ ]INTRO$/i.test(vj.sceneName)) {
+              // Twitch: attach streamer data to INTRO segments for sidebar
+              const namePart = vj.sceneName.replace(/[_ ]INTRO$/i, '').replace(/_/g, ' ').toLowerCase();
+              const streamer = (card.streamers || []).find(s =>
+                (s.displayName || '').toLowerCase() === namePart ||
+                (s.twitchUsername || '').toLowerCase() === namePart
+              ) || (card.streamers || [])[0];
+              if (streamer) {
+                seg.cardData = {
+                  title:    streamer.displayName || namePart,
+                  category: 'ON STREAM',
+                  storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
+                  fact:     [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0, 60),
+                  imageUrl: streamer.profileImage || null,
+                  twitchUsername: streamer.twitchUsername || streamer.username || null
                 };
               }
             }
