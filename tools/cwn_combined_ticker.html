@@ -64,52 +64,16 @@ body { width:1920px; height:64px; background:transparent; overflow:hidden; font-
 </div>
 
 <script>
-var FMP = 'rJPVYlHnpcjxuOLoR1phvBz7e27UMMSq';
 var trackEl = document.getElementById('track');
 var scrollX = 0, animId;
 
 /* ── MARKET DATA ── */
+/* No hardcoded fallbacks — ticker only shows live data from Yahoo Finance / CoinGecko / Frankfurter */
 var DATA = {
-  indices: {
-    SPY:  { price:6528.65,  change:184.93,  pct:2.92  },
-    QQQ:  { price:21590.63, change:795.99,  pct:3.83  },
-    DIA:  { price:46341.32, change:1125.17, pct:2.49  },
-    IWM:  { price:2496.37,  change:92.37,   pct:3.41  },
-    FTSE: { price:8632.44,  change:54.21,   pct:0.63  },
-    DAX:  { price:22841.32, change:312.44,  pct:1.38  },
-    CAC:  { price:7921.44,  change:98.32,   pct:1.25  },
-    N225: { price:35442.88, change:412.44,  pct:1.18  },
-    HSI:  { price:23441.32, change:188.44,  pct:0.81  },
-    ASX:  { price:8221.44,  change:54.88,   pct:0.67  }
-  },
-  stocks: {
-    NVDA:  { name:'Nvidia',        price:174.44, pct:5.62  },
-    AAPL:  { name:'Apple',         price:253.79, pct:2.99  },
-    MSFT:  { name:'Microsoft',     price:388.45, pct:2.14  },
-    AMZN:  { name:'Amazon',        price:208.27, pct:3.64  },
-    GOOGL: { name:'Alphabet',      price:287.56, pct:2.10  },
-    AVGO:  { name:'Broadcom',      price:198.32, pct:3.21  },
-    META:  { name:'Meta',          price:572.13, pct:6.67  },
-    TSLA:  { name:'Tesla',         price:371.80, pct:4.65  },
-    NFLX:  { name:'Netflix',       price:995.42, pct:1.88  },
-    AMD:   { name:'AMD',           price:108.34, pct:4.12  },
-    PLTR:  { name:'Palantir',      price:92.18,  pct:5.44  },
-    JPM:   { name:'JPMorgan',      price:248.76, pct:1.32  },
-    BAC:   { name:'Bank of Amer',  price:44.21,  pct:1.18  },
-    V:     { name:'Visa',          price:352.44, pct:0.88  },
-    MA:    { name:'Mastercard',    price:548.92, pct:0.94  },
-    BRKB:  { name:'Berkshire B',   price:498.31, pct:0.44  },
-    LLY:   { name:'Eli Lilly',     price:812.44, pct:1.22  },
-    JNJ:   { name:'J&J',           price:162.88, pct:0.54  },
-    ABBV:  { name:'AbbVie',        price:198.54, pct:0.88  },
-    COST:  { name:'Costco',        price:972.44, pct:1.14  },
-    WMT:   { name:'Walmart',       price:98.32,  pct:0.72  },
-    PG:    { name:'P&G',           price:168.44, pct:0.54  },
-    KO:    { name:'Coca-Cola',     price:72.18,  pct:0.38  },
-    HD:    { name:'Home Depot',    price:388.92, pct:0.96  }
-  },
-  crypto: {},
-  forex: {}
+  indices: {},
+  stocks:  {},
+  crypto:  {},
+  forex:   {}
 };
 
 /* ── NEWS DATA ── */
@@ -169,15 +133,18 @@ function buildTicker() {
   var fh = ''; fxOrder.forEach(function(f) { var q = DATA.forex[f]; if (q) fh += mkItem(q.pair, '', q.rate, null); });
   if (fh) html += mkCat('FOREX') + fh;
 
-  // SECTION DIVIDER
-  html += mkSectionDiv();
+  // SECTION DIVIDER — only add if there's market data AND news data to separate
+  var hasMarket = (ih || sh || ch2 || fh);
+  var hasNews = NEWS_ITEMS.length > 0;
+  if (hasMarket && hasNews) html += mkSectionDiv();
 
   // NEWS section
-  if (NEWS_ITEMS.length) {
+  if (hasNews) {
     html += mkCat('WORLD NEWS');
     NEWS_ITEMS.forEach(function(item) { html += mkNews(item.source, item.title); });
   }
 
+  // Don't render until at least some live data has arrived
   if (!html) return;
   trackEl.innerHTML = html + html;
   if (!animId) startScroll();
@@ -201,55 +168,54 @@ function startScroll() {
   animId = requestAnimationFrame(step);
 }
 
-/* ── MARKET FETCHES ── */
+/* ── MARKET FETCHES — Yahoo Finance (no API key, works in Puppeteer server-side Chrome) ── */
 function fetchIndices() {
-  // US indices
+  var symbols = '%5EGSPC,%5EIXIC,%5EDJI,%5ERUT,%5EFTSE,%5EGDAXI,%5EFCHI,%5EN225,%5EHSI,%5EAXJO';
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'https://financialmodelingprep.com/stable/quote?apikey=' + FMP + '&symbol=^GSPC,^IXIC,^DJI,^RUT', true);
+  xhr.open('GET', 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + symbols + '&fields=symbol,regularMarketPrice,regularMarketChange,regularMarketChangePercent', true);
   xhr.timeout = 10000;
   xhr.onload = function() {
     try {
-      var arr = JSON.parse(xhr.responseText);
-      if (!Array.isArray(arr) || !arr.length) return;
-      var map = {'^GSPC':'SPY','^IXIC':'QQQ','^DJI':'DIA','^RUT':'IWM'};
-      arr.forEach(function(q) { var k = map[q.symbol]; if (k && q.price) DATA.indices[k] = {price:q.price,change:q.change,pct:q.changePercentage}; });
+      var d = JSON.parse(xhr.responseText);
+      var quotes = (d.quoteResponse && d.quoteResponse.result) || [];
+      var map = {'^GSPC':'SPY','^IXIC':'QQQ','^DJI':'DIA','^RUT':'IWM','^FTSE':'FTSE','^GDAXI':'DAX','^FCHI':'CAC','^N225':'N225','^HSI':'HSI','^AXJO':'ASX'};
+      quotes.forEach(function(q) {
+        var k = map[q.symbol];
+        if (k && q.regularMarketPrice) {
+          DATA.indices[k] = { price: q.regularMarketPrice, change: q.regularMarketChange || 0, pct: q.regularMarketChangePercent || 0 };
+        }
+      });
       buildTicker();
-    } catch(e) {}
+    } catch(e) { console.warn('[ticker] indices fetch failed:', e.message); }
   };
+  xhr.onerror = xhr.ontimeout = function() { console.warn('[ticker] indices fetch timeout'); };
   xhr.send();
-  // Global indices
-  var xhr2 = new XMLHttpRequest();
-  xhr2.open('GET', 'https://financialmodelingprep.com/stable/quote?apikey=' + FMP + '&symbol=^FTSE,^GDAXI,^FCHI,^N225,^HSI,^AXJO', true);
-  xhr2.timeout = 10000;
-  xhr2.onload = function() {
-    try {
-      var arr2 = JSON.parse(xhr2.responseText);
-      if (!Array.isArray(arr2) || !arr2.length) return;
-      var map2 = {'^FTSE':'FTSE','^GDAXI':'DAX','^FCHI':'CAC','^N225':'N225','^HSI':'HSI','^AXJO':'ASX'};
-      arr2.forEach(function(q) { var k = map2[q.symbol]; if (k && q.price) DATA.indices[k] = {price:q.price,change:q.change,pct:q.changePercentage}; });
-      buildTicker();
-    } catch(e) {}
-  };
-  xhr2.send();
 }
 function fetchStocks() {
-  ['NVDA','AAPL','MSFT','AMZN','GOOGL','AVGO','META','TSLA','NFLX','AMD','PLTR','JPM','BAC','V','MA','BRK.B','LLY','JNJ','ABBV','COST','WMT','PG','KO','HD'].forEach(function(sym, i) {
-    setTimeout(function() {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'https://financialmodelingprep.com/stable/quote?apikey=' + FMP + '&symbol=' + sym, true);
-      xhr.timeout = 8000;
-      xhr.onload = function() {
-        try {
-          var arr = JSON.parse(xhr.responseText);
-          if (arr && arr[0] && arr[0].price) {
-            var sk=sym==='BRK.B'?'BRKB':sym; DATA.stocks[sk] = {name:DATA.stocks[sk]&&DATA.stocks[sk].name||sym, price:arr[0].price, change:arr[0].change, pct:arr[0].changePercentage};
-            buildTicker();
-          }
-        } catch(e) {}
-      };
-      xhr.send();
-    }, i * 400);
-  });
+  var symbols = 'NVDA,AAPL,MSFT,AMZN,GOOGL,AVGO,META,TSLA,NFLX,AMD,PLTR,JPM,BAC,V,MA,BRK-B,LLY,JNJ,ABBV,COST,WMT,PG,KO,HD';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + symbols + '&fields=symbol,shortName,regularMarketPrice,regularMarketChange,regularMarketChangePercent', true);
+  xhr.timeout = 10000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      var quotes = (d.quoteResponse && d.quoteResponse.result) || [];
+      quotes.forEach(function(q) {
+        var sk = q.symbol === 'BRK-B' ? 'BRKB' : q.symbol;
+        if (q.regularMarketPrice) {
+          DATA.stocks[sk] = {
+            name: q.shortName || q.symbol,
+            price: q.regularMarketPrice,
+            change: q.regularMarketChange || 0,
+            pct: q.regularMarketChangePercent || 0
+          };
+        }
+      });
+      buildTicker();
+    } catch(e) { console.warn('[ticker] stocks fetch failed:', e.message); }
+  };
+  xhr.onerror = xhr.ontimeout = function() { console.warn('[ticker] stocks fetch timeout'); };
+  xhr.send();
 }
 function fetchCrypto() {
   var xhr = new XMLHttpRequest();
