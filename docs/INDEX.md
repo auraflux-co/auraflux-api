@@ -83,6 +83,7 @@ Dispatch files coordinate multiple handoffs in sequence. Archive after all const
 ---
 
 ## docs/specs/
+| `SHORT_FORM_SPEC.md` | **AUTHORITATIVE short-form spec confirmed 2026-04-19.** Structure: HOOK+CLIP+REACTION only. No INTRO/OUTRO scenes. Bobby G top, clip bottom, caption above split (~y=920). Portrait avatar `3714bb5af7234f28acad451db78b468c`. News: portrait AJ clips only. |
 | `CHROME_OVERLAY_FFMPEG_SPEC.md` | **APPROVED — pending implementation.** Replace Puppeteer→PNG→FFmpeg chrome pipeline with pure FFmpeg drawtext/drawbox. Universal for all customers — colors/name/logo from customerConfig only. Zero code changes for Customer 1+. Covers filter chain design, per-scene params interface, migration plan, acceptance criteria. |
 
 ## docs/architecture/
