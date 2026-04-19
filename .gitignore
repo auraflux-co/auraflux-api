@@ -46,7 +46,8 @@ video_generation_custom_*.csv
 *.gif
 
 # IDE and editor files
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
