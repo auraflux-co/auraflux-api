@@ -1994,3 +1994,46 @@ Create files in this order — earlier files establish patterns for later ones:
 ---
 
 *Handoff written 2026-04-18. Targeting Jest test coverage of all active gate and library code paths.*
+
+---
+
+## Results Delivery
+
+When all test files are implemented and passing, write a summary to `MORNING_BRIEFING.md`.
+
+Append this section:
+
+```markdown
+## 🧪 Test Suite Results — {date}
+
+**Branch:** aider/test-suite
+**Files created:** {count} test files
+**Tests written:** {total test count}
+**Tests passing:** {passing count}
+**Tests failing:** {failing count}
+
+### Coverage by module
+| Module | Tests | Status |
+|---|---|---|
+| gate0 | X | ✅ / ❌ |
+| gate1 | X | ✅ / ❌ |
+| gate2 | X | ✅ / ❌ |
+| gate3a | X | ✅ / ❌ |
+| gate3b | X | ✅ / ❌ |
+| gate4 | X | ✅ / ❌ |
+| gate5 | X | ✅ / ❌ |
+| scaffold | X | ✅ / ❌ |
+| parseScriptIntoScenes | X | ✅ / ❌ |
+| sendScriptToHeyGen | X | ✅ / ❌ |
+| thumbnail | X | ✅ / ❌ |
+| downloader | X | ✅ / ❌ |
+| job_spec | X | ✅ / ❌ |
+| nba_source | X | ✅ / ❌ |
+| news_source | X | ✅ / ❌ |
+
+### Failures (if any)
+{list any failing tests with reason}
+
+### Issues found in production code
+{list any bugs discovered while writing tests — include file + line number}
+```
