@@ -4758,22 +4758,28 @@ function fetchNBAScoreboardWithFallback(dateStr, _daysBack) {
     try{
       var d=JSON.parse(xhr.responseText);
       var events=(d.events||[]);
-      if (!events.length) {
-        // No games — auto-expand up to 48h (2 days) back
-        if (_daysBack < 2) {
-          var tried = new Date(dateStr);
+      // Filter to completed games matching the requested date only
+      var completedForDate = events.filter(function(ev){
+        var completed = ev.status && ev.status.type && (ev.status.type.completed || ev.status.type.name === 'STATUS_FINAL');
+        var evDate = (ev.date||'').slice(0,10);
+        return completed && (!evDate || evDate === dateStr);
+      });
+      if (!completedForDate.length) {
+        // Allow one day of lookback only
+        if (_daysBack < 1) {
+          var tried = new Date(dateStr + 'T12:00:00');
           var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
-          g('nba-fetch-status').textContent = 'No games on ' + dateStr + ' — checking ' + dayBefore + '...';
+          g('nba-fetch-status').textContent = 'No games on ' + dateStr + ' (ET) — checking ' + dayBefore + '...';
           var dp = g('nba-date-input');
           if (dp) dp.value = dayBefore;
           fetchNBAScoreboardWithFallback(dayBefore, _daysBack + 1);
         } else {
-          g('nba-fetch-status').textContent = 'No NBA games found in the last 48 hours.';
+          g('nba-fetch-status').textContent = 'No completed NBA games in the last 48 hours (ET).';
         }
         return;
       }
       // Hand off to the main renderer with the found events
-      processNBAScoreboardEvents(events, dateStr);
+      processNBAScoreboardEvents(completedForDate, dateStr);
     }catch(e){ g('nba-fetch-status').textContent='Error: '+e.message; }
   };
   xhr.onerror=xhr.ontimeout=function(){ g('nba-fetch-status').textContent='Network error'; };
@@ -4909,13 +4915,14 @@ function nbaSelectAll(checked) {
 }
 
 function generateNBA(_daysBack) {
-  // Auto-fetch most recent completed games (up to 48h back) and go straight to script gen.
+  // Fetch yesterday's completed games (Eastern Time). Max lookback: 1 day (yesterday only).
+  // If no games yesterday, show a clear message — do NOT silently pull stale games from days ago.
   _daysBack = _daysBack || 0;
   if (_daysBack === 0) lockGenerateButton('btn-gen-nba');
   var statusEl = g('nba-fetch-status');
-  var targetDate = localDateMinus(_daysBack);
+  var targetDate = localDateMinus(_daysBack); // 0 = yesterday ET, 1 = 2 days ago
   var dateKey = targetDate.replace(/-/g, '');
-  if (statusEl) statusEl.textContent = 'Fetching games for ' + targetDate + '...';
+  if (statusEl) statusEl.textContent = 'Fetching games for ' + targetDate + ' (Eastern Time)...';
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + dateKey, true);
   xhr.timeout = 15000;
@@ -4923,16 +4930,23 @@ function generateNBA(_daysBack) {
     try {
       var data = JSON.parse(xhr.responseText);
       var events = data.events || [];
+      // Only accept games whose date matches targetDate — prevents stale games from other dates
       var finalGames = events.filter(function(ev) {
-        return ev.status && ev.status.type && ev.status.type.completed;
+        var completed = ev.status && ev.status.type && ev.status.type.completed;
+        // ESPN event date is in ET — verify it matches the date we requested
+        var evDate = (ev.date || '').slice(0, 10); // "2026-04-18T..."
+        var evDateET = evDate; // ESPN dates are already ET-anchored for NBA
+        var dateMatch = !evDate || evDateET === targetDate;
+        return completed && dateMatch;
       });
       if (!finalGames.length) {
-        if (_daysBack < 2) {
-          if (statusEl) statusEl.textContent = 'No games on ' + targetDate + ', checking previous day...';
+        // Only allow one day of lookback (in case yesterday had no games — e.g. All-Star break)
+        if (_daysBack < 1) {
+          if (statusEl) statusEl.textContent = 'No games on ' + targetDate + ' (ET) — checking previous day...';
           generateNBA(_daysBack + 1);
           return;
         }
-        if (statusEl) statusEl.textContent = 'No completed games found in the last 48 hours. Try again later.';
+        if (statusEl) statusEl.textContent = 'No completed NBA games found in the last 48 hours (ET). Check back after games finish tonight.';
         unlockGenerateButtons(); return;
       }
       if (statusEl) statusEl.textContent = 'Found ' + finalGames.length + ' game' + (finalGames.length !== 1 ? 's' : '') + ' from ' + targetDate + ' — fetching highlight clips...';
