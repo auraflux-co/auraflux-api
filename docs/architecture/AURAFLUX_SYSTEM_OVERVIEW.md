@@ -170,65 +170,41 @@ GATE 5 — Upload Confirmation (Code only, no AI)
 
 ## Gate Workers — Who Does What
 
-### Gate 0 — Gemini / ffprobe
-**Single question:** Did we get what was ordered?
-**How work is produced:** ffprobe probes source URLs for format, duration, reachability
-**Three states:**
-- `canProduce()`: GEMINI_API_KEY present? source items in Job Spec?
-- `commit()`: "I will confirm N sources resolve, detect format, confirm title matches"
-- `run()`: probe each source, return confirmedFormat (authoritative for all downstream)
+Each gate worker operates in two phases: **Prebuild** (fires immediately on `job:confirmed` before production starts) and **Production Line** (fires when the job reaches that gate). No gate does work that belongs to another gate.
 
-**Fix approach:** Hard fail on any issue — no retry, fix the source
+| Gate | Owner | Single Question | PREBUILD — `prepare()` on job:confirmed | PRODUCTION LINE — `run()` when job arrives |
+|---|---|---|---|---|
+| **Gate 0** | ffprobe | Did we get what was ordered? | Load source item count, verify GEMINI_API_KEY, log `N sources to confirm` | Probe each source URL, detect format (16:9/9:16), check duration ≥ 10s. Output: `confirmedFormat` — authoritative for all downstream gates |
+| **Gate 1** | Claude | Does the script meet committed style? | Load voice rules, prohibited words, outro line, pass threshold from designSpec. Log `voice=X, outro=Y, threshold=90` | Style QA only — voice, names, accuracy, outro. Build surgical fix directive if sendback. Never check structure. |
+| **Gate 2** | ffprobe | Are the renders production quality? | Verify ffprobe available, pre-read expected format, pre-create tmp dir. Log `ffprobe ready, expecting N segments at 16:9` | ffprobe every segment — audio ground truth, freeze detection (0.1% threshold), file size, framing. Batch stops on first hard fail. |
+| **Gate 3a** | Gemini | Does the assembled video look right at 3 sample points? | Load expected clip count, skin, format from designSpec. Log `will check N clips, skin=news, format=16:9` | Extract EARLY/MIDDLE/LATE 20s clips, upload to Gemini, analyze. Build `sampleFindings` + `downstreamHeadsUp`. Self-heals chrome mismatch via targeted FFmpeg re-burn. |
+| **Gate 3b** | Claude (analytical) | Did assembly match the committed spec? | Pre-build commitment checklist from designSpec (skin/logo/resolution/clips), store keyed by jobId. Log checklist. | Compare designSpec vs Gate 3a findings analytically. No video watch. `mismatch_fixable` triggers chrome re-burn. Only `mismatch_escalate` blocks Gate 4. |
+| **Gate 4** | Gemini | Is this video broadcast ready? | Load Gemini key, read platforms from deliverySpec. Log `will authorize upload to youtube, tiktok, instagram` | Watch COMPLETE video (not samples). Read ALL prior gate reports. `broadcastReady=true` → `uploadSignal=true` → authorizes Gate 5. Only gate that can authorize upload. |
+| **Gate 5** | Code only | Did upload succeed on all platforms? | Validate UPLOADPOST_API_KEY/PROFILE set, read platforms from deliverySpec, pre-validate non-empty. Log `will deliver to youtube/tiktok/instagram via {profile}` | Hard stop without `gate4.uploadSignal`. Pre-publish validator (platform API limits). Upload-Post per platform. Per-platform retry (max 3). Partial success counts as pass. |
 
----
+### Key data each gate reads from Job Spec
 
-### Gate 1 — Claude (Style QA)
-**Single question:** Does the script meet the committed style?
-**How work is produced:** System generated scaffold → Gemini filled dialogue → Claude reviews
-**Three states:**
-- `canProduce()`: filled script in savedOutputs? Claude API key? style guide loaded?
-- `commit()`: "I will verify voice, names, accuracy, outro. I will NOT check structure."
-- `run()`: score style checks, build surgical fix directive if sendback needed
+| Gate | Reads from Job Spec | Produces for downstream |
+|---|---|---|
+| Gate 0 | `order.inputs.items[]`, `designSpec.qaThresholds.gate0` | `confirmedFormat` (authoritative) |
+| Gate 1 | `designSpec.voice.*`, `designSpec.qaThresholds.gate1` | Script approved → HeyGen fires |
+| Gate 2 | `designSpec.qaThresholds.gate2`, `order.output.aspectRatio` | `gate2Score`, `batchStopped` |
+| Gate 3a | `designSpec.expectedClipCount`, `designSpec.chrome.skin`, prior gate reports | `sampleFindings`, `downstreamHeadsUp` |
+| Gate 3b | `designSpec.chrome.*`, `designSpec.audio.mixMode`, Gate 3a findings | `mismatches[]`, self-heal result |
+| Gate 4 | `deliverySpec.platforms`, ALL prior gate reports | `uploadSignal: true` |
+| Gate 5 | `deliverySpec.platforms`, `state.savedOutputs.publishCopy`, `state.savedOutputs.driveUrl` | `job_id` per platform |
 
-**Fix approach:** Score 70-89 → one sendback with exact fix directive (what scene, what's wrong, what to write instead). Score <70 → escalate with full fix directive. Gemini receives directive and rewrites specific scenes.
+### Fix approach per gate
 
-**QA agent knows:** How Gemini produced the script. What HeyGen needs (scene markers). That a surgical fix is success, a vague rejection is failure.
-
----
-
-### Gate 2 — Code + ffprobe (Render Quality)
-**Single question:** Are the renders production quality?
-**How work is produced:** HeyGen rendered Bobby G speaking each scene
-**Three states:**
-- `canProduce()`: ffprobe available? segment paths exist? Gate 1 passed?
-- `commit()`: "I will validate N segments — freeze, audio, framing for confirmed format"
-- `run()`: ffprobe each segment, freeze detection, file size check
-
-**Fix approach:** Code-only. Freeze or audio missing = hard fail, stop batch. No AI call.
-
----
-
-### Gate 3a — Gemini (Qualitative Assembly)
-**Single question:** Does the assembled video look right at 3 sample points?
-**How work is produced:** FFmpeg assembled avatar segments + source clips + chrome overlay + ticker
-**Three states:**
-- `canProduce()`: assembled file exists >100KB? Gemini Files API available? Gate 2 passed?
-- `commit()`: "I will watch EARLY/MIDDLE/LATE samples, check freeze/clips/audio/chrome"
-- `run()`: extract 20s clips, upload to Gemini, analyze each, build findings + fix directive
-
-**Fix approach:** Freeze → targeted FFmpeg alarm (not full re-assembly). Audio/chrome issues → fix directive to assembly with timestamp and nature of issue. Passes `downstreamHeadsUp` to Gate 4.
-
-**QA agent knows:** Full 8-step production chain. How to write fix directives for FFmpeg. That Gate 4 watches the full video — Gate 3a is 3 samples only.
-
----
-
-### Gate 3b — Claude (Commitment Verification)
-**Single question:** Did assembly deliver what was committed?
-**How work is produced:** Gate 3a qualitative findings + Job Spec designSpec
-**Three states:**
-- `canProduce()`: Gate 3a report available? designSpec has content?
-- `commit()`: "I will verify chrome skin, logo position, dimensions, clip count, audio mix"
-- `run()`: analytical comparison of designSpec vs Gate 3a findings. No video watch.
+| Gate | On failure | Fix method |
+|---|---|---|
+| Gate 0 | Hard fail — stop pipeline | Fix the source, no retry |
+| Gate 1 | Score 70-89: one sendback with surgical fix directive | Gemini rewrites specific scenes using exact facts provided |
+| Gate 2 | Freeze/audio missing: hard fail, batch stops | No retry — fix the HeyGen render |
+| Gate 3a | Score <60 or freeze: targeted FFmpeg alarm | Re-burn specific segment, not full re-assembly |
+| Gate 3b | `mismatch_fixable`: chrome re-burn then re-run Gate 3a | `mismatch_escalate`: human review |
+| Gate 4 | Score <70: one sendback with specific actionable blockers | Targeted assembly fix — not HeyGen rollback |
+| Gate 5 | Platform fails: retry that platform only (max 3) | Other platforms not affected |
 
 **Fix approach:** `mismatch_fixable` → targeted re-assembly of specific field. `mismatch_escalate` → human review.
 
