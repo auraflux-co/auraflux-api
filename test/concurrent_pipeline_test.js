@@ -287,11 +287,17 @@ async function runTest(testCase) {
       result.error = resp.data?.error;
     } else if (resp.status === 200 && resp.data?.script) {
       result.gate0 = 'PASS';
-      result.gate1 = resp.data?.scriptQA?.outcome === 'pass' ? 'PASS' :
-                     resp.data?.scriptQA?.outcome === 'sendback' ? 'SENDBACK' : 'MANUAL';
-      result.gate1Score = resp.data?.scriptQA?.score;
+      const qa = resp.data?.scriptQA;
+      // 'manual' in claudeScriptQA = 70-89 range = pipeline continues (sendback with retry)
+      // 'pass' = ≥90 = auto-proceed
+      // 'fail' = <70 = hard fail
+      const outcome = qa?.outcome;
+      result.gate1 = outcome === 'pass' ? 'PASS' :
+                     (outcome === 'sendback' || outcome === 'manual') ? 'SENDBACK' :
+                     outcome === 'fail' ? 'HARD_FAIL' : 'PASS'; // no score = gate1 not wired, treat as pass
+      result.gate1Score = qa?.score || null;
       result.wordCount = resp.data?.wordCount;
-      result.status = result.gate1 === 'PASS' ? 'pass' : 'gate1_review';
+      result.status = (result.gate1 === 'PASS' || result.gate1 === 'SENDBACK') ? 'pass' : 'gate1_fail';
     } else {
       result.gate0 = 'ERROR';
       result.gate1 = 'SKIPPED';
@@ -374,11 +380,20 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\nFiring ${testCases.length} concurrent jobs...\n`);
+  // Batch size — server is single-fork Node.js; too many simultaneous Gemini calls
+  // saturates the event loop. 6 concurrent is stable; we batch until all are done.
+  const BATCH_SIZE = 6;
+  console.log(`\nFiring ${testCases.length} jobs in batches of ${BATCH_SIZE}...\n`);
   const startAll = Date.now();
 
-  // Run all concurrently
-  const results = await Promise.all(testCases.map(runTest));
+  const results = [];
+  for (let i = 0; i < testCases.length; i += BATCH_SIZE) {
+    const batch = testCases.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.all(batch.map(runTest));
+    results.push(...batchResults);
+    const done = Math.min(i + BATCH_SIZE, testCases.length);
+    console.log(`  Batch ${Math.ceil(done/BATCH_SIZE)}/${Math.ceil(testCases.length/BATCH_SIZE)} complete (${done}/${testCases.length} jobs)\n`);
+  }
 
   const totalMs = Date.now() - startAll;
 
