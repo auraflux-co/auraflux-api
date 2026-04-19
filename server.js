@@ -484,6 +484,14 @@ async function startHeyGenPoller(jobId, card) {
 
   console.log(`[heygen-poller:${jobId}] 🔄 Starting — polling ${videoJobs.length} segments every 30s (max ${MAX_POLL_MINUTES}min)`);
 
+  // Seed pending rows in heygen_renders DB table for each video job (non-fatal)
+  try {
+    const { saveHeyGenRender } = require('./lib/db');
+    for (const vj of videoJobs) {
+      if (vj.video_id) saveHeyGenRender(jobId, vj.video_id, vj.sceneName, 'pending', {});
+    }
+  } catch(e) {}
+
   const poll = async () => {
     pollCount++;
     if (pollCount > MAX_POLLS) {
@@ -516,6 +524,17 @@ async function startHeyGenPoller(jobId, card) {
       const completed = statuses.filter(s => s.status === 'completed' && s.video_url);
       const pending   = statuses.filter(s => s.status !== 'completed');
       const failed    = statuses.filter(s => s.status === 'failed');
+
+      // Persist completed/failed render statuses to DB (non-fatal)
+      try {
+        const { saveHeyGenRender } = require('./lib/db');
+        for (const s of statuses) {
+          if (s.status === 'completed' || s.status === 'failed') {
+            saveHeyGenRender(jobId, s.video_id, s.sceneName, s.status,
+              s.status === 'completed' ? { videoUrl: s.video_url } : {});
+          }
+        }
+      } catch(e) {}
 
       console.log(`[heygen-poller:${jobId}] Poll ${pollCount}: ${completed.length}/${videoJobs.length} completed, ${pending.length} pending, ${failed.length} failed`);
 
