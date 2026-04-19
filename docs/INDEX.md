@@ -82,6 +82,9 @@ Dispatch files coordinate multiple handoffs in sequence. Archive after all const
 
 ---
 
+## docs/specs/
+| `CHROME_OVERLAY_FFMPEG_SPEC.md` | **APPROVED — pending implementation.** Replace Puppeteer→PNG→FFmpeg chrome pipeline with pure FFmpeg drawtext/drawbox. Universal for all customers — colors/name/logo from customerConfig only. Zero code changes for Customer 1+. Covers filter chain design, per-scene params interface, migration plan, acceptance criteria. |
+
 ## docs/architecture/
 | `CHANGE_IMPACT_MAP.md` | **Read before any code change.** Maps every pipeline component to every other component it touches. Answers "I changed X, who needs to know?" for scaffold, script gen, all 6 gates, assembly, customerConfig, and jobSpec fields. | — How the System Works
 Authoritative technical reference. Read before touching any pipeline code.
