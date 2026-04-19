@@ -624,26 +624,64 @@ async function startHeyGenPoller(jobId, card) {
       // Sort completed segments by sceneIndex to preserve script order
       const sortedAvatarSegs = [...completed].sort((a, b) => a.sceneIndex - b.sceneIndex);
 
-      // Build the interleaved segmentData array:
-      // Avatar segments come from HeyGen URLs (sorted by sceneIndex)
-      // Source clips come from orderedClipUrls (in order, inserted after their SETUP scene)
-      // The script structure is: INTRO, STREAMER_INTRO, CLIP1_SETUP, [CLIP1], CLIP1_REACTION, CLIP2_SETUP, [CLIP2], CLIP2_REACTION, ..., OUTRO
-      // Avatar segments: INTRO, STREAMER_INTRO, CLIP1_SETUP, CLIP1_REACTION, CLIP2_SETUP, CLIP2_REACTION, OUTRO
-      // Source clips: inserted after each SETUP scene
+      // Build avatar lookup by sceneName for fast access
+      const avatarByName = {};
+      for (const seg of sortedAvatarSegs) {
+        avatarByName[seg.sceneName] = seg;
+      }
+
+      // Build the interleaved segmentData array using the SCRIPT as the source of truth.
+      // Script scenes define order and clip positions. HeyGen provides audio/video for avatar scenes.
+      // source_clip scenes in the script are NOT sent to HeyGen — clips come from orderedClipUrls.
       const orderedClipUrls = card.orderedClipUrls || [];
+      const scriptScenes = card.script?.scenes || [];
       const segmentData = [];
       let clipIdx = 0;
 
-      for (const avatarSeg of sortedAvatarSegs) {
-        // Add the avatar segment
-        segmentData.push({
-          url:   avatarSeg.video_url,
-          label: avatarSeg.sceneName,
-          type:  'avatar'
-        });
+      if (scriptScenes.length > 0) {
+        // Script-driven build: walk scenes in script order
+        for (const scene of scriptScenes) {
+          if (scene.type === 'source_clip') {
+            // Insert source clip from orderedClipUrls in order
+            const clip = orderedClipUrls[clipIdx];
+            clipIdx++;
+            if (clip && (clip.url || clip.clipUrl)) {
+              segmentData.push({
+                url:     clip.clipUrl || clip.url || '',
+                pageUrl: clip.pageUrl || '',
+                label:   clip.label || scene.name || `CLIP_${clipIdx}`,
+                type:    'source_clip',
+                clipUrl: clip.clipUrl || clip.url || ''
+              });
+            }
+          } else {
+            // Avatar scene — find matching HeyGen render
+            const avatarSeg = avatarByName[scene.name] || avatarByName[scene.id];
+            if (avatarSeg && avatarSeg.video_url) {
+              segmentData.push({
+                url:   avatarSeg.video_url,
+                label: avatarSeg.sceneName,
+                type:  'avatar'
+              });
+            }
+          }
+        }
+      } else {
+        // Fallback: legacy avatar-only build (no script — old jobs)
+        for (const avatarSeg of sortedAvatarSegs) {
+          segmentData.push({
+            url:   avatarSeg.video_url,
+            label: avatarSeg.sceneName,
+            type:  'avatar'
+          });
+        }
+      }
 
-        // Attach cardData to INTRO segments — chrome overlay reads this for flag + sidebar
-        // Works for all content types — not just News
+      // Attach cardData to INTRO segments in segmentData (works for both script-driven and legacy paths)
+      for (const avatarSeg of sortedAvatarSegs) {
+        const seg = segmentData.find(s => s.label === avatarSeg.sceneName && s.type === 'avatar');
+        if (!seg) continue;
+
         const _sceneName = avatarSeg.sceneName || '';
         const _ct = card.contentType || 'twitch';
         if (_ct === 'news' && /STORY(\d+)_INTRO/i.test(_sceneName)) {
@@ -651,7 +689,7 @@ async function startHeyGenPoller(jobId, card) {
           const storyIdx   = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
           const storyItem  = (card.newsItems || [])[storyIdx];
           if (storyItem) {
-            segmentData[segmentData.length - 1].cardData = {
+            seg.cardData = {
               title:        storyItem.title    || `Story ${storyIdx + 1}`,
               category:     storyItem.category || 'WORLD NEWS',
               storyId:      `story_${storyIdx + 1}`,
@@ -665,7 +703,7 @@ async function startHeyGenPoller(jobId, card) {
           const gameIdx   = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
           const rawName   = _sceneName.replace(/^GAME\d+[_ ]/i,'').replace(/[_ ]INTRO$/i,'').replace(/_/g,' ');
           const nbaItem   = (card.nbaItems || [])[gameIdx];
-          segmentData[segmentData.length - 1].cardData = {
+          seg.cardData = {
             title:    nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
             matchup:  nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
             category: 'NBA GAME',
@@ -679,7 +717,7 @@ async function startHeyGenPoller(jobId, card) {
             (s.twitchUsername||'').toLowerCase() === namePart
           ) || (card.streamers||[])[0];
           if (streamer) {
-            segmentData[segmentData.length - 1].cardData = {
+            seg.cardData = {
               title:    streamer.displayName || namePart,
               category: 'ON STREAM',
               storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
@@ -687,27 +725,6 @@ async function startHeyGenPoller(jobId, card) {
               imageUrl: streamer.profileImage || null,
               twitchUsername: streamer.twitchUsername || streamer.username || null
             };
-          }
-        }
-
-        // Insert source clip after this avatar segment if the script says so.
-        // Twitch: clips go after SETUP scenes (CLIP1_SETUP, CLIP2_SETUP, ...)
-        // News:   clips go after STORY#_SETUP scenes (STORY1_SETUP, STORY2_SETUP, ...)
-        // NBA:    clips go after GAME#_NARRATION scenes
-        const isClipTrigger = /SETUP/i.test(avatarSeg.sceneName) || /NARRATION/i.test(avatarSeg.sceneName);
-        if (isClipTrigger && clipIdx < orderedClipUrls.length) {
-          const clip = orderedClipUrls[clipIdx];
-          clipIdx++;  // always increment to maintain story-index alignment
-          if (clip && (clip.url || clip.clipUrl)) {
-            segmentData.push({
-              url:     clip.clipUrl || clip.url || '',
-              pageUrl: clip.pageUrl || '',
-              label:   clip.label || `CLIP_${clipIdx}`,
-              type:    'source_clip',
-              clipUrl: clip.clipUrl || clip.url || ''
-            });
-          } else {
-            console.log(`[heygen-poller] null clip at index ${clipIdx - 1} — skipping, index alignment preserved`);
           }
         }
       }
