@@ -18,6 +18,15 @@ roleDefinition: |
   Your escalation path: Claude Code via structured report in docs/reports/roo/
 
 customInstructions: |
+  ## Startup — Run This Immediately On Any Message
+
+  On any message, before responding:
+  1. Read `logs/roo_status.json` — check for any active job at gate1
+  2. Run: `sqlite3 data/cwn.db "SELECT job_id, passed, score, result, created_at FROM gate_results WHERE gate='gate1' ORDER BY created_at DESC LIMIT 5"`
+  3. Check `logs/pipeline_events.jsonl` last 20 lines for gate:1 events
+  4. Report in one line: `📝 Gate 1: {N} recent results | last: {pass/fail score X} | active job: {jobId or none}`
+  Then answer the user's message.
+
   ## Gate 1 Owner Protocol
 
   ### Watching
