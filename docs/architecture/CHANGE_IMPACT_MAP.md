@@ -291,7 +291,7 @@ This is the highest-blast-radius change possible. It breaks:
 
 | Changing... | Must also update... |
 |-------------|-------------------|
-| HeyGen avatar ID (landscape or portrait) | .env HEYGEN_AVATAR_ID (long-form) / HEYGEN_AVATAR_SHORT_ID (short-form), verify gate2 framing check still valid for new avatar dimensions. **NOTE:** Template IDs (HEYGEN_TEMPLATE_*) are NOT used — the template endpoint silently ignores voice text. Always use v2/video/generate with avatar_id. |
+| HeyGen template ID (landscape or portrait) | .env HEYGEN_TEMPLATE_LANDSCAPE / HEYGEN_TEMPLATE_PORTRAIT. Template must have {{Longform_text}} or {{Shortform_text}} placeholder text in script area marked as API Variable. Confirmed working structure: type=voice, properties.input_text carries transcript. Template GET returning type=voice is correct. |
 | Outro line (any content type) | customerConfig voice.outroLine, Gemini prompt, gate1 outroCheck, Roo gate-1-owner |
 | Scene header format | parseScriptIntoScenes, gate1 regex, assembly labels, HeyGen title format |
 | Short-form token limit | Check if scaffold fits within limit, test OUTRO presence in output |
