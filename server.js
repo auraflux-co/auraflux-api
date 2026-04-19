@@ -666,13 +666,28 @@ async function startHeyGenPoller(jobId, card) {
             }
           } else {
             // Avatar scene — find matching HeyGen render
-            const avatarSeg = avatarByName[scene.name] || avatarByName[scene.id];
+            const sceneKey = scene.name || scene.id;
+            const avatarSeg = avatarByName[sceneKey] || Object.values(avatarByName).find(v => v.sceneName === sceneKey);
             if (avatarSeg && avatarSeg.video_url) {
               segmentData.push({
                 url:   avatarSeg.video_url,
                 label: avatarSeg.sceneName,
                 type:  'avatar'
               });
+              // SETUP scene: has clip insert after dialogue — insert source_clip from orderedClipUrls
+              if (scene.hasClipInsert) {
+                const clip = orderedClipUrls[clipIdx];
+                clipIdx++;
+                if (clip && (clip.url || clip.clipUrl)) {
+                  segmentData.push({
+                    url:     clip.clipUrl || clip.url || '',
+                    pageUrl: clip.pageUrl || '',
+                    label:   clip.label || `${sceneKey}_CLIP`,
+                    type:    'source_clip',
+                    clipUrl: clip.clipUrl || clip.url || ''
+                  });
+                }
+              }
             }
           }
         }
