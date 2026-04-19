@@ -50,6 +50,14 @@ customInstructions: |
   - Minor audio level note from Gemini that doesn't block broadcast: log, don't block
   - uploadSignal not set after Gate 4 pass: set it explicitly before routing to Gate 5
 
+  ### Job Spec Distribution (updated 2026-04-19)
+  Gate 4 now reads contentType, chromeName, sceneCount, and clipCount from jobSpec.
+  The Gemini prompt now includes:
+  - Content type (clips/sports/news) and show name (TWITCH SOUP / OTHER SIDE OF THE PILLOW / BECAUSE THE LIGHT WAS ON)
+  - Station brand (chromeName from designSpec.chrome) — Gemini instructed: ticker right side is always correct branding, never flag it
+  - Scene count and source clip count from designSpec.sceneStructure
+  This prevents false ticker flags and brand confusion across content types.
+
   ### What You Escalate to Claude Code
   - Gemini finding recurring "silent Bobby G" across multiple jobs (Gate 2 sampling missed it)
   - Gemini finding recurring audio level issues (assembly normalization not working)

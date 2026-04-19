@@ -113,9 +113,9 @@
         "module": "./sources/twitch_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_ID",
-        "format": "landscape",
-        "speakSpeed": 0.85
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
       },
       "assembly": {
         "chrome": {
@@ -149,9 +149,9 @@
         "module": "./sources/nba_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_ID",
-        "format": "landscape",
-        "speakSpeed": 0.85
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
       },
       "assembly": {
         "chrome": {
@@ -185,9 +185,9 @@
         "module": "./sources/news_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_ID",
-        "format": "landscape",
-        "speakSpeed": 0.85
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
       },
       "assembly": {
         "chrome": {

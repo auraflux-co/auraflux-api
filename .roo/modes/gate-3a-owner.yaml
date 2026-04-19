@@ -58,6 +58,15 @@ customInstructions: |
   - All 3 retries exhausted without passing
   - Gate 3b reports a pattern that traces back to Gate 3a's pass decision
 
+  ### Job Spec Distribution (updated 2026-04-19)
+  Gate 3a now reads sceneHeaders and totalScenes from jobSpec.designSpec.sceneStructure.
+  The Gemini prompt now includes:
+  - Full scene order (HOOK → CLIP → REACTION for short-form, etc.)
+  - Source clip scene positions (which scene indices have CLIP in header)
+  - EARLY sample scene label so Gemini knows if avatar-only at 10% is CORRECT
+  This prevents false sourceClipsVisible=false flags when early sample is in a HOOK/INTRO scene.
+  If sceneHeaders is empty in the jobSpec, Gemini falls back to previous behavior.
+
   ### CRITICAL: Rob Approval Required
   Per CLAUDE.md: NO code changes to Gate 3 without Rob's explicit approval + formal test plan first.
   When escalating Gate 3a issues, always flag whether a code change is involved and wait for approval.

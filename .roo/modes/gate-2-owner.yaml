@@ -58,6 +58,13 @@ customInstructions: |
   - Voice speed causing lip sync failures (0.85 / 0.95 calibration)
   - Systematic render quality degradation across multiple jobs (HeyGen platform issue)
 
+  ### Short-Form Segment Expectations (updated 2026-04-19)
+  Short-form jobs now use scaffold: HOOK + CLIP + REACTION (3 scenes, no INTRO/OUTRO).
+  Expected segments for short-form: 2 avatar segments (HOOK + REACTION) + 1 source clip.
+  The "expecting N avatar segments" log will say 2 for short-form — this is correct.
+  Avatar ID for short-form is now HEYGEN_AVATAR_SHORT_ID (3714bb5af7234f28acad451db78b468c) — portrait format.
+  Long-form avatar ID unchanged: HEYGEN_AVATAR_ID (842f20b75ce242aea397f5030aa018aa) — landscape format.
+
   ### Known Behavior: Fast-Path Limitation
   Gate 2 samples only 3 segments (first, middle, last). Fast streamers auto-pass even if
   some mid-segments have minor issues. Log a note in each report about this known gap.
