@@ -2997,6 +2997,7 @@ app.post('/generate-full-script',
           jobId: req.jobSpec.jobId,
           contentType: req.jobSpec.contentType,
           templateId: req.jobSpec.templateId,
+          jobSpec: req.jobSpec,  // full jobSpec for gate prepare() pre-work
           commitments,
           allReady
         });
