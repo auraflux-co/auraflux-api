@@ -13,7 +13,9 @@
         "speakSpeed": 0.85
       },
       "assembly": {
-        "chrome": { "skin": "twitch" },
+        "chrome": {
+          "skin": "twitch"
+        },
         "ticker": "twitch",
         "sourceCrop": "crop=1880:1040,",
         "voiceover": false
@@ -29,7 +31,9 @@
       },
       "publish": {
         "pinnedCommentKey": "twitch",
-        "platforms": ["youtube"]
+        "platforms": [
+          "youtube"
+        ]
       }
     },
     "nba": {
@@ -44,7 +48,9 @@
         "speakSpeed": 0.85
       },
       "assembly": {
-        "chrome": { "skin": "nba" },
+        "chrome": {
+          "skin": "nba"
+        },
         "ticker": "nba",
         "sourceCrop": "crop=1920:1080,",
         "voiceover": true
@@ -60,7 +66,9 @@
       },
       "publish": {
         "pinnedCommentKey": "nba",
-        "platforms": ["youtube"]
+        "platforms": [
+          "youtube"
+        ]
       }
     },
     "news": {
@@ -75,7 +83,9 @@
         "speakSpeed": 0.85
       },
       "assembly": {
-        "chrome": { "skin": "news" },
+        "chrome": {
+          "skin": "news"
+        },
         "ticker": "news",
         "sourceCrop": "crop=1920:1080,",
         "voiceover": false
@@ -91,7 +101,9 @@
       },
       "publish": {
         "pinnedCommentKey": "news",
-        "platforms": ["youtube"]
+        "platforms": [
+          "youtube"
+        ]
       }
     },
     "twitch-short": {
@@ -106,7 +118,9 @@
         "speakSpeed": 0.95
       },
       "assembly": {
-        "chrome": { "skin": "twitch" },
+        "chrome": {
+          "skin": "twitch"
+        },
         "ticker": "twitch",
         "layout": "split-screen",
         "sourceCrop": "crop=1880:1040,",
@@ -123,7 +137,11 @@
       },
       "publish": {
         "pinnedCommentKey": "twitch",
-        "platforms": ["youtube", "tiktok", "instagram"]
+        "platforms": [
+          "youtube",
+          "tiktok",
+          "instagram"
+        ]
       }
     },
     "nba-short": {
@@ -138,7 +156,9 @@
         "speakSpeed": 0.95
       },
       "assembly": {
-        "chrome": { "skin": "nba" },
+        "chrome": {
+          "skin": "nba"
+        },
         "ticker": "nba",
         "layout": "split-screen",
         "sourceCrop": "crop=1920:1080,",
@@ -155,7 +175,11 @@
       },
       "publish": {
         "pinnedCommentKey": "nba",
-        "platforms": ["youtube", "tiktok", "instagram"]
+        "platforms": [
+          "youtube",
+          "tiktok",
+          "instagram"
+        ]
       }
     },
     "news-short": {
@@ -170,7 +194,9 @@
         "speakSpeed": 0.95
       },
       "assembly": {
-        "chrome": { "skin": "news" },
+        "chrome": {
+          "skin": "news"
+        },
         "ticker": "news",
         "layout": "split-screen",
         "sourceCrop": "crop=1920:1080,",
@@ -187,8 +213,24 @@
       },
       "publish": {
         "pinnedCommentKey": "news",
-        "platforms": ["youtube", "tiktok", "instagram"]
+        "platforms": [
+          "youtube",
+          "tiktok",
+          "instagram"
+        ]
       }
     }
+  },
+  "news-short": {
+    "label": "News Short-Form",
+    "formFactor": "short"
+  },
+  "twitch-short": {
+    "label": "Twitch Short-Form",
+    "formFactor": "short"
+  },
+  "nba-short": {
+    "label": "NBA Short-Form",
+    "formFactor": "short"
   }
 }
