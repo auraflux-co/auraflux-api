@@ -127,7 +127,7 @@ async function fetchNbaItems() {
 async function fetchNewsItems(count = 1) {
   if (_newsCache) return _newsCache.slice(0, count);
   try {
-    const resp = await axios.get(`${BASE_URL}/news/us-canada-videos`, { timeout: 30000 });
+    const resp = await axios.get(`${BASE_URL}/news/us-canada-videos`, { timeout: 90000 }); // Puppeteer scraper takes 30-60s
     // endpoint returns { videos: [...] } not { items: [...] }
     const videos = resp.data?.videos || resp.data?.items || [];
     _newsCache = videos.map(it => ({
@@ -364,10 +364,40 @@ async function main() {
     console.error('❌ Server not running on port 3000. Start with: npm run start');
     process.exit(1);
   }
-
-  // Verify GATE_TEST_MODE
   console.log('✅ Server online');
-  console.log('⚠️  Ensure GATE_TEST_MODE=true in .env before running\n');
+
+  // HARD GUARD: Verify GATE_TEST_MODE=true on the server before firing ANY jobs.
+  // This test runner calls /generate-full-script which auto-sends to HeyGen if
+  // Gate 1 passes and GATE_TEST_MODE is false. Each HeyGen call costs $0.33.
+  // 472 jobs were accidentally sent to HeyGen = $155.84 in one test run.
+  // This check is non-negotiable — abort if not confirmed.
+  try {
+    const envCheck = await axios.get(`${BASE_URL}/health`, { timeout: 5000 });
+    const gateTestMode = envCheck.data?.env?.GATE_TEST_MODE;
+    if (gateTestMode !== 'true' && gateTestMode !== true) {
+      console.error('');
+      console.error('🚨 ABORTED — GATE_TEST_MODE is not true on the server.');
+      console.error('   Set GATE_TEST_MODE=true in .env and restart: npm run restart');
+      console.error('   This test will NOT run without it. Each HeyGen call costs $0.33.');
+      console.error('');
+      process.exit(1);
+    }
+    console.log('✅ GATE_TEST_MODE=true confirmed — HeyGen auto-send is blocked\n');
+  } catch (e) {
+    // /health may not expose env — fall back to reading .env directly
+    const fs = require('fs');
+    const envFile = require('path').join(__dirname, '../.env');
+    const envContent = fs.existsSync(envFile) ? fs.readFileSync(envFile, 'utf8') : '';
+    if (!envContent.includes('GATE_TEST_MODE=true')) {
+      console.error('');
+      console.error('🚨 ABORTED — Cannot confirm GATE_TEST_MODE=true.');
+      console.error('   Verify .env has GATE_TEST_MODE=true and restart the server.');
+      console.error('   This test will NOT run without confirmed gate test mode.');
+      console.error('');
+      process.exit(1);
+    }
+    console.log('✅ GATE_TEST_MODE=true confirmed via .env — HeyGen auto-send is blocked\n');
+  }
 
   // Pre-fetch shared sources once to avoid hammering scrapers with 100 concurrent requests
   console.log('Pre-fetching shared sources (news, NBA)...');
@@ -392,7 +422,13 @@ async function main() {
     const batchResults = await Promise.all(batch.map(runTest));
     results.push(...batchResults);
     const done = Math.min(i + BATCH_SIZE, testCases.length);
+    const batchErrors = batchResults.filter(r => r.status === 'error').length;
     console.log(`  Batch ${Math.ceil(done/BATCH_SIZE)}/${Math.ceil(testCases.length/BATCH_SIZE)} complete (${done}/${testCases.length} jobs)\n`);
+    // If batch had errors (possible server crash), wait for PM2 to recover before next batch
+    if (batchErrors > 0 && i + BATCH_SIZE < testCases.length) {
+      console.log(`  ⚠️  ${batchErrors} errors in batch — waiting 8s for server recovery...\n`);
+      await new Promise(r => setTimeout(r, 8000));
+    }
   }
 
   const totalMs = Date.now() - startAll;

@@ -5731,7 +5731,13 @@ const server = app.listen(PORT, () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
   console.log(`   FFmpeg path: ${ffmpegPath()}`);
   console.log(`   Tmp dir:     ${TMP_DIR}`);
-  console.log(`   Output dir:  ${OUTPUT_DIR}\n`);
+  console.log(`   Output dir:  ${OUTPUT_DIR}`);
+  const gateTestMode = process.env.GATE_TEST_MODE === 'true';
+  if (gateTestMode) {
+    console.log(`   ⏸  GATE_TEST_MODE=true — HeyGen auto-send DISABLED ($0.33/segment protected)\n`);
+  } else {
+    console.log(`   🔴 GATE_TEST_MODE=false — HeyGen auto-send LIVE (each segment costs $0.33)\n`);
+  }
   checkFFmpeg((err, v) => {
     if (err) console.warn('⚠️  FFmpeg not found:', err.message);
     else console.log('✅ FFmpeg:', v);
