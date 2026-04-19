@@ -16,6 +16,12 @@ log() {
   echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] $1" | tee -a "$LOG_FILE"
 }
 
+# On Render, RENDER env var is set automatically — Cursor/Roo don't exist there
+if [ -n "$RENDER" ]; then
+  log "roo_watcher disabled on Render (no Cursor/Roo in cloud) — exiting"
+  exit 0
+fi
+
 log "roo_watcher started — polling $TRIGGER_FILE every 10s"
 
 while true; do
