@@ -4,47 +4,89 @@
   "showName": "ClipzWorld News",
   "templates": {
     "long-form": {
-      "contentTypes": ["news", "clips", "sports"],
+      "contentTypes": [
+        "news",
+        "clips",
+        "sports"
+      ],
       "sceneFormulas": {
-        "news":   "1 + (items * 4) + 1",
-        "clips":  "1 + (items * 7) + 1",
+        "news": "1 + (items * 4) + 1",
+        "clips": "1 + (items * 7) + 1",
         "sports": "1 + (items * 4) + 1"
       },
-      "maxItems": { "news": 5, "clips": 10, "sports": 5 },
+      "maxItems": {
+        "news": 5,
+        "clips": 10,
+        "sports": 5
+      },
       "providers": {
-        "fetch":    "site_scrape",
-        "script":   "gemini",
-        "avatar":   "heygen",
+        "fetch": "site_scrape",
+        "script": "gemini",
+        "avatar": "heygen",
         "assembly": "internal",
-        "upload":   "upload-post"
+        "upload": "upload-post"
       },
       "designDefaults": {
         "chrome": {
           "templateFile": "tools/clipzworld_newscast.html",
           "skins": {
-            "news":   { "accentColor": "#C41E3A", "accentColor2": "#8B0000" },
-            "clips":  { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
-            "sports": { "accentColor": "#17408B", "accentColor2": "#C9082A" }
+            "news": {
+              "accentColor": "#C41E3A",
+              "accentColor2": "#8B0000"
+            },
+            "clips": {
+              "accentColor": "#6441A5",
+              "accentColor2": "#4B2D8F"
+            },
+            "sports": {
+              "accentColor": "#17408B",
+              "accentColor2": "#C9082A"
+            }
           },
           "logoPosition": "bottom-right-mug",
           "logoSize": 120
         },
-        "audio": { "mixMode": "both", "avatarTrack": true, "sourceTrack": true },
-        "resolution": { "width": 1920, "height": 1080 },
+        "audio": {
+          "mixMode": "both",
+          "avatarTrack": true,
+          "sourceTrack": true
+        },
+        "resolution": {
+          "width": 1920,
+          "height": 1080
+        },
         "avatarId": "842f20b75ce242aea397f5030aa018aa",
         "voiceId": "2e598f1a6022448cb6710e5d44665325",
         "speakSpeed": 0.85
       },
       "qaThresholds": {
-        "gate0":  { "minDurationSeconds": 10 },
-        "gate1":  { "pass": 90, "manualReview": 70 },
-        "gate2":  { "pass": 85, "manualReview": 65 },
-        "gate3a": { "pass": 70, "manualReview": 60 },
-        "gate4":  { "pass": 70 }
+        "gate0": {
+          "minDurationSeconds": 10
+        },
+        "gate1": {
+          "pass": 90,
+          "manualReview": 70
+        },
+        "gate2": {
+          "pass": 85,
+          "manualReview": 65
+        },
+        "gate3a": {
+          "pass": 70,
+          "manualReview": 60
+        },
+        "gate4": {
+          "pass": 70
+        }
       },
       "voice": {
         "style": "jon-stewart-norm-macdonald-space-ghost",
-        "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
+        "prohibitedWords": [
+          "incredible",
+          "amazing",
+          "crazy",
+          "wild"
+        ],
         "outroLine": "Goodnight and good luck.",
         "speakerName": "Bobby G"
       },
@@ -52,17 +94,26 @@
         "news": {
           "templateType": "html",
           "templatePath": "templates/cwn_news_tool.html",
-          "viewport": { "width": 1280, "height": 720 }
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
         },
         "clips": {
           "templateType": "overlay",
           "backgroundPath": "assets/twitchsoup_thumbnail.jpeg",
-          "viewport": { "width": 1280, "height": 720 }
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
         },
         "sports": {
           "templateType": "html",
           "templatePath": "templates/nba_thumbnail_generator.html",
-          "viewport": { "width": 1280, "height": 720 }
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
         }
       },
       "ffmpeg": {
@@ -73,30 +124,73 @@
         "audioCodec": "aac",
         "audioBitrate": "192k",
         "dissolveSeconds": 0.7
+      },
+      "assemblyConfig": {
+        "news": {
+          "sourceCropFilter": "crop=1920:1080,",
+          "clipIntroSkipSecs": 5,
+          "clipMaxSecs": 25,
+          "watermarkBox": {
+            "x": 1780,
+            "y": 960,
+            "w": 120,
+            "h": 80,
+            "color": "0x0d1424@1.0"
+          }
+        },
+        "clips": {
+          "sourceCropFilter": "crop=1880:1040,",
+          "clipIntroSkipSecs": 0,
+          "clipMaxSecs": null
+        },
+        "sports": {
+          "sourceCropFilter": "crop=1920:1080,",
+          "clipIntroSkipSecs": 0,
+          "clipMaxSecs": null,
+          "mixMode": "voiceover",
+          "musicVolume": 0.2
+        }
       }
     },
     "short-form": {
-      "contentTypes": ["news", "clips", "sports"],
+      "contentTypes": [
+        "news",
+        "clips",
+        "sports"
+      ],
       "sceneFormulas": {
-        "news":   "1 + 1 + 1",
-        "clips":  "1 + 1 + 1 + 1 + 1",
+        "news": "1 + 1 + 1",
+        "clips": "1 + 1 + 1 + 1 + 1",
         "sports": "1 + 1 + 1 + 1"
       },
-      "maxItems": { "news": 1, "clips": 1, "sports": 1 },
+      "maxItems": {
+        "news": 1,
+        "clips": 1,
+        "sports": 1
+      },
       "providers": {
-        "fetch":    "site_scrape",
-        "script":   "gemini",
-        "avatar":   "heygen",
+        "fetch": "site_scrape",
+        "script": "gemini",
+        "avatar": "heygen",
         "assembly": "internal",
-        "upload":   "upload-post"
+        "upload": "upload-post"
       },
       "designDefaults": {
         "chrome": {
           "templateFile": "tools/clipzworld_newscast.html",
           "skins": {
-            "news":   { "accentColor": "#C41E3A", "accentColor2": "#8B0000" },
-            "clips":  { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
-            "sports": { "accentColor": "#17408B", "accentColor2": "#C9082A" }
+            "news": {
+              "accentColor": "#C41E3A",
+              "accentColor2": "#8B0000"
+            },
+            "clips": {
+              "accentColor": "#6441A5",
+              "accentColor2": "#4B2D8F"
+            },
+            "sports": {
+              "accentColor": "#17408B",
+              "accentColor2": "#C9082A"
+            }
           },
           "logoPosition": "bottom-right-mug",
           "logoSize": 80,
@@ -104,22 +198,45 @@
           "splitTop": "clip",
           "splitBottom": "avatar"
         },
-        "audio": { "mixMode": "both" },
-        "resolution": { "width": 1080, "height": 1920 },
+        "audio": {
+          "mixMode": "both"
+        },
+        "resolution": {
+          "width": 1080,
+          "height": 1920
+        },
         "avatarId": "ed57439c9c3d4a398f3b247b75714b13",
         "voiceId": "2e598f1a6022448cb6710e5d44665325",
         "speakSpeed": 0.95
       },
       "qaThresholds": {
-        "gate0":  { "minDurationSeconds": 10 },
-        "gate1":  { "pass": 90, "manualReview": 70 },
-        "gate2":  { "pass": 85, "manualReview": 65 },
-        "gate3a": { "pass": 70, "manualReview": 60 },
-        "gate4":  { "pass": 70 }
+        "gate0": {
+          "minDurationSeconds": 10
+        },
+        "gate1": {
+          "pass": 90,
+          "manualReview": 70
+        },
+        "gate2": {
+          "pass": 85,
+          "manualReview": 65
+        },
+        "gate3a": {
+          "pass": 70,
+          "manualReview": 60
+        },
+        "gate4": {
+          "pass": 70
+        }
       },
       "voice": {
         "style": "jon-stewart-norm-macdonald-space-ghost",
-        "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
+        "prohibitedWords": [
+          "incredible",
+          "amazing",
+          "crazy",
+          "wild"
+        ],
         "outroLine": "Subscribe. Appreciate you.",
         "speakerName": "Bobby G"
       },
@@ -127,17 +244,26 @@
         "news": {
           "templateType": "html",
           "templatePath": "templates/cwn_news_tool.html",
-          "viewport": { "width": 1280, "height": 720 }
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
         },
         "clips": {
           "templateType": "overlay",
           "backgroundPath": "assets/twitchsoup_thumbnail.jpeg",
-          "viewport": { "width": 1280, "height": 720 }
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
         },
         "sports": {
           "templateType": "html",
           "templatePath": "templates/nba_thumbnail_generator.html",
-          "viewport": { "width": 1280, "height": 720 }
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
         }
       },
       "ffmpeg": {
@@ -147,16 +273,46 @@
         "fps": 30,
         "audioCodec": "aac",
         "audioBitrate": "192k"
+      },
+      "assemblyConfig": {
+        "news": {
+          "sourceCropFilter": "crop=1920:1080,",
+          "clipIntroSkipSecs": 5,
+          "clipMaxSecs": 25,
+          "watermarkBox": {
+            "x": 1780,
+            "y": 960,
+            "w": 120,
+            "h": 80,
+            "color": "0x0d1424@1.0"
+          }
+        },
+        "clips": {
+          "sourceCropFilter": "crop=1880:1040,",
+          "clipIntroSkipSecs": 0,
+          "clipMaxSecs": null
+        },
+        "sports": {
+          "sourceCropFilter": "crop=1920:1080,",
+          "clipIntroSkipSecs": 0,
+          "clipMaxSecs": null,
+          "mixMode": "voiceover",
+          "musicVolume": 0.2
+        }
       }
     }
   },
   "delivery": {
-    "platforms": ["youtube", "tiktok", "instagram"],
+    "platforms": [
+      "youtube",
+      "tiktok",
+      "instagram"
+    ],
     "driveFolderId": "${DRIVE_FOLDER_ID}",
     "uploadPostProfile": "${UPLOADPOST_PROFILE}",
     "categoryIds": {
-      "news":   "25",
-      "clips":  "24",
+      "news": "25",
+      "clips": "24",
       "sports": "17"
     },
     "visibility": "private"
