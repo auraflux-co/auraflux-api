@@ -650,3 +650,45 @@ See `IMPLEMENTATION_SPEC.md` for full technical specifications.
 4. Create News scraper endpoint
 5. Implement short-form split-screen assembly
 6. Run production test suite (`test_3_longform_production.js`)
+
+## Roo Code Integration
+
+**Roo Code gate owners run persistently in VS Code**, watching the pipeline bus for gate events.
+Each gate has a dedicated owner mode (`.roo/modes/gate-{N}-owner.yaml`).
+A Pipeline Orchestrator (`pipeline-orchestrator.yaml`) aggregates all gate reports.
+
+### Roles
+| Role | Owner | Boundary |
+|---|---|---|
+| Gate 0 — Source Confirmation | Roo gate-0-owner | URL retry, ESPN HLS refresh, backup clip |
+| Gate 1 — Script Style QA | Roo gate-1-owner | Script retry, reject 0-scene scripts |
+| Gate 2 — Render Quality | Roo gate-2-owner | HeyGen re-render for silent/short |
+| Gate 3a — Assembly QA | Roo gate-3a-owner | Assembly retry (max 3) |
+| Gate 3b — Commitment Verification | Roo gate-3b-owner | Chrome re-burn on fixable mismatch |
+| Gate 4 — Broadcast Ready | Roo gate-4-owner | Surface blockers, note thumbnail |
+| Gate 5 — Publish | Roo gate-5-owner | Platform retry (max 3) |
+| Pipeline Orchestrator | Roo pipeline-orchestrator | Cross-gate pattern detection |
+
+### Reporting Cadence
+- **Hourly**: `docs/reports/roo/hourly.md` — live run outcomes, failures, fixes applied
+- **Daily**: `docs/reports/roo/daily_{date}.md` — pattern summary, pass rates
+- **Monthly**: `docs/reports/roo/monthly_{month}.md` — trends, improvement recommendations
+
+### Escalation Protocol
+Roo escalates to Claude Code when:
+1. A fix requires code changes (not just retry/re-render)
+2. Same failure pattern appears 3+ times in a day
+3. A new failure mode not covered by existing gate logic
+4. Performance degradation trend detected
+
+Escalation format: structured report in `docs/reports/roo/escalation_{timestamp}.md`
+Claude Code reads escalations at session start and acts as architect.
+
+### What Claude Code Receives
+Every report includes:
+1. Gate outcomes (pass/fail counts, scores)
+2. Root causes diagnosed
+3. Fixes applied autonomously
+4. **Improvement suggestions ranked by impact** — Claude Code reviews with Rob
+
+Claude Code does NOT touch live execution — Roo owns that layer.
