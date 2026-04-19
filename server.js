@@ -197,12 +197,12 @@ const {
   generateNewscastOverlay
 } = require('./lib/chrome_overlay');
 const {
-  geminiQACheck,
+  geminiQACheck, // TODO: remove — dead code, gate2Worker.run() replaces this (see /gate2-segment-qa endpoint)
   parseScriptIntoScenes,
   generateClipAvailabilityReport,
   claudeScriptQA,
   claudeScriptFix,
-  geminiSegmentQA,
+  geminiSegmentQA, // TODO: remove — dead code, gate2Worker.run() replaces this
   callClaudeAPI,
   uploadToGeminiFiles,
   waitForGeminiFile,
