@@ -1,7 +1,6 @@
-# AuraFlux Pipeline — Hourly Gate Report Log
+# AuraFlux Pipeline — Hourly Report Log
 
-Rolling log — gate owners append here each hour. Last 24 hours retained; older entries archived to daily_{date}.md.
+Pipeline Orchestrator appends here every hour.
+Format: timestamp | gate outcomes | gaps | fixes | escalations | top improvement
 
 ---
-
-<!-- Gate owners append below this line -->
