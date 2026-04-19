@@ -107,27 +107,27 @@
       }
     },
     "twitch-short": {
-      "label": "Twitch Short",
+      "label": "Twitch Compilation (Short-Form)",
       "formFactor": "short",
       "source": {
         "module": "./sources/twitch_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
-        "format": "portrait",
-        "speakSpeed": 0.95
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
       },
       "assembly": {
         "chrome": {
           "skin": "twitch"
         },
         "ticker": "twitch",
-        "layout": "split-screen",
         "sourceCrop": "crop=1880:1040,",
-        "voiceover": false
+        "voiceover": false,
+        "layout": "split-screen"
       },
       "qa": {
-        "checklistModule": "./qa/checklists/twitch-short",
+        "checklistModule": "./qa/checklists/twitch",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
@@ -138,34 +138,32 @@
       "publish": {
         "pinnedCommentKey": "twitch",
         "platforms": [
-          "youtube",
-          "tiktok",
-          "instagram"
+          "youtube"
         ]
       }
     },
     "nba-short": {
-      "label": "NBA Short",
+      "label": "NBA Highlights (Short-Form)",
       "formFactor": "short",
       "source": {
         "module": "./sources/nba_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
-        "format": "portrait",
-        "speakSpeed": 0.95
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
       },
       "assembly": {
         "chrome": {
           "skin": "nba"
         },
         "ticker": "nba",
-        "layout": "split-screen",
         "sourceCrop": "crop=1920:1080,",
-        "voiceover": false
+        "voiceover": true,
+        "layout": "split-screen"
       },
       "qa": {
-        "checklistModule": "./qa/checklists/nba-short",
+        "checklistModule": "./qa/checklists/nba",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
@@ -176,34 +174,32 @@
       "publish": {
         "pinnedCommentKey": "nba",
         "platforms": [
-          "youtube",
-          "tiktok",
-          "instagram"
+          "youtube"
         ]
       }
     },
     "news-short": {
-      "label": "News Short",
+      "label": "World News (Short-Form)",
       "formFactor": "short",
       "source": {
         "module": "./sources/news_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
-        "format": "portrait",
-        "speakSpeed": 0.95
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
       },
       "assembly": {
         "chrome": {
           "skin": "news"
         },
         "ticker": "news",
-        "layout": "split-screen",
         "sourceCrop": "crop=1920:1080,",
-        "voiceover": false
+        "voiceover": false,
+        "layout": "split-screen"
       },
       "qa": {
-        "checklistModule": "./qa/checklists/news-short",
+        "checklistModule": "./qa/checklists/news",
         "gate1PassThreshold": 90,
         "gate1ManualThreshold": 70,
         "gate2PassThreshold": 85,
@@ -214,23 +210,9 @@
       "publish": {
         "pinnedCommentKey": "news",
         "platforms": [
-          "youtube",
-          "tiktok",
-          "instagram"
+          "youtube"
         ]
       }
     }
-  },
-  "news-short": {
-    "label": "News Short-Form",
-    "formFactor": "short"
-  },
-  "twitch-short": {
-    "label": "Twitch Short-Form",
-    "formFactor": "short"
-  },
-  "nba-short": {
-    "label": "NBA Short-Form",
-    "formFactor": "short"
   }
 }
