@@ -3341,6 +3341,11 @@ function generateTwitch() {
           });
         });
         markClipsUsed(primaryClipUrls);
+        if (!items.length) {
+          g('twitch-gen-status').innerHTML = '❌ No streamers returned valid clips — check Twitch API token or streamer names';
+          unlockGenerateButtons();
+          return;
+        }
         g('script-type-label').textContent = 'TWITCH — Gemini + Claude writing full script...';
         callFullScriptServer('twitch', items, 'twitch-gen-status', null);
       });
