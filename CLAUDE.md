@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 2. `STATUS.md` — current tasks, active file locks, what's working, what's next
 3. `AGENT_FILE_REGISTRY.md` — file ownership tiers, handoff size rules, multi-agent lock protocol. **Read before touching any file.**
 4. **`docs/architecture/GATED_PIPELINE_ARCHITECTURE.md`** — the authoritative spec for the Gated Self-Healing Pipeline. Every agent touching pipeline code must read this.
+5. **`docs/architecture/CHANGE_IMPACT_MAP.md`** — **read before any code change**. Maps every component's blast radius. If you change X, this tells you what else must change in the same commit.
 
 **Multi-agent rule:** If two sub-agents are running simultaneously, check `STATUS.md → 🔒 Active File Locks` before editing any Tier 1 or Tier 2 file. Declare your lock before your first edit. See `AGENT_FILE_REGISTRY.md` for the full protocol.
 

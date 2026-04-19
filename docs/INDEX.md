@@ -82,7 +82,8 @@ Dispatch files coordinate multiple handoffs in sequence. Archive after all const
 
 ---
 
-## docs/architecture/ — How the System Works
+## docs/architecture/
+| `CHANGE_IMPACT_MAP.md` | **Read before any code change.** Maps every pipeline component to every other component it touches. Answers "I changed X, who needs to know?" for scaffold, script gen, all 6 gates, assembly, customerConfig, and jobSpec fields. | — How the System Works
 Authoritative technical reference. Read before touching any pipeline code.
 
 | File | What it covers |
