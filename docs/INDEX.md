@@ -7,6 +7,8 @@ Root-level files that must stay in root (read by agents at session start):
 - `STATUS.md` — current tasks, active locks, what's working, what's next
 - `AGENT_FILE_REGISTRY.md` — file ownership tiers, lock protocol, agent roster
 - `README.md` — project overview
+- `CONTRIBUTING.md` — fork/setup, tests, what not to commit (public GitHub hygiene)
+- `SECURITY.md` — how to report vulnerabilities responsibly
 
 ---
 

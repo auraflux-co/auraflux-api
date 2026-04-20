@@ -22,14 +22,16 @@ Dashboard: [http://localhost:8765/cwn_production.html](http://localhost:8765/cwn
 
 ---
 
-## Deploy Workflow
+## Contributing & deploy
+
+For forks and external contributors, see **[CONTRIBUTING.md](CONTRIBUTING.md)** (local setup, what not to commit, tests).
+
+Typical maintainer workflow:
 
 ```bash
-cd ~/cwn-production
-git add -A
+git add -p   # review hunks — avoid committing .env, data/*.db, logs/
 git commit -m "your message"
 git push
-# nodemon auto-restarts — no manual step needed
 ```
 
 ---
