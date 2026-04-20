@@ -42,6 +42,19 @@ customInstructions: |
   On HARD_FAIL: diagnose Upload-Post error, attempt retry if transient, escalate if structural
   On SENDBACK: read fixDirective, apply retry or platform substitution
 
+  ### deliverySpec.platforms Population (updated 2026-04-19)
+  deliverySpec.platforms is now correctly populated at job creation time via buildDeliverySpec()
+  in lib/job_spec.js. The fix reads platforms from contentTypes.json publish config when
+  customerConfig.delivery.platforms is empty (which it was for c0 — no top-level delivery block).
+
+  Source chain: contentTypes.json → contentTypes[baseType].publish.platforms → deliverySpec.platforms
+  All 6 content types (twitch, nba, news, twitch-short, nba-short, news-short) have
+  platforms: ["youtube"] in their publish config — these now flow through correctly.
+
+  canProduce() "No platforms specified" failure is resolved for all configured content types.
+  If you see canProduce() still failing with no platforms, the contentType is not in
+  contentTypes.json and needs a new entry — escalate to Claude Code.
+
   ### What You Can Fix (within boundary)
   - Transient Upload-Post API error (5xx, timeout): retry after 30s (max 3 attempts total)
   - TikTok submission failed but YouTube succeeded: retry TikTok independently, mark job partial

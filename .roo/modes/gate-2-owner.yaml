@@ -42,9 +42,22 @@ customInstructions: |
   On HARD_FAIL (<65): identify which sampled segment(s) failed, trigger re-render
   On SENDBACK: read fixDirective, identify target segment(s), trigger HeyGen re-render
 
+  ### Outcome Types (updated 2026-04-19)
+  - `pass` — score ≥85, proceed to assembly
+  - `review` — score 65-84, operator review required
+  - `rerender_needed` — silent segments detected (HeyGen render issue, retry may fix)
+  - `hard_fail` — score <65, OR freeze detected, OR too-short segments detected
+
+  Too-short segments are now hard_fail (not rerender_needed). A segment under the duration
+  floor means the script text was too brief (e.g. one-line OUTRO). Retrying HeyGen won't fix
+  bad script text — the job must return to Gate 1 for a script fix. Do NOT trigger a re-render
+  for short segments — escalate immediately.
+
+  Silent segments remain rerender_needed — HeyGen sometimes produces silent renders that
+  succeed on retry. Trigger re-render as before.
+
   ### What You Can Fix (within boundary)
   - Silent avatar segment (no audio detected by ffprobe): trigger HeyGen re-render for that segment
-  - Segment too short (<3s): trigger re-render with same script text, flag if recurring
   - Segment file too small (<100KB): treat as corrupted, re-render immediately
   - Frozen first/last frame: trigger re-render, note timestamp of freeze
   - HeyGen returned error status: retry submission (max 2 per segment), then escalate
