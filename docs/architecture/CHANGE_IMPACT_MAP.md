@@ -333,6 +333,14 @@ See `PIPELINE_CONTRACT_SPEC.md` for the full rule and rationale.
 | Drive upload logic | jobSpec.state.savedOutputs.driveUrl, Gate 4 check, Gate 5 input |
 | Gate thresholds (pass/fail scores) | customerConfig, Roo gate owner YAMLs, test expected outcomes |
 | contentType aliases (twitch→clips) | Gate 0 alias map, configLoader, customerConfig template keys |
+| `customerConfig designDefaults.voice.lockedIntro` | scaffold.js (getLockedIntro reads it), script_gen.js (writes to jobSpec.designSpec.voice.lockedIntro), gate1.js (checkLockedIntro reads from jobSpec), qa/checklists/nba.js + news.js + twitch.js (getLockedIntroCheck reads it), Roo gate-1-owner.yaml |
+| `customerConfig designDefaults.voice.lockedOutro` | scaffold.js (getLockedOutro reads it), gate1.js (getRequiredOutro uses customerConfig.voice.outroLine — NOTE: the full outro is in voice.lockedOutro but gate1 checks for voice.outroLine which is the final sentence only; both must be consistent) |
+| `customerConfig designDefaults.voice.showName` | script_gen.js (writes to jobSpec.designSpec.voice.showName and chrome.showName), gate4.js Gemini prompt, publish.js channelConfig, Roo gate-4-owner.yaml |
+| `customerConfig designDefaults.voice.categoryLabel` | script_gen.js (writes to jobSpec.designSpec.chrome.categoryLabel), chrome overlay flag (category label row), Roo gate-4-owner.yaml |
+| `customerConfig designDefaults.chrome.caption` | script_gen.js (writes to jobSpec.designSpec.chrome.caption), assembly.js caption burn (reads from jobSpec.designSpec.chrome.caption.colors[baseType]), Roo gate-3a-owner.yaml |
+| `jobSpec.designSpec.voice.lockedIntro` | Written by script_gen.js after scaffold generation. Read by gate1.js checkLockedIntro(). If this field is null or missing, Gate 1 skips the intro check (non-blocking). |
+| `jobSpec.designSpec.chrome.caption` | Written by script_gen.js after scaffold generation. Read by assembly.js caption burn. If null, caption burn uses captionStyle from req.body only. |
+| `customerConfig designDefaults.chrome.splitTop/splitBottom` | assembly.js split-screen stacking order. CREATIVE_CONFIG_SPEC.md: avatar=TOP, clip=BOTTOM. c0.json short-form designDefaults now correctly has splitTop=avatar, splitBottom=clip. |
 
 ---
 

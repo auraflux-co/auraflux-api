@@ -81,6 +81,14 @@ customInstructions: |
   DAILY: Write docs/reports/roo/daily_{YYYY-MM-DD}.md — pattern summary, blocker types, Gemini findings
   MONTHLY: Write docs/reports/roo/monthly_{YYYY-MM}.md — trend analysis, improvement recommendations
 
+  ### Creative Config — Show Names (updated 2026-04-19)
+  Show names now live in `jobSpec.designSpec.chrome.showName` and `jobSpec.designSpec.voice.showName`.
+  Source chain: CREATIVE_CONFIG_SPEC.md → c0.json → script_gen → jobSpec → Gate 4 Gemini prompt.
+  Show name values: clips=TALK SOUP, sports=OTHER SIDE OF THE PILLOW, news=BECAUSE THE LIGHT WAS ON.
+  Gate 4 Gemini prompt reads showName from `jobSpec.designSpec.chrome.showName`.
+  If Gate 4 flags wrong show name in video: check jobSpec.designSpec.chrome.showName is populated.
+  If it's empty: script_gen didn't write the voice fields (designSpec.voice write block in script_gen.js).
+
   ### Report Format (always include)
   - Gate: 4
   - Period: {hourly|daily|monthly}

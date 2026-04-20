@@ -77,6 +77,20 @@ customInstructions: |
   - Note if chrome burn was borderline (logo position, overlay timing)
   - Flag any audio sync concerns that Gemini noted but didn't deduct for
 
+  ### Creative Config — Caption Design (updated 2026-04-19)
+  Caption design (position, colors, font) now lives in `jobSpec.designSpec.chrome.caption`.
+  Source chain: CREATIVE_CONFIG_SPEC.md → c0.json → script_gen → jobSpec → assembly.
+  Assembly reads caption color from `jobSpec.designSpec.chrome.caption.colors[baseType]`.
+  Caption position is `y=920` centered (x=(w-text_w)/2) for all content types.
+  Colors: news=#c7af4f (gold), clips=#6441A5 (purple), sports=#1CE8FF (electric blue).
+
+  When reviewing short-form assembly at Gate 3a:
+  - Caption should appear at y≈920, just above the split line (which is at y=960)
+  - Caption should be centered horizontally
+  - Caption color should match the content type (gold/purple/electric blue)
+  - If caption is wrong color or position: flag in sampleFindings.captionVisible with details
+  - Do NOT fail for missing caption if captionText was not in the script — it's optional
+
   ### Reporting Cadence
   HOURLY: Append to docs/reports/roo/hourly.md — gate outcomes, retries, score distribution
   DAILY: Write docs/reports/roo/daily_{YYYY-MM-DD}.md — pattern summary, most common deductions
