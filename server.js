@@ -867,7 +867,8 @@ setImmediate(() => {
     console.log(`[startup-resume] ${scriptReadyCandidates.length} script_ready job(s) found — auto-sending to HeyGen (cap: ${MAX_SCRIPT_READY_RESUME})`);
     const toResumeScriptReady = scriptReadyCandidates.slice(0, MAX_SCRIPT_READY_RESUME);
 
-    for (const card of toResumeScriptReady) {
+    // Use async IIFE — setImmediate callback is not async so await requires this wrapper
+    (async () => { for (const card of toResumeScriptReady) {
       const jobId = card.jobId || card.id || card.scriptJobId;
       if (!jobId) { console.warn('[startup-resume:script_ready] Card has no jobId — skipping'); continue; }
       const contentType = card.contentType || 'twitch';
@@ -892,7 +893,7 @@ setImmediate(() => {
       } catch(e) {
         console.error(`[startup-resume:${jobId}] HeyGen send failed: ${e.message}`);
       }
-    }
+    } })().catch(e => console.error('[startup-resume:script_ready] Async error:', e.message));
   }
 });
 
