@@ -901,6 +901,16 @@ setImmediate(() => {
 // This listener owns Gate 2 QA + logging + assembly trigger + assembly completion polling.
 // Dashboard is view-only — it reads persistedJobs, never drives this flow.
 pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
+  // Concurrent job isolation guard: verify the card in persistedJobs matches the event's jobId
+  // and contentType. If a concurrent job mutated persistedJobs[jobId] with the wrong contentType,
+  // this guard aborts before assembly uses mismatched context (e.g. long-form assembled as short-form).
+  const _liveCard = persistedJobs[jobId];
+  if (_liveCard && _liveCard.contentType && _liveCard.contentType !== contentType) {
+    logger.error({ jobId, eventContentType: contentType, cardContentType: _liveCard.contentType },
+      'heygen:all_complete — contentType mismatch between event and persistedJobs card. Aborting assembly to prevent cross-job contamination.');
+    return;
+  }
+
   // Rebuild segmentData from card if null (e.g. emitted by startup resume after server restart)
   let segmentData = rawSegmentData;
   if (!segmentData) {
@@ -2321,8 +2331,12 @@ async function downloadEspnVideo(url, outPath) {
 // Scrapes the ESPN game page for the video with the highest duration
 // User requirement: "video on that page with the highest duration--top left of the game_id page"
 app.post('/nba/scrape-game-highlight', async (req, res) => {
-  const { gameId } = req.body;
+  const { gameId, formType } = req.body;
   if (!gameId) return res.status(400).json({ error: 'gameId required' });
+  // Short-form clips need 30-90s for split-screen. Long-form uses any duration ≥ 10s.
+  const isShortFormRequest = formType === 'short';
+  const minDurationSecs = isShortFormRequest ? 30 : 10;
+  const maxDurationSecs = isShortFormRequest ? 90 : null;
 
   try {
     console.log(`[nba-scrape] Fetching highlights for gameId: ${gameId} via ESPN Summary API`);
@@ -2381,18 +2395,20 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       });
     }
 
-    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting longest`);
+    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting ${isShortFormRequest ? 'best 30-90s clip for short-form' : 'longest clip for long-form'}`);
 
-    // Step 2: Use full video pool — select longest duration video.
-    // The game highlights reel is reliably the longest video (115s vs 40s for play clips).
+    // Step 2: Use full video pool — select best clip based on form type.
+    // Long-form: select longest duration (game highlights reel is reliably longest at 115s).
+    // Short-form: prefer clips in 30-90s range for split-screen; fall back to longest if none in range.
     // Keyword filtering on API metadata was removed: ESPN titles don't contain "highlight"
     // even when the page shows "Game Highlights", so the filter always returned 0 matches.
     const videoPool = videos;
-    console.log(`[nba-scrape]   Using full pool of ${videoPool.length} videos — will select longest duration`);
+    console.log(`[nba-scrape]   Using full pool of ${videoPool.length} videos`);
 
-    // Step 3: Find video with longest duration from the full pool
+    // Step 3: Find best video — prefer 30-90s range for short-form, longest for long-form
     let highestDurationVideo = null;
     let maxDuration = 0;
+    let shortFormPreferred = null;  // best clip in 30-90s range for short-form
 
     for (const video of videoPool) {
       const duration = video.duration || 0;
@@ -2400,10 +2416,27 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
 
       console.log(`[nba-scrape]   Video: "${title}" (${duration}s)`);
 
+      // Track the longest clip (long-form selection + short-form fallback)
       if (duration > maxDuration) {
         maxDuration = duration;
         highestDurationVideo = video;
       }
+
+      // Track best clip in 30-90s range for short-form (prefer longer within range)
+      if (isShortFormRequest && duration >= minDurationSecs && duration <= maxDurationSecs) {
+        if (!shortFormPreferred || duration > (shortFormPreferred.duration || 0)) {
+          shortFormPreferred = video;
+        }
+      }
+    }
+
+    // Short-form: use preferred 30-90s clip if found, otherwise fall back to longest
+    if (isShortFormRequest && shortFormPreferred) {
+      highestDurationVideo = shortFormPreferred;
+      maxDuration = shortFormPreferred.duration || 0;
+      console.log(`[nba-scrape] Short-form: selected ${maxDuration}s clip in target 30-90s range`);
+    } else if (isShortFormRequest) {
+      console.warn(`[nba-scrape] Short-form: no clip in 30-90s range found — falling back to longest (${maxDuration}s)`);
     }
 
     if (!highestDurationVideo) {
@@ -2439,13 +2472,13 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       });
     }
 
-    // Gate 0: Validate duration meets minimum threshold
-    if (maxDuration > 0 && maxDuration < 10) {
-      console.warn(`[nba-scrape] Gate 0 WARN: Best video for game ${gameId} is only ${maxDuration}s — below 10s minimum`);
+    // Gate 0: Validate duration meets minimum threshold (30s for short-form, 10s for long-form)
+    if (maxDuration > 0 && maxDuration < minDurationSecs) {
+      console.warn(`[nba-scrape] Gate 0 WARN: Best video for game ${gameId} is only ${maxDuration}s — below ${minDurationSecs}s minimum (formType: ${formType || 'long'})`);
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No valid highlight clips found for game ${gameId} — longest clip is only ${maxDuration}s (minimum: 10s)`
+        error: `No valid highlight clips found for game ${gameId} — longest clip is only ${maxDuration}s (minimum: ${minDurationSecs}s for ${isShortFormRequest ? 'short-form' : 'long-form'})`
       });
     }
 

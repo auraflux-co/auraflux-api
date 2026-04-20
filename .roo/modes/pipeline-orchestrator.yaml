@@ -132,6 +132,22 @@ customInstructions: |
   Diagnosis: Parallel thumbnail generation failed during Gate 3a window
   Action: Check assembly logs for "Thumbnail error", surface to Claude Code
 
+  **Pattern: Short-form NBA job got 9s clip (Gate 0 pass but assembly has nothing to work with)**
+  Diagnosis: Gate 0 minDurationSeconds was 10 for all templates — short-form needs 30s minimum.
+  Fix (2026-04-19): c0.json short-form gate0.minDurationSeconds=30, maxDurationSeconds=90.
+  gate0.js getMaxDurationSecs() now returns 90 for short-form (null for long-form).
+  Action: If Gate 0 still passing <30s clips for short-form, check that templateId is correctly
+  set to 'short-form' in jobSpec before gate0.run() is called. getMinDurationSecs() reads templateId.
+
+  **Pattern: NBA long-form assembled as short-form (portrait format, split-screen layout)**
+  Diagnosis: Concurrent NBA long-form + NBA short-form jobs — heygen:all_complete listener
+  read wrong contentType, triggering portrait assembly for landscape job.
+  Fix (2026-04-19): Concurrent isolation guard added at top of heygen:all_complete listener.
+  Guard checks persistedJobs[jobId].contentType === event.contentType before proceeding.
+  If mismatch detected, listener aborts with error log (no assembly) — requires manual re-trigger.
+  Action: If this guard fires, check logs for "contentType mismatch" — manual re-trigger via
+  ROLLBACK → FORCE ADVANCE on the affected job card.
+
   ### Customer 0 Production Health KPIs
   Track vs targets in every daily report:
   - End-to-end success rate (Gate 0 → Gate 5): target ≥85%
