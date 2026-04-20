@@ -58,7 +58,7 @@ Read logs/roo_status.json and logs/pipeline_events.jsonl for live state.
 NOTIFICATION
 
       log "Notification written to logs/roo_notification.md for job $JOB_ID"
-      log "Roo will pick this up on its next message cycle (open Cursor → Roo → send any message)"
+      log "Roo will pick this up on its next message cycle (open VS Code → Roo → send any message)"
     fi
   fi
 
