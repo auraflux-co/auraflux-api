@@ -26,18 +26,22 @@
 
 ## Status When You Wake Up
 
-**Synth test was still running when I committed.** Check for output:
-```bash
-ls -lt output/*.mp4 | head -6
-# Look for news_synth / twitch_synth / nba_synth from today
-```
+**Synth test completed ✅ — all 3 content types assembled successfully.**
 
-If output files exist — open them and verify:
-- Flag is flush to left edge, does NOT cover Bobby G's face (88px max)
+| Content Type | Output File | Size |
+|---|---|---|
+| News | news_synth_test_3clips_asm_1776663598384.mp4 | 18.4 MB |
+| Twitch | twitch_synth_test_1clips_asm_1776663769570.mp4 | 6.6 MB |
+| NBA | nba_synth_test_1clips_asm_1776663907705.mp4 | 5.1 MB |
+
+**Open these and visually verify:**
+- Flag is flush to left edge, does NOT cover Bobby G's face (88px max — was 110px before fix)
 - Sidebar cards visible on the right side for all 3 content types
 - News: 3 story cards (Ceasefire / Markets / Amazon)
 - Twitch: Jason card with "New York · Just hit 50k subs"
 - NBA: Lakers vs Celtics card
+
+If chrome looks correct → short-form test next, then Render.
 
 ---
 
