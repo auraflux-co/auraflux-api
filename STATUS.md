@@ -127,7 +127,9 @@ You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js
 5. **Synth test review** — review the 4 synth test outputs Rob already has open (News/Twitch/NBA/Short). QA notes in conversation: news sidebar cards visible ✅, artifact (black/white block ~x:1170 y:300) may be double-burn of logo — check assembly.js logo overlay for duplicate filters.
 6. **If tests keep failing → Render deploy** — Docker is ready, Dockerfile is complete. When Rob says go, spawn Sub-Agent A (render.yaml + server config) and Sub-Agent B (env vars, Postgres migration).
 
----
+### Note — planning captured on `origin/main` (2026-04-18)
+
+Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic assembly QA, and PM2 vs nodemon landed on `main`. **Operational truth for Phase A stays in the header above** (`GATE_TEST_MODE=false` for live HeyGen when running the agreed sheet). Older `main` copy referred to `GATE_TEST_MODE=true` for staged Gate 1 testing — do not mix with Phase A live runs. Optional: `MORNING_BRIEFING.md` (if present) may hold gate drill / briefing context from that period.
 
 ---
 
