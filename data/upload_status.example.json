@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0",
+  "created": "1970-01-01T00:00:00.000Z",
+  "description": "Example schema only. Copy to data/upload_status.json (gitignored) or omit — first publish creates the file.",
+  "uploads": []
+}
