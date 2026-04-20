@@ -30,20 +30,78 @@
       },
       "designDefaults": {
         "chrome": {
-          "templateFile": "tools/clipzworld_newscast.html",
-          "skins": {
+          "name": "BECAUSE THE LIGHT WAS ON",
+
+          "colors": {
+            "primary":    "#22304b",
+            "accent":     "#c7af4f",
+            "active":     "#C0392B",
+            "text":       "#ffffff",
+            "background": "#0d1424"
+          },
+
+          "topBar": {
+            "height": 48,
+            "episodePrefix": "Episode"
+          },
+
+          "flag": {
+            "width": 620,
+            "height": 88,
+            "borderWidth": 4,
+            "maxTitleChars": 50,
+            "categoryLabel": {
+              "news":   "WORLD NEWS",
+              "clips":  "ON STREAM",
+              "sports": "NBA GAME"
+            }
+          },
+
+          "sidebar": {
+            "top": 120,
+            "rightMargin": 32,
+            "width": 420,
+            "itemHeight": 90,
+            "itemGap": 12,
+            "maxItems": 5,
+            "borderWidth": 4,
+            "activeBorderWidth": 5
+          },
+
+          "logo": {
+            "asset": "assets/cwn_logo.png",
+            "x": 1725,
+            "y": 910,
+            "size": 90,
+            "opacity": 0.85
+          },
+
+          "font": {
+            "headline": "assets/fonts/BebasNeue-Regular.ttf",
+            "body":     "assets/fonts/BarlowCondensed-SemiBold.ttf",
+            "small":    "assets/fonts/BarlowCondensed-Regular.ttf"
+          },
+
+          "contentTypeOverrides": {
             "news": {
-              "accentColor": "#C41E3A",
-              "accentColor2": "#8B0000"
+              "name": "BECAUSE THE LIGHT WAS ON",
+              "colors": { "primary": "#22304b", "accent": "#c7af4f", "active": "#C0392B" }
             },
             "clips": {
-              "accentColor": "#6441A5",
-              "accentColor2": "#4B2D8F"
+              "name": "TALK SOUP",
+              "colors": { "primary": "#6441A5", "accent": "#7d5bbe", "active": "#6441A5" }
             },
             "sports": {
-              "accentColor": "#17408B",
-              "accentColor2": "#C9082A"
+              "name": "OTHER SIDE OF THE PILLOW",
+              "colors": { "primary": "#17408B", "accent": "#1a4fa8", "active": "#C9082A" }
             }
+          },
+
+          "templateFile": "tools/clipzworld_newscast.html",
+          "skins": {
+            "news":   { "accentColor": "#C41E3A", "accentColor2": "#8B0000" },
+            "clips":  { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
+            "sports": { "accentColor": "#17408B", "accentColor2": "#C9082A" }
           },
           "logoPosition": "bottom-right-mug",
           "logoSize": 120,
