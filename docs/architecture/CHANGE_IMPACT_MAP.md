@@ -135,6 +135,24 @@ Assembly uses localFileTypes[] parallel array for type tracking (no filename pat
 
 ---
 
+### If you change SCRIPT GEN — job spine (linkScriptJob, 2026-04-19)
+
+After Gate 1 passes and `saveJobCard` is called, `script_gen.js` calls `linkScriptJob(semanticJobId, scriptJobId)`
+from `lib/job_spec.js`. This writes the `script_*` job ID back to the `c0_*` row's `script_job_id` column.
+
+**If you change this:**
+- `job_spec.js` `linkScriptJob()` function — reads `jobs.id` and writes `jobs.script_job_id`
+- All gate owner YAMLs include JOIN query using `script_job_id` — update if column name changes
+- `pipeline-orchestrator.yaml` references the column by name — update if changed
+
+**If you rename `jobs.script_job_id`:**
+- `lib/db.js` migration DDL
+- `lib/job_spec.js` `linkScriptJob()`
+- `lib/job_spec.js` `getJobSpec()` fallback query at ~line 345
+- All 7 gate owner YAMLs
+
+---
+
 ### If you change SCRIPT GEN — HeyGen submission (sendScriptToHeyGen)
 
 **What breaks:**
@@ -192,6 +210,15 @@ Assembly uses localFileTypes[] parallel array for type tracking (no filename pat
 **Also update:**
 - customerConfig gate2 thresholds if pass/review points change
 - gate2-owner.yaml if outcome types change
+
+---
+
+### If you change ASSEMBLY (lib/assembly.js) — news clip re-scrape
+
+**Context (2026-04-19):** `scrapeArticleVideo` is now imported from `lib/script_gen.js` in `assembly.js`.
+If `scrapeArticleVideo` is renamed or its export changes:
+- `assembly.js` line 17 `require('./script_gen')` destructure must be updated
+- The re-scrape block (lines ~1195-1207) must be re-tested with a news job
 
 ---
 

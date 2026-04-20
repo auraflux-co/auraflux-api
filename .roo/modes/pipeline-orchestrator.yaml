@@ -69,6 +69,10 @@ customInstructions: |
   **SQLite DB (ground truth):**
   - gate_results: all gate outcomes with full result JSON (scores, deductions, concerns)
   - jobs: job stage progression, drive URLs, published status
+  - jobs.script_job_id: links c0_* semantic job ID to script_* pipeline job ID (2026-04-19)
+    Gate results are stored under script_* IDs. To query gate results for a c0_* job:
+    `SELECT gr.* FROM gate_results gr JOIN jobs j ON gr.job_id = j.script_job_id WHERE j.id = 'c0_ID'`
+    Or: `SELECT id, script_job_id FROM jobs WHERE id LIKE 'c0_%' ORDER BY created_at DESC LIMIT 10`
   - job_metrics: per-stage timing (script gen, HeyGen, assembly, QA)
   - heygen_renders: per-segment render status, detect silent renders
   - publish_results: per-platform upload outcomes

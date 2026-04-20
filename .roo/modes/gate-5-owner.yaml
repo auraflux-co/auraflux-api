@@ -36,6 +36,13 @@ customInstructions: |
   Read gate results from: data/cwn.db table gate_results WHERE gate = 'gate5'
   Read job specs from: data/cwn.db table jobs
 
+  ### Job Spine — c0_* to script_* ID linking (updated 2026-04-19)
+  Gate results are saved under script_* job IDs. Semantic job specs use c0_* IDs.
+  After Gate 1 passes, jobs.script_job_id links the two. To find gate results for a semantic job:
+    `sqlite3 data/cwn.db "SELECT gr.job_id, gr.passed, gr.score FROM gate_results gr JOIN jobs j ON gr.job_id = j.script_job_id WHERE j.id = 'c0_ID_HERE' AND gr.gate='gate5'"`
+  Or look up the script_job_id for any c0_* job:
+    `sqlite3 data/cwn.db "SELECT id, script_job_id FROM jobs WHERE id LIKE 'c0_%' ORDER BY created_at DESC LIMIT 5"`
+
   ### Decision Making
   On PASS (job_id confirmed on all platforms): log to docs/reports/roo/hourly.md, record delivery URLs
   On partial_fail: retry failed platforms (max 3), mark job as partial if one platform irreversibly fails
