@@ -54,15 +54,15 @@ tail -n 50 logs/errors.jsonl
 Filter for: PIPELINE_ESCALATION, JOB_KILLED, MONITORING_CODE_FIX_NEEDED.
 Each one needs a docs/reports/roo/escalation_{timestamp}.md if not already filed.
 
-### Step 6 — Check notification file
+### Step 6 — Check autostart + notification files
 ```
-cat logs/roo_notification.md
+cat .roo/autostart.json 2>/dev/null; cat logs/roo_notification.md 2>/dev/null
 ```
-If this file exists and is non-empty — a new job was detected by roo_watcher.sh.
-Read the jobId and content type, begin active watch mode for that job.
-Delete the file after reading so it doesn't repeat:
+If either file exists — a new job was detected automatically.
+Read the jobId and content type, begin active watch mode.
+Delete both after reading:
 ```
-rm logs/roo_notification.md
+rm -f .roo/autostart.json logs/roo_notification.md
 ```
 
 ---
