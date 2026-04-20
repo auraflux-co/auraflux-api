@@ -1,8 +1,9 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-20 (overnight agent run)
-**Branch:** aider/render-readiness-docs (local) | remote main has 04/18 planning note
-**🧪 GATE_TEST_MODE=true IN .ENV** — Pipeline stops after Gate 1. No HeyGen auto-send until all 6 Gate 1 tests pass.
+**Last Updated:** 2026-04-20 (Claude Code — chrome fixes + synth test)
+**Branch:** aider/test-suite
+**🧪 GATE_TEST_MODE=false** — Pipeline runs end-to-end. HeyGen IS active. Run synth tests before any live job.
+**🎯 PRIORITY:** Get synth test passing all 3 content types → then Render deploy
 **How to start a session:** Read CLAUDE.md → STATUS.md → tell the agent what to work on
 
 ---
@@ -86,6 +87,7 @@ You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
 |-------|---------------|---------------|--------|-----------|
+| Claude Code | **fix(chrome): flag height capped at 88px, Twitch sidebar reads cardData from segments** — Two bugs fixed from tonight's production run: (1) chrome_overlay_ffmpeg.js line 237 was expanding flag to 110px for 2-line titles, covering Bobby G's face (face starts y=120, flag was reaching y=158). Fixed: flag always stays 88px; 2-line titles use fontsize=20 instead of 28. (2) assembly.js Twitch branch was reading streamerRoster for sidebar (empty in synth and new pipeline jobs). Fixed: first checks INTRO segment cardData like NBA/News do, falls back to streamerRoster. (3) synth_assembly_test.js Twitch payload was missing cardData on JASON_INTRO segment — added to match News/NBA pattern. Synth test running to verify all 3 content types assemble with correct chrome. | lib/chrome_overlay_ffmpeg.js, lib/assembly.js, test/synth_assembly_test.js, STATUS.md | — | 2026-04-20 |
 | Aider | **chore(overnight): check for overnight tasks; none found** — OVERNIGHT_TASKS.md was empty. Updated MORNING_BRIEFING.md to reflect no-op run. Also updated commit checklist. | docs/ops/COMMIT_CHECKLIST.md, MORNING_BRIEFING.md, OVERNIGHT_TASKS.md, STATUS.md | — | 2026-04-20 |
 | Claude Code (worktree) | **feat(pipeline): pre-generate scaffold + complete spec + full QA context** — createJobSpec() now runs generateScaffold() when items provided (scaffold text + sceneHeaders + expectedClipCount in designSpec at job creation). Voice/chrome resolved from customerConfig into designSpec.voice at createJobSpec() time. Gate 0 canProduce() is now content-type-aware: news→GEMINI+Puppeteer, clips→TWITCH_TOKEN+CLIENT_ID, sports→GEMINI+ffprobe. Gate 0 commit() includes sceneCount+clipCount. Gate 1 canProduce() has PRE-GENERATE mode (checks spec completeness without requiring filledScript) and RUN mode. Gate 1 Claude prompt receives full spec context: lockedIntro, lockedOutro, prohibitedWords, sceneHeaders, items; new deductions for lockedIntroCorrect=false (-15), lockedOutroCorrect=false (-15), prohibitedWordsFound (-10 each), itemAccuracyIssues (-10 each). Gate 3a: flagAccurate+sidebarAccurate added to Gemini prompt and JSON response; prepare() logs clip positions + item titles. Gate 4: itemsOrdered+categoryLabel in Gemini prompt; flagAccurate=false and sidebarAccurate=false treated as BLOCKERs. script_gen.js: reads pre-generated scaffold from jobSpec if available (else fallback to generate); items injected into jobSpec.order.inputs.items at script-gen time; voice write block skips if already resolved. Roo YAMLs: gate-0/1/3a/4-owner updated. CHANGE_IMPACT_MAP.md: pre-generate blast radius section added. | lib/job_spec.js, lib/gates/gate0.js, lib/gates/gate1.js, lib/gates/gate3a.js, lib/gates/gate4.js, lib/script_gen.js, .roo/modes/gate-0-owner.yaml, .roo/modes/gate-1-owner.yaml, .roo/modes/gate-3a-owner.yaml, .roo/modes/gate-4-owner.yaml, docs/architecture/CHANGE_IMPACT_MAP.md | — | 2026-04-19 |
 | Claude Code | **feat(versioning): git hash + auto version bump** — /health now returns version, gitHash, gitBranch, lastCommit, deployedAt. BUILD_INFO set at startup. Pre-commit hook auto-bumps package.json patch on every commit. No more running old code without knowing it. | server.js, scripts/pre-commit.sh, STATUS.md | — | 2026-04-20 |

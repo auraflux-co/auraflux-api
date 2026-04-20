@@ -110,7 +110,7 @@ function twitchPayload() {
     expectedClips: 1,
     segmentData: [
       { ...avatar('INTRO',          'av_10s.mp4') },
-      { ...avatar('JASON_INTRO',    'av_10s.mp4') },
+      { ...avatar('JASON_INTRO',    'av_10s.mp4'), cardData: { title: 'Jason', displayName: 'Jason', category: 'ON STREAM', storyId: 'streamer_0', origin: 'New York', fact: 'Just hit 50k subs' } },
       { ...avatar('JASON_CLIP1_SETUP',    'av_10s.mp4') },
       { ...clip(  'JASON_CLIP1',    'clip_16x9_10s.mp4') },
       { ...avatar('JASON_CLIP1_REACTION', 'av_10s.mp4') },
