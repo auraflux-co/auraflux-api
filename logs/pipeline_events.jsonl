@@ -916,3 +916,4 @@
 {"ts":"2026-04-20T21:58:42.421Z","type":"gate:escalate","jobId":"c0_COMPACT_DIRECT_nba_1776721645080","gate":"unknown","reason":"Gate worker silent for 11 minutes at gate unknown","trailLength":0}
 {"ts":"2026-04-20T22:02:42.422Z","type":"gate:escalate","jobId":"c0_COMPACT_DIRECT_news_1776721885770","gate":"unknown","reason":"Gate worker silent for 11 minutes at gate unknown","trailLength":0}
 {"ts":"2026-04-20T22:02:42.425Z","type":"gate:escalate","jobId":"c0_COMPACT_DIRECT_twitch_1776721927925","gate":"unknown","reason":"Gate worker silent for 11 minutes at gate unknown","trailLength":0}
+{"ts":"2026-04-20T22:06:42.423Z","type":"gate:escalate","jobId":"c0_EXTRACT_DIRECT_nba-short_1776722120446","gate":"unknown","reason":"Gate worker silent for 11 minutes at gate unknown","trailLength":0}
