@@ -1,0 +1,17 @@
+Phase A batch → http://127.0.0.1:3000 (script timeout 720000ms)
+Health OK — ok HeyGen
+⚠ VectCut offline in /health — NBA overlay / some shorts may degrade; continuing.
+
+════════════ 1) NBA long-form (1 clip) ════════════
+OK 121.3s — metricsJobId=script_nba_1776721645087 words=438 geminiHits=1
+
+════════════ 2) News long-form (1 clip) ════════════
+OK 41.5s — metricsJobId=script_news_1776721885773 words=204 geminiHits=0
+
+════════════ 3) Twitch long-form — Jason — 2 clips ════════════
+OK 166.6s — metricsJobId=script_twitch_1776721927930 words=170 geminiHits=1
+
+════════════ 4) NBA short-form ════════════
+OK 79.3s — metricsJobId=script_nba-short_1776722120450 words=56 geminiHits=1
+
+✅ Phase A batch finished all four /generate-full-script calls.

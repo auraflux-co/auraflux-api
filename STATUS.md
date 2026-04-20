@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-21 (Cursor — Phase A: HeyGen ON for agreed run sheet)
+**Last Updated:** 2026-04-21 (Cursor — Phase A live script batch logged + `git add`)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `CLAUDE.md` → tell the agent the **current focus** bullet below.
@@ -20,13 +20,13 @@
 
 ### Codebase assessment (living — update when checkpoints change)
 
-**Last assessed:** 2026-04-21 (Cursor)
+**Last assessed:** 2026-04-21 (Cursor — live script batch + Jest)
 
 | Area | State | Notes |
 |------|--------|------|
 | **Jest (`npm test` / `npm run test:all`)** | ✅ **44/44 pass** | Suites: `test/ffmpeg_utils.test.js`, `test/pipeline_qa.test.js`, `test/pipeline_adversarial.test.js`. |
 | **`test/run_tests.js`** | ✅ Fixed | Was invoking Jest files with **plain Node** → `ReferenceError: test is not defined`. Now delegates to **Jest** (`--runInBand`). |
-| **Phase A E2E matrix** | ⬜ Not replaced by unit tests | **Agreed run sheet:** HeyGen **required** (live). Expect API spend for the four configured runs. |
+| **Phase A E2E matrix** | 🟡 **Script path exercised** | Four agreed configs ran via `scripts/phase_a_batch.cjs` → `POST /generate-full-script` (live keys). **Not** full bar to Drive until HeyGen + assembly rows are logged separately. VectCut was **offline** in `/health` during run. |
 | **`npm run format:check`** | Not run this session | Large diff possible — run when you want a formatting pass. |
 | **`npm run load-test:health`** | Needs API on :3000 | Phase C — safe (GET `/health` only). |
 
@@ -68,7 +68,7 @@
 
 ### Current focus (update every working session)
 
-- **Today:** Execute **Phase A agreed run sheet** (four runs: NBA 1-clip LF → News 1-clip LF → Twitch 2-clip LF Jason → NBA short) with **HeyGen live**. Log each in **E2E log** with Actor + job IDs.
+- **Today:** Confirm **HeyGen → assembly → gates** for the four script jobs below (dashboard or server logs); then optional **L1–L3** full long-form. Transcript: `docs/reports/phase_a_live_script_batch.txt`.
 - **Blocked by:** _(secrets → `docs/ops/REQUIRED_API_KEYS.md`; paste keys only in env/Render, not in chat)_
 
 **Attribution:** Progress here may come from **Rob (product owner)** or from an **automation agent** (e.g. **Claude Code**, **Cursor**, Cline, Roo). Not every row is a manual operator run. Use the **Actor** column in the log so it is explicit who kicked off or recorded the run.
@@ -78,6 +78,10 @@
 | Date | Actor | Run | Job ID(s) | Result | Notes |
 |------|-------|-----|-----------|--------|------|
 | 2026-04-21 | Cursor | Jest unit + integration (npm test / npm run test:all) | — | Pass | 44/44; test:all runner fixed to use Jest (was broken). |
+| 2026-04-21 | Cursor | Phase A 1 — NBA LF 1-clip (`/generate-full-script`) | script_nba_1776721645087 | Pass | ~121s, 438 words; `phase_a_batch.cjs`. |
+| 2026-04-21 | Cursor | Phase A 2 — News LF 1-clip | script_news_1776721885773 | Pass | ~42s, 204 words. |
+| 2026-04-21 | Cursor | Phase A 3 — Twitch LF Jason 2 clips | script_twitch_1776721927930 | Pass | ~167s, 170 words. |
+| 2026-04-21 | Cursor | Phase A 4 — NBA short | script_nba-short_1776722120450 | Pass | ~79s, 56 words. |
 | | | | | | |
 
 ---
@@ -161,7 +165,9 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
-| Agent | Task Completed | Files Changed | Commit | Timestamp |\n| Claude Code | **fix(assembly): remove missed categoryId hardcode + QA all 13 removals** — Removed last content-type categoryId branch at line 2592. QA confirmed: all spec reads (mixMode, clipIntroSkipSecs, clipMaxSecs, sourceCropFilter, watermarkBox) flow correctly via buildDesignSpec(). Synth 4/4 PASS. v1.0.9 live. | lib/assembly.js, STATUS.md | — | 2026-04-21 |
+| Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **Live Phase A script batch** — `scripts/phase_a_batch.cjs`: 4× `POST /generate-full-script` (NBA LF, News LF, Twitch Jason×2, NBA short). All OK; metricsJobIds in E2E log. `/health`: VectCut offline. Transcript: `docs/reports/phase_a_live_script_batch.txt`. | STATUS.md, docs/reports/phase_a_live_script_batch.txt | — | 2026-04-21 |
+| Claude Code | **fix(assembly): remove missed categoryId hardcode + QA all 13 removals** — Removed last content-type categoryId branch at line 2592. QA confirmed: all spec reads (mixMode, clipIntroSkipSecs, clipMaxSecs, sourceCropFilter, watermarkBox) flow correctly via buildDesignSpec(). Synth 4/4 PASS. v1.0.9 live. | lib/assembly.js, STATUS.md | — | 2026-04-21 |
 | Sub-Agent A | **refactor(pipeline): remove 13 bad fallbacks — req.body.items is authoritative, no content-type inference** — Removed all 13 hardcoded fallback code paths: (1) gwJobSpec items constructor now uses `inputs: { items: [] }` — real items always written in the unconditional injection block below. (2) Items injection guard `&&(!gwJobSpec?.order?.inputs?.items?.length)` removed — unconditional write. (3) All three PHASE3_INLINE_FALLBACK blocks deleted (twitch/nba/news inline source fetching) — source modules handle this; catch now re-throws instead of swallowing. `_sourceModuleLoaded` flag removed entirely. (4-6) assembly.js legacy activeIdx/allStories fallback chains replaced with error-log+safe-zero; streamerRoster loading block deleted (only used in removed fallbacks). (7) Three hardcoded `contentType === 'news' ? '25' : contentType === 'sports' ? '17' : '24'` categoryId branches replaced with `|| '24'` — value must come from jobSpec. (8) `|| contentType === 'nba'` voiceover fallback removed; spec read path fixed to `designSpec.assembly[_asmCtKey].mixMode` (correct per-content-type key). (9-11) watermarkBox, sourceCropFilter reads fixed to use `_asmCfg = designSpec.assembly[_segCtKey]` — c0.json has all values in assemblyConfig.{news,clips,sports}. (12) `(contentType === 'news') ? LOGO_POS_NEWS : LOGO_POS` removed — both were identical. (13) Hardcoded avatar/voice UUID fallbacks removed; env var path preserved as legitimate platform constraint. | lib/script_gen.js, lib/assembly.js, STATUS.md | — | 2026-04-20 |
 | Claude Code | **fix(downloader): allow absolute local paths for synth prebuild** — `downloadFile()` was rejecting absolute file paths (`/tmp/synth_prebuild/av.mp4`) with "URL blocked: not from trusted domain". The SSRF domain check doesn't apply to local files. Added early return: if url starts with `/` and file exists on disk, copy directly to destPath. Unblocks synth prebuild file paths set by Fix 1 in the 4-fix batch. | lib/downloader.js, STATUS.md | — | 2026-04-21 |
 |-------|---------------|---------------|--------|-----------|
