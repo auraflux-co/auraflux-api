@@ -418,6 +418,124 @@ Each item is tagged with one MoSCoW tier and a `Blocks` field naming downstream 
 
 ---
 
+---
+
+## Bucket 5 — Platform Ownership (Direct API + TubeBuddy Lite)
+
+**Strategic context:** Upload-Post and TubeBuddy are middlemen calling the same YouTube, TikTok, and Instagram APIs that AuraFlux has direct access to. The path to full platform ownership is phased — Upload-Post stays until direct is proven, then removed. TubeBuddy stays as a personal tool until AuraFlux Analytics replaces its value with customer-specific data.
+
+**Why this matters for Customer 1:** A customer publishing through AuraFlux direct owns their analytics relationship. AuraFlux knows their specific audience, their specific content performance, their specific best publish windows. That data moat is what makes AuraFlux defensible — competitors can't replicate it because it's built from each customer's own channel data.
+
+### 🔴 Must-Have (Phase 2 — Render deploy prerequisite)
+
+- **Pre-publish validator against platform API limits**
+  - **What:** Hard gate before Upload-Post fires. Validates every field against YouTube (title ≤100 chars, description ≤5000 bytes, tags ≤500 chars total), TikTok (caption ≤2200 UTF-16 runes, no scheduling), Instagram (caption ≤2200 chars, ≤30 hashtags, Reels ≤15min/300MB) limits. Fails loudly with specific field + limit + current value.
+  - **Why:** Currently no validation — Upload-Post rejects silently or truncates. Platform API limits documented in `docs/architecture/PIPELINE_CONTRACT_SPEC.md`.
+  - **Blocks:** reliable upload, Customer 1 readiness
+  - **Effort:** S
+  - **Source:** `CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md`, `docs/specs/PUBLISH_COPY_SPEC.md`
+
+- **Publish copy overhaul — ChatGPT-quality output**
+  - **What:** Rewrite `handleGeneratePublishCopy()` to produce: timestamps from actual segment durations, 5 A/B title variants, 4 thumbnail text options, content-type specific categoryId, channel handle variable in pinned comment, full hashtag sets per show, per-platform captions. Reference format: `docs/specs/PUBLISH_COPY_SPEC.md`.
+  - **Why:** Rob uses ChatGPT instead of the endpoint. Every published video requires manual work that should be automated.
+  - **Blocks:** full autonomous publish pipeline
+  - **Effort:** M
+  - **Source:** `CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md`, memory `feedback_title_desc_generator`
+
+- **Upload-Post wiring fix**
+  - **What:** `thumbnail_url` + `pinnedComment` required (hard fail if missing, not silent drop). Hashtags appended to description footer. Tags always sent from publish-copy. categoryId from publish-copy not hardcoded. TikTok full caption not 90-char truncated. embeddable/license/publicStatsViewable always sent.
+  - **Why:** Critical fields silently dropped today — YouTube gets black frame thumbnails, no pinned comment, wrong category.
+  - **Blocks:** upload quality
+  - **Effort:** S
+  - **Source:** `CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md`
+
+### 🟠 Should-Have (Phase 2 — after Render deploy)
+
+- **Direct YouTube upload (alongside Upload-Post)**
+  - **What:** Implement YouTube Data API v3 `videos.insert` directly in AuraFlux. One endpoint, two providers (Upload-Post or direct), same Job Spec. Customer or operator selects provider. Scheduling via `privacyStatus: PRIVATE` + `publishAt`.
+  - **Why:** Removes Upload-Post dependency for YouTube. Enables title updates (`videos.update`), analytics reads, and scheduling from the same auth flow.
+  - **Blocks:** title switcher (post-publish), analytics integration, content calendar
+  - **Effort:** L
+  - **Source:** 2026-04-18 platform ownership strategy discussion
+
+- **Direct TikTok posting (alongside Upload-Post)**
+  - **What:** Implement TikTok Content Posting API directly. `privacy_level: SELF_ONLY` for private drafts. Note: TikTok has no scheduling API — post immediately or use SELF_ONLY + manual flip.
+  - **Why:** Removes Upload-Post dependency for TikTok. Direct control over caption, privacy, AI disclosure flags.
+  - **Blocks:** full Upload-Post removal
+  - **Effort:** M
+  - **Source:** 2026-04-18 platform ownership strategy discussion
+
+- **Direct Instagram posting (alongside Upload-Post)**
+  - **What:** Implement Instagram Graph API directly. Reels via `media_type: REELS`. Scheduling via `published: false` + `scheduled_publish_time`. Rate limit: 100 posts/24h.
+  - **Why:** Removes Upload-Post dependency for Instagram. Direct control over caption, hashtags, scheduling.
+  - **Blocks:** full Upload-Post removal
+  - **Effort:** M
+  - **Source:** 2026-04-18 platform ownership strategy discussion
+
+- **Post-publish outcome card in dashboard**
+  - **What:** After upload confirms, surface a card showing: all platform statuses, thumbnail applied, title used, pinned comment posted. Manual items: end screen + cards (add in Studio — can't be automated), chapters (verify YouTube parsed them — add manually if not), playlist (assign in Studio). Title switcher reads stored alternatives from Job Spec. Flip to public button.
+  - **Why:** Customer sees outcomes not instructions. Everything automatic shown as ✅. Three Studio deep links for what genuinely can't be automated.
+  - **Blocks:** Customer 1 UX
+  - **Effort:** M
+  - **Source:** `CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md`, 2026-04-18 discussion
+
+- **Thumbnail auto-generation via Gemini Imagen + Canva**
+  - **What:** Claude selects template variant (reaction/drama/funny/clean) + hook text from publish-copy output → Gemini Imagen generates background image from ChatGPT-style prompt → Canva autofill (image + hook text) → export → `thumbnail_url` in upload package. Long-form only — Shorts use `cover_timestamp`.
+  - **Why:** Thumbnail currently manual — operator exports from Canva each time. Auto-generation means thumbnail goes with the video automatically.
+  - **Blocks:** fully automatic upload package
+  - **Effort:** L (Gemini Imagen integration + Canva autofill wiring)
+  - **Source:** `docs/specs/PUBLISH_COPY_SPEC.md`, 2026-04-18 discussion
+
+### 🟡 Could-Have (Phase 3 — Customer 1 readiness)
+
+- **Remove Upload-Post entirely**
+  - **What:** Once direct YouTube + TikTok + Instagram are proven in production, remove Upload-Post dependency. All publishing goes direct. `UPLOADPOST_API_KEY` removed from env.
+  - **Why:** Cost reduction ($50/mo flat), full ownership of publish flow, no third-party dependency for core function.
+  - **Blocks:** nothing
+  - **Effort:** S (removal only — direct APIs already built by this point)
+  - **Depends on:** Direct YouTube + TikTok + Instagram all stable in production
+  - **Source:** 2026-04-18 platform ownership strategy discussion
+
+- **YouTube Analytics integration (TubeBuddy lite — Phase 1)**
+  - **What:** Pull YouTube Analytics API data per customer channel: CTR by title, retention by content type, views by publish day/time. Surface in AuraFlux dashboard as a performance panel per job. Use data to generate content calendar suggestions.
+  - **Why:** TubeBuddy shows this data via browser extension. AuraFlux can show it in the dashboard, specific to each customer's channel, without a subscription or ToS risk. CTR per title enables real A/B tracking not just guessing.
+  - **Blocks:** data-driven content calendar, Customer 1 data moat
+  - **Effort:** L
+  - **Depends on:** Direct YouTube upload (same OAuth flow)
+  - **Source:** 2026-04-18 platform ownership strategy discussion
+
+- **Content calendar — audience-data driven**
+  - **What:** Replace generic "post at 7pm Tuesday" suggestions with suggestions derived from each customer's actual YouTube Analytics (when their specific audience is online, what days/times their videos perform best). Show in scheduling UI at `app.auraflux.co`. Customer selects suggested time or picks their own. Selection saved to `deliverySpec.scheduledAt` in Job Spec.
+  - **Why:** Current Customer 0 scheduling is manual in YouTube Studio. Customer 1 needs it in the AuraFlux dashboard with data behind the suggestions.
+  - **Blocks:** full scheduling autonomy for Customer 1
+  - **Effort:** L
+  - **Depends on:** YouTube Analytics integration, direct YouTube upload (for `publishAt`)
+  - **Source:** `docs/architecture/PIPELINE_CONTRACT_SPEC.md` scheduling section, 2026-04-18 discussion
+
+- **YouTube Search Console integration (TubeBuddy lite — Phase 2)**
+  - **What:** Pull YouTube Search Console / keyword data via YouTube Data API. Surface tag performance, search impression data, keyword opportunities per content type. Claude uses this data to improve tag and title generation in publish copy.
+  - **Why:** TubeBuddy's tag suggestions use search volume data. AuraFlux can approximate this from each customer's own search impression data — more relevant than generic keyword research.
+  - **Blocks:** nothing
+  - **Effort:** L
+  - **Depends on:** YouTube Analytics integration
+  - **Source:** 2026-04-18 platform ownership strategy discussion
+
+### ⚪ Won't-Have (yet)
+
+- **YouTube cards + end screens via API**
+  - **Why:** YouTube Data API does not support cards or end screens. Manual in YouTube Studio — confirmed no automation path. Dashboard post-publish card surfaces these as manual items with Studio deep links.
+
+- **TikTok scheduling via API**
+  - **Why:** TikTok Content Posting API does not support scheduling. Posts immediately. Workaround: upload as `SELF_ONLY` (private), dashboard shows reminder to flip at scheduled time manually.
+
+- **A/B thumbnail testing via API**
+  - **Why:** No platform API supports A/B thumbnail testing. TubeBuddy wraps YouTube's internal experiment system which is not publicly accessible. AuraFlux approach: store 5 title variants + 4 thumbnail text options in Job Spec, operator switches via dashboard, CTR tracked via Analytics integration.
+
+- **TubeBuddy API integration**
+  - **Why:** TubeBuddy has no public API. Browser extension only. Automation would violate their ToS and YouTube's API terms. Not viable. AuraFlux builds the equivalent value directly from YouTube APIs.
+
+---
+
 ## Maintenance notes
 
 - **When a new post-test item surfaces in conversation or a doc:** add it to the correct bucket with all 5 fields. Don't just drop it in without Blocks + Effort + Source.
@@ -431,3 +549,4 @@ Each item is tagged with one MoSCoW tier and a `Blocks` field naming downstream 
 | Date | Change |
 |------|--------|
 | 2026-04-12 | Doc created. Harvested from STATUS.md Tech Debt, POST_PUBLISH_TASKS.md §2–4, OVERNIGHT_TASKS.md (QUEUED + INDEPENDENT + BLOCKED), CLAUDE.md Pending Features, GATED_PIPELINE_ARCHITECTURE.md §4.4, SERVER_SPLIT_PLAN.md, HEYGEN_OPTIONS_INVENTORY.md, memory files. ~45 items across 4 buckets. |
+| 2026-04-18 | Added Bucket 5 — Platform Ownership. Strategy: Upload-Post and TubeBuddy are middlemen calling the same APIs AuraFlux has direct access to. Phase 2: direct YouTube/TikTok/Instagram alongside Upload-Post. Phase 3: Upload-Post removed, full direct ownership. Phase 3+: YouTube Analytics + Search Console integration = TubeBuddy lite, data-driven content calendar per customer. TubeBuddy (no API, ToS violation risk) documented as Won't-Have. Cards/end screens/TikTok scheduling/A/B thumbnails all confirmed as platform limitations — documented in Won't-Have with AuraFlux workarounds. Also: publish copy overhaul + upload-post wiring fix promoted to Must-Have (handoff written: CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md). Railway references updated to Render throughout. |

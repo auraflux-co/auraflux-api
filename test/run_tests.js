@@ -1,27 +1,24 @@
 'use strict';
 
 /**
- * Test runner — executes all test suites in order.
+ * Test runner — runs the full Jest suite (all `*.test.js` files under `test/` per package.json jest.testMatch).
  * Run with: npm run test:all
+ *
+ * Do not execute individual test files with plain `node` — they rely on Jest globals (test, expect).
  */
 
 const { execFileSync } = require('child_process');
+const path = require('path');
 
-const suites = [
-  { name: 'FFmpeg Utilities',      module: './ffmpeg_utils.test' },
-  { name: 'Pipeline QA',           module: './pipeline_qa.test' },
-  { name: 'Pipeline Adversarial',  module: './pipeline_adversarial.test' },
-];
+const root = path.join(__dirname, '..');
+const jestBin = require.resolve('jest/bin/jest');
 
-let allPassed = true;
-
-for (const suite of suites) {
-  console.log(`\n── ${suite.name} ─────────────────────────────────────`);
-  try {
-    execFileSync(process.execPath, [require.resolve(suite.module)], { stdio: 'inherit' });
-  } catch {
-    allPassed = false;
-  }
+try {
+  execFileSync(process.execPath, [jestBin, '--runInBand'], {
+    stdio: 'inherit',
+    cwd: root,
+    env: process.env,
+  });
+} catch (e) {
+  process.exit(typeof e.status === 'number' ? e.status : 1);
 }
-
-process.exit(allPassed ? 0 : 1);
