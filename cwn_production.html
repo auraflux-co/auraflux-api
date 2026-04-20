@@ -1997,7 +1997,7 @@ function restoreJobsFromServer(showAlert) {
               if (scene.type === 'source_clip') {
                 // Find matching sourceClipSegment by sceneId
                 var clipSeg = serverJob.sourceClipSegments.find(function(s) {
-                  return s.sceneId === scene.id;
+                  return s.sceneId === scene.name || s.sceneId === scene.id;
                 });
                 if (clipSeg) {
                   rebuiltSegments.push({
