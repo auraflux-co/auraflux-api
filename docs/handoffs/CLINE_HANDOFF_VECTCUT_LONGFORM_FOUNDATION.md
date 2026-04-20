@@ -423,7 +423,7 @@ Short-form behavior is fully isolated from this change — rollback restores pre
 ## What this fix does NOT solve
 
 1. **NBA voiceover rebuild itself** — that's Wave 3, separate handoff. This handoff just makes the tools available.
-2. **Background music tracks** — Rob is providing these separately. Path will be `assets/audio/nba/`. Wave 3 will read from there.
+2. **Background music tracks** — Rob is providing these separately. Path will be `assets/audio/`. Wave 3 will read from there.
 3. **Short-form audio handling** — untouched. Short-form continues using whatever audio flow exists today.
 4. **Music track rotation logic** — Wave 3 picks a track per episode (random or sequential). Not in scope here.
 

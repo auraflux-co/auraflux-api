@@ -3,6 +3,8 @@
 **Status:** Authoritative — current production state on branch `feature/gate-worker-system`
 **Audience:** All agents, new sessions, Customer 1 onboarding
 
+**Product-aligned architecture (diagram + end-user paths):** read **`SYSTEM_ARCHITECTURE.md`** first for the control-plane vs content-plane view, three ways to start (upload / link / idea), six-stage content flow, and monitoring stack. This document drills into **current** stack versions and file-level behavior.
+
 ---
 
 ## What AuraFlux Is

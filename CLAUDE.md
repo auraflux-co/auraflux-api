@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `docs/INDEX.md` — full index of all docs with descriptions. Read this to find anything.
 - `docs/handoffs/` — all active and pending sub-agent task specs (named CLINE_HANDOFF_* for historical reasons)
 - `docs/dispatches/` — multi-handoff dispatch orders
-- `docs/architecture/` — system design, pipeline specs, technical reference
+- `docs/architecture/` — system design, pipeline specs, technical reference. **Product + control-plane view:** `docs/architecture/SYSTEM_ARCHITECTURE.md` (end-user entry paths, six content stages, monitoring, launch program)
 - `docs/specs/` — feature specs and design specs (forward-looking)
 - `docs/strategy/` — business strategy, roadmap, AuraFlux product plan, Phase 2 build spec
 - `docs/ops/` — operational runbooks, checklists, commit rules
