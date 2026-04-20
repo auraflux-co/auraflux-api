@@ -235,6 +235,45 @@ If `scrapeArticleVideo` is renamed or its export changes:
 - gate3b's commitment checklist (commitments object in jobSpec)
 - docs/specs/SET_DESIGN_SPEC_CWN.md if visual layout changes
 
+### If you change chrome overlay (lib/chrome_overlay_ffmpeg.js) — NEW as of 2026-04-19
+
+**Replaces:** lib/chrome_overlay.js Puppeteer pipeline — all Puppeteer functions @deprecated.
+
+**What breaks:**
+- `assembly.js` — imports buildAndBurnChrome, resolveChromeCfg from this module
+- `gate3a.js` — Gemini prompt references drawtext/drawbox, chromeCorrect field in sampleFindings
+- `gate4.js` — Gemini prompt references chromeCorrect and chromeNotes fields
+- `gate-3a-owner.yaml` — chrome fix logic references font files, resolveChromeCfg
+- `gate-4-owner.yaml` — chrome visual spec expectations documented there
+
+**If you change customerConfig chrome colors:**
+- resolveChromeCfg() in lib/chrome_overlay_ffmpeg.js reads them — update contentTypeOverrides if changing per-show colors
+- Gate 3a expectedSkin check reads `jobSpec.designSpec.chrome.skin` — still unchanged
+- Gate 3a prompt now also checks chromeCorrect and expects colors to match skin
+
+**If you change chrome font files:**
+- chrome_overlay_ffmpeg.js FONT_FILES constants at module top
+- FONT_AVAILABLE check logs WARN if missing, falls back to FFmpeg built-in sans
+- Gate 3a prompt will see different typeface in video — acceptable fallback
+
+**If you change chrome flag/sidebar coords:**
+- Hard-coded in buildChromeFilterChain() — all coords from chromeCfg (c0.json)
+- gate3a prompt references exact pixel positions for operator context
+- gate3b commitment check via gate3aReport.chromeCorrect field
+
+**Blast radius summary (chrome engine change):**
+| Component | Impact |
+|---|---|
+| lib/chrome_overlay_ffmpeg.js | NEW — core engine |
+| lib/assembly.js | Import changed, all generateNewscastOverlay() calls replaced |
+| lib/chrome_overlay.js | @deprecated — burnSceneChromeFromDirective still used |
+| config/customers/c0.json | New chrome block with colors/topBar/flag/sidebar/logo/font |
+| lib/gates/gate3a.js | Prompt updated — chromeCorrect field added |
+| lib/gates/gate4.js | Prompt updated — chromeCorrect + chromeNotes fields added |
+| .roo/modes/gate-3a-owner.yaml | Chrome fix logic updated |
+| .roo/modes/gate-4-owner.yaml | Visual spec expectations updated |
+| docs/architecture/CHANGE_IMPACT_MAP.md | This section added |
+
 ---
 
 ### If you change ASSEMBLY — audio mixing or normalization
