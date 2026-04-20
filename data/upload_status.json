@@ -4,6 +4,84 @@
   "description": "CWN publish tracking database — logs every /publish attempt with status, platform, timestamps, and jobId",
   "uploads": [
     {
+      "id": 1776447305779,
+      "timestamp": "2026-04-17T17:35:05.779Z",
+      "status": "failed",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Israel-Lebanon Ceasefire: Celebrations Erupt in the Streets",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1qc5u3cXHnGwMiWWOZtrjR5R3GKXsbrWO",
+      "error": "Request failed with status code 429",
+      "metricsJobId": "publish_1776447303162"
+    },
+    {
+      "id": 1776445896535,
+      "timestamp": "2026-04-17T17:11:36.535Z",
+      "status": "failed",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Streamer Gets Slapped 3 Times at Charity Soccer Match",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1xblLurngxSKTeMMuQdHkDZJX_PojUbhO",
+      "error": "Request failed with status code 429",
+      "metricsJobId": "publish_1776445895067"
+    },
+    {
+      "id": 1776445827694,
+      "timestamp": "2026-04-17T17:10:27.694Z",
+      "status": "failed",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Drummond Hits a 3 to Seal It! Sixers Survive the Play-In",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1au1FHMD3hIup7JVJE-9fPSVzuGu4YQKv",
+      "error": "Request failed with status code 429",
+      "metricsJobId": "publish_1776445825716"
+    },
+    {
+      "id": 1776438759713,
+      "timestamp": "2026-04-17T15:12:39.713Z",
+      "status": "failed",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Twitch's Wildest Moments This Week | Twitch Soup Ep.",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1kNOIm6P3RSBjYDg0Bvr1sCVKBd_3Y40i",
+      "error": "Request failed with status code 429",
+      "metricsJobId": "publish_1776438758272"
+    },
+    {
+      "id": 1776437374714,
+      "timestamp": "2026-04-17T14:49:34.714Z",
+      "status": "failed",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Israel-Lebanon Ceasefire Begins — But For How Long? | CWN",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1ufnA_2mQ2Tu0K3UmX52-U8tlKCKcB89I",
+      "error": "Request failed with status code 429",
+      "metricsJobId": "publish_1776437372136"
+    },
+    {
+      "id": 1776434937048,
+      "timestamp": "2026-04-17T14:08:57.048Z",
+      "status": "failed",
+      "platforms": [
+        "youtube"
+      ],
+      "title": "Israel-Lebanon Ceasefire Begins & Kyiv Attack: Apr 17",
+      "contentType": "long",
+      "driveUrl": "https://drive.google.com/uc?export=download&id=1VwNpiEKhMr7KYMQFWUXWVY84i4SI5f0T",
+      "error": "Request failed with status code 429",
+      "metricsJobId": "publish_1776434933982"
+    },
+    {
       "id": 1776115659610,
       "trackingId": "pub_1776115659610_manual",
       "timestamp": "2026-04-13T21:27:39.610Z",

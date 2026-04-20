@@ -1,5 +1,7 @@
 # CWN Production — Full Environment Map
-**Last updated:** 2026-04-15
+**Last updated:** 2026-04-21
+
+**Product & system view:** For the **authoritative** AuraFlux architecture narrative (input → spec builder → Node engine → BullMQ/Redis → storage → distribution, six-stage content flow, end-user “three ways to start,” and monitoring stack), read **`SYSTEM_ARCHITECTURE.md`**. This file remains the **detailed** operator map: ports, binaries, and every external service on Customer 0’s current deployment.
 
 ---
 

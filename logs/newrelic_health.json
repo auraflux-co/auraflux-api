@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-04-18T19:17:54.385Z",
+  "accountId": "7957415",
+  "appId": "614674131",
+  "window": "last 1 hour",
+  "summary": {
+    "errorRate": null,
+    "throughputRpm": null,
+    "avgResponseSeconds": null,
+    "memoryUsedMB": null
+  },
+  "slowestEndpoints": [],
+  "recentErrors": []
+}

@@ -2,7 +2,7 @@
 
 **Author:** Claude Code (dispatched 2026-04-12 late evening)
 **For:** Cline (implementation)
-**Scope:** NBA long-form — replace the existing FFmpeg `-shortest` voiceover branch at `server.js:4109-4164` with a VectCutAPI-based audio pipeline that mutes the clip's native audio, mixes Bobby G's narration at full volume, and layers a background music track at reduced volume. **Wave 3-NBA — BLOCKED until multiple upstream handoffs have shipped AND Rob has dropped music tracks into `assets/audio/nba/`.** Fixes Gap #26.
+**Scope:** NBA long-form — replace the existing FFmpeg `-shortest` voiceover branch at `server.js:4109-4164` with a VectCutAPI-based audio pipeline that mutes the clip's native audio, mixes Bobby G's narration at full volume, and layers a background music track at reduced volume. **Wave 3-NBA — BLOCKED until multiple upstream handoffs have shipped AND Rob has dropped music tracks into `assets/audio/`.** Fixes Gap #26.
 **Ship order:** Single atomic commit. Biggest handoff in the series — ~2-4 hours Cline work.
 **Do NOT touch:** News Gemini prompt or assembly branches, Twitch assembly branch, short-form split-screen path (VectCutClient short-form methods stay working). The existing NBA TV card burn at `server.js:3968-4038` stays as-is — this handoff only replaces the voiceover mix step.
 **Before committing:** Re-read `COMMIT_CHECKLIST.md`. Atomic staging. STATUS.md update. LONGFORM_FIX_ROTATION.md update.
@@ -19,7 +19,7 @@
 2. **`CLINE_HANDOFF_NBA_PROMPT_CLIP_DURATION.md`** (Wave 2-NBA, Gap #23) — clipDuration in prompt
 3. **`CLINE_HANDOFF_NBA_NARRATION_WORD_COUNT.md`** (Wave 2-NBA, Gap #22) — narration word count matches clip duration
 4. **`CLINE_HANDOFF_VECTCUT_LONGFORM_FOUNDATION.md`** (Wave 1, Gap #46) — VectCutClient.addAudioTrack / setClipVolume / exportDraft methods exist
-5. **Rob must have dropped music tracks into `assets/audio/nba/`.** This is a non-code blocker. Verify by running `ls assets/audio/nba/*.mp3 assets/audio/nba/*.wav 2>/dev/null` before starting — if the directory is empty or doesn't exist, pause and ask Rob.
+5. **Rob must have dropped music tracks into `assets/audio/`.** This is a non-code blocker. Verify by running `ls assets/audio/*.mp3 assets/audio/*.wav 2>/dev/null` before starting — if the directory is empty or doesn't exist, pause and ask Rob.
 
 **Pre-ship grep/ls verification:**
 ```bash
@@ -41,7 +41,7 @@ grep -n "addAudioTrack\|setClipVolume\|exportDraft" server.js
 # Should have 3+ hits in VectCutClient class
 
 # Music tracks available
-ls assets/audio/nba/*.mp3 assets/audio/nba/*.wav 2>/dev/null | wc -l
+ls assets/audio/*.mp3 assets/audio/*.wav 2>/dev/null | wc -l
 # Should be ≥1
 ```
 
@@ -231,7 +231,7 @@ async function orchestrateNBAVoiceoverVectCut(avatarTsPath, clipTsPath, outputTs
 
 ### Music track selection helper
 
-Pick a music track from `assets/audio/nba/` per episode. Simple random selection initially; track rotation logic can evolve later.
+Pick a music track from `assets/audio/` per episode. Simple random selection initially; track rotation logic can evolve later.
 
 ```javascript
 /**
@@ -291,7 +291,7 @@ if (contentType === 'nba' && tsFiles.length > 0) {
   // Pick a music track for this episode (same track used across all games in the episode for consistency)
   const musicTrackPath = pickNBAMusicTrack();
   if (!musicTrackPath) {
-    log(asmId, `  ⚠️  No NBA music tracks in assets/audio/nba/ — falling back to narration-only voiceover`);
+    log(asmId, `  ⚠️  No NBA music tracks in assets/audio/ — falling back to narration-only voiceover`);
     // Continue without music; narration-only mix will still work via VectCutAPI
   }
 
@@ -359,7 +359,7 @@ This means the pipeline works even if Rob hasn't dropped music tracks yet. The v
 
 **If VectCutAPI is entirely unreachable** (server down, port 9001 not responding), the first call to `axios.post(${CAPCUT_URL}/capcut/init)` throws. Every voiceover attempt in the loop fails, every game falls back to original clip, and the NBA episode still assembles — just without any voiceover.
 
-**If `pickNBAMusicTrack()` returns null** (no tracks in `assets/audio/nba/`), the voiceover still runs but without music. Narration plays over muted clip, dead silence where music would have been.
+**If `pickNBAMusicTrack()` returns null** (no tracks in `assets/audio/`), the voiceover still runs but without music. Narration plays over muted clip, dead silence where music would have been.
 
 **All three failure modes are non-fatal.** NBA assembly completes; the worst case is a degraded output, not a broken run.
 
@@ -377,7 +377,7 @@ Before committing, you must verify end-to-end with a real NBA run. Process:
    ```
 2. **Verify music tracks exist:**
    ```bash
-   ls assets/audio/nba/*.mp3 assets/audio/nba/*.wav 2>/dev/null
+   ls assets/audio/*.mp3 assets/audio/*.wav 2>/dev/null
    ```
 3. **Run a 2-game NBA smoke test** via the dashboard (or call the `/generate-full-script` endpoint directly with a 2-game payload).
 4. **Watch the assembly log for:**
@@ -433,7 +433,7 @@ New voiceover flow per game:
 7. Convert MP4 to TS for concat compatibility
 8. Replace original clip in tsFiles[] with voiced TS
 
-Music tracks loaded from assets/audio/nba/ (Rob drops .mp3/.wav files).
+Music tracks loaded from assets/audio/ (Rob drops .mp3/.wav files).
 pickNBAMusicTrack() picks randomly per episode. Track rotation + episode
 tagging can evolve later.
 
@@ -449,7 +449,7 @@ Depends on:
 - CLINE_HANDOFF_NBA_PROMPT_CLIP_DURATION.md (Wave 2-NBA Gap #23) — clipDuration in prompt
 - CLINE_HANDOFF_NBA_NARRATION_WORD_COUNT.md (Wave 2-NBA Gap #22) — narration sized to clip
 - CLINE_HANDOFF_VECTCUT_LONGFORM_FOUNDATION.md (Wave 1 Gap #46) — VectCutClient methods
-- assets/audio/nba/ folder populated by Rob
+- assets/audio/ folder populated by Rob
 
 Changes:
 - server.js — new orchestrateNBAVoiceoverVectCut() function (placed near VectCutClient class)
@@ -462,7 +462,7 @@ Verification:
 - 2-game NBA smoke test: voiceover log markers present, final MP4 plays with
   narration + music + muted clip audio + full clip duration
 - VectCutAPI health check before commit
-- assets/audio/nba/ directory verified populated before commit
+- assets/audio/ directory verified populated before commit
 
 References: LONGFORM_FIX_ROTATION.md NBA Wave 3, gap audit Gap #26
 ```
@@ -498,7 +498,7 @@ Revert restores the FFmpeg `-shortest` voiceover, which is the known-degraded bu
 2. **ESPN video selection criterion** — Gap #20 in Wave 0. Longest-duration video from ESPN may still be a press conference or player interview instead of actual game action. Separate quality improvement.
 3. **Background music track rotation logic** — `pickNBAMusicTrack()` just picks randomly. Future improvements: avoid repeats within N episodes, match music mood to game stakes, etc. Out of scope here.
 4. **Audio ducking between narration and music** — the music plays at a fixed 0.20 volume throughout. A professional mix would duck the music down when Bobby G is talking and up when he's silent. VectCutAPI may or may not support ducking — not in scope here. If Rob wants ducking later, it's a follow-up feature in this same voiceover function.
-5. **Normalization across different music tracks** — different source files may have different baseline loudness. For now, manually tune each track to a consistent level before dropping in `assets/audio/nba/`. Loudness normalization is a future feature.
+5. **Normalization across different music tracks** — different source files may have different baseline loudness. For now, manually tune each track to a consistent level before dropping in `assets/audio/`. Loudness normalization is a future feature.
 
 ---
 
@@ -519,7 +519,7 @@ VectCutAPI's track-based model solves all of these at the architectural level. E
 ## Checklist for Cline
 
 - [ ] All dependency handoffs shipped (grep checks in "Dependency chain" section pass)
-- [ ] `assets/audio/nba/` directory exists and contains ≥1 music track
+- [ ] `assets/audio/` directory exists and contains ≥1 music track
 - [ ] VectCutAPI server running on port 9001 (`curl http://localhost:9001/health` returns 200)
 - [ ] `pickNBAMusicTrack()` helper function added
 - [ ] `orchestrateNBAVoiceoverVectCut()` function added

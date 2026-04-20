@@ -16,13 +16,6 @@ const {
   createConcatList
 } = require('../lib/ffmpeg_utils');
 
-// Test suite
-const tests = [];
-
-function test(name, fn) {
-  tests.push({ name, fn });
-}
-
 // ── Tests ──────────────────────────────────────────────────────────
 
 test('buildProbeCommand returns correct structure', () => {
@@ -144,37 +137,3 @@ test('createConcatList handles empty array', () => {
   assert.strictEqual(result, '');
 });
 
-// ── Test Runner ────────────────────────────────────────────────────
-
-async function runTests() {
-  console.log('\n🧪 Running FFmpeg Utilities Tests\n');
-  
-  let passed = 0;
-  let failed = 0;
-  
-  for (const { name, fn } of tests) {
-    try {
-      await fn();
-      console.log(`✅ ${name}`);
-      passed++;
-    } catch (err) {
-      console.log(`❌ ${name}`);
-      console.log(`   ${err.message}`);
-      if (err.stack) {
-        console.log(`   ${err.stack.split('\n').slice(1, 3).join('\n   ')}`);
-      }
-      failed++;
-    }
-  }
-  
-  console.log(`\n${passed} passed, ${failed} failed\n`);
-  
-  process.exit(failed > 0 ? 1 : 0);
-}
-
-// Run tests if executed directly
-if (require.main === module) {
-  runTests();
-}
-
-module.exports = { runTests };

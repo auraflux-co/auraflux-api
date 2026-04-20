@@ -64,17 +64,22 @@ body { width:1920px; height:64px; background:transparent; overflow:hidden; font-
 </div>
 
 <script>
-var FMP = 'rJPVYlHnpcjxuOLoR1phvBz7e27UMMSq';
+var FMP = '';
+(function() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://localhost:3000/market-keys', false); // sync — keys needed before any fetch
+  try { xhr.send(); if (xhr.status === 200) { var k = JSON.parse(xhr.responseText); FMP = k.fmp || ''; } } catch(e) {}
+})();
 var trackEl = document.getElementById('track');
 var scrollX = 0, animId;
 
 /* ── MARKET DATA ── */
 var DATA = {
   indices: {
-    SPY:  { price:6528.65,  change:184.93,  pct:2.92  },
-    QQQ:  { price:21590.63, change:795.99,  pct:3.83  },
-    DIA:  { price:46341.32, change:1125.17, pct:2.49  },
-    IWM:  { price:2496.37,  change:92.37,   pct:3.41  },
+    SPY:  { price:710.14, change:8.52,  pct:1.21 },
+    QQQ:  { price:648.85, change:8.37,  pct:1.31 },
+    DIA:  { price:494.22, change:8.62,  pct:1.77 },
+    IWM:  { price:275.78, change:5.86,  pct:2.16 },
     FTSE: { price:8632.44,  change:54.21,   pct:0.63  },
     DAX:  { price:22841.32, change:312.44,  pct:1.38  },
     CAC:  { price:7921.44,  change:98.32,   pct:1.25  },
@@ -83,30 +88,30 @@ var DATA = {
     ASX:  { price:8221.44,  change:54.88,   pct:0.67  }
   },
   stocks: {
-    NVDA:  { name:'Nvidia',        price:174.44, pct:5.62  },
-    AAPL:  { name:'Apple',         price:253.79, pct:2.99  },
-    MSFT:  { name:'Microsoft',     price:388.45, pct:2.14  },
-    AMZN:  { name:'Amazon',        price:208.27, pct:3.64  },
-    GOOGL: { name:'Alphabet',      price:287.56, pct:2.10  },
-    AVGO:  { name:'Broadcom',      price:198.32, pct:3.21  },
-    META:  { name:'Meta',          price:572.13, pct:6.67  },
-    TSLA:  { name:'Tesla',         price:371.80, pct:4.65  },
-    NFLX:  { name:'Netflix',       price:995.42, pct:1.88  },
-    AMD:   { name:'AMD',           price:108.34, pct:4.12  },
-    PLTR:  { name:'Palantir',      price:92.18,  pct:5.44  },
-    JPM:   { name:'JPMorgan',      price:248.76, pct:1.32  },
-    BAC:   { name:'Bank of Amer',  price:44.21,  pct:1.18  },
-    V:     { name:'Visa',          price:352.44, pct:0.88  },
-    MA:    { name:'Mastercard',    price:548.92, pct:0.94  },
+    NVDA:  { name:'Nvidia',        price:201.68, pct:1.68  },
+    AAPL:  { name:'Apple',         price:270.23, pct:2.59  },
+    MSFT:  { name:'Microsoft',     price:422.79, pct:0.60  },
+    AMZN:  { name:'Amazon',        price:250.56, pct:0.34  },
+    GOOGL: { name:'Alphabet',      price:341.68, pct:1.68  },
+    AVGO:  { name:'Broadcom',      price:406.54, pct:2.03  },
+    META:  { name:'Meta',          price:688.55, pct:1.73  },
+    TSLA:  { name:'Tesla',         price:400.62, pct:3.01  },
+    NFLX:  { name:'Netflix',       price:97.31,  pct:-9.72 },
+    AMD:   { name:'AMD',           price:278.39, pct:0.05  },
+    PLTR:  { name:'Palantir',      price:146.39, pct:2.54  },
+    JPM:   { name:'JPMorgan',      price:310.29, pct:0.11  },
+    BAC:   { name:'Bank of Amer',  price:53.91,  pct:0.75  },
+    V:     { name:'Visa',          price:317.02, pct:0.61  },
+    MA:    { name:'Mastercard',    price:521.30, pct:0.53  },
     BRKB:  { name:'Berkshire B',   price:498.31, pct:0.44  },
-    LLY:   { name:'Eli Lilly',     price:812.44, pct:1.22  },
-    JNJ:   { name:'J&J',           price:162.88, pct:0.54  },
-    ABBV:  { name:'AbbVie',        price:198.54, pct:0.88  },
-    COST:  { name:'Costco',        price:972.44, pct:1.14  },
-    WMT:   { name:'Walmart',       price:98.32,  pct:0.72  },
-    PG:    { name:'P&G',           price:168.44, pct:0.54  },
-    KO:    { name:'Coca-Cola',     price:72.18,  pct:0.38  },
-    HD:    { name:'Home Depot',    price:388.92, pct:0.96  }
+    LLY:   { name:'Eli Lilly',     price:927.03, pct:2.55  },
+    JNJ:   { name:'J&J',           price:234.18, pct:-0.15 },
+    ABBV:  { name:'AbbVie',        price:208.38, pct:-0.29 },
+    COST:  { name:'Costco',        price:999.89, pct:1.28  },
+    WMT:   { name:'Walmart',       price:127.50, pct:2.15  },
+    PG:    { name:'P&G',           price:146.93, pct:2.67  },
+    KO:    { name:'Coca-Cola',     price:75.74,  pct:0.74  },
+    HD:    { name:'Home Depot',    price:349.40, pct:3.63  }
   },
   crypto: {},
   forex: {}

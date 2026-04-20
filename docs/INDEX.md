@@ -42,6 +42,7 @@ All pending work lives here. Archive after the associated commit lands.
 | `CLINE_HANDOFF_ROLLBACK_ADVANCE_GAPS.md` | Cline-B | **SHIPPED 96ca354** | scriptJobId persist, dedup lock clear, rollback overshoot, audit trail |
 | `CLINE_HANDOFF_JOB_DISMISS.md` | Cline-B | **SUPERSEDED by JOB_DISMISS_RESTORE** | Original dismiss spec — endpoint + dashboard function now shipped |
 | `CLINE_HANDOFF_JOB_DISMISS_RESTORE.md` | Cline-B | **PENDING** | Stage allowlist for GET /jobs + assembled skip in auto-restore (dismiss endpoint already done) |
+| `CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md` | Cline-B | **PENDING — HIGH PRIORITY** | Full publish system overhaul: ChatGPT-quality copy format, upload-post wiring (thumbnail+comment required), categoryId per content type, TikTok caption fix, post-publish outcome card, Gate 4 publish package audit, title switcher from stored alternatives |
 | `CLINE_HANDOFF_ASSEMBLY_DEDUP_LOCK.md` | Cline-A | **PENDING** | Prevent duplicate assembly runs on same job |
 | `CLINE_HANDOFF_STRICT_CLIPS_DEDUP_DROPDOWN.md` | Cline-A | **PENDING** | Deduplicate clips in dropdown |
 | `CLINE_HANDOFF_AJ_NEWS_SCRAPER.md` | Cline-A | **SUPERSEDED by GATE0_NEWS_SCRAPER** | Puppeteer scraper for AJ /us-canada/ /news/ → 16:9 Brightcove HLS; replaces broken static cheerio scraper |
@@ -81,15 +82,25 @@ Dispatch files coordinate multiple handoffs in sequence. Archive after all const
 
 ---
 
-## docs/architecture/ — How the System Works
-Authoritative technical reference. Read before touching any pipeline code.
+## docs/specs/
+| `CREATIVE_CONFIG_SPEC.md` | **AUTHORITATIVE — confirmed by Rob 2026-04-19.** All creative decisions in one place: locked intros/outros for all 3 shows, show names, colors, caption design, overlay layout, voice personas, scaffold structure, assembly config. Single source of truth for scaffold, Gate 1, QA agents, assembly, publish. |
+| `SHORT_FORM_SPEC.md` | **AUTHORITATIVE short-form spec confirmed 2026-04-19.** Structure: HOOK+CLIP+REACTION only. No INTRO/OUTRO scenes. Bobby G top, clip bottom, caption above split (~y=920). Portrait avatar `3714bb5af7234f28acad451db78b468c`. News: portrait AJ clips only. |
+| `CHROME_OVERLAY_FFMPEG_SPEC.md` | **APPROVED — pending implementation.** Replace Puppeteer→PNG→FFmpeg chrome pipeline with pure FFmpeg drawtext/drawbox. Universal for all customers — colors/name/logo from customerConfig only. Zero code changes for Customer 1+. Covers filter chain design, per-scene params interface, migration plan, acceptance criteria. |
+
+## docs/architecture/
+
+**Start here for the full product + system picture:** `SYSTEM_ARCHITECTURE.md` — control plane, six-stage content flow, three end-user entry paths, monitoring, launch blocks, link to decoupled GPU stack.
 
 | File | What it covers |
 |------|---------------|
-| `GATED_PIPELINE_ARCHITECTURE.md` | **READ THIS FIRST** — the complete 4-gate pipeline spec. Authoritative. |
+| `CHANGE_IMPACT_MAP.md` | **Read before any code change.** Maps every pipeline component to every other component it touches. Answers "I changed X, who needs to know?" for scaffold, script gen, all 6 gates, assembly, customerConfig, and jobSpec fields. |
+| `SYSTEM_ARCHITECTURE.md` | **Product + internal architecture** — Input→Spec→Node→Queue→Storage→Distribution; 01–06 content stages; three ways to start; monitoring; launch program; pointer to ComfyUI future |
+| `AURAFLUX_SYSTEM_OVERVIEW.md` | **Current** stack (versions, job types, E2E ASCII flow) — read after SYSTEM_ARCHITECTURE for implementation detail |
+| `PIPELINE_CONTRACT_SPEC.md` | **READ THIS FIRST (schema)** — universal pipeline contract: Job Spec schema, Stage Interface, Provider Interface. Supersedes CWN-specific assumptions. Customer 0 (CWN) is a reference implementation, not the architecture. |
+| `GATED_PIPELINE_ARCHITECTURE.md` | Gate logic, retry loop, Gate Output Contract, learning records. Still authoritative for gate mechanics. Read alongside PIPELINE_CONTRACT_SPEC.md. |
 | `CHROME_DIRECTIVE_ARCHITECTURE.md` | Directive sidecar system — how per-scene chrome overlays work |
-| `PLATFORM_ARCHITECTURE.md` | Naming conventions, content type definitions, platform targets |
-| `CWN_ENVIRONMENT_MAP.md` | Full environment map — every API, library, tool, service with definitions and diagram |
+| `PLATFORM_ARCHITECTURE.md` | Two-sided platform, **three end-user entry paths** (upload / link / idea), three layers, naming |
+| `CWN_ENVIRONMENT_MAP.md` | Full environment map — every API, library, tool, service with definitions and diagram (operator detail) |
 | `QA_GATES.md` | Gate 1-4 scoring rules, thresholds, pass/fail behavior |
 | `ROLLBACK_FORCE_ADVANCE_SPEC.md` | Rollback and force-advance pipeline controls spec |
 | `UPLOAD_API_SPEC.md` | Upload-Post API integration spec |
@@ -98,6 +109,7 @@ Authoritative technical reference. Read before touching any pipeline code.
 | `SERVER_SPLIT_PLAN.md` | Plan to split server.js into modules (Phase 2 prep) |
 | `DASHBOARD_DECOUPLING_SPEC.md` | Target architecture — dashboard as read-only monitor, server owns all pipeline state and orchestration |
 | `FUTURE_4K_MIGRATION_PLAN.md` | Parked — 4K upgrade plan when bandwidth/storage allows |
+| `DECOUPLED_VIDEO_PRODUCT_STACK.md` | **Future** — Vercel/Next.js + Render Node + RunPod ComfyUI/SVD; not the current Customer 0 pipeline |
 
 ---
 
@@ -109,7 +121,7 @@ Forward-looking specs for features in progress or upcoming. Not handoffs — the
 | `SET_DESIGN_SPEC_NEWS.md` | News set design — authoritative spec for what the overlay should look like |
 | `SHARED_NEWSCAST_SET_MIGRATION.md` | Migration plan for shared newscast set across all content types |
 | `VISUAL_DESIGN_SPEC.md` | Visual design standards — colors, typography, overlay layout rules |
-| `PUBLISH_COPY_SPEC.md` | Title/description/hashtag generation spec per platform |
+| `PUBLISH_COPY_SPEC.md` | **UPDATED 2026-04-18** — Full publish copy spec: ChatGPT-quality description format, timestamps from segment durations, 5 A/B titles, pinned comment with channel handle variable, thumbnail text options, per-platform schema, what's manual vs automated |
 | `PHASE_2_BUILD_SPEC.md` | **AuraFlux Phase 2** — full 6-week build plan, stack locked, prerequisites |
 | `PHASE_2_DESIGN_PACKAGE.md` | AuraFlux design package — UI patterns, component decisions |
 | `AURAFLUX_BRAND.md` | AuraFlux brand identity — name, domain, visual direction |
@@ -131,6 +143,7 @@ Where we're going and why. ICP, pricing, AuraFlux product plan, Phase 2 build sp
 | `AURAFLUX_BRAND.md` | AuraFlux brand identity — name, domain, visual direction |
 | `AURAFLUX_PRODUCTION_MODEL.md` | How CWN pipeline becomes a multi-tenant product |
 | `AURAFLUX_REVERSE_PIPELINE_SPEC.md` | Reverse pipeline spec — customer input → automated output |
+| `PO_AND_ENGINEERING_RUNBOOK.md` | **PO ↔ code lead** — how we work, when we ask for keys/access, PDF vision vs repo snapshot |
 
 ---
 
@@ -139,12 +152,20 @@ How to run the operation day-to-day. Checklists, agent schedules, commit rules.
 
 | File | What it covers |
 |------|---------------|
+| `REQUIRED_API_KEYS.md` | **Anthropic vs Gemini vs HeyGen** — which `process.env` names exist, for people without `.env` access (no secret values) |
 | `COMMIT_CHECKLIST.md` | **Read before every commit** — STATUS.md update, doc sync, staging rules |
 | `OVERNIGHT_TASKS.md` | Aider overnight task schedule — what runs 1-6am, what it touches |
 | `POST_PUBLISH_MANUAL_CHECKLIST.md` | 20% of post-publish tasks that can't be automated |
 | `POST_PUBLISH_TASKS.md` | Full post-publish task list (discovered during Twitch long-form review) |
 | `CREATIVE_VS_OPERATIONS.md` | What needs Rob + Claude creative alignment vs pure automation |
 | `CODE_REVIEW.md` | Latest Cline code review report — findings, dead code, cleanup candidates |
+| `POST_RENDER_TASKS.md` | **Post-Render migration task list** — everything deferred until after Render deploy. Priority 1: NR alerts, monitoring.js escalation file write, TZ=UTC. Priority 2: chrome rename, designSpec decoupling, module split. Priority 3: Customer 1 gate docs, brand rename, Twelve Labs, Runway. Priority 4: direct platform APIs. |
+| `RENDER_RUNBOOK.md` | Step-by-step production render runbook — pre-render checklist, gate sequence, per-content-type notes, recovery procedures, expected timings |
+| `LAUNCH_PLAN_2026.md` | **Blocks 2–4** — E2E tests, full long-form runs, Render, Prettier, load test, rename audit, Rovo (pointer) |
+| `LAUNCH_TEST_MATRIX.md` | **Block 2** test matrix — 6 E2E + 3 full long-form + short-form sign-off table |
+| `RENDER_DEPLOY_CHECKLIST.md` | **Render** deploy steps + links to `POST_RENDER_TASKS.md` |
+| `RENAME_CWN_TO_AURAFLUX.md` | Safe rename order — not a single mass replace |
+| `ATLASSIAN_ROVO_MCP.md` | **Rovo / Jira MCP** — ID-side setup, not in-repo code |
 
 ---
 

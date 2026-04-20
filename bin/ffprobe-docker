@@ -1,0 +1,11 @@
+#!/bin/sh
+# ffprobe via Docker container (linuxserver/ffmpeg - native ARM64, FFmpeg 8.x)
+# Drop-in replacement for local ffprobe binary.
+
+exec docker run --rm \
+  --platform linux/arm64 \
+  -v /Users/robertgregory/cwn-production:/Users/robertgregory/cwn-production \
+  -v /private/tmp:/private/tmp \
+  --entrypoint ffprobe \
+  linuxserver/ffmpeg:latest \
+  "$@"

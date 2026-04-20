@@ -1,0 +1,6 @@
+{
+  "jobId": "c0_EXTRACT_DIRECT_nba-short_1776722120446",
+  "contentType": "nba-short",
+  "firedAt": "2026-04-20T21:55:20.611Z",
+  "message": "Job confirmed: c0_EXTRACT_DIRECT_nba-short_1776722120446 (nba-short). Run your standing task from .roo/rules/pipeline-orchestrator.md. Read logs/roo_status.json and logs/pipeline_events.jsonl now."
+}

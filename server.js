@@ -1,4 +1,105 @@
+require('newrelic');
 require('dotenv').config();
+
+// ── Build identity — set once at startup, never changes during runtime ────────
+const BUILD_INFO = (() => {
+  const { execSync: _execSync } = require('child_process');
+  try {
+    const hash = _execSync('git rev-parse --short HEAD', { cwd: __dirname }).toString().trim();
+    const fullHash = _execSync('git rev-parse HEAD', { cwd: __dirname }).toString().trim();
+    const branch = _execSync('git rev-parse --abbrev-ref HEAD', { cwd: __dirname }).toString().trim();
+    const commitMsg = _execSync('git log -1 --format=%s', { cwd: __dirname }).toString().trim();
+    const pkg = require('./package.json');
+    return {
+      version: pkg.version,
+      gitHash: hash,
+      gitHashFull: fullHash,
+      gitBranch: branch,
+      lastCommit: commitMsg,
+      deployedAt: new Date().toISOString()
+    };
+  } catch(e) {
+    return { version: require('./package.json').version, gitHash: 'unknown', deployedAt: new Date().toISOString() };
+  }
+})();
+
+// ── New Relic custom event helpers ───────────────────────────────────────────
+// All events are fire-and-forget — never block the pipeline.
+// Queryable via NRQL: SELECT * FROM EventName WHERE customerId = 'c0' SINCE 7 days ago
+
+function nrEvent(eventType, attributes) {
+  try {
+    if (typeof newrelic !== 'undefined') {
+      newrelic.recordCustomEvent(eventType, {
+        timestamp: Date.now(),
+        env: process.env.NODE_ENV || 'development',
+        ...attributes
+      });
+    }
+  } catch(e) { /* non-fatal */ }
+}
+
+// Keep old helper for backwards compat
+function nrGateAttribute(jobId, gate, score, passed) {
+  nrEvent('GateResult', { jobId, gate, gateScore: score, gatePassed: passed });
+}
+
+// ── NR Event: Job confirmed (pre-generate sign-off complete) ─────────────────
+function nrJobConfirmed(jobSpec, allReady) {
+  nrEvent('JobConfirmed', {
+    jobId:       jobSpec.jobId,
+    customerId:  jobSpec.customerId,
+    templateId:  jobSpec.templateId,
+    contentType: jobSpec.contentType,
+    formFactor:  jobSpec.order?.output?.formFactor,
+    platforms:   (jobSpec.deliverySpec?.platforms || []).join(','),
+    allGatesReady: allReady,
+    expectedClips: jobSpec.designSpec?.expectedClipCount ?? 0
+  });
+}
+
+// ── NR Event: Gate result (pass/fail at any gate) ────────────────────────────
+function nrGateResult(jobId, customerId, contentType, gate, passed, score, outcome, durationMs) {
+  nrEvent('GateResult', {
+    jobId, customerId, contentType,
+    gate: String(gate),
+    passed: passed ? 1 : 0,
+    score: score ?? null,
+    outcome: outcome || null,
+    durationMs: durationMs || null
+  });
+}
+
+// ── NR Event: Script sendback (Gate 1 fix directive issued) ──────────────────
+function nrScriptSendback(jobId, customerId, contentType, score, attempt, reasons) {
+  nrEvent('ScriptSendback', {
+    jobId, customerId, contentType,
+    score, attempt,
+    reasons: Array.isArray(reasons) ? reasons.slice(0,3).join('; ') : (reasons || '')
+  });
+}
+
+// ── NR Event: Video published (Gate 5 success) ───────────────────────────────
+function nrVideoPublished(jobId, customerId, contentType, platform, title, pipelineMs, scores) {
+  nrEvent('VideoPublished', {
+    jobId, customerId, contentType, platform,
+    title: (title || '').slice(0, 100),
+    totalPipelineMs: pipelineMs || null,
+    gate1Score:  scores?.gate1  ?? null,
+    gate3aScore: scores?.gate3a ?? null,
+    gate4Score:  scores?.gate4  ?? null
+  });
+}
+
+// ── NR Event: Assembly complete ───────────────────────────────────────────────
+function nrAssemblyComplete(jobId, customerId, contentType, asmId, durationMs, fileSizeMB, gate3aScore) {
+  nrEvent('AssemblyComplete', {
+    jobId, customerId, contentType, asmId,
+    durationMs: durationMs || null,
+    fileSizeMB: fileSizeMB || null,
+    gate3aScore: gate3aScore ?? null
+  });
+}
 
 // ── Red 4: Proactive chrome directive architecture ─────────────────────────
 // Feature flag — default true. Set USE_DIRECTIVE_CHROME=false to fall back
@@ -105,7 +206,11 @@ const { requireFields, validateContentType, validateArrayLength, sanitizeStrings
 const TwitchClient = require('./lib/clients/twitch_client');
 const { CONFIG } = require('./lib/config');
 const logger = require('./lib/logger');
+const pipelineBus = require('./lib/pipeline_events');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
+const db = require('./lib/db');
+const { createJobSpec, getJobSpec } = require('./lib/job_spec');
+const { startMonitoring } = require('./lib/monitoring');
 const {
   generateTwitchLongformThumbnail,
   generateNewsNbaThumbnail,
@@ -114,13 +219,12 @@ const {
   generateNewscastOverlay
 } = require('./lib/chrome_overlay');
 const {
-  geminiQACheck,
+  geminiQACheck, // TODO: remove — dead code, gate2Worker.run() replaces this (see /gate2-segment-qa endpoint)
   parseScriptIntoScenes,
   generateClipAvailabilityReport,
   claudeScriptQA,
   claudeScriptFix,
-  geminiScriptQA,
-  geminiSegmentQA,
+  geminiSegmentQA, // TODO: remove — dead code, gate2Worker.run() replaces this
   callClaudeAPI,
   uploadToGeminiFiles,
   waitForGeminiFile,
@@ -166,6 +270,7 @@ const {
   assemblyJobs
 } = require('./lib/assembly');
 const { downloadFile } = require('./lib/downloader');
+const { ffmpegPath: _ffmpegDockerPath, ffprobePath: _ffprobeDockerPath } = require('./lib/ffmpeg_utils');
 const cheerio = require('cheerio');
 
 const app  = express();
@@ -266,6 +371,42 @@ try {
   persistedJobs = {};
 }
 
+// ── SQLite init + fallback load ───────────────────────────────────────────────
+// Initialize SQLite alongside jobs.json. During transition both run in parallel.
+// If SQLite has more jobs than the JSON file (e.g. after a partial migration),
+// prefer SQLite so no jobs are lost.
+try {
+  db.initDb();
+  const sqliteJobs = db.loadAllJobs();
+  if (sqliteJobs.length > Object.keys(persistedJobs).length) {
+    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
+    persistedJobs = {};
+    for (const card of sqliteJobs) {
+      if (card && card.jobId) persistedJobs[card.jobId] = card;
+    }
+  } else {
+    console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
+  }
+} catch (e) {
+  console.error('[db] SQLite init failed — falling back to jobs.json only:', e.message);
+}
+
+// Infer job stage from card fields for legacy jobs that predate the explicit stage field.
+// Used by /jobs filter and startup resume logic.
+function inferJobStage(job) {
+  if (job.finalUrl) return 'assembled';
+  if (job.assembly?.url || job.assembledUrl) return 'assembled';
+  const videoJobs = job.heygen?.videoJobs || [];
+  if (videoJobs.length > 0) {
+    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+    if (allComplete) return 'all_sent'; // all done — ready for assembly
+    const anyStarted = videoJobs.some(vj => vj.video_id);
+    if (anyStarted) return 'all_sent'; // in-flight in HeyGen
+  }
+  if (job.script) return 'script_ready';
+  return '';
+}
+
 function saveJobCard(jobId, card) {
   // Fix 2 Part A: Extract source_clip segments from script and save to card
   if (card.script && card.orderedClipUrls) {
@@ -275,8 +416,8 @@ function saveJobCard(jobId, card) {
         const clipData = card.orderedClipUrls[i] || {};
         return {
           type: 'source_clip',
-          sceneId: scene.id,
-          label: scene.id || `STORY${i+1}_CLIP`,
+          sceneId: scene.name,
+          label: scene.name || `STORY${i+1}_CLIP`,
           clipUrl: clipData.clipUrl || clipData.url || '',
           pageUrl: clipData.pageUrl || '',
           storyIndex: clipData.storyIndex ?? i,
@@ -299,6 +440,12 @@ function saveJobCard(jobId, card) {
     fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
   } catch(e) {
     console.error('[jobs] Failed to save jobs.json:', e.message);
+  }
+  // ── SQLite write (additive — runs alongside JSON during transition) ──────────
+  try {
+    db.saveJob(jobId, persistedJobs[jobId]);
+  } catch (e) {
+    console.error('[db] Failed to save job to SQLite:', e.message);
   }
 }
 
@@ -380,6 +527,27 @@ function checkContentTypeStuckPattern(contentType, jobId) {
   }
 }
 
+// ── Active poller registry — tracks in-flight HeyGen pollers for graceful shutdown ──
+// On SIGTERM (nodemon restart or kill), we wait up to 35s for the current poll to finish
+// so the job card is written to disk before the process exits. The startup resume then
+// picks up exactly where we left off on the next boot.
+const activePollers = new Map(); // jobId → { jobId, resolve, settled }
+
+function registerPoller(jobId) {
+  let resolve;
+  const done = new Promise(r => { resolve = r; });
+  activePollers.set(jobId, { jobId, resolve, done });
+  return resolve; // caller calls resolve() when the poller exits cleanly
+}
+
+function unregisterPoller(jobId) {
+  const entry = activePollers.get(jobId);
+  if (entry) { entry.resolve(); activePollers.delete(jobId); }
+}
+
+// Graceful shutdown — wait for active pollers before exiting
+// gracefulShutdown defined later — single implementation handles pollers + assembly
+
 // ── startHeyGenPoller() — Auto-poll HeyGen until all segments complete, then auto-assemble ──
 // Called after Gate 1 passes and HeyGen video IDs are saved to the job card.
 // Implements the fully-automatic pipeline: Gate 1 → HeyGen render → auto-assemble → Gate 3 → Drive → Gate 6 publish (private)
@@ -402,12 +570,24 @@ async function startHeyGenPoller(jobId, card) {
   const MAX_POLLS = (MAX_POLL_MINUTES * 60 * 1000) / POLL_INTERVAL_MS;
   let pollCount = 0;
 
+  // Register with graceful shutdown tracker
+  const pollerDone = registerPoller(jobId);
+
   console.log(`[heygen-poller:${jobId}] 🔄 Starting — polling ${videoJobs.length} segments every 30s (max ${MAX_POLL_MINUTES}min)`);
+
+  // Seed pending rows in heygen_renders DB table for each video job (non-fatal)
+  try {
+    const { saveHeyGenRender } = require('./lib/db');
+    for (const vj of videoJobs) {
+      if (vj.video_id) saveHeyGenRender(jobId, vj.video_id, vj.sceneName, 'pending', {});
+    }
+  } catch(e) {}
 
   const poll = async () => {
     pollCount++;
     if (pollCount > MAX_POLLS) {
       console.error(`[heygen-poller:${jobId}] ⏰ Timeout after ${MAX_POLL_MINUTES}min — giving up. Manual REFRESH IDs + ASSEMBLE required.`);
+      unregisterPoller(jobId);
       return;
     }
 
@@ -436,6 +616,27 @@ async function startHeyGenPoller(jobId, card) {
       const pending   = statuses.filter(s => s.status !== 'completed');
       const failed    = statuses.filter(s => s.status === 'failed');
 
+      // Detect silent placeholder renders: source_clip scenes submitted to HeyGen produce 5s silent videos.
+      // Flag them in logs so we can diagnose — they will be excluded at segmentData build time (type: source_clip skipped).
+      const silentSuspects = completed.filter(s => {
+        const name = (s.sceneName || '').toUpperCase();
+        return name.includes('_CLIP') && !name.includes('_CLIP1') && !name.includes('_CLIP2') && !name.includes('_CLIP3') && !name.includes('SETUP') && !name.includes('REACTION') && !name.includes('RECAP');
+      });
+      if (silentSuspects.length > 0) {
+        console.warn(`[heygen-poller:${jobId}] ⚠️  SILENT RENDER DETECTED: ${silentSuspects.map(s => s.sceneName).join(', ')} — these are source_clip scenes that should not have been submitted to HeyGen. They will be excluded from assembly. Check parseSegments_v2 or sendScriptToHeyGen for source_clip skip logic.`);
+      }
+
+      // Persist completed/failed render statuses to DB (non-fatal)
+      try {
+        const { saveHeyGenRender } = require('./lib/db');
+        for (const s of statuses) {
+          if (s.status === 'completed' || s.status === 'failed') {
+            saveHeyGenRender(jobId, s.video_id, s.sceneName, s.status,
+              s.status === 'completed' ? { videoUrl: s.video_url } : {});
+          }
+        }
+      } catch(e) {}
+
       console.log(`[heygen-poller:${jobId}] Poll ${pollCount}: ${completed.length}/${videoJobs.length} completed, ${pending.length} pending, ${failed.length} failed`);
 
       if (failed.length > 0) {
@@ -455,32 +656,87 @@ async function startHeyGenPoller(jobId, card) {
       // Sort completed segments by sceneIndex to preserve script order
       const sortedAvatarSegs = [...completed].sort((a, b) => a.sceneIndex - b.sceneIndex);
 
-      // Build the interleaved segmentData array:
-      // Avatar segments come from HeyGen URLs (sorted by sceneIndex)
-      // Source clips come from orderedClipUrls (in order, inserted after their SETUP scene)
-      // The script structure is: INTRO, STREAMER_INTRO, CLIP1_SETUP, [CLIP1], CLIP1_REACTION, CLIP2_SETUP, [CLIP2], CLIP2_REACTION, ..., OUTRO
-      // Avatar segments: INTRO, STREAMER_INTRO, CLIP1_SETUP, CLIP1_REACTION, CLIP2_SETUP, CLIP2_REACTION, OUTRO
-      // Source clips: inserted after each SETUP scene
+      // Build avatar lookup by sceneName for fast access
+      const avatarByName = {};
+      for (const seg of sortedAvatarSegs) {
+        avatarByName[seg.sceneName] = seg;
+      }
+
+      // Build the interleaved segmentData array using the SCRIPT as the source of truth.
+      // Script scenes define order and clip positions. HeyGen provides audio/video for avatar scenes.
+      // source_clip scenes in the script are NOT sent to HeyGen — clips come from orderedClipUrls.
       const orderedClipUrls = card.orderedClipUrls || [];
+      const scriptScenes = card.script?.scenes || [];
       const segmentData = [];
       let clipIdx = 0;
 
-      for (const avatarSeg of sortedAvatarSegs) {
-        // Add the avatar segment
-        segmentData.push({
-          url:   avatarSeg.video_url,
-          label: avatarSeg.sceneName,
-          type:  'avatar'
-        });
+      if (scriptScenes.length > 0) {
+        // Script-driven build: walk scenes in script order
+        for (const scene of scriptScenes) {
+          if (scene.type === 'source_clip') {
+            // Insert source clip from orderedClipUrls in order
+            const clip = orderedClipUrls[clipIdx];
+            clipIdx++;
+            if (clip && (clip.url || clip.clipUrl)) {
+              segmentData.push({
+                url:     clip.clipUrl || clip.url || '',
+                pageUrl: clip.pageUrl || '',
+                label:   clip.label || scene.name || `CLIP_${clipIdx}`,
+                type:    'source_clip',
+                clipUrl: clip.clipUrl || clip.url || ''
+              });
+            }
+          } else {
+            // Avatar scene — find matching HeyGen render
+            const sceneKey = scene.name || scene.id;
+            const avatarSeg = avatarByName[sceneKey] || Object.values(avatarByName).find(v => v.sceneName === sceneKey);
+            if (avatarSeg && avatarSeg.video_url) {
+              segmentData.push({
+                url:   avatarSeg.video_url,
+                label: avatarSeg.sceneName,
+                type:  'avatar'
+              });
+              // SETUP scene: has clip insert after dialogue — insert source_clip from orderedClipUrls
+              if (scene.hasClipInsert) {
+                const clip = orderedClipUrls[clipIdx];
+                clipIdx++;
+                if (clip && (clip.url || clip.clipUrl)) {
+                  segmentData.push({
+                    url:     clip.clipUrl || clip.url || '',
+                    pageUrl: clip.pageUrl || '',
+                    label:   clip.label || `${sceneKey}_CLIP`,
+                    type:    'source_clip',
+                    clipUrl: clip.clipUrl || clip.url || ''
+                  });
+                }
+              }
+            }
+          }
+        }
+      } else {
+        // Fallback: legacy avatar-only build (no script — old jobs)
+        for (const avatarSeg of sortedAvatarSegs) {
+          segmentData.push({
+            url:   avatarSeg.video_url,
+            label: avatarSeg.sceneName,
+            type:  'avatar'
+          });
+        }
+      }
 
-        // For News: attach cardData to STORY#_INTRO segments so the assembly
-        // can burn the correct TV card overlay (title, category, image) per story
-        if ((card.contentType || 'twitch') === 'news' && /STORY(\d+)_INTRO/i.test(avatarSeg.sceneName)) {
-          const storyMatch = avatarSeg.sceneName.match(/STORY(\d+)_INTRO/i);
+      // Attach cardData to INTRO segments in segmentData (works for both script-driven and legacy paths)
+      for (const avatarSeg of sortedAvatarSegs) {
+        const seg = segmentData.find(s => s.label === avatarSeg.sceneName && s.type === 'avatar');
+        if (!seg) continue;
+
+        const _sceneName = avatarSeg.sceneName || '';
+        const _ct = card.contentType || 'twitch';
+        if (_ct === 'news' && /STORY(\d+)_INTRO/i.test(_sceneName)) {
+          const storyMatch = _sceneName.match(/STORY(\d+)_INTRO/i);
           const storyIdx   = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
           const storyItem  = (card.newsItems || [])[storyIdx];
           if (storyItem) {
-            segmentData[segmentData.length - 1].cardData = {
+            seg.cardData = {
               title:        storyItem.title    || `Story ${storyIdx + 1}`,
               category:     storyItem.category || 'WORLD NEWS',
               storyId:      `story_${storyIdx + 1}`,
@@ -489,23 +745,33 @@ async function startHeyGenPoller(jobId, card) {
               source:       storyItem.source || ''
             };
           }
-        }
-
-        // If this is a SETUP scene, insert the corresponding source clip after it
-        if (/SETUP/i.test(avatarSeg.sceneName) && clipIdx < orderedClipUrls.length) {
-          const clip = orderedClipUrls[clipIdx];
-          clipIdx++;  // Fix 6: always increment to maintain story-index alignment
-          // Fix 6: skip null entries (stories without clips) — null preserved for index alignment
-          if (clip && clip.url) {
-            segmentData.push({
-              url:     clip.clipUrl || clip.url || '',
-              pageUrl: clip.pageUrl || '',
-              label:   clip.label || `CLIP_${clipIdx}`,
-              type:    'source_clip',
-              clipUrl: clip.clipUrl || clip.url || ''
-            });
-          } else {
-            console.log(`[heygen-poller] Fix6: null clip at storyIndex ${clip ? clip.storyIndex : clipIdx - 1} — skipping segment insert, index alignment preserved`);
+        } else if (_ct === 'nba' && /GAME(\d+)[_ ].*INTRO/i.test(_sceneName)) {
+          const gameMatch = _sceneName.match(/GAME(\d+)/i);
+          const gameIdx   = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
+          const rawName   = _sceneName.replace(/^GAME\d+[_ ]/i,'').replace(/[_ ]INTRO$/i,'').replace(/_/g,' ');
+          const nbaItem   = (card.nbaItems || [])[gameIdx];
+          seg.cardData = {
+            title:    nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+            matchup:  nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+            category: 'NBA GAME',
+            storyId:  `game_${gameIdx + 1}`,
+            gameId:   nbaItem?.gameId || null
+          };
+        } else if (_ct === 'twitch' && /[_ ]INTRO$/i.test(_sceneName)) {
+          const namePart = _sceneName.replace(/[_ ]INTRO$/i,'').replace(/_/g,' ').toLowerCase();
+          const streamer = (card.streamers || []).find(s =>
+            (s.displayName||'').toLowerCase() === namePart ||
+            (s.twitchUsername||'').toLowerCase() === namePart
+          ) || (card.streamers||[])[0];
+          if (streamer) {
+            seg.cardData = {
+              title:    streamer.displayName || namePart,
+              category: 'ON STREAM',
+              storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
+              fact:     [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0,60),
+              imageUrl: streamer.profileImage || null,
+              twitchUsername: streamer.twitchUsername || streamer.username || null
+            };
           }
         }
       }
@@ -523,112 +789,18 @@ async function startHeyGenPoller(jobId, card) {
       updatedCard.stage = 'all_sent';
       saveJobCard(jobId, updatedCard);
 
-      // Trigger assembly via internal HTTP call (same as dashboard ASSEMBLE button)
-      const PORT = process.env.PORT || 3000;
-      const assemblyId = `asm_${Date.now()}`;
-      const contentType = card.contentType || 'twitch';
-      const format = contentType.includes('-short') ? 'portrait' : 'landscape';
-
-      // Pre-warm ticker cache BEFORE assembly so it's ready when FFmpeg needs it
-      // captureTicker takes ~2-3 min (900 frames) — await it here so assembly never races ahead
-      if (!contentType.includes('short')) {
-        const tickerContentType = contentType.replace(/-short$/, '');
-        console.log(`[heygen-poller:${jobId}] 🎞 Pre-warming ${tickerContentType} ticker cache (awaiting)...`);
-        try {
-          const tickerPrewarmPath = await captureTicker(tickerContentType);
-          if (tickerPrewarmPath) console.log(`[heygen-poller:${jobId}] ✅ Ticker pre-warmed: ${tickerPrewarmPath}`);
-          else console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm failed — assembly will proceed without ticker`);
-        } catch(e) {
-          console.warn(`[heygen-poller:${jobId}] ⚠️ Ticker pre-warm error: ${e.message} — continuing without ticker`);
-        }
-      }
-
-      console.log(`[heygen-poller:${jobId}] 🎬 Triggering auto-assembly (assemblyId: ${assemblyId})...`);
-
-      // Build a human-readable job title for the output filename
-      // e.g. "TWITCH Saturday, April 11, 2026 (7 avatar + 2 clips)"
-      const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
-      const _dateLabel = _cardDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      const _avatarCount = sortedAvatarSegs.length;
-      const _clipCount   = clipIdx;
-      const _humanTitle  = `${contentType.toUpperCase()} ${_dateLabel} (${_avatarCount} avatar + ${_clipCount} clips)`;
-
-      try {
-        await axios.post(`http://localhost:${PORT}/assemble`, {
-          segments:    segmentData.map(s => s.url),
-          segmentData: segmentData,
-          labels:      segmentData.map(s => s.label),
-          transition:  'crossfade',
-          format:      'mp4',
-          assemblyId,
-          jobTitle:    _humanTitle,
-          contentType,
-          jobId,
-          sceneTextMap: card.heygen?.sceneTextMap || null,
-          fullScript:   card.script || null,
-          streamers:    card.streamers || []
-        }, { timeout: 10000 }); // Just fire — assembly runs async
-
-        console.log(`[heygen-poller:${jobId}] ✅ Auto-assembly triggered (assemblyId: ${assemblyId}) — Gate 3 → Drive → Gate 6 will run automatically`);
-
-        // Update job card to reflect assembly started
-        const cardNow = persistedJobs[jobId] || updatedCard;
-        cardNow.assemblyId = assemblyId;
-        cardNow.autoAssembledAt = new Date().toISOString();
-        saveJobCard(jobId, cardNow);
-
-        // ── Poll assemblyJobs in-process until done, then persist final state ──
-        // assemblyJobs[assemblyId] is in-memory in the same Node process.
-        // Poll every 15s until status is 'done', 'failed', or 'manual_review',
-        // then write assembledAt + stage + outputPath + driveUrl to the persisted job card
-        // so the dashboard shows the correct state after any page reload.
-        const ASM_POLL_INTERVAL = 15000;
-        const ASM_POLL_MAX = 120; // 30 min max (120 × 15s)
-        let asmPollCount = 0;
-        const pollAssemblyCompletion = () => {
-          asmPollCount++;
-          const asmJob = assemblyJobs[assemblyId];
-          if (!asmJob) {
-            if (asmPollCount < ASM_POLL_MAX) setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-            return;
-          }
-          const isDone = asmJob.status === 'done' || asmJob.status === 'manual_review' || asmJob.status === 'failed';
-          if (!isDone && asmPollCount < ASM_POLL_MAX) {
-            setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-            return;
-          }
-          // Assembly finished — update persisted job card
-          const finalCard = persistedJobs[jobId] || cardNow;
-          if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
-            finalCard.assembledAt = new Date().toISOString();
-            finalCard.stage = 'assembled';
-            if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
-            if (asmJob.driveUrl)   finalCard.finalUrl   = asmJob.driveUrl;
-            if (asmJob.qaScore !== undefined) {
-              finalCard.gate5 = finalCard.gate5 || {};
-              finalCard.gate5.score   = asmJob.qaScore;
-              finalCard.gate5.outcome = asmJob.qaOutcome || 'manual_review';
-              finalCard.gate5.report  = asmJob.qaReport  || '';
-              if (asmJob.qaOutcome === 'pass') {
-                finalCard._gate5Done = true;
-                finalCard.stage = 'gate5_forced'; // treat auto-pass same as force-pass for dashboard
-              }
-            }
-            if (asmJob.publishResult) {
-              finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
-              finalCard.stage = 'published';
-            }
-            saveJobCard(jobId, finalCard);
-            console.log(`[heygen-poller:${jobId}] ✅ Persisted assembly completion: stage=${finalCard.stage}, outputPath=${asmJob.outputPath || 'n/a'}, driveUrl=${asmJob.driveUrl || 'n/a'}`);
-          } else {
-            console.warn(`[heygen-poller:${jobId}] ⚠️ Assembly ended with status=${asmJob.status} — job card not updated to assembled`);
-          }
-        };
-        setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-
-      } catch(assembleErr) {
-        console.error(`[heygen-poller:${jobId}] ❌ Auto-assembly POST failed: ${assembleErr.message} — manual ASSEMBLE required`);
-      }
+      // ── Emit pipeline event — Gate 2 QA + assembly handled by pipelineBus listener ──
+      const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
+      pipelineBus.emit('heygen:all_complete', {
+        jobId,
+        contentType: card.contentType || 'twitch',
+        segmentUrls,
+        card: updatedCard,
+        segmentData
+      });
+      unregisterPoller(jobId);
+      console.log(`[heygen-poller:${jobId}] 📡 heygen:all_complete emitted — Gate 2 + assembly handed off to pipeline bus`);
+      return; // poller's job is done — pipelineBus listener owns Gate 2 + assembly
 
     } catch(pollErr) {
       console.error(`[heygen-poller:${jobId}] Poll error: ${pollErr.message} — retrying in 30s`);
@@ -641,6 +813,349 @@ async function startHeyGenPoller(jobId, card) {
 }
 
 // NOTE: GET /jobs endpoint is registered after app is initialized (see below near line 796+)
+
+// ── Startup: Resume in-flight HeyGen pollers after server restart ─────────────
+// nodemon or any crash kills in-memory pollers. On boot, scan persistedJobs for jobs that
+// were actively polling HeyGen (all_sent stage, not yet assembled) and restart the poller.
+// This is fire-and-forget — the poller handles its own timeout/failure.
+setImmediate(() => {
+  // Safety: only resume jobs that were legitimately in-flight.
+  // MAX_RESUME_POLLERS prevents the 35-poller flood that burned 390 HeyGen credits.
+  const MAX_RESUME_POLLERS = 2;
+  let resumed = 0;
+
+  const candidates = Object.entries(persistedJobs).filter(([jobId, card]) => {
+    if ((card.status || '') === 'dismissed') return false;
+    const stage = card.stage || inferJobStage(card);
+    if (stage !== 'all_sent') return false;
+    const videoJobs = card.heygen?.videoJobs || [];
+    if (!videoJobs.length) return false;
+    // Skip if a poller is already running for this job (shouldn't happen at startup but guard anyway)
+    if (activePollers.has(jobId)) return false;
+    return true;
+  });
+
+  if (candidates.length > MAX_RESUME_POLLERS) {
+    console.warn(`[startup-resume] ⚠️  ${candidates.length} jobs eligible for resume — capping at ${MAX_RESUME_POLLERS} to prevent HeyGen flood. Remaining ${candidates.length - MAX_RESUME_POLLERS} jobs need manual re-trigger from dashboard.`);
+  }
+
+  const toResume = candidates.slice(0, MAX_RESUME_POLLERS);
+
+  for (const [jobId, card] of toResume) {
+    const videoJobs = card.heygen?.videoJobs || [];
+    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+    if (allComplete) {
+      console.log(`[startup-resume:${jobId}] All segments already completed — emitting heygen:all_complete`);
+      const contentType = card.contentType || 'twitch';
+      const formType = card.formType || 'compilation';
+      const segmentUrls = videoJobs.filter(vj => vj.video_url).map(vj => vj.video_url);
+      setTimeout(() => {
+        pipelineBus.emit('heygen:all_complete', {
+          jobId, contentType, formType, segmentUrls, card, segmentData: null
+        });
+      }, 2000);
+    } else {
+      console.log(`[startup-resume:${jobId}] Resuming HeyGen poller (${videoJobs.length} segments, not all complete)`);
+      startHeyGenPoller(jobId, card).catch(e => {
+        console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
+      });
+    }
+    resumed++;
+  }
+
+  if (resumed > 0) {
+    console.log(`[startup-resume] Resumed ${resumed} in-flight job(s) (cap: ${MAX_RESUME_POLLERS})`);
+  }
+
+  // ── Resume script_ready jobs — Gate 1 passed but HeyGen not yet submitted ──
+  // Handles: server restart after GATE_TEST_MODE was flipped, or any interruption
+  // between Gate 1 pass and HeyGen submission (e.g. HeyGen timeout, process kill).
+  // Jobs reach script_ready via rollback (all_sent → script_ready clears video IDs).
+  // Cap at MAX_RESUME_POLLERS to match all_sent resume and avoid HeyGen flood.
+  const scriptReadyCandidates = Object.values(persistedJobs).filter(card => {
+    if ((card.status || '') === 'dismissed') return false;
+    const stage = card.stage || inferJobStage(card);
+    if (stage !== 'script_ready') return false;
+    const script = card.script?.raw || card.script;
+    if (!script || (typeof script === 'string' && script.length < 10)) return false;
+    // Must have a script but no HeyGen video IDs
+    const videoJobs = card.heygen?.videoJobs || [];
+    if (videoJobs.length > 0) return false;
+    return true;
+  });
+
+  if (scriptReadyCandidates.length > 0) {
+    const MAX_SCRIPT_READY_RESUME = MAX_RESUME_POLLERS;
+    console.log(`[startup-resume] ${scriptReadyCandidates.length} script_ready job(s) found — auto-sending to HeyGen (cap: ${MAX_SCRIPT_READY_RESUME})`);
+    const toResumeScriptReady = scriptReadyCandidates.slice(0, MAX_SCRIPT_READY_RESUME);
+
+    // Use async IIFE — setImmediate callback is not async so await requires this wrapper
+    (async () => { for (const card of toResumeScriptReady) {
+      const jobId = card.jobId || card.id || card.scriptJobId;
+      if (!jobId) { console.warn('[startup-resume:script_ready] Card has no jobId — skipping'); continue; }
+      const contentType = card.contentType || 'twitch';
+      const script = card.script?.raw || (typeof card.script === 'string' ? card.script : null);
+      if (!script) { console.warn(`[startup-resume:${jobId}] No script found in card — skipping`); continue; }
+
+      try {
+        const format = contentType.includes('-short') ? 'portrait' : 'landscape';
+        console.log(`[startup-resume:${jobId}] Sending to HeyGen (${contentType}, ${format})`);
+        const heygenResult = await sendScriptToHeyGen(script, { contentType, format, jobId });
+        if (heygenResult?.videoJobs?.length) {
+          card.heygen = heygenResult;
+          card.stage = 'all_sent';
+          saveJobCard(jobId, card);
+          console.log(`[startup-resume:${jobId}] ✅ Sent ${heygenResult.videoJobs.length} scenes to HeyGen`);
+          startHeyGenPoller(jobId, card).catch(e => {
+            console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
+          });
+        } else {
+          console.warn(`[startup-resume:${jobId}] HeyGen returned no videoJobs — skipping poller start`);
+        }
+      } catch(e) {
+        console.error(`[startup-resume:${jobId}] HeyGen send failed: ${e.message}`);
+      }
+    } })().catch(e => console.error('[startup-resume:script_ready] Async error:', e.message));
+  }
+});
+
+// ── Pipeline Bus: heygen:all_complete → Gate 2 QA → assembly ─────────────────
+// The HeyGen poller emits this when all segments are done.
+// This listener owns Gate 2 QA + logging + assembly trigger + assembly completion polling.
+// Dashboard is view-only — it reads persistedJobs, never drives this flow.
+pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
+  // Concurrent job isolation guard: verify the card in persistedJobs matches the event's jobId
+  // and contentType. If a concurrent job mutated persistedJobs[jobId] with the wrong contentType,
+  // this guard aborts before assembly uses mismatched context (e.g. long-form assembled as short-form).
+  const _liveCard = persistedJobs[jobId];
+  if (_liveCard && _liveCard.contentType && _liveCard.contentType !== contentType) {
+    logger.error({ jobId, eventContentType: contentType, cardContentType: _liveCard.contentType },
+      'heygen:all_complete — contentType mismatch between event and persistedJobs card. Aborting assembly to prevent cross-job contamination.');
+    return;
+  }
+
+  // Rebuild segmentData from card if null (e.g. emitted by startup resume after server restart)
+  let segmentData = rawSegmentData;
+  if (!segmentData) {
+    const videoJobs = card.heygen?.videoJobs || [];
+    const sourceClips = card.sourceClipSegments || [];
+
+    // Build avatar lookup by sceneName for fast access
+    const avatarByName = {};
+    for (const vj of videoJobs) {
+      if (vj.status === 'completed' && vj.video_url) {
+        avatarByName[vj.sceneName] = vj;
+      }
+    }
+
+    // Use the script's scene order as the merge template so clips land in the right positions
+    const scriptScenes = card.script?.scenes || [];
+    if (scriptScenes.length > 0) {
+      let clipIdx = 0;
+      segmentData = [];
+      for (const scene of scriptScenes) {
+        if (scene.type === 'source_clip') {
+          // Insert source clip in scene order
+          const clip = sourceClips[clipIdx] || card.orderedClipUrls?.[clipIdx];
+          if (clip) {
+            segmentData.push({
+              type: 'source_clip',
+              url: clip.clipUrl || clip.url || '',
+              label: clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
+              pageUrl: clip.pageUrl || '',
+              storyIndex: clip.storyIndex ?? clipIdx,
+              sceneId: scene.name || scene.id
+            });
+          }
+          clipIdx++;
+        } else if (scene.type === 'avatar') {
+          // Match avatar segment by scene name (script uses scene.name, HeyGen uses sceneName)
+          const sceneKey = scene.name || scene.id;
+          const vj = avatarByName[sceneKey] ||
+            Object.values(avatarByName).find(v => v.sceneName === sceneKey);
+          if (vj) {
+            const seg = { type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex };
+            // Attach cardData for INTRO segments — chrome overlay reads this for flag + sidebar
+            if (card.contentType === 'news' && /STORY(\d+)_INTRO/i.test(vj.sceneName)) {
+              const storyMatch = vj.sceneName.match(/STORY(\d+)_INTRO/i);
+              const storyIdx = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
+              const storyItem = (card.newsItems || [])[storyIdx];
+              if (storyItem) {
+                seg.cardData = {
+                  title:        storyItem.title    || `Story ${storyIdx + 1}`,
+                  category:     storyItem.category || 'WORLD NEWS',
+                  storyId:      `story_${storyIdx + 1}`,
+                  imageUrl:     storyItem.thumbnailUrl || storyItem.imageUrl || null,
+                  heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
+                  source:       storyItem.source || ''
+                };
+              }
+            } else if (card.contentType === 'nba' && /GAME(\d+)[_ ].*INTRO/i.test(vj.sceneName)) {
+              // NBA: attach game matchup data to INTRO segments for flag + sidebar
+              const gameMatch = vj.sceneName.match(/GAME(\d+)/i);
+              const gameIdx = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
+              // Extract matchup from scene name: GAME1_CHARLOTTE_HORNETS_ORLANDO_MAGIC_INTRO
+              const rawName = vj.sceneName.replace(/^GAME\d+[_ ]/i, '').replace(/[_ ]INTRO$/i, '').replace(/_/g, ' ');
+              const nbaItem = (card.nbaItems || [])[gameIdx];
+              seg.cardData = {
+                title:   nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+                matchup: nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+                category: 'NBA GAME',
+                storyId:  `game_${gameIdx + 1}`,
+                gameId:   nbaItem?.gameId || null
+              };
+            } else if (card.contentType === 'twitch' && /[_ ]INTRO$/i.test(vj.sceneName)) {
+              // Twitch: attach streamer data to INTRO segments for sidebar
+              const namePart = vj.sceneName.replace(/[_ ]INTRO$/i, '').replace(/_/g, ' ').toLowerCase();
+              const streamer = (card.streamers || []).find(s =>
+                (s.displayName || '').toLowerCase() === namePart ||
+                (s.twitchUsername || '').toLowerCase() === namePart
+              ) || (card.streamers || [])[0];
+              if (streamer) {
+                seg.cardData = {
+                  title:    streamer.displayName || namePart,
+                  category: 'ON STREAM',
+                  storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
+                  fact:     [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0, 60),
+                  imageUrl: streamer.profileImage || null,
+                  twitchUsername: streamer.twitchUsername || streamer.username || null
+                };
+              }
+            }
+            segmentData.push(seg);
+          }
+        }
+      }
+    } else {
+      // No script scenes — fall back to avatar-only in sceneIndex order
+      segmentData = videoJobs
+        .filter(vj => vj.status === 'completed' && vj.video_url)
+        .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0))
+        .map(vj => ({ type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex }));
+    }
+
+    const avatarCount = segmentData.filter(s => s.type === 'avatar').length;
+    const clipCount   = segmentData.filter(s => s.type === 'source_clip').length;
+    logger.warn({ jobId, avatarCount, clipCount }, 'heygen:all_complete — segmentData rebuilt from card (startup resume)');
+  }
+  logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
+
+  // ── Gate 2: Handled inside assembly.js after segments are downloaded ─────
+  // Removed pre-assembly Gate 2 here — segmentUrls are HeyGen video IDs/URLs,
+  // not local file paths. fs.existsSync(url) always returns false → score 0.
+  // Gate 2 (new gate worker) runs inside handleAssemble() after downloads complete
+  // where it has actual local file paths to ffprobe and analyze.
+  logger.info({ jobId }, 'heygen:all_complete — skipping pre-assembly Gate 2, assembly.js owns it');
+
+  // ── Pre-warm ticker cache (long-form only) ────────────────────────────────
+  if (!contentType.includes('short')) {
+    const tickerContentType = contentType.replace(/-short$/, '');
+    logger.info({ jobId, tickerContentType }, 'Pre-warming ticker cache');
+    try {
+      const tickerPath = await captureTicker(tickerContentType);
+      if (tickerPath) logger.info({ jobId, tickerPath }, 'Ticker pre-warmed');
+      else logger.warn({ jobId }, 'Ticker pre-warm returned null — assembly continues without ticker');
+    } catch(e) {
+      logger.warn({ jobId, err: e.message }, 'Ticker pre-warm error — continuing');
+    }
+  }
+
+  // ── Trigger assembly ──────────────────────────────────────────────────────
+  const PORT = process.env.PORT || 3000;
+  // Assembly ID derived from jobId — survives retries, keeps all gate results linked
+  // Retry attempts append _r2, _r3 etc. First attempt uses clean asm_{jobId}
+  const _existingAsmId = (persistedJobs[jobId] || card).assemblyId;
+  const _retryCount = (persistedJobs[jobId] || card)._assemblyRetryCount || 0;
+  const assemblyId = _existingAsmId && _retryCount === 0
+    ? _existingAsmId  // reuse on first auto-trigger after server restart
+    : `asm_${jobId}${_retryCount > 0 ? `_r${_retryCount + 1}` : ''}`;
+  const format = contentType.includes('-short') ? 'portrait' : 'landscape';
+  const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
+  const _dateLabel = _cardDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const _avatarCount = segmentUrls.length;
+  const _clipCount   = (segmentData || []).filter(s => s.type === 'source_clip').length;
+  const _humanTitle  = `${contentType.toUpperCase()} ${_dateLabel} (${_avatarCount} avatar + ${_clipCount} clips)`;
+
+  try {
+    await axios.post(`http://localhost:${PORT}/assemble`, {
+      segments:     (segmentData || []).map(s => s.url),
+      segmentData:  segmentData || [],
+      labels:       (segmentData || []).map(s => s.label),
+      transition:   'crossfade',
+      format:       contentType.includes('-short') ? 'portrait' : 'mp4',
+      assemblyId,
+      jobTitle:     _humanTitle,
+      contentType,
+      jobId,
+      jobSpecId:    card.jobSpecId || null,  // semantic job spec ID for gate workers to load full spec
+      sceneTextMap:  card.heygen?.sceneTextMap || null,
+      fullScript:    (card.script && card.script.raw) ? card.script.raw : (card.script || null),
+      streamers:     card.streamers || [],
+      expectedClips: card.expectedClips ?? 0,  // Pipeline contract — Gate 3 asserts this
+      designSpec:    card.designSpec || null,
+      nbaItems:      card.nbaItems || [],
+      captionText:   card.captionText || null,
+      captionStyle:  card.captionStyle || null
+    }, { timeout: 10000 });
+
+    logger.info({ jobId, assemblyId }, 'Auto-assembly triggered — Gate 3 → Drive will run automatically');
+    pipelineBus.emit('assembly:triggered', { jobId, assemblyId });
+
+    const cardNow = persistedJobs[jobId] || card;
+    cardNow.assemblyId = assemblyId;
+    cardNow.autoAssembledAt = new Date().toISOString();
+    cardNow._assemblyRetryCount = (_retryCount || 0) + 1;
+    saveJobCard(jobId, cardNow);
+
+    // ── Poll assembly completion → persist final state ────────────────────
+    const ASM_POLL_INTERVAL = 15000;
+    const ASM_POLL_MAX = 120; // 30 min
+    let asmPollCount = 0;
+    const pollAssemblyCompletion = () => {
+      asmPollCount++;
+      const asmJob = assemblyJobs[assemblyId];
+      if (!asmJob) {
+        if (asmPollCount < ASM_POLL_MAX) setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+        return;
+      }
+      const isDone = asmJob.status === 'done' || asmJob.status === 'manual_review' || asmJob.status === 'failed';
+      if (!isDone && asmPollCount < ASM_POLL_MAX) { setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL); return; }
+
+      const finalCard = persistedJobs[jobId] || cardNow;
+      if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
+        finalCard.assembledAt = new Date().toISOString();
+        finalCard.stage = 'assembled';
+        if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
+        if (asmJob.driveUrl)   finalCard.finalUrl   = asmJob.driveUrl;
+        // Gate 3 = assembly QA (Gemini watches the assembled video)
+        if (asmJob.qaScore !== undefined) {
+          finalCard.gate3 = {
+            score:   asmJob.qaScore,
+            outcome: asmJob.qaOutcome || 'manual_review',
+            report:  asmJob.qaReport  || '',
+            checkedAt: new Date().toISOString()
+          };
+          if (asmJob.qaOutcome === 'pass' || asmJob.qaOutcome === 'manual_review') {
+            finalCard.stage = 'assembled';
+          }
+        }
+        if (asmJob.publishResult) {
+          finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
+          finalCard.stage = 'published';
+        }
+        saveJobCard(jobId, finalCard);
+        logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
+        pipelineBus.emit('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
+      } else {
+        logger.warn({ jobId, asmStatus: asmJob.status }, 'Assembly ended without done/manual_review — card not updated');
+      }
+    };
+    setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+
+  } catch(assembleErr) {
+    logger.error({ jobId, err: assembleErr.message }, 'Auto-assembly POST failed — manual ASSEMBLE required');
+  }
+});
 
 // Initialize Anthropic client for Claude API calls
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -873,20 +1388,13 @@ const SYSTEM_FONT = findSystemFont();
 
 // downloadFile moved to lib/downloader.js (imported above)
 
-function ffmpegPath() {
-  if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
-  // Cross-platform default: .exe on Windows, no extension on Unix
-  return process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
-}
-
-function ffprobePath() {
-  if (process.env.FFPROBE_PATH) return process.env.FFPROBE_PATH;
-  return process.platform === 'win32' ? 'ffprobe.exe' : 'ffprobe';
-}
+// Delegate to lib/ffmpeg_utils — routes through Docker container (bin/ffmpeg-docker)
+function ffmpegPath() { return _ffmpegDockerPath(); }
+function ffprobePath() { return _ffprobeDockerPath(); }
 
 function checkFFmpeg(cb) {
-  exec(ffmpegPath() + ' -version', (err, stdout) => {
-    if (err) return cb(new Error('FFmpeg not found. Install ffmpeg and ensure it is in PATH.'));
+  execFile(ffmpegPath(), ['-version'], (err, stdout) => {
+    if (err) return cb(new Error('FFmpeg not found or Docker not running.'));
     const versionLine = stdout.split('\n')[0];
     cb(null, versionLine);
   });
@@ -904,7 +1412,11 @@ function checkFFmpeg(cb) {
 app.get('/health', async (req, res) => {
   const health = {
     ok: true,
-    version: '1.0.0',
+    version: BUILD_INFO.version,
+    gitHash: BUILD_INFO.gitHash,
+    gitBranch: BUILD_INFO.gitBranch,
+    lastCommit: BUILD_INFO.lastCommit,
+    deployedAt: BUILD_INFO.deployedAt,
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     dependencies: {},
@@ -1002,18 +1514,18 @@ app.get('/health', async (req, res) => {
 app.get('/jobs', (req, res) => {
   // Only return in-flight jobs. Completed (assembled, published) and
   // failed/dismissed jobs are excluded — they do not need to restore on page load.
-  // Operators can still manually retrieve any job with ↩ RESTORE JOBS if needed.
   const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'assembling']);
-  
+
   const actionableJobs = Object.values(persistedJobs).filter(job => {
-    const stage = job.stage || '';
     const status = job.status || '';
     // Never return dismissed jobs regardless of stage
     if (status === 'dismissed') return false;
-    // Only return in-flight stages (script ready, sent to HeyGen, currently assembling)
+    // Infer stage for legacy jobs that don't have the stage field set
+    const stage = job.stage || inferJobStage(job);
+    // Only return in-flight stages
     return IN_FLIGHT_STAGES.has(stage);
   }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
-  
+
   res.json({ ok: true, count: actionableJobs.length, jobs: actionableJobs });
 });
 
@@ -1023,10 +1535,18 @@ app.delete('/job/:id', (req, res) => {
   const jobId = req.params.id;
   if (!persistedJobs[jobId]) return res.json({ ok: false, error: 'Job not found: ' + jobId });
   delete persistedJobs[jobId];
+  // Write to jobs.json
   try {
     fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
   } catch(e) {
     console.error('[jobs] Failed to save jobs.json after delete:', e.message);
+  }
+  // Also delete from SQLite DB so job doesn't reappear on server restart
+  try {
+    const { deleteJob } = require('./lib/db');
+    if (typeof deleteJob === 'function') deleteJob(jobId);
+  } catch(e) {
+    // DB delete is best-effort — non-fatal
   }
   console.log(`[jobs] Deleted job: ${jobId}`);
   res.json({ ok: true, deleted: jobId });
@@ -1216,7 +1736,7 @@ function detectStage(card) {
   if (card.publishRecord && card.publishRecord.publishedAt) return 'published';
   if (card.assembledAt || card.finalUrl) return 'assembled';
   if (card.heygen && card.heygen.videoJobs && card.heygen.videoJobs.length) return 'all_sent';
-  if (card.script && card.script.length > 10) return 'script_ready';
+  if (card.script && (card.script.raw || typeof card.script === 'string') && (card.script.raw || card.script).length > 10) return 'script_ready';
   return 'unknown';
 }
 
@@ -1231,6 +1751,22 @@ app.get('/newscast-overlay', (req, res) => {
 
 app.get('/twitch-tool', (req, res) => {
   res.sendFile(path.join(__dirname, 'cwn_twitch_tool.html'));
+});
+
+// Returns Twitch credentials for browser-side Twitch API calls (ticker, etc.)
+// Token is read from env at request time so it picks up rotations without restart
+app.get('/twitch-token', (req, res) => {
+  const clientId = process.env.TWITCH_CLIENT_ID;
+  const token    = process.env.TWITCH_TOKEN;
+  if (!clientId || !token) return res.status(503).json({ error: 'Twitch credentials not configured' });
+  res.json({ clientId, token });
+});
+
+app.get('/market-keys', (req, res) => {
+  res.json({
+    fmp:     process.env.FMP_API_KEY     || '',
+    finnhub: process.env.FINNHUB_API_KEY || ''
+  });
 });
 
 // Serve assets folder for images (Bobby G, etc.)
@@ -1544,8 +2080,30 @@ app.post('/assemble',
   },
   requireFields('segments', 'segmentData'),
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
-  (req, res) => handleAssemble(req, res, saveJobCard)
+  async (req, res) => {
+    // Load job spec for this job (created at script gen time)
+    const jobId = req.body.jobSpecId || req.body.asmId;
+    if (jobId) {
+      try {
+        req.jobSpec = await getJobSpec(jobId);
+      } catch (e) {
+        console.warn(`[assemble] No job spec found for ${jobId} — proceeding without`);
+      }
+    }
+    handleAssemble(req, res, saveJobCard);
+  }
 );
+
+// GET /job-spec/:jobId — fetch job spec state for a given job
+app.get('/job-spec/:jobId', async (req, res) => {
+  try {
+    const spec = await getJobSpec(req.params.jobId);
+    if (!spec) return res.status(404).json({ error: 'Job spec not found' });
+    res.json({ ok: true, jobSpec: spec });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // GET /assemble-progress/:id
 app.get('/assemble-progress/:id', (req, res) => {
@@ -1574,269 +2132,6 @@ app.get('/assemble-progress/:id', (req, res) => {
   });
 });
 
-// POST /assemble/:asmId/retry — re-run FFmpeg assembly from existing tmp segments
-// Skips Gate 1, HeyGen, and downloads. Uses tmp/asm_{asmId}_*.mp4 files directly.
-// Use case: assembly crashed but HeyGen segments already downloaded — no need to re-burn credits.
-// References: CLINE_HANDOFF_RETRY_ASSEMBLY.md
-app.post('/assemble/:asmId/retry', (req, res) => {
-  // DISABLED 2026-04-14: retry path skips Puppeteer chrome pipeline.
-  // TV card / lower-third flag / story sidebar all absent from output.
-  // Fresh assembly from dashboard is the safe path — HeyGen segments are
-  // cached in tmp/ and re-used automatically (no HeyGen re-spend).
-  // Re-enable when retry is rewritten to enter main assembly at chrome step.
-  return res.status(501).json({
-    error: 'retry_disabled',
-    message: 'Retry assembly is temporarily disabled. Use the main ASSEMBLE button — existing HeyGen segments are cached in tmp/ and will be re-used without re-burning HeyGen credits.',
-  });
-});
-
-/* DISABLED 2026-04-14 - see CLINE_HANDOFF_RETRY_ASSEMBLY_DISABLE.md
-app.post('/assemble/:asmId/retry', async (req, res) => {
-  const { asmId } = req.params;
-  const { contentType = 'news', jobTitle, assemblyJobId } = req.body;
-
-  // Block if still running
-  if (assemblyJobs[asmId] && assemblyJobs[asmId].status === 'running') {
-    console.warn(`[assemble/retry] asmId=${asmId} is still running — cannot retry a live assembly`);
-    return res.status(409).json({ error: 'Assembly still running — wait for it to finish or restart server', asmId });
-  }
-
-  // Find existing tmp files for this asmId, sorted by numeric index
-  // Naming pattern: asm_{asmId}_{index}_{name}.mp4
-  // Strip the "asm_{asmId}_" prefix to isolate "{index}_{name}.mp4" and parse index
-  const prefix = asmId + '_';
-  const tmpFiles = fs.readdirSync(TMP_DIR)
-    .filter(f => f.startsWith(prefix) && f.endsWith('.mp4'))
-    .sort((a, b) => {
-      const idxA = parseInt(a.slice(prefix.length).split('_')[0]) || 0;
-      const idxB = parseInt(b.slice(prefix.length).split('_')[0]) || 0;
-      return idxA - idxB;
-    })
-    .map(f => path.join(TMP_DIR, f));
-
-  if (!tmpFiles.length) {
-    return res.status(404).json({
-      error: 'No tmp segments found for this asmId — tmp/ may have been cleaned. Cannot retry.',
-      asmId,
-      hint: 'Run a fresh assembly from the dashboard.'
-    });
-  }
-
-  // Infer segTypes from filenames: files with 'clip' in name are source_clip, rest are avatar
-  const segTypes = tmpFiles.map(f => path.basename(f).toLowerCase().includes('clip') ? 'source_clip' : 'avatar');
-  const avatarCount = segTypes.filter(t => t === 'avatar').length;
-  const downloadedClipCount = segTypes.filter(t => t === 'source_clip').length;
-
-  log(asmId, `🔄 RETRY: Re-assembling from ${tmpFiles.length} existing tmp segments (skipping HeyGen)`);
-  log(asmId, `Segment types: ${avatarCount} avatar, ${downloadedClipCount} source_clip`);
-
-  // Reset assembly job state
-  assemblyJobs[asmId] = {
-    pct: 45,
-    log: '',
-    status: 'running',
-    outputPath: null,
-    sourceJobId: assemblyJobId || null,
-    isRetry: true
-  };
-
-  res.json({ ok: true, asmId, segmentCount: tmpFiles.length, message: 'Retry assembly started from existing segments' });
-
-  // ── Re-run from Step 5 (concat → Gate 3 → Drive upload) ──
-  const retryRun = async () => {
-    try {
-      // Build output path
-      const baseTitle = (jobTitle || 'cwn_retry').toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 40);
-      const outFile = `${baseTitle}_retry_${downloadedClipCount}clips_${Date.now()}.mp4`;
-      const outPath = path.join(OUTPUT_DIR, outFile);
-
-      // Step 5: Build concat list
-      log(asmId, `Building concat list from ${tmpFiles.length} segments...`);
-      const concatListPath = path.join(TMP_DIR, `concat_${asmId}.txt`);
-      const concatContent  = tmpFiles.map(f => `file '${f.replace(/'/g, "'\\''")}'`).join('\n');
-      fs.writeFileSync(concatListPath, concatContent);
-
-      // Step 6: FFmpeg concat (re-encode to normalize codecs/framerates across avatar + source_clip segments)
-      log(asmId, `Running FFmpeg concat...`);
-      assemblyJobs[asmId].pct = 55;
-      await new Promise((resolve, reject) => {
-        const args = [
-          '-f', 'concat', '-safe', '0', '-i', concatListPath,
-          '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-          '-c:a', 'aac', '-ar', '44100', '-ac', '2',
-          '-movflags', '+faststart',
-          '-y', outPath
-        ];
-        const proc = execFile(ffmpegPath(), args, { timeout: 30 * 60 * 1000 });
-        proc.stdout.on('data', d => log(asmId, d.toString().trim()));
-        proc.stderr.on('data', d => log(asmId, d.toString().trim()));
-        proc.on('close', code => code === 0 ? resolve() : reject(new Error(`FFmpeg concat failed: exit ${code}`)));
-        proc.on('error', reject);
-      });
-
-      assemblyJobs[asmId].pct = 80;
-      assemblyJobs[asmId].outputPath = outPath;
-      log(asmId, `✅ FFmpeg concat complete: ${outFile}`);
-
-      // Step 6b: Ticker bake — mirrors main assembly path
-      // Shorts never get a ticker; retry inherits same rule
-      const retryTickerType = contentType ? contentType.replace(/-short$/, '') : null;
-      let tickerBaked = false;
-      if (retryTickerType && TICKER_MAP[retryTickerType]) {
-        log(asmId, `\n🎞  Baking ${retryTickerType} ticker overlay (retry)...`);
-        assemblyJobs[asmId].pct = 85;
-        try {
-          const tickerPath = await captureTicker(retryTickerType);
-          if (tickerPath && fs.existsSync(tickerPath)) {
-            const tickeredFile = outFile.replace('.mp4', '_tickered.mp4');
-            const tickeredPath = path.join(OUTPUT_DIR, tickeredFile);
-            // Probe duration for ticker length
-            const tickerTotalSec = await new Promise((resolve) => {
-              execFile(ffprobePath(), [
-                '-v', 'error', '-show_entries', 'format=duration',
-                '-of', 'default=noprint_wrappers=1:nokey=1', outPath
-              ], (err, stdout) => resolve(err ? 300 : parseFloat(stdout.trim()) || 300));
-            });
-            const timeoutMs = Math.max(60000, tickerTotalSec * 3 * 1000);
-            await new Promise((res, rej) => {
-              const args = [
-                '-i', outPath,
-                '-stream_loop', '-1', '-i', tickerPath,
-                '-t', (tickerTotalSec + 2.0).toFixed(3),
-                '-filter_complex', `[0:v][1:v]overlay=x=0:y=H-${CONFIG.TICKER.HEIGHT}:eof_action=repeat[vout]`,
-                '-map', '[vout]', '-map', '0:a?',
-                '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac',
-                '-movflags', '+faststart', '-y', tickeredPath
-              ];
-              const ff2 = require('child_process').execFile(ffmpegPath(), args, { maxBuffer: 100*1024*1024 });
-              let lastProgressAt = Date.now();
-              const watchdog = setInterval(() => {
-                if (Date.now() - lastProgressAt > 90000) {
-                  clearInterval(watchdog);
-                  log(asmId, `⚠️  Ticker overlay stalled (retry) — killing, using un-tickered`);
-                  try { ff2.kill('SIGKILL'); } catch(e) {}
-                }
-              }, 10000);
-              const hardTimeout = setTimeout(() => {
-                clearInterval(watchdog);
-                log(asmId, `⚠️  Ticker overlay timeout (retry) — using un-tickered`);
-                try { ff2.kill('SIGKILL'); } catch(e) {}
-              }, timeoutMs);
-              ff2.stderr && ff2.stderr.on('data', (data) => {
-                lastProgressAt = Date.now();
-                const line = data.toString();
-                const timeMatch = line.match(/time=(\d+:\d+:\d+\.\d+)/);
-                if (timeMatch) {
-                  const parts = timeMatch[1].split(':');
-                  const elapsed = +parts[0]*3600 + +parts[1]*60 + +parts[2];
-                  const pct = Math.min(99, Math.round((elapsed / tickerTotalSec) * 100));
-                  if (pct % 10 === 0) log(asmId, `  🎞  Ticker (retry): ${timeMatch[1]} / ${Math.round(tickerTotalSec)}s (${pct}%)`);
-                  assemblyJobs[asmId].tickerPct = pct;
-                }
-              });
-              ff2.on('close', code => {
-                clearInterval(watchdog);
-                clearTimeout(hardTimeout);
-                if (code === 0) {
-                  try { fs.unlinkSync(outPath); } catch(e) {}
-                  fs.renameSync(tickeredPath, outPath);
-                  tickerBaked = true;
-                  log(asmId, `✅ Ticker baked in (retry)`);
-                  res();
-                } else {
-                  log(asmId, `⚠️  Ticker overlay failed (retry, code ${code}) — using un-tickered`);
-                  try { fs.unlinkSync(tickeredPath); } catch(e) {}
-                  res(); // non-fatal
-                }
-              });
-              ff2.on('error', e => {
-                clearInterval(watchdog);
-                clearTimeout(hardTimeout);
-                log(asmId, `⚠️  Ticker overlay error (retry): ${e.message}`);
-                res();
-              });
-            });
-          } else {
-            log(asmId, `⚠️  Ticker not available (retry) — install puppeteer: npm install puppeteer`);
-          }
-        } catch(tickerErr) {
-          log(asmId, `⚠️  Ticker step failed (retry): ${tickerErr.message} — continuing without ticker`);
-        }
-      }
-
-      // Step 7: Gate 3 QA — probe duration first
-      const totalDurResult = await new Promise((resolve) => {
-        execFile(ffprobePath(), [
-          '-v', 'error', '-show_entries', 'format=duration',
-          '-of', 'default=noprint_wrappers=1:nokey=1', outPath
-        ], (err, stdout) => resolve(err ? '0' : stdout.trim()));
-      });
-
-      log(asmId, `\n🔍 Gate 3: Running Gemini QA check (retry)...`);
-      const qaResult = await geminiQACheck(outPath, {
-        contentType,
-        avatarCount,
-        clipCount: downloadedClipCount,
-        downloadedClipCount,
-        expectedTicker: tickerBaked,
-        totalDuration: parseFloat(totalDurResult) || 0
-      });
-
-      assemblyJobs[asmId].qaScore   = qaResult.score;
-      assemblyJobs[asmId].qaReport  = qaResult.report;
-      assemblyJobs[asmId].qaOutcome = qaResult.outcome;
-
-      log(asmId, `Gate 3: ${qaResult.outcome} (${qaResult.score}/100)`);
-
-      // ── Gate 3 Auto-Action (Fix 5) ──────────────────────────────────
-      const { action, directive, reason } = autoAction(3, qaResult.score, {
-        jobId: asmId,
-        contentType,
-        clipCount: downloadedClipCount,
-        retryCount: 0 // This is already a retry path
-      });
-      logger.info({ gate: 3, score: qaResult.score, action, directive, reason }, 'Gate 3 auto-action (retry path)');
-
-      if (action === 'proceed') {
-        log(asmId, `✅ Gate 3 AUTO-ACTION: ${action} — ${reason}`);
-        // Continue to Drive upload below
-      } else if (action === 'manual_review') {
-        log(asmId, `⏸  Gate 3 AUTO-ACTION: ${action} — ${reason}`);
-        assemblyJobs[asmId].status = 'manual_review';
-        assemblyJobs[asmId].autoAction = { action, directive, reason };
-        return; // Pause pipeline
-      } else if (action === 'retry_assembly') {
-        log(asmId, `🔄 Gate 3 AUTO-ACTION: ${action} — ${reason}`);
-        // Already in retry path — cannot retry again, escalate to manual review
-        assemblyJobs[asmId].status = 'manual_review';
-        assemblyJobs[asmId].autoAction = { action: 'manual_review', directive: 'Gate 3 retry failed — manual review required', reason };
-        return;
-      }
-
-      if (qaResult.outcome === 'pass' || qaResult.outcome === 'manual_review') {
-        // Upload to Drive
-        log(asmId, `Uploading to Google Drive...`);
-        const driveUrl = await uploadToDrive(outPath, path.basename(outPath));
-        assemblyJobs[asmId].driveUrl = driveUrl;
-        assemblyJobs[asmId].status   = 'done';
-        assemblyJobs[asmId].pct      = 100;
-        log(asmId, `✅ RETRY COMPLETE — Drive: ${driveUrl}`);
-      } else {
-        assemblyJobs[asmId].status = 'failed';
-        assemblyJobs[asmId].error  = `Gate 3 failed on retry: ${qaResult.score}/100`;
-        log(asmId, `❌ Gate 3 failed on retry (${qaResult.score}/100) — manual review needed`);
-      }
-    } catch (err) {
-      assemblyJobs[asmId].status = 'failed';
-      assemblyJobs[asmId].error  = err.message;
-      log(asmId, `❌ Retry assembly error: ${err.message}`);
-      console.error('[assemble/retry] Error:', err);
-    }
-  };
-
-  retryRun();
-});
-*/
 
 // GET /download/:file — serve assembled video or thumbnail frame
 app.get('/download/:file', (req, res) => {
@@ -1999,7 +2294,7 @@ app.post('/capture-ticker', async (req, res) => {
  * @returns {Promise<{videoUrl: string, duration?: number, title?: string} | null>}
  */
 async function scrapeEspnGameVideoUrl(gameId) {
-  const gamePageUrl = `https://www.espn.com/nba/game/_/gameId/${gameId}`;
+  const gamePageUrl = `https://www.espn.com/nba/video/_/gameId/${gameId}`;
   let capturedHlsUrl = null;
   let browser;
 
@@ -2052,66 +2347,95 @@ async function scrapeEspnGameVideoUrl(gameId) {
   return null;
 }
 
+// downloadEspnVideo — thin wrapper around the universal downloader
+// Keeping this name so existing callers don't need changes.
+const { downloadVideoForAnalysis } = require('./lib/downloader');
+async function downloadEspnVideo(url, outPath) {
+  return downloadVideoForAnalysis(url, outPath, { maxSecs: 90 });
+}
+
 // ── POST /nba/scrape-game-highlight ─────────────────────────────────
 // Scrapes the ESPN game page for the video with the highest duration
 // User requirement: "video on that page with the highest duration--top left of the game_id page"
 app.post('/nba/scrape-game-highlight', async (req, res) => {
-  const { gameId } = req.body;
+  const { gameId, formType } = req.body;
   if (!gameId) return res.status(400).json({ error: 'gameId required' });
+  // Short-form clips need 30-90s for split-screen. Long-form uses any duration ≥ 10s.
+  const isShortFormRequest = formType === 'short';
+  const minDurationSecs = isShortFormRequest ? 30 : 10;
+  const maxDurationSecs = isShortFormRequest ? 90 : null;
 
   try {
-    console.log(`[nba-scrape] Fetching game summary for gameId: ${gameId}`);
+    console.log(`[nba-scrape] Fetching highlights for gameId: ${gameId} via ESPN Summary API`);
 
-    // Step 1: Fetch ESPN game summary API (contains videos)
+    // Primary path: ESPN Summary API — returns Akamai HLS URLs (stable, no expiry)
+    // article.video = compiled highlights reel (87-115s) — not always present
+    // d.videos = individual play clips + highlights — longest duration = highlights reel
+    // Puppeteer removed: d.videos Akamai HLS is reliable and doesn't require a browser
     const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
     const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
-    const videos = summaryResp.data.videos || [];
+    const summaryData = summaryResp.data;
 
-    if (!videos.length) {
-      console.warn(`[nba-scrape] No videos found in ESPN API for game ${gameId} — trying Puppeteer fallback`);
-      
-      // Gate 0: Try Puppeteer fallback to capture HLS manifest
-      const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
-      if (puppeteerResult && puppeteerResult.videoUrl) {
+    // Check article.video first — this is where the compiled highlights reel lives
+    const articleVideos = (summaryData.article && summaryData.article.video) || [];
+    if (articleVideos.length) {
+      const highlight = articleVideos[0]; // First is always the Game Highlights reel
+      // Prefer Akamai HLS manifest (stable, no expiring token) over direct CDN MP4 (expires in seconds)
+      const hlsUrl = highlight.links?.source?.HLS?.HD?.href || highlight.links?.source?.HLS?.href;
+      const directMp4 = highlight.links?.source?.HD?.href;
+      const hlUrl = hlsUrl || directMp4;
+      if (hlUrl) {
+        console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s) [${hlsUrl ? 'HLS' : 'direct MP4'}]`);
+        // Download immediately — ESPN CDN URLs expire within seconds
+        const tmpPathAv = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
+        let localPathAv = null;
+        try {
+          localPathAv = await downloadEspnVideo(hlUrl, tmpPathAv);
+        } catch(e) {
+          console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
+        }
         return res.json({
           ok: true,
           gate0: 'pass',
           gameId,
-          videoUrl: puppeteerResult.videoUrl,
-          thumbnail: '',
-          title: 'Game Highlights (Puppeteer)',
-          description: '',
-          duration: 0,
-          videoCount: 0,
-          source: 'puppeteer'
+          videoUrl: hlUrl,
+          localPath: localPathAv,
+          thumbnail: (highlight.thumbnail && highlight.thumbnail.href) || '',
+          title: highlight.headline || 'Game Highlights',
+          description: highlight.description || '',
+          duration: highlight.duration || 0,
+          source: 'article.video'
         });
       }
+    }
 
-      // Gate 0 FAIL: No videos in API and Puppeteer failed
+    // Step 3: Fall back to play clips (d.videos) — longest duration
+    console.warn(`[nba-scrape] ⚠️ article.video empty — falling back to API play clips (longest duration)`);
+    const videos = summaryData.videos || [];
+
+    if (!videos.length) {
+      // Gate 0 FAIL: Puppeteer failed and API has no videos either
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No videos found for game ${gameId} — ESPN API returned empty videos[]. Game may be too recent or too old.`
+        error: `No videos found for game ${gameId} — video page Puppeteer failed and ESPN API returned empty videos[]. Game may be too recent or too old.`
       });
     }
 
-    console.log(`[nba-scrape] Found ${videos.length} videos for game ${gameId}`);
+    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting ${isShortFormRequest ? 'best 30-90s clip for short-form' : 'longest clip for long-form'}`);
 
-    // Step 2: Filter for highlight videos first (Gap #20)
-    // ESPN often includes press conferences (30+ min) and interviews alongside actual highlights (~1-2 min).
-    // Prefer videos whose headline/title/description matches highlight-specific keywords.
-    // Fall back to unfiltered set if no matches — better to have a press conference than no clip.
-    const highlightPattern = /highlight|top\s+plays|key\s+plays|best\s+plays|game\s+recap/i;
-    const filteredVideos = videos.filter(v => {
-      const text = `${v.headline || ''} ${v.title || ''} ${v.description || ''}`;
-      return highlightPattern.test(text);
-    });
-    const videoPool = filteredVideos.length > 0 ? filteredVideos : videos;
-    console.log(`[nba-scrape]   Filtered ${filteredVideos.length}/${videos.length} videos matching "highlight" pattern — using ${videoPool.length} in pool`);
+    // Step 2: Use full video pool — select best clip based on form type.
+    // Long-form: select longest duration (game highlights reel is reliably longest at 115s).
+    // Short-form: prefer clips in 30-90s range for split-screen; fall back to longest if none in range.
+    // Keyword filtering on API metadata was removed: ESPN titles don't contain "highlight"
+    // even when the page shows "Game Highlights", so the filter always returned 0 matches.
+    const videoPool = videos;
+    console.log(`[nba-scrape]   Using full pool of ${videoPool.length} videos`);
 
-    // Step 3: Find video with highest duration from the filtered pool
+    // Step 3: Find best video — prefer 30-90s range for short-form, longest for long-form
     let highestDurationVideo = null;
     let maxDuration = 0;
+    let shortFormPreferred = null;  // best clip in 30-90s range for short-form
 
     for (const video of videoPool) {
       const duration = video.duration || 0;
@@ -2119,10 +2443,27 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
 
       console.log(`[nba-scrape]   Video: "${title}" (${duration}s)`);
 
+      // Track the longest clip (long-form selection + short-form fallback)
       if (duration > maxDuration) {
         maxDuration = duration;
         highestDurationVideo = video;
       }
+
+      // Track best clip in 30-90s range for short-form (prefer longer within range)
+      if (isShortFormRequest && duration >= minDurationSecs && duration <= maxDurationSecs) {
+        if (!shortFormPreferred || duration > (shortFormPreferred.duration || 0)) {
+          shortFormPreferred = video;
+        }
+      }
+    }
+
+    // Short-form: use preferred 30-90s clip if found, otherwise fall back to longest
+    if (isShortFormRequest && shortFormPreferred) {
+      highestDurationVideo = shortFormPreferred;
+      maxDuration = shortFormPreferred.duration || 0;
+      console.log(`[nba-scrape] Short-form: selected ${maxDuration}s clip in target 30-90s range`);
+    } else if (isShortFormRequest) {
+      console.warn(`[nba-scrape] Short-form: no clip in 30-90s range found — falling back to longest (${maxDuration}s)`);
     }
 
     if (!highestDurationVideo) {
@@ -2134,64 +2475,78 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       });
     }
 
-    // Step 4: Extract best quality video URL from API
+    // Step 4: Extract best quality video URL — prefer Akamai HLS (stable, no expiry)
+    // over direct CDN MP4 (expires within seconds of being generated)
     const links = highestDurationVideo.links || {};
     const source = links.source || {};
-    let videoUrl = source.HD?.href
+    let videoUrl = source.HLS?.HD?.href
+      || source.HLS?.href
+      || source.HD?.href
       || source.mezzanine?.href
       || source.full?.href
       || source.href
       || links.mobile?.href
       || '';
 
-    // Gate 0: Validate the selected URL is usable (ESPN CDN URLs often return 500)
-    // If API URL is empty or fails validation, fall back to Puppeteer HLS capture
+    // Gate 0: Validate the selected URL is usable
+    // Puppeteer already ran first and failed, so no further fallback is available.
     if (!videoUrl) {
-      console.warn(`[nba-scrape] Gate 0: No usable video URL in API response — trying Puppeteer fallback`);
-      const puppeteerResult = await scrapeEspnGameVideoUrl(gameId);
-      if (puppeteerResult && puppeteerResult.videoUrl) {
-        videoUrl = puppeteerResult.videoUrl;
-        console.log(`[nba-scrape] Gate 0: Puppeteer fallback succeeded — using HLS manifest`);
-      } else {
-        console.error(`[nba-scrape] Gate 0 FAIL: No usable video URL found for game ${gameId}`);
-        return res.json({
-          ok: false,
-          gate0: 'fail',
-          error: `No valid highlight clip URL found for game ${gameId} — API returned metadata but no downloadable URL. Check ESPN API response at: ${summaryUrl}`
-        });
-      }
-    }
-
-    // Gate 0: Validate duration meets minimum threshold
-    if (maxDuration > 0 && maxDuration < 10) {
-      console.warn(`[nba-scrape] Gate 0 WARN: Best video for game ${gameId} is only ${maxDuration}s — below 10s minimum`);
+      console.error(`[nba-scrape] Gate 0 FAIL: No usable video URL found for game ${gameId}`);
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No valid highlight clips found for game ${gameId} — longest clip is only ${maxDuration}s (minimum: 10s)`
+        error: `No valid highlight clip URL found for game ${gameId} — Puppeteer failed and API returned metadata but no downloadable URL. Check ESPN API response at: ${summaryUrl}`
+      });
+    }
+
+    // Gate 0: Validate duration meets minimum threshold (30s for short-form, 10s for long-form)
+    if (maxDuration > 0 && maxDuration < minDurationSecs) {
+      console.warn(`[nba-scrape] Gate 0 WARN: Best video for game ${gameId} is only ${maxDuration}s — below ${minDurationSecs}s minimum (formType: ${formType || 'long'})`);
+      return res.json({
+        ok: false,
+        gate0: 'fail',
+        error: `No valid highlight clips found for game ${gameId} — longest clip is only ${maxDuration}s (minimum: ${minDurationSecs}s for ${isShortFormRequest ? 'short-form' : 'long-form'})`
       });
     }
 
     // Also extract thumbnail
     const thumbnail = highestDurationVideo.thumbnail || '';
 
-    const result = {
+    console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected longest duration video: "${highestDurationVideo.headline || highestDurationVideo.title || 'Game Highlights'}" (${maxDuration}s)`);
+    console.log(`[nba-scrape]    URL: ${videoUrl.slice(0, 80)}...`);
+
+    // Download immediately — ESPN CDN URLs expire within seconds
+    const tmpPathApi = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
+    let localPathApi = null;
+    try {
+      const { execFile } = require('child_process');
+      const ffmpegBin = ffmpegPath();
+      const ffmpegArgs = ['-i', videoUrl, '-t', '90', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', '-y', tmpPathApi];
+      await new Promise((resolve, reject) => {
+        execFile(ffmpegBin, ffmpegArgs, { timeout: 120000 }, (err) => err ? reject(err) : resolve());
+      });
+      const sizeApi = fs.existsSync(tmpPathApi) ? fs.statSync(tmpPathApi).size : 0;
+      if (sizeApi > 1000) {
+        localPathApi = tmpPathApi;
+        console.log(`[nba-scrape] ✅ Downloaded highlight to ${tmpPathApi} (${(sizeApi/1024/1024).toFixed(1)}MB)`);
+      }
+    } catch(e) {
+      console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
+    }
+
+    res.json({
       ok: true,
       gate0: 'pass',
       gameId,
       videoUrl,
+      localPath: localPathApi,
       thumbnail,
       title: highestDurationVideo.headline || highestDurationVideo.title || 'Game Highlights',
       description: highestDurationVideo.description || '',
       duration: maxDuration,
       videoCount: videos.length,
       source: 'api'
-    };
-
-    console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected highest duration video: "${result.title}" (${maxDuration}s)`);
-    console.log(`[nba-scrape]    URL: ${videoUrl.slice(0, 80)}...`);
-
-    res.json(result);
+    });
 
   } catch (err) {
     console.error(`[nba-scrape] Error:`, err.message);
@@ -2287,14 +2642,7 @@ async function validateVideo(v) {
 // Fetches Al Jazeera's per-day sitemap XML, filters to US-topic news articles.
 // Excludes: /liveblog/ /video/ /longform/ /podcasts/ (no video or wrong format)
 // Returns array of article URL strings.
-const US_KEYWORDS = [
-  'us-', '-us-', 'trump', 'america', 'american', 'washington', 'congress',
-  'senate', 'white-house', 'pentagon', 'canada', 'mexico', 'nato', 'iran-us',
-  'us-iran', 'tariff', 'fentanyl', 'deportation', 'immigration', 'border',
-  'fbi', 'cia', 'doge'
-];
-
-async function fetchAjSitemapUrls(date = new Date(), topicKeywords = US_KEYWORDS) {
+async function fetchAjSitemapUrls(date = new Date()) {
   const yyyy = date.getFullYear();
   const mm   = String(date.getMonth() + 1).padStart(2, '0');
   const dd   = String(date.getDate()).padStart(2, '0');
@@ -2313,42 +2661,38 @@ async function fetchAjSitemapUrls(date = new Date(), topicKeywords = US_KEYWORDS
     .map(m => m.replace(/<\/?loc>/g, '').trim())
     .filter(u => u.startsWith('https://www.aljazeera.com/'));
 
-  // Exclude non-article paths
+  // Exclude non-article paths — return ALL remaining articles (no topic keyword filter)
   const EXCLUDE_PATHS = ['/liveblog/', '/video/', '/longform/', '/podcasts/', '/program/'];
   const articleUrls = allUrls.filter(u => !EXCLUDE_PATHS.some(p => u.includes(p)));
 
-  // Filter to topic-matching articles by keyword overlap on the URL slug
-  const matching = articleUrls.filter(u => {
-    const slug = u.toLowerCase();
-    return topicKeywords.some(kw => slug.includes(kw));
-  });
-
-  console.log(`[fetchAjSitemapUrls] ${allUrls.length} total → ${articleUrls.length} articles → ${matching.length} topic-matching`);
-  return matching;
+  console.log(`[fetchAjSitemapUrls] ${allUrls.length} total → ${articleUrls.length} articles (all topics)`);
+  return articleUrls;
 }
 
 // ── AJ Puppeteer video scraper ────────────────────────────────────────────────
-// Opens a Puppeteer browser, loads up to maxCheck articles, intercepts Brightcove
-// API network responses to capture HLS URLs directly, checks manifest dimensions.
+// Opens a Puppeteer browser, walks sitemap articles in order (today first, then
+// yesterday as fallback), intercepts Brightcove API network responses to capture
+// HLS URLs directly, checks manifest dimensions.
+// Stops as soon as targetCount confirmed videos are found (no hard article cap).
 // Returns array of { articleUrl, videoId, hlsUrl, orientation, pillarboxFilter }
 // orientation: 'landscape' (16:9) | 'portrait' (9:16)
 // pillarboxFilter: null for landscape, FFmpeg filter string for portrait
 //
 // Brightcove account: 665003303001
 // HLS served at manifest.prod.boltdns.net
-async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
+async function scrapeAjNewsVideos(targetCount = 5) {
   const puppeteer = require('puppeteer');
   const results = [];
 
-  // Fetch today's and yesterday's sitemap URLs
+  // Fetch today's and yesterday's sitemap URLs — today first, yesterday as fallback
   const today     = new Date();
   const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
 
   let candidateUrls = [];
   try {
     const [todayUrls, yestUrls] = await Promise.all([
-      fetchAjSitemapUrls(today, topicKeywords),
-      fetchAjSitemapUrls(yesterday, topicKeywords)
+      fetchAjSitemapUrls(today),
+      fetchAjSitemapUrls(yesterday)
     ]);
     candidateUrls = [...todayUrls, ...yestUrls];
   } catch (e) {
@@ -2361,8 +2705,7 @@ async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
     return [];
   }
 
-  const toCheck = candidateUrls.slice(0, maxCheck);
-  console.log(`[scrapeAjNewsVideos] Checking ${toCheck.length} articles with Puppeteer...`);
+  console.log(`[scrapeAjNewsVideos] Scanning for ${targetCount} videos (no article cap)...`);
 
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -2370,15 +2713,36 @@ async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
   });
 
   try {
-    for (const articleUrl of toCheck) {
+    for (const articleUrl of candidateUrls) {
+      // Stop as soon as we have enough confirmed videos
+      if (results.length >= targetCount) break;
+
       let capturedHls   = null;
       let capturedVideoId = null;
 
       const page = await browser.newPage();
       try {
-        // Intercept Brightcove API calls to capture HLS manifests
+        // Spoof a real browser UA so AJ doesn't serve a bot-detection page
+        await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+        // Pre-accept GDPR/consent so the wall doesn't stall the page load
+        await page.setCookie(
+          { name: 'OptanonAlertBoxClosed', value: new Date().toISOString(), domain: '.aljazeera.com', path: '/' },
+          { name: 'OptanonConsent',        value: 'isGpcEnabled=0&datestamp=' + encodeURIComponent(new Date().toISOString()) + '&version=202209.1.0&isIABGlobal=false&hosts=&landingPath=NotLandingPage&groups=C0001%3A1%2CC0002%3A1%2CC0003%3A1%2CC0004%3A1&AwaitingReconsent=false', domain: '.aljazeera.com', path: '/' }
+        );
+        // Intercept requests: block heavy assets to speed up load, let Brightcove API through
         await page.setRequestInterception(true);
-        page.on('request', req => req.continue());
+        const BLOCK_TYPES = new Set(['image', 'font', 'media']);
+        const BLOCK_DOMAINS = ['googlesyndication.com', 'doubleclick.net', 'googletagmanager.com',
+          'google-analytics.com', 'facebook.net', 'scorecardresearch.com', 'quantserve.com'];
+        page.on('request', req => {
+          const url = req.url();
+          if (BLOCK_TYPES.has(req.resourceType()) ||
+              BLOCK_DOMAINS.some(d => url.includes(d))) {
+            req.abort();
+          } else {
+            req.continue();
+          }
+        });
 
         page.on('response', async resp => {
           const url = resp.url();
@@ -2403,7 +2767,7 @@ async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
           }
         });
 
-        await page.goto(articleUrl, { waitUntil: 'networkidle2', timeout: 20000 });
+        await page.goto(articleUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
         // Scroll to trigger lazy-loaded players
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
         await new Promise(r => setTimeout(r, 2000));
@@ -2441,6 +2805,12 @@ async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
         console.warn(`[scrapeAjNewsVideos] Manifest check failed: ${e.message}`);
       }
 
+      // Fix 2: portrait-only for news-short — landscape clips dropped silently
+      if (orientation !== 'portrait') {
+        console.log(`[scrapeAjNewsVideos] ⏭  LANDSCAPE dropped (${manifestWidth}x${manifestHeight}): ${articleUrl.slice(-60)}`);
+        continue;
+      }
+
       results.push({
         articleUrl,
         videoId:        capturedVideoId,
@@ -2451,7 +2821,7 @@ async function scrapeAjNewsVideos(topicKeywords = US_KEYWORDS, maxCheck = 20) {
         sourceHeight:   manifestHeight
       });
 
-      console.log(`[scrapeAjNewsVideos] ✅ ${orientation.toUpperCase()} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
+      console.log(`[scrapeAjNewsVideos] ✅ PORTRAIT ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
     }
   } finally {
     await browser.close();
@@ -2499,8 +2869,42 @@ app.get('/news/us-canada-videos', async (req, res) => {
     // The dashboard shows these to the operator — text-only articles are excluded.
     // Typical results: 6-12 confirmed videos from today+yesterday's sitemap.
     console.log('[news/us-canada-videos] Running Puppeteer AJ scraper...');
-    const ajVideos = await scrapeAjNewsVideos(US_KEYWORDS, 20);
+    let ajVideos = await scrapeAjNewsVideos(5);
     console.log(`[news/us-canada-videos] Scraped ${ajVideos.length} confirmed video articles`);
+
+    // ── Gate 0: Gemini recovery when scraper returns 0 videos ────────────────
+    // If Puppeteer found nothing (timeouts, Brightcove not firing), ask Gemini to
+    // pick the most video-likely articles from the sitemap and retry once.
+    if (ajVideos.length === 0) {
+      console.log('[news/us-canada-videos] Gate 0: 0 videos — asking Gemini to select best candidates for retry...');
+      try {
+        const [todayUrls, yestUrls] = await Promise.all([
+          fetchAjSitemapUrls(new Date()),
+          fetchAjSitemapUrls(new Date(Date.now() - 86400000))
+        ]);
+        const allUrls = [...todayUrls, ...yestUrls].slice(0, 60);
+        if (allUrls.length > 0) {
+          const slugList = allUrls.map((u, i) => `${i+1}. ${u.split('/').filter(Boolean).pop()}`).join('\n');
+          const geminiPrompt = `You are selecting news articles for a video show. From this list of Al Jazeera article slugs, pick the 8 most likely to have an embedded video (breaking news, conflict, politics, interviews tend to have video; opinion/analysis rarely do). Return ONLY a JSON array of the numbers you selected, e.g. [1,3,7,12,15,18,22,25]. No explanation.\n\n${slugList}`;
+          const geminiResp = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            { contents: [{ parts: [{ text: geminiPrompt }] }] },
+            { timeout: 15000 }
+          );
+          const geminiText = ((geminiResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text).join('') || '').trim();
+          const match = geminiText.match(/\[[\d,\s]+\]/);
+          if (match) {
+            const indices = JSON.parse(match[0]).map(n => n - 1).filter(n => n >= 0 && n < allUrls.length);
+            const candidateUrls = indices.map(n => allUrls[n]);
+            console.log(`[news/us-canada-videos] Gate 0 Gemini picked ${candidateUrls.length} candidates — retrying scrape...`);
+            ajVideos = await scrapeAjNewsVideos(5, candidateUrls);
+            console.log(`[news/us-canada-videos] Gate 0 retry: ${ajVideos.length} videos found`);
+          }
+        }
+      } catch (e) {
+        console.warn(`[news/us-canada-videos] Gate 0 Gemini recovery failed: ${e.message}`);
+      }
+    }
 
     // Convert to the video object shape the dashboard expects
     const videos = ajVideos.map(v => {
@@ -2527,12 +2931,19 @@ app.get('/news/us-canada-videos', async (req, res) => {
 
     videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
+    // Safety net: endpoint always returns portrait-only (scraper already filters, this is belt+suspenders)
+    const portraitVideos = videos.filter(v => v.orientation === 'portrait');
+    if (portraitVideos.length < videos.length) {
+      console.log(`[news/us-canada-videos] Safety filter: dropped ${videos.length - portraitVideos.length} landscape clips (scraper should have dropped these)`);
+    }
+
     return res.json({
-      videos,
-      recentCount: videos.length,
-      source: 'AJ sitemap (today+yesterday) — Puppeteer Brightcove confirmed',
-      landscape: videos.filter(v => v.orientation === 'landscape').length,
-      portrait:  videos.filter(v => v.orientation === 'portrait').length
+      ok: true,
+      videos: portraitVideos,
+      recentCount: portraitVideos.length,
+      source: 'AJ sitemap (today+yesterday) — Puppeteer Brightcove confirmed (portrait only)',
+      landscape: 0,
+      portrait:  portraitVideos.length
     });
   } catch (err) {
     console.error('[news/us-canada-videos] Error:', err.message);
@@ -2793,15 +3204,151 @@ app.post('/generate-full-script',
   validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
   validateArrayLength('items', 1),
   async (req, res) => {
-    const { type } = req.body;
+    const { type, items } = req.body;
+    // Build ajVideoPool directly from items the dashboard already scraped —
+    // avoids a full second Puppeteer run that adds 3-5 minutes before Gemini starts.
+    // Items from fetchCwnNewsVideos() already carry hlsUrl, orientation, pillarboxFilter.
     let ajVideoPool = [];
-    if (type === 'news' || type === 'news-short') {
+    if ((type === 'news' || type === 'news-short') && Array.isArray(items)) {
+      ajVideoPool = items
+        .filter(it => it.hlsUrl || it.videoUrl)
+        .map(it => ({
+          articleUrl:      it.link || it.url || '',
+          title:           it.title || '',
+          hlsUrl:          it.hlsUrl || it.videoUrl || '',
+          orientation:     it.sourceOrientation || 'landscape',
+          pillarboxFilter: it.pillarboxFilter || null
+        }));
+      console.log(`[/generate-full-script] ajVideoPool built from request items: ${ajVideoPool.length} videos (no re-scrape)`);
+    }
+    // Create Job Spec at job start — single document every stage reads
+    try {
+      const { type: contentType, formType, itemCount, title } = req.body;
+      req.jobSpec = await createJobSpec({
+        customerId: req.body.customerId || 'c0',
+        showId: req.body.showId || null,
+        templateId: formType === 'short' ? 'short-form' : 'long-form',
+        contentType,
+        createdBy: 'dashboard',
+        order: {
+          inputs: {
+            sourceType: 'site_scrape',
+            sourceConfig: { siteTarget: contentType },
+            items: [],
+            itemCount: itemCount || 0
+          },
+          output: {
+            formFactor: formType === 'short' ? 'short' : 'long',
+            aspectRatio: formType === 'short' ? '9:16' : '16:9',
+            resolution: formType === 'short'
+              ? { width: 1080, height: 1920 }
+              : { width: 1920, height: 1080 }
+          },
+          meta: { title: title || null, scheduledAt: null }
+        }
+      });
+    } catch (specErr) {
+      console.warn('[/generate-full-script] Job Spec creation failed (non-fatal):', specErr.message);
+    }
+    // Override deliverySpec platforms if caller specified them (e.g. platform selector modal)
+    if (req.jobSpec && req.body.platforms && Array.isArray(req.body.platforms) && req.body.platforms.length > 0) {
+      req.jobSpec.deliverySpec.platforms = req.body.platforms;
+      console.log(`[/generate-full-script] deliverySpec.platforms overridden by request: ${req.body.platforms.join(', ')}`);
+    }
+    // Store the semantic jobSpecId on req so script_gen can cross-reference it into the job card
+    if (req.jobSpec) {
+      req.jobSpecId = req.jobSpec.jobId;
+
+      // ── PRE-GENERATE GATE COMMITMENT CHECK ───────────────────────────────
+      // Every gate worker runs canProduce() + commit() against this job spec
+      // BEFORE production starts. All must confirm they can deliver.
+      // Job ID is only confirmed after all gates sign off.
+      // QA agents are also notified of the confirmed job ID and spec.
+      const sep = '═'.repeat(60);
+      console.log('\n' + sep);
+      console.log(`[PRE-GENERATE] Job spec received — gate workers signing off`);
+      console.log(`[PRE-GENERATE] Job ID:        ${req.jobSpec.jobId}`);
+      console.log(`[PRE-GENERATE] Customer:      ${req.jobSpec.customerId}`);
+      console.log(`[PRE-GENERATE] Template:      ${req.jobSpec.templateId}`);
+      console.log(`[PRE-GENERATE] Content type:  ${req.jobSpec.contentType}`);
+      console.log(`[PRE-GENERATE] Form factor:   ${req.jobSpec.order?.output?.formFactor} (${req.jobSpec.order?.output?.aspectRatio})`);
+      console.log(`[PRE-GENERATE] Resolution:    ${req.jobSpec.order?.output?.resolution?.width}×${req.jobSpec.order?.output?.resolution?.height}`);
+      console.log(`[PRE-GENERATE] Platforms:     ${req.jobSpec.deliverySpec?.platforms?.join(', ') || 'none'}`);
+      console.log(`[PRE-GENERATE] Avatar ID:     ${req.jobSpec.designSpec?.avatarId?.slice(0,8) || 'n/a'}...`);
+      console.log(`[PRE-GENERATE] Expected clips:${req.jobSpec.designSpec?.expectedClipCount ?? 'n/a'}`);
+      console.log(`[PRE-GENERATE] Chrome skin:   ${req.jobSpec.designSpec?.chrome?.skin || 'n/a'}`);
+      console.log(`[PRE-GENERATE] Outro line:    ${req.jobSpec.designSpec?.voice?.outroLine || 'from customerConfig'}`);
+      console.log(sep);
+
+      // Run canProduce + commit on all gate workers
       try {
-        console.log('[/generate-full-script] Pre-scraping AJ Puppeteer video pool...');
-        ajVideoPool = await scrapeAjNewsVideos(US_KEYWORDS, 20);
-        console.log(`[/generate-full-script] ajVideoPool: ${ajVideoPool.length} videos (${ajVideoPool.filter(v=>v.orientation==='landscape').length} landscape, ${ajVideoPool.filter(v=>v.orientation==='portrait').length} portrait)`);
-      } catch (e) {
-        console.warn(`[/generate-full-script] AJ pre-scrape failed (non-fatal): ${e.message}`);
+        const gates = {
+          gate0: require('./lib/gates/gate0'),
+          gate1: require('./lib/gates/gate1'),
+          gate2: require('./lib/gates/gate2'),
+          gate3a: require('./lib/gates/gate3a'),
+          gate3b: require('./lib/gates/gate3b'),
+          gate4: require('./lib/gates/gate4'),
+          gate5: require('./lib/gates/gate5'),
+        };
+
+        let allReady = true;
+        const commitments = {};
+
+        for (const [name, gate] of Object.entries(gates)) {
+          try {
+            // canProduce check
+            const readiness = typeof gate.canProduce === 'function'
+              ? await Promise.resolve(gate.canProduce(req.jobSpec))
+              : { ready: true, missing: [] };
+
+            // commit declaration
+            const commitment = typeof gate.commit === 'function'
+              ? await Promise.resolve(gate.commit(req.jobSpec))
+              : { committed: 'no commit() defined' };
+
+            const ready = readiness.ready !== false;
+            commitments[name] = { ready, commitment };
+
+            if (!ready) {
+              allReady = false;
+              console.log(`[${name.toUpperCase()}] ❌ NOT READY: ${(readiness.missing || readiness.reasons || []).map(m => m.item || m).join(', ')}`);
+            } else {
+              const summary = commitment?.summary || commitment?.committed || 'ready';
+              console.log(`[${name.toUpperCase()}] ✅ SIGNED OFF: ${summary}`);
+            }
+          } catch(gErr) {
+            console.log(`[${name.toUpperCase()}] ⚠️  Sign-off error (non-fatal): ${gErr.message}`);
+          }
+        }
+
+        console.log(sep);
+        if (allReady) {
+          console.log(`[PRE-GENERATE] ✅ ALL GATES SIGNED OFF — Job confirmed: ${req.jobSpec.jobId}`);
+          console.log(`[PRE-GENERATE] 🚀 Production starting — notifying all QA agents`);
+          console.log(`[PRE-GENERATE] QA agents briefed on job: ${req.jobSpec.jobId}`);
+          console.log(`[PRE-GENERATE] Gate thresholds: G1≥${req.jobSpec.designSpec?.qaThresholds?.gate1?.pass} G2≥${req.jobSpec.designSpec?.qaThresholds?.gate2?.pass} G3a≥${req.jobSpec.designSpec?.qaThresholds?.gate3a?.pass} G4≥${req.jobSpec.designSpec?.qaThresholds?.gate4?.pass}`);
+        } else {
+          console.log(`[PRE-GENERATE] ⚠️  Some gates not ready — job proceeding with warnings`);
+          console.log(`[PRE-GENERATE] Kill this job if critical gates failed`);
+        }
+        console.log(sep + '\n');
+
+        // Emit job confirmed event on pipeline bus for monitoring
+        pipelineBus.emit('job:confirmed', {
+          jobId: req.jobSpec.jobId,
+          contentType: req.jobSpec.contentType,
+          templateId: req.jobSpec.templateId,
+          jobSpec: req.jobSpec,  // full jobSpec for gate prepare() pre-work
+          commitments,
+          allReady
+        });
+
+        // NR: job confirmed event — queryable per customer/content type
+        nrJobConfirmed(req.jobSpec, allReady);
+
+      } catch(commitErr) {
+        console.warn('[PRE-GENERATE] Gate sign-off check failed (non-fatal):', commitErr.message);
       }
     }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
@@ -2872,64 +3419,82 @@ app.post('/analyze-style-library', async (req, res) => {
         console.log(`[style-library] Uploading ${(fs.statSync(tmpPath).size/1024/1024).toFixed(1)}MB to Gemini...`);
         const geminiFile = await waitForGeminiFile(await uploadToGeminiFiles(tmpPath));
 
-        // 10x VIEWING: Watch each reference video 10 times for deeper style learning
-        console.log(`[style-library] Starting 10x viewing analysis for ${url.slice(0,60)}...`);
+        // 2x VIEWING: Watch each reference video 2 times for style learning
+        console.log(`[style-library] Starting 2x viewing analysis for ${url.slice(0,60)}...`);
         const multipleViewings = [];
 
-        for (let viewNum = 1; viewNum <= 10; viewNum++) {
-          const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for ClipzWorld News (CWN), a "${contentType}" compilation show.
+        for (let viewNum = 1; viewNum <= 2; viewNum++) {
+          const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for Bobby G, the host of ClipzWorld News (CWN), a "${contentType}" show.
 
-This is VIEWING #${viewNum} of 10. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : viewNum <= 3 ? 'Focus on details you may have missed in previous viewings.' : viewNum <= 6 ? 'Look for subtle patterns and recurring elements.' : 'Deep analysis - extract nuanced stylistic details.'}
+Bobby G's voice blend: Norm MacDonald (flat deadpan, never explains the joke) + Jon Stewart Daily Show (one alarming observation, controlled disbelief) + Stuart Scott ESPN (cultural authority, rhythm, cadence) + Space Ghost Coast to Coast (non-sequitur pivots are fine, chaos is fine).
 
-Your job is to extract the specific stylistic elements so a script writer can replicate the feel.
+Bobby G NEVER does: hype phrases ("What's up everyone!"), exclamation energy, "This is insane!", "You won't believe this", audience callouts ("Drop a comment below"), explaining the joke, or warm enthusiasm.
 
-Extract and document:
-1. OPENING ENERGY: How does the host/show open? Energy level? First sentence structure?
-2. PACING: How fast does it move? How long on each segment/topic?
-3. TONE: Specific adjectives for the delivery (deadpan? warm? sardonic? chaotic?)
-4. HUMOR TECHNIQUE: What makes it funny? (observation? timing? non-sequitur? understatement?)
-5. LANGUAGE PATTERNS: Specific phrases, sentence structures, or speech patterns that appear
-6. TRANSITIONS: How does it move between segments/topics?
-7. REACTION STYLE: How does the host respond to content? Length? Affect?
-8. WHAT TO AVOID: Things this show explicitly does NOT do (no hype, no explanation, etc.)
-9. SIGNATURE MOVES: Any recurring bits, catchphrases, or structural elements
+This is VIEWING #${viewNum} of 2. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : 'Focus on details you may have missed in the first viewing — extract nuanced stylistic details and recurring patterns.'}
 
-Be specific and actionable. A script writer should be able to read this and write in the same voice without watching the video.`;
+Extract ONLY what applies to Bobby G's voice. Focus on:
+1. SENTENCE STRUCTURE: How short? How flat? State-the-fact pattern?
+2. TIMING & PACING: Where does the host pause? How long after a clip before speaking?
+3. OBSERVATION STYLE: Does the host make it MORE alarming or just note the absurdity?
+4. TRANSITION STRUCTURE: How does it move between topics? One word? One sentence?
+5. HUMOR TECHNIQUE: Understatement? Non-sequitur? Deadpan? What specifically?
+6. WHAT THIS HOST DOES NOT DO: Explicit list of avoided behaviors
+7. RHYTHM PATTERNS: Sentence length variation, [beat] placement, trailing off vs punchy endings
 
-          const genResp = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
-            {
-              contents: [{ parts: [
-                { text: stylePrompt },
-                { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
-              ]}],
-              generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
-            },
-            { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
-          );
+Do NOT extract: energy level, catchphrases, audience engagement tactics, hype language, or anything that conflicts with flat deadpan delivery. Those are surface features of the performer, not the voice Bobby G uses.`;
+
+          // Retry up to 3 times on 503 with exponential backoff
+          let genResp = null;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              genResp = await axios.post(
+                `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
+                {
+                  contents: [{ parts: [
+                    { text: stylePrompt },
+                    { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
+                  ]}],
+                  generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
+                },
+                { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
+              );
+              break; // success
+            } catch(retryErr) {
+              const is503 = retryErr.response && retryErr.response.status === 503;
+              if (is503 && attempt < 3) {
+                const backoff = attempt * 15000; // 15s, 30s
+                console.warn(`[style-library]   ⚠️ 503 on viewing ${viewNum} attempt ${attempt} — retrying in ${backoff/1000}s`);
+                await new Promise(r => setTimeout(r, backoff));
+              } else {
+                throw retryErr;
+              }
+            }
+          }
 
           const observation = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
           if (observation.length > 100) {
             multipleViewings.push(`--- VIEWING #${viewNum} ---\n${observation}`);
-            console.log(`[style-library]   ✓ Viewing ${viewNum}/10 complete (${observation.length} chars)`);
+            console.log(`[style-library]   ✓ Viewing ${viewNum}/2 complete (${observation.length} chars)`);
           }
 
           // Rate limit pause between viewings (shorter than between videos)
-          if (viewNum < 10) await new Promise(r => setTimeout(r, 2000));
+          if (viewNum < 2) await new Promise(r => setTimeout(r, 2000));
         }
 
-        // Synthesize all 10 viewings into a deep per-video analysis
-        if (multipleViewings.length >= 8) { // Require at least 8 successful viewings
-          const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations.
+        // Synthesize all 2 viewings into a deep per-video analysis
+        if (multipleViewings.length >= 1) { // Require at least 1 successful viewing
+          const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations for Bobby G, host of ClipzWorld News.
+
+Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority. Flat. Never explains the joke. State the fact, one observation, done.
 
 Here are your ${multipleViewings.length} viewing observations:
 ${multipleViewings.join('\n\n')}
 
-Now synthesize ALL these observations into ONE DEEP, COMPREHENSIVE style analysis.
+Synthesize these into ONE DEEP style analysis — but filter everything through Bobby G's voice constraints:
+- Keep: sentence structure, timing patterns, observation technique, transition rhythm, deadpan moves
+- Discard: hype energy, audience callouts, exclamation delivery, warm enthusiasm, catchphrase energy
 - Identify patterns that appeared across multiple viewings
-- Highlight subtle details only noticed in later viewings
-- Create a unified, nuanced understanding of this video's style
-- Be specific and actionable for script writers
+- Be specific and actionable — a Gemini model should read this and write flat deadpan scripts
 Max 600 words.`;
 
           try {
@@ -2941,15 +3506,15 @@ Max 600 words.`;
               messages: [{ role: 'user', content: deepSynthesisPrompt }]
             });
             const deepAnalysis = msg.content[0]?.text || multipleViewings.join('\n\n');
-            videoAnalyses.push(`--- Reference video (10x viewing): ${url.slice(0,60)} ---\n${deepAnalysis}`);
-            console.log(`[style-library] ✅ 10x analysis complete for ${url.slice(0,60)} (${deepAnalysis.length} chars)`);
+            videoAnalyses.push(`--- Reference video (2x viewing): ${url.slice(0,60)} ---\n${deepAnalysis}`);
+            console.log(`[style-library] ✅ 2x analysis complete for ${url.slice(0,60)} (${deepAnalysis.length} chars)`);
           } catch(e) {
             // Fallback: concatenate all viewings
-            videoAnalyses.push(`--- Reference video (10 viewings): ${url.slice(0,60)} ---\n${multipleViewings.join('\n\n')}`);
-            console.log(`[style-library] ✅ 10x analysis complete (fallback) for ${url.slice(0,60)}`);
+            videoAnalyses.push(`--- Reference video (2 viewings): ${url.slice(0,60)} ---\n${multipleViewings.join('\n\n')}`);
+            console.log(`[style-library] ✅ 2x analysis complete (fallback) for ${url.slice(0,60)}`);
           }
         } else {
-          console.warn(`[style-library] Only ${multipleViewings.length}/10 viewings succeeded, skipping video`);
+          console.warn(`[style-library] Only ${multipleViewings.length}/2 viewings succeeded, skipping video`);
         }
 
         // Cleanup
@@ -2958,8 +3523,8 @@ Max 600 words.`;
           await axios.delete(`https://generativelanguage.googleapis.com/v1beta/${geminiFile.name}?key=${GEMINI_APIKEY}`);
         } catch(e) {}
 
-        // Rate limit pause between videos
-        await new Promise(r => setTimeout(r, 3000));
+        // Rate limit pause between videos — longer to avoid 503s on rapid succession
+        await new Promise(r => setTimeout(r, 5000));
 
       } catch(e) {
         console.warn(`[style-library] Failed for ${url}: ${e.message}`);
@@ -2969,14 +3534,40 @@ Max 600 words.`;
 
     if (videoAnalyses.length > 0) {
       // Synthesize all analyses into one coherent style guide
-      const synthesisPrompt = `You analyzed ${videoAnalyses.length} reference videos for a "${contentType}" show on ClipzWorld News.
+      const isShortForm = contentType.endsWith('-short');
+      const shortConstraints = isShortForm ? `
+
+SHORT-FORM SPECIFIC RULES (this is a 45-60 second vertical video):
+- ONE clip, ONE observation, done — no callbacks, no multi-part builds
+- Every sentence must earn its place — cut anything that doesn't land immediately
+- No setup longer than 2 sentences before the clip
+- Post-clip reaction: maximum 2 sentences
+- [beat] used once maximum per script
+- Must feel complete in under 60 seconds` : '';
+
+      const synthesisPrompt = `You analyzed ${videoAnalyses.length} reference videos for Bobby G, host of ClipzWorld News (CWN) "${contentType}" show.
+
+Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority + Space Ghost non-sequitur. Flat delivery. Never explains the joke. Never hypes. State the fact, one observation, done.${shortConstraints}
 
 Here are the individual analyses:
 ${videoAnalyses.join('\n\n')}
 
-Now write a UNIFIED STYLE GUIDE that a script writer can use for every "${contentType}" script.
-Be specific, actionable, and concise. This will be injected into every script generation prompt.
-Format as clear bullet points under clear headings. Max 400 words.`;
+Write a UNIFIED STYLE GUIDE for Bobby G's "${contentType}" scripts. Extract the structural, rhythmic, and comedic patterns from the reference videos that are COMPATIBLE with Bobby G's flat deadpan delivery.
+
+INCLUDE:
+- Sentence structure patterns (how short, how flat, state-fact-then-observation)
+- Timing cues (where [beat] pauses belong, how long after a clip before speaking)
+- Transition structure (one word? one sentence? non-sequitur pivot?)
+- Observation technique (make it more alarming, not less — never explain)
+- What this voice NEVER does (explicit do-not list)
+
+DO NOT INCLUDE:
+- Hype phrases, exclamation energy, audience callouts
+- "What's up everyone", "This is insane", "You won't believe"
+- Warm enthusiasm or cheerleader energy
+- Anything that contradicts flat deadpan delivery
+
+Format as clear bullet points under clear headings. Max 400 words. This will be injected into every "${contentType}" script generation prompt.`;
 
       try {
         const { Anthropic } = require('@anthropic-ai/sdk');
@@ -2998,6 +3589,9 @@ Format as clear bullet points under clear headings. Max 400 words.`;
     } else {
       results[contentType] = { ok: false, error: 'No videos could be analyzed' };
     }
+
+    // Pause between content types to avoid Gemini 503 rate limits
+    await new Promise(r => setTimeout(r, 15000));
   }
 
   // Save style guides to disk
@@ -3613,7 +4207,7 @@ app.post('/capcut/add-segment', async (req, res) => {
     // Get duration first
     const dur = await new Promise((resolve) => {
       const args = ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', url];
-      execFile(ffmpegPath().replace('ffmpeg', 'ffprobe'), args, (err, stdout) => {
+      execFile(ffprobePath(), args, (err, stdout) => {
         resolve(parseFloat(stdout) || 10);
       });
     });
@@ -3782,7 +4376,7 @@ app.post('/thumbnail-short', async (req, res) => {
           '-vsync', 'vfr',
           '-f', 'null', '-'
         ];
-        execFile(ffmpegPath().replace('ffmpeg', 'ffprobe'), [
+        execFile(ffprobePath(), [
           '-v', 'quiet', '-show_frames', '-select_streams', 'v',
           '-read_intervals', `%+${Math.min(duration, 60)}`,
           '-show_entries', 'frame=pkt_pts_time,pict_type',
@@ -4668,7 +5262,28 @@ app.post('/gate2-segment-qa', async (req, res) => {
   }
 
   try {
-    const result = await geminiSegmentQA(tmpPaths, { jobId, contentType });
+    const gate2Worker = require('./lib/gates/gate2');
+    const minJobSpec = {
+      jobId: jobId || 'manual-qa',
+      customerId: req.body.customerId || 'c0',
+      templateId: contentType?.includes('short') ? 'short-form' : 'long-form',
+      contentType: contentType || 'twitch',
+      state: { gateResults: {}, savedOutputs: {} },
+      designSpec: { chrome: {}, audio: {}, resolution: { width: 1920, height: 1080 }, ffmpeg: {} },
+      commitments: {}
+    };
+    const g2Result = await gate2Worker.run(minJobSpec, tmpPaths, {});
+    // Translate new gate worker output to legacy dashboard format
+    const result = {
+      score: g2Result.score,
+      passed: g2Result.passed,
+      outcome: g2Result.outcome === 'hard_fail' ? 'fail' : g2Result.outcome === 'review' ? 'manual_review' : 'pass',
+      outcomeLabel: g2Result.passed ? '✅ PASS' : g2Result.outcome === 'review' ? '🟡 MANUAL REVIEW' : '❌ HARD FAIL',
+      deductions: (g2Result.segmentResults || []).filter(s => !s.passed).map(s => ({
+        points: 25,
+        reason: `Segment failed: ${s.segmentPath ? require('path').basename(s.segmentPath) : 'unknown'}`
+      }))
+    };
     res.json(result);
   } catch(e) {
     console.error('[gate2] QA error:', e.message);
@@ -5238,42 +5853,66 @@ const server = app.listen(PORT, () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
   console.log(`   FFmpeg path: ${ffmpegPath()}`);
   console.log(`   Tmp dir:     ${TMP_DIR}`);
-  console.log(`   Output dir:  ${OUTPUT_DIR}\n`);
+  console.log(`   Output dir:  ${OUTPUT_DIR}`);
+  const gateTestMode = process.env.GATE_TEST_MODE === 'true';
+  if (gateTestMode) {
+    console.log(`   ⏸  GATE_TEST_MODE=true — HeyGen auto-send DISABLED ($0.33/segment protected)\n`);
+  } else {
+    console.log(`   🔴 GATE_TEST_MODE=false — HeyGen auto-send LIVE (each segment costs $0.33)\n`);
+  }
   checkFFmpeg((err, v) => {
     if (err) console.warn('⚠️  FFmpeg not found:', err.message);
     else console.log('✅ FFmpeg:', v);
   });
+  startMonitoring(); // Start pipeline event monitoring
 });
 
-// Graceful shutdown handler
-function gracefulShutdown(signal) {
-  console.log(`\n${signal} received. Starting graceful shutdown...`);
-  
-  server.close(() => {
-    console.log('✅ HTTP server closed');
-    
-    // Clean up active jobs
-    const activeJobs = Object.keys(assemblyJobs).filter(id => 
-      assemblyJobs[id].status === 'running'
-    );
-    
-    if (activeJobs.length > 0) {
-      console.log(`⚠️  ${activeJobs.length} active assembly job(s) - allowing 30s to complete`);
-      setTimeout(() => {
-        console.log('⏱️  Shutdown timeout - exiting');
-        process.exit(0);
-      }, 30000);
-    } else {
-      console.log('✅ No active jobs - exiting cleanly');
-      process.exit(0);
-    }
-  });
-  
-  // Force exit after 35 seconds
-  setTimeout(() => {
-    console.error('❌ Forced shutdown after 35s timeout');
+// Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
+async function gracefulShutdown(signal) {
+  console.log(`\n[shutdown] ${signal} received — checking in-flight work...`);
+
+  const pollerCount   = activePollers.size;
+  const assemblyCount = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
+
+  if (pollerCount === 0 && assemblyCount === 0) {
+    console.log('[shutdown] No active pollers or assemblies — exiting cleanly');
+    process.exit(0);
+  }
+
+  console.log(`[shutdown] ${pollerCount} poller(s), ${assemblyCount} assembly job(s) in flight — waiting up to 35s...`);
+
+  // Hard exit after 35s no matter what
+  const forceTimer = setTimeout(() => {
+    console.error('[shutdown] 35s timeout — forcing exit');
     process.exit(1);
   }, 35000);
+  forceTimer.unref();
+
+  // Wait for all pollers to checkpoint their current poll cycle
+  if (pollerCount > 0) {
+    await Promise.race([
+      Promise.all([...activePollers.values()].map(e => e.done)),
+      new Promise(r => setTimeout(r, 33000))
+    ]);
+    console.log('[shutdown] Pollers checkpointed');
+  }
+
+  // Wait for running assembly jobs to finish (polls every 1s)
+  if (assemblyCount > 0) {
+    await Promise.race([
+      new Promise(resolve => {
+        const interval = setInterval(() => {
+          const still = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
+          if (still === 0) { clearInterval(interval); resolve(); }
+        }, 1000);
+      }),
+      new Promise(r => setTimeout(r, 30000))
+    ]);
+    console.log('[shutdown] Assemblies checkpointed');
+  }
+
+  console.log('[shutdown] Clean exit');
+  process.exit(0);
 }
 
 // ── POST /nba/generate-intro-card ────────────────────────────────────

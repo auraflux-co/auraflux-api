@@ -1,5 +1,7 @@
 {
-  "watch": ["server.js", "*.js", "lib/"],
+  "watch": ["server.js"],
   "ignore": ["tmp/", "output/", "assets/", "data/", "logs/", "*.mp4", "*.png"],
-  "delay": "2000"
+  "delay": "2000",
+  "signal": "SIGTERM",
+  "killSignal": "SIGTERM"
 }
