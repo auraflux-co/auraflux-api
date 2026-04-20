@@ -1,6 +1,28 @@
 require('newrelic');
 require('dotenv').config();
 
+// ── Build identity — set once at startup, never changes during runtime ────────
+const BUILD_INFO = (() => {
+  const { execSync: _execSync } = require('child_process');
+  try {
+    const hash = _execSync('git rev-parse --short HEAD', { cwd: __dirname }).toString().trim();
+    const fullHash = _execSync('git rev-parse HEAD', { cwd: __dirname }).toString().trim();
+    const branch = _execSync('git rev-parse --abbrev-ref HEAD', { cwd: __dirname }).toString().trim();
+    const commitMsg = _execSync('git log -1 --format=%s', { cwd: __dirname }).toString().trim();
+    const pkg = require('./package.json');
+    return {
+      version: pkg.version,
+      gitHash: hash,
+      gitHashFull: fullHash,
+      gitBranch: branch,
+      lastCommit: commitMsg,
+      deployedAt: new Date().toISOString()
+    };
+  } catch(e) {
+    return { version: require('./package.json').version, gitHash: 'unknown', deployedAt: new Date().toISOString() };
+  }
+})();
+
 // ── New Relic custom event helpers ───────────────────────────────────────────
 // All events are fire-and-forget — never block the pipeline.
 // Queryable via NRQL: SELECT * FROM EventName WHERE customerId = 'c0' SINCE 7 days ago
@@ -1390,7 +1412,11 @@ function checkFFmpeg(cb) {
 app.get('/health', async (req, res) => {
   const health = {
     ok: true,
-    version: '1.0.0',
+    version: BUILD_INFO.version,
+    gitHash: BUILD_INFO.gitHash,
+    gitBranch: BUILD_INFO.gitBranch,
+    lastCommit: BUILD_INFO.lastCommit,
+    deployedAt: BUILD_INFO.deployedAt,
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     dependencies: {},
