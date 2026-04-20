@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-20T20:23:42.050Z",
+  "updatedAt": "2026-04-20T22:02:42.425Z",
   "activeJobs": [
     {
       "jobId": "c0_COMPACT_DIRECT_twitch_1776715091409",
@@ -245,6 +245,57 @@
       "failedGate": 5,
       "failReason": null,
       "currentGate": 4
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_nba_1776721645080",
+      "contentType": "nba",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T21:47:25.086Z",
+      "lastActivity": "2026-04-20T21:58:42.421Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_news_1776721885770",
+      "contentType": "news",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T21:51:25.772Z",
+      "lastActivity": "2026-04-20T22:02:42.422Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_twitch_1776721927925",
+      "contentType": "twitch",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T21:52:07.928Z",
+      "lastActivity": "2026-04-20T22:02:42.425Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_EXTRACT_DIRECT_nba-short_1776722120446",
+      "contentType": "nba-short",
+      "templateId": "short-form",
+      "startedAt": "2026-04-20T21:55:20.449Z",
+      "lastActivity": "2026-04-20T21:55:20.449Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "running",
+      "allGatesReady": false
     }
   ]
 }
