@@ -844,6 +844,56 @@ setImmediate(() => {
   if (resumed > 0) {
     console.log(`[startup-resume] Resumed ${resumed} in-flight job(s) (cap: ${MAX_RESUME_POLLERS})`);
   }
+
+  // ── Resume script_ready jobs — Gate 1 passed but HeyGen not yet submitted ──
+  // Handles: server restart after GATE_TEST_MODE was flipped, or any interruption
+  // between Gate 1 pass and HeyGen submission (e.g. HeyGen timeout, process kill).
+  // Jobs reach script_ready via rollback (all_sent → script_ready clears video IDs).
+  // Cap at MAX_RESUME_POLLERS to match all_sent resume and avoid HeyGen flood.
+  const scriptReadyCandidates = Object.values(persistedJobs).filter(card => {
+    if ((card.status || '') === 'dismissed') return false;
+    const stage = card.stage || inferJobStage(card);
+    if (stage !== 'script_ready') return false;
+    const script = card.script?.raw || card.script;
+    if (!script || (typeof script === 'string' && script.length < 10)) return false;
+    // Must have a script but no HeyGen video IDs
+    const videoJobs = card.heygen?.videoJobs || [];
+    if (videoJobs.length > 0) return false;
+    return true;
+  });
+
+  if (scriptReadyCandidates.length > 0) {
+    const MAX_SCRIPT_READY_RESUME = MAX_RESUME_POLLERS;
+    console.log(`[startup-resume] ${scriptReadyCandidates.length} script_ready job(s) found — auto-sending to HeyGen (cap: ${MAX_SCRIPT_READY_RESUME})`);
+    const toResumeScriptReady = scriptReadyCandidates.slice(0, MAX_SCRIPT_READY_RESUME);
+
+    for (const card of toResumeScriptReady) {
+      const jobId = card.jobId || card.id || card.scriptJobId;
+      if (!jobId) { console.warn('[startup-resume:script_ready] Card has no jobId — skipping'); continue; }
+      const contentType = card.contentType || 'twitch';
+      const script = card.script?.raw || (typeof card.script === 'string' ? card.script : null);
+      if (!script) { console.warn(`[startup-resume:${jobId}] No script found in card — skipping`); continue; }
+
+      try {
+        const format = contentType.includes('-short') ? 'portrait' : 'landscape';
+        console.log(`[startup-resume:${jobId}] Sending to HeyGen (${contentType}, ${format})`);
+        const heygenResult = await sendScriptToHeyGen(script, { contentType, format, jobId });
+        if (heygenResult?.videoJobs?.length) {
+          card.heygen = heygenResult;
+          card.stage = 'all_sent';
+          saveJobCard(jobId, card);
+          console.log(`[startup-resume:${jobId}] ✅ Sent ${heygenResult.videoJobs.length} scenes to HeyGen`);
+          startHeyGenPoller(jobId, card).catch(e => {
+            console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
+          });
+        } else {
+          console.warn(`[startup-resume:${jobId}] HeyGen returned no videoJobs — skipping poller start`);
+        }
+      } catch(e) {
+        console.error(`[startup-resume:${jobId}] HeyGen send failed: ${e.message}`);
+      }
+    }
+  }
 });
 
 // ── Pipeline Bus: heygen:all_complete → Gate 2 QA → assembly ─────────────────
