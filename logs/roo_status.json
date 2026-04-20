@@ -1,0 +1,250 @@
+{
+  "updatedAt": "2026-04-20T20:23:42.050Z",
+  "activeJobs": [
+    {
+      "jobId": "c0_COMPACT_DIRECT_twitch_1776715091409",
+      "contentType": "twitch",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T19:58:11.418Z",
+      "lastActivity": "2026-04-20T20:08:42.398Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_news_1776715091436",
+      "contentType": "news",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T19:58:11.437Z",
+      "lastActivity": "2026-04-20T20:08:42.401Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_EXTRACT_DIRECT_twitch-short_1776715091440",
+      "contentType": "twitch-short",
+      "templateId": "short-form",
+      "startedAt": "2026-04-20T19:58:11.441Z",
+      "lastActivity": "2026-04-20T20:08:42.403Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_nba_1776715091444",
+      "contentType": "nba",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T19:58:11.445Z",
+      "lastActivity": "2026-04-20T20:08:42.405Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_news_1776714486381",
+      "gateHistory": [
+        {
+          "gate": 2,
+          "result": "pass",
+          "score": 100,
+          "outcome": "pass",
+          "ts": "2026-04-20T19:58:37.980Z"
+        },
+        {
+          "gate": "3a",
+          "result": "pass",
+          "score": 85,
+          "outcome": "pass",
+          "ts": "2026-04-20T20:00:36.020Z"
+        },
+        {
+          "gate": "3b",
+          "result": "hard_fail",
+          "reason": null,
+          "ts": "2026-04-20T20:00:36.028Z"
+        },
+        {
+          "gate": 4,
+          "result": "pass",
+          "score": null,
+          "outcome": "pass",
+          "ts": "2026-04-20T20:01:30.159Z"
+        },
+        {
+          "gate": 5,
+          "result": "hard_fail",
+          "reason": null,
+          "ts": "2026-04-20T20:21:30.095Z"
+        }
+      ],
+      "sendbackCount": 0,
+      "lastActivity": "2026-04-20T20:21:30.095Z",
+      "currentGate": 4,
+      "status": "hard_fail",
+      "escalatedGate": "3b",
+      "failedGate": 5,
+      "failReason": null
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_twitch_1776715325520",
+      "contentType": "twitch",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T20:02:05.522Z",
+      "lastActivity": "2026-04-20T20:12:42.399Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_EXTRACT_DIRECT_twitch-short_1776715448289",
+      "contentType": "twitch-short",
+      "templateId": "short-form",
+      "startedAt": "2026-04-20T20:04:08.290Z",
+      "lastActivity": "2026-04-20T20:14:42.399Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_twitch_1776715448295",
+      "contentType": "twitch",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T20:04:08.296Z",
+      "lastActivity": "2026-04-20T20:14:42.403Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_news_1776715448299",
+      "contentType": "news",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T20:04:08.300Z",
+      "lastActivity": "2026-04-20T20:14:42.406Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_nba_1776715448303",
+      "contentType": "nba",
+      "templateId": "long-form",
+      "startedAt": "2026-04-20T20:04:08.304Z",
+      "lastActivity": "2026-04-20T20:14:42.408Z",
+      "currentGate": "gate0",
+      "gateHistory": [],
+      "sendbackCount": 0,
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_nba_1776714486415",
+      "gateHistory": [
+        {
+          "gate": 2,
+          "result": "pass",
+          "score": 100,
+          "outcome": "pass",
+          "ts": "2026-04-20T20:04:50.116Z"
+        },
+        {
+          "gate": "3a",
+          "result": "pass",
+          "score": 83,
+          "outcome": "pass",
+          "ts": "2026-04-20T20:08:22.132Z"
+        },
+        {
+          "gate": "3b",
+          "result": "pass",
+          "score": null,
+          "outcome": "pass",
+          "ts": "2026-04-20T20:08:22.137Z"
+        },
+        {
+          "gate": 4,
+          "result": "hard_fail",
+          "reason": null,
+          "ts": "2026-04-20T20:09:29.899Z"
+        }
+      ],
+      "sendbackCount": 0,
+      "lastActivity": "2026-04-20T20:09:29.899Z",
+      "currentGate": "3b",
+      "status": "hard_fail",
+      "escalatedGate": 4,
+      "failedGate": 4,
+      "failReason": null
+    },
+    {
+      "jobId": "c0_COMPACT_DIRECT_nba_1776714848542",
+      "gateHistory": [
+        {
+          "gate": 2,
+          "result": "hard_fail",
+          "reason": "Segment 4 duration too short: 2.2s (minimum 3s for avatar dialogue)",
+          "ts": "2026-04-20T20:04:50.432Z"
+        },
+        {
+          "gate": "3a",
+          "result": "pass",
+          "score": 68,
+          "outcome": "pass_with_notes",
+          "ts": "2026-04-20T20:08:26.085Z"
+        },
+        {
+          "gate": "3b",
+          "result": "hard_fail",
+          "reason": null,
+          "ts": "2026-04-20T20:08:26.090Z"
+        },
+        {
+          "gate": 4,
+          "result": "pass",
+          "score": null,
+          "outcome": "pass",
+          "ts": "2026-04-20T20:09:48.190Z"
+        },
+        {
+          "gate": 5,
+          "result": "hard_fail",
+          "reason": null,
+          "ts": "2026-04-20T20:23:42.050Z"
+        }
+      ],
+      "sendbackCount": 0,
+      "lastActivity": "2026-04-20T20:23:42.050Z",
+      "status": "hard_fail",
+      "escalatedGate": 2,
+      "failedGate": 5,
+      "failReason": null,
+      "currentGate": 4
+    }
+  ]
+}

@@ -1,281 +1,400 @@
-# PUBLISH_COPY_SPEC.md
-**Author:** Claude Code, 2026-04-14  
-**Status:** LOCKED — reference before touching `/generate-publish-copy` or any publish metadata  
-**Purpose:** Defines exactly what the publish copy generator must produce, what inputs it needs, and which values are CWN-specific vs customer-configurable for AuraFlux.
+# Publish Copy Spec — AuraFlux
+
+**Author:** Claude Code
+**Date:** 2026-04-18
+**Status:** 🟢 AUTHORITATIVE — supersedes 2026-04-14 version
+**Applies to:** `/generate-publish-copy` endpoint, `handleGeneratePublishCopy()` in `lib/publish.js`
 
 ---
 
-## The Standard to Match
+## What This Document Is
 
-The canonical reference for output quality is the ChatGPT session from 2026-04-14 that produced the Twitch Soup #1 description. Key properties of that output:
-
-- 5 title options with emotion hooks, not 1 generic title
-- Full description with show identity opening line
-- Accurate timestamps per streamer/segment
-- Featured streamers section with clickable Twitch URLs
-- "What You'll See" bullet section
-- Subscribe CTA with notification reminder
-- Upload frequency line
-- Host credit (Bobby G)
-- Disclaimer for non-owned content
-- Hashtags (in description) AND tags (separate YouTube backend field) — two distinct things
-- Playlist description as a separate deliverable
-- Thumbnail text ideas (3-5 options)
+The authoritative spec for what Claude generates when producing YouTube/TikTok/Instagram publish copy. All output must match the format and quality of the Customer 0 reference example below. Claude is the generator. The output is a complete, ready-to-use package — nothing left for the operator to write.
 
 ---
 
-## What the Current Endpoint Gets Wrong
+## Customer 0 Reference Example — Twitch Long-Form
 
-| Problem | Root Cause |
+This is the exact format and quality level Claude must produce. Every field. Every section. Every tone choice.
+
+### YouTube Title
+```
+Streamer Gets HUMBLED About Fighting Experience 😂 | Funniest Twitch Clips
+```
+
+### YouTube Description
+```
+Welcome to Twitch Soup by ClipzWorld News 🍜 — your daily dose of the funniest Twitch clips, viral streamer moments, and gaming highlights!
+
+In today's episode, a streamer gets completely humbled talking about fighting experience 😂 plus 11 more insane moments from top creators!
+
+⏱️ TIMESTAMPS
+
+0:00 Intro
+0:08 Jasontheween gets humbled 😂
+0:45 HasanAbi reacts
+1:20 StableRonaldo funny moment
+1:55 Adapt clip
+2:30 Lacy highlight
+3:05 Marlon moment
+3:40 Cinna reaction
+4:10 Yonnajay clip
+4:40 JayCinco highlight
+5:10 Maya funny moment
+5:40 ExtraEmily chaos 😂
+6:10 YourRAGEGaming reaction
+
+🎮 Featured Streamers (Support Them 💜)
+Jasontheween
+https://www.twitch.tv/jasontheween
+HasanAbi
+https://www.twitch.tv/hasanabi
+Adapt
+https://www.twitch.tv/adapt
+StableRonaldo
+https://www.twitch.tv/stableronaldo
+Lacy
+https://www.twitch.tv/lacy
+Marlon
+https://www.twitch.tv/marlon
+Cinna
+https://www.twitch.tv/cinna
+Yonnajay
+https://www.twitch.tv/yonnajay
+JayCinco
+https://www.twitch.tv/jaycinco
+Maya
+https://www.twitch.tv/maya
+ExtraEmily
+https://www.twitch.tv/extraemily
+YourRAGEGaming
+https://www.twitch.tv/yourrage
+
+😂 What You'll See:
+Funniest Twitch clips of the day
+Streamer fails & viral moments
+Gaming highlights & reactions
+Unfiltered chaos 😂
+
+🚀 Subscribe for DAILY Twitch Clips
+
+If you love funny Twitch moments, streamer drama, and viral highlights, hit that Subscribe button and turn on notifications 🔔
+
+📅 New uploads every day!
+
+🎤 Hosted by:
+Bobby G
+
+📢 Disclaimer:
+All content belongs to respective streamers. Used for entertainment and highlight purposes.
+
+🔥 Hashtags:
+#TwitchClips #FunnyMoments #StreamerFails #TwitchHighlights #Gaming #ViralClips
+```
+
+### YouTube Tags (no # prefix — copied into YouTube tag field)
+```
+twitch clips, funny twitch clips, twitch highlights, twitch fails, streamer fails, viral twitch clips, gaming funny moments, twitch compilation, twitch moments, funny streamers, hasanabi clips, yourrage clips, extraemily twitch, stableronaldo clips, twitch funny compilation, best twitch clips 2026, twitch trending, livestream fails, twitch drama, twitch reaction
+```
+
+### Thumbnail Text Options (for Canva or burn overlay — operator picks one)
+```
+"HUMBLED 😂"
+"BRO WAS CONFIDENT…"
+"INSTANT REGRET 💀"
+"THIS WAS EMBARRASSING"
+```
+
+### Pinned Comment
+```
+What was your favorite streamer clip? Let me know below! 👇 If you enjoyed this, consider subscribing for more Twitch Soup episodes.
+www.youtube.com/@clipzworldnews?sub_confirmation=1
+```
+
+---
+
+## Description Structure — Section by Section
+
+Every description Claude generates must follow this exact section order. Sections marked REQUIRED always appear. Sections marked CONDITIONAL appear when data is available.
+
+```
+1. SHOW INTRO LINE (REQUIRED)
+   Format: "Welcome to [SHOW NAME] by [NETWORK] [EMOJI] — [tagline]"
+   One line. Show brand emoji. Network name. Show tagline.
+
+2. EPISODE HOOK (REQUIRED)
+   1-2 sentences. The biggest moment in the episode.
+   Specific, not generic. Makes a viewer who hasn't watched want to click.
+   "a streamer gets humbled" not "amazing content today"
+
+3. TIMESTAMPS (REQUIRED — long-form only)
+   Header: ⏱️ TIMESTAMPS
+   Format: M:SS Label [optional emoji on standout moments only]
+   Always starts: 0:00 Intro
+   One line per segment/story/game
+   Runtime derived from actual segment durations — not estimated
+
+4. FEATURED SOURCES (CONDITIONAL — content type determines format)
+   Twitch:  🎮 Featured Streamers (Support Them 💜)
+            [Display name]\n[twitch.tv/handle] per streamer
+   NBA:     🏀 Games Featured
+            [Team A] vs [Team B] — [score if available] per game
+   News:    📰 Stories Covered
+            [Headline ≤60 chars] per story — no source attribution
+
+5. WHAT YOU'LL SEE (REQUIRED)
+   4 bullet points. Specific to this episode's content.
+   Not generic. Not "amazing moments" — specific to what this episode has.
+   Emoji on 1-2 bullets max.
+
+6. SUBSCRIBE CTA (REQUIRED)
+   Platform-cadence line + notification bell 🔔
+   Upload cadence line ("New uploads every day!")
+
+7. HOST LINE (REQUIRED)
+   🎤 Hosted by: [HOST NAME]
+
+8. DISCLAIMER (CONDITIONAL — Twitch and Sports only)
+   📢 Disclaimer: All content belongs to respective [streamers/leagues/networks].
+   Used for entertainment and highlight purposes.
+
+9. HASHTAGS FOOTER (REQUIRED)
+   Header: 🔥 Hashtags:
+   5-6 hashtags inline
+   Mix: show-specific + content-type + platform broad
+```
+
+**Customer 0 hashtag sets:**
+
+| Content type | Hashtags |
 |---|---|
-| Output too short | Script truncated to 600 chars — not enough context |
-| 1 title, not 5 options | Prompt asks for one title |
-| No streamer URLs | `streamers.json` not passed to prompt |
-| Hashtags and tags conflated | Prompt doesn't distinguish them |
-| No playlist description | Never requested |
-| No thumbnail text ideas | Never requested |
-| No show identity line | "Twitch Soup" / "Other Side of the Pillow" not in prompt |
-| No host credit | Bobby G not mentioned |
-| No disclaimer | Not in prompt |
-| No episode number | Not passed in |
-| Timestamps are guessed | `buildYouTubeChapters()` output not passed to prompt |
+| Twitch/clips | #TwitchClips #FunnyMoments #StreamerFails #TwitchHighlights #Gaming #ViralClips |
+| NBA/sports | #NBA #Basketball #NBAHighlights #Sports #GameHighlights #ClipzWorldNews |
+| News | #News #WorldNews #NewsHighlights #ClipzWorldNews #BecauseTheLightWasOn |
 
 ---
 
-## Required Inputs
+## Timestamps — How to Generate
 
-### Always required
-| Field | Source | Notes |
-|---|---|---|
-| `contentType` | Job card | `twitch` / `nba` / `news` |
-| `formType` | Job card | `long` / `short` |
-| `script` | Job card | **Full script, not excerpt** |
-| `date` | Auto | Today's date, long format |
-| `episodeNumber` | Job card / operator input | e.g. `1`, `47` |
-| `channelConfig` | Job card (see below) | Show name, host, handle, CTA, upload frequency |
+Timestamps are derived from actual segment durations in the assembled video. Claude receives `segments[]` with `label` and `durationSeconds` per segment.
 
-### Twitch only
-| Field | Source | Notes |
-|---|---|---|
-| `streamers` | Job card | Array of display names in episode order |
-| `streamerRoster` | `streamers.json` | Full roster with `{ displayName, twitchUrl, twitchUsername }` — filter to featured streamers |
-| `hookMoment` | Derived from script | The single funniest/most surprising moment — used in title + description opener |
+```
+Running total approach:
+  0:00  Intro                          ← always first
+  [MM:SS from running sum] [label] [emoji on standout moments]
 
-### NBA only
-| Field | Source | Notes |
-|---|---|---|
-| `games` | Job card | Array of `{ away, home, awayScore, homeScore }` |
-| `hookMoment` | Derived from script | Best play/moment of the night |
+Label formatting per content type:
+  Twitch:  [DisplayName] [hook moment from script] — emoji on best 2-3 moments
+  NBA:     [Team A] vs [Team B]
+  News:    [Story headline truncated to 60 chars]
 
-### News only
-| Field | Source | Notes |
-|---|---|---|
-| `stories` | Job card | Array of `{ headline, source }` |
-| `hookMoment` | Derived from script | Most compelling story for title hook |
+Emoji rule: maximum 3 emojis across all timestamp lines.
+Only on the moments that are genuinely the standout clips.
+```
 
-### For accurate timestamps
-| Field | Source | Notes |
-|---|---|---|
-| `chapters` | `buildYouTubeChapters()` output | Pre-built timestamp string — pass directly to prompt, do not re-generate |
+YouTube auto-detects chapters from timestamp format in description. No separate chapter field needed — the timestamp block IS the chapters block.
 
 ---
 
-## Channel Config Object
+## Title — Rules
 
-This travels with every job. For CWN it is hardcoded. For AuraFlux customers it comes from their profile.
+```
+Format:  [HOOK MOMENT] [EMOJI] | [SHOW DESCRIPTOR]
+Max:     100 characters
+Hook:    The single most clickable thing in the episode
+         Specific > generic
+         "Streamer Gets HUMBLED" not "Funny Twitch Clips"
+Emoji:   One max in hook. None in show descriptor.
+         Pipe ( | ) separator between hook and descriptor.
+No:      ALL CAPS show descriptor
+         Trailing punctuation
+         More than one hashtag
+```
+
+Claude generates **5 A/B title variants** — operator picks in dashboard, recommended is index 0:
 
 ```json
 {
-  "showName": "Twitch Soup",
-  "channelName": "ClipzWorld News",
-  "handle": "@clipznashite",
-  "host": "Bobby G",
-  "uploadFrequency": "every other day",
-  "ctaSubscribe": "Subscribe & turn on notifications 🔔 so you never miss an upload!",
-  "disclaimer": "All content belongs to respective streamers. Used for entertainment and highlight purposes.",
-  "userType": "curator",
-  "niche": "gaming / twitch clips",
-  "tone": "funny, deadpan, unfiltered"
+  "titles": [
+    "Primary — most clickable hook",
+    "Alt 1 — different angle on same moment",
+    "Alt 2 — broader episode theme",
+    "Alt 3 — question format",
+    "Alt 4 — reaction/emotion format"
+  ],
+  "recommended": 0
 }
 ```
 
-**CWN show names by content type:**
-- Twitch: `"Twitch Soup"`
-- NBA: `"Other Side of the Pillow"`
-- News: `"Because the Light Was On"`
+---
 
-**Customer-configurable fields (AuraFlux):**
-- `showName` — their show
-- `channelName` — their channel
-- `handle` — their YouTube/TikTok handle
-- `host` — their on-screen host name
-- `uploadFrequency` — their schedule
-- `disclaimer` — curator vs streamer (streamers don't need it)
-- `userType` — `'streamer'` | `'curator'`
-- `niche` — their content category
-- `tone` — their voice
+## Pinned Comment — Rules
+
+```
+Structure:
+  Line 1: Episode-specific engagement question
+  Line 2: Subscribe CTA with channel URL
+
+Format:
+  "[Specific question]? Let me know below! 👇 If you enjoyed this,
+   consider subscribing for more [SHOW NAME] episodes.
+   www.youtube.com/@[CHANNEL_HANDLE]?sub_confirmation=1"
+
+Episode-specific questions by content type:
+  Twitch:  "What was your favorite streamer clip?"
+  NBA:     "Which game surprised you the most?"
+  News:    "Which story hit different for you?"
+
+Rules:
+  - Question must be specific to THIS episode — not a generic CTA
+  - Channel handle resolved from customer.config.youtubeHandle — never hardcoded
+  - sub_confirmation=1 always appended — forces subscribe dialog on click
+  - Operator sees this as a suggestion and can edit before approving
+```
+
+**Customer 0 channel handle:** `@clipzworldnews`
+**Customer 1+:** `customer.config.youtubeHandle` — required field in customer account setup.
 
 ---
 
-## Required Output Structure
+## Thumbnail Text Options
+
+Claude generates 4 options per episode. Operator picks in Canva or as burn overlay. These are suggestions — not auto-burned.
+
+```
+Format:   Short, punchy, uppercase or title case
+Max:      4 words per line, 2 lines max
+Style:    Reaction text, not descriptive
+
+At least 1: the reaction/emotion to the moment
+At least 1: the setup (what happened before)
+Emoji:    On 2 of 4 options max
+All:      Must work standalone on a thumbnail without context
+
+Examples from reference:
+  "HUMBLED 😂"             ← emotion
+  "BRO WAS CONFIDENT…"    ← setup
+  "INSTANT REGRET 💀"     ← consequence
+  "THIS WAS EMBARRASSING" ← plain reaction
+```
+
+---
+
+## Per-Platform Output Schema
+
+Claude returns this complete JSON. Every field. Nothing optional that has a known value.
 
 ```json
 {
   "youtube": {
-    "titles": [
-      "Streamer Gets HUMBLED About Fighting Experience 😂 | Twitch Soup #1",
-      "Funniest Twitch Clips of the Day 😂 | Twitch Soup",
-      "Twitch Streamer Gets ROASTED About Fighting Skills 😂",
-      "Top Twitch Fails & Funny Moments 😂 | ClipzWorld News",
-      "You Won't Believe What This Streamer Said… 😂 | Best Twitch Clips 2026"
-    ],
-    "description": "...(full description per spec below)...",
-    "tags": ["twitch clips", "funny twitch clips", "twitch highlights", "streamer fails", "..."],
-    "hashtags": ["#TwitchClips", "#FunnyMoments", "#StreamerFails", "#Gaming"],
-    "pinnedComment": "Which clip was funniest? Drop your timestamp below 👇",
-    "playlistDescription": "...(per spec below)...",
-    "thumbnailTextIdeas": ["HUMBLED 😂", "BRO WAS CONFIDENT…", "INSTANT REGRET 💀", "THIS WAS EMBARRASSING"]
+    "title": "string — primary title ≤100 chars",
+    "titles": ["5 A/B options"],
+    "recommended": 0,
+    "description": "string — full description with all required sections",
+    "tags": ["array", "no hash prefix", "combined ≤500 chars"],
+    "hashtags": ["#in", "#description", "#footer"],
+    "categoryId": "string — content-type specific (see table below)",
+    "pinnedComment": "string — question + subscribe URL with {{CHANNEL_HANDLE}} resolved",
+    "thumbnailTextOptions": ["4 options"],
+    "chapters": "string — timestamp block (same as in description, sent separately for YouTube chapter parsing)"
   },
   "tiktok": {
-    "caption": "...(90-150 chars, hook first, 4-6 hashtags mixed in naturally)..."
+    "caption": "string — hook + hashtags inline ≤2200 runes",
+    "coverTimestamp": 1000
   },
   "instagram": {
-    "caption": "...(125 char hook, then full description, 10-15 hashtags at end)..."
+    "caption": "string — hook + bullets + hashtags ≤2200 chars ≤30 hashtags",
+    "mediaType": "REELS"
   }
 }
 ```
 
+**categoryId per content type:**
+
+| Content type | categoryId | YouTube category |
+|---|---|---|
+| `clips-long` / `clips-short` | `"24"` | Entertainment |
+| `sports-long` / `sports-short` | `"17"` | Sports |
+| `news-long` / `news-short` | `"25"` | News & Politics |
+
 ---
 
-## YouTube Description Structure (in order)
+## Customer Account Variables
 
+These must exist in every customer's account config before publish copy runs:
+
+| Variable | Customer 0 | Purpose |
+|---|---|---|
+| `youtubeHandle` | `clipzworldnews` | Pinned comment subscribe URL |
+| `hostName` | `Bobby G` | Hosted by line |
+| `network` | `ClipzWorld News` | Show intro line |
+| `uploadCadence` | `every day` | Subscribe CTA |
+
+**Show names + taglines per content type (Customer 0):**
+
+| Content type | Show name | Tagline |
+|---|---|---|
+| `clips-long/short` | Twitch Soup | your daily dose of the funniest Twitch clips, viral streamer moments, and gaming highlights |
+| `sports-long/short` | The Other Side of the Pillow | where we appreciate all of yesterday's games in the association |
+| `news-long/short` | Because the Light Was On | where we bring you the most impactful news stories of the day, our way |
+
+---
+
+## What Is Manual — Confirmed
+
+Cannot be done via Upload-Post or YouTube Data API. Always done in YouTube Studio after private draft lands:
+
+| Feature | Status |
+|---|---|
+| YouTube cards | ❌ Manual only |
+| End screens | ❌ Manual only |
+| A/B thumbnail testing | ❌ Manual — use Claude's 5 title options as the A/B set |
+| Playlist assignment | ❌ Manual only |
+| Chapter verification | ⚠️ Auto-detected by YouTube from timestamp format — verify manually that YouTube parsed correctly |
+
+Claude generates thumbnail text options and 5 title variants so the operator has everything they need for manual steps without writing anything themselves.
+
+---
+
+## What Flows to /publish — Full Wiring
+
+After operator approves publish copy (or `approvalMode: 'auto'`), the complete package flows to the upload gate. Nothing discarded.
+
+```javascript
+{
+  // YouTube
+  youtube_title:         titles[recommended],        // Primary title
+  youtube_description:   description,                // Full description — timestamps + hashtags included
+  tags:                  tags,                       // Array, no # prefix
+  categoryId:            categoryId,                 // Content-type specific
+  thumbnail_url:         thumbnailUrl,               // From Canva export — required, not optional
+  first_comment:         pinnedComment,             // Channel handle resolved — required, not optional
+  containsSyntheticMedia: true,                     // Always — AI-generated content
+  embeddable:            true,
+  publicStatsViewable:   true,
+  license:               'youtube',
+
+  // TikTok
+  tiktok_title:          tiktok.caption,            // Full caption — NOT 90-char truncated
+  privacy_level:         tiktokPrivacy,
+  post_mode:             'DIRECT_POST',
+  is_aigc:               true,
+  cover_timestamp:       tiktok.coverTimestamp,     // 1000ms default
+
+  // Instagram
+  instagram_title:       instagram.caption,          // Full caption
+  media_type:            instagram.mediaType,        // REELS or STORIES
+
+  // Scheduling
+  scheduled_date:        deliverySpec.scheduledAt   // From Job Spec if scheduled
+}
 ```
-[Show identity line] — "Welcome to [SHOW NAME] by [CHANNEL NAME] [emoji] — [one-line show pitch]"
 
-[Episode hook] — "In today's episode, [HOOK MOMENT] [emoji] plus [N] more [content descriptor]!"
-
-⏱️ TIMESTAMPS
-[chapters string from buildYouTubeChapters() — accurate, not guessed]
-
-🎮 Featured [Streamers / Teams / Stories] (Support Them! 💜)
-[For Twitch: DisplayName\nhttps://www.twitch.tv/username — one per line]
-[For NBA: Team names + game result]
-[For News: Headline + source]
-
-😂 What You'll See:
-[4 bullet points derived from script content]
-
-🚀 Subscribe CTA
-[ctaSubscribe from channelConfig]
-
-📅 [uploadFrequency from channelConfig]
-
-🎤 Hosted by: [host from channelConfig]
-
-📢 Disclaimer: [disclaimer — only for curator userType]
-
-🔥 Hashtags: [5-8 description hashtags]
-```
+**Fields that were previously conditional and silently dropped — now required:**
+- `thumbnail_url` — if missing, pre-publish gate hard fails. Generate thumbnail first.
+- `first_comment` — if missing, pre-publish gate hard fails. Generate publish copy first.
+- `tags` — always sent from publish-copy output, not dependent on frontend passing them.
 
 ---
 
-## YouTube Tags (separate from hashtags)
-
-Tags go in the YouTube Studio tags field, NOT in the description. They are comma-separated keywords for the algorithm, not display hashtags.
-
-**Format:** lowercase, no `#`, search-intent phrases
-**Count:** 15-25 tags
-**Pattern:** specific → broad
-- Specific: streamer names, game names, specific moments
-- Mid: "twitch clips", "twitch highlights", "funny streamers"  
-- Broad: "gaming", "livestream", "funny moments 2026"
-
-**Must include for Twitch:** streamer usernames as tags (YouTube indexes them)
-**Must include for NBA:** team names, player names from script
-**Must include for News:** story topics, countries/regions mentioned
-
----
-
-## Playlist Description Structure
-
-```
-Welcome to [SHOW NAME] by [CHANNEL NAME] [emoji] — [one-line series pitch]
-
-This series features:
-[4 bullet points describing series content]
-
-[Broad appeal line — who will enjoy this]
-
-🔥 [Update frequency line]
-```
-
----
-
-## Title Rules
-
-- **5 options always** — operator picks one
-- **Option 1:** Hook moment + show name + episode number (e.g. "Streamer Gets HUMBLED 😂 | Twitch Soup #1")
-- **Option 2:** Content descriptor + emotion (e.g. "Funniest Twitch Clips of the Day 😂")
-- **Option 3:** Curiosity/intrigue hook (e.g. "You Won't Believe What This Streamer Said…")
-- **Option 4:** Keyword-first SEO title (e.g. "Best Twitch Clips Compilation 2026 😂")
-- **Option 5:** Show brand + episode number only (e.g. "Twitch Soup #1 | ClipzWorld News")
-- Max 100 chars hard limit (YouTube truncates at ~70 in search)
-- Include 1 emoji per title
-- Never generic — must reference something specific from the script
-
----
-
-## Platform Caveats
-
-| Element | YouTube | TikTok | Instagram |
-|---|---|---|---|
-| Title | Separate field, 5 options | No title — caption only | No title — caption only |
-| Description | Long-form, structured | Not used | Not used |
-| Caption | Not used | 90-150 chars optimal, 2200 max | 125 char hook, 2200 max |
-| Hashtags | In description (5-8) + tags field (15-25) | 4-6 mixed into caption | 10-15 at end of caption |
-| Timestamps | In description | Not used | Not used |
-| Streamer links | In description | Not used | @mentions if possible |
-| Playlist desc | Separate deliverable | N/A | N/A |
-| Thumbnail | Uploaded separately | Auto-generated or uploaded | Uploaded separately |
-
----
-
-## Hook Moment Extraction
-
-The `hookMoment` drives the title Option 1 and description opener. It is the single most compelling moment in the episode.
-
-**How to extract from script:**
-- For Twitch: find the most emotionally charged segment — biggest laugh, most surprising moment, most shareable reaction. Look for capitalized words, [beat] pauses around punchlines, or the cold open subject.
-- For NBA: find the most dramatic play — buzzer beater, big comeback, unexpected upset
-- For News: find the most provocative story — highest stakes, most unexpected development
-
-**Format for title:** "[Emotion verb in caps] + context" — e.g. "Gets HUMBLED", "ROASTED", "LOSES IT", "CAN'T BELIEVE"
-
----
-
-## What Does NOT Change Per Customer (CWN constants)
-
-- Bobby G voice and name
-- CWN show names (Twitch Soup / Other Side of the Pillow / Because the Light Was On)
-- `@clipznashite` handle
-- Gold/dark brand aesthetic references
-- Disclaimer text
-
-## What DOES Change Per Customer (AuraFlux variables)
-
-Everything in `channelConfig` — show name, host, handle, upload frequency, niche, tone, disclaimer, userType. When AuraFlux ships, these come from the customer's profile. Until then, CWN values are hardcoded constants in server.js.
-
----
-
-## Implementation Notes for Cline
-
-1. **Pass full script** — remove the `script.substring(0, 600)` truncation at `server.js:8776`. Pass the full script. Claude can handle it.
-2. **Pass `streamerRoster`** — filter `streamers.json` to only the streamers featured in this episode (match against `job.streamers` array). Pass as structured array with `displayName` + `twitchUrl`.
-3. **Pass `chapters`** — the output of `buildYouTubeChapters()` is already computed at `server.js:5286`. Pass it directly to `/generate-publish-copy` so the prompt can embed it verbatim — do not ask Claude to regenerate timestamps.
-4. **Pass `episodeNumber`** — add to job card at script gen time, pass through to publish copy.
-5. **Pass `channelConfig`** — hardcode CWN values as a constant in server.js for now. AuraFlux will replace with customer profile lookup.
-6. **Request 5 titles** — update prompt to explicitly request 5 title options in the `titles` array.
-7. **Separate tags from hashtags** — prompt must explicitly distinguish YouTube description hashtags (display, `#Tag`) from YouTube tags field (algorithm, lowercase keywords).
-8. **Request playlist description** — add to prompt output requirements.
-9. **Request thumbnail text ideas** — add to prompt output requirements.
-10. **hookMoment extraction** — add a pre-pass that scans the script for the most compelling moment before the main prompt runs. Can be a simple Claude call or regex heuristic on the cold open subject.
+*This spec is the reference for all publish copy generation. Claude matches this format. Customer-specific values (show names, handles, taglines) live in customer account config, not in code. Last updated 2026-04-18 by Claude Code.*
