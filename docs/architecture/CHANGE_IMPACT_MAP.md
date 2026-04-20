@@ -359,6 +359,8 @@ See `PIPELINE_CONTRACT_SPEC.md` for the full rule and rationale.
 | Platform list (deliverySpec.platforms) | Gates 4+5, dashboard display, Gate 5 pre-publish validator |
 | Drive upload logic | jobSpec.state.savedOutputs.driveUrl, Gate 4 check, Gate 5 input |
 | Gate thresholds (pass/fail scores) | customerConfig, Roo gate owner YAMLs, test expected outcomes |
+| `customerConfig gate0.minDurationSeconds` | gate0.js getMinDurationSecs(), gate-0-owner.yaml duration thresholds, /nba/scrape-game-highlight minDurationSecs |
+| `customerConfig gate0.maxDurationSeconds` | gate0.js getMaxDurationSecs(), gate-0-owner.yaml duration thresholds, /nba/scrape-game-highlight maxDurationSecs — long-form has no entry (null = no max) |
 | contentType aliases (twitch→clips) | Gate 0 alias map, configLoader, customerConfig template keys |
 | `customerConfig designDefaults.voice.lockedIntro` | scaffold.js (getLockedIntro reads it), script_gen.js (writes to jobSpec.designSpec.voice.lockedIntro), gate1.js (checkLockedIntro reads from jobSpec), qa/checklists/nba.js + news.js + twitch.js (getLockedIntroCheck reads it), Roo gate-1-owner.yaml |
 | `customerConfig designDefaults.voice.lockedOutro` | scaffold.js (getLockedOutro reads it), gate1.js (getRequiredOutro uses customerConfig.voice.outroLine — NOTE: the full outro is in voice.lockedOutro but gate1 checks for voice.outroLine which is the final sentence only; both must be consistent) |

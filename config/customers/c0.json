@@ -273,7 +273,8 @@
       },
       "qaThresholds": {
         "gate0": {
-          "minDurationSeconds": 10
+          "minDurationSeconds": 30,
+          "maxDurationSeconds": 90
         },
         "gate1": {
           "pass": 90,

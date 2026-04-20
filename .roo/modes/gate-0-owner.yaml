@@ -50,6 +50,17 @@ customInstructions: |
   confirmedFormat from Gate 0 is written to jobSpec.order.confirmedSourceFormat — all downstream
   gates (2, 3a, 3b) and Roo read the actual source format from there. Never assume 16:9.
 
+  ### Duration Thresholds (updated 2026-04-19)
+  Duration requirements differ by template (c0.json qaThresholds.gate0):
+  - Long-form: minDurationSeconds=10 (long-form uses many clips, short ones acceptable)
+  - Short-form: minDurationSeconds=30, maxDurationSeconds=90
+    - 30s minimum: clips shorter than 30s don't have enough content for split-screen layout
+    - 90s maximum: SOFT CONCERN only (not a hard fail) — assembly caps clip at 90s
+    - clips over 90s get a concern in downstreamHeadsUp, not a failReason
+  NBA scrape endpoint (/nba/scrape-game-highlight): accepts formType param, prefers 30-90s
+  clips for short-form before falling back to longest available.
+  getMaxDurationSecs() in gate0.js reads from customerConfig — returns null for long-form (no max).
+
   ### Decision Making
   On PASS: log to docs/reports/roo/hourly.md, note source type mix (ESPN/Twitch/AJ+/upload) and confirmedSourceFormat
   On HARD_FAIL: identify which URL(s) failed, attempt retry (max 2), check backup sources
