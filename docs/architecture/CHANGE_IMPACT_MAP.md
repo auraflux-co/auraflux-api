@@ -369,6 +369,47 @@ This is the highest-blast-radius change possible. It breaks:
 
 ---
 
+### If you change PRE-GENERATE (lib/job_spec.js createJobSpec()) — scaffold + voice resolution
+
+**Added 2026-04-19: Pre-generate architectural fix**
+
+`createJobSpec()` now:
+1. Runs `generateScaffold()` if `params.items` is non-empty → populates `designSpec.sceneStructure` at job creation
+2. Resolves voice/chrome from customerConfig → populates `designSpec.voice` and `designSpec.chrome` at job creation
+
+**What breaks if you change this:**
+- `gate0.js canProduce()` — now expects items in order.inputs.items at pre-generate (part of the new capability check)
+- `gate1.js canProduce()` — checks `designSpec.voice.lockedOutro` and `sceneStructure.sceneHeaders` at pre-generate
+- `gate3a.js prepare()` — reads sceneHeaders from designSpec.sceneStructure (now available at job creation)
+- `gate4.js analyzeFullVideo()` — reads itemsOrdered and categoryLabel from designSpec.voice (now available at job creation)
+- `script_gen.js` scaffold block — checks `gwJobSpec.designSpec.sceneStructure.scaffold` to skip re-generation
+
+**Blast radius of pre-generate fix (2026-04-19):**
+| Component | Change | Impact if Missing |
+|---|---|---|
+| `lib/job_spec.js` | generateScaffold() at createJobSpec() | Gates see empty sceneStructure at pre-generate |
+| `lib/job_spec.js` | voice/chrome resolution at createJobSpec() | Gate 1 canProduce() fails at pre-generate |
+| `lib/gates/gate0.js` | content-type-aware canProduce() | Wrong env vars not caught until run time |
+| `lib/gates/gate1.js` | canProduce() pre-generate mode | Gate 1 fails pre-generate sign-off for all new jobs |
+| `lib/gates/gate1.js` | Claude prompt gets full spec | QA misses lockedIntro/lockedOutro/prohibitedWords checks |
+| `lib/gates/gate3a.js` | flagAccurate/sidebarAccurate in prompt | Flag/sidebar errors invisible until Gate 4 |
+| `lib/gates/gate4.js` | flagAccurate/sidebarAccurate as BLOCKERS | Wrong flag/sidebar ships to viewers |
+| `lib/script_gen.js` | pre-generated scaffold check | Scaffold generated twice (harmless but wasteful) |
+| `.roo/modes/gate-0-owner.yaml` | canProduce() capability check doc | Roo misroutes env var failures |
+| `.roo/modes/gate-1-owner.yaml` | pre-generate mode + full Claude context doc | Roo misroutes canProduce() failures |
+| `.roo/modes/gate-3a-owner.yaml` | flag/sidebar accuracy doc | Roo doesn't know to escalate these |
+| `.roo/modes/gate-4-owner.yaml` | flag/sidebar BLOCKER doc | Roo doesn't hold uploadSignal on wrong titles |
+
+**Forward compatibility:**
+- If `params.items` is empty at `createJobSpec()` time: scaffold generation is skipped (non-fatal).
+  The fallback path in `script_gen.js` generates the scaffold at script-gen time (backward compat).
+- If customerConfig cannot be loaded at createJobSpec(): voice/chrome resolution fails silently.
+  The script_gen.js write block still runs as fallback.
+- The `else { ... }` block in script_gen.js scaffold section is the backward-compat path.
+  Both paths (pre-generated + fallback) converge at the sceneStructure write-back block.
+
+---
+
 ## Job Spec Distribution Rule
 
 **Every gate QA prompt must receive the full confirmed job spec. No cherry-picking.**
@@ -377,6 +418,18 @@ When changing any gate's QA prompt or adding a new jobSpec field:
 - Gates 0-5 `run()` functions must pass full `jobSpec` to any Gemini/Claude call
 - Specifically: `designSpec.sceneStructure`, `designSpec.chrome`, `order.inputs.items`, prior gate commitments, `qaThresholds`
 - If you add a field to jobSpec → update every gate QA prompt that is relevant to that field
+
+**New fields added by pre-generate fix (2026-04-19) — required in all downstream gate prompts:**
+- `jobSpec.designSpec.sceneStructure.scaffold` — full scaffold text (script_gen reads this)
+- `jobSpec.designSpec.voice.lockedIntro` — exact locked intro text (Gate 1 checks this)
+- `jobSpec.designSpec.voice.lockedOutro` — exact locked outro text (Gate 1 checks this)
+- `jobSpec.designSpec.voice.prohibitedWords[]` — prohibited words list (Gate 1 checks these)
+- `jobSpec.designSpec.voice.showName` — show name for brand identity (Gates 3a, 4)
+- `jobSpec.designSpec.voice.categoryLabel` — flag row 1 label (Gates 3a, 4)
+- `gate3aReport.sampleFindings[].flagAccurate` — new field: flag accuracy per sample (Gate 4 reads)
+- `gate3aReport.sampleFindings[].sidebarAccurate` — new field: sidebar accuracy per sample (Gate 4 reads)
+- `gate4Report.flagAccurate` — new field: BLOCKER if false (Gate 5 reads gate4Report.uploadSignal)
+- `gate4Report.sidebarAccurate` — new field: BLOCKER if false
 - If you change a gate's QA criteria → verify it reads from jobSpec, not hardcoded assumptions
 
 See `PIPELINE_CONTRACT_SPEC.md` for the full rule and rationale.

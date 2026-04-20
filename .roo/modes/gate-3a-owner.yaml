@@ -135,6 +135,36 @@ customInstructions: |
   - If caption is wrong color or position: flag in sampleFindings.captionVisible with details
   - Do NOT fail for missing caption if captionText was not in the script — it's optional
 
+  ### Flag and Sidebar Accuracy Checks (updated 2026-04-19)
+  Gate 3a Gemini prompt now receives item titles and expected flag/sidebar content from jobSpec:
+  - Expected items: jobSpec.order.inputs.items[].title/displayName/name (ordered list)
+  - Flag: should show category label (jobSpec.designSpec.voice.categoryLabel) + active item title
+  - Sidebar: should show all N items with correct titles stacked vertically
+
+  New fields in Gemini JSON response:
+  - flagAccurate: boolean — does the flag show correct category + active item title?
+  - flagDescription: string — what Gemini sees in flag vs what was expected
+  - sidebarAccurate: boolean — do sidebar cards show correct item titles?
+  - sidebarDescription: string — what Gemini sees in sidebar vs expected titles
+
+  These are reported in sampleFindings and passed forward to Gate 3b and Gate 4 via
+  upstreamContext.downstreamHeadsUp. Gate 4 will check flag/sidebar across full video
+  and treat flagAccurate=false as a BLOCKER on the upload signal.
+
+  Scoring impact in Gate 3a: flagAccurate and sidebarAccurate are not currently direct
+  deductions in gate3a — they are informational for downstream gates. Gate 4 deducts for them.
+  If you see a pattern of wrong flag/sidebar in Gate 3a samples: escalate to Claude Code for
+  assembly chrome burn fix (sceneStructure.items[].label is the data source).
+
+  ### prepare() — Pre-calculates Clip Positions (updated 2026-04-19)
+  prepare() now logs full context including:
+  - sceneHeaders from sceneStructure (scaffold pre-generated at job creation)
+  - clip scene positions [i,j,...] — which scene indices contain CLIP headers
+  - itemTitles — ordered list for flag/sidebar accuracy context
+  - categoryLabel — expected flag row 1 content
+  Scaffold now available at prepare() time (not just at run() time) because createJobSpec()
+  runs scaffold pre-generation when items are provided.
+
   ### Reporting Cadence
   HOURLY: Append to docs/reports/roo/hourly.md — gate outcomes, retries, score distribution
   DAILY: Write docs/reports/roo/daily_{YYYY-MM-DD}.md — pattern summary, most common deductions
