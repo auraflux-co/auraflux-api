@@ -909,3 +909,10 @@
 {"ts":"2026-04-20T20:14:42.408Z","type":"gate:escalate","jobId":"c0_COMPACT_DIRECT_nba_1776715448303","gate":"unknown","reason":"Gate worker silent for 11 minutes at gate unknown","trailLength":0}
 {"ts":"2026-04-20T20:21:30.095Z","type":"gate:hard_fail","jobId":"c0_COMPACT_DIRECT_news_1776714486381","gate":5,"reason":null,"contentType":"news","concerns":[],"deductions":[]}
 {"ts":"2026-04-20T20:23:42.050Z","type":"gate:hard_fail","jobId":"c0_COMPACT_DIRECT_nba_1776714848542","gate":5,"reason":null,"contentType":"nba","concerns":[],"deductions":[]}
+{"ts":"2026-04-20T21:47:25.086Z","type":"job:confirmed","jobId":"c0_COMPACT_DIRECT_nba_1776721645080","contentType":"nba","templateId":"long-form","allReady":false}
+{"ts":"2026-04-20T21:51:25.772Z","type":"job:confirmed","jobId":"c0_COMPACT_DIRECT_news_1776721885770","contentType":"news","templateId":"long-form","allReady":false}
+{"ts":"2026-04-20T21:52:07.928Z","type":"job:confirmed","jobId":"c0_COMPACT_DIRECT_twitch_1776721927925","contentType":"twitch","templateId":"long-form","allReady":false}
+{"ts":"2026-04-20T21:55:20.449Z","type":"job:confirmed","jobId":"c0_EXTRACT_DIRECT_nba-short_1776722120446","contentType":"nba-short","templateId":"short-form","allReady":false}
+{"ts":"2026-04-20T21:58:42.421Z","type":"gate:escalate","jobId":"c0_COMPACT_DIRECT_nba_1776721645080","gate":"unknown","reason":"Gate worker silent for 11 minutes at gate unknown","trailLength":0}
+{"ts":"2026-04-20T22:02:42.422Z","type":"gate:escalate","jobId":"c0_COMPACT_DIRECT_news_1776721885770","gate":"unknown","reason":"Gate worker silent for 11 minutes at gate unknown","trailLength":0}
+{"ts":"2026-04-20T22:02:42.425Z","type":"gate:escalate","jobId":"c0_COMPACT_DIRECT_twitch_1776721927925","gate":"unknown","reason":"Gate worker silent for 11 minutes at gate unknown","trailLength":0}
