@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-20T22:02:42.425Z",
+  "updatedAt": "2026-04-20T22:06:42.423Z",
   "activeJobs": [
     {
       "jobId": "c0_COMPACT_DIRECT_twitch_1776715091409",
@@ -290,12 +290,13 @@
       "contentType": "nba-short",
       "templateId": "short-form",
       "startedAt": "2026-04-20T21:55:20.449Z",
-      "lastActivity": "2026-04-20T21:55:20.449Z",
+      "lastActivity": "2026-04-20T22:06:42.423Z",
       "currentGate": "gate0",
       "gateHistory": [],
       "sendbackCount": 0,
-      "status": "running",
-      "allGatesReady": false
+      "status": "escalated",
+      "allGatesReady": false,
+      "escalatedGate": "unknown"
     }
   ]
 }
