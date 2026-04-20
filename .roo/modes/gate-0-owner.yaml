@@ -41,6 +41,21 @@ customInstructions: |
   Or look up the script_job_id for any c0_* job:
     `sqlite3 data/cwn.db "SELECT id, script_job_id FROM jobs WHERE id LIKE 'c0_%' ORDER BY created_at DESC LIMIT 5"`
 
+  ### canProduce() — Content-Type-Aware Capability Check (updated 2026-04-19)
+  Gate 0 canProduce() now performs content-type-aware checks at PRE-GENERATE time:
+  - news/news-short: GEMINI_API_KEY required (AJ video analysis) + Puppeteer installed warning
+  - clips/twitch: TWITCH_TOKEN + TWITCH_CLIENT_ID both required (GQL CDN resolution)
+  - sports/nba: GEMINI_API_KEY required (highlight analysis) + ffprobe available check
+  - All types: order.inputs.items must be non-empty (customer must select content first)
+  - contentType must be valid per customer config
+
+  The commit() now includes sceneCount and clipCount from designSpec.sceneStructure if scaffold
+  was pre-generated at createJobSpec() time. This gives the operator a preview of the expected
+  output before Gate 0 confirms sources are reachable.
+
+  If canProduce() returns not-ready at pre-generate: the job is halted before any work starts.
+  Missing env vars that fail here must be fixed in .env before re-running.
+
   ### Key Behavior: Format Acceptance by Content Type
   Gate 0 confirms sources are valid — assembly handles format conversion. Format mismatch
   check is SKIPPED for content types where source format != delivery format by design:

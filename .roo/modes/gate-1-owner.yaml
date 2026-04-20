@@ -88,10 +88,45 @@ customInstructions: |
   - [beat] markers present as segment boundaries
   - No [BRACKET PLACEHOLDERS] of any kind
 
+  ### canProduce() — Pre-Generate Spec Completeness Check (updated 2026-04-19)
+  Gate 1 canProduce() now has TWO modes:
+
+  PRE-GENERATE mode (filledScript is undefined in jobSpec):
+  - Checks designSpec.voice.lockedOutro is present (resolved at createJobSpec() by pre-generate fix)
+  - Checks designSpec.sceneStructure.sceneHeaders is non-empty (scaffold ran at createJobSpec())
+  - Does NOT check for filledScript — script hasn't been written yet
+  - If these checks fail: the issue is createJobSpec() not running scaffold/voice resolution
+    (items were absent at job creation, or customerConfig didn't load)
+
+  RUN mode (filledScript is set in jobSpec):
+  - All pre-generate checks run
+  - Also checks filledScript is non-empty
+
+  If canProduce() fails at pre-generate due to missing sceneHeaders: it means items were not
+  passed to createJobSpec() — they arrive in the request body but were not in params.items.
+  This is expected for jobs created before the pre-generate fix. The scaffold will be generated
+  in script_gen.js (fallback path). Gate 1 will still work — canProduce() at run time will
+  find the filled script and all will be well.
+
+  ### Claude QA Prompt — Full Spec Context (updated 2026-04-19)
+  The Gate 1 Claude QA prompt now receives the full job spec context:
+  - lockedIntro text (from designSpec.voice.lockedIntro) — Claude checks it's in === INTRO ===
+  - lockedOutro text (from designSpec.voice.lockedOutro) — Claude checks it's in === OUTRO ===
+  - prohibitedWords (from designSpec.voice.prohibitedWords) — Claude checks none appear
+  - showName (from designSpec.voice.showName) — Claude uses this for brand identity context
+  - Expected scene structure (sceneHeaders joined) — Claude knows what the script should cover
+  - Items ordered (by title/displayName) — Claude checks commentary matches ordered content
+
+  New scoring deductions (applied from Claude's JSON response):
+  - lockedIntroCorrect=false → -15 points (deducted in addition to the local checkLockedIntro check)
+  - lockedOutroCorrect=false → -15 points (deducted in addition to the local checkOutro check)
+  - prohibitedWordsFound (Claude-found) → -10 each (in addition to local findHypeViolations check)
+  - itemAccuracyIssues → -10 each (capped at 3)
+
   ### Creative Config Single Source of Truth (updated 2026-04-19)
   Gate 1 now reads locked intro from `jobSpec.designSpec.voice.lockedIntro` — set by
-  script_gen.js after scaffold generation, sourced from c0.json designDefaults.voice.lockedIntro.
-  The source chain is: CREATIVE_CONFIG_SPEC.md → c0.json → script_gen → jobSpec → Gate 1.
+  createJobSpec() at pre-generate time (new) or script_gen.js after scaffold (fallback).
+  Source chain: c0.json designDefaults.voice → createJobSpec() → jobSpec → Gate 1.
 
   If the intro check fails:
   - The issue is either scaffold not writing the locked text OR Gemini overwriting it.

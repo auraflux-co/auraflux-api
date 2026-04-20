@@ -114,6 +114,31 @@ customInstructions: |
   If Gate 4 flags wrong show name in video: check jobSpec.designSpec.chrome.showName is populated.
   If it's empty: script_gen didn't write the voice fields (designSpec.voice write block in script_gen.js).
 
+  ### Flag and Sidebar Accuracy — BLOCKERS (updated 2026-04-19)
+  Gate 4 Gemini prompt now receives ordered item titles and flag/sidebar expectations from jobSpec:
+  - itemsOrdered: jobSpec.order.inputs.items[].title joined (ordered list for flag sequence)
+  - categoryLabel: jobSpec.designSpec.voice.categoryLabel (flag row 1 content)
+  - Flag must update per scene: different item title on flag row 2 for each story/streamer/game
+  - Sidebar must show all N items with correct titles throughout
+
+  New fields in Gemini JSON response:
+  - flagAccurate: boolean — does the flag update correctly per scene with correct item titles?
+  - flagNotes: string — specific description of flag behavior vs expected
+  - sidebarAccurate: boolean — do sidebar cards show correct item titles throughout?
+  - sidebarNotes: string — specific description of sidebar vs expected
+
+  BLOCKER LOGIC (new — 2026-04-19):
+  - flagAccurate=false → automatic BLOCKER added to blockers[] → broadcastReady=false → uploadSignal=false
+    Reason: wrong flag title is a factual error visible to every viewer
+  - sidebarAccurate=false → automatic BLOCKER added to blockers[]
+    Reason: wrong sidebar titles confuse viewers about what content they're watching
+
+  When you see a flag/sidebar blocker from Gate 4:
+  1. Check gate4 result: analysis.flagNotes and analysis.sidebarNotes for what Gemini saw
+  2. Check sceneStructure.items[].label in jobSpec — this is what chrome burn reads for titles
+  3. If labels are wrong: the issue is in the items[] written to gwJobSpec at script-gen time
+  4. Escalate to Claude Code with jobSpec sceneStructure.items data vs what Gemini reported
+
   ### Report Format (always include)
   - Gate: 4
   - Period: {hourly|daily|monthly}
