@@ -46,7 +46,38 @@
             }
           },
           "logoPosition": "bottom-right-mug",
-          "logoSize": 120
+          "logoSize": 120,
+          "caption": {
+            "position": "y=920",
+            "align": "center",
+            "fontsize": 68,
+            "font": "/System/Library/Fonts/Supplemental/Arial Bold Italic.ttf",
+            "boxOpacity": 0.75,
+            "boxBorderW": 18,
+            "colors": {
+              "news": "#c7af4f",
+              "clips": "#6441A5",
+              "sports": "#1CE8FF"
+            }
+          }
+        },
+        "voice": {
+          "lockedIntro": {
+            "news": "I'm Bobby G, and this is Because the Light was on. I'm told this is the news. A recent study shows that people who watch news programs are 40% more likely to be aware that a news program is currently happening. ... [Pause] ... Here are some things that occurred while we weren't looking.",
+            "clips": "Welcome to Twitch Soup. I'm your host Bobby G, and for the next five minutes, I'll be your guide through the digital world that is livestreaming.",
+            "sports": "What's up, ClipzWorld! Grab your shades, because we're heading to the Other Side of the Pillow. I'm Bobby G, and we're breaking down the highlights that weren't just good—they were cold."
+          },
+          "lockedOutro": "That's all the time we have before the light bill is due. I'm Bobby G for ClipzWorld News. Keep your clips short and your takes shorter. Goodnight and good luck.",
+          "showName": {
+            "news": "BECAUSE THE LIGHT WAS ON",
+            "clips": "TALK SOUP",
+            "sports": "OTHER SIDE OF THE PILLOW"
+          },
+          "categoryLabel": {
+            "news": "WORLD NEWS",
+            "clips": "ON STREAM",
+            "sports": "NBA GAME"
+          }
         },
         "audio": {
           "mixMode": "both",
@@ -199,8 +230,35 @@
           "logoPosition": "bottom-right-mug",
           "logoSize": 80,
           "layout": "split-screen",
-          "splitTop": "clip",
-          "splitBottom": "avatar"
+          "splitTop": "avatar",
+          "splitBottom": "clip",
+          "caption": {
+            "position": "y=920",
+            "align": "center",
+            "fontsize": 68,
+            "font": "/System/Library/Fonts/Supplemental/Arial Bold Italic.ttf",
+            "boxOpacity": 0.75,
+            "boxBorderW": 18,
+            "colors": {
+              "news": "#c7af4f",
+              "clips": "#6441A5",
+              "sports": "#1CE8FF"
+            }
+          }
+        },
+        "voice": {
+          "lockedIntro": null,
+          "lockedOutro": null,
+          "showName": {
+            "news": "BECAUSE THE LIGHT WAS ON",
+            "clips": "TALK SOUP",
+            "sports": "OTHER SIDE OF THE PILLOW"
+          },
+          "categoryLabel": {
+            "news": "WORLD NEWS",
+            "clips": "ON STREAM",
+            "sports": "NBA GAME"
+          }
         },
         "audio": {
           "mixMode": "both"

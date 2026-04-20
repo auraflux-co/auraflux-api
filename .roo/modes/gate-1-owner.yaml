@@ -78,6 +78,21 @@ customInstructions: |
   - [beat] markers present as segment boundaries
   - No [BRACKET PLACEHOLDERS] of any kind
 
+  ### Creative Config Single Source of Truth (updated 2026-04-19)
+  Gate 1 now reads locked intro from `jobSpec.designSpec.voice.lockedIntro` — set by
+  script_gen.js after scaffold generation, sourced from c0.json designDefaults.voice.lockedIntro.
+  The source chain is: CREATIVE_CONFIG_SPEC.md → c0.json → script_gen → jobSpec → Gate 1.
+
+  If the intro check fails:
+  - The issue is either scaffold not writing the locked text OR Gemini overwriting it.
+  - Scaffold writes the locked intro during scaffold generation (lib/scaffold.js getLockedIntro()).
+  - Gemini is instructed "DO NOT change === INTRO === — copy exactly as written in scaffold."
+  - If Gemini overwrites the intro anyway: escalate to Claude Code (Gemini prompt fix needed).
+  - If scaffold is missing intro: escalate to Claude Code (scaffold bug — not something to patch in script_gen).
+
+  The prepare() log now shows: `[gate1] Ready for job {id} — voice={type}, intro='{first 40 chars}...', outro='{outro}', threshold={N}`
+  Use this to confirm locked intro is flowing from jobSpec before Gate 1 runs.
+
 groups:
   - read
   - edit
