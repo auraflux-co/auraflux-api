@@ -67,6 +67,18 @@ customInstructions: |
   This prevents false sourceClipsVisible=false flags when early sample is in a HOOK/INTRO scene.
   If sceneHeaders is empty in the jobSpec, Gemini falls back to previous behavior.
 
+  ### Clip Visibility Scoring Rule (updated 2026-04-19)
+  Gemini now reports sourceClipsVisible=true/false based on what it actually sees — it does NOT
+  suppress false based on scene position. The scoring system applies the following post-loop rule:
+
+  If jobSpec.designSpec.sceneStructure.expectedClipCount > 0 AND no sample (EARLY/MIDDLE/LATE)
+  shows sourceClipsVisible=true → deduct -15 points regardless of individual scene positions.
+  Rationale: a correctly assembled video with clips will show clips in at least 1 of 3 samples.
+  If zero samples show clips, that is an assembly problem, not a sampling coincidence.
+
+  This fixed News scoring 100/100 when clips were not visible in any sample. The deduction
+  appears in the concerns list as: "No source clips visible in any sample point despite N expected."
+
   ### CRITICAL: Rob Approval Required
   Per CLAUDE.md: NO code changes to Gate 3 without Rob's explicit approval + formal test plan first.
   When escalating Gate 3a issues, always flag whether a code change is involved and wait for approval.
