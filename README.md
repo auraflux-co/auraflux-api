@@ -68,22 +68,22 @@ tmp/                  ← Segments, intro cards, gate samples (auto-cleaned)
 ┌─────────────────────────────────────────────────────────────────┐
 │  1. SCRIPT GENERATION                                            │
 │     Dashboard → Content Type → Streamers/Topic → Generate       │
-│     Claude writes Bobby G script (Jon Stewart + Norm Mac style)  │
+│     Gemini fills scaffold → Bobby G dialogue (style from config)   │
 │                                                                   │
-│  ▼ GATE 1: Script QA (Gemini) ≥90=auto / 70-89=manual / <70=fail│
+│  ▼ GATE 1: Script QA (Claude / Anthropic) ≥90 / 70-89 / <70      │
 │                                                                   │
 │  2. HEYGEN RENDER                                                 │
 │     Segments queued → HeyGen renders Bobby G avatar              │
 │     16:9 or 9:16 based on form type                              │
 │                                                                   │
-│  ▼ GATE 2: Segment QA (Gemini samples 3 segments) ≥85=auto      │
+│  ▼ GATE 2: Segment structure QA (code + gate reports)              │
 │                                                                   │
 │  3. ASSEMBLY                                                      │
 │     FFmpeg: normalize → intro cards → clips → ticker bake        │
 │     Node Canvas: intro card PNG (circle, gold ring, 3 lines)     │
 │     Ticker: baked into video (80px/sec, 24 stocks + 10 indices)  │
 │                                                                   │
-│  ▼ GATE 3: Assembly QA (Gemini watches assembled video) ≥70=auto │
+│  ▼ GATES 3a/3b: Assembly QA (Gemini samples) + commitment check  │
 │                                                                   │
 │  4. POST-ASSEMBLY LEARNING                                        │
 │     Gemini watches 60s → extracts 6 insights → cwn_style_guides  │
@@ -103,13 +103,15 @@ tmp/                  ← Segments, intro cards, gate samples (auto-cleaned)
 
 | Gate | What | Tool | Pass | Manual | Fail |
 |---|---|---|---|---|---|
-| 1 | Script quality | Gemini | ≥90 | 70–89 | <70 |
-| 2 | HeyGen segment QA | Gemini (3 samples) | ≥85 | 65–84 | <65 |
-| 3 | Assembly QA | Gemini (watches video) | ≥70 | 60–69 | <60 |
-| 4 | Publish confirm | Upload-Post API | job_id received | — | no job_id |
+| 1 | Script style QA (after Gemini writes script) | **Claude** (Anthropic) | ≥90 | 70–89 | <70 |
+| 2 | Segment structure / duration | **Code** (+ upstream gate reports) | — | — | hard_fail on bad structure |
+| 3a / 3b | Assembly QA + commitment check | **Gemini** (samples) + code (3b) | varies | varies | varies |
+| 4 | Broadcast-ready video QA | **Gemini** (full video) | — | — | — |
 
-**Gate 2 checks:** lip sync, audio presence, rendering artifacts, motion quality  
-**Gate 3 checks:** pacing, transitions, audio levels, visual consistency, overall broadcast readiness  
+**Script generation** uses **Gemini** (`lib/script_gen.js`), then **Gate 1** uses **Claude** (`ANTHROPIC_API_KEY`). For a full list of env **names** and which AI provider each uses (shareable with people who do not have `.env`), see **`docs/ops/REQUIRED_API_KEYS.md`**.
+
+**Gate 5 / publish** use Upload-Post and related config — see `lib/gates/gate5.js` and `PUBLISH_COPY_SPEC.md`.
+
 **QA logs:** stored locally at `output/qa_failures/` — NOT uploaded to Drive
 
 ---

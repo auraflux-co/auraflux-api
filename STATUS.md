@@ -1,10 +1,84 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-20 (Claude Code — chrome fixes + synth test)
+**Last Updated:** 2026-04-21 (Cursor — Phase A: HeyGen ON for agreed run sheet)
 **Branch:** aider/test-suite
-**🚀 GATE_TEST_MODE=false** — Pipeline runs end-to-end. HeyGen IS active. 5-job live test in progress (news/nba/twitch long-form + twitch-short).
-**🎯 PRIORITY:** Get synth test passing all 3 content types → then Render deploy
-**How to start a session:** Read CLAUDE.md → STATUS.md → tell the agent what to work on
+**Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
+**How to start a session:** Read **this file first (Owned execution order)** → `CLAUDE.md` → tell the agent the **current focus** bullet below.
+
+---
+
+## 🎯 Owned execution order (single source of truth for “what we do next”)
+
+**Rule:** Work **respects this sequence**. Supporting docs (`docs/ops/LAUNCH_PLAN_2026.md`, `docs/ops/LAUNCH_TEST_MATRIX.md`, `docs/architecture/SYSTEM_ARCHITECTURE.md`, `docs/strategy/PO_AND_ENGINEERING_RUNBOOK.md`, `docs/ops/REQUIRED_API_KEYS.md`, etc.) are **reference** — they do not replace this section. **Progress and sign-off live here.**
+
+| Phase | What | When it starts | Block in launch plan |
+|--------|------|------------------|------------------------|
+| **A** | **Pipeline proof (E2E + full long-form)** | **Now** — always first until signed off | Block 2 |
+| **B** | **Render deploy + post-deploy tasks** | Only after Phase A is green **or** product explicitly waives | Block 3 |
+| **C** | **Platform / hygiene** (load test, rename audit doc, Rovo, UI review) | After Phase A is under control; some items can overlap B if low-risk | Block 4 |
+| **D** | **Future decoupled stack** (Vercel + RunPod ComfyUI, etc.) | Not launch-blocking | `DECOUPLED_VIDEO_PRODUCT_STACK.md` |
+
+### Codebase assessment (living — update when checkpoints change)
+
+**Last assessed:** 2026-04-21 (Cursor)
+
+| Area | State | Notes |
+|------|--------|------|
+| **Jest (`npm test` / `npm run test:all`)** | ✅ **44/44 pass** | Suites: `test/ffmpeg_utils.test.js`, `test/pipeline_qa.test.js`, `test/pipeline_adversarial.test.js`. |
+| **`test/run_tests.js`** | ✅ Fixed | Was invoking Jest files with **plain Node** → `ReferenceError: test is not defined`. Now delegates to **Jest** (`--runInBand`). |
+| **Phase A E2E matrix** | ⬜ Not replaced by unit tests | **Agreed run sheet:** HeyGen **required** (live). Expect API spend for the four configured runs. |
+| **`npm run format:check`** | Not run this session | Large diff possible — run when you want a formatting pass. |
+| **`npm run load-test:health`** | Needs API on :3000 | Phase C — safe (GET `/health` only). |
+
+**Production log themes to watch during E2E:** `SOURCE_CLIPS_ALL_MISSING` (clips not resolved before assembly), `GATE3A_SYNTH_PREBUILD_FAIL` / `HEYGEN_BLOCKED_SYNTH_FAIL` when chrome prebuild fails — fix pipeline/source, not docs.
+
+### Phase A — Block 2 (gate to everything downstream)
+
+1. Run the **minimum E2E matrix** — `docs/ops/LAUNCH_TEST_MATRIX.md` (general template). **Customer 0 run order** is frozen below — execute in order and log each row in **E2E / launch log**.
+2. Record **job IDs + pass/fail** in the table below (or link to a dated note). Fix pipeline/source issues before declaring green.
+3. **Do not** treat Render or decoupled architecture work as “the main track” until this phase has an honest status.
+
+#### Agreed run sheet — Phase A (execute in order)
+
+| # | Configuration | Pass bar (same gates as usual) |
+|---|----------------|--------------------------------|
+| 1 | **NBA long-form — 1 clip** | Script → HeyGen → assembly → gates through your launch bar; one NBA highlight clip in the episode. |
+| 2 | **News long-form — 1 clip** | Same; one news story / clip slot. |
+| 3 | **Twitch long-form — 2 clips — Jason** | Same; **Jason** streamer (e.g. Jasontheween / roster as in dashboard) with **two** clip slots in the long-form flow. |
+| 4 | **NBA short-form** | Short pipeline (9:16); `nba-short` or dashboard equivalent; real HeyGen (not silent / not mock). |
+
+**HeyGen for rows 1–4:** Product confirmed **live HeyGen** for this test — keep **`GATE_TEST_MODE=false`** and valid HeyGen credentials.
+
+**After these four:** add full multi-clip long-form runs (L1–L3 in `LAUNCH_TEST_MATRIX.md` section B) when you want launch sign-off on *full* episode counts — not required to complete rows 1–4 above.
+
+### Phase B — Block 3 (only if A allows)
+
+1. Follow `docs/ops/RENDER_DEPLOY_CHECKLIST.md`.
+2. After deploy: `docs/ops/POST_RENDER_TASKS.md` in order (NR license key type, monitoring, TZ=UTC, then P2+).
+
+### Phase C — Block 4 (sequential where it matters)
+
+| # | Task | Notes |
+|---|------|--------|
+| 1 | `npm run load-test:health` (API up; hits `/health` only) | `scripts/load_test_autocannon.js` |
+| 2 | Prettier policy | Scripts exist: `npm run format` / `format:check` — run when ready for a formatting pass |
+| 3 | Rename audit (not mass rename) | `docs/ops/RENAME_CWN_TO_AURAFLUX.md` |
+| 4 | Rovo / Jira MCP | `docs/ops/ATLASSIAN_ROVO_MCP.md` (Cursor settings — not repo code) |
+| 5 | C0→C1 UI / Equinox | Schedule as product/engineering review |
+
+### Current focus (update every working session)
+
+- **Today:** Execute **Phase A agreed run sheet** (four runs: NBA 1-clip LF → News 1-clip LF → Twitch 2-clip LF Jason → NBA short) with **HeyGen live**. Log each in **E2E log** with Actor + job IDs.
+- **Blocked by:** _(secrets → `docs/ops/REQUIRED_API_KEYS.md`; paste keys only in env/Render, not in chat)_
+
+**Attribution:** Progress here may come from **Rob (product owner)** or from an **automation agent** (e.g. **Claude Code**, **Cursor**, Cline, Roo). Not every row is a manual operator run. Use the **Actor** column in the log so it is explicit who kicked off or recorded the run.
+
+### E2E / launch log (fill as you go)
+
+| Date | Actor | Run | Job ID(s) | Result | Notes |
+|------|-------|-----|-----------|--------|------|
+| 2026-04-21 | Cursor | Jest unit + integration (npm test / npm run test:all) | — | Pass | 44/44; test:all runner fixed to use Jest (was broken). |
+| | | | | | |
 
 ---
 

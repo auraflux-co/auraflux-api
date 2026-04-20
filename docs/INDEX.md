@@ -88,16 +88,19 @@ Dispatch files coordinate multiple handoffs in sequence. Archive after all const
 | `CHROME_OVERLAY_FFMPEG_SPEC.md` | **APPROVED — pending implementation.** Replace Puppeteer→PNG→FFmpeg chrome pipeline with pure FFmpeg drawtext/drawbox. Universal for all customers — colors/name/logo from customerConfig only. Zero code changes for Customer 1+. Covers filter chain design, per-scene params interface, migration plan, acceptance criteria. |
 
 ## docs/architecture/
-| `CHANGE_IMPACT_MAP.md` | **Read before any code change.** Maps every pipeline component to every other component it touches. Answers "I changed X, who needs to know?" for scaffold, script gen, all 6 gates, assembly, customerConfig, and jobSpec fields. | — How the System Works
-Authoritative technical reference. Read before touching any pipeline code.
+
+**Start here for the full product + system picture:** `SYSTEM_ARCHITECTURE.md` — control plane, six-stage content flow, three end-user entry paths, monitoring, launch blocks, link to decoupled GPU stack.
 
 | File | What it covers |
 |------|---------------|
-| `PIPELINE_CONTRACT_SPEC.md` | **READ THIS FIRST** — universal pipeline contract: Job Spec schema, Stage Interface, Provider Interface. Supersedes CWN-specific assumptions. Customer 0 (CWN) is a reference implementation, not the architecture. |
+| `CHANGE_IMPACT_MAP.md` | **Read before any code change.** Maps every pipeline component to every other component it touches. Answers "I changed X, who needs to know?" for scaffold, script gen, all 6 gates, assembly, customerConfig, and jobSpec fields. |
+| `SYSTEM_ARCHITECTURE.md` | **Product + internal architecture** — Input→Spec→Node→Queue→Storage→Distribution; 01–06 content stages; three ways to start; monitoring; launch program; pointer to ComfyUI future |
+| `AURAFLUX_SYSTEM_OVERVIEW.md` | **Current** stack (versions, job types, E2E ASCII flow) — read after SYSTEM_ARCHITECTURE for implementation detail |
+| `PIPELINE_CONTRACT_SPEC.md` | **READ THIS FIRST (schema)** — universal pipeline contract: Job Spec schema, Stage Interface, Provider Interface. Supersedes CWN-specific assumptions. Customer 0 (CWN) is a reference implementation, not the architecture. |
 | `GATED_PIPELINE_ARCHITECTURE.md` | Gate logic, retry loop, Gate Output Contract, learning records. Still authoritative for gate mechanics. Read alongside PIPELINE_CONTRACT_SPEC.md. |
 | `CHROME_DIRECTIVE_ARCHITECTURE.md` | Directive sidecar system — how per-scene chrome overlays work |
-| `PLATFORM_ARCHITECTURE.md` | Naming conventions, content type definitions, platform targets |
-| `CWN_ENVIRONMENT_MAP.md` | Full environment map — every API, library, tool, service with definitions and diagram |
+| `PLATFORM_ARCHITECTURE.md` | Two-sided platform, **three end-user entry paths** (upload / link / idea), three layers, naming |
+| `CWN_ENVIRONMENT_MAP.md` | Full environment map — every API, library, tool, service with definitions and diagram (operator detail) |
 | `QA_GATES.md` | Gate 1-4 scoring rules, thresholds, pass/fail behavior |
 | `ROLLBACK_FORCE_ADVANCE_SPEC.md` | Rollback and force-advance pipeline controls spec |
 | `UPLOAD_API_SPEC.md` | Upload-Post API integration spec |
@@ -106,6 +109,7 @@ Authoritative technical reference. Read before touching any pipeline code.
 | `SERVER_SPLIT_PLAN.md` | Plan to split server.js into modules (Phase 2 prep) |
 | `DASHBOARD_DECOUPLING_SPEC.md` | Target architecture — dashboard as read-only monitor, server owns all pipeline state and orchestration |
 | `FUTURE_4K_MIGRATION_PLAN.md` | Parked — 4K upgrade plan when bandwidth/storage allows |
+| `DECOUPLED_VIDEO_PRODUCT_STACK.md` | **Future** — Vercel/Next.js + Render Node + RunPod ComfyUI/SVD; not the current Customer 0 pipeline |
 
 ---
 
@@ -139,6 +143,7 @@ Where we're going and why. ICP, pricing, AuraFlux product plan, Phase 2 build sp
 | `AURAFLUX_BRAND.md` | AuraFlux brand identity — name, domain, visual direction |
 | `AURAFLUX_PRODUCTION_MODEL.md` | How CWN pipeline becomes a multi-tenant product |
 | `AURAFLUX_REVERSE_PIPELINE_SPEC.md` | Reverse pipeline spec — customer input → automated output |
+| `PO_AND_ENGINEERING_RUNBOOK.md` | **PO ↔ code lead** — how we work, when we ask for keys/access, PDF vision vs repo snapshot |
 
 ---
 
@@ -147,6 +152,7 @@ How to run the operation day-to-day. Checklists, agent schedules, commit rules.
 
 | File | What it covers |
 |------|---------------|
+| `REQUIRED_API_KEYS.md` | **Anthropic vs Gemini vs HeyGen** — which `process.env` names exist, for people without `.env` access (no secret values) |
 | `COMMIT_CHECKLIST.md` | **Read before every commit** — STATUS.md update, doc sync, staging rules |
 | `OVERNIGHT_TASKS.md` | Aider overnight task schedule — what runs 1-6am, what it touches |
 | `POST_PUBLISH_MANUAL_CHECKLIST.md` | 20% of post-publish tasks that can't be automated |
@@ -155,6 +161,11 @@ How to run the operation day-to-day. Checklists, agent schedules, commit rules.
 | `CODE_REVIEW.md` | Latest Cline code review report — findings, dead code, cleanup candidates |
 | `POST_RENDER_TASKS.md` | **Post-Render migration task list** — everything deferred until after Render deploy. Priority 1: NR alerts, monitoring.js escalation file write, TZ=UTC. Priority 2: chrome rename, designSpec decoupling, module split. Priority 3: Customer 1 gate docs, brand rename, Twelve Labs, Runway. Priority 4: direct platform APIs. |
 | `RENDER_RUNBOOK.md` | Step-by-step production render runbook — pre-render checklist, gate sequence, per-content-type notes, recovery procedures, expected timings |
+| `LAUNCH_PLAN_2026.md` | **Blocks 2–4** — E2E tests, full long-form runs, Render, Prettier, load test, rename audit, Rovo (pointer) |
+| `LAUNCH_TEST_MATRIX.md` | **Block 2** test matrix — 6 E2E + 3 full long-form + short-form sign-off table |
+| `RENDER_DEPLOY_CHECKLIST.md` | **Render** deploy steps + links to `POST_RENDER_TASKS.md` |
+| `RENAME_CWN_TO_AURAFLUX.md` | Safe rename order — not a single mass replace |
+| `ATLASSIAN_ROVO_MCP.md` | **Rovo / Jira MCP** — ID-side setup, not in-repo code |
 
 ---
 

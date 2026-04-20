@@ -2,7 +2,7 @@
 # ── Stage 1: Build native deps ────────────────────────────────────────────────
 # canvas (Cairo), sharp, and puppeteer all need system libs that aren't in
 # Alpine. Debian slim has them via apt and avoids Alpine's musl libc issues.
-FROM node:lts-bookworm-slim AS builder
+FROM node:22-bookworm-slim AS builder
 
 # Cairo (canvas), libvips (sharp), and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -22,7 +22,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 # ── Stage 2: Runtime image ────────────────────────────────────────────────────
-FROM node:lts-bookworm-slim AS runtime
+FROM node:22-bookworm-slim AS runtime
 
 # Runtime-only system libs for canvas, sharp, puppeteer Chromium
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -76,7 +76,8 @@ USER node
 EXPOSE 3000
 
 ENV NODE_ENV=production \
-    PORT=3000
+    PORT=3000 \
+    NEW_RELIC_NO_CONFIG_FILE=true
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"

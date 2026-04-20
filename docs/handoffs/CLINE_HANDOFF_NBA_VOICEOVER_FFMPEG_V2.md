@@ -5,7 +5,7 @@
 **Scope:** NBA long-form — rebuild the voiceover step at `server.js:4109-4164` using FFmpeg `amix` filter with 3 audio inputs (muted clip video + Bobby G narration at full volume + background music bed at reduced volume) and explicit duration control that covers the full clip length. Replaces the broken `-shortest` flag approach. Fixes Gap #26. **This handoff SUPERSEDES `CLINE_HANDOFF_NBA_VECTCUT_VOICEOVER.md` and `CLINE_HANDOFF_VECTCUT_LONGFORM_FOUNDATION.md` — both parked tonight after Cline surfaced that VectCutAPI is a CapCut draft builder, not a headless renderer.**
 **Ship order:** Single atomic commit. Medium-size change — ~200-300 lines of server.js touched.
 **Do NOT touch:** News assembly branch, Twitch assembly branch, short-form code paths, NBA TV card burn at `server.js:3968-4038`, NBA Gemini prompt (Wave 1+2 already shipped in `6801b5d`). This handoff only replaces the voiceover audio mix step inside the NBA assembly flow.
-**Before committing:** Re-read `COMMIT_CHECKLIST.md`. Atomic staging. STATUS.md update. LONGFORM_FIX_ROTATION.md update. Music tracks must be present in `assets/audio/nba/` before this handoff can be verified end-to-end.
+**Before committing:** Re-read `COMMIT_CHECKLIST.md`. Atomic staging. STATUS.md update. LONGFORM_FIX_ROTATION.md update. Music tracks must be present in `assets/audio/` before this handoff can be verified end-to-end.
 
 **Rob's directive:** *"pick whats best for long term no shortcuts and no bandaids"* — applies. The path chosen here (FFmpeg `amix` done correctly with explicit duration control) is NOT a bandaid — it's the standard professional audio mixing pattern used in every serious FFmpeg-based video pipeline. The previous `-shortest` implementation was the bandaid because it used a duration-truncation hack instead of proper mixing.
 
@@ -42,7 +42,7 @@ Cline investigated the VectCutAPI path earlier tonight (per `CLINE_HANDOFF_VECTC
 1. **`CLINE_HANDOFF_NBA_PROMPT_REWRITE.md`** (NBA Wave 1, Gap #21) — NARRATION scene rename ✅ already shipped in `6801b5d`
 2. **`CLINE_HANDOFF_NBA_PROMPT_CLIP_DURATION.md`** (NBA Wave 2, Gap #23) — clipDuration in GAME DATA ✅ already shipped in `6801b5d`
 3. **`CLINE_HANDOFF_NBA_NARRATION_WORD_COUNT.md`** (NBA Wave 2, Gap #22) — word count matches clip duration ✅ already shipped in `6801b5d`
-4. **Rob must have dropped music tracks into `assets/audio/nba/`.** This is a non-code blocker for end-to-end verification. If the directory is empty, you can still ship the code (with `pickNBAMusicTrack()` returning null gracefully), but verification requires at least one track.
+4. **Rob must have dropped music tracks into `assets/audio/`.** This is a non-code blocker for end-to-end verification. If the directory is empty, you can still ship the code (with `pickNBAMusicTrack()` returning null gracefully), but verification requires at least one track.
 
 **Pre-ship verification commands:**
 ```bash
@@ -51,7 +51,7 @@ grep -n "NARRATION scenes\|NARRATION word count target" server.js
 # Should have hits
 
 # Music tracks check
-ls assets/audio/nba/*.mp3 assets/audio/nba/*.wav assets/audio/nba/*.m4a 2>/dev/null
+ls assets/audio/*.mp3 assets/audio/*.wav assets/audio/*.m4a 2>/dev/null
 # Optional — may be empty, code handles it gracefully
 
 # Current broken voiceover is still in place
@@ -131,7 +131,7 @@ Add near other helper functions (e.g., near `downloadFile` at `server.js:~1470` 
 ```javascript
 /**
  * Pick a background music track for an NBA episode.
- * Reads from assets/audio/nba/ — supports .mp3, .wav, .m4a, .flac, .ogg.
+ * Reads from assets/audio/ — supports .mp3, .wav, .m4a, .flac, .ogg.
  * Initially random selection; future: episode-based rotation, metadata-aware.
  *
  * @returns {string|null} - absolute path to a music track, or null if no tracks available
@@ -338,7 +338,7 @@ if (contentType === 'nba' && tsFiles.length > 0) {
   if (musicTrackPath) {
     log(asmId, `  🎵 Music track: ${path.basename(musicTrackPath)}`);
   } else {
-    log(asmId, `  ⚠️  No NBA music tracks in assets/audio/nba/ — narration-only mix`);
+    log(asmId, `  ⚠️  No NBA music tracks in assets/audio/ — narration-only mix`);
   }
 
   const voiceoverFiles = [...tsFiles];
@@ -519,7 +519,7 @@ a bandaid when implemented with proper duration control (no -shortest),
 proper per-track volume (amix weights), and background music bed support.
 
 New helpers:
-- pickNBAMusicTrack() — reads assets/audio/nba/*.mp3/.wav/.m4a/.flac/.ogg,
+- pickNBAMusicTrack() — reads assets/audio/*.mp3/.wav/.m4a/.flac/.ogg,
   picks one per episode (random initially, rotation logic later)
 - mixNBAVoiceoverFFmpeg(avatarTs, clipTs, outputTs, options) — 3-input
   FFmpeg amix:
@@ -537,7 +537,7 @@ Assembly branch replacement (server.js:4105-4164):
 - Consistent music track across all games in the episode
 
 Fallback behavior:
-- No music tracks in assets/audio/nba/: narration-only 2-input mix,
+- No music tracks in assets/audio/: narration-only 2-input mix,
   silent background over muted clip (still works)
 - probeDuration fails on clip: throw, caller catches, per-game fallback
 - FFmpeg error: caught, logged, per-game fallback
@@ -548,7 +548,7 @@ Depends on:
 - CLINE_HANDOFF_NBA_PROMPT_REWRITE.md (Wave 1-NBA) ✅ shipped in 6801b5d
 - CLINE_HANDOFF_NBA_PROMPT_CLIP_DURATION.md (Wave 2-NBA) ✅ shipped in 6801b5d
 - CLINE_HANDOFF_NBA_NARRATION_WORD_COUNT.md (Wave 2-NBA) ✅ shipped in 6801b5d
-- assets/audio/nba/ music tracks (optional — handles null gracefully)
+- assets/audio/ music tracks (optional — handles null gracefully)
 
 Verification:
 - node -c server.js exit 0
@@ -597,7 +597,7 @@ Restores the old `-shortest` FFmpeg voiceover which is known-degraded but functi
 
 1. **NBA full newscast chrome layer** — Gap #27, parked post-test shared-template rebrand. NBA continues to have only the top-right TV card during game intros, no full chrome during game body.
 2. **Background music ducking** — the music plays at a fixed 0.20 volume throughout. A pro mix would duck the music when Bobby G talks and un-duck during silence. FFmpeg has a `sidechaincompress` filter that can do this but it adds complexity. Not in scope for this handoff. If needed later, add it as a follow-up in the same helper function.
-3. **Loudness normalization across music tracks** — different source files have different baseline loudness. For now, manually tune each track to consistent level before dropping in `assets/audio/nba/`. FFmpeg `loudnorm` filter can normalize but adds render time. Future follow-up.
+3. **Loudness normalization across music tracks** — different source files have different baseline loudness. For now, manually tune each track to consistent level before dropping in `assets/audio/`. FFmpeg `loudnorm` filter can normalize but adds render time. Future follow-up.
 4. **Music track rotation** — `pickNBAMusicTrack()` picks randomly per episode. Future: track metadata, episode-based rotation, avoid-repeat logic, mood-matching.
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -15,6 +15,7 @@
     "vectcut": "cd VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py",
     "test": "jest",
     "test:all": "node test/run_tests.js",
+    "test:ci": "jest --runInBand --ci",
     "cleanup": "curl -X POST http://localhost:3000/cleanup -H 'Content-Type: application/json' -d '{\"keepCount\":2,\"cleanTmp\":true,\"cleanQaLogs\":false}'",
     "disk-usage": "curl http://localhost:3000/disk-usage",
     "auth-drive": "node cwn-auth.js",
@@ -28,7 +29,10 @@
     "benchmark": "node qa/benchmark.js",
     "benchmark:concurrent": "node qa/benchmark.js --concurrent",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "format": "prettier --write \"**/*.{js,json,md,html,css,yml,yaml}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{js,json,md,html,css,yml,yaml}\" --ignore-path .prettierignore",
+    "load-test:health": "node scripts/load_test_autocannon.js"
   },
   "keywords": [
     "ai",
@@ -73,9 +77,11 @@
     "sharp": "^0.32.0"
   },
   "devDependencies": {
+    "autocannon": "^8.0.0",
     "eslint": "^8.50.0",
     "jest": "^30.3.0",
-    "playwright": "^1.59.1"
+    "playwright": "^1.59.1",
+    "prettier": "^3.5.3"
   },
   "repository": {
     "type": "git",
