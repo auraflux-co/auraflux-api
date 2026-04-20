@@ -25,18 +25,11 @@ const BUILD_INFO = (() => {
 
 // ── New Relic custom event helpers ───────────────────────────────────────────
 // All events are fire-and-forget — never block the pipeline.
-// Queryable via NRQL: SELECT * FROM EventName WHERE customerId = 'c0' SINCE 7 days ago
+// Queryable via NRQL on each custom event type name.
+const { nrPipelineEvent } = require('./lib/nr_pipeline');
 
 function nrEvent(eventType, attributes) {
-  try {
-    if (typeof newrelic !== 'undefined') {
-      newrelic.recordCustomEvent(eventType, {
-        timestamp: Date.now(),
-        env: process.env.NODE_ENV || 'development',
-        ...attributes
-      });
-    }
-  } catch(e) { /* non-fatal */ }
+  nrPipelineEvent(eventType, attributes);
 }
 
 // Keep old helper for backwards compat
@@ -200,6 +193,33 @@ const path       = require('path');
 const { execFile, exec, execSync } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
 const puppeteer  = require('puppeteer');
+
+/** When Puppeteer's cache has no bundled Chrome, fall back to a system install. */
+function puppeteerExecutablePath() {
+  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH;
+  if (envPath && fs.existsSync(envPath)) return envPath;
+  if (process.platform === 'darwin') {
+    const p = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    if (fs.existsSync(p)) return p;
+  }
+  if (process.platform === 'linux') {
+    const candidates = ['/usr/bin/google-chrome-stable', '/usr/bin/google-chrome', '/usr/bin/chromium-browser', '/usr/bin/chromium'];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) return p;
+    }
+  }
+  if (process.platform === 'win32') {
+    const p = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+    if (fs.existsSync(p)) return p;
+  }
+  return undefined;
+}
+
+function withPuppeteerExecutable(opts) {
+  const exe = puppeteerExecutablePath();
+  return exe ? { ...opts, executablePath: exe } : opts;
+}
+
 const { body, validationResult } = require('express-validator');
 const { logError, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 const { requireFields, validateContentType, validateArrayLength, sanitizeStrings } = require('./lib/validation');
@@ -574,6 +594,13 @@ async function startHeyGenPoller(jobId, card) {
   const pollerDone = registerPoller(jobId);
 
   console.log(`[heygen-poller:${jobId}] 🔄 Starting — polling ${videoJobs.length} segments every 30s (max ${MAX_POLL_MINUTES}min)`);
+  nrEvent('HeyGenPollStart', {
+    jobId,
+    executionMode: 'inline',
+    segmentCount: videoJobs.length,
+    contentType: card.contentType || 'twitch',
+    maxPollMinutes: MAX_POLL_MINUTES
+  });
 
   // Seed pending rows in heygen_renders DB table for each video job (non-fatal)
   try {
@@ -587,6 +614,7 @@ async function startHeyGenPoller(jobId, card) {
     pollCount++;
     if (pollCount > MAX_POLLS) {
       console.error(`[heygen-poller:${jobId}] ⏰ Timeout after ${MAX_POLL_MINUTES}min — giving up. Manual REFRESH IDs + ASSEMBLE required.`);
+      nrEvent('HeyGenPollTimeout', { jobId, pollCount, segmentCount: videoJobs.length, contentType: card.contentType || 'twitch' });
       unregisterPoller(jobId);
       return;
     }
@@ -638,6 +666,15 @@ async function startHeyGenPoller(jobId, card) {
       } catch(e) {}
 
       console.log(`[heygen-poller:${jobId}] Poll ${pollCount}: ${completed.length}/${videoJobs.length} completed, ${pending.length} pending, ${failed.length} failed`);
+      nrEvent('HeyGenPollTick', {
+        jobId,
+        pollCount,
+        completed: completed.length,
+        pending: pending.length,
+        failed: failed.length,
+        total: videoJobs.length,
+        contentType: card.contentType || 'twitch'
+      });
 
       if (failed.length > 0) {
         console.error(`[heygen-poller:${jobId}] ❌ ${failed.length} segment(s) failed in HeyGen: ${failed.map(f => f.sceneName).join(', ')} — manual intervention required`);
@@ -791,6 +828,12 @@ async function startHeyGenPoller(jobId, card) {
 
       // ── Emit pipeline event — Gate 2 QA + assembly handled by pipelineBus listener ──
       const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
+      nrEvent('HeyGenSegmentsReady', {
+        jobId,
+        contentType: card.contentType || 'twitch',
+        segmentCount: videoJobs.length,
+        segmentUrlCount: segmentUrls.length
+      });
       pipelineBus.emit('heygen:all_complete', {
         jobId,
         contentType: card.contentType || 'twitch',
@@ -1039,6 +1082,14 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
     logger.warn({ jobId, avatarCount, clipCount }, 'heygen:all_complete — segmentData rebuilt from card (startup resume)');
   }
   logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
+  nrEvent('PipelineHeyGenComplete', {
+    jobId,
+    contentType,
+    customerId: (card && card.customerId) || (_liveCard && _liveCard.customerId) || 'c0',
+    segmentUrlCount: (segmentUrls || []).length,
+    scriptJobId: card.scriptJobId || null,
+    jobSpecId: card.jobSpecId || null
+  });
 
   // ── Gate 2: Handled inside assembly.js after segments are downloaded ─────
   // Removed pre-assembly Gate 2 here — segmentUrls are HeyGen video IDs/URLs,
@@ -1099,6 +1150,13 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
     }, { timeout: 10000 });
 
     logger.info({ jobId, assemblyId }, 'Auto-assembly triggered — Gate 3 → Drive will run automatically');
+    nrEvent('AssemblyTriggered', {
+      jobId,
+      assemblyId,
+      contentType,
+      segmentCount: (segmentData || []).length,
+      customerId: (card.customerId || 'c0')
+    });
     pipelineBus.emit('assembly:triggered', { jobId, assemblyId });
 
     const cardNow = persistedJobs[jobId] || card;
@@ -1145,15 +1203,41 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
         }
         saveJobCard(jobId, finalCard);
         logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
+        const _cid = finalCard.customerId || 'c0';
+        const _durMs = asmJob.duration != null ? Math.round(Number(asmJob.duration) * 1000) : null;
+        nrAssemblyComplete(jobId, _cid, contentType, assemblyId, _durMs, asmJob.sizeMB ?? null, asmJob.qaScore ?? null);
+        nrEvent('PipelineRunTerminal', {
+          jobId,
+          assemblyId,
+          contentType,
+          customerId: _cid,
+          stage: finalCard.stage,
+          gate3Score: asmJob.qaScore ?? null,
+          gate3Outcome: asmJob.qaOutcome || null,
+          hasDriveUrl: !!(asmJob.driveUrl || finalCard.finalUrl)
+        });
         pipelineBus.emit('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
       } else {
         logger.warn({ jobId, asmStatus: asmJob.status }, 'Assembly ended without done/manual_review — card not updated');
+        nrEvent('AssemblyPersistSkipped', {
+          jobId,
+          assemblyId,
+          contentType,
+          asmStatus: asmJob.status || 'unknown',
+          error: (asmJob.error || '').slice(0, 500)
+        });
       }
     };
     setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
 
   } catch(assembleErr) {
     logger.error({ jobId, err: assembleErr.message }, 'Auto-assembly POST failed — manual ASSEMBLE required');
+    nrEvent('AssemblyTriggerFailed', {
+      jobId,
+      contentType,
+      customerId: (card && card.customerId) || 'c0',
+      error: (assembleErr && assembleErr.message) ? String(assembleErr.message).slice(0, 500) : 'unknown'
+    });
   }
 });
 
@@ -2119,6 +2203,7 @@ app.get('/assemble-progress/:id', (req, res) => {
     pct:              job.pct,
     tickerPct:        job.tickerPct || null,
     status:           job.status,
+    error:            job.error || null,
     log:              newLog,
     logOffset:        fullLog.length,
     outputPath:       job.outputPath,
@@ -2299,10 +2384,10 @@ async function scrapeEspnGameVideoUrl(gameId) {
   let browser;
 
   try {
-    browser = await puppeteer.launch({
+    browser = await puppeteer.launch(withPuppeteerExecutable({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    });
+    }));
     const page = await browser.newPage();
 
     await page.setRequestInterception(true);
@@ -2707,10 +2792,10 @@ async function scrapeAjNewsVideos(targetCount = 5) {
 
   console.log(`[scrapeAjNewsVideos] Scanning for ${targetCount} videos (no article cap)...`);
 
-  const browser = await puppeteer.launch({
+  const browser = await puppeteer.launch(withPuppeteerExecutable({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-  });
+  }));
 
   try {
     for (const articleUrl of candidateUrls) {
@@ -5949,10 +6034,10 @@ app.post('/nba/generate-intro-card', async (req, res) => {
   try {
     console.log(`[nba-intro-card] Generating card for game ${gameId}...`);
 
-    browser = await puppeteer.launch({
+    browser = await puppeteer.launch(withPuppeteerExecutable({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security']
-    });
+    }));
 
     const page = await browser.newPage();
 

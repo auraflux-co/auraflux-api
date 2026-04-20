@@ -21,9 +21,16 @@
 'use strict';
 
 require('dotenv').config();
+// New Relic: load agent before other requires when license is set (Docker poller gets its own app name).
+if (process.env.NEW_RELIC_LICENSE_KEY && !/^REPLACE/i.test(String(process.env.NEW_RELIC_LICENSE_KEY))) {
+  process.env.NR_PIPELINE_SERVICE = process.env.NR_PIPELINE_SERVICE || 'auraflux-heygen-poller-docker';
+  process.env.NEW_RELIC_APP_NAME = process.env.NEW_RELIC_APP_NAME || 'AuraFlux-HeyGenPoller';
+  require('newrelic');
+}
 const fs    = require('fs');
 const path  = require('path');
 const axios = require('axios');
+const { nrPipelineEvent } = require(path.join(__dirname, '..', 'lib', 'nr_pipeline'));
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -112,6 +119,12 @@ function buildSegmentData(card, sortedAvatarSegs) {
 async function poll(videoJobs, pollCount) {
   if (pollCount > MAX_POLLS) {
     console.error(`[poller:${jobId}] ⏰ Timeout after ${MAX_POLL_MINUTES}min — giving up. POST /job/${jobId}/resubmit-heygen to retry.`);
+    nrPipelineEvent('HeyGenDockerPollTimeout', {
+      jobId,
+      pollCount,
+      maxPolls: MAX_POLLS,
+      segmentCount: videoJobs.length
+    });
     process.exit(1);
   }
 
@@ -134,6 +147,14 @@ async function poll(videoJobs, pollCount) {
   const pending   = statuses.filter(s => s.status !== 'completed');
 
   console.log(`[poller:${jobId}] Poll ${pollCount}: ${completed.length}/${videoJobs.length} completed, ${pending.length} pending, ${failed.length} failed`);
+  nrPipelineEvent('HeyGenDockerPollTick', {
+    jobId,
+    pollCount,
+    completed: completed.length,
+    pending: pending.length,
+    failed: failed.length,
+    total: videoJobs.length
+  });
 
   // Write failed statuses back to card so resubmit guard can see terminal state
   if (failed.length > 0) {
@@ -155,6 +176,7 @@ async function poll(videoJobs, pollCount) {
     const TERMINAL = new Set(['completed', 'failed', 'error']);
     if (statuses.every(s => TERMINAL.has(s.status)) && completed.length === 0) {
       console.warn(`[poller:${jobId}] All segments terminal, 0 completed — stopping. POST /job/${jobId}/resubmit-heygen to retry.`);
+      nrPipelineEvent('HeyGenDockerPollAllFailed', { jobId, pollCount });
       process.exit(2); // exit 2 = all-failed, distinct from timeout (1) and success (0)
     }
   }
@@ -169,6 +191,12 @@ async function poll(videoJobs, pollCount) {
 
   const sortedAvatarSegs = [...completed].sort((a, b) => a.sceneIndex - b.sceneIndex);
   const card = readCard();
+  nrPipelineEvent('HeyGenDockerSegmentsReady', {
+    jobId,
+    segmentCount: videoJobs.length,
+    pollCount,
+    contentType: card.contentType || 'twitch'
+  });
 
   // Persist completed URLs to card
   card.heygen.videoJobs = statuses.map(s => ({
@@ -191,9 +219,11 @@ async function poll(videoJobs, pollCount) {
       { timeout: 15000 }
     );
     console.log(`[poller:${jobId}] 📡 Handoff sent to ${CWN_SERVER_URL}/internal/heygen-complete — pipeline continues`);
+    nrPipelineEvent('HeyGenDockerHandoffOk', { jobId, segmentCount: videoJobs.length });
     process.exit(0);
   } catch (e) {
     console.error(`[poller:${jobId}] Handoff POST failed: ${e.message}`);
+    nrPipelineEvent('HeyGenDockerHandoffFail', { jobId, error: (e.message || '').slice(0, 500) });
     // Card is already saved with completed URLs — server can re-trigger from startup resume
     process.exit(3); // exit 3 = completed but handoff failed
   }
@@ -210,6 +240,13 @@ async function main() {
 
   console.log(`[poller:${jobId}] 🔄 Starting — ${videoJobs.length} segments, polling every ${POLL_INTERVAL_MS / 1000}s (max ${MAX_POLL_MINUTES}min)`);
   console.log(`[poller:${jobId}] Server handoff: ${CWN_SERVER_URL}/internal/heygen-complete`);
+  nrPipelineEvent('HeyGenDockerPollStart', {
+    jobId,
+    segmentCount: videoJobs.length,
+    pollIntervalMs: POLL_INTERVAL_MS,
+    maxPollMinutes: MAX_POLL_MINUTES,
+    contentType: card.contentType || 'twitch'
+  });
 
   // First poll after 30s — give HeyGen time to begin processing
   setTimeout(() => poll(videoJobs, 1), POLL_INTERVAL_MS);

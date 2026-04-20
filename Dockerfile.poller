@@ -9,6 +9,8 @@ COPY docker/poller-package.json ./package.json
 RUN npm install --omit=dev
 
 COPY bin/heygen-poller.js ./bin/heygen-poller.js
+COPY lib/nr_pipeline.js   ./lib/nr_pipeline.js
+COPY newrelic.js          ./newrelic.js
 COPY data/                ./data/
 
 # data/jobs.json is a runtime volume — the COPY above is just for the initial
@@ -18,6 +20,7 @@ COPY data/                ./data/
 ENV NODE_ENV=production
 ENV CWN_SERVER_URL=http://host.docker.internal:3000
 ENV JOBS_FILE=/app/data/jobs.json
+# Set NEW_RELIC_LICENSE_KEY + NEW_RELIC_APP_NAME (e.g. AuraFlux-HeyGenPoller) at runtime for NR.
 
 ENTRYPOINT ["node", "bin/heygen-poller.js"]
 # CMD is the jobId — passed at runtime: docker run cwn-poller script_nba_123
