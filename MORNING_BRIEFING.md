@@ -1,87 +1,99 @@
-# Morning Briefing — 2026-04-17
+# Morning Briefing — 2026-04-21
 
-## What We Built Tonight
-
-### Session Goal
-Gate-by-gate testing infrastructure. All 5 gates (0-4) now have their foundational work committed. Pipeline stops after Gate 1 so each gate can be verified before advancing.
-
----
-
-## Commits This Session (newest first)
-
-| Commit | What |
-|--------|------|
-| 4a5b520 | Dead code removal — generateIntroCardPNG + generateGameStoryCardPNG deleted (308 lines). Gate 3 chrome is now universal newscast overlay only. |
-| 6f46cae | Gate 4 publish QA — metadata validation + Claude text repair + Gemini thumbnail QA (CWN_BRAND_KIT, pass ≥80) + Upload-Post receipt confirmation |
-| e0f9b95 | Poller restart recovery — recoverInFlightJobs() on boot, auto-trigger assembly on restore when all segments done |
-| 0d92e1a | Stuck job dashboard — checkContentTypeStatus() on page init, auto-disabled banner |
-| d237a3e | Unified stuck job escalation — markJobStuck(), POST /job/:id/stuck, GET /content-type-status |
-| 8c28fe4 | Thumbnail fallback — canvaUrl → thumbDriveUrl → thumbnailUrl in both publish paths |
-| de4d5d5 | **GATE_TEST_MODE=true** — HeyGen auto-send disabled, pipeline stops after Gate 1 |
-| f4855bd | Pipeline resilience — assembly persistence, autoAction() self-healing, Pino logging |
-| fcb6d29 | HeyGen template 400 logging — logs templateId + full error body on fallback |
-| ae94967 | Shorts Gate 1 fixes — isShortForm guard, short-form hints in claudeScriptQA |
-| 8db2c8a | Gate 1 structured fix directive — surgical retry feedback to Gemini |
-| 2e27670 | NBA Gate 0 — ESPN Puppeteer scraper + duration validation |
+**Session closed:** ~2:00 AM ET Apr 20 (Rob went to bed)
+**Commit:** `02c8911` — fix(chrome): cap flag at 88px + Twitch sidebar reads segment cardData
+**Branch:** `aider/test-suite`
 
 ---
 
-## Gate Status
+## What Was Fixed Tonight
 
-| Gate | Status | Notes |
-|------|--------|-------|
-| Gate 0 | ✅ Done | AJ/ESPN/Twitch clip pool confirmed |
-| Gate 1 | ✅ Done | Long + short form, autoAction, retry loop |
-| Gate 2 | ✅ Done | Poller recovery + template error logging |
-| Gate 3 | ✅ Done | Universal chrome, parseGate3Report |
-| Gate 4 | ✅ Done | Metadata check, Claude repair, Gemini thumbnail QA |
+### 1. Chrome flag height (lib/chrome_overlay_ffmpeg.js)
+**Bug:** 2-line titles expanded flag from 88px → 110px, covering Bobby G's face (face zone ~y=120, flag was reaching y=158).
+**Fix:** Flag always stays at 88px spec max. 2-line titles use fontsize=20 instead of 28.
+**Visible in:** NBA video had massive flag covering Bobby G's head.
+
+### 2. Twitch sidebar empty (lib/assembly.js)
+**Bug:** Twitch branch read sidebar data from `streamerRoster` — empty for all new pipeline jobs and synth tests.
+**Fix:** First scans INTRO segments for `cardData` (same pattern NBA/News already used), falls back to `streamerRoster`.
+**Visible in:** Twitch video had the sidebar panel but zero story cards inside it.
+
+### 3. Synth test Twitch payload (test/synth_assembly_test.js)
+**Bug:** `JASON_INTRO` segment had no `cardData` — the test wasn't exercising the sidebar at all.
+**Fix:** Added `cardData: { title, displayName, origin, fact }` to match News/NBA pattern.
 
 ---
 
-## Tomorrow's Plan
+## Status When You Wake Up
 
-### Step 1 — Restart server (picks up GATE_TEST_MODE=true from .env)
-```bash
-cd ~/cwn-production && nodemon server.js
+**Synth test completed ✅ — all 3 content types assembled successfully.**
+
+| Content Type | Output File | Size |
+|---|---|---|
+| News | news_synth_test_3clips_asm_1776663598384.mp4 | 18.4 MB |
+| Twitch | twitch_synth_test_1clips_asm_1776663769570.mp4 | 6.6 MB |
+| NBA | nba_synth_test_1clips_asm_1776663907705.mp4 | 5.1 MB |
+
+**Open these and visually verify:**
+- Flag is flush to left edge, does NOT cover Bobby G's face (88px max — was 110px before fix)
+- Sidebar cards visible on the right side for all 3 content types
+- News: 3 story cards (Ceasefire / Markets / Amazon)
+- Twitch: Jason card with "New York · Just hit 50k subs"
+- NBA: Lakers vs Celtics card
+
+If chrome looks correct → short-form test next, then Render.
+
+---
+
+## Priority Order For Today
+
+### Must complete before Render deploy
+
+**1. [pause]/[beat] markers being spoken by Bobby G**
+Bobby G literally said "pause" on the news video. Only `CAPTION:` labels are currently stripped before HeyGen submission. Need to also strip `[pause]`, `[beat]`, `[BEAT]`, `[PAUSE]` in `lib/script_gen.js` before text is sent.
+→ Sub-Agent A, quick fix, 15 min
+
+**2. AJ portrait pillarbox not applied**
+News clips are 608x1080 portrait, stretched to 1920x1080. The `pillarboxFilter` field exists on the segment object but `lib/assembly.js` never applies it. Fix: when `seg.sourceOrientation === 'portrait'` apply the filter in the FFmpeg command for that clip.
+→ Sub-Agent A, same commit as #1
+
+**3. Run synth test short-form**
+`node test/synth_assembly_test.js short`
+Verify: Bobby G top, clip bottom, caption at ~y=920, no chrome flag (shorts have no sidebar/flag).
+
+**4. Re-run full synth test after fixes**
+`node test/synth_assembly_test.js news twitch nba short`
+All 4 pass → ready to tell Rob we're ready for Render.
+
+### Render deploy (when synth passes, Rob says go)
+- Sub-Agent A: render.yaml + server config
+- Sub-Agent B: Postgres migration plan + env vars
+- Remember: `TZ=UTC` in Render env vars
+
+### Post-Render (do NOT touch now)
+- YouTube test channel (10/day limit hit last night — needs a separate channel for testing)
+- NBA narration accuracy — Gemini fabricates player names, needs real data source wired in
+- Deprecated Puppeteer chrome functions cleanup (delete after 2 clean synth test runs)
+- NR alert policies, designSpec decoupling, chrome rename
+
+---
+
+## How To Start Your Session
+
+```
+1. Read CLAUDE.md → STATUS.md
+2. Check synth test output (ls -lt output/*.mp4 | head -6)
+3. Tell me what you see on the videos
+4. I'll spawn Sub-Agent A for the [pause] + pillarbox fixes
+5. Re-run synth test
+6. If all pass — "ready for Render?"
 ```
 
-### Step 2 — Run 6 Gate 1 tests, paste scores back to Claude Code
-
-| # | Type | Form | Gate 4 destination |
-|---|------|------|--------------------|
-| 1 | Twitch | Long | YouTube |
-| 2 | News | Long | YouTube |
-| 3 | NBA | Long | YouTube |
-| 4 | Twitch | Short | YouTube Shorts + TikTok + Instagram |
-| 5 | News | Short | YouTube Shorts + TikTok + Instagram |
-| 6 | NBA | Short | YouTube Shorts + TikTok + Instagram |
-
-Pipeline stops after Gate 1 — no HeyGen credits burn. Pass = ≥90. Paste all 6 scores.
-
-### Step 3 — Claude Code diagnoses any failures, Clines fix
-### Step 4 — All 4 pass → flip GATE_TEST_MODE=false → Gate 2 tests
-### Step 5 — Repeat gate by gate through Gate 4
-
 ---
 
-## Known Issues
-
-1. **HeyGen template 400s** — logging now in place, Gate 2 test will expose the real error
-2. **Gate 3 surgical retry** — parseGate3Report() written but freeze-remove loop not wired yet
-3. **Shorts dashboard buttons** — may need to use main Generate with short-form selected if buttons do nothing
-
----
-
-## Process Improvements Made Tonight
-
-- Cline identity opener — every prompt starts with "You are Cline-A/B/C, your branch prefix is cline-a/b/c/"
-- git push before reporting — baked into every prompt
-- Branch guard — "check git branch --show-current before every commit or STOP"
-
----
-
-## Next Cline Assignments (after Gate 1 tests pass)
-
-- **Cline-A** — Fix HeyGen template 400s based on logged error body (Gate 2)
-- **Cline-B** — Wire parseGate3Report() into Gate 3 retry loop in lib/assembly.js
-- **Cline-C** — NEWS_CHROME_FIX (AL JAZEERA label, dark story cards, seek corruption)
+## Key Numbers From Last Night's Production Run
+- 3 videos assembled (NBA / News / Twitch long-form)
+- 0 published — YouTube 10/day rate limit hit on all 4 upload attempts
+- Chrome bugs visible in all 3 assembled videos (flag too large, sidebar empty)
+- HeyGen: avatar path confirmed working. Template API permanently abandoned.
+- GATE_TEST_MODE is currently `false` in .env — pipeline runs end-to-end. Run synth test before any live job.

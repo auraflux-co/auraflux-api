@@ -138,4 +138,18 @@ if [ "$CODE_COUNT" -gt 0 ]; then
   fi
 fi
 
+# ── AUTO VERSION BUMP ────────────────────────────────────────────────────────
+# Bump patch version in package.json on every commit.
+# Ensures /health always shows the correct version for what's deployed.
+# MAJOR.MINOR.PATCH — patch auto-bumps, minor/major are manual.
+if command -v node &>/dev/null && [ -f "package.json" ]; then
+  CURRENT_VERSION=$(node -p "require('./package.json').version" 2>/dev/null)
+  if [ -n "$CURRENT_VERSION" ]; then
+    NEW_VERSION=$(node -e "const v='$CURRENT_VERSION'.split('.');v[2]=parseInt(v[2])+1;console.log(v.join('.'))")
+    node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.version='$NEW_VERSION';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n')"
+    git add package.json 2>/dev/null
+    echo "  📦 Version bumped: $CURRENT_VERSION → $NEW_VERSION"
+  fi
+fi
+
 exit 0

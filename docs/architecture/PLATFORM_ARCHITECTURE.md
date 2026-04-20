@@ -44,6 +44,22 @@ Rob's model today. Runs a show about streamers, NBA, or news. Does not own the s
 
 ---
 
+## End-user entry paths (product vision)
+
+The customer-facing product offers **three ways to start** (design deck: *AuraFlux Content Pipeline* / *Three Ways to Start*). They are **user-experience** labels over the same internal pipeline; implementation may be dashboard actions, API, or a future Vercel/Next.js app.
+
+| Path | User intent | Maps to platform / pipeline |
+|------|-------------|----------------------------|
+| **Use my content** | Upload clips, videos, or raw footage (MP4, MOV, etc.). | Ingestion + extract/moment flows; `EXTRACT_*` and upload handlers where implemented; storage in Layer 1 over time. |
+| **Link content** | Connect Twitch, YouTube, or any supported URL. | Source ingestion without upload; OAuth or public APIs + scrapes; same **Spec builder → Node engine** as other jobs. |
+| **Start from idea** | Begin from a prompt or topic. | Scaffold + generative script path; no raw media required up front; subject to template and policy. |
+
+**After entry:** the engine **finds moments (where applicable) → builds story/scenes → runs QA gates → produces video (HeyGen + FFmpeg) → publishes** to TikTok, YouTube, Instagram, and other configured targets. Output formats (short vs long, compilations) are template and `formFactor` decisions, not a separate backend stack.
+
+**Full system diagram and stage table:** `SYSTEM_ARCHITECTURE.md`.
+
+---
+
 ## The Three Layers
 
 ### Layer 1 — Content Library

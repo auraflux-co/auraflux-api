@@ -159,14 +159,6 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
-      <div class="sidebar-lbl">CONTENT TYPES</div>
-      <button class="sidebar-btn" onclick="nav('nba')"><span class="icon">B</span> NBA Compilation</button>
-      <button class="sidebar-btn" onclick="nav('news')"><span class="icon">N</span> News Compilation</button>
-      <button class="sidebar-btn" onclick="nav('twitch')"><span class="icon">T</span> Twitch Compilation</button>
-      <button class="sidebar-btn" onclick="nav('shorts')"><span class="icon">S</span> Shorts / Reels</button>
-    </div>
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-section">
       <div class="sidebar-lbl">TOOLS</div>
       <button class="sidebar-btn" onclick="nav('publish')"><span class="icon">Y</span> Publish Prep</button>
       <button class="sidebar-btn" onclick="nav('abtest')"><span class="icon">T</span> Thumbnails</button>
@@ -184,34 +176,31 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">NBA COMPILATION</div>
+            <div class="card-title">NBA</div>
             <span class="tag tag-pending" id="nba-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
-            <!-- Game picker drives this — no manual ID entry needed -->
-            <div id="nba-selected-games-display" style="margin-bottom:12px;">
-              <div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.5);letter-spacing:2px;margin-bottom:6px;">SELECTED GAMES</div>
-              <div id="nba-games-summary" style="font-size:12px;color:rgba(255,255,255,0.35);font-family:monospace;">No games selected — click SELECT GAMES to pick from yesterday's schedule</div>
-            </div>
-            <div class="field"><label>FORMAT</label>
-              <select id="nba-format">
-                <option value="landscape">Landscape 1920x1080 (YouTube Long Form)</option>
-                <option value="portrait">Portrait 1080x1920 (Shorts/TikTok)</option>
+            <div id="nba-games-summary" style="font-size:12px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:12px;">Auto-fetches yesterday's completed games with highlight clips.</div>
+            <input id="nba-game-ids" type="hidden" value="">
+            <div class="field"><label>GAME COUNT</label>
+              <select id="nba-count">
+                <option value="1">1 game (test)</option>
+                <option value="3" selected>3 games (~5 min)</option>
+                <option value="5">5 games (~8 min)</option>
               </select>
             </div>
-            <!-- Hidden — populated by the game picker -->
-            <input id="nba-game-ids" type="hidden" value="">
             <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
-            <div class="btn-row">
-              <button class="btn btn-gold" onclick="nav('nba')">SELECT GAMES</button>
-              <button class="btn btn-outline btn-sm" onclick="generateNBA()" id="nba-generate-btn" style="display:none;">GENERATE SCRIPT</button>
+            <div class="btn-row" style="align-items:center;gap:10px;">
+              <button id="btn-gen-nba" class="btn btn-gold" onclick="generateNBA()">LONG FORM</button>
+              <button id="btn-gen-nba-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('nba', platforms); })">SHORT</button>
+              <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
             </div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">NEWS COMPILATION</div>
+            <div class="card-title">NEWS</div>
             <span class="tag tag-pending" id="news-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
@@ -225,41 +214,29 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             </div>
             <div class="field"><label>STORY COUNT</label>
               <select id="news-count">
+                <option value="1">1 story (test)</option>
                 <option value="5">5 stories (~5 min)</option>
                 <option value="10" selected>10 stories (~10 min)</option>
                 <option value="15">15 stories (~15 min)</option>
               </select>
             </div>
-            <div class="field"><label>FORMAT</label>
-              <select id="news-format">
-                <option value="landscape">Landscape 1920x1080 (YouTube Long Form)</option>
-                <option value="portrait">Portrait 1080x1920 (Shorts/TikTok)</option>
-              </select>
-            </div>
             <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
             <div class="btn-row">
-              <button class="btn btn-gold" onclick="generateNews()">GENERATE NEWS VIDEO</button>
-              <button class="btn btn-outline btn-sm" onclick="nav('news')">CONFIGURE</button>
+              <button id="btn-gen-news" class="btn btn-gold" onclick="generateNews()">LONG FORM</button>
+              <button id="btn-gen-news-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('news', platforms); })">SHORT</button>
             </div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">TWITCH COMPILATION</div>
+            <div class="card-title">TWITCH</div>
             <span class="tag tag-pending" id="twitch-gen-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
             <div class="field"><label>STREAMERS (top clips from each)</label>
               <textarea id="twitch-streamers" style="min-height:60px" onchange="saveStreamerList()" oninput="saveStreamerList()">jasontheween, hasanabi, adapt, stableronaldo, lacy, marlon, cinna, yonnajay, jaycinco, maya</textarea>
               <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
-            </div>
-
-            <div class="field"><label>FORMAT</label>
-              <select id="twitch-format">
-                <option value="landscape">Landscape 1920x1080 (YouTube Long Form)</option>
-                <option value="portrait">Portrait 1080x1920 (Shorts/TikTok)</option>
-              </select>
             </div>
             <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
             <div class="field" style="margin-bottom:8px;">
@@ -274,8 +251,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:8px;">(applies to this generation)</span>
             </div>
             <div class="btn-row">
-              <button class="btn btn-gold" onclick="generateTwitch()">GENERATE TWITCH VIDEO</button>
-              <button class="btn btn-outline btn-sm" onclick="nav('twitch')">CONFIGURE</button>
+              <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitch()">LONG FORM</button>
+              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('twitch', platforms); })">SHORT</button>
             </div>
           </div>
         </div>
@@ -328,35 +305,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="card"><div class="card-body"><div id="schedule-list" style="font-family:Arial,sans-serif;font-size:13px;line-height:2;color:rgba(255,255,255,0.8);"></div></div></div>
     </div>
 
-    <!-- NBA PAGE -->
-    <div class="page" id="page-nba">
-      <div class="sec-title">NBA COMPILATION CONFIG</div>
-      <div class="alert alert-info">Fetches yesterday's completed games. Only games with a <strong>Game Highlights</strong> video on ESPN will be included. Check the ones you want, then click Generate Script.</div>
-      <div class="card"><div class="card-body">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
-          <button class="btn btn-gold" onclick="fetchYesterdayGames()">FETCH YESTERDAY'S GAMES</button>
-          <input id="nba-date-input" type="date" style="background:#060a12;border:1px solid rgba(199,175,79,0.3);color:#fff;padding:8px 12px;border-radius:4px;font-size:13px;font-family:monospace;" title="Or pick a different date">
-          <button class="btn btn-outline btn-sm" onclick="fetchGamesForDate()">FETCH THIS DATE</button>
-          <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
-        </div>
-        <!-- Game picker grid -->
-        <div id="nba-game-picker" style="display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <span style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.5);letter-spacing:3px;">SELECT GAMES TO INCLUDE</span>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-outline btn-sm" onclick="nbaSelectAll(true)">SELECT ALL</button>
-              <button class="btn btn-outline btn-sm" onclick="nbaSelectAll(false)">DESELECT ALL</button>
-            </div>
-          </div>
-          <div id="nba-game-cards" style="display:flex;flex-direction:column;gap:8px;"></div>
-          <div class="btn-row" style="margin-top:14px;">
-            <button class="btn btn-gold" onclick="nbaUseSelected()">USE SELECTED GAMES → GENERATE SCRIPT</button>
-          </div>
-        </div>
-        <!-- Hidden inputs still needed for backward compat -->
-        <input id="nba-config-ids" type="hidden">
-        <div id="nba-games-found" style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.35);font-family:monospace;"></div>
-      </div></div>
+    <!-- NBA PAGE — retired, generate is now on main page -->
+    <div class="page" id="page-nba" style="display:none;">
+      <input id="nba-config-ids" type="hidden">
+      <input id="nba-date-input" type="hidden">
+      <div id="nba-games-found" style="display:none;"></div>
+      <div id="nba-game-cards" style="display:none;"></div>
+      <div id="nba-game-picker" style="display:none;"></div>
     </div>
 
     <!-- NEWS PAGE -->
@@ -418,34 +373,7 @@ maya: she/her</textarea>
       </div></div>
     </div>
 
-    <!-- SHORTS PAGE -->
-    <div class="page" id="page-shorts">
-      <div class="sec-title">SHORTS / REELS / TIKTOK</div>
-      <div class="alert alert-info">All shorts are 9:16 (1080x1920). One per day per platform. Scheduled for late afternoon/evening.</div>
-      <div class="cards-grid">
-        <div class="card">
-          <div class="card-header"><div class="card-title">NBA SHORT</div></div>
-          <div class="card-body">
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;">Top scorer clip from yesterday's game.</p>
-            <div class="btn-row" style="align-items:center;gap:10px;"><button class="btn btn-gold btn-sm" onclick="generateShort('nba')">GENERATE NBA SHORT</button><span class="tag tag-pending" id="nba-short-status" style="font-size:9px;"><span class="tag-dot"></span>READY</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">NEWS SHORT</div></div>
-          <div class="card-body">
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;">Auto-selects stories with Iran or Trump.</p>
-            <div class="btn-row" style="align-items:center;gap:10px;"><button class="btn btn-gold btn-sm" onclick="generateShort('news')">GENERATE NEWS SHORT</button><span class="tag tag-pending" id="news-short-status" style="font-size:9px;"><span class="tag-dot"></span>READY</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">TWITCH SHORT</div></div>
-          <div class="card-body">
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;">Top viewed clip from your 10 streamers.</p>
-            <div class="btn-row" style="align-items:center;gap:10px;"><button class="btn btn-gold btn-sm" onclick="generateShort('twitch')">GENERATE TWITCH SHORT</button><span class="tag tag-pending" id="twitch-short-status" style="font-size:9px;"><span class="tag-dot"></span>READY</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- SHORTS PAGE — removed. Short buttons now live inline on the main Generate page (LONG FORM / SHORT per card). -->
 
     <!-- PUBLISH PREP PAGE -->
     <div class="page" id="page-publish">
@@ -880,37 +808,32 @@ maya: she/her</textarea>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
               <div>
-                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">TWITCH COMPILATION</div>
-                <textarea id="ref-twitch-urls" placeholder="One URL per line&#10;YouTube or Drive links" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;">https://www.youtube.com/watch?v=ZopeSp8fK-0
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">TWITCH</div>
+                <textarea id="ref-twitch-urls" placeholder="One URL per line&#10;YouTube or Drive links" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;">https://www.youtube.com/watch?v=OzAQctMP53Q
+https://www.youtube.com/watch?v=ZopeSp8fK-0
 https://www.youtube.com/watch?v=XUl-BynnmCc
 https://www.youtube.com/watch?v=yXIWkk-p9mo</textarea>
+                <button class="btn btn-ffmpeg btn-sm" style="margin-top:6px;width:100%;" onclick="teach('twitch')">🎓 TEACH</button>
               </div>
               <div>
-                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">NBA COMPILATION</div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">NBA</div>
                 <textarea id="ref-nba-urls" placeholder="One URL per line&#10;YouTube or Drive links" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;">https://www.youtube.com/watch?v=TWXHDa6Ta1s
 https://www.youtube.com/watch?v=ke4zLK4MYTI</textarea>
+                <button class="btn btn-ffmpeg btn-sm" style="margin-top:6px;width:100%;" onclick="teach('nba')">🎓 TEACH</button>
               </div>
               <div>
-                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">NEWS COMPILATION</div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">NEWS</div>
                 <textarea id="ref-news-urls" placeholder="One URL per line&#10;YouTube or Drive links" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;">https://www.youtube.com/watch?v=WS0GkhUzJMc
 https://www.youtube.com/watch?v=YKNYm6DpXs4
 https://www.youtube.com/watch?v=j4vcHuc3VzI</textarea>
+                <button class="btn btn-ffmpeg btn-sm" style="margin-top:6px;width:100%;" onclick="teach('news')">🎓 TEACH</button>
               </div>
-              <div>
-                <div style="font-size:9px;font-weight:900;color:#9146ff;letter-spacing:2px;margin-bottom:6px;">TWITCH SHORTS</div>
-                <textarea id="ref-twitch-short-urls" placeholder="One URL per line" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(145,70,255,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;"></textarea>
-              </div>
-              <div>
-                <div style="font-size:9px;font-weight:900;color:#9146ff;letter-spacing:2px;margin-bottom:6px;">NBA SHORTS</div>
-                <textarea id="ref-nba-short-urls" placeholder="One URL per line" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(145,70,255,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;"></textarea>
-              </div>
-              <div>
-                <div style="font-size:9px;font-weight:900;color:#9146ff;letter-spacing:2px;margin-bottom:6px;">NEWS SHORTS</div>
-                <textarea id="ref-news-short-urls" placeholder="One URL per line" style="width:100%;height:80px;background:#0d1524;color:#fff;border:1px solid rgba(145,70,255,0.2);padding:6px;font-size:11px;font-family:monospace;resize:vertical;"></textarea>
-              </div>
+              <!-- Shorts inherit from base type guide automatically -->
+              <textarea id="ref-twitch-short-urls" style="display:none;"></textarea>
+              <textarea id="ref-nba-short-urls" style="display:none;"></textarea>
+              <textarea id="ref-news-short-urls" style="display:none;"></textarea>
             </div>
             <button class="btn btn-gold btn-sm" style="margin-top:10px;" onclick="saveReferenceLibrary()">💾 SAVE REFERENCE LIBRARY</button>
-            <button class="btn btn-ffmpeg btn-sm" style="margin-top:10px;margin-left:8px;" onclick="teachGemini()">🎓 TEACH GEMINI (one-time)</button>
             <span id="ref-save-status" style="margin-left:10px;font-size:11px;color:rgba(255,255,255,0.4);"></span>
             <div id="teach-status" style="margin-top:10px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.5);white-space:pre-wrap;max-height:200px;overflow-y:auto;"></div>
             <div id="style-guide-preview" style="margin-top:12px;display:none;">
@@ -1101,11 +1024,31 @@ var CFG = {
   ffmpegUrl: 'http://localhost:3000',
   transition: 'crossfade',
   outputFmt: 'mp4',
-  outputDir: './output'
+  outputDir: './output',
 };
 
 var JOBS = [];
 var CURRENT_TYPE = null;
+
+// Returns yesterday's date as YYYY-MM-DD in Eastern Time.
+function localYesterday() {
+  var etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  etNow.setDate(etNow.getDate() - 1);
+  return etNow.getFullYear() + '-' + String(etNow.getMonth()+1).padStart(2,'0') + '-' + String(etNow.getDate()).padStart(2,'0');
+}
+
+// Returns a date N days ago as YYYY-MM-DD in Eastern Time (0 = yesterday, 1 = 2 days ago, etc.)
+function localDateMinus(daysBack) {
+  var etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  etNow.setDate(etNow.getDate() - 1 - (daysBack || 0));
+  return etNow.getFullYear() + '-' + String(etNow.getMonth()+1).padStart(2,'0') + '-' + String(etNow.getDate()).padStart(2,'0');
+}
+
+// Returns today's date as YYYY-MM-DD in Eastern Time.
+function localToday() {
+  var etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  return etNow.getFullYear() + '-' + String(etNow.getMonth()+1).padStart(2,'0') + '-' + String(etNow.getDate()).padStart(2,'0');
+}
 var CURRENT_META = {}; // stores extra per-job metadata (gameIds, headline, etc)
 var _assemblyFiredForJob = {}; // dedup lock to prevent multiple /assemble calls for same jobId
 
@@ -1439,16 +1382,19 @@ function assembleJob(batchJobId) {
     });
 
   
-var payload = {
+var isShortJob = (job.type || '').includes('-short');
+  var payload = {
     segmentData: segmentData,
     segments: segmentData.map(function(s){ return s.url; }),
     labels:   segmentData.map(function(s){ return s.label; }),
     transition: CFG.transition,
-    format: CFG.outputFmt,
+    format: isShortJob ? 'portrait' : CFG.outputFmt,
     outputDir: CFG.outputDir,
     jobTitle: job.title,
     contentType: job.type || 'twitch',
-    jobId: (window.CURRENT_META && window.CURRENT_META.scriptJobId) || job.scriptJobId || job.id || ''
+    jobId: (window.CURRENT_META && window.CURRENT_META.scriptJobId) || job.scriptJobId || job.id || '',
+    captionText: job.captionText || null,
+    captionStyle: job.captionStyle || null
   };
 
   // Update segment status indicators
@@ -1499,8 +1445,9 @@ var payload = {
     logAssembly(batchJobId, '❌ Server unreachable. Is server.js running on ' + CFG.ffmpegUrl + '?');
   };
 
-  // Stream progress via polling
-  var assemblyId = 'asm_' + Date.now();
+  // Use the script-gen jobId as the assembly ID so all files, logs, and metrics
+  // share one singular ID across every stage of the pipeline.
+  var assemblyId = batchJobId || ('asm_' + Date.now());
   payload.assemblyId = assemblyId;
   // Store assemblyId on job so RETRY ASSEMBLY button can reference it
   job.asmId = assemblyId;
@@ -2050,7 +1997,7 @@ function restoreJobsFromServer(showAlert) {
               if (scene.type === 'source_clip') {
                 // Find matching sourceClipSegment by sceneId
                 var clipSeg = serverJob.sourceClipSegments.find(function(s) {
-                  return s.sceneId === scene.id;
+                  return s.sceneId === scene.name || s.sceneId === scene.id;
                 });
                 if (clipSeg) {
                   rebuiltSegments.push({
@@ -2992,6 +2939,22 @@ function isRealTitle(title) {
 
 // ── GENERATE ACTIONS ──────────────────────────────────────────────
 // ── FULL SCRIPT GENERATION (server-side Gemini + Claude) ─────────
+var _activeGenerateBtn = null;
+
+function lockGenerateButton(btnId) {
+  _activeGenerateBtn = btnId;
+  var el = g(btnId);
+  if (el) { el.disabled = true; el.style.opacity = '0.4'; el.style.cursor = 'not-allowed'; }
+}
+
+function unlockGenerateButtons() {
+  if (_activeGenerateBtn) {
+    var el = g(_activeGenerateBtn);
+    if (el) { el.disabled = false; el.style.opacity = ''; el.style.cursor = ''; }
+    _activeGenerateBtn = null;
+  }
+}
+
 function setGeneratingState(statusElId, labelText) {
   g('script-type-label').textContent = labelText;
   g('main-script').value = '';
@@ -3003,7 +2966,7 @@ function setGeneratingState(statusElId, labelText) {
   if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:rgba(52,152,219,0.8);">⏳ Calling Gemini + Claude — this takes 15-30 seconds...</span>';
 }
 
-function callFullScriptServer(type, items, statusElId, onDone, tone) {
+function callFullScriptServer(type, items, statusElId, onDone, tone, platforms) {
   var dateStr = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   var xhr = new XMLHttpRequest();
   xhr.open('POST', CFG.ffmpegUrl + '/generate-full-script', true);
@@ -3066,18 +3029,36 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
                       || JOBS.find(function(j){ return j.status !== 'failed'; });
         if (currentJob && resp.metricsJobId) {
           currentJob.scriptJobId = resp.metricsJobId;
+          if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
+            currentJob.orderedClipUrls = resp.orderedClipUrls;
+          }
+          if (resp.script) {
+            currentJob.script = resp.script;
+          }
+          if (resp.captionText) {
+            currentJob.captionText = resp.captionText;
+          }
+          if (resp.captionStyle) {
+            currentJob.captionStyle = resp.captionStyle;
+          }
           saveJobs();
         }
       }
 
       g('main-script').scrollIntoView({behavior:'smooth'});
+      unlockGenerateButtons();
       if (onDone) onDone(resp);
     } catch(e) {
       var statusEl = g(statusElId);
       if (statusEl) statusEl.innerHTML = '<span class="tag-dot"></span> ERROR';
       g('script-type-label').textContent = 'ERROR: ' + e.message;
-      if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ ' + e.message + '</span>';
+      var isGate0 = e.message && e.message.indexOf('Gate 0 FAIL') !== -1;
+      var retryHtml = isGate0
+        ? '<br><button onclick="generateNBA()" class="btn btn-gold btn-sm" style="margin-top:8px;">↻ RETRY</button>'
+        : '';
+      if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ ' + e.message + '</span>' + retryHtml;
       cwn_log('[generate-full-script] ' + e.message, true);
+      unlockGenerateButtons();
     }
   };
   xhr.onerror = xhr.ontimeout = function() {
@@ -3085,107 +3066,16 @@ function callFullScriptServer(type, items, statusElId, onDone, tone) {
     if (statusEl) statusEl.innerHTML = '<span class="tag-dot"></span> SERVER UNREACHABLE';
     g('script-type-label').textContent = 'ERROR: server.js not running on ' + CFG.ffmpegUrl;
     if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ server.js not running — start it first</span>';
+    unlockGenerateButtons();
   };
-  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {} }));
-}
-
-function generateNBA() {
-  var ids = g('nba-game-ids').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-  if (!ids.length) { nav('nba'); return; }
-  // Gap #19: Guard — require SELECT GAMES flow before generating script
-  // CURRENT_META.clipUrls is populated by nbaUseSelected() after scraping ESPN highlight URLs.
-  // If user typed game IDs directly without clicking SELECT GAMES, clipUrls is empty and
-  // the server receives games with no clipUrl → Gate 1 failure (empty Gemini analysis).
-  if (!CURRENT_META || !CURRENT_META.clipUrls || Object.keys(CURRENT_META.clipUrls).length === 0) {
-    var statusEl = g('nba-status');
-    if (statusEl) {
-      statusEl.textContent = '⚠️ Please click SELECT GAMES first to scrape highlight URLs before generating the script.';
-      statusEl.style.color = '#e8a020';
-    } else {
-      alert('Please click SELECT GAMES first to scrape highlight URLs before generating the script.');
-    }
-    nav('nba');
-    return;
-  }
-  CURRENT_TYPE = 'nba';
-  CURRENT_META = { gameIds: ids, clipUrls: CURRENT_META.clipUrls };
-  setGeneratingState('nba-status', 'NBA — Fetching ESPN data...');
-
-  // Fetch summary for each game, then build items array for server
-  var games = []; var done = 0;
-  ids.forEach(function(gameId) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event='+gameId,true);
-    xhr.timeout=10000;
-    xhr.onload=function(){
-      try {
-        var d=JSON.parse(xhr.responseText);
-        var hc=d.header&&d.header.competitions&&d.header.competitions[0];
-        var comps=(hc&&hc.competitors)||[];
-        var away={team:{}}, home={team:{}};
-        comps.forEach(function(c){ if(c.homeAway==='away')away=c; if(c.homeAway==='home')home=c; });
-        // Top scorer
-        var topPlayer=null, topPts=0;
-        ((d.boxscore&&d.boxscore.players)||[]).forEach(function(tp){
-          (tp.statistics||[]).forEach(function(sg){
-            (sg.athletes||[]).forEach(function(a){
-              var pts=parseInt((a.stats||[])[13]||0);
-              if(pts>topPts){topPts=pts;topPlayer={name:(a.athlete&&a.athlete.displayName)||'',pts:pts,reb:(a.stats||[])[6]||'?',ast:(a.stats||[])[7]||'?'};}
-            });
-          });
-        });
-        // Injuries
-        var outNames=[];
-        (d.injuries||[]).forEach(function(t){ (t.injuries||[]).forEach(function(p){ if((p.status||'').toLowerCase()==='out') outNames.push((p.athlete&&p.athlete.shortName)||''); }); });
-        // Team colors for thumbnail (optional visual hint)
-        var awayColor='22304b', homeColor='1a2538';
-        ((d.boxscore&&d.boxscore.teams)||[]).forEach(function(t){
-          var col=(t.team&&t.team.color)||'';
-          if(col&&(t.team&&t.team.abbreviation)===(away.team&&away.team.abbreviation)) awayColor=col;
-          if(col&&(t.team&&t.team.abbreviation)===(home.team&&home.team.abbreviation)) homeColor=col;
-        });
-        // Thumbnail from ESPN (team logo area as proxy)
-        var awayAbbr=(away.team&&away.team.abbreviation)||'';
-        var thumbUrl = awayAbbr ? 'https://a.espncdn.com/i/teamlogos/nba/500/'+awayAbbr.toLowerCase()+'.png' : '';
-        games.push({
-          gameId: gameId,
-          away:   (away.team&&away.team.displayName)||'Away',
-          home:   (home.team&&home.team.displayName)||'Home',
-          awayAbbr: awayAbbr,
-          homeAbbr: (home.team&&home.team.abbreviation)||'',
-          awayScore: away.score||'?',
-          homeScore: home.score||'?',
-          awayRec: (away.record&&away.record[0]&&away.record[0].displayValue)||'',
-          homeRec: (home.record&&home.record[0]&&home.record[0].displayValue)||'',
-          leader: topPlayer?topPlayer.name:'',
-          leaderStat: topPlayer?(topPlayer.pts+' PTS / '+topPlayer.reb+' REB / '+topPlayer.ast+' AST'):'',
-          injuries: outNames,
-          thumbnailUrl: thumbUrl
-        });
-      }catch(e){ games.push({gameId:gameId,away:'?',home:'?',awayScore:'?',homeScore:'?',leader:'',leaderStat:'',injuries:[],thumbnailUrl:''}); }
-      done++;
-      if (done>=ids.length) {
-        g('script-type-label').textContent = 'NBA — Gemini + Claude writing full script...';
-        // Attach clip URLs to each game item for the server
-        var clipUrlsMap = (CURRENT_META&&CURRENT_META.clipUrls)||{};
-        games.forEach(function(gm){ var cu=clipUrlsMap[gm.gameId]; if(cu){gm.clipUrl=cu.url;gm.clipDuration=cu.duration;} });
-        callFullScriptServer('nba', games, 'nba-status', null);
-      }
-    };
-    xhr.onerror=xhr.ontimeout=function(){
-      games.push({gameId:gameId,away:'?',home:'?',awayScore:'?',homeScore:'?',leader:'',leaderStat:'',injuries:[],thumbnailUrl:''});
-      done++;
-      if(done>=ids.length) callFullScriptServer('nba', games, 'nba-status', null);
-    };
-    xhr.send();
-  });
+  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {}, platforms: platforms || null }));
 }
 
 // ── Fix 25b: Adapter — fetch CWN US/Canada video stories from server endpoint ──
 // Calls /news/us-canada-videos and adapts response to legacy rss2json item shape.
 function fetchCwnNewsVideos(callback) {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', CFG.ffmpegUrl + '/news/us-canada-videos', true); xhr.timeout = 15000;
+  xhr.open('GET', CFG.ffmpegUrl + '/news/us-canada-videos', true); xhr.timeout = 480000;
   xhr.onload = function() {
     try {
       var d = JSON.parse(xhr.responseText);
@@ -3200,6 +3090,7 @@ function fetchCwnNewsVideos(callback) {
           thumbnail:   v.thumbnail || '',
           description: '',
           enclosure:   {},
+          hlsUrl:      v.hlsUrl || '',
           validation:  v.validation || null   // Track C: per-video validation result
         };
       });
@@ -3211,12 +3102,13 @@ function fetchCwnNewsVideos(callback) {
 }
 
 function generateNews() {
+  lockGenerateButton('btn-gen-news');
   CURRENT_TYPE = 'news';
   var newsSrc = g('news-source') ? g('news-source').value : 'aljazeera';
   CURRENT_META = { source: newsSrc, feedUrl: '/news/us-canada-videos' };
   setGeneratingState('news-status', 'NEWS — Fetching stories...');
   fetchCwnNewsVideos(function(d, err) {
-    if (err || !d) { g('news-status').innerHTML = 'ERROR: ' + (err || 'no data'); return; }
+    if (err || !d) { g('news-status').innerHTML = 'ERROR: ' + (err || 'no data'); unlockGenerateButtons(); return; }
     try {
       var count = parseInt(g('news-count').value)||10;
       var sourceName = 'Al Jazeera';
@@ -3231,7 +3123,7 @@ function generateNews() {
           source:       sourceName,
           link:         it.link||'',
           thumbnailUrl: img,
-          videoUrl:     '',
+          videoUrl:     it.hlsUrl || '',
           pubDate:      it.pubDate||''
         };
       });
@@ -3239,6 +3131,7 @@ function generateNews() {
       callFullScriptServer('news', items, 'news-status', null);
     } catch(e) {
       g('news-status').innerHTML = 'ERROR: ' + e.message;
+      unlockGenerateButtons();
     }
   });
 }
@@ -3288,6 +3181,8 @@ function resolveTwitchClipUrls(clips, callback) {
 
 function generateTwitch() {
   var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  if (!streamers.length) { alert('No streamers configured.'); return; }
+  lockGenerateButton('btn-gen-twitch');
   var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
   var streamerNotes = parseStreamerNotes();
   CURRENT_TYPE = 'twitch';
@@ -3446,6 +3341,11 @@ function generateTwitch() {
           });
         });
         markClipsUsed(primaryClipUrls);
+        if (!items.length) {
+          g('twitch-gen-status').innerHTML = '❌ No streamers returned valid clips — check Twitch API token or streamer names';
+          unlockGenerateButtons();
+          return;
+        }
         g('script-type-label').textContent = 'TWITCH — Gemini + Claude writing full script...';
         callFullScriptServer('twitch', items, 'twitch-gen-status', null);
       });
@@ -3526,7 +3426,12 @@ function parseSegments_v1(script) {
       // Split on ALL [CLIP PLAYS HERE] markers — supports 1, 2, or 3 clips per section
       var clipPattern = /\[CLIP PLAYS HERE[^\]]*\]/gi;
       var parts = fullText.split(clipPattern); // [before, between1, between2, ..., after]
-      var orderedUrls = (window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || [];
+      var _activeJob = (window.CURRENT_META && window.CURRENT_META.scriptJobId)
+        ? JOBS.find(function(j){ return j.id === window.CURRENT_META.scriptJobId || j.scriptJobId === window.CURRENT_META.scriptJobId; })
+        : null;
+      var orderedUrls = (_activeJob && _activeJob.orderedClipUrls && _activeJob.orderedClipUrls.length)
+        ? _activeJob.orderedClipUrls
+        : ((window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || []);
       var mp4Map      = (window.CURRENT_META && window.CURRENT_META.clipMp4Urls) || {};
 
       // Also fall back to legacy clipUrls
@@ -3661,7 +3566,12 @@ function parseSegments_v2(script) {
 
   // Phase 2: Process each section as a single logical unit
   var result = [];
-  var orderedUrls = (window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || [];
+  var _activeJob = (window.CURRENT_META && window.CURRENT_META.scriptJobId)
+    ? JOBS.find(function(j){ return j.id === window.CURRENT_META.scriptJobId || j.scriptJobId === window.CURRENT_META.scriptJobId; })
+    : null;
+  var orderedUrls = (_activeJob && _activeJob.orderedClipUrls && _activeJob.orderedClipUrls.length)
+    ? _activeJob.orderedClipUrls
+    : ((window.CURRENT_META && window.CURRENT_META.orderedClipUrls) || []);
   var mp4Map = (window.CURRENT_META && window.CURRENT_META.clipMp4Urls) || {};
   var clipInsertIdx = 0;  // Global counter for clip position
 
@@ -3670,10 +3580,17 @@ function parseSegments_v2(script) {
 
     var fullText = sec.lines.join('\n');
     var hasClipMarker = /\[CLIP PLAYS HERE[^\]]*\]/i.test(fullText);
+    // New script format: STORY#_CLIP sections use "type: source_clip" instead of [CLIP PLAYS HERE]
+    var isSourceClipSection = /type:\s*source_clip/i.test(fullText);
+    if (isSourceClipSection) hasClipMarker = true;
 
-    // Extract avatar text: remove [CLIP PLAYS HERE] marker line, keep everything else
+    // Extract avatar text: remove [CLIP PLAYS HERE] marker line and type/spokenText metadata lines
     var avatarText = cleanAvatarText(
-      fullText.replace(/\[CLIP PLAYS HERE[^\]]*\]/gi, '').trim()
+      fullText
+        .replace(/\[CLIP PLAYS HERE[^\]]*\]/gi, '')
+        .replace(/^type:\s*(avatar|source_clip)\s*$/gim, '')
+        .replace(/^spokenText:\s*/gim, '')
+        .trim()
     );
 
     // Emit the avatar segment for this section
@@ -4188,11 +4105,13 @@ function sendToHeyGen() {
     clipsPerStreamer: parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10)
   };
   var gate2Result = gate2_validateSegmentStructure(allParsed, gate2Config, 1, []);
+  // Structural pre-check is informational only — Gemini+Claude Gate 2 QA is the real gate.
+  // Do not block assembly on structural mismatches; they produce false positives on NBA/News.
   if (!gate2Result.passed) {
-    handleGate2Failure(allParsed, gate2Result, script);
-    return; // Gate 2 fix loop takes over
+    console.warn('[gate2] structural pre-check flagged issues (non-blocking):', gate2Result.diagnosis.map(function(d){return d.kind;}).join(', '));
+  } else {
+    displayGate2Pass(gate2Result);
   }
-  displayGate2Pass(gate2Result);
   // ── End Gate 2 ────────────────────────────────────────────────────────────
 
   // Also parse without the 15-word minimum to catch stripped/empty segments
@@ -4291,7 +4210,7 @@ function doSendToHeyGen(allParsed, avatarSegs, clipSegs) {
   var avatarOnly = allSegments.filter(function(s){ return s.type==='avatar'; });
   if (!avatarOnly.length) { alert('No avatar segments found to send to HeyGen.'); return; }
 
-  var isPortrait = (CURRENT_TYPE === 'short');
+  var isPortrait = (CURRENT_TYPE || '').indexOf('short') > -1;
   var dateStr = new Date().toLocaleDateString([],{month:'short',day:'numeric'});
   var baseTitle = (CURRENT_TYPE||'video').toUpperCase() + ' ' + dateStr;
   var hgCount = avatarOnly.length;
@@ -4572,9 +4491,13 @@ function sendToHeyGenManual() {
 }
 
 function regenScript() {
+  if (_activeGenerateBtn) { console.warn('[regenScript] Generate already in flight — skipping duplicate trigger'); return; }
   if (CURRENT_TYPE === 'nba') generateNBA();
+  else if (CURRENT_TYPE === 'nba-short') generateShort('nba');
   else if (CURRENT_TYPE === 'news') generateNews();
+  else if (CURRENT_TYPE === 'news-short') generateShort('news');
   else if (CURRENT_TYPE === 'twitch') generateTwitch();
+  else if (CURRENT_TYPE === 'twitch-short') generateShort('twitch');
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────
@@ -4629,20 +4552,40 @@ function buildCalendar() {
   schedule.innerHTML = schedHtml;
 }
 
-function generateShort(type) {
+function generateShort(type, platforms) {
+  lockGenerateButton('btn-gen-' + type + '-short');
   CURRENT_TYPE = type + '-short';
+  var _shortPlatforms = platforms || null;
   setGeneratingState(type+'-short-status', type.toUpperCase()+' SHORT — Fetching data...');
 
   if (type === 'nba') {
-    // Fetch yesterday's top game + top scorer then call server
-    var yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0].replace(/-/g,'');
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+yesterday,true);
-    xhr.timeout=10000;
-    xhr.onload=function(){
-      try{
-        var d=JSON.parse(xhr.responseText); var events=d.events||[];
-        if(!events.length){ g('script-type-label').textContent='NBA SHORT -- no games'; return; }
+    // Fetch yesterday's top game — auto-expand to 48h if no games found
+    var shortDateStr = localYesterday();
+    function fetchNBAShortForDate(dateStr, _daysBack) {
+      _daysBack = _daysBack || 0;
+      var dateKey = dateStr.replace(/-/g,'');
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dateKey,true);
+      xhr.timeout=10000;
+      xhr.onload=function(){
+        try{
+          var d=JSON.parse(xhr.responseText); var events=d.events||[];
+          var completedEvents = events.filter(function(ev){
+            var completed = ev.status && ev.status.type && ev.status.type.completed;
+            var evDate = (ev.date||'').slice(0,10);
+            return completed && (!evDate || evDate === dateStr);
+          });
+          if(!completedEvents.length){ events = []; } else { events = completedEvents; }
+          if(!events.length){
+            if (_daysBack < 1) {
+              var tried = new Date(dateStr);
+              var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
+              g('script-type-label').textContent='NBA SHORT -- no games on '+dateStr+', trying '+dayBefore;
+              fetchNBAShortForDate(dayBefore, _daysBack + 1);
+              return;
+            }
+            g('script-type-label').textContent='NBA SHORT -- no games found in last 24h'; return;
+          }
         // Pick highest-scoring game
         var bestGame=null, best=0;
         events.forEach(function(ev){
@@ -4671,12 +4614,14 @@ function generateShort(type) {
                 });
               });
             });
-            // Get clip URL
+            var thumbUrl = (away.team&&away.team.abbreviation) ? 'https://a.espncdn.com/i/teamlogos/nba/500/'+(away.team.abbreviation||'').toLowerCase()+'.png' : '';
+            // Check s.videos first, then s.article.video
             var videos=s.videos||[]; var hlVid=null;
             for(var i=0;i<videos.length;i++){ if((videos[i].headline||'').toLowerCase().indexOf('highlights')>-1){hlVid=videos[i];break;} }
+            if(!hlVid && s.article && s.article.video && s.article.video.length) hlVid=s.article.video[0];
+            if(!hlVid && videos.length) hlVid=videos[0];
             var src=(hlVid&&hlVid.links&&hlVid.links.source)||{};
-            var clipUrl=src.HD&&src.HD.href||src.mezzanine&&src.mezzanine.href||src.href||'';
-            var thumbUrl = (away.team&&away.team.abbreviation) ? 'https://a.espncdn.com/i/teamlogos/nba/500/'+(away.team.abbreviation||'').toLowerCase()+'.png' : '';
+            var clipUrl=(src.HLS&&src.HLS.HD&&src.HLS.HD.href)||(src.HLS&&src.HLS.href)||src.HD&&src.HD.href||src.mezzanine&&src.mezzanine.href||src.href||'';
 
             var item = {
               gameId: gameId,
@@ -4688,82 +4633,116 @@ function generateShort(type) {
               injuries: [], clipUrl: clipUrl, thumbnailUrl: thumbUrl
             };
             CURRENT_META = { gameIds: [gameId] };
-            callFullScriptServer('nba-short', [item], 'nba-short-status', null);
+            callFullScriptServer('nba-short', [item], 'nba-short-status', null, null, _shortPlatforms);
           }catch(e){ g('script-type-label').textContent='NBA SHORT -- error: '+e.message; }
         };
         xhr2.onerror=xhr2.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- ESPN timeout'; };
         xhr2.send();
       }catch(e){ g('script-type-label').textContent='NBA SHORT -- error'; }
-    };
-    xhr.onerror=xhr.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- offline'; };
-    xhr.send();
+      };
+      xhr.onerror=xhr.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- offline'; };
+      xhr.send();
+    }
+    fetchNBAShortForDate(shortDateStr);
 
   } else if (type === 'news') {
-    // Fetch top story matching keywords (for shorts we take the #1 keyword match or just #1 story)
-    // Fix 25b: use new CWN endpoint instead of rss2json
-    var keywords=(g('shorts-keywords')&&g('shorts-keywords').value||'Iran,Trump,Gaza,Ukraine,tariffs').toLowerCase().split(',').map(function(k){return k.trim();});
+    // Pick the single best story from today's feed — keyword match preferred, else top story
+    var keywords = 'Iran,Trump,Gaza,Ukraine,tariffs,war,crisis,election'.toLowerCase().split(',').map(function(k){return k.trim();});
     fetchCwnNewsVideos(function(d, err) {
-      if (err || !d) { g('script-type-label').textContent='NEWS SHORT -- error: '+(err||'no data'); return; }
-      try{
-        var all=(d.items||[]).slice(0,20);
-        // Prefer keyword match, else top story
+      if (err || !d) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- error: '+(err||'no data'); return; }
+      try {
+        var all = (d.items||[]).slice(0,20);
         var story = all.find(function(it){ var t=(it.title||'').toLowerCase(); return keywords.some(function(k){return t.indexOf(k)>-1;}); }) || all[0];
-        if(!story){ g('script-type-label').textContent='NEWS SHORT -- no stories'; return; }
-        var img=story.thumbnail||'';
+        if (!story) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- no stories found'; return; }
         var item = {
-          title: (story.title||'').trim(),
-          desc: (story.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
-          source: 'Al Jazeera', link: story.link||'', thumbnailUrl: img, videoUrl: '', pubDate: story.pubDate||''
+          title:        (story.title||'').trim(),
+          desc:         (story.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
+          source:       'Al Jazeera',
+          link:         story.link||'',
+          thumbnailUrl: story.thumbnail||'',
+          videoUrl:     story.hlsUrl||'',
+          pubDate:      story.pubDate||''
         };
         CURRENT_META = { source: 'aljazeera' };
-        callFullScriptServer('news-short', [item], 'news-short-status', null);
-      }catch(e){ g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
+        g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
+        callFullScriptServer('news-short', [item], 'news-short-status', null, null, _shortPlatforms);
+      } catch(e) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
     });
 
   } else if (type === 'twitch') {
-    // Fetch top clip from first configured streamer
-    var streamers = (g('twitch-config-streamers')&&g('twitch-config-streamers').value||'').split('\n').map(function(s){return s.trim().toLowerCase();}).filter(Boolean);
+    // Fetch top clip across ALL configured streamers — pick single highest-viewed clip
+    var streamers = g('twitch-streamers') ? g('twitch-streamers').value.split(',').map(function(s){return s.trim().toLowerCase();}).filter(Boolean) : [];
+    if (!streamers.length) { unlockGenerateButtons(); g('script-type-label').textContent='TWITCH SHORT -- no streamers configured'; return; }
     var notes = parseStreamerNotes ? parseStreamerNotes() : {};
-    var name = streamers[0];
-    if(!name){ g('script-type-label').textContent='TWITCH SHORT -- no streamers configured'; return; }
-    var xU=new XMLHttpRequest();
-    xU.open('GET','https://api.twitch.tv/helix/users?login='+name,true);
-    xU.setRequestHeader('Client-Id',CFG.twitchId); xU.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
-    xU.timeout=8000;
-    xU.onload=function(){
-      try{
-        var u=JSON.parse(xU.responseText); var user=u.data&&u.data[0];
-        if(!user){ g('script-type-label').textContent='TWITCH SHORT -- streamer not found'; return; }
-        var since=new Date(Date.now()-86400000).toISOString();
-        var xC=new XMLHttpRequest();
-        xC.open('GET','https://api.twitch.tv/helix/clips?broadcaster_id='+user.id+'&first=5&started_at='+since,true);
-        xC.setRequestHeader('Client-Id',CFG.twitchId); xC.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
-        xC.timeout=8000;
-        xC.onload=function(){
-          try{
-            var cd=JSON.parse(xC.responseText);
-            var topClip=(cd.data||[]).filter(function(c){return isRealTitle(c.title);})[0];
-            if(!topClip){ g('script-type-label').textContent='TWITCH SHORT -- no clips today'; return; }
-            var nameKey=user.display_name.toLowerCase();
-            var streamerKey = (user.display_name||'').toLowerCase().replace(/\s+/g,'');
-            var SMAP = {'jasontheween':'Jason','hasanabi':'Hasan','adapt':'Adapt','stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon','cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya'};
-            var item = {
-              streamer: user.display_name,
-              displayName: SMAP[streamerKey] || user.display_name,
-              notes: notes[nameKey]||notes[name]||'',
-              clips: [{ rank:1, title:topClip.title, url:topClip.url, views:topClip.view_count, game:topClip.game_name||'', thumbnailUrl:topClip.thumbnail_url||'' }],
-              title: topClip.title, url: topClip.url, views: topClip.view_count, game: topClip.game_name||'', thumbnailUrl: topClip.thumbnail_url||''
-            };
-            CURRENT_META = { streamers: [name] };
-            callFullScriptServer('twitch-short', [item], 'twitch-short-status', null);
-          }catch(e){ g('script-type-label').textContent='TWITCH SHORT -- error: '+e.message; }
-        };
-        xC.onerror=xC.ontimeout=function(){ g('script-type-label').textContent='TWITCH SHORT -- Twitch API timeout'; };
-        xC.send();
-      }catch(e){ g('script-type-label').textContent='TWITCH SHORT -- error'; }
-    };
-    xU.onerror=xU.ontimeout=function(){ g('script-type-label').textContent='TWITCH SHORT -- offline'; };
-    xU.send();
+    var since = new Date(Date.now() - 86400000 * 2).toISOString(); // 48h window
+    var SMAP = {'jasontheween':'Jason','hasanabi':'Hasan','adapt':'Adapt','stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon','cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya','extraemily':'ExtraEmily','yourragegaming':'Rage'};
+    var allCandidates = []; // {streamer, displayName, notes, clip}
+    var pending = streamers.length;
+
+    function onAllDone() {
+      if (!allCandidates.length) {
+        unlockGenerateButtons();
+        g('script-type-label').textContent = 'TWITCH SHORT -- no clips found across any streamer';
+        return;
+      }
+      // Pick highest-viewed clip across all streamers
+      allCandidates.sort(function(a,b){ return (b.clip.view_count||0)-(a.clip.view_count||0); });
+      var best = allCandidates[0];
+      var item = {
+        streamer:    best.streamer,
+        displayName: best.displayName,
+        notes:       best.notes,
+        clips: [{ rank:1, title:best.clip.title, url:best.clip.url, views:best.clip.view_count, game:best.clip.game_name||'', thumbnailUrl:best.clip.thumbnail_url||'' }],
+        title:       best.clip.title, url: best.clip.url, views: best.clip.view_count,
+        game:        best.clip.game_name||'', thumbnailUrl: best.clip.thumbnail_url||''
+      };
+      CURRENT_META = { streamers: [best.streamer.toLowerCase()] };
+      g('script-type-label').textContent = 'TWITCH SHORT — ' + best.displayName + ': "' + best.clip.title.slice(0,50) + '"';
+      resolveTwitchClipUrls([item.clips[0]], function(resolved) {
+        if (resolved && resolved[0] && resolved[0].mp4Url) {
+          item.clips[0].mp4Url = resolved[0].mp4Url;
+        }
+        callFullScriptServer('twitch-short', [item], 'twitch-short-status', null, null, _shortPlatforms);
+      });
+    }
+
+    streamers.forEach(function(name) {
+      var xU = new XMLHttpRequest();
+      xU.open('GET','https://api.twitch.tv/helix/users?login='+name,true);
+      xU.setRequestHeader('Client-Id',CFG.twitchId); xU.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
+      xU.timeout = 8000;
+      xU.onload = function() {
+        try {
+          var u = JSON.parse(xU.responseText); var user = u.data&&u.data[0];
+          if (!user) { if(--pending===0) onAllDone(); return; }
+          var xC = new XMLHttpRequest();
+          xC.open('GET','https://api.twitch.tv/helix/clips?broadcaster_id='+user.id+'&first=10&started_at='+since,true);
+          xC.setRequestHeader('Client-Id',CFG.twitchId); xC.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
+          xC.timeout = 8000;
+          xC.onload = function() {
+            try {
+              var cd = JSON.parse(xC.responseText);
+              var topClip = (cd.data||[]).filter(function(c){return isRealTitle(c.title);})[0];
+              if (topClip) {
+                var streamerKey = (user.display_name||'').toLowerCase().replace(/\s+/g,'');
+                var nameKey = user.display_name.toLowerCase();
+                allCandidates.push({
+                  streamer:    user.display_name,
+                  displayName: SMAP[streamerKey] || user.display_name,
+                  notes:       notes[nameKey]||notes[name]||'',
+                  clip:        topClip
+                });
+              }
+            } catch(e) {}
+            if (--pending===0) onAllDone();
+          };
+          xC.onerror = xC.ontimeout = function() { if(--pending===0) onAllDone(); };
+          xC.send();
+        } catch(e) { if(--pending===0) onAllDone(); }
+      };
+      xU.onerror = xU.ontimeout = function() { if(--pending===0) onAllDone(); };
+      xU.send();
+    });
   }
 }
 
@@ -4772,16 +4751,58 @@ function generateShort(type) {
 var NBA_GAMES = []; // [{id, away, home, awayAbbr, homeAbbr, awayScore, homeScore, isFinal, hasHighlights, highlightTitle}]
 
 function fetchYesterdayGames() {
-  var yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0];
-  // Pre-fill date picker
+  var yesterday = localYesterday();
   var dp = g('nba-date-input');
   if (dp) dp.value = yesterday;
-  fetchNBAScoreboard(yesterday);
+  // Smart lookback: try yesterday first, auto-expand to 48h if no games
+  fetchNBAScoreboardWithFallback(yesterday);
+}
+
+function fetchNBAScoreboardWithFallback(dateStr, _daysBack) {
+  _daysBack = _daysBack || 0;
+  var dateKey = dateStr.replace(/-/g,'');
+  g('nba-fetch-status').textContent = 'Fetching scoreboard for ' + dateStr + '...';
+  g('nba-game-picker').style.display = 'none';
+  NBA_GAMES = [];
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dateKey,true);
+  xhr.timeout=10000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      var events=(d.events||[]);
+      // Filter to completed games matching the requested date only
+      var completedForDate = events.filter(function(ev){
+        var completed = ev.status && ev.status.type && (ev.status.type.completed || ev.status.type.name === 'STATUS_FINAL');
+        var evDate = (ev.date||'').slice(0,10);
+        return completed && (!evDate || evDate === dateStr);
+      });
+      if (!completedForDate.length) {
+        // Allow one day of lookback only
+        if (_daysBack < 1) {
+          var tried = new Date(dateStr + 'T12:00:00');
+          var dayBefore = new Date(tried - 86400000).toISOString().slice(0,10);
+          g('nba-fetch-status').textContent = 'No games on ' + dateStr + ' (ET) — checking ' + dayBefore + '...';
+          var dp = g('nba-date-input');
+          if (dp) dp.value = dayBefore;
+          fetchNBAScoreboardWithFallback(dayBefore, _daysBack + 1);
+        } else {
+          g('nba-fetch-status').textContent = 'No completed NBA games in the last 48 hours (ET).';
+        }
+        return;
+      }
+      // Hand off to the main renderer with the found events
+      processNBAScoreboardEvents(completedForDate, dateStr);
+    }catch(e){ g('nba-fetch-status').textContent='Error: '+e.message; }
+  };
+  xhr.onerror=xhr.ontimeout=function(){ g('nba-fetch-status').textContent='Network error'; };
+  xhr.send();
 }
 
 function fetchGamesForDate() {
   var dp = g('nba-date-input');
-  var date = dp ? dp.value : new Date(Date.now()-86400000).toISOString().split('T')[0];
+  var date = dp ? dp.value : localYesterday();
   if (!date) { alert('Pick a date first'); return; }
   fetchNBAScoreboard(date);
 }
@@ -4800,7 +4821,14 @@ function fetchNBAScoreboard(dateStr) {
       var d=JSON.parse(xhr.responseText);
       var events=(d.events||[]);
       if (!events.length) { g('nba-fetch-status').textContent='No games found for '+dateStr; return; }
+      processNBAScoreboardEvents(events, dateStr);
+    }catch(e){ g('nba-fetch-status').textContent='Error: '+e.message; }
+  };
+  xhr.onerror=xhr.ontimeout=function(){ g('nba-fetch-status').textContent='Network error'; };
+  xhr.send();
+}
 
+function processNBAScoreboardEvents(events, dateStr) {
       var finalGames = events.filter(function(ev){
         var status=(ev.competitions&&ev.competitions[0]&&ev.competitions[0].status&&ev.competitions[0].status.type&&ev.competitions[0].status.type.name)||'';
         return status.indexOf('FINAL')>-1 || status.indexOf('STATUS_FINAL')>-1;
@@ -4837,7 +4865,7 @@ function fetchNBAScoreboard(dateStr) {
         var xS = new XMLHttpRequest();
         xS.open('POST','http://localhost:3000/nba/scrape-game-highlight',true);
         xS.setRequestHeader('Content-Type','application/json');
-        xS.timeout=10000;
+        xS.timeout=60000;
         xS.onload=function(){
           try{
             var result=JSON.parse(xS.responseText);
@@ -4857,10 +4885,6 @@ function fetchNBAScoreboard(dateStr) {
         xS.onerror=xS.ontimeout=function(){ done++; if(done>=finalGames.length) renderNBAGamePicker(); };
         xS.send(JSON.stringify({gameId:ev.id}));
       });
-    }catch(e){ g('nba-fetch-status').textContent='Error: '+e.message; }
-  };
-  xhr.onerror=xhr.ontimeout=function(){ g('nba-fetch-status').textContent='Network error'; };
-  xhr.send();
 }
 
 function renderNBAGamePicker() {
@@ -4872,14 +4896,14 @@ function renderNBAGamePicker() {
   cards.innerHTML = '';
   NBA_GAMES.forEach(function(gm, i) {
     var card = document.createElement('div');
-    card.style.cssText = 'background:#060a12;border:1px solid rgba(199,175,79,'+(gm.hasHighlights?'0.2':'0.06')+');border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;opacity:'+(gm.hasHighlights?'1':'0.45')+';';
+    card.style.cssText = 'background:#060a12;border:1px solid rgba(199,175,79,0.2);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;opacity:1;';
     var checkId = 'nba-chk-'+i;
     var score = gm.awayScore&&gm.homeScore ? gm.awayScore+'-'+gm.homeScore : 'N/A';
     var hlBadge = gm.hasHighlights
       ? '<span style="font-size:9px;font-weight:900;color:#2ecc71;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);padding:2px 8px;border-radius:10px;letter-spacing:1px;">✓ GAME HIGHLIGHTS</span>'
       : '<span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.25);letter-spacing:1px;">NO HIGHLIGHTS</span>';
     card.innerHTML =
-      '<input type="checkbox" id="'+checkId+'" '+(gm.selected&&gm.hasHighlights?'checked':'')+(gm.hasHighlights?'':' disabled')+' style="width:16px;height:16px;cursor:pointer;flex-shrink:0;">'
+      '<input type="checkbox" id="'+checkId+'" '+(gm.selected?'checked':'')+' style="width:16px;height:16px;cursor:pointer;flex-shrink:0;">'
       +'<div style="flex:1;">'
         +'<div style="font-size:14px;font-weight:700;color:#fff;font-family:Barlow Condensed,sans-serif;">'+gm.awayAbbr+' @ '+gm.homeAbbr+'</div>'
         +'<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;">'+gm.away+' vs '+gm.home+'</div>'
@@ -4904,50 +4928,123 @@ function nbaSelectAll(checked) {
   });
 }
 
-function nbaUseSelected() {
-  var selected = NBA_GAMES.filter(function(gm, i){
-    var chk = document.getElementById('nba-chk-'+i);
-    return gm.hasHighlights && chk && chk.checked;
-  });
-  if (!selected.length) { alert('Select at least one game with highlights'); return; }
-  var ids = selected.map(function(gm){ return gm.id; });
-  g('nba-config-ids').value = ids.join(', ');
-  g('nba-game-ids').value   = ids.join(', ');
-  // Build clipUrls map: { gameId: { url, duration, title } }
-  var clipUrls = {};
-  selected.forEach(function(gm){ clipUrls[gm.id] = { url: gm.clipUrl||'', duration: gm.clipDuration||null, title: gm.highlightTitle||'Game Highlights' }; });
-  // Store in CURRENT_META for job manifest
-  CURRENT_META = { gameIds: ids, clipUrls: clipUrls };
-  var gameLabels = selected.map(function(gm){ return gm.awayAbbr+' @ '+gm.homeAbbr+' ('+gm.awayScore+'-'+gm.homeScore+')'; });
-  g('nba-games-found').textContent = ids.length + ' games selected';
-  // Update the generate card display
-  var summary = g('nba-games-summary');
-  if (summary) {
-    summary.style.color = '#c7af4f';
-    summary.textContent = ids.length + ' game'+(ids.length>1?'s':'')+' with highlights: ' + gameLabels.join(' · ');
-  }
-  g('nba-status').className = 'tag tag-done';
-  g('nba-status').innerHTML = '<span class="tag-dot"></span> ' + ids.length + ' GAMES READY';
-  var genBtn = g('nba-generate-btn');
-  if (genBtn) genBtn.style.display = '';
-  // Generate the script using selected game data
-  CURRENT_TYPE = 'nba';
-  var games = selected.map(function(gm){
+function generateNBA(_daysBack) {
+  // Fetch yesterday's completed games (Eastern Time). Max lookback: 1 day (yesterday only).
+  // If no games yesterday, show a clear message — do NOT silently pull stale games from days ago.
+  _daysBack = _daysBack || 0;
+  if (_daysBack === 0) lockGenerateButton('btn-gen-nba');
+  var statusEl = g('nba-fetch-status');
+  var targetDate = localDateMinus(_daysBack); // 0 = yesterday ET, 1 = 2 days ago
+  var dateKey = targetDate.replace(/-/g, '');
+  if (statusEl) statusEl.textContent = 'Fetching games for ' + targetDate + ' (Eastern Time)...';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + dateKey, true);
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try {
+      var data = JSON.parse(xhr.responseText);
+      var events = data.events || [];
+      // Only accept games whose date matches targetDate — prevents stale games from other dates
+      var finalGames = events.filter(function(ev) {
+        var completed = ev.status && ev.status.type && ev.status.type.completed;
+        // ESPN event date is in ET — verify it matches the date we requested
+        var evDate = (ev.date || '').slice(0, 10); // "2026-04-18T..."
+        var evDateET = evDate; // ESPN dates are already ET-anchored for NBA
+        var dateMatch = !evDate || evDateET === targetDate;
+        return completed && dateMatch;
+      });
+      if (!finalGames.length) {
+        // Only allow one day of lookback (in case yesterday had no games — e.g. All-Star break)
+        if (_daysBack < 1) {
+          if (statusEl) statusEl.textContent = 'No games on ' + targetDate + ' (ET) — checking previous day...';
+          generateNBA(_daysBack + 1);
+          return;
+        }
+        if (statusEl) statusEl.textContent = 'No completed NBA games found in the last 48 hours (ET). Check back after games finish tonight.';
+        unlockGenerateButtons(); return;
+      }
+      if (statusEl) statusEl.textContent = 'Found ' + finalGames.length + ' game' + (finalGames.length !== 1 ? 's' : '') + ' from ' + targetDate + ' — fetching highlight clips...';
+      // Build game entries and scrape clips in parallel
+      var gameEntries = [];
+      var done = 0;
+      finalGames.forEach(function(ev) {
+        var comp = (ev.competitions || [])[0] || {};
+        var competitors = comp.competitors || [];
+        var away = competitors.find(function(c){ return c.homeAway === 'away'; }) || competitors[0] || {};
+        var home = competitors.find(function(c){ return c.homeAway === 'home'; }) || competitors[1] || {};
+        var entry = {
+          gameId:    ev.id,
+          away:      (away.team && away.team.displayName) || 'Away',
+          home:      (home.team && home.team.displayName) || 'Home',
+          awayAbbr:  (away.team && away.team.abbreviation) || 'AWY',
+          homeAbbr:  (home.team && home.team.abbreviation) || 'HME',
+          awayScore: away.score || '',
+          homeScore: home.score || '',
+          clipUrl: '', clipDuration: null, thumbnail: '', leader: '', leaderStat: '', injuries: []
+        };
+        gameEntries.push(entry);
+        // Scrape highlight clip via backend
+        var xS = new XMLHttpRequest();
+        xS.open('POST', 'http://localhost:3000/nba/scrape-game-highlight', true);
+        xS.setRequestHeader('Content-Type', 'application/json');
+        xS.timeout = 60000;
+        xS.onload = function() {
+          try {
+            var result = JSON.parse(xS.responseText);
+            if (result.ok && result.videoUrl) {
+              entry.clipUrl      = result.videoUrl;
+              entry.clipDuration = result.duration || null;
+              entry.thumbnail    = result.thumbnail || '';
+              entry.localPath    = result.localPath || '';
+            }
+          } catch(e) {}
+          done++;
+          if (done >= finalGames.length) launchNBAScriptGen(gameEntries, statusEl);
+        };
+        xS.onerror = xS.ontimeout = function() { done++; if (done >= finalGames.length) launchNBAScriptGen(gameEntries, statusEl); };
+        xS.send(JSON.stringify({ gameId: ev.id }));
+      });
+    } catch(e) {
+      if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+      unlockGenerateButtons();
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() { if (statusEl) statusEl.textContent = 'Network error fetching scoreboard'; unlockGenerateButtons(); };
+  xhr.send();
+}
+
+function launchNBAScriptGen(gameEntries, statusEl) {
+  // Drop games with no clip — Gate 0 handles this server-side too but filter here for clarity
+  var items = gameEntries.map(function(gm) {
     return {
-      away: gm.away, home: gm.home,
+      gameId: gm.gameId, away: gm.away, home: gm.home,
       awayAbbr: gm.awayAbbr, homeAbbr: gm.homeAbbr,
-      score: gm.awayScore+'-'+gm.homeScore,
-      leader: null, leaderStat: null, injuries: []
+      awayScore: gm.awayScore, homeScore: gm.homeScore,
+      leader: gm.leader || '', leaderStat: gm.leaderStat || '',
+      injuries: gm.injuries || [],
+      clipUrl: gm.clipUrl || '', clipDuration: gm.clipDuration || null,
+      thumbnailUrl: gm.thumbnail || '',
+      localPath: gm.localPath || ''
     };
   });
-  g('script-type-label').textContent = 'NBA COMPILATION SCRIPT';
-  g('main-script').value = SCRIPTS.nba(games);
-  updateScriptStats();
-  g('nba-status').className = 'tag tag-processing';
-  g('nba-status').innerHTML = '<span class="tag-dot"></span> SCRIPT READY — ' + selected.length + ' games';
+  var nbaCountSel = g('nba-count');
+  var nbaLimit = nbaCountSel ? (parseInt(nbaCountSel.value) || 3) : 3;
+  items = items.slice(0, nbaLimit);
+  var withClips = items.filter(function(i){ return !!i.clipUrl; });
+  var label = withClips.length + '/' + items.length + ' games have clips';
+  if (statusEl) statusEl.textContent = label + ' — generating script...';
+  CURRENT_TYPE = 'nba';
+  CURRENT_META = { gameIds: items.map(function(i){ return i.gameId; }), items: items };
+  var summary = g('nba-games-summary');
+  if (summary) { summary.style.color = '#c7af4f'; summary.textContent = label; }
+  g('nba-status').className = 'tag tag-done';
+  g('nba-status').innerHTML = '<span class="tag-dot"></span> ' + items.length + ' GAMES';
+  g('script-type-label').textContent = 'NBA — Gemini + Claude writing full script...';
   nav('generate');
-  g('main-script').scrollIntoView({behavior:'smooth'});
+  callFullScriptServer('nba', items, 'nba-status', null);
 }
+
+function nbaUseSelected() {} // legacy stub — no longer used
 
 function fetchNewsStories() {
   // Fix 25b: use new CWN endpoint instead of rss2json
@@ -5758,9 +5855,12 @@ function setupUploadPostQueue() {
   xhr.send(JSON.stringify({}));
 }
 
-function teachGemini() {
+// teach(filter) — single entry point for all TEACH buttons.
+// filter: 'twitch' | 'nba' | 'news' | null (null = all types)
+// Shorts inherit from base type automatically (script_gen.js:1626) — no separate guide needed.
+function teach(filter) {
   var lib = {};
-  var types = ['twitch','nba','news','twitch-short','nba-short','news-short'];
+  var types = filter ? [filter] : ['twitch', 'nba', 'news'];
   types.forEach(function(t) {
     var el = g('ref-' + t + '-urls');
     if (el && el.value.trim()) {
@@ -5770,13 +5870,15 @@ function teachGemini() {
   });
 
   if (!Object.keys(lib).length) {
-    alert('Add reference video URLs in the library textareas first, then save.');
+    var label = filter ? filter.toUpperCase() : 'any content type';
+    alert('Add reference video URLs for ' + label + ' first.');
     return;
   }
 
   var statusEl = g('teach-status');
   var totalVideos = Object.values(lib).reduce(function(a,b){ return a + b.length; }, 0);
-  if (statusEl) statusEl.textContent = '🎓 Teaching Gemini — watching ' + totalVideos + ' reference videos...\nThis takes 3-5 minutes. Do not close this tab.';
+  var typeLabel = filter ? filter.toUpperCase() + ' — ' : '';
+  if (statusEl) statusEl.textContent = '🎓 Teaching Gemini — ' + typeLabel + 'watching ' + totalVideos + ' video' + (totalVideos === 1 ? '' : 's') + '...\nThis takes 1-2 minutes per video. Do not close this tab.';
 
   var xhr = new XMLHttpRequest();
   xhr.open('POST', CFG.ffmpegUrl + '/analyze-style-library', true);
@@ -5792,7 +5894,7 @@ function teachGemini() {
         msg += '\n' + t + ': ' + (r.ok ? r.videoCount + ' videos analyzed, ' + r.chars + ' char style guide stored' : '❌ ' + r.error);
       });
       if (statusEl) statusEl.textContent = msg;
-      loadStyleGuides(); // show what was stored
+      loadStyleGuides();
     } catch(e) {
       if (statusEl) statusEl.textContent = '❌ Teaching failed: ' + e.message;
     }
@@ -5984,30 +6086,31 @@ function saveReferenceLibrary() {
 }
 
 function loadReferenceLibrary() {
-  // Pre-populate defaults if library not yet saved
-  var stored = localStorage.getItem('CWN_REF_LIBRARY');
-  if (!stored) {
-    var defaults = {
-      'twitch': ['https://www.youtube.com/watch?v=ZopeSp8fK-0','https://www.youtube.com/watch?v=XUl-BynnmCc','https://www.youtube.com/watch?v=yXIWkk-p9mo'],
-      'nba':    ['https://www.youtube.com/watch?v=TWXHDa6Ta1s','https://www.youtube.com/watch?v=ke4zLK4MYTI'],
-      'news':   ['https://www.youtube.com/watch?v=WS0GkhUzJMc','https://www.youtube.com/watch?v=YKNYm6DpXs4','https://www.youtube.com/watch?v=j4vcHuc3VzI']
-    };
-    localStorage.setItem('CWN_REF_LIBRARY', JSON.stringify(defaults));
-  }
-  // Load saved library from localStorage
-  try {
-    var lib = JSON.parse(localStorage.getItem('CWN_REF_LIBRARY') || '{}');
-    // If no saved library yet, save the defaults from the textarea values
-    var hasAny = Object.keys(lib).some(function(k){ return lib[k] && lib[k].length; });
-    if (!hasAny) {
-      saveReferenceLibrary();
-    } else {
-      Object.keys(lib).forEach(function(t) {
-        var el = g('ref-' + t + '-urls');
-        if (el && lib[t] && lib[t].length) el.value = lib[t].join('\n');
-      });
-    }
-  } catch(e) {}
+  var defaults = {
+    'twitch':       ['https://www.youtube.com/watch?v=OzAQctMP53Q','https://www.youtube.com/watch?v=ZopeSp8fK-0','https://www.youtube.com/watch?v=XUl-BynnmCc','https://www.youtube.com/watch?v=yXIWkk-p9mo'],
+    'nba':          ['https://www.youtube.com/watch?v=TWXHDa6Ta1s','https://www.youtube.com/watch?v=ke4zLK4MYTI'],
+    'news':         ['https://www.youtube.com/watch?v=WS0GkhUzJMc','https://www.youtube.com/watch?v=YKNYm6DpXs4','https://www.youtube.com/watch?v=j4vcHuc3VzI'],
+    'twitch-short': ['https://www.youtube.com/watch?v=OzAQctMP53Q','https://www.youtube.com/watch?v=ZopeSp8fK-0','https://www.youtube.com/watch?v=XUl-BynnmCc','https://www.youtube.com/watch?v=yXIWkk-p9mo'],
+    'nba-short':    ['https://www.youtube.com/watch?v=TWXHDa6Ta1s','https://www.youtube.com/watch?v=ke4zLK4MYTI'],
+    'news-short':   ['https://www.youtube.com/watch?v=WS0GkhUzJMc','https://www.youtube.com/watch?v=YKNYm6DpXs4','https://www.youtube.com/watch?v=j4vcHuc3VzI']
+  };
+
+  // Merge stored library over defaults — only use stored values if non-empty
+  var stored = {};
+  try { stored = JSON.parse(localStorage.getItem('CWN_REF_LIBRARY') || '{}'); } catch(e) {}
+  var lib = Object.assign({}, defaults);
+  Object.keys(stored).forEach(function(t) {
+    if (stored[t] && stored[t].length > 0) lib[t] = stored[t];
+  });
+
+  // Always write back so shorts keys persist going forward
+  localStorage.setItem('CWN_REF_LIBRARY', JSON.stringify(lib));
+
+  // Populate textareas
+  Object.keys(lib).forEach(function(t) {
+    var el = g('ref-' + t + '-urls');
+    if (el && lib[t] && lib[t].length) el.value = lib[t].join('\n');
+  });
 }
 
 function getReferenceUrls(type) {
@@ -6999,6 +7102,65 @@ async function checkContentTypeStatus() {
     };
     xhr.send();
   } catch(e) {}
+}
+</script>
+
+<!-- Platform Selector Modal — shown before SHORT FORM generate -->
+<div id="platform-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#1a2540;border:1px solid #c7af4f;border-radius:8px;padding:28px 32px;min-width:320px;max-width:400px;">
+    <div style="font-size:13px;color:#c7af4f;letter-spacing:2px;margin-bottom:16px;">SELECT PLATFORMS</div>
+    <div style="font-size:11px;color:#8899aa;margin-bottom:20px;">Choose where to publish this short-form video</div>
+    <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" id="plat-youtube" checked style="width:16px;height:16px;accent-color:#c7af4f;">
+      <span style="color:#fff;font-size:13px;">YouTube Shorts</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
+      <input type="checkbox" id="plat-tiktok" checked style="width:16px;height:16px;accent-color:#c7af4f;">
+      <span style="color:#fff;font-size:13px;">TikTok</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;margin-bottom:20px;cursor:pointer;">
+      <input type="checkbox" id="plat-instagram" checked style="width:16px;height:16px;accent-color:#c7af4f;">
+      <span style="color:#fff;font-size:13px;">Instagram Reels</span>
+    </label>
+    <div style="display:flex;gap:12px;justify-content:flex-end;">
+      <button onclick="closePlatformModal()" style="background:transparent;border:1px solid #445;color:#8899aa;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:12px;">CANCEL</button>
+      <button onclick="confirmPlatformModal()" style="background:#c7af4f;border:none;color:#1a2540;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;">GENERATE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var _platformModalCallback = null;
+
+function showPlatformModal(callback) {
+  // Reset checkboxes to all checked
+  document.getElementById('plat-youtube').checked = true;
+  document.getElementById('plat-tiktok').checked = true;
+  document.getElementById('plat-instagram').checked = true;
+  _platformModalCallback = callback;
+  var modal = document.getElementById('platform-modal');
+  modal.style.display = 'flex';
+}
+
+function closePlatformModal() {
+  document.getElementById('platform-modal').style.display = 'none';
+  _platformModalCallback = null;
+}
+
+function confirmPlatformModal() {
+  var platforms = [];
+  if (document.getElementById('plat-youtube').checked) platforms.push('youtube');
+  if (document.getElementById('plat-tiktok').checked) platforms.push('tiktok');
+  if (document.getElementById('plat-instagram').checked) platforms.push('instagram');
+
+  if (platforms.length === 0) {
+    alert('Please select at least one platform.');
+    return;
+  }
+
+  document.getElementById('platform-modal').style.display = 'none';
+  if (_platformModalCallback) _platformModalCallback(platforms);
+  _platformModalCallback = null;
 }
 </script>
 </body>

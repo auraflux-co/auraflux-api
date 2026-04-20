@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Drop-in wrapper for heygen-poller.js that runs inside Docker.
+# Usage: bin/heygen-poller-docker <jobId>
+#
+# Build once: docker build -f Dockerfile.poller -t cwn-poller .
+# Then this wrapper is used by the server instead of spawning the poller in-process.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+JOB_ID="${1:?Usage: heygen-poller-docker <jobId>}"
+
+exec docker run --rm \
+  --name "cwn-poller-${JOB_ID}" \
+  --platform linux/arm64 \
+  -v "${PROJECT_DIR}/data:/app/data" \
+  -e HEYGEN_API_KEY="${HEYGEN_API_KEY}" \
+  -e CWN_SERVER_URL="${CWN_SERVER_URL:-http://host.docker.internal:3000}" \
+  -e POLL_INTERVAL_MS="${POLL_INTERVAL_MS:-30000}" \
+  -e MAX_POLL_MINUTES="${MAX_POLL_MINUTES:-60}" \
+  --add-host host.docker.internal:host-gateway \
+  cwn-poller \
+  "${JOB_ID}"

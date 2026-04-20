@@ -9,16 +9,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 2. `STATUS.md` — current tasks, active file locks, what's working, what's next
 3. `AGENT_FILE_REGISTRY.md` — file ownership tiers, handoff size rules, multi-agent lock protocol. **Read before touching any file.**
 4. **`docs/architecture/GATED_PIPELINE_ARCHITECTURE.md`** — the authoritative spec for the Gated Self-Healing Pipeline. Every agent touching pipeline code must read this.
+5. **`docs/architecture/CHANGE_IMPACT_MAP.md`** — **read before any code change**.
+6. **`docs/architecture/PIPELINE_CONTRACT_SPEC.md`** — **Job Spec Distribution Rule**: every gate worker, QA agent, and gate manager receives the FULL confirmed job spec. No agent reconstructs or cherry-picks fields. QA agent prompts (Gemini/Claude inside gates) must include sceneStructure, chrome, inputs, commitments, and qaThresholds from the job spec. This is a hard requirement — not optional. Maps every component's blast radius. If you change X, this tells you what else must change in the same commit.
 
-Tell Cline: _"Read CLAUDE.md, STATUS.md, AGENT_FILE_REGISTRY.md and tell me what we're working on"_
+**Multi-agent rule:** If two sub-agents are running simultaneously, check `STATUS.md → 🔒 Active File Locks` before editing any Tier 1 or Tier 2 file. Declare your lock before your first edit. See `AGENT_FILE_REGISTRY.md` for the full protocol.
 
-**Multi-agent rule:** If two agents are running simultaneously, check `STATUS.md → 🔒 Active File Locks` before editing any Tier 1 or Tier 2 file. Declare your lock before your first edit. See `AGENT_FILE_REGISTRY.md` for the full protocol.
-
-**Doc structure (as of 2026-04-15):**
+**Doc structure (as of 2026-04-16):**
 - `docs/INDEX.md` — full index of all docs with descriptions. Read this to find anything.
-- `docs/handoffs/` — all active and pending Cline/Cursor handoffs
+- `docs/handoffs/` — all active and pending sub-agent task specs (named CLINE_HANDOFF_* for historical reasons)
 - `docs/dispatches/` — multi-handoff dispatch orders
-- `docs/architecture/` — system design, pipeline specs, technical reference
+- `docs/architecture/` — system design, pipeline specs, technical reference. **Product + control-plane view:** `docs/architecture/SYSTEM_ARCHITECTURE.md` (end-user entry paths, six content stages, monitoring, launch program)
 - `docs/specs/` — feature specs and design specs (forward-looking)
 - `docs/strategy/` — business strategy, roadmap, AuraFlux product plan, Phase 2 build spec
 - `docs/ops/` — operational runbooks, checklists, commit rules
@@ -42,8 +42,8 @@ Tell Cline: _"Read CLAUDE.md, STATUS.md, AGENT_FILE_REGISTRY.md and tell me what
 # Terminal 1 — Static file server (dashboard at localhost:8765)
 cd ~/cwn-production && python3 -m http.server 8765
 
-# Terminal 2 — Node API server (auto-restarts via nodemon)
-cd ~/cwn-production && nodemon server.js
+# Terminal 2 — Node API server (auto-restarts via nodemon, tees to logs/server.log)
+cd ~/cwn-production && nodemon server.js 2>&1 | tee -a logs/server.log
 
 # Terminal 3 — VectCut API server (port 9001, for video editing)
 cd ~/cwn-production/VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py
@@ -64,21 +64,18 @@ Claude Code owns this routing table. Update here when models change. Full domain
 
 | Agent | Model | Domain |
 |---|---|---|
-| **Claude Code** | Claude Sonnet 4.6 | Architecture, diagnosis, spec writing, handoff authoring, roadmap, model routing decisions |
-| **Cline-A** | Claude Sonnet | Backend pipeline — `server.js` pipeline functions, gates, FFmpeg, assembly, HeyGen, QA scoring |
-| **Cline-B** | DeepSeek | Backend API/data — `server.js` endpoints, `data/`, `logs/`, job persistence, publish integration |
-| **Cline-C** | GPT-4.5 / Codex | Frontend — `cwn_production.html`, `tools/`, `assets/`, AuraFlux React UI (Phase 2+) |
+| **Claude Code** | Claude Sonnet 4.6 (main session) | Architecture, diagnosis, spec writing, roadmap, model routing decisions |
+| **Sub-Agent A** | Claude Sonnet 4.6 (spawned) | Backend pipeline — `lib/`, `server.js` pipeline functions, gates, FFmpeg, assembly, HeyGen, QA scoring |
+| **Sub-Agent B** | Claude Haiku 4.5 (spawned) | Backend API/data — `server.js` endpoints, `data/`, `logs/`, job persistence, publish integration |
+| **Sub-Agent C** | Claude Sonnet 4.6 (spawned) | Frontend — `cwn_production.html`, `tools/`, `assets/`, AuraFlux React UI (Phase 2+) |
 | **Aider** | — | Overnight batch — docs, migrations, Jira/Confluence, non-breaking scripts |
 
-**Jira labels:** `cline_sonnet`, `cline_deepseek`, `cline_gpt` — used in Assignee field on all tickets.
+**Jira labels:** `sub_agent_a`, `sub_agent_b`, `sub_agent_c` — used in Assignee field on all tickets.
 
-**DeepSeek (Cline-B) rules — context window is small:**
-- NEVER read `server.js` in full — 9000+ lines
-- Always `grep -n` first, read only 50 lines around target
-- Re-read STATUS.md only after context reset — not CLAUDE.md + all handoffs
-- One handoff at a time
-
-**Gemini as Cline:** off the table — did not perform well on code tasks.
+**Sub-Agent B (Haiku) rules — smaller context window:**
+- NEVER read `server.js` in full — grep + targeted reads only
+- Read only 50 lines around the target function
+- One task at a time, no multi-file refactors
 
 **Phase 3 pipeline model routing** (script gen → Pro, Gate 1 → Opus, etc.): see `AUTONOMOUS_PRODUCTION_ROADMAP.md` section 3.3.
 
@@ -109,12 +106,7 @@ Use this policy for all implementation work so Rob can lead with ideas and revie
 - **Claude Code = General Manager** — plans work, breaks tasks into safe steps, keeps `CLAUDE.md` rules in force.
 - **Gemini Flash = Visual Director** — used for visual/frame decisions (thumbnail hooks, layout quality, clickability checks).
 - **Aider = Surgical Coder** — used for high-risk refactors or tightly scoped edits in large files.
-- **Cline = Human Review Layer** — present an English plan before changes; summarize what changed after edits.
-
-**Cline Implementation:**
-- See `CLINE_PLAN_TEMPLATE.md` for structured plan presentation format
-- See `CLINE_USAGE_GUIDE.md` for complete workflow documentation
-- Cline uses 8-section plan template: Task Summary, Affected Files, Implementation Steps, Agent Orchestration, Dependencies, Testing, Rollback, Commit Strategy
+- **Sub-Agents = Implementation layer** — Claude Code spawns them with a self-contained prompt; they read, edit, and commit. Claude Code reviews the result.
 
 **When to call Aider:**
 1. File is large (roughly >2000 lines) and change touches multiple functions/sections.
@@ -660,3 +652,73 @@ See `IMPLEMENTATION_SPEC.md` for full technical specifications.
 4. Create News scraper endpoint
 5. Implement short-form split-screen assembly
 6. Run production test suite (`test_3_longform_production.js`)
+
+## Roo Code Integration
+
+**Roo Code is the production intelligence layer.** It runs persistently in VS Code with full
+visibility into everything: the pipeline heartbeat (New Relic, PM2), every job spec at every
+stage, all gate worker and QA agent inputs/outputs, and the delta between what was expected
+vs what actually happened. It closes gaps autonomously where possible and escalates to Claude
+Code with specific, actionable improvement proposals.
+
+### Architecture
+```
+New Relic (GateResult, JobConfirmed, VideoPublished, GateSendback)
+PM2 health (uptime, restart count, memory)
+SQLite DB (gate_results, jobs, job_metrics, heygen_renders, publish_results)
+Pipeline Bus events (gate:pass, gate:hard_fail, gate:sendback)
+Job Spec at pre-generate (designSpec, deliverySpec, commitments, qaThresholds)
+         ↓ all fed into ↓
+Pipeline Orchestrator (pipeline-orchestrator.yaml)
+         ↓ coordinates ↓
+Gate Owners (gate-0 through gate-5 owner modes)
+         ↓ escalates to ↓
+Claude Code (architect) → Rob (product owner)
+```
+
+### Roles
+| Role | Mode | Owns | Can Fix | Escalates |
+|---|---|---|---|---|
+| Gate 0 Owner | gate-0-owner | Source confirmation | URL retry, ESPN HLS refresh | Scraper code broken, new format |
+| Gate 1 Owner | gate-1-owner | Script style QA | Retry with fixDirective, reject 0-scene | Scaffold/prompt mismatch, persistent format failure |
+| Gate 2 Owner | gate-2-owner | Render quality | HeyGen re-render for silent/short | New silence pattern, ffprobe tuning |
+| Gate 3a Owner | gate-3a-owner | Assembly QA | Assembly retry (max 3) | Sub-80 pattern, Gemini prompt update |
+| Gate 3b Owner | gate-3b-owner | Commitment verification | Chrome re-burn (fixable) | mismatch_escalate, resolution bug |
+| Gate 4 Owner | gate-4-owner | Broadcast ready | Surface blockers, note thumbnail gap | Recurring content issues, audio normalization |
+| Gate 5 Owner | gate-5-owner | Publish | Platform retry (max 3) | API format change, auth failure, poll timeout |
+| **Pipeline Orchestrator** | **pipeline-orchestrator** | **Full pipeline intelligence** | **Cross-gate coordination** | **All code fixes, all strategic improvements** |
+
+### Pipeline Orchestrator — Full Access
+The orchestrator receives and reads:
+- **New Relic**: GateResult events (scores, concerns, deductions), JobConfirmed, VideoPublished, GateSendback — queried every cycle
+- **PM2**: process health, restart count, uptime — `pm2 list` + `pm2 logs`
+- **SQLite**: all 7 tables — gate_results, jobs, job_metrics, heygen_renders, publish_results, assembly_jobs, gate_fixes
+- **Job Spec**: full jobSpec at every stage — designSpec.sceneStructure, qaThresholds, commitments, deliverySpec
+- **Gate owner reports**: docs/reports/roo/hourly.md (all 7 gate owners append here)
+
+Core loop: **Expected** (jobSpec commitments) vs **Actual** (gate_results) → diagnose gap → fix or escalate.
+
+### Reporting Cadence
+- **Hourly**: `docs/reports/roo/hourly.md` — NR query results, PM2 health, gate outcomes, gaps found, fixes applied, top improvement
+- **Daily**: `docs/reports/roo/daily_{YYYY-MM-DD}.md` — full KPI dashboard, cross-gate patterns, git correlation, top 3 improvements
+- **Monthly**: `docs/reports/roo/monthly_{YYYY-MM}.md` — trends, cost analysis, Customer 1 readiness, strategic recommendations
+
+### Escalation Protocol
+Write `docs/reports/roo/escalation_{timestamp}.md` when:
+1. Code change required (not just retry/re-render)
+2. Same failure pattern 3+ times in one day
+3. Multiple gates failing simultaneously (systemic)
+4. NR alert policy violation
+5. PM2 restart count > 3 in one hour
+6. KPI target missed >10% for 2+ consecutive days
+
+Escalation includes: NR evidence, DB evidence, git correlation, expected vs actual gap,
+proposed fix with exact files to change, estimated impact, Rob approval needed yes/no.
+
+### Claude Code at Session Start
+Read in this order:
+1. `docs/reports/roo/escalation_*.md` — immediate action items
+2. `docs/reports/roo/daily_{today}.md` — overnight summary
+3. Review with Rob, implement approved improvements, commit
+
+Claude Code does NOT touch live execution — Roo owns that layer.

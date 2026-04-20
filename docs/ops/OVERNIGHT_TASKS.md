@@ -1,5 +1,21 @@
 # CWN Overnight Task Schedule
 
+## 🎬 RENDER READINESS — Next Session Priority
+
+**Status as of 2026-04-17:** Synth QA in progress (awaiting Rob visual approval on 4 outputs).
+
+**Once synth QA passes → render sequence:**
+1. `node test/synth_assembly_test.js` → all 4 PASS
+2. News render first (Gate 0→4)
+3. Twitch render second
+4. NBA render third
+5. Phase 1 locked → proceed to Phase 2 client layer
+
+**Runbook:** `docs/ops/RENDER_RUNBOOK.md`
+**Jira Epic:** CPD — "Phase 1 Production Render"
+
+---
+
 **Window:** 1:00 AM – 7:00 AM Eastern (daily)
 **Agent:** Aider (gemini/gemini-2.5-pro)
 **Output:** Morning briefing written to `MORNING_BRIEFING.md` after each run
@@ -83,10 +99,10 @@ Mark `[x]` when complete. Add new tasks at the bottom with a date.
 
 ### 🟢 APPROVED — Ready to Run (1am-7am ET)
 
-> **⭐ TONIGHT'S PRIORITY (2026-04-14) — Atlassian rebuild first.**
-> Before picking up any other `[ ]` task tonight, scroll down to **"Rebuild Atlassian integration from scratch"** (around line 340). That task builds `lib/clients/jira_client.js`, `lib/clients/confluence_client.js`, and `scripts/jira_ping.js` — it unblocks the Jira morning report and the eventual `jira_sync.js`. Rob is moving toward Jira (epics/stories/tasks/subtasks) + Confluence as the canonical home for work tracking and reference docs, which means the current `CLINE_HANDOFF_*.md` / `STATUS.md` / `ROADMAP.md` ecosystem is transitional — it goes away once Atlassian is live. Getting the pipe open tonight is the first step. Task is fully specced, all new files, zero risk to `server.js` or the dashboard. If Rob's `.env` isn't filled in yet, ship the code anyway — the ping script's "ATLASSIAN_API_TOKEN not set" error is the expected failure mode and Rob handles auth separately.
+> **⭐ TONIGHT'S PRIORITY (2026-04-17) — Universal code architecture review first.**
+> Before picking up any other `[ ]` task tonight, find the task **"Universal Architecture Review — full codebase audit"** in the INDEPENDENT section below. That task reviews the entire codebase (server.js, lib/, cwn_production.html) and produces a written recommendations document on how to eliminate content-type/form hardcoding in favor of a universal data-driven architecture. Review-only, no code changes tonight.
 >
-> After the Atlassian task ships, fall back to normal top-to-bottom queue order (server.js module split next, then the QUEUED section).
+> After the architecture review ships, the second priority tonight is the **"/health endpoint code review"** task (also in INDEPENDENT section). After those two, fall back to normal top-to-bottom queue order.
 
 #### [~] server.js Module Split — IN PROGRESS
 **Priority:** High — reduces context limit issues for all agents
@@ -435,6 +451,60 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 
 ---
 
+#### [x] ⭐ Universal Architecture Review — full codebase audit (2026-04-17)
+**Files to READ (no edits tonight):** `server.js` (all endpoints + pipeline functions), `lib/` (all modules), `cwn_production.html` (all generate/assemble functions)
+**Output:** NEW `docs/architecture/UNIVERSAL_ARCHITECTURE_RECOMMENDATIONS.md`
+**What:** Full codebase audit to identify everywhere content-type (`twitch`/`nba`/`news`) and form-type (`compilation`/`short`) are hardcoded as branching conditions — and produce concrete recommendations for a universal data-driven architecture. Tonight is **REVIEW + RECOMMENDATIONS ONLY** — no code changes.
+
+**Background and motivation:**
+The codebase has grown 3 content types × 2 form types = 6 production paths. Right now many of these paths are implemented as `if (contentType === 'twitch')` / `else if (contentType === 'nba')` / `else` branches scattered throughout `server.js`, `cwn_production.html`, and `lib/`. The result: when a bug is fixed or feature added for one content type, the other 5 paths must be updated separately. The goal is a universal architecture where content-type and form-type differences are expressed as **configuration objects**, not branching code.
+
+**What Aider should do tonight:**
+1. Search `server.js` for all occurrences of `contentType`, `formType`, `'twitch'`, `'nba'`, `'news'`, `'compilation'`, `'short'` — catalog every branch point
+2. Search `cwn_production.html` for the same patterns — catalog dashboard-side branch points
+3. Search `lib/` modules for the same patterns
+4. Group the findings into categories:
+   - **Legitimately universal** — already content-type-agnostic (good, no change needed)
+   - **Trivially extractable** — 2-3 line branches where a config lookup would eliminate the branch
+   - **Deeply coupled** — branches where the logic is genuinely different enough to require careful design before extracting
+5. Propose a **content-type config schema** — a JSON object per content type/form combination that captures all the type-specific constants currently hardcoded in branches (avatar IDs, voice IDs, speak speeds, scene count formulas, Gate thresholds, FFmpeg filter params, etc.)
+6. Propose a **migration roadmap** — ordered list of changes from easiest/safest to most complex, with risk level per step
+7. Write the full recommendations to `docs/architecture/UNIVERSAL_ARCHITECTURE_RECOMMENDATIONS.md` with:
+   - Executive summary (1 paragraph)
+   - Catalog of all branch points found (file, line, what it branches on)
+   - Proposed config schema (show the full JSON structure)
+   - Migration roadmap (ordered steps, risk level, estimated scope per step)
+   - What NOT to change (cases where branching is genuinely correct)
+
+**What Aider should NOT do tonight:**
+- Do NOT make any code changes to `server.js`, `cwn_production.html`, or any `lib/` file
+- Tonight is audit + recommendations only — Claude Code executes the changes
+
+**Risk:** None — read-only analysis + new doc only
+**Estimate:** 3 hours
+**Dependencies:** none
+**Safe for Aider:** ✅ Pure read + new doc — zero production code changes
+
+---
+
+#### [ ] ⭐ Health check code review — `/health` endpoint audit (2026-04-17)
+**Files to READ (no edits unless trivial fix):** `server.js` (search for `/health` route), `lib/routes/health.js` (if it exists), `package.json`
+**Output:** Update `MORNING_BRIEFING.md` with findings; create `lib/routes/health.js` if it doesn't exist yet
+**What:** Audit the current `/health` endpoint — does it exist, what does it return, is it suitable for Railway/load-balancer health checks? If it doesn't exist, create `lib/routes/health.js` per the spec already written in this file (see "Write `/health` endpoint" task above). If it does exist, review it and report gaps.
+
+**What Aider should do tonight:**
+1. Search `server.js` for `app.get('/health'` — does it exist?
+2. If YES: read the handler. Does it return JSON with `{status, uptime, version, memory_usage_mb, active_jobs_count}`? Does it have <10ms latency (no FFmpeg, no external API)? Report gaps in `MORNING_BRIEFING.md`.
+3. If NO: create `lib/routes/health.js` per the spec in the "Write `/health` endpoint" task (see above in INDEPENDENT section). Wire it into server.js with `require('./lib/routes/health')(app);`. Run `node --check server.js`.
+4. Either way, write a findings summary to `MORNING_BRIEFING.md` under "Health Check Review".
+
+**Risk:** Low — either read-only or a small new file + 1-line server.js edit
+**Estimate:** 45 min
+**Dependencies:** Run AFTER the Universal Architecture Review task
+**Safe for Aider:** ✅ Mostly new file; server.js 1-line wire-up only
+
+---
+
 ### Scheduling notes for INDEPENDENT tasks
 
 - Pick one task per night, not multiple
@@ -689,3 +759,23 @@ Build a standalone script that generates `MORNING_JIRA_REPORT.md` each night. Us
 - `.gitignore`
 - `scripts/jira_ping.js` (as reference for pattern)
 
+# CWN Overnight Task Schedule
+
+**Window:** 1:00 AM – 7:00 AM Eastern (daily)
+**Agent:** Aider
+
+---
+## Aider Task Queue
+
+Tasks are listed in priority order. Aider works through them top-to-bottom each night.
+
+### 🟢 APPROVED — Ready to Run
+
+- [ ] Health check code review — `/health` endpoint audit
+- [~] `server.js` Module Split — IN PROGRESS
+- [ ] Jira morning report script (`scripts/jira_morning_report.js`)
+# Overnight Tasks for 2026-04-20
+
+## APPROVED
+
+- [x] No tasks found in file.

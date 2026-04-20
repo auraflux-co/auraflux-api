@@ -1,26 +1,38 @@
 {
   "name": "cwn-production",
-  "version": "1.0.0",
+  "version": "1.0.13",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "pm2 start ecosystem.config.js --env production",
+    "start:cluster": "pm2 start ecosystem.config.js -i max --env production",
+    "stop": "pm2 stop auraflux",
+    "restart": "pm2 reload auraflux",
+    "logs": "pm2 logs auraflux",
+    "status": "pm2 status",
+    "dev": "pm2 start ecosystem.config.js --env development",
     "dashboard": "python3 -m http.server 8765",
     "vectcut": "cd VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py",
-    "test": "node test/ffmpeg_utils.test.js",
+    "test": "jest",
     "test:all": "node test/run_tests.js",
+    "test:ci": "jest --runInBand --ci",
     "cleanup": "curl -X POST http://localhost:3000/cleanup -H 'Content-Type: application/json' -d '{\"keepCount\":2,\"cleanTmp\":true,\"cleanQaLogs\":false}'",
     "disk-usage": "curl http://localhost:3000/disk-usage",
     "auth-drive": "node cwn-auth.js",
     "jira-ping": "node scripts/jira_ping.js",
+    "nr-health": "node scripts/newrelic_health.js",
     "qa:install": "npx playwright install chromium",
     "qa:record": "node qa/record_session.js",
     "qa:clean": "rm -rf output/qa_sessions/*",
     "qa:baseline": "node qa/visual_regression.js --update",
     "qa:regression": "node qa/visual_regression.js",
     "benchmark": "node qa/benchmark.js",
-    "benchmark:concurrent": "node qa/benchmark.js --concurrent"
+    "benchmark:concurrent": "node qa/benchmark.js --concurrent",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "format": "prettier --write \"**/*.{js,json,md,html,css,yml,yaml}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{js,json,md,html,css,yml,yaml}\" --ignore-path .prettierignore",
+    "load-test:health": "node scripts/load_test_autocannon.js"
   },
   "keywords": [
     "ai",
@@ -44,6 +56,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "axios": "^1.14.0",
+    "better-sqlite3": "^12.9.0",
+    "bullmq": "^5.74.1",
     "canvas": "^3.2.3",
     "cheerio": "^1.2.0",
     "cors": "^2.8.5",
@@ -53,7 +67,9 @@
     "fluent-ffmpeg": "^2.1.2",
     "googleapis": "^171.4.0",
     "helmet": "^8.1.0",
+    "ioredis": "^5.10.1",
     "multer": "^1.4.5-lts.1",
+    "newrelic": "^13.19.1",
     "node-cron": "^3.0.3",
     "pino": "^9.14.0",
     "pino-pretty": "^11.3.0",
@@ -61,9 +77,11 @@
     "sharp": "^0.32.0"
   },
   "devDependencies": {
+    "autocannon": "^8.0.0",
     "eslint": "^8.50.0",
-    "nodemon": "^3.0.0",
-    "playwright": "^1.59.1"
+    "jest": "^30.3.0",
+    "playwright": "^1.59.1",
+    "prettier": "^3.5.3"
   },
   "repository": {
     "type": "git",
@@ -72,5 +90,19 @@
   "bugs": {
     "url": "https://github.com/clipzworldnews/cwn-production/issues"
   },
-  "homepage": "https://github.com/clipzworldnews/cwn-production#readme"
+  "homepage": "https://github.com/clipzworldnews/cwn-production#readme",
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/test/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "lib/**/*.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 60
+      }
+    }
+  }
 }

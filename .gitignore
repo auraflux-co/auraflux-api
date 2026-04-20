@@ -45,8 +45,20 @@ video_generation_custom_*.csv
 *.png
 *.gif
 
+# Debug ingest logs (per-session; do not commit)
+.cursor/debug-*.log
+
+# Test / build artifacts
+coverage/
+.nyc_output/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
 # IDE and editor files
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
