@@ -268,6 +268,24 @@ finalizeJobMetrics(jobId); // Saves to run_metrics_{jobId}.json
 
 All jobs produce `output/run_metrics_{jobId}.json` with per-stage wall time + totals.
 
+### RCA — Why ledger (`PipelineWhy`, `why_ledger`, `why:ledger`) (April 2026)
+
+When a job misbehaves, read in this order: **what happened → which failure bucket → which layer to fix.**
+
+1. **What:** gate, score, pass/fail, sendback, auto-action — existing NR `GateResult` / `GateSendback` plus **`PipelineWhy`** (same moment as interventions).
+2. **Why class (`failureClass`):** `SPEC_VIOLATION` (script ignored job spec), `QA_INPUT_DEFECT` (gates judged on wrong or thin evidence), `PRODUCTION_DEFECT` (infra/API/pipeline bug), `UNKNOWN`, or `NONE` on clean passes. Defaults come from `inferFailureClass()` in `lib/why_ledger.js`; gate code may pass an explicit override when the cause is known.
+3. **How to fix:** do not “tune Gate 1” until the class is right — spec issues → prompts/scaffold/job spec; QA_INPUT → Gate 0 / clip analysis / authorized facts plumbing; PRODUCTION → Chrome, FFmpeg, HeyGen, DB, timeouts, parse errors.
+
+**Sources of truth (all written by `recordWhyLedger()`):**
+
+| Sink | Location |
+|------|-----------|
+| SQLite | `why_ledger` table — `lib/db.js` (`saveWhyLedger`) |
+| New Relic | Custom event **`PipelineWhy`** |
+| JSONL | `logs/pipeline_events.jsonl` — lines with `"type":"why:ledger"` (via `lib/roo_bridge.js`) |
+
+**Wiring:** `lib/why_ledger.js`; emitted from `lib/monitoring.js` (gate bus + escalate + kill + restore), `lib/script_gen.js` (Gate 1 pipeline bus + auto-action), `lib/gates/gate1.js` (Claude JSON salvage path), `lib/assembly.js` (bus payload enrichment). Tests: `test/why_ledger.test.js`.
+
 ### Job Persistence & Pipeline Controls (April 2026)
 
 The pipeline is now a fully persistent, recoverable state machine. Three closely-related features work together — if you touch any of them, touch the others too.
