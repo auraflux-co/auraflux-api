@@ -1,5 +1,12 @@
 # Morning Briefing — 2026-04-21
 
+## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 21)
+- **Task:** Process `OVERNIGHT_TASKS.md`.
+- **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
+- **Actions:** Updated `STATUS.md` and this briefing to reflect a no-op run.
+
+---
+
 **Session closed:** ~2:00 AM ET Apr 20 (Rob went to bed)
 **Commit:** `02c8911` — fix(chrome): cap flag at 88px + Twitch sidebar reads segment cardData
 **Branch:** `aider/test-suite`
