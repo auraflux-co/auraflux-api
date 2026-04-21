@@ -92,25 +92,20 @@ A run is **green / successful** only when **all** of the following are true:
 | 2026-04-21 | Cursor | Phase A 2 — News LF 1-clip | script_news_1776721885773 | Pass | ~42s, 204 words. |
 | 2026-04-21 | Cursor | Phase A 3 — Twitch LF Jason 2 clips | script_twitch_1776721927930 | Pass | ~167s, 170 words. |
 | 2026-04-21 | Cursor | Phase A 4 — NBA short | script_nba-short_1776722120450 | Pass | ~79s, 56 words. |
-| | | | | | |
 
 ---
 
 ## 🔖 2026-04-18 Session Summary — Read This When You Return
-
 **What was done today (planning + architecture only — no pipeline code touched):**
-
 ### Docs written/updated:
 - `docs/architecture/PIPELINE_CONTRACT_SPEC.md` — NEW, authoritative. AuraFlux universal pipeline contract: Job Spec schema, Stage Interface (canProduce/commit/preview/run/selfTest), Provider Interface, Approval Layer, Pre-Generate phase, Gate Map (0-5 revised), Inter-Gate Intelligence (upstreamContext), Publishing System with platform API limits, Scheduling system, Confirmed infrastructure stack, Pain points + template-driven fixes, Customer 0 reference implementation. **Read this before touching any pipeline code.**
 - `docs/specs/PUBLISH_COPY_SPEC.md` — UPDATED. ChatGPT-quality format spec with Customer 0 reference example saved verbatim. Timestamps from segment durations, 5 A/B titles, 4 thumbnail text options, pinned comment with channel handle variable, per-platform schema, what's manual vs automated.
 - `docs/strategy/ROADMAP.md` — Added Bucket 5: Platform Ownership. Full strategy for removing Upload-Post (direct YouTube/TikTok/Instagram), TubeBuddy lite via YouTube Analytics API, audience-data content calendar. All platform limitations documented (cards/end screens/TikTok scheduling = no API, won't-have).
 - `docs/handoffs/CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md` — NEW. Sub-Agent B handoff: publish copy rewrite to spec, upload-post wiring fix (thumbnail+comment required), categoryId per content type, TikTok caption fix, post-publish outcome card, Gate 4 publish package audit, title switcher from stored Job Spec.
-
 ### Code changed (small, approved):
 - `ecosystem.config.js` — NEW. PM2 config replacing nodemon for production. `npm run start` = PM2 single, `npm run start:cluster` = max CPUs, `npm run restart` = zero-downtime reload.
 - `package.json` — PM2 scripts added (start/stop/restart/logs/status). nodemon stays in devDependencies for `npm run dev`.
 - `newrelic.js` — app_name changed from `'CWN Production'` → `'AuraFlux'`.
-
 ### Key decisions made today:
 1. **AuraFlux is the system. CWN/ClipzWorld is Customer 0.** No "CWN" in architecture docs.
 2. **Template scaffold system** — system generates script structure, provider fills dialogue only. Gate 1 becomes style-only. Structural failures become impossible.
@@ -122,11 +117,9 @@ A run is **green / successful** only when **all** of the following are true:
 8. **Stack confirmed** — Render (not Railway), PM2, BullMQ+Redis, Docker, New Relic (AuraFlux), SQLite now → Postgres at Render deploy, Drizzle ORM.
 9. **Publish system** — thumbnail auto with upload (Gemini Imagen + Canva), title auto-selected (5 stored alternatives for post-publish switch), pinned comment auto, chapters in description (verify in Studio), end screen/cards manual (can't be automated — confirmed). Post-publish card = mostly ✅ + 3 Studio deep links.
 10. **Upload-Post → direct platform APIs** phased in Roadmap Bucket 5.
-
 ### New Relic key issue (unresolved — fix when you return):
 You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js agent needs a 40-character **License Key**. They are different key types.
 **Fix:** Go to `one.newrelic.com/api-keys` → look for **License key** section (NOT "Ingest API key") → click to reveal full 40-character hex key → paste into `.env` as `NEW_RELIC_LICENSE_KEY`.
-
 ### What to do when you return:
 1. **Install PM2** if not already: `npm install -g pm2`
 2. **Fix New Relic key** (see above)
@@ -140,15 +133,11 @@ You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js
    - Gate 4 reframed: full video broadcast ready → upload signal
 5. **Synth test review** — review the 4 synth test outputs Rob already has open (News/Twitch/NBA/Short). QA notes in conversation: news sidebar cards visible ✅, artifact (black/white block ~x:1170 y:300) may be double-burn of logo — check assembly.js logo overlay for duplicate filters.
 6. **If tests keep failing → Render deploy** — Docker is ready, Dockerfile is complete. When Rob says go, spawn Sub-Agent A (render.yaml + server config) and Sub-Agent B (env vars, Postgres migration).
-
 ### Note — planning captured on `origin/main` (2026-04-18)
-
 Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic assembly QA, and PM2 vs nodemon landed on `main`. **Operational truth for Phase A stays in the header above** (`GATE_TEST_MODE=false` for live HeyGen when running the agreed sheet). Older `main` copy referred to `GATE_TEST_MODE=true` for staged Gate 1 testing — do not mix with Phase A live runs. Optional: `MORNING_BRIEFING.md` (if present) may hold gate drill / briefing context from that period.
-
 ---
 
 ## 🗂️ Agent Assignments
-
 | Agent | Tool | Domain | Best For |
 |-------|------|--------|----------|
 | **Claude Code** | Claude Sonnet 4.6 (this session) | Architecture, diagnosis, spec writing, handoffs | Root cause analysis, planning, roadmap, model routing |
