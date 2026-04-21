@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-21 (Cursor — pipeline QA spine + AJ news + commit)
+**Last Updated:** 2026-04-21 (Cursor — definition of done: full job + creative bar)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `CLAUDE.md` → tell the agent the **current focus** bullet below.
@@ -10,6 +10,16 @@
 ## 🎯 Owned execution order (single source of truth for “what we do next”)
 
 **Rule:** Work **respects this sequence**. Supporting docs (`docs/ops/LAUNCH_PLAN_2026.md`, `docs/ops/LAUNCH_TEST_MATRIX.md`, `docs/architecture/SYSTEM_ARCHITECTURE.md`, `docs/strategy/PO_AND_ENGINEERING_RUNBOOK.md`, `docs/ops/REQUIRED_API_KEYS.md`, etc.) are **reference** — they do not replace this section. **Progress and sign-off live here.**
+
+### Definition of done — **full job run** (product)
+
+A run is **green / successful** only when **all** of the following are true:
+
+1. **All gates pass** for that job (through the pipeline’s final gate, including publish/readiness gates as applicable). **Passing Gate 0 or Gate 1 alone is not success** for the whole job.
+2. **Creative + overlay meet spec** — broadcast chrome, layout, and creative treatment match what product signed off (Rob’s creative review; QA may catch gaps he did not).
+3. **Usable video** — a deliverable in **`output/`** (or agreed handoff path) that is fit for review/shipping under the above. **No usable video ⇒ failure** for that job, even if earlier stages looked fine.
+
+**Do not** describe a job as “passed” or Phase A as “green” from script HTTP 200, Gate 1 only, or partial gate progress. Milestones can be logged separately; **sign-off language applies only to the full bar above.** See also `CLAUDE.md` → *Full job success vs partial milestones* and `docs/ops/LAUNCH_TEST_MATRIX.md` (intro).
 
 | Phase | What | When it starts | Block in launch plan |
 |--------|------|------------------|------------------------|
@@ -26,7 +36,7 @@
 |------|--------|------|
 | **Jest (`npm test` / `npm run test:all`)** | ✅ **57/57 pass** | Includes `test/why_ledger.test.js`, QA cycle / generate-confirm tests; suites per `package.json` `testMatch`. |
 | **`test/run_tests.js`** | ✅ Fixed | Was invoking Jest files with **plain Node** → `ReferenceError: test is not defined`. Now delegates to **Jest** (`--runInBand`). |
-| **Phase A E2E matrix** | 🟡 **Script path exercised** | Four agreed configs ran via `scripts/phase_a_batch.cjs` → `POST /generate-full-script` (live keys). **Not** full bar to Drive until HeyGen + assembly rows are logged separately. VectCut was **offline** in `/health` during run. |
+| **Phase A E2E matrix** | 🟡 **Partial automation only** | `phase_a_batch.cjs` exercises **script submission**; it is **not** full-job green per **Definition of done** above until all gates + creative + usable video. VectCut offline in `/health` can block or degrade overlay paths. |
 | **`npm run format:check`** | Not run this session | Large diff possible — run when you want a formatting pass. |
 | **`npm run load-test:health`** | Needs API on :3000 | Phase C — safe (GET `/health` only). |
 
@@ -166,6 +176,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **docs: definition of done for full job runs** — Authoritative bar in `STATUS.md`: all gates + creative/overlay spec (product review) + usable video in `output/`; Gate 0/1 or script 200 ≠ success. Mirrored in `CLAUDE.md` (*Full job success vs partial milestones*), `docs/ops/LAUNCH_TEST_MATRIX.md` (pass criteria + matrix rows), `docs/INDEX.md` (root file list). | STATUS.md, CLAUDE.md, docs/ops/LAUNCH_TEST_MATRIX.md, docs/INDEX.md | — | 2026-04-21 |
 | Cursor | **feat(pipeline): early job spine for script jobs, QA sendback tiers + generate confirm, AJ news pins** — `lib/script_gen.js` + `lib/db.js`: seed `jobs` / `seedJobSpecFromScript` before Gate 0 so `saveOutput` / spine persist without missing jobId. `lib/job_spec.js`, `lib/monitoring.js`, `lib/pipeline_events.js`, `lib/roo_bridge.js`, `lib/qa_cycle.js`, `lib/qa_generate_confirm.js`, `server.js`: Tier 1 vs Tier 2 sendbacks, `QA_CONFIRM_ON_GENERATE` + `/job/:id/qa-confirm-generate`. `server.js` + news assembly: pinned AJ URLs, portrait orientation / `forcedCandidates`, `sourceOrientation` from Phase A. `scripts/phase_a_batch.cjs`, `ecosystem.config.js`, `.env.example`: batch + env docs. Gates 3a/3b/4 + assembly/chrome modules: aligned with monitoring. New: `lib/auto_publish_env.js`, job monitor / gate watch / smoke scripts, tests. **Not committed:** `logs/*`, `docs/reports/phase_a_rca_*.md` (local RCA dumps). | lib/script_gen.js, lib/db.js, lib/job_spec.js, lib/monitoring.js, lib/pipeline_events.js, lib/roo_bridge.js, lib/qa_cycle.js, lib/qa_generate_confirm.js, lib/auto_publish_env.js, lib/assembly.js, lib/assembly/chrome_*.js, lib/chrome_overlay.js, lib/gates/gate3a.js, lib/gates/gate3b.js, lib/gates/gate4.js, lib/sources/news_source.js, server.js, scripts/phase_a_batch.cjs, scripts/job_monitor_daemon.cjs, scripts/phase_a_gate_watch.cjs, scripts/smoke_deploy.cjs, ecosystem.config.js, config/customers/c0.json, .env.example, package.json, test/*.js, tools/clipzworld_newscast.html, STATUS.md | f214868 | 2026-04-21 |
 | Cursor | **fix(pipeline): stop spurious failures — getDb export, escalation reasons, silence guard** — `lib/db.js`: export `getDb` so `linkScriptJob()` works (fixes `JOB_SPINE_LINK_FAIL`). `lib/monitoring.js`: `escalate()` always uses non-null `safeReason`; `gate:hard_fail` builds `hardFailReason` from deductions/concerns; `gate:escalate` log never `Error(null)`; silence checker skips jobs with no `gate:pass` yet (fixes false “silent at gate unknown”). `lib/assembly.js`: bus `reason` falls back to `notes`/`report`/gate label. `lib/gates/gate4.js`: return `outcome`, `score`, `failReason`, `concerns` on pass/fail so monitoring/NR get text. | lib/db.js, lib/monitoring.js, lib/assembly.js, lib/gates/gate4.js, STATUS.md | 195dc75 | 2026-04-21 |
 | Cursor | **chore(oss): clean repo for public GitHub** — Expanded `.gitignore` (SQLite `cwn.db*`, `logs/*` streams, `upload_status.json`, `episode_counters.json`, chrome synth history, `.roo/autostart.json`). `git rm --cached` on those paths so clones stay clean. Removed baked-in Google OAuth client defaults from `lib/publish.js` (use `.env` only). `CONTRIBUTING.md` + `SECURITY.md`; `README` deploy section uses `git add -p`; `data/*.example.json` for optional local copies; `lib/roo_bridge.js` mkdir before status write; `docs/INDEX.md` links. | .gitignore, lib/publish.js, lib/roo_bridge.js, CONTRIBUTING.md, SECURITY.md, README.md, data/upload_status.example.json, data/episode_counters.example.json, docs/INDEX.md, STATUS.md | 9585485 | 2026-04-21 |
