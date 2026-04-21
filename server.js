@@ -51,6 +51,16 @@ function nrJobConfirmed(jobSpec, allReady) {
   });
 }
 
+function nrQaGenerateConfirmPolicy(jobSpec, attrs = {}) {
+  nrEvent('QaGenerateConfirmPolicy', {
+    jobId: jobSpec.jobId,
+    customerId: jobSpec.customerId,
+    templateId: jobSpec.templateId,
+    contentType: jobSpec.contentType,
+    ...attrs
+  });
+}
+
 // ── NR Event: Gate result (pass/fail at any gate) ────────────────────────────
 function nrGateResult(jobId, customerId, contentType, gate, passed, score, outcome, durationMs) {
   nrEvent('GateResult', {
@@ -582,6 +592,72 @@ async function startHeyGenPoller(jobId, card) {
   const videoJobs = card.heygen?.videoJobs || [];
   if (!videoJobs.length) {
     console.error(`[heygen-poller:${jobId}] No videoJobs in card — cannot poll`);
+    return;
+  }
+
+  // Sim mode / pre-completed jobs: skip external polling, emit directly.
+  const allAlreadyComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+  if (allAlreadyComplete) {
+    console.log(`[heygen-poller:${jobId}] ⏭️ All segments already completed (sim/local) — emitting heygen:all_complete`);
+    const sortedAvatarSegs = [...videoJobs]
+      .filter(vj => vj.video_url)
+      .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0));
+    const avatarByName = {};
+    for (const seg of sortedAvatarSegs) avatarByName[seg.sceneName] = seg;
+
+    const orderedClipUrls = card.orderedClipUrls || [];
+    const scriptScenes = card.script?.scenes || [];
+    const segmentData = [];
+    let clipIdx = 0;
+    if (scriptScenes.length > 0) {
+      for (const scene of scriptScenes) {
+        if (scene.type === 'source_clip') {
+          const clip = orderedClipUrls[clipIdx++];
+          if (clip && (clip.url || clip.clipUrl)) {
+            segmentData.push({
+              url: clip.clipUrl || clip.url || '',
+              pageUrl: clip.pageUrl || '',
+              label: clip.label || scene.name || `CLIP_${clipIdx}`,
+              type: 'source_clip',
+              clipUrl: clip.clipUrl || clip.url || ''
+            });
+          }
+        } else {
+          const sceneKey = scene.name || scene.id;
+          const avatarSeg = avatarByName[sceneKey];
+          if (avatarSeg && avatarSeg.video_url) {
+            segmentData.push({ url: avatarSeg.video_url, label: avatarSeg.sceneName, type: 'avatar' });
+            if (scene.hasClipInsert) {
+              const clip = orderedClipUrls[clipIdx++];
+              if (clip && (clip.url || clip.clipUrl)) {
+                segmentData.push({
+                  url: clip.clipUrl || clip.url || '',
+                  pageUrl: clip.pageUrl || '',
+                  label: clip.label || `${sceneKey}_CLIP`,
+                  type: 'source_clip',
+                  clipUrl: clip.clipUrl || clip.url || ''
+                });
+              }
+            }
+          }
+        }
+      }
+    } else {
+      for (const s of sortedAvatarSegs) segmentData.push({ url: s.video_url, label: s.sceneName, type: 'avatar' });
+    }
+    const updatedCard = persistedJobs[jobId] || card;
+    updatedCard.heygen = updatedCard.heygen || {};
+    updatedCard.heygen.videoJobs = videoJobs;
+    updatedCard.stage = 'all_sent';
+    saveJobCard(jobId, updatedCard);
+    const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
+    pipelineBus.emit('heygen:all_complete', {
+      jobId,
+      contentType: card.contentType || 'twitch',
+      segmentUrls,
+      card: updatedCard,
+      segmentData
+    });
     return;
   }
 
@@ -1794,6 +1870,18 @@ app.post('/job/:id/stuck', (req, res) => {
   res.json({ ok: true, id, gate, reason });
 });
 
+// POST /job/:id/qa-confirm-generate — QA agents confirm before generate when QA_CONFIRM_ON_GENERATE=true
+app.post('/job/:id/qa-confirm-generate', (req, res) => {
+  const { id } = req.params;
+  try {
+    const { markConfirmed } = require('./lib/qa_generate_confirm');
+    markConfirmed(id, { source: 'qa_confirm_endpoint' });
+    res.json({ ok: true, jobId: id, status: 'confirmed' });
+  } catch (e) {
+    res.status(500).json({ error: e.message || String(e) });
+  }
+});
+
 // GET /content-type-status — return disabled content types + stuck counts
 // Dashboard polls this on init to show auto-disable warnings.
 app.get('/content-type-status', (req, res) => {
@@ -2754,6 +2842,31 @@ async function fetchAjSitemapUrls(date = new Date()) {
   return articleUrls;
 }
 
+/** Strip #fragment so Puppeteer navigates to a stable document URL. */
+function stripAjPageFragment(url) {
+  if (!url || typeof url !== 'string') return url;
+  const i = url.indexOf('#');
+  return i === -1 ? url : url.slice(0, i);
+}
+
+/**
+ * Extra AJ pages to try first in scrapeAjNewsVideos (sitemap excludes /video/… paths).
+ * Set NEWS_AJ_PINNED_URLS= (empty) or "off" to disable built-in example.
+ * @returns {string[]}
+ */
+function getPinnedAjUrlsForScraper() {
+  const raw = process.env.NEWS_AJ_PINNED_URLS;
+  if (raw !== undefined) {
+    const t = String(raw).trim();
+    if (t === '' || t === '0' || t.toLowerCase() === 'off' || t.toLowerCase() === 'false') return [];
+    return t.split(/[\n,]+/).map((s) => stripAjPageFragment(s.trim())).filter(Boolean);
+  }
+  // Portrait /video/quotable — US-relevant; not discoverable via sitemap article filter
+  return [
+    'https://www.aljazeera.com/video/quotable/2026/4/21/us-is-pretty-far-behind-where-they-started-the-war-on-iran'
+  ];
+}
+
 // ── AJ Puppeteer video scraper ────────────────────────────────────────────────
 // Opens a Puppeteer browser, walks sitemap articles in order (today first, then
 // yesterday as fallback), intercepts Brightcove API network responses to capture
@@ -2765,28 +2878,41 @@ async function fetchAjSitemapUrls(date = new Date()) {
 //
 // Brightcove account: 665003303001
 // HLS served at manifest.prod.boltdns.net
-async function scrapeAjNewsVideos(targetCount = 5) {
+// forcedCandidates: optional URL list (e.g. Gemini recovery) — merged after pinned URLs
+async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
   const puppeteer = require('puppeteer');
   const results = [];
 
-  // Fetch today's and yesterday's sitemap URLs — today first, yesterday as fallback
   const today     = new Date();
   const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
 
   let candidateUrls = [];
-  try {
-    const [todayUrls, yestUrls] = await Promise.all([
-      fetchAjSitemapUrls(today),
-      fetchAjSitemapUrls(yesterday)
-    ]);
-    candidateUrls = [...todayUrls, ...yestUrls];
-  } catch (e) {
-    console.warn(`[scrapeAjNewsVideos] Sitemap fetch error: ${e.message}`);
-    return [];
+  if (Array.isArray(forcedCandidates) && forcedCandidates.length > 0) {
+    candidateUrls = forcedCandidates.map((u) => stripAjPageFragment(String(u))).filter(Boolean);
+    console.log(`[scrapeAjNewsVideos] Using ${candidateUrls.length} forced candidate URL(s)`);
+  } else {
+    try {
+      const [todayUrls, yestUrls] = await Promise.all([
+        fetchAjSitemapUrls(today),
+        fetchAjSitemapUrls(yesterday)
+      ]);
+      candidateUrls = [...todayUrls, ...yestUrls];
+    } catch (e) {
+      console.warn(`[scrapeAjNewsVideos] Sitemap fetch error: ${e.message}`);
+      return [];
+    }
+  }
+
+  const pinned = getPinnedAjUrlsForScraper();
+  if (pinned.length) {
+    const seen = new Set(pinned);
+    const tail = candidateUrls.filter((u) => !seen.has(u));
+    candidateUrls = [...pinned, ...tail];
+    console.log(`[scrapeAjNewsVideos] Prepended ${pinned.length} pinned URL(s) (NEWS_AJ_PINNED_URLS or default quotable)`);
   }
 
   if (candidateUrls.length === 0) {
-    console.warn('[scrapeAjNewsVideos] No candidate URLs from sitemap');
+    console.warn('[scrapeAjNewsVideos] No candidate URLs (sitemap + pinned empty)');
     return [];
   }
 
@@ -2852,7 +2978,7 @@ async function scrapeAjNewsVideos(targetCount = 5) {
           }
         });
 
-        await page.goto(articleUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        await page.goto(stripAjPageFragment(articleUrl), { waitUntil: 'domcontentloaded', timeout: 45000 });
         // Scroll to trigger lazy-loaded players
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
         await new Promise(r => setTimeout(r, 2000));
@@ -2897,7 +3023,7 @@ async function scrapeAjNewsVideos(targetCount = 5) {
       }
 
       results.push({
-        articleUrl,
+        articleUrl: stripAjPageFragment(articleUrl),
         videoId:        capturedVideoId,
         hlsUrl:         capturedHls,
         orientation,
@@ -3301,7 +3427,7 @@ app.post('/generate-full-script',
           articleUrl:      it.link || it.url || '',
           title:           it.title || '',
           hlsUrl:          it.hlsUrl || it.videoUrl || '',
-          orientation:     it.sourceOrientation || 'landscape',
+          orientation:     (it.sourceOrientation || it.orientation || 'landscape').toLowerCase(),
           pillarboxFilter: it.pillarboxFilter || null
         }));
       console.log(`[/generate-full-script] ajVideoPool built from request items: ${ajVideoPool.length} videos (no re-scrape)`);
@@ -3315,6 +3441,7 @@ app.post('/generate-full-script',
         templateId: formType === 'short' ? 'short-form' : 'long-form',
         contentType,
         createdBy: 'dashboard',
+        expectedSynth: !!req.body.expectedSynth,
         order: {
           inputs: {
             sourceType: 'site_scrape',
@@ -3341,6 +3468,8 @@ app.post('/generate-full-script',
       console.log(`[/generate-full-script] deliverySpec.platforms overridden by request: ${req.body.platforms.join(', ')}`);
     }
     // Store the semantic jobSpecId on req so script_gen can cross-reference it into the job card
+    let preGenerateAllReady = false;
+    let preGenerateCommitments = {};
     if (req.jobSpec) {
       req.jobSpecId = req.jobSpec.jobId;
 
@@ -3432,8 +3561,50 @@ app.post('/generate-full-script',
         // NR: job confirmed event — queryable per customer/content type
         nrJobConfirmed(req.jobSpec, allReady);
 
+        preGenerateAllReady = allReady;
+        preGenerateCommitments = commitments;
       } catch(commitErr) {
         console.warn('[PRE-GENERATE] Gate sign-off check failed (non-fatal):', commitErr.message);
+      }
+
+      // ── QA generate confirm (monitor + optional enforce) ─────────────────
+      // Gate workers sign off above; this tracks whether QA should also ack before generate (policy).
+      try {
+        const qaGen = require('./lib/qa_generate_confirm');
+        qaGen.persistAfterPreGenerate(req.jobSpec.jobId, {
+          allReady: preGenerateAllReady,
+          commitments: preGenerateCommitments
+        });
+        const policyOn = qaGen.isPolicyEnabled();
+        pipelineBus.emit('qa:generate_confirm_policy', {
+          jobId: req.jobSpec.jobId,
+          contentType: req.jobSpec.contentType,
+          templateId: req.jobSpec.templateId,
+          policyEnabled: policyOn,
+          gateWorkersAllReady: preGenerateAllReady,
+          monitorNote: policyOn
+            ? 'QA_CONFIRM_ON_GENERATE: require qaGenerateConfirmed on this POST or POST /job/:id/qa-confirm-generate'
+            : 'QA generate confirm not required — set QA_CONFIRM_ON_GENERATE=true to enforce QA ack like gate sign-off'
+        });
+        nrQaGenerateConfirmPolicy(req.jobSpec, {
+          policyEnabled: policyOn,
+          gateWorkersAllReady: preGenerateAllReady
+        });
+        if (policyOn) {
+          // Same POST must include qaGenerateConfirmed (each generate creates a new jobId — no separate round-trip yet).
+          if (!qaGen.requestSaysConfirmed(req.body)) {
+            return res.status(422).json({
+              error:
+                'QA_CONFIRM_ON_GENERATE is enabled: include qaGenerateConfirmed: true on this POST after QA agents agree (same request as gate sign-off). Optional: POST /job/:jobId/qa-confirm-generate for manual DB ack when reusing a job id.',
+              needsQaGenerateConfirm: true,
+              jobId: req.jobSpec.jobId,
+              gateWorkersAllReady: preGenerateAllReady
+            });
+          }
+          qaGen.markConfirmed(req.jobSpec.jobId, { source: 'request_body' });
+        }
+      } catch (qaErr) {
+        console.warn('[generate-full-script] QA generate confirm hook failed (non-fatal):', qaErr.message);
       }
     }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);

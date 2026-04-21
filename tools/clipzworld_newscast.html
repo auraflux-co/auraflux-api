@@ -97,7 +97,7 @@ body {
   top: 48px;        /* sits directly below the 48px top bar */
   left: 0;
   margin-left: 0;   /* explicit: no inherited offset */
-  width: 720px;     /* narrowed from 860px to pull back from Bobby G's face */
+  width: 720px;     /* 0415 baseline */
   display: flex;
   flex-direction: column;
   opacity: 0;
@@ -277,7 +277,7 @@ body {
 }
 
 .story-item {
-  background: rgba(8,14,28,1.0);
+  background: rgba(13,20,36,0.97);
   border-left: 4px solid var(--gold);
   border-top: 1px solid rgba(199,175,79,0.18);
   border-bottom: 1px solid rgba(199,175,79,0.18);
@@ -308,7 +308,7 @@ body {
 .story-item.active {
   border-left-color: var(--red);
   border-left-width: 5px;
-  background: rgba(34,48,75,1.0);
+  background: rgba(34,48,75,0.95);
 }
 
 .story-item.active .story-item-cat { color: var(--red); }
@@ -337,6 +337,23 @@ body.sidebar-hidden .story-list {
   visibility: hidden;
   transition: opacity 0.5s ease, visibility 0.5s ease;
 }
+
+/* Baseline lock: 2026-04-15 overlay profile */
+body.baseline-0415 .lower-third { width: 720px; }
+body.baseline-0415 .lt-top { background: var(--gold); }
+body.baseline-0415 .top-bar {
+  background: linear-gradient(90deg, var(--navy) 0%, rgba(34,48,75,0.95) 60%, transparent 100%);
+}
+body.baseline-0415 .top-brand { color: var(--gold); }
+body.baseline-0415 .segment-tag {
+  background: var(--navy);
+  border: 1px solid var(--gold);
+}
+body.baseline-0415 .story-item {
+  background: rgba(13,20,36,0.97);
+}
+body.baseline-0415 .story-item-cat { color: var(--gold); }
+body.baseline-0415 .story-item.active { background: rgba(34,48,75,0.95); }
 
 </style>
 </head>

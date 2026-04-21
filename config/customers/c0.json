@@ -31,6 +31,7 @@
       "designDefaults": {
         "chrome": {
           "name": "BECAUSE THE LIGHT WAS ON",
+          "baselinePreset": "0415",
 
           "colors": {
             "primary":    "#22304b",
@@ -222,6 +223,7 @@
           "clipIntroSkipSecs": 5,
           "clipMaxSecs": 25,
           "watermarkBox": {
+            "enabled": false,
             "x": 1780,
             "y": 960,
             "w": 120,
@@ -401,6 +403,7 @@
           "clipIntroSkipSecs": 5,
           "clipMaxSecs": 25,
           "watermarkBox": {
+            "enabled": false,
             "x": 1780,
             "y": 960,
             "w": 120,

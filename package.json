@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -32,7 +32,12 @@
     "test:coverage": "jest --coverage",
     "format": "prettier --write \"**/*.{js,json,md,html,css,yml,yaml}\" --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{js,json,md,html,css,yml,yaml}\" --ignore-path .prettierignore",
-    "load-test:health": "node scripts/load_test_autocannon.js"
+    "load-test:health": "node scripts/load_test_autocannon.js",
+    "smoke:deploy": "node scripts/smoke_deploy.cjs",
+    "phase-a:batch": "node scripts/phase_a_batch.cjs",
+    "phase-a:watch": "node scripts/phase_a_gate_watch.cjs",
+    "phase-a:batch:sim": "HEYGEN_SIM_MODE=true node scripts/phase_a_batch.cjs",
+    "job-monitor": "node scripts/job_monitor_daemon.cjs"
   },
   "keywords": [
     "ai",
