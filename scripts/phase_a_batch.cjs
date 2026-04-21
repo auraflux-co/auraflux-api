@@ -5,11 +5,18 @@
  *
  * Usage: node scripts/phase_a_batch.cjs
  * Env: TWITCH_CLIENT_ID + TWITCH_TOKEN for Twitch step; server on PHASE_A_API (default http://127.0.0.1:3000).
+ * After the four script calls: writes logs/phase_a_last_run.json, polls /job-spec every 1s (see phase_a_gate_watch.cjs),
+ * then writes docs/reports/phase_a_rca_<timestamp>.md. Set PHASE_A_SKIP_WATCH=1 to skip watch+RCA.
+ * For long runs without the 2-minute "stable exit", set PHASE_A_WATCH_EXIT_ON_STABLE=0 (still exits on Gate 5 or PHASE_A_WATCH_MAX_MS).
+ * For 24/7 transition logging for all jobs, run `npm run job-monitor` or PM2 app `job-monitor` (see ecosystem.config.js).
  */
 'use strict';
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+const fs = require('fs');
+const path = require('path');
 const axios = require('axios');
+const { watchPhaseAJobs, writeRcaReport } = require('./phase_a_gate_watch.cjs');
 
 const BASE = process.env.PHASE_A_API || 'http://127.0.0.1:3000';
 const GEN_TIMEOUT_MS = parseInt(process.env.PHASE_A_SCRIPT_TIMEOUT_MS || '720000', 10);
@@ -36,7 +43,18 @@ function todayLabel() {
   });
 }
 
+function jobMeta(label, data) {
+  return {
+    label,
+    scriptJobId: data.scriptJobId || data.metricsJobId,
+    semanticJobId: data.semanticJobId || null
+  };
+}
+
 async function generateFullScript(body, label) {
+  if (process.env.QA_CONFIRM_ON_GENERATE === 'true') {
+    body = { ...body, qaGenerateConfirmed: true };
+  }
   console.log(`\n${'═'.repeat(12)} ${label} ${'═'.repeat(12)}`);
   const start = Date.now();
   const r = await axios.post(`${BASE}/generate-full-script`, body, {
@@ -107,7 +125,7 @@ async function nbaLongOneClip() {
     thumbnailUrl: scr.data.thumbnail || '',
     localPath: scr.data.localPath || ''
   };
-  await generateFullScript(
+  return await generateFullScript(
     { type: 'nba', items: [item], date: todayLabel(), tone: 'deadpan' },
     '1) NBA long-form (1 clip)'
   );
@@ -126,9 +144,12 @@ async function newsLongOne() {
     thumbnail: first.thumbnail || '',
     description: '',
     enclosure: {},
-    hlsUrl: first.hlsUrl || first.videoUrl || ''
+    hlsUrl: first.hlsUrl || first.videoUrl || '',
+    // Must match /generate-full-script ajVideoPool + news_source portrait gate (defaults were landscape)
+    sourceOrientation: (first.orientation || 'portrait').toLowerCase(),
+    pillarboxFilter: first.pillarboxFilter || null
   };
-  await generateFullScript(
+  return await generateFullScript(
     { type: 'news', items: [item], date: todayLabel(), tone: 'deadpan' },
     '2) News long-form (1 clip)'
   );
@@ -181,7 +202,7 @@ async function twitchJasonTwoClips() {
     game: two[0].game_name || '',
     thumbnailUrl: two[0].thumbnail_url || ''
   };
-  await generateFullScript(
+  return await generateFullScript(
     { type: 'twitch', items: [item], date: todayLabel(), tone: 'deadpan' },
     '3) Twitch long-form — Jason — 2 clips'
   );
@@ -245,7 +266,7 @@ async function nbaShort() {
     clipUrl: scr.data.videoUrl,
     thumbnailUrl: scr.data.thumbnail || ''
   };
-  await generateFullScript(
+  return await generateFullScript(
     {
       type: 'nba-short',
       items: [item],
@@ -266,12 +287,38 @@ async function main() {
     console.warn('⚠ VectCut offline in /health — NBA overlay / some shorts may degrade; continuing.');
   }
 
-  await nbaLongOneClip();
-  await newsLongOne();
-  await twitchJasonTwoClips();
-  await nbaShort();
+  const jobs = [
+    jobMeta('1_nba_lf', await nbaLongOneClip()),
+    jobMeta('2_news_lf', await newsLongOne()),
+    jobMeta('3_twitch_jason_2', await twitchJasonTwoClips()),
+    jobMeta('4_nba_short', await nbaShort())
+  ];
 
-  console.log('\n✅ Phase A batch finished all four /generate-full-script calls.');
+  const runMeta = { startedAt: new Date().toISOString(), jobs };
+  const lastRunPath = path.join(__dirname, '..', 'logs', 'phase_a_last_run.json');
+  fs.mkdirSync(path.dirname(lastRunPath), { recursive: true });
+  fs.writeFileSync(lastRunPath, JSON.stringify(runMeta, null, 2), 'utf8');
+  console.log(`\n✅ Phase A batch finished all four /generate-full-script calls.`);
+  console.log(`Wrote ${lastRunPath}`);
+
+  if (process.env.PHASE_A_SKIP_WATCH === '1') {
+    console.log('PHASE_A_SKIP_WATCH=1 — skipping 1s gate poll + RCA (re-run: node scripts/phase_a_gate_watch.cjs --file logs/phase_a_last_run.json)');
+    return;
+  }
+
+  const pollId = (j) => j.semanticJobId || j.scriptJobId;
+  const watchIds = jobs.map(pollId).filter(Boolean);
+  const labelById = Object.fromEntries(
+    jobs
+      .map((j) => {
+        const pid = pollId(j);
+        return pid ? [pid, j.label] : null;
+      })
+      .filter(Boolean)
+  );
+  console.log('\n── Gate watch (1s interval, RCA on exit) ──');
+  await watchPhaseAJobs(watchIds, { labelById });
+  await writeRcaReport(jobs, runMeta);
 }
 
 main().catch((e) => {
