@@ -88,7 +88,7 @@ All 4 pass → ready to tell Rob we're ready for Render.
 ## How To Start Your Session
 
 ```
-1. Read CLAUDE.md → STATUS.md
+1. Read cursor.md → STATUS.md
 2. Check synth test output (ls -lt output/*.mp4 | head -6)
 3. Tell me what you see on the videos
 4. I'll spawn Sub-Agent A for the [pause] + pillarbox fixes
