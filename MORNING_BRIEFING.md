@@ -1,3 +1,12 @@
+# Morning Briefing — 2026-04-22
+
+## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 22)
+- **Task:** Process `OVERNIGHT_TASKS.md`.
+- **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
+- **Actions:** Updated `STATUS.md`, `MORNING_BRIEFING.md`, and `docs/ops/COMMIT_CHECKLIST.md` to reflect a no-op run.
+
+---
+
 # Morning Briefing — 2026-04-21
 
 ## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 21)
