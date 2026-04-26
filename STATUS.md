@@ -168,6 +168,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **docs+tests: cursor.md handoff, architecture docs, ops runbooks, new scripts/tests, assets** — 04/25-26 session documentation and supporting files. | cursor.md, docs/*, scripts/*, test/*, assets/*, STATUS.md | — | 2026-04-26 |
 | Cursor | **chore(pipeline): server.js + remaining lib, config, scripts, ecosystem 04/25-26** — All remaining modified pipeline files from 2-day session. | server.js, lib/*, config/*, scripts/*, ecosystem.config.js, STATUS.md | — | 2026-04-26 |
 | Cursor | **feat(infra): gate_policy_runner, job_spec_contracts, job_spec_preflight, heygen_folder_map, gate1_video_reviewer, ai_memory_trace, ai_prompt_replay** — new lib modules. | lib/gate_policy_runner.js, lib/job_spec_contracts.js, lib/job_spec_preflight.js, lib/heygen_folder_map.js, lib/gates/gate1_video_reviewer.js, lib/ai_memory_trace.js, lib/ai_prompt_replay.js, STATUS.md | — | 2026-04-26 |
 | Cursor | **feat(dashboard): inline clip/story picker, batch shorts, picker feeds both** — cwn_production.html picker for NBA/news, generateShort/Batch respect selections. | cwn_production.html, STATUS.md | — | 2026-04-26 |

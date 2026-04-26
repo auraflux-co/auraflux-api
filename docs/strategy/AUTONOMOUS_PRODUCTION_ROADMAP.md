@@ -926,7 +926,7 @@ This doc is ONE OF SEVEN active planning docs. Agents working on CWN must read t
 
 | Doc | Scope | When to read |
 |---|---|---|
-| `CLAUDE.md` | Architecture + rules + gotchas | Every session start |
+| `cursor.md` | Architecture + rules + gotchas | Every session start |
 | `STATUS.md` | Current work state, last agent actions | Every session start |
 | `GATED_PIPELINE_ARCHITECTURE.md` | Pipeline principles + gate semantics | Any pipeline / gate work |
 | `BUSINESS_STRATEGY.md` | Positioning, GTM, pricing, competitive | Any customer-facing copy, pricing decision, or positioning question |
@@ -950,7 +950,7 @@ Then:
 
 3. **Every smoke test gap gets tagged with which phase it unblocks** when added to the handoff queue. Gaps that only matter for public-launch autonomous mode (multi-client isolation, retry caps, scheduling accuracy) go to the Phase 2/3 backlog, not the current smoke test handoff.
 
-4. **Cross-reference additions:** after approval, update `CLAUDE.md` session-start instructions to include both new docs in the "read these three files" list. Currently it says CLAUDE.md + STATUS.md + GATED_PIPELINE_ARCHITECTURE.md. Should become "those three" for engineering work + "those three + BUSINESS_STRATEGY.md + AUTONOMOUS_PRODUCTION_ROADMAP.md" for roadmap/strategy work.
+4. **Cross-reference additions:** after approval, update `cursor.md` session-start instructions to include both new docs in the "read these three files" list. Currently it says cursor.md + STATUS.md + GATED_PIPELINE_ARCHITECTURE.md. Should become "those three" for engineering work + "those three + BUSINESS_STRATEGY.md + AUTONOMOUS_PRODUCTION_ROADMAP.md" for roadmap/strategy work.
 
 5. **Phase 2 planning begins after Phase 1 exit**, not now. This doc is the spec; the phase-specific handoff is written when we're ready to execute.
 

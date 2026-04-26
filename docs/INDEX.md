@@ -1,10 +1,10 @@
 # CWN Docs Index
-**Last updated:** 2026-04-15  
+**Last updated:** 2026-04-21  
 **Migration target:** Confluence (CP space) — this index becomes the CP space map
 
 Root-level files that must stay in root (read by agents at session start):
-- `CLAUDE.md` — architecture, rules, gotchas. Read first every session.
-- `STATUS.md` — current tasks, active locks, what's working, what's next
+- `cursor.md` — architecture, rules, gotchas. Read first every session.
+- `STATUS.md` — current tasks, active locks, what's next; **Definition of done (full job run)** — all gates + creative/overlay spec + usable `output/` video (not Gate 0/1 alone)
 - `AGENT_FILE_REGISTRY.md` — file ownership tiers, lock protocol, agent roster
 - `README.md` — project overview
 - `CONTRIBUTING.md` — fork/setup, tests, what not to commit (public GitHub hygiene)
@@ -165,6 +165,7 @@ How to run the operation day-to-day. Checklists, agent schedules, commit rules.
 | `RENDER_RUNBOOK.md` | Step-by-step production render runbook — pre-render checklist, gate sequence, per-content-type notes, recovery procedures, expected timings |
 | `LAUNCH_PLAN_2026.md` | **Blocks 2–4** — E2E tests, full long-form runs, Render, Prettier, load test, rename audit, Rovo (pointer) |
 | `LAUNCH_TEST_MATRIX.md` | **Block 2** test matrix — 6 E2E + 3 full long-form + short-form sign-off table |
+| `PIPELINE_FAILURE_PLAYBOOK.md` | **When jobs stay red** — classify layer → one-line RCA → tune vs fix vs **documented** waiver → never idle on red; evidence order (`pipeline_events`, `run_metrics`, spec). Use when automation hasn’t produced green. |
 | `RENDER_DEPLOY_CHECKLIST.md` | **Render** deploy steps + links to `POST_RENDER_TASKS.md` |
 | `RENAME_CWN_TO_AURAFLUX.md` | Safe rename order — not a single mass replace |
 | `ATLASSIAN_ROVO_MCP.md` | **Rovo / Jira MCP** — ID-side setup, not in-repo code |

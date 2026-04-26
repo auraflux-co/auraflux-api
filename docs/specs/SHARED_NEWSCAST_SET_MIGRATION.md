@@ -10,7 +10,7 @@
 
 CWN runs three content types through the long-form pipeline: News, NBA, and Twitch. Each one currently has its own independent path for rendering on-screen chrome (the non-clip, non-avatar visual layer — top bar, sidebar, lower-third flag, TV card, logo, ticker). This has produced three separate problems:
 
-**A. TV card generation is three separate Canvas functions with different dimensions.** Twitch renders a 640×360 profile-photo rectangle, NBA renders a game-thumbnail rectangle, News renders an Open Graph-scraped article rectangle. The `CLAUDE.md` spec says all three should use the same 640×360 TV-shape with gold 5px border in the same `OVERLAY_ZONE` at `{x:1240, y:40, w:640, h:360}`, but the implementations have drifted. The actual current pixel dimensions per content type come from a separate Explore task that's queued — this doc flags the drift but does not resolve it.
+**A. TV card generation is three separate Canvas functions with different dimensions.** Twitch renders a 640×360 profile-photo rectangle, NBA renders a game-thumbnail rectangle, News renders an Open Graph-scraped article rectangle. The `cursor.md` spec says all three should use the same 640×360 TV-shape with gold 5px border in the same `OVERLAY_ZONE` at `{x:1240, y:40, w:640, h:360}`, but the implementations have drifted. The actual current pixel dimensions per content type come from a separate Explore task that's queued — this doc flags the drift but does not resolve it.
 
 **B. News newscast chrome is News-only.** Fix 7 shipped `tools/clipzworld_newscast.html` + `generateNewscastOverlay()` — a Puppeteer-rendered HTML template that produces a full-screen transparent PNG containing the top bar, sidebar, and lower-third flag positioned for the News layout. NBA and Twitch have no equivalent. Their current overlays are just TV card + logo + ticker burns layered onto raw source + avatar video. No top bar. No sidebar. No lower-third flag.
 
@@ -107,7 +107,7 @@ Five phases. Each phase gated on the previous one passing smoke tests before mov
 
 **Phase 4: Same for Twitch.** Rob provides Twitch brand hex values (confirm `#9146FF` primary, provide accent) and answers Twitch-specific open questions. Populate the `twitch` entry. Wire Twitch's assembly path. Build `generateTwitchTVCard()` (this may be close to the existing Twitch intro-card function, just re-targeted to the shared OVERLAY_ZONE). Smoke test loop. Iterate.
 
-**Phase 5: Deprecate legacy overlay paths.** Once all three content types run through the unified overlay, delete or archive the old per-content-type overlay code paths. Update `CLAUDE.md` to reflect the new unified architecture. Update `GATED_PIPELINE_ARCHITECTURE.md` if needed. This is a cleanup pass, not a functional change.
+**Phase 5: Deprecate legacy overlay paths.** Once all three content types run through the unified overlay, delete or archive the old per-content-type overlay code paths. Update `cursor.md` to reflect the new unified architecture. Update `GATED_PIPELINE_ARCHITECTURE.md` if needed. This is a cleanup pass, not a functional change.
 
 **Rough schedule guess** (for planning only, not a commitment): Phase 1 is days-to-weeks depending on smoke test cadence. Phase 2 is a single focused session. Phase 3 is days. Phase 4 is days. Phase 5 is a single cleanup pass. Total wall-clock estimate: 2-4 weeks from News lock to Phase 5 done.
 
