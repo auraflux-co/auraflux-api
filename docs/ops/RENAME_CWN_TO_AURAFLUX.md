@@ -39,4 +39,4 @@ rg -n "CWN|cwn-production|ClipzWorld" --glob '!node_modules' --glob '!data/*.db'
 ## Done when
 
 - [ ] Grep for legacy brand in **customer-visible** surfaces is either updated or explicitly “legacy alias”.  
-- [ ] Agents update `STATUS.md` / `CLAUDE.md` references in same PR series.
+- [ ] Agents update `STATUS.md` / `cursor.md` references in same PR series.

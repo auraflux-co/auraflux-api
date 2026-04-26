@@ -4,6 +4,9 @@
 **Owner**: Cline (Implementation) / Rob (Creative Approval)  
 **Status**: ✅ LOCKED — Phase 2 implementation reference
 
+> Note: For active short-form production behavior, use `docs/specs/SHORT_FORM_SPEC.md` as the source of truth.
+> This document contains legacy planning details and may not match current runtime layout/audio rules.
+
 ---
 
 ## 1. Short-Form Canvas

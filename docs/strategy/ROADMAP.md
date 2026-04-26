@@ -11,7 +11,7 @@
 - ❌ **Not in this doc:** anything required to pass the 6 test cases. Those live in the rotation docs.
 - ❌ **Not in this doc:** Priority 1 items from `POST_PUBLISH_TASKS.md` (white strip, ticker gap, auto-publish creative pieces) — test-blocking polish.
 - ❌ **Not in this doc:** NBA live-narration rework — currently in `LONGFORM_FIX_ROTATION.md` as test-blocking architectural work.
-- ✅ **In this doc:** everything else parked "post-test" across STATUS.md, POST_PUBLISH_TASKS.md, OVERNIGHT_TASKS.md, CLAUDE.md, GATED_PIPELINE_ARCHITECTURE.md, SERVER_SPLIT_PLAN.md, HEYGEN_OPTIONS_INVENTORY.md, and the user's memory files.
+- ✅ **In this doc:** everything else parked "post-test" across STATUS.md, POST_PUBLISH_TASKS.md, OVERNIGHT_TASKS.md, cursor.md, GATED_PIPELINE_ARCHITECTURE.md, SERVER_SPLIT_PLAN.md, HEYGEN_OPTIONS_INVENTORY.md, and the user's memory files.
 
 ## Prioritization method — MoSCoW + dependency graph
 
@@ -102,7 +102,7 @@ Each item is tagged with one MoSCoW tier and a `Blocks` field naming downstream 
 
 - **Complete `server.js` module split (Phase 2–5)**
   - **What:** Continue extracting modules per `SERVER_SPLIT_PLAN.md`. Phase 1 done (config/logger/metrics). Next: `lib/services/gemini.js`, `lib/services/heygen.js`, `lib/services/ffmpeg.js`, `lib/routes/*.js`. Target: server.js drops from ~10,000 lines to ~300.
-  - **Why:** server.js hit 172K tokens — Aider literally cannot load it alongside CLAUDE.md + STATUS.md (200K context limit). Every future refactor is harder until this ships. Unblocks every Aider task that touches server.js.
+  - **Why:** server.js hit 172K tokens — Aider literally cannot load it alongside cursor.md + STATUS.md (200K context limit). Every future refactor is harder until this ships. Unblocks every Aider task that touches server.js.
   - **Blocks:** Enterprise → rate limiting per endpoint, input validation, structured logging, Gate self-healing upgrades (most gate code is inside server.js), `/health` + `/metrics` route modules, and every other `lib/routes/*.js` extraction
   - **Effort:** XL (5 modules × ~1 night each per OVERNIGHT_TASKS.md cadence)
   - **Source:** SERVER_SPLIT_PLAN.md, OVERNIGHT_TASKS.md
@@ -548,5 +548,5 @@ Each item is tagged with one MoSCoW tier and a `Blocks` field naming downstream 
 
 | Date | Change |
 |------|--------|
-| 2026-04-12 | Doc created. Harvested from STATUS.md Tech Debt, POST_PUBLISH_TASKS.md §2–4, OVERNIGHT_TASKS.md (QUEUED + INDEPENDENT + BLOCKED), CLAUDE.md Pending Features, GATED_PIPELINE_ARCHITECTURE.md §4.4, SERVER_SPLIT_PLAN.md, HEYGEN_OPTIONS_INVENTORY.md, memory files. ~45 items across 4 buckets. |
+| 2026-04-12 | Doc created. Harvested from STATUS.md Tech Debt, POST_PUBLISH_TASKS.md §2–4, OVERNIGHT_TASKS.md (QUEUED + INDEPENDENT + BLOCKED), cursor.md Pending Features, GATED_PIPELINE_ARCHITECTURE.md §4.4, SERVER_SPLIT_PLAN.md, HEYGEN_OPTIONS_INVENTORY.md, memory files. ~45 items across 4 buckets. |
 | 2026-04-18 | Added Bucket 5 — Platform Ownership. Strategy: Upload-Post and TubeBuddy are middlemen calling the same APIs AuraFlux has direct access to. Phase 2: direct YouTube/TikTok/Instagram alongside Upload-Post. Phase 3: Upload-Post removed, full direct ownership. Phase 3+: YouTube Analytics + Search Console integration = TubeBuddy lite, data-driven content calendar per customer. TubeBuddy (no API, ToS violation risk) documented as Won't-Have. Cards/end screens/TikTok scheduling/A/B thumbnails all confirmed as platform limitations — documented in Won't-Have with AuraFlux workarounds. Also: publish copy overhaul + upload-post wiring fix promoted to Must-Have (handoff written: CLINE_HANDOFF_PUBLISH_SYSTEM_OVERHAUL.md). Railway references updated to Render throughout. |

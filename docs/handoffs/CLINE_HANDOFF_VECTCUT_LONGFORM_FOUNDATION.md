@@ -7,7 +7,7 @@
 **Do NOT touch:** Short-form `assembleShortForm()` path, CapCut init/add-segment/finalize for split-screen, `/capcut/ticker`, `/capcut/logo`. All existing VectCutClient methods stay working — this handoff ADDS new methods for long-form audio mixing without breaking short-form.
 **Before committing:** Re-read `COMMIT_CHECKLIST.md`. Atomic staging. STATUS.md update. LONGFORM_FIX_ROTATION.md update.
 
-**Prerequisite check:** VectCutAPI server must be running on port 9001 before testing. Verify with `curl http://localhost:9001/health` or `lsof -iTCP:9001`. If not running, start with `cd VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py` per CLAUDE.md.
+**Prerequisite check:** VectCutAPI server must be running on port 9001 before testing. Verify with `curl http://localhost:9001/health` or `lsof -iTCP:9001`. If not running, start with `cd VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py` per cursor.md.
 
 ---
 
@@ -32,7 +32,7 @@ Referenced from:
 
 ### Python-side — `VectCutAPI/` directory
 
-Flask server at `VectCutAPI/capcut_server.py`, port 9001. Existing endpoints (per `cat VectCutAPI/ 2>/dev/null` earlier tonight + CLAUDE.md references):
+Flask server at `VectCutAPI/capcut_server.py`, port 9001. Existing endpoints (per `cat VectCutAPI/ 2>/dev/null` earlier tonight + cursor.md references):
 - `POST /capcut/init` — create a new draft, returns `draftId`
 - `POST /capcut/add-segment` — add a video segment to draft
 - `POST /capcut/ticker` — add ticker text element

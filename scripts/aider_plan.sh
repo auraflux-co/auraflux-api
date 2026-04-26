@@ -28,7 +28,7 @@ cd "$REPO_DIR"
 PLAN_PROMPT="You are the Aider agent for CWN Production. Your job right now is NOT to write code — it is to do a thorough audit of the entire codebase and produce a complete multi-week task plan.
 
 Read these files carefully:
-- CLAUDE.md (architecture, rules, all gotchas)
+- cursor.md (architecture, rules, all gotchas)
 - STATUS.md (current state, what's working, what's pending)
 - OVERNIGHT_TASKS.md (existing task queue)
 - SERVER_SPLIT_PLAN.md (module split plan — Phase 1 done, items 4-15 remain)

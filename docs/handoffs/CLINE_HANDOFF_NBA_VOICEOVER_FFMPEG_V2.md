@@ -580,7 +580,7 @@ git revert HEAD && git push
 Restores the old `-shortest` FFmpeg voiceover which is known-degraded but functional. Not ideal but safe.
 
 **If the FFmpeg 3-track amix fails during testing:**
-- Check FFmpeg version — `amix`, `apad`, `atrim`, `stream_loop` all require FFmpeg 4+. Per CLAUDE.md, the installed FFmpeg is v8.1 so this should be fine.
+- Check FFmpeg version — `amix`, `apad`, `atrim`, `stream_loop` all require FFmpeg 4+. Per cursor.md, the installed FFmpeg is v8.1 so this should be fine.
 - Check the filter graph syntax — common mistakes: missing semicolons between filter chains, wrong pad labels, mismatched input counts
 - Test the FFmpeg command directly in terminal before iterating code:
   ```bash

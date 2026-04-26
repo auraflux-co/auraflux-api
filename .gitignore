@@ -13,11 +13,27 @@ cwn-drive-key.json
 .DS_Store
 .aider*
 
-# Runtime state — never commit
-# NOTE: data/episode_counters.json and logs/errors.jsonl are already tracked;
-# leaving them tracked so episode numbers survive fresh clones and error logs
-# stay accessible to the overnight runner. Only brand-new runtime files go here.
+# Runtime state — never commit (public / contributor clones)
 data/jobs.json
+data/cwn.db
+data/cwn.db-shm
+data/cwn.db-wal
+data/upload_status.json
+data/episode_counters.json
+data/chrome_synth_history.json
+
+# Log streams and Roo local snapshots (recreated at runtime — see lib/error_logger.js, lib/roo_bridge.js)
+logs/errors.jsonl
+logs/pipeline_events.jsonl
+logs/job_run_timeline.jsonl
+logs/gate_fixes.jsonl
+logs/newrelic_health.json
+logs/roo_status.json
+logs/roo_trigger.json
+logs/roo_notification.md
+
+# Roo Code — machine-local autostart only (modes/rules stay tracked)
+.roo/autostart.json
 
 # Binary / media assets — keep locally or in Google Drive
 *.mp4

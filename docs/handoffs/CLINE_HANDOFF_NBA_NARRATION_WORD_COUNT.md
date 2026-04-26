@@ -55,7 +55,7 @@ ESPN highlight clip duration: ${g.clipDuration ? Math.round(g.clipDuration) + ' 
 NARRATION word count target for this game: ${g.clipDuration ? Math.round(g.clipDuration * 2.5) + '-' + Math.round(g.clipDuration * 3) + ' words' : '70-90 words (default)'}
 ```
 
-**Why the 2.5-3.0 multiplier:** Bobby G speaks at `HEYGEN_SPEAK_SPEED=0.85` (per CLAUDE.md). Normal English speech is ~150 words per minute = 2.5 words per second. Slightly slowed to 0.85 speed = effective ~2.5-3.0 words per second of rendered video. The narration needs to cover the full clip without feeling rushed, so target the UPPER bound of that range to leave margin for pauses.
+**Why the 2.5-3.0 multiplier:** Bobby G speaks at `HEYGEN_SPEAK_SPEED=0.85` (per cursor.md). Normal English speech is ~150 words per minute = 2.5 words per second. Slightly slowed to 0.85 speed = effective ~2.5-3.0 words per second of rendered video. The narration needs to cover the full clip without feeling rushed, so target the UPPER bound of that range to leave margin for pauses.
 
 For a 25-second clip: `25 * 2.5 = 62 words` to `25 * 3 = 75 words`. Gemini targets that range.
 

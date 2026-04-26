@@ -33,6 +33,43 @@
 
 ---
 
+## Content Confirmation Gate (pre-generation)
+
+**Every C1+ job must pass a Content Confirmation step before Gate 0 fires.**  
+This is the architectural lesson learned from C0: credits, compute, and HeyGen time are wasted when the wrong clips enter the pipeline. The fix is a pre-generation stage where the system fetches and previews available content, and the customer (or operator) confirms the exact inputs before the job spec is committed.
+
+```
+URL / CDN / Search Query / Upload
+        ↓
+  Stage 0: CONTENT DISCOVERY       ← fetch, scrape, or receive files
+  [scrape metadata, probe duration, check orientation]
+        ↓
+  Stage 0b: CONFIRM                ← show preview in UI, customer selects/deselects
+  [job spec gets locked: exact URLs, durations, orientations written to order.inputs.items]
+        ↓
+  createJobSpec() fires             ← scaffold + voice resolve against confirmed inputs
+        ↓
+  Gate 0 → Gate 1 → Assembly ...   ← pipeline runs on confirmed, verified inputs only
+```
+
+### Three entry workflows map to the same confirmation step:
+
+| Workflow | Fetch trigger | Confirmation |
+|---|---|---|
+| **Link Content** | Customer pastes URL / CDN path | System scrapes + shows clip preview (title, duration, orientation) |
+| **Use My Content** | Customer uploads MP4/MOV | System probes with ffprobe + shows file metadata |
+| **Start From Idea** | Customer describes topic | System proposes clips from web/search API; customer picks |
+
+In all three cases, `order.inputs.items` is fully populated **before** `createJobSpec()` runs. This enables:
+- `designSpec.sceneStructure.sceneHeaders` resolved from actual clip count  
+- `designSpec.voice.lockedOutro` resolved from confirmed content type and customer config  
+- Gate 1 `canProduce()` passes on first call, no retries needed  
+- Zero wasted HeyGen / AI generation runs on unconfirmed content
+
+**C0 today:** The PICK CLIPS / PICK STORIES UI buttons on the dashboard implement this pattern for the manual C0 workflow. C1+ inherits the same pattern but automated via the frontend before job creation.
+
+---
+
 ## Gemini + FFmpeg (long-to-short, without Pegasus)
 
 - **Gemini** can propose **windows** (start/end) and **crop** hints for vertical.  
@@ -66,4 +103,4 @@ Typical path: **SDXL still** → **SVD img2vid** (14–25 frames) → **FFmpeg**
 - **MCP** in Cursor for DB/docs when this stack gets its own services.  
 - **`.cursor/rules`** (or project rules) for: no shelling to raw user strings in FFmpeg, `fluent-ffmpeg` or audited args only.
 
-This repository’s **current** development rules remain in `CLAUDE.md` and `AGENT_FILE_REGISTRY.md`.
+This repository’s **current** development rules remain in `cursor.md` and `AGENT_FILE_REGISTRY.md`.

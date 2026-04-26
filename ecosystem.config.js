@@ -5,7 +5,9 @@
 // Reload:     npm run restart    (zero-downtime)
 // Persist:    pm2 startup && pm2 save  (survive reboots)
 
-require('dotenv').config();
+// Ensure .env values override stale inherited shell/PM2 daemon variables (repo root, not PM2 cwd).
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 
 module.exports = {
   apps: [
@@ -48,6 +50,7 @@ module.exports = {
       env: {
         NODE_ENV: 'development',
         PORT: 3000,
+        CWN_OVERLAY_BASELINE_PRESET: '0415',
         GATE_TEST_MODE: 'false', // PRODUCTION RUN — intentional full pipeline test
       },
 
@@ -55,6 +58,7 @@ module.exports = {
       env_production: {
         NODE_ENV: 'production',
         PORT: 3000,
+        CWN_OVERLAY_BASELINE_PRESET: '0415',
         GATE_TEST_MODE: 'false', // PRODUCTION RUN — intentional full pipeline test
       },
 
@@ -69,6 +73,29 @@ module.exports = {
         '*.mp4',
         '*.png',
       ],
+    },
+    {
+      name: 'job-monitor',
+      script: 'scripts/job_monitor_daemon.cjs',
+      cwd: __dirname,
+      interpreter: 'node',
+      watch: false,
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 3000,
+      out_file: 'logs/job_monitor_pm2.log',
+      error_file: 'logs/job_monitor_pm2.log',
+      merge_logs: true,
+      env: {
+        NODE_ENV: 'development',
+        JOB_MONITOR_INTERVAL_MS: '60000',
+        JOB_MONITOR_LOG: 'logs/job_monitor_events.jsonl',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        JOB_MONITOR_INTERVAL_MS: '60000',
+        JOB_MONITOR_LOG: 'logs/job_monitor_events.jsonl',
+      },
     },
   ],
 };

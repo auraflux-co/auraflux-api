@@ -1,4 +1,38 @@
+# Morning Briefing — 2026-04-24
+
+## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 24)
+- **Task:** Process `OVERNIGHT_TASKS.md`.
+- **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
+- **Actions:** Updated `STATUS.md`, `MORNING_BRIEFING.md`, and `docs/ops/COMMIT_CHECKLIST.md` to reflect a no-op run.
+
+---
+
+# Morning Briefing — 2026-04-23
+
+## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 23)
+- **Task:** Process `OVERNIGHT_TASKS.md`.
+- **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
+- **Actions:** Updated `STATUS.md`, `MORNING_BRIEFING.md`, and `docs/ops/COMMIT_CHECKLIST.md` to reflect a no-op run.
+
+---
+
+# Morning Briefing — 2026-04-22
+
+## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 22)
+- **Task:** Process `OVERNIGHT_TASKS.md`.
+- **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
+- **Actions:** Updated `STATUS.md`, `MORNING_BRIEFING.md`, and `docs/ops/COMMIT_CHECKLIST.md` to reflect a no-op run.
+
+---
+
 # Morning Briefing — 2026-04-21
+
+## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 21)
+- **Task:** Process `OVERNIGHT_TASKS.md`.
+- **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
+- **Actions:** Updated `STATUS.md` and this briefing to reflect a no-op run.
+
+---
 
 **Session closed:** ~2:00 AM ET Apr 20 (Rob went to bed)
 **Commit:** `02c8911` — fix(chrome): cap flag at 88px + Twitch sidebar reads segment cardData
@@ -81,7 +115,7 @@ All 4 pass → ready to tell Rob we're ready for Render.
 ## How To Start Your Session
 
 ```
-1. Read CLAUDE.md → STATUS.md
+1. Read cursor.md → STATUS.md
 2. Check synth test output (ls -lt output/*.mp4 | head -6)
 3. Tell me what you see on the videos
 4. I'll spawn Sub-Agent A for the [pause] + pillarbox fixes
