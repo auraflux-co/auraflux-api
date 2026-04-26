@@ -1545,3 +1545,75 @@ Every fix below is tagged **[C0]** (fixes c0 short/long production), **[C1+]** (
 - `groupSegmentsByLabel` `itemIdx: -1` issue (LOW)
 - Gate 5 `passed: anySuccess` misleading outcome (LOW)
 - Twitch clip picker (no picker today — shorts auto-select highest-viewed clip across all streamers)
+
+---
+
+## Next Session Plan — 2026-04-27 (Rob + Cursor)
+
+**Gate before everything:** Run Phase A E2E matrix first. Only move to Block 3+ if tests pass.
+
+### Block 2 — Tests (run first, ~1 hr)
+1. `npm test` — Jest 84 tests, should be clean
+2. Phase A E2E matrix — 6 job types (NBA long, News long, Twitch long, NBA short, News short, Twitch short)
+   - Verify: NBA short REACTION appears (ordinal fix), clip is 25s not 4s
+   - Verify: Gate 3a semantic content check fires for wrong-clip
+   - Verify: Gate 4/5 runs regardless of Drive upload outcome
+   - Verify: Dashboard picker selections flow into `generateShort` + `generateShortBatch`
+
+### Block 3 — Render Migration (~2 hrs, IF tests pass)
+5. Render.com deploy — Node.js backend (`api.auraflux.co`)
+   - Source: `docs/ops/RENDER_RUNBOOK.md`, `docs/ops/RENDER_DEPLOY_CHECKLIST.md`, `docs/ops/POST_RENDER_TASKS.md`
+   - Post-deploy tasks from `docs/handoffs/AIDER_HANDOFF_RENDER_READINESS.md`
+   - Env vars, PM2 → Render process config, health check endpoint
+
+### Block 4 — Platform/Architecture (~remaining hours)
+6. **Rovo MCP setup** — `docs/ops/ATLASSIAN_ROVO_MCP.md`
+7. **C0→C1+ UI code review + Equinox assessment**
+   - Review `cwn_production.html` against C1+ Next.js/Shadcn target
+   - Equinox = the new frontend design system; assess migration gap
+8. **Autocannon load test** (HeyGen OFF, `GATE_TEST_MODE=true`)
+   - `scripts/load_test_autocannon.js` — `npm run load-test:health`
+9. **Prettier setup** — `.prettierrc` exists, run `npm run format:check` then `npm run format`
+10. **GitHub cleanup / .gitignore** — audit untracked files, tighten ignore rules
+11. **CWN→AuraFlux rename audit** — `docs/ops/RENAME_CWN_TO_AURAFLUX.md`
+
+### Block 4 (cont.) — C1+ Decoupled Stack Architecture
+
+Per `docs/architecture/DECOUPLED_VIDEO_PRODUCT_STACK.md`:
+
+**Stack:**
+- Frontend: Vercel / Next.js / Shadcn (`app.auraflux.co`)
+- Backend: Render.com / Node.js — FFmpeg, API orchestration (`api.auraflux.co`)
+- AI Engine: RunPod.io / ComfyUI + SVD — GPU video generation (serverless endpoints)
+
+**Key workflows to implement:**
+1. **Text-to-Video**: Prompt → Node.js → RunPod ComfyUI (SVD/SVD-XT) → S3 URL → frontend
+2. **Long→Short**: Upload → Node.js FFmpeg split+resize 9:16 → optional ComfyUI enhancement
+3. **Short→Long**: Upload short → ComfyUI high-context extension or FFmpeg loop/assemble
+
+**Gemini clip analysis integration:**
+- Feed video to Gemini → get top 3 timestamps + crop suggestions
+- Pass timestamps to FFmpeg: `ffmpeg -ss [start] -i [input] -to [end] -c copy [output]`
+- For vertical crop: `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920`
+- Use `ffprobe` to find keyframe cut points for lossless cuts
+
+**SVD pipeline:**
+- SDXL generates base image from prompt
+- SVD (`svd.safetensors` 14 frames / `svd_xt.safetensors` 25 frames) generates clip
+- FFmpeg post-process: frame sequence → MP4, upscale, stitch scenes
+- ComfyUI as node-based orchestrator for SDXL→SVD→FFmpeg workflows
+- `motion_bucket_id`: low = subtle motion, high = intense; VRAM-limited → start 512×512 then upscale
+
+**RunPod setup steps (when ready):**
+1. Create account, add credits, launch ComfyUI pod (RTX 4090 recommended)
+2. Select template with Stable Video Diffusion (`thecooltechguy/ComfyUI-Stable-Video-Diffusion`)
+3. Wire RunPod API key on Render backend (never on frontend)
+4. Use serverless endpoints for on-demand, cost-controlled generation
+5. Pause pods when not in use
+
+**Pending C1+ blockers (carry-forward):**
+- Gate 5 per-customer `UPLOADPOST_PROFILE` credentials
+- BullMQ queue workers for pipeline stages
+- Cloudflare R2 replacing local disk / Google Drive for C1+ assets
+- `groupSegmentsByLabel` `itemIdx: -1` (LOW)
+- Gate 5 `passed: anySuccess` misleading (LOW)
