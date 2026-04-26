@@ -74,6 +74,22 @@ git push origin <your-branch-name>
 
 ---
 
+## 5b. MERGE TO MAIN
+
+**Cursor (Sonnet 4.6 / Act mode) reviews and merges to main — agents do not push directly to main.**
+
+```bash
+# From the feature branch, open a PR via gh:
+gh pr create --title "..." --body "..."
+# Or merge directly if the branch is ready and tested:
+git checkout main && git merge --no-ff <branch> && git push origin main
+```
+
+The planning model (Composer 2) handles architectural decisions before implementation.
+The act model (Sonnet 4.6) handles implementation, commits, and merges.
+
+---
+
 ## 6. WHAT NOT TO COMMIT
 
 - `.env` — never
@@ -108,7 +124,8 @@ Before editing any Tier 1 file (`server.js`, `cwn_production.html`, etc.):
 
 ## CWN Test Matrix (for context — do not run tests yourself)
 
-6 tests per gate. Claude Code runs these after each gate's fixes merge.
+6 tests per gate. Cursor (Sonnet 4.6, Act mode) runs these after each gate's fixes merge.
+Planning decisions go through Composer 2 (Plan mode) first.
 
 | Test | Type | Form | Gate 4 destination |
 |------|------|------|--------------------|
