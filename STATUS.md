@@ -168,6 +168,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **chore(cursor): .cursor/agents + .cursor/rules for Cursor agent guidance** — planning.md and planning-action-models.mdc for Cursor agent workflow. | .cursor/agents/planning.md, .cursor/rules/planning-action-models.mdc, STATUS.md | — | 2026-04-26 |
 | Cursor | **feat(scripts+tests+assets): new utility scripts, test suite, runbooks, RCA reports, fonts** — supporting tooling for 04/25-26 session. | scripts/*, test/*, docs/ops/*, docs/reports/*, assets/*, tools/*, STATUS.md | — | 2026-04-26 |
 | Cursor | **docs+tests: cursor.md handoff, architecture docs, ops runbooks, new scripts/tests, assets** — 04/25-26 session documentation and supporting files. | cursor.md, docs/*, scripts/*, test/*, assets/*, STATUS.md | — | 2026-04-26 |
 | Cursor | **chore(pipeline): server.js + remaining lib, config, scripts, ecosystem 04/25-26** — All remaining modified pipeline files from 2-day session. | server.js, lib/*, config/*, scripts/*, ecosystem.config.js, STATUS.md | — | 2026-04-26 |
