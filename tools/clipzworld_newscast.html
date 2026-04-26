@@ -344,7 +344,9 @@ body.baseline-0415 .lt-top { background: var(--gold); }
 body.baseline-0415 .top-bar {
   background: linear-gradient(90deg, var(--navy) 0%, rgba(34,48,75,0.95) 60%, transparent 100%);
 }
-body.baseline-0415 .top-brand { color: var(--gold); }
+/* Episode + show title: high-contrast white on navy top bar */
+body.baseline-0415 .top-show,
+body.baseline-0415 .top-brand { color: #ffffff; }
 body.baseline-0415 .segment-tag {
   background: var(--navy);
   border: 1px solid var(--gold);
@@ -354,6 +356,27 @@ body.baseline-0415 .story-item {
 }
 body.baseline-0415 .story-item-cat { color: var(--gold); }
 body.baseline-0415 .story-item.active { background: rgba(34,48,75,0.95); }
+
+/* ═══════════════════════════════════════
+   BOTTOM-RIGHT LOGO — always visible
+═══════════════════════════════════════ */
+.cwn-logo-wrap {
+  position: absolute;
+  left: 1725px;
+  top: 910px;
+  width: 90px;
+  height: 90px;
+  opacity: 0.85;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.cwn-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
 
 </style>
 </head>
@@ -381,6 +404,11 @@ body.baseline-0415 .story-item.active { background: rgba(34,48,75,0.95); }
 
 <!-- STORY LIST — populated dynamically by generateNewscastOverlay() via page.evaluate() -->
 <div class="story-list">
+</div>
+
+<!-- LOGO -->
+<div class="cwn-logo-wrap">
+  <img class="cwn-logo-img" src="/assets/cwn_logo.png" alt="CWN logo" />
 </div>
 
 <!-- LOWER THIRD (TV card — hidden by default, shown via .visible class) -->
