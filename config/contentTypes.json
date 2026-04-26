@@ -113,7 +113,7 @@
         "module": "./sources/twitch_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_TWITCH_ID",
         "format": "portrait",
         "speakSpeed": 0.95
       },
@@ -149,7 +149,7 @@
         "module": "./sources/nba_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_NBA_ID",
         "format": "portrait",
         "speakSpeed": 0.95
       },
@@ -185,7 +185,7 @@
         "module": "./sources/news_source"
       },
       "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_SHORT_ID",
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_NEWS_ID",
         "format": "portrait",
         "speakSpeed": 0.95
       },

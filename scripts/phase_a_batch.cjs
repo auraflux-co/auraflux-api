@@ -4,15 +4,28 @@
  * Mirrors dashboard payloads to POST /generate-full-script.
  *
  * Usage: node scripts/phase_a_batch.cjs
- * Env: TWITCH_CLIENT_ID + TWITCH_TOKEN for Twitch step; server on PHASE_A_API (default http://127.0.0.1:3000).
- * After the four script calls: writes logs/phase_a_last_run.json, polls /job-spec every 1s (see phase_a_gate_watch.cjs),
+ * Env:
+ *   PHASE_A_JOBS — comma list to run a subset (default all four). Keys:
+ *     nba_lf | news_lf | twitch_jason_2 | nba_short | news_short | twitch_short
+ *     Example mini smoke: PHASE_A_JOBS=nba_lf,news_short
+ *     Example: PHASE_A_JOBS=news_lf,twitch_short
+ *   TWITCH_CLIENT_ID + TWITCH_TOKEN for Twitch step only.
+ *   Server: PHASE_A_API (default http://127.0.0.1:3000).
+ * After the four script calls: writes logs/phase_a_last_run.json, polls /job-spec every 1s for **scriptJobId** rows (see phase_a_gate_watch.cjs),
  * then writes docs/reports/phase_a_rca_<timestamp>.md. Set PHASE_A_SKIP_WATCH=1 to skip watch+RCA.
- * For long runs without the 2-minute "stable exit", set PHASE_A_WATCH_EXIT_ON_STABLE=0 (still exits on Gate 5 or PHASE_A_WATCH_MAX_MS).
+ * Defaults (unless env set): PHASE_A_WATCH_EXIT_ON_STABLE=0, PHASE_A_WATCH_MAX_MS=2h — poll until Gate 5 or max time, not "stable 2 min".
  * For 24/7 transition logging for all jobs, run `npm run job-monitor` or PM2 app `job-monitor` (see ecosystem.config.js).
  */
 'use strict';
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+// Default: keep polling until Gate 5 or max duration — do not stop on "2 min stable" while jobs are still moving.
+if (process.env.PHASE_A_WATCH_EXIT_ON_STABLE === undefined) {
+  process.env.PHASE_A_WATCH_EXIT_ON_STABLE = '0';
+}
+if (process.env.PHASE_A_WATCH_MAX_MS === undefined) {
+  process.env.PHASE_A_WATCH_MAX_MS = String(2 * 60 * 60 * 1000);
+}
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -155,6 +168,103 @@ async function newsLongOne() {
   );
 }
 
+/** News short-form — same feed item shape as long-form; template short via formType. */
+async function newsShortOne() {
+  const news = await axios.get(`${BASE}/news/us-canada-videos`, { timeout: 600000 });
+  if (!news.data.ok) throw new Error(`News feed: ${news.data.error || 'not ok'}`);
+  const vids = news.data.videos || [];
+  const first = vids.find((v) => v.hlsUrl || v.videoUrl) || vids[0];
+  if (!first) throw new Error('News short: no videos in feed');
+  const item = {
+    title: first.title || '',
+    link: first.url || '',
+    pubDate: first.publishedAt || '',
+    thumbnail: first.thumbnail || '',
+    description: '',
+    enclosure: {},
+    hlsUrl: first.hlsUrl || first.videoUrl || '',
+    sourceOrientation: (first.orientation || 'portrait').toLowerCase(),
+    pillarboxFilter: first.pillarboxFilter || null
+  };
+  return await generateFullScript(
+    {
+      type: 'news-short',
+      formType: 'short',
+      items: [item],
+      date: todayLabel(),
+      tone: 'deadpan'
+    },
+    'News short-form (1 story)'
+  );
+}
+
+/** Twitch short-form — 1 clip, Helix (requires TWITCH_CLIENT_ID + TWITCH_TOKEN). */
+async function twitchShortOne() {
+  const cid = process.env.TWITCH_CLIENT_ID;
+  const tok = process.env.TWITCH_TOKEN;
+  if (!cid || !tok) {
+    throw new Error('TWITCH_CLIENT_ID and TWITCH_TOKEN must be set in .env for twitch_short');
+  }
+  const login = (process.env.PHASE_A_TWITCH_SHORT_LOGIN || 'jasontheween').toLowerCase();
+  const headers = { 'Client-Id': cid, Authorization: `Bearer ${tok}` };
+  const userResp = await axios.get(`https://api.twitch.tv/helix/users?login=${login}`, {
+    headers,
+    timeout: 15000
+  });
+  const user = userResp.data && userResp.data.data && userResp.data.data[0];
+  if (!user) throw new Error(`Twitch short: user not found — ${login}`);
+  const since = new Date(Date.now() - 86400000 * 2).toISOString();
+  const clipsResp = await axios.get(
+    `https://api.twitch.tv/helix/clips?broadcaster_id=${user.id}&first=20&started_at=${since}`,
+    { headers, timeout: 15000 }
+  );
+  const raw = (clipsResp.data && clipsResp.data.data) || [];
+  const minSec = parseInt(process.env.PHASE_A_TWITCH_SHORT_MIN_SEC || '30', 10) || 30;
+  const valid = raw.filter((c) => isRealTitle(c.title) && Number(c.duration) >= minSec);
+  valid.sort((a, b) => Number(b.duration) - Number(a.duration));
+  const one = valid.slice(0, 1);
+  if (one.length < 1) {
+    throw new Error(
+      `Twitch short: need 1 clip with title + duration>=${minSec}s in 48h for ${login} (Gate 0 short-form floor). Got ${raw.length} raw clips, ${valid.length} after filter.`
+    );
+  }
+  const c = one[0];
+  const displayName = user.display_name || login;
+  const item = {
+    streamer: user.display_name,
+    displayName,
+    notes: '',
+    clipsPerStreamer: 1,
+    targetClipsPerStreamer: 1,
+    clips: [
+      {
+        rank: 1,
+        isBackup: false,
+        title: c.title,
+        url: c.url,
+        views: c.view_count,
+        game: c.game_name || '',
+        thumbnailUrl: c.thumbnail_url || ''
+      }
+    ],
+    title: c.title,
+    url: c.url,
+    views: c.view_count,
+    game: c.game_name || '',
+    thumbnailUrl: c.thumbnail_url || ''
+  };
+  return await generateFullScript(
+    {
+      type: 'twitch-short',
+      formType: 'short',
+      items: [item],
+      date: todayLabel(),
+      tone: 'deadpan'
+    },
+    'Twitch short-form (1 clip)'
+  );
+}
+
 async function twitchJasonTwoClips() {
   const cid = process.env.TWITCH_CLIENT_ID;
   const tok = process.env.TWITCH_TOKEN;
@@ -278,8 +388,26 @@ async function nbaShort() {
   );
 }
 
+const DEFAULT_PHASE_A_STEPS = ['nba_lf', 'news_lf', 'twitch_jason_2', 'nba_short'];
+
 async function main() {
+  const stepEnv = (process.env.PHASE_A_JOBS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const steps = stepEnv.length ? stepEnv : DEFAULT_PHASE_A_STEPS;
+
+  const stepRunners = {
+    nba_lf: async () => jobMeta('1_nba_lf', await nbaLongOneClip()),
+    news_lf: async () => jobMeta('2_news_lf', await newsLongOne()),
+    twitch_jason_2: async () => jobMeta('3_twitch_jason_2', await twitchJasonTwoClips()),
+    nba_short: async () => jobMeta('4_nba_short', await nbaShort()),
+    news_short: async () => jobMeta('5_news_short', await newsShortOne()),
+    twitch_short: async () => jobMeta('6_twitch_short', await twitchShortOne())
+  };
+
   console.log(`Phase A batch → ${BASE} (script timeout ${GEN_TIMEOUT_MS}ms)`);
+  console.log(`Steps: ${steps.join(' → ')}`);
   const h = await axios.get(`${BASE}/health`, { timeout: 5000 });
   if (!(h.data && h.data.ok)) throw new Error('Health check failed');
   console.log('Health OK —', (h.data.dependencies && h.data.dependencies.HEYGEN_API_KEY && h.data.dependencies.HEYGEN_API_KEY.status) || '?', 'HeyGen');
@@ -287,18 +415,22 @@ async function main() {
     console.warn('⚠ VectCut offline in /health — NBA overlay / some shorts may degrade; continuing.');
   }
 
-  const jobs = [
-    jobMeta('1_nba_lf', await nbaLongOneClip()),
-    jobMeta('2_news_lf', await newsLongOne()),
-    jobMeta('3_twitch_jason_2', await twitchJasonTwoClips()),
-    jobMeta('4_nba_short', await nbaShort())
-  ];
+  const jobs = [];
+  for (const key of steps) {
+    const run = stepRunners[key];
+    if (!run) {
+      throw new Error(
+        `Unknown PHASE_A_JOBS key "${key}". Use: ${Object.keys(stepRunners).join(', ')}`
+      );
+    }
+    jobs.push(await run());
+  }
 
-  const runMeta = { startedAt: new Date().toISOString(), jobs };
+  const runMeta = { startedAt: new Date().toISOString(), jobs, steps };
   const lastRunPath = path.join(__dirname, '..', 'logs', 'phase_a_last_run.json');
   fs.mkdirSync(path.dirname(lastRunPath), { recursive: true });
   fs.writeFileSync(lastRunPath, JSON.stringify(runMeta, null, 2), 'utf8');
-  console.log(`\n✅ Phase A batch finished all four /generate-full-script calls.`);
+  console.log(`\n✅ Phase A batch finished ${jobs.length} /generate-full-script call(s).`);
   console.log(`Wrote ${lastRunPath}`);
 
   if (process.env.PHASE_A_SKIP_WATCH === '1') {
@@ -306,7 +438,10 @@ async function main() {
     return;
   }
 
-  const pollId = (j) => j.semanticJobId || j.scriptJobId;
+  // Gate results and /job-spec gate snapshots live on **script** job ids (script_nba_…), not the
+  // semantic fetch row (c0_COMPACT_FETCH_…). Polling semantic ids makes the watch look "stuck"
+  // at pending with no gates while the script job is actually moving.
+  const pollId = (j) => j.scriptJobId || j.semanticJobId;
   const watchIds = jobs.map(pollId).filter(Boolean);
   const labelById = Object.fromEntries(
     jobs

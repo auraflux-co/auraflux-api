@@ -50,7 +50,7 @@ echo "✅ Starting Aider overnight task..." >> "$LOG_FILE"
 cd "$REPO_DIR"
 
 # The task prompt — tells Aider exactly what to do in one non-interactive pass
-TASK_PROMPT="Read OVERNIGHT_TASKS.md carefully. Find the FIRST task marked [ ] (not [x] or [~]) in the APPROVED section. Work on that ONE task only. Follow all rules in CLAUDE.md and COMMIT_CHECKLIST.md. After completing: run 'node --check server.js' if you touched server.js, update STATUS.md Last Agent Action table, update MORNING_BRIEFING.md with what you did, mark the task [x] in OVERNIGHT_TASKS.md, commit all changed files with a clear message, then run 'git push origin main'. Do not start a second task. If you cannot complete the task safely, write the error to MORNING_BRIEFING.md and exit without committing."
+TASK_PROMPT="Read OVERNIGHT_TASKS.md carefully. Find the FIRST task marked [ ] (not [x] or [~]) in the APPROVED section. Work on that ONE task only. Follow all rules in cursor.md and COMMIT_CHECKLIST.md. After completing: run 'node --check server.js' if you touched server.js, update STATUS.md Last Agent Action table, update MORNING_BRIEFING.md with what you did, mark the task [x] in OVERNIGHT_TASKS.md, commit all changed files with a clear message, then run 'git push origin main'. Do not start a second task. If you cannot complete the task safely, write the error to MORNING_BRIEFING.md and exit without committing."
 
 # Run Aider non-interactively with --message flag
 # --yes-always: auto-confirm file edits (no interactive prompts)

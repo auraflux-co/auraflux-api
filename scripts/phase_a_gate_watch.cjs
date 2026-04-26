@@ -8,6 +8,8 @@
  *   node scripts/phase_a_gate_watch.cjs --file logs/phase_a_last_run.json
  *
  * Env: PHASE_A_API (default http://127.0.0.1:3000), PHASE_A_WATCH_MAX_MS (default 3600000)
+ *      CWN_DB_PATH — same SQLite as the API (defaults to data/cwn.db) for disk fallback + merge
+ *      PHASE_A_WATCH_TICK_MS — if >0, log full gate matrix every N ms even when unchanged (default 0)
  */
 'use strict';
 
@@ -20,19 +22,55 @@ const Database = require('better-sqlite3');
 const BASE = process.env.PHASE_A_API || 'http://127.0.0.1:3000';
 const INTERVAL_MS = parseInt(process.env.PHASE_A_WATCH_INTERVAL_MS || '1000', 10);
 const MAX_MS = parseInt(process.env.PHASE_A_WATCH_MAX_MS || String(60 * 60 * 1000), 10);
-const DB_PATH = path.join(__dirname, '..', 'data', 'cwn.db');
+const DISK_DB_PATH = process.env.CWN_DB_PATH
+  ? path.resolve(process.env.CWN_DB_PATH)
+  : path.join(__dirname, '..', 'data', 'cwn.db');
 const REPORT_DIR = path.join(__dirname, '..', 'docs', 'reports');
+const TICK_MS = parseInt(process.env.PHASE_A_WATCH_TICK_MS || '0', 10) || 0;
 
 const GATE_ORDER = ['gate0', 'gate1', 'gate2', 'gate3a', 'gate3b', 'gate4', 'gate5'];
 
+/**
+ * One-line matrix for gates 0–5: pending | ok(score:outcome) | fail(outcome).
+ */
 function summarizeGates(gateResults) {
-  if (!gateResults || typeof gateResults !== 'object') return '';
+  if (!gateResults || typeof gateResults !== 'object') gateResults = {};
   return GATE_ORDER.map((g) => {
     const r = gateResults[g];
-    if (!r) return `${g}:-`;
+    if (!r || typeof r !== 'object') return `${g}:pending`;
     const o = r.outcome != null ? String(r.outcome).slice(0, 14) : '';
-    return `${g}:${r.passed ? 'OK' : 'XX'}${o ? ':' + o : ''}`;
+    const sc = r.score != null && r.score !== '' ? `${r.score}` : '';
+    if (r.passed === true) {
+      const mid = sc ? `${sc}${o ? ':' + o : ''}` : o || 'pass';
+      return `${g}:ok${mid ? '(' + mid + ')' : ''}`;
+    }
+    if (r.passed === false) {
+      return `${g}:fail${o ? '(' + o + ')' : ''}`;
+    }
+    return `${g}:unknown`;
   }).join(' ');
+}
+
+/**
+ * Merge authoritative gate_results (canonical + linked job ids) over job_spec JSON.
+ */
+function mergeSqliteGatesIntoSpec(spec) {
+  if (!spec || typeof spec !== 'object') return spec;
+  const jid = spec.jobId;
+  if (!jid || typeof jid !== 'string') return spec;
+  try {
+    const { getGateResults } = require(path.join(__dirname, '..', 'lib', 'db'));
+    const fromSql = getGateResults(jid);
+    return {
+      ...spec,
+      state: {
+        ...(spec.state || {}),
+        gateResults: { ...((spec.state && spec.state.gateResults) || {}), ...fromSql }
+      }
+    };
+  } catch (_) {
+    return spec;
+  }
 }
 
 function snapshotJobSpec(data) {
@@ -55,17 +93,40 @@ function snapshotJobSpec(data) {
  */
 function fetchSpecFromDisk(jobId) {
   try {
-    const { getJobBySpec } = require(path.join(__dirname, '..', 'lib', 'db'));
-    const spec = getJobBySpec(jobId);
+    const dbm = require(path.join(__dirname, '..', 'lib', 'db'));
+    dbm.initDb();
+    const fromSql = dbm.getGateResults(jobId);
+    const spec = dbm.getJobBySpec(jobId);
+    let merged;
+    let source;
     if (spec) {
-      return { jobId, source: 'sqlite_job_spec', ...snapshotJobSpec({ jobSpec: spec }) };
+      merged = mergeSqliteGatesIntoSpec({
+        ...spec,
+        jobId: spec.jobId || jobId,
+        state: { ...(spec.state || {}), gateResults: { ...((spec.state && spec.state.gateResults) || {}) } }
+      });
+      source = 'sqlite_job_spec';
+    } else if (Object.keys(fromSql).length > 0) {
+      const card = dbm.loadJob(jobId) || {};
+      const st = card.stage || card.status || 'unknown';
+      const saved = {};
+      if (card.outputPath || card.finalUrl) saved.assembledPath = card.outputPath || card.finalUrl;
+      merged = {
+        jobId,
+        customerId: card.customerId || 'c0',
+        state: { gateResults: fromSql, savedOutputs: saved, status: st }
+      };
+      source = 'sqlite_gates_only';
+    } else {
+      return null;
     }
+    return { jobId, source, ...snapshotJobSpec({ jobSpec: merged }) };
   } catch (_) {
     /* lib/db may fail if cwd/env differs */
   }
   try {
-    if (!fs.existsSync(DB_PATH)) return null;
-    const db = new Database(DB_PATH, { readonly: true });
+    if (!fs.existsSync(DISK_DB_PATH)) return null;
+    const db = new Database(DISK_DB_PATH, { readonly: true });
     const jobRow = db
       .prepare('SELECT stage, status, card FROM jobs WHERE id = ? OR script_job_id = ? ORDER BY updated_at DESC LIMIT 1')
       .get(jobId, jobId);
@@ -87,7 +148,7 @@ function fetchSpecFromDisk(jobId) {
     } catch (_) {}
     return {
       jobId,
-      source: 'sqlite_gates_only',
+      source: 'sqlite_gates_only_legacy',
       status: st,
       gates: summarizeGates(raw),
       raw,
@@ -106,7 +167,8 @@ async function fetchSpec(jobId) {
     validateStatus: () => true
   });
   if (r.status === 200 && r.data && !r.data.error && r.data.jobSpec) {
-    return { jobId, source: 'api', ...snapshotJobSpec({ jobSpec: r.data.jobSpec }) };
+    const merged = mergeSqliteGatesIntoSpec(r.data.jobSpec);
+    return { jobId, source: 'api', ...snapshotJobSpec({ jobSpec: merged }) };
   }
   const disk = fetchSpecFromDisk(jobId);
   if (disk) {
@@ -120,7 +182,8 @@ function loadJobIdsFromFile(p) {
   const j = JSON.parse(raw);
   const ids = [];
   for (const row of j.jobs || []) {
-    const pid = row.semanticJobId || row.scriptJobId;
+    // Match phase_a_batch.cjs: script row holds gateResults + getGateResults spine.
+    const pid = row.scriptJobId || row.semanticJobId;
     if (pid) ids.push(pid);
   }
   return { meta: j, ids, jobs: j.jobs || [] };
@@ -134,16 +197,21 @@ async function watchPhaseAJobs(jobIds, opts = {}) {
   const labelById = opts.labelById || {};
   const started = Date.now();
   const last = Object.fromEntries(jobIds.map((id) => [id, '']));
+  const lastTick = Object.fromEntries(jobIds.map((id) => [id, 0]));
   const now0 = Date.now();
   const stableSince = Object.fromEntries(jobIds.map((id) => [id, now0]));
   const STABLE_MS = parseInt(process.env.PHASE_A_WATCH_STABLE_MS || '120000', 10);
   const EXIT_ON_STABLE = process.env.PHASE_A_WATCH_EXIT_ON_STABLE !== '0';
   console.log(`\n[gate-watch] ${jobIds.length} job(s), poll every ${INTERVAL_MS}ms, max ${MAX_MS}ms → ${BASE}`);
   console.log(
+    `[gate-watch] Matrix: ${GATE_ORDER.join(' → ')} (pending = not persisted yet; merged from SQLite gate_results when local DB matches API)`
+  );
+  console.log(
     EXIT_ON_STABLE
       ? `[gate-watch] Early exit if all jobs unchanged for ${STABLE_MS}ms, or any job has Gate 5 persisted.`
       : `[gate-watch] Exit on Gate 5 or max duration only (PHASE_A_WATCH_EXIT_ON_STABLE=0).`
   );
+  if (TICK_MS > 0) console.log(`[gate-watch] PHASE_A_WATCH_TICK_MS=${TICK_MS} — periodic full matrix lines while unchanged`);
 
   while (Date.now() - started < MAX_MS) {
     let allStable = true;
@@ -154,11 +222,16 @@ async function watchPhaseAJobs(jobIds, opts = {}) {
         const src = snap.source ? `[${snap.source}] ` : '';
         const key = snap.error || `${src}${snap.status || 'n/a'} | ${snap.gates || '—'}`;
         if (snap.hasGate5) anyGate5 = true;
-        if (key !== last[id]) {
+        const lab = labelById[id] || id;
+        const ts = new Date().toISOString();
+        const tickDue = TICK_MS > 0 && Date.now() - (lastTick[id] || 0) >= TICK_MS;
+        const changed = key !== last[id];
+        if (changed) {
           last[id] = key;
           stableSince[id] = Date.now();
-          const lab = labelById[id] || id;
-          const ts = new Date().toISOString();
+          console.log(`[gate-watch] ${ts} ${lab} :: ${key}`);
+        } else if (tickDue) {
+          lastTick[id] = Date.now();
           console.log(`[gate-watch] ${ts} ${lab} :: ${key}`);
         }
         if (Date.now() - stableSince[id] < STABLE_MS) allStable = false;
@@ -211,7 +284,7 @@ function analyzeGate2(resultStr) {
 function buildRcaMarkdown({ jobs, meta }) {
   let db;
   try {
-    db = new Database(DB_PATH, { readonly: true });
+    db = new Database(DISK_DB_PATH, { readonly: true });
   } catch (e) {
     return `# Phase A RCA\n\nCould not open DB: ${e.message}\n`;
   }
@@ -382,5 +455,8 @@ module.exports = {
   buildRcaMarkdown,
   fetchSpec,
   fetchSpecFromDisk,
-  loadJobIdsFromFile
+  loadJobIdsFromFile,
+  summarizeGates,
+  mergeSqliteGatesIntoSpec,
+  GATE_ORDER
 };

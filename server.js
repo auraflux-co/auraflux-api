@@ -1,5 +1,7 @@
+// Load repo-root .env regardless of PM2/cwd (folder_id and keys live here).
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 require('newrelic');
-require('dotenv').config();
 
 // ── Build identity — set once at startup, never changes during runtime ────────
 const BUILD_INFO = (() => {
@@ -199,7 +201,6 @@ const cors       = require('cors');
 const helmet     = require('helmet');
 const axios      = require('axios');
 const fs         = require('fs');
-const path       = require('path');
 const { execFile, exec, execSync } = require('child_process');
 const Anthropic  = require('@anthropic-ai/sdk');
 const puppeteer  = require('puppeteer');
@@ -208,6 +209,32 @@ const puppeteer  = require('puppeteer');
 function puppeteerExecutablePath() {
   const envPath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH;
   if (envPath && fs.existsSync(envPath)) return envPath;
+
+  // Probe Puppeteer's own download cache (npx puppeteer browsers install chrome).
+  // Puppeteer caches under ~/.cache/puppeteer/chrome/<platform>-<ver>/chrome-<platform>/<App>.
+  try {
+    const cacheBase = path.join(require('os').homedir(), '.cache', 'puppeteer', 'chrome');
+    if (fs.existsSync(cacheBase)) {
+      // Walk one level of version dirs, newest first
+      const vers = fs.readdirSync(cacheBase).sort().reverse();
+      for (const ver of vers) {
+        const candidates = [
+          // macOS arm / x64
+          path.join(cacheBase, ver, 'chrome-mac-arm64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
+          path.join(cacheBase, ver, 'chrome-mac-x64',  'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
+          // Linux
+          path.join(cacheBase, ver, 'chrome-linux64', 'chrome'),
+          // Win
+          path.join(cacheBase, ver, 'chrome-win64', 'chrome.exe'),
+          path.join(cacheBase, ver, 'chrome-win32', 'chrome.exe'),
+        ];
+        for (const p of candidates) {
+          if (fs.existsSync(p)) return p;
+        }
+      }
+    }
+  } catch (_) { /* non-fatal */ }
+
   if (process.platform === 'darwin') {
     const p = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
     if (fs.existsSync(p)) return p;
@@ -240,6 +267,15 @@ const pipelineBus = require('./lib/pipeline_events');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
 const db = require('./lib/db');
 const { createJobSpec, getJobSpec } = require('./lib/job_spec');
+const {
+  shouldUseManualCheckpoint,
+  useC0ImmediateManualHold,
+  writeManualManifest,
+  prefetchManualSourceClips,
+  prepareC0ManualHoldAfterHeyGen,
+  applyManualOverrides
+} = require('./lib/manual_segment_workflow');
+const { persistJobSpecGateContracts } = require('./lib/job_spec_contracts');
 const { startMonitoring } = require('./lib/monitoring');
 const {
   generateTwitchLongformThumbnail,
@@ -400,6 +436,8 @@ try {
 } catch(e) {
   persistedJobs = {};
 }
+// Expose to assembly.js Gate 2 bypass (avoids circular require)
+global.persistedJobsRef = persistedJobs;
 
 // ── SQLite init + fallback load ───────────────────────────────────────────────
 // Initialize SQLite alongside jobs.json. During transition both run in parallel.
@@ -450,6 +488,8 @@ function saveJobCard(jobId, card) {
           label: scene.name || `STORY${i+1}_CLIP`,
           clipUrl: clipData.clipUrl || clipData.url || '',
           pageUrl: clipData.pageUrl || '',
+          clipTimingTargets: Array.isArray(clipData.clipTimingTargets) ? clipData.clipTimingTargets : [],
+          clipTimingFormat: clipData.clipTimingFormat || 'none',
           storyIndex: clipData.storyIndex ?? i,
           status: 'ready'  // source clips don't render via HeyGen
         };
@@ -460,6 +500,8 @@ function saveJobCard(jobId, card) {
   }
 
   persistedJobs[jobId] = { ...card, savedAt: new Date().toISOString() };
+  // Keep global ref in sync so assembly.js Gate 2 bypass can read card state
+  if (global.persistedJobsRef) global.persistedJobsRef[jobId] = persistedJobs[jobId];
   // Prune jobs older than 7 days to keep file small
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   for (const id of Object.keys(persistedJobs)) {
@@ -599,6 +641,13 @@ async function startHeyGenPoller(jobId, card) {
   const allAlreadyComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
   if (allAlreadyComplete) {
     console.log(`[heygen-poller:${jobId}] ⏭️ All segments already completed (sim/local) — emitting heygen:all_complete`);
+    try {
+      pipelineBus.emit('heygen:poll_terminal', {
+        jobId,
+        outcome: 'skipped_external_poll',
+        reason: 'all_segments_already_complete'
+      });
+    } catch (_e) { /* non-fatal */ }
     const sortedAvatarSegs = [...videoJobs]
       .filter(vj => vj.video_url)
       .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0));
@@ -619,7 +668,9 @@ async function startHeyGenPoller(jobId, card) {
               pageUrl: clip.pageUrl || '',
               label: clip.label || scene.name || `CLIP_${clipIdx}`,
               type: 'source_clip',
-              clipUrl: clip.clipUrl || clip.url || ''
+              clipUrl: clip.clipUrl || clip.url || '',
+              clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+              clipTimingFormat: clip.clipTimingFormat || 'none'
             });
           }
         } else {
@@ -635,7 +686,9 @@ async function startHeyGenPoller(jobId, card) {
                   pageUrl: clip.pageUrl || '',
                   label: clip.label || `${sceneKey}_CLIP`,
                   type: 'source_clip',
-                  clipUrl: clip.clipUrl || clip.url || ''
+                  clipUrl: clip.clipUrl || clip.url || '',
+                  clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+                  clipTimingFormat: clip.clipTimingFormat || 'none'
                 });
               }
             }
@@ -650,6 +703,34 @@ async function startHeyGenPoller(jobId, card) {
     updatedCard.heygen.videoJobs = videoJobs;
     updatedCard.stage = 'all_sent';
     saveJobCard(jobId, updatedCard);
+    if (shouldUseManualCheckpoint(updatedCard)) {
+      const man = writeManualManifest(jobId, updatedCard, segmentData);
+      const { dir, manifestPath, manifest, overlaysDir, overlaysReadme, copiedPreviews, operatorGuideDir } = man;
+      let prefetch = { logPath: path.join(dir, 'source_clip_prefetch.log') };
+      try {
+        prefetch = await prefetchManualSourceClips(dir, segmentData, { jobId });
+      } catch (e) {
+        console.error(`[heygen-poller:${jobId}] source clip prefetch failed (non-fatal): ${e.message}`);
+      }
+      updatedCard.stage = 'awaiting_manual_segments';
+      updatedCard.manualSegments = {
+        enabled: true,
+        status: 'awaiting_upload',
+        manualDir: dir,
+        manifestPath,
+        operatorGuideDir,
+        sourceClipPrefetchLogPath: prefetch.logPath,
+        overlaysDir,
+        overlaysReadme,
+        overlayPreviewCopies: copiedPreviews || [],
+        segmentCount: manifest.segments.length,
+        requestedAt: new Date().toISOString()
+      };
+      saveJobCard(jobId, updatedCard);
+      console.log(`[heygen-poller:${jobId}] 🛑 c0 manual checkpoint — ${dir} (see read_me/) — resume POST /job/${jobId}/manual-segments/resume`);
+      unregisterPoller(jobId);
+      return;
+    }
     const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
     pipelineBus.emit('heygen:all_complete', {
       jobId,
@@ -691,6 +772,13 @@ async function startHeyGenPoller(jobId, card) {
     if (pollCount > MAX_POLLS) {
       console.error(`[heygen-poller:${jobId}] ⏰ Timeout after ${MAX_POLL_MINUTES}min — giving up. Manual REFRESH IDs + ASSEMBLE required.`);
       nrEvent('HeyGenPollTimeout', { jobId, pollCount, segmentCount: videoJobs.length, contentType: card.contentType || 'twitch' });
+      try {
+        pipelineBus.emit('heygen:poll_terminal', {
+          jobId,
+          outcome: 'timeout',
+          reason: 'max_polls_exceeded'
+        });
+      } catch (_e) { /* non-fatal */ }
       unregisterPoller(jobId);
       return;
     }
@@ -751,6 +839,16 @@ async function startHeyGenPoller(jobId, card) {
         total: videoJobs.length,
         contentType: card.contentType || 'twitch'
       });
+      try {
+        pipelineBus.emit('heygen:poll_tick', {
+          jobId,
+          attempt: pollCount,
+          allComplete: completed.length === videoJobs.length,
+          pending: pending.length,
+          failed: failed.length,
+          total: videoJobs.length
+        });
+      } catch (_e) { /* non-fatal */ }
 
       if (failed.length > 0) {
         console.error(`[heygen-poller:${jobId}] ❌ ${failed.length} segment(s) failed in HeyGen: ${failed.map(f => f.sceneName).join(', ')} — manual intervention required`);
@@ -796,7 +894,9 @@ async function startHeyGenPoller(jobId, card) {
                 pageUrl: clip.pageUrl || '',
                 label:   clip.label || scene.name || `CLIP_${clipIdx}`,
                 type:    'source_clip',
-                clipUrl: clip.clipUrl || clip.url || ''
+                clipUrl: clip.clipUrl || clip.url || '',
+                clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+                clipTimingFormat: clip.clipTimingFormat || 'none'
               });
             }
           } else {
@@ -819,7 +919,9 @@ async function startHeyGenPoller(jobId, card) {
                     pageUrl: clip.pageUrl || '',
                     label:   clip.label || `${sceneKey}_CLIP`,
                     type:    'source_clip',
-                    clipUrl: clip.clipUrl || clip.url || ''
+                    clipUrl: clip.clipUrl || clip.url || '',
+                    clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+                    clipTimingFormat: clip.clipTimingFormat || 'none'
                   });
                 }
               }
@@ -901,6 +1003,41 @@ async function startHeyGenPoller(jobId, card) {
       }));
       updatedCard.stage = 'all_sent';
       saveJobCard(jobId, updatedCard);
+      if (shouldUseManualCheckpoint(updatedCard)) {
+        const man = writeManualManifest(jobId, updatedCard, segmentData);
+        const { dir, manifestPath, manifest, overlaysDir, overlaysReadme, copiedPreviews, operatorGuideDir } = man;
+        let prefetch = { logPath: path.join(dir, 'source_clip_prefetch.log') };
+        try {
+          prefetch = await prefetchManualSourceClips(dir, segmentData, { jobId });
+        } catch (e) {
+          console.error(`[heygen-poller:${jobId}] source clip prefetch failed (non-fatal): ${e.message}`);
+        }
+        updatedCard.stage = 'awaiting_manual_segments';
+        updatedCard.manualSegments = {
+          enabled: true,
+          status: 'awaiting_upload',
+          manualDir: dir,
+          manifestPath,
+          operatorGuideDir,
+          sourceClipPrefetchLogPath: prefetch.logPath,
+          overlaysDir,
+          overlaysReadme,
+          overlayPreviewCopies: copiedPreviews || [],
+          segmentCount: manifest.segments.length,
+          requestedAt: new Date().toISOString()
+        };
+        saveJobCard(jobId, updatedCard);
+        try {
+          pipelineBus.emit('heygen:poll_terminal', {
+            jobId,
+            outcome: 'manual_checkpoint_waiting',
+            reason: 'c0_manual_segment_hold'
+          });
+        } catch (_e) { /* non-fatal */ }
+        console.log(`[heygen-poller:${jobId}] 🛑 c0 manual checkpoint — ${dir} (see read_me/) — resume POST /job/${jobId}/manual-segments/resume`);
+        unregisterPoller(jobId);
+        return;
+      }
 
       // ── Emit pipeline event — Gate 2 QA + assembly handled by pipelineBus listener ──
       const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
@@ -910,6 +1047,13 @@ async function startHeyGenPoller(jobId, card) {
         segmentCount: videoJobs.length,
         segmentUrlCount: segmentUrls.length
       });
+      try {
+        pipelineBus.emit('heygen:poll_terminal', {
+          jobId,
+          outcome: 'all_segments_ready',
+          reason: null
+        });
+      } catch (_e) { /* non-fatal */ }
       pipelineBus.emit('heygen:all_complete', {
         jobId,
         contentType: card.contentType || 'twitch',
@@ -946,6 +1090,9 @@ setImmediate(() => {
   const candidates = Object.entries(persistedJobs).filter(([jobId, card]) => {
     if ((card.status || '') === 'dismissed') return false;
     const stage = card.stage || inferJobStage(card);
+    // Never re-trigger assembly for jobs that already finished — this was causing
+    // assembled jobs to oscillate back to all_sent on every server restart.
+    if (stage === 'assembled' || stage === 'published' || stage === 'gate5_forced') return false;
     if (stage !== 'all_sent') return false;
     const videoJobs = card.heygen?.videoJobs || [];
     if (!videoJobs.length) return false;
@@ -969,6 +1116,13 @@ setImmediate(() => {
       const formType = card.formType || 'compilation';
       const segmentUrls = videoJobs.filter(vj => vj.video_url).map(vj => vj.video_url);
       setTimeout(() => {
+        try {
+          pipelineBus.emit('heygen:poll_terminal', {
+            jobId,
+            outcome: 'all_segments_ready',
+            reason: 'startup_resume_card_complete'
+          });
+        } catch (_e) { /* non-fatal */ }
         pipelineBus.emit('heygen:all_complete', {
           jobId, contentType, formType, segmentUrls, card, segmentData: null
         });
@@ -1022,12 +1176,23 @@ setImmediate(() => {
         const heygenResult = await sendScriptToHeyGen(script, { contentType, format, jobId });
         if (heygenResult?.videoJobs?.length) {
           card.heygen = heygenResult;
-          card.stage = 'all_sent';
-          saveJobCard(jobId, card);
-          console.log(`[startup-resume:${jobId}] ✅ Sent ${heygenResult.videoJobs.length} scenes to HeyGen`);
-          startHeyGenPoller(jobId, card).catch(e => {
-            console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
-          });
+          const useManualImmediate = useC0ImmediateManualHold(card);
+          if (useManualImmediate) {
+            const prep = await prepareC0ManualHoldAfterHeyGen(jobId, card);
+            card.stage = 'awaiting_manual_segments';
+            card.manualSegments = prep.manualSegments;
+            saveJobCard(jobId, card);
+            console.log(
+              `[startup-resume:${jobId}] ✅ c0 immediate manual hold (${heygenResult.videoJobs.length} scenes sent, no poll) — ${prep.manualSegments.manualDir}`
+            );
+          } else {
+            card.stage = 'all_sent';
+            saveJobCard(jobId, card);
+            console.log(`[startup-resume:${jobId}] ✅ Sent ${heygenResult.videoJobs.length} scenes to HeyGen`);
+            startHeyGenPoller(jobId, card).catch(e => {
+              console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
+            });
+          }
         } else {
           console.warn(`[startup-resume:${jobId}] HeyGen returned no videoJobs — skipping poller start`);
         }
@@ -1056,8 +1221,19 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
   // Rebuild segmentData from card if null (e.g. emitted by startup resume after server restart)
   let segmentData = rawSegmentData;
   if (!segmentData) {
-    const videoJobs = card.heygen?.videoJobs || [];
-    const sourceClips = card.sourceClipSegments || [];
+    const segCard = _liveCard || card;
+    if (shouldUseManualCheckpoint(segCard) && segCard.manualSegments?.holdKind === 'immediate') {
+      const { buildManualHoldSegmentData } = require('./lib/manual_segment_workflow');
+      segmentData = buildManualHoldSegmentData(segCard);
+      const avatarCount = segmentData.filter(s => s.type === 'avatar').length;
+      const clipCount = segmentData.filter(s => s.type === 'source_clip').length;
+      logger.warn(
+        { jobId, avatarCount, clipCount },
+        'heygen:all_complete — segmentData from c0 immediate manual template (no HeyGen avatar URLs)'
+      );
+    } else {
+    const videoJobs = segCard.heygen?.videoJobs || [];
+    const sourceClips = segCard.sourceClipSegments || [];
 
     // Build avatar lookup by sceneName for fast access
     const avatarByName = {};
@@ -1068,37 +1244,39 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
     }
 
     // Use the script's scene order as the merge template so clips land in the right positions
-    const scriptScenes = card.script?.scenes || [];
+    const scriptScenes = segCard.script?.scenes || [];
     if (scriptScenes.length > 0) {
       let clipIdx = 0;
       segmentData = [];
       for (const scene of scriptScenes) {
         if (scene.type === 'source_clip') {
-          // Insert source clip in scene order
-          const clip = sourceClips[clipIdx] || card.orderedClipUrls?.[clipIdx];
+          // Explicit source_clip scenes (news, short-form)
+          const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
           if (clip) {
             segmentData.push({
               type: 'source_clip',
               url: clip.clipUrl || clip.url || '',
               label: clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
               pageUrl: clip.pageUrl || '',
+              clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+              clipTimingFormat: clip.clipTimingFormat || 'none',
               storyIndex: clip.storyIndex ?? clipIdx,
               sceneId: scene.name || scene.id
             });
           }
           clipIdx++;
         } else if (scene.type === 'avatar') {
-          // Match avatar segment by scene name (script uses scene.name, HeyGen uses sceneName)
+          // Avatar scene
           const sceneKey = scene.name || scene.id;
           const vj = avatarByName[sceneKey] ||
             Object.values(avatarByName).find(v => v.sceneName === sceneKey);
           if (vj) {
             const seg = { type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex };
             // Attach cardData for INTRO segments — chrome overlay reads this for flag + sidebar
-            if (card.contentType === 'news' && /STORY(\d+)_INTRO/i.test(vj.sceneName)) {
+            if (segCard.contentType === 'news' && /STORY(\d+)_INTRO/i.test(vj.sceneName)) {
               const storyMatch = vj.sceneName.match(/STORY(\d+)_INTRO/i);
               const storyIdx = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
-              const storyItem = (card.newsItems || [])[storyIdx];
+              const storyItem = (segCard.newsItems || [])[storyIdx];
               if (storyItem) {
                 seg.cardData = {
                   title:        storyItem.title    || `Story ${storyIdx + 1}`,
@@ -1109,13 +1287,13 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
                   source:       storyItem.source || ''
                 };
               }
-            } else if (card.contentType === 'nba' && /GAME(\d+)[_ ].*INTRO/i.test(vj.sceneName)) {
+            } else if (segCard.contentType === 'nba' && /GAME(\d+)[_ ].*INTRO/i.test(vj.sceneName)) {
               // NBA: attach game matchup data to INTRO segments for flag + sidebar
               const gameMatch = vj.sceneName.match(/GAME(\d+)/i);
               const gameIdx = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
               // Extract matchup from scene name: GAME1_CHARLOTTE_HORNETS_ORLANDO_MAGIC_INTRO
               const rawName = vj.sceneName.replace(/^GAME\d+[_ ]/i, '').replace(/[_ ]INTRO$/i, '').replace(/_/g, ' ');
-              const nbaItem = (card.nbaItems || [])[gameIdx];
+              const nbaItem = (segCard.nbaItems || [])[gameIdx];
               seg.cardData = {
                 title:   nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
                 matchup: nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
@@ -1123,13 +1301,13 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
                 storyId:  `game_${gameIdx + 1}`,
                 gameId:   nbaItem?.gameId || null
               };
-            } else if (card.contentType === 'twitch' && /[_ ]INTRO$/i.test(vj.sceneName)) {
+            } else if (segCard.contentType === 'twitch' && /[_ ]INTRO$/i.test(vj.sceneName)) {
               // Twitch: attach streamer data to INTRO segments for sidebar
               const namePart = vj.sceneName.replace(/[_ ]INTRO$/i, '').replace(/_/g, ' ').toLowerCase();
-              const streamer = (card.streamers || []).find(s =>
+              const streamer = (segCard.streamers || []).find(s =>
                 (s.displayName || '').toLowerCase() === namePart ||
                 (s.twitchUsername || '').toLowerCase() === namePart
-              ) || (card.streamers || [])[0];
+              ) || (segCard.streamers || [])[0];
               if (streamer) {
                 seg.cardData = {
                   title:    streamer.displayName || namePart,
@@ -1142,6 +1320,24 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
               }
             }
             segmentData.push(seg);
+
+            // SETUP-style clip insert (NBA/Twitch long-form): avatar + source_clip
+            if (scene.hasClipInsert) {
+              const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
+              if (clip) {
+                segmentData.push({
+                  type: 'source_clip',
+                  url: clip.clipUrl || clip.url || '',
+                  label: clip.label || `${sceneKey}_CLIP`,
+                  pageUrl: clip.pageUrl || '',
+                  clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+                  clipTimingFormat: clip.clipTimingFormat || 'none',
+                  storyIndex: clip.storyIndex ?? clipIdx,
+                  sceneId: scene.name || scene.id
+                });
+              }
+              clipIdx++;
+            }
           }
         }
       }
@@ -1156,7 +1352,20 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
     const avatarCount = segmentData.filter(s => s.type === 'avatar').length;
     const clipCount   = segmentData.filter(s => s.type === 'source_clip').length;
     logger.warn({ jobId, avatarCount, clipCount }, 'heygen:all_complete — segmentData rebuilt from card (startup resume)');
+    }
   }
+
+  {
+    const manualApplied = applyManualOverrides(jobId, segmentData || []);
+    segmentData = manualApplied.segmentData;
+    if (manualApplied.overrideCount > 0) {
+      logger.info(
+        { jobId, overrideCount: manualApplied.overrideCount, manualDir: manualApplied.dir },
+        'heygen:all_complete — using manual segment overrides from /tmp'
+      );
+    }
+  }
+
   logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
   nrEvent('PipelineHeyGenComplete', {
     jobId,
@@ -1199,7 +1408,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
   const format = contentType.includes('-short') ? 'portrait' : 'landscape';
   const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
   const _dateLabel = _cardDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const _avatarCount = segmentUrls.length;
+  const _avatarCount = (segmentData || []).filter(s => s.type === 'avatar').length || segmentUrls.length;
   const _clipCount   = (segmentData || []).filter(s => s.type === 'source_clip').length;
   const _humanTitle  = `${contentType.toUpperCase()} ${_dateLabel} (${_avatarCount} avatar + ${_clipCount} clips)`;
 
@@ -1260,7 +1469,10 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
         finalCard.assembledAt = new Date().toISOString();
         finalCard.stage = 'assembled';
         if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
-        if (asmJob.driveUrl)   finalCard.finalUrl   = asmJob.driveUrl;
+        // Use driveUrl if available; fall back to local download URL so stage
+        // reaches 'assembled' and Approve button appears even when Drive is down.
+        const _resolvedUrl = asmJob.driveUrl || asmJob.localUrl || null;
+        if (_resolvedUrl) finalCard.finalUrl = _resolvedUrl;
         // Gate 3 = assembly QA (Gemini watches the assembled video)
         if (asmJob.qaScore !== undefined) {
           finalCard.gate3 = {
@@ -1674,7 +1886,7 @@ app.get('/health', async (req, res) => {
 app.get('/jobs', (req, res) => {
   // Only return in-flight jobs. Completed (assembled, published) and
   // failed/dismissed jobs are excluded — they do not need to restore on page load.
-  const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'assembling']);
+  const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling']);
 
   const actionableJobs = Object.values(persistedJobs).filter(job => {
     const status = job.status || '';
@@ -1686,7 +1898,21 @@ app.get('/jobs', (req, res) => {
     return IN_FLIGHT_STAGES.has(stage);
   }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
 
-  res.json({ ok: true, count: actionableJobs.length, jobs: actionableJobs });
+  const { getJobBySpec } = require('./lib/db');
+  const { buildGateStatusSnapshot } = require('./lib/job_spec_contracts');
+  const jobsWithGateStatus = actionableJobs.map((job) => {
+    const candidates = [job.jobSpecId, job.scriptJobId, job.id].filter(Boolean);
+    let spec = null;
+    for (const id of candidates) {
+      try {
+        spec = getJobBySpec(id);
+        if (spec) break;
+      } catch (_e) {}
+    }
+    return { ...job, gateStatus: spec ? buildGateStatusSnapshot(spec) : null };
+  });
+
+  res.json({ ok: true, count: jobsWithGateStatus.length, jobs: jobsWithGateStatus });
 });
 
 // DELETE /job/:id — remove a job from persistedJobs + jobs.json
@@ -1731,6 +1957,14 @@ app.post('/job/:id/rollback', (req, res) => {
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: published → assembled`);
     logError('PIPELINE_ROLLBACK', `Job rolled back: published → assembled`, { jobId, before: 'published', after: 'assembled', at: new Date().toISOString() });
+    try {
+      pipelineBus.emit('job:rollback', {
+        jobId,
+        before: 'published',
+        after: 'assembled',
+        message: 'Publish record cleared — re-approve to re-publish.'
+      });
+    } catch (_e) { /* non-fatal */ }
     return res.json({ ok: true, jobId, before: 'published', after: 'assembled', message: 'Publish record cleared — re-approve to re-publish.' });
   }
 
@@ -1759,6 +1993,14 @@ app.post('/job/:id/rollback', (req, res) => {
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: assembled → all_sent`);
     logError('PIPELINE_ROLLBACK', `Job rolled back: assembled → all_sent`, { jobId, before: 'assembled', after: 'all_sent', at: new Date().toISOString() });
+    try {
+      pipelineBus.emit('job:rollback', {
+        jobId,
+        before: 'assembled',
+        after: 'all_sent',
+        message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.'
+      });
+    } catch (_e) { /* non-fatal */ }
     return res.json({ ok: true, jobId, before: 'assembled', after: 'all_sent', message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.' });
   }
 
@@ -1772,6 +2014,14 @@ app.post('/job/:id/rollback', (req, res) => {
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: all_sent → script_ready`);
     logError('PIPELINE_ROLLBACK', `Job rolled back: all_sent → script_ready`, { jobId, before: 'all_sent', after: 'script_ready', at: new Date().toISOString() });
+    try {
+      pipelineBus.emit('job:rollback', {
+        jobId,
+        before: 'all_sent',
+        after: 'script_ready',
+        message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.'
+      });
+    } catch (_e) { /* non-fatal */ }
     return res.json({ ok: true, jobId, before: 'all_sent', after: 'script_ready', message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.' });
   }
 
@@ -1799,6 +2049,14 @@ app.post('/job/:id/advance', (req, res) => {
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: script_ready → gate1 force-passed`);
     logError('PIPELINE_ADVANCE', `Job force-advanced: script_ready → gate1_forced`, { jobId, before: 'script_ready', after: 'gate1_forced', at: new Date().toISOString() });
+    try {
+      pipelineBus.emit('job:advance', {
+        jobId,
+        from: 'script_ready',
+        to: 'gate1_forced',
+        message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.'
+      });
+    } catch (_e) { /* non-fatal */ }
     return res.json({ ok: true, jobId, before: 'script_ready', after: 'gate1_forced', message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.' });
   }
 
@@ -1820,6 +2078,14 @@ app.post('/job/:id/advance', (req, res) => {
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: all_sent → gate2 force-passed (${forced} segments marked)`);
     logError('PIPELINE_ADVANCE', `Job force-advanced: all_sent → gate2_forced`, { jobId, before: 'all_sent', after: 'gate2_forced', at: new Date().toISOString() });
+    try {
+      pipelineBus.emit('job:advance', {
+        jobId,
+        from: 'all_sent',
+        to: 'gate2_forced',
+        message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.`
+      });
+    } catch (_e) { /* non-fatal */ }
     return res.json({ ok: true, jobId, before: 'all_sent', after: 'gate2_forced', message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.` });
   }
 
@@ -1834,10 +2100,96 @@ app.post('/job/:id/advance', (req, res) => {
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: assembled → gate5 force-passed`);
     logError('PIPELINE_ADVANCE', `Job force-advanced: assembled → gate5_forced`, { jobId, before: 'assembled', after: 'gate5_forced', at: new Date().toISOString() });
+    try {
+      pipelineBus.emit('job:advance', {
+        jobId,
+        from: 'assembled',
+        to: 'gate5_forced',
+        message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.'
+      });
+    } catch (_e) { /* non-fatal */ }
     return res.json({ ok: true, jobId, before: 'assembled', after: 'gate5_forced', message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.' });
   }
 
   return res.json({ ok: false, error: `Job is at stage "${stage}" — cannot advance further (already at publish stage or unknown stage).` });
+});
+
+// POST /job/:id/manual-segments/resume — continue pipeline after c0 manual checkpoint
+app.post('/job/:id/manual-segments/resume', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  let stage = card.stage || inferJobStage(card);
+  if (stage === 'published') {
+    return res.status(400).json({
+      ok: false,
+      error: 'Job is published — POST /job/:id/rollback first, then resume.'
+    });
+  }
+
+  // Operator fixed manual drops (or ordinal parsing) after a bad assemble — same cleanup as
+  // POST /job/:id/rollback from assembled, without requiring a second request.
+  if (stage === 'assembled' || stage === 'gate5_forced') {
+    delete card.assembledAt;
+    delete card.finalUrl;
+    delete card.outputPath;
+    delete card.gate5;
+    delete card._gate5Done;
+    delete card._gate5Running;
+    delete card._gate3Approved;
+    delete card._gate3Rejected;
+    if (card.heygen && card.heygen.videoJobs) {
+      card.heygen.videoJobs.forEach(vj => { vj._url = null; });
+    }
+    Object.keys(assemblyJobs).forEach(asmId => {
+      if (assemblyJobs[asmId]?.sourceJobId === jobId) {
+        delete assemblyJobs[asmId];
+        console.log(`[manual-segments/resume] ${jobId}: cleared assembly dedup lock for asmId=${asmId}`);
+      }
+    });
+    card.stage = 'all_sent';
+    saveJobCard(jobId, card);
+    stage = 'all_sent';
+    console.log(`[manual-segments/resume] ${jobId}: cleared prior assembly — continuing to Gate 2 + assemble`);
+  }
+
+  if (stage !== 'awaiting_manual_segments' && stage !== 'all_sent') {
+    return res.status(400).json({
+      ok: false,
+      error: `Job is at stage "${stage}" — expected awaiting_manual_segments, all_sent, assembled, or gate5_forced`
+    });
+  }
+
+  const segmentUrls = (card.heygen?.videoJobs || [])
+    .filter(vj => vj.status === 'completed' && vj.video_url)
+    .map(vj => vj.video_url);
+
+  card.manualSegments = {
+    ...(card.manualSegments || {}),
+    status: 'resume_requested',
+    resumedAt: new Date().toISOString()
+  };
+  card.stage = 'all_sent';
+  saveJobCard(jobId, card);
+
+  try {
+    pipelineBus.emit('heygen:all_complete', {
+      jobId,
+      contentType: card.contentType || 'twitch',
+      segmentUrls,
+      card,
+      segmentData: null
+    });
+    return res.json({
+      ok: true,
+      jobId,
+      message: 'Resume accepted — Gate 2 + assembly handoff emitted.',
+      segmentCount: segmentUrls.length
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message || String(e) });
+  }
 });
 
 // POST /job/:id/dismiss — operator closed the job card on the dashboard.
@@ -2271,7 +2623,13 @@ app.get('/job-spec/:jobId', async (req, res) => {
   try {
     const spec = await getJobSpec(req.params.jobId);
     if (!spec) return res.status(404).json({ error: 'Job spec not found' });
-    res.json({ ok: true, jobSpec: spec });
+    const { buildGateStatusSnapshot, validateGateContractConsistency } = require('./lib/job_spec_contracts');
+    res.json({
+      ok: true,
+      jobSpec: spec,
+      gateStatus: buildGateStatusSnapshot(spec),
+      gateContractValidation: validateGateContractConsistency(spec)
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -2728,7 +3086,8 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
 });
 
 // ── GET /news/us-canada-videos ────────────────────────────────────
-// Fix 25a: Scrapes aljazeera.com/us-canada/ for /video/newsfeed/ article URLs.
+// Scrapes Al Jazeera with US & Canada editorial priority: hub page links first,
+// then /us-canada/… sitemap URLs, then other sitemap articles (excludes /features/, /opinion/, /longform/).
 // Returns 100% video-guaranteed stories (vs ~20-30% hit rate from global RSS feed).
 // Supports NEWS_RSS_URL env var override for future RSS.app migration (Fix 30).
 //
@@ -2842,6 +3201,221 @@ async function fetchAjSitemapUrls(date = new Date()) {
   return articleUrls;
 }
 
+/**
+ * Collect article URLs linked from the US & Canada hub (editorial queue), excluding /features/ etc.
+ * @returns {Promise<string[]>}
+ */
+const AJ_ALLOWED_SECTION_PATH_RE = /\/(where\/united-states|us-canada)\//i;
+
+/** Dated article slug: /news/2026/4/22/… or /where/united-states/…/2026/…/… */
+function ajArticleHasDatedSlugPath(pathname) {
+  return /\/\d{4}\/\d{1,2}\/\d{1,2}\/[^/]+/i.test(pathname || '');
+}
+
+function ajAljazeeraArticleBaseOk(urlStr) {
+  if (!urlStr || typeof urlStr !== 'string') return false;
+  let p;
+  try {
+    p = new URL(urlStr).pathname || '';
+  } catch {
+    return false;
+  }
+  if (!/^https:\/\/(www\.)?aljazeera\.com\//i.test(urlStr)) return false;
+  if (/\/(features|opinion|longform|podcasts|program|gallery)\b/i.test(p)) return false;
+  if (!ajArticleHasDatedSlugPath(p)) return false;
+  return true;
+}
+
+/**
+ * Sitemap (and Gemini recovery): only URLs whose path is explicitly US/Canada editorial.
+ * Do NOT use bare /news/… from the sitemap — those are global and not US-first.
+ */
+function ajArticlePathFromSitemapStrict(urlStr) {
+  if (!ajAljazeeraArticleBaseOk(urlStr)) return false;
+  try {
+    return AJ_ALLOWED_SECTION_PATH_RE.test(new URL(urlStr).pathname || '');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Hub queues (where/united-states + us-canada landing pages): allow /news/YYYY/MM/DD/…
+ * because those links are curated on those pages (US-first queue), not raw sitemap.
+ */
+function ajArticlePathFromHubQueues(urlStr) {
+  if (!ajAljazeeraArticleBaseOk(urlStr)) return false;
+  let p;
+  try {
+    p = new URL(urlStr).pathname || '';
+  } catch {
+    return false;
+  }
+  return AJ_ALLOWED_SECTION_PATH_RE.test(p) || /\/news\//i.test(p);
+}
+
+async function fetchAjHubArticleUrls(hubUrl, maxUrls = 45) {
+  const hub = String(hubUrl || '').trim().replace(/\/?$/, '/');
+  if (!hub) return [];
+  const resp = await axios.get(hub, {
+    timeout: 25000,
+    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' }
+  });
+  const $ = cheerio.load(resp.data || '');
+  const out = [];
+  const badPath = (p) =>
+    /\/(features|opinion|longform|podcasts|program|gallery|sport|sports)\b/i.test(p);
+  const looksArticle = (p) =>
+    ajArticleHasDatedSlugPath(p) &&
+    (AJ_ALLOWED_SECTION_PATH_RE.test(p) || /\/news\//i.test(p));
+  $('a[href]').each((_, el) => {
+    if (out.length >= maxUrls) return false;
+    const href = ($(el).attr('href') || '').trim();
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    let abs;
+    try {
+      abs = new URL(href, 'https://www.aljazeera.com').href.split('#')[0];
+    } catch {
+      return;
+    }
+    let p;
+    try {
+      const u = new URL(abs);
+      if (!/aljazeera\.com$/i.test(u.hostname || '')) return;
+      p = u.pathname || '';
+    } catch {
+      return;
+    }
+    if (badPath(p)) return;
+    if (!looksArticle(p)) return;
+    out.push(abs);
+  });
+  const uniq = [...new Set(out)];
+  console.log(`[fetchAjHubArticleUrls] ${uniq.length} article URL(s) from ${hub}`);
+  return uniq;
+}
+
+/** ffprobe HLS / MP4 duration (seconds); null on failure. */
+function probeHlsDurationSeconds(hlsUrl) {
+  return new Promise((resolve) => {
+    try {
+      execFile(
+        ffprobePath(),
+        ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', hlsUrl],
+        { timeout: 35000 },
+        (err, stdout) => {
+          if (err) return resolve(null);
+          const d = parseFloat(String(stdout || '').trim(), 10);
+          resolve(Number.isFinite(d) ? d : null);
+        }
+      );
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/** ffprobe HLS / MP4 stream dimensions; returns {width,height} or null on failure. */
+/**
+ * Brightcove master playlists list multiple RESOLUTION=WxH variants; the in-page embed
+ * is often 16:9 while a 9:16 rendition exists. Pick the highest-area portrait variant URL.
+ * @returns {Promise<{ hlsUrl: string, orientation: 'portrait'|'landscape', sourceWidth: number, sourceHeight: number }|null>}
+ */
+async function pickPortraitOrLargestVariantFromHlsMaster(masterHlsUrl) {
+  if (!masterHlsUrl || typeof masterHlsUrl !== 'string') return null;
+  try {
+    const resp = await axios.get(masterHlsUrl, {
+      timeout: 15000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CWN/1.0)' }
+    });
+    const text = String(resp.data || '');
+    if (!text.includes('#EXTM3U')) return null;
+    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const variants = [];
+    for (let i = 0; i < lines.length - 1; i++) {
+      const line = lines[i];
+      if (!line.startsWith('#EXT-X-STREAM-INF:')) continue;
+      const resM = line.match(/RESOLUTION=(\d+)x(\d+)/i);
+      const bwM = line.match(/BANDWIDTH=(\d+)/i);
+      const uriLine = lines[i + 1];
+      if (!resM || !uriLine || uriLine.startsWith('#')) continue;
+      const w = parseInt(resM[1], 10);
+      const h = parseInt(resM[2], 10);
+      if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) continue;
+      let variantUrl = uriLine;
+      if (!/^https?:\/\//i.test(variantUrl)) {
+        try {
+          variantUrl = new URL(variantUrl, masterHlsUrl).href;
+        } catch {
+          continue;
+        }
+      }
+      variants.push({
+        w,
+        h,
+        bandwidth: bwM ? parseInt(bwM[1], 10) : 0,
+        url: variantUrl
+      });
+    }
+    if (variants.length === 0) return null;
+    const portrait = variants.filter((v) => v.h > v.w);
+    if (portrait.length > 0) {
+      portrait.sort((a, b) => b.w * b.h - a.w * a.h);
+      const best = portrait[0];
+      return {
+        hlsUrl: best.url,
+        orientation: 'portrait',
+        sourceWidth: best.w,
+        sourceHeight: best.h
+      };
+    }
+    variants.sort((a, b) => b.w * b.h - a.w * a.h);
+    const best = variants[0];
+    return {
+      hlsUrl: masterHlsUrl,
+      orientation: 'landscape',
+      sourceWidth: best.w,
+      sourceHeight: best.h
+    };
+  } catch {
+    return null;
+  }
+}
+
+function probeHlsDimensions(hlsUrl) {
+  return new Promise((resolve) => {
+    try {
+      execFile(
+        ffprobePath(),
+        [
+          '-v', 'error',
+          '-select_streams', 'v:0',
+          '-show_entries', 'stream=width,height',
+          '-of', 'default=noprint_wrappers=1:nokey=1',
+          hlsUrl
+        ],
+        { timeout: 35000 },
+        (err, stdout) => {
+          if (err) return resolve(null);
+          const lines = String(stdout || '')
+            .split(/\r?\n/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (lines.length < 2) return resolve(null);
+          const width = parseInt(lines[0], 10);
+          const height = parseInt(lines[1], 10);
+          if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+            return resolve(null);
+          }
+          resolve({ width, height });
+        }
+      );
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
 /** Strip #fragment so Puppeteer navigates to a stable document URL. */
 function stripAjPageFragment(url) {
   if (!url || typeof url !== 'string') return url;
@@ -2861,10 +3435,8 @@ function getPinnedAjUrlsForScraper() {
     if (t === '' || t === '0' || t.toLowerCase() === 'off' || t.toLowerCase() === 'false') return [];
     return t.split(/[\n,]+/).map((s) => stripAjPageFragment(s.trim())).filter(Boolean);
   }
-  // Portrait /video/quotable — US-relevant; not discoverable via sitemap article filter
-  return [
-    'https://www.aljazeera.com/video/quotable/2026/4/21/us-is-pretty-far-behind-where-they-started-the-war-on-iran'
-  ];
+  // Default: no pinned URLs — discovery is US-Canada hub + /us-canada/ sitemap paths first.
+  return [];
 }
 
 // ── AJ Puppeteer video scraper ────────────────────────────────────────────────
@@ -2896,7 +3468,60 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
         fetchAjSitemapUrls(today),
         fetchAjSitemapUrls(yesterday)
       ]);
-      candidateUrls = [...todayUrls, ...yestUrls];
+      const mergedSitemap = [...todayUrls, ...yestUrls];
+      const sitemapWhereUs = mergedSitemap.filter((u) => /\/where\/united-states\//i.test(u));
+      const sitemapUsCanada = mergedSitemap.filter((u) => /\/us-canada\//i.test(u));
+      const sitemapAllowed = mergedSitemap.filter(
+        (u) =>
+          AJ_ALLOWED_SECTION_PATH_RE.test(u) &&
+          !/\/features\//i.test(u) &&
+          !/\/opinion\//i.test(u) &&
+          !/\/longform\//i.test(u)
+      );
+      const primaryHubUrl = process.env.NEWS_US_PRIMARY_HUB_URL || 'https://www.aljazeera.com/where/united-states/';
+      const fallbackHubUrl = process.env.NEWS_US_CANADA_HUB_URL || 'https://www.aljazeera.com/us-canada/';
+      let primaryHubUrls = [];
+      let fallbackHubUrls = [];
+      try {
+        primaryHubUrls = await fetchAjHubArticleUrls(primaryHubUrl, 50);
+      } catch (e) {
+        console.warn(`[scrapeAjNewsVideos] Primary hub fetch failed (${primaryHubUrl}): ${e.message}`);
+      }
+      try {
+        fallbackHubUrls = await fetchAjHubArticleUrls(fallbackHubUrl, 50);
+      } catch (e) {
+        console.warn(`[scrapeAjNewsVideos] Fallback hub fetch failed (${fallbackHubUrl}): ${e.message}`);
+      }
+      const seen = new Set();
+      const pushOrder = (arr) => {
+        for (const u of arr) {
+          if (!seen.has(u)) {
+            seen.add(u);
+            candidateUrls.push(u);
+          }
+        }
+      };
+      candidateUrls = [];
+      pushOrder(primaryHubUrls);
+      pushOrder(fallbackHubUrls);
+      pushOrder(sitemapWhereUs);
+      pushOrder(sitemapUsCanada);
+      pushOrder(
+        sitemapAllowed.filter((u) => !/\/where\/united-states\//i.test(u) && !/\/us-canada\//i.test(u))
+      );
+      const hubUrlSet = new Set(
+        [...primaryHubUrls, ...fallbackHubUrls].map((u) => stripAjPageFragment(String(u)))
+      );
+      candidateUrls = candidateUrls.map((u) => stripAjPageFragment(String(u))).filter((u) => {
+        if (!u) return false;
+        if (hubUrlSet.has(u)) return ajArticlePathFromHubQueues(u);
+        return ajArticlePathFromSitemapStrict(u);
+      });
+      console.log(
+        `[scrapeAjNewsVideos] Candidate order: primaryHub=${primaryHubUrls.length}, fallbackHub=${fallbackHubUrls.length}, ` +
+          `sitemap where/united-states=${sitemapWhereUs.length}, sitemap /us-canada/=${sitemapUsCanada.length}, ` +
+          `US-first filter (hub=/news|section, sitemap=section only) → ${candidateUrls.length} URL(s)`
+      );
     } catch (e) {
       console.warn(`[scrapeAjNewsVideos] Sitemap fetch error: ${e.message}`);
       return [];
@@ -2908,7 +3533,7 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
     const seen = new Set(pinned);
     const tail = candidateUrls.filter((u) => !seen.has(u));
     candidateUrls = [...pinned, ...tail];
-    console.log(`[scrapeAjNewsVideos] Prepended ${pinned.length} pinned URL(s) (NEWS_AJ_PINNED_URLS or default quotable)`);
+    console.log(`[scrapeAjNewsVideos] Prepended ${pinned.length} pinned URL(s) (NEWS_AJ_PINNED_URLS)`);
   }
 
   if (candidateUrls.length === 0) {
@@ -2991,22 +3616,39 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
 
       if (!capturedHls) continue;
 
-      // Check manifest dimensions to determine orientation
-      let orientation   = 'landscape';
+      // In-page Video.js is often 16:9 chrome while Brightcove master lists a 9:16 rendition — pick that variant URL.
+      let orientation = 'landscape';
       let pillarboxFilter = null;
-      let manifestWidth  = 1920;
+      let manifestWidth = 1920;
       let manifestHeight = 1080;
+      let effectiveHls = capturedHls;
       try {
-        const manifestResp = await axios.get(capturedHls, { timeout: 10000 });
-        const manifestText = manifestResp.data || '';
-        // HLS master manifests include RESOLUTION=WxH in variant lines
-        const resMatches = [...manifestText.matchAll(/RESOLUTION=(\d+)x(\d+)/g)];
-        if (resMatches.length > 0) {
-          // Use the largest variant for dimension check
-          const dims = resMatches.map(m => ({ w: parseInt(m[1]), h: parseInt(m[2]) }));
-          dims.sort((a, b) => (b.w * b.h) - (a.w * a.h));
-          manifestWidth  = dims[0].w;
-          manifestHeight = dims[0].h;
+        const variantPick = await pickPortraitOrLargestVariantFromHlsMaster(capturedHls);
+        if (variantPick && variantPick.orientation === 'portrait') {
+          effectiveHls = variantPick.hlsUrl;
+          orientation = 'portrait';
+          manifestWidth = variantPick.sourceWidth;
+          manifestHeight = variantPick.sourceHeight;
+          pillarboxFilter = buildAjPillarboxFilter(manifestWidth, manifestHeight);
+          console.log(
+            `[scrapeAjNewsVideos] Portrait variant from master ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`
+          );
+        } else {
+          const probed = await probeHlsDimensions(capturedHls);
+          if (probed && probed.width > 0 && probed.height > 0) {
+            manifestWidth = probed.width;
+            manifestHeight = probed.height;
+          } else {
+            const manifestResp = await axios.get(capturedHls, { timeout: 10000 });
+            const manifestText = manifestResp.data || '';
+            const resMatches = [...manifestText.matchAll(/RESOLUTION=(\d+)x(\d+)/g)];
+            if (resMatches.length > 0) {
+              const dims = resMatches.map(m => ({ w: parseInt(m[1], 10), h: parseInt(m[2], 10) }));
+              dims.sort((a, b) => (b.w * b.h) - (a.w * a.h));
+              manifestWidth = dims[0].w;
+              manifestHeight = dims[0].h;
+            }
+          }
           if (manifestHeight > manifestWidth) {
             orientation = 'portrait';
             pillarboxFilter = buildAjPillarboxFilter(manifestWidth, manifestHeight);
@@ -3022,10 +3664,21 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
         continue;
       }
 
+      const maxClipSec = parseFloat(process.env.NEWS_AJ_MAX_CLIP_SEC || '180', 10);
+      if (Number.isFinite(maxClipSec) && maxClipSec > 0) {
+        const dur = await probeHlsDurationSeconds(effectiveHls);
+        if (dur != null && dur > maxClipSec + 0.25) {
+          console.log(
+            `[scrapeAjNewsVideos] ⏭  duration ${dur.toFixed(1)}s > ${maxClipSec}s (NEWS_AJ_MAX_CLIP_SEC): ${articleUrl.slice(-60)}`
+          );
+          continue;
+        }
+      }
+
       results.push({
         articleUrl: stripAjPageFragment(articleUrl),
         videoId:        capturedVideoId,
-        hlsUrl:         capturedHls,
+        hlsUrl:         effectiveHls,
         orientation,
         pillarboxFilter,
         sourceWidth:    manifestWidth,
@@ -3093,9 +3746,28 @@ app.get('/news/us-canada-videos', async (req, res) => {
           fetchAjSitemapUrls(new Date()),
           fetchAjSitemapUrls(new Date(Date.now() - 86400000))
         ]);
-        const allUrls = [...todayUrls, ...yestUrls].slice(0, 60);
+        const merged = [...todayUrls, ...yestUrls].filter((u) => ajArticlePathFromSitemapStrict(String(u)));
+        const usFirst = merged.filter((u) => /\/where\/united-states\//i.test(u));
+        const usCanadaNext = merged.filter((u) => /\/us-canada\//i.test(u));
+        const allowedTail = merged.filter(
+          (u) =>
+            !/\/features\//i.test(u) &&
+            !/\/opinion\//i.test(u) &&
+            !/\/longform\//i.test(u) &&
+            !/\/where\/united-states\//i.test(u) &&
+            !/\/us-canada\//i.test(u)
+        );
+        const seenG = new Set();
+        const ordered = [];
+        for (const u of [...usFirst, ...usCanadaNext, ...allowedTail]) {
+          if (!seenG.has(u)) {
+            seenG.add(u);
+            ordered.push(u);
+          }
+        }
+        const allUrls = ordered.slice(0, 60);
         if (allUrls.length > 0) {
-          const slugList = allUrls.map((u, i) => `${i+1}. ${u.split('/').filter(Boolean).pop()}`).join('\n');
+          const slugList = allUrls.map((u, i) => `${i + 1}. ${u.split('/').filter(Boolean).pop()}`).join('\n');
           const geminiPrompt = `You are selecting news articles for a video show. From this list of Al Jazeera article slugs, pick the 8 most likely to have an embedded video (breaking news, conflict, politics, interviews tend to have video; opinion/analysis rarely do). Return ONLY a JSON array of the numbers you selected, e.g. [1,3,7,12,15,18,22,25]. No explanation.\n\n${slugList}`;
           const geminiResp = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -3144,16 +3816,27 @@ app.get('/news/us-canada-videos', async (req, res) => {
 
     // Safety net: endpoint always returns portrait-only (scraper already filters, this is belt+suspenders)
     const portraitVideos = videos.filter(v => v.orientation === 'portrait');
-    if (portraitVideos.length < videos.length) {
-      console.log(`[news/us-canada-videos] Safety filter: dropped ${videos.length - portraitVideos.length} landscape clips (scraper should have dropped these)`);
+    const droppedNonPortrait = videos.length - portraitVideos.length;
+    if (droppedNonPortrait > 0) {
+      console.log(`[news/us-canada-videos] Safety filter: dropped ${droppedNonPortrait} non-portrait clips (scraper should have dropped these)`);
     }
+
+    const hint =
+      portraitVideos.length === 0
+        ? 'No 9:16 portrait clips with Brightcove HLS from US/Canada AJ paths. Causes: Puppeteer did not capture HLS, only landscape articles today, duration over NEWS_AJ_MAX_CLIP_SEC, or Gemini sitemap recovery failed (check GEMINI_API_KEY). Server logs tag [news/us-canada-videos] and [scrapeAjNewsVideos].'
+        : null;
 
     return res.json({
       ok: true,
       videos: portraitVideos,
       recentCount: portraitVideos.length,
-      source: 'AJ sitemap (today+yesterday) — Puppeteer Brightcove confirmed (portrait only)',
-      landscape: 0,
+      totalFound: portraitVideos.length,
+      scrapedWithVideo: ajVideos.length,
+      droppedNonPortrait,
+      hint,
+      source:
+        'AJ where/united-states first, fallback us-canada — Puppeteer Brightcove — portrait-only — duration ≤ NEWS_AJ_MAX_CLIP_SEC',
+      landscape: droppedNonPortrait,
       portrait:  portraitVideos.length
     });
   } catch (err) {
@@ -3435,6 +4118,14 @@ app.post('/generate-full-script',
     // Create Job Spec at job start — single document every stage reads
     try {
       const { type: contentType, formType, itemCount, title } = req.body;
+      const sourceType = (contentType === 'news' || contentType === 'news-short')
+        ? 'site_scrape'
+        : 'url_list';
+      const sourceUrls = Array.isArray(items)
+        ? items
+            .map(it => it.videoUrl || it.clipUrl || it.url || it.link || null)
+            .filter(Boolean)
+        : [];
       req.jobSpec = await createJobSpec({
         customerId: req.body.customerId || 'c0',
         showId: req.body.showId || null,
@@ -3442,22 +4133,12 @@ app.post('/generate-full-script',
         contentType,
         createdBy: 'dashboard',
         expectedSynth: !!req.body.expectedSynth,
-        order: {
-          inputs: {
-            sourceType: 'site_scrape',
-            sourceConfig: { siteTarget: contentType },
-            items: [],
-            itemCount: itemCount || 0
-          },
-          output: {
-            formFactor: formType === 'short' ? 'short' : 'long',
-            aspectRatio: formType === 'short' ? '9:16' : '16:9',
-            resolution: formType === 'short'
-              ? { width: 1080, height: 1920 }
-              : { width: 1920, height: 1080 }
-          },
-          meta: { title: title || null, scheduledAt: null }
-        }
+        sourceType,
+        sourceConfig: sourceType === 'site_scrape'
+          ? { siteTarget: contentType }
+          : { urls: sourceUrls },
+        items: Array.isArray(items) ? items : [],
+        title: title || null
       });
     } catch (specErr) {
       console.warn('[/generate-full-script] Job Spec creation failed (non-fatal):', specErr.message);
@@ -3563,6 +4244,11 @@ app.post('/generate-full-script',
 
         preGenerateAllReady = allReady;
         preGenerateCommitments = commitments;
+        try {
+          persistJobSpecGateContracts(req.jobSpec, commitments);
+        } catch (contractErr) {
+          console.warn('[PRE-GENERATE] Failed to persist gate contracts (non-fatal):', contractErr.message);
+        }
       } catch(commitErr) {
         console.warn('[PRE-GENERATE] Gate sign-off check failed (non-fatal):', commitErr.message);
       }
@@ -4047,6 +4733,125 @@ app.get('/heygen/latest-videos', async (req, res) => {
   } catch(e) {
     console.error('[heygen/latest-videos] Error:', e.message);
     res.status(500).json({ error: e.message });
+  }
+});
+
+async function bulkDeleteHeyGenVideos({ apiKey, dryRun = false, maxPasses = 100, perPassLimit = 100 }) {
+  const headers = { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' };
+  const failures = [];
+  let totalDeleted = 0;
+  let totalSeen = 0;
+  let passCount = 0;
+
+  const listVideos = async () => {
+    const resp = await axios.get(
+      `https://api.heygen.com/v1/video.list?limit=${Math.max(1, Math.min(100, perPassLimit))}`,
+      { headers: { 'X-Api-Key': apiKey }, timeout: 30000 }
+    );
+    return resp.data?.data?.videos || [];
+  };
+
+  const deleteOne = async (video) => {
+    const v1Body = { video_id: video.video_id };
+    const attempts = [
+      () => axios.post('https://api.heygen.com/v1/video.delete', v1Body, { headers, timeout: 30000 }),
+      () => axios.post(
+        'https://api.heygen.com/v1/video.delete',
+        { video_id: video.video_id, type: video.type || 'GENERATED' },
+        { headers, timeout: 30000 }
+      ),
+      () => axios.delete(`https://api.heygen.com/v3/videos/${video.video_id}`, {
+        headers: { 'X-Api-Key': apiKey },
+        timeout: 30000
+      })
+    ];
+    let lastErr = null;
+    for (const run of attempts) {
+      try {
+        return await run();
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw lastErr;
+  };
+
+  while (passCount < maxPasses) {
+    passCount++;
+    const videos = await listVideos();
+    if (!videos.length) break;
+    totalSeen += videos.length;
+    if (dryRun) continue;
+
+    for (const video of videos) {
+      try {
+        await deleteOne(video);
+        totalDeleted++;
+      } catch (err) {
+        failures.push({
+          video_id: video.video_id,
+          title: video.video_title || null,
+          error: err.response?.data || err.message || 'unknown_error'
+        });
+      }
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }
+
+  const remaining = (await listVideos()).length;
+  return {
+    passCount,
+    totalSeen,
+    totalDeleted,
+    remaining,
+    failedCount: failures.length,
+    failures: failures.slice(0, 50)
+  };
+}
+
+// POST /admin/heygen/delete-all — dangerous operation; token + explicit confirmation required.
+// Header: x-admin-token: <HEYGEN_ADMIN_TOKEN>
+// Body: { confirmDeleteAll: "DELETE_ALL_HEYGEN_VIDEOS", dryRun?: boolean, maxPasses?: number, perPassLimit?: number }
+app.post('/admin/heygen/delete-all', async (req, res) => {
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+  if (!HEYGEN_API_KEY) return res.status(400).json({ ok: false, error: 'HEYGEN_API_KEY not set' });
+
+  const adminToken = process.env.HEYGEN_ADMIN_TOKEN;
+  if (!adminToken) {
+    return res.status(503).json({
+      ok: false,
+      error: 'HEYGEN_ADMIN_TOKEN not configured; endpoint disabled'
+    });
+  }
+
+  const requestToken = req.headers['x-admin-token'];
+  if (!requestToken || requestToken !== adminToken) {
+    return res.status(403).json({ ok: false, error: 'Forbidden: invalid admin token' });
+  }
+
+  const confirm = req.body?.confirmDeleteAll;
+  if (confirm !== 'DELETE_ALL_HEYGEN_VIDEOS') {
+    return res.status(400).json({
+      ok: false,
+      error: 'Explicit confirmation required',
+      expected: { confirmDeleteAll: 'DELETE_ALL_HEYGEN_VIDEOS' }
+    });
+  }
+
+  try {
+    const result = await bulkDeleteHeyGenVideos({
+      apiKey: HEYGEN_API_KEY,
+      dryRun: !!req.body?.dryRun,
+      maxPasses: Math.max(1, Math.min(500, Number(req.body?.maxPasses) || 100)),
+      perPassLimit: Math.max(1, Math.min(100, Number(req.body?.perPassLimit) || 100))
+    });
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: err.message || 'delete failed',
+      details: err.response?.data || null
+    });
   }
 });
 
@@ -5393,13 +6198,13 @@ function getPlatformEffects(platform, contentType) {
 app.get('/shorts/avatar-ids', (req, res) => {
   res.json({
     landscape: {
-      avatarId: '1a5d4e9130d2467fa01d9e1580aff829',
+      avatarId: process.env.HEYGEN_AVATAR_ID || '1a5d4e9130d2467fa01d9e1580aff829',
       dimensions: '1920x1080',
       format: 'landscape',
       useFor: 'YouTube long form compilations'
     },
     portrait: {
-      avatarId: 'ed57439c9c3d4a398f3b247b75714b13',
+      avatarId: process.env.HEYGEN_AVATAR_SHORT_ID || 'ed57439c9c3d4a398f3b247b75714b13',
       dimensions: '1080x1920',
       format: 'portrait',
       useFor: 'TikTok, Instagram Reels, YouTube Shorts'
