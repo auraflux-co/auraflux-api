@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-26 (Cursor — 04/25+04/26 session commits)
+**Last Updated:** 2026-04-26 (Cursor — 04/26 session: roster-grounded Gemini analysis + multi-type clip pickers)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
@@ -168,6 +168,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(nba): roster-grounded Gemini analysis; fix(dashboard): manual clip picker for News + Twitch short-form** — `nba_source.js`: extract confirmed player names from ESPN `leaders` API on URL refresh, store as `item.playerContext`; same in Gate 0 retry block. `script_gen.js`: NBA Gemini analysis prompt now injects ESPN-confirmed roster with hard warning "your training-data roster is outdated — do NOT use names not in this list"; script generation prompt injects same playerContext per game as a guardrail. `server.js`: new `GET /twitch/clips-pool` endpoint — fetches recent clip metadata (title, thumbnail, duration, view count) from Twitch Helix API for a list of streamers. `cwn_production.html`: News short SHORT button now opens `openNewsShortClipPicker()` gallery (reuses `_newsPickerStories`, shows thumbnails + title); Twitch short SHORT button now opens `openTwitchShortClipPicker()` gallery (calls `/twitch/clips-pool`); both follow same pattern as NBA short picker (`select → generate`). | lib/sources/nba_source.js, lib/script_gen.js, server.js, cwn_production.html, STATUS.md | — | 2026-04-26 |
 | Cursor | **chore(cursor): .cursor/agents + .cursor/rules for Cursor agent guidance** — planning.md and planning-action-models.mdc for Cursor agent workflow. | .cursor/agents/planning.md, .cursor/rules/planning-action-models.mdc, STATUS.md | — | 2026-04-26 |
 | Cursor | **feat(scripts+tests+assets): new utility scripts, test suite, runbooks, RCA reports, fonts** — supporting tooling for 04/25-26 session. | scripts/*, test/*, docs/ops/*, docs/reports/*, assets/*, tools/*, STATUS.md | — | 2026-04-26 |
 | Cursor | **docs+tests: cursor.md handoff, architecture docs, ops runbooks, new scripts/tests, assets** — 04/25-26 session documentation and supporting files. | cursor.md, docs/*, scripts/*, test/*, assets/*, STATUS.md | — | 2026-04-26 |
