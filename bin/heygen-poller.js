@@ -31,6 +31,12 @@ const fs    = require('fs');
 const path  = require('path');
 const axios = require('axios');
 const { nrPipelineEvent } = require(path.join(__dirname, '..', 'lib', 'nr_pipeline'));
+const pipelineBus = require(path.join(__dirname, '..', 'lib', 'pipeline_events'));
+const {
+  shouldUseManualCheckpoint,
+  writeManualManifest,
+  prefetchManualSourceClips
+} = require(path.join(__dirname, '..', 'lib', 'manual_segment_workflow'));
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -125,6 +131,13 @@ async function poll(videoJobs, pollCount) {
       maxPolls: MAX_POLLS,
       segmentCount: videoJobs.length
     });
+    try {
+      pipelineBus.appendJobTimelineEvent('heygen:poll_terminal', {
+        jobId,
+        outcome: 'timeout',
+        reason: 'max_polls_exceeded'
+      });
+    } catch (_e) { /* non-fatal */ }
     process.exit(1);
   }
 
@@ -155,6 +168,16 @@ async function poll(videoJobs, pollCount) {
     failed: failed.length,
     total: videoJobs.length
   });
+  try {
+    pipelineBus.appendJobTimelineEvent('heygen:poll_tick', {
+      jobId,
+      attempt: pollCount,
+      allComplete: completed.length === videoJobs.length,
+      pending: pending.length,
+      failed: failed.length,
+      total: videoJobs.length
+    });
+  } catch (_e) { /* non-fatal */ }
 
   // Write failed statuses back to card so resubmit guard can see terminal state
   if (failed.length > 0) {
@@ -177,6 +200,13 @@ async function poll(videoJobs, pollCount) {
     if (statuses.every(s => TERMINAL.has(s.status)) && completed.length === 0) {
       console.warn(`[poller:${jobId}] All segments terminal, 0 completed — stopping. POST /job/${jobId}/resubmit-heygen to retry.`);
       nrPipelineEvent('HeyGenDockerPollAllFailed', { jobId, pollCount });
+      try {
+        pipelineBus.appendJobTimelineEvent('heygen:poll_terminal', {
+          jobId,
+          outcome: 'all_segments_failed',
+          reason: 'terminal_no_completed'
+        });
+      } catch (_e) { /* non-fatal */ }
       process.exit(2); // exit 2 = all-failed, distinct from timeout (1) and success (0)
     }
   }
@@ -210,6 +240,49 @@ async function poll(videoJobs, pollCount) {
   const segmentData  = buildSegmentData(card, sortedAvatarSegs);
   const segmentUrls  = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
   const contentType  = card.contentType || 'twitch';
+
+  if (shouldUseManualCheckpoint(card)) {
+    const man = writeManualManifest(jobId, card, segmentData);
+    const { dir, manifestPath, manifest, overlaysDir, overlaysReadme, copiedPreviews, operatorGuideDir } = man;
+    let prefetch = { logPath: path.join(dir, 'source_clip_prefetch.log') };
+    try {
+      prefetch = await prefetchManualSourceClips(dir, segmentData, { jobId });
+    } catch (e) {
+      console.error(`[poller:${jobId}] source clip prefetch failed (non-fatal): ${e.message}`);
+    }
+    card.stage = 'awaiting_manual_segments';
+    card.manualSegments = {
+      enabled: true,
+      status: 'awaiting_upload',
+      manualDir: dir,
+      manifestPath,
+      operatorGuideDir,
+      sourceClipPrefetchLogPath: prefetch.logPath,
+      overlaysDir,
+      overlaysReadme,
+      overlayPreviewCopies: copiedPreviews || [],
+      segmentCount: manifest.segments.length,
+      requestedAt: new Date().toISOString()
+    };
+    writeCard(card);
+    console.log(`[poller:${jobId}] 🛑 c0 manual checkpoint — ${dir} (see read_me/) — resume POST /job/${jobId}/manual-segments/resume`);
+    try {
+      pipelineBus.appendJobTimelineEvent('heygen:poll_terminal', {
+        jobId,
+        outcome: 'manual_checkpoint_waiting',
+        reason: 'c0_manual_segment_hold'
+      });
+    } catch (_e) { /* non-fatal */ }
+    process.exit(0);
+  }
+
+  try {
+    pipelineBus.appendJobTimelineEvent('heygen:poll_terminal', {
+      jobId,
+      outcome: 'all_segments_ready',
+      reason: 'docker_poller_before_handoff'
+    });
+  } catch (_e) { /* non-fatal */ }
 
   // ── Handoff to server — triggers Gate 2 + assembly ──────────────────────
   try {
