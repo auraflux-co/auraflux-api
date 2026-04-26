@@ -9,7 +9,7 @@
 #   bash scripts/claude_consult.sh "$(cat some_file.md)"
 #
 # This is a peer-agent call — Claude runs non-interactively (-p flag),
-# reads CLAUDE.md + STATUS.md automatically, and returns one response.
+# reads cursor.md + STATUS.md automatically, and returns one response.
 
 set -e
 
@@ -32,7 +32,7 @@ cd "$REPO_DIR"
 PROMPT="You are being consulted as a PEER AGENT by Cline, which is working on a task in the CWN Production repo. You have a fresh context window and a different perspective.
 
 Before answering, read these files:
-- CLAUDE.md (architecture, rules, gotchas)
+- cursor.md (architecture, rules, gotchas)
 - STATUS.md (current state)
 
 Then respond to this question from Cline:

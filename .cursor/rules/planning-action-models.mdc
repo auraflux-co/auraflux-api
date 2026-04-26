@@ -1,0 +1,34 @@
+---
+description: Default Composer=planning; act only on request—then Sonnet vs Gemini for implement
+alwaysApply: true
+---
+
+# Model workflow (this repo)
+
+**Default start:** **Composer** + **planning** (no implementation yet). You cannot switch models for Rob; he uses the model picker. **Cuing “act”** is on purpose: when Rob says he’s ready to implement, that’s his reminder to **leave Composer** and pick an action model.
+
+## Phase 1 — Planning (Composer, default)
+
+- First messages: **plan only** (scope, constraints, options, steps, risks, definition of done). Use `.cursor/agents/planning.md` pattern or the **planning** subagent.
+- **No full implementation** until Rob moves to act (tiny snippets if he asks for illustration are OK).
+
+## Phase 2 — Act (only when Rob asks)
+
+Rob signals with things like: **act**, **execute**, **implement**, **go**, **ship it**, **apply the plan**, **code it**, **now build**. **Then** he switches off Composer to an **action** model.
+
+### Which action model: Sonnet vs Gemini Flash
+
+| Prefer **Claude Sonnet** | Prefer **Gemini Flash** |
+|--------------------------|-------------------------|
+| **Tier 1/2** or pipeline-critical paths (`AGENT_FILE_REGISTRY.md`) | Mechanical edits: rename, format-like churn, simple boilerplate |
+| Tricky logic, async, correctness-sensitive code | **Read-only** or “summarize this tree / doc set” in one go |
+| Multi-file refactors that must stay consistent | Fast iteration when you’ll **review every diff** yourself |
+| Security, edge cases, tests you care about | Exploratory “try 3 versions” on **non-prod** throwaway work |
+| When **unsure** — default to Sonnet | When task is **obvious, small, and well-specified** and speed matters |
+
+**Rule of thumb:** If a bug would be **painful in prod** (gates, `server.js` core, assembly, data shape), use **Sonnet** for act. If the task is **boring, bounded, and easy to verify** (or you’re just **reading/searching**), **Flash** is fine.
+
+## Exceptions
+
+- Rob says *skip plan*, *just do X*, *one line*: can go straight to act; he still picks Sonnet vs Flash with the same table.
+- Plan already in thread: act model **follows the plan** and flags conflicts instead of silent scope creep.

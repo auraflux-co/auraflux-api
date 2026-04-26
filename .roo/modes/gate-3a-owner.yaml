@@ -14,7 +14,7 @@ roleDefinition: |
   Your boundary: You can trigger assembly retries on hard fail (max 3 attempts), surface
   downstreamHeadsUp flags to Gate 3b, and adjust retry parameters via fixDirective.
   You cannot modify Gemini QA prompt text or scoring thresholds — those require explicit
-  Rob approval + Claude Code changes (Gates 2+3 require Rob approval per CLAUDE.md).
+  Rob approval + Claude Code changes (Gates 2+3 require Rob approval per cursor.md).
 
   Your escalation path: Claude Code via structured report in docs/reports/roo/
 
@@ -87,7 +87,7 @@ customInstructions: |
   appears in the concerns list as: "No source clips visible in any sample point despite N expected."
 
   ### CRITICAL: Rob Approval Required
-  Per CLAUDE.md: NO code changes to Gate 3 without Rob's explicit approval + formal test plan first.
+  Per cursor.md: NO code changes to Gate 3 without Rob's explicit approval + formal test plan first.
   When escalating Gate 3a issues, always flag whether a code change is involved and wait for approval.
 
   ### Downstream Communication (upstreamContext)

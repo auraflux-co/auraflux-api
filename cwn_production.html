@@ -189,10 +189,21 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <option value="5">5 games (~8 min)</option>
               </select>
             </div>
+            <!-- inline clip picker — populated by previewNBAGames() -->
+            <div id="nba-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
             <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
-            <div class="btn-row" style="align-items:center;gap:10px;">
-              <button id="btn-gen-nba" class="btn btn-gold" onclick="generateNBA()">LONG FORM</button>
-              <button id="btn-gen-nba-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('nba', platforms); })">SHORT</button>
+            <div class="btn-row" style="align-items:center;gap:10px;flex-wrap:wrap;">
+              <button id="btn-preview-nba" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNBAGames()">PICK CLIPS</button>
+              <span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;letter-spacing:.03em;">↑ feeds both</span>
+              <button id="btn-gen-nba" class="btn btn-gold" onclick="generateNBAWithPicker()">LONG FORM</button>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <select id="nba-short-batch" style="background:#0b111f;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:11px;padding:4px 6px;border-radius:4px;">
+                  <option value="1">×1</option>
+                  <option value="3">×3</option>
+                  <option value="5">×5</option>
+                </select>
+                <button id="btn-gen-nba-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShortBatch('nba', platforms); })">SHORT</button>
+              </div>
               <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
             </div>
           </div>
@@ -221,9 +232,20 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               </select>
             </div>
             <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
-            <div class="btn-row">
-              <button id="btn-gen-news" class="btn btn-gold" onclick="generateNews()">LONG FORM</button>
-              <button id="btn-gen-news-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('news', platforms); })">SHORT</button>
+            <!-- inline story picker — populated by previewNewsStories() -->
+            <div id="news-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
+            <div class="btn-row" style="flex-wrap:wrap;gap:10px;align-items:center;">
+              <button id="btn-preview-news" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNewsStories()">PICK STORIES</button>
+              <span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;letter-spacing:.03em;">↑ feeds both</span>
+              <button id="btn-gen-news" class="btn btn-gold" onclick="generateNewsWithPicker()">LONG FORM</button>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <select id="news-short-batch" style="background:#0b111f;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:11px;padding:4px 6px;border-radius:4px;">
+                  <option value="1">×1</option>
+                  <option value="3">×3</option>
+                  <option value="5">×5</option>
+                </select>
+                <button id="btn-gen-news-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShortBatch('news', platforms); })">SHORT</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1377,7 +1399,9 @@ function assembleJob(batchJobId) {
         url:     s.type === 'source_clip' ? (s.clipUrl || s.url) : s.url,
         pageUrl: s.type === 'source_clip' ? (s.pageUrl || '') : '',
         label:   s.label,
-        type:    s.type || 'avatar'
+        type:    s.type || 'avatar',
+        clipTimingTargets: s.type === 'source_clip' ? (s.clipTimingTargets || []) : [],
+        clipTimingFormat: s.type === 'source_clip' ? (s.clipTimingFormat || 'none') : 'none'
       };
     });
 
@@ -1977,6 +2001,8 @@ function restoreJobsFromServer(showAlert) {
               clipUrl:     clip.url || '',
               pageUrl:     clip.pageUrl || '',
               url:         clip.url || '',
+              clipTimingTargets: clip.clipTimingTargets || [],
+              clipTimingFormat: clip.clipTimingFormat || 'none',
               clipDuration: null,
               videoId:     null
             });
@@ -2007,6 +2033,8 @@ function restoreJobsFromServer(showAlert) {
                     clipUrl: clipSeg.clipUrl || '',
                     pageUrl: clipSeg.pageUrl || '',
                     url: clipSeg.clipUrl || '',
+                    clipTimingTargets: clipSeg.clipTimingTargets || [],
+                    clipTimingFormat: clipSeg.clipTimingFormat || 'none',
                     status: 'ready',
                     videoId: null
                   });
@@ -2043,6 +2071,10 @@ function restoreJobsFromServer(showAlert) {
             seg.clipUrl = clipUrls[fillIdx].url || '';
             seg.url     = seg.clipUrl;
             seg.pageUrl = clipUrls[fillIdx].pageUrl || '';
+          }
+          if (!seg.clipTimingTargets && clipUrls[fillIdx]) {
+            seg.clipTimingTargets = clipUrls[fillIdx].clipTimingTargets || [];
+            seg.clipTimingFormat = clipUrls[fillIdx].clipTimingFormat || 'none';
           }
           if (clipUrls[fillIdx]) fillIdx++;
         });
@@ -2118,6 +2150,9 @@ function restoreJobsFromServer(showAlert) {
           type:        contentType,
           title:       contentType.toUpperCase() + ' ' + dateLabel + ' (' + avatarCount + ' avatar + ' + clipCount + ' clips)',
           status:      restoredStatus,
+          stage:       serverJob.stage || null,
+          jobSpecId:   serverJob.jobSpecId || null,
+          manualSegments: serverJob.manualSegments || null,
           created:     serverJob.savedAt || new Date().toISOString(),
           segments:    segments,
           script:      serverJob.script || '',
@@ -2324,7 +2359,15 @@ function renderQueue() {
       +'<div class="job-row-top"><div class="job-info" style="flex:1;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
       +'<div><div class="job-title">'+job.title+'</div>'
-      +'<div class="job-meta">'+(job.type||'video').toUpperCase().replace('-',' ')+' | '+new Date(job.created).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div></div>'
+      +'<div class="job-meta">'+(job.type||'video').toUpperCase().replace('-',' ')+' | '+new Date(job.created).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div>'
+      +'<div class="job-id-line" style="font-size:10px;font-family:monospace;color:rgba(255,255,255,0.35);margin-top:4px;word-break:break-all;" title="Use this id for /tmp/manual_segments and resume API">ID: '+job.id+'</div>'
+      +(job.manualSegments && job.manualSegments.manualDir
+        ? '<div style="font-size:10px;font-family:monospace;color:rgba(199,175,79,0.55);margin-top:3px;word-break:break-all;">Manual drop: '+job.manualSegments.manualDir+'</div>'
+          +((job.manualSegments.operatorGuideDir || job.manualSegments.operatorGuidePath)
+            ? '<div style="font-size:10px;font-family:monospace;color:rgba(199,175,79,0.45);margin-top:2px;word-break:break-all;">Operator notes: '+(job.manualSegments.operatorGuideDir || job.manualSegments.operatorGuidePath)+'</div>'
+            : '')
+        : '')
+      +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
       +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+'<div id="gate3-approval-'+job.id+'" style="display:'+(job._gate3Approved||job._gate3Rejected?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
@@ -2387,8 +2430,32 @@ function retrySegment(jobId, segIndex) {
 }
 
 // ── REFRESH HEYGEN IDs ────────────────────────────────────────────
-// Fetches latest HeyGen videos, matches by title prefix (jobId_XX_SCENENAME),
-// and updates segment URLs so assembly can proceed after manual Avatar V upgrade.
+// Fetches latest HeyGen videos, matches by title prefix (jobId_XX_SCENENAME) OR
+// compact titles from sendScriptToHeyGen (tw_SCENE_00_runTag), then updates segment URLs.
+function contentTypeToHeyGenTag(jobType) {
+  var t = String(jobType || 'twitch').toLowerCase();
+  var map = { twitch: 'tw', 'twitch-short': 'twS', 'clips-short': 'cS', news: 'nw', 'news-short': 'nwS', nba: 'nba', 'nba-short': 'nbaS' };
+  if (map[t]) return map[t];
+  return t.replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'unk';
+}
+function sanitizeHeyGenSceneForMatch(s, maxLen) {
+  maxLen = maxLen || 40;
+  // Dashboard labels often use spaces (sceneName with underscores collapsed for display)
+  var out = String(s || '').replace(/\s+/g, '_').replace(/[^A-Za-z0-9_-]/g, '').slice(0, Math.max(1, maxLen));
+  return out || '';
+}
+function parseHeyGenCompactTitle(title) {
+  if (!title || typeof title !== 'string') return null;
+  var parts = title.split('_');
+  if (parts.length < 4) return null;
+  var tag = parts[parts.length - 1];
+  var idxStr = parts[parts.length - 2];
+  if (!/^\d{2}$/.test(idxStr)) return null;
+  var ct = parts[0];
+  var scene = parts.slice(1, -2).join('_');
+  return { ct: ct, scene: scene, idx: parseInt(idxStr, 10), tag: tag };
+}
+
 function refreshHeyGenIds(jobId) {
   var job = JOBS.find(function(j){ return j.id === jobId; });
   if (!job) return;
@@ -2407,6 +2474,40 @@ function refreshHeyGenIds(jobId) {
       var videos = resp.videos || [];
       var prefix = jobId + '_';
       var matched = videos.filter(function(v) { return v.title && v.title.startsWith(prefix); });
+
+      if (!matched.length) {
+        var expCt = contentTypeToHeyGenTag(job.type);
+        var compactHits = [];
+        (job.segments || []).forEach(function(seg) {
+          if (seg.type !== 'avatar' || !seg.label) return;
+          var wantScene = sanitizeHeyGenSceneForMatch(seg.label, 40);
+          if (!wantScene) return;
+          for (var vi = 0; vi < videos.length; vi++) {
+            var v = videos[vi];
+            if (!v.title || !v.video_url) continue;
+            var p = parseHeyGenCompactTitle(v.title);
+            if (!p || p.ct !== expCt) continue;
+            if (sanitizeHeyGenSceneForMatch(p.scene, 40) !== wantScene) continue;
+            compactHits.push({ seg: seg, v: v });
+            break;
+          }
+        });
+        if (compactHits.length) {
+          var uCompact = 0;
+          compactHits.forEach(function(h) {
+            h.seg.url = h.v.video_url;
+            h.seg.videoId = h.v.video_id;
+            h.seg.status = 'completed';
+            uCompact++;
+          });
+          saveJobs();
+          renderQueue();
+          var msgC = '✅ ' + uCompact + '/' + compactHits.length + ' (HeyGen title match)';
+          cwn_log('[refreshIds] ' + msgC + ' for job ' + jobId, false);
+          if (btn) { btn.textContent = msgC; btn.disabled = false; setTimeout(function(){ btn.textContent = '🔄 REFRESH IDs'; }, 4000); }
+          return;
+        }
+      }
 
       if (!matched.length) {
         // Fallback: direct video_id lookup for jobs sent before title format was added
@@ -2966,6 +3067,22 @@ function setGeneratingState(statusElId, labelText) {
   if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:rgba(52,152,219,0.8);">⏳ Calling Gemini + Claude — this takes 15-30 seconds...</span>';
 }
 
+function statusTagIdForType(type) {
+  if (type === 'twitch' || type === 'twitch-short') return 'twitch-gen-status';
+  if (type === 'nba' || type === 'nba-short') return 'nba-status';
+  if (type === 'news' || type === 'news-short') return 'news-status';
+  return null;
+}
+
+function setGenerateModeActive(type, form) {
+  var longBtn = g('btn-gen-' + type);
+  var shortBtn = g('btn-gen-' + type + '-short');
+  if (!longBtn || !shortBtn) return;
+  var longOn = form === 'long';
+  longBtn.className = longOn ? 'btn btn-gold' : 'btn btn-outline';
+  shortBtn.className = longOn ? 'btn btn-outline' : 'btn btn-gold';
+}
+
 function callFullScriptServer(type, items, statusElId, onDone, tone, platforms) {
   var dateStr = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   var xhr = new XMLHttpRequest();
@@ -2975,6 +3092,10 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms) 
   xhr.onload = function() {
     try {
       var resp = JSON.parse(xhr.responseText);
+      if (resp.errors && Array.isArray(resp.errors) && resp.errors.length > 0) {
+        var first = resp.errors[0];
+        throw new Error(first.msg || first.error || JSON.stringify(first));
+      }
       if (resp.error) throw new Error(resp.error);
       g('main-script').value = resp.script;
       updateScriptStats();
@@ -3054,7 +3175,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms) 
       g('script-type-label').textContent = 'ERROR: ' + e.message;
       var isGate0 = e.message && e.message.indexOf('Gate 0 FAIL') !== -1;
       var retryHtml = isGate0
-        ? '<br><button onclick="generateNBA()" class="btn btn-gold btn-sm" style="margin-top:8px;">↻ RETRY</button>'
+        ? '<br><button onclick="generateNBAWithPicker()" class="btn btn-gold btn-sm" style="margin-top:8px;">↻ RETRY</button>'
         : '';
       if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ ' + e.message + '</span>' + retryHtml;
       cwn_log('[generate-full-script] ' + e.message, true);
@@ -3083,6 +3204,9 @@ function fetchCwnNewsVideos(callback) {
       // Adapt to legacy rss2json item shape expected by all callers
       // Track C: preserve validation data per-item and summary
       var items = (d.videos || []).map(function(v) {
+        // Must mirror API orientation — server defaults missing orientation to landscape and
+        // news long-form Gate 0 uses portraitPool only; omitting this caused 0/N "have video".
+        var ori = (v.orientation && String(v.orientation).toLowerCase()) || 'portrait';
         return {
           title:       v.title || '',
           link:        v.url || '',
@@ -3091,10 +3215,21 @@ function fetchCwnNewsVideos(callback) {
           description: '',
           enclosure:   {},
           hlsUrl:      v.hlsUrl || '',
+          orientation: ori,
+          sourceOrientation: ori,
+          pillarboxFilter: v.pillarboxFilter != null ? v.pillarboxFilter : null,
           validation:  v.validation || null   // Track C: per-video validation result
         };
       });
-      callback({ items: items, source: d.source, totalFound: d.totalFound, validationSummary: d.validationSummary || null }, null);
+      callback({
+        items: items,
+        source: d.source,
+        totalFound: d.totalFound != null ? d.totalFound : (d.recentCount != null ? d.recentCount : items.length),
+        scrapedWithVideo: d.scrapedWithVideo,
+        droppedNonPortrait: d.droppedNonPortrait,
+        hint: d.hint || null,
+        validationSummary: d.validationSummary || null
+      }, null);
     } catch(e) { callback(null, e.message); }
   };
   xhr.onerror = xhr.ontimeout = function() { callback(null, 'Network error fetching news videos'); };
@@ -3103,6 +3238,7 @@ function fetchCwnNewsVideos(callback) {
 
 function generateNews() {
   lockGenerateButton('btn-gen-news');
+  setGenerateModeActive('news', 'long');
   CURRENT_TYPE = 'news';
   var newsSrc = g('news-source') ? g('news-source').value : 'aljazeera';
   CURRENT_META = { source: newsSrc, feedUrl: '/news/us-canada-videos' };
@@ -3124,9 +3260,28 @@ function generateNews() {
           link:         it.link||'',
           thumbnailUrl: img,
           videoUrl:     it.hlsUrl || '',
+          hlsUrl:       it.hlsUrl || '',
+          orientation:  (it.orientation || it.sourceOrientation || 'portrait'),
+          sourceOrientation: (it.sourceOrientation || it.orientation || 'portrait'),
+          pillarboxFilter: it.pillarboxFilter != null ? it.pillarboxFilter : null,
           pubDate:      it.pubDate||''
         };
       });
+      if (!items.length) {
+        var found = d.totalFound != null ? d.totalFound : 0;
+        var sw = d.scrapedWithVideo != null ? d.scrapedWithVideo : null;
+        var dropped = d.droppedNonPortrait != null ? d.droppedNonPortrait : null;
+        var detail = 'No portrait HLS stories from /news/us-canada-videos.';
+        if (sw != null && sw === 0) detail += ' Scraper returned 0 clips (Puppeteer/Brightcove or sitemap).';
+        else if (sw != null && sw > 0 && found === 0) detail += ' ' + sw + ' clip(s) scraped but none passed portrait/duration rules.';
+        else if (dropped != null && dropped > 0 && found === 0) detail += ' ' + dropped + ' non-portrait clip(s) filtered.';
+        if (d.hint) detail += ' ' + d.hint;
+        g('news-status').innerHTML = 'ERROR: ' + detail + ' Refresh, then Generate again.';
+        if (g('script-type-label')) g('script-type-label').textContent = 'NEWS — No usable items to generate script';
+        if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ No input stories with usable video URLs. ' + detail + '</span>';
+        unlockGenerateButtons();
+        return;
+      }
       g('script-type-label').textContent = 'NEWS — Gemini + Claude writing full script...';
       callFullScriptServer('news', items, 'news-status', null);
     } catch(e) {
@@ -3183,6 +3338,7 @@ function generateTwitch() {
   var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
   if (!streamers.length) { alert('No streamers configured.'); return; }
   lockGenerateButton('btn-gen-twitch');
+  setGenerateModeActive('twitch', 'long');
   var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
   var streamerNotes = parseStreamerNotes();
   CURRENT_TYPE = 'twitch';
@@ -4492,9 +4648,9 @@ function sendToHeyGenManual() {
 
 function regenScript() {
   if (_activeGenerateBtn) { console.warn('[regenScript] Generate already in flight — skipping duplicate trigger'); return; }
-  if (CURRENT_TYPE === 'nba') generateNBA();
+  if (CURRENT_TYPE === 'nba') generateNBAWithPicker();
   else if (CURRENT_TYPE === 'nba-short') generateShort('nba');
-  else if (CURRENT_TYPE === 'news') generateNews();
+  else if (CURRENT_TYPE === 'news') generateNewsWithPicker();
   else if (CURRENT_TYPE === 'news-short') generateShort('news');
   else if (CURRENT_TYPE === 'twitch') generateTwitch();
   else if (CURRENT_TYPE === 'twitch-short') generateShort('twitch');
@@ -4554,13 +4710,72 @@ function buildCalendar() {
 
 function generateShort(type, platforms) {
   lockGenerateButton('btn-gen-' + type + '-short');
+  setGenerateModeActive(type, 'short');
   CURRENT_TYPE = type + '-short';
   var _shortPlatforms = platforms || null;
-  setGeneratingState(type+'-short-status', type.toUpperCase()+' SHORT — Fetching data...');
+  setGeneratingState(statusTagIdForType(type + '-short'), type.toUpperCase()+' SHORT — Fetching data...');
+
+  // ── Picker shortcut: if the inline picker has selections, use them directly ──
+  // The same picker that feeds LONG FORM also feeds SHORT FORM.
+  // For short: use only the FIRST selected item (one clip per short video).
+  // For batch shorts (generateShortBatch), each selected item gets its own short.
+  if (type === 'nba') {
+    var _nbaSelected = (window._nbaPickerGames || []).filter(function(g){ return !!g._selected; });
+    if (_nbaSelected.length > 0) {
+      var pickedGame = _nbaSelected[0];
+      var item = {
+        gameId:      pickedGame.gameId || '',
+        away:        pickedGame.away || '?',
+        home:        pickedGame.home || '?',
+        awayScore:   pickedGame.awayScore || '?',
+        homeScore:   pickedGame.homeScore || '?',
+        leader:      pickedGame.leader || '',
+        leaderStat:  pickedGame.leaderStat || '',
+        injuries:    pickedGame.injuries || [],
+        clipUrl:     pickedGame.clipUrl || pickedGame.url || '',
+        thumbnailUrl: pickedGame.thumbnailUrl || ''
+      };
+      if (!item.clipUrl) {
+        setGeneratingState(statusTagIdForType('nba-short'), 'NBA SHORT — picked game has no clip URL yet. Use PICK CLIPS to scrape first.');
+        unlockGenerateButtons();
+        return;
+      }
+      CURRENT_META = { gameIds: [item.gameId] };
+      g('script-type-label').textContent = 'NBA SHORT — ' + item.away + ' vs ' + item.home + ' (picker)';
+      callFullScriptServer('nba-short', [item], statusTagIdForType('nba-short'), null, null, _shortPlatforms);
+      return;
+    }
+  }
+
+  if (type === 'news') {
+    var _newsSelected = (window._newsPickerStories || []).filter(function(s){ return !!s._selected; });
+    if (_newsSelected.length > 0) {
+      var pickedStory = _newsSelected[0];
+      var item = {
+        title:        (pickedStory.title || '').trim(),
+        desc:         (pickedStory.desc || pickedStory.description || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 1200),
+        source:       'Al Jazeera',
+        link:         pickedStory.link || '',
+        thumbnailUrl: pickedStory.thumbnail || pickedStory.thumbnailUrl || '',
+        videoUrl:     pickedStory.hlsUrl || pickedStory.videoUrl || '',
+        hlsUrl:       pickedStory.hlsUrl || pickedStory.videoUrl || '',
+        orientation:  pickedStory.orientation || 'portrait',
+        sourceOrientation: pickedStory.sourceOrientation || pickedStory.orientation || 'portrait',
+        pillarboxFilter: pickedStory.pillarboxFilter != null ? pickedStory.pillarboxFilter : null,
+        pubDate:      pickedStory.pubDate || ''
+      };
+      CURRENT_META = { source: 'aljazeera' };
+      g('script-type-label').textContent = 'NEWS SHORT — "' + (item.title||'').slice(0, 60) + '" (picker)';
+      callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, _shortPlatforms);
+      return;
+    }
+  }
 
   if (type === 'nba') {
-    // Fetch yesterday's top game — auto-expand to 48h if no games found
+    // Fetch yesterday's games for SHORT. Honor selected dropdown quantity.
     var shortDateStr = localYesterday();
+    var nbaCountSelShort = g('nba-count');
+    var nbaLimitShort = nbaCountSelShort ? (parseInt(nbaCountSelShort.value, 10) || 3) : 3;
     function fetchNBAShortForDate(dateStr, _daysBack) {
       _daysBack = _daysBack || 0;
       var dateKey = dateStr.replace(/-/g,'');
@@ -4572,8 +4787,7 @@ function generateShort(type, platforms) {
           var d=JSON.parse(xhr.responseText); var events=d.events||[];
           var completedEvents = events.filter(function(ev){
             var completed = ev.status && ev.status.type && ev.status.type.completed;
-            var evDate = (ev.date||'').slice(0,10);
-            return completed && (!evDate || evDate === dateStr);
+            return completed;
           });
           if(!completedEvents.length){ events = []; } else { events = completedEvents; }
           if(!events.length){
@@ -4584,63 +4798,90 @@ function generateShort(type, platforms) {
               fetchNBAShortForDate(dayBefore, _daysBack + 1);
               return;
             }
+            unlockGenerateButtons();
             g('script-type-label').textContent='NBA SHORT -- no games found in last 24h'; return;
           }
-        // Pick highest-scoring game
-        var bestGame=null, best=0;
-        events.forEach(function(ev){
-          var comps=(ev.competitions&&ev.competitions[0]&&ev.competitions[0].competitors)||[];
-          var total=comps.reduce(function(a,c){ return a+parseInt(c.score||0); },0);
-          if(total>best){ best=total; bestGame=ev; }
+        // Rank by total points to prioritize best game environments.
+        var ranked = events.slice().sort(function(a, b){
+          var compsA=(a.competitions&&a.competitions[0]&&a.competitions[0].competitors)||[];
+          var compsB=(b.competitions&&b.competitions[0]&&b.competitions[0].competitors)||[];
+          var totalA=compsA.reduce(function(sum,c){ return sum + parseInt(c.score||0,10); },0);
+          var totalB=compsB.reduce(function(sum,c){ return sum + parseInt(c.score||0,10); },0);
+          return totalB-totalA;
         });
-        var gameId = bestGame ? bestGame.id : events[0].id;
-        // Now fetch summary for top scorer + clip URL
-        var xhr2=new XMLHttpRequest();
-        xhr2.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event='+gameId,true);
-        xhr2.timeout=10000;
-        xhr2.onload=function(){
-          try{
-            var s=JSON.parse(xhr2.responseText);
-            var comp = s.header&&s.header.competitions&&s.header.competitions[0];
-            var comps2=(comp&&comp.competitors)||[];
-            var away={team:{}}, home={team:{}};
-            comps2.forEach(function(c){ if(c.homeAway==='away')away=c; if(c.homeAway==='home')home=c; });
-            var topPlayer=null, topPts=0;
-            ((s.boxscore&&s.boxscore.players)||[]).forEach(function(tp){
-              (tp.statistics||[]).forEach(function(sg){
-                (sg.athletes||[]).forEach(function(a){
-                  var pts=parseInt((a.stats||[])[13]||0);
-                  if(pts>topPts){topPts=pts;topPlayer={name:(a.athlete&&a.athlete.displayName)||'',pts:pts,reb:(a.stats||[])[6]||'--',ast:(a.stats||[])[7]||'--'};}
-                });
-              });
-            });
-            var thumbUrl = (away.team&&away.team.abbreviation) ? 'https://a.espncdn.com/i/teamlogos/nba/500/'+(away.team.abbreviation||'').toLowerCase()+'.png' : '';
-            // Check s.videos first, then s.article.video
-            var videos=s.videos||[]; var hlVid=null;
-            for(var i=0;i<videos.length;i++){ if((videos[i].headline||'').toLowerCase().indexOf('highlights')>-1){hlVid=videos[i];break;} }
-            if(!hlVid && s.article && s.article.video && s.article.video.length) hlVid=s.article.video[0];
-            if(!hlVid && videos.length) hlVid=videos[0];
-            var src=(hlVid&&hlVid.links&&hlVid.links.source)||{};
-            var clipUrl=(src.HLS&&src.HLS.HD&&src.HLS.HD.href)||(src.HLS&&src.HLS.href)||src.HD&&src.HD.href||src.mezzanine&&src.mezzanine.href||src.href||'';
-
-            var item = {
-              gameId: gameId,
-              away: (away.team&&away.team.displayName)||'Away',
-              home: (home.team&&home.team.displayName)||'Home',
-              awayScore: away.score||'?', homeScore: home.score||'?',
-              leader: topPlayer?topPlayer.name:'',
-              leaderStat: topPlayer?(topPlayer.pts+' PTS / '+topPlayer.reb+' REB / '+topPlayer.ast+' AST'):'',
-              injuries: [], clipUrl: clipUrl, thumbnailUrl: thumbUrl
-            };
-            CURRENT_META = { gameIds: [gameId] };
-            callFullScriptServer('nba-short', [item], 'nba-short-status', null, null, _shortPlatforms);
-          }catch(e){ g('script-type-label').textContent='NBA SHORT -- error: '+e.message; }
-        };
-        xhr2.onerror=xhr2.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- ESPN timeout'; };
-        xhr2.send();
-      }catch(e){ g('script-type-label').textContent='NBA SHORT -- error'; }
+        var candidateEvents = ranked.slice(0, Math.max(nbaLimitShort * 2, nbaLimitShort));
+        var pending = candidateEvents.length;
+        var candidates = [];
+        if (!pending) {
+          unlockGenerateButtons();
+          g('script-type-label').textContent='NBA SHORT -- no candidate games found';
+          return;
+        }
+        candidateEvents.forEach(function(ev){
+          var comp=(ev.competitions&&ev.competitions[0])||{};
+          var competitors = comp.competitors || [];
+          var away = competitors.find(function(c){ return c.homeAway==='away'; }) || competitors[0] || {};
+          var home = competitors.find(function(c){ return c.homeAway==='home'; }) || competitors[1] || {};
+          var item = {
+            gameId: ev.id,
+            away: (away.team&&away.team.displayName)||'Away',
+            home: (home.team&&home.team.displayName)||'Home',
+            awayScore: away.score||'?',
+            homeScore: home.score||'?',
+            leader: '',
+            leaderStat: '',
+            injuries: [],
+            clipUrl: '',
+            thumbnailUrl: ''
+          };
+          var xS = new XMLHttpRequest();
+          xS.open('POST', 'http://localhost:3000/nba/scrape-game-highlight', true);
+          xS.setRequestHeader('Content-Type', 'application/json');
+          xS.timeout = 30000;
+          xS.onload = function(){
+            try{
+              var result = JSON.parse(xS.responseText);
+              if (result.ok && result.videoUrl) {
+                item.clipUrl = result.videoUrl;
+                item.thumbnailUrl = result.thumbnail || '';
+              }
+            } catch(e) {}
+            candidates.push(item);
+            pending--;
+            if (!pending) {
+              var withClips = candidates.filter(function(c){ return !!c.clipUrl; });
+              var items = withClips.slice(0, nbaLimitShort);
+              if (!items.length) {
+                unlockGenerateButtons();
+                g('script-type-label').textContent='NBA SHORT -- no usable highlight clips found';
+                return;
+              }
+              CURRENT_META = { gameIds: items.map(function(it){ return it.gameId; }) };
+              g('script-type-label').textContent = 'NBA SHORT — ' + items.length + '/' + nbaLimitShort + ' games with clips';
+              callFullScriptServer('nba-short', items, statusTagIdForType('nba-short'), null, null, _shortPlatforms);
+            }
+          };
+          xS.onerror = xS.ontimeout = function(){
+            candidates.push(item);
+            pending--;
+            if (!pending) {
+              var withClips = candidates.filter(function(c){ return !!c.clipUrl; });
+              var items = withClips.slice(0, nbaLimitShort);
+              if (!items.length) {
+                unlockGenerateButtons();
+                g('script-type-label').textContent='NBA SHORT -- no usable highlight clips found';
+                return;
+              }
+              CURRENT_META = { gameIds: items.map(function(it){ return it.gameId; }) };
+              g('script-type-label').textContent = 'NBA SHORT — ' + items.length + '/' + nbaLimitShort + ' games with clips';
+              callFullScriptServer('nba-short', items, statusTagIdForType('nba-short'), null, null, _shortPlatforms);
+            }
+          };
+          xS.send(JSON.stringify({ gameId: ev.id }));
+        });
+      }catch(e){ unlockGenerateButtons(); g('script-type-label').textContent='NBA SHORT -- error'; }
       };
-      xhr.onerror=xhr.ontimeout=function(){ g('script-type-label').textContent='NBA SHORT -- offline'; };
+      xhr.onerror=xhr.ontimeout=function(){ unlockGenerateButtons(); g('script-type-label').textContent='NBA SHORT -- offline'; };
       xhr.send();
     }
     fetchNBAShortForDate(shortDateStr);
@@ -4661,11 +4902,15 @@ function generateShort(type, platforms) {
           link:         story.link||'',
           thumbnailUrl: story.thumbnail||'',
           videoUrl:     story.hlsUrl||'',
+          hlsUrl:       story.hlsUrl||'',
+          orientation:  (story.orientation || story.sourceOrientation || 'portrait'),
+          sourceOrientation: (story.sourceOrientation || story.orientation || 'portrait'),
+          pillarboxFilter: story.pillarboxFilter != null ? story.pillarboxFilter : null,
           pubDate:      story.pubDate||''
         };
         CURRENT_META = { source: 'aljazeera' };
         g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
-        callFullScriptServer('news-short', [item], 'news-short-status', null, null, _shortPlatforms);
+        callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, _shortPlatforms);
       } catch(e) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
     });
 
@@ -4702,7 +4947,7 @@ function generateShort(type, platforms) {
         if (resolved && resolved[0] && resolved[0].mp4Url) {
           item.clips[0].mp4Url = resolved[0].mp4Url;
         }
-        callFullScriptServer('twitch-short', [item], 'twitch-short-status', null, null, _shortPlatforms);
+        callFullScriptServer('twitch-short', [item], statusTagIdForType('twitch-short'), null, null, _shortPlatforms);
       });
     }
 
@@ -4933,6 +5178,7 @@ function generateNBA(_daysBack) {
   // If no games yesterday, show a clear message — do NOT silently pull stale games from days ago.
   _daysBack = _daysBack || 0;
   if (_daysBack === 0) lockGenerateButton('btn-gen-nba');
+  if (_daysBack === 0) setGenerateModeActive('nba', 'long');
   var statusEl = g('nba-fetch-status');
   var targetDate = localDateMinus(_daysBack); // 0 = yesterday ET, 1 = 2 days ago
   var dateKey = targetDate.replace(/-/g, '');
@@ -4944,14 +5190,10 @@ function generateNBA(_daysBack) {
     try {
       var data = JSON.parse(xhr.responseText);
       var events = data.events || [];
-      // Only accept games whose date matches targetDate — prevents stale games from other dates
+      // Scoreboard endpoint is already date-scoped; only require completed games.
       var finalGames = events.filter(function(ev) {
         var completed = ev.status && ev.status.type && ev.status.type.completed;
-        // ESPN event date is in ET — verify it matches the date we requested
-        var evDate = (ev.date || '').slice(0, 10); // "2026-04-18T..."
-        var evDateET = evDate; // ESPN dates are already ET-anchored for NBA
-        var dateMatch = !evDate || evDateET === targetDate;
-        return completed && dateMatch;
+        return completed;
       });
       if (!finalGames.length) {
         // Only allow one day of lookback (in case yesterday had no games — e.g. All-Star break)
@@ -5014,8 +5256,8 @@ function generateNBA(_daysBack) {
 }
 
 function launchNBAScriptGen(gameEntries, statusEl) {
-  // Drop games with no clip — Gate 0 handles this server-side too but filter here for clarity
-  var items = gameEntries.map(function(gm) {
+  // Build canonical game items
+  var allItems = gameEntries.map(function(gm) {
     return {
       gameId: gm.gameId, away: gm.away, home: gm.home,
       awayAbbr: gm.awayAbbr, homeAbbr: gm.homeAbbr,
@@ -5029,9 +5271,26 @@ function launchNBAScriptGen(gameEntries, statusEl) {
   });
   var nbaCountSel = g('nba-count');
   var nbaLimit = nbaCountSel ? (parseInt(nbaCountSel.value) || 3) : 3;
-  items = items.slice(0, nbaLimit);
-  var withClips = items.filter(function(i){ return !!i.clipUrl; });
-  var label = withClips.length + '/' + items.length + ' games have clips';
+  var withClipsAll = allItems.filter(function(i){ return !!i.clipUrl; });
+  // Prefer games user selected in the picker, but always backfill to requested count.
+  var selectedIds = {};
+  (NBA_GAMES || []).forEach(function(g){
+    if (g && g.selected && g.hasHighlights && g.id) selectedIds[String(g.id)] = true;
+  });
+  var preferred = withClipsAll.filter(function(i){ return selectedIds[String(i.gameId)]; });
+  var fallback = withClipsAll.filter(function(i){ return !selectedIds[String(i.gameId)]; });
+  var items = preferred.slice(0, nbaLimit);
+  if (items.length < nbaLimit) {
+    items = items.concat(fallback.slice(0, nbaLimit - items.length));
+  }
+  var label = items.length + '/' + nbaLimit + ' requested games have clips';
+  if (!items.length) {
+    if (statusEl) statusEl.textContent = 'No selected NBA games have usable highlight clips. Refresh and retry.';
+    var summaryFail = g('nba-games-summary');
+    if (summaryFail) { summaryFail.style.color = '#e74c3c'; summaryFail.textContent = '0/' + nbaLimit + ' games with clips'; }
+    unlockGenerateButtons();
+    return;
+  }
   if (statusEl) statusEl.textContent = label + ' — generating script...';
   CURRENT_TYPE = 'nba';
   CURRENT_META = { gameIds: items.map(function(i){ return i.gameId; }), items: items };
@@ -5045,6 +5304,363 @@ function launchNBAScriptGen(gameEntries, statusEl) {
 }
 
 function nbaUseSelected() {} // legacy stub — no longer used
+
+// ── Main-page inline clip pickers ──────────────────────────────────────────────
+
+// State for main-page pickers
+var _nbaPickerGames = [];   // [{gameId, away, home, awayAbbr, homeAbbr, awayScore, homeScore, clipUrl, clipDuration, thumbnail, localPath, selected}]
+var _newsPickerStories = []; // [{title, link, videoUrl, hlsUrl, thumbnailUrl, orientation, pillarboxFilter, pubDate, selected}]
+
+// ── NBA inline clip picker ─────────────────────────────────────────────────────
+
+function previewNBAGames() {
+  var statusEl = g('nba-fetch-status');
+  var picker = g('nba-inline-picker');
+  var btn = g('btn-preview-nba');
+  // Toggle off if already showing
+  if (picker.style.display !== 'none' && _nbaPickerGames.length > 0) {
+    picker.style.display = 'none';
+    btn.textContent = 'PICK CLIPS';
+    return;
+  }
+  btn.textContent = 'FETCHING...';
+  btn.disabled = true;
+  if (statusEl) statusEl.textContent = 'Fetching yesterday\'s games...';
+  _nbaPickerGames = [];
+  var targetDate = localDateMinus(0);
+  var dateKey = targetDate.replace(/-/g,'');
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dateKey,true);
+  xhr.timeout = 12000;
+  xhr.onload = function() {
+    try {
+      var data = JSON.parse(xhr.responseText);
+      var finalGames = (data.events||[]).filter(function(ev){
+        return ev.status && ev.status.type && ev.status.type.completed;
+      });
+      if (!finalGames.length) {
+        // try previous day
+        var prevDate = localDateMinus(1);
+        var prevKey = prevDate.replace(/-/g,'');
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+prevKey,true);
+        xhr2.timeout = 12000;
+        xhr2.onload = function() {
+          try {
+            var data2 = JSON.parse(xhr2.responseText);
+            var games2 = (data2.events||[]).filter(function(ev){ return ev.status && ev.status.type && ev.status.type.completed; });
+            if (!games2.length) { nbaPickerNoGames(btn, statusEl); return; }
+            scrapeNBAPickerClips(games2, btn, statusEl, prevDate);
+          } catch(e) { nbaPickerNoGames(btn, statusEl); }
+        };
+        xhr2.onerror = xhr2.ontimeout = function(){ nbaPickerNoGames(btn, statusEl); };
+        xhr2.send();
+        return;
+      }
+      scrapeNBAPickerClips(finalGames, btn, statusEl, targetDate);
+    } catch(e) { nbaPickerNoGames(btn, statusEl); }
+  };
+  xhr.onerror = xhr.ontimeout = function(){ nbaPickerNoGames(btn, statusEl); };
+  xhr.send();
+}
+
+function nbaPickerNoGames(btn, statusEl) {
+  btn.textContent = 'PICK CLIPS'; btn.disabled = false;
+  if (statusEl) statusEl.textContent = 'No completed games found.';
+}
+
+function scrapeNBAPickerClips(finalGames, btn, statusEl, dateStr) {
+  var done = 0; var total = finalGames.length;
+  if (statusEl) statusEl.textContent = 'Scraping '+total+' highlight clips...';
+  finalGames.forEach(function(ev) {
+    var comp = (ev.competitions||[])[0]||{};
+    var comps = comp.competitors||[];
+    var away = comps.find(function(c){return c.homeAway==='away';})||comps[0]||{};
+    var home = comps.find(function(c){return c.homeAway==='home';})||comps[1]||{};
+    var entry = {
+      gameId: ev.id,
+      away: (away.team&&away.team.displayName)||'Away',
+      home: (home.team&&home.team.displayName)||'Home',
+      awayAbbr: (away.team&&away.team.abbreviation)||'AWY',
+      homeAbbr: (home.team&&home.team.abbreviation)||'HME',
+      awayScore: away.score||'', homeScore: home.score||'',
+      clipUrl:'', clipDuration:null, thumbnail:'', localPath:'',
+      selected: true // default all selected
+    };
+    _nbaPickerGames.push(entry);
+    var xS = new XMLHttpRequest();
+    xS.open('POST','http://localhost:3000/nba/scrape-game-highlight',true);
+    xS.setRequestHeader('Content-Type','application/json');
+    xS.timeout = 60000;
+    xS.onload = function() {
+      try {
+        var r = JSON.parse(xS.responseText);
+        if (r.ok && r.videoUrl) { entry.clipUrl=r.videoUrl; entry.clipDuration=r.duration||null; entry.thumbnail=r.thumbnail||''; entry.localPath=r.localPath||''; }
+      } catch(e) {}
+      done++;
+      if (done >= total) renderNBAPicker(btn, statusEl, dateStr);
+    };
+    xS.onerror = xS.ontimeout = function(){ done++; if (done >= total) renderNBAPicker(btn, statusEl, dateStr); };
+    xS.send(JSON.stringify({gameId: ev.id}));
+  });
+}
+
+function renderNBAPicker(btn, statusEl, dateStr) {
+  btn.textContent = 'HIDE PICKER'; btn.disabled = false;
+  var withClips = _nbaPickerGames.filter(function(g){return !!g.clipUrl;}).length;
+  if (statusEl) statusEl.textContent = withClips+'/'+_nbaPickerGames.length+' games have highlights — '+dateStr;
+  var picker = g('nba-inline-picker');
+  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:6px;letter-spacing:1px;">SELECT GAMES FOR LONG FORM — UNCHECKED = EXCLUDED</div>';
+  _nbaPickerGames.forEach(function(gm, i) {
+    var hasClip = !!gm.clipUrl;
+    var score = gm.awayScore&&gm.homeScore ? gm.awayScore+'-'+gm.homeScore : 'N/A';
+    var badge = hasClip
+      ? '<span style="font-size:9px;color:#2ecc71;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3);padding:1px 6px;border-radius:8px;">✓ CLIP</span>'
+      : '<span style="font-size:9px;color:rgba(255,255,255,0.25);padding:1px 6px;">NO CLIP</span>';
+    html += '<label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
+      +'<input type="checkbox" id="nbapick-'+i+'" '+(gm.selected&&hasClip?'checked':'')+(hasClip?'':' disabled')+' onchange="_nbaPickerGames['+i+'].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;">'
+      +'<div style="flex:1;">'
+        +'<span style="font-weight:700;font-family:Barlow Condensed,sans-serif;font-size:13px;color:#fff;">'+gm.awayAbbr+' @ '+gm.homeAbbr+'</span>'
+        +'<span style="font-size:11px;color:rgba(255,255,255,0.4);margin-left:8px;">'+gm.away+' vs '+gm.home+'</span>'
+      +'</div>'
+      +'<span style="font-family:Bebas Neue,sans-serif;font-size:18px;color:#c7af4f;margin-right:8px;">'+score+'</span>'
+      +badge
+      +'</label>';
+  });
+  picker.innerHTML = html;
+  picker.style.display = '';
+}
+
+// Override generateNBA to respect manual selection when picker has been used
+var _origGenerateNBA = null;
+(function patchGenerateNBA() {
+  var origFn = typeof generateNBA === 'function' ? generateNBA : null;
+  _origGenerateNBA = origFn;
+  window.generateNBAWithPicker = function() {
+    // If picker has been used and has selections, skip auto-fetch and use picker items directly
+    var selected = _nbaPickerGames.filter(function(gm){ return gm.selected && gm.clipUrl; });
+    var nbaLimit = parseInt((g('nba-count')||{value:'3'}).value)||3;
+    if (selected.length > 0) {
+      var items = selected.slice(0, nbaLimit).map(function(gm) {
+        return { gameId:gm.gameId, away:gm.away, home:gm.home, awayAbbr:gm.awayAbbr, homeAbbr:gm.homeAbbr,
+          awayScore:gm.awayScore, homeScore:gm.homeScore, leader:'', leaderStat:'', injuries:[],
+          clipUrl:gm.clipUrl, clipDuration:gm.clipDuration||null, thumbnailUrl:gm.thumbnail||'', localPath:gm.localPath||'' };
+      });
+      if (!items.length) { alert('No games selected with highlight clips. Uncheck some and try again.'); return; }
+      lockGenerateButton('btn-gen-nba');
+      setGenerateModeActive('nba','long');
+      CURRENT_TYPE = 'nba';
+      CURRENT_META = { gameIds: items.map(function(i){return i.gameId;}), items: items };
+      g('nba-status').className = 'tag tag-done';
+      g('nba-status').innerHTML = '<span class="tag-dot"></span> '+items.length+' GAMES (MANUAL)';
+      if (g('script-type-label')) g('script-type-label').textContent = 'NBA — '+items.length+' selected games — generating script...';
+      if (g('nba-fetch-status')) g('nba-fetch-status').textContent = items.length+' selected games';
+      nav('generate');
+      callFullScriptServer('nba', items, 'nba-status', null);
+    } else {
+      // No picker used — fall through to original auto-fetch
+      if (typeof generateNBA === 'function') generateNBA();
+    }
+  };
+})();
+
+// ── News inline story picker ──────────────────────────────────────────────────
+
+function previewNewsStories() {
+  var btn = g('btn-preview-news');
+  var picker = g('news-inline-picker');
+  if (picker.style.display !== 'none' && _newsPickerStories.length > 0) {
+    picker.style.display = 'none';
+    btn.textContent = 'PICK STORIES';
+    return;
+  }
+  btn.textContent = 'FETCHING...'; btn.disabled = true;
+  _newsPickerStories = [];
+  fetchCwnNewsVideos(function(d, err) {
+    btn.disabled = false;
+    if (err || !d || !(d.items||[]).length) {
+      btn.textContent = 'PICK STORIES';
+      alert('Could not fetch stories: ' + (err || 'no data'));
+      return;
+    }
+    var count = parseInt((g('news-count')||{value:'10'}).value)||10;
+    var sourceName = 'Al Jazeera';
+    (d.items||[]).slice(0, Math.max(count, 15)).forEach(function(it) {
+      _newsPickerStories.push({
+        title: (it.title||'').trim(),
+        link: it.link||'',
+        videoUrl: it.hlsUrl||'',
+        hlsUrl: it.hlsUrl||'',
+        thumbnailUrl: it.thumbnail||'',
+        orientation: it.sourceOrientation||it.orientation||'portrait',
+        sourceOrientation: it.sourceOrientation||it.orientation||'portrait',
+        pillarboxFilter: it.pillarboxFilter != null ? it.pillarboxFilter : null,
+        pubDate: it.pubDate||'',
+        source: sourceName,
+        desc: (it.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
+        selected: !!(it.hlsUrl||it.videoUrl) // default: only select stories with video
+      });
+    });
+    renderNewsPicker(btn, count);
+  });
+}
+
+function renderNewsPicker(btn, maxCount) {
+  btn.textContent = 'HIDE PICKER';
+  var picker = g('news-inline-picker');
+  var withVideo = _newsPickerStories.filter(function(s){ return !!s.hlsUrl; }).length;
+  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:6px;letter-spacing:1px;">'
+    +'SELECT STORIES — '+withVideo+'/'+_newsPickerStories.length+' HAVE VIDEO — TOP '+maxCount+' CHECKED WILL BE USED'
+    +'</div>';
+  _newsPickerStories.forEach(function(story, i) {
+    var hasVideo = !!story.hlsUrl;
+    var badge = hasVideo
+      ? '<span style="font-size:9px;color:#2ecc71;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3);padding:1px 6px;border-radius:8px;flex-shrink:0;">✓ VIDEO</span>'
+      : '<span style="font-size:9px;color:rgba(255,255,255,0.25);padding:1px 6px;flex-shrink:0;">NO VIDEO</span>';
+    html += '<label style="display:flex;align-items:flex-start;gap:8px;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
+      +'<input type="checkbox" id="newspick-'+i+'" '+(story.selected?'checked':'')+' onchange="_newsPickerStories['+i+'].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;">'
+      +'<div style="flex:1;font-size:12px;color:'+(hasVideo?'#fff':'rgba(255,255,255,0.4)')+';">'+story.title+'</div>'
+      +badge
+      +'</label>';
+  });
+  picker.innerHTML = html;
+  picker.style.display = '';
+}
+
+// ── Batch shorts ──────────────────────────────────────────────────────────────
+
+function generateShortBatch(type, platforms) {
+  var batchSel = g(type+'-short-batch');
+  var n = batchSel ? (parseInt(batchSel.value)||1) : 1;
+  if (n <= 1) { generateShort(type, platforms); return; }
+  // Fire n parallel short-form jobs — each picks one item from the available pool
+  // For NBA: one game per short. For news: one story per short.
+  // Pre-fetch the pool once, then dispatch n times.
+  lockGenerateButton('btn-gen-'+type+'-short');
+  setGenerateModeActive(type, 'short');
+  CURRENT_TYPE = type + '-short';
+  var statusId = statusTagIdForType(type+'-short');
+  setGeneratingState(statusId, type.toUpperCase()+' SHORT ×'+n+' — Fetching pool...');
+
+  if (type === 'nba') {
+    // Prefer: selected picker items → all picker items with clips → auto-fetch
+    var _nbaAllPicker = window._nbaPickerGames || [];
+    var _nbaSelPool = _nbaAllPicker.filter(function(gm){ return gm._selected && gm.clipUrl; });
+    var pool = _nbaSelPool.length > 0 ? _nbaSelPool : _nbaAllPicker.filter(function(gm){ return gm.clipUrl; });
+    if (pool.length > 0) {
+      _dispatchBatchNBAShorts(pool, n, platforms, statusId);
+    } else {
+      // Auto-fetch then dispatch
+      var dStr = localDateMinus(0);
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dStr.replace(/-/g,''),true);
+      xhr.timeout=12000;
+      xhr.onload=function(){
+        try {
+          var events = ((JSON.parse(xhr.responseText).events)||[]).filter(function(ev){ return ev.status&&ev.status.type&&ev.status.type.completed; });
+          if (!events.length) { setGeneratingState(statusId,'No games found'); unlockGenerateButtons(); return; }
+          // Quick build without clip scrape — fall back to single shot if pool empty
+          var quickItems = events.slice(0,n).map(function(ev){
+            var comp=(ev.competitions||[])[0]||{}; var comps=comp.competitors||[];
+            var away=comps.find(function(c){return c.homeAway==='away';})||comps[0]||{};
+            var home=comps.find(function(c){return c.homeAway==='home';})||comps[1]||{};
+            return {gameId:ev.id,away:(away.team&&away.team.displayName)||'Away',home:(home.team&&home.team.displayName)||'Home',
+              awayAbbr:(away.team&&away.team.abbreviation)||'AWY',homeAbbr:(home.team&&home.team.abbreviation)||'HME',
+              awayScore:away.score||'',homeScore:home.score||'',leader:'',leaderStat:'',injuries:[],clipUrl:'',clipDuration:null,thumbnailUrl:'',localPath:''};
+          });
+          // Fall through to scrape in generateShort flow — fire n shots with different picks
+          setGeneratingState(statusId,'NBA SHORT ×'+n+' — scraping clips then dispatching...');
+          for (var i=0;i<n;i++) {
+            (function(idx){ setTimeout(function(){ generateShort(type, platforms); }, idx * 800); })(i);
+          }
+          unlockGenerateButtons();
+        } catch(e){ unlockGenerateButtons(); }
+      };
+      xhr.onerror=xhr.ontimeout=function(){ unlockGenerateButtons(); };
+      xhr.send();
+    }
+  } else if (type === 'news') {
+    // Prefer: selected picker items → all picker items with video → auto-fetch
+    var _newsAllPicker = window._newsPickerStories || [];
+    var _newsSelPool = _newsAllPicker.filter(function(s){ return s._selected && (s.hlsUrl || s.videoUrl); });
+    var pool = _newsSelPool.length > 0 ? _newsSelPool : _newsAllPicker.filter(function(s){ return !!(s.hlsUrl || s.videoUrl); });
+    if (pool.length > 0) {
+      _dispatchBatchNewsShorts(pool, n, platforms, statusId);
+    } else {
+      // Auto-fetch pool
+      fetchCwnNewsVideos(function(d, err) {
+        if (err||!d||(d.items||[]).length===0) { setGeneratingState(statusId,'No stories found'); unlockGenerateButtons(); return; }
+        var stories = (d.items||[]).filter(function(it){ return !!(it.hlsUrl||it.videoUrl); });
+        if (!stories.length) { setGeneratingState(statusId,'No stories with video'); unlockGenerateButtons(); return; }
+        var p = stories.map(function(it){
+          return {title:(it.title||'').trim(),link:it.link||'',videoUrl:it.hlsUrl||'',hlsUrl:it.hlsUrl||'',
+            thumbnailUrl:it.thumbnail||'',orientation:it.sourceOrientation||'portrait',sourceOrientation:it.sourceOrientation||'portrait',
+            pillarboxFilter:it.pillarboxFilter!=null?it.pillarboxFilter:null,pubDate:it.pubDate||'',
+            source:'Al Jazeera',desc:(it.description||'').replace(/<[^>]+>/g,'').trim().slice(0,1200)};
+        });
+        _dispatchBatchNewsShorts(p, n, platforms, statusId);
+      });
+    }
+  }
+}
+
+function _dispatchBatchNBAShorts(pool, n, platforms, statusId) {
+  // Each short gets one game — cycle through pool if fewer games than requested
+  var fired = 0;
+  for (var i = 0; i < n; i++) {
+    var game = pool[i % pool.length];
+    var item = {gameId:game.gameId,away:game.away,home:game.home,awayAbbr:game.awayAbbr,homeAbbr:game.homeAbbr,
+      awayScore:game.awayScore,homeScore:game.homeScore,leader:'',leaderStat:'',injuries:[],
+      clipUrl:game.clipUrl,clipDuration:game.clipDuration||null,thumbnailUrl:game.thumbnail||'',localPath:game.localPath||''};
+    (function(itm, idx) {
+      setTimeout(function(){
+        setGeneratingState(statusId,'NBA SHORT ×'+n+' — dispatched '+(idx+1)+'/'+n);
+        callFullScriptServer('nba-short', [itm], statusId, null, null, platforms);
+      }, idx * 1500);
+    })(item, i);
+    fired++;
+  }
+  setGeneratingState(statusId,'NBA SHORT ×'+fired+' — all dispatched');
+}
+
+function _dispatchBatchNewsShorts(pool, n, platforms, statusId) {
+  // Each short gets one story — cycle through pool
+  var fired = 0;
+  for (var i = 0; i < n; i++) {
+    var story = pool[i % pool.length];
+    (function(s, idx) {
+      setTimeout(function(){
+        setGeneratingState(statusId,'NEWS SHORT ×'+n+' — dispatched '+(idx+1)+'/'+n);
+        callFullScriptServer('news-short', [s], statusId, null, null, platforms);
+      }, idx * 1500);
+    })(story, i);
+    fired++;
+  }
+  setGeneratingState(statusId,'NEWS SHORT ×'+fired+' — all dispatched');
+}
+
+// ── generateNews override — respects manual story picker if used ──────────────
+
+var _origGenerateNews = null;
+(function patchGenerateNews() {
+  _origGenerateNews = typeof generateNews === 'function' ? generateNews : null;
+  window.generateNewsWithPicker = function() {
+    var selected = _newsPickerStories.filter(function(s){ return s.selected && s.hlsUrl; });
+    var count = parseInt((g('news-count')||{value:'10'}).value)||10;
+    if (selected.length > 0) {
+      var items = selected.slice(0, count);
+      if (!items.length) { alert('No stories selected with video. Use PICK STORIES to select some.'); return; }
+      lockGenerateButton('btn-gen-news');
+      setGenerateModeActive('news','long');
+      CURRENT_TYPE = 'news';
+      if (g('script-type-label')) g('script-type-label').textContent = 'NEWS — '+items.length+' selected stories — generating script...';
+      nav('generate');
+      callFullScriptServer('news', items, 'news-status', null);
+    } else {
+      if (typeof generateNews === 'function') generateNews();
+    }
+  };
+})();
 
 function fetchNewsStories() {
   // Fix 25b: use new CWN endpoint instead of rss2json

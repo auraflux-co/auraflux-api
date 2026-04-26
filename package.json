@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.13",
+  "version": "1.0.29",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -13,6 +13,8 @@
     "dev": "pm2 start ecosystem.config.js --env development",
     "dashboard": "python3 -m http.server 8765",
     "vectcut": "cd VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py",
+    "db:backfill-canonical": "node scripts/backfill_canonical_job_ids.cjs",
+    "db:backfill-canonical:dry": "node scripts/backfill_canonical_job_ids.cjs --dry-run",
     "test": "jest",
     "test:all": "node test/run_tests.js",
     "test:ci": "jest --runInBand --ci",
@@ -32,7 +34,20 @@
     "test:coverage": "jest --coverage",
     "format": "prettier --write \"**/*.{js,json,md,html,css,yml,yaml}\" --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{js,json,md,html,css,yml,yaml}\" --ignore-path .prettierignore",
-    "load-test:health": "node scripts/load_test_autocannon.js"
+    "load-test:health": "node scripts/load_test_autocannon.js",
+    "smoke:deploy": "node scripts/smoke_deploy.cjs",
+    "phase-a:batch": "node scripts/phase_a_batch.cjs",
+    "phase-a:batch:mini": "PHASE_A_JOBS=nba_lf,news_short PHASE_A_WATCH_EXIT_ON_STABLE=1 PHASE_A_WATCH_STABLE_MS=180000 node scripts/phase_a_batch.cjs",
+    "phase-a:watch": "node scripts/phase_a_gate_watch.cjs",
+    "gate:contracts:check": "node scripts/gate_contract_consistency_check.cjs",
+    "phase-a:batch:sim": "HEYGEN_SIM_MODE=true node scripts/phase_a_batch.cjs",
+    "job-monitor": "node scripts/job_monitor_daemon.cjs",
+    "heygen:manual-queue": "node scripts/heygen_manual_queue.cjs",
+    "heygen:manual-queue:resume": "node scripts/heygen_manual_queue.cjs --resume",
+    "manual:ingest": "node scripts/manual_ingest.cjs",
+    "manual:ingest:latest": "node scripts/manual_ingest.cjs --latest",
+    "prompt-replay:offline": "node scripts/prompt_replay_offline.cjs",
+    "heygen:delete-all": "node scripts/heygen_delete_all.cjs --confirm"
   },
   "keywords": [
     "ai",

@@ -79,7 +79,7 @@ How customers **enter** the product (matches *AuraFlux Content Pipeline* / *Thre
 
 - **Streamers and curators** (two-sided model): see `PLATFORM_ARCHITECTURE.md` — who owns the clip, attribution, and library strategy.  
 - **Operators (Rob / production):** dashboard, job cards, manual Studio steps where APIs cannot fully automate.  
-- **Engineering / agents:** `CHANGE_IMPACT_MAP.md`, gate YAMLs, `CLAUDE.md`.
+- **Engineering / agents:** `CHANGE_IMPACT_MAP.md`, gate YAMLs, `cursor.md`.
 
 ---
 

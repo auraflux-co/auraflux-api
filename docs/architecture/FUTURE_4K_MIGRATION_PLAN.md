@@ -93,7 +93,7 @@ I couldn't find HeyGen's 4K pricing during the earlier web research phase. The s
 - **~4× price** (full compute cost passthrough)
 - **Pro / Enterprise plan only** — possible HeyGen gates 4K to higher subscription tiers
 
-**Action before any 4K work:** Rob must confirm the actual HeyGen cost with a single test render at `dimension: {width: 3840, height: 2160}`. If it's >$0.10/segment, the monthly cost model in `CLAUDE.md` (~$381/mo at current volume) could balloon to $800-$1500/mo.
+**Action before any 4K work:** Rob must confirm the actual HeyGen cost with a single test render at `dimension: {width: 3840, height: 2160}`. If it's >$0.10/segment, the monthly cost model in `cursor.md` (~$381/mo at current volume) could balloon to $800-$1500/mo.
 
 ---
 
@@ -183,7 +183,7 @@ If any of these is false, stay at 1080p.
 - `cwn_production.html:1270` — HeyGen API payload `dimension` field
 - `server.js:3361, 3500, 3650, 4037` — FFmpeg overlay coordinates (must be config-driven in a 4K migration)
 - `server.js:4559-4650` — Ticker capture via Puppeteer (needs viewport update for 4K)
-- `CLAUDE.md` — Cost model (~$381/mo) — would need updating post-migration
+- `cursor.md` — Cost model (~$381/mo) — would need updating post-migration
 - `QA_GATES.md` — Gate 5 spec (not yet implemented, must be 4K-aware if built after migration)
 
 ---

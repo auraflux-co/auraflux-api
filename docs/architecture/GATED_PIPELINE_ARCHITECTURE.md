@@ -824,7 +824,7 @@ The current pipeline has many of the patterns this architecture forbids:
 
 ## What this means for future agents
 
-- **Start every new session by reading this doc** AND `STATUS.md` AND `CLAUDE.md`. This is the pipeline's constitution.
+- **Start every new session by reading this doc** AND `STATUS.md` AND `cursor.md`. This is the pipeline's constitution.
 - **Before adding any retry logic, check if it fits the Gate Output Contract pattern.** If not, restructure.
 - **Before fixing a bug directly, ask: which gate should have caught this?** If the answer is "no gate currently catches it," add the check to the relevant gate instead of patching the symptom.
 - **Read `logs/gate_fixes.jsonl` before proposing a fix.** The answer to your problem might already be documented.
@@ -866,7 +866,7 @@ Rob reversed this spec on 2026-04-11 morning for brand consistency: **all 3 cont
 - `ROLLBACK_FORCE_ADVANCE_SPEC.md` — existing manual version of what this automates
 - `QA_GATES.md` — original gate spec (partial, pre-architecture)
 - `STATUS.md` — current pipeline state
-- `CLAUDE.md` — project-wide rules of engagement
+- `cursor.md` — project-wide rules of engagement
 
 ---
 

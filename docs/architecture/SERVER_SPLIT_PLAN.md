@@ -9,7 +9,7 @@
 ## The Problem
 
 When Aider loads server.js for editing, it consumes ~172K tokens just for the file.
-Add CLAUDE.md + STATUS.md + QA_GATES.md and you exceed the 200K limit before Aider can write a single line.
+Add cursor.md + STATUS.md + QA_GATES.md and you exceed the 200K limit before Aider can write a single line.
 
 **Error seen:**
 ```

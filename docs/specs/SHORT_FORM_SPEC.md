@@ -44,13 +44,18 @@ REACTION (1-2 lines)
 
 ### CAPTION
 - 3-6 words
-- Burned as text overlay just above the split line on Bobby G's side
+- Burned as text overlay in Bobby G panel lower-third (bottom-center of top panel, safely above split)
 - Per content type rules:
   - twitch-short: ALL CAPS, internet speak, emoji ok (max 4 words)
   - nba-short: UPPERCASE, vibe-check (max 3 words)  
   - news-short: Title Case, slightly deadpan/absurd headline (max 6 words)
 - Extracted from the CAPTION: line in the script
 - NOT spoken by Bobby G — burned by FFmpeg only
+- Readability defaults:
+  - white text (`#FFFFFF`)
+  - black stroke/outline
+  - subtle black drop shadow
+  - max two lines
 
 ---
 
@@ -74,9 +79,14 @@ REACTION (1-2 lines)
 
 - Bobby G on **TOP**, source clip on **BOTTOM**
 - Both halves exactly 1080×960
-- Caption burned at approximately y=920 — just above the split, visible on Bobby G's half
+- Caption burned bottom-center in Bobby's top panel (`y=960-text_h-36`), visible on Bobby G's half
 - Bobby G must be reacting TO the clip — not just watching neutrally
 - Portrait avatar framing: Bobby G visible from chest up
+
+### Content-Type Playback Rule
+
+- `news-short` and `twitch-short`: Bobby G remains visible on top, but does **not** speak during the clip window.
+- `nba-short` (aka `sports-short`): Bobby G **does** speak during the clip window (voiceover style, like long-form NBA).
 
 ---
 

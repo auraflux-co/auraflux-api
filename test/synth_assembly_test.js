@@ -62,7 +62,11 @@ function clip(label, filename) {
 
 // /assemble requires a 'segments' array field (validator) even when segmentData is used
 function withSegments(p) {
-  return { ...p, segments: p.segmentData.filter(s => s.type === 'avatar').map(s => s.url) };
+  return {
+    ...p,
+    segments: p.segmentData.filter(s => s.type === 'avatar').map(s => s.url),
+    expectedSynth: true
+  };
 }
 
 function newsPayload() {
