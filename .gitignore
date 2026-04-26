@@ -25,6 +25,7 @@ data/chrome_synth_history.json
 # Log streams and Roo local snapshots (recreated at runtime — see lib/error_logger.js, lib/roo_bridge.js)
 logs/errors.jsonl
 logs/pipeline_events.jsonl
+logs/job_run_timeline.jsonl
 logs/gate_fixes.jsonl
 logs/newrelic_health.json
 logs/roo_status.json

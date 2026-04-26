@@ -5,7 +5,9 @@
 // Reload:     npm run restart    (zero-downtime)
 // Persist:    pm2 startup && pm2 save  (survive reboots)
 
-require('dotenv').config();
+// Ensure .env values override stale inherited shell/PM2 daemon variables (repo root, not PM2 cwd).
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 
 module.exports = {
   apps: [
