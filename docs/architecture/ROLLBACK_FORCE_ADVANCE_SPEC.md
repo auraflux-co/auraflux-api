@@ -263,7 +263,7 @@ Once dashboard integration lands, verify in this order:
 - `server.js:~899-1030` — **new uncommitted** rollback + advance endpoints + `detectStage()` helper
 - `data/jobs.json` — persisted job cards (runtime state, should be gitignored — see audit)
 - `cwn_production.html` — `restoreJobsFromServer()` (added in `cfe2200`), needs rollback/advance button wiring
-- `CLAUDE.md` — needs update to document the stage machine + escape hatches
+- `cursor.md` — needs update to document the stage machine + escape hatches
 - `STATUS.md` — track implementation progress
 
 ---

@@ -32,7 +32,7 @@
 **Handoff header convention:** Every handoff written by Claude Code will start with `→ Agent: Cline-A` (or B/Cursor/Aider) so it's immediately clear who executes it.
 
 **Cline-C workflow notes:**
-- All 3 Clines use the same terminal workflow — read CLAUDE.md + STATUS.md + handoff, then execute
+- All 3 Clines use the same terminal workflow — read cursor.md + STATUS.md + handoff, then execute
 - Cline-C prompt must start with identity opener: "You are Cline-C. Your branch prefix is cline-c/."
 - Check git branch --show-current before every commit
 
@@ -79,7 +79,7 @@
 | Pattern | Examples |
 |---|---|
 | `scripts/*.js` | `jira_ping.js`, `jira_morning_report.js` |
-| `*.md` (docs) | Handoff docs, spec files, STATUS.md, CLAUDE.md |
+| `*.md` (docs) | Handoff docs, spec files, STATUS.md, cursor.md |
 | `output/`, `tmp/`, `logs/` | Runtime output — never committed anyway |
 | `test/*.js` | Test files |
 | `assets/` | Static assets |

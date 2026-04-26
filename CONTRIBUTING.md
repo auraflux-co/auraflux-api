@@ -37,7 +37,7 @@ Thanks for helping improve this project. This repo is set up so **secrets and ma
 | Area | Notes |
 |------|--------|
 | Pipeline / gates | `lib/gates/`, `lib/assembly.js`, `lib/script_gen.js`, `server.js` |
-| RCA / “why did QA fail?” | `lib/why_ledger.js`, `CLAUDE.md` (RCA section), SQLite `why_ledger` table |
+| RCA / “why did QA fail?” | `lib/why_ledger.js`, `cursor.md` (RCA section), SQLite `why_ledger` table |
 | Architecture | `docs/architecture/`, especially `GATED_PIPELINE_ARCHITECTURE.md` |
 
 ## Questions

@@ -195,7 +195,7 @@ These tasks were identified by Aider but couldn't be completed due to the server
 #### [x] Add `.env.example` File
 **File:** New `.env.example`
 **What:** Document all required env vars with placeholder values (no real keys)
-**Why:** New agents/sessions don't know what's needed without reading CLAUDE.md
+**Why:** New agents/sessions don't know what's needed without reading cursor.md
 **Risk:** None — new file only
 **Estimate:** 20 min
 
@@ -420,7 +420,7 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 #### [ ] Write `scripts/lint_markdown_links.js` (catch broken cross-references)
 **File:** NEW `scripts/lint_markdown_links.js`
 **What:** Node script that walks every `.md` file in the repo, extracts all markdown links (`[text](path)` and `[text](#anchor)`), and verifies each link target exists. Reports broken links to stdout, exits 1 if any are broken.
-**Why:** The doc corpus has grown to 15+ handoff files plus CLAUDE.md, STATUS.md, architecture docs, etc. Cross-references go stale as files move (e.g., the handoffs that got archived to `docs/archive/` — any doc referencing them by old path is now broken).
+**Why:** The doc corpus has grown to 15+ handoff files plus cursor.md, STATUS.md, architecture docs, etc. Cross-references go stale as files move (e.g., the handoffs that got archived to `docs/archive/` — any doc referencing them by old path is now broken).
 **How:**
 1. Walk `*.md` files (exclude `node_modules`, `docs/archive/`)
 2. Regex extract `\]\(([^)]+)\)` — match markdown link targets
@@ -547,7 +547,7 @@ These tasks are scoped and ready, but must NOT ship until Rob signals the 12-tes
 When Aider runs overnight, it should:
 
 1. **Read these files first** (already in `.aider.conf.yml` read list):
-   - `CLAUDE.md`
+   - `cursor.md`
    - `STATUS.md`
    - `COMMIT_CHECKLIST.md`
    - `QA_GATES.md`
@@ -697,7 +697,7 @@ Write under `## Draft Ticket List` in `JIRA_CONFLUENCE_MIGRATION_PLAN.md`.
 
 Propose a Confluence page tree for space **CP** that organises the 75 `.md` files logically. Categories to consider:
 
-- Architecture & Specs (CLAUDE.md, GATED_PIPELINE_ARCHITECTURE.md, SET_DESIGN_SPEC_NEWS.md, VISUAL_DESIGN_SPEC.md, CHROME_DIRECTIVE_ARCHITECTURE.md, etc.)
+- Architecture & Specs (cursor.md, GATED_PIPELINE_ARCHITECTURE.md, SET_DESIGN_SPEC_NEWS.md, VISUAL_DESIGN_SPEC.md, CHROME_DIRECTIVE_ARCHITECTURE.md, etc.)
 - Active handoffs (in-flight CLINE_HANDOFF_*.md)
 - Shipped/archived handoffs (completed CLINE_HANDOFF_*.md — these can go in an archive section)
 - Operational runbooks (COMMIT_CHECKLIST.md, POST_PUBLISH_MANUAL_CHECKLIST.md, POST_PUBLISH_TASKS.md, etc.)

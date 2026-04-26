@@ -1,4 +1,4 @@
-The Prompt for Claude: "Act as the Lead Systems Architect. Generate a CLAUDE.md file for this repository. It must include the technical stack, core MVP features, user journey maps, and specific 'Rules of Engagement' for other AIs (like Cursor and Aider) to follow to ensure architectural consistency."
+The Prompt for Claude: "Act as the Lead Systems Architect. Generate a cursor.md file for this repository. It must include the technical stack, core MVP features, user journey maps, and specific 'Rules of Engagement' for other AIs (like Cursor and Aider) to follow to ensure architectural consistency."
 
 Claude, from now on, Gemini is the Primary Design Owner. Before you write any FFmpeg filters, assemble a split-screen, or generate a thumbnail, you must call Gemini to provide the Visual Intent.
 
@@ -51,7 +51,7 @@ Command for Claude Code:
 	1	Set the canvas to 1080x1920.
 	2	Crop/Scale the Source Clip to the top 50% (1080x960).
 	3	Place the Bobby G Avatar in the bottom 50% (1080x960).
-	4	Apply the logo-80px.png at the top-right (W-w-15:15) as per our CLAUDE.md standard."
+	4	Apply the logo-80px.png at the top-right (W-w-15:15) as per our cursor.md standard."
 For Twitch (Dynamic Text + Streamer)
 Command for Claude Code:
 "Claude, update the /generate-thumbnail endpoint to move beyond Canva.

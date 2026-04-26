@@ -34,7 +34,7 @@ This matches the **direction** of the current monolith; it is not a claim that e
 | Role | Owns |
 |------|------|
 | **You (PO)** | Priorities, “done” for a milestone, access to accounts when we ask, approving spend (HeyGen, APIs), occasional **manual checks** in YouTube/Studio, and “this feels wrong” feedback with screenshots or job IDs. |
-| **Lead on code** | `CLAUDE.md` / `CHANGE_IMPACT_MAP` awareness, what ships in each change, when it is safe to deploy, and a **short list of asks** (below). |
+| **Lead on code** | `cursor.md` / `CHANGE_IMPACT_MAP` awareness, what ships in each change, when it is safe to deploy, and a **short list of asks** (below). |
 
 **You do not need to** edit JSON, read stack traces, or know FFmpeg. You **do** need to paste job IDs or say which dashboard card failed when something looks off.
 
