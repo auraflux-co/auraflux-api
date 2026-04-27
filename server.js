@@ -235,7 +235,7 @@ function validateRequiredEnv() {
 validateRequiredEnv();
 
 /**
- * CWN Production Server
+ * AuraFlux API Server
  * - POST /assemble         → FFmpeg pipeline: download HeyGen segments → concat → output MP4
  * - GET  /assemble-progress/:id → SSE-style progress polling
  * - POST /canva-import     → Forward video URL to Canva MCP (import-design-from-url)
@@ -8163,7 +8163,7 @@ app.use(errorMiddleware);
 
 // ── Start ─────────────────────────────────────────────────────────
 const server = app.listen(PORT, () => {
-  console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
+  console.log(`\n🚀 AuraFlux API running on http://localhost:${PORT}`);
   console.log(`   FFmpeg path: ${ffmpegPath()}`);
   console.log(`   Tmp dir:     ${TMP_DIR}`);
   console.log(`   Output dir:  ${OUTPUT_DIR}`);
