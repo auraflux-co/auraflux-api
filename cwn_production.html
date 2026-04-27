@@ -2098,8 +2098,11 @@ function restoreJobsFromServer(showAlert) {
         });
 
         // If no videoJobs (older format), create placeholder segments from script
-        if (!segments.length && serverJob.script) {
-          var sceneMatches = serverJob.script.match(/===\s*(.+?)\s*===/g) || [];
+        // serverJob.script may be a string or an object {text,scenes} — guard before calling .match()
+        var scriptText = typeof serverJob.script === 'string' ? serverJob.script
+                       : (serverJob.script && serverJob.script.text) || '';
+        if (!segments.length && scriptText) {
+          var sceneMatches = scriptText.match(/===\s*(.+?)\s*===/g) || [];
           sceneMatches.forEach(function(m) {
             var label = m.replace(/===/g, '').trim();
             segments.push({ type:'avatar', label:label, status:'rendering', videoId:null, url:null });
@@ -2173,7 +2176,7 @@ function restoreJobsFromServer(showAlert) {
           manualSegments: serverJob.manualSegments || null,
           created:     serverJob.savedAt || new Date().toISOString(),
           segments:    segments,
-          script:      serverJob.script || '',
+          script:      scriptText || '',
           meta:        {
             streamers:       (serverJob.streamers || []).map(function(s){ return s.twitchUsername || s; }),
             orderedClipUrls: clipUrls
