@@ -1553,7 +1553,7 @@ Every fix below is tagged **[C0]** (fixes c0 short/long production), **[C1+]** (
 **Gate before everything:** Run Phase A E2E matrix first. Only move to Block 3+ if tests pass.
 
 ### Block 2 — Tests (run first, ~1 hr)
-1. `npm test` — Jest 84 tests, should be clean
+1. `npm test` — Jest 96 tests (16 suites), should be clean
 2. Phase A E2E matrix — 6 job types (NBA long, News long, Twitch long, NBA short, News short, Twitch short)
    - Verify: NBA short REACTION appears (ordinal fix), clip is 25s not 4s
    - Verify: Gate 3a semantic content check fires for wrong-clip
