@@ -1,6 +1,6 @@
 {
-  "name": "cwn-production",
-  "version": "1.0.43",
+  "name": "auraflux-api",
+  "version": "1.0.44",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -100,12 +100,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/clipzworldnews/cwn-production.git"
+    "url": "https://github.com/clipzworldnews/auraflux-api.git"
   },
   "bugs": {
-    "url": "https://github.com/clipzworldnews/cwn-production/issues"
+    "url": "https://github.com/clipzworldnews/auraflux-api/issues"
   },
-  "homepage": "https://github.com/clipzworldnews/cwn-production#readme",
+  "homepage": "https://github.com/clipzworldnews/auraflux-api#readme",
   "jest": {
     "testEnvironment": "node",
     "testMatch": [
