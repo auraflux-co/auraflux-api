@@ -106,84 +106,6 @@ function nrAssemblyComplete(jobId, customerId, contentType, asmId, durationMs, f
   });
 }
 
-// ── Build identity — set once at startup, never changes during runtime ────────
-const BUILD_INFO = (() => {
-  const { execSync: _execSync } = require('child_process');
-  try {
-    const hash = _execSync('git rev-parse --short HEAD', { cwd: __dirname }).toString().trim();
-    const fullHash = _execSync('git rev-parse HEAD', { cwd: __dirname }).toString().trim();
-    const branch = _execSync('git rev-parse --abbrev-ref HEAD', { cwd: __dirname }).toString().trim();
-    const commitMsg = _execSync('git log -1 --format=%s', { cwd: __dirname }).toString().trim();
-    const pkg = require('./package.json');
-    return {
-      version: pkg.version,
-      gitHash: hash,
-      gitHashFull: fullHash,
-      gitBranch: branch,
-      lastCommit: commitMsg,
-      deployedAt: new Date().toISOString()
-    };
-  } catch(e) {
-    return { version: require('./package.json').version, gitHash: 'unknown', deployedAt: new Date().toISOString() };
-  }
-})();
-
-// ── New Relic custom event helpers ───────────────────────────────────────────
-// All events are fire-and-forget — never block the pipeline.
-// Queryable via NRQL: SELECT * FROM EventName WHERE customerId = 'c0' SINCE 7 days ago
-
-function nrEvent(eventType, attributes) {
-  try {
-    if (typeof newrelic !== 'undefined') {
-      newrelic.recordCustomEvent(eventType, {
-        timestamp: Date.now(),
-        env: process.env.NODE_ENV || 'development',
-        ...attributes
-      });
-    }
-  } catch(e) { /* non-fatal */ }
-}
-
-// Keep old helper for backwards compat
-function nrGateAttribute(jobId, gate, score, passed) {
-  nrEvent('GateResult', { jobId, gate, gateScore: score, gatePassed: passed });
-}
-
-// ── NR Event: Job confirmed (pre-generate sign-off complete) ─────────────────
-function nrJobConfirmed(jobSpec, allReady) {
-  nrEvent('JobConfirmed', {
-    jobId:       jobSpec.jobId,
-    customerId:  jobSpec.customerId,
-    templateId:  jobSpec.templateId,
-    contentType: jobSpec.contentType,
-    formFactor:  jobSpec.order?.output?.formFactor,
-    platforms:   (jobSpec.deliverySpec?.platforms || []).join(','),
-    allGatesReady: allReady,
-    expectedClips: jobSpec.designSpec?.expectedClipCount ?? 0
-  });
-}
-
-// ── NR Event: Gate result (pass/fail at any gate) ────────────────────────────
-function nrGateResult(jobId, customerId, contentType, gate, passed, score, outcome, durationMs) {
-  nrEvent('GateResult', {
-    jobId, customerId, contentType,
-    gate: String(gate),
-    passed: passed ? 1 : 0,
-    score: score ?? null,
-    outcome: outcome || null,
-    durationMs: durationMs || null
-  });
-}
-
-// ── NR Event: Script sendback (Gate 1 fix directive issued) ──────────────────
-function nrScriptSendback(jobId, customerId, contentType, score, attempt, reasons) {
-  nrEvent('ScriptSendback', {
-    jobId, customerId, contentType,
-    score, attempt,
-    reasons: Array.isArray(reasons) ? reasons.slice(0,3).join('; ') : (reasons || '')
-  });
-}
-
 // ── NR Event: Video published (Gate 5 success) ───────────────────────────────
 function nrVideoPublished(jobId, customerId, contentType, platform, title, pipelineMs, scores) {
   nrEvent('VideoPublished', {
@@ -3028,6 +2950,98 @@ const { downloadVideoForAnalysis } = require('./lib/downloader');
 async function downloadEspnVideo(url, outPath) {
   return downloadVideoForAnalysis(url, outPath, { maxSecs: 90 });
 }
+
+// ── GET /nba/game-clips/:gameId ────────────────────────────────────
+// Returns ALL available clips for a game from ESPN Summary API.
+// Used by the dashboard short-form clip picker to show the full menu.
+// ── GET /twitch/clips-pool ────────────────────────────────────────────────────
+// Returns recent clip metadata (thumbnails, titles, durations) for a list of
+// streamers. Used by the dashboard short-form clip picker — no MP4 resolution,
+// just Helix API metadata so the UI loads fast.
+app.get('/twitch/clips-pool', async (req, res) => {
+  const streamersParam = (req.query.streamers || '').trim();
+  const clipsPerStreamer = Math.max(1, Math.min(10, parseInt(req.query.clipsPerStreamer) || 3));
+  if (!streamersParam) return res.status(400).json({ error: 'streamers query param required' });
+
+  const streamerList = streamersParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!streamerList.length) return res.status(400).json({ error: 'no streamers provided' });
+
+  const clientId = process.env.TWITCH_CLIENT_ID;
+  const token    = process.env.TWITCH_TOKEN;
+  if (!clientId || !token) return res.status(500).json({ error: 'TWITCH_CLIENT_ID / TWITCH_TOKEN not set' });
+
+  try {
+    // Resolve user IDs in one batch call
+    const userResp = await axios.get(
+      `https://api.twitch.tv/helix/users?${streamerList.map(s => `login=${s}`).join('&')}`,
+      { headers: { 'Client-Id': clientId, 'Authorization': `Bearer ${token}` }, timeout: 10000 }
+    );
+    const users = userResp.data?.data || [];
+
+    // Fetch recent clips for each resolved user in parallel
+    const allClips = (await Promise.all(users.map(async user => {
+      try {
+        const clipsResp = await axios.get(
+          `https://api.twitch.tv/helix/clips?broadcaster_id=${user.id}&first=${clipsPerStreamer}`,
+          { headers: { 'Client-Id': clientId, 'Authorization': `Bearer ${token}` }, timeout: 10000 }
+        );
+        return (clipsResp.data?.data || []).map(c => ({
+          streamer:  user.display_name || user.login,
+          title:     c.title || 'Clip',
+          thumbnail: c.thumbnail_url || '',
+          duration:  Math.round(c.duration || 0),
+          url:       c.url || '',
+          slug:      c.id || '',
+          game:      c.game_id || '',
+          viewCount: c.view_count || 0
+        }));
+      } catch (e) {
+        console.warn(`[twitch/clips-pool] Failed for ${user.login}: ${e.message}`);
+        return [];
+      }
+    }))).flat();
+
+    res.json({ ok: true, clips: allClips });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── GET /nba/game-clips/:gameId ────────────────────────────────────────────────
+app.get('/nba/game-clips/:gameId', async (req, res) => {
+  const { gameId } = req.params;
+  if (!gameId) return res.status(400).json({ error: 'gameId required' });
+  try {
+    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
+    const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
+    const summaryData = summaryResp.data;
+
+    const articleVideos = Array.isArray(summaryData.article?.video)
+      ? summaryData.article.video
+      : (summaryData.article?.video ? [summaryData.article.video] : []);
+    const topVideos = summaryData.videos || [];
+    const all = [...topVideos, ...articleVideos];
+
+    const clips = all
+      .map(v => {
+        const src = v.links?.source || {};
+        const url = src.HLS?.HD?.href || src.HLS?.href || src.HD?.href || src.mezzanine?.href || '';
+        if (!url) return null;
+        return {
+          headline: v.headline || v.title || 'Clip',
+          duration: v.duration || 0,
+          url,
+          thumbnail: (typeof v.thumbnail === 'string' ? v.thumbnail : v.thumbnail?.href) || ''
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.duration - a.duration);
+
+    res.json({ ok: true, gameId, clips });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // ── POST /nba/scrape-game-highlight ─────────────────────────────────
 // Scrapes the ESPN game page for the video with the highest duration

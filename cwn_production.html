@@ -191,6 +191,12 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             </div>
             <!-- inline clip picker — populated by previewNBAGames() -->
             <div id="nba-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
+            <!-- short-form clip gallery — shown when SHORT is clicked, lets user pick exact clip -->
+            <div id="nba-short-clip-gallery" style="display:none;margin-bottom:10px;border:1px solid rgba(28,232,255,0.25);border-radius:6px;padding:10px;background:#060a12;">
+              <div style="font-size:10px;color:rgba(28,232,255,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:8px;">PICK ONE CLIP FOR SHORT FORM — CLICK TO SELECT</div>
+              <div id="nba-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
+              <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;" id="nba-short-clip-status"></div>
+            </div>
             <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
             <div class="btn-row" style="align-items:center;gap:10px;flex-wrap:wrap;">
               <button id="btn-preview-nba" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNBAGames()">PICK CLIPS</button>
@@ -202,7 +208,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   <option value="3">×3</option>
                   <option value="5">×5</option>
                 </select>
-                <button id="btn-gen-nba-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShortBatch('nba', platforms); })">SHORT</button>
+                <button id="btn-gen-nba-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ openNbaShortClipPicker(platforms); })">SHORT</button>
               </div>
               <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
             </div>
@@ -234,6 +240,12 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
             <!-- inline story picker — populated by previewNewsStories() -->
             <div id="news-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
+            <!-- short-form clip gallery — shown when SHORT is clicked, lets user pick one story -->
+            <div id="news-short-clip-gallery" style="display:none;margin-bottom:10px;border:1px solid rgba(28,232,255,0.25);border-radius:6px;padding:10px;background:#060a12;">
+              <div style="font-size:10px;color:rgba(28,232,255,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:8px;">PICK ONE STORY FOR SHORT FORM — CLICK TO SELECT</div>
+              <div id="news-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
+              <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;" id="news-short-clip-status"></div>
+            </div>
             <div class="btn-row" style="flex-wrap:wrap;gap:10px;align-items:center;">
               <button id="btn-preview-news" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNewsStories()">PICK STORIES</button>
               <span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;letter-spacing:.03em;">↑ feeds both</span>
@@ -244,7 +256,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   <option value="3">×3</option>
                   <option value="5">×5</option>
                 </select>
-                <button id="btn-gen-news-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShortBatch('news', platforms); })">SHORT</button>
+                <button id="btn-gen-news-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ openNewsShortClipPicker(platforms); })">SHORT</button>
               </div>
             </div>
           </div>
@@ -261,6 +273,12 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
             </div>
             <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
+            <!-- short-form clip gallery — shown when SHORT is clicked -->
+            <div id="twitch-short-clip-gallery" style="display:none;margin-bottom:10px;border:1px solid rgba(28,232,255,0.25);border-radius:6px;padding:10px;background:#060a12;">
+              <div style="font-size:10px;color:rgba(28,232,255,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:8px;">PICK ONE CLIP FOR SHORT FORM — CLICK TO SELECT</div>
+              <div id="twitch-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
+              <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;" id="twitch-short-clip-status"></div>
+            </div>
             <div class="field" style="margin-bottom:8px;">
               <label>CLIPS PER STREAMER</label>
               <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:13px;letter-spacing:1px;font-weight:700;">
@@ -274,7 +292,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             </div>
             <div class="btn-row">
               <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitch()">LONG FORM</button>
-              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ generateShort('twitch', platforms); })">SHORT</button>
+              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ openTwitchShortClipPicker(platforms); })">SHORT</button>
             </div>
           </div>
         </div>
@@ -4706,6 +4724,381 @@ function buildCalendar() {
     schedHtml += '<br>';
   });
   schedule.innerHTML = schedHtml;
+}
+
+// ── NBA short-form manual clip picker ────────────────────────────────────────
+// Shows ALL available clips from ESPN for each game so user picks exactly one.
+// No auto-selection logic — user must explicitly click a clip.
+
+function openNbaShortClipPicker(platforms) {
+  var gallery = g('nba-short-clip-gallery');
+  var list    = g('nba-short-clip-list');
+  var status  = g('nba-short-clip-status');
+
+  // Toggle off if already open
+  if (gallery.style.display !== 'none') {
+    gallery.style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:11px;font-family:monospace;padding:6px;">Loading clips from ESPN...</div>';
+  gallery.style.display = '';
+  status.textContent = '';
+
+  // Collect game pool: picker games with clips first, then fetch fresh if empty
+  var pool = (window._nbaPickerGames || []).filter(function(gm){ return gm.gameId; });
+
+  if (pool.length === 0) {
+    // No picker data yet — fetch yesterday's completed games
+    var dateKey = localDateMinus(0).replace(/-/g,'');
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dateKey,true);
+    xhr.timeout = 12000;
+    xhr.onload = function(){
+      try {
+        var d = JSON.parse(xhr.responseText);
+        var events = (d.events||[]).filter(function(ev){ return ev.status&&ev.status.type&&ev.status.type.completed; });
+        pool = events.map(function(ev){
+          var comp=(ev.competitions||[])[0]||{}; var comps=comp.competitors||[];
+          var away=comps.find(function(c){return c.homeAway==='away';})||comps[0]||{};
+          var home=comps.find(function(c){return c.homeAway==='home';})||comps[1]||{};
+          return { gameId:ev.id,
+            away:(away.team&&away.team.displayName)||'Away',
+            home:(home.team&&home.team.displayName)||'Home',
+            awayAbbr:(away.team&&away.team.abbreviation)||'AWY',
+            homeAbbr:(home.team&&home.team.abbreviation)||'HME',
+            awayScore:away.score||'', homeScore:home.score||'' };
+        });
+        _fetchAndRenderShortClips(pool, list, status, platforms);
+      } catch(e) {
+        list.innerHTML = '<div style="color:#e74c3c;font-size:11px;padding:6px;">Error loading games: '+e.message+'</div>';
+      }
+    };
+    xhr.onerror = xhr.ontimeout = function(){
+      list.innerHTML = '<div style="color:#e74c3c;font-size:11px;padding:6px;">ESPN offline or timed out</div>';
+    };
+    xhr.send();
+  } else {
+    _fetchAndRenderShortClips(pool, list, status, platforms);
+  }
+}
+
+function _fetchAndRenderShortClips(pool, list, status, platforms) {
+  var total = pool.length;
+  var loaded = 0;
+  var allClips = []; // [{gameLabel, gameId, headline, duration, url, thumbnail}]
+
+  status.textContent = 'Fetching clips for '+total+' game'+(total!==1?'s':'')+'...';
+
+  pool.forEach(function(gm){
+    var gameLabel = (gm.awayAbbr||gm.away)+' @ '+(gm.homeAbbr||gm.home);
+    if (gm.awayScore && gm.homeScore) gameLabel += '  '+gm.awayScore+'-'+gm.homeScore;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET','http://localhost:3000/nba/game-clips/'+gm.gameId,true);
+    xhr.timeout = 10000;
+    xhr.onload = function(){
+      try {
+        var r = JSON.parse(xhr.responseText);
+        (r.clips||[]).forEach(function(c){
+          allClips.push({ gameLabel:gameLabel, gameId:gm.gameId, headline:c.headline, duration:c.duration, url:c.url, thumbnail:c.thumbnail });
+        });
+      } catch(e) {}
+      loaded++;
+      if (loaded === total) _renderShortClipList(allClips, list, status, platforms);
+    };
+    xhr.onerror = xhr.ontimeout = function(){
+      loaded++;
+      if (loaded === total) _renderShortClipList(allClips, list, status, platforms);
+    };
+    xhr.send();
+  });
+}
+
+function _renderShortClipList(clips, list, status, platforms) {
+  if (!clips.length) {
+    list.innerHTML = '<div style="color:#e74c3c;font-size:11px;padding:6px;">No clips found from ESPN</div>';
+    status.textContent = '';
+    return;
+  }
+  // Sort by duration desc within each game
+  clips.sort(function(a,b){ return b.duration - a.duration; });
+  status.textContent = clips.length+' clips available — click one to generate';
+
+  list.innerHTML = clips.map(function(c, idx){
+    var dur = c.duration ? c.duration+'s' : '?s';
+    var durColor = c.duration >= 60 ? '#2ecc71' : c.duration >= 30 ? '#c7af4f' : 'rgba(255,255,255,0.4)';
+    var thumb = c.thumbnail
+      ? '<img src="'+c.thumbnail+'" style="width:72px;height:41px;object-fit:cover;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\'">'
+      : '<div style="width:72px;height:41px;background:#111;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.2);">NO THUMB</div>';
+    return '<div onclick="_selectNbaShortClip('+idx+')" data-idx="'+idx+'" id="nba-short-clip-'+idx+'" '
+      +'style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:background 0.15s;" '
+      +'onmouseover="this.style.background=\'rgba(28,232,255,0.07)\'" onmouseout="this.style.background=\'transparent\'">'
+      + thumb
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.headline+'</div>'
+        +'<div style="font-size:10px;color:rgba(255,255,255,0.4);font-family:monospace;margin-top:2px;">'+c.gameLabel+'</div>'
+      +'</div>'
+      +'<div style="font-family:Bebas Neue,monospace;font-size:16px;color:'+durColor+';flex-shrink:0;">'+dur+'</div>'
+    +'</div>';
+  }).join('');
+
+  // Store clip list on window for onclick handler
+  window._nbaShortClipMenu = { clips: clips, platforms: platforms };
+}
+
+function _selectNbaShortClip(idx) {
+  var menu = window._nbaShortClipMenu;
+  if (!menu) return;
+  var c = menu.clips[idx];
+  if (!c) return;
+
+  // Highlight selection
+  var all = g('nba-short-clip-list').querySelectorAll('[data-idx]');
+  all.forEach(function(el){ el.style.border='1px solid rgba(255,255,255,0.07)'; el.style.background='transparent'; });
+  var sel = g('nba-short-clip-'+idx);
+  if (sel) { sel.style.border='1px solid rgba(28,232,255,0.6)'; sel.style.background='rgba(28,232,255,0.08)'; }
+
+  g('nba-short-clip-status').textContent = 'Selected: '+c.headline+' ('+c.duration+'s) — generating...';
+
+  // Fire pipeline with exact clip
+  var item = {
+    gameId:       c.gameId,
+    away:         c.gameLabel.split('@')[0].trim(),
+    home:         c.gameLabel.split('@')[1]&&c.gameLabel.split('@')[1].trim().split(/\s+/)[0] || '?',
+    awayScore:    '', homeScore: '',
+    leader: '', leaderStat: '', injuries: [],
+    clipUrl:      c.url,
+    thumbnailUrl: c.thumbnail || ''
+  };
+
+  // Parse scores out of gameLabel if present (e.g. "DET @ ORL  105-113")
+  var scoreMatch = c.gameLabel.match(/(\d+)-(\d+)/);
+  if (scoreMatch) { item.awayScore = scoreMatch[1]; item.homeScore = scoreMatch[2]; }
+
+  setGenerateModeActive('nba', 'short');
+  CURRENT_TYPE = 'nba-short';
+  lockGenerateButton('btn-gen-nba-short');
+  CURRENT_META = { gameIds: [c.gameId] };
+  g('script-type-label').textContent = 'NBA SHORT — '+c.headline+' ('+c.duration+'s)';
+
+  callFullScriptServer('nba-short', [item], statusTagIdForType('nba-short'), null, null, menu.platforms);
+}
+
+// ── News short-form manual clip picker ───────────────────────────────────────
+var _newsShortClipPool = [];
+
+function openNewsShortClipPicker(platforms) {
+  var gallery = g('news-short-clip-gallery');
+  var list    = g('news-short-clip-list');
+  var status  = g('news-short-clip-status');
+
+  // Toggle off if already open
+  if (gallery.style.display !== 'none' && _newsShortClipPool.length > 0) {
+    gallery.style.display = 'none';
+    _newsShortClipPool = [];
+    return;
+  }
+
+  gallery.style.display = '';
+  list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;padding:8px;">Fetching news stories...</div>';
+  status.textContent = '';
+
+  // Reuse existing fetched stories if available, otherwise fetch fresh
+  if (window._newsPickerStories && window._newsPickerStories.length > 0) {
+    _buildNewsShortClipPool(window._newsPickerStories, list, status, platforms);
+  } else {
+    fetchCwnNewsVideos(function(d, err) {
+      if (err || !d || !(d.items||[]).length) {
+        list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">Failed to load stories: ' + (err||'no data') + '</div>';
+        return;
+      }
+      var stories = (d.items||[]).slice(0, 20).map(function(it) {
+        return {
+          title: (it.title||'').trim(),
+          link: it.link||'',
+          hlsUrl: it.hlsUrl||'',
+          videoUrl: it.hlsUrl||'',
+          thumbnailUrl: it.thumbnail||'',
+          orientation: it.sourceOrientation||it.orientation||'portrait',
+          sourceOrientation: it.sourceOrientation||it.orientation||'portrait',
+          pillarboxFilter: it.pillarboxFilter != null ? it.pillarboxFilter : null,
+          pubDate: it.pubDate||'',
+          desc: (it.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200)
+        };
+      });
+      _buildNewsShortClipPool(stories, list, status, platforms);
+    });
+  }
+}
+
+function _buildNewsShortClipPool(stories, list, status, platforms) {
+  // Only show stories that have a video
+  _newsShortClipPool = stories.filter(function(s){ return !!(s.hlsUrl||s.videoUrl); });
+  if (!_newsShortClipPool.length) {
+    list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">No stories with video found — run PICK STORIES first.</div>';
+    return;
+  }
+  _renderNewsShortClipList(_newsShortClipPool, list, status, platforms);
+}
+
+function _renderNewsShortClipList(clips, list, status, platforms) {
+  list.innerHTML = clips.map(function(c, idx) {
+    var thumb = c.thumbnailUrl
+      ? '<img src="'+c.thumbnailUrl+'" style="width:80px;height:45px;object-fit:cover;border-radius:3px;flex-shrink:0;" onerror="this.style.display=\'none\'">'
+      : '<div style="width:80px;height:45px;background:#1a2035;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.2);">NO IMG</div>';
+    var date = c.pubDate ? '<span style="font-size:9px;color:rgba(255,255,255,0.3);margin-left:4px;">'+c.pubDate.slice(0,10)+'</span>' : '';
+    return '<div onclick="_selectNewsShortClip('+idx+')" data-idx="'+idx+'" id="news-short-clip-'+idx+'" '
+      +'style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);transition:background 0.15s;" '
+      +'onmouseover="this.style.background=\'rgba(28,232,255,0.08)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.02)\'">'
+      +thumb
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:12px;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.title+'</div>'
+      +'<div style="font-size:10px;color:rgba(28,232,255,0.5);font-family:monospace;margin-top:2px;">NEWS'+date+'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  status.textContent = _newsShortClipPool.length + ' stories with video — click one to generate short';
+  list._platforms = platforms;
+}
+
+function _selectNewsShortClip(idx) {
+  var menu = { platforms: g('news-short-clip-list')._platforms || null };
+  var all = g('news-short-clip-list').querySelectorAll('[data-idx]');
+  all.forEach(function(el){ el.style.border='1px solid rgba(255,255,255,0.06)'; el.style.background='rgba(255,255,255,0.02)'; });
+  var sel = g('news-short-clip-'+idx);
+  if (sel) { sel.style.border='1px solid rgba(28,232,255,0.6)'; sel.style.background='rgba(28,232,255,0.08)'; }
+
+  var c = _newsShortClipPool[idx];
+  if (!c) return;
+  g('news-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" — generating...';
+
+  var item = {
+    title:        c.title,
+    desc:         c.desc||'',
+    source:       'Al Jazeera',
+    link:         c.link||'',
+    thumbnailUrl: c.thumbnailUrl||'',
+    videoUrl:     c.hlsUrl||c.videoUrl||'',
+    hlsUrl:       c.hlsUrl||c.videoUrl||'',
+    orientation:  c.orientation||'portrait',
+    sourceOrientation: c.sourceOrientation||c.orientation||'portrait',
+    pillarboxFilter: c.pillarboxFilter != null ? c.pillarboxFilter : null,
+    pubDate:      c.pubDate||''
+  };
+
+  setGenerateModeActive('news', 'short');
+  CURRENT_TYPE = 'news-short';
+  lockGenerateButton('btn-gen-news-short');
+  CURRENT_META = { source: 'aljazeera' };
+  g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
+
+  callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, menu.platforms);
+}
+
+// ── Twitch short-form manual clip picker ─────────────────────────────────────
+var _twitchShortClipPool = [];
+
+function openTwitchShortClipPicker(platforms) {
+  var gallery = g('twitch-short-clip-gallery');
+  var list    = g('twitch-short-clip-list');
+  var status  = g('twitch-short-clip-status');
+
+  if (gallery.style.display !== 'none' && _twitchShortClipPool.length > 0) {
+    gallery.style.display = 'none';
+    _twitchShortClipPool = [];
+    return;
+  }
+
+  gallery.style.display = '';
+  list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;padding:8px;">Fetching Twitch clips...</div>';
+  status.textContent = '';
+  list._platforms = platforms;
+
+  var streamersTxt = (g('twitch-streamers')||{value:''}).value || '';
+  var streamers = streamersTxt.split(/[\n,]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+  if (!streamers.length) {
+    list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">No streamers configured — add them in the STREAMERS field above.</div>';
+    return;
+  }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/twitch/clips-pool?streamers='+encodeURIComponent(streamers.join(','))+'&clipsPerStreamer=3', true);
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if (!d.ok || !d.clips || !d.clips.length) {
+        list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">'+(d.error||'No clips found')+'</div>';
+        return;
+      }
+      _twitchShortClipPool = d.clips;
+      _renderTwitchShortClipList(d.clips, list, status, platforms);
+    } catch(e) {
+      list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">Parse error: '+e.message+'</div>';
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">Request failed — check server.</div>';
+  };
+  xhr.send();
+}
+
+function _renderTwitchShortClipList(clips, list, status, platforms) {
+  list.innerHTML = clips.map(function(c, idx) {
+    var thumb = c.thumbnail
+      ? '<img src="'+c.thumbnail+'" style="width:80px;height:45px;object-fit:cover;border-radius:3px;flex-shrink:0;" onerror="this.style.display=\'none\'">'
+      : '<div style="width:80px;height:45px;background:#1a2035;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.2);">NO IMG</div>';
+    var dur = c.duration ? '<span style="font-size:9px;color:rgba(255,255,255,0.35);margin-left:4px;">'+c.duration+'s</span>' : '';
+    var views = c.viewCount ? '<span style="font-size:9px;color:rgba(255,255,255,0.25);margin-left:4px;">'+c.viewCount.toLocaleString()+' views</span>' : '';
+    return '<div onclick="_selectTwitchShortClip('+idx+')" data-idx="'+idx+'" id="twitch-short-clip-'+idx+'" '
+      +'style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);transition:background 0.15s;" '
+      +'onmouseover="this.style.background=\'rgba(28,232,255,0.08)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.02)\'">'
+      +thumb
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:12px;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.title+'</div>'
+      +'<div style="font-size:10px;color:rgba(28,232,255,0.5);font-family:monospace;margin-top:2px;">'+c.streamer+dur+views+'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  status.textContent = clips.length + ' clips — click one to generate short';
+  list._platforms = platforms;
+}
+
+function _selectTwitchShortClip(idx) {
+  var menu = { platforms: g('twitch-short-clip-list')._platforms || null };
+  var all = g('twitch-short-clip-list').querySelectorAll('[data-idx]');
+  all.forEach(function(el){ el.style.border='1px solid rgba(255,255,255,0.06)'; el.style.background='rgba(255,255,255,0.02)'; });
+  var sel = g('twitch-short-clip-'+idx);
+  if (sel) { sel.style.border='1px solid rgba(28,232,255,0.6)'; sel.style.background='rgba(28,232,255,0.08)'; }
+
+  var c = _twitchShortClipPool[idx];
+  if (!c) return;
+  g('twitch-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" ('+c.streamer+') — generating...';
+
+  var item = {
+    streamer:     c.streamer,
+    title:        c.title,
+    thumbnailUrl: c.thumbnail||'',
+    url:          c.url||'',
+    slug:         c.slug||'',
+    game:         c.game||'',
+    viewCount:    c.viewCount||0,
+    clips: [{
+      streamer:     c.streamer,
+      title:        c.title,
+      thumbnailUrl: c.thumbnail||'',
+      url:          c.url||'',
+      slug:         c.slug||'',
+      game:         c.game||''
+    }]
+  };
+
+  setGenerateModeActive('twitch', 'short');
+  CURRENT_TYPE = 'twitch-short';
+  lockGenerateButton('btn-gen-twitch-short');
+  g('script-type-label').textContent = 'TWITCH SHORT — '+c.streamer+': "'+c.title.slice(0,50)+'"';
+
+  callFullScriptServer('twitch-short', [item], statusTagIdForType('twitch-short'), null, null, menu.platforms);
 }
 
 function generateShort(type, platforms) {
