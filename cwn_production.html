@@ -5025,7 +5025,7 @@ function openTwitchShortClipPicker(platforms) {
   }
 
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', '/twitch/clips-pool?streamers='+encodeURIComponent(streamers.join(','))+'&clipsPerStreamer=3', true);
+  xhr.open('GET', CFG.ffmpegUrl + '/twitch/clips-pool?streamers='+encodeURIComponent(streamers.join(','))+'&clipsPerStreamer=3', true);
   xhr.timeout = 15000;
   xhr.onload = function() {
     try {
