@@ -2175,6 +2175,75 @@ function checkFFmpeg(cb) {
   });
 }
 
+// ── Health check cache ──────────────────────────────────────────────────────
+// All expensive checks (FFmpeg spawn, disk df, VectCut HTTP) run once at
+// startup and every 60s. The /health route returns the cached snapshot
+// instantly so it stays < 5ms under load.
+const _healthCache = {
+  ffmpeg: { status: 'pending', version: null },
+  apiKeys: {},
+  directories: {},
+  vectcut: { status: 'pending' },
+  freeSpaceGB: null,
+  lastRefreshed: null,
+};
+
+async function _refreshHealthCache() {
+  // FFmpeg
+  try {
+    const ver = await new Promise((resolve, reject) =>
+      checkFFmpeg((err, v) => (err ? reject(err) : resolve(v)))
+    );
+    _healthCache.ffmpeg = { status: 'ok', version: ver };
+  } catch (e) {
+    _healthCache.ffmpeg = { status: 'error', error: e.message };
+  }
+
+  // API keys — just presence check, no network call
+  ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'].forEach((k) => {
+    _healthCache.apiKeys[k] = { status: process.env[k] ? 'ok' : 'missing' };
+  });
+
+  // Directories — stat only
+  for (const [name, dir] of Object.entries({ tmp: TMP_DIR, output: OUTPUT_DIR })) {
+    try {
+      fs.statSync(dir);
+      _healthCache.directories[name] = { path: dir, exists: true, writable: true };
+    } catch (e) {
+      _healthCache.directories[name] = { path: dir, exists: false, error: e.message };
+    }
+  }
+
+  // Disk space
+  try {
+    const freeKB = await new Promise((resolve, reject) => {
+      const { exec } = require('child_process');
+      exec(`df -k "${OUTPUT_DIR}" | awk 'NR==2 {print $4}'`, (err, stdout) =>
+        err ? reject(err) : resolve(parseInt(stdout.trim()))
+      );
+    });
+    const freeGB = parseFloat((freeKB / 1024 / 1024).toFixed(1));
+    _healthCache.freeSpaceGB = freeGB;
+    if (_healthCache.directories.output) {
+      _healthCache.directories.output.freeSpaceGB = freeGB;
+    }
+  } catch (_e) {}
+
+  // VectCut — optional external call
+  try {
+    const vectCutHealth = await vectCutClient.healthCheck();
+    _healthCache.vectcut = vectCutHealth.healthy ? { status: 'ok' } : { status: 'offline', error: vectCutHealth.error };
+  } catch (e) {
+    _healthCache.vectcut = { status: 'offline', error: e.message };
+  }
+
+  _healthCache.lastRefreshed = new Date().toISOString();
+}
+
+// Prime the cache immediately, then refresh every 60s
+_refreshHealthCache().catch(() => {});
+setInterval(() => _refreshHealthCache().catch(() => {}), 60_000);
+
 // Check available disk space before assembly
 
 // ── Build FFmpeg concat filter ─────────────────────────────────────
@@ -2183,10 +2252,24 @@ function checkFFmpeg(cb) {
 
 // ── Routes ────────────────────────────────────────────────────────
 
-// Health check with dependency validation
-app.get('/health', async (req, res) => {
-  const health = {
-    ok: true,
+// Health check — returns cached dependency state (refreshed every 60s at startup).
+// The route itself is synchronous and returns in < 5ms under load.
+app.get('/health', (req, res) => {
+  const errors = [];
+  if (_healthCache.ffmpeg.status === 'error') errors.push('FFmpeg not available');
+  Object.entries(_healthCache.apiKeys).forEach(([k, v]) => {
+    if (v.status === 'missing') errors.push(`${k} not configured`);
+  });
+  Object.entries(_healthCache.directories).forEach(([, v]) => {
+    if (!v.exists) errors.push(`${v.path} directory not accessible`);
+  });
+  if (_healthCache.freeSpaceGB !== null && _healthCache.freeSpaceGB < 5) {
+    errors.push(`Low disk space: ${_healthCache.freeSpaceGB}GB remaining`);
+  }
+
+  const statusCode = errors.length === 0 ? 200 : 503;
+  res.status(statusCode).json({
+    ok: errors.length === 0,
     version: BUILD_INFO.version,
     gitHash: BUILD_INFO.gitHash,
     gitBranch: BUILD_INFO.gitBranch,
@@ -2194,94 +2277,15 @@ app.get('/health', async (req, res) => {
     deployedAt: BUILD_INFO.deployedAt,
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    dependencies: {},
-    directories: {},
-    errors: [],
-  };
-
-  // Check FFmpeg
-  try {
-    const ffmpegVersion = await new Promise((resolve, reject) => {
-      checkFFmpeg((err, version) => {
-        if (err) reject(err);
-        else resolve(version);
-      });
-    });
-    health.dependencies.ffmpeg = { status: 'ok', version: ffmpegVersion };
-  } catch (err) {
-    health.ok = false;
-    health.dependencies.ffmpeg = { status: 'error', error: err.message };
-    health.errors.push('FFmpeg not available');
-  }
-
-  // Check API keys
-  const requiredKeys = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'];
-  requiredKeys.forEach((key) => {
-    const exists = !!process.env[key];
-    health.dependencies[key] = { status: exists ? 'ok' : 'missing' };
-    if (!exists) {
-      health.ok = false;
-      health.errors.push(`${key} not configured`);
-    }
+    cacheAge: _healthCache.lastRefreshed,
+    dependencies: {
+      ffmpeg: _healthCache.ffmpeg,
+      ..._healthCache.apiKeys,
+      vectcut: _healthCache.vectcut,
+    },
+    directories: _healthCache.directories,
+    errors,
   });
-
-  // Check directories
-  const dirs = { tmp: TMP_DIR, output: OUTPUT_DIR };
-  for (const [name, dir] of Object.entries(dirs)) {
-    try {
-      const stats = fs.statSync(dir);
-      health.directories[name] = {
-        path: dir,
-        exists: true,
-        writable: true, // Already validated on startup
-      };
-    } catch (err) {
-      health.ok = false;
-      health.directories[name] = {
-        path: dir,
-        exists: false,
-        error: err.message,
-      };
-      health.errors.push(`${name} directory not accessible`);
-    }
-  }
-
-  // Check VectCut API (optional)
-  try {
-    const vectCutHealth = await vectCutClient.healthCheck();
-    health.dependencies.vectcut = vectCutHealth.healthy
-      ? { status: 'ok' }
-      : { status: 'offline', error: vectCutHealth.error };
-  } catch (err) {
-    health.dependencies.vectcut = { status: 'offline', error: err.message };
-    // VectCut is optional, don't fail health check
-  }
-
-  // Check disk space
-  try {
-    await new Promise((resolve, reject) => {
-      const { exec } = require('child_process');
-      exec(`df -k "${OUTPUT_DIR}" | awk 'NR==2 {print $4}'`, (err, stdout) => {
-        if (err) return reject(err);
-        const freeKB = parseInt(stdout.trim());
-        const freeMB = Math.floor(freeKB / 1024);
-        const freeGB = (freeMB / 1024).toFixed(1);
-        health.directories.output.freeSpaceGB = parseFloat(freeGB);
-
-        // Warn if less than 5GB free
-        if (freeMB < 5120) {
-          health.errors.push(`Low disk space: ${freeGB}GB remaining`);
-        }
-        resolve();
-      });
-    });
-  } catch (err) {
-    // Non-fatal, just log
-    health.directories.output.freeSpaceError = err.message;
-  }
-
-  const statusCode = health.ok ? 200 : 503;
-  res.status(statusCode).json(health);
 });
 
 // GET /jobs — return all persisted job cards for dashboard recovery after server restart
