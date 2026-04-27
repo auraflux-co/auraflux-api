@@ -126,6 +126,14 @@ services:
       - key: ATLASSIAN_EMAIL
         sync: false
 
+      # RunPod / ComfyUI / SVD (Phase 4 — text-to-video + long-to-short)
+      - key: RUNPOD_API_KEY
+        sync: false
+      - key: RUNPOD_POD_ID
+        sync: false
+      - key: RUNPOD_ENDPOINT_ID
+        sync: false
+
       # C0 manual workflow flag
       - key: C0_MANUAL_SEGMENT_CHECKPOINT
         value: 'true'
