@@ -426,6 +426,7 @@ const {
   probeDuration,
   checkDiskSpace,
   captureTicker,
+  getPinnedComment,
   TICKER_CACHE,
   TICKER_MAP,
   assemblyJobs,
@@ -3312,9 +3313,7 @@ app.get('/canva-import-status/:id', (req, res) => {
 // ── Streamer display name map ────────────────────────────────────
 // Maps Twitch username (lowercase) → on-air display name
 
-// Pinned comment for Gate 6 publish — read from customerConfig delivery.pinnedComments
-// using getPinnedComment(contentType, customerId) from assembly.js.
-const { getPinnedComment } = require('./lib/assembly');
+// getPinnedComment imported at top-level assembly require block above.
 
 // GET /ticker-status — check which tickers are cached
 app.get('/ticker-status', (req, res) => {
