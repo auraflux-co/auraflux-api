@@ -470,6 +470,16 @@
       "clips": "24",
       "sports": "17"
     },
-    "visibility": "private"
+    "visibility": "private",
+    "pinnedComments": {
+      "clips":  "What was your favorite streamer clip? Let me know below! 👇 If you enjoyed this, consider subscribing for more Twitch Soup episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
+      "sports": "What was your favorite game highlight? Let me know below! 👇 If you enjoyed this, consider subscribing for more Other Side of the Pillow episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
+      "news":   "What was your favorite news story? Let me know below! 👇 If you enjoyed this, consider subscribing for more Because the Light Was On episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1"
+    },
+    "tickerFiles": {
+      "sports": "tools/sports_ticker.html",
+      "news":   "tools/cwn_combined_ticker.html",
+      "clips":  "tools/cwn_twitch_ticker.html"
+    }
   }
 }
