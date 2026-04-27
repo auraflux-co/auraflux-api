@@ -85,17 +85,18 @@ These must be done before onboarding any paying customer.
 **Owner:** Aider (batch rename, overnight task)  
 **Reference:** `memory/project_brand_rename.md`
 
-### 3.3 Twelve Labs — Long-to-Short Pipeline
-**Why deferred:** Phase 2 after gate system stable on Render.  
-**What to build:** Marengo semantic moment extraction from assembled long-form → FFmpeg cuts → shorts with zero new HeyGen/script credits. New `EXTRACT_DIRECT` job type.  
-**Owner:** Claude Code (architecture) → Sub-Agent A (implementation)  
-**Reference:** `memory/project_twelvelabs_shorts.md`
+### 3.3 Long-to-Short Pipeline — Gemini + FFmpeg (replaces Twelve Labs)
+**Why superseded:** Twelve Labs (Marengo) replaced by Gemini video analysis + FFmpeg. No additional API vendor needed — Gemini key already in production.  
+**What to build:** Customer uploads or selects assembled long-form video → Gemini analyzes for top 3–5 high-interest moments with start/end timestamps + crop region → FFmpeg cuts to 9:16 shorts (`-ss` seek + `-vf crop/scale`). New `EXTRACT_DIRECT` job type. Zero new HeyGen/script credits.  
+**Reference:** `docs/architecture/DECOUPLED_VIDEO_PRODUCT_STACK.md` → "Gemini + FFmpeg — long-to-short"  
+**Owner:** Sub-Agent A  
 
-### 3.4 Runway MCP — Idea-to-Video Pipeline
-**Why deferred:** Phase 2. Requires new `COMPACT_GEN` sourceType adapter.  
-**What to build:** Customer provides idea → Runway generates clips from text/image → same pipeline downstream (Gate 0 confirms Runway clips, rest unchanged).  
-**Owner:** Claude Code (architecture) → Sub-Agent A (implementation)  
-**Reference:** `memory/project_runway_mcp.md`
+### 3.4 Text-to-Video — RunPod / ComfyUI / SVD (replaces Runway MCP)
+**Why superseded:** Runway MCP replaced by self-hosted SVD on RunPod. Full cost control, no per-video API vendor fees. Customer provides text prompt → SDXL image → SVD img2vid → FFmpeg post-process.  
+**What to build:** `lib/ai/runpod.js` (RunPod API client), `lib/ai/svd_workflow.json` (ComfyUI workflow), `lib/ai/svd_pipeline.js` (orchestrator). New `CREATE_FROM_IDEA` job type entry point in `server.js`.  
+**Reference:** `docs/architecture/DECOUPLED_VIDEO_PRODUCT_STACK.md` → "SVD pipeline" + "RunPod setup"  
+**Owner:** Sub-Agent A  
+**Prerequisites:** RunPod account + credits + ComfyUI pod with SVD template (RTX 4090). Rob completes RunPod setup first.
 
 ---
 
