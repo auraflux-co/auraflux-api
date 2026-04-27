@@ -115,6 +115,11 @@
             "clips":  { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
             "sports": { "accentColor": "#17408B", "accentColor2": "#C9082A" }
           },
+          "hasTopBar": true,
+          "hasFlag": true,
+          "hasSidebar": true,
+          "hasTicker": true,
+          "hasLogo": true,
           "logoPosition": "bottom-right-mug",
           "logoSize": 120,
           "caption": {
@@ -308,7 +313,12 @@
               "accentColor2": "#C9082A"
             }
           },
-          "logoPosition": "bottom-right-mug",
+          "hasTopBar": false,
+          "hasFlag": false,
+          "hasSidebar": false,
+          "hasTicker": false,
+          "hasLogo": true,
+          "logoPosition": "top-right",
           "logoSize": 80,
           "layout": "split-screen",
           "splitTop": "avatar",
