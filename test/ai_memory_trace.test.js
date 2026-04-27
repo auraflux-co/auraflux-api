@@ -27,7 +27,7 @@ describe('ai_memory_trace', () => {
       jobId: 'job_disabled',
       stage: 'unit',
       prompt: 'test prompt',
-      inputs: { script: 'hello' }
+      inputs: { script: 'hello' },
     });
     expect(event).toBeNull();
     expect(fs.existsSync(tracePath)).toBe(false);
@@ -47,9 +47,9 @@ describe('ai_memory_trace', () => {
       inputs: {
         script: '=== INTRO ===\nHello world',
         orderedItemCount: 2,
-        sceneHeaders: ['INTRO', 'STORY1_CLIP']
+        sceneHeaders: ['INTRO', 'STORY1_CLIP'],
       },
-      metadata: { source: 'unit-test' }
+      metadata: { source: 'unit-test' },
     });
 
     expect(event).toBeTruthy();
@@ -67,4 +67,3 @@ describe('ai_memory_trace', () => {
     expect(parsed.metadata.source).toBe('unit-test');
   });
 });
-

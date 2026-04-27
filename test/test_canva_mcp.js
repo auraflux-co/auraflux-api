@@ -47,11 +47,15 @@ async function testCanvaMCPSetup() {
   // Test 3: Check if server /generate-thumbnail endpoint exists
   console.log('\n3️⃣  Testing /generate-thumbnail endpoint...');
   try {
-    const response = await axios.post(`${API_BASE}/generate-thumbnail`, {
-      jobId: 'diagnostic_test_' + Date.now(),
-      hookLine: 'DIAGNOSTIC TEST',
-      date: 'Today'
-    }, { timeout: 5000 });
+    const response = await axios.post(
+      `${API_BASE}/generate-thumbnail`,
+      {
+        jobId: 'diagnostic_test_' + Date.now(),
+        hookLine: 'DIAGNOSTIC TEST',
+        date: 'Today',
+      },
+      { timeout: 5000 }
+    );
 
     console.log('   ✅ Endpoint responded');
     console.log(`   Message: ${response.data.message}`);
@@ -61,7 +65,7 @@ async function testCanvaMCPSetup() {
 
     // Test 4: Wait and check status
     console.log('\n4️⃣  Waiting 15 seconds for async thumbnail generation...');
-    await new Promise(r => setTimeout(r, 15000));
+    await new Promise((r) => setTimeout(r, 15000));
 
     console.log('   Checking /thumbnail-status/' + jobId + '...');
     try {
@@ -80,7 +84,6 @@ async function testCanvaMCPSetup() {
     } catch (e) {
       console.log(`   ❌ Status check failed: ${e.message}`);
     }
-
   } catch (e) {
     if (e.code === 'ECONNREFUSED') {
       console.log('   ❌ Server not running - start with: nodemon server.js');
@@ -100,7 +103,7 @@ async function testCanvaMCPSetup() {
       const response = await client.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 50,
-        messages: [{ role: 'user', content: 'Say "API works"' }]
+        messages: [{ role: 'user', content: 'Say "API works"' }],
       });
       console.log('   ✅ Claude API responding correctly');
     } catch (e) {
@@ -127,7 +130,7 @@ async function testCanvaMCPSetup() {
   console.log('See CANVA_MCP_SETUP.md for detailed troubleshooting guide.\n');
 }
 
-testCanvaMCPSetup().catch(err => {
+testCanvaMCPSetup().catch((err) => {
   console.error('\n💥 Diagnostic script crashed:', err.message);
   console.error(err.stack);
   process.exit(1);

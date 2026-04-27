@@ -26,18 +26,28 @@ Pass criteria: Every test case produces the expected output within 1 character o
 ## Test Case 1 — Happy path: 1 streamer × 2 clips (Style B script)
 
 **Setup:**
+
 ```javascript
 window.CURRENT_META = {
   streamers: ['jasontheween'],
   orderedClipUrls: [
-    { url: 'http://test.mp4/clip1', pageUrl: 'https://twitch.tv/jasontheween/clip/A', duration: 30 },
-    { url: 'http://test.mp4/clip2', pageUrl: 'https://twitch.tv/jasontheween/clip/B', duration: 25 }
+    {
+      url: 'http://test.mp4/clip1',
+      pageUrl: 'https://twitch.tv/jasontheween/clip/A',
+      duration: 30,
+    },
+    {
+      url: 'http://test.mp4/clip2',
+      pageUrl: 'https://twitch.tv/jasontheween/clip/B',
+      duration: 25,
+    },
   ],
-  clipMp4Urls: {}
+  clipMp4Urls: {},
 };
 ```
 
 **Test script:**
+
 ```
 === INTRO ===
 Hello everyone! You are tuning into Twitch Soup brought to you by ClipzWorld News. Where we appreciate our favorite streamers on Twitch. I am your host Bobby G. Let's get to it.
@@ -74,19 +84,20 @@ Appreciate you!
 
 **Expected segments (exactly 9):**
 
-| # | type | label | clipUrl / text preview |
-|---|---|---|---|
-| 0 | avatar | INTRO | "Hello everyone! You are tuning into..." |
-| 1 | avatar | JASON_INTRO | "First up tonight, we have Jason..." |
-| 2 | avatar | JASON_CLIP1_SETUP | "Here we see his cat-eared avatar..." |
-| 3 | source_clip | JASON_CLIP1_SETUP (CLIP 1) | `http://test.mp4/clip1` |
-| 4 | avatar | JASON_CLIP1_REACTION | "That is certainly a choice..." |
-| 5 | avatar | JASON_CLIP2_SETUP | "Speaking of interesting choices..." |
-| 6 | source_clip | JASON_CLIP2_SETUP (CLIP 2) | `http://test.mp4/clip2` |
-| 7 | avatar | JASON_CLIP2_REACTION | "He certainly made some friends..." |
-| 8 | avatar | OUTRO | "Well everybody, that does it..." |
+| #   | type        | label                      | clipUrl / text preview                   |
+| --- | ----------- | -------------------------- | ---------------------------------------- |
+| 0   | avatar      | INTRO                      | "Hello everyone! You are tuning into..." |
+| 1   | avatar      | JASON_INTRO                | "First up tonight, we have Jason..."     |
+| 2   | avatar      | JASON_CLIP1_SETUP          | "Here we see his cat-eared avatar..."    |
+| 3   | source_clip | JASON_CLIP1_SETUP (CLIP 1) | `http://test.mp4/clip1`                  |
+| 4   | avatar      | JASON_CLIP1_REACTION       | "That is certainly a choice..."          |
+| 5   | avatar      | JASON_CLIP2_SETUP          | "Speaking of interesting choices..."     |
+| 6   | source_clip | JASON_CLIP2_SETUP (CLIP 2) | `http://test.mp4/clip2`                  |
+| 7   | avatar      | JASON_CLIP2_REACTION       | "He certainly made some friends..."      |
+| 8   | avatar      | OUTRO                      | "Well everybody, that does it..."        |
 
 **Expected Gate 2 output:**
+
 ```json
 {
   "gateName": "gate2_segment_structure",
@@ -100,6 +111,7 @@ Appreciate you!
 ```
 
 **Critical checks:**
+
 - `segments.length === 9`
 - `segments.filter(s => s.type === 'avatar').length === 7`
 - `segments.filter(s => s.type === 'source_clip').length === 2`
@@ -114,17 +126,23 @@ Appreciate you!
 This is THE test case that was producing "scenes out of order" for days. Must pass cleanly after Gate 2 ships.
 
 **Setup:**
+
 ```javascript
 window.CURRENT_META = {
   streamers: ['jasontheween'],
   orderedClipUrls: [
-    { url: 'http://test.mp4/clip1', pageUrl: 'https://twitch.tv/jasontheween/clip/A', duration: 30 }
+    {
+      url: 'http://test.mp4/clip1',
+      pageUrl: 'https://twitch.tv/jasontheween/clip/A',
+      duration: 30,
+    },
   ],
-  clipMp4Urls: {}
+  clipMp4Urls: {},
 };
 ```
 
 **Test script:**
+
 ```
 === INTRO ===
 Hello everyone! Tuning into Twitch Soup. I am your host Bobby G.
@@ -152,14 +170,14 @@ Appreciate you!
 
 **Expected segments (exactly 5):**
 
-| # | type | label |
-|---|---|---|
-| 0 | avatar | INTRO |
-| 1 | avatar | JASON_INTRO |
-| 2 | avatar | JASON_CLIP1_SETUP |
-| 3 | source_clip | JASON_CLIP1_SETUP (CLIP 1) |
-| 4 | avatar | JASON_CLIP1_REACTION |
-| — | — | (OUTRO should be here too, making 6 total) |
+| #   | type        | label                                      |
+| --- | ----------- | ------------------------------------------ |
+| 0   | avatar      | INTRO                                      |
+| 1   | avatar      | JASON_INTRO                                |
+| 2   | avatar      | JASON_CLIP1_SETUP                          |
+| 3   | source_clip | JASON_CLIP1_SETUP (CLIP 1)                 |
+| 4   | avatar      | JASON_CLIP1_REACTION                       |
+| —   | —           | (OUTRO should be here too, making 6 total) |
 
 **Correction:** 5 scenes in this script produce **6 segments** (5 avatar + 1 source_clip). Let me recount:
 
@@ -178,22 +196,29 @@ This tests that Gate 2 correctly identifies the parseSegments_v1 bug pattern and
 **Setup:** same as Test Case 2.
 
 **How to run:**
+
 ```javascript
 // Temporarily call v1 to get the buggy output
 var v1Segments = parseSegments_v1(testScriptFromTestCase2);
 // v1 should produce ~7-8 segments with zombie fragments and suffixed labels
 
 // Run Gate 2 on the buggy v1 output
-var gate2Result = gate2_validateSegmentStructure(v1Segments, {
-  contentType: 'twitch',
-  streamers: ['jasontheween'],
-  clipsPerStreamer: 1
-}, 1, []);
+var gate2Result = gate2_validateSegmentStructure(
+  v1Segments,
+  {
+    contentType: 'twitch',
+    streamers: ['jasontheween'],
+    clipsPerStreamer: 1,
+  },
+  1,
+  []
+);
 
 console.log(gate2Result);
 ```
 
 **Expected Gate 2 output:**
+
 ```json
 {
   "passed": false,
@@ -234,6 +259,7 @@ console.log(gate2Result);
 Tests scalability. This is the structure of Test 1 in `test/test_suite_12cases.json`.
 
 **Setup:**
+
 ```javascript
 window.CURRENT_META = {
   streamers: ['jasontheween', 'hasanabi', 'adapt', 'stableronaldo', 'lacy'],
@@ -243,11 +269,12 @@ window.CURRENT_META = {
     { url: 'http://test.mp4/clip2', pageUrl: '', duration: 30 },
     { url: 'http://test.mp4/clip3', pageUrl: '', duration: 30 },
     // ... (generate 15 total)
-  ]
+  ],
 };
 ```
 
 **Expected segment count:**
+
 ```
 1 (INTRO) + 5 × (1 + 3 × 3) + 1 (OUTRO) = 1 + 5 × 10 + 1 = 52 segments
 ```
@@ -255,6 +282,7 @@ window.CURRENT_META = {
 Of those: `5 × (1 + 3 × 2) + 2 = 37` avatar + `5 × 3 = 15` source_clip = **52 total**.
 
 Wait, let me recount the Twitch pattern:
+
 - 1 INTRO (avatar)
 - Per streamer: 1 STREAMER_INTRO (avatar) + 3 × (1 SETUP avatar + 1 CLIP source + 1 REACTION avatar) = 1 + 9 = 10 segments
 - 1 OUTRO (avatar)
@@ -270,6 +298,7 @@ Wait, let me recount the Twitch pattern:
 ## Test Case 5 — NBA long-form (5 games)
 
 **Setup:**
+
 ```javascript
 window.CURRENT_META = {
   contentType: 'nba',
@@ -278,13 +307,16 @@ window.CURRENT_META = {
     { home: 'Warriors', away: 'Nets', score: '125-118' },
     { home: 'Heat', away: 'Bucks', score: '103-99' },
     { home: 'Suns', away: 'Mavericks', score: '118-115' },
-    { home: 'Nuggets', away: 'Clippers', score: '122-110' }
+    { home: 'Nuggets', away: 'Clippers', score: '122-110' },
   ],
-  orderedClipUrls: [/* 5 placeholder URLs */]
+  orderedClipUrls: [
+    /* 5 placeholder URLs */
+  ],
 };
 ```
 
 **Expected segment count:**
+
 ```
 1 (INTRO) + 5 × (1 SETUP + 1 CLIP + 1 REACTION) + 1 (OUTRO) = 1 + 15 + 1 = 17 segments
 ```
@@ -326,7 +358,8 @@ Verify `buildNbaNewsExpectedPattern(items, 'news')` produces the correct pattern
 
 **Setup:** A news-short script with 3 stories but NO `[CLIP PLAYS HERE]` markers (just avatar narration).
 
-**Expected:** 
+**Expected:**
+
 - parseSegments_v2 produces N avatar segments with 0 source_clips
 - Gate 2 checks that `clipCount === 0` matches expected (which should be 0 for this content type if configured correctly)
 
@@ -339,6 +372,7 @@ Verify `buildNbaNewsExpectedPattern(items, 'news')` produces the correct pattern
 **Setup:** script where one scene header is `== INTRO ==` (2 equals instead of 3).
 
 **Expected:**
+
 - parseSegments_v2 fails to recognize the malformed header as a section boundary
 - Result: one section containing both the malformed-header line AND the intended content of the next section
 - Gate 2 should detect either `segment_count_mismatch` OR `segment_order_mismatch` (depending on which check fires first)
@@ -384,35 +418,55 @@ Well everybody. Appreciate you!`;
     streamers: [{ twitchUsername: 'jasontheween', displayName: 'Jason' }],
     orderedClipUrls: [
       { url: 'http://test.mp4/clip1', pageUrl: '', duration: 30 },
-      { url: 'http://test.mp4/clip2', pageUrl: '', duration: 25 }
+      { url: 'http://test.mp4/clip2', pageUrl: '', duration: 25 },
     ],
-    clipMp4Urls: {}
+    clipMp4Urls: {},
   };
 
   var tc1Result = parseSegments_v2(tc1Script);
-  var tc1Pass = (tc1Result.length === 9) &&
-                (tc1Result.filter(function(s){return s.type==='avatar';}).length === 7) &&
-                (tc1Result.filter(function(s){return s.type==='source_clip';}).length === 2);
+  var tc1Pass =
+    tc1Result.length === 9 &&
+    tc1Result.filter(function (s) {
+      return s.type === 'avatar';
+    }).length === 7 &&
+    tc1Result.filter(function (s) {
+      return s.type === 'source_clip';
+    }).length === 2;
   results.push({ name: 'TC1: 1×2 happy path', pass: tc1Pass, segments: tc1Result.length });
 
-  var tc1Gate = gate2_validateSegmentStructure(tc1Result, {
-    contentType: 'twitch',
-    streamers: [{ twitchUsername: 'jasontheween' }],
-    clipsPerStreamer: 2
-  }, 1, []);
-  results.push({ name: 'TC1: Gate 2 PASS', pass: tc1Gate.passed === true, outcome: tc1Gate.outcome });
+  var tc1Gate = gate2_validateSegmentStructure(
+    tc1Result,
+    {
+      contentType: 'twitch',
+      streamers: [{ twitchUsername: 'jasontheween' }],
+      clipsPerStreamer: 2,
+    },
+    1,
+    []
+  );
+  results.push({
+    name: 'TC1: Gate 2 PASS',
+    pass: tc1Gate.passed === true,
+    outcome: tc1Gate.outcome,
+  });
 
   // Test Case 2 — 1×1 (the stuck smoke test case)
-  var tc2Script = tc1Script
-    .replace(/=== JASON_CLIP2_SETUP ===[\s\S]*?=== JASON_CLIP2_REACTION ===\nHe made friends\.\n/, '');
-  window.CURRENT_META.orderedClipUrls = [{ url: 'http://test.mp4/clip1', pageUrl: '', duration: 30 }];
+  var tc2Script = tc1Script.replace(
+    /=== JASON_CLIP2_SETUP ===[\s\S]*?=== JASON_CLIP2_REACTION ===\nHe made friends\.\n/,
+    ''
+  );
+  window.CURRENT_META.orderedClipUrls = [
+    { url: 'http://test.mp4/clip1', pageUrl: '', duration: 30 },
+  ];
   var tc2Result = parseSegments_v2(tc2Script);
-  var tc2Pass = (tc2Result.length === 6);
+  var tc2Pass = tc2Result.length === 6;
   results.push({ name: 'TC2: 1×1 edge case', pass: tc2Pass, segments: tc2Result.length });
 
   // Print results
   console.table(results);
-  var passCount = results.filter(function(r){return r.pass;}).length;
+  var passCount = results.filter(function (r) {
+    return r.pass;
+  }).length;
   console.log('Passed: ' + passCount + ' / ' + results.length);
   return results;
 }
@@ -426,6 +480,7 @@ runGate2Tests();
 ## Success criteria for Phase 1 ship
 
 Cline's Gate 2 implementation ships when:
+
 - [ ] Test Case 1 produces exactly 9 segments
 - [ ] Test Case 2 produces exactly 6 segments (the former 11-segment zombie bug is gone)
 - [ ] Test Case 3 catches parseSegments_v1 output with at least one critical issue
@@ -437,4 +492,4 @@ Cline's Gate 2 implementation ships when:
 
 ---
 
-*This file is spec, not executable code. Cline can run these tests manually via the browser console or turn them into a formal test suite using jest/mocha if desired. The minimum bar is manual verification before commit.*
+_This file is spec, not executable code. Cline can run these tests manually via the browser console or turn them into a formal test suite using jest/mocha if desired. The minimum bar is manual verification before commit._

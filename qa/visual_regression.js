@@ -33,30 +33,30 @@ const PAGES = [
     name: 'health',
     url: `${BASE_URL}/health`,
     waitFor: null,
-    description: 'Health check endpoint (JSON)'
+    description: 'Health check endpoint (JSON)',
   },
   {
     name: 'news_tool',
     url: `${BASE_URL}/news-tool`,
     waitFor: 'networkidle',
-    description: 'News thumbnail generator UI'
+    description: 'News thumbnail generator UI',
   },
   {
     name: 'newscast_overlay',
     url: `${BASE_URL}/newscast-overlay`,
     waitFor: 'networkidle',
-    description: 'Newscast overlay UI'
+    description: 'Newscast overlay UI',
   },
   {
     name: 'twitch_tool',
     url: `${BASE_URL}/twitch-tool`,
     waitFor: 'networkidle',
-    description: 'Twitch thumbnail generator UI'
-  }
+    description: 'Twitch thumbnail generator UI',
+  },
 ];
 
 // Ensure directories exist
-[BASELINE_DIR, REPORT_DIR].forEach(dir => {
+[BASELINE_DIR, REPORT_DIR].forEach((dir) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
@@ -83,7 +83,7 @@ function diffImages(baselineBuffer, currentBuffer, threshold) {
     totalPixels: total,
     diffPercent,
     passed: diffPercent <= threshold,
-    sizeMismatch: false
+    sizeMismatch: false,
   };
 }
 
@@ -96,11 +96,11 @@ async function runVisualRegression() {
 
   const browser = await chromium.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
   const context = await browser.newContext({
-    viewport: { width: 1920, height: 1080 }
+    viewport: { width: 1920, height: 1080 },
   });
 
   const results = [];
@@ -142,7 +142,9 @@ async function runVisualRegression() {
             console.log(`     ✅ PASS — diff: ${(diff.diffPercent * 100).toFixed(4)}%`);
             results.push({ name: page.name, status: 'pass', passed: true, diff });
           } else {
-            console.log(`     ❌ FAIL — diff: ${(diff.diffPercent * 100).toFixed(4)}% (threshold: ${(DIFF_THRESHOLD * 100).toFixed(2)}%)`);
+            console.log(
+              `     ❌ FAIL — diff: ${(diff.diffPercent * 100).toFixed(4)}% (threshold: ${(DIFF_THRESHOLD * 100).toFixed(2)}%)`
+            );
             results.push({ name: page.name, status: 'fail_diff', passed: false, diff });
           }
         }
@@ -158,8 +160,8 @@ async function runVisualRegression() {
   await browser.close();
 
   // Write report
-  const passed = results.filter(r => r.passed).length;
-  const failed = results.filter(r => !r.passed).length;
+  const passed = results.filter((r) => r.passed).length;
+  const failed = results.filter((r) => !r.passed).length;
   const passRate = ((passed / results.length) * 100).toFixed(1);
 
   const report = {
@@ -167,7 +169,7 @@ async function runVisualRegression() {
     mode: UPDATE_MODE ? 'baseline_update' : 'regression_check',
     threshold: DIFF_THRESHOLD,
     summary: { total: results.length, passed, failed, passRate: `${passRate}%` },
-    results
+    results,
   };
 
   const reportPath = path.join(REPORT_DIR, `report_${TIMESTAMP}.json`);
@@ -179,7 +181,9 @@ async function runVisualRegression() {
   } else {
     console.log(`📊 Results: ${passed}/${results.length} passed (${passRate}%)`);
     if (failed > 0) {
-      console.log(`❌ ${failed} regression(s) detected — review screenshots in output/visual_regression/`);
+      console.log(
+        `❌ ${failed} regression(s) detected — review screenshots in output/visual_regression/`
+      );
     } else {
       console.log(`✅ All visual checks passed`);
     }
@@ -190,7 +194,7 @@ async function runVisualRegression() {
   if (!UPDATE_MODE && failed > 0) process.exit(1);
 }
 
-runVisualRegression().catch(err => {
+runVisualRegression().catch((err) => {
   console.error('Fatal error in visual regression:', err);
   process.exit(1);
 });

@@ -8,7 +8,7 @@ describe('job_spec_preflight', () => {
       jobId: 'script_test_1',
       customerId: 'c0',
       contentType: 'news',
-      order: { inputs: { items: [{ title: 'a' }] } }
+      order: { inputs: { items: [{ title: 'a' }] } },
     });
     expect(r.ok).toBe(true);
     expect(r.errors.length).toBe(0);
@@ -19,7 +19,7 @@ describe('job_spec_preflight', () => {
       jobId: 'x',
       customerId: 'c0',
       contentType: 'news',
-      order: { inputs: { items: [] } }
+      order: { inputs: { items: [] } },
     });
     expect(r.ok).toBe(false);
   });

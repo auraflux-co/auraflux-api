@@ -10,12 +10,13 @@ const {
   firstSourceUrl,
   cacheKeyForUrl,
   pruneStalePartFiles,
-  cacheRootPath
+  cacheRootPath,
 } = require('../lib/gates/gate1_video_reviewer');
 
 describe('gate1_video_reviewer helpers', () => {
   test('tryParseReviewerJson parses fenced JSON', () => {
-    const raw = 'Here:\n```json\n{"fabricationFound":false,"examples":[],"observedSummary":"Raptors vs Cavs highlight"}\n```';
+    const raw =
+      'Here:\n```json\n{"fabricationFound":false,"examples":[],"observedSummary":"Raptors vs Cavs highlight"}\n```';
     const j = tryParseReviewerJson(raw);
     expect(j.fabricationFound).toBe(false);
     expect(j.observedSummary).toContain('Raptors');

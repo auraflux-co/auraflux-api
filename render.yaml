@@ -39,21 +39,21 @@ services:
       - key: PUPPETEER_EXECUTABLE_PATH
         value: /usr/bin/chromium
       - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
-        value: "true"
+        value: 'true'
       - key: GATE_TEST_MODE
-        value: "false"
+        value: 'false'
       - key: NEW_RELIC_APP_NAME
         value: auraflux-api-prod
       - key: NEW_RELIC_NO_CONFIG_FILE
-        value: "true"
+        value: 'true'
       - key: SHORT_FORM_LOGO_SIZE
-        value: "80"
+        value: '80'
       - key: SHORT_FORM_AUDIO_MIX
         value: both
       - key: USE_LOCAL_FFMPEG
-        value: "false"
+        value: 'false'
       - key: VECTCUT_API_URL
-        value: ""
+        value: ''
 
       # ── Secrets — set values in Render environment panel (sync: false) ────────
       # AI APIs
@@ -128,7 +128,7 @@ services:
 
       # C0 manual workflow flag
       - key: C0_MANUAL_SEGMENT_CHECKPOINT
-        value: "true"
+        value: 'true'
 
 # ── PostgreSQL — future migration target (Phase 2)
 # Uncomment when ready to migrate from SQLite.

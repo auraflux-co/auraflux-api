@@ -1,1131 +1,1757 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CWN Production Manual</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
-  
-  :root {
-    --navy: #22304b;
-    --navy-dark: #162035;
-    --navy-mid: #2d3f5e;
-    --gold: #c7af4f;
-    --gold-light: #d9c370;
-    --gold-dim: rgba(199,175,79,0.15);
-    --white: #f0ede6;
-    --muted: rgba(240,237,230,0.45);
-    --danger: #e74c3c;
-    --success: #2ecc71;
-    --code-bg: #0d1825;
-  }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CWN Production Manual</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  
-  body {
-    background: var(--navy-dark);
-    color: var(--white);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    line-height: 1.7;
-  }
+      :root {
+        --navy: #22304b;
+        --navy-dark: #162035;
+        --navy-mid: #2d3f5e;
+        --gold: #c7af4f;
+        --gold-light: #d9c370;
+        --gold-dim: rgba(199, 175, 79, 0.15);
+        --white: #f0ede6;
+        --muted: rgba(240, 237, 230, 0.45);
+        --danger: #e74c3c;
+        --success: #2ecc71;
+        --code-bg: #0d1825;
+      }
 
-  /* SIDEBAR */
-  .sidebar {
-    position: fixed;
-    left: 0; top: 0; bottom: 0;
-    width: 260px;
-    background: var(--navy);
-    border-right: 1px solid rgba(199,175,79,0.2);
-    overflow-y: auto;
-    z-index: 100;
-  }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-  .sidebar-logo {
-    padding: 24px 20px 16px;
-    border-bottom: 1px solid rgba(199,175,79,0.2);
-  }
+      body {
+        background: var(--navy-dark);
+        color: var(--white);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        line-height: 1.7;
+      }
 
-  .sidebar-logo .show-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
-    letter-spacing: 3px;
-    color: var(--gold);
-    line-height: 1;
-  }
+      /* SIDEBAR */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        background: var(--navy);
+        border-right: 1px solid rgba(199, 175, 79, 0.2);
+        overflow-y: auto;
+        z-index: 100;
+      }
 
-  .sidebar-logo .sub {
-    font-size: 10px;
-    letter-spacing: 4px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
+      .sidebar-logo {
+        padding: 24px 20px 16px;
+        border-bottom: 1px solid rgba(199, 175, 79, 0.2);
+      }
 
-  .sidebar-version {
-    padding: 8px 20px;
-    font-size: 10px;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
+      .sidebar-logo .show-name {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 26px;
+        letter-spacing: 3px;
+        color: var(--gold);
+        line-height: 1;
+      }
 
-  .nav-section-label {
-    padding: 16px 20px 6px;
-    font-size: 9px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--gold);
-    font-weight: 600;
-  }
+      .sidebar-logo .sub {
+        font-size: 10px;
+        letter-spacing: 4px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-top: 4px;
+      }
 
-  .nav-item {
-    display: block;
-    padding: 8px 20px;
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 13px;
-    transition: all 0.15s;
-    border-left: 2px solid transparent;
-  }
+      .sidebar-version {
+        padding: 8px 20px;
+        font-size: 10px;
+        color: var(--muted);
+        font-family: 'DM Mono', monospace;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
 
-  .nav-item:hover, .nav-item.active {
-    color: var(--white);
-    background: rgba(199,175,79,0.06);
-    border-left-color: var(--gold);
-  }
+      .nav-section-label {
+        padding: 16px 20px 6px;
+        font-size: 9px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 600;
+      }
 
-  .nav-item .icon { margin-right: 8px; opacity: 0.7; }
+      .nav-item {
+        display: block;
+        padding: 8px 20px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.15s;
+        border-left: 2px solid transparent;
+      }
 
-  /* MAIN */
-  .main {
-    margin-left: 260px;
-    padding: 48px 56px;
-    max-width: 960px;
-  }
+      .nav-item:hover,
+      .nav-item.active {
+        color: var(--white);
+        background: rgba(199, 175, 79, 0.06);
+        border-left-color: var(--gold);
+      }
 
-  /* SECTIONS */
-  .section { margin-bottom: 72px; scroll-margin-top: 32px; }
+      .nav-item .icon {
+        margin-right: 8px;
+        opacity: 0.7;
+      }
 
-  .section-badge {
-    display: inline-block;
-    font-size: 9px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--gold);
-    background: var(--gold-dim);
-    border: 1px solid rgba(199,175,79,0.3);
-    padding: 3px 10px;
-    border-radius: 2px;
-    margin-bottom: 10px;
-    font-family: 'DM Mono', monospace;
-  }
+      /* MAIN */
+      .main {
+        margin-left: 260px;
+        padding: 48px 56px;
+        max-width: 960px;
+      }
 
-  h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 52px;
-    letter-spacing: 4px;
-    color: var(--gold);
-    line-height: 1;
-    margin-bottom: 8px;
-  }
+      /* SECTIONS */
+      .section {
+        margin-bottom: 72px;
+        scroll-margin-top: 32px;
+      }
 
-  h2 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
-    letter-spacing: 3px;
-    color: var(--white);
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(199,175,79,0.2);
-  }
+      .section-badge {
+        display: inline-block;
+        font-size: 9px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--gold);
+        background: var(--gold-dim);
+        border: 1px solid rgba(199, 175, 79, 0.3);
+        padding: 3px 10px;
+        border-radius: 2px;
+        margin-bottom: 10px;
+        font-family: 'DM Mono', monospace;
+      }
 
-  h3 {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 12px;
-    margin-top: 28px;
-  }
+      h1 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 52px;
+        letter-spacing: 4px;
+        color: var(--gold);
+        line-height: 1;
+        margin-bottom: 8px;
+      }
 
-  p { color: rgba(240,237,230,0.8); margin-bottom: 12px; }
+      h2 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 32px;
+        letter-spacing: 3px;
+        color: var(--white);
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(199, 175, 79, 0.2);
+      }
 
-  /* PIPELINE */
-  .pipeline {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    margin: 24px 0;
-  }
+      h3 {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 12px;
+        margin-top: 28px;
+      }
 
-  .pipeline-step {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-  }
+      p {
+        color: rgba(240, 237, 230, 0.8);
+        margin-bottom: 12px;
+      }
 
-  .pipeline-connector {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 40px;
-    flex-shrink: 0;
-  }
+      /* PIPELINE */
+      .pipeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin: 24px 0;
+      }
 
-  .pipeline-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--gold);
-    border: 2px solid var(--gold-light);
-    flex-shrink: 0;
-    margin-top: 16px;
-  }
+      .pipeline-step {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+      }
 
-  .pipeline-line {
-    width: 2px;
-    background: linear-gradient(to bottom, var(--gold), rgba(199,175,79,0.2));
-    flex: 1;
-    margin: 0 auto;
-  }
+      .pipeline-connector {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 40px;
+        flex-shrink: 0;
+      }
 
-  .pipeline-card {
-    flex: 1;
-    background: var(--navy-mid);
-    border: 1px solid rgba(199,175,79,0.15);
-    border-radius: 4px;
-    padding: 16px 20px;
-    margin-bottom: 8px;
-  }
+      .pipeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gold);
+        border: 2px solid var(--gold-light);
+        flex-shrink: 0;
+        margin-top: 16px;
+      }
 
-  .pipeline-card .step-label {
-    font-size: 9px;
-    letter-spacing: 3px;
-    color: var(--muted);
-    text-transform: uppercase;
-    font-family: 'DM Mono', monospace;
-  }
+      .pipeline-line {
+        width: 2px;
+        background: linear-gradient(to bottom, var(--gold), rgba(199, 175, 79, 0.2));
+        flex: 1;
+        margin: 0 auto;
+      }
 
-  .pipeline-card .step-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--white);
-    margin: 4px 0;
-  }
+      .pipeline-card {
+        flex: 1;
+        background: var(--navy-mid);
+        border: 1px solid rgba(199, 175, 79, 0.15);
+        border-radius: 4px;
+        padding: 16px 20px;
+        margin-bottom: 8px;
+      }
 
-  .pipeline-card .step-desc {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
+      .pipeline-card .step-label {
+        font-size: 9px;
+        letter-spacing: 3px;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-family: 'DM Mono', monospace;
+      }
 
-  .pipeline-card .step-qa {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 8px;
-    font-size: 11px;
-    color: var(--gold);
-    background: var(--gold-dim);
-    padding: 3px 10px;
-    border-radius: 2px;
-    font-family: 'DM Mono', monospace;
-  }
+      .pipeline-card .step-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--white);
+        margin: 4px 0;
+      }
 
-  /* CARDS */
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin: 20px 0;
-  }
+      .pipeline-card .step-desc {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
 
-  .card {
-    background: var(--navy-mid);
-    border: 1px solid rgba(199,175,79,0.15);
-    border-radius: 4px;
-    padding: 20px;
-  }
+      .pipeline-card .step-qa {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        font-size: 11px;
+        color: var(--gold);
+        background: var(--gold-dim);
+        padding: 3px 10px;
+        border-radius: 2px;
+        font-family: 'DM Mono', monospace;
+      }
 
-  .card-icon { font-size: 20px; margin-bottom: 8px; }
-  .card-title { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
-  .card-desc { font-size: 12px; color: var(--muted); }
+      /* CARDS */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin: 20px 0;
+      }
 
-  /* CODE BLOCKS */
-  .code {
-    background: var(--code-bg);
-    border: 1px solid rgba(199,175,79,0.15);
-    border-radius: 4px;
-    padding: 16px 20px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--gold-light);
-    margin: 12px 0;
-    overflow-x: auto;
-    line-height: 1.8;
-  }
+      .card {
+        background: var(--navy-mid);
+        border: 1px solid rgba(199, 175, 79, 0.15);
+        border-radius: 4px;
+        padding: 20px;
+      }
 
-  .code .comment { color: rgba(199,175,79,0.35); }
-  .code .key { color: #7ec8e3; }
-  .code .val { color: var(--gold-light); }
+      .card-icon {
+        font-size: 20px;
+        margin-bottom: 8px;
+      }
+      .card-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 4px;
+      }
+      .card-desc {
+        font-size: 12px;
+        color: var(--muted);
+      }
 
-  /* TABLE */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-    font-size: 13px;
-  }
+      /* CODE BLOCKS */
+      .code {
+        background: var(--code-bg);
+        border: 1px solid rgba(199, 175, 79, 0.15);
+        border-radius: 4px;
+        padding: 16px 20px;
+        font-family: 'DM Mono', monospace;
+        font-size: 12px;
+        color: var(--gold-light);
+        margin: 12px 0;
+        overflow-x: auto;
+        line-height: 1.8;
+      }
 
-  th {
-    background: rgba(199,175,79,0.1);
-    color: var(--gold);
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid rgba(199,175,79,0.2);
-    font-family: 'DM Mono', monospace;
-  }
+      .code .comment {
+        color: rgba(199, 175, 79, 0.35);
+      }
+      .code .key {
+        color: #7ec8e3;
+      }
+      .code .val {
+        color: var(--gold-light);
+      }
 
-  td {
-    padding: 10px 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    color: rgba(240,237,230,0.8);
-  }
+      /* TABLE */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 13px;
+      }
 
-  tr:hover td { background: rgba(199,175,79,0.03); }
+      th {
+        background: rgba(199, 175, 79, 0.1);
+        color: var(--gold);
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 1px solid rgba(199, 175, 79, 0.2);
+        font-family: 'DM Mono', monospace;
+      }
 
-  /* ALERT BOXES */
-  .alert {
-    display: flex;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 4px;
-    margin: 16px 0;
-    font-size: 13px;
-  }
+      td {
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(240, 237, 230, 0.8);
+      }
 
-  .alert-icon { font-size: 16px; flex-shrink: 0; padding-top: 1px; }
-  .alert-warn { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); }
-  .alert-info { background: rgba(199,175,79,0.08); border: 1px solid rgba(199,175,79,0.25); }
-  .alert-ok { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.25); }
+      tr:hover td {
+        background: rgba(199, 175, 79, 0.03);
+      }
 
-  /* COST TABLE */
-  .cost-total {
-    background: var(--gold-dim);
-    border: 1px solid rgba(199,175,79,0.4);
-    padding: 16px 20px;
-    border-radius: 4px;
-    margin-top: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+      /* ALERT BOXES */
+      .alert {
+        display: flex;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 4px;
+        margin: 16px 0;
+        font-size: 13px;
+      }
 
-  .cost-total .label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
-  .cost-total .amount { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--gold); letter-spacing: 2px; }
+      .alert-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+        padding-top: 1px;
+      }
+      .alert-warn {
+        background: rgba(231, 76, 60, 0.1);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+      }
+      .alert-info {
+        background: rgba(199, 175, 79, 0.08);
+        border: 1px solid rgba(199, 175, 79, 0.25);
+      }
+      .alert-ok {
+        background: rgba(46, 204, 113, 0.08);
+        border: 1px solid rgba(46, 204, 113, 0.25);
+      }
 
-  /* STREAMER GRID */
-  .streamer-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    margin: 16px 0;
-  }
+      /* COST TABLE */
+      .cost-total {
+        background: var(--gold-dim);
+        border: 1px solid rgba(199, 175, 79, 0.4);
+        padding: 16px 20px;
+        border-radius: 4px;
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-  .streamer-chip {
-    background: var(--navy-mid);
-    border: 1px solid rgba(199,175,79,0.2);
-    border-radius: 4px;
-    padding: 10px 12px;
-    text-align: center;
-  }
+      .cost-total .label {
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--gold);
+      }
+      .cost-total .amount {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 32px;
+        color: var(--gold);
+        letter-spacing: 2px;
+      }
 
-  .streamer-chip .display { font-size: 13px; font-weight: 600; color: var(--gold); }
-  .streamer-chip .username { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+      /* STREAMER GRID */
+      .streamer-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin: 16px 0;
+      }
 
-  /* STATUS BADGES */
-  .badge {
-    display: inline-block;
-    font-size: 9px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 2px;
-    font-family: 'DM Mono', monospace;
-  }
-  .badge-done { background: rgba(46,204,113,0.15); color: var(--success); border: 1px solid rgba(46,204,113,0.3); }
-  .badge-pending { background: rgba(199,175,79,0.1); color: var(--gold); border: 1px solid rgba(199,175,79,0.3); }
-  .badge-new { background: rgba(52,152,219,0.15); color: #74b9e8; border: 1px solid rgba(52,152,219,0.3); }
+      .streamer-chip {
+        background: var(--navy-mid);
+        border: 1px solid rgba(199, 175, 79, 0.2);
+        border-radius: 4px;
+        padding: 10px 12px;
+        text-align: center;
+      }
 
-  /* HEADER */
-  .manual-header {
-    margin-bottom: 56px;
-    padding-bottom: 32px;
-    border-bottom: 1px solid rgba(199,175,79,0.2);
-  }
+      .streamer-chip .display {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gold);
+      }
+      .streamer-chip .username {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: 'DM Mono', monospace;
+      }
 
-  .manual-header .meta {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    margin-top: 12px;
-  }
+      /* STATUS BADGES */
+      .badge {
+        display: inline-block;
+        font-size: 9px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 2px;
+        font-family: 'DM Mono', monospace;
+      }
+      .badge-done {
+        background: rgba(46, 204, 113, 0.15);
+        color: var(--success);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+      }
+      .badge-pending {
+        background: rgba(199, 175, 79, 0.1);
+        color: var(--gold);
+        border: 1px solid rgba(199, 175, 79, 0.3);
+      }
+      .badge-new {
+        background: rgba(52, 152, 219, 0.15);
+        color: #74b9e8;
+        border: 1px solid rgba(52, 152, 219, 0.3);
+      }
 
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--navy-dark); }
-  ::-webkit-scrollbar-thumb { background: rgba(199,175,79,0.3); border-radius: 3px; }
-</style>
-</head>
-<body>
+      /* HEADER */
+      .manual-header {
+        margin-bottom: 56px;
+        padding-bottom: 32px;
+        border-bottom: 1px solid rgba(199, 175, 79, 0.2);
+      }
 
-<!-- SIDEBAR -->
-<nav class="sidebar">
-  <div class="sidebar-logo">
-    <div class="show-name">CLIPZWORLD<br>NEWS</div>
-    <div class="sub">Production Manual</div>
-  </div>
-  <div class="sidebar-version">v2.1 — April 8, 2026</div>
+      .manual-header .meta {
+        font-size: 11px;
+        color: var(--muted);
+        font-family: 'DM Mono', monospace;
+        margin-top: 12px;
+      }
 
-  <div class="nav-section-label">Overview</div>
-  <a class="nav-item" href="#overview">🎙 Show Identity</a>
-  <a class="nav-item" href="#pipeline">⚙️ Production Pipeline</a>
-  <a class="nav-item" href="#tools">🛠 Tool Stack</a>
-  <a class="nav-item" href="#costs">💰 Cost Model</a>
-
-  <div class="nav-section-label">Production</div>
-  <a class="nav-item" href="#dashboard">📊 Dashboard</a>
-  <a class="nav-item" href="#streamers">👥 Streamers</a>
-  <a class="nav-item" href="#script">✍️ Script System</a>
-  <a class="nav-item" href="#assembly">🎬 Assembly</a>
-  <a class="nav-item" href="#qa">🔍 QA System</a>
-
-  <div class="nav-section-label">Publishing</div>
-  <a class="nav-item" href="#thumbnails">🖼 Thumbnails</a>
-  <a class="nav-item" href="#publish">📤 Publishing</a>
-  <a class="nav-item" href="#schedule">📅 Schedule</a>
-
-  <div class="nav-section-label">Operations</div>
-  <a class="nav-item" href="#env">🔑 Environment</a>
-  <a class="nav-item" href="#servers">🖥 Local Servers</a>
-  <a class="nav-item" href="#pronunciation">🗣 Pronunciation</a>
-  <a class="nav-item" href="#future">🚀 Roadmap</a>
-</nav>
-
-<!-- MAIN CONTENT -->
-<main class="main">
-
-  <!-- HEADER -->
-  <div class="manual-header" id="overview">
-    <div class="section-badge">CWN OPERATIONS</div>
-    <h1>PRODUCTION<br>MANUAL</h1>
-    <p style="font-size:16px; color:rgba(240,237,230,0.7); max-width:560px;">
-      The Daily Update — brought to you by ClipzWorld News. Your complete reference for producing, assembling, and publishing Bobby G's show at scale.
-    </p>
-    <div class="meta">
-      Channel: @clipznashite &nbsp;·&nbsp; Host: Bobby G &nbsp;·&nbsp;
-      Brand: Navy #22304b / Gold #c7af4f &nbsp;·&nbsp; Updated: April 5, 2026
-    </div>
-  </div>
-
-  <!-- SHOW IDENTITY -->
-  <section class="section">
-    <div class="section-badge">IDENTITY</div>
-    <h2>SHOW IDENTITY</h2>
-
-    <h3>Content Types</h3>
-    <div class="card-grid">
-      <div class="card">
-        <div class="card-icon">🎮</div>
-        <div class="card-title">Twitch Compilation</div>
-        <div class="card-desc">Top clips from 10 streamers. 3 clips each. ~18-25 min long form. Bobby G reacts in voiceover style with setup → clip → reaction × 3 per streamer.</div>
+      /* SCROLLBAR */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--navy-dark);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(199, 175, 79, 0.3);
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="show-name">CLIPZWORLD<br />NEWS</div>
+        <div class="sub">Production Manual</div>
       </div>
-      <div class="card">
-        <div class="card-icon">📰</div>
-        <div class="card-title">News Compilation</div>
-        <div class="card-desc">Daily news stories. Bobby G delivers CWN-style commentary on world events. Deadpan anchor voice.</div>
-      </div>
-      <div class="card">
-        <div class="card-icon">🏀</div>
-        <div class="card-title">NBA Compilation</div>
-        <div class="card-desc">Yesterday's games. Avatar speaks WHILE clip plays (voiceover mode). Score, leader, injuries per game.</div>
-      </div>
-      <div class="card">
-        <div class="card-icon">⚡</div>
-        <div class="card-title">Shorts / Reels</div>
-        <div class="card-desc">9:16 vertical. 40-60 words. Opens with "The Daily Update. ClipzWorld News." Same voice, tighter format.</div>
-      </div>
-    </div>
+      <div class="sidebar-version">v2.1 — April 8, 2026</div>
 
-    <h3>Locked Intros & Outros</h3>
-    <table>
-      <tr><th>Type</th><th>Intro</th><th>Outro</th></tr>
-      <tr><td>Twitch</td><td>…Where we appreciate our favorite streamers on Twitch…</td><td>…which of the clips you liked the most. Appreciate you!</td></tr>
-      <tr><td>News</td><td>…Where we bring you the most impactful news stories of the day…</td><td>…which of the stories covered concerns you the most. Appreciate you!</td></tr>
-      <tr><td>NBA</td><td>…Where we appreciate all of yesterday's games in the association…</td><td>…Go play a pick-up game today. Let us know how you did. Appreciate you!</td></tr>
-    </table>
+      <div class="nav-section-label">Overview</div>
+      <a class="nav-item" href="#overview">🎙 Show Identity</a>
+      <a class="nav-item" href="#pipeline">⚙️ Production Pipeline</a>
+      <a class="nav-item" href="#tools">🛠 Tool Stack</a>
+      <a class="nav-item" href="#costs">💰 Cost Model</a>
 
-    <h3>Script Voice</h3>
-    <p>Three reference shows define Bobby G's delivery:</p>
-    <div class="card-grid">
-      <div class="card">
-        <div class="card-title">Jon Stewart / Daily Show</div>
-        <div class="card-desc">Flat delivery + one devastating observation + immediate pivot. Never explain the joke.</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Norm MacDonald Weekend Update</div>
-        <div class="card-desc">Short sentences. [beat] pauses. Never explain. The pause IS the joke.</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Space Ghost Coast to Coast</div>
-        <div class="card-desc">Non-sequitur cold opens. Confident self-contradiction. Controlled chaos.</div>
-      </div>
-    </div>
-  </section>
+      <div class="nav-section-label">Production</div>
+      <a class="nav-item" href="#dashboard">📊 Dashboard</a>
+      <a class="nav-item" href="#streamers">👥 Streamers</a>
+      <a class="nav-item" href="#script">✍️ Script System</a>
+      <a class="nav-item" href="#assembly">🎬 Assembly</a>
+      <a class="nav-item" href="#qa">🔍 QA System</a>
 
-  <!-- PIPELINE -->
-  <section class="section" id="pipeline">
-    <div class="section-badge">ARCHITECTURE</div>
-    <h2>PRODUCTION PIPELINE</h2>
-    <p>Full agentic loop with QA gates at each handoff. Failed QA loops back to the responsible agent. All QA failures logged to Google Drive and locally.</p>
+      <div class="nav-section-label">Publishing</div>
+      <a class="nav-item" href="#thumbnails">🖼 Thumbnails</a>
+      <a class="nav-item" href="#publish">📤 Publishing</a>
+      <a class="nav-item" href="#schedule">📅 Schedule</a>
 
-    <div class="pipeline">
-      <div class="pipeline-step">
-        <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-        <div class="pipeline-card">
-          <div class="step-label">Step 1 — Dashboard</div>
-          <div class="step-title">Generate Video Request</div>
-          <div class="step-desc">User selects content type, streamers, clips-per-streamer. Dashboard fetches live clips via Twitch Helix API, resolves GQL MP4 URLs.</div>
+      <div class="nav-section-label">Operations</div>
+      <a class="nav-item" href="#env">🔑 Environment</a>
+      <a class="nav-item" href="#servers">🖥 Local Servers</a>
+      <a class="nav-item" href="#pronunciation">🗣 Pronunciation</a>
+      <a class="nav-item" href="#future">🚀 Roadmap</a>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <!-- HEADER -->
+      <div class="manual-header" id="overview">
+        <div class="section-badge">CWN OPERATIONS</div>
+        <h1>PRODUCTION<br />MANUAL</h1>
+        <p style="font-size: 16px; color: rgba(240, 237, 230, 0.7); max-width: 560px">
+          The Daily Update — brought to you by ClipzWorld News. Your complete reference for
+          producing, assembling, and publishing Bobby G's show at scale.
+        </p>
+        <div class="meta">
+          Channel: @clipznashite &nbsp;·&nbsp; Host: Bobby G &nbsp;·&nbsp; Brand: Navy #22304b /
+          Gold #c7af4f &nbsp;·&nbsp; Updated: April 5, 2026
         </div>
       </div>
-      <div class="pipeline-step">
-        <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-        <div class="pipeline-card">
-          <div class="step-label">Step 2 — Gemini + Claude</div>
-          <div class="step-title">Script Generation</div>
-          <div class="step-desc">Gemini watches all clips (3 waves, 10 clips each). Analyzes content. Claude writes full script using stored style fingerprint from reference video library. Structure: [Intro 2-3 sentences] → [CLIP] → [1-sentence reaction] → [2-sentence setup] → [CLIP] → [1-sentence reaction] → repeat.</div>
-          <div class="step-qa">🔍 QA: Claude checks structure, [CLIP PLAYS HERE] count, display names, word count</div>
-        </div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-        <div class="pipeline-card">
-          <div class="step-label">Step 3 — User Review</div>
-          <div class="step-title">Script Review & Edit</div>
-          <div class="step-desc">Script displayed in dashboard editor. User reviews, edits inline, approves. Pronunciation library auto-applies phonetic substitutions before HeyGen send.</div>
-        </div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-        <div class="pipeline-card">
-          <div class="step-label">Step 4 — HeyGen API</div>
-          <div class="step-title">Avatar Segment Generation</div>
-          <div class="step-desc">Each avatar text segment sent individually. Avatar ID: Bobby G (16:9 or 9:16). Voice: "cw" at 0.85 speed (reactions at 0.95). ~42 segments per Twitch compilation. Polls v1/video_status.get until COMPLETED. Cost: ~$0.004/sec.</div>
-          <div class="step-qa">🔍 QA: Gemini reviews 3-point sample (early/mid/late) — lip sync, ticker, freeze detection</div>
-        </div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-        <div class="pipeline-card">
-          <div class="step-label">Step 5 — FFmpeg Assembly</div>
-          <div class="step-title">Video Assembly</div>
-          <div class="step-desc">
-            1. Download all segments (avatar + source clips)<br>
-            2. Re-resolve fresh GQL tokens for Twitch clips<br>
-            3. Validate MP4 headers (skip CTYP/expired)<br>
-            4. Normalize to TS: 1920×1080, 30fps, CFR, keyframe every 30 frames<br>
-            5. Concat demuxer for 30+ segments (A/V sync guaranteed)<br>
-            6. Bake ticker overlay (60s loop, CLIPZWORLD/NEWS/🔴LIVE)<br>
-            7. Burn logo bug (top-right, 120px, 85% opacity)<br>
-            8. ffprobe validation pass
+
+      <!-- SHOW IDENTITY -->
+      <section class="section">
+        <div class="section-badge">IDENTITY</div>
+        <h2>SHOW IDENTITY</h2>
+
+        <h3>Content Types</h3>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">🎮</div>
+            <div class="card-title">Twitch Compilation</div>
+            <div class="card-desc">
+              Top clips from 10 streamers. 3 clips each. ~18-25 min long form. Bobby G reacts in
+              voiceover style with setup → clip → reaction × 3 per streamer.
+            </div>
           </div>
-          <div class="step-qa">🔍 QA: Gemini 3-point QA — early/mid/late 20s samples, freeze detection, ticker visible, score 0-100, threshold 60</div>
+          <div class="card">
+            <div class="card-icon">📰</div>
+            <div class="card-title">News Compilation</div>
+            <div class="card-desc">
+              Daily news stories. Bobby G delivers CWN-style commentary on world events. Deadpan
+              anchor voice.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🏀</div>
+            <div class="card-title">NBA Compilation</div>
+            <div class="card-desc">
+              Yesterday's games. Avatar speaks WHILE clip plays (voiceover mode). Score, leader,
+              injuries per game.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon">⚡</div>
+            <div class="card-title">Shorts / Reels</div>
+            <div class="card-desc">
+              9:16 vertical. 40-60 words. Opens with "The Daily Update. ClipzWorld News." Same
+              voice, tighter format.
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-connector"><div class="pipeline-dot" style="background:#74b9e8; border-color:#74b9e8"></div><div class="pipeline-line"></div></div>
-        <div class="pipeline-card" style="border-color:rgba(52,152,219,0.3)">
-          <div class="step-label">Step 6 — Gate 5 · Final QA</div>
-          <div class="step-title">Final Video Review (Gemini)</div>
-          <div class="step-desc">Gemini reviews the fully assembled MP4 — ticker baked, logo burned. Scores 4 dimensions: Visual quality, Audio quality, Clip content, Pacing. Total 100 points. Pass threshold: ≥85. Triggered automatically 2 seconds after assembly completes. Results displayed on the job card in the queue.</div>
-          <div class="step-qa">🔍 Gate 5: Visual (30) + Audio (30) + Clips (30) + Pacing (10) = 100 · Pass ≥85 · Endpoint: POST /gate5-review</div>
+
+        <h3>Locked Intros & Outros</h3>
+        <table>
+          <tr>
+            <th>Type</th>
+            <th>Intro</th>
+            <th>Outro</th>
+          </tr>
+          <tr>
+            <td>Twitch</td>
+            <td>…Where we appreciate our favorite streamers on Twitch…</td>
+            <td>…which of the clips you liked the most. Appreciate you!</td>
+          </tr>
+          <tr>
+            <td>News</td>
+            <td>…Where we bring you the most impactful news stories of the day…</td>
+            <td>…which of the stories covered concerns you the most. Appreciate you!</td>
+          </tr>
+          <tr>
+            <td>NBA</td>
+            <td>…Where we appreciate all of yesterday's games in the association…</td>
+            <td>…Go play a pick-up game today. Let us know how you did. Appreciate you!</td>
+          </tr>
+        </table>
+
+        <h3>Script Voice</h3>
+        <p>Three reference shows define Bobby G's delivery:</p>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-title">Jon Stewart / Daily Show</div>
+            <div class="card-desc">
+              Flat delivery + one devastating observation + immediate pivot. Never explain the joke.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Norm MacDonald Weekend Update</div>
+            <div class="card-desc">
+              Short sentences. [beat] pauses. Never explain. The pause IS the joke.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Space Ghost Coast to Coast</div>
+            <div class="card-desc">
+              Non-sequitur cold opens. Confident self-contradiction. Controlled chaos.
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-        <div class="pipeline-card">
-          <div class="step-label">Step 7 — Google Drive</div>
-          <div class="step-title">Upload & Store</div>
-          <div class="step-desc">Auto-upload to Drive folder 1LJKU3DwQY4nwbLXBeNROpHc9o6tZbUyB. Sets public sharing. Failed QA reports saved as separate Drive documents. Local copy saved to ~/Downloads/output/.</div>
+      </section>
+
+      <!-- PIPELINE -->
+      <section class="section" id="pipeline">
+        <div class="section-badge">ARCHITECTURE</div>
+        <h2>PRODUCTION PIPELINE</h2>
+        <p>
+          Full agentic loop with QA gates at each handoff. Failed QA loops back to the responsible
+          agent. All QA failures logged to Google Drive and locally.
+        </p>
+
+        <div class="pipeline">
+          <div class="pipeline-step">
+            <div class="pipeline-connector">
+              <div class="pipeline-dot"></div>
+              <div class="pipeline-line"></div>
+            </div>
+            <div class="pipeline-card">
+              <div class="step-label">Step 1 — Dashboard</div>
+              <div class="step-title">Generate Video Request</div>
+              <div class="step-desc">
+                User selects content type, streamers, clips-per-streamer. Dashboard fetches live
+                clips via Twitch Helix API, resolves GQL MP4 URLs.
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-connector">
+              <div class="pipeline-dot"></div>
+              <div class="pipeline-line"></div>
+            </div>
+            <div class="pipeline-card">
+              <div class="step-label">Step 2 — Gemini + Claude</div>
+              <div class="step-title">Script Generation</div>
+              <div class="step-desc">
+                Gemini watches all clips (3 waves, 10 clips each). Analyzes content. Claude writes
+                full script using stored style fingerprint from reference video library. Structure:
+                [Intro 2-3 sentences] → [CLIP] → [1-sentence reaction] → [2-sentence setup] → [CLIP]
+                → [1-sentence reaction] → repeat.
+              </div>
+              <div class="step-qa">
+                🔍 QA: Claude checks structure, [CLIP PLAYS HERE] count, display names, word count
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-connector">
+              <div class="pipeline-dot"></div>
+              <div class="pipeline-line"></div>
+            </div>
+            <div class="pipeline-card">
+              <div class="step-label">Step 3 — User Review</div>
+              <div class="step-title">Script Review & Edit</div>
+              <div class="step-desc">
+                Script displayed in dashboard editor. User reviews, edits inline, approves.
+                Pronunciation library auto-applies phonetic substitutions before HeyGen send.
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-connector">
+              <div class="pipeline-dot"></div>
+              <div class="pipeline-line"></div>
+            </div>
+            <div class="pipeline-card">
+              <div class="step-label">Step 4 — HeyGen API</div>
+              <div class="step-title">Avatar Segment Generation</div>
+              <div class="step-desc">
+                Each avatar text segment sent individually. Avatar ID: Bobby G (16:9 or 9:16).
+                Voice: "cw" at 0.85 speed (reactions at 0.95). ~42 segments per Twitch compilation.
+                Polls v1/video_status.get until COMPLETED. Cost: ~$0.004/sec.
+              </div>
+              <div class="step-qa">
+                🔍 QA: Gemini reviews 3-point sample (early/mid/late) — lip sync, ticker, freeze
+                detection
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-connector">
+              <div class="pipeline-dot"></div>
+              <div class="pipeline-line"></div>
+            </div>
+            <div class="pipeline-card">
+              <div class="step-label">Step 5 — FFmpeg Assembly</div>
+              <div class="step-title">Video Assembly</div>
+              <div class="step-desc">
+                1. Download all segments (avatar + source clips)<br />
+                2. Re-resolve fresh GQL tokens for Twitch clips<br />
+                3. Validate MP4 headers (skip CTYP/expired)<br />
+                4. Normalize to TS: 1920×1080, 30fps, CFR, keyframe every 30 frames<br />
+                5. Concat demuxer for 30+ segments (A/V sync guaranteed)<br />
+                6. Bake ticker overlay (60s loop, CLIPZWORLD/NEWS/🔴LIVE)<br />
+                7. Burn logo bug (top-right, 120px, 85% opacity)<br />
+                8. ffprobe validation pass
+              </div>
+              <div class="step-qa">
+                🔍 QA: Gemini 3-point QA — early/mid/late 20s samples, freeze detection, ticker
+                visible, score 0-100, threshold 60
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-connector">
+              <div class="pipeline-dot" style="background: #74b9e8; border-color: #74b9e8"></div>
+              <div class="pipeline-line"></div>
+            </div>
+            <div class="pipeline-card" style="border-color: rgba(52, 152, 219, 0.3)">
+              <div class="step-label">Step 6 — Gate 5 · Final QA</div>
+              <div class="step-title">Final Video Review (Gemini)</div>
+              <div class="step-desc">
+                Gemini reviews the fully assembled MP4 — ticker baked, logo burned. Scores 4
+                dimensions: Visual quality, Audio quality, Clip content, Pacing. Total 100 points.
+                Pass threshold: ≥85. Triggered automatically 2 seconds after assembly completes.
+                Results displayed on the job card in the queue.
+              </div>
+              <div class="step-qa">
+                🔍 Gate 5: Visual (30) + Audio (30) + Clips (30) + Pacing (10) = 100 · Pass ≥85 ·
+                Endpoint: POST /gate5-review
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-connector">
+              <div class="pipeline-dot"></div>
+              <div class="pipeline-line"></div>
+            </div>
+            <div class="pipeline-card">
+              <div class="step-label">Step 7 — Google Drive</div>
+              <div class="step-title">Upload & Store</div>
+              <div class="step-desc">
+                Auto-upload to Drive folder 1LJKU3DwQY4nwbLXBeNROpHc9o6tZbUyB. Sets public sharing.
+                Failed QA reports saved as separate Drive documents. Local copy saved to
+                ~/Downloads/output/.
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-connector">
+              <div class="pipeline-dot" style="background: var(--success)"></div>
+              <div class="pipeline-line" style="background: rgba(46, 204, 113, 0.2)"></div>
+            </div>
+            <div class="pipeline-card" style="border-color: rgba(46, 204, 113, 0.2)">
+              <div class="step-label">Step 8 — Upload-Post API</div>
+              <div class="step-title">Publish & Schedule</div>
+              <div class="step-desc">
+                Upload-Post handles simultaneous distribution: YouTube (long form), TikTok,
+                Instagram Reels, with scheduling based on content type and platform-specific optimal
+                times.
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-connector"><div class="pipeline-dot" style="background:var(--success)"></div><div class="pipeline-line" style="background:rgba(46,204,113,0.2)"></div></div>
-        <div class="pipeline-card" style="border-color:rgba(46,204,113,0.2)">
-          <div class="step-label">Step 8 — Upload-Post API</div>
-          <div class="step-title">Publish & Schedule</div>
-          <div class="step-desc">Upload-Post handles simultaneous distribution: YouTube (long form), TikTok, Instagram Reels, with scheduling based on content type and platform-specific optimal times.</div>
+
+        <div class="alert alert-warn">
+          <div class="alert-icon">⚠️</div>
+          <div>
+            QA failures at any gate are logged to Google Drive under the same folder as video
+            outputs. The failed step re-runs automatically until it passes or hits the max retry
+            limit (3x).
+          </div>
         </div>
-      </div>
-    </div>
-
-    <div class="alert alert-warn">
-      <div class="alert-icon">⚠️</div>
-      <div>QA failures at any gate are logged to Google Drive under the same folder as video outputs. The failed step re-runs automatically until it passes or hits the max retry limit (3x).</div>
-    </div>
-  </section>
-
-  <!-- TOOL STACK -->
-  <section class="section" id="tools">
-    <div class="section-badge">INFRASTRUCTURE</div>
-    <h2>TOOL STACK</h2>
-
-    <table>
-      <tr><th>Tool</th><th>Role</th><th>Status</th><th>Notes</th></tr>
-      <tr><td>Claude (Anthropic)</td><td>Script generation, QA review, orchestration</td><td><span class="badge badge-done">ACTIVE</span></td><td>claude-sonnet-4-20250514, 8k max tokens</td></tr>
-      <tr><td>Gemini 2.5 Flash</td><td>Clip analysis, visual QA, style fingerprinting</td><td><span class="badge badge-done">ACTIVE</span></td><td>CDN download → upload → analyze → delete</td></tr>
-      <tr><td>HeyGen API</td><td>Avatar video generation (Bobby G)</td><td><span class="badge badge-done">ACTIVE</span></td><td>Pay-as-you-go, ~$0.004/sec, v2/video/generate</td></tr>
-      <tr><td>Twitch Helix API</td><td>Top clip fetching, GQL MP4 resolution</td><td><span class="badge badge-done">ACTIVE</span></td><td>GQL for signed CDN URLs, 24hr clip window</td></tr>
-      <tr><td>FFmpeg</td><td>Normalize, concat, ticker bake, logo burn</td><td><span class="badge badge-done">ACTIVE</span></td><td>Homebrew install, concat demuxer for 30+ segs</td></tr>
-      <tr><td>Google Drive API</td><td>Video storage, QA log storage</td><td><span class="badge badge-done">ACTIVE</span></td><td>OAuth2 with real client credentials</td></tr>
-      <tr><td>Puppeteer</td><td>Ticker frame capture (60s at 15fps)</td><td><span class="badge badge-done">ACTIVE</span></td><td>Captures cwn_twitch_ticker.html</td></tr>
-      <tr><td>CapCut MCP</td><td>Advanced assembly, thumbnails, creative</td><td><span class="badge badge-new">PLANNED</span></td><td>VectCutAPI open source MCP server</td></tr>
-      <tr><td>Upload-Post API</td><td>Multi-platform publishing, scheduling</td><td><span class="badge badge-done">ACTIVE</span></td><td>YouTube, TikTok, Instagram — endpoints wired in server.js</td></tr>
-      <tr><td>Railway</td><td>Cloud hosting for server.js</td><td><span class="badge badge-pending">LATER</span></td><td>After codebase is stable</td></tr>
-    </table>
-  </section>
-
-  <!-- COSTS -->
-  <section class="section" id="costs">
-    <div class="section-badge">FINANCIALS</div>
-    <h2>COST MODEL</h2>
-    <p>Estimated monthly cost at maximum production: 90 long-form + 270 short-form = 360 videos/month.</p>
-
-    <table>
-      <tr><th>Tool</th><th>Unit Cost</th><th>Long Form (90)</th><th>Short Form (270)</th><th>Monthly Total</th></tr>
-      <tr><td>HeyGen API</td><td>$0.004/sec avatar</td><td>~$432 (avg 20min)</td><td>~$97 (avg 90sec)</td><td>~$529</td></tr>
-      <tr><td>Gemini API</td><td>~$0.014/clip analyzed</td><td>~$35 (28 clips each)</td><td>~$11 (3 clips each)</td><td>~$56</td></tr>
-      <tr><td>Claude API</td><td>~$0.05/script</td><td>~$5</td><td>~$13</td><td>~$18</td></tr>
-      <tr><td>Upload-Post</td><td>Advanced $99/mo</td><td colspan="2">3,000 uploads/mo included</td><td>$99</td></tr>
-      <tr><td>CapCut Pro</td><td>$7.99/mo</td><td colspan="2">Watermark-free export</td><td>$8</td></tr>
-      <tr><td>Railway (server)</td><td>~$25/mo</td><td colspan="2">After stable deployment</td><td>$25</td></tr>
-    </table>
-
-    <div class="cost-total">
-      <div>
-        <div class="label">Estimated Monthly Total</div>
-        <div style="font-size:11px; color:var(--muted); margin-top:4px;">360 videos max · 90 long + 270 short</div>
-      </div>
-      <div class="amount">~$735 / MO</div>
-    </div>
-
-    <div class="alert alert-info">
-      <div class="alert-icon">💡</div>
-      <div>HeyGen is the dominant cost (~72%). At half production (180 videos/month), cost drops to ~$400. The key lever is avatar render time — shorter scripts = lower cost. Shorts at ~$0.36 each are highly efficient.</div>
-    </div>
-
-    <h3>Current HeyGen Wallet</h3>
-    <div class="code">
-Rate: ~$0.004/second of generated avatar video
-Per long-form compilation: ~$3.36–4.50 (varies by script length)
-Per short/reel: ~$0.36
-Current balance: check HeyGen dashboard → API → Billing
-Reload recommendation: $100 at a time (~25-28 compilations of runway)
-    </div>
-  </section>
-
-  <!-- DASHBOARD -->
-  <section class="section" id="dashboard">
-    <div class="section-badge">INTERFACE</div>
-    <h2>DASHBOARD</h2>
-
-    <h3>Two Servers Required</h3>
-    <div class="code">
-<span class="comment"># Terminal 1 — Dashboard HTML server</span>
-cd ~/Downloads && python3 -m http.server 8765
-<span class="comment"># Open: http://localhost:8765/cwn_production.html</span>
-
-<span class="comment"># Terminal 2 — Node.js API server</span>
-cd ~/Downloads && node server.js
-<span class="comment"># Runs on: http://localhost:3000</span>
-    </div>
-
-    <h3>Dashboard Pages</h3>
-    <table>
-      <tr><th>Page</th><th>Function</th></tr>
-      <tr><td>Generate Videos</td><td>Select content type, streamers, clips per streamer → Generate → Review script → Send to HeyGen</td></tr>
-      <tr><td>Job Queue</td><td>Monitor HeyGen segment status. Expand job to see INTRO/CLIP/REACTION rows. Re-Assemble button.</td></tr>
-      <tr><td>Content Calendar</td><td>Scheduled posts overview</td></tr>
-      <tr><td>Thumbnails</td><td>Thumbnail generation per job</td></tr>
-      <tr><td>Publish Prep</td><td>Title, description, hashtags, chapters for each video</td></tr>
-      <tr><td>Settings</td><td>HeyGen config, Gemini config, Twitch config, FFmpeg server, Pronunciation Library, Style Guide</td></tr>
-    </table>
-
-    <h3>Segment Status Reference</h3>
-    <table>
-      <tr><th>Status</th><th>Meaning</th></tr>
-      <tr><td>COMPLETED DL</td><td>HeyGen rendered, downloaded, ready for assembly</td></tr>
-      <tr><td>CLIP READY</td><td>Source clip URL resolved, ready for assembly</td></tr>
-      <tr><td>❌ CTYP / empty</td><td>Clip expired, CDN token invalid. Skipped in assembly.</td></tr>
-    </table>
-
-    <h3>Server Maintenance (Settings → FFmpeg Server)</h3>
-    <p>Two maintenance tools are available in the Settings → FFmpeg Server tab under the <strong>SERVER MAINTENANCE</strong> section:</p>
-
-    <table>
-      <tr><th>Button</th><th>Endpoint</th><th>What It Does</th></tr>
-      <tr><td>CHECK DISK USAGE</td><td>GET /disk-usage</td><td>Shows size of ~/Downloads/output/ (final MP4s) and ~/Downloads/tmp/ (temp files). Helps identify when disk is filling up.</td></tr>
-      <tr><td>CLEANUP OLD FILES</td><td>POST /cleanup</td><td>Confirms before running. Keeps the 5 most recent output MP4s, deletes the rest. Also clears all temp files in ~/Downloads/tmp/.</td></tr>
-    </table>
-
-    <div class="alert alert-info">
-      <div class="alert-icon">💡</div>
-      <div>Run CLEANUP after every 5–10 productions. A single long-form compilation can be 2–4 GB. The tmp/ folder accumulates TS segments and ticker captures that are safe to delete after assembly.</div>
-    </div>
-  </section>
-
-  <!-- STREAMERS -->
-  <section class="section" id="streamers">
-    <div class="section-badge">TALENT</div>
-    <h2>STREAMER ROSTER</h2>
-
-    <div class="streamer-grid">
-      <div class="streamer-chip"><div class="display">Jason</div><div class="username">jasontheween</div></div>
-      <div class="streamer-chip"><div class="display">Hasan</div><div class="username">hasanabi</div></div>
-      <div class="streamer-chip"><div class="display">Adapt</div><div class="username">adapt</div></div>
-      <div class="streamer-chip"><div class="display">Ron</div><div class="username">stableronaldo</div></div>
-      <div class="streamer-chip"><div class="display">Lacy</div><div class="username">lacy</div></div>
-      <div class="streamer-chip"><div class="display">Marlon</div><div class="username">marlon</div></div>
-      <div class="streamer-chip"><div class="display">Cinna</div><div class="username">cinna</div></div>
-      <div class="streamer-chip"><div class="display">Yonna</div><div class="username">yonnajay</div></div>
-      <div class="streamer-chip"><div class="display">Jay Cinco</div><div class="username">jaycinco</div></div>
-      <div class="streamer-chip"><div class="display">Maya</div><div class="username">maya</div></div>
-    </div>
-
-    <p style="color:var(--muted); font-size:12px;">ExtraEmily and YourRage are approved for future roster expansion. Edit the streamer field in the Generate Videos page — it auto-saves to localStorage and persists across sessions.</p>
-
-    <div class="alert alert-info">
-      <div class="alert-icon">📝</div>
-      <div><strong>Coming:</strong> Streamer intro cards burned into each Bobby G intro segment. Each streamer will have a 2-3 second image frame + 1 origin line + 1 key fact before their first clip. You write the lines — system burns the image.</div>
-    </div>
-  </section>
-
-  <!-- SCRIPT SYSTEM -->
-  <section class="section" id="script">
-    <div class="section-badge">WRITING</div>
-    <h2>SCRIPT SYSTEM</h2>
-
-    <h3>Per-Streamer Structure (3 Clips)</h3>
-    <div class="code">
-[Streamer intro — 2-3 sentences. Sets up clip 1 with full context.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE flat reaction sentence. Short. Deadpan.]
-[beat]
-[2-sentence setup for clip 2. Bridge from reaction. Context for clip 2.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE flat reaction sentence. Short. Deadpan.]
-[beat]
-[2-sentence setup for clip 3. Bridge from reaction. Context for clip 3.]
-[beat]
-[CLIP PLAYS HERE]
-[beat]
-[ONE flat reaction sentence. Short. Deadpan.]
-[beat]
-Follow [ON-AIR NAME]. Link in description.
-    </div>
-
-    <h3>Key Rules</h3>
-    <table>
-      <tr><th>Rule</th><th>Detail</th></tr>
-      <tr><td>Intro length</td><td>2-3 sentences — LONGEST setup</td></tr>
-      <tr><td>Clip 2 & 3 setups</td><td>2 sentences each — longer than reactions, shorter than intro</td></tr>
-      <tr><td>Reactions</td><td>EXACTLY 1 sentence. Flat. Can be non-sequitur. Never explain the clip.</td></tr>
-      <tr><td>[beat]</td><td>3-second pause. Converted to "..." for HeyGen. Critical for delivery rhythm.</td></tr>
-      <tr><td>Display names</td><td>ALWAYS use on-air name (Ron not StableRonaldo, Jay Cinco not Jaycinco)</td></tr>
-      <tr><td>ExtraEmily hallucination</td><td>If Claude generates an 11th streamer section, delete it before HeyGen send</td></tr>
-    </table>
-
-    <h3>Reference Video Library (Taught ✅)</h3>
-    <table>
-      <tr><th>Content Type</th><th>Videos Analyzed</th><th>Style Guide Size</th></tr>
-      <tr><td>Twitch</td><td>3 videos</td><td>2,234 chars</td></tr>
-      <tr><td>NBA</td><td>2 videos</td><td>2,467 chars</td></tr>
-      <tr><td>News</td><td>3 videos</td><td>2,191 chars</td></tr>
-    </table>
-    <p style="font-size:12px; color:var(--muted);">Stored in ~/Downloads/cwn_style_guides.json. Re-teach via Settings → Gemini Reference Video Library → TEACH GEMINI.</p>
-
-    <h3>Speaking Speed</h3>
-    <div class="code">
-Intros / Cold Open / Outro:  0.85 (base speed — measured, show-host tone)
-Reactions:                   0.95 (base + 0.10 — punchy one-liners)
-Configurable in:             Settings → HeyGen Config → Speaking Speed
-    </div>
-  </section>
-
-  <!-- ASSEMBLY -->
-  <section class="section" id="assembly">
-    <div class="section-badge">FFMPEG</div>
-    <h2>ASSEMBLY PIPELINE</h2>
-
-    <h3>Normalization (per segment)</h3>
-    <div class="code">
-ffmpeg -i input
-  -vf "scale=1920:1080:force_original_aspect_ratio=decrease,
-       pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,
-       fps=fps=30"
-  -pix_fmt yuv420p
-  -c:v libx264 -preset fast -crf 23
-  -g 30 -keyint_min 30 -sc_threshold 0   <span class="comment"># keyframe every 1s</span>
-  -c:a aac -ar 44100 -ac 2
-  -af "aresample=async=1:min_hard_comp=0.100000:first_pts=0"
-  -bsf:v h264_mp4toannexb
-  -f mpegts output.ts
-    </div>
-
-    <h3>Concat (30+ segments)</h3>
-    <div class="code">
-<span class="comment"># Concat demuxer — reliable A/V sync for large jobs</span>
-ffmpeg -f concat -safe 0 -i list.txt
-  -c:v libx264 -preset fast -crf 23
-  -c:a aac -ar 44100 -ac 2
-  -af aresample=async=1
-  -movflags +faststart
-  output.mp4
-    </div>
-
-    <h3>Ticker Overlay</h3>
-    <div class="code">
-<span class="comment"># 60s ticker capture at 15fps (900 frames)</span>
-<span class="comment"># Ticker URL: http://localhost:8765/cwn_twitch_ticker.html</span>
-<span class="comment"># Cached to ~/Downloads/tmp/ticker_twitch.mp4</span>
-<span class="comment"># Delete cache to force recapture: rm ~/Downloads/tmp/ticker_twitch.mp4</span>
-
-ffmpeg -i video.mp4
-  -stream_loop -1 -i ticker.mp4
-  -t {duration + 2.0}           <span class="comment"># +2s buffer prevents outro truncation</span>
-  -filter_complex "[0:v][1:v]overlay=x=0:y=H-64:eof_action=repeat[vout]"
-  -map [vout] -map 0:a
-  -c:v libx264 -preset fast -c:a aac
-  -movflags +faststart
-  tickered.mp4
-    </div>
-
-    <h3>Watchdog Timeouts</h3>
-    <table>
-      <tr><th>Trigger</th><th>Action</th></tr>
-      <tr><td>No FFmpeg output for 90s</td><td>Kill process, continue with un-tickered version</td></tr>
-      <tr><td>3× video duration elapsed</td><td>Hard timeout kill, non-fatal</td></tr>
-    </table>
-  </section>
-
-  <!-- QA SYSTEM -->
-  <section class="section" id="qa">
-    <div class="section-badge">QUALITY</div>
-    <h2>QA SYSTEM</h2>
-
-    <p>Three-point Gemini QA runs after assembly. Samples at 10%, 50%, and 85% of the video. Each sample is 20 seconds.</p>
-
-    <h3>QA Checklist by Sample Point</h3>
-    <table>
-      <tr><th>Sample</th><th>Checks</th></tr>
-      <tr><td>EARLY (~10%)</td><td>Lip sync, ticker visible, VIDEO FREEZE (critical), transitions clean, audio clear</td></tr>
-      <tr><td>MIDDLE (~50%)</td><td>VIDEO FREEZE (critical), ticker still visible, video quality 1080p, avatar visible, audio clear</td></tr>
-      <tr><td>LATE (~85%)</td><td>VIDEO FREEZE (critical), ticker still scrolling, outro ends cleanly, audio to end</td></tr>
-    </table>
-
-    <h3>Scoring</h3>
-    <div class="code">
-Pass threshold:  60/100 AND no freeze detected
-Freeze penalty:  20/100 per segment where freeze detected
-On freeze:       🚨 VIDEO FREEZE DETECTED — Drive upload BLOCKED
-On pass:         ✅ QA passed — proceed to Drive upload
-    </div>
-
-    <h3>QA Failure Logging</h3>
-    <p>Failed QA reports are saved to:</p>
-    <div class="code">
-Google Drive: same folder as video outputs (1LJKU3DwQY4nwbLXBeNROpHc9o6tZbUyB)
-Local:        ~/Downloads/output/qa_failures/
-Filename:     qa_fail_{asmId}_{timestamp}.txt
-    </div>
-
-    <h3>Gate 5 — Final Video QA</h3>
-    <p>Gate 5 is the last QA gate before Drive upload. Gemini reviews the fully assembled MP4 (ticker baked, logo burned) and scores it across 4 dimensions. Triggered automatically 2 seconds after assembly completes. Score and breakdown displayed on the job card in the queue.</p>
-
-    <table>
-      <tr><th>Dimension</th><th>Max Points</th><th>What Gemini Checks</th></tr>
-      <tr><td>Visual Quality</td><td>30</td><td>1080p clarity, no artifacts, logo visible, ticker rendered correctly</td></tr>
-      <tr><td>Audio Quality</td><td>30</td><td>Clear speech, no distortion, consistent levels, no dropout</td></tr>
-      <tr><td>Clip Content</td><td>30</td><td>Clips match script context, no black frames, content appropriate</td></tr>
-      <tr><td>Pacing</td><td>10</td><td>Transitions smooth, no jarring cuts, avatar/clip rhythm natural</td></tr>
-    </table>
-
-    <div class="code">
-Total:           100 points
-Pass threshold:  ≥85
-Result display:  Score shown on job card — green (pass) / yellow (review) / red (fail)
-Endpoint:        POST /gate5-review
-Trigger:         Auto-fires 2s after asmComplete() in dashboard
-    </div>
-
-    <div class="alert alert-ok">
-      <div class="alert-icon">✅</div>
-      <div>Gate 5 is non-blocking by design — it flags issues for review but does not halt the Drive upload. A score below 85 shows a red warning on the job card so you can decide whether to re-assemble before publishing.</div>
-    </div>
-  </section>
-
-  <!-- THUMBNAILS -->
-  <section class="section" id="thumbnails">
-    <div class="section-badge">CREATIVE</div>
-    <h2>THUMBNAILS</h2>
-
-    <div class="card-grid">
-      <div class="card">
-        <div class="card-icon">🖼</div>
-        <div class="card-title">Compilation (16:9)</div>
-        <div class="card-desc">Navy/gold Canva template. Streamer names from script. Key clip frame. CWN logo. Bobby G bug. Status: PLANNED — Canva templates to be built.</div>
-      </div>
-      <div class="card">
-        <div class="card-icon">📱</div>
-        <div class="card-title">Shorts / Reels (9:16)</div>
-        <div class="card-desc">Best frame extraction from the short via FFmpeg. Gemini picks the highest-impact frame. CWN overlay. Status: PLANNED.</div>
-      </div>
-    </div>
-
-    <div class="alert alert-info">
-      <div class="alert-icon">📝</div>
-      <div>Header intro card (banner_cwn.png) is currently DISABLED — blurry at current resolution. Will re-enable when proper Canva branding template is ready.</div>
-    </div>
-  </section>
-
-  <!-- PUBLISHING -->
-  <section class="section" id="publish">
-    <div class="section-badge">DISTRIBUTION</div>
-    <h2>PUBLISHING — UPLOAD-POST</h2>
-
-    <p>Upload-Post API handles simultaneous multi-platform distribution. All three publish endpoints are wired in server.js and triggered from the dashboard's Publish Prep page. Each platform button POSTs to its respective endpoint with the video file path, title, description, and hashtags.</p>
-
-    <h3>Wired Endpoints</h3>
-    <table>
-      <tr><th>Platform</th><th>Endpoint</th><th>Format</th><th>Content Type</th><th>Status</th></tr>
-      <tr><td>YouTube</td><td>POST /publish/youtube</td><td>16:9 MP4</td><td>Long form compilations</td><td><span class="badge badge-done">WIRED</span></td></tr>
-      <tr><td>TikTok</td><td>POST /publish/tiktok</td><td>9:16 MP4</td><td>Shorts only</td><td><span class="badge badge-done">WIRED</span></td></tr>
-      <tr><td>Instagram</td><td>POST /publish/instagram</td><td>9:16 MP4</td><td>Reels only</td><td><span class="badge badge-done">WIRED</span></td></tr>
-      <tr><td>All Platforms</td><td>POST /publish/all</td><td>Both</td><td>Simultaneous publish</td><td><span class="badge badge-done">WIRED</span></td></tr>
-    </table>
-
-    <div class="alert alert-info">
-      <div class="alert-icon">💡</div>
-      <div>Endpoints are wired and functional — API credentials still need to be configured. Add <code style="font-family:monospace; color:var(--gold)">UPLOADPOST_API_KEY</code> to .env and connect your Upload-Post account to activate live publishing.</div>
-    </div>
-
-    <h3>Dashboard Publish Flow</h3>
-    <div class="code">
-1. Job Queue → job card → PUBLISH COPY button
-   → Copies title, description, hashtags to clipboard
-
-2. Publish Prep page → select job
-   → Edit title / description / hashtags
-   → Click: PUBLISH TO YOUTUBE / TIKTOK / INSTAGRAM / ALL
-   → Dashboard POSTs to server endpoint
-   → Server calls Upload-Post API
-   → Status returned and displayed
-    </div>
-
-    <h3>Required .env Keys for Publishing</h3>
-    <div class="code">
-UPLOADPOST_API_KEY=your_key_here
-UPLOADPOST_PROFILE=clipznashite
-    </div>
-  </section>
-
-  <!-- SCHEDULE -->
-  <section class="section" id="schedule">
-    <div class="section-badge">CALENDAR</div>
-    <h2>PUBLISHING SCHEDULE</h2>
-    <p>Publishing logic to be defined by Rob. Framework for recommendations:</p>
-
-    <table>
-      <tr><th>Platform</th><th>Content</th><th>Frequency</th><th>Best Times (EST)</th></tr>
-      <tr><td>YouTube</td><td>Long form compilations</td><td>1× daily</td><td>12pm, 5pm, 8pm</td></tr>
-      <tr><td>TikTok</td><td>Shorts</td><td>3× daily</td><td>7am, 12pm, 7pm</td></tr>
-      <tr><td>Instagram</td><td>Reels</td><td>2× daily</td><td>9am, 6pm</td></tr>
-    </table>
-  </section>
-
-  <!-- ENVIRONMENT -->
-  <section class="section" id="env">
-    <div class="section-badge">CONFIG</div>
-    <h2>ENVIRONMENT VARIABLES</h2>
-    <p>Location: <code style="font-family:monospace; color:var(--gold)">~/Downloads/.env</code></p>
-
-    <div class="code">
-<span class="comment"># AI</span>
-ANTHROPIC_API_KEY=sk-ant-api03-...
-GEMINI_API_KEY=AIzaSy...
-
-<span class="comment"># Video Generation</span>
-HEYGEN_API_KEY=sk_V2_hgu_...
-
-<span class="comment"># Twitch</span>
-TWITCH_CLIENT_ID=nghzr9gr22acplvunvkm5c13784nit
-TWITCH_TOKEN=shcz8knnxikq8pz8rogp7nli8e84qm
-
-<span class="comment"># Google Drive (OAuth2 — real credentials)</span>
-DRIVE_FOLDER_ID=1LJKU3DwQY4nwbLXBeNROpHc9o6tZbUyB
-DRIVE_CLIENT_ID=281415000137-u3qh2evajigmhsmft2s3rgeidqq97ueu.apps.googleusercontent.com
-DRIVE_CLIENT_SECRET=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
-DRIVE_REFRESH_TOKEN=1//010t_...  <span class="comment"># set by node cwn-auth.js</span>
-
-<span class="comment"># Servers</span>
-PORT=3000
-DASHBOARD_PORT=8765
-    </div>
-
-    <h3>HeyGen Avatar IDs</h3>
-    <div class="code">
-Compilations (16:9):  19c1d4adf8904694a3cc331c5a9bee4b
-Shorts (9:16):        ed57439c9c3d4a398f3b247b75714b13
-Voice ID:             2e598f1a6022448cb6710e5d44665325
-Speaking speed:       0.85 (reactions: 0.95)
-    </div>
-  </section>
-
-  <!-- SERVERS -->
-  <section class="section" id="servers">
-    <div class="section-badge">OPERATIONS</div>
-    <h2>LOCAL SERVER GUIDE</h2>
-
-    <h3>Daily Startup</h3>
-    <div class="code">
-<span class="comment"># 1. Dashboard server</span>
-cd ~/Downloads && python3 -m http.server 8765
-
-<span class="comment"># 2. Node API server</span>
-cd ~/Downloads && node server.js
-
-<span class="comment"># 3. Open dashboard</span>
-open http://localhost:8765/cwn_production.html
-    </div>
-
-    <h3>When Replacing server.js</h3>
-    <div class="code">
-<span class="comment"># Verify new file has the fix before restarting</span>
-grep -c "concat demuxer for reliable" ~/Downloads/server.js
-<span class="comment"># Should return: 1</span>
-
-Ctrl+C  (stop running server)
-<span class="comment"># Replace the file</span>
-node server.js
-    </div>
-
-    <h3>Troubleshooting</h3>
-    <table>
-      <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
-      <tr><td>Ticker stalls at 95%</td><td>Old server.js without watchdog</td><td>Replace server.js, restart</td></tr>
-      <tr><td>A/V desync by Hasan section</td><td>xfade path running (old code)</td><td>grep for "concat demuxer" — if 0, wrong file</td></tr>
-      <tr><td>Wrong clips for streamer</td><td>orderedClipUrls not from server</td><td>Must regenerate script (not re-assemble)</td></tr>
-      <tr><td>Drive upload fails quota</td><td>gcloud ADC interference</td><td>Check DRIVE_REFRESH_TOKEN in .env</td></tr>
-      <tr><td>CTYP segments skipped</td><td>Twitch CDN tokens expired</td><td>Normal — backup clips used. Regenerate if Maya has 0 clips.</td></tr>
-    </table>
-  </section>
-
-  <!-- PRONUNCIATION -->
-  <section class="section" id="pronunciation">
-    <div class="section-badge">VOICE</div>
-    <h2>PRONUNCIATION LIBRARY</h2>
-
-    <p>Settings → Pronunciation Library. Names auto-detected from script. Phonetic substitution applied to all HeyGen input_text before sending. Stored in localStorage permanently.</p>
-
-    <h3>Current Library</h3>
-    <table>
-      <tr><th>Display Name</th><th>Phonetic</th><th>Notes</th></tr>
-      <tr><td>Yonna</td><td>Yawn-uh</td><td>Confirmed needed</td></tr>
-      <tr><td>(scan for more)</td><td>—</td><td>Generate script → Settings → SCAN CURRENT SCRIPT FOR NAMES</td></tr>
-    </table>
-
-    <h3>How It Works</h3>
-    <div class="code">
-1. Generate script
-2. Settings → Pronunciation Library → SCAN CURRENT SCRIPT FOR NAMES
-3. System finds: Kanye, Deshae, Emiru, Attenborough, etc.
-4. Add phonetic spelling for each name that sounds wrong
-5. Applied automatically to every HeyGen segment going forward
-6. Real name stays in script/captions — HeyGen hears phonetic version
-    </div>
-  </section>
-
-  <!-- ROADMAP -->
-  <section class="section" id="future">
-    <div class="section-badge">ROADMAP</div>
-    <h2>ROADMAP</h2>
-
-    <h3>Immediate (Next Run)</h3>
-    <table>
-      <tr><th>Item</th><th>Priority</th></tr>
-      <tr><td>Clip content mismatch fix — assemblyUrl = exact same URL Gemini watched</td><td>🔴 Critical</td></tr>
-      <tr><td>Maya clip expiry — increase backup pool, re-resolve at assembly time</td><td>🔴 Critical</td></tr>
-      <tr><td>Streamer intro images burned in (origin + 1 fact per streamer)</td><td>🟡 High</td></tr>
-      <tr><td>Pronunciation library scan — identify all mispronounced names from first video</td><td>🟡 High</td></tr>
-    </table>
-
-    <h3>Completed This Session ✅</h3>
-    <table>
-      <tr><th>Item</th><th>Status</th></tr>
-      <tr><td>Gate 5 — Final video QA (Gemini, 100pt scoring, auto-trigger after assembly)</td><td><span class="badge badge-done">DONE</span></td></tr>
-      <tr><td>Cleanup / Disk Usage — buttons wired in Settings → FFmpeg Server</td><td><span class="badge badge-done">DONE</span></td></tr>
-      <tr><td>Publish endpoints wired — /publish/youtube, /tiktok, /instagram, /all</td><td><span class="badge badge-done">DONE</span></td></tr>
-      <tr><td>Full dashboard audit — all features verified against server endpoints</td><td><span class="badge badge-done">DONE</span></td></tr>
-    </table>
-
-    <h3>Near Term</h3>
-    <table>
-      <tr><th>Item</th><th>Status</th></tr>
-      <tr><td>CapCut MCP integration (VectCutAPI)</td><td><span class="badge badge-new">PLANNED</span></td></tr>
-      <tr><td>Upload-Post API credentials — add UPLOADPOST_API_KEY to .env</td><td><span class="badge badge-pending">PENDING</span></td></tr>
-      <tr><td>Canva thumbnail templates (16:9 + 9:16)</td><td><span class="badge badge-new">PLANNED</span></td></tr>
-      <tr><td>News compilation first run</td><td><span class="badge badge-new">PLANNED</span></td></tr>
-      <tr><td>NBA compilation first run</td><td><span class="badge badge-new">PLANNED</span></td></tr>
-      <tr><td>Publish schedule logic (Rob to define)</td><td><span class="badge badge-pending">PENDING</span></td></tr>
-    </table>
-
-    <h3>Future</h3>
-    <table>
-      <tr><th>Item</th><th>Notes</th></tr>
-      <tr><td>Railway deployment</td><td>After codebase stable. ~$25/mo. Enables overnight runs.</td></tr>
-      <tr><td>ExtraEmily + YourRage roster expansion</td><td>Test with next Twitch compilation</td></tr>
-      <tr><td>YouTube chapter auto-gen from transcript</td><td>Via YouTube MCP</td></tr>
-    </table>
-  </section>
-
-</main>
-
-<script>
-// Active nav highlighting on scroll
-const sections = document.querySelectorAll('section[id], div[id="overview"]');
-const navItems = document.querySelectorAll('.nav-item');
-
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      navItems.forEach(item => item.classList.remove('active'));
-      const active = document.querySelector(`.nav-item[href="#${entry.target.id}"]`);
-      if (active) active.classList.add('active');
-    }
-  });
-}, { threshold: 0.3 });
-
-sections.forEach(s => observer.observe(s));
-</script>
-</body>
+      </section>
+
+      <!-- TOOL STACK -->
+      <section class="section" id="tools">
+        <div class="section-badge">INFRASTRUCTURE</div>
+        <h2>TOOL STACK</h2>
+
+        <table>
+          <tr>
+            <th>Tool</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Notes</th>
+          </tr>
+          <tr>
+            <td>Claude (Anthropic)</td>
+            <td>Script generation, QA review, orchestration</td>
+            <td><span class="badge badge-done">ACTIVE</span></td>
+            <td>claude-sonnet-4-20250514, 8k max tokens</td>
+          </tr>
+          <tr>
+            <td>Gemini 2.5 Flash</td>
+            <td>Clip analysis, visual QA, style fingerprinting</td>
+            <td><span class="badge badge-done">ACTIVE</span></td>
+            <td>CDN download → upload → analyze → delete</td>
+          </tr>
+          <tr>
+            <td>HeyGen API</td>
+            <td>Avatar video generation (Bobby G)</td>
+            <td><span class="badge badge-done">ACTIVE</span></td>
+            <td>Pay-as-you-go, ~$0.004/sec, v2/video/generate</td>
+          </tr>
+          <tr>
+            <td>Twitch Helix API</td>
+            <td>Top clip fetching, GQL MP4 resolution</td>
+            <td><span class="badge badge-done">ACTIVE</span></td>
+            <td>GQL for signed CDN URLs, 24hr clip window</td>
+          </tr>
+          <tr>
+            <td>FFmpeg</td>
+            <td>Normalize, concat, ticker bake, logo burn</td>
+            <td><span class="badge badge-done">ACTIVE</span></td>
+            <td>Homebrew install, concat demuxer for 30+ segs</td>
+          </tr>
+          <tr>
+            <td>Google Drive API</td>
+            <td>Video storage, QA log storage</td>
+            <td><span class="badge badge-done">ACTIVE</span></td>
+            <td>OAuth2 with real client credentials</td>
+          </tr>
+          <tr>
+            <td>Puppeteer</td>
+            <td>Ticker frame capture (60s at 15fps)</td>
+            <td><span class="badge badge-done">ACTIVE</span></td>
+            <td>Captures cwn_twitch_ticker.html</td>
+          </tr>
+          <tr>
+            <td>CapCut MCP</td>
+            <td>Advanced assembly, thumbnails, creative</td>
+            <td><span class="badge badge-new">PLANNED</span></td>
+            <td>VectCutAPI open source MCP server</td>
+          </tr>
+          <tr>
+            <td>Upload-Post API</td>
+            <td>Multi-platform publishing, scheduling</td>
+            <td><span class="badge badge-done">ACTIVE</span></td>
+            <td>YouTube, TikTok, Instagram — endpoints wired in server.js</td>
+          </tr>
+          <tr>
+            <td>Railway</td>
+            <td>Cloud hosting for server.js</td>
+            <td><span class="badge badge-pending">LATER</span></td>
+            <td>After codebase is stable</td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- COSTS -->
+      <section class="section" id="costs">
+        <div class="section-badge">FINANCIALS</div>
+        <h2>COST MODEL</h2>
+        <p>
+          Estimated monthly cost at maximum production: 90 long-form + 270 short-form = 360
+          videos/month.
+        </p>
+
+        <table>
+          <tr>
+            <th>Tool</th>
+            <th>Unit Cost</th>
+            <th>Long Form (90)</th>
+            <th>Short Form (270)</th>
+            <th>Monthly Total</th>
+          </tr>
+          <tr>
+            <td>HeyGen API</td>
+            <td>$0.004/sec avatar</td>
+            <td>~$432 (avg 20min)</td>
+            <td>~$97 (avg 90sec)</td>
+            <td>~$529</td>
+          </tr>
+          <tr>
+            <td>Gemini API</td>
+            <td>~$0.014/clip analyzed</td>
+            <td>~$35 (28 clips each)</td>
+            <td>~$11 (3 clips each)</td>
+            <td>~$56</td>
+          </tr>
+          <tr>
+            <td>Claude API</td>
+            <td>~$0.05/script</td>
+            <td>~$5</td>
+            <td>~$13</td>
+            <td>~$18</td>
+          </tr>
+          <tr>
+            <td>Upload-Post</td>
+            <td>Advanced $99/mo</td>
+            <td colspan="2">3,000 uploads/mo included</td>
+            <td>$99</td>
+          </tr>
+          <tr>
+            <td>CapCut Pro</td>
+            <td>$7.99/mo</td>
+            <td colspan="2">Watermark-free export</td>
+            <td>$8</td>
+          </tr>
+          <tr>
+            <td>Railway (server)</td>
+            <td>~$25/mo</td>
+            <td colspan="2">After stable deployment</td>
+            <td>$25</td>
+          </tr>
+        </table>
+
+        <div class="cost-total">
+          <div>
+            <div class="label">Estimated Monthly Total</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px">
+              360 videos max · 90 long + 270 short
+            </div>
+          </div>
+          <div class="amount">~$735 / MO</div>
+        </div>
+
+        <div class="alert alert-info">
+          <div class="alert-icon">💡</div>
+          <div>
+            HeyGen is the dominant cost (~72%). At half production (180 videos/month), cost drops to
+            ~$400. The key lever is avatar render time — shorter scripts = lower cost. Shorts at
+            ~$0.36 each are highly efficient.
+          </div>
+        </div>
+
+        <h3>Current HeyGen Wallet</h3>
+        <div class="code">
+          Rate: ~$0.004/second of generated avatar video Per long-form compilation: ~$3.36–4.50
+          (varies by script length) Per short/reel: ~$0.36 Current balance: check HeyGen dashboard →
+          API → Billing Reload recommendation: $100 at a time (~25-28 compilations of runway)
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section class="section" id="dashboard">
+        <div class="section-badge">INTERFACE</div>
+        <h2>DASHBOARD</h2>
+
+        <h3>Two Servers Required</h3>
+        <div class="code">
+          <span class="comment"># Terminal 1 — Dashboard HTML server</span>
+          cd ~/Downloads && python3 -m http.server 8765
+          <span class="comment"># Open: http://localhost:8765/cwn_production.html</span>
+
+          <span class="comment"># Terminal 2 — Node.js API server</span>
+          cd ~/Downloads && node server.js
+          <span class="comment"># Runs on: http://localhost:3000</span>
+        </div>
+
+        <h3>Dashboard Pages</h3>
+        <table>
+          <tr>
+            <th>Page</th>
+            <th>Function</th>
+          </tr>
+          <tr>
+            <td>Generate Videos</td>
+            <td>
+              Select content type, streamers, clips per streamer → Generate → Review script → Send
+              to HeyGen
+            </td>
+          </tr>
+          <tr>
+            <td>Job Queue</td>
+            <td>
+              Monitor HeyGen segment status. Expand job to see INTRO/CLIP/REACTION rows. Re-Assemble
+              button.
+            </td>
+          </tr>
+          <tr>
+            <td>Content Calendar</td>
+            <td>Scheduled posts overview</td>
+          </tr>
+          <tr>
+            <td>Thumbnails</td>
+            <td>Thumbnail generation per job</td>
+          </tr>
+          <tr>
+            <td>Publish Prep</td>
+            <td>Title, description, hashtags, chapters for each video</td>
+          </tr>
+          <tr>
+            <td>Settings</td>
+            <td>
+              HeyGen config, Gemini config, Twitch config, FFmpeg server, Pronunciation Library,
+              Style Guide
+            </td>
+          </tr>
+        </table>
+
+        <h3>Segment Status Reference</h3>
+        <table>
+          <tr>
+            <th>Status</th>
+            <th>Meaning</th>
+          </tr>
+          <tr>
+            <td>COMPLETED DL</td>
+            <td>HeyGen rendered, downloaded, ready for assembly</td>
+          </tr>
+          <tr>
+            <td>CLIP READY</td>
+            <td>Source clip URL resolved, ready for assembly</td>
+          </tr>
+          <tr>
+            <td>❌ CTYP / empty</td>
+            <td>Clip expired, CDN token invalid. Skipped in assembly.</td>
+          </tr>
+        </table>
+
+        <h3>Server Maintenance (Settings → FFmpeg Server)</h3>
+        <p>
+          Two maintenance tools are available in the Settings → FFmpeg Server tab under the
+          <strong>SERVER MAINTENANCE</strong> section:
+        </p>
+
+        <table>
+          <tr>
+            <th>Button</th>
+            <th>Endpoint</th>
+            <th>What It Does</th>
+          </tr>
+          <tr>
+            <td>CHECK DISK USAGE</td>
+            <td>GET /disk-usage</td>
+            <td>
+              Shows size of ~/Downloads/output/ (final MP4s) and ~/Downloads/tmp/ (temp files).
+              Helps identify when disk is filling up.
+            </td>
+          </tr>
+          <tr>
+            <td>CLEANUP OLD FILES</td>
+            <td>POST /cleanup</td>
+            <td>
+              Confirms before running. Keeps the 5 most recent output MP4s, deletes the rest. Also
+              clears all temp files in ~/Downloads/tmp/.
+            </td>
+          </tr>
+        </table>
+
+        <div class="alert alert-info">
+          <div class="alert-icon">💡</div>
+          <div>
+            Run CLEANUP after every 5–10 productions. A single long-form compilation can be 2–4 GB.
+            The tmp/ folder accumulates TS segments and ticker captures that are safe to delete
+            after assembly.
+          </div>
+        </div>
+      </section>
+
+      <!-- STREAMERS -->
+      <section class="section" id="streamers">
+        <div class="section-badge">TALENT</div>
+        <h2>STREAMER ROSTER</h2>
+
+        <div class="streamer-grid">
+          <div class="streamer-chip">
+            <div class="display">Jason</div>
+            <div class="username">jasontheween</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Hasan</div>
+            <div class="username">hasanabi</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Adapt</div>
+            <div class="username">adapt</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Ron</div>
+            <div class="username">stableronaldo</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Lacy</div>
+            <div class="username">lacy</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Marlon</div>
+            <div class="username">marlon</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Cinna</div>
+            <div class="username">cinna</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Yonna</div>
+            <div class="username">yonnajay</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Jay Cinco</div>
+            <div class="username">jaycinco</div>
+          </div>
+          <div class="streamer-chip">
+            <div class="display">Maya</div>
+            <div class="username">maya</div>
+          </div>
+        </div>
+
+        <p style="color: var(--muted); font-size: 12px">
+          ExtraEmily and YourRage are approved for future roster expansion. Edit the streamer field
+          in the Generate Videos page — it auto-saves to localStorage and persists across sessions.
+        </p>
+
+        <div class="alert alert-info">
+          <div class="alert-icon">📝</div>
+          <div>
+            <strong>Coming:</strong> Streamer intro cards burned into each Bobby G intro segment.
+            Each streamer will have a 2-3 second image frame + 1 origin line + 1 key fact before
+            their first clip. You write the lines — system burns the image.
+          </div>
+        </div>
+      </section>
+
+      <!-- SCRIPT SYSTEM -->
+      <section class="section" id="script">
+        <div class="section-badge">WRITING</div>
+        <h2>SCRIPT SYSTEM</h2>
+
+        <h3>Per-Streamer Structure (3 Clips)</h3>
+        <div class="code">
+          [Streamer intro — 2-3 sentences. Sets up clip 1 with full context.] [beat] [CLIP PLAYS
+          HERE] [beat] [ONE flat reaction sentence. Short. Deadpan.] [beat] [2-sentence setup for
+          clip 2. Bridge from reaction. Context for clip 2.] [beat] [CLIP PLAYS HERE] [beat] [ONE
+          flat reaction sentence. Short. Deadpan.] [beat] [2-sentence setup for clip 3. Bridge from
+          reaction. Context for clip 3.] [beat] [CLIP PLAYS HERE] [beat] [ONE flat reaction
+          sentence. Short. Deadpan.] [beat] Follow [ON-AIR NAME]. Link in description.
+        </div>
+
+        <h3>Key Rules</h3>
+        <table>
+          <tr>
+            <th>Rule</th>
+            <th>Detail</th>
+          </tr>
+          <tr>
+            <td>Intro length</td>
+            <td>2-3 sentences — LONGEST setup</td>
+          </tr>
+          <tr>
+            <td>Clip 2 & 3 setups</td>
+            <td>2 sentences each — longer than reactions, shorter than intro</td>
+          </tr>
+          <tr>
+            <td>Reactions</td>
+            <td>EXACTLY 1 sentence. Flat. Can be non-sequitur. Never explain the clip.</td>
+          </tr>
+          <tr>
+            <td>[beat]</td>
+            <td>3-second pause. Converted to "..." for HeyGen. Critical for delivery rhythm.</td>
+          </tr>
+          <tr>
+            <td>Display names</td>
+            <td>ALWAYS use on-air name (Ron not StableRonaldo, Jay Cinco not Jaycinco)</td>
+          </tr>
+          <tr>
+            <td>ExtraEmily hallucination</td>
+            <td>If Claude generates an 11th streamer section, delete it before HeyGen send</td>
+          </tr>
+        </table>
+
+        <h3>Reference Video Library (Taught ✅)</h3>
+        <table>
+          <tr>
+            <th>Content Type</th>
+            <th>Videos Analyzed</th>
+            <th>Style Guide Size</th>
+          </tr>
+          <tr>
+            <td>Twitch</td>
+            <td>3 videos</td>
+            <td>2,234 chars</td>
+          </tr>
+          <tr>
+            <td>NBA</td>
+            <td>2 videos</td>
+            <td>2,467 chars</td>
+          </tr>
+          <tr>
+            <td>News</td>
+            <td>3 videos</td>
+            <td>2,191 chars</td>
+          </tr>
+        </table>
+        <p style="font-size: 12px; color: var(--muted)">
+          Stored in ~/Downloads/cwn_style_guides.json. Re-teach via Settings → Gemini Reference
+          Video Library → TEACH GEMINI.
+        </p>
+
+        <h3>Speaking Speed</h3>
+        <div class="code">
+          Intros / Cold Open / Outro: 0.85 (base speed — measured, show-host tone) Reactions: 0.95
+          (base + 0.10 — punchy one-liners) Configurable in: Settings → HeyGen Config → Speaking
+          Speed
+        </div>
+      </section>
+
+      <!-- ASSEMBLY -->
+      <section class="section" id="assembly">
+        <div class="section-badge">FFMPEG</div>
+        <h2>ASSEMBLY PIPELINE</h2>
+
+        <h3>Normalization (per segment)</h3>
+        <div class="code">
+          ffmpeg -i input -vf "scale=1920:1080:force_original_aspect_ratio=decrease,
+          pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black, fps=fps=30" -pix_fmt yuv420p -c:v libx264
+          -preset fast -crf 23 -g 30 -keyint_min 30 -sc_threshold 0
+          <span class="comment"># keyframe every 1s</span>
+          -c:a aac -ar 44100 -ac 2 -af "aresample=async=1:min_hard_comp=0.100000:first_pts=0" -bsf:v
+          h264_mp4toannexb -f mpegts output.ts
+        </div>
+
+        <h3>Concat (30+ segments)</h3>
+        <div class="code">
+          <span class="comment"># Concat demuxer — reliable A/V sync for large jobs</span>
+          ffmpeg -f concat -safe 0 -i list.txt -c:v libx264 -preset fast -crf 23 -c:a aac -ar 44100
+          -ac 2 -af aresample=async=1 -movflags +faststart output.mp4
+        </div>
+
+        <h3>Ticker Overlay</h3>
+        <div class="code">
+          <span class="comment"># 60s ticker capture at 15fps (900 frames)</span>
+          <span class="comment"># Ticker URL: http://localhost:8765/cwn_twitch_ticker.html</span>
+          <span class="comment"># Cached to ~/Downloads/tmp/ticker_twitch.mp4</span>
+          <span class="comment"
+            ># Delete cache to force recapture: rm ~/Downloads/tmp/ticker_twitch.mp4</span
+          >
+
+          ffmpeg -i video.mp4 -stream_loop -1 -i ticker.mp4 -t {duration + 2.0}
+          <span class="comment"># +2s buffer prevents outro truncation</span>
+          -filter_complex "[0:v][1:v]overlay=x=0:y=H-64:eof_action=repeat[vout]" -map [vout] -map
+          0:a -c:v libx264 -preset fast -c:a aac -movflags +faststart tickered.mp4
+        </div>
+
+        <h3>Watchdog Timeouts</h3>
+        <table>
+          <tr>
+            <th>Trigger</th>
+            <th>Action</th>
+          </tr>
+          <tr>
+            <td>No FFmpeg output for 90s</td>
+            <td>Kill process, continue with un-tickered version</td>
+          </tr>
+          <tr>
+            <td>3× video duration elapsed</td>
+            <td>Hard timeout kill, non-fatal</td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- QA SYSTEM -->
+      <section class="section" id="qa">
+        <div class="section-badge">QUALITY</div>
+        <h2>QA SYSTEM</h2>
+
+        <p>
+          Three-point Gemini QA runs after assembly. Samples at 10%, 50%, and 85% of the video. Each
+          sample is 20 seconds.
+        </p>
+
+        <h3>QA Checklist by Sample Point</h3>
+        <table>
+          <tr>
+            <th>Sample</th>
+            <th>Checks</th>
+          </tr>
+          <tr>
+            <td>EARLY (~10%)</td>
+            <td>
+              Lip sync, ticker visible, VIDEO FREEZE (critical), transitions clean, audio clear
+            </td>
+          </tr>
+          <tr>
+            <td>MIDDLE (~50%)</td>
+            <td>
+              VIDEO FREEZE (critical), ticker still visible, video quality 1080p, avatar visible,
+              audio clear
+            </td>
+          </tr>
+          <tr>
+            <td>LATE (~85%)</td>
+            <td>
+              VIDEO FREEZE (critical), ticker still scrolling, outro ends cleanly, audio to end
+            </td>
+          </tr>
+        </table>
+
+        <h3>Scoring</h3>
+        <div class="code">
+          Pass threshold: 60/100 AND no freeze detected Freeze penalty: 20/100 per segment where
+          freeze detected On freeze: 🚨 VIDEO FREEZE DETECTED — Drive upload BLOCKED On pass: ✅ QA
+          passed — proceed to Drive upload
+        </div>
+
+        <h3>QA Failure Logging</h3>
+        <p>Failed QA reports are saved to:</p>
+        <div class="code">
+          Google Drive: same folder as video outputs (1LJKU3DwQY4nwbLXBeNROpHc9o6tZbUyB) Local:
+          ~/Downloads/output/qa_failures/ Filename: qa_fail_{asmId}_{timestamp}.txt
+        </div>
+
+        <h3>Gate 5 — Final Video QA</h3>
+        <p>
+          Gate 5 is the last QA gate before Drive upload. Gemini reviews the fully assembled MP4
+          (ticker baked, logo burned) and scores it across 4 dimensions. Triggered automatically 2
+          seconds after assembly completes. Score and breakdown displayed on the job card in the
+          queue.
+        </p>
+
+        <table>
+          <tr>
+            <th>Dimension</th>
+            <th>Max Points</th>
+            <th>What Gemini Checks</th>
+          </tr>
+          <tr>
+            <td>Visual Quality</td>
+            <td>30</td>
+            <td>1080p clarity, no artifacts, logo visible, ticker rendered correctly</td>
+          </tr>
+          <tr>
+            <td>Audio Quality</td>
+            <td>30</td>
+            <td>Clear speech, no distortion, consistent levels, no dropout</td>
+          </tr>
+          <tr>
+            <td>Clip Content</td>
+            <td>30</td>
+            <td>Clips match script context, no black frames, content appropriate</td>
+          </tr>
+          <tr>
+            <td>Pacing</td>
+            <td>10</td>
+            <td>Transitions smooth, no jarring cuts, avatar/clip rhythm natural</td>
+          </tr>
+        </table>
+
+        <div class="code">
+          Total: 100 points Pass threshold: ≥85 Result display: Score shown on job card — green
+          (pass) / yellow (review) / red (fail) Endpoint: POST /gate5-review Trigger: Auto-fires 2s
+          after asmComplete() in dashboard
+        </div>
+
+        <div class="alert alert-ok">
+          <div class="alert-icon">✅</div>
+          <div>
+            Gate 5 is non-blocking by design — it flags issues for review but does not halt the
+            Drive upload. A score below 85 shows a red warning on the job card so you can decide
+            whether to re-assemble before publishing.
+          </div>
+        </div>
+      </section>
+
+      <!-- THUMBNAILS -->
+      <section class="section" id="thumbnails">
+        <div class="section-badge">CREATIVE</div>
+        <h2>THUMBNAILS</h2>
+
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">🖼</div>
+            <div class="card-title">Compilation (16:9)</div>
+            <div class="card-desc">
+              Navy/gold Canva template. Streamer names from script. Key clip frame. CWN logo. Bobby
+              G bug. Status: PLANNED — Canva templates to be built.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon">📱</div>
+            <div class="card-title">Shorts / Reels (9:16)</div>
+            <div class="card-desc">
+              Best frame extraction from the short via FFmpeg. Gemini picks the highest-impact
+              frame. CWN overlay. Status: PLANNED.
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <div class="alert-icon">📝</div>
+          <div>
+            Header intro card (banner_cwn.png) is currently DISABLED — blurry at current resolution.
+            Will re-enable when proper Canva branding template is ready.
+          </div>
+        </div>
+      </section>
+
+      <!-- PUBLISHING -->
+      <section class="section" id="publish">
+        <div class="section-badge">DISTRIBUTION</div>
+        <h2>PUBLISHING — UPLOAD-POST</h2>
+
+        <p>
+          Upload-Post API handles simultaneous multi-platform distribution. All three publish
+          endpoints are wired in server.js and triggered from the dashboard's Publish Prep page.
+          Each platform button POSTs to its respective endpoint with the video file path, title,
+          description, and hashtags.
+        </p>
+
+        <h3>Wired Endpoints</h3>
+        <table>
+          <tr>
+            <th>Platform</th>
+            <th>Endpoint</th>
+            <th>Format</th>
+            <th>Content Type</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>YouTube</td>
+            <td>POST /publish/youtube</td>
+            <td>16:9 MP4</td>
+            <td>Long form compilations</td>
+            <td><span class="badge badge-done">WIRED</span></td>
+          </tr>
+          <tr>
+            <td>TikTok</td>
+            <td>POST /publish/tiktok</td>
+            <td>9:16 MP4</td>
+            <td>Shorts only</td>
+            <td><span class="badge badge-done">WIRED</span></td>
+          </tr>
+          <tr>
+            <td>Instagram</td>
+            <td>POST /publish/instagram</td>
+            <td>9:16 MP4</td>
+            <td>Reels only</td>
+            <td><span class="badge badge-done">WIRED</span></td>
+          </tr>
+          <tr>
+            <td>All Platforms</td>
+            <td>POST /publish/all</td>
+            <td>Both</td>
+            <td>Simultaneous publish</td>
+            <td><span class="badge badge-done">WIRED</span></td>
+          </tr>
+        </table>
+
+        <div class="alert alert-info">
+          <div class="alert-icon">💡</div>
+          <div>
+            Endpoints are wired and functional — API credentials still need to be configured. Add
+            <code style="font-family: monospace; color: var(--gold)">UPLOADPOST_API_KEY</code> to
+            .env and connect your Upload-Post account to activate live publishing.
+          </div>
+        </div>
+
+        <h3>Dashboard Publish Flow</h3>
+        <div class="code">
+          1. Job Queue → job card → PUBLISH COPY button → Copies title, description, hashtags to
+          clipboard 2. Publish Prep page → select job → Edit title / description / hashtags → Click:
+          PUBLISH TO YOUTUBE / TIKTOK / INSTAGRAM / ALL → Dashboard POSTs to server endpoint →
+          Server calls Upload-Post API → Status returned and displayed
+        </div>
+
+        <h3>Required .env Keys for Publishing</h3>
+        <div class="code">UPLOADPOST_API_KEY=your_key_here UPLOADPOST_PROFILE=clipznashite</div>
+      </section>
+
+      <!-- SCHEDULE -->
+      <section class="section" id="schedule">
+        <div class="section-badge">CALENDAR</div>
+        <h2>PUBLISHING SCHEDULE</h2>
+        <p>Publishing logic to be defined by Rob. Framework for recommendations:</p>
+
+        <table>
+          <tr>
+            <th>Platform</th>
+            <th>Content</th>
+            <th>Frequency</th>
+            <th>Best Times (EST)</th>
+          </tr>
+          <tr>
+            <td>YouTube</td>
+            <td>Long form compilations</td>
+            <td>1× daily</td>
+            <td>12pm, 5pm, 8pm</td>
+          </tr>
+          <tr>
+            <td>TikTok</td>
+            <td>Shorts</td>
+            <td>3× daily</td>
+            <td>7am, 12pm, 7pm</td>
+          </tr>
+          <tr>
+            <td>Instagram</td>
+            <td>Reels</td>
+            <td>2× daily</td>
+            <td>9am, 6pm</td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- ENVIRONMENT -->
+      <section class="section" id="env">
+        <div class="section-badge">CONFIG</div>
+        <h2>ENVIRONMENT VARIABLES</h2>
+        <p>
+          Location: <code style="font-family: monospace; color: var(--gold)">~/Downloads/.env</code>
+        </p>
+
+        <div class="code">
+          <span class="comment"># AI</span>
+          ANTHROPIC_API_KEY=sk-ant-api03-... GEMINI_API_KEY=AIzaSy...
+
+          <span class="comment"># Video Generation</span>
+          HEYGEN_API_KEY=sk_V2_hgu_...
+
+          <span class="comment"># Twitch</span>
+          TWITCH_CLIENT_ID=nghzr9gr22acplvunvkm5c13784nit
+          TWITCH_TOKEN=shcz8knnxikq8pz8rogp7nli8e84qm
+
+          <span class="comment"># Google Drive (OAuth2 — real credentials)</span>
+          DRIVE_FOLDER_ID=1LJKU3DwQY4nwbLXBeNROpHc9o6tZbUyB
+          DRIVE_CLIENT_ID=281415000137-u3qh2evajigmhsmft2s3rgeidqq97ueu.apps.googleusercontent.com
+          DRIVE_CLIENT_SECRET=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 DRIVE_REFRESH_TOKEN=1//010t_...
+          <span class="comment"># set by node cwn-auth.js</span>
+
+          <span class="comment"># Servers</span>
+          PORT=3000 DASHBOARD_PORT=8765
+        </div>
+
+        <h3>HeyGen Avatar IDs</h3>
+        <div class="code">
+          Compilations (16:9): 19c1d4adf8904694a3cc331c5a9bee4b Shorts (9:16):
+          ed57439c9c3d4a398f3b247b75714b13 Voice ID: 2e598f1a6022448cb6710e5d44665325 Speaking
+          speed: 0.85 (reactions: 0.95)
+        </div>
+      </section>
+
+      <!-- SERVERS -->
+      <section class="section" id="servers">
+        <div class="section-badge">OPERATIONS</div>
+        <h2>LOCAL SERVER GUIDE</h2>
+
+        <h3>Daily Startup</h3>
+        <div class="code">
+          <span class="comment"># 1. Dashboard server</span>
+          cd ~/Downloads && python3 -m http.server 8765
+
+          <span class="comment"># 2. Node API server</span>
+          cd ~/Downloads && node server.js
+
+          <span class="comment"># 3. Open dashboard</span>
+          open http://localhost:8765/cwn_production.html
+        </div>
+
+        <h3>When Replacing server.js</h3>
+        <div class="code">
+          <span class="comment"># Verify new file has the fix before restarting</span>
+          grep -c "concat demuxer for reliable" ~/Downloads/server.js
+          <span class="comment"># Should return: 1</span>
+
+          Ctrl+C (stop running server)
+          <span class="comment"># Replace the file</span>
+          node server.js
+        </div>
+
+        <h3>Troubleshooting</h3>
+        <table>
+          <tr>
+            <th>Symptom</th>
+            <th>Cause</th>
+            <th>Fix</th>
+          </tr>
+          <tr>
+            <td>Ticker stalls at 95%</td>
+            <td>Old server.js without watchdog</td>
+            <td>Replace server.js, restart</td>
+          </tr>
+          <tr>
+            <td>A/V desync by Hasan section</td>
+            <td>xfade path running (old code)</td>
+            <td>grep for "concat demuxer" — if 0, wrong file</td>
+          </tr>
+          <tr>
+            <td>Wrong clips for streamer</td>
+            <td>orderedClipUrls not from server</td>
+            <td>Must regenerate script (not re-assemble)</td>
+          </tr>
+          <tr>
+            <td>Drive upload fails quota</td>
+            <td>gcloud ADC interference</td>
+            <td>Check DRIVE_REFRESH_TOKEN in .env</td>
+          </tr>
+          <tr>
+            <td>CTYP segments skipped</td>
+            <td>Twitch CDN tokens expired</td>
+            <td>Normal — backup clips used. Regenerate if Maya has 0 clips.</td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- PRONUNCIATION -->
+      <section class="section" id="pronunciation">
+        <div class="section-badge">VOICE</div>
+        <h2>PRONUNCIATION LIBRARY</h2>
+
+        <p>
+          Settings → Pronunciation Library. Names auto-detected from script. Phonetic substitution
+          applied to all HeyGen input_text before sending. Stored in localStorage permanently.
+        </p>
+
+        <h3>Current Library</h3>
+        <table>
+          <tr>
+            <th>Display Name</th>
+            <th>Phonetic</th>
+            <th>Notes</th>
+          </tr>
+          <tr>
+            <td>Yonna</td>
+            <td>Yawn-uh</td>
+            <td>Confirmed needed</td>
+          </tr>
+          <tr>
+            <td>(scan for more)</td>
+            <td>—</td>
+            <td>Generate script → Settings → SCAN CURRENT SCRIPT FOR NAMES</td>
+          </tr>
+        </table>
+
+        <h3>How It Works</h3>
+        <div class="code">
+          1. Generate script 2. Settings → Pronunciation Library → SCAN CURRENT SCRIPT FOR NAMES 3.
+          System finds: Kanye, Deshae, Emiru, Attenborough, etc. 4. Add phonetic spelling for each
+          name that sounds wrong 5. Applied automatically to every HeyGen segment going forward 6.
+          Real name stays in script/captions — HeyGen hears phonetic version
+        </div>
+      </section>
+
+      <!-- ROADMAP -->
+      <section class="section" id="future">
+        <div class="section-badge">ROADMAP</div>
+        <h2>ROADMAP</h2>
+
+        <h3>Immediate (Next Run)</h3>
+        <table>
+          <tr>
+            <th>Item</th>
+            <th>Priority</th>
+          </tr>
+          <tr>
+            <td>Clip content mismatch fix — assemblyUrl = exact same URL Gemini watched</td>
+            <td>🔴 Critical</td>
+          </tr>
+          <tr>
+            <td>Maya clip expiry — increase backup pool, re-resolve at assembly time</td>
+            <td>🔴 Critical</td>
+          </tr>
+          <tr>
+            <td>Streamer intro images burned in (origin + 1 fact per streamer)</td>
+            <td>🟡 High</td>
+          </tr>
+          <tr>
+            <td>Pronunciation library scan — identify all mispronounced names from first video</td>
+            <td>🟡 High</td>
+          </tr>
+        </table>
+
+        <h3>Completed This Session ✅</h3>
+        <table>
+          <tr>
+            <th>Item</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>Gate 5 — Final video QA (Gemini, 100pt scoring, auto-trigger after assembly)</td>
+            <td><span class="badge badge-done">DONE</span></td>
+          </tr>
+          <tr>
+            <td>Cleanup / Disk Usage — buttons wired in Settings → FFmpeg Server</td>
+            <td><span class="badge badge-done">DONE</span></td>
+          </tr>
+          <tr>
+            <td>Publish endpoints wired — /publish/youtube, /tiktok, /instagram, /all</td>
+            <td><span class="badge badge-done">DONE</span></td>
+          </tr>
+          <tr>
+            <td>Full dashboard audit — all features verified against server endpoints</td>
+            <td><span class="badge badge-done">DONE</span></td>
+          </tr>
+        </table>
+
+        <h3>Near Term</h3>
+        <table>
+          <tr>
+            <th>Item</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>CapCut MCP integration (VectCutAPI)</td>
+            <td><span class="badge badge-new">PLANNED</span></td>
+          </tr>
+          <tr>
+            <td>Upload-Post API credentials — add UPLOADPOST_API_KEY to .env</td>
+            <td><span class="badge badge-pending">PENDING</span></td>
+          </tr>
+          <tr>
+            <td>Canva thumbnail templates (16:9 + 9:16)</td>
+            <td><span class="badge badge-new">PLANNED</span></td>
+          </tr>
+          <tr>
+            <td>News compilation first run</td>
+            <td><span class="badge badge-new">PLANNED</span></td>
+          </tr>
+          <tr>
+            <td>NBA compilation first run</td>
+            <td><span class="badge badge-new">PLANNED</span></td>
+          </tr>
+          <tr>
+            <td>Publish schedule logic (Rob to define)</td>
+            <td><span class="badge badge-pending">PENDING</span></td>
+          </tr>
+        </table>
+
+        <h3>Future</h3>
+        <table>
+          <tr>
+            <th>Item</th>
+            <th>Notes</th>
+          </tr>
+          <tr>
+            <td>Railway deployment</td>
+            <td>After codebase stable. ~$25/mo. Enables overnight runs.</td>
+          </tr>
+          <tr>
+            <td>ExtraEmily + YourRage roster expansion</td>
+            <td>Test with next Twitch compilation</td>
+          </tr>
+          <tr>
+            <td>YouTube chapter auto-gen from transcript</td>
+            <td>Via YouTube MCP</td>
+          </tr>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      // Active nav highlighting on scroll
+      const sections = document.querySelectorAll('section[id], div[id="overview"]');
+      const navItems = document.querySelectorAll('.nav-item');
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              navItems.forEach((item) => item.classList.remove('active'));
+              const active = document.querySelector(`.nav-item[href="#${entry.target.id}"]`);
+              if (active) active.classList.add('active');
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+
+      sections.forEach((s) => observer.observe(s));
+    </script>
+  </body>
 </html>

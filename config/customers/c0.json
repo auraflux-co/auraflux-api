@@ -4,13 +4,7 @@
   "showName": "ClipzWorld News",
   "templates": {
     "long-form": {
-      "contentTypes": [
-        "news",
-        "clips",
-        "sports",
-        "twitch",
-        "nba"
-      ],
+      "contentTypes": ["news", "clips", "sports", "twitch", "nba"],
       "sceneFormulas": {
         "news": "1 + (items * 4) + 1",
         "clips": "1 + (items * 7) + 1",
@@ -34,10 +28,10 @@
           "baselinePreset": "0415",
 
           "colors": {
-            "primary":    "#22304b",
-            "accent":     "#c7af4f",
-            "active":     "#C0392B",
-            "text":       "#ffffff",
+            "primary": "#22304b",
+            "accent": "#c7af4f",
+            "active": "#C0392B",
+            "text": "#ffffff",
             "background": "#0d1424"
           },
 
@@ -52,8 +46,8 @@
             "borderWidth": 4,
             "maxTitleChars": 50,
             "categoryLabel": {
-              "news":   "WORLD NEWS",
-              "clips":  "ON STREAM",
+              "news": "WORLD NEWS",
+              "clips": "ON STREAM",
               "sports": "NBA GAME"
             }
           },
@@ -79,8 +73,8 @@
 
           "font": {
             "headline": "assets/fonts/BebasNeue-Regular.ttf",
-            "body":     "assets/fonts/BarlowCondensed-SemiBold.ttf",
-            "small":    "assets/fonts/BarlowCondensed-Regular.ttf"
+            "body": "assets/fonts/BarlowCondensed-SemiBold.ttf",
+            "small": "assets/fonts/BarlowCondensed-Regular.ttf"
           },
 
           "contentTypeOverrides": {
@@ -111,8 +105,8 @@
 
           "templateFile": "tools/clipzworld_newscast.html",
           "skins": {
-            "news":   { "accentColor": "#C41E3A", "accentColor2": "#8B0000" },
-            "clips":  { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
+            "news": { "accentColor": "#C41E3A", "accentColor2": "#8B0000" },
+            "clips": { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
             "sports": { "accentColor": "#17408B", "accentColor2": "#C9082A" }
           },
           "hasTopBar": true,
@@ -198,12 +192,7 @@
       },
       "voice": {
         "style": "jon-stewart-norm-macdonald-space-ghost",
-        "prohibitedWords": [
-          "incredible",
-          "amazing",
-          "crazy",
-          "wild"
-        ],
+        "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
         "outroLine": "Goodnight and good luck.",
         "speakerName": "Bobby G"
       },
@@ -272,13 +261,7 @@
       }
     },
     "short-form": {
-      "contentTypes": [
-        "news",
-        "clips",
-        "sports",
-        "twitch",
-        "nba"
-      ],
+      "contentTypes": ["news", "clips", "sports", "twitch", "nba"],
       "sceneFormulas": {
         "news": "1 + 1 + 1",
         "clips": "1 + 1 + 1 + 1 + 1",
@@ -385,12 +368,7 @@
       },
       "voice": {
         "style": "jon-stewart-norm-macdonald-space-ghost",
-        "prohibitedWords": [
-          "incredible",
-          "amazing",
-          "crazy",
-          "wild"
-        ],
+        "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
         "outroLine": "Subscribe. Appreciate you.",
         "speakerName": "Bobby G"
       },
@@ -458,11 +436,7 @@
     }
   },
   "delivery": {
-    "platforms": [
-      "youtube",
-      "tiktok",
-      "instagram"
-    ],
+    "platforms": ["youtube", "tiktok", "instagram"],
     "driveFolderId": "${DRIVE_FOLDER_ID}",
     "uploadPostProfile": "${UPLOADPOST_PROFILE}",
     "categoryIds": {
@@ -472,14 +446,14 @@
     },
     "visibility": "private",
     "pinnedComments": {
-      "clips":  "What was your favorite streamer clip? Let me know below! 👇 If you enjoyed this, consider subscribing for more Twitch Soup episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
+      "clips": "What was your favorite streamer clip? Let me know below! 👇 If you enjoyed this, consider subscribing for more Twitch Soup episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
       "sports": "What was your favorite game highlight? Let me know below! 👇 If you enjoyed this, consider subscribing for more Other Side of the Pillow episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
-      "news":   "What was your favorite news story? Let me know below! 👇 If you enjoyed this, consider subscribing for more Because the Light Was On episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1"
+      "news": "What was your favorite news story? Let me know below! 👇 If you enjoyed this, consider subscribing for more Because the Light Was On episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1"
     },
     "tickerFiles": {
       "sports": "tools/sports_ticker.html",
-      "news":   "tools/cwn_combined_ticker.html",
-      "clips":  "tools/cwn_twitch_ticker.html"
+      "news": "tools/cwn_combined_ticker.html",
+      "clips": "tools/cwn_twitch_ticker.html"
     }
   }
 }

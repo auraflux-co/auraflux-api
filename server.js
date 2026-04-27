@@ -9,7 +9,9 @@ const BUILD_INFO = (() => {
   try {
     const hash = _execSync('git rev-parse --short HEAD', { cwd: __dirname }).toString().trim();
     const fullHash = _execSync('git rev-parse HEAD', { cwd: __dirname }).toString().trim();
-    const branch = _execSync('git rev-parse --abbrev-ref HEAD', { cwd: __dirname }).toString().trim();
+    const branch = _execSync('git rev-parse --abbrev-ref HEAD', { cwd: __dirname })
+      .toString()
+      .trim();
     const commitMsg = _execSync('git log -1 --format=%s', { cwd: __dirname }).toString().trim();
     const pkg = require('./package.json');
     return {
@@ -18,10 +20,14 @@ const BUILD_INFO = (() => {
       gitHashFull: fullHash,
       gitBranch: branch,
       lastCommit: commitMsg,
-      deployedAt: new Date().toISOString()
+      deployedAt: new Date().toISOString(),
     };
-  } catch(e) {
-    return { version: require('./package.json').version, gitHash: 'unknown', deployedAt: new Date().toISOString() };
+  } catch (e) {
+    return {
+      version: require('./package.json').version,
+      gitHash: 'unknown',
+      deployedAt: new Date().toISOString(),
+    };
   }
 })();
 
@@ -42,14 +48,14 @@ function nrGateAttribute(jobId, gate, score, passed) {
 // ── NR Event: Job confirmed (pre-generate sign-off complete) ─────────────────
 function nrJobConfirmed(jobSpec, allReady) {
   nrEvent('JobConfirmed', {
-    jobId:       jobSpec.jobId,
-    customerId:  jobSpec.customerId,
-    templateId:  jobSpec.templateId,
+    jobId: jobSpec.jobId,
+    customerId: jobSpec.customerId,
+    templateId: jobSpec.templateId,
     contentType: jobSpec.contentType,
-    formFactor:  jobSpec.order?.output?.formFactor,
-    platforms:   (jobSpec.deliverySpec?.platforms || []).join(','),
+    formFactor: jobSpec.order?.output?.formFactor,
+    platforms: (jobSpec.deliverySpec?.platforms || []).join(','),
     allGatesReady: allReady,
-    expectedClips: jobSpec.designSpec?.expectedClipCount ?? 0
+    expectedClips: jobSpec.designSpec?.expectedClipCount ?? 0,
   });
 }
 
@@ -59,72 +65,105 @@ function nrQaGenerateConfirmPolicy(jobSpec, attrs = {}) {
     customerId: jobSpec.customerId,
     templateId: jobSpec.templateId,
     contentType: jobSpec.contentType,
-    ...attrs
+    ...attrs,
   });
 }
 
 // ── NR Event: Gate result (pass/fail at any gate) ────────────────────────────
 function nrGateResult(jobId, customerId, contentType, gate, passed, score, outcome, durationMs) {
   nrEvent('GateResult', {
-    jobId, customerId, contentType,
+    jobId,
+    customerId,
+    contentType,
     gate: String(gate),
     passed: passed ? 1 : 0,
     score: score ?? null,
     outcome: outcome || null,
-    durationMs: durationMs || null
+    durationMs: durationMs || null,
   });
 }
 
 // ── NR Event: Script sendback (Gate 1 fix directive issued) ──────────────────
 function nrScriptSendback(jobId, customerId, contentType, score, attempt, reasons) {
   nrEvent('ScriptSendback', {
-    jobId, customerId, contentType,
-    score, attempt,
-    reasons: Array.isArray(reasons) ? reasons.slice(0,3).join('; ') : (reasons || '')
+    jobId,
+    customerId,
+    contentType,
+    score,
+    attempt,
+    reasons: Array.isArray(reasons) ? reasons.slice(0, 3).join('; ') : reasons || '',
   });
 }
 
 // ── NR Event: Video published (Gate 5 success) ───────────────────────────────
 function nrVideoPublished(jobId, customerId, contentType, platform, title, pipelineMs, scores) {
   nrEvent('VideoPublished', {
-    jobId, customerId, contentType, platform,
+    jobId,
+    customerId,
+    contentType,
+    platform,
     title: (title || '').slice(0, 100),
     totalPipelineMs: pipelineMs || null,
-    gate1Score:  scores?.gate1  ?? null,
+    gate1Score: scores?.gate1 ?? null,
     gate3aScore: scores?.gate3a ?? null,
-    gate4Score:  scores?.gate4  ?? null
+    gate4Score: scores?.gate4 ?? null,
   });
 }
 
 // ── NR Event: Assembly complete ───────────────────────────────────────────────
-function nrAssemblyComplete(jobId, customerId, contentType, asmId, durationMs, fileSizeMB, gate3aScore) {
+function nrAssemblyComplete(
+  jobId,
+  customerId,
+  contentType,
+  asmId,
+  durationMs,
+  fileSizeMB,
+  gate3aScore
+) {
   nrEvent('AssemblyComplete', {
-    jobId, customerId, contentType, asmId,
+    jobId,
+    customerId,
+    contentType,
+    asmId,
     durationMs: durationMs || null,
     fileSizeMB: fileSizeMB || null,
-    gate3aScore: gate3aScore ?? null
+    gate3aScore: gate3aScore ?? null,
   });
 }
 
 // ── NR Event: Video published (Gate 5 success) ───────────────────────────────
 function nrVideoPublished(jobId, customerId, contentType, platform, title, pipelineMs, scores) {
   nrEvent('VideoPublished', {
-    jobId, customerId, contentType, platform,
+    jobId,
+    customerId,
+    contentType,
+    platform,
     title: (title || '').slice(0, 100),
     totalPipelineMs: pipelineMs || null,
-    gate1Score:  scores?.gate1  ?? null,
+    gate1Score: scores?.gate1 ?? null,
     gate3aScore: scores?.gate3a ?? null,
-    gate4Score:  scores?.gate4  ?? null
+    gate4Score: scores?.gate4 ?? null,
   });
 }
 
 // ── NR Event: Assembly complete ───────────────────────────────────────────────
-function nrAssemblyComplete(jobId, customerId, contentType, asmId, durationMs, fileSizeMB, gate3aScore) {
+function nrAssemblyComplete(
+  jobId,
+  customerId,
+  contentType,
+  asmId,
+  durationMs,
+  fileSizeMB,
+  gate3aScore
+) {
   nrEvent('AssemblyComplete', {
-    jobId, customerId, contentType, asmId,
+    jobId,
+    customerId,
+    contentType,
+    asmId,
     durationMs: durationMs || null,
     fileSizeMB: fileSizeMB || null,
-    gate3aScore: gate3aScore ?? null
+    gate3aScore: gate3aScore ?? null,
   });
 }
 
@@ -132,13 +171,16 @@ function nrAssemblyComplete(jobId, customerId, contentType, asmId, durationMs, f
 // Feature flag — default true. Set USE_DIRECTIVE_CHROME=false to fall back
 // to the legacy Fix 5/7 reactive state machine (emergency rollback only).
 const USE_DIRECTIVE_CHROME = process.env.USE_DIRECTIVE_CHROME !== 'false';
-const { directiveToOverlayParams, validateScript: validateChromeScript } = require('./lib/chromeDirectives');
+const {
+  directiveToOverlayParams,
+  validateScript: validateChromeScript,
+} = require('./lib/chromeDirectives');
 const {
   writeDirectiveForJob,
   loadDirectiveForJob,
   hasDirectiveForJob,
   extractSpokenTextFromDirective,
-  pruneOldDirectives
+  pruneOldDirectives,
 } = require('./lib/directives');
 
 // ── Option Y hotfix 1: browser-like headers to bypass Al Jazeera WAF ──────
@@ -146,8 +188,9 @@ const {
 // detection. Full Chrome-on-macOS header set makes requests look like a real
 // browser. Rotate Chrome version (currently 132) quarterly to avoid staleness.
 const BROWSER_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  'User-Agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
   'Accept-Language': 'en-US,en;q=0.9',
   'Accept-Encoding': 'gzip, deflate, br',
   'Sec-Fetch-Dest': 'document',
@@ -156,7 +199,7 @@ const BROWSER_HEADERS = {
   'Upgrade-Insecure-Requests': '1',
   'Sec-Ch-Ua': '"Chromium";v="132", "Google Chrome";v="132", "Not?A_Brand";v="99"',
   'Sec-Ch-Ua-Mobile': '?0',
-  'Sec-Ch-Ua-Platform': '"macOS"'
+  'Sec-Ch-Ua-Platform': '"macOS"',
 };
 
 // ── Red 4 hotfix: strip markdown code fences from Gemini JSON output ──────
@@ -178,15 +221,11 @@ function stripCodeFences(text) {
 
 // Validate required environment variables on startup
 function validateRequiredEnv() {
-  const required = [
-    'ANTHROPIC_API_KEY',
-    'GEMINI_API_KEY',
-    'HEYGEN_API_KEY'
-  ];
-  const missing = required.filter(key => !process.env[key]);
+  const required = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'];
+  const missing = required.filter((key) => !process.env[key]);
   if (missing.length > 0) {
     console.error('\n❌ FATAL: Missing required environment variables:');
-    missing.forEach(key => console.error(`   - ${key}`));
+    missing.forEach((key) => console.error(`   - ${key}`));
     console.error('\nPlease add these to your .env file and restart.\n');
     process.exit(1);
   }
@@ -210,22 +249,22 @@ validateRequiredEnv();
  */
 
 // ── Timestamp all console output ──────────────────────────────────────────────
-const _origLog   = console.log;
-const _origWarn  = console.warn;
+const _origLog = console.log;
+const _origWarn = console.warn;
 const _origError = console.error;
-const _ts = () => new Date().toISOString().replace('T',' ').slice(0,19);
-console.log   = (...a) => _origLog(`[${_ts()}]`,   ...a);
-console.warn  = (...a) => _origWarn(`[${_ts()}]`,  ...a);
+const _ts = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
+console.log = (...a) => _origLog(`[${_ts()}]`, ...a);
+console.warn = (...a) => _origWarn(`[${_ts()}]`, ...a);
 console.error = (...a) => _origError(`[${_ts()}]`, ...a);
 
-const express    = require('express');
-const cors       = require('cors');
-const helmet     = require('helmet');
-const axios      = require('axios');
-const fs         = require('fs');
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const axios = require('axios');
+const fs = require('fs');
 const { execFile, exec, execSync } = require('child_process');
-const Anthropic  = require('@anthropic-ai/sdk');
-const puppeteer  = require('puppeteer');
+const Anthropic = require('@anthropic-ai/sdk');
+const puppeteer = require('puppeteer');
 
 /** When Puppeteer's cache has no bundled Chrome, fall back to a system install. */
 function puppeteerExecutablePath() {
@@ -242,8 +281,24 @@ function puppeteerExecutablePath() {
       for (const ver of vers) {
         const candidates = [
           // macOS arm / x64
-          path.join(cacheBase, ver, 'chrome-mac-arm64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
-          path.join(cacheBase, ver, 'chrome-mac-x64',  'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
+          path.join(
+            cacheBase,
+            ver,
+            'chrome-mac-arm64',
+            'Google Chrome for Testing.app',
+            'Contents',
+            'MacOS',
+            'Google Chrome for Testing'
+          ),
+          path.join(
+            cacheBase,
+            ver,
+            'chrome-mac-x64',
+            'Google Chrome for Testing.app',
+            'Contents',
+            'MacOS',
+            'Google Chrome for Testing'
+          ),
           // Linux
           path.join(cacheBase, ver, 'chrome-linux64', 'chrome'),
           // Win
@@ -255,14 +310,21 @@ function puppeteerExecutablePath() {
         }
       }
     }
-  } catch (_) { /* non-fatal */ }
+  } catch (_) {
+    /* non-fatal */
+  }
 
   if (process.platform === 'darwin') {
     const p = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
     if (fs.existsSync(p)) return p;
   }
   if (process.platform === 'linux') {
-    const candidates = ['/usr/bin/google-chrome-stable', '/usr/bin/google-chrome', '/usr/bin/chromium-browser', '/usr/bin/chromium'];
+    const candidates = [
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+    ];
     for (const p of candidates) {
       if (fs.existsSync(p)) return p;
     }
@@ -281,12 +343,23 @@ function withPuppeteerExecutable(opts) {
 
 const { body, validationResult } = require('express-validator');
 const { logError, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
-const { requireFields, validateContentType, validateArrayLength, sanitizeStrings } = require('./lib/validation');
+const {
+  requireFields,
+  validateContentType,
+  validateArrayLength,
+  sanitizeStrings,
+} = require('./lib/validation');
 const TwitchClient = require('./lib/clients/twitch_client');
 const { CONFIG } = require('./lib/config');
 const logger = require('./lib/logger');
 const pipelineBus = require('./lib/pipeline_events');
-const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
+const {
+  StageTimer,
+  jobMetrics,
+  initJobMetrics,
+  addStageMetrics,
+  finalizeJobMetrics,
+} = require('./lib/metrics');
 const db = require('./lib/db');
 const { createJobSpec, getJobSpec } = require('./lib/job_spec');
 const {
@@ -295,7 +368,7 @@ const {
   writeManualManifest,
   prefetchManualSourceClips,
   prepareC0ManualHoldAfterHeyGen,
-  applyManualOverrides
+  applyManualOverrides,
 } = require('./lib/manual_segment_workflow');
 const { persistJobSpecGateContracts } = require('./lib/job_spec_contracts');
 const { startMonitoring } = require('./lib/monitoring');
@@ -304,7 +377,7 @@ const {
   generateNewsNbaThumbnail,
   burnSceneChromeFromDirective,
   generateChromeOverlayFromDirective,
-  generateNewscastOverlay
+  generateNewscastOverlay,
 } = require('./lib/chrome_overlay');
 const {
   geminiQACheck, // TODO: remove — dead code, gate2Worker.run() replaces this (see /gate2-segment-qa endpoint)
@@ -317,7 +390,7 @@ const {
   uploadToGeminiFiles,
   waitForGeminiFile,
   deleteGeminiFile,
-  autoAction
+  autoAction,
 } = require('./lib/qa');
 const {
   sendScriptToHeyGen,
@@ -328,7 +401,7 @@ const {
   geminiAnalyzeClip,
   geminiAnalyzeThumbnail,
   prioritizeNewsStories,
-  handleGenerateFullScript
+  handleGenerateFullScript,
 } = require('./lib/script_gen');
 const {
   getDriveClient,
@@ -340,7 +413,7 @@ const {
   logUploadAttempt,
   generateShortFormCaption,
   handlePublish,
-  handleGeneratePublishCopy
+  handleGeneratePublishCopy,
 } = require('./lib/publish');
 const {
   handleAssemble,
@@ -355,20 +428,23 @@ const {
   captureTicker,
   TICKER_CACHE,
   TICKER_MAP,
-  assemblyJobs
+  assemblyJobs,
 } = require('./lib/assembly');
 const { downloadFile } = require('./lib/downloader');
-const { ffmpegPath: _ffmpegDockerPath, ffprobePath: _ffprobeDockerPath } = require('./lib/ffmpeg_utils');
+const {
+  ffmpegPath: _ffmpegDockerPath,
+  ffprobePath: _ffprobeDockerPath,
+} = require('./lib/ffmpeg_utils');
 const cheerio = require('cheerio');
 
-const app  = express();
+const app = express();
 
 // ── FFmpeg encoder selection ─────────────────────────────────────────────────
 // macOS (local dev, M4 Pro): VideoToolbox hardware encoder — ~5x faster than libx264
 // Linux (Railway standard): libx264 ultrafast — no GPU on standard plan
 // Linux + GPU (Railway future): h264_nvenc — add when GPU instance available
-const _IS_MACOS  = process.platform === 'darwin';
-const _HW_AVAIL  = _IS_MACOS; // extend to check process.env.ENABLE_NVENC when Railway GPU added
+const _IS_MACOS = process.platform === 'darwin';
+const _HW_AVAIL = _IS_MACOS; // extend to check process.env.ENABLE_NVENC when Railway GPU added
 
 // Returns encoder + quality args for the current platform.
 // hwQuality=true for chrome burns (short segments, worth extra quality)
@@ -376,24 +452,32 @@ const _HW_AVAIL  = _IS_MACOS; // extend to check process.env.ENABLE_NVENC when R
 function ffmpegEncodeArgs(hwQuality = false) {
   if (_HW_AVAIL) {
     // Apple VideoToolbox — uses M4 Pro media engine, doesn't compete with CPU
-    return ['-c:v', 'h264_videotoolbox',
-            ...( hwQuality ? CONFIG.FFMPEG.HW_QUALITY_HQ : CONFIG.FFMPEG.HW_QUALITY_FLAG ),
-            ...CONFIG.FFMPEG.THREADS];
+    return [
+      '-c:v',
+      'h264_videotoolbox',
+      ...(hwQuality ? CONFIG.FFMPEG.HW_QUALITY_HQ : CONFIG.FFMPEG.HW_QUALITY_FLAG),
+      ...CONFIG.FFMPEG.THREADS,
+    ];
   } else {
     // Linux / Railway — software encode, ultrafast preset for speed
-    return ['-c:v', 'libx264',
-            ...( hwQuality ? CONFIG.FFMPEG.SW_QUALITY_HQ : CONFIG.FFMPEG.SW_QUALITY_FLAGS ),
-            ...CONFIG.FFMPEG.THREADS];
+    return [
+      '-c:v',
+      'libx264',
+      ...(hwQuality ? CONFIG.FFMPEG.SW_QUALITY_HQ : CONFIG.FFMPEG.SW_QUALITY_FLAGS),
+      ...CONFIG.FFMPEG.THREADS,
+    ];
   }
 }
 
-console.log(`[ffmpeg] Encoder: ${_HW_AVAIL ? 'h264_videotoolbox (hardware)' : 'libx264 (software)'} on ${process.platform}`);
+console.log(
+  `[ffmpeg] Encoder: ${_HW_AVAIL ? 'h264_videotoolbox (hardware)' : 'libx264 (software)'} on ${process.platform}`
+);
 
-const TMP_DIR    = require('path').join(__dirname, 'tmp');
+const TMP_DIR = require('path').join(__dirname, 'tmp');
 const CWN_LOGO_PATH = path.join(__dirname, 'assets', 'cwn_logo.png');
 const CWN_BANNER_PATH = path.join(__dirname, 'assets', 'cwn_banner.png');
 const OUTPUT_DIR = require('path').join(__dirname, 'output');
-require('fs').mkdirSync(TMP_DIR,    { recursive: true });
+require('fs').mkdirSync(TMP_DIR, { recursive: true });
 require('fs').mkdirSync(OUTPUT_DIR, { recursive: true });
 
 // Clean up orphaned temp files on startup (older than 24 hours)
@@ -445,7 +529,7 @@ validateDirWritable(OUTPUT_DIR, 'output');
 pruneOldDirectives(); // Red 4 hotfix 12: prune directive sidecar files older than 7 days
 
 // assemblyJobs imported from lib/assembly.js (shared in-memory state)
-const heygenJobs   = {};
+const heygenJobs = {};
 
 // ── Job Card Persistence ─────────────────────────────────────────────────────
 // Saves completed script+HeyGen jobs to disk so server restarts don't lose them.
@@ -455,7 +539,7 @@ let persistedJobs = {};
 try {
   persistedJobs = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
   console.log(`[jobs] Loaded ${Object.keys(persistedJobs).length} persisted jobs from disk`);
-} catch(e) {
+} catch (e) {
   persistedJobs = {};
 }
 // Expose to assembly.js Gate 2 bypass (avoids circular require)
@@ -469,7 +553,9 @@ try {
   db.initDb();
   const sqliteJobs = db.loadAllJobs();
   if (sqliteJobs.length > Object.keys(persistedJobs).length) {
-    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
+    console.log(
+      `[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`
+    );
     persistedJobs = {};
     for (const card of sqliteJobs) {
       if (card && card.jobId) persistedJobs[card.jobId] = card;
@@ -488,9 +574,9 @@ function inferJobStage(job) {
   if (job.assembly?.url || job.assembledUrl) return 'assembled';
   const videoJobs = job.heygen?.videoJobs || [];
   if (videoJobs.length > 0) {
-    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+    const allComplete = videoJobs.every((vj) => vj.status === 'completed' && vj.video_url);
     if (allComplete) return 'all_sent'; // all done — ready for assembly
-    const anyStarted = videoJobs.some(vj => vj.video_id);
+    const anyStarted = videoJobs.some((vj) => vj.video_id);
     if (anyStarted) return 'all_sent'; // in-flight in HeyGen
   }
   if (job.script) return 'script_ready';
@@ -505,7 +591,9 @@ try {
   db.initDb();
   const sqliteJobs = db.loadAllJobs();
   if (sqliteJobs.length > Object.keys(persistedJobs).length) {
-    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
+    console.log(
+      `[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`
+    );
     persistedJobs = {};
     for (const card of sqliteJobs) {
       if (card && card.jobId) persistedJobs[card.jobId] = card;
@@ -524,9 +612,9 @@ function inferJobStage(job) {
   if (job.assembly?.url || job.assembledUrl) return 'assembled';
   const videoJobs = job.heygen?.videoJobs || [];
   if (videoJobs.length > 0) {
-    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+    const allComplete = videoJobs.every((vj) => vj.status === 'completed' && vj.video_url);
     if (allComplete) return 'all_sent'; // all done — ready for assembly
-    const anyStarted = videoJobs.some(vj => vj.video_id);
+    const anyStarted = videoJobs.some((vj) => vj.video_id);
     if (anyStarted) return 'all_sent'; // in-flight in HeyGen
   }
   if (job.script) return 'script_ready';
@@ -536,24 +624,28 @@ function inferJobStage(job) {
 function saveJobCard(jobId, card) {
   // Fix 2 Part A: Extract source_clip segments from script and save to card
   if (card.script && card.orderedClipUrls) {
-    const sourceClipScenes = (card.script.scenes || []).filter(s => s.type === 'source_clip');
+    const sourceClipScenes = (card.script.scenes || []).filter((s) => s.type === 'source_clip');
     if (sourceClipScenes.length > 0) {
       const sourceClipSegments = sourceClipScenes.map((scene, i) => {
         const clipData = card.orderedClipUrls[i] || {};
         return {
           type: 'source_clip',
           sceneId: scene.name,
-          label: scene.name || `STORY${i+1}_CLIP`,
+          label: scene.name || `STORY${i + 1}_CLIP`,
           clipUrl: clipData.clipUrl || clipData.url || '',
           pageUrl: clipData.pageUrl || '',
-          clipTimingTargets: Array.isArray(clipData.clipTimingTargets) ? clipData.clipTimingTargets : [],
+          clipTimingTargets: Array.isArray(clipData.clipTimingTargets)
+            ? clipData.clipTimingTargets
+            : [],
           clipTimingFormat: clipData.clipTimingFormat || 'none',
           storyIndex: clipData.storyIndex ?? i,
-          status: 'ready'  // source clips don't render via HeyGen
+          status: 'ready', // source clips don't render via HeyGen
         };
       });
       card.sourceClipSegments = sourceClipSegments;
-      console.log(`[jobs] Saved ${sourceClipSegments.length} source_clip segments to job card ${jobId}`);
+      console.log(
+        `[jobs] Saved ${sourceClipSegments.length} source_clip segments to job card ${jobId}`
+      );
     }
   }
 
@@ -568,7 +660,7 @@ function saveJobCard(jobId, card) {
   }
   try {
     fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
-  } catch(e) {
+  } catch (e) {
     console.error('[jobs] Failed to save jobs.json:', e.message);
   }
   // ── SQLite write (additive — runs alongside JSON during transition) ──────────
@@ -626,13 +718,15 @@ function checkContentTypeStuckPattern(contentType, jobId) {
   }
 
   // Prune entries older than 24h
-  stuckPatternLog[contentType] = stuckPatternLog[contentType].filter(ts => now - ts < WINDOW_MS);
+  stuckPatternLog[contentType] = stuckPatternLog[contentType].filter((ts) => now - ts < WINDOW_MS);
 
   // Add this stuck job
   stuckPatternLog[contentType].push(now);
 
   const stuckCount = stuckPatternLog[contentType].length;
-  console.log(`[checkContentTypeStuckPattern] ${contentType}: ${stuckCount} stuck jobs in last 24h`);
+  console.log(
+    `[checkContentTypeStuckPattern] ${contentType}: ${stuckCount} stuck jobs in last 24h`
+  );
 
   if (stuckCount >= THRESHOLD) {
     // Auto-disable this content type
@@ -642,16 +736,16 @@ function checkContentTypeStuckPattern(contentType, jobId) {
 
     const disabledAt = new Date().toISOString();
     const reason = `Auto-disabled: ${stuckCount} stuck jobs in 24h (last: ${jobId})`;
-    
+
     global.disabledContentTypes[contentType] = {
       disabledAt,
       reason,
       stuckCount,
-      lastJobId: jobId
+      lastJobId: jobId,
     };
 
     console.error(`[checkContentTypeStuckPattern] 🚫 AUTO-DISABLED ${contentType}: ${reason}`);
-    
+
     // Log to errors.jsonl
     logError('SYSTEM', 'AUTO_DISABLE', reason, { contentType, stuckCount, jobId });
   }
@@ -665,14 +759,19 @@ const activePollers = new Map(); // jobId → { jobId, resolve, settled }
 
 function registerPoller(jobId) {
   let resolve;
-  const done = new Promise(r => { resolve = r; });
+  const done = new Promise((r) => {
+    resolve = r;
+  });
   activePollers.set(jobId, { jobId, resolve, done });
   return resolve; // caller calls resolve() when the poller exits cleanly
 }
 
 function unregisterPoller(jobId) {
   const entry = activePollers.get(jobId);
-  if (entry) { entry.resolve(); activePollers.delete(jobId); }
+  if (entry) {
+    entry.resolve();
+    activePollers.delete(jobId);
+  }
 }
 
 // Graceful shutdown — wait for active pollers before exiting
@@ -696,18 +795,22 @@ async function startHeyGenPoller(jobId, card) {
   }
 
   // Sim mode / pre-completed jobs: skip external polling, emit directly.
-  const allAlreadyComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+  const allAlreadyComplete = videoJobs.every((vj) => vj.status === 'completed' && vj.video_url);
   if (allAlreadyComplete) {
-    console.log(`[heygen-poller:${jobId}] ⏭️ All segments already completed (sim/local) — emitting heygen:all_complete`);
+    console.log(
+      `[heygen-poller:${jobId}] ⏭️ All segments already completed (sim/local) — emitting heygen:all_complete`
+    );
     try {
       pipelineBus.emit('heygen:poll_terminal', {
         jobId,
         outcome: 'skipped_external_poll',
-        reason: 'all_segments_already_complete'
+        reason: 'all_segments_already_complete',
       });
-    } catch (_e) { /* non-fatal */ }
+    } catch (_e) {
+      /* non-fatal */
+    }
     const sortedAvatarSegs = [...videoJobs]
-      .filter(vj => vj.video_url)
+      .filter((vj) => vj.video_url)
       .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0));
     const avatarByName = {};
     for (const seg of sortedAvatarSegs) avatarByName[seg.sceneName] = seg;
@@ -727,15 +830,21 @@ async function startHeyGenPoller(jobId, card) {
               label: clip.label || scene.name || `CLIP_${clipIdx}`,
               type: 'source_clip',
               clipUrl: clip.clipUrl || clip.url || '',
-              clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
-              clipTimingFormat: clip.clipTimingFormat || 'none'
+              clipTimingTargets: Array.isArray(clip.clipTimingTargets)
+                ? clip.clipTimingTargets
+                : [],
+              clipTimingFormat: clip.clipTimingFormat || 'none',
             });
           }
         } else {
           const sceneKey = scene.name || scene.id;
           const avatarSeg = avatarByName[sceneKey];
           if (avatarSeg && avatarSeg.video_url) {
-            segmentData.push({ url: avatarSeg.video_url, label: avatarSeg.sceneName, type: 'avatar' });
+            segmentData.push({
+              url: avatarSeg.video_url,
+              label: avatarSeg.sceneName,
+              type: 'avatar',
+            });
             if (scene.hasClipInsert) {
               const clip = orderedClipUrls[clipIdx++];
               if (clip && (clip.url || clip.clipUrl)) {
@@ -745,8 +854,10 @@ async function startHeyGenPoller(jobId, card) {
                   label: clip.label || `${sceneKey}_CLIP`,
                   type: 'source_clip',
                   clipUrl: clip.clipUrl || clip.url || '',
-                  clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
-                  clipTimingFormat: clip.clipTimingFormat || 'none'
+                  clipTimingTargets: Array.isArray(clip.clipTimingTargets)
+                    ? clip.clipTimingTargets
+                    : [],
+                  clipTimingFormat: clip.clipTimingFormat || 'none',
                 });
               }
             }
@@ -754,7 +865,8 @@ async function startHeyGenPoller(jobId, card) {
         }
       }
     } else {
-      for (const s of sortedAvatarSegs) segmentData.push({ url: s.video_url, label: s.sceneName, type: 'avatar' });
+      for (const s of sortedAvatarSegs)
+        segmentData.push({ url: s.video_url, label: s.sceneName, type: 'avatar' });
     }
     const updatedCard = persistedJobs[jobId] || card;
     updatedCard.heygen = updatedCard.heygen || {};
@@ -763,12 +875,22 @@ async function startHeyGenPoller(jobId, card) {
     saveJobCard(jobId, updatedCard);
     if (shouldUseManualCheckpoint(updatedCard)) {
       const man = writeManualManifest(jobId, updatedCard, segmentData);
-      const { dir, manifestPath, manifest, overlaysDir, overlaysReadme, copiedPreviews, operatorGuideDir } = man;
+      const {
+        dir,
+        manifestPath,
+        manifest,
+        overlaysDir,
+        overlaysReadme,
+        copiedPreviews,
+        operatorGuideDir,
+      } = man;
       let prefetch = { logPath: path.join(dir, 'source_clip_prefetch.log') };
       try {
         prefetch = await prefetchManualSourceClips(dir, segmentData, { jobId });
       } catch (e) {
-        console.error(`[heygen-poller:${jobId}] source clip prefetch failed (non-fatal): ${e.message}`);
+        console.error(
+          `[heygen-poller:${jobId}] source clip prefetch failed (non-fatal): ${e.message}`
+        );
       }
       updatedCard.stage = 'awaiting_manual_segments';
       updatedCard.manualSegments = {
@@ -782,39 +904,43 @@ async function startHeyGenPoller(jobId, card) {
         overlaysReadme,
         overlayPreviewCopies: copiedPreviews || [],
         segmentCount: manifest.segments.length,
-        requestedAt: new Date().toISOString()
+        requestedAt: new Date().toISOString(),
       };
       saveJobCard(jobId, updatedCard);
-      console.log(`[heygen-poller:${jobId}] 🛑 c0 manual checkpoint — ${dir} (see read_me/) — resume POST /job/${jobId}/manual-segments/resume`);
+      console.log(
+        `[heygen-poller:${jobId}] 🛑 c0 manual checkpoint — ${dir} (see read_me/) — resume POST /job/${jobId}/manual-segments/resume`
+      );
       unregisterPoller(jobId);
       return;
     }
-    const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
+    const segmentUrls = sortedAvatarSegs.map((s) => s.video_url).filter(Boolean);
     pipelineBus.emit('heygen:all_complete', {
       jobId,
       contentType: card.contentType || 'twitch',
       segmentUrls,
       card: updatedCard,
-      segmentData
+      segmentData,
     });
     return;
   }
 
   const POLL_INTERVAL_MS = 30000; // 30 seconds between polls
-  const MAX_POLL_MINUTES = 60;    // Give up after 60 minutes (safety net)
+  const MAX_POLL_MINUTES = 60; // Give up after 60 minutes (safety net)
   const MAX_POLLS = (MAX_POLL_MINUTES * 60 * 1000) / POLL_INTERVAL_MS;
   let pollCount = 0;
 
   // Register with graceful shutdown tracker
   const pollerDone = registerPoller(jobId);
 
-  console.log(`[heygen-poller:${jobId}] 🔄 Starting — polling ${videoJobs.length} segments every 30s (max ${MAX_POLL_MINUTES}min)`);
+  console.log(
+    `[heygen-poller:${jobId}] 🔄 Starting — polling ${videoJobs.length} segments every 30s (max ${MAX_POLL_MINUTES}min)`
+  );
   nrEvent('HeyGenPollStart', {
     jobId,
     executionMode: 'inline',
     segmentCount: videoJobs.length,
     contentType: card.contentType || 'twitch',
-    maxPollMinutes: MAX_POLL_MINUTES
+    maxPollMinutes: MAX_POLL_MINUTES,
   });
 
   // Seed pending rows in heygen_renders DB table for each video job (non-fatal)
@@ -823,7 +949,7 @@ async function startHeyGenPoller(jobId, card) {
     for (const vj of videoJobs) {
       if (vj.video_id) saveHeyGenRender(jobId, vj.video_id, vj.sceneName, 'pending', {});
     }
-  } catch(e) {}
+  } catch (e) {}
 
   // Seed pending rows in heygen_renders DB table for each video job (non-fatal)
   try {
@@ -831,57 +957,84 @@ async function startHeyGenPoller(jobId, card) {
     for (const vj of videoJobs) {
       if (vj.video_id) saveHeyGenRender(jobId, vj.video_id, vj.sceneName, 'pending', {});
     }
-  } catch(e) {}
+  } catch (e) {}
 
   const poll = async () => {
     pollCount++;
     if (pollCount > MAX_POLLS) {
-      console.error(`[heygen-poller:${jobId}] ⏰ Timeout after ${MAX_POLL_MINUTES}min — giving up. Manual REFRESH IDs + ASSEMBLE required.`);
-      nrEvent('HeyGenPollTimeout', { jobId, pollCount, segmentCount: videoJobs.length, contentType: card.contentType || 'twitch' });
+      console.error(
+        `[heygen-poller:${jobId}] ⏰ Timeout after ${MAX_POLL_MINUTES}min — giving up. Manual REFRESH IDs + ASSEMBLE required.`
+      );
+      nrEvent('HeyGenPollTimeout', {
+        jobId,
+        pollCount,
+        segmentCount: videoJobs.length,
+        contentType: card.contentType || 'twitch',
+      });
       try {
         pipelineBus.emit('heygen:poll_terminal', {
           jobId,
           outcome: 'timeout',
-          reason: 'max_polls_exceeded'
+          reason: 'max_polls_exceeded',
         });
-      } catch (_e) { /* non-fatal */ }
+      } catch (_e) {
+        /* non-fatal */
+      }
       unregisterPoller(jobId);
       return;
     }
 
     try {
       // Check status of all video IDs in parallel
-      const statuses = await Promise.all(videoJobs.map(async (job) => {
-        try {
-          const resp = await axios.get(
-            `https://api.heygen.com/v1/video_status.get?video_id=${job.video_id}`,
-            { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
-          );
-          const data = resp.data?.data || {};
-          return {
-            video_id: job.video_id,
-            sceneName: job.sceneName,
-            sceneIndex: job.sceneIndex,
-            status: data.status,
-            video_url: data.video_url || null
-          };
-        } catch(e) {
-          return { video_id: job.video_id, sceneName: job.sceneName, sceneIndex: job.sceneIndex, status: 'error', video_url: null };
-        }
-      }));
+      const statuses = await Promise.all(
+        videoJobs.map(async (job) => {
+          try {
+            const resp = await axios.get(
+              `https://api.heygen.com/v1/video_status.get?video_id=${job.video_id}`,
+              { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
+            );
+            const data = resp.data?.data || {};
+            return {
+              video_id: job.video_id,
+              sceneName: job.sceneName,
+              sceneIndex: job.sceneIndex,
+              status: data.status,
+              video_url: data.video_url || null,
+            };
+          } catch (e) {
+            return {
+              video_id: job.video_id,
+              sceneName: job.sceneName,
+              sceneIndex: job.sceneIndex,
+              status: 'error',
+              video_url: null,
+            };
+          }
+        })
+      );
 
-      const completed = statuses.filter(s => s.status === 'completed' && s.video_url);
-      const pending   = statuses.filter(s => s.status !== 'completed');
-      const failed    = statuses.filter(s => s.status === 'failed');
+      const completed = statuses.filter((s) => s.status === 'completed' && s.video_url);
+      const pending = statuses.filter((s) => s.status !== 'completed');
+      const failed = statuses.filter((s) => s.status === 'failed');
 
       // Detect silent placeholder renders: source_clip scenes submitted to HeyGen produce 5s silent videos.
       // Flag them in logs so we can diagnose — they will be excluded at segmentData build time (type: source_clip skipped).
-      const silentSuspects = completed.filter(s => {
+      const silentSuspects = completed.filter((s) => {
         const name = (s.sceneName || '').toUpperCase();
-        return name.includes('_CLIP') && !name.includes('_CLIP1') && !name.includes('_CLIP2') && !name.includes('_CLIP3') && !name.includes('SETUP') && !name.includes('REACTION') && !name.includes('RECAP');
+        return (
+          name.includes('_CLIP') &&
+          !name.includes('_CLIP1') &&
+          !name.includes('_CLIP2') &&
+          !name.includes('_CLIP3') &&
+          !name.includes('SETUP') &&
+          !name.includes('REACTION') &&
+          !name.includes('RECAP')
+        );
       });
       if (silentSuspects.length > 0) {
-        console.warn(`[heygen-poller:${jobId}] ⚠️  SILENT RENDER DETECTED: ${silentSuspects.map(s => s.sceneName).join(', ')} — these are source_clip scenes that should not have been submitted to HeyGen. They will be excluded from assembly. Check parseSegments_v2 or sendScriptToHeyGen for source_clip skip logic.`);
+        console.warn(
+          `[heygen-poller:${jobId}] ⚠️  SILENT RENDER DETECTED: ${silentSuspects.map((s) => s.sceneName).join(', ')} — these are source_clip scenes that should not have been submitted to HeyGen. They will be excluded from assembly. Check parseSegments_v2 or sendScriptToHeyGen for source_clip skip logic.`
+        );
       }
 
       // Persist completed/failed render statuses to DB (non-fatal)
@@ -889,13 +1042,20 @@ async function startHeyGenPoller(jobId, card) {
         const { saveHeyGenRender } = require('./lib/db');
         for (const s of statuses) {
           if (s.status === 'completed' || s.status === 'failed') {
-            saveHeyGenRender(jobId, s.video_id, s.sceneName, s.status,
-              s.status === 'completed' ? { videoUrl: s.video_url } : {});
+            saveHeyGenRender(
+              jobId,
+              s.video_id,
+              s.sceneName,
+              s.status,
+              s.status === 'completed' ? { videoUrl: s.video_url } : {}
+            );
           }
         }
-      } catch(e) {}
+      } catch (e) {}
 
-      console.log(`[heygen-poller:${jobId}] Poll ${pollCount}: ${completed.length}/${videoJobs.length} completed, ${pending.length} pending, ${failed.length} failed`);
+      console.log(
+        `[heygen-poller:${jobId}] Poll ${pollCount}: ${completed.length}/${videoJobs.length} completed, ${pending.length} pending, ${failed.length} failed`
+      );
       nrEvent('HeyGenPollTick', {
         jobId,
         pollCount,
@@ -903,7 +1063,7 @@ async function startHeyGenPoller(jobId, card) {
         pending: pending.length,
         failed: failed.length,
         total: videoJobs.length,
-        contentType: card.contentType || 'twitch'
+        contentType: card.contentType || 'twitch',
       });
       try {
         pipelineBus.emit('heygen:poll_tick', {
@@ -912,12 +1072,16 @@ async function startHeyGenPoller(jobId, card) {
           allComplete: completed.length === videoJobs.length,
           pending: pending.length,
           failed: failed.length,
-          total: videoJobs.length
+          total: videoJobs.length,
         });
-      } catch (_e) { /* non-fatal */ }
+      } catch (_e) {
+        /* non-fatal */
+      }
 
       if (failed.length > 0) {
-        console.error(`[heygen-poller:${jobId}] ❌ ${failed.length} segment(s) failed in HeyGen: ${failed.map(f => f.sceneName).join(', ')} — manual intervention required`);
+        console.error(
+          `[heygen-poller:${jobId}] ❌ ${failed.length} segment(s) failed in HeyGen: ${failed.map((f) => f.sceneName).join(', ')} — manual intervention required`
+        );
         // Don't give up entirely — HeyGen sometimes marks as failed then recovers. Keep polling.
       }
 
@@ -928,7 +1092,9 @@ async function startHeyGenPoller(jobId, card) {
       }
 
       // ── All segments completed — build segmentData and trigger assembly ──
-      console.log(`[heygen-poller:${jobId}] ✅ All ${videoJobs.length} HeyGen segments completed — building segmentData for auto-assembly`);
+      console.log(
+        `[heygen-poller:${jobId}] ✅ All ${videoJobs.length} HeyGen segments completed — building segmentData for auto-assembly`
+      );
 
       // Sort completed segments by sceneIndex to preserve script order
       const sortedAvatarSegs = [...completed].sort((a, b) => a.sceneIndex - b.sceneIndex);
@@ -956,24 +1122,28 @@ async function startHeyGenPoller(jobId, card) {
             clipIdx++;
             if (clip && (clip.url || clip.clipUrl)) {
               segmentData.push({
-                url:     clip.clipUrl || clip.url || '',
+                url: clip.clipUrl || clip.url || '',
                 pageUrl: clip.pageUrl || '',
-                label:   clip.label || scene.name || `CLIP_${clipIdx}`,
-                type:    'source_clip',
+                label: clip.label || scene.name || `CLIP_${clipIdx}`,
+                type: 'source_clip',
                 clipUrl: clip.clipUrl || clip.url || '',
-                clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
-                clipTimingFormat: clip.clipTimingFormat || 'none'
+                clipTimingTargets: Array.isArray(clip.clipTimingTargets)
+                  ? clip.clipTimingTargets
+                  : [],
+                clipTimingFormat: clip.clipTimingFormat || 'none',
               });
             }
           } else {
             // Avatar scene — find matching HeyGen render
             const sceneKey = scene.name || scene.id;
-            const avatarSeg = avatarByName[sceneKey] || Object.values(avatarByName).find(v => v.sceneName === sceneKey);
+            const avatarSeg =
+              avatarByName[sceneKey] ||
+              Object.values(avatarByName).find((v) => v.sceneName === sceneKey);
             if (avatarSeg && avatarSeg.video_url) {
               segmentData.push({
-                url:   avatarSeg.video_url,
+                url: avatarSeg.video_url,
                 label: avatarSeg.sceneName,
-                type:  'avatar'
+                type: 'avatar',
               });
               // SETUP scene: has clip insert after dialogue — insert source_clip from orderedClipUrls
               if (scene.hasClipInsert) {
@@ -981,13 +1151,15 @@ async function startHeyGenPoller(jobId, card) {
                 clipIdx++;
                 if (clip && (clip.url || clip.clipUrl)) {
                   segmentData.push({
-                    url:     clip.clipUrl || clip.url || '',
+                    url: clip.clipUrl || clip.url || '',
                     pageUrl: clip.pageUrl || '',
-                    label:   clip.label || `${sceneKey}_CLIP`,
-                    type:    'source_clip',
+                    label: clip.label || `${sceneKey}_CLIP`,
+                    type: 'source_clip',
                     clipUrl: clip.clipUrl || clip.url || '',
-                    clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
-                    clipTimingFormat: clip.clipTimingFormat || 'none'
+                    clipTimingTargets: Array.isArray(clip.clipTimingTargets)
+                      ? clip.clipTimingTargets
+                      : [],
+                    clipTimingFormat: clip.clipTimingFormat || 'none',
                   });
                 }
               }
@@ -998,85 +1170,105 @@ async function startHeyGenPoller(jobId, card) {
         // Fallback: legacy avatar-only build (no script — old jobs)
         for (const avatarSeg of sortedAvatarSegs) {
           segmentData.push({
-            url:   avatarSeg.video_url,
+            url: avatarSeg.video_url,
             label: avatarSeg.sceneName,
-            type:  'avatar'
+            type: 'avatar',
           });
         }
       }
 
       // Attach cardData to INTRO segments in segmentData (works for both script-driven and legacy paths)
       for (const avatarSeg of sortedAvatarSegs) {
-        const seg = segmentData.find(s => s.label === avatarSeg.sceneName && s.type === 'avatar');
+        const seg = segmentData.find((s) => s.label === avatarSeg.sceneName && s.type === 'avatar');
         if (!seg) continue;
 
         const _sceneName = avatarSeg.sceneName || '';
         const _ct = card.contentType || 'twitch';
         if (_ct === 'news' && /STORY(\d+)_INTRO/i.test(_sceneName)) {
           const storyMatch = _sceneName.match(/STORY(\d+)_INTRO/i);
-          const storyIdx   = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
-          const storyItem  = (card.newsItems || [])[storyIdx];
+          const storyIdx = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
+          const storyItem = (card.newsItems || [])[storyIdx];
           if (storyItem) {
             seg.cardData = {
-              title:        storyItem.title    || `Story ${storyIdx + 1}`,
-              category:     storyItem.category || 'WORLD NEWS',
-              storyId:      `story_${storyIdx + 1}`,
-              imageUrl:     storyItem.thumbnailUrl || storyItem.imageUrl || null,
+              title: storyItem.title || `Story ${storyIdx + 1}`,
+              category: storyItem.category || 'WORLD NEWS',
+              storyId: `story_${storyIdx + 1}`,
+              imageUrl: storyItem.thumbnailUrl || storyItem.imageUrl || null,
               heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
-              source:       storyItem.source || ''
+              source: storyItem.source || '',
             };
           }
         } else if (_ct === 'nba' && /GAME(\d+)[_ ].*INTRO/i.test(_sceneName)) {
           const gameMatch = _sceneName.match(/GAME(\d+)/i);
-          const gameIdx   = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
-          const rawName   = _sceneName.replace(/^GAME\d+[_ ]/i,'').replace(/[_ ]INTRO$/i,'').replace(/_/g,' ');
-          const nbaItem   = (card.nbaItems || [])[gameIdx];
+          const gameIdx = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
+          const rawName = _sceneName
+            .replace(/^GAME\d+[_ ]/i, '')
+            .replace(/[_ ]INTRO$/i, '')
+            .replace(/_/g, ' ');
+          const nbaItem = (card.nbaItems || [])[gameIdx];
           seg.cardData = {
-            title:    nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
-            matchup:  nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+            title: nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+            matchup: nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
             category: 'NBA GAME',
-            storyId:  `game_${gameIdx + 1}`,
-            gameId:   nbaItem?.gameId || null
+            storyId: `game_${gameIdx + 1}`,
+            gameId: nbaItem?.gameId || null,
           };
         } else if (_ct === 'twitch' && /[_ ]INTRO$/i.test(_sceneName)) {
-          const namePart = _sceneName.replace(/[_ ]INTRO$/i,'').replace(/_/g,' ').toLowerCase();
-          const streamer = (card.streamers || []).find(s =>
-            (s.displayName||'').toLowerCase() === namePart ||
-            (s.twitchUsername||'').toLowerCase() === namePart
-          ) || (card.streamers||[])[0];
+          const namePart = _sceneName
+            .replace(/[_ ]INTRO$/i, '')
+            .replace(/_/g, ' ')
+            .toLowerCase();
+          const streamer =
+            (card.streamers || []).find(
+              (s) =>
+                (s.displayName || '').toLowerCase() === namePart ||
+                (s.twitchUsername || '').toLowerCase() === namePart
+            ) || (card.streamers || [])[0];
           if (streamer) {
             seg.cardData = {
-              title:    streamer.displayName || namePart,
+              title: streamer.displayName || namePart,
               category: 'ON STREAM',
-              storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
-              fact:     [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0,60),
+              storyId: `streamer_${namePart.replace(/\s+/g, '_')}`,
+              fact: [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0, 60),
               imageUrl: streamer.profileImage || null,
-              twitchUsername: streamer.twitchUsername || streamer.username || null
+              twitchUsername: streamer.twitchUsername || streamer.username || null,
             };
           }
         }
       }
 
-      console.log(`[heygen-poller:${jobId}] Built segmentData: ${segmentData.length} segments (${sortedAvatarSegs.length} avatar + ${clipIdx} source_clips)`);
+      console.log(
+        `[heygen-poller:${jobId}] Built segmentData: ${segmentData.length} segments (${sortedAvatarSegs.length} avatar + ${clipIdx} source_clips)`
+      );
 
       // Update job card with completed URLs before assembly
       const updatedCard = persistedJobs[jobId] || card;
       updatedCard.heygen = updatedCard.heygen || {};
-      updatedCard.heygen.videoJobs = statuses.map(s => ({
-        ...(videoJobs.find(j => j.video_id === s.video_id) || {}),
+      updatedCard.heygen.videoJobs = statuses.map((s) => ({
+        ...(videoJobs.find((j) => j.video_id === s.video_id) || {}),
         status: s.status,
-        video_url: s.video_url
+        video_url: s.video_url,
       }));
       updatedCard.stage = 'all_sent';
       saveJobCard(jobId, updatedCard);
       if (shouldUseManualCheckpoint(updatedCard)) {
         const man = writeManualManifest(jobId, updatedCard, segmentData);
-        const { dir, manifestPath, manifest, overlaysDir, overlaysReadme, copiedPreviews, operatorGuideDir } = man;
+        const {
+          dir,
+          manifestPath,
+          manifest,
+          overlaysDir,
+          overlaysReadme,
+          copiedPreviews,
+          operatorGuideDir,
+        } = man;
         let prefetch = { logPath: path.join(dir, 'source_clip_prefetch.log') };
         try {
           prefetch = await prefetchManualSourceClips(dir, segmentData, { jobId });
         } catch (e) {
-          console.error(`[heygen-poller:${jobId}] source clip prefetch failed (non-fatal): ${e.message}`);
+          console.error(
+            `[heygen-poller:${jobId}] source clip prefetch failed (non-fatal): ${e.message}`
+          );
         }
         updatedCard.stage = 'awaiting_manual_segments';
         updatedCard.manualSegments = {
@@ -1090,48 +1282,55 @@ async function startHeyGenPoller(jobId, card) {
           overlaysReadme,
           overlayPreviewCopies: copiedPreviews || [],
           segmentCount: manifest.segments.length,
-          requestedAt: new Date().toISOString()
+          requestedAt: new Date().toISOString(),
         };
         saveJobCard(jobId, updatedCard);
         try {
           pipelineBus.emit('heygen:poll_terminal', {
             jobId,
             outcome: 'manual_checkpoint_waiting',
-            reason: 'c0_manual_segment_hold'
+            reason: 'c0_manual_segment_hold',
           });
-        } catch (_e) { /* non-fatal */ }
-        console.log(`[heygen-poller:${jobId}] 🛑 c0 manual checkpoint — ${dir} (see read_me/) — resume POST /job/${jobId}/manual-segments/resume`);
+        } catch (_e) {
+          /* non-fatal */
+        }
+        console.log(
+          `[heygen-poller:${jobId}] 🛑 c0 manual checkpoint — ${dir} (see read_me/) — resume POST /job/${jobId}/manual-segments/resume`
+        );
         unregisterPoller(jobId);
         return;
       }
 
       // ── Emit pipeline event — Gate 2 QA + assembly handled by pipelineBus listener ──
-      const segmentUrls = sortedAvatarSegs.map(s => s.video_url).filter(Boolean);
+      const segmentUrls = sortedAvatarSegs.map((s) => s.video_url).filter(Boolean);
       nrEvent('HeyGenSegmentsReady', {
         jobId,
         contentType: card.contentType || 'twitch',
         segmentCount: videoJobs.length,
-        segmentUrlCount: segmentUrls.length
+        segmentUrlCount: segmentUrls.length,
       });
       try {
         pipelineBus.emit('heygen:poll_terminal', {
           jobId,
           outcome: 'all_segments_ready',
-          reason: null
+          reason: null,
         });
-      } catch (_e) { /* non-fatal */ }
+      } catch (_e) {
+        /* non-fatal */
+      }
       pipelineBus.emit('heygen:all_complete', {
         jobId,
         contentType: card.contentType || 'twitch',
         segmentUrls,
         card: updatedCard,
-        segmentData
+        segmentData,
       });
       unregisterPoller(jobId);
-      console.log(`[heygen-poller:${jobId}] 📡 heygen:all_complete emitted — Gate 2 + assembly handed off to pipeline bus`);
+      console.log(
+        `[heygen-poller:${jobId}] 📡 heygen:all_complete emitted — Gate 2 + assembly handed off to pipeline bus`
+      );
       return; // poller's job is done — pipelineBus listener owns Gate 2 + assembly
-
-    } catch(pollErr) {
+    } catch (pollErr) {
       console.error(`[heygen-poller:${jobId}] Poll error: ${pollErr.message} — retrying in 30s`);
       setTimeout(poll, POLL_INTERVAL_MS);
     }
@@ -1168,34 +1367,47 @@ setImmediate(() => {
   });
 
   if (candidates.length > MAX_RESUME_POLLERS) {
-    console.warn(`[startup-resume] ⚠️  ${candidates.length} jobs eligible for resume — capping at ${MAX_RESUME_POLLERS} to prevent HeyGen flood. Remaining ${candidates.length - MAX_RESUME_POLLERS} jobs need manual re-trigger from dashboard.`);
+    console.warn(
+      `[startup-resume] ⚠️  ${candidates.length} jobs eligible for resume — capping at ${MAX_RESUME_POLLERS} to prevent HeyGen flood. Remaining ${candidates.length - MAX_RESUME_POLLERS} jobs need manual re-trigger from dashboard.`
+    );
   }
 
   const toResume = candidates.slice(0, MAX_RESUME_POLLERS);
 
   for (const [jobId, card] of toResume) {
     const videoJobs = card.heygen?.videoJobs || [];
-    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
+    const allComplete = videoJobs.every((vj) => vj.status === 'completed' && vj.video_url);
     if (allComplete) {
-      console.log(`[startup-resume:${jobId}] All segments already completed — emitting heygen:all_complete`);
+      console.log(
+        `[startup-resume:${jobId}] All segments already completed — emitting heygen:all_complete`
+      );
       const contentType = card.contentType || 'twitch';
       const formType = card.formType || 'compilation';
-      const segmentUrls = videoJobs.filter(vj => vj.video_url).map(vj => vj.video_url);
+      const segmentUrls = videoJobs.filter((vj) => vj.video_url).map((vj) => vj.video_url);
       setTimeout(() => {
         try {
           pipelineBus.emit('heygen:poll_terminal', {
             jobId,
             outcome: 'all_segments_ready',
-            reason: 'startup_resume_card_complete'
+            reason: 'startup_resume_card_complete',
           });
-        } catch (_e) { /* non-fatal */ }
+        } catch (_e) {
+          /* non-fatal */
+        }
         pipelineBus.emit('heygen:all_complete', {
-          jobId, contentType, formType, segmentUrls, card, segmentData: null
+          jobId,
+          contentType,
+          formType,
+          segmentUrls,
+          card,
+          segmentData: null,
         });
       }, 2000);
     } else {
-      console.log(`[startup-resume:${jobId}] Resuming HeyGen poller (${videoJobs.length} segments, not all complete)`);
-      startHeyGenPoller(jobId, card).catch(e => {
+      console.log(
+        `[startup-resume:${jobId}] Resuming HeyGen poller (${videoJobs.length} segments, not all complete)`
+      );
+      startHeyGenPoller(jobId, card).catch((e) => {
         console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
       });
     }
@@ -1203,7 +1415,9 @@ setImmediate(() => {
   }
 
   if (resumed > 0) {
-    console.log(`[startup-resume] Resumed ${resumed} in-flight job(s) (cap: ${MAX_RESUME_POLLERS})`);
+    console.log(
+      `[startup-resume] Resumed ${resumed} in-flight job(s) (cap: ${MAX_RESUME_POLLERS})`
+    );
   }
 
   // ── Resume script_ready jobs — Gate 1 passed but HeyGen not yet submitted ──
@@ -1211,7 +1425,7 @@ setImmediate(() => {
   // between Gate 1 pass and HeyGen submission (e.g. HeyGen timeout, process kill).
   // Jobs reach script_ready via rollback (all_sent → script_ready clears video IDs).
   // Cap at MAX_RESUME_POLLERS to match all_sent resume and avoid HeyGen flood.
-  const scriptReadyCandidates = Object.values(persistedJobs).filter(card => {
+  const scriptReadyCandidates = Object.values(persistedJobs).filter((card) => {
     if ((card.status || '') === 'dismissed') return false;
     const stage = card.stage || inferJobStage(card);
     if (stage !== 'script_ready') return false;
@@ -1225,47 +1439,61 @@ setImmediate(() => {
 
   if (scriptReadyCandidates.length > 0) {
     const MAX_SCRIPT_READY_RESUME = MAX_RESUME_POLLERS;
-    console.log(`[startup-resume] ${scriptReadyCandidates.length} script_ready job(s) found — auto-sending to HeyGen (cap: ${MAX_SCRIPT_READY_RESUME})`);
+    console.log(
+      `[startup-resume] ${scriptReadyCandidates.length} script_ready job(s) found — auto-sending to HeyGen (cap: ${MAX_SCRIPT_READY_RESUME})`
+    );
     const toResumeScriptReady = scriptReadyCandidates.slice(0, MAX_SCRIPT_READY_RESUME);
 
     // Use async IIFE — setImmediate callback is not async so await requires this wrapper
-    (async () => { for (const card of toResumeScriptReady) {
-      const jobId = card.jobId || card.id || card.scriptJobId;
-      if (!jobId) { console.warn('[startup-resume:script_ready] Card has no jobId — skipping'); continue; }
-      const contentType = card.contentType || 'twitch';
-      const script = card.script?.raw || (typeof card.script === 'string' ? card.script : null);
-      if (!script) { console.warn(`[startup-resume:${jobId}] No script found in card — skipping`); continue; }
-
-      try {
-        const format = contentType.includes('-short') ? 'portrait' : 'landscape';
-        console.log(`[startup-resume:${jobId}] Sending to HeyGen (${contentType}, ${format})`);
-        const heygenResult = await sendScriptToHeyGen(script, { contentType, format, jobId });
-        if (heygenResult?.videoJobs?.length) {
-          card.heygen = heygenResult;
-          const useManualImmediate = useC0ImmediateManualHold(card);
-          if (useManualImmediate) {
-            const prep = await prepareC0ManualHoldAfterHeyGen(jobId, card);
-            card.stage = 'awaiting_manual_segments';
-            card.manualSegments = prep.manualSegments;
-            saveJobCard(jobId, card);
-            console.log(
-              `[startup-resume:${jobId}] ✅ c0 immediate manual hold (${heygenResult.videoJobs.length} scenes sent, no poll) — ${prep.manualSegments.manualDir}`
-            );
-          } else {
-            card.stage = 'all_sent';
-            saveJobCard(jobId, card);
-            console.log(`[startup-resume:${jobId}] ✅ Sent ${heygenResult.videoJobs.length} scenes to HeyGen`);
-            startHeyGenPoller(jobId, card).catch(e => {
-              console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
-            });
-          }
-        } else {
-          console.warn(`[startup-resume:${jobId}] HeyGen returned no videoJobs — skipping poller start`);
+    (async () => {
+      for (const card of toResumeScriptReady) {
+        const jobId = card.jobId || card.id || card.scriptJobId;
+        if (!jobId) {
+          console.warn('[startup-resume:script_ready] Card has no jobId — skipping');
+          continue;
         }
-      } catch(e) {
-        console.error(`[startup-resume:${jobId}] HeyGen send failed: ${e.message}`);
+        const contentType = card.contentType || 'twitch';
+        const script = card.script?.raw || (typeof card.script === 'string' ? card.script : null);
+        if (!script) {
+          console.warn(`[startup-resume:${jobId}] No script found in card — skipping`);
+          continue;
+        }
+
+        try {
+          const format = contentType.includes('-short') ? 'portrait' : 'landscape';
+          console.log(`[startup-resume:${jobId}] Sending to HeyGen (${contentType}, ${format})`);
+          const heygenResult = await sendScriptToHeyGen(script, { contentType, format, jobId });
+          if (heygenResult?.videoJobs?.length) {
+            card.heygen = heygenResult;
+            const useManualImmediate = useC0ImmediateManualHold(card);
+            if (useManualImmediate) {
+              const prep = await prepareC0ManualHoldAfterHeyGen(jobId, card);
+              card.stage = 'awaiting_manual_segments';
+              card.manualSegments = prep.manualSegments;
+              saveJobCard(jobId, card);
+              console.log(
+                `[startup-resume:${jobId}] ✅ c0 immediate manual hold (${heygenResult.videoJobs.length} scenes sent, no poll) — ${prep.manualSegments.manualDir}`
+              );
+            } else {
+              card.stage = 'all_sent';
+              saveJobCard(jobId, card);
+              console.log(
+                `[startup-resume:${jobId}] ✅ Sent ${heygenResult.videoJobs.length} scenes to HeyGen`
+              );
+              startHeyGenPoller(jobId, card).catch((e) => {
+                console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
+              });
+            }
+          } else {
+            console.warn(
+              `[startup-resume:${jobId}] HeyGen returned no videoJobs — skipping poller start`
+            );
+          }
+        } catch (e) {
+          console.error(`[startup-resume:${jobId}] HeyGen send failed: ${e.message}`);
+        }
       }
-    } })().catch(e => console.error('[startup-resume:script_ready] Async error:', e.message));
+    })().catch((e) => console.error('[startup-resume:script_ready] Async error:', e.message));
   }
 });
 
@@ -1273,327 +1501,426 @@ setImmediate(() => {
 // The HeyGen poller emits this when all segments are done.
 // This listener owns Gate 2 QA + logging + assembly trigger + assembly completion polling.
 // Dashboard is view-only — it reads persistedJobs, never drives this flow.
-pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
-  // Concurrent job isolation guard: verify the card in persistedJobs matches the event's jobId
-  // and contentType. If a concurrent job mutated persistedJobs[jobId] with the wrong contentType,
-  // this guard aborts before assembly uses mismatched context (e.g. long-form assembled as short-form).
-  const _liveCard = persistedJobs[jobId];
-  if (_liveCard && _liveCard.contentType && _liveCard.contentType !== contentType) {
-    logger.error({ jobId, eventContentType: contentType, cardContentType: _liveCard.contentType },
-      'heygen:all_complete — contentType mismatch between event and persistedJobs card. Aborting assembly to prevent cross-job contamination.');
-    return;
-  }
-
-  // Rebuild segmentData from card if null (e.g. emitted by startup resume after server restart)
-  let segmentData = rawSegmentData;
-  if (!segmentData) {
-    const segCard = _liveCard || card;
-    if (shouldUseManualCheckpoint(segCard) && segCard.manualSegments?.holdKind === 'immediate') {
-      const { buildManualHoldSegmentData } = require('./lib/manual_segment_workflow');
-      segmentData = buildManualHoldSegmentData(segCard);
-      const avatarCount = segmentData.filter(s => s.type === 'avatar').length;
-      const clipCount = segmentData.filter(s => s.type === 'source_clip').length;
-      logger.warn(
-        { jobId, avatarCount, clipCount },
-        'heygen:all_complete — segmentData from c0 immediate manual template (no HeyGen avatar URLs)'
+pipelineBus.on(
+  'heygen:all_complete',
+  async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
+    // Concurrent job isolation guard: verify the card in persistedJobs matches the event's jobId
+    // and contentType. If a concurrent job mutated persistedJobs[jobId] with the wrong contentType,
+    // this guard aborts before assembly uses mismatched context (e.g. long-form assembled as short-form).
+    const _liveCard = persistedJobs[jobId];
+    if (_liveCard && _liveCard.contentType && _liveCard.contentType !== contentType) {
+      logger.error(
+        { jobId, eventContentType: contentType, cardContentType: _liveCard.contentType },
+        'heygen:all_complete — contentType mismatch between event and persistedJobs card. Aborting assembly to prevent cross-job contamination.'
       );
-    } else {
-    const videoJobs = segCard.heygen?.videoJobs || [];
-    const sourceClips = segCard.sourceClipSegments || [];
-
-    // Build avatar lookup by sceneName for fast access
-    const avatarByName = {};
-    for (const vj of videoJobs) {
-      if (vj.status === 'completed' && vj.video_url) {
-        avatarByName[vj.sceneName] = vj;
-      }
+      return;
     }
 
-    // Use the script's scene order as the merge template so clips land in the right positions
-    const scriptScenes = segCard.script?.scenes || [];
-    if (scriptScenes.length > 0) {
-      let clipIdx = 0;
-      segmentData = [];
-      for (const scene of scriptScenes) {
-        if (scene.type === 'source_clip') {
-          // Explicit source_clip scenes (news, short-form)
-          const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
-          if (clip) {
-            segmentData.push({
-              type: 'source_clip',
-              url: clip.clipUrl || clip.url || '',
-              label: clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
-              pageUrl: clip.pageUrl || '',
-              clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
-              clipTimingFormat: clip.clipTimingFormat || 'none',
-              storyIndex: clip.storyIndex ?? clipIdx,
-              sceneId: scene.name || scene.id
-            });
-          }
-          clipIdx++;
-        } else if (scene.type === 'avatar') {
-          // Avatar scene
-          const sceneKey = scene.name || scene.id;
-          const vj = avatarByName[sceneKey] ||
-            Object.values(avatarByName).find(v => v.sceneName === sceneKey);
-          if (vj) {
-            const seg = { type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex };
-            // Attach cardData for INTRO segments — chrome overlay reads this for flag + sidebar
-            if (segCard.contentType === 'news' && /STORY(\d+)_INTRO/i.test(vj.sceneName)) {
-              const storyMatch = vj.sceneName.match(/STORY(\d+)_INTRO/i);
-              const storyIdx = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
-              const storyItem = (segCard.newsItems || [])[storyIdx];
-              if (storyItem) {
-                seg.cardData = {
-                  title:        storyItem.title    || `Story ${storyIdx + 1}`,
-                  category:     storyItem.category || 'WORLD NEWS',
-                  storyId:      `story_${storyIdx + 1}`,
-                  imageUrl:     storyItem.thumbnailUrl || storyItem.imageUrl || null,
-                  heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
-                  source:       storyItem.source || ''
-                };
-              }
-            } else if (segCard.contentType === 'nba' && /GAME(\d+)[_ ].*INTRO/i.test(vj.sceneName)) {
-              // NBA: attach game matchup data to INTRO segments for flag + sidebar
-              const gameMatch = vj.sceneName.match(/GAME(\d+)/i);
-              const gameIdx = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
-              // Extract matchup from scene name: GAME1_CHARLOTTE_HORNETS_ORLANDO_MAGIC_INTRO
-              const rawName = vj.sceneName.replace(/^GAME\d+[_ ]/i, '').replace(/[_ ]INTRO$/i, '').replace(/_/g, ' ');
-              const nbaItem = (segCard.nbaItems || [])[gameIdx];
-              seg.cardData = {
-                title:   nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
-                matchup: nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
-                category: 'NBA GAME',
-                storyId:  `game_${gameIdx + 1}`,
-                gameId:   nbaItem?.gameId || null
-              };
-            } else if (segCard.contentType === 'twitch' && /[_ ]INTRO$/i.test(vj.sceneName)) {
-              // Twitch: attach streamer data to INTRO segments for sidebar
-              const namePart = vj.sceneName.replace(/[_ ]INTRO$/i, '').replace(/_/g, ' ').toLowerCase();
-              const streamer = (segCard.streamers || []).find(s =>
-                (s.displayName || '').toLowerCase() === namePart ||
-                (s.twitchUsername || '').toLowerCase() === namePart
-              ) || (segCard.streamers || [])[0];
-              if (streamer) {
-                seg.cardData = {
-                  title:    streamer.displayName || namePart,
-                  category: 'ON STREAM',
-                  storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
-                  fact:     [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0, 60),
-                  imageUrl: streamer.profileImage || null,
-                  twitchUsername: streamer.twitchUsername || streamer.username || null
-                };
-              }
-            }
-            segmentData.push(seg);
+    // Rebuild segmentData from card if null (e.g. emitted by startup resume after server restart)
+    let segmentData = rawSegmentData;
+    if (!segmentData) {
+      const segCard = _liveCard || card;
+      if (shouldUseManualCheckpoint(segCard) && segCard.manualSegments?.holdKind === 'immediate') {
+        const { buildManualHoldSegmentData } = require('./lib/manual_segment_workflow');
+        segmentData = buildManualHoldSegmentData(segCard);
+        const avatarCount = segmentData.filter((s) => s.type === 'avatar').length;
+        const clipCount = segmentData.filter((s) => s.type === 'source_clip').length;
+        logger.warn(
+          { jobId, avatarCount, clipCount },
+          'heygen:all_complete — segmentData from c0 immediate manual template (no HeyGen avatar URLs)'
+        );
+      } else {
+        const videoJobs = segCard.heygen?.videoJobs || [];
+        const sourceClips = segCard.sourceClipSegments || [];
 
-            // SETUP-style clip insert (NBA/Twitch long-form): avatar + source_clip
-            if (scene.hasClipInsert) {
+        // Build avatar lookup by sceneName for fast access
+        const avatarByName = {};
+        for (const vj of videoJobs) {
+          if (vj.status === 'completed' && vj.video_url) {
+            avatarByName[vj.sceneName] = vj;
+          }
+        }
+
+        // Use the script's scene order as the merge template so clips land in the right positions
+        const scriptScenes = segCard.script?.scenes || [];
+        if (scriptScenes.length > 0) {
+          let clipIdx = 0;
+          segmentData = [];
+          for (const scene of scriptScenes) {
+            if (scene.type === 'source_clip') {
+              // Explicit source_clip scenes (news, short-form)
               const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
               if (clip) {
                 segmentData.push({
                   type: 'source_clip',
                   url: clip.clipUrl || clip.url || '',
-                  label: clip.label || `${sceneKey}_CLIP`,
+                  label: clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
                   pageUrl: clip.pageUrl || '',
-                  clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+                  clipTimingTargets: Array.isArray(clip.clipTimingTargets)
+                    ? clip.clipTimingTargets
+                    : [],
                   clipTimingFormat: clip.clipTimingFormat || 'none',
                   storyIndex: clip.storyIndex ?? clipIdx,
-                  sceneId: scene.name || scene.id
+                  sceneId: scene.name || scene.id,
                 });
               }
               clipIdx++;
+            } else if (scene.type === 'avatar') {
+              // Avatar scene
+              const sceneKey = scene.name || scene.id;
+              const vj =
+                avatarByName[sceneKey] ||
+                Object.values(avatarByName).find((v) => v.sceneName === sceneKey);
+              if (vj) {
+                const seg = {
+                  type: 'avatar',
+                  url: vj.video_url,
+                  label: vj.sceneName,
+                  sceneIndex: vj.sceneIndex,
+                };
+                // Attach cardData for INTRO segments — chrome overlay reads this for flag + sidebar
+                if (segCard.contentType === 'news' && /STORY(\d+)_INTRO/i.test(vj.sceneName)) {
+                  const storyMatch = vj.sceneName.match(/STORY(\d+)_INTRO/i);
+                  const storyIdx = storyMatch ? parseInt(storyMatch[1], 10) - 1 : -1;
+                  const storyItem = (segCard.newsItems || [])[storyIdx];
+                  if (storyItem) {
+                    seg.cardData = {
+                      title: storyItem.title || `Story ${storyIdx + 1}`,
+                      category: storyItem.category || 'WORLD NEWS',
+                      storyId: `story_${storyIdx + 1}`,
+                      imageUrl: storyItem.thumbnailUrl || storyItem.imageUrl || null,
+                      heroImageUrl: storyItem.heroImageUrl || storyItem.thumbnailUrl || null,
+                      source: storyItem.source || '',
+                    };
+                  }
+                } else if (
+                  segCard.contentType === 'nba' &&
+                  /GAME(\d+)[_ ].*INTRO/i.test(vj.sceneName)
+                ) {
+                  // NBA: attach game matchup data to INTRO segments for flag + sidebar
+                  const gameMatch = vj.sceneName.match(/GAME(\d+)/i);
+                  const gameIdx = gameMatch ? parseInt(gameMatch[1], 10) - 1 : 0;
+                  // Extract matchup from scene name: GAME1_CHARLOTTE_HORNETS_ORLANDO_MAGIC_INTRO
+                  const rawName = vj.sceneName
+                    .replace(/^GAME\d+[_ ]/i, '')
+                    .replace(/[_ ]INTRO$/i, '')
+                    .replace(/_/g, ' ');
+                  const nbaItem = (segCard.nbaItems || [])[gameIdx];
+                  seg.cardData = {
+                    title: nbaItem?.title || nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+                    matchup: nbaItem?.matchup || rawName || `Game ${gameIdx + 1}`,
+                    category: 'NBA GAME',
+                    storyId: `game_${gameIdx + 1}`,
+                    gameId: nbaItem?.gameId || null,
+                  };
+                } else if (segCard.contentType === 'twitch' && /[_ ]INTRO$/i.test(vj.sceneName)) {
+                  // Twitch: attach streamer data to INTRO segments for sidebar
+                  const namePart = vj.sceneName
+                    .replace(/[_ ]INTRO$/i, '')
+                    .replace(/_/g, ' ')
+                    .toLowerCase();
+                  const streamer =
+                    (segCard.streamers || []).find(
+                      (s) =>
+                        (s.displayName || '').toLowerCase() === namePart ||
+                        (s.twitchUsername || '').toLowerCase() === namePart
+                    ) || (segCard.streamers || [])[0];
+                  if (streamer) {
+                    seg.cardData = {
+                      title: streamer.displayName || namePart,
+                      category: 'ON STREAM',
+                      storyId: `streamer_${namePart.replace(/\s+/g, '_')}`,
+                      fact: [streamer.origin, streamer.fact]
+                        .filter(Boolean)
+                        .join(' · ')
+                        .slice(0, 60),
+                      imageUrl: streamer.profileImage || null,
+                      twitchUsername: streamer.twitchUsername || streamer.username || null,
+                    };
+                  }
+                }
+                segmentData.push(seg);
+
+                // SETUP-style clip insert (NBA/Twitch long-form): avatar + source_clip
+                if (scene.hasClipInsert) {
+                  const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
+                  if (clip) {
+                    segmentData.push({
+                      type: 'source_clip',
+                      url: clip.clipUrl || clip.url || '',
+                      label: clip.label || `${sceneKey}_CLIP`,
+                      pageUrl: clip.pageUrl || '',
+                      clipTimingTargets: Array.isArray(clip.clipTimingTargets)
+                        ? clip.clipTimingTargets
+                        : [],
+                      clipTimingFormat: clip.clipTimingFormat || 'none',
+                      storyIndex: clip.storyIndex ?? clipIdx,
+                      sceneId: scene.name || scene.id,
+                    });
+                  }
+                  clipIdx++;
+                }
+              }
             }
           }
+        } else {
+          // No script scenes — fall back to avatar-only in sceneIndex order
+          segmentData = videoJobs
+            .filter((vj) => vj.status === 'completed' && vj.video_url)
+            .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0))
+            .map((vj) => ({
+              type: 'avatar',
+              url: vj.video_url,
+              label: vj.sceneName,
+              sceneIndex: vj.sceneIndex,
+            }));
         }
+
+        const avatarCount = segmentData.filter((s) => s.type === 'avatar').length;
+        const clipCount = segmentData.filter((s) => s.type === 'source_clip').length;
+        logger.warn(
+          { jobId, avatarCount, clipCount },
+          'heygen:all_complete — segmentData rebuilt from card (startup resume)'
+        );
       }
-    } else {
-      // No script scenes — fall back to avatar-only in sceneIndex order
-      segmentData = videoJobs
-        .filter(vj => vj.status === 'completed' && vj.video_url)
-        .sort((a, b) => (a.sceneIndex ?? 0) - (b.sceneIndex ?? 0))
-        .map(vj => ({ type: 'avatar', url: vj.video_url, label: vj.sceneName, sceneIndex: vj.sceneIndex }));
     }
 
-    const avatarCount = segmentData.filter(s => s.type === 'avatar').length;
-    const clipCount   = segmentData.filter(s => s.type === 'source_clip').length;
-    logger.warn({ jobId, avatarCount, clipCount }, 'heygen:all_complete — segmentData rebuilt from card (startup resume)');
+    {
+      const manualApplied = applyManualOverrides(jobId, segmentData || []);
+      segmentData = manualApplied.segmentData;
+      if (manualApplied.overrideCount > 0) {
+        logger.info(
+          { jobId, overrideCount: manualApplied.overrideCount, manualDir: manualApplied.dir },
+          'heygen:all_complete — using manual segment overrides from /tmp'
+        );
+      }
     }
-  }
 
-  {
-    const manualApplied = applyManualOverrides(jobId, segmentData || []);
-    segmentData = manualApplied.segmentData;
-    if (manualApplied.overrideCount > 0) {
-      logger.info(
-        { jobId, overrideCount: manualApplied.overrideCount, manualDir: manualApplied.dir },
-        'heygen:all_complete — using manual segment overrides from /tmp'
-      );
+    logger.info(
+      { jobId, contentType, segmentCount: segmentUrls.length },
+      'heygen:all_complete — running Gate 2'
+    );
+    nrEvent('PipelineHeyGenComplete', {
+      jobId,
+      contentType,
+      customerId: (card && card.customerId) || (_liveCard && _liveCard.customerId) || 'c0',
+      segmentUrlCount: (segmentUrls || []).length,
+      scriptJobId: card.scriptJobId || null,
+      jobSpecId: card.jobSpecId || null,
+    });
+
+    // ── Gate 2: Handled inside assembly.js after segments are downloaded ─────
+    // Removed pre-assembly Gate 2 here — segmentUrls are HeyGen video IDs/URLs,
+    // not local file paths. fs.existsSync(url) always returns false → score 0.
+    // Gate 2 (new gate worker) runs inside handleAssemble() after downloads complete
+    // where it has actual local file paths to ffprobe and analyze.
+    logger.info(
+      { jobId },
+      'heygen:all_complete — skipping pre-assembly Gate 2, assembly.js owns it'
+    );
+
+    // ── Pre-warm ticker cache (long-form only) ────────────────────────────────
+    if (!contentType.includes('short')) {
+      const tickerContentType = contentType.replace(/-short$/, '');
+      logger.info({ jobId, tickerContentType }, 'Pre-warming ticker cache');
+      try {
+        const tickerPath = await captureTicker(tickerContentType);
+        if (tickerPath) logger.info({ jobId, tickerPath }, 'Ticker pre-warmed');
+        else
+          logger.warn(
+            { jobId },
+            'Ticker pre-warm returned null — assembly continues without ticker'
+          );
+      } catch (e) {
+        logger.warn({ jobId, err: e.message }, 'Ticker pre-warm error — continuing');
+      }
     }
-  }
 
-  logger.info({ jobId, contentType, segmentCount: segmentUrls.length }, 'heygen:all_complete — running Gate 2');
-  nrEvent('PipelineHeyGenComplete', {
-    jobId,
-    contentType,
-    customerId: (card && card.customerId) || (_liveCard && _liveCard.customerId) || 'c0',
-    segmentUrlCount: (segmentUrls || []).length,
-    scriptJobId: card.scriptJobId || null,
-    jobSpecId: card.jobSpecId || null
-  });
+    // ── Trigger assembly ──────────────────────────────────────────────────────
+    const PORT = process.env.PORT || 3000;
+    // Assembly ID derived from jobId — survives retries, keeps all gate results linked
+    // Retry attempts append _r2, _r3 etc. First attempt uses clean asm_{jobId}
+    const _existingAsmId = (persistedJobs[jobId] || card).assemblyId;
+    const _retryCount = (persistedJobs[jobId] || card)._assemblyRetryCount || 0;
+    const assemblyId =
+      _existingAsmId && _retryCount === 0
+        ? _existingAsmId // reuse on first auto-trigger after server restart
+        : `asm_${jobId}${_retryCount > 0 ? `_r${_retryCount + 1}` : ''}`;
+    const format = contentType.includes('-short') ? 'portrait' : 'landscape';
+    const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
+    const _dateLabel = _cardDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const _avatarCount =
+      (segmentData || []).filter((s) => s.type === 'avatar').length || segmentUrls.length;
+    const _clipCount = (segmentData || []).filter((s) => s.type === 'source_clip').length;
+    const _humanTitle = `${contentType.toUpperCase()} ${_dateLabel} (${_avatarCount} avatar + ${_clipCount} clips)`;
 
-  // ── Gate 2: Handled inside assembly.js after segments are downloaded ─────
-  // Removed pre-assembly Gate 2 here — segmentUrls are HeyGen video IDs/URLs,
-  // not local file paths. fs.existsSync(url) always returns false → score 0.
-  // Gate 2 (new gate worker) runs inside handleAssemble() after downloads complete
-  // where it has actual local file paths to ffprobe and analyze.
-  logger.info({ jobId }, 'heygen:all_complete — skipping pre-assembly Gate 2, assembly.js owns it');
-
-  // ── Pre-warm ticker cache (long-form only) ────────────────────────────────
-  if (!contentType.includes('short')) {
-    const tickerContentType = contentType.replace(/-short$/, '');
-    logger.info({ jobId, tickerContentType }, 'Pre-warming ticker cache');
     try {
-      const tickerPath = await captureTicker(tickerContentType);
-      if (tickerPath) logger.info({ jobId, tickerPath }, 'Ticker pre-warmed');
-      else logger.warn({ jobId }, 'Ticker pre-warm returned null — assembly continues without ticker');
-    } catch(e) {
-      logger.warn({ jobId, err: e.message }, 'Ticker pre-warm error — continuing');
+      await axios.post(
+        `http://localhost:${PORT}/assemble`,
+        {
+          segments: (segmentData || []).map((s) => s.url),
+          segmentData: segmentData || [],
+          labels: (segmentData || []).map((s) => s.label),
+          transition: 'crossfade',
+          format: contentType.includes('-short') ? 'portrait' : 'mp4',
+          assemblyId,
+          jobTitle: _humanTitle,
+          contentType,
+          jobId,
+          jobSpecId: card.jobSpecId || null, // semantic job spec ID for gate workers to load full spec
+          sceneTextMap: card.heygen?.sceneTextMap || null,
+          fullScript: card.script && card.script.raw ? card.script.raw : card.script || null,
+          streamers: card.streamers || [],
+          expectedClips: card.expectedClips ?? 0, // Pipeline contract — Gate 3 asserts this
+          designSpec: card.designSpec || null,
+          nbaItems: card.nbaItems || [],
+          captionText: card.captionText || null,
+          captionStyle: card.captionStyle || null,
+        },
+        { timeout: 10000 }
+      );
+
+      logger.info(
+        { jobId, assemblyId },
+        'Auto-assembly triggered — Gate 3 → Drive will run automatically'
+      );
+      nrEvent('AssemblyTriggered', {
+        jobId,
+        assemblyId,
+        contentType,
+        segmentCount: (segmentData || []).length,
+        customerId: card.customerId || 'c0',
+      });
+      pipelineBus.emit('assembly:triggered', { jobId, assemblyId });
+
+      const cardNow = persistedJobs[jobId] || card;
+      cardNow.assemblyId = assemblyId;
+      cardNow.autoAssembledAt = new Date().toISOString();
+      cardNow._assemblyRetryCount = (_retryCount || 0) + 1;
+      saveJobCard(jobId, cardNow);
+
+      // ── Poll assembly completion → persist final state ────────────────────
+      const ASM_POLL_INTERVAL = 15000;
+      const ASM_POLL_MAX = 120; // 30 min
+      let asmPollCount = 0;
+      const pollAssemblyCompletion = () => {
+        asmPollCount++;
+        const asmJob = assemblyJobs[assemblyId];
+        if (!asmJob) {
+          if (asmPollCount < ASM_POLL_MAX) setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+          return;
+        }
+        const isDone =
+          asmJob.status === 'done' ||
+          asmJob.status === 'manual_review' ||
+          asmJob.status === 'failed';
+        if (!isDone && asmPollCount < ASM_POLL_MAX) {
+          setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+          return;
+        }
+
+        const finalCard = persistedJobs[jobId] || cardNow;
+        if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
+          finalCard.assembledAt = new Date().toISOString();
+          finalCard.stage = 'assembled';
+          if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
+          // Use driveUrl if available; fall back to local download URL so stage
+          // reaches 'assembled' and Approve button appears even when Drive is down.
+          const _resolvedUrl = asmJob.driveUrl || asmJob.localUrl || null;
+          if (_resolvedUrl) finalCard.finalUrl = _resolvedUrl;
+          // Gate 3 = assembly QA (Gemini watches the assembled video)
+          if (asmJob.qaScore !== undefined) {
+            finalCard.gate3 = {
+              score: asmJob.qaScore,
+              outcome: asmJob.qaOutcome || 'manual_review',
+              report: asmJob.qaReport || '',
+              checkedAt: new Date().toISOString(),
+            };
+            if (asmJob.qaOutcome === 'pass' || asmJob.qaOutcome === 'manual_review') {
+              finalCard.stage = 'assembled';
+            }
+          }
+          if (asmJob.publishResult) {
+            finalCard.publishRecord = {
+              publishedAt: new Date().toISOString(),
+              ...asmJob.publishResult,
+            };
+            finalCard.stage = 'published';
+          }
+          saveJobCard(jobId, finalCard);
+          logger.info(
+            {
+              jobId,
+              stage: finalCard.stage,
+              gate3Score: asmJob.qaScore || null,
+              driveUrl: asmJob.driveUrl || null,
+            },
+            'Assembly completion persisted'
+          );
+          const _cid = finalCard.customerId || 'c0';
+          const _durMs =
+            asmJob.duration != null ? Math.round(Number(asmJob.duration) * 1000) : null;
+          nrAssemblyComplete(
+            jobId,
+            _cid,
+            contentType,
+            assemblyId,
+            _durMs,
+            asmJob.sizeMB ?? null,
+            asmJob.qaScore ?? null
+          );
+          nrEvent('PipelineRunTerminal', {
+            jobId,
+            assemblyId,
+            contentType,
+            customerId: _cid,
+            stage: finalCard.stage,
+            gate3Score: asmJob.qaScore ?? null,
+            gate3Outcome: asmJob.qaOutcome || null,
+            hasDriveUrl: !!(asmJob.driveUrl || finalCard.finalUrl),
+          });
+          pipelineBus.emit('gate3:complete', {
+            jobId,
+            score: asmJob.qaScore,
+            outcome: asmJob.qaOutcome,
+          });
+        } else {
+          logger.warn(
+            { jobId, asmStatus: asmJob.status },
+            'Assembly ended without done/manual_review — card not updated'
+          );
+          nrEvent('AssemblyPersistSkipped', {
+            jobId,
+            assemblyId,
+            contentType,
+            asmStatus: asmJob.status || 'unknown',
+            error: (asmJob.error || '').slice(0, 500),
+          });
+        }
+      };
+      setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+    } catch (assembleErr) {
+      logger.error(
+        { jobId, err: assembleErr.message },
+        'Auto-assembly POST failed — manual ASSEMBLE required'
+      );
+      nrEvent('AssemblyTriggerFailed', {
+        jobId,
+        contentType,
+        customerId: (card && card.customerId) || 'c0',
+        error:
+          assembleErr && assembleErr.message
+            ? String(assembleErr.message).slice(0, 500)
+            : 'unknown',
+      });
     }
   }
-
-  // ── Trigger assembly ──────────────────────────────────────────────────────
-  const PORT = process.env.PORT || 3000;
-  // Assembly ID derived from jobId — survives retries, keeps all gate results linked
-  // Retry attempts append _r2, _r3 etc. First attempt uses clean asm_{jobId}
-  const _existingAsmId = (persistedJobs[jobId] || card).assemblyId;
-  const _retryCount = (persistedJobs[jobId] || card)._assemblyRetryCount || 0;
-  const assemblyId = _existingAsmId && _retryCount === 0
-    ? _existingAsmId  // reuse on first auto-trigger after server restart
-    : `asm_${jobId}${_retryCount > 0 ? `_r${_retryCount + 1}` : ''}`;
-  const format = contentType.includes('-short') ? 'portrait' : 'landscape';
-  const _cardDate = card.savedAt ? new Date(card.savedAt) : new Date();
-  const _dateLabel = _cardDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const _avatarCount = (segmentData || []).filter(s => s.type === 'avatar').length || segmentUrls.length;
-  const _clipCount   = (segmentData || []).filter(s => s.type === 'source_clip').length;
-  const _humanTitle  = `${contentType.toUpperCase()} ${_dateLabel} (${_avatarCount} avatar + ${_clipCount} clips)`;
-
-  try {
-    await axios.post(`http://localhost:${PORT}/assemble`, {
-      segments:     (segmentData || []).map(s => s.url),
-      segmentData:  segmentData || [],
-      labels:       (segmentData || []).map(s => s.label),
-      transition:   'crossfade',
-      format:       contentType.includes('-short') ? 'portrait' : 'mp4',
-      assemblyId,
-      jobTitle:     _humanTitle,
-      contentType,
-      jobId,
-      jobSpecId:    card.jobSpecId || null,  // semantic job spec ID for gate workers to load full spec
-      sceneTextMap:  card.heygen?.sceneTextMap || null,
-      fullScript:    (card.script && card.script.raw) ? card.script.raw : (card.script || null),
-      streamers:     card.streamers || [],
-      expectedClips: card.expectedClips ?? 0,  // Pipeline contract — Gate 3 asserts this
-      designSpec:    card.designSpec || null,
-      nbaItems:      card.nbaItems || [],
-      captionText:   card.captionText || null,
-      captionStyle:  card.captionStyle || null
-    }, { timeout: 10000 });
-
-    logger.info({ jobId, assemblyId }, 'Auto-assembly triggered — Gate 3 → Drive will run automatically');
-    nrEvent('AssemblyTriggered', {
-      jobId,
-      assemblyId,
-      contentType,
-      segmentCount: (segmentData || []).length,
-      customerId: (card.customerId || 'c0')
-    });
-    pipelineBus.emit('assembly:triggered', { jobId, assemblyId });
-
-    const cardNow = persistedJobs[jobId] || card;
-    cardNow.assemblyId = assemblyId;
-    cardNow.autoAssembledAt = new Date().toISOString();
-    cardNow._assemblyRetryCount = (_retryCount || 0) + 1;
-    saveJobCard(jobId, cardNow);
-
-    // ── Poll assembly completion → persist final state ────────────────────
-    const ASM_POLL_INTERVAL = 15000;
-    const ASM_POLL_MAX = 120; // 30 min
-    let asmPollCount = 0;
-    const pollAssemblyCompletion = () => {
-      asmPollCount++;
-      const asmJob = assemblyJobs[assemblyId];
-      if (!asmJob) {
-        if (asmPollCount < ASM_POLL_MAX) setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-        return;
-      }
-      const isDone = asmJob.status === 'done' || asmJob.status === 'manual_review' || asmJob.status === 'failed';
-      if (!isDone && asmPollCount < ASM_POLL_MAX) { setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL); return; }
-
-      const finalCard = persistedJobs[jobId] || cardNow;
-      if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
-        finalCard.assembledAt = new Date().toISOString();
-        finalCard.stage = 'assembled';
-        if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
-        // Use driveUrl if available; fall back to local download URL so stage
-        // reaches 'assembled' and Approve button appears even when Drive is down.
-        const _resolvedUrl = asmJob.driveUrl || asmJob.localUrl || null;
-        if (_resolvedUrl) finalCard.finalUrl = _resolvedUrl;
-        // Gate 3 = assembly QA (Gemini watches the assembled video)
-        if (asmJob.qaScore !== undefined) {
-          finalCard.gate3 = {
-            score:   asmJob.qaScore,
-            outcome: asmJob.qaOutcome || 'manual_review',
-            report:  asmJob.qaReport  || '',
-            checkedAt: new Date().toISOString()
-          };
-          if (asmJob.qaOutcome === 'pass' || asmJob.qaOutcome === 'manual_review') {
-            finalCard.stage = 'assembled';
-          }
-        }
-        if (asmJob.publishResult) {
-          finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
-          finalCard.stage = 'published';
-        }
-        saveJobCard(jobId, finalCard);
-        logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
-        const _cid = finalCard.customerId || 'c0';
-        const _durMs = asmJob.duration != null ? Math.round(Number(asmJob.duration) * 1000) : null;
-        nrAssemblyComplete(jobId, _cid, contentType, assemblyId, _durMs, asmJob.sizeMB ?? null, asmJob.qaScore ?? null);
-        nrEvent('PipelineRunTerminal', {
-          jobId,
-          assemblyId,
-          contentType,
-          customerId: _cid,
-          stage: finalCard.stage,
-          gate3Score: asmJob.qaScore ?? null,
-          gate3Outcome: asmJob.qaOutcome || null,
-          hasDriveUrl: !!(asmJob.driveUrl || finalCard.finalUrl)
-        });
-        pipelineBus.emit('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
-      } else {
-        logger.warn({ jobId, asmStatus: asmJob.status }, 'Assembly ended without done/manual_review — card not updated');
-        nrEvent('AssemblyPersistSkipped', {
-          jobId,
-          assemblyId,
-          contentType,
-          asmStatus: asmJob.status || 'unknown',
-          error: (asmJob.error || '').slice(0, 500)
-        });
-      }
-    };
-    setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-
-  } catch(assembleErr) {
-    logger.error({ jobId, err: assembleErr.message }, 'Auto-assembly POST failed — manual ASSEMBLE required');
-    nrEvent('AssemblyTriggerFailed', {
-      jobId,
-      contentType,
-      customerId: (card && card.customerId) || 'c0',
-      error: (assembleErr && assembleErr.message) ? String(assembleErr.message).slice(0, 500) : 'unknown'
-    });
-  }
-});
+);
 
 // Initialize Anthropic client for Claude API calls
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -1601,14 +1928,16 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // Initialize Twitch client
 const twitchClient = new TwitchClient({
   clientId: process.env.TWITCH_CLIENT_ID,
-  token: process.env.TWITCH_TOKEN
+  token: process.env.TWITCH_TOKEN,
 });
 
 // Security headers via helmet
-app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for local dashboard with inline scripts
-  crossOriginEmbedderPolicy: false // Disabled for embedded videos/images
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Disabled for local dashboard with inline scripts
+    crossOriginEmbedderPolicy: false, // Disabled for embedded videos/images
+  })
+);
 
 // CORS configuration with origin whitelist
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -1622,23 +1951,23 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.warn(`⚠️  Blocked CORS request from unauthorized origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️  Blocked CORS request from unauthorized origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(require('express').json({ limit: '50mb' }));
 app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
-
-
 
 const PORT = process.env.PORT || 3000;
 
@@ -1671,7 +2000,7 @@ class VectCutClient {
           y: layout.CLIP_ZONE.y,
           w: layout.CLIP_ZONE.w,
           h: layout.CLIP_ZONE.h,
-          z: 1
+          z: 1,
         },
         {
           path: avatarPath,
@@ -1679,16 +2008,16 @@ class VectCutClient {
           y: layout.AVATAR_ZONE.y,
           w: layout.AVATAR_ZONE.w,
           h: layout.AVATAR_ZONE.h,
-          z: 2
-        }
+          z: 2,
+        },
       ],
       branding: {
         path: findBrandingAsset('logo-80px.png'),
         x: layout.LOGO_POS.x,
         y: layout.LOGO_POS.y,
         size: layout.LOGO_POS.size,
-        opacity: 0.85
-      }
+        opacity: 0.85,
+      },
     };
 
     return axios.post(`${this.baseUrl}/assemble`, payload);
@@ -1711,9 +2040,9 @@ class VectCutClient {
       w: coords.w,
       h: coords.h,
       style: {
-        border: '5px solid #c7af4f',  // CWN Gold border
-        shadow: '0 4px 15px rgba(0,0,0,0.5)'  // 50% opacity shadow
-      }
+        border: '5px solid #c7af4f', // CWN Gold border
+        shadow: '0 4px 15px rgba(0,0,0,0.5)', // 50% opacity shadow
+      },
     });
   }
 
@@ -1747,7 +2076,10 @@ function findBrandingAsset(name) {
 function findSystemFont() {
   // Local no-space copy takes priority (created on first run)
   const localCopy = path.join(__dirname, 'tmp', 'cwn_font.ttf');
-  if (fs.existsSync(localCopy)) { console.log(`[font] Using local copy: ${localCopy}`); return localCopy; }
+  if (fs.existsSync(localCopy)) {
+    console.log(`[font] Using local copy: ${localCopy}`);
+    return localCopy;
+  }
 
   // Find source font
   const candidates = [
@@ -1761,11 +2093,12 @@ function findSystemFont() {
   for (const src of candidates) {
     if (fs.existsSync(src)) {
       try {
-        if (!fs.existsSync(path.join(__dirname, 'tmp'))) fs.mkdirSync(path.join(__dirname, 'tmp'), { recursive: true });
+        if (!fs.existsSync(path.join(__dirname, 'tmp')))
+          fs.mkdirSync(path.join(__dirname, 'tmp'), { recursive: true });
         fs.copyFileSync(src, localCopy);
         console.log(`[font] Copied ${src} → ${localCopy}`);
         return localCopy;
-      } catch(e) {
+      } catch (e) {
         console.warn(`[font] Copy failed: ${e.message} — using original path`);
         return src;
       }
@@ -1823,12 +2156,15 @@ const SYSTEM_FONT = findSystemFont();
  * Fix 8B: uses scraped og:image as background, story headline as foreground text, gold border.
  */
 
-
 // downloadFile moved to lib/downloader.js (imported above)
 
 // Delegate to lib/ffmpeg_utils — routes through Docker container (bin/ffmpeg-docker)
-function ffmpegPath() { return _ffmpegDockerPath(); }
-function ffprobePath() { return _ffprobeDockerPath(); }
+function ffmpegPath() {
+  return _ffmpegDockerPath();
+}
+function ffprobePath() {
+  return _ffprobeDockerPath();
+}
 
 function checkFFmpeg(cb) {
   execFile(ffmpegPath(), ['-version'], (err, stdout) => {
@@ -1859,7 +2195,7 @@ app.get('/health', async (req, res) => {
     uptime: process.uptime(),
     dependencies: {},
     directories: {},
-    errors: []
+    errors: [],
   };
 
   // Check FFmpeg
@@ -1879,7 +2215,7 @@ app.get('/health', async (req, res) => {
 
   // Check API keys
   const requiredKeys = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'];
-  requiredKeys.forEach(key => {
+  requiredKeys.forEach((key) => {
     const exists = !!process.env[key];
     health.dependencies[key] = { status: exists ? 'ok' : 'missing' };
     if (!exists) {
@@ -1896,14 +2232,14 @@ app.get('/health', async (req, res) => {
       health.directories[name] = {
         path: dir,
         exists: true,
-        writable: true // Already validated on startup
+        writable: true, // Already validated on startup
       };
     } catch (err) {
       health.ok = false;
       health.directories[name] = {
         path: dir,
         exists: false,
-        error: err.message
+        error: err.message,
       };
       health.errors.push(`${name} directory not accessible`);
     }
@@ -1930,7 +2266,7 @@ app.get('/health', async (req, res) => {
         const freeMB = Math.floor(freeKB / 1024);
         const freeGB = (freeMB / 1024).toFixed(1);
         health.directories.output.freeSpaceGB = parseFloat(freeGB);
-        
+
         // Warn if less than 5GB free
         if (freeMB < 5120) {
           health.errors.push(`Low disk space: ${freeGB}GB remaining`);
@@ -1952,17 +2288,24 @@ app.get('/health', async (req, res) => {
 app.get('/jobs', (req, res) => {
   // Only return in-flight jobs. Completed (assembled, published) and
   // failed/dismissed jobs are excluded — they do not need to restore on page load.
-  const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling']);
+  const IN_FLIGHT_STAGES = new Set([
+    'script_ready',
+    'all_sent',
+    'awaiting_manual_segments',
+    'assembling',
+  ]);
 
-  const actionableJobs = Object.values(persistedJobs).filter(job => {
-    const status = job.status || '';
-    // Never return dismissed jobs regardless of stage
-    if (status === 'dismissed') return false;
-    // Infer stage for legacy jobs that don't have the stage field set
-    const stage = job.stage || inferJobStage(job);
-    // Only return in-flight stages
-    return IN_FLIGHT_STAGES.has(stage);
-  }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+  const actionableJobs = Object.values(persistedJobs)
+    .filter((job) => {
+      const status = job.status || '';
+      // Never return dismissed jobs regardless of stage
+      if (status === 'dismissed') return false;
+      // Infer stage for legacy jobs that don't have the stage field set
+      const stage = job.stage || inferJobStage(job);
+      // Only return in-flight stages
+      return IN_FLIGHT_STAGES.has(stage);
+    })
+    .sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
 
   const { getJobBySpec } = require('./lib/db');
   const { buildGateStatusSnapshot } = require('./lib/job_spec_contracts');
@@ -1990,14 +2333,14 @@ app.delete('/job/:id', (req, res) => {
   // Write to jobs.json
   try {
     fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
-  } catch(e) {
+  } catch (e) {
     console.error('[jobs] Failed to save jobs.json after delete:', e.message);
   }
   // Also delete from SQLite DB so job doesn't reappear on server restart
   try {
     const { deleteJob } = require('./lib/db');
     if (typeof deleteJob === 'function') deleteJob(jobId);
-  } catch(e) {
+  } catch (e) {
     // DB delete is best-effort — non-fatal
   }
   console.log(`[jobs] Deleted job: ${jobId}`);
@@ -2010,7 +2353,7 @@ app.delete('/job/:id', (req, res) => {
 // action button re-appears in the dashboard.
 app.post('/job/:id/rollback', (req, res) => {
   const jobId = req.params.id;
-  const card  = persistedJobs[jobId];
+  const card = persistedJobs[jobId];
   if (!card) return res.json({ ok: false, error: 'Job not found: ' + jobId });
 
   const before = card.stage || detectStage(card);
@@ -2022,16 +2365,29 @@ app.post('/job/:id/rollback', (req, res) => {
     card.stage = 'assembled';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: published → assembled`);
-    logError('PIPELINE_ROLLBACK', `Job rolled back: published → assembled`, { jobId, before: 'published', after: 'assembled', at: new Date().toISOString() });
+    logError('PIPELINE_ROLLBACK', `Job rolled back: published → assembled`, {
+      jobId,
+      before: 'published',
+      after: 'assembled',
+      at: new Date().toISOString(),
+    });
     try {
       pipelineBus.emit('job:rollback', {
         jobId,
         before: 'published',
         after: 'assembled',
-        message: 'Publish record cleared — re-approve to re-publish.'
+        message: 'Publish record cleared — re-approve to re-publish.',
       });
-    } catch (_e) { /* non-fatal */ }
-    return res.json({ ok: true, jobId, before: 'published', after: 'assembled', message: 'Publish record cleared — re-approve to re-publish.' });
+    } catch (_e) {
+      /* non-fatal */
+    }
+    return res.json({
+      ok: true,
+      jobId,
+      before: 'published',
+      after: 'assembled',
+      message: 'Publish record cleared — re-approve to re-publish.',
+    });
   }
 
   if (before === 'assembled') {
@@ -2046,10 +2402,12 @@ app.post('/job/:id/rollback', (req, res) => {
     delete card._gate3Rejected;
     // Reset all avatar segments back to 'rendering' so REFRESH IDs re-appears
     if (card.heygen && card.heygen.videoJobs) {
-      card.heygen.videoJobs.forEach(vj => { vj._url = null; });
+      card.heygen.videoJobs.forEach((vj) => {
+        vj._url = null;
+      });
     }
     // Clear assembly dedup lock to allow re-assembly
-    Object.keys(assemblyJobs).forEach(asmId => {
+    Object.keys(assemblyJobs).forEach((asmId) => {
       if (assemblyJobs[asmId]?.sourceJobId === jobId) {
         delete assemblyJobs[asmId];
         console.log(`[rollback] ${jobId}: cleared assembly dedup lock for asmId=${asmId}`);
@@ -2058,37 +2416,65 @@ app.post('/job/:id/rollback', (req, res) => {
     card.stage = 'all_sent';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: assembled → all_sent`);
-    logError('PIPELINE_ROLLBACK', `Job rolled back: assembled → all_sent`, { jobId, before: 'assembled', after: 'all_sent', at: new Date().toISOString() });
+    logError('PIPELINE_ROLLBACK', `Job rolled back: assembled → all_sent`, {
+      jobId,
+      before: 'assembled',
+      after: 'all_sent',
+      at: new Date().toISOString(),
+    });
     try {
       pipelineBus.emit('job:rollback', {
         jobId,
         before: 'assembled',
         after: 'all_sent',
-        message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.'
+        message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.',
       });
-    } catch (_e) { /* non-fatal */ }
-    return res.json({ ok: true, jobId, before: 'assembled', after: 'all_sent', message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.' });
+    } catch (_e) {
+      /* non-fatal */
+    }
+    return res.json({
+      ok: true,
+      jobId,
+      before: 'assembled',
+      after: 'all_sent',
+      message: 'Assembly cleared — click REFRESH IDs then ASSEMBLE again.',
+    });
   }
 
   if (before === 'all_sent') {
     // Roll back from all_sent → script_ready (clear HeyGen video IDs)
     if (card.heygen && card.heygen.videoJobs) {
-      card.heygen.videoJobs.forEach(vj => { delete vj.video_id; });
+      card.heygen.videoJobs.forEach((vj) => {
+        delete vj.video_id;
+      });
     }
     delete card.gate2;
     card.stage = 'script_ready';
     saveJobCard(jobId, card);
     console.log(`[rollback] ${jobId}: all_sent → script_ready`);
-    logError('PIPELINE_ROLLBACK', `Job rolled back: all_sent → script_ready`, { jobId, before: 'all_sent', after: 'script_ready', at: new Date().toISOString() });
+    logError('PIPELINE_ROLLBACK', `Job rolled back: all_sent → script_ready`, {
+      jobId,
+      before: 'all_sent',
+      after: 'script_ready',
+      at: new Date().toISOString(),
+    });
     try {
       pipelineBus.emit('job:rollback', {
         jobId,
         before: 'all_sent',
         after: 'script_ready',
-        message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.'
+        message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.',
       });
-    } catch (_e) { /* non-fatal */ }
-    return res.json({ ok: true, jobId, before: 'all_sent', after: 'script_ready', message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.' });
+    } catch (_e) {
+      /* non-fatal */
+    }
+    return res.json({
+      ok: true,
+      jobId,
+      before: 'all_sent',
+      after: 'script_ready',
+      message: 'HeyGen IDs cleared — edit script and re-send to HeyGen.',
+    });
   }
 
   return res.json({ ok: false, error: `Job is at stage "${before}" — nothing to roll back to.` });
@@ -2100,7 +2486,7 @@ app.post('/job/:id/rollback', (req, res) => {
 // so the next action button appears in the dashboard.
 app.post('/job/:id/advance', (req, res) => {
   const jobId = req.params.id;
-  const card  = persistedJobs[jobId];
+  const card = persistedJobs[jobId];
   if (!card) return res.json({ ok: false, error: 'Job not found: ' + jobId });
 
   const stage = card.stage || detectStage(card);
@@ -2109,21 +2495,34 @@ app.post('/job/:id/advance', (req, res) => {
     // Force-advance: mark Gate 1 as force-passed so SEND TO HEYGEN is unblocked
     card.gate1 = card.gate1 || {};
     card.gate1.outcome = 'force_pass';
-    card.gate1.score   = card.gate1.score || 0;
+    card.gate1.score = card.gate1.score || 0;
     card.gate1.forcedAt = new Date().toISOString();
     card.stage = 'gate1_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: script_ready → gate1 force-passed`);
-    logError('PIPELINE_ADVANCE', `Job force-advanced: script_ready → gate1_forced`, { jobId, before: 'script_ready', after: 'gate1_forced', at: new Date().toISOString() });
+    logError('PIPELINE_ADVANCE', `Job force-advanced: script_ready → gate1_forced`, {
+      jobId,
+      before: 'script_ready',
+      after: 'gate1_forced',
+      at: new Date().toISOString(),
+    });
     try {
       pipelineBus.emit('job:advance', {
         jobId,
         from: 'script_ready',
         to: 'gate1_forced',
-        message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.'
+        message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.',
       });
-    } catch (_e) { /* non-fatal */ }
-    return res.json({ ok: true, jobId, before: 'script_ready', after: 'gate1_forced', message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.' });
+    } catch (_e) {
+      /* non-fatal */
+    }
+    return res.json({
+      ok: true,
+      jobId,
+      before: 'script_ready',
+      after: 'gate1_forced',
+      message: 'Gate 1 force-passed — SEND TO HEYGEN is now unlocked.',
+    });
   }
 
   if (stage === 'all_sent') {
@@ -2131,53 +2530,82 @@ app.post('/job/:id/advance', (req, res) => {
     // so the ASSEMBLE button appears. The placeholder will be replaced by REFRESH IDs.
     const videoJobs = (card.heygen && card.heygen.videoJobs) || [];
     let forced = 0;
-    videoJobs.forEach(vj => {
+    videoJobs.forEach((vj) => {
       if (!vj._url && vj.video_id) {
         vj._forcedComplete = true;
         forced++;
       }
     });
     card.gate2 = card.gate2 || {};
-    card.gate2.outcome  = 'force_pass';
+    card.gate2.outcome = 'force_pass';
     card.gate2.forcedAt = new Date().toISOString();
     card.stage = 'gate2_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: all_sent → gate2 force-passed (${forced} segments marked)`);
-    logError('PIPELINE_ADVANCE', `Job force-advanced: all_sent → gate2_forced`, { jobId, before: 'all_sent', after: 'gate2_forced', at: new Date().toISOString() });
+    logError('PIPELINE_ADVANCE', `Job force-advanced: all_sent → gate2_forced`, {
+      jobId,
+      before: 'all_sent',
+      after: 'gate2_forced',
+      at: new Date().toISOString(),
+    });
     try {
       pipelineBus.emit('job:advance', {
         jobId,
         from: 'all_sent',
         to: 'gate2_forced',
-        message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.`
+        message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.`,
       });
-    } catch (_e) { /* non-fatal */ }
-    return res.json({ ok: true, jobId, before: 'all_sent', after: 'gate2_forced', message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.` });
+    } catch (_e) {
+      /* non-fatal */
+    }
+    return res.json({
+      ok: true,
+      jobId,
+      before: 'all_sent',
+      after: 'gate2_forced',
+      message: `Gate 2 force-passed — ${forced} segment(s) marked. Click REFRESH IDs to get real URLs, then ASSEMBLE.`,
+    });
   }
 
   if (stage === 'assembled') {
     // Force-advance: mark Gate 5 as force-passed so APPROVE button appears
     card.gate5 = card.gate5 || {};
-    card.gate5.score    = card.gate5.score || 0;
-    card.gate5.outcome  = 'force_pass';
+    card.gate5.score = card.gate5.score || 0;
+    card.gate5.outcome = 'force_pass';
     card.gate5.forcedAt = new Date().toISOString();
-    card._gate5Done     = true;
+    card._gate5Done = true;
     card.stage = 'gate5_forced';
     saveJobCard(jobId, card);
     console.log(`[advance] ${jobId}: assembled → gate5 force-passed`);
-    logError('PIPELINE_ADVANCE', `Job force-advanced: assembled → gate5_forced`, { jobId, before: 'assembled', after: 'gate5_forced', at: new Date().toISOString() });
+    logError('PIPELINE_ADVANCE', `Job force-advanced: assembled → gate5_forced`, {
+      jobId,
+      before: 'assembled',
+      after: 'gate5_forced',
+      at: new Date().toISOString(),
+    });
     try {
       pipelineBus.emit('job:advance', {
         jobId,
         from: 'assembled',
         to: 'gate5_forced',
-        message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.'
+        message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.',
       });
-    } catch (_e) { /* non-fatal */ }
-    return res.json({ ok: true, jobId, before: 'assembled', after: 'gate5_forced', message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.' });
+    } catch (_e) {
+      /* non-fatal */
+    }
+    return res.json({
+      ok: true,
+      jobId,
+      before: 'assembled',
+      after: 'gate5_forced',
+      message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.',
+    });
   }
 
-  return res.json({ ok: false, error: `Job is at stage "${stage}" — cannot advance further (already at publish stage or unknown stage).` });
+  return res.json({
+    ok: false,
+    error: `Job is at stage "${stage}" — cannot advance further (already at publish stage or unknown stage).`,
+  });
 });
 
 // POST /job/:id/manual-segments/resume — continue pipeline after c0 manual checkpoint
@@ -2190,7 +2618,7 @@ app.post('/job/:id/manual-segments/resume', (req, res) => {
   if (stage === 'published') {
     return res.status(400).json({
       ok: false,
-      error: 'Job is published — POST /job/:id/rollback first, then resume.'
+      error: 'Job is published — POST /job/:id/rollback first, then resume.',
     });
   }
 
@@ -2206,35 +2634,41 @@ app.post('/job/:id/manual-segments/resume', (req, res) => {
     delete card._gate3Approved;
     delete card._gate3Rejected;
     if (card.heygen && card.heygen.videoJobs) {
-      card.heygen.videoJobs.forEach(vj => { vj._url = null; });
+      card.heygen.videoJobs.forEach((vj) => {
+        vj._url = null;
+      });
     }
-    Object.keys(assemblyJobs).forEach(asmId => {
+    Object.keys(assemblyJobs).forEach((asmId) => {
       if (assemblyJobs[asmId]?.sourceJobId === jobId) {
         delete assemblyJobs[asmId];
-        console.log(`[manual-segments/resume] ${jobId}: cleared assembly dedup lock for asmId=${asmId}`);
+        console.log(
+          `[manual-segments/resume] ${jobId}: cleared assembly dedup lock for asmId=${asmId}`
+        );
       }
     });
     card.stage = 'all_sent';
     saveJobCard(jobId, card);
     stage = 'all_sent';
-    console.log(`[manual-segments/resume] ${jobId}: cleared prior assembly — continuing to Gate 2 + assemble`);
+    console.log(
+      `[manual-segments/resume] ${jobId}: cleared prior assembly — continuing to Gate 2 + assemble`
+    );
   }
 
   if (stage !== 'awaiting_manual_segments' && stage !== 'all_sent') {
     return res.status(400).json({
       ok: false,
-      error: `Job is at stage "${stage}" — expected awaiting_manual_segments, all_sent, assembled, or gate5_forced`
+      error: `Job is at stage "${stage}" — expected awaiting_manual_segments, all_sent, assembled, or gate5_forced`,
     });
   }
 
   const segmentUrls = (card.heygen?.videoJobs || [])
-    .filter(vj => vj.status === 'completed' && vj.video_url)
-    .map(vj => vj.video_url);
+    .filter((vj) => vj.status === 'completed' && vj.video_url)
+    .map((vj) => vj.video_url);
 
   card.manualSegments = {
     ...(card.manualSegments || {}),
     status: 'resume_requested',
-    resumedAt: new Date().toISOString()
+    resumedAt: new Date().toISOString(),
   };
   card.stage = 'all_sent';
   saveJobCard(jobId, card);
@@ -2245,13 +2679,13 @@ app.post('/job/:id/manual-segments/resume', (req, res) => {
       contentType: card.contentType || 'twitch',
       segmentUrls,
       card,
-      segmentData: null
+      segmentData: null,
     });
     return res.json({
       ok: true,
       jobId,
       message: 'Resume accepted — Gate 2 + assembly handoff emitted.',
-      segmentCount: segmentUrls.length
+      segmentCount: segmentUrls.length,
     });
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message || String(e) });
@@ -2275,15 +2709,15 @@ app.post('/job/:id/dismiss', (req, res) => {
 app.post('/job/:id/stuck', (req, res) => {
   const { id } = req.params;
   const { gate, reason, detail = {} } = req.body;
-  
+
   if (!gate || !reason) {
     return res.status(400).json({ error: 'gate and reason required' });
   }
-  
+
   if (!persistedJobs[id]) {
     return res.status(404).json({ error: 'Job not found', id });
   }
-  
+
   markJobStuck(id, gate, reason, detail);
   res.json({ ok: true, id, gate, reason });
 });
@@ -2305,18 +2739,18 @@ app.post('/job/:id/qa-confirm-generate', (req, res) => {
 app.get('/content-type-status', (req, res) => {
   const disabled = global.disabledContentTypes || {};
   const stuckCounts = {};
-  
+
   // Build stuck counts from in-memory log
   for (const [contentType, timestamps] of Object.entries(stuckPatternLog)) {
     stuckCounts[contentType] = timestamps.length;
   }
-  
+
   res.json({
     ok: true,
     disabled,
     stuckCounts,
     threshold: 3,
-    windowHours: 24
+    windowHours: 24,
   });
 });
 
@@ -2326,7 +2760,12 @@ function detectStage(card) {
   if (card.publishRecord && card.publishRecord.publishedAt) return 'published';
   if (card.assembledAt || card.finalUrl) return 'assembled';
   if (card.heygen && card.heygen.videoJobs && card.heygen.videoJobs.length) return 'all_sent';
-  if (card.script && (card.script.raw || typeof card.script === 'string') && (card.script.raw || card.script).length > 10) return 'script_ready';
+  if (
+    card.script &&
+    (card.script.raw || typeof card.script === 'string') &&
+    (card.script.raw || card.script).length > 10
+  )
+    return 'script_ready';
   return 'unknown';
 }
 
@@ -2347,15 +2786,16 @@ app.get('/twitch-tool', (req, res) => {
 // Token is read from env at request time so it picks up rotations without restart
 app.get('/twitch-token', (req, res) => {
   const clientId = process.env.TWITCH_CLIENT_ID;
-  const token    = process.env.TWITCH_TOKEN;
-  if (!clientId || !token) return res.status(503).json({ error: 'Twitch credentials not configured' });
+  const token = process.env.TWITCH_TOKEN;
+  if (!clientId || !token)
+    return res.status(503).json({ error: 'Twitch credentials not configured' });
   res.json({ clientId, token });
 });
 
 app.get('/market-keys', (req, res) => {
   res.json({
-    fmp:     process.env.FMP_API_KEY     || '',
-    finnhub: process.env.FINNHUB_API_KEY || ''
+    fmp: process.env.FMP_API_KEY || '',
+    finnhub: process.env.FINNHUB_API_KEY || '',
   });
 });
 
@@ -2369,9 +2809,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // Share your "CWN Videos" Drive folder with the service account email (Editor)
 
 // DRIVE_KEY_PATH + DRIVE_FOLDER_NAME moved to lib/publish.js (only consumer after module split)
-let   _driveFolderId   = null; // cached after first lookup (getDriveFolderId is in lib/publish.js)
-
-
+let _driveFolderId = null; // cached after first lookup (getDriveFolderId is in lib/publish.js)
 
 // ── Topaz Labs Video Enhancement ──────────────────────────────────
 // Enhances video quality using Topaz Labs API (fix compression artifacts, frozen frames, pixelation)
@@ -2390,78 +2828,101 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
   }
 
   try {
-    console.log(`[topaz] Enhancing video: ${path.basename(videoPath)} (${sizeMB.toFixed(1)} MB)...`);
+    console.log(
+      `[topaz] Enhancing video: ${path.basename(videoPath)} (${sizeMB.toFixed(1)} MB)...`
+    );
 
     // Step 1: Probe video metadata with FFprobe
     const metadata = await new Promise((res, rej) => {
-      execFile(ffprobePath(), [
-        '-v', 'error',
-        '-select_streams', 'v:0',
-        '-count_frames',
-        '-show_entries', 'stream=width,height,r_frame_rate,nb_read_frames,codec_name,duration',
-        '-show_entries', 'format=duration',
-        '-of', 'json',
-        videoPath
-      ], (err, stdout) => {
-        if (err) return rej(err);
-        try {
-          const json = JSON.parse(stdout);
-          const stream = json.streams?.[0] || {};
-          const format = json.format || {};
-          const [num, den] = (stream.r_frame_rate || '30/1').split('/').map(Number);
-          res({
-            width: stream.width || 1920,
-            height: stream.height || 1080,
-            fps: Math.round(num / den),
-            duration: parseFloat(format.duration || stream.duration || '60'),
-            codec: stream.codec_name || 'h264',
-            container: path.extname(videoPath).slice(1) || 'mp4'
-          });
-        } catch(e) { rej(e); }
-      });
+      execFile(
+        ffprobePath(),
+        [
+          '-v',
+          'error',
+          '-select_streams',
+          'v:0',
+          '-count_frames',
+          '-show_entries',
+          'stream=width,height,r_frame_rate,nb_read_frames,codec_name,duration',
+          '-show_entries',
+          'format=duration',
+          '-of',
+          'json',
+          videoPath,
+        ],
+        (err, stdout) => {
+          if (err) return rej(err);
+          try {
+            const json = JSON.parse(stdout);
+            const stream = json.streams?.[0] || {};
+            const format = json.format || {};
+            const [num, den] = (stream.r_frame_rate || '30/1').split('/').map(Number);
+            res({
+              width: stream.width || 1920,
+              height: stream.height || 1080,
+              fps: Math.round(num / den),
+              duration: parseFloat(format.duration || stream.duration || '60'),
+              codec: stream.codec_name || 'h264',
+              container: path.extname(videoPath).slice(1) || 'mp4',
+            });
+          } catch (e) {
+            rej(e);
+          }
+        }
+      );
     });
 
-    console.log(`[topaz] Metadata: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${metadata.duration.toFixed(1)}s, ${metadata.codec}/${metadata.container}`);
+    console.log(
+      `[topaz] Metadata: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${metadata.duration.toFixed(1)}s, ${metadata.codec}/${metadata.container}`
+    );
 
     // Step 2: Create enhancement request
-    const createResp = await axios.post('https://api.topazlabs.com/video/', {
-      source: {
-        resolution: [metadata.width, metadata.height],
-        container: metadata.container,
-        frameRate: metadata.fps,
-        duration: metadata.duration
+    const createResp = await axios.post(
+      'https://api.topazlabs.com/video/',
+      {
+        source: {
+          resolution: [metadata.width, metadata.height],
+          container: metadata.container,
+          frameRate: metadata.fps,
+          duration: metadata.duration,
+        },
+        output: {
+          resolution: [metadata.width, metadata.height], // no upscaling, just enhancement
+          audioCodec: 'AAC',
+          container: 'mp4',
+        },
+        filter: {
+          model: 'apo-3', // Proteus model for quality + artifact recovery
+          slowmo: { enabled: false },
+          frameRate: metadata.fps,
+        },
       },
-      output: {
-        resolution: [metadata.width, metadata.height], // no upscaling, just enhancement
-        audioCodec: 'AAC',
-        container: 'mp4'
-      },
-      filter: {
-        model: 'apo-3', // Proteus model for quality + artifact recovery
-        slowmo: { enabled: false },
-        frameRate: metadata.fps
+      {
+        headers: {
+          'X-API-Key': TOPAZ_API_KEY,
+          accept: 'application/json',
+          'content-type': 'application/json',
+        },
+        timeout: 30000,
       }
-    }, {
-      headers: {
-        'X-API-Key': TOPAZ_API_KEY,
-        'accept': 'application/json',
-        'content-type': 'application/json'
-      },
-      timeout: 30000
-    });
+    );
 
     const requestID = createResp.data?.requestID;
     if (!requestID) throw new Error('No requestID in Topaz create response');
     console.log(`[topaz] Created request: ${requestID}`);
 
     // Step 3: Accept and get upload URLs
-    const acceptResp = await axios.patch(`https://api.topazlabs.com/video/${requestID}/accept`, {}, {
-      headers: {
-        'X-API-Key': TOPAZ_API_KEY,
-        'accept': 'application/json',
-        'content-type': 'application/json'
+    const acceptResp = await axios.patch(
+      `https://api.topazlabs.com/video/${requestID}/accept`,
+      {},
+      {
+        headers: {
+          'X-API-Key': TOPAZ_API_KEY,
+          accept: 'application/json',
+          'content-type': 'application/json',
+        },
       }
-    });
+    );
 
     const uploadUrl = acceptResp.data?.uploadUrl;
     if (!uploadUrl) throw new Error('No uploadUrl in Topaz accept response');
@@ -2472,19 +2933,23 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
     await axios.put(uploadUrl, videoBuffer, {
       headers: { 'Content-Type': 'video/mp4' },
       maxBodyLength: Infinity,
-      timeout: 300000 // 5 min upload timeout
+      timeout: 300000, // 5 min upload timeout
     });
 
     console.log(`[topaz] Video uploaded, completing...`);
 
     // Step 5: Complete upload to start processing
-    await axios.patch(`https://api.topazlabs.com/video/${requestID}/complete-upload`, {}, {
-      headers: {
-        'X-API-Key': TOPAZ_API_KEY,
-        'accept': 'application/json',
-        'content-type': 'application/json'
+    await axios.patch(
+      `https://api.topazlabs.com/video/${requestID}/complete-upload`,
+      {},
+      {
+        headers: {
+          'X-API-Key': TOPAZ_API_KEY,
+          accept: 'application/json',
+          'content-type': 'application/json',
+        },
       }
-    });
+    );
 
     console.log(`[topaz] Processing started, polling status...`);
 
@@ -2494,13 +2959,13 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
     let downloadUrl = null;
 
     while (Date.now() - startTime < POLL_TIMEOUT) {
-      await new Promise(r => setTimeout(r, 15000)); // poll every 15s
+      await new Promise((r) => setTimeout(r, 15000)); // poll every 15s
 
       const statusResp = await axios.get(`https://api.topazlabs.com/video/${requestID}/status`, {
         headers: {
           'X-API-Key': TOPAZ_API_KEY,
-          'accept': 'application/json'
-        }
+          accept: 'application/json',
+        },
       });
 
       const status = statusResp.data?.status;
@@ -2530,7 +2995,9 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
     });
 
     const enhancedStat = fs.statSync(enhancedPath);
-    console.log(`[topaz] Downloaded enhanced video: ${(enhancedStat.size / 1024 / 1024).toFixed(1)} MB`);
+    console.log(
+      `[topaz] Downloaded enhanced video: ${(enhancedStat.size / 1024 / 1024).toFixed(1)} MB`
+    );
 
     // Step 8: Replace original with enhanced
     fs.unlinkSync(videoPath);
@@ -2538,8 +3005,7 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
     console.log(`[topaz] ✅ Video enhanced successfully`);
 
     return { success: true, requestID };
-
-  } catch(err) {
+  } catch (err) {
     console.error(`[topaz] ❌ Enhancement failed: ${err.message}`);
     return { success: false, reason: err.message };
   }
@@ -2590,7 +3056,6 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
 //
 // Returns: { script: string, fixed: boolean }
 
-
 // ── Gate 1: Script QA — Gemini reviews Claude's script (LEGACY) ───
 // This function is now only used for non-Twitch/NBA/News content types
 // where the scene count issue doesn't apply.
@@ -2616,22 +3081,24 @@ async function enhanceVideoWithTopaz(videoPath, opts = {}) {
 //
 // Critical failures: freeze in avatar, lip sync broken, audio missing, wrong avatar
 
-
 // Claude API wrapper with detailed error handling
-
 
 // POST /upload-to-drive — manual trigger from dashboard
 app.post('/upload-to-drive', async (req, res) => {
   const { filename, title } = req.body;
   if (!filename) return res.status(400).json({ error: 'filename required' });
   const filePath = path.join(OUTPUT_DIR, path.basename(filename));
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found: ' + filename });
+  if (!fs.existsSync(filePath))
+    return res.status(404).json({ error: 'File not found: ' + filename });
 
   try {
     const driveUrl = await uploadToDrive(filePath, filename, title || filename);
-    if (!driveUrl) return res.status(400).json({ error: 'cwn-drive-key.json not found in Downloads. See setup instructions.' });
+    if (!driveUrl)
+      return res
+        .status(400)
+        .json({ error: 'cwn-drive-key.json not found in Downloads. See setup instructions.' });
     res.json({ ok: true, driveUrl });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
@@ -2641,22 +3108,27 @@ app.post('/drive-then-canva', async (req, res) => {
   const { filename, title } = req.body;
   if (!filename) return res.status(400).json({ error: 'filename required' });
   const filePath = path.join(OUTPUT_DIR, path.basename(filename));
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found: ' + filename });
+  if (!fs.existsSync(filePath))
+    return res.status(404).json({ error: 'File not found: ' + filename });
 
   res.json({ ok: true, message: 'Upload started — check /assemble-progress for status' });
 
   try {
     console.log(`[drive-then-canva] Starting for: ${filename}`);
     const driveUrl = await uploadToDrive(filePath, filename, title || filename);
-    if (!driveUrl) { console.warn('[drive-then-canva] No Drive key configured'); return; }
+    if (!driveUrl) {
+      console.warn('[drive-then-canva] No Drive key configured');
+      return;
+    }
     console.log(`[drive-then-canva] Drive URL: ${driveUrl}`);
     console.log(`[drive-then-canva] Paste that URL in Claude chat to import to Canva`);
-  } catch(err) {
+  } catch (err) {
     console.error('[drive-then-canva] Error:', err.message);
   }
 });
 
-app.post('/assemble',
+app.post(
+  '/assemble',
   body('asmId').optional().isString().trim(),
   body('segments').isArray(),
   body('contentType').isString(),
@@ -2689,12 +3161,15 @@ app.get('/job-spec/:jobId', async (req, res) => {
   try {
     const spec = await getJobSpec(req.params.jobId);
     if (!spec) return res.status(404).json({ error: 'Job spec not found' });
-    const { buildGateStatusSnapshot, validateGateContractConsistency } = require('./lib/job_spec_contracts');
+    const {
+      buildGateStatusSnapshot,
+      validateGateContractConsistency,
+    } = require('./lib/job_spec_contracts');
     res.json({
       ok: true,
       jobSpec: spec,
       gateStatus: buildGateStatusSnapshot(spec),
-      gateContractValidation: validateGateContractConsistency(spec)
+      gateContractValidation: validateGateContractConsistency(spec),
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -2708,27 +3183,26 @@ app.get('/assemble-progress/:id', (req, res) => {
 
   // Return new log lines since last poll (client tracks offset)
   const logOffset = parseInt(req.query.offset) || 0;
-  const fullLog   = job.log || '';
-  const newLog    = fullLog.slice(logOffset);
+  const fullLog = job.log || '';
+  const newLog = fullLog.slice(logOffset);
 
   res.json({
-    pct:              job.pct,
-    tickerPct:        job.tickerPct || null,
-    status:           job.status,
-    error:            job.error || null,
-    log:              newLog,
-    logOffset:        fullLog.length,
-    outputPath:       job.outputPath,
-    filename:         job.filename,
-    duration:         job.duration,
+    pct: job.pct,
+    tickerPct: job.tickerPct || null,
+    status: job.status,
+    error: job.error || null,
+    log: newLog,
+    logOffset: fullLog.length,
+    outputPath: job.outputPath,
+    filename: job.filename,
+    duration: job.duration,
     segmentDurations: job.segmentDurations || null,
-    gate2Score:       job.gate2Score || null,
-    gate2Outcome:     job.gate2Outcome || null,
-    downloadUrl:      job.filename ? `/download/${job.filename}` : null,
-    thumbFilename:    job.thumbFilename || null
+    gate2Score: job.gate2Score || null,
+    gate2Outcome: job.gate2Outcome || null,
+    downloadUrl: job.filename ? `/download/${job.filename}` : null,
+    thumbFilename: job.thumbFilename || null,
   });
 });
-
 
 // GET /download/:file — serve assembled video or thumbnail frame
 app.get('/download/:file', (req, res) => {
@@ -2776,26 +3250,30 @@ app.post('/canva-import', async (req, res) => {
         system: `You are a production assistant. Use the Canva MCP tool to import the provided video URL into a new Canva design. 
 Call import-design-from-url with the URL provided. Then call get-design-import-from-url-status to get the result.
 Return ONLY a JSON object with keys: design_id, design_url, status. No other text.`,
-        messages: [{
-          role: 'user',
-          content: `Import this video into Canva: ${videoUrl}\nLabel: ${label || 'CWN Video'}\nReturn JSON with design_id and design_url.`
-        }],
-        mcp_servers: [{
-          type: 'url',
-          url: 'https://mcp.canva.com/mcp',
-          name: 'canva-mcp'
-        }]
+        messages: [
+          {
+            role: 'user',
+            content: `Import this video into Canva: ${videoUrl}\nLabel: ${label || 'CWN Video'}\nReturn JSON with design_id and design_url.`,
+          },
+        ],
+        mcp_servers: [
+          {
+            type: 'url',
+            url: 'https://mcp.canva.com/mcp',
+            name: 'canva-mcp',
+          },
+        ],
       });
 
       // Parse response
-      const textBlock = response.content.find(b => b.type === 'text');
+      const textBlock = response.content.find((b) => b.type === 'text');
       if (!textBlock) throw new Error('No text response from Claude');
 
       let parsed;
       try {
         const clean = textBlock.text.replace(/```json|```/g, '').trim();
         parsed = JSON.parse(clean);
-      } catch(e) {
+      } catch (e) {
         // Try to extract a URL from the text
         const urlMatch = textBlock.text.match(/https:\/\/www\.canva\.com\/design\/[^\s"']+/);
         if (urlMatch) {
@@ -2805,15 +3283,14 @@ Return ONLY a JSON object with keys: design_id, design_url, status. No other tex
         }
       }
 
-      canvaJobs[jobId].status     = 'success';
+      canvaJobs[jobId].status = 'success';
       canvaJobs[jobId].design_url = parsed.design_url || parsed.url;
-      canvaJobs[jobId].design_id  = parsed.design_id;
+      canvaJobs[jobId].design_id = parsed.design_id;
       console.log(`[canva] Import complete: ${canvaJobs[jobId].design_url}`);
-
-    } catch(err) {
+    } catch (err) {
       console.error('[canva] Import failed:', err.message);
       canvaJobs[jobId].status = 'failed';
-      canvaJobs[jobId].error  = err.message;
+      canvaJobs[jobId].error = err.message;
     }
   };
 
@@ -2839,29 +3316,40 @@ app.get('/canva-import-status/:id', (req, res) => {
 // using getPinnedComment(contentType, customerId) from assembly.js.
 const { getPinnedComment } = require('./lib/assembly');
 
-
 // GET /ticker-status — check which tickers are cached
 app.get('/ticker-status', (req, res) => {
   res.json({
     cached: Object.keys(TICKER_CACHE),
     available: Object.keys(TICKER_MAP),
-    puppeteerInstalled: (() => { try { require('puppeteer'); return true; } catch(e) { return false; } })()
+    puppeteerInstalled: (() => {
+      try {
+        require('puppeteer');
+        return true;
+      } catch (e) {
+        return false;
+      }
+    })(),
   });
 });
 
 // POST /precapture-tickers — warm up ticker cache before assembly
 // Body: { types: ['nba','news','twitch'] }  (omit to capture all)
 app.post('/precapture-tickers', async (req, res) => {
-  const types   = (req.body && req.body.types) || Object.keys(TICKER_MAP);
-  const captured = [], failed = [];
+  const types = (req.body && req.body.types) || Object.keys(TICKER_MAP);
+  const captured = [],
+    failed = [];
 
   console.log(`[ticker] Pre-capturing tickers: ${types.join(', ')}`);
   for (const type of types) {
     try {
       const p = await captureTicker(type);
-      if (p) { captured.push(type); console.log(`[ticker] ✓ ${type}`); }
-      else    { failed.push(type); }
-    } catch(e) {
+      if (p) {
+        captured.push(type);
+        console.log(`[ticker] ✓ ${type}`);
+      } else {
+        failed.push(type);
+      }
+    } catch (e) {
       failed.push(type);
       console.warn(`[ticker] ✗ ${type}: ${e.message}`);
     }
@@ -2872,10 +3360,13 @@ app.post('/precapture-tickers', async (req, res) => {
 // POST /capture-ticker — pre-capture a ticker on demand
 app.post('/capture-ticker', async (req, res) => {
   const { contentType } = req.body;
-  if (!TICKER_MAP[contentType]) return res.status(400).json({ error: 'Unknown content type. Use: nba, news, twitch' });
+  if (!TICKER_MAP[contentType])
+    return res.status(400).json({ error: 'Unknown content type. Use: nba, news, twitch' });
   delete TICKER_CACHE[contentType]; // force re-capture
   res.json({ ok: true, message: `Capturing ${contentType} ticker in background...` });
-  captureTicker(contentType).catch(e => console.warn('[ticker] Background capture failed:', e.message));
+  captureTicker(contentType).catch((e) =>
+    console.warn('[ticker] Background capture failed:', e.message)
+  );
 });
 
 /**
@@ -2891,15 +3382,17 @@ async function scrapeEspnGameVideoUrl(gameId) {
   let browser;
 
   try {
-    browser = await puppeteer.launch(withPuppeteerExecutable({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    }));
+    browser = await puppeteer.launch(
+      withPuppeteerExecutable({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      })
+    );
     const page = await browser.newPage();
 
     await page.setRequestInterception(true);
-    page.on('request', req => req.continue());
-    page.on('response', async resp => {
+    page.on('request', (req) => req.continue());
+    page.on('response', async (resp) => {
       const url = resp.url();
       // ESPN uses service-pkgespn.akamaized.net for HLS manifests
       if (url.includes('service-pkgespn.akamaized.net') && url.includes('.m3u8')) {
@@ -2914,26 +3407,31 @@ async function scrapeEspnGameVideoUrl(gameId) {
     // Scroll to trigger lazy-loaded video player
     for (let i = 0; i < 4; i++) {
       await page.evaluate(() => window.scrollBy(0, window.innerHeight * 2));
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 600));
     }
 
     // Wait up to 5s for HLS manifest intercept
     for (let i = 0; i < 10 && !capturedHlsUrl; i++) {
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
     }
 
     await browser.close();
     browser = null;
 
     if (capturedHlsUrl) {
-      console.log(`[nba-scrape] Puppeteer HLS captured for ${gameId}: ${capturedHlsUrl.slice(0, 80)}...`);
+      console.log(
+        `[nba-scrape] Puppeteer HLS captured for ${gameId}: ${capturedHlsUrl.slice(0, 80)}...`
+      );
       return { videoUrl: capturedHlsUrl };
     }
-
   } catch (e) {
     console.warn(`[nba-scrape] Puppeteer fallback failed for ${gameId}: ${e.message}`);
   } finally {
-    if (browser) { try { await browser.close(); } catch (_) {} }
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (_) {}
+    }
   }
 
   return null;
@@ -2958,43 +3456,54 @@ app.get('/twitch/clips-pool', async (req, res) => {
   const clipsPerStreamer = Math.max(1, Math.min(10, parseInt(req.query.clipsPerStreamer) || 3));
   if (!streamersParam) return res.status(400).json({ error: 'streamers query param required' });
 
-  const streamerList = streamersParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const streamerList = streamersParam
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
   if (!streamerList.length) return res.status(400).json({ error: 'no streamers provided' });
 
   const clientId = process.env.TWITCH_CLIENT_ID;
-  const token    = process.env.TWITCH_TOKEN;
-  if (!clientId || !token) return res.status(500).json({ error: 'TWITCH_CLIENT_ID / TWITCH_TOKEN not set' });
+  const token = process.env.TWITCH_TOKEN;
+  if (!clientId || !token)
+    return res.status(500).json({ error: 'TWITCH_CLIENT_ID / TWITCH_TOKEN not set' });
 
   try {
     // Resolve user IDs in one batch call
     const userResp = await axios.get(
-      `https://api.twitch.tv/helix/users?${streamerList.map(s => `login=${s}`).join('&')}`,
-      { headers: { 'Client-Id': clientId, 'Authorization': `Bearer ${token}` }, timeout: 10000 }
+      `https://api.twitch.tv/helix/users?${streamerList.map((s) => `login=${s}`).join('&')}`,
+      { headers: { 'Client-Id': clientId, Authorization: `Bearer ${token}` }, timeout: 10000 }
     );
     const users = userResp.data?.data || [];
 
     // Fetch recent clips for each resolved user in parallel
-    const allClips = (await Promise.all(users.map(async user => {
-      try {
-        const clipsResp = await axios.get(
-          `https://api.twitch.tv/helix/clips?broadcaster_id=${user.id}&first=${clipsPerStreamer}`,
-          { headers: { 'Client-Id': clientId, 'Authorization': `Bearer ${token}` }, timeout: 10000 }
-        );
-        return (clipsResp.data?.data || []).map(c => ({
-          streamer:  user.display_name || user.login,
-          title:     c.title || 'Clip',
-          thumbnail: c.thumbnail_url || '',
-          duration:  Math.round(c.duration || 0),
-          url:       c.url || '',
-          slug:      c.id || '',
-          game:      c.game_id || '',
-          viewCount: c.view_count || 0
-        }));
-      } catch (e) {
-        console.warn(`[twitch/clips-pool] Failed for ${user.login}: ${e.message}`);
-        return [];
-      }
-    }))).flat();
+    const allClips = (
+      await Promise.all(
+        users.map(async (user) => {
+          try {
+            const clipsResp = await axios.get(
+              `https://api.twitch.tv/helix/clips?broadcaster_id=${user.id}&first=${clipsPerStreamer}`,
+              {
+                headers: { 'Client-Id': clientId, Authorization: `Bearer ${token}` },
+                timeout: 10000,
+              }
+            );
+            return (clipsResp.data?.data || []).map((c) => ({
+              streamer: user.display_name || user.login,
+              title: c.title || 'Clip',
+              thumbnail: c.thumbnail_url || '',
+              duration: Math.round(c.duration || 0),
+              url: c.url || '',
+              slug: c.id || '',
+              game: c.game_id || '',
+              viewCount: c.view_count || 0,
+            }));
+          } catch (e) {
+            console.warn(`[twitch/clips-pool] Failed for ${user.login}: ${e.message}`);
+            return [];
+          }
+        })
+      )
+    ).flat();
 
     res.json({ ok: true, clips: allClips });
   } catch (err) {
@@ -3013,12 +3522,14 @@ app.get('/nba/game-clips/:gameId', async (req, res) => {
 
     const articleVideos = Array.isArray(summaryData.article?.video)
       ? summaryData.article.video
-      : (summaryData.article?.video ? [summaryData.article.video] : []);
+      : summaryData.article?.video
+        ? [summaryData.article.video]
+        : [];
     const topVideos = summaryData.videos || [];
     const all = [...topVideos, ...articleVideos];
 
     const clips = all
-      .map(v => {
+      .map((v) => {
         const src = v.links?.source || {};
         const url = src.HLS?.HD?.href || src.HLS?.href || src.HD?.href || src.mezzanine?.href || '';
         if (!url) return null;
@@ -3026,7 +3537,7 @@ app.get('/nba/game-clips/:gameId', async (req, res) => {
           headline: v.headline || v.title || 'Clip',
           duration: v.duration || 0,
           url,
-          thumbnail: (typeof v.thumbnail === 'string' ? v.thumbnail : v.thumbnail?.href) || ''
+          thumbnail: (typeof v.thumbnail === 'string' ? v.thumbnail : v.thumbnail?.href) || '',
         };
       })
       .filter(Boolean)
@@ -3069,13 +3580,15 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       const directMp4 = highlight.links?.source?.HD?.href;
       const hlUrl = hlsUrl || directMp4;
       if (hlUrl) {
-        console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s) [${hlsUrl ? 'HLS' : 'direct MP4'}]`);
+        console.log(
+          `[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s) [${hlsUrl ? 'HLS' : 'direct MP4'}]`
+        );
         // Download immediately — ESPN CDN URLs expire within seconds
         const tmpPathAv = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
         let localPathAv = null;
         try {
           localPathAv = await downloadEspnVideo(hlUrl, tmpPathAv);
-        } catch(e) {
+        } catch (e) {
           console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
         }
         return res.json({
@@ -3088,13 +3601,15 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
           title: highlight.headline || 'Game Highlights',
           description: highlight.description || '',
           duration: highlight.duration || 0,
-          source: 'article.video'
+          source: 'article.video',
         });
       }
     }
 
     // Step 3: Fall back to play clips (d.videos) — longest duration
-    console.warn(`[nba-scrape] ⚠️ article.video empty — falling back to API play clips (longest duration)`);
+    console.warn(
+      `[nba-scrape] ⚠️ article.video empty — falling back to API play clips (longest duration)`
+    );
     const videos = summaryData.videos || [];
 
     if (!videos.length) {
@@ -3102,11 +3617,13 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No videos found for game ${gameId} — video page Puppeteer failed and ESPN API returned empty videos[]. Game may be too recent or too old.`
+        error: `No videos found for game ${gameId} — video page Puppeteer failed and ESPN API returned empty videos[]. Game may be too recent or too old.`,
       });
     }
 
-    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting ${isShortFormRequest ? 'best 30-90s clip for short-form' : 'longest clip for long-form'}`);
+    console.log(
+      `[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting ${isShortFormRequest ? 'best 30-90s clip for short-form' : 'longest clip for long-form'}`
+    );
 
     // Step 2: Use full video pool — select best clip based on form type.
     // Long-form: select longest duration (game highlights reel is reliably longest at 115s).
@@ -3119,7 +3636,7 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     // Step 3: Find best video — prefer 30-90s range for short-form, longest for long-form
     let highestDurationVideo = null;
     let maxDuration = 0;
-    let shortFormPreferred = null;  // best clip in 30-90s range for short-form
+    let shortFormPreferred = null; // best clip in 30-90s range for short-form
 
     for (const video of videoPool) {
       const duration = video.duration || 0;
@@ -3147,7 +3664,9 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       maxDuration = shortFormPreferred.duration || 0;
       console.log(`[nba-scrape] Short-form: selected ${maxDuration}s clip in target 30-90s range`);
     } else if (isShortFormRequest) {
-      console.warn(`[nba-scrape] Short-form: no clip in 30-90s range found — falling back to longest (${maxDuration}s)`);
+      console.warn(
+        `[nba-scrape] Short-form: no clip in 30-90s range found — falling back to longest (${maxDuration}s)`
+      );
     }
 
     if (!highestDurationVideo) {
@@ -3155,7 +3674,7 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No video with duration >0 found for game ${gameId} — ESPN may not have processed highlights yet.`
+        error: `No video with duration >0 found for game ${gameId} — ESPN may not have processed highlights yet.`,
       });
     }
 
@@ -3163,14 +3682,15 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     // over direct CDN MP4 (expires within seconds of being generated)
     const links = highestDurationVideo.links || {};
     const source = links.source || {};
-    let videoUrl = source.HLS?.HD?.href
-      || source.HLS?.href
-      || source.HD?.href
-      || source.mezzanine?.href
-      || source.full?.href
-      || source.href
-      || links.mobile?.href
-      || '';
+    let videoUrl =
+      source.HLS?.HD?.href ||
+      source.HLS?.href ||
+      source.HD?.href ||
+      source.mezzanine?.href ||
+      source.full?.href ||
+      source.href ||
+      links.mobile?.href ||
+      '';
 
     // Gate 0: Validate the selected URL is usable
     // Puppeteer already ran first and failed, so no further fallback is available.
@@ -3179,24 +3699,28 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No valid highlight clip URL found for game ${gameId} — Puppeteer failed and API returned metadata but no downloadable URL. Check ESPN API response at: ${summaryUrl}`
+        error: `No valid highlight clip URL found for game ${gameId} — Puppeteer failed and API returned metadata but no downloadable URL. Check ESPN API response at: ${summaryUrl}`,
       });
     }
 
     // Gate 0: Validate duration meets minimum threshold (30s for short-form, 10s for long-form)
     if (maxDuration > 0 && maxDuration < minDurationSecs) {
-      console.warn(`[nba-scrape] Gate 0 WARN: Best video for game ${gameId} is only ${maxDuration}s — below ${minDurationSecs}s minimum (formType: ${formType || 'long'})`);
+      console.warn(
+        `[nba-scrape] Gate 0 WARN: Best video for game ${gameId} is only ${maxDuration}s — below ${minDurationSecs}s minimum (formType: ${formType || 'long'})`
+      );
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No valid highlight clips found for game ${gameId} — longest clip is only ${maxDuration}s (minimum: ${minDurationSecs}s for ${isShortFormRequest ? 'short-form' : 'long-form'})`
+        error: `No valid highlight clips found for game ${gameId} — longest clip is only ${maxDuration}s (minimum: ${minDurationSecs}s for ${isShortFormRequest ? 'short-form' : 'long-form'})`,
       });
     }
 
     // Also extract thumbnail
     const thumbnail = highestDurationVideo.thumbnail || '';
 
-    console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected longest duration video: "${highestDurationVideo.headline || highestDurationVideo.title || 'Game Highlights'}" (${maxDuration}s)`);
+    console.log(
+      `[nba-scrape] ✅ Gate 0 PASS: Selected longest duration video: "${highestDurationVideo.headline || highestDurationVideo.title || 'Game Highlights'}" (${maxDuration}s)`
+    );
     console.log(`[nba-scrape]    URL: ${videoUrl.slice(0, 80)}...`);
 
     // Download immediately — ESPN CDN URLs expire within seconds
@@ -3205,16 +3729,41 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     try {
       const { execFile } = require('child_process');
       const ffmpegBin = ffmpegPath();
-      const ffmpegArgs = ['-i', videoUrl, '-t', '90', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', '-y', tmpPathApi];
+      const ffmpegArgs = [
+        '-i',
+        videoUrl,
+        '-t',
+        '90',
+        '-c:v',
+        'libx264',
+        '-preset',
+        'ultrafast',
+        '-crf',
+        '28',
+        '-c:a',
+        'aac',
+        '-ar',
+        '44100',
+        '-ac',
+        '2',
+        '-movflags',
+        '+faststart',
+        '-y',
+        tmpPathApi,
+      ];
       await new Promise((resolve, reject) => {
-        execFile(ffmpegBin, ffmpegArgs, { timeout: 120000 }, (err) => err ? reject(err) : resolve());
+        execFile(ffmpegBin, ffmpegArgs, { timeout: 120000 }, (err) =>
+          err ? reject(err) : resolve()
+        );
       });
       const sizeApi = fs.existsSync(tmpPathApi) ? fs.statSync(tmpPathApi).size : 0;
       if (sizeApi > 1000) {
         localPathApi = tmpPathApi;
-        console.log(`[nba-scrape] ✅ Downloaded highlight to ${tmpPathApi} (${(sizeApi/1024/1024).toFixed(1)}MB)`);
+        console.log(
+          `[nba-scrape] ✅ Downloaded highlight to ${tmpPathApi} (${(sizeApi / 1024 / 1024).toFixed(1)}MB)`
+        );
       }
-    } catch(e) {
+    } catch (e) {
       console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
     }
 
@@ -3229,9 +3778,8 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       description: highestDurationVideo.description || '',
       duration: maxDuration,
       videoCount: videos.length,
-      source: 'api'
+      source: 'api',
     });
-
   } catch (err) {
     console.error(`[nba-scrape] Error:`, err.message);
     res.status(500).json({ error: err.message, gate0: 'error' });
@@ -3283,7 +3831,10 @@ async function validateVideo(v) {
   try {
     hlsUrl = await scrapeArticleVideo(v.url);
     checks.ytdlpExtract = !!hlsUrl;
-    if (!hlsUrl) issues.push('scrapeArticleVideo returned null (no Brightcove embed or yt-dlp failed on embed URL)');
+    if (!hlsUrl)
+      issues.push(
+        'scrapeArticleVideo returned null (no Brightcove embed or yt-dlp failed on embed URL)'
+      );
   } catch (e) {
     checks.ytdlpExtract = false;
     issues.push(`scrapeArticleVideo failed: ${e.message}`);
@@ -3316,8 +3867,14 @@ async function validateVideo(v) {
   }
 
   // Derive overall status
-  const hasFail = checks.brightcoveReachable === false || checks.ytdlpExtract === false || checks.durationOk === false;
-  const hasWarning = checks.dimensionsOk === false || checks.durationOk === 'warning' || checks.ogImageReachable === false;
+  const hasFail =
+    checks.brightcoveReachable === false ||
+    checks.ytdlpExtract === false ||
+    checks.durationOk === false;
+  const hasWarning =
+    checks.dimensionsOk === false ||
+    checks.durationOk === 'warning' ||
+    checks.ogImageReachable === false;
   const status = hasFail ? 'fail' : hasWarning ? 'warning' : 'ok';
 
   return { ...v, validation: { status, checks, issues } };
@@ -3329,28 +3886,30 @@ async function validateVideo(v) {
 // Returns array of article URL strings.
 async function fetchAjSitemapUrls(date = new Date()) {
   const yyyy = date.getFullYear();
-  const mm   = String(date.getMonth() + 1).padStart(2, '0');
-  const dd   = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
   const sitemapUrl = `https://www.aljazeera.com/sitemap.xml?yyyy=${yyyy}&mm=${mm}&dd=${dd}`;
 
   console.log(`[fetchAjSitemapUrls] Fetching ${sitemapUrl}`);
   const resp = await axios.get(sitemapUrl, {
     timeout: 15000,
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CWN/1.0)' }
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CWN/1.0)' },
   });
 
   const xml = resp.data || '';
   // Extract all <loc> URLs from the sitemap XML
   const locMatches = xml.match(/<loc>([^<]+)<\/loc>/g) || [];
   const allUrls = locMatches
-    .map(m => m.replace(/<\/?loc>/g, '').trim())
-    .filter(u => u.startsWith('https://www.aljazeera.com/'));
+    .map((m) => m.replace(/<\/?loc>/g, '').trim())
+    .filter((u) => u.startsWith('https://www.aljazeera.com/'));
 
   // Exclude non-article paths — return ALL remaining articles (no topic keyword filter)
   const EXCLUDE_PATHS = ['/liveblog/', '/video/', '/longform/', '/podcasts/', '/program/'];
-  const articleUrls = allUrls.filter(u => !EXCLUDE_PATHS.some(p => u.includes(p)));
+  const articleUrls = allUrls.filter((u) => !EXCLUDE_PATHS.some((p) => u.includes(p)));
 
-  console.log(`[fetchAjSitemapUrls] ${allUrls.length} total → ${articleUrls.length} articles (all topics)`);
+  console.log(
+    `[fetchAjSitemapUrls] ${allUrls.length} total → ${articleUrls.length} articles (all topics)`
+  );
   return articleUrls;
 }
 
@@ -3408,19 +3967,23 @@ function ajArticlePathFromHubQueues(urlStr) {
 }
 
 async function fetchAjHubArticleUrls(hubUrl, maxUrls = 45) {
-  const hub = String(hubUrl || '').trim().replace(/\/?$/, '/');
+  const hub = String(hubUrl || '')
+    .trim()
+    .replace(/\/?$/, '/');
   if (!hub) return [];
   const resp = await axios.get(hub, {
     timeout: 25000,
-    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' }
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    },
   });
   const $ = cheerio.load(resp.data || '');
   const out = [];
   const badPath = (p) =>
     /\/(features|opinion|longform|podcasts|program|gallery|sport|sports)\b/i.test(p);
   const looksArticle = (p) =>
-    ajArticleHasDatedSlugPath(p) &&
-    (AJ_ALLOWED_SECTION_PATH_RE.test(p) || /\/news\//i.test(p));
+    ajArticleHasDatedSlugPath(p) && (AJ_ALLOWED_SECTION_PATH_RE.test(p) || /\/news\//i.test(p));
   $('a[href]').each((_, el) => {
     if (out.length >= maxUrls) return false;
     const href = ($(el).attr('href') || '').trim();
@@ -3454,7 +4017,15 @@ function probeHlsDurationSeconds(hlsUrl) {
     try {
       execFile(
         ffprobePath(),
-        ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', hlsUrl],
+        [
+          '-v',
+          'error',
+          '-show_entries',
+          'format=duration',
+          '-of',
+          'default=noprint_wrappers=1:nokey=1',
+          hlsUrl,
+        ],
         { timeout: 35000 },
         (err, stdout) => {
           if (err) return resolve(null);
@@ -3479,11 +4050,14 @@ async function pickPortraitOrLargestVariantFromHlsMaster(masterHlsUrl) {
   try {
     const resp = await axios.get(masterHlsUrl, {
       timeout: 15000,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CWN/1.0)' }
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CWN/1.0)' },
     });
     const text = String(resp.data || '');
     if (!text.includes('#EXTM3U')) return null;
-    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const lines = text
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
     const variants = [];
     for (let i = 0; i < lines.length - 1; i++) {
       const line = lines[i];
@@ -3507,7 +4081,7 @@ async function pickPortraitOrLargestVariantFromHlsMaster(masterHlsUrl) {
         w,
         h,
         bandwidth: bwM ? parseInt(bwM[1], 10) : 0,
-        url: variantUrl
+        url: variantUrl,
       });
     }
     if (variants.length === 0) return null;
@@ -3519,7 +4093,7 @@ async function pickPortraitOrLargestVariantFromHlsMaster(masterHlsUrl) {
         hlsUrl: best.url,
         orientation: 'portrait',
         sourceWidth: best.w,
-        sourceHeight: best.h
+        sourceHeight: best.h,
       };
     }
     variants.sort((a, b) => b.w * b.h - a.w * a.h);
@@ -3528,7 +4102,7 @@ async function pickPortraitOrLargestVariantFromHlsMaster(masterHlsUrl) {
       hlsUrl: masterHlsUrl,
       orientation: 'landscape',
       sourceWidth: best.w,
-      sourceHeight: best.h
+      sourceHeight: best.h,
     };
   } catch {
     return null;
@@ -3541,11 +4115,15 @@ function probeHlsDimensions(hlsUrl) {
       execFile(
         ffprobePath(),
         [
-          '-v', 'error',
-          '-select_streams', 'v:0',
-          '-show_entries', 'stream=width,height',
-          '-of', 'default=noprint_wrappers=1:nokey=1',
-          hlsUrl
+          '-v',
+          'error',
+          '-select_streams',
+          'v:0',
+          '-show_entries',
+          'stream=width,height',
+          '-of',
+          'default=noprint_wrappers=1:nokey=1',
+          hlsUrl,
         ],
         { timeout: 35000 },
         (err, stdout) => {
@@ -3585,8 +4163,12 @@ function getPinnedAjUrlsForScraper() {
   const raw = process.env.NEWS_AJ_PINNED_URLS;
   if (raw !== undefined) {
     const t = String(raw).trim();
-    if (t === '' || t === '0' || t.toLowerCase() === 'off' || t.toLowerCase() === 'false') return [];
-    return t.split(/[\n,]+/).map((s) => stripAjPageFragment(s.trim())).filter(Boolean);
+    if (t === '' || t === '0' || t.toLowerCase() === 'off' || t.toLowerCase() === 'false')
+      return [];
+    return t
+      .split(/[\n,]+/)
+      .map((s) => stripAjPageFragment(s.trim()))
+      .filter(Boolean);
   }
   // Default: no pinned URLs — discovery is US-Canada hub + /us-canada/ sitemap paths first.
   return [];
@@ -3608,8 +4190,9 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
   const puppeteer = require('puppeteer');
   const results = [];
 
-  const today     = new Date();
-  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
 
   let candidateUrls = [];
   if (Array.isArray(forcedCandidates) && forcedCandidates.length > 0) {
@@ -3619,7 +4202,7 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
     try {
       const [todayUrls, yestUrls] = await Promise.all([
         fetchAjSitemapUrls(today),
-        fetchAjSitemapUrls(yesterday)
+        fetchAjSitemapUrls(yesterday),
       ]);
       const mergedSitemap = [...todayUrls, ...yestUrls];
       const sitemapWhereUs = mergedSitemap.filter((u) => /\/where\/united-states\//i.test(u));
@@ -3631,19 +4214,25 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
           !/\/opinion\//i.test(u) &&
           !/\/longform\//i.test(u)
       );
-      const primaryHubUrl = process.env.NEWS_US_PRIMARY_HUB_URL || 'https://www.aljazeera.com/where/united-states/';
-      const fallbackHubUrl = process.env.NEWS_US_CANADA_HUB_URL || 'https://www.aljazeera.com/us-canada/';
+      const primaryHubUrl =
+        process.env.NEWS_US_PRIMARY_HUB_URL || 'https://www.aljazeera.com/where/united-states/';
+      const fallbackHubUrl =
+        process.env.NEWS_US_CANADA_HUB_URL || 'https://www.aljazeera.com/us-canada/';
       let primaryHubUrls = [];
       let fallbackHubUrls = [];
       try {
         primaryHubUrls = await fetchAjHubArticleUrls(primaryHubUrl, 50);
       } catch (e) {
-        console.warn(`[scrapeAjNewsVideos] Primary hub fetch failed (${primaryHubUrl}): ${e.message}`);
+        console.warn(
+          `[scrapeAjNewsVideos] Primary hub fetch failed (${primaryHubUrl}): ${e.message}`
+        );
       }
       try {
         fallbackHubUrls = await fetchAjHubArticleUrls(fallbackHubUrl, 50);
       } catch (e) {
-        console.warn(`[scrapeAjNewsVideos] Fallback hub fetch failed (${fallbackHubUrl}): ${e.message}`);
+        console.warn(
+          `[scrapeAjNewsVideos] Fallback hub fetch failed (${fallbackHubUrl}): ${e.message}`
+        );
       }
       const seen = new Set();
       const pushOrder = (arr) => {
@@ -3660,16 +4249,20 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
       pushOrder(sitemapWhereUs);
       pushOrder(sitemapUsCanada);
       pushOrder(
-        sitemapAllowed.filter((u) => !/\/where\/united-states\//i.test(u) && !/\/us-canada\//i.test(u))
+        sitemapAllowed.filter(
+          (u) => !/\/where\/united-states\//i.test(u) && !/\/us-canada\//i.test(u)
+        )
       );
       const hubUrlSet = new Set(
         [...primaryHubUrls, ...fallbackHubUrls].map((u) => stripAjPageFragment(String(u)))
       );
-      candidateUrls = candidateUrls.map((u) => stripAjPageFragment(String(u))).filter((u) => {
-        if (!u) return false;
-        if (hubUrlSet.has(u)) return ajArticlePathFromHubQueues(u);
-        return ajArticlePathFromSitemapStrict(u);
-      });
+      candidateUrls = candidateUrls
+        .map((u) => stripAjPageFragment(String(u)))
+        .filter((u) => {
+          if (!u) return false;
+          if (hubUrlSet.has(u)) return ajArticlePathFromHubQueues(u);
+          return ajArticlePathFromSitemapStrict(u);
+        });
       console.log(
         `[scrapeAjNewsVideos] Candidate order: primaryHub=${primaryHubUrls.length}, fallbackHub=${fallbackHubUrls.length}, ` +
           `sitemap where/united-states=${sitemapWhereUs.length}, sitemap /us-canada/=${sitemapUsCanada.length}, ` +
@@ -3686,7 +4279,9 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
     const seen = new Set(pinned);
     const tail = candidateUrls.filter((u) => !seen.has(u));
     candidateUrls = [...pinned, ...tail];
-    console.log(`[scrapeAjNewsVideos] Prepended ${pinned.length} pinned URL(s) (NEWS_AJ_PINNED_URLS)`);
+    console.log(
+      `[scrapeAjNewsVideos] Prepended ${pinned.length} pinned URL(s) (NEWS_AJ_PINNED_URLS)`
+    );
   }
 
   if (candidateUrls.length === 0) {
@@ -3696,71 +4291,101 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
 
   console.log(`[scrapeAjNewsVideos] Scanning for ${targetCount} videos (no article cap)...`);
 
-  const browser = await puppeteer.launch(withPuppeteerExecutable({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-  }));
+  const browser = await puppeteer.launch(
+    withPuppeteerExecutable({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    })
+  );
 
   try {
     for (const articleUrl of candidateUrls) {
       // Stop as soon as we have enough confirmed videos
       if (results.length >= targetCount) break;
 
-      let capturedHls   = null;
+      let capturedHls = null;
       let capturedVideoId = null;
 
       const page = await browser.newPage();
       try {
         // Spoof a real browser UA so AJ doesn't serve a bot-detection page
-        await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+        await page.setUserAgent(
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        );
         // Pre-accept GDPR/consent so the wall doesn't stall the page load
         await page.setCookie(
-          { name: 'OptanonAlertBoxClosed', value: new Date().toISOString(), domain: '.aljazeera.com', path: '/' },
-          { name: 'OptanonConsent',        value: 'isGpcEnabled=0&datestamp=' + encodeURIComponent(new Date().toISOString()) + '&version=202209.1.0&isIABGlobal=false&hosts=&landingPath=NotLandingPage&groups=C0001%3A1%2CC0002%3A1%2CC0003%3A1%2CC0004%3A1&AwaitingReconsent=false', domain: '.aljazeera.com', path: '/' }
+          {
+            name: 'OptanonAlertBoxClosed',
+            value: new Date().toISOString(),
+            domain: '.aljazeera.com',
+            path: '/',
+          },
+          {
+            name: 'OptanonConsent',
+            value:
+              'isGpcEnabled=0&datestamp=' +
+              encodeURIComponent(new Date().toISOString()) +
+              '&version=202209.1.0&isIABGlobal=false&hosts=&landingPath=NotLandingPage&groups=C0001%3A1%2CC0002%3A1%2CC0003%3A1%2CC0004%3A1&AwaitingReconsent=false',
+            domain: '.aljazeera.com',
+            path: '/',
+          }
         );
         // Intercept requests: block heavy assets to speed up load, let Brightcove API through
         await page.setRequestInterception(true);
         const BLOCK_TYPES = new Set(['image', 'font', 'media']);
-        const BLOCK_DOMAINS = ['googlesyndication.com', 'doubleclick.net', 'googletagmanager.com',
-          'google-analytics.com', 'facebook.net', 'scorecardresearch.com', 'quantserve.com'];
-        page.on('request', req => {
+        const BLOCK_DOMAINS = [
+          'googlesyndication.com',
+          'doubleclick.net',
+          'googletagmanager.com',
+          'google-analytics.com',
+          'facebook.net',
+          'scorecardresearch.com',
+          'quantserve.com',
+        ];
+        page.on('request', (req) => {
           const url = req.url();
-          if (BLOCK_TYPES.has(req.resourceType()) ||
-              BLOCK_DOMAINS.some(d => url.includes(d))) {
+          if (BLOCK_TYPES.has(req.resourceType()) || BLOCK_DOMAINS.some((d) => url.includes(d))) {
             req.abort();
           } else {
             req.continue();
           }
         });
 
-        page.on('response', async resp => {
+        page.on('response', async (resp) => {
           const url = resp.url();
           // Brightcove playback API returns JSON with HLS sources
-          if (url.includes('edge.api.brightcove.com') ||
-              url.includes('/accounts/665003303001/videos/')) {
+          if (
+            url.includes('edge.api.brightcove.com') ||
+            url.includes('/accounts/665003303001/videos/')
+          ) {
             try {
               const json = await resp.json();
               const sources = json.sources || [];
               // Prefer HLS manifest (application/x-mpegURL or .m3u8)
-              const hls = sources.find(s =>
-                (s.type === 'application/x-mpegURL' ||
-                 (s.src && s.src.includes('.m3u8'))) &&
-                s.src && s.src.includes('manifest.prod.boltdns.net')
+              const hls = sources.find(
+                (s) =>
+                  (s.type === 'application/x-mpegURL' || (s.src && s.src.includes('.m3u8'))) &&
+                  s.src &&
+                  s.src.includes('manifest.prod.boltdns.net')
               );
               if (hls && hls.src && !capturedHls) {
                 capturedHls = hls.src;
                 capturedVideoId = json.id || url.match(/videos\/(\d+)/)?.[1] || null;
-                console.log(`[scrapeAjNewsVideos] Captured HLS for ${articleUrl.slice(-60)}: ${hls.src.slice(0, 80)}`);
+                console.log(
+                  `[scrapeAjNewsVideos] Captured HLS for ${articleUrl.slice(-60)}: ${hls.src.slice(0, 80)}`
+                );
               }
             } catch (_) {}
           }
         });
 
-        await page.goto(stripAjPageFragment(articleUrl), { waitUntil: 'domcontentloaded', timeout: 45000 });
+        await page.goto(stripAjPageFragment(articleUrl), {
+          waitUntil: 'domcontentloaded',
+          timeout: 45000,
+        });
         // Scroll to trigger lazy-loaded players
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-        await new Promise(r => setTimeout(r, 2000));
-
+        await new Promise((r) => setTimeout(r, 2000));
       } catch (e) {
         console.warn(`[scrapeAjNewsVideos] Page error on ${articleUrl.slice(-60)}: ${e.message}`);
       } finally {
@@ -3796,8 +4421,11 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
             const manifestText = manifestResp.data || '';
             const resMatches = [...manifestText.matchAll(/RESOLUTION=(\d+)x(\d+)/g)];
             if (resMatches.length > 0) {
-              const dims = resMatches.map(m => ({ w: parseInt(m[1], 10), h: parseInt(m[2], 10) }));
-              dims.sort((a, b) => (b.w * b.h) - (a.w * a.h));
+              const dims = resMatches.map((m) => ({
+                w: parseInt(m[1], 10),
+                h: parseInt(m[2], 10),
+              }));
+              dims.sort((a, b) => b.w * b.h - a.w * a.h);
               manifestWidth = dims[0].w;
               manifestHeight = dims[0].h;
             }
@@ -3813,7 +4441,9 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
 
       // Accept both landscape and portrait — clips go into the split-screen bottom half
       // and are cropped/scaled by FFmpeg regardless of source orientation.
-      console.log(`[scrapeAjNewsVideos] ✅ ${orientation.toUpperCase()} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
+      console.log(
+        `[scrapeAjNewsVideos] ✅ ${orientation.toUpperCase()} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`
+      );
 
       const maxClipSec = parseFloat(process.env.NEWS_AJ_MAX_CLIP_SEC || '180', 10);
       if (Number.isFinite(maxClipSec) && maxClipSec > 0) {
@@ -3828,23 +4458,27 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
 
       results.push({
         articleUrl: stripAjPageFragment(articleUrl),
-        videoId:        capturedVideoId,
-        hlsUrl:         effectiveHls,
+        videoId: capturedVideoId,
+        hlsUrl: effectiveHls,
         orientation,
         pillarboxFilter,
-        sourceWidth:    manifestWidth,
-        sourceHeight:   manifestHeight
+        sourceWidth: manifestWidth,
+        sourceHeight: manifestHeight,
       });
 
-      console.log(`[scrapeAjNewsVideos] ✅ added ${orientation} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
+      console.log(
+        `[scrapeAjNewsVideos] ✅ added ${orientation} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`
+      );
     }
   } finally {
     await browser.close();
   }
 
-  const landscape = results.filter(r => r.orientation === 'landscape').length;
-  const portrait  = results.filter(r => r.orientation === 'portrait').length;
-  console.log(`[scrapeAjNewsVideos] Done: ${results.length} with video (${landscape} landscape, ${portrait} portrait)`);
+  const landscape = results.filter((r) => r.orientation === 'landscape').length;
+  const portrait = results.filter((r) => r.orientation === 'portrait').length;
+  console.log(
+    `[scrapeAjNewsVideos] Done: ${results.length} with video (${landscape} landscape, ${portrait} portrait)`
+  );
   return results;
 }
 
@@ -3870,7 +4504,7 @@ function buildAjPillarboxFilter(w, h) {
     // Step 3: gold seam left border (4px, full height)
     `drawbox=x='(${targetW}-iw)/2-4':y=0:w=4:h=${targetH}:color=0xc7af4f@1.0:t=fill`,
     // Step 4: gold seam right border (4px, full height)
-    `drawbox=x='(${targetW}+iw)/2':y=0:w=4:h=${targetH}:color=0xc7af4f@1.0:t=fill`
+    `drawbox=x='(${targetW}+iw)/2':y=0:w=4:h=${targetH}:color=0xc7af4f@1.0:t=fill`,
   ].join(',');
 
   return filter;
@@ -3891,13 +4525,17 @@ app.get('/news/us-canada-videos', async (req, res) => {
     // If Puppeteer found nothing (timeouts, Brightcove not firing), ask Gemini to
     // pick the most video-likely articles from the sitemap and retry once.
     if (ajVideos.length === 0) {
-      console.log('[news/us-canada-videos] Gate 0: 0 videos — asking Gemini to select best candidates for retry...');
+      console.log(
+        '[news/us-canada-videos] Gate 0: 0 videos — asking Gemini to select best candidates for retry...'
+      );
       try {
         const [todayUrls, yestUrls] = await Promise.all([
           fetchAjSitemapUrls(new Date()),
-          fetchAjSitemapUrls(new Date(Date.now() - 86400000))
+          fetchAjSitemapUrls(new Date(Date.now() - 86400000)),
         ]);
-        const merged = [...todayUrls, ...yestUrls].filter((u) => ajArticlePathFromSitemapStrict(String(u)));
+        const merged = [...todayUrls, ...yestUrls].filter((u) =>
+          ajArticlePathFromSitemapStrict(String(u))
+        );
         const usFirst = merged.filter((u) => /\/where\/united-states\//i.test(u));
         const usCanadaNext = merged.filter((u) => /\/us-canada\//i.test(u));
         const allowedTail = merged.filter(
@@ -3918,19 +4556,28 @@ app.get('/news/us-canada-videos', async (req, res) => {
         }
         const allUrls = ordered.slice(0, 60);
         if (allUrls.length > 0) {
-          const slugList = allUrls.map((u, i) => `${i + 1}. ${u.split('/').filter(Boolean).pop()}`).join('\n');
+          const slugList = allUrls
+            .map((u, i) => `${i + 1}. ${u.split('/').filter(Boolean).pop()}`)
+            .join('\n');
           const geminiPrompt = `You are selecting news articles for a video show. From this list of Al Jazeera article slugs, pick the 8 most likely to have an embedded video (breaking news, conflict, politics, interviews tend to have video; opinion/analysis rarely do). Return ONLY a JSON array of the numbers you selected, e.g. [1,3,7,12,15,18,22,25]. No explanation.\n\n${slugList}`;
           const geminiResp = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
             { contents: [{ parts: [{ text: geminiPrompt }] }] },
             { timeout: 15000 }
           );
-          const geminiText = ((geminiResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text).join('') || '').trim();
+          const geminiText = (
+            (geminiResp.data?.candidates?.[0]?.content?.parts || []).map((p) => p.text).join('') ||
+            ''
+          ).trim();
           const match = geminiText.match(/\[[\d,\s]+\]/);
           if (match) {
-            const indices = JSON.parse(match[0]).map(n => n - 1).filter(n => n >= 0 && n < allUrls.length);
-            const candidateUrls = indices.map(n => allUrls[n]);
-            console.log(`[news/us-canada-videos] Gate 0 Gemini picked ${candidateUrls.length} candidates — retrying scrape...`);
+            const indices = JSON.parse(match[0])
+              .map((n) => n - 1)
+              .filter((n) => n >= 0 && n < allUrls.length);
+            const candidateUrls = indices.map((n) => allUrls[n]);
+            console.log(
+              `[news/us-canada-videos] Gate 0 Gemini picked ${candidateUrls.length} candidates — retrying scrape...`
+            );
             ajVideos = await scrapeAjNewsVideos(5, candidateUrls);
             console.log(`[news/us-canada-videos] Gate 0 retry: ${ajVideos.length} videos found`);
           }
@@ -3941,36 +4588,39 @@ app.get('/news/us-canada-videos', async (req, res) => {
     }
 
     // Convert to the video object shape the dashboard expects
-    const videos = ajVideos.map(v => {
+    const videos = ajVideos.map((v) => {
       const dateMatch = v.articleUrl.match(/\/(\d{4})\/(\d{1,2})\/(\d{1,2})\//);
       let publishedAt = new Date().toISOString();
       if (dateMatch) {
         const [_, yyyy, mm, dd] = dateMatch;
-        publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T23:59:59Z`).toISOString();
+        publishedAt = new Date(
+          `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}T23:59:59Z`
+        ).toISOString();
       }
       const slug = v.articleUrl.split('/').filter(Boolean).pop() || '';
-      const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const title = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
       return {
-        url:          v.articleUrl,
-        href:         v.articleUrl.replace('https://www.aljazeera.com', ''),
-        title:        title || '(untitled)',
-        thumbnail:    null,
+        url: v.articleUrl,
+        href: v.articleUrl.replace('https://www.aljazeera.com', ''),
+        title: title || '(untitled)',
+        thumbnail: null,
         publishedAt,
-        hlsUrl:       v.hlsUrl,
-        orientation:  v.orientation,       // 'landscape' | 'portrait'
-        pillarboxFilter: v.pillarboxFilter  // null or FFmpeg filter string
+        hlsUrl: v.hlsUrl,
+        orientation: v.orientation, // 'landscape' | 'portrait'
+        pillarboxFilter: v.pillarboxFilter, // null or FFmpeg filter string
       };
     });
 
     videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
-    const landscape = videos.filter(v => v.orientation === 'landscape').length;
-    const portrait  = videos.filter(v => v.orientation === 'portrait').length;
+    const landscape = videos.filter((v) => v.orientation === 'landscape').length;
+    const portrait = videos.filter((v) => v.orientation === 'portrait').length;
 
-    const hint = videos.length === 0
-      ? 'No clips with Brightcove HLS from US/Canada AJ paths. Causes: Puppeteer did not capture HLS, duration over NEWS_AJ_MAX_CLIP_SEC, or Gemini sitemap recovery failed (check GEMINI_API_KEY). Server logs tag [news/us-canada-videos] and [scrapeAjNewsVideos].'
-      : null;
+    const hint =
+      videos.length === 0
+        ? 'No clips with Brightcove HLS from US/Canada AJ paths. Causes: Puppeteer did not capture HLS, duration over NEWS_AJ_MAX_CLIP_SEC, or Gemini sitemap recovery failed (check GEMINI_API_KEY). Server logs tag [news/us-canada-videos] and [scrapeAjNewsVideos].'
+        : null;
 
     return res.json({
       ok: true,
@@ -3980,9 +4630,10 @@ app.get('/news/us-canada-videos', async (req, res) => {
       scrapedWithVideo: ajVideos.length,
       droppedNonPortrait: 0,
       hint,
-      source: 'AJ where/united-states first, fallback us-canada — Puppeteer Brightcove — landscape + portrait — duration ≤ NEWS_AJ_MAX_CLIP_SEC',
+      source:
+        'AJ where/united-states first, fallback us-canada — Puppeteer Brightcove — landscape + portrait — duration ≤ NEWS_AJ_MAX_CLIP_SEC',
       landscape,
-      portrait
+      portrait,
     });
   } catch (err) {
     console.error('[news/us-canada-videos] Error:', err.message);
@@ -4017,7 +4668,7 @@ app.post('/twitch-clip-url', async (req, res) => {
     const result = await resolveTwitchClipMp4(slug);
     console.log(`[twitch-clip-url] ✓ ${result.quality} — ${result.mp4Url.slice(0, 80)}...`);
     res.json({ ok: true, slug, ...result });
-  } catch(err) {
+  } catch (err) {
     console.warn(`[twitch-clip-url] Failed for ${slug}: ${err.message}`);
     res.status(500).json({ error: err.message, slug });
   }
@@ -4032,7 +4683,7 @@ app.post('/twitch-clip-url', async (req, res) => {
 // Body: { thumbnailUrl, clipTitle, streamer, game, contentType, clipUrl, viewCount }
 // contentType: 'twitch' | 'nba' | 'news'
 
-const GEMINI_MODEL  = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_APIKEY = process.env.GEMINI_API_KEY; // Validated at startup
 
 // CWN_VOICE_GUIDES moved to lib/script_gen.js (only consumer — getVoiceGuide() is in that module)
@@ -4048,7 +4699,9 @@ app.post('/analyze-clip', async (req, res) => {
   }
 
   const type = contentType || 'twitch';
-  console.log(`[analyze] Starting analysis — type:${type} streamer:${streamer||'?'} clip:"${clipTitle||'?'}"`);
+  console.log(
+    `[analyze] Starting analysis — type:${type} streamer:${streamer || '?'} clip:"${clipTitle || '?'}"`
+  );
 
   try {
     // ── Step 1: Gemini visual analysis ──────────────────────────────
@@ -4057,9 +4710,12 @@ app.post('/analyze-clip', async (req, res) => {
     if (thumbnailUrl) {
       // Download thumbnail
       let imageBase64 = '';
-      let mimeType    = 'image/jpeg';
+      let mimeType = 'image/jpeg';
       try {
-        const imgResp = await axios.get(thumbnailUrl, { responseType: 'arraybuffer', timeout: 10000 });
+        const imgResp = await axios.get(thumbnailUrl, {
+          responseType: 'arraybuffer',
+          timeout: 10000,
+        });
         imageBase64 = Buffer.from(imgResp.data).toString('base64');
         const ct = imgResp.headers['content-type'] || 'image/jpeg';
         mimeType = ct.split(';')[0].trim();
@@ -4094,19 +4750,21 @@ Describe concisely (2-3 sentences):
 1. What is literally shown in the image — people, places, objects
 2. The visual context that relates to the headline
 3. Any notable details visible
-Be factual. No editorializing.`
+Be factual. No editorializing.`,
         };
 
         const geminiPrompt = geminiPrompts[type] || geminiPrompts.twitch;
 
         const geminiBody = {
-          contents: [{
-            parts: [
-              { text: geminiPrompt },
-              { inline_data: { mime_type: mimeType, data: imageBase64 } }
-            ]
-          }],
-          generationConfig: { maxOutputTokens: 300, temperature: 0.3 }
+          contents: [
+            {
+              parts: [
+                { text: geminiPrompt },
+                { inline_data: { mime_type: mimeType, data: imageBase64 } },
+              ],
+            },
+          ],
+          generationConfig: { maxOutputTokens: 300, temperature: 0.3 },
         };
 
         const geminiResp = await axios.post(
@@ -4116,15 +4774,18 @@ Be factual. No editorializing.`
         );
 
         const parts = geminiResp.data?.candidates?.[0]?.content?.parts || [];
-        geminiAnalysis = parts.map(p => p.text || '').join('').trim();
+        geminiAnalysis = parts
+          .map((p) => p.text || '')
+          .join('')
+          .trim();
         console.log(`[analyze] Gemini analysis: ${geminiAnalysis.slice(0, 120)}...`);
       }
     }
 
     // ── Step 2: Claude rewrites in CWN voice ─────────────────────────
     const tone = 'deadpan'; // Style guide from Gemini reference library handles voice — tone selector removed
-  const voiceGuide = getVoiceGuide(type, tone);
-  console.log(`[generate-full-script] tone:${tone}`);
+    const voiceGuide = getVoiceGuide(type, tone);
+    console.log(`[generate-full-script] tone:${tone}`);
 
     const claudePrompt = `Write a CWN script segment for the following source clip.
 
@@ -4142,31 +4803,30 @@ ${geminiAnalysis || '(No visual analysis available — use clip title and metada
 Write the CWN script segment following the voice rules exactly.
 Output ONLY the script — no preamble, no explanation, no markdown.`;
 
-    const client   = new Anthropic();
+    const client = new Anthropic();
     const response = await client.messages.create({
-      model:      'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 500,
-      system:     voiceGuide,
-      messages:   [{ role: 'user', content: claudePrompt }]
+      system: voiceGuide,
+      messages: [{ role: 'user', content: claudePrompt }],
     });
 
     const cwnScript = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
       .join('')
       .trim();
 
     console.log(`[analyze] CWN script generated (${cwnScript.length} chars)`);
 
     res.json({
-      ok:           true,
+      ok: true,
       geminiAnalysis,
       cwnScript,
       clipTitle,
       streamer,
-      contentType:  type
+      contentType: type,
     });
-
   } catch (err) {
     console.error('[analyze] Error:', err.message);
     res.status(500).json({ error: err.message });
@@ -4197,9 +4857,6 @@ Output ONLY the script — no preamble, no explanation, no markdown.`;
 
 const GEMINI_FILE_LIMIT = 34 * 1024 * 1024; // 34MB
 
-
-
-
 // Use TwitchClient method
 function twitchThumbToMp4(thumbnailUrl) {
   return twitchClient.thumbnailToMp4(thumbnailUrl);
@@ -4223,12 +4880,10 @@ function twitchThumbToMp4(thumbnailUrl) {
 // Returns: absolute HLS/MP4 URL string ready for yt-dlp download, or null on failure.
 // Per-article timeout: 15s. Non-fatal — story skips clip if scrape fails.
 
-
-
 // Keep old name as alias (used in analyze-clip route)
 
-
-app.post('/generate-full-script',
+app.post(
+  '/generate-full-script',
   body('type').isString(),
   body('items').isArray(),
   body('formType').optional().isString(),
@@ -4250,26 +4905,25 @@ app.post('/generate-full-script',
     let ajVideoPool = [];
     if ((type === 'news' || type === 'news-short') && Array.isArray(items)) {
       ajVideoPool = items
-        .filter(it => it.hlsUrl || it.videoUrl)
-        .map(it => ({
-          articleUrl:      it.link || it.url || '',
-          title:           it.title || '',
-          hlsUrl:          it.hlsUrl || it.videoUrl || '',
-          orientation:     (it.sourceOrientation || it.orientation || 'landscape').toLowerCase(),
-          pillarboxFilter: it.pillarboxFilter || null
+        .filter((it) => it.hlsUrl || it.videoUrl)
+        .map((it) => ({
+          articleUrl: it.link || it.url || '',
+          title: it.title || '',
+          hlsUrl: it.hlsUrl || it.videoUrl || '',
+          orientation: (it.sourceOrientation || it.orientation || 'landscape').toLowerCase(),
+          pillarboxFilter: it.pillarboxFilter || null,
         }));
-      console.log(`[/generate-full-script] ajVideoPool built from request items: ${ajVideoPool.length} videos (no re-scrape)`);
+      console.log(
+        `[/generate-full-script] ajVideoPool built from request items: ${ajVideoPool.length} videos (no re-scrape)`
+      );
     }
     // Create Job Spec at job start — single document every stage reads
     try {
       const { type: contentType, formType, itemCount, title } = req.body;
-      const sourceType = (contentType === 'news' || contentType === 'news-short')
-        ? 'site_scrape'
-        : 'url_list';
+      const sourceType =
+        contentType === 'news' || contentType === 'news-short' ? 'site_scrape' : 'url_list';
       const sourceUrls = Array.isArray(items)
-        ? items
-            .map(it => it.videoUrl || it.clipUrl || it.url || it.link || null)
-            .filter(Boolean)
+        ? items.map((it) => it.videoUrl || it.clipUrl || it.url || it.link || null).filter(Boolean)
         : [];
       req.jobSpec = await createJobSpec({
         customerId: req.body.customerId || 'c0',
@@ -4279,19 +4933,28 @@ app.post('/generate-full-script',
         createdBy: 'dashboard',
         expectedSynth: !!req.body.expectedSynth,
         sourceType,
-        sourceConfig: sourceType === 'site_scrape'
-          ? { siteTarget: contentType }
-          : { urls: sourceUrls },
+        sourceConfig:
+          sourceType === 'site_scrape' ? { siteTarget: contentType } : { urls: sourceUrls },
         items: Array.isArray(items) ? items : [],
-        title: title || null
+        title: title || null,
       });
     } catch (specErr) {
-      console.warn('[/generate-full-script] Job Spec creation failed (non-fatal):', specErr.message);
+      console.warn(
+        '[/generate-full-script] Job Spec creation failed (non-fatal):',
+        specErr.message
+      );
     }
     // Override deliverySpec platforms if caller specified them (e.g. platform selector modal)
-    if (req.jobSpec && req.body.platforms && Array.isArray(req.body.platforms) && req.body.platforms.length > 0) {
+    if (
+      req.jobSpec &&
+      req.body.platforms &&
+      Array.isArray(req.body.platforms) &&
+      req.body.platforms.length > 0
+    ) {
       req.jobSpec.deliverySpec.platforms = req.body.platforms;
-      console.log(`[/generate-full-script] deliverySpec.platforms overridden by request: ${req.body.platforms.join(', ')}`);
+      console.log(
+        `[/generate-full-script] deliverySpec.platforms overridden by request: ${req.body.platforms.join(', ')}`
+      );
     }
     // Store the semantic jobSpecId on req so script_gen can cross-reference it into the job card
     let preGenerateAllReady = false;
@@ -4311,13 +4974,25 @@ app.post('/generate-full-script',
       console.log(`[PRE-GENERATE] Customer:      ${req.jobSpec.customerId}`);
       console.log(`[PRE-GENERATE] Template:      ${req.jobSpec.templateId}`);
       console.log(`[PRE-GENERATE] Content type:  ${req.jobSpec.contentType}`);
-      console.log(`[PRE-GENERATE] Form factor:   ${req.jobSpec.order?.output?.formFactor} (${req.jobSpec.order?.output?.aspectRatio})`);
-      console.log(`[PRE-GENERATE] Resolution:    ${req.jobSpec.order?.output?.resolution?.width}×${req.jobSpec.order?.output?.resolution?.height}`);
-      console.log(`[PRE-GENERATE] Platforms:     ${req.jobSpec.deliverySpec?.platforms?.join(', ') || 'none'}`);
-      console.log(`[PRE-GENERATE] Avatar ID:     ${req.jobSpec.designSpec?.avatarId?.slice(0,8) || 'n/a'}...`);
-      console.log(`[PRE-GENERATE] Expected clips:${req.jobSpec.designSpec?.expectedClipCount ?? 'n/a'}`);
+      console.log(
+        `[PRE-GENERATE] Form factor:   ${req.jobSpec.order?.output?.formFactor} (${req.jobSpec.order?.output?.aspectRatio})`
+      );
+      console.log(
+        `[PRE-GENERATE] Resolution:    ${req.jobSpec.order?.output?.resolution?.width}×${req.jobSpec.order?.output?.resolution?.height}`
+      );
+      console.log(
+        `[PRE-GENERATE] Platforms:     ${req.jobSpec.deliverySpec?.platforms?.join(', ') || 'none'}`
+      );
+      console.log(
+        `[PRE-GENERATE] Avatar ID:     ${req.jobSpec.designSpec?.avatarId?.slice(0, 8) || 'n/a'}...`
+      );
+      console.log(
+        `[PRE-GENERATE] Expected clips:${req.jobSpec.designSpec?.expectedClipCount ?? 'n/a'}`
+      );
       console.log(`[PRE-GENERATE] Chrome skin:   ${req.jobSpec.designSpec?.chrome?.skin || 'n/a'}`);
-      console.log(`[PRE-GENERATE] Outro line:    ${req.jobSpec.designSpec?.voice?.outroLine || 'from customerConfig'}`);
+      console.log(
+        `[PRE-GENERATE] Outro line:    ${req.jobSpec.designSpec?.voice?.outroLine || 'from customerConfig'}`
+      );
       console.log(sep);
 
       // Run canProduce + commit on all gate workers
@@ -4338,36 +5013,44 @@ app.post('/generate-full-script',
         for (const [name, gate] of Object.entries(gates)) {
           try {
             // canProduce check
-            const readiness = typeof gate.canProduce === 'function'
-              ? await Promise.resolve(gate.canProduce(req.jobSpec))
-              : { ready: true, missing: [] };
+            const readiness =
+              typeof gate.canProduce === 'function'
+                ? await Promise.resolve(gate.canProduce(req.jobSpec))
+                : { ready: true, missing: [] };
 
             // commit declaration
-            const commitment = typeof gate.commit === 'function'
-              ? await Promise.resolve(gate.commit(req.jobSpec))
-              : { committed: 'no commit() defined' };
+            const commitment =
+              typeof gate.commit === 'function'
+                ? await Promise.resolve(gate.commit(req.jobSpec))
+                : { committed: 'no commit() defined' };
 
             const ready = readiness.ready !== false;
             commitments[name] = { ready, commitment };
 
             if (!ready) {
               allReady = false;
-              console.log(`[${name.toUpperCase()}] ❌ NOT READY: ${(readiness.missing || readiness.reasons || []).map(m => m.item || m).join(', ')}`);
+              console.log(
+                `[${name.toUpperCase()}] ❌ NOT READY: ${(readiness.missing || readiness.reasons || []).map((m) => m.item || m).join(', ')}`
+              );
             } else {
               const summary = commitment?.summary || commitment?.committed || 'ready';
               console.log(`[${name.toUpperCase()}] ✅ SIGNED OFF: ${summary}`);
             }
-          } catch(gErr) {
+          } catch (gErr) {
             console.log(`[${name.toUpperCase()}] ⚠️  Sign-off error (non-fatal): ${gErr.message}`);
           }
         }
 
         console.log(sep);
         if (allReady) {
-          console.log(`[PRE-GENERATE] ✅ ALL GATES SIGNED OFF — Job confirmed: ${req.jobSpec.jobId}`);
+          console.log(
+            `[PRE-GENERATE] ✅ ALL GATES SIGNED OFF — Job confirmed: ${req.jobSpec.jobId}`
+          );
           console.log(`[PRE-GENERATE] 🚀 Production starting — notifying all QA agents`);
           console.log(`[PRE-GENERATE] QA agents briefed on job: ${req.jobSpec.jobId}`);
-          console.log(`[PRE-GENERATE] Gate thresholds: G1≥${req.jobSpec.designSpec?.qaThresholds?.gate1?.pass} G2≥${req.jobSpec.designSpec?.qaThresholds?.gate2?.pass} G3a≥${req.jobSpec.designSpec?.qaThresholds?.gate3a?.pass} G4≥${req.jobSpec.designSpec?.qaThresholds?.gate4?.pass}`);
+          console.log(
+            `[PRE-GENERATE] Gate thresholds: G1≥${req.jobSpec.designSpec?.qaThresholds?.gate1?.pass} G2≥${req.jobSpec.designSpec?.qaThresholds?.gate2?.pass} G3a≥${req.jobSpec.designSpec?.qaThresholds?.gate3a?.pass} G4≥${req.jobSpec.designSpec?.qaThresholds?.gate4?.pass}`
+          );
         } else {
           console.log(`[PRE-GENERATE] ⚠️  Some gates not ready — job proceeding with warnings`);
           console.log(`[PRE-GENERATE] Kill this job if critical gates failed`);
@@ -4379,9 +5062,9 @@ app.post('/generate-full-script',
           jobId: req.jobSpec.jobId,
           contentType: req.jobSpec.contentType,
           templateId: req.jobSpec.templateId,
-          jobSpec: req.jobSpec,  // full jobSpec for gate prepare() pre-work
+          jobSpec: req.jobSpec, // full jobSpec for gate prepare() pre-work
           commitments,
-          allReady
+          allReady,
         });
 
         // NR: job confirmed event — queryable per customer/content type
@@ -4392,9 +5075,12 @@ app.post('/generate-full-script',
         try {
           persistJobSpecGateContracts(req.jobSpec, commitments);
         } catch (contractErr) {
-          console.warn('[PRE-GENERATE] Failed to persist gate contracts (non-fatal):', contractErr.message);
+          console.warn(
+            '[PRE-GENERATE] Failed to persist gate contracts (non-fatal):',
+            contractErr.message
+          );
         }
-      } catch(commitErr) {
+      } catch (commitErr) {
         console.warn('[PRE-GENERATE] Gate sign-off check failed (non-fatal):', commitErr.message);
       }
 
@@ -4404,7 +5090,7 @@ app.post('/generate-full-script',
         const qaGen = require('./lib/qa_generate_confirm');
         qaGen.persistAfterPreGenerate(req.jobSpec.jobId, {
           allReady: preGenerateAllReady,
-          commitments: preGenerateCommitments
+          commitments: preGenerateCommitments,
         });
         const policyOn = qaGen.isPolicyEnabled();
         pipelineBus.emit('qa:generate_confirm_policy', {
@@ -4415,11 +5101,11 @@ app.post('/generate-full-script',
           gateWorkersAllReady: preGenerateAllReady,
           monitorNote: policyOn
             ? 'QA_CONFIRM_ON_GENERATE: require qaGenerateConfirmed on this POST or POST /job/:id/qa-confirm-generate'
-            : 'QA generate confirm not required — set QA_CONFIRM_ON_GENERATE=true to enforce QA ack like gate sign-off'
+            : 'QA generate confirm not required — set QA_CONFIRM_ON_GENERATE=true to enforce QA ack like gate sign-off',
         });
         nrQaGenerateConfirmPolicy(req.jobSpec, {
           policyEnabled: policyOn,
-          gateWorkersAllReady: preGenerateAllReady
+          gateWorkersAllReady: preGenerateAllReady,
         });
         if (policyOn) {
           // Same POST must include qaGenerateConfirmed (each generate creates a new jobId — no separate round-trip yet).
@@ -4429,20 +5115,21 @@ app.post('/generate-full-script',
                 'QA_CONFIRM_ON_GENERATE is enabled: include qaGenerateConfirmed: true on this POST after QA agents agree (same request as gate sign-off). Optional: POST /job/:jobId/qa-confirm-generate for manual DB ack when reusing a job id.',
               needsQaGenerateConfirm: true,
               jobId: req.jobSpec.jobId,
-              gateWorkersAllReady: preGenerateAllReady
+              gateWorkersAllReady: preGenerateAllReady,
             });
           }
           qaGen.markConfirmed(req.jobSpec.jobId, { source: 'request_body' });
         }
       } catch (qaErr) {
-        console.warn('[generate-full-script] QA generate confirm hook failed (non-fatal):', qaErr.message);
+        console.warn(
+          '[generate-full-script] QA generate confirm hook failed (non-fatal):',
+          qaErr.message
+        );
       }
     }
     handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
   }
 );
-
-
 
 // ── POST /analyze-style-library ─────────────────────────────────
 // One-time teaching pass: Gemini watches reference videos and extracts
@@ -4458,10 +5145,12 @@ app.post('/analyze-style-library', async (req, res) => {
 
   const STYLE_GUIDE_PATH = path.join(__dirname, 'data/cwn_style_guides.json');
   let existingGuides = {};
-  try { existingGuides = JSON.parse(fs.readFileSync(STYLE_GUIDE_PATH, 'utf8')); } catch(e) {}
+  try {
+    existingGuides = JSON.parse(fs.readFileSync(STYLE_GUIDE_PATH, 'utf8'));
+  } catch (e) {}
 
   const results = {};
-  const errors  = {};
+  const errors = {};
 
   for (const [contentType, urls] of Object.entries(library)) {
     if (!urls || !urls.length) continue;
@@ -4472,17 +5161,26 @@ app.post('/analyze-style-library', async (req, res) => {
       if (!url || !url.startsWith('http')) continue;
       try {
         // Download video sample (first 32MB) for Gemini analysis
-        const tmpPath = path.join(TMP_DIR, `ref_${contentType}_${Date.now()}_${Math.random().toString(36).slice(2,6)}.mp4`);
+        const tmpPath = path.join(
+          TMP_DIR,
+          `ref_${contentType}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.mp4`
+        );
         const MAX_BYTES = 32 * 1024 * 1024;
 
         console.log(`[style-library] Downloading: ${url.slice(0, 80)}...`);
         await new Promise((res, rej) => {
           const { execFile } = require('child_process');
           const args = [
-            '--quiet', '--no-warnings',
-            '-f', 'best[ext=mp4][filesize<33M]/best[filesize<33M]/best',
-            '--max-filesize', '33m',
-            '-o', tmpPath, '--no-playlist', '--no-part'
+            '--quiet',
+            '--no-warnings',
+            '-f',
+            'best[ext=mp4][filesize<33M]/best[filesize<33M]/best',
+            '--max-filesize',
+            '33m',
+            '-o',
+            tmpPath,
+            '--no-playlist',
+            '--no-part',
           ];
           execFile('yt-dlp', args.concat([url]), { timeout: 90000 }, (err, stdout, stderr) => {
             if (err) rej(new Error(`yt-dlp: ${stderr || err.message}`));
@@ -4492,7 +5190,9 @@ app.post('/analyze-style-library', async (req, res) => {
 
         if (!fs.existsSync(tmpPath) || fs.statSync(tmpPath).size < 1000) {
           console.warn(`[style-library] Download failed for ${url}`);
-          try { fs.unlinkSync(tmpPath); } catch(e) {}
+          try {
+            fs.unlinkSync(tmpPath);
+          } catch (e) {}
           continue;
         }
 
@@ -4503,11 +5203,13 @@ app.post('/analyze-style-library', async (req, res) => {
           fs.writeFileSync(tmpPath, buf);
         }
 
-        console.log(`[style-library] Uploading ${(fs.statSync(tmpPath).size/1024/1024).toFixed(1)}MB to Gemini...`);
+        console.log(
+          `[style-library] Uploading ${(fs.statSync(tmpPath).size / 1024 / 1024).toFixed(1)}MB to Gemini...`
+        );
         const geminiFile = await waitForGeminiFile(await uploadToGeminiFiles(tmpPath));
 
         // 2x VIEWING: Watch each reference video 2 times for style learning
-        console.log(`[style-library] Starting 2x viewing analysis for ${url.slice(0,60)}...`);
+        console.log(`[style-library] Starting 2x viewing analysis for ${url.slice(0, 60)}...`);
         const multipleViewings = [];
 
         for (let viewNum = 1; viewNum <= 2; viewNum++) {
@@ -4537,39 +5239,51 @@ Do NOT extract: energy level, catchphrases, audience engagement tactics, hype la
               genResp = await axios.post(
                 `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
                 {
-                  contents: [{ parts: [
-                    { text: stylePrompt },
-                    { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } }
-                  ]}],
-                  generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
+                  contents: [
+                    {
+                      parts: [
+                        { text: stylePrompt },
+                        { file_data: { mime_type: 'video/mp4', file_uri: geminiFile.uri } },
+                      ],
+                    },
+                  ],
+                  generationConfig: { maxOutputTokens: 1000, temperature: 0.2 },
                 },
                 { headers: { 'Content-Type': 'application/json' }, timeout: 90000 }
               );
               break; // success
-            } catch(retryErr) {
+            } catch (retryErr) {
               const is503 = retryErr.response && retryErr.response.status === 503;
               if (is503 && attempt < 3) {
                 const backoff = attempt * 15000; // 15s, 30s
-                console.warn(`[style-library]   ⚠️ 503 on viewing ${viewNum} attempt ${attempt} — retrying in ${backoff/1000}s`);
-                await new Promise(r => setTimeout(r, backoff));
+                console.warn(
+                  `[style-library]   ⚠️ 503 on viewing ${viewNum} attempt ${attempt} — retrying in ${backoff / 1000}s`
+                );
+                await new Promise((r) => setTimeout(r, backoff));
               } else {
                 throw retryErr;
               }
             }
           }
 
-          const observation = (genResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
+          const observation = (genResp.data?.candidates?.[0]?.content?.parts || [])
+            .map((p) => p.text || '')
+            .join('')
+            .trim();
           if (observation.length > 100) {
             multipleViewings.push(`--- VIEWING #${viewNum} ---\n${observation}`);
-            console.log(`[style-library]   ✓ Viewing ${viewNum}/2 complete (${observation.length} chars)`);
+            console.log(
+              `[style-library]   ✓ Viewing ${viewNum}/2 complete (${observation.length} chars)`
+            );
           }
 
           // Rate limit pause between viewings (shorter than between videos)
-          if (viewNum < 2) await new Promise(r => setTimeout(r, 2000));
+          if (viewNum < 2) await new Promise((r) => setTimeout(r, 2000));
         }
 
         // Synthesize all 2 viewings into a deep per-video analysis
-        if (multipleViewings.length >= 1) { // Require at least 1 successful viewing
+        if (multipleViewings.length >= 1) {
+          // Require at least 1 successful viewing
           const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations for Bobby G, host of ClipzWorld News.
 
 Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority. Flat. Never explains the joke. State the fact, one observation, done.
@@ -4590,30 +5304,43 @@ Max 600 words.`;
             const msg = await anthropic.messages.create({
               model: 'claude-sonnet-4-20250514',
               max_tokens: 800,
-              messages: [{ role: 'user', content: deepSynthesisPrompt }]
+              messages: [{ role: 'user', content: deepSynthesisPrompt }],
             });
             const deepAnalysis = msg.content[0]?.text || multipleViewings.join('\n\n');
-            videoAnalyses.push(`--- Reference video (2x viewing): ${url.slice(0,60)} ---\n${deepAnalysis}`);
-            console.log(`[style-library] ✅ 2x analysis complete for ${url.slice(0,60)} (${deepAnalysis.length} chars)`);
-          } catch(e) {
+            videoAnalyses.push(
+              `--- Reference video (2x viewing): ${url.slice(0, 60)} ---\n${deepAnalysis}`
+            );
+            console.log(
+              `[style-library] ✅ 2x analysis complete for ${url.slice(0, 60)} (${deepAnalysis.length} chars)`
+            );
+          } catch (e) {
             // Fallback: concatenate all viewings
-            videoAnalyses.push(`--- Reference video (2 viewings): ${url.slice(0,60)} ---\n${multipleViewings.join('\n\n')}`);
-            console.log(`[style-library] ✅ 2x analysis complete (fallback) for ${url.slice(0,60)}`);
+            videoAnalyses.push(
+              `--- Reference video (2 viewings): ${url.slice(0, 60)} ---\n${multipleViewings.join('\n\n')}`
+            );
+            console.log(
+              `[style-library] ✅ 2x analysis complete (fallback) for ${url.slice(0, 60)}`
+            );
           }
         } else {
-          console.warn(`[style-library] Only ${multipleViewings.length}/2 viewings succeeded, skipping video`);
+          console.warn(
+            `[style-library] Only ${multipleViewings.length}/2 viewings succeeded, skipping video`
+          );
         }
 
         // Cleanup
-        try { fs.unlinkSync(tmpPath); } catch(e) {}
         try {
-          await axios.delete(`https://generativelanguage.googleapis.com/v1beta/${geminiFile.name}?key=${GEMINI_APIKEY}`);
-        } catch(e) {}
+          fs.unlinkSync(tmpPath);
+        } catch (e) {}
+        try {
+          await axios.delete(
+            `https://generativelanguage.googleapis.com/v1beta/${geminiFile.name}?key=${GEMINI_APIKEY}`
+          );
+        } catch (e) {}
 
         // Rate limit pause between videos — longer to avoid 503s on rapid succession
-        await new Promise(r => setTimeout(r, 5000));
-
-      } catch(e) {
+        await new Promise((r) => setTimeout(r, 5000));
+      } catch (e) {
         console.warn(`[style-library] Failed for ${url}: ${e.message}`);
         errors[url] = e.message;
       }
@@ -4622,7 +5349,8 @@ Max 600 words.`;
     if (videoAnalyses.length > 0) {
       // Synthesize all analyses into one coherent style guide
       const isShortForm = contentType.endsWith('-short');
-      const shortConstraints = isShortForm ? `
+      const shortConstraints = isShortForm
+        ? `
 
 SHORT-FORM SPECIFIC RULES (this is a 45-60 second vertical video):
 - ONE clip, ONE observation, done — no callbacks, no multi-part builds
@@ -4630,7 +5358,8 @@ SHORT-FORM SPECIFIC RULES (this is a 45-60 second vertical video):
 - No setup longer than 2 sentences before the clip
 - Post-clip reaction: maximum 2 sentences
 - [beat] used once maximum per script
-- Must feel complete in under 60 seconds` : '';
+- Must feel complete in under 60 seconds`
+        : '';
 
       const synthesisPrompt = `You analyzed ${videoAnalyses.length} reference videos for Bobby G, host of ClipzWorld News (CWN) "${contentType}" show.
 
@@ -4662,13 +5391,19 @@ Format as clear bullet points under clear headings. Max 400 words. This will be 
         const msg = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 600,
-          messages: [{ role: 'user', content: synthesisPrompt }]
+          messages: [{ role: 'user', content: synthesisPrompt }],
         });
         const styleGuide = msg.content[0]?.text || videoAnalyses.join('\n\n');
         existingGuides[contentType] = styleGuide;
-        results[contentType] = { ok: true, videoCount: videoAnalyses.length, chars: styleGuide.length };
-        console.log(`[style-library] ✅ Style guide for ${contentType}: ${styleGuide.length} chars`);
-      } catch(e) {
+        results[contentType] = {
+          ok: true,
+          videoCount: videoAnalyses.length,
+          chars: styleGuide.length,
+        };
+        console.log(
+          `[style-library] ✅ Style guide for ${contentType}: ${styleGuide.length} chars`
+        );
+      } catch (e) {
         // Fallback: just concatenate analyses
         existingGuides[contentType] = videoAnalyses.join('\n\n');
         results[contentType] = { ok: true, videoCount: videoAnalyses.length, fallback: true };
@@ -4678,7 +5413,7 @@ Format as clear bullet points under clear headings. Max 400 words. This will be 
     }
 
     // Pause between content types to avoid Gemini 503 rate limits
-    await new Promise(r => setTimeout(r, 15000));
+    await new Promise((r) => setTimeout(r, 15000));
   }
 
   // Save style guides to disk
@@ -4695,7 +5430,7 @@ app.get('/style-library', (req, res) => {
   try {
     const guides = JSON.parse(fs.readFileSync(STYLE_GUIDE_PATH, 'utf8'));
     res.json({ ok: true, guides, path: STYLE_GUIDE_PATH });
-  } catch(e) {
+  } catch (e) {
     res.json({ ok: true, guides: {}, message: 'No style guides yet — run Teaching Pass first' });
   }
 });
@@ -4723,9 +5458,6 @@ app.get('/style-library', (req, res) => {
 // ── Upload Status Tracking DB ─────────────────────────────────────────────────
 // Reads/writes data/upload_status.json to track every publish attempt
 
-
-
-
 // GET /publish/upload-status — read the upload tracking database
 app.get('/publish/upload-status', (req, res) => {
   const db = readUploadStatus();
@@ -4734,21 +5466,24 @@ app.get('/publish/upload-status', (req, res) => {
   const status = req.query.status || null;
 
   let uploads = db.uploads;
-  if (platform) uploads = uploads.filter(u => u.platforms && u.platforms.includes(platform));
-  if (status)   uploads = uploads.filter(u => u.status === status);
+  if (platform) uploads = uploads.filter((u) => u.platforms && u.platforms.includes(platform));
+  if (status) uploads = uploads.filter((u) => u.status === status);
 
   res.json({
     total: db.uploads.length,
     filtered: uploads.length,
-    uploads: uploads.slice(0, limit)
+    uploads: uploads.slice(0, limit),
   });
 });
 
 // GET /upload-status/:trackingId — look up a specific publish attempt by trackingId
 app.get('/upload-status/:trackingId', (req, res) => {
   const db = readUploadStatus();
-  const entry = db.uploads.find(u => u.trackingId === req.params.trackingId);
-  if (!entry) return res.status(404).json({ error: 'trackingId not found', trackingId: req.params.trackingId });
+  const entry = db.uploads.find((u) => u.trackingId === req.params.trackingId);
+  if (!entry)
+    return res
+      .status(404)
+      .json({ error: 'trackingId not found', trackingId: req.params.trackingId });
   const overallStatus = entry.status === 'submitted' ? 'uploading' : entry.status;
   res.json({
     trackingId: entry.trackingId,
@@ -4758,7 +5493,7 @@ app.get('/upload-status/:trackingId', (req, res) => {
     timestamp: entry.timestamp,
     request_id: entry.request_id || null,
     job_id: entry.job_id || null,
-    error: entry.error || null
+    error: entry.error || null,
   });
 });
 
@@ -4807,81 +5542,88 @@ app.get('/heygen/latest-videos', async (req, res) => {
 
   try {
     // Step 1: List recent videos
-    const listResp = await axios.get(
-      `https://api.heygen.com/v1/video.list?limit=${limit}`,
-      { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 15000 }
-    );
+    const listResp = await axios.get(`https://api.heygen.com/v1/video.list?limit=${limit}`, {
+      headers: { 'X-Api-Key': HEYGEN_API_KEY },
+      timeout: 15000,
+    });
 
     const videos = listResp.data?.data?.videos || [];
     console.log(`[heygen/latest-videos] Fetched ${videos.length} videos`);
 
     // Step 2: For completed videos, fetch download URLs in parallel (max 10 at a time)
-    const completedVideos = videos.filter(v => v.status === 'completed');
+    const completedVideos = videos.filter((v) => v.status === 'completed');
     const batchSize = 10;
     const withUrls = [];
 
     for (let i = 0; i < completedVideos.length; i += batchSize) {
       const batch = completedVideos.slice(i, i + batchSize);
-      const results = await Promise.all(batch.map(async (v) => {
-        try {
-          const statusResp = await axios.get(
-            `https://api.heygen.com/v1/video_status.get?video_id=${v.video_id}`,
-            { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
-          );
-          const data = statusResp.data?.data || {};
-          return {
-            video_id: v.video_id,
-            title: v.video_title || v.video_id,
-            status: v.status,
-            created_at: v.created_at,
-            video_url: data.video_url || data.url || null,
-            duration: data.duration || null
-          };
-        } catch(e) {
-          return {
-            video_id: v.video_id,
-            title: v.video_title || v.video_id,
-            status: v.status,
-            created_at: v.created_at,
-            video_url: null,
-            error: e.message
-          };
-        }
-      }));
+      const results = await Promise.all(
+        batch.map(async (v) => {
+          try {
+            const statusResp = await axios.get(
+              `https://api.heygen.com/v1/video_status.get?video_id=${v.video_id}`,
+              { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
+            );
+            const data = statusResp.data?.data || {};
+            return {
+              video_id: v.video_id,
+              title: v.video_title || v.video_id,
+              status: v.status,
+              created_at: v.created_at,
+              video_url: data.video_url || data.url || null,
+              duration: data.duration || null,
+            };
+          } catch (e) {
+            return {
+              video_id: v.video_id,
+              title: v.video_title || v.video_id,
+              status: v.status,
+              created_at: v.created_at,
+              video_url: null,
+              error: e.message,
+            };
+          }
+        })
+      );
       withUrls.push(...results);
       if (i + batchSize < completedVideos.length) {
-        await new Promise(r => setTimeout(r, 500)); // brief pause between batches
+        await new Promise((r) => setTimeout(r, 500)); // brief pause between batches
       }
     }
 
     // Include non-completed videos (no URL fetch needed)
     const nonCompleted = videos
-      .filter(v => v.status !== 'completed')
-      .map(v => ({
+      .filter((v) => v.status !== 'completed')
+      .map((v) => ({
         video_id: v.video_id,
         title: v.video_title || v.video_id,
         status: v.status,
         created_at: v.created_at,
-        video_url: null
+        video_url: null,
       }));
 
     // Merge and sort by created_at desc
-    const allVideos = [...withUrls, ...nonCompleted]
-      .sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+    const allVideos = [...withUrls, ...nonCompleted].sort(
+      (a, b) => (b.created_at || 0) - (a.created_at || 0)
+    );
 
     res.json({
       ok: true,
       count: allVideos.length,
-      videos: allVideos
+      videos: allVideos,
     });
-
-  } catch(e) {
+  } catch (e) {
     console.error('[heygen/latest-videos] Error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
 
-async function bulkDeleteHeyGenVideos({ apiKey, dryRun = false, maxPasses = 100, perPassLimit = 100 }) {
+async function bulkDeleteHeyGenVideos({
+  apiKey,
+  dryRun = false,
+  maxPasses = 100,
+  perPassLimit = 100,
+}) {
   const headers = { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' };
   const failures = [];
   let totalDeleted = 0;
@@ -4899,16 +5641,19 @@ async function bulkDeleteHeyGenVideos({ apiKey, dryRun = false, maxPasses = 100,
   const deleteOne = async (video) => {
     const v1Body = { video_id: video.video_id };
     const attempts = [
-      () => axios.post('https://api.heygen.com/v1/video.delete', v1Body, { headers, timeout: 30000 }),
-      () => axios.post(
-        'https://api.heygen.com/v1/video.delete',
-        { video_id: video.video_id, type: video.type || 'GENERATED' },
-        { headers, timeout: 30000 }
-      ),
-      () => axios.delete(`https://api.heygen.com/v3/videos/${video.video_id}`, {
-        headers: { 'X-Api-Key': apiKey },
-        timeout: 30000
-      })
+      () =>
+        axios.post('https://api.heygen.com/v1/video.delete', v1Body, { headers, timeout: 30000 }),
+      () =>
+        axios.post(
+          'https://api.heygen.com/v1/video.delete',
+          { video_id: video.video_id, type: video.type || 'GENERATED' },
+          { headers, timeout: 30000 }
+        ),
+      () =>
+        axios.delete(`https://api.heygen.com/v3/videos/${video.video_id}`, {
+          headers: { 'X-Api-Key': apiKey },
+          timeout: 30000,
+        }),
     ];
     let lastErr = null;
     for (const run of attempts) {
@@ -4936,10 +5681,10 @@ async function bulkDeleteHeyGenVideos({ apiKey, dryRun = false, maxPasses = 100,
         failures.push({
           video_id: video.video_id,
           title: video.video_title || null,
-          error: err.response?.data || err.message || 'unknown_error'
+          error: err.response?.data || err.message || 'unknown_error',
         });
       }
-      await new Promise(r => setTimeout(r, 120));
+      await new Promise((r) => setTimeout(r, 120));
     }
   }
 
@@ -4950,7 +5695,7 @@ async function bulkDeleteHeyGenVideos({ apiKey, dryRun = false, maxPasses = 100,
     totalDeleted,
     remaining,
     failedCount: failures.length,
-    failures: failures.slice(0, 50)
+    failures: failures.slice(0, 50),
   };
 }
 
@@ -4965,7 +5710,7 @@ app.post('/admin/heygen/delete-all', async (req, res) => {
   if (!adminToken) {
     return res.status(503).json({
       ok: false,
-      error: 'HEYGEN_ADMIN_TOKEN not configured; endpoint disabled'
+      error: 'HEYGEN_ADMIN_TOKEN not configured; endpoint disabled',
     });
   }
 
@@ -4979,7 +5724,7 @@ app.post('/admin/heygen/delete-all', async (req, res) => {
     return res.status(400).json({
       ok: false,
       error: 'Explicit confirmation required',
-      expected: { confirmDeleteAll: 'DELETE_ALL_HEYGEN_VIDEOS' }
+      expected: { confirmDeleteAll: 'DELETE_ALL_HEYGEN_VIDEOS' },
     });
   }
 
@@ -4988,14 +5733,14 @@ app.post('/admin/heygen/delete-all', async (req, res) => {
       apiKey: HEYGEN_API_KEY,
       dryRun: !!req.body?.dryRun,
       maxPasses: Math.max(1, Math.min(500, Number(req.body?.maxPasses) || 100)),
-      perPassLimit: Math.max(1, Math.min(100, Number(req.body?.perPassLimit) || 100))
+      perPassLimit: Math.max(1, Math.min(100, Number(req.body?.perPassLimit) || 100)),
     });
     res.json({ ok: true, ...result });
   } catch (err) {
     res.status(500).json({
       ok: false,
       error: err.message || 'delete failed',
-      details: err.response?.data || null
+      details: err.response?.data || null,
     });
   }
 });
@@ -5023,30 +5768,32 @@ app.post('/heygen/video-urls', async (req, res) => {
 
   for (let i = 0; i < videoIds.length; i += batchSize) {
     const batch = videoIds.slice(i, i + batchSize);
-    const batchResults = await Promise.all(batch.map(async (videoId) => {
-      try {
-        const statusResp = await axios.get(
-          `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
-          { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
-        );
-        const data = statusResp.data?.data || {};
-        return {
-          video_id: videoId,
-          status: data.status || 'unknown',
-          video_url: data.video_url || data.url || null,
-          duration: data.duration || null
-        };
-      } catch(e) {
-        return { video_id: videoId, status: 'error', video_url: null, error: e.message };
-      }
-    }));
+    const batchResults = await Promise.all(
+      batch.map(async (videoId) => {
+        try {
+          const statusResp = await axios.get(
+            `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
+            { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
+          );
+          const data = statusResp.data?.data || {};
+          return {
+            video_id: videoId,
+            status: data.status || 'unknown',
+            video_url: data.video_url || data.url || null,
+            duration: data.duration || null,
+          };
+        } catch (e) {
+          return { video_id: videoId, status: 'error', video_url: null, error: e.message };
+        }
+      })
+    );
     results.push(...batchResults);
     if (i + batchSize < videoIds.length) {
-      await new Promise(r => setTimeout(r, 300)); // brief pause between batches
+      await new Promise((r) => setTimeout(r, 300)); // brief pause between batches
     }
   }
 
-  const completed = results.filter(r => r.video_url).length;
+  const completed = results.filter((r) => r.video_url).length;
   console.log(`[heygen/video-urls] ${completed}/${videoIds.length} have URLs`);
 
   res.json({ ok: true, count: results.length, videos: results });
@@ -5084,7 +5831,9 @@ app.post('/log-heygen-metrics', async (req, res) => {
 
     addStageMetrics(jobId, heygenTimer.end());
 
-    console.log(`[metrics:${jobId}] HeyGen rendering metrics logged: ${segmentCount} segments, ${(totalWaitTimeMs/1000).toFixed(2)}s total`);
+    console.log(
+      `[metrics:${jobId}] HeyGen rendering metrics logged: ${segmentCount} segments, ${(totalWaitTimeMs / 1000).toFixed(2)}s total`
+    );
 
     res.json({ ok: true, jobId, message: 'HeyGen metrics logged successfully' });
   } catch (e) {
@@ -5099,16 +5848,17 @@ app.get('/publish/status', async (req, res) => {
   if (!UPLOADPOST_API_KEY) return res.status(400).json({ error: 'UPLOADPOST_API_KEY not set' });
 
   const { request_id, job_id } = req.query;
-  if (!request_id && !job_id) return res.status(400).json({ error: 'request_id or job_id required' });
+  if (!request_id && !job_id)
+    return res.status(400).json({ error: 'request_id or job_id required' });
 
   try {
     const param = request_id ? `request_id=${request_id}` : `job_id=${job_id}`;
     const response = await axios.get(
       `https://api.upload-post.com/api/uploadposts/status?${param}`,
-      { headers: { 'Authorization': `Apikey ${UPLOADPOST_API_KEY}` } }
+      { headers: { Authorization: `Apikey ${UPLOADPOST_API_KEY}` } }
     );
     res.json(response.data);
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ error: e.message, details: e.response?.data || null });
   }
 });
@@ -5121,10 +5871,10 @@ app.get('/publish/history', async (req, res) => {
   try {
     const response = await axios.get(
       'https://api.upload-post.com/api/uploadposts/history?limit=20',
-      { headers: { 'Authorization': `Apikey ${UPLOADPOST_API_KEY}` } }
+      { headers: { Authorization: `Apikey ${UPLOADPOST_API_KEY}` } }
     );
     res.json(response.data);
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
@@ -5138,10 +5888,10 @@ app.get('/publish/queue', async (req, res) => {
   try {
     const response = await axios.get(
       `https://api.upload-post.com/api/uploadposts/queue/settings?profile_username=${UPLOADPOST_PROFILE}`,
-      { headers: { 'Authorization': `Apikey ${UPLOADPOST_API_KEY}` } }
+      { headers: { Authorization: `Apikey ${UPLOADPOST_API_KEY}` } }
     );
     res.json(response.data);
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
@@ -5156,10 +5906,15 @@ app.post('/publish/queue', async (req, res) => {
     const response = await axios.post(
       'https://api.upload-post.com/api/uploadposts/queue/settings',
       { profile_username: UPLOADPOST_PROFILE, ...req.body },
-      { headers: { 'Authorization': `Apikey ${UPLOADPOST_API_KEY}`, 'Content-Type': 'application/json' } }
+      {
+        headers: {
+          Authorization: `Apikey ${UPLOADPOST_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
     );
     res.json(response.data);
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
@@ -5176,10 +5931,11 @@ app.post('/publish/youtube', async (req, res) => {
   try {
     const { google } = require('googleapis');
     // Reuse OAuth2 from Drive
-    const CLIENT_ID     = '764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com';
+    const CLIENT_ID = '764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com';
     const CLIENT_SECRET = 'd-FL95Q19q7MQmFpd7hHD0Ty';
-    const oauth2Client  = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
-    if (!process.env.DRIVE_REFRESH_TOKEN) return res.status(400).json({ error: 'Run node cwn-auth.js first to authorize Google' });
+    const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
+    if (!process.env.DRIVE_REFRESH_TOKEN)
+      return res.status(400).json({ error: 'Run node cwn-auth.js first to authorize Google' });
     oauth2Client.setCredentials({ refresh_token: process.env.DRIVE_REFRESH_TOKEN });
 
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
@@ -5190,7 +5946,9 @@ app.post('/publish/youtube', async (req, res) => {
       status.publishAt = new Date(scheduledAt).toISOString();
     }
 
-    console.log(`[youtube] Uploading ${filename} (${(fs.statSync(filePath).size/1024/1024).toFixed(1)}MB)...`);
+    console.log(
+      `[youtube] Uploading ${filename} (${(fs.statSync(filePath).size / 1024 / 1024).toFixed(1)}MB)...`
+    );
     const uploadRes = await youtube.videos.insert({
       part: ['snippet', 'status'],
       requestBody: {
@@ -5200,21 +5958,21 @@ app.post('/publish/youtube', async (req, res) => {
           tags: tags || [],
           categoryId: '24', // Entertainment
           defaultLanguage: 'en',
-          defaultAudioLanguage: 'en'
+          defaultAudioLanguage: 'en',
         },
-        status
+        status,
       },
       media: {
         mimeType: 'video/mp4',
-        body: fs.createReadStream(filePath)
-      }
+        body: fs.createReadStream(filePath),
+      },
     });
 
     const videoId = uploadRes.data.id;
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
     console.log(`[youtube] ✅ Uploaded: ${videoUrl}`);
     res.json({ ok: true, videoId, videoUrl, scheduledAt: status.publishAt || null });
-  } catch(e) {
+  } catch (e) {
     console.error('[youtube] Upload failed:', e.message);
     res.status(500).json({ error: e.message });
   }
@@ -5224,14 +5982,17 @@ app.post('/publish/youtube', async (req, res) => {
 app.post('/publish/tiktok', async (req, res) => {
   const { filename, caption, scheduledAt } = req.body;
   if (!filename) return res.status(400).json({ error: 'filename required' });
-  if (!process.env.TIKTOK_ACCESS_TOKEN) return res.status(400).json({ error: 'TIKTOK_ACCESS_TOKEN not set in .env' });
+  if (!process.env.TIKTOK_ACCESS_TOKEN)
+    return res.status(400).json({ error: 'TIKTOK_ACCESS_TOKEN not set in .env' });
 
   const filePath = path.join(OUTPUT_DIR, path.basename(filename));
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
 
   try {
     const fileSize = fs.statSync(filePath).size;
-    console.log(`[tiktok] Initiating upload for ${filename} (${(fileSize/1024/1024).toFixed(1)}MB)...`);
+    console.log(
+      `[tiktok] Initiating upload for ${filename} (${(fileSize / 1024 / 1024).toFixed(1)}MB)...`
+    );
 
     // Step 1: Init upload
     const initResp = await axios.post(
@@ -5243,16 +6004,21 @@ app.post('/publish/tiktok', async (req, res) => {
           disable_duet: false,
           disable_comment: false,
           disable_stitch: false,
-          video_cover_timestamp_ms: 1000
+          video_cover_timestamp_ms: 1000,
         },
         source_info: {
           source: 'FILE_UPLOAD',
           video_size: fileSize,
           chunk_size: fileSize,
-          total_chunk_count: 1
-        }
+          total_chunk_count: 1,
+        },
       },
-      { headers: { 'Authorization': `Bearer ${process.env.TIKTOK_ACCESS_TOKEN}`, 'Content-Type': 'application/json' } }
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.TIKTOK_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      }
     );
 
     const { publish_id, upload_url } = initResp.data.data;
@@ -5262,15 +6028,15 @@ app.post('/publish/tiktok', async (req, res) => {
     await axios.put(upload_url, fileBuffer, {
       headers: {
         'Content-Type': 'video/mp4',
-        'Content-Range': `bytes 0-${fileSize-1}/${fileSize}`,
-        'Content-Length': fileSize
+        'Content-Range': `bytes 0-${fileSize - 1}/${fileSize}`,
+        'Content-Length': fileSize,
       },
-      maxBodyLength: Infinity
+      maxBodyLength: Infinity,
     });
 
     console.log(`[tiktok] ✅ Uploaded. Publish ID: ${publish_id}`);
     res.json({ ok: true, publishId: publish_id });
-  } catch(e) {
+  } catch (e) {
     console.error('[tiktok] Upload failed:', e.message);
     res.status(500).json({ error: e.message });
   }
@@ -5281,7 +6047,9 @@ app.post('/publish/instagram', async (req, res) => {
   const { filename, caption, scheduledAt } = req.body;
   if (!filename) return res.status(400).json({ error: 'filename required' });
   if (!process.env.INSTAGRAM_ACCESS_TOKEN || !process.env.INSTAGRAM_ACCOUNT_ID) {
-    return res.status(400).json({ error: 'INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_ACCOUNT_ID required in .env' });
+    return res
+      .status(400)
+      .json({ error: 'INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_ACCOUNT_ID required in .env' });
   }
 
   const filePath = path.join(OUTPUT_DIR, path.basename(filename));
@@ -5289,12 +6057,19 @@ app.post('/publish/instagram', async (req, res) => {
 
   try {
     // Instagram requires a public URL — use Drive URL
-    const driveUrl = await uploadToDrive(filePath, path.basename(filename), path.basename(filename));
-    if (!driveUrl) return res.status(400).json({ error: 'Drive upload required for Instagram — set up cwn-auth.js first' });
+    const driveUrl = await uploadToDrive(
+      filePath,
+      path.basename(filename),
+      path.basename(filename)
+    );
+    if (!driveUrl)
+      return res
+        .status(400)
+        .json({ error: 'Drive upload required for Instagram — set up cwn-auth.js first' });
 
     const IG_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN;
-    const IG_ID    = process.env.INSTAGRAM_ACCOUNT_ID;
-    const BASE     = `https://graph.facebook.com/v19.0`;
+    const IG_ID = process.env.INSTAGRAM_ACCOUNT_ID;
+    const BASE = `https://graph.facebook.com/v19.0`;
 
     console.log(`[instagram] Creating container for ${filename}...`);
 
@@ -5303,31 +6078,39 @@ app.post('/publish/instagram', async (req, res) => {
       video_url: driveUrl,
       caption: caption || '',
       media_type: 'REELS',
-      access_token: IG_TOKEN
+      access_token: IG_TOKEN,
     });
     const containerId = containerResp.data.id;
 
     // Step 2: Poll until container is ready
     let ready = false;
     for (let i = 0; i < 20; i++) {
-      await new Promise(r => setTimeout(r, 5000));
-      const statusResp = await axios.get(`${BASE}/${containerId}?fields=status_code&access_token=${IG_TOKEN}`);
-      if (statusResp.data.status_code === 'FINISHED') { ready = true; break; }
-      if (statusResp.data.status_code === 'ERROR') throw new Error('Instagram container processing failed');
-      console.log(`[instagram] Container status: ${statusResp.data.status_code} (attempt ${i+1}/20)`);
+      await new Promise((r) => setTimeout(r, 5000));
+      const statusResp = await axios.get(
+        `${BASE}/${containerId}?fields=status_code&access_token=${IG_TOKEN}`
+      );
+      if (statusResp.data.status_code === 'FINISHED') {
+        ready = true;
+        break;
+      }
+      if (statusResp.data.status_code === 'ERROR')
+        throw new Error('Instagram container processing failed');
+      console.log(
+        `[instagram] Container status: ${statusResp.data.status_code} (attempt ${i + 1}/20)`
+      );
     }
     if (!ready) return res.status(500).json({ error: 'Instagram container timed out' });
 
     // Step 3: Publish
     const publishResp = await axios.post(`${BASE}/${IG_ID}/media_publish`, {
       creation_id: containerId,
-      access_token: IG_TOKEN
+      access_token: IG_TOKEN,
     });
 
     const mediaId = publishResp.data.id;
     console.log(`[instagram] ✅ Published. Media ID: ${mediaId}`);
     res.json({ ok: true, mediaId });
-  } catch(e) {
+  } catch (e) {
     console.error('[instagram] Upload failed:', e.message);
     res.status(500).json({ error: e.message });
   }
@@ -5350,7 +6133,7 @@ const CAPCUT_URL = process.env.CAPCUT_URL || 'http://localhost:9001';
 async function capcut(endpoint, body) {
   const resp = await axios.post(`${CAPCUT_URL}${endpoint}`, body, {
     headers: { 'Content-Type': 'application/json' },
-    timeout: 30000
+    timeout: 30000,
   });
   return resp.data;
 }
@@ -5369,7 +6152,7 @@ app.get('/capcut/health', async (req, res) => {
       error: 'CapCut MCP server not running',
       url: CAPCUT_URL,
       hint: 'Start the CapCut MCP server on port 9001',
-      details: e.message
+      details: e.message,
     });
   }
 });
@@ -5379,19 +6162,20 @@ app.post('/capcut/init', async (req, res) => {
   const { jobId, contentType = 'twitch', format = 'landscape' } = req.body;
   if (!jobId) return res.status(400).json({ error: 'jobId required' });
 
-  const width  = format === 'portrait' ? 1080 : 1920;
+  const width = format === 'portrait' ? 1080 : 1920;
   const height = format === 'portrait' ? 1920 : 1080;
-  const fps    = 30;
+  const fps = 30;
 
   try {
     const result = await capcut('/create_draft', { width, height, fps });
     const draftId = result?.result?.draft_id || result?.draft_id;
-    if (!draftId) return res.status(500).json({ error: 'CapCut did not return draft_id', raw: result });
+    if (!draftId)
+      return res.status(500).json({ error: 'CapCut did not return draft_id', raw: result });
 
     capcutDrafts[jobId] = { draftId, segments: [], width, height, fps, contentType, format };
     console.log(`[capcut] ✅ Draft created for job ${jobId}: ${draftId}`);
     res.json({ ok: true, draftId, jobId });
-  } catch(e) {
+  } catch (e) {
     console.error('[capcut] Init failed:', e.message);
     res.status(500).json({ error: e.message, hint: 'Is CapCut MCP server running on port 9001?' });
   }
@@ -5401,10 +6185,14 @@ app.post('/capcut/init', async (req, res) => {
 // Call this for each HeyGen avatar segment as it completes AND each source clip
 app.post('/capcut/add-segment', async (req, res) => {
   const { jobId, segmentUrl, segmentType = 'avatar', label = '', localPath = '' } = req.body;
-  if (!jobId || (!segmentUrl && !localPath)) return res.status(400).json({ error: 'jobId + segmentUrl or localPath required' });
+  if (!jobId || (!segmentUrl && !localPath))
+    return res.status(400).json({ error: 'jobId + segmentUrl or localPath required' });
 
   const draft = capcutDrafts[jobId];
-  if (!draft) return res.status(404).json({ error: `No draft found for job ${jobId} — call /capcut/init first` });
+  if (!draft)
+    return res
+      .status(404)
+      .json({ error: `No draft found for job ${jobId} — call /capcut/init first` });
 
   const position = draft.segments.length;
   const url = localPath || segmentUrl;
@@ -5412,7 +6200,15 @@ app.post('/capcut/add-segment', async (req, res) => {
   try {
     // Get duration first
     const dur = await new Promise((resolve) => {
-      const args = ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', url];
+      const args = [
+        '-v',
+        'error',
+        '-show_entries',
+        'format=duration',
+        '-of',
+        'default=noprint_wrappers=1:nokey=1',
+        url,
+      ];
       execFile(ffprobePath(), args, (err, stdout) => {
         resolve(parseFloat(stdout) || 10);
       });
@@ -5424,13 +6220,18 @@ app.post('/capcut/add-segment', async (req, res) => {
       start: 0,
       end: dur,
       volume: segmentType === 'source_clip' ? 0.7 : 1.0, // source clips slightly quieter
-      transition: position > 0 ? 'cut' : undefined
+      transition: position > 0 ? 'cut' : undefined,
     });
 
     draft.segments.push({ url, type: segmentType, label, duration: dur, position });
     console.log(`[capcut] ✅ Added segment ${position + 1} (${segmentType}): ${label}`);
-    res.json({ ok: true, position: position + 1, totalSegments: draft.segments.length, duration: dur });
-  } catch(e) {
+    res.json({
+      ok: true,
+      position: position + 1,
+      totalSegments: draft.segments.length,
+      duration: dur,
+    });
+  } catch (e) {
     console.error(`[capcut] Add segment failed for ${label}:`, e.message);
     res.status(500).json({ error: e.message });
   }
@@ -5438,7 +6239,11 @@ app.post('/capcut/add-segment', async (req, res) => {
 
 // POST /capcut/ticker — add scrolling ticker text overlay to draft
 app.post('/capcut/ticker', async (req, res) => {
-  const { jobId, tickerText = 'CLIPZWORLD NEWS  •  THE DAILY UPDATE  •  @clipznashite  •  ', totalDuration } = req.body;
+  const {
+    jobId,
+    tickerText = 'CLIPZWORLD NEWS  •  THE DAILY UPDATE  •  @clipznashite  •  ',
+    totalDuration,
+  } = req.body;
   if (!jobId) return res.status(400).json({ error: 'jobId required' });
 
   const draft = capcutDrafts[jobId];
@@ -5456,12 +6261,12 @@ app.post('/capcut/ticker', async (req, res) => {
       background_color: '#22304b',
       background_alpha: 0.95,
       transform_y: draft.height - 64, // bottom of frame
-      animation: 'scroll_left'
+      animation: 'scroll_left',
     });
 
     console.log(`[capcut] ✅ Ticker added to draft ${draft.draftId}`);
     res.json({ ok: true });
-  } catch(e) {
+  } catch (e) {
     console.error('[capcut] Ticker failed:', e.message);
     res.status(500).json({ error: e.message });
   }
@@ -5484,12 +6289,12 @@ app.post('/capcut/logo', async (req, res) => {
       transform_x: draft.width - 140,
       transform_y: 20,
       scale_x: 0.85,
-      scale_y: 0.85
+      scale_y: 0.85,
     });
 
     console.log(`[capcut] ✅ Logo bug added`);
     res.json({ ok: true });
-  } catch(e) {
+  } catch (e) {
     console.error('[capcut] Logo failed:', e.message);
     res.status(500).json({ error: e.message });
   }
@@ -5512,16 +6317,18 @@ app.post('/capcut/finalize', async (req, res) => {
     console.log(`[capcut]    Open CapCut → File → Open → select draft to render`);
 
     // Clean up draft state (keep for 1 hour in case of re-finalize)
-    setTimeout(() => { delete capcutDrafts[jobId]; }, 3600000);
+    setTimeout(() => {
+      delete capcutDrafts[jobId];
+    }, 3600000);
 
     res.json({
       ok: true,
       draftId: draft.draftId,
       draftUrl,
       totalSegments: draft.segments.length,
-      instructions: 'Open CapCut → File → Open Project → select draft → Export'
+      instructions: 'Open CapCut → File → Open Project → select draft → Export',
     });
-  } catch(e) {
+  } catch (e) {
     console.error('[capcut] Finalize failed:', e.message);
     res.status(500).json({ error: e.message });
   }
@@ -5535,7 +6342,7 @@ app.get('/capcut/status/:jobId', (req, res) => {
     ok: true,
     draftId: draft.draftId,
     totalSegments: draft.segments.length,
-    segments: draft.segments.map(s => ({ label: s.label, type: s.type, duration: s.duration }))
+    segments: draft.segments.map((s) => ({ label: s.label, type: s.type, duration: s.duration })),
   });
 });
 
@@ -5560,10 +6367,15 @@ app.post('/thumbnail-short', async (req, res) => {
       await new Promise((resolve, reject) => {
         const file = fs.createWriteStream(localPath);
         const protocol = videoPath.startsWith('https') ? require('https') : require('http');
-        protocol.get(videoPath, (response) => {
-          response.pipe(file);
-          file.on('finish', () => { file.close(); resolve(); });
-        }).on('error', reject);
+        protocol
+          .get(videoPath, (response) => {
+            response.pipe(file);
+            file.on('finish', () => {
+              file.close();
+              resolve();
+            });
+          })
+          .on('error', reject);
       });
     }
 
@@ -5573,56 +6385,94 @@ app.post('/thumbnail-short', async (req, res) => {
 
     // Find highest-motion frame using ffprobe scene detection
     // scene=0.3 threshold — picks frames with significant visual change
-    let bestTimestamp = duration * 0.30; // fallback: 30% mark
+    let bestTimestamp = duration * 0.3; // fallback: 30% mark
     try {
       const sceneData = await new Promise((resolve, reject) => {
         const args = [
-          '-i', localPath,
-          '-vf', 'select=gt(scene\\,0.3),showinfo',
-          '-vsync', 'vfr',
-          '-f', 'null', '-'
+          '-i',
+          localPath,
+          '-vf',
+          'select=gt(scene\\,0.3),showinfo',
+          '-vsync',
+          'vfr',
+          '-f',
+          'null',
+          '-',
         ];
-        execFile(ffprobePath(), [
-          '-v', 'quiet', '-show_frames', '-select_streams', 'v',
-          '-read_intervals', `%+${Math.min(duration, 60)}`,
-          '-show_entries', 'frame=pkt_pts_time,pict_type',
-          '-of', 'csv=p=0', localPath
-        ], { maxBuffer: 10 * 1024 * 1024 }, (err, stdout) => {
-          if (err) { resolve(null); return; }
-          // Parse frame timestamps — find I-frames (scene changes)
-          const lines = stdout.trim().split('\n').filter(Boolean);
-          const iFrames = lines
-            .map(l => { const parts = l.split(','); return { t: parseFloat(parts[0]), type: parts[1] }; })
-            .filter(f => f.type === 'I' && f.t > 3 && f.t < duration - 3); // skip first/last 3s
-          if (iFrames.length > 0) {
-            // Pick the I-frame closest to 40% mark (usually peak action)
-            const target = duration * 0.40;
-            iFrames.sort((a, b) => Math.abs(a.t - target) - Math.abs(b.t - target));
-            resolve(iFrames[0].t);
-          } else {
-            resolve(null);
+        execFile(
+          ffprobePath(),
+          [
+            '-v',
+            'quiet',
+            '-show_frames',
+            '-select_streams',
+            'v',
+            '-read_intervals',
+            `%+${Math.min(duration, 60)}`,
+            '-show_entries',
+            'frame=pkt_pts_time,pict_type',
+            '-of',
+            'csv=p=0',
+            localPath,
+          ],
+          { maxBuffer: 10 * 1024 * 1024 },
+          (err, stdout) => {
+            if (err) {
+              resolve(null);
+              return;
+            }
+            // Parse frame timestamps — find I-frames (scene changes)
+            const lines = stdout.trim().split('\n').filter(Boolean);
+            const iFrames = lines
+              .map((l) => {
+                const parts = l.split(',');
+                return { t: parseFloat(parts[0]), type: parts[1] };
+              })
+              .filter((f) => f.type === 'I' && f.t > 3 && f.t < duration - 3); // skip first/last 3s
+            if (iFrames.length > 0) {
+              // Pick the I-frame closest to 40% mark (usually peak action)
+              const target = duration * 0.4;
+              iFrames.sort((a, b) => Math.abs(a.t - target) - Math.abs(b.t - target));
+              resolve(iFrames[0].t);
+            } else {
+              resolve(null);
+            }
           }
-        });
+        );
       });
       if (sceneData !== null) {
         bestTimestamp = sceneData;
-        console.log(`[thumbnail-short] Best frame at ${bestTimestamp.toFixed(2)}s (scene detection)`);
+        console.log(
+          `[thumbnail-short] Best frame at ${bestTimestamp.toFixed(2)}s (scene detection)`
+        );
       } else {
-        console.log(`[thumbnail-short] Scene detection found no I-frames — using 30% mark (${bestTimestamp.toFixed(2)}s)`);
+        console.log(
+          `[thumbnail-short] Scene detection found no I-frames — using 30% mark (${bestTimestamp.toFixed(2)}s)`
+        );
       }
-    } catch(e) {
+    } catch (e) {
       console.warn(`[thumbnail-short] Scene detection failed: ${e.message} — using fallback`);
     }
 
     // Get episode counter for this content type
     const epCounters = (() => {
-      try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'data/episode_counters.json'), 'utf8')); }
-      catch(e) { return {}; }
+      try {
+        return JSON.parse(
+          fs.readFileSync(path.join(__dirname, 'data/episode_counters.json'), 'utf8')
+        );
+      } catch (e) {
+        return {};
+      }
     })();
     const epKey = `${contentType}_short`;
     const epNum = (epCounters[epKey] || 0) + 1;
     epCounters[epKey] = epNum;
-    try { fs.writeFileSync(path.join(__dirname, 'data/episode_counters.json'), JSON.stringify(epCounters, null, 2)); } catch(e) {}
+    try {
+      fs.writeFileSync(
+        path.join(__dirname, 'data/episode_counters.json'),
+        JSON.stringify(epCounters, null, 2)
+      );
+    } catch (e) {}
 
     // Build output path
     const outDir = OUTPUT_DIR;
@@ -5647,20 +6497,28 @@ app.post('/thumbnail-short', async (req, res) => {
       // Tagline: "BECAUSE THE LIGHT WAS ON" — centered, bottom area
       `drawtext=fontfile='${useFont}':text='${tagline}':fontsize=64:fontcolor=white:x=(w-text_w)/2:y=1680:shadowcolor=black:shadowx=2:shadowy=2`,
       // Episode badge: "EP N" — top-left, gold
-      `drawtext=fontfile='${useFont}':text='${epLabel}':fontsize=36:fontcolor=#c7af4f:x=20:y=20:shadowcolor=black:shadowx=1:shadowy=1`
+      `drawtext=fontfile='${useFont}':text='${epLabel}':fontsize=36:fontcolor=#c7af4f:x=20:y=20:shadowcolor=black:shadowx=1:shadowy=1`,
     ].join(',');
 
     await new Promise((resolve, reject) => {
       const args = [
-        '-ss', bestTimestamp.toFixed(3),
-        '-i', localPath,
-        '-vframes', '1',
-        '-vf', drawTextFilters,
-        '-q:v', '2',
-        '-y', outPath
+        '-ss',
+        bestTimestamp.toFixed(3),
+        '-i',
+        localPath,
+        '-vframes',
+        '1',
+        '-vf',
+        drawTextFilters,
+        '-q:v',
+        '2',
+        '-y',
+        outPath,
       ];
       const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
-      proc.on('close', code => code === 0 ? resolve() : reject(new Error(`Frame extract failed: ${code}`)));
+      proc.on('close', (code) =>
+        code === 0 ? resolve() : reject(new Error(`Frame extract failed: ${code}`))
+      );
       proc.on('error', reject);
     });
 
@@ -5668,7 +6526,9 @@ app.post('/thumbnail-short', async (req, res) => {
 
     // Clean up downloaded temp file
     if (videoPath.startsWith('http')) {
-      try { fs.unlinkSync(localPath); } catch(e) {}
+      try {
+        fs.unlinkSync(localPath);
+      } catch (e) {}
     }
 
     res.json({
@@ -5677,10 +6537,9 @@ app.post('/thumbnail-short', async (req, res) => {
       thumbnailUrl: `/download/${outFile}`,
       episode: epNum,
       frameTimestamp: bestTimestamp,
-      contentType
+      contentType,
     });
-
-  } catch(e) {
+  } catch (e) {
     console.error(`[thumbnail-short] Error: ${e.message}`);
     res.status(500).json({ error: e.message });
   }
@@ -5703,12 +6562,12 @@ app.post('/safety-zone-check', (req, res) => {
     avatarFaceX = 540,
     avatarFaceY = 1200,
     // Avatar face radius for overlap detection (pixels)
-    avatarFaceRadius = 120
+    avatarFaceRadius = 120,
   } = req.body;
 
   const SAFETY_ZONES = {
     tiktok: { x: 880, y: 1520, w: 200, h: 400, label: 'TikTok like/share/comment buttons' },
-    reels:  { x: 0,   y: 1770, w: 1080, h: 150, label: 'Instagram Reels caption area' }
+    reels: { x: 0, y: 1770, w: 1080, h: 150, label: 'Instagram Reels caption area' },
   };
 
   const warnings = [];
@@ -5729,7 +6588,7 @@ app.post('/safety-zone-check', (req, res) => {
       zone,
       avatarFace: { x: avatarFaceX, y: avatarFaceY, radius: avatarFaceRadius },
       distance: Math.round(distance),
-      margin: Math.round(distance - avatarFaceRadius)
+      margin: Math.round(distance - avatarFaceRadius),
     };
 
     if (overlaps) {
@@ -5737,7 +6596,9 @@ app.post('/safety-zone-check', (req, res) => {
       warnings.push(msg);
       console.warn(msg);
     } else {
-      console.log(`[safety-zone] ✅ ${platform.toUpperCase()} safe — avatar face ${Math.round(distance)}px from UI zone (margin: ${Math.round(distance - avatarFaceRadius)}px)`);
+      console.log(
+        `[safety-zone] ✅ ${platform.toUpperCase()} safe — avatar face ${Math.round(distance)}px from UI zone (margin: ${Math.round(distance - avatarFaceRadius)}px)`
+      );
     }
   }
 
@@ -5751,7 +6612,7 @@ app.post('/safety-zone-check', (req, res) => {
     zones: results,
     recommendation: allSafe
       ? '✅ Avatar position is safe for all platforms'
-      : '⚠️ Avatar overlaps platform UI — flag for Rob review before publishing'
+      : '⚠️ Avatar overlaps platform UI — flag for Rob review before publishing',
   });
 });
 
@@ -5764,24 +6625,32 @@ app.post('/capcut/thumbnail', async (req, res) => {
   if (!jobId || !videoPath) return res.status(400).json({ error: 'jobId and videoPath required' });
 
   const draft = capcutDrafts[jobId];
-  if (!draft) return res.status(404).json({ error: `No draft for ${jobId} — call /capcut/init first` });
+  if (!draft)
+    return res.status(404).json({ error: `No draft for ${jobId} — call /capcut/init first` });
 
   try {
     // Extract frame at given timestamp (or 30% mark)
     const duration = await probeDuration(videoPath);
-    const ts = timestamp || (duration * 0.30);
+    const ts = timestamp || duration * 0.3;
     const thumbPath = path.join(TMP_DIR, `capcut_thumb_${jobId}_${Date.now()}.png`);
 
     await new Promise((resolve, reject) => {
       const args = [
-        '-ss', ts.toFixed(3),
-        '-i', videoPath,
-        '-vframes', '1',
-        '-q:v', '2',
-        '-y', thumbPath
+        '-ss',
+        ts.toFixed(3),
+        '-i',
+        videoPath,
+        '-vframes',
+        '1',
+        '-q:v',
+        '2',
+        '-y',
+        thumbPath,
       ];
       const proc = execFile(ffmpegPath(), args, { maxBuffer: 10 * 1024 * 1024 });
-      proc.on('close', code => code === 0 ? resolve() : reject(new Error(`Frame extract failed: ${code}`)));
+      proc.on('close', (code) =>
+        code === 0 ? resolve() : reject(new Error(`Frame extract failed: ${code}`))
+      );
       proc.on('error', reject);
     });
 
@@ -5800,13 +6669,15 @@ app.post('/capcut/thumbnail', async (req, res) => {
       transform_y: 0,
       scale_x: 1.0,
       scale_y: 1.0,
-      is_cover: true
+      is_cover: true,
     });
 
-    try { fs.unlinkSync(thumbPath); } catch(e) {}
+    try {
+      fs.unlinkSync(thumbPath);
+    } catch (e) {}
     console.log(`[capcut/thumbnail] ✅ Cover frame set at ${ts.toFixed(2)}s`);
     res.json({ ok: true, timestamp: ts, thumbUrl });
-  } catch(e) {
+  } catch (e) {
     console.error('[capcut/thumbnail] Error:', e.message);
     res.status(500).json({ error: e.message });
   }
@@ -5825,7 +6696,7 @@ app.get('/short-form-status/:jobId', (req, res) => {
     status: asmJob.status || 'unknown',
     pct: asmJob.pct || 0,
     outputPath: asmJob.outputPath || null,
-    format: asmJob.format || 'portrait'
+    format: asmJob.format || 'portrait',
   });
 });
 
@@ -5849,33 +6720,48 @@ app.post('/teach-streamer-language', async (req, res) => {
   // Auto-fetch recent clips from Twitch if no URLs provided
   if (autoFetch && !vodUrls.length) {
     try {
-      const userResp = await axios.get(
-        `https://api.twitch.tv/helix/users?login=${streamer}`,
-        { headers: { 'Client-Id': process.env.TWITCH_CLIENT_ID, 'Authorization': `Bearer ${process.env.TWITCH_TOKEN}` } }
-      );
+      const userResp = await axios.get(`https://api.twitch.tv/helix/users?login=${streamer}`, {
+        headers: {
+          'Client-Id': process.env.TWITCH_CLIENT_ID,
+          Authorization: `Bearer ${process.env.TWITCH_TOKEN}`,
+        },
+      });
       const userId = userResp.data?.data?.[0]?.id;
       if (userId) {
         const clipsResp = await axios.get(
           `https://api.twitch.tv/helix/clips?broadcaster_id=${userId}&first=10`,
-          { headers: { 'Client-Id': process.env.TWITCH_CLIENT_ID, 'Authorization': `Bearer ${process.env.TWITCH_TOKEN}` } }
+          {
+            headers: {
+              'Client-Id': process.env.TWITCH_CLIENT_ID,
+              Authorization: `Bearer ${process.env.TWITCH_TOKEN}`,
+            },
+          }
         );
         const clips = clipsResp.data?.data || [];
         clipsToAnalyze = clips
-          .filter(c => c.thumbnail_url)
-          .map(c => ({ thumbnailUrl: c.thumbnail_url, title: c.title, pageUrl: c.url }));
-        console.log(`[streamer-language] Auto-fetched ${clipsToAnalyze.length} clips for ${streamer}`);
+          .filter((c) => c.thumbnail_url)
+          .map((c) => ({ thumbnailUrl: c.thumbnail_url, title: c.title, pageUrl: c.url }));
+        console.log(
+          `[streamer-language] Auto-fetched ${clipsToAnalyze.length} clips for ${streamer}`
+        );
       }
-    } catch(e) {
+    } catch (e) {
       console.warn(`[streamer-language] Auto-fetch failed: ${e.message}`);
     }
   }
 
   if (!clipsToAnalyze.length) {
-    return res.status(400).json({ error: 'No clips to analyze — provide vodUrls or set autoFetch:true' });
+    return res
+      .status(400)
+      .json({ error: 'No clips to analyze — provide vodUrls or set autoFetch:true' });
   }
 
   // Send to client immediately — analysis runs in background
-  res.json({ ok: true, message: `Analyzing ${clipsToAnalyze.length} clips for ${streamer}...`, streamer });
+  res.json({
+    ok: true,
+    message: `Analyzing ${clipsToAnalyze.length} clips for ${streamer}...`,
+    streamer,
+  });
 
   // Background analysis
   (async () => {
@@ -5900,14 +6786,16 @@ Be specific — generic descriptions are useless. Actual vocabulary and bit name
       const analyses = [];
       for (const clip of clipsToAnalyze.slice(0, 10)) {
         try {
-          const url = typeof clip === 'string' ? clip : (clip.thumbnailUrl || '');
+          const url = typeof clip === 'string' ? clip : clip.thumbnailUrl || '';
           if (!url) continue;
           const analysis = await geminiAnalyzeClip('', url, 'twitch', {
-            streamer, title: clip.title || '', pageUrl: clip.pageUrl || ''
+            streamer,
+            title: clip.title || '',
+            pageUrl: clip.pageUrl || '',
           });
           if (analysis && analysis.length > 20) analyses.push(analysis);
-          await new Promise(r => setTimeout(r, 1000));
-        } catch(e) {
+          await new Promise((r) => setTimeout(r, 1000));
+        } catch (e) {
           console.warn(`[streamer-language] Clip analysis failed: ${e.message}`);
         }
       }
@@ -5916,27 +6804,36 @@ Be specific — generic descriptions are useless. Actual vocabulary and bit name
       const synthesisResp = await axios.post(
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_APIKEY}`,
         {
-          contents: [{ parts: [{ text: `${prompt}\n\nCLIP ANALYSES:\n${analyses.join('\n---\n')}` }] }],
-          generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
+          contents: [
+            { parts: [{ text: `${prompt}\n\nCLIP ANALYSES:\n${analyses.join('\n---\n')}` }] },
+          ],
+          generationConfig: { maxOutputTokens: 1000, temperature: 0.2 },
         },
         { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
       );
 
-      const fingerprint = (synthesisResp.data?.candidates?.[0]?.content?.parts || []).map(p => p.text||'').join('').trim();
+      const fingerprint = (synthesisResp.data?.candidates?.[0]?.content?.parts || [])
+        .map((p) => p.text || '')
+        .join('')
+        .trim();
 
       // Save to cwn_style_guides.json under streamer key
       const guidePath = path.join(__dirname, 'data/cwn_style_guides.json');
       let guides = {};
-      try { guides = JSON.parse(fs.readFileSync(guidePath, 'utf8')); } catch(e) {}
+      try {
+        guides = JSON.parse(fs.readFileSync(guidePath, 'utf8'));
+      } catch (e) {}
       if (!guides.streamers) guides.streamers = {};
       guides.streamers[streamer.toLowerCase()] = {
         fingerprint,
         clipsAnalyzed: analyses.length,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
       fs.writeFileSync(guidePath, JSON.stringify(guides, null, 2));
-      console.log(`[streamer-language] ✅ ${streamer} language fingerprint saved (${fingerprint.length} chars)`);
-    } catch(e) {
+      console.log(
+        `[streamer-language] ✅ ${streamer} language fingerprint saved (${fingerprint.length} chars)`
+      );
+    } catch (e) {
       console.error(`[streamer-language] Background analysis failed for ${streamer}:`, e.message);
     }
   })();
@@ -5946,7 +6843,9 @@ Be specific — generic descriptions are useless. Actual vocabulary and bit name
 app.get('/teach-streamer-language/status', (req, res) => {
   const guidePath = path.join(__dirname, 'data/cwn_style_guides.json');
   let guides = {};
-  try { guides = JSON.parse(fs.readFileSync(guidePath, 'utf8')); } catch(e) {}
+  try {
+    guides = JSON.parse(fs.readFileSync(guidePath, 'utf8'));
+  } catch (e) {}
   const streamers = guides.streamers || {};
   res.json({
     ok: true,
@@ -5954,8 +6853,8 @@ app.get('/teach-streamer-language/status', (req, res) => {
       streamer: name,
       clipsAnalyzed: data.clipsAnalyzed,
       updatedAt: data.updatedAt,
-      fingerprintLength: data.fingerprint?.length || 0
-    }))
+      fingerprintLength: data.fingerprint?.length || 0,
+    })),
   });
 });
 
@@ -5979,25 +6878,30 @@ app.post('/publish/setup-queue', async (req, res) => {
     max_posts_per_slot: 3, // YouTube + TikTok + Instagram can post same content at same time
     days_of_week: [0, 1, 2, 3, 4, 5, 6], // all days
     slots: [
-      { hour: 9,  minute: 0  }, // 9am — YT long form (Mon/Tue/Sun) + TikTok (Sun)
-      { hour: 12, minute: 0  }, // 12pm — IG Reels (Mon-Thu)
-      { hour: 14, minute: 0  }, // 2pm — TikTok (Tue-Fri)
-      { hour: 17, minute: 0  }, // 5pm — TikTok (Tue-Fri)
-      { hour: 18, minute: 0  }, // 6pm — IG Reels (Mon-Thu) + YT Shorts (Thu/Fri/Sat)
-      { hour: 20, minute: 0  }, // 8pm — YT Shorts (Thu/Fri/Sat)
-    ]
+      { hour: 9, minute: 0 }, // 9am — YT long form (Mon/Tue/Sun) + TikTok (Sun)
+      { hour: 12, minute: 0 }, // 12pm — IG Reels (Mon-Thu)
+      { hour: 14, minute: 0 }, // 2pm — TikTok (Tue-Fri)
+      { hour: 17, minute: 0 }, // 5pm — TikTok (Tue-Fri)
+      { hour: 18, minute: 0 }, // 6pm — IG Reels (Mon-Thu) + YT Shorts (Thu/Fri/Sat)
+      { hour: 20, minute: 0 }, // 8pm — YT Shorts (Thu/Fri/Sat)
+    ],
   };
 
   try {
     const response = await axios.post(
       'https://api.upload-post.com/api/uploadposts/queue/settings',
       { profile_username: UPLOADPOST_PROFILE, ...scheduleConfig },
-      { headers: { 'Authorization': `Apikey ${UPLOADPOST_API_KEY}`, 'Content-Type': 'application/json' } }
+      {
+        headers: {
+          Authorization: `Apikey ${UPLOADPOST_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
     );
 
     console.log(`[upload-post] ✅ Queue configured for ${UPLOADPOST_PROFILE}`);
     res.json({ ok: true, schedule: scheduleConfig, response: response.data });
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ error: e.message, details: e.response?.data });
   }
 });
@@ -6012,37 +6916,40 @@ app.post('/publish/setup-queue', async (req, res) => {
 // Body: { inputPath, streamer, outputPath }
 app.post('/burn-streamer-intro', async (req, res) => {
   const { inputPath, streamer, outputPath } = req.body;
-  if (!inputPath || !streamer) return res.status(400).json({ error: 'inputPath + streamer required' });
+  if (!inputPath || !streamer)
+    return res.status(400).json({ error: 'inputPath + streamer required' });
 
   // Load streamer data
   const streamersPath = path.join(__dirname, 'data/streamers.json');
   let streamerData = null;
   try {
     const data = JSON.parse(fs.readFileSync(streamersPath, 'utf8'));
-    streamerData = data.roster?.find(s =>
-      s.displayName?.toLowerCase() === streamer.toLowerCase() ||
-      s.twitchUsername?.toLowerCase() === streamer.toLowerCase()
+    streamerData = data.roster?.find(
+      (s) =>
+        s.displayName?.toLowerCase() === streamer.toLowerCase() ||
+        s.twitchUsername?.toLowerCase() === streamer.toLowerCase()
     );
-  } catch(e) {
+  } catch (e) {
     return res.status(400).json({ error: 'streamers.json not found — copy to ~/Downloads/' });
   }
 
-  if (!streamerData) return res.status(404).json({ error: `Streamer "${streamer}" not found in streamers.json` });
+  if (!streamerData)
+    return res.status(404).json({ error: `Streamer "${streamer}" not found in streamers.json` });
 
   const out = outputPath || inputPath.replace('.mp4', '_intro.mp4');
   const profileImgUrl = streamerData.profileImage || '';
   const origin = streamerData.origin || '';
-  const fact   = streamerData.fact || '';
-  const name   = streamerData.displayName || streamer;
+  const fact = streamerData.fact || '';
+  const name = streamerData.displayName || streamer;
 
   // Download profile image to tmp
-  const profileImgPath = path.join(TMP_DIR, `profile_${name.replace(/\s/g,'_')}.png`);
+  const profileImgPath = path.join(TMP_DIR, `profile_${name.replace(/\s/g, '_')}.png`);
   let hasProfileImg = false;
   if (profileImgUrl && !fs.existsSync(profileImgPath)) {
     try {
       await downloadFile(profileImgUrl, profileImgPath);
       hasProfileImg = fs.existsSync(profileImgPath) && fs.statSync(profileImgPath).size > 100;
-    } catch(e) {
+    } catch (e) {
       console.warn(`[burn-intro] Could not download profile image for ${name}: ${e.message}`);
     }
   } else if (fs.existsSync(profileImgPath)) {
@@ -6069,29 +6976,46 @@ app.post('/burn-streamer-intro', async (req, res) => {
           `drawbox=x=60:y=60:w=400:h=200:color=0xc7af4f@1:t=3:enable='lte(t,${introDur})',` +
           // Streamer name
           `drawtext=text='${name.toUpperCase()}':x=200:y=85:fontsize=22:fontcolor=0xc7af4f:` +
-            `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})',` +
+          `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})',` +
           // Origin
           `drawtext=text='Origin\\: ${origin}':x=200:y=115:fontsize=15:fontcolor=0xf0ede6:` +
-            `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})',` +
+          `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})',` +
           // Fact
           `drawtext=text='${fact.replace(/'/g, "'")}':x=200:y=140:fontsize=14:fontcolor=0xf0ede6:` +
-            `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'[bg]`,
+          `${SYSTEM_FONT || '/Library/Fonts/Arial.ttf'}:enable='lte(t,${introDur})'[bg]`,
         // Overlay circular profile image onto card
-        `[bg][circle]overlay=x=75:y=75:enable='lte(t,${introDur})'[out]`
+        `[bg][circle]overlay=x=75:y=75:enable='lte(t,${introDur})'[out]`,
       ].join(';');
 
       await new Promise((resolve, reject) => {
         const args = [
-          '-i', inputPath,
-          '-i', profileImgPath,
-          '-filter_complex', filterComplex,
-          '-map', '[out]', '-map', '0:a',
-          '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-          '-c:a', 'aac', '-ar', '44100',
-          '-y', out
+          '-i',
+          inputPath,
+          '-i',
+          profileImgPath,
+          '-filter_complex',
+          filterComplex,
+          '-map',
+          '[out]',
+          '-map',
+          '0:a',
+          '-c:v',
+          'libx264',
+          '-preset',
+          'fast',
+          '-crf',
+          '23',
+          '-c:a',
+          'aac',
+          '-ar',
+          '44100',
+          '-y',
+          out,
         ];
         const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
-        proc.on('close', code => code === 0 ? resolve() : reject(new Error(`FFmpeg exit ${code}`)));
+        proc.on('close', (code) =>
+          code === 0 ? resolve() : reject(new Error(`FFmpeg exit ${code}`))
+        );
         proc.on('error', reject);
       });
     } else {
@@ -6101,22 +7025,37 @@ app.post('/burn-streamer-intro', async (req, res) => {
         `drawbox=x=60:y=60:w=380:h=180:color=0xc7af4f@1:t=3:enable='lte(t,${introDur})'`,
         `drawtext=text='${name.toUpperCase()}':x=70:y=80:fontsize=22:fontcolor=0xc7af4f:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t,${introDur})'`,
         `drawtext=text='Origin\\: ${origin}':x=70:y=110:fontsize=15:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t,${introDur})'`,
-        `drawtext=text='${fact}':x=70:y=135:fontsize=14:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t,${introDur})'`
+        `drawtext=text='${fact}':x=70:y=135:fontsize=14:fontcolor=0xf0ede6:fontfile=/Users/robertgregory/cwn-production/tmp/cwn_font.ttf:enable='lte(t,${introDur})'`,
       ].join(',');
 
       await new Promise((resolve, reject) => {
-        const args = ['-i', inputPath, '-vf', textFilter,
-          '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-          '-c:a', 'aac', '-y', out];
+        const args = [
+          '-i',
+          inputPath,
+          '-vf',
+          textFilter,
+          '-c:v',
+          'libx264',
+          '-preset',
+          'fast',
+          '-crf',
+          '23',
+          '-c:a',
+          'aac',
+          '-y',
+          out,
+        ];
         const proc = execFile(ffmpegPath(), args, { maxBuffer: 50 * 1024 * 1024 });
-        proc.on('close', code => code === 0 ? resolve() : reject(new Error(`FFmpeg exit ${code}`)));
+        proc.on('close', (code) =>
+          code === 0 ? resolve() : reject(new Error(`FFmpeg exit ${code}`))
+        );
         proc.on('error', reject);
       });
     }
 
     console.log(`[burn-intro] ✅ Intro card burned for ${name}: ${path.basename(out)}`);
     res.json({ ok: true, outputPath: out, streamer: name, hasProfileImg });
-  } catch(e) {
+  } catch (e) {
     console.error(`[burn-intro] Failed for ${name}:`, e.message);
     res.status(500).json({ error: e.message });
   }
@@ -6128,11 +7067,11 @@ app.post('/burn-streamer-intro', async (req, res) => {
 // Generates 3 platform-optimized variants (YouTube Shorts, TikTok, Instagram Reels)
 app.post('/capcut/split-screen', async (req, res) => {
   const {
-    sourceVideoPath,      // Left side: news source video
-    bobbyGVideoPath,      // Right side: Bobby G reaction
-    caption,              // Gemini-generated caption
+    sourceVideoPath, // Left side: news source video
+    bobbyGVideoPath, // Right side: Bobby G reaction
+    caption, // Gemini-generated caption
     contentType = 'news', // news, nba, or twitch
-    platforms = ['youtube', 'tiktok', 'instagram']
+    platforms = ['youtube', 'tiktok', 'instagram'],
   } = req.body;
 
   if (!sourceVideoPath || !bobbyGVideoPath) {
@@ -6152,7 +7091,7 @@ app.post('/capcut/split-screen', async (req, res) => {
       const draftResp = await axios.post(`${CAPCUT_API}/create_draft`, {
         width: 1080,
         height: 1920,
-        fps: 60
+        fps: 60,
       });
 
       if (!draftResp.data.ok) {
@@ -6169,10 +7108,10 @@ app.post('/capcut/split-screen', async (req, res) => {
         track_index: 0,
         x: 0,
         y: 0,
-        width: 540,  // 50% of 1080
+        width: 540, // 50% of 1080
         height: 1920,
         start_time: 0,
-        mask_type: 'rectangle' // Optional: can add mask for rounded corners
+        mask_type: 'rectangle', // Optional: can add mask for rounded corners
       });
 
       // Step 3: Add Bobby G reaction (right 50%)
@@ -6180,12 +7119,12 @@ app.post('/capcut/split-screen', async (req, res) => {
         draft_id: draftId,
         video_path: bobbyGVideoPath,
         track_index: 1,
-        x: 540,  // Right half
+        x: 540, // Right half
         y: 0,
         width: 540,
         height: 1920,
         start_time: 0,
-        mask_type: 'rectangle'
+        mask_type: 'rectangle',
       });
 
       // Step 4: Add keyframes for dynamic zooms (platform-specific)
@@ -6197,7 +7136,7 @@ app.post('/capcut/split-screen', async (req, res) => {
           time: kf.time,
           scale: kf.scale,
           x: kf.x,
-          y: kf.y
+          y: kf.y,
         });
       }
 
@@ -6210,7 +7149,7 @@ app.post('/capcut/split-screen', async (req, res) => {
           font_size: captionStyle.fontSize,
           font_color: captionStyle.color,
           position: captionStyle.position,
-          animation: captionStyle.animation
+          animation: captionStyle.animation,
         });
       }
 
@@ -6221,7 +7160,7 @@ app.post('/capcut/split-screen', async (req, res) => {
           draft_id: draftId,
           effect_type: effect.type,
           start_time: effect.start,
-          duration: effect.duration
+          duration: effect.duration,
         });
       }
 
@@ -6231,17 +7170,19 @@ app.post('/capcut/split-screen', async (req, res) => {
         output_path: path.join(OUTPUT_DIR, `split_screen_${platform}_${Date.now()}.mp4`),
         resolution: '1080p',
         fps: 60,
-        quality: 'high'
+        quality: 'high',
       });
 
       if (!saveResp.data.ok) {
-        throw new Error(`CapCut save_draft failed for ${platform}: ${saveResp.data.error || 'unknown error'}`);
+        throw new Error(
+          `CapCut save_draft failed for ${platform}: ${saveResp.data.error || 'unknown error'}`
+        );
       }
 
       platformVariants[platform] = {
         draftId,
         outputPath: saveResp.data.output_path,
-        status: saveResp.data.status
+        status: saveResp.data.status,
       };
 
       console.log(`[capcut-split] ✅ ${platform} variant saved: ${saveResp.data.output_path}`);
@@ -6250,9 +7191,8 @@ app.post('/capcut/split-screen', async (req, res) => {
     res.json({
       ok: true,
       platforms: platformVariants,
-      caption
+      caption,
     });
-
   } catch (err) {
     console.error('[capcut-split] Error:', err.message);
     res.status(500).json({ error: err.message });
@@ -6266,20 +7206,20 @@ function getZoomKeyframes(platform) {
       { track: 0, time: 0, scale: 1.0, x: 0, y: 0 },
       { track: 0, time: 2, scale: 1.1, x: -20, y: -30 }, // Subtle zoom on source
       { track: 1, time: 1, scale: 1.0, x: 540, y: 0 },
-      { track: 1, time: 3, scale: 1.05, x: 540, y: -20 }  // Subtle zoom on Bobby G
+      { track: 1, time: 3, scale: 1.05, x: 540, y: -20 }, // Subtle zoom on Bobby G
     ],
     tiktok: [
       { track: 0, time: 0, scale: 1.0, x: 0, y: 0 },
       { track: 0, time: 1.5, scale: 1.15, x: -30, y: -40 }, // More aggressive zoom
       { track: 1, time: 0.5, scale: 1.0, x: 540, y: 0 },
-      { track: 1, time: 2.5, scale: 1.1, x: 540, y: -30 }
+      { track: 1, time: 2.5, scale: 1.1, x: 540, y: -30 },
     ],
     instagram: [
       { track: 0, time: 0, scale: 1.0, x: 0, y: 0 },
       { track: 0, time: 2, scale: 1.08, x: -15, y: -20 }, // Gentle zoom
       { track: 1, time: 1, scale: 1.0, x: 540, y: 0 },
-      { track: 1, time: 3, scale: 1.06, x: 540, y: -15 }
-    ]
+      { track: 1, time: 3, scale: 1.06, x: 540, y: -15 },
+    ],
   };
   return keyframes[platform] || keyframes.youtube;
 }
@@ -6291,20 +7231,20 @@ function getCaptionStyle(platform) {
       fontSize: 48,
       color: '#FFFFFF',
       position: 'bottom',
-      animation: 'fade_in'
+      animation: 'fade_in',
     },
     tiktok: {
       fontSize: 52,
       color: '#FFFFFF',
       position: 'center_bottom',
-      animation: 'pop'
+      animation: 'pop',
     },
     instagram: {
       fontSize: 44,
       color: '#FFFFFF',
       position: 'bottom',
-      animation: 'slide_up'
-    }
+      animation: 'slide_up',
+    },
   };
   return styles[platform] || styles.youtube;
 }
@@ -6313,15 +7253,13 @@ function getCaptionStyle(platform) {
 function getPlatformEffects(platform, contentType) {
   const effects = {
     youtube: [
-      { type: 'color_correction', start: 0, duration: -1 } // Apply to entire video
+      { type: 'color_correction', start: 0, duration: -1 }, // Apply to entire video
     ],
     tiktok: [
       { type: 'fast_zoom', start: 0, duration: 0.5 },
-      { type: 'shake', start: 2, duration: 0.3 }
+      { type: 'shake', start: 2, duration: 0.3 },
     ],
-    instagram: [
-      { type: 'soft_glow', start: 0, duration: -1 }
-    ]
+    instagram: [{ type: 'soft_glow', start: 0, duration: -1 }],
   };
   return effects[platform] || [];
 }
@@ -6346,17 +7284,17 @@ app.get('/shorts/avatar-ids', (req, res) => {
       avatarId: process.env.HEYGEN_AVATAR_ID || '1a5d4e9130d2467fa01d9e1580aff829',
       dimensions: '1920x1080',
       format: 'landscape',
-      useFor: 'YouTube long form compilations'
+      useFor: 'YouTube long form compilations',
     },
     portrait: {
       avatarId: process.env.HEYGEN_AVATAR_SHORT_ID || 'ed57439c9c3d4a398f3b247b75714b13',
       dimensions: '1080x1920',
       format: 'portrait',
-      useFor: 'TikTok, Instagram Reels, YouTube Shorts'
+      useFor: 'TikTok, Instagram Reels, YouTube Shorts',
     },
     voiceId: '2e598f1a6022448cb6710e5d44665325',
     baseSpeed: 0.85,
-    reactionSpeed: 0.95
+    reactionSpeed: 0.95,
   });
 });
 
@@ -6383,29 +7321,50 @@ app.post('/shorts/cut-from-long', async (req, res) => {
     // Cut segment, scale to 9:16 with padding if needed
     await new Promise((resolve, reject) => {
       const args = [
-        '-ss', startTime.toString(),
-        '-i', inPath,
-        '-t', duration.toString(),
-        '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black',
-        '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
-        '-c:a', 'aac', '-ar', '44100',
-        '-movflags', '+faststart',
-        '-y', outPath
+        '-ss',
+        startTime.toString(),
+        '-i',
+        inPath,
+        '-t',
+        duration.toString(),
+        '-vf',
+        'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black',
+        '-c:v',
+        'libx264',
+        '-preset',
+        'fast',
+        '-crf',
+        '23',
+        '-c:a',
+        'aac',
+        '-ar',
+        '44100',
+        '-movflags',
+        '+faststart',
+        '-y',
+        outPath,
       ];
       const proc = execFile(ffmpegPath(), args);
-      proc.on('close', code => code === 0 ? resolve() : reject(new Error(`FFmpeg exit ${code}`)));
+      proc.on('close', (code) =>
+        code === 0 ? resolve() : reject(new Error(`FFmpeg exit ${code}`))
+      );
       proc.on('error', reject);
     });
 
     const size = (fs.statSync(outPath).size / 1024 / 1024).toFixed(1);
     console.log(`[shorts] ✅ Cut from ${startTime}s-${endTime}s → ${outFile} (${size}MB)`);
-    res.json({ ok: true, outputPath: outPath, filename: outFile, duration, sizeMB: parseFloat(size) });
-  } catch(e) {
+    res.json({
+      ok: true,
+      outputPath: outPath,
+      filename: outFile,
+      duration,
+      sizeMB: parseFloat(size),
+    });
+  } catch (e) {
     console.error('[shorts] Cut failed:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
-
 
 // POST /gate-fix-log — append Gate 2 fix attempt to logs/gate_fixes.jsonl
 // Called by client-side handleGate2Failure after each fix strategy attempt.
@@ -6428,43 +7387,71 @@ app.post('/gate-fix-log', (req, res) => {
 app.post('/gate2-segment-qa', async (req, res) => {
   const { jobId, segments, contentType = 'twitch' } = req.body;
   if (!segments || !segments.length) return res.status(400).json({ error: 'segments required' });
-  if (!GEMINI_APIKEY) return res.json({ score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (no key)', deductions: [], skipped: true });
+  if (!GEMINI_APIKEY)
+    return res.json({
+      score: 100,
+      passed: true,
+      outcome: 'pass',
+      outcomeLabel: '✅ PASS (no key)',
+      deductions: [],
+      skipped: true,
+    });
 
   // Download avatar segments to tmp for Gemini analysis
-  const avatarSegs = segments.filter(s => s.type !== 'source_clip' && s.url);
-  if (!avatarSegs.length) return res.json({ score: 100, passed: true, outcome: 'pass', outcomeLabel: '✅ PASS (no avatar segs)', deductions: [] });
+  const avatarSegs = segments.filter((s) => s.type !== 'source_clip' && s.url);
+  if (!avatarSegs.length)
+    return res.json({
+      score: 100,
+      passed: true,
+      outcome: 'pass',
+      outcomeLabel: '✅ PASS (no avatar segs)',
+      deductions: [],
+    });
 
   const tmpPaths = [];
   // Sample first, middle, last — max 3 downloads
   const toCheck = [
     avatarSegs[0],
     avatarSegs[Math.floor(avatarSegs.length / 2)],
-    avatarSegs[avatarSegs.length - 1]
+    avatarSegs[avatarSegs.length - 1],
   ].filter((s, i, arr) => arr.indexOf(s) === i); // dedupe
 
   console.log(`[gate2] Downloading ${toCheck.length} segments for QA (job: ${jobId})...`);
 
   for (const seg of toCheck) {
-    const tmpPath = path.join(TMP_DIR, `gate2_${Date.now()}_${Math.random().toString(36).slice(2,6)}.mp4`);
+    const tmpPath = path.join(
+      TMP_DIR,
+      `gate2_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.mp4`
+    );
     try {
       await downloadFile(seg.url, tmpPath);
       const size = fs.existsSync(tmpPath) ? fs.statSync(tmpPath).size : 0;
       if (size > 5000) {
         tmpPaths.push(tmpPath);
-        console.log(`[gate2] Downloaded: ${seg.label} (${(size/1024/1024).toFixed(1)}MB)`);
+        console.log(`[gate2] Downloaded: ${seg.label} (${(size / 1024 / 1024).toFixed(1)}MB)`);
       } else {
         console.warn(`[gate2] Segment too small (${size}b) — skipping: ${seg.label}`);
-        try { fs.unlinkSync(tmpPath); } catch(e) {}
+        try {
+          fs.unlinkSync(tmpPath);
+        } catch (e) {}
       }
-    } catch(e) {
+    } catch (e) {
       console.warn(`[gate2] Download failed for ${seg.label}: ${e.message}`);
-      try { fs.unlinkSync(tmpPath); } catch(e2) {}
+      try {
+        fs.unlinkSync(tmpPath);
+      } catch (e2) {}
     }
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
   }
 
   if (!tmpPaths.length) {
-    return res.json({ score: 75, passed: false, outcome: 'manual_review', outcomeLabel: '🟡 MANUAL REVIEW (download failed)', deductions: [{ points: 25, reason: 'Could not download segments for QA' }] });
+    return res.json({
+      score: 75,
+      passed: false,
+      outcome: 'manual_review',
+      outcomeLabel: '🟡 MANUAL REVIEW (download failed)',
+      deductions: [{ points: 25, reason: 'Could not download segments for QA' }],
+    });
   }
 
   try {
@@ -6476,29 +7463,49 @@ app.post('/gate2-segment-qa', async (req, res) => {
       contentType: contentType || 'twitch',
       state: { gateResults: {}, savedOutputs: {} },
       designSpec: { chrome: {}, audio: {}, resolution: { width: 1920, height: 1080 }, ffmpeg: {} },
-      commitments: {}
+      commitments: {},
     };
     const g2Result = await gate2Worker.run(minJobSpec, tmpPaths, {});
     // Translate new gate worker output to legacy dashboard format
     const result = {
       score: g2Result.score,
       passed: g2Result.passed,
-      outcome: g2Result.outcome === 'hard_fail' ? 'fail' : g2Result.outcome === 'review' ? 'manual_review' : 'pass',
-      outcomeLabel: g2Result.passed ? '✅ PASS' : g2Result.outcome === 'review' ? '🟡 MANUAL REVIEW' : '❌ HARD FAIL',
-      deductions: (g2Result.segmentResults || []).filter(s => !s.passed).map(s => ({
-        points: 25,
-        reason: `Segment failed: ${s.segmentPath ? require('path').basename(s.segmentPath) : 'unknown'}`
-      }))
+      outcome:
+        g2Result.outcome === 'hard_fail'
+          ? 'fail'
+          : g2Result.outcome === 'review'
+            ? 'manual_review'
+            : 'pass',
+      outcomeLabel: g2Result.passed
+        ? '✅ PASS'
+        : g2Result.outcome === 'review'
+          ? '🟡 MANUAL REVIEW'
+          : '❌ HARD FAIL',
+      deductions: (g2Result.segmentResults || [])
+        .filter((s) => !s.passed)
+        .map((s) => ({
+          points: 25,
+          reason: `Segment failed: ${s.segmentPath ? require('path').basename(s.segmentPath) : 'unknown'}`,
+        })),
     };
     res.json(result);
-  } catch(e) {
+  } catch (e) {
     console.error('[gate2] QA error:', e.message);
-    res.json({ score: 75, passed: false, outcome: 'manual_review', outcomeLabel: '🟡 MANUAL REVIEW (QA error)', deductions: [{ points: 25, reason: e.message }] });
+    res.json({
+      score: 75,
+      passed: false,
+      outcome: 'manual_review',
+      outcomeLabel: '🟡 MANUAL REVIEW (QA error)',
+      deductions: [{ points: 25, reason: e.message }],
+    });
   } finally {
-    tmpPaths.forEach(p => { try { fs.unlinkSync(p); } catch(e) {} });
+    tmpPaths.forEach((p) => {
+      try {
+        fs.unlinkSync(p);
+      } catch (e) {}
+    });
   }
 });
-
 
 // ── POST /remediate-video ─────────────────────────────────────────
 // Pre-publish remediation: downloads assembled video from Drive,
@@ -6524,19 +7531,20 @@ app.post('/remediate-video', async (req, res) => {
   console.log(`[remediate] Starting remediation for job ${jobId}: ${missedItems.join(', ')}`);
 
   // Step 1: Download video from Drive
-  const tmpInput  = path.join(TMP_DIR, `${remId}_input.mp4`);
+  const tmpInput = path.join(TMP_DIR, `${remId}_input.mp4`);
   const tmpOutput = path.join(TMP_DIR, `${remId}_output.mp4`);
 
   try {
     console.log(`[remediate] Downloading from Drive...`);
     await downloadFile(driveUrl, tmpInput);
     const inputSize = fs.statSync(tmpInput).size;
-    if (inputSize < 100000) throw new Error(`Downloaded file too small (${inputSize}b) — Drive URL may be expired`);
-    console.log(`[remediate] Downloaded: ${(inputSize/1024/1024).toFixed(1)}MB`);
+    if (inputSize < 100000)
+      throw new Error(`Downloaded file too small (${inputSize}b) — Drive URL may be expired`);
+    console.log(`[remediate] Downloaded: ${(inputSize / 1024 / 1024).toFixed(1)}MB`);
 
     let currentFile = tmpInput;
     const appliedItems = [];
-    const failedItems  = [];
+    const failedItems = [];
 
     // ── Remediation: Intro Cards ────────────────────────────────────
     // Burns streamer intro cards onto each intro segment region of the video.
@@ -6556,43 +7564,65 @@ app.post('/remediate-video', async (req, res) => {
 
       streamers.forEach((streamer, idx) => {
         if (!streamer || !streamer.displayName) return;
-        const name   = (streamer.displayName || '').toUpperCase().replace(/'/g, "\'").replace(/:/g, '\:');
+        const name = (streamer.displayName || '')
+          .toUpperCase()
+          .replace(/'/g, "\'")
+          .replace(/:/g, '\:');
         const origin = (streamer.origin || '').replace(/'/g, "\'").replace(/:/g, '\:');
-        const fact   = (streamer.fact   || '').replace(/'/g, "\'").replace(/:/g, '\:').slice(0, 40);
+        const fact = (streamer.fact || '').replace(/'/g, "\'").replace(/:/g, '\:').slice(0, 40);
 
         // Estimated start time for this streamer's intro
         const startT = Math.round((idx + 1) * avgPerStreamer);
-        const endT   = startT + 3;
+        const endT = startT + 3;
         const fontPath = (SYSTEM_FONT || '/Library/Fonts/Arial.ttf').replace(/ /g, '\\ ');
 
         // Navy box + gold border + text (3 lines)
-        filterParts.push(
-          `drawbox=x=50:y=50:w=420:h=170:color=0x22304b@0.92:t=fill:enable='between(t\,${startT}\,${endT})'`,
-          `drawbox=x=50:y=50:w=420:h=170:color=0xc7af4f@1:t=3:enable='between(t\,${startT}\,${endT})'`,
-          `drawtext=text='${name}':x=65:y=72:fontsize=20:fontcolor=0xc7af4f:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'`,
-          origin ? `drawtext=text='Origin\: ${origin}':x=65:y=102:fontsize=14:fontcolor=0xf0ede6:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'` : null,
-          fact   ? `drawtext=text='${fact}':x=65:y=125:fontsize=13:fontcolor=0xf0ede6:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'` : null,
-        ).filter(Boolean);
+        filterParts
+          .push(
+            `drawbox=x=50:y=50:w=420:h=170:color=0x22304b@0.92:t=fill:enable='between(t\,${startT}\,${endT})'`,
+            `drawbox=x=50:y=50:w=420:h=170:color=0xc7af4f@1:t=3:enable='between(t\,${startT}\,${endT})'`,
+            `drawtext=text='${name}':x=65:y=72:fontsize=20:fontcolor=0xc7af4f:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'`,
+            origin
+              ? `drawtext=text='Origin\: ${origin}':x=65:y=102:fontsize=14:fontcolor=0xf0ede6:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'`
+              : null,
+            fact
+              ? `drawtext=text='${fact}':x=65:y=125:fontsize=13:fontcolor=0xf0ede6:fontfile=${fontPath}:enable='between(t\,${startT}\,${endT})'`
+              : null
+          )
+          .filter(Boolean);
       });
 
       if (filterParts.length > 0) {
         const introOutput = path.join(TMP_DIR, `${remId}_intro_cards.mp4`);
-        const filterStr   = filterParts.join(',');
+        const filterStr = filterParts.join(',');
 
         try {
           await new Promise((res, rej) => {
             const args = [
-              '-i', currentFile,
-              '-vf', filterStr,
-              '-c:v', 'libx264', '-preset', 'fast', '-crf', '22',
-              '-c:a', 'copy',
-              '-movflags', '+faststart',
-              '-y', introOutput
+              '-i',
+              currentFile,
+              '-vf',
+              filterStr,
+              '-c:v',
+              'libx264',
+              '-preset',
+              'fast',
+              '-crf',
+              '22',
+              '-c:a',
+              'copy',
+              '-movflags',
+              '+faststart',
+              '-y',
+              introOutput,
             ];
             const ff = execFile(ffmpegPath(), args, { maxBuffer: 100 * 1024 * 1024 });
             let stderr = '';
-            ff.stderr && ff.stderr.on('data', d => { stderr += d; });
-            ff.on('close', code => {
+            ff.stderr &&
+              ff.stderr.on('data', (d) => {
+                stderr += d;
+              });
+            ff.on('close', (code) => {
               if (code === 0) res();
               else rej(new Error(`Intro cards FFmpeg exit ${code}: ${stderr.slice(-200)}`));
             });
@@ -6604,7 +7634,7 @@ app.post('/remediate-video', async (req, res) => {
             appliedItems.push('intro_cards');
             console.log(`[remediate] ✅ Intro cards applied`);
           }
-        } catch(e) {
+        } catch (e) {
           failedItems.push({ item: 'intro_cards', error: e.message });
           console.warn(`[remediate] ⚠️  Intro cards failed: ${e.message}`);
         }
@@ -6620,15 +7650,31 @@ app.post('/remediate-video', async (req, res) => {
         try {
           await new Promise((res, rej) => {
             const args = [
-              '-i', currentFile, '-i', logoPng,
+              '-i',
+              currentFile,
+              '-i',
+              logoPng,
               '-filter_complex',
-              `[1:v]scale=${((contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).size}:-1,format=rgba,colorchannelmixer=aa=${((contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).opacity || 0.85}[logo];[0:v][logo]overlay=${((contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).x}:${((contentType === 'news') ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).y}[vout]`,
-              '-map', '[vout]', '-map', '0:a?',
-              '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'copy',
-              '-movflags', '+faststart', '-y', logoOutput
+              `[1:v]scale=${(contentType === 'news' ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).size}:-1,format=rgba,colorchannelmixer=aa=${(contentType === 'news' ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).opacity || 0.85}[logo];[0:v][logo]overlay=${(contentType === 'news' ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).x}:${(contentType === 'news' ? CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS_NEWS : CONFIG.VISUAL_LAYOUTS.LONG_FORM.LOGO_POS).y}[vout]`,
+              '-map',
+              '[vout]',
+              '-map',
+              '0:a?',
+              '-c:v',
+              'libx264',
+              '-preset',
+              'fast',
+              '-c:a',
+              'copy',
+              '-movflags',
+              '+faststart',
+              '-y',
+              logoOutput,
             ];
-            const ff = execFile(ffmpegPath(), args, { maxBuffer: 100*1024*1024 });
-            ff.on('close', code => code === 0 ? res() : rej(new Error(`Logo FFmpeg exit ${code}`)));
+            const ff = execFile(ffmpegPath(), args, { maxBuffer: 100 * 1024 * 1024 });
+            ff.on('close', (code) =>
+              code === 0 ? res() : rej(new Error(`Logo FFmpeg exit ${code}`))
+            );
             ff.on('error', rej);
           });
           if (fs.existsSync(logoOutput) && fs.statSync(logoOutput).size > 100000) {
@@ -6636,7 +7682,7 @@ app.post('/remediate-video', async (req, res) => {
             appliedItems.push('logo_bug');
             console.log(`[remediate] ✅ Logo bug applied`);
           }
-        } catch(e) {
+        } catch (e) {
           failedItems.push({ item: 'logo_bug', error: e.message });
           console.warn(`[remediate] ⚠️  Logo bug failed: ${e.message}`);
         }
@@ -6648,27 +7694,43 @@ app.post('/remediate-video', async (req, res) => {
     // ── Step 3: Copy final to output dir + re-upload to Drive ───────
     if (appliedItems.length === 0) {
       // Nothing was applied — clean up and return original URL
-      try { fs.unlinkSync(tmpInput); } catch(e) {}
-      return res.json({ ok: true, driveUrl, appliedItems: [], failedItems, message: 'No remediation applied — check errors' });
+      try {
+        fs.unlinkSync(tmpInput);
+      } catch (e) {}
+      return res.json({
+        ok: true,
+        driveUrl,
+        appliedItems: [],
+        failedItems,
+        message: 'No remediation applied — check errors',
+      });
     }
 
     const outFilename = `remediated_${jobId || remId}_${Date.now()}.mp4`;
-    const outPath     = path.join(OUTPUT_DIR, outFilename);
+    const outPath = path.join(OUTPUT_DIR, outFilename);
     fs.copyFileSync(currentFile, outPath);
 
     // Clean up tmp files
-    [tmpInput, tmpOutput].forEach(f => { try { if (f !== currentFile) fs.unlinkSync(f); } catch(e) {} });
+    [tmpInput, tmpOutput].forEach((f) => {
+      try {
+        if (f !== currentFile) fs.unlinkSync(f);
+      } catch (e) {}
+    });
 
     // Re-upload to Drive
     console.log(`[remediate] Re-uploading to Drive...`);
     let newDriveUrl = driveUrl; // fallback to original if upload fails
     try {
-      const uploadedUrl = await uploadToDrive(outPath, outFilename, `REMEDIATED — ${jobId || outFilename}`);
+      const uploadedUrl = await uploadToDrive(
+        outPath,
+        outFilename,
+        `REMEDIATED — ${jobId || outFilename}`
+      );
       if (uploadedUrl) {
         newDriveUrl = uploadedUrl;
         console.log(`[remediate] ✅ Re-uploaded: ${newDriveUrl}`);
       }
-    } catch(e) {
+    } catch (e) {
       console.warn(`[remediate] ⚠️  Drive re-upload failed: ${e.message} — using original URL`);
     }
 
@@ -6679,12 +7741,13 @@ app.post('/remediate-video', async (req, res) => {
       appliedItems,
       failedItems,
       outputFile: outFilename,
-      message: `Applied: ${appliedItems.join(', ')}${failedItems.length ? ' | Failed: ' + failedItems.map(f=>f.item).join(', ') : ''}`
+      message: `Applied: ${appliedItems.join(', ')}${failedItems.length ? ' | Failed: ' + failedItems.map((f) => f.item).join(', ') : ''}`,
     });
-
-  } catch(err) {
+  } catch (err) {
     console.error('[remediate] Error:', err.message);
-    try { fs.unlinkSync(tmpInput); } catch(e) {}
+    try {
+      fs.unlinkSync(tmpInput);
+    } catch (e) {}
     res.status(500).json({ error: err.message });
   }
 });
@@ -6743,20 +7806,25 @@ app.post('/generate-thumbnail', async (req, res) => {
   try {
     const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/streamers.json'), 'utf8'));
     roster = data.roster || [];
-  } catch(e) {
+  } catch (e) {
     return res.status(400).json({ error: 'streamers.json not found' });
   }
 
   // Get active streamers in configured order (max 12 for the circles)
   const activeStreamers = roster
-    .filter(s => s.active)
+    .filter((s) => s.active)
     .slice(0, THUMBNAIL_CIRCLE_ELEMENT_IDS.length);
 
-  const dateStr  = date || new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const dateStr =
+    date ||
+    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const hookText = hookLine || 'BEST TWITCH CLIPS';
 
   console.log(`[thumbnail] Generating for ${activeStreamers.length} streamers, date: ${dateStr}`);
-  res.json({ ok: true, message: 'Thumbnail generation started — check /thumbnail-status/' + jobId });
+  res.json({
+    ok: true,
+    message: 'Thumbnail generation started — check /thumbnail-status/' + jobId,
+  });
 
   // Run async — Canva API calls take time
   (async () => {
@@ -6786,29 +7854,31 @@ app.post('/generate-thumbnail', async (req, res) => {
           'https://api.canva.com/rest/v1/url-asset-uploads',
           {
             name: `${streamer.displayName} profile`,
-            url: hiResUrl
+            url: hiResUrl,
           },
           {
             headers: {
-              'Authorization': `Bearer ${CANVA_ACCESS_TOKEN}`,
-              'Content-Type': 'application/json'
+              Authorization: `Bearer ${CANVA_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json',
             },
-            timeout: 30000
+            timeout: 30000,
           }
         );
 
         const uploadJob = uploadResp.data.job;
-        console.log(`[thumbnail] Upload job ${uploadJob.id} for ${streamer.displayName}: ${uploadJob.status}`);
+        console.log(
+          `[thumbnail] Upload job ${uploadJob.id} for ${streamer.displayName}: ${uploadJob.status}`
+        );
 
         // Poll for upload completion (max 30 seconds)
         let asset = null;
         for (let i = 0; i < 10; i++) {
-          await new Promise(r => setTimeout(r, 3000));
+          await new Promise((r) => setTimeout(r, 3000));
 
           const statusResp = await axios.get(
             `https://api.canva.com/rest/v1/url-asset-uploads/${uploadJob.id}`,
             {
-              headers: { 'Authorization': `Bearer ${CANVA_ACCESS_TOKEN}` }
+              headers: { Authorization: `Bearer ${CANVA_ACCESS_TOKEN}` },
             }
           );
 
@@ -6838,19 +7908,19 @@ app.post('/generate-thumbnail', async (req, res) => {
       uploadedAssets.forEach(({ assetId, index }) => {
         autofillData[`streamer${index + 1}`] = {
           type: 'image',
-          asset_id: assetId
+          asset_id: assetId,
         };
       });
 
       // Add text fields
       autofillData.hookLine = {
         type: 'text',
-        text: hookText
+        text: hookText,
       };
 
       autofillData.dateLine = {
         type: 'text',
-        text: `CLIPZWORLD NEWS  •  ${dateStr.toUpperCase()}`
+        text: `CLIPZWORLD NEWS  •  ${dateStr.toUpperCase()}`,
       };
 
       const autofillResp = await axios.post(
@@ -6858,14 +7928,14 @@ app.post('/generate-thumbnail', async (req, res) => {
         {
           brand_template_id: TWITCH_THUMBNAIL_TEMPLATE_ID,
           data: autofillData,
-          title: `Twitch Compilation - ${dateStr}`
+          title: `Twitch Compilation - ${dateStr}`,
         },
         {
           headers: {
-            'Authorization': `Bearer ${CANVA_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${CANVA_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
           },
-          timeout: 30000
+          timeout: 30000,
         }
       );
 
@@ -6875,12 +7945,12 @@ app.post('/generate-thumbnail', async (req, res) => {
       // Poll for autofill completion (max 60 seconds)
       let design = null;
       for (let i = 0; i < 20; i++) {
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise((r) => setTimeout(r, 3000));
 
         const statusResp = await axios.get(
           `https://api.canva.com/rest/v1/autofills/${autofillJob.id}`,
           {
-            headers: { 'Authorization': `Bearer ${CANVA_ACCESS_TOKEN}` }
+            headers: { Authorization: `Bearer ${CANVA_ACCESS_TOKEN}` },
           }
         );
 
@@ -6907,10 +7977,9 @@ app.post('/generate-thumbnail', async (req, res) => {
         ok: true,
         canvaUrl,
         designId: design.id,
-        completedAt: new Date().toISOString()
+        completedAt: new Date().toISOString(),
       };
-
-    } catch(err) {
+    } catch (err) {
       console.error('[thumbnail] Error:', err.message);
       if (err.response) {
         console.error('[thumbnail] Canva API error:', err.response.data);
@@ -6928,7 +7997,6 @@ app.get('/thumbnail-status/:jobId', (req, res) => {
   res.json({ status: result.ok ? 'done' : 'failed', ...result });
 });
 
-
 // POST /cleanup — remove old output files, keep only the N most recent
 // Body: { keepCount: 2, cleanTmp: true, cleanQaLogs: false }
 app.post('/cleanup', async (req, res) => {
@@ -6937,33 +8005,40 @@ app.post('/cleanup', async (req, res) => {
 
   // ── Output MP4s — keep N most recent ──────────────────────────
   try {
-    const files = fs.readdirSync(OUTPUT_DIR)
-      .filter(f => f.endsWith('.mp4'))
-      .map(f => ({ name: f, path: path.join(OUTPUT_DIR, f), mtime: fs.statSync(path.join(OUTPUT_DIR, f)).mtimeMs }))
+    const files = fs
+      .readdirSync(OUTPUT_DIR)
+      .filter((f) => f.endsWith('.mp4'))
+      .map((f) => ({
+        name: f,
+        path: path.join(OUTPUT_DIR, f),
+        mtime: fs.statSync(path.join(OUTPUT_DIR, f)).mtimeMs,
+      }))
       .sort((a, b) => b.mtime - a.mtime);
 
     const toDelete = files.slice(keepCount);
-    const toKeep   = files.slice(0, keepCount);
+    const toKeep = files.slice(0, keepCount);
 
-    toKeep.forEach(f => results.kept.push(f.name));
+    toKeep.forEach((f) => results.kept.push(f.name));
     for (const f of toDelete) {
       const size = fs.statSync(f.path).size;
       fs.unlinkSync(f.path);
       results.deleted.push(f.name);
       results.freed += size;
-      console.log(`[cleanup] Deleted: ${f.name} (${(size/1024/1024).toFixed(1)}MB)`);
+      console.log(`[cleanup] Deleted: ${f.name} (${(size / 1024 / 1024).toFixed(1)}MB)`);
     }
 
     // Also clean thumb jpg files for deleted videos
     fs.readdirSync(OUTPUT_DIR)
-      .filter(f => f.endsWith('_thumb.jpg'))
-      .forEach(f => {
+      .filter((f) => f.endsWith('_thumb.jpg'))
+      .forEach((f) => {
         const baseName = f.replace('_thumb.jpg', '.mp4');
         if (results.deleted.includes(baseName)) {
-          try { fs.unlinkSync(path.join(OUTPUT_DIR, f)); } catch(e) {}
+          try {
+            fs.unlinkSync(path.join(OUTPUT_DIR, f));
+          } catch (e) {}
         }
       });
-  } catch(e) {
+  } catch (e) {
     console.warn('[cleanup] Output cleanup error:', e.message);
   }
 
@@ -6971,33 +8046,39 @@ app.post('/cleanup', async (req, res) => {
   if (cleanTmp) {
     try {
       let tmpFreed = 0;
-      fs.readdirSync(TMP_DIR).forEach(f => {
+      fs.readdirSync(TMP_DIR).forEach((f) => {
         // Keep: cwn_font.ttf, ticker_*.mp4, profile_*.png (profile image cache)
         // Delete: asm_*, gate2_*, gate3_*, learn_*, early_clips/
-        if (f.startsWith('asm_') || f.startsWith('gate') || f.startsWith('learn_') || f.startsWith('gemini_')) {
+        if (
+          f.startsWith('asm_') ||
+          f.startsWith('gate') ||
+          f.startsWith('learn_') ||
+          f.startsWith('gemini_')
+        ) {
           const fp = path.join(TMP_DIR, f);
           try {
             const size = fs.statSync(fp).size;
             fs.unlinkSync(fp);
             tmpFreed += size;
-          } catch(e) {}
+          } catch (e) {}
         }
       });
       // Clean early_clips subfolder
       const earlyDir = path.join(TMP_DIR, 'early_clips');
       if (fs.existsSync(earlyDir)) {
-        fs.readdirSync(earlyDir).forEach(f => {
+        fs.readdirSync(earlyDir).forEach((f) => {
           try {
             const fp = path.join(earlyDir, f);
             const size = fs.statSync(fp).size;
             fs.unlinkSync(fp);
             tmpFreed += size;
-          } catch(e) {}
+          } catch (e) {}
         });
       }
       results.freed += tmpFreed;
-      if (tmpFreed > 0) console.log(`[cleanup] Tmp freed: ${(tmpFreed/1024/1024).toFixed(1)}MB`);
-    } catch(e) {
+      if (tmpFreed > 0)
+        console.log(`[cleanup] Tmp freed: ${(tmpFreed / 1024 / 1024).toFixed(1)}MB`);
+    } catch (e) {
       console.warn('[cleanup] Tmp cleanup error:', e.message);
     }
   }
@@ -7006,37 +8087,60 @@ app.post('/cleanup', async (req, res) => {
   if (cleanQaLogs) {
     const qaDir = path.join(OUTPUT_DIR, 'qa_failures');
     if (fs.existsSync(qaDir)) {
-      fs.readdirSync(qaDir).forEach(f => {
-        try { fs.unlinkSync(path.join(qaDir, f)); } catch(e) {}
+      fs.readdirSync(qaDir).forEach((f) => {
+        try {
+          fs.unlinkSync(path.join(qaDir, f));
+        } catch (e) {}
       });
       console.log('[cleanup] QA logs cleared');
     }
   }
 
   const freedMB = (results.freed / 1024 / 1024).toFixed(1);
-  console.log(`[cleanup] ✅ Done — freed ${freedMB}MB, deleted ${results.deleted.length} videos, kept ${results.kept.length}`);
-  res.json({ ok: true, deleted: results.deleted, kept: results.kept, freedMB: parseFloat(freedMB) });
+  console.log(
+    `[cleanup] ✅ Done — freed ${freedMB}MB, deleted ${results.deleted.length} videos, kept ${results.kept.length}`
+  );
+  res.json({
+    ok: true,
+    deleted: results.deleted,
+    kept: results.kept,
+    freedMB: parseFloat(freedMB),
+  });
 });
 
 // GET /disk-usage — check current disk usage
 app.get('/disk-usage', (req, res) => {
   try {
-    const outputFiles = fs.readdirSync(OUTPUT_DIR)
-      .filter(f => f.endsWith('.mp4'))
-      .map(f => {
+    const outputFiles = fs
+      .readdirSync(OUTPUT_DIR)
+      .filter((f) => f.endsWith('.mp4'))
+      .map((f) => {
         const fp = path.join(OUTPUT_DIR, f);
         const stat = fs.statSync(fp); // Call statSync only once
-        return { name: f, sizeMB: parseFloat((stat.size/1024/1024).toFixed(1)), mtime: stat.mtimeMs };
+        return {
+          name: f,
+          sizeMB: parseFloat((stat.size / 1024 / 1024).toFixed(1)),
+          mtime: stat.mtimeMs,
+        };
       })
       .sort((a, b) => b.mtime - a.mtime);
 
     const tmpSize = fs.readdirSync(TMP_DIR).reduce((acc, f) => {
-      try { return acc + fs.statSync(path.join(TMP_DIR, f)).size; } catch(e) { return acc; }
+      try {
+        return acc + fs.statSync(path.join(TMP_DIR, f)).size;
+      } catch (e) {
+        return acc;
+      }
     }, 0);
 
-    const totalMB = outputFiles.reduce((a, f) => a + f.sizeMB, 0) + tmpSize/1024/1024;
-    res.json({ ok: true, outputFiles, tmpMB: parseFloat((tmpSize/1024/1024).toFixed(1)), totalMB: parseFloat(totalMB.toFixed(1)) });
-  } catch(e) {
+    const totalMB = outputFiles.reduce((a, f) => a + f.sizeMB, 0) + tmpSize / 1024 / 1024;
+    res.json({
+      ok: true,
+      outputFiles,
+      tmpMB: parseFloat((tmpSize / 1024 / 1024).toFixed(1)),
+      totalMB: parseFloat(totalMB.toFixed(1)),
+    });
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
@@ -7047,7 +8151,7 @@ app.get('/errors', (req, res) => {
   const label = req.query.label || null;
   const rate = getErrorRate();
   let recent = getRecentErrors(n);
-  if (label) recent = recent.filter(e => e.label === label);
+  if (label) recent = recent.filter((e) => e.label === label);
   res.json({ ok: true, errorRate: rate, recent, logFile: ERROR_LOG });
 });
 
@@ -7062,7 +8166,9 @@ const server = app.listen(PORT, () => {
   console.log(`   Output dir:  ${OUTPUT_DIR}`);
   const gateTestMode = process.env.GATE_TEST_MODE === 'true';
   if (gateTestMode) {
-    console.log(`   ⏸  GATE_TEST_MODE=true — HeyGen auto-send DISABLED ($0.33/segment protected)\n`);
+    console.log(
+      `   ⏸  GATE_TEST_MODE=true — HeyGen auto-send DISABLED ($0.33/segment protected)\n`
+    );
   } else {
     console.log(`   🔴 GATE_TEST_MODE=false — HeyGen auto-send LIVE (each segment costs $0.33)\n`);
   }
@@ -7077,15 +8183,19 @@ const server = app.listen(PORT, () => {
 async function gracefulShutdown(signal) {
   console.log(`\n[shutdown] ${signal} received — checking in-flight work...`);
 
-  const pollerCount   = activePollers.size;
-  const assemblyCount = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
+  const pollerCount = activePollers.size;
+  const assemblyCount = Object.keys(assemblyJobs).filter(
+    (id) => assemblyJobs[id].status === 'running'
+  ).length;
 
   if (pollerCount === 0 && assemblyCount === 0) {
     console.log('[shutdown] No active pollers or assemblies — exiting cleanly');
     process.exit(0);
   }
 
-  console.log(`[shutdown] ${pollerCount} poller(s), ${assemblyCount} assembly job(s) in flight — waiting up to 35s...`);
+  console.log(
+    `[shutdown] ${pollerCount} poller(s), ${assemblyCount} assembly job(s) in flight — waiting up to 35s...`
+  );
 
   // Hard exit after 35s no matter what
   const forceTimer = setTimeout(() => {
@@ -7097,8 +8207,8 @@ async function gracefulShutdown(signal) {
   // Wait for all pollers to checkpoint their current poll cycle
   if (pollerCount > 0) {
     await Promise.race([
-      Promise.all([...activePollers.values()].map(e => e.done)),
-      new Promise(r => setTimeout(r, 33000))
+      Promise.all([...activePollers.values()].map((e) => e.done)),
+      new Promise((r) => setTimeout(r, 33000)),
     ]);
     console.log('[shutdown] Pollers checkpointed');
   }
@@ -7106,13 +8216,18 @@ async function gracefulShutdown(signal) {
   // Wait for running assembly jobs to finish (polls every 1s)
   if (assemblyCount > 0) {
     await Promise.race([
-      new Promise(resolve => {
+      new Promise((resolve) => {
         const interval = setInterval(() => {
-          const still = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
-          if (still === 0) { clearInterval(interval); resolve(); }
+          const still = Object.keys(assemblyJobs).filter(
+            (id) => assemblyJobs[id].status === 'running'
+          ).length;
+          if (still === 0) {
+            clearInterval(interval);
+            resolve();
+          }
         }, 1000);
       }),
-      new Promise(r => setTimeout(r, 30000))
+      new Promise((r) => setTimeout(r, 30000)),
     ]);
     console.log('[shutdown] Assemblies checkpointed');
   }
@@ -7148,17 +8263,21 @@ app.post('/nba/generate-intro-card', async (req, res) => {
 
   const templatePath = path.join(__dirname, 'templates', 'nba_intro_card.html');
   if (!fs.existsSync(templatePath)) {
-    return res.status(500).json({ ok: false, error: 'Template not found: templates/nba_intro_card.html' });
+    return res
+      .status(500)
+      .json({ ok: false, error: 'Template not found: templates/nba_intro_card.html' });
   }
 
   let browser;
   try {
     console.log(`[nba-intro-card] Generating card for game ${gameId}...`);
 
-    browser = await puppeteer.launch(withPuppeteerExecutable({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security']
-    }));
+    browser = await puppeteer.launch(
+      withPuppeteerExecutable({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security'],
+      })
+    );
 
     const page = await browser.newPage();
 
@@ -7172,12 +8291,12 @@ app.post('/nba/generate-intro-card', async (req, res) => {
     // Wait for ESPN API data to render (title changes to 'READY' when done)
     try {
       await page.waitForFunction(() => document.title === 'READY', { timeout: 12000 });
-    } catch(e) {
+    } catch (e) {
       console.warn(`[nba-intro-card] Timeout waiting for READY — taking screenshot anyway`);
     }
 
     // Extra buffer for images (logos) to fully load
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    await new Promise((resolve) => setTimeout(resolve, 1200));
 
     // Hide the status bar before screenshot
     await page.evaluate(() => {
@@ -7199,7 +8318,7 @@ app.post('/nba/generate-intro-card', async (req, res) => {
       ok: true,
       cardPath,
       gameId,
-      dimensions: '640x360'
+      dimensions: '640x360',
     };
 
     // ── Optional: Convert PNG → 10s MP4 via FFmpeg ──────────────────
@@ -7211,16 +8330,19 @@ app.post('/nba/generate-intro-card', async (req, res) => {
         execSync(ffmpegCmd, { timeout: 30000 });
         result.videoPath = videoPath;
         console.log(`[nba-intro-card] ✅ MP4 saved: ${videoPath}`);
-      } catch(ffErr) {
+      } catch (ffErr) {
         console.warn(`[nba-intro-card] FFmpeg failed (PNG still saved): ${ffErr.message}`);
         result.videoError = 'FFmpeg conversion failed — PNG is available';
       }
     }
 
     res.json(result);
-
-  } catch(err) {
-    if (browser) { try { await browser.close(); } catch(e) {} }
+  } catch (err) {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (e) {}
+    }
     console.error(`[nba-intro-card] Error:`, err.message);
     res.status(500).json({ ok: false, error: err.message, gameId });
   }

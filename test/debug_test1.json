@@ -3,8 +3,8 @@
   "date": "Tuesday, April 7, 2026",
   "clipsPerStreamer": 3,
   "items": [
-    {"streamer": "jasontheween", "displayName": "Jason", "clips": []},
-    {"streamer": "hasanabi", "displayName": "Hasan", "clips": []},
-    {"streamer": "adapt", "displayName": "Adapt", "clips": []}
+    { "streamer": "jasontheween", "displayName": "Jason", "clips": [] },
+    { "streamer": "hasanabi", "displayName": "Hasan", "clips": [] },
+    { "streamer": "adapt", "displayName": "Adapt", "clips": [] }
   ]
 }

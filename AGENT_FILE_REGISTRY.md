@@ -8,19 +8,21 @@
 
 ## Agent roster
 
-| Agent | Tool | Terminal | Domain | Best for |
-|---|---|---|---|---|
-| **Cline-A** | Cline + Claude Sonnet | Terminal 1 | Backend — pipeline, gates, FFmpeg, assembly, HeyGen | Complex server logic, gate scoring, QA fixes, anything touching the production engine |
-| **Cline-B** | Cline + DeepSeek | Terminal 2 | Backend — API endpoints, data layer, job persistence | Endpoint additions, `data/jobs.json` schema, publish integration, formulaic surgical edits |
-| **Cline-C** | Cline + Claude Sonnet 4.6 | Terminal 3 | Frontend — dashboard UI, AuraFlux React/Next.js, cleanup | `cwn_production.html`, `tools/`, `assets/`, WAVE_0 cleanup, future AuraFlux React UI |
-| **Aider** | Aider | Overnight | Docs, migrations, Jira/Confluence, non-breaking scripts | Batch tasks, anything running 1-6am |
-| **Claude Code** | Claude Sonnet 4.6 | This session | Architecture, handoffs, specs, diagnosis | Planning, root cause analysis, spec writing, roadmap, model routing decisions |
+| Agent           | Tool                      | Terminal     | Domain                                                   | Best for                                                                                   |
+| --------------- | ------------------------- | ------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Cline-A**     | Cline + Claude Sonnet     | Terminal 1   | Backend — pipeline, gates, FFmpeg, assembly, HeyGen      | Complex server logic, gate scoring, QA fixes, anything touching the production engine      |
+| **Cline-B**     | Cline + DeepSeek          | Terminal 2   | Backend — API endpoints, data layer, job persistence     | Endpoint additions, `data/jobs.json` schema, publish integration, formulaic surgical edits |
+| **Cline-C**     | Cline + Claude Sonnet 4.6 | Terminal 3   | Frontend — dashboard UI, AuraFlux React/Next.js, cleanup | `cwn_production.html`, `tools/`, `assets/`, WAVE_0 cleanup, future AuraFlux React UI       |
+| **Aider**       | Aider                     | Overnight    | Docs, migrations, Jira/Confluence, non-breaking scripts  | Batch tasks, anything running 1-6am                                                        |
+| **Claude Code** | Claude Sonnet 4.6         | This session | Architecture, handoffs, specs, diagnosis                 | Planning, root cause analysis, spec writing, roadmap, model routing decisions              |
 
 **Model routing rationale:**
+
 - **All 3 on Sonnet 4.6** — VS Code Cline extension uses one model setting across all instances. Can't run different models per terminal window. Claude Max is flat-rate so no cost difference. All 3 on Sonnet 4.6 for best output.
 - All 3 Clines run in terminal via Claude Code API (Claude Max subscription).
 
 **Domain split (prevents file lock conflicts):**
+
 - Cline-A owns: `server.js` pipeline functions, `lib/`, assembly logic, gate scoring
 - Cline-B owns: `server.js` API endpoints only (app.get/app.post routes), `data/`, `logs/`
 - Cursor owns: `cwn_production.html`, `tools/`, `assets/`, future `ui/` directory
@@ -32,6 +34,7 @@
 **Handoff header convention:** Every handoff written by Claude Code will start with `→ Agent: Cline-A` (or B/Cursor/Aider) so it's immediately clear who executes it.
 
 **Cline-C workflow notes:**
+
 - All 3 Clines use the same terminal workflow — read cursor.md + STATUS.md + handoff, then execute
 - Cline-C prompt must start with identity opener: "You are Cline-C. Your branch prefix is cline-c/."
 - Check git branch --show-current before every commit
@@ -42,13 +45,13 @@
 
 **Never edit without explicit Rob approval. Never edit if another agent has declared a lock.**
 
-| File | Why it's Tier 1 |
-|---|---|
-| `server.js` | 9000+ line Node API — every pipeline stage lives here. A bad edit breaks all content types simultaneously. |
-| `cwn_production.html` | Dashboard + all pipeline controls. A bad edit breaks the operator's ability to run anything. |
-| `lib/directives.js` | Directive sidecar read/write. Corruption here breaks chrome on every News run. |
-| `lib/chromeDirectives.js` | Zod schema. A schema change breaks every directive written before it. |
-| `lib/config.js` | Global CONFIG constants. A bad value cascades into every assembly job. |
+| File                      | Why it's Tier 1                                                                                            |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `server.js`               | 9000+ line Node API — every pipeline stage lives here. A bad edit breaks all content types simultaneously. |
+| `cwn_production.html`     | Dashboard + all pipeline controls. A bad edit breaks the operator's ability to run anything.               |
+| `lib/directives.js`       | Directive sidecar read/write. Corruption here breaks chrome on every News run.                             |
+| `lib/chromeDirectives.js` | Zod schema. A schema change breaks every directive written before it.                                      |
+| `lib/config.js`           | Global CONFIG constants. A bad value cascades into every assembly job.                                     |
 
 **Rule:** If your handoff requires a Tier 1 file, declare a lock in STATUS.md before your first edit (see Lock Protocol below). Check STATUS.md first — if another agent has it locked, stop and tell Rob.
 
@@ -58,17 +61,17 @@
 
 **One agent at a time. Must be explicitly listed in your handoff's "Files to change" table.**
 
-| File | Why it's Tier 2 |
-|---|---|
-| `tools/clipzworld_newscast.html` | Puppeteer chrome renderer. Bad edit = blank overlay on every News run. |
-| `lib/metrics.js` | Stage timer + job metrics. Shared by all pipeline stages. |
-| `lib/validation.js` | URL + input validation. Shared security layer. |
-| `lib/error_logger.js` | Shared error logging. |
-| `lib/clients/jira_client.js` | Atlassian integration — not pipeline-critical but shared. |
-| `lib/clients/confluence_client.js` | Same. |
-| `package.json` | Dependency changes affect all agents and the running server. |
-| `.env.example` | Template for credentials — wrong changes mislead future setup. |
-| `data/jobs.json` | Runtime job state. Never commit, never hand-edit while server is running. |
+| File                               | Why it's Tier 2                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| `tools/clipzworld_newscast.html`   | Puppeteer chrome renderer. Bad edit = blank overlay on every News run.    |
+| `lib/metrics.js`                   | Stage timer + job metrics. Shared by all pipeline stages.                 |
+| `lib/validation.js`                | URL + input validation. Shared security layer.                            |
+| `lib/error_logger.js`              | Shared error logging.                                                     |
+| `lib/clients/jira_client.js`       | Atlassian integration — not pipeline-critical but shared.                 |
+| `lib/clients/confluence_client.js` | Same.                                                                     |
+| `package.json`                     | Dependency changes affect all agents and the running server.              |
+| `.env.example`                     | Template for credentials — wrong changes mislead future setup.            |
+| `data/jobs.json`                   | Runtime job state. Never commit, never hand-edit while server is running. |
 
 ---
 
@@ -76,13 +79,13 @@
 
 **Any agent can edit these if listed in their handoff. No lock declaration needed.**
 
-| Pattern | Examples |
-|---|---|
-| `scripts/*.js` | `jira_ping.js`, `jira_morning_report.js` |
-| `*.md` (docs) | Handoff docs, spec files, STATUS.md, cursor.md |
-| `output/`, `tmp/`, `logs/` | Runtime output — never committed anyway |
-| `test/*.js` | Test files |
-| `assets/` | Static assets |
+| Pattern                    | Examples                                       |
+| -------------------------- | ---------------------------------------------- |
+| `scripts/*.js`             | `jira_ping.js`, `jira_morning_report.js`       |
+| `*.md` (docs)              | Handoff docs, spec files, STATUS.md, cursor.md |
+| `output/`, `tmp/`, `logs/` | Runtime output — never committed anyway        |
+| `test/*.js`                | Test files                                     |
+| `assets/`                  | Static assets                                  |
 
 ---
 
@@ -90,14 +93,15 @@
 
 Every handoff should be tagged with a size. Claude Code assigns the tag when writing the handoff. Cline/Aider respects the rule for that size.
 
-| Size | Definition | Rule |
-|---|---|---|
-| **S** | ≤3 file edits, ≤20 lines total changed | One session, Flash Act, single commit |
-| **M** | 4-10 file edits OR touches any Tier 1 file | One session, Flash, diff review before commit |
-| **L** | Architectural change, multiple subsystems, >1 Tier 1 file | Must be split into S/M handoffs by Claude Code first — never execute an L handoff as-is |
-| **XL** | Refactor >200 lines OR new feature from scratch | Claude Code writes directly OR Aider overnight — never Cline |
+| Size   | Definition                                                | Rule                                                                                    |
+| ------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **S**  | ≤3 file edits, ≤20 lines total changed                    | One session, Flash Act, single commit                                                   |
+| **M**  | 4-10 file edits OR touches any Tier 1 file                | One session, Flash, diff review before commit                                           |
+| **L**  | Architectural change, multiple subsystems, >1 Tier 1 file | Must be split into S/M handoffs by Claude Code first — never execute an L handoff as-is |
+| **XL** | Refactor >200 lines OR new feature from scratch           | Claude Code writes directly OR Aider overnight — never Cline                            |
 
 **Current handoff sizes:**
+
 - `CLINE_HANDOFF_NEWS_CHROME_FIX.md` — **M** (server.js + tools/clipzworld_newscast.html)
 - `CLINE_HANDOFF_WAVE_0_CLEANUP.md` — **S×13** (13 independent S items, one commit each)
 - `CLINE_HANDOFF_NBA_VOICEOVER_FFMPEG_V2.md` — **L** (split before executing)
@@ -116,6 +120,7 @@ When two Cline instances or Cline + Aider are running simultaneously:
 3. If the file is locked by another agent — **stop, do not edit, tell Rob**
 
 **Lock entry format in STATUS.md:**
+
 ```
 | server.js | Cline-A | CLINE_HANDOFF_NEWS_CHROME_FIX.md Fix 2-6 | 2026-04-14 14:30 ET |
 ```
@@ -131,6 +136,7 @@ When two Cline instances or Cline + Aider are running simultaneously:
 Aider runs 1-6am and handles high-volume, tedious, data-intensive tasks that would interrupt active daytime workflows. Changes are reviewed at morning standup before taking full effect.
 
 **Jira management:**
+
 - Ticket triage — analyze new bugs/support requests, assign priority, categorize into correct request types
 - Backlog cleanup — identify stale/zombie tickets (no update in 14+ days), close or flag for review
 - Issue enrichment — link related Confluence docs, PRDs, and spec files to Jira tickets automatically
@@ -138,16 +144,19 @@ Aider runs 1-6am and handles high-volume, tedious, data-intensive tasks that wou
 - Dependency management — when parent task marked complete, notify stakeholders and update dependent tickets
 
 **Confluence maintenance:**
+
 - Summarize long pages updated during the day into executive summaries
 - Archive inactive/obsolete pages
 - Scan new pages for action items → create corresponding Jira tickets
 - Generate draft docs from resolved Jira issues
 
 **Reporting:**
+
 - Daily status report on engineering activity → delivered to Rob's email/Slack by 6am
 - Proactive issue creation when recurring error patterns detected in `logs/errors.jsonl`
 
 **What Aider does NOT do overnight:**
+
 - Does NOT touch `server.js`, `cwn_production.html`, or any Tier 1 file
 - Does NOT commit code changes — only docs, scripts, Jira/Confluence updates
 - Does NOT make architectural decisions — flags for Claude Code review
@@ -165,6 +174,7 @@ Maintenance windows are for system-wide tasks that cannot safely run under produ
 **Maintenance window task categories:**
 
 **Security:**
+
 - Dependency vulnerability scan (`npm audit`) + fix where safe
 - OWASP top 10 review pass on all user-facing endpoints
 - Input sanitization audit — verify all req.body inputs validated before use
@@ -172,6 +182,7 @@ Maintenance windows are for system-wide tasks that cannot safely run under produ
 - Log PII audit — ensure no customer data leaking into `logs/errors.jsonl`
 
 **Code quality:**
+
 - Dead code removal — functions defined but never called
 - Unused import cleanup
 - Console.log → structured logger replacement
@@ -179,23 +190,27 @@ Maintenance windows are for system-wide tasks that cannot safely run under produ
 - Duplicate function detection — same logic in multiple places, consolidate
 
 **Data sanitization:**
+
 - `data/jobs.json` compaction — prune jobs older than retention policy
 - `logs/` rotation — archive and compress old log files
 - `output/` cleanup — remove MP4s already confirmed on Drive
 - Stale `tmp/` files older than 48h
 
 **Refactoring:**
+
 - Extract repeated patterns into shared utilities
 - Module splits when a file exceeds size threshold
 - Rename internal variables to customer-facing names (per `PLATFORM_ARCHITECTURE.md` naming table)
 - Dead endpoint removal
 
 **Dependency maintenance:**
+
 - `npm audit fix` for non-breaking patches
 - Package version assessment — flag major version gaps for Claude Code review
 - Breaking change report → Jira ticket for Claude Code to spec the migration
 
 **System health report (generated at end of every window):**
+
 ```
 === MAINTENANCE WINDOW REPORT ===
 Window: [start] → [end]
@@ -210,6 +225,7 @@ Status: READY TO RESUME / NEEDS ROB REVIEW
 ```
 
 **What Aider does NOT do in maintenance windows:**
+
 - Does NOT make architectural decisions — creates Jira tickets for Claude Code
 - Does NOT change API contracts or gate logic — flags for sprint planning
 - Does NOT update customer-facing UI copy without PO approval
@@ -230,6 +246,7 @@ EPIC: [Major feature, e.g. "Autonomous Gate Progression"]
 ```
 
 **API-first workflow:**
+
 1. Claude Code writes the handoff (API contract)
 2. Cline-B (DeepSeek) stubs the endpoint first
 3. Cline-A (Sonnet) builds the logic, Cline-C (GPT) builds the UI in parallel against the stub
@@ -258,9 +275,9 @@ Add this table to STATUS.md immediately below the `🤖 Last Agent Action` table
 ```markdown
 ## 🔒 Active File Locks
 
-| File | Agent | Handoff | Locked At |
-|------|-------|---------|-----------|
-| (none) | — | — | — |
+| File   | Agent | Handoff | Locked At |
+| ------ | ----- | ------- | --------- |
+| (none) | —     | —       | —         |
 ```
 
 Clear entries when the associated commit lands.

@@ -8,10 +8,14 @@ node_modules/
 # Agent config/state files — local only
 .cline/
 .clinerules/
+.serena/
 data/assembly_jobs.json
 cwn-drive-key.json
 .DS_Store
 .aider*
+
+# Empty placeholder file created by aider venv setup
+env
 
 # Runtime state — never commit (public / contributor clones)
 data/jobs.json
@@ -31,6 +35,12 @@ logs/newrelic_health.json
 logs/roo_status.json
 logs/roo_trigger.json
 logs/roo_notification.md
+# Additional runtime log files (ai memory, job monitor, phase run reports)
+logs/ai_memory_trace.jsonl
+logs/job_monitor_events.jsonl
+logs/*.csv
+logs/phase_a_last_run.json
+logs/phase_a_live_*.log
 
 # Roo Code — machine-local autostart only (modes/rules stay tracked)
 .roo/autostart.json

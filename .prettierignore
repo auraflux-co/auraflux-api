@@ -7,7 +7,10 @@ tmp
 **/*.min.js
 **/*.min.css
 VectCutAPI/venv-*
+VectCutAPI/__pycache__
 .venv
+.venv-aider
+.venv-*
 coverage
 .next
 dist
@@ -17,6 +20,28 @@ data/*.db
 **/*.png
 **/*.jpg
 **/.cursor/debug-*.log
-claude
+# Agent / tool config dirs
 .roo
 .cline
+.clinerules
+.serena
+.claude
+# Aider working files
+.aider*
+# Google OAuth secrets
+client_secret_*.json
+# Logs (runtime-generated)
+logs
+# Docs and assets (not source code — skip formatting)
+docs
+assets
+scripts
+tools
+# VectCutAPI (third-party Python service — not our JS source)
+VectCutAPI
+# Dashboard HTML — large complex operational file, Prettier HTML parser cannot parse it
+cwn_production.html
+# STATUS.md — long-form tracking tables with pipe-separated content Prettier reformats incorrectly
+STATUS.md
+# Canvas / media source files (not JS source)
+*.canvas.tsx
