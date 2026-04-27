@@ -24,19 +24,19 @@ function buildTwitchScript(streamerNames) {
     sections.push(`=== ${upper}_CLIP ===\n[CLIP PLAYS HERE]`);
     sections.push(`=== ${upper}_REACT ===\nThat was something. [beat]`);
   }
-  sections.push('=== OUTRO ===\nI\'m Bobby G. Goodnight and good luck.');
+  sections.push("=== OUTRO ===\nI'm Bobby G. Goodnight and good luck.");
   return sections.join('\n\n');
 }
 
 /** Build a minimal News script with N story clips using type: source_clip */
 function buildNewsScript(storyCount) {
-  const sections = ['=== INTRO ===\nHere\'s what\'s happening. [beat]'];
+  const sections = ["=== INTRO ===\nHere's what's happening. [beat]"];
   for (let i = 1; i <= storyCount; i++) {
     sections.push(`=== STORY${i}_INTRO ===\nStory ${i} intro text. [beat]`);
     sections.push(`=== STORY${i}_CLIP ===\ntype: source_clip`);
     sections.push(`=== STORY${i}_REACT ===\nReaction to story ${i}. [beat]`);
   }
-  sections.push('=== OUTRO ===\nI\'m Bobby G. Goodnight and good luck.');
+  sections.push("=== OUTRO ===\nI'm Bobby G. Goodnight and good luck.");
   return sections.join('\n\n');
 }
 
@@ -48,8 +48,12 @@ test('parseScriptIntoScenes: Twitch clip markers produce source_clip scenes', ()
   const script = buildTwitchScript(['Jason', 'Hasan']);
   const scenes = parseScriptIntoScenes(script);
 
-  const clipScenes = scenes.filter(s => s.type === 'source_clip');
-  assert.strictEqual(clipScenes.length, 2, `Expected 2 source_clip scenes, got ${clipScenes.length}`);
+  const clipScenes = scenes.filter((s) => s.type === 'source_clip');
+  assert.strictEqual(
+    clipScenes.length,
+    2,
+    `Expected 2 source_clip scenes, got ${clipScenes.length}`
+  );
 
   // Clip scenes have empty text (marker stripped) and correct type
   for (const cs of clipScenes) {
@@ -65,7 +69,10 @@ test('parseScriptIntoScenes: [CLIP PLAYS HERE] stripped from avatar scene text',
   const scenes = parseScriptIntoScenes(script);
 
   for (const s of scenes) {
-    assert(!s.text.includes('[CLIP PLAYS HERE]'), `Scene "${s.name}" still contains [CLIP PLAYS HERE]`);
+    assert(
+      !s.text.includes('[CLIP PLAYS HERE]'),
+      `Scene "${s.name}" still contains [CLIP PLAYS HERE]`
+    );
   }
 });
 
@@ -75,8 +82,12 @@ test('parseScriptIntoScenes: News type:source_clip markers produce source_clip s
   const script = buildNewsScript(3);
   const scenes = parseScriptIntoScenes(script);
 
-  const clipScenes = scenes.filter(s => s.type === 'source_clip');
-  assert.strictEqual(clipScenes.length, 3, `Expected 3 source_clip scenes, got ${clipScenes.length}`);
+  const clipScenes = scenes.filter((s) => s.type === 'source_clip');
+  assert.strictEqual(
+    clipScenes.length,
+    3,
+    `Expected 3 source_clip scenes, got ${clipScenes.length}`
+  );
 });
 
 // ── 4. parseScriptIntoScenes: avatar scenes kept alongside clip scenes ──
@@ -85,13 +96,17 @@ test('parseScriptIntoScenes: avatar and source_clip scenes both included', () =>
   const script = buildTwitchScript(['Jay Cinco']);
   const scenes = parseScriptIntoScenes(script);
 
-  const avatarScenes = scenes.filter(s => s.type === 'avatar');
-  const clipScenes   = scenes.filter(s => s.type === 'source_clip');
+  const avatarScenes = scenes.filter((s) => s.type === 'avatar');
+  const clipScenes = scenes.filter((s) => s.type === 'source_clip');
 
   // INTRO + JAYCINCO_INTRO + JAYCINCO_REACT + OUTRO = 4 avatar
   assert(avatarScenes.length >= 3, `Expected ≥3 avatar scenes, got ${avatarScenes.length}`);
   // 1 clip scene for Jay Cinco
-  assert.strictEqual(clipScenes.length, 1, `Expected 1 source_clip scene, got ${clipScenes.length}`);
+  assert.strictEqual(
+    clipScenes.length,
+    1,
+    `Expected 1 source_clip scene, got ${clipScenes.length}`
+  );
 });
 
 // ── 5. parseScriptIntoScenes: zero-clip script returns no source_clip scenes ──
@@ -101,11 +116,11 @@ test('parseScriptIntoScenes: script with no clip markers returns no source_clip 
     '=== INTRO ===',
     'Welcome to the show. [beat]',
     '=== OUTRO ===',
-    "I'm Bobby G. Goodnight and good luck."
+    "I'm Bobby G. Goodnight and good luck.",
   ].join('\n\n');
 
   const scenes = parseScriptIntoScenes(script);
-  const clipScenes = scenes.filter(s => s.type === 'source_clip');
+  const clipScenes = scenes.filter((s) => s.type === 'source_clip');
   assert.strictEqual(clipScenes.length, 0);
 });
 
@@ -116,15 +131,15 @@ test('parseScriptIntoScenes: scene names with underscores are preserved correctl
     '=== TRAIL_BLAZERS_INTRO ===',
     'Trail Blazers vs Lakers. [beat]',
     '=== TRAIL_BLAZERS_CLIP ===',
-    '[CLIP PLAYS HERE]'
+    '[CLIP PLAYS HERE]',
   ].join('\n\n');
 
   const scenes = parseScriptIntoScenes(script);
-  const names = scenes.map(s => s.name);
+  const names = scenes.map((s) => s.name);
   assert(names.includes('TRAIL_BLAZERS_INTRO'), `Expected TRAIL_BLAZERS_INTRO, got: ${names}`);
   assert(names.includes('TRAIL_BLAZERS_CLIP'), `Expected TRAIL_BLAZERS_CLIP, got: ${names}`);
 
-  const clip = scenes.find(s => s.name === 'TRAIL_BLAZERS_CLIP');
+  const clip = scenes.find((s) => s.name === 'TRAIL_BLAZERS_CLIP');
   assert(clip, 'TRAIL_BLAZERS_CLIP scene not found');
   assert.strictEqual(clip.type, 'source_clip');
 });
@@ -153,11 +168,11 @@ test('Gate 2 guard: non-empty segmentPaths array does NOT trigger hard-fail bran
 
 test('Gate 3 contract: expectedClips > 0 and deliveredClips = 0 → hard fail', () => {
   // Replicate the contract check from geminiQACheck (lib/qa.js:71-81)
-  const contractExpected  = 5;
+  const contractExpected = 5;
   const downloadedClipCount = 0;
   const clipCount = 0;
 
-  const _contractExpected  = contractExpected || 0;
+  const _contractExpected = contractExpected || 0;
   const _contractDelivered = downloadedClipCount || clipCount || 0;
   const isContractViolation = _contractExpected > 0 && _contractDelivered === 0;
 
@@ -165,23 +180,27 @@ test('Gate 3 contract: expectedClips > 0 and deliveredClips = 0 → hard fail', 
 });
 
 test('Gate 3 contract: expectedClips = 0 (news-short) → no contract violation', () => {
-  const contractExpected  = 0; // news-short has no clips
+  const contractExpected = 0; // news-short has no clips
   const downloadedClipCount = 0;
   const clipCount = 0;
 
-  const _contractExpected  = contractExpected || 0;
+  const _contractExpected = contractExpected || 0;
   const _contractDelivered = downloadedClipCount || clipCount || 0;
   const isContractViolation = _contractExpected > 0 && _contractDelivered === 0;
 
-  assert.strictEqual(isContractViolation, false, 'news-short with 0 clips should not be a violation');
+  assert.strictEqual(
+    isContractViolation,
+    false,
+    'news-short with 0 clips should not be a violation'
+  );
 });
 
 test('Gate 3 contract: expectedClips = 5 and deliveredClips = 5 → no violation', () => {
-  const contractExpected  = 5;
+  const contractExpected = 5;
   const downloadedClipCount = 5;
   const clipCount = 5;
 
-  const _contractExpected  = contractExpected || 0;
+  const _contractExpected = contractExpected || 0;
   const _contractDelivered = downloadedClipCount || clipCount || 0;
   const isContractViolation = _contractExpected > 0 && _contractDelivered === 0;
 
@@ -198,16 +217,20 @@ test('claudeScriptQA expectedClips: twitch with 3 streamers × 2 clips = 6', () 
   const streamers = [
     { displayName: 'Jason', twitchUsername: 'jasontheween' },
     { displayName: 'Hasan', twitchUsername: 'hasanabi' },
-    { displayName: 'Ron',   twitchUsername: 'stableronaldo' }
+    { displayName: 'Ron', twitchUsername: 'stableronaldo' },
   ];
   const clipsPerStreamer = 2;
   const clipAnalyses = []; // not used for twitch formula
 
   const isShortForm = contentType.includes('-short');
-  const expectedClips = contentType === 'news-short' ? 0
-                      : isShortForm ? 1
-                      : contentType === 'twitch' ? streamers.length * clipsPerStreamer
-                      : clipAnalyses.length;
+  const expectedClips =
+    contentType === 'news-short'
+      ? 0
+      : isShortForm
+        ? 1
+        : contentType === 'twitch'
+          ? streamers.length * clipsPerStreamer
+          : clipAnalyses.length;
 
   assert.strictEqual(expectedClips, 6, `Expected 6 clips, got ${expectedClips}`);
 });
@@ -219,12 +242,20 @@ test('claudeScriptQA expectedClips: twitch-short = exactly 1', () => {
   const clipAnalyses = [];
 
   const isShortForm = contentType.includes('-short');
-  const expectedClips = contentType === 'news-short' ? 0
-                      : isShortForm ? 1
-                      : contentType === 'twitch' ? streamers.length * clipsPerStreamer
-                      : clipAnalyses.length;
+  const expectedClips =
+    contentType === 'news-short'
+      ? 0
+      : isShortForm
+        ? 1
+        : contentType === 'twitch'
+          ? streamers.length * clipsPerStreamer
+          : clipAnalyses.length;
 
-  assert.strictEqual(expectedClips, 1, `twitch-short should always expect 1 clip, got ${expectedClips}`);
+  assert.strictEqual(
+    expectedClips,
+    1,
+    `twitch-short should always expect 1 clip, got ${expectedClips}`
+  );
 });
 
 test('claudeScriptQA expectedClips: news-short = 0', () => {
@@ -234,10 +265,14 @@ test('claudeScriptQA expectedClips: news-short = 0', () => {
   const clipAnalyses = [];
 
   const isShortForm = contentType.includes('-short');
-  const expectedClips = contentType === 'news-short' ? 0
-                      : isShortForm ? 1
-                      : contentType === 'twitch' ? streamers.length * clipsPerStreamer
-                      : clipAnalyses.length;
+  const expectedClips =
+    contentType === 'news-short'
+      ? 0
+      : isShortForm
+        ? 1
+        : contentType === 'twitch'
+          ? streamers.length * clipsPerStreamer
+          : clipAnalyses.length;
 
   assert.strictEqual(expectedClips, 0, `news-short should expect 0 clips, got ${expectedClips}`);
 });
@@ -251,7 +286,7 @@ test('Startup resume: caps at MAX_RESUME_POLLERS=2 from 10 eligible jobs', () =>
   // Simulate 10 candidates in all_sent stage with video jobs
   const candidates = Array.from({ length: 10 }, (_, i) => [
     `script_twitch_${1000 + i}`,
-    { stage: 'all_sent', heygen: { videoJobs: [{ video_id: `vid_${i}`, status: 'pending' }] } }
+    { stage: 'all_sent', heygen: { videoJobs: [{ video_id: `vid_${i}`, status: 'pending' }] } },
   ]);
 
   const activePollers = new Map(); // empty at startup
@@ -265,7 +300,11 @@ test('Startup resume: caps at MAX_RESUME_POLLERS=2 from 10 eligible jobs', () =>
   const toResume = eligible.slice(0, MAX_RESUME_POLLERS);
 
   assert.strictEqual(eligible.length, 10, `Expected 10 eligible, got ${eligible.length}`);
-  assert.strictEqual(toResume.length, MAX_RESUME_POLLERS, `Should cap at ${MAX_RESUME_POLLERS}, got ${toResume.length}`);
+  assert.strictEqual(
+    toResume.length,
+    MAX_RESUME_POLLERS,
+    `Should cap at ${MAX_RESUME_POLLERS}, got ${toResume.length}`
+  );
 });
 
 test('Startup resume: skips jobs already in activePollers', () => {
@@ -273,14 +312,14 @@ test('Startup resume: skips jobs already in activePollers', () => {
 
   const candidates = Array.from({ length: 5 }, (_, i) => [
     `script_twitch_${2000 + i}`,
-    { stage: 'all_sent', heygen: { videoJobs: [{ video_id: `vid_${i}`, status: 'pending' }] } }
+    { stage: 'all_sent', heygen: { videoJobs: [{ video_id: `vid_${i}`, status: 'pending' }] } },
   ]);
 
   // Pre-populate activePollers with 3 of the 5 jobs
   const activePollers = new Map([
     ['script_twitch_2000', {}],
     ['script_twitch_2001', {}],
-    ['script_twitch_2002', {}]
+    ['script_twitch_2002', {}],
   ]);
 
   const eligible = candidates.filter(([jobId, card]) => {
@@ -295,4 +334,3 @@ test('Startup resume: skips jobs already in activePollers', () => {
   const toResume = eligible.slice(0, MAX_RESUME_POLLERS);
   assert.strictEqual(toResume.length, 2, `Should resume 2 (both eligible, under cap)`);
 });
-

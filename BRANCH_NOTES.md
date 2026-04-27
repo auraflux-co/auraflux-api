@@ -26,11 +26,13 @@ The report is in `lib/qa.js` in the `generateClipAvailabilityReport()` function.
 ## TASK — Add per-streamer clip breakdown to Gate 1 report
 
 **Find the function:**
+
 ```bash
 grep -n "generateClipAvailabilityReport\|CLIP AVAILABILITY" lib/qa.js || true
 ```
 
 **Find the items/streamer loop:**
+
 ```bash
 grep -n "streamerOrder\|targetPerStreamer\|actualTotal" lib/qa.js || true
 ```
@@ -38,6 +40,7 @@ grep -n "streamerOrder\|targetPerStreamer\|actualTotal" lib/qa.js || true
 **What to add — after the existing Target/Actual/Shortfall lines:**
 
 Build a per-streamer breakdown from `items` array:
+
 ```javascript
 // Per-streamer breakdown
 if (items && items.length > 0) {
@@ -52,10 +55,13 @@ if (items && items.length > 0) {
 ```
 
 Also add a "dropped streamers" line at the end if any have 0 clips:
+
 ```javascript
-const dropped = items ? items.filter(it => !(it.clips && it.clips.length > 0)) : [];
+const dropped = items ? items.filter((it) => !(it.clips && it.clips.length > 0)) : [];
 if (dropped.length > 0) {
-  report.push(`\nDropped (0 clips): ${dropped.map(d => d.displayName || d.streamer || d.name).join(', ')}`);
+  report.push(
+    `\nDropped (0 clips): ${dropped.map((d) => d.displayName || d.streamer || d.name).join(', ')}`
+  );
 }
 ```
 
@@ -71,6 +77,7 @@ grep -n "Per-streamer\|Dropped" lib/qa.js || true
 ```
 
 Gate 1 report should now show:
+
 ```
 ── CLIP AVAILABILITY REPORT ──────────────────────
 Target: 20 clips (10 streamers × 2 clips each)
@@ -90,6 +97,6 @@ Dropped (0 clips): Ron
 
 ## Log
 
-| Time | Entry |
-|------|-------|
+| Time           | Entry                                                                   |
+| -------------- | ----------------------------------------------------------------------- |
 | 2026-04-15 EOD | Branch opened. Change is in lib/qa.js generateClipAvailabilityReport(). |

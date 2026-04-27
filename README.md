@@ -1,4 +1,5 @@
 # CWN Production — ClipzWorld News
+
 **Channel:** [@clipznashite](https://youtube.com/@clipznashite) · **Host:** Bobby G · **Brand:** Navy `#22304b` / Gold `#c7af4f`
 
 > **AI-powered news and reaction show featuring Bobby G**
@@ -52,12 +53,12 @@ tmp/                  ← Segments, intro cards, gate samples (auto-cleaned)
 
 ## Content Types & Dimensions
 
-| Content Type | Form | Platform | Aspect | Avatar |
-|---|---|---|---|---|
-| Twitch Clips | Compilation | YouTube | 16:9 | `19c1d4adf890...` |
-| NBA Highlights | Compilation | YouTube | 16:9 | `19c1d4adf890...` |
-| News Reaction | Compilation | YouTube | 16:9 | `19c1d4adf890...` |
-| Any type | Short | TikTok / Reels / Shorts | 9:16 | `ed57439c9c3d...` |
+| Content Type   | Form        | Platform                | Aspect | Avatar            |
+| -------------- | ----------- | ----------------------- | ------ | ----------------- |
+| Twitch Clips   | Compilation | YouTube                 | 16:9   | `19c1d4adf890...` |
+| NBA Highlights | Compilation | YouTube                 | 16:9   | `19c1d4adf890...` |
+| News Reaction  | Compilation | YouTube                 | 16:9   | `19c1d4adf890...` |
+| Any type       | Short       | TikTok / Reels / Shorts | 9:16   | `ed57439c9c3d...` |
 
 **Voice ID:** `2e598f1a6022448cb6710e5d44665325` ("cw")  
 **Speed:** 0.85 (compilations) · 0.95 (shorts/reactions)
@@ -103,12 +104,12 @@ tmp/                  ← Segments, intro cards, gate samples (auto-cleaned)
 
 ## QA Gates
 
-| Gate | What | Tool | Pass | Manual | Fail |
-|---|---|---|---|---|---|
-| 1 | Script style QA (after Gemini writes script) | **Claude** (Anthropic) | ≥90 | 70–89 | <70 |
-| 2 | Segment structure / duration | **Code** (+ upstream gate reports) | — | — | hard_fail on bad structure |
-| 3a / 3b | Assembly QA + commitment check | **Gemini** (samples) + code (3b) | varies | varies | varies |
-| 4 | Broadcast-ready video QA | **Gemini** (full video) | — | — | — |
+| Gate    | What                                         | Tool                               | Pass   | Manual | Fail                       |
+| ------- | -------------------------------------------- | ---------------------------------- | ------ | ------ | -------------------------- |
+| 1       | Script style QA (after Gemini writes script) | **Claude** (Anthropic)             | ≥90    | 70–89  | <70                        |
+| 2       | Segment structure / duration                 | **Code** (+ upstream gate reports) | —      | —      | hard_fail on bad structure |
+| 3a / 3b | Assembly QA + commitment check               | **Gemini** (samples) + code (3b)   | varies | varies | varies                     |
+| 4       | Broadcast-ready video QA                     | **Gemini** (full video)            | —      | —      | —                          |
 
 **Script generation** uses **Gemini** (`lib/script_gen.js`), then **Gate 1** uses **Claude** (`ANTHROPIC_API_KEY`). For a full list of env **names** and which AI provider each uses (shareable with people who do not have `.env`), see **`docs/ops/REQUIRED_API_KEYS.md`**.
 
@@ -140,63 +141,69 @@ DASHBOARD_PORT=8765
 ## API Endpoints
 
 ### Script Generation
-| Endpoint | Method | Body |
-|---|---|---|
-| `/generate-script` | POST | `{ contentType, formType, streamers[], topic }` |
+
+| Endpoint           | Method | Body                                            |
+| ------------------ | ------ | ----------------------------------------------- |
+| `/generate-script` | POST   | `{ contentType, formType, streamers[], topic }` |
 
 `contentType`: `twitch` · `nba` · `news`  
 `formType`: `compilation` · `short`
 
 ### HeyGen
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/heygen-generate` | POST | Queue segment for rendering |
-| `/heygen-status/:videoId` | GET | Poll render status |
+
+| Endpoint                  | Method | Notes                       |
+| ------------------------- | ------ | --------------------------- |
+| `/heygen-generate`        | POST   | Queue segment for rendering |
+| `/heygen-status/:videoId` | GET    | Poll render status          |
 
 ### Assembly
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/start-assembly` | POST | `{ asmId, segments[], contentType, formType }` |
-| `/assembly-status/:asmId` | GET | Progress + gate results |
+
+| Endpoint                  | Method | Notes                                          |
+| ------------------------- | ------ | ---------------------------------------------- |
+| `/start-assembly`         | POST   | `{ asmId, segments[], contentType, formType }` |
+| `/assembly-status/:asmId` | GET    | Progress + gate results                        |
 
 ### Gate QA
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/gate1-script-qa` | POST | Script review before HeyGen |
-| `/gate2-segment-qa` | POST | Samples first/middle/last segment |
-| `/gate3-assembly-qa` | POST | Reviews assembled video |
+
+| Endpoint             | Method | Notes                             |
+| -------------------- | ------ | --------------------------------- |
+| `/gate1-script-qa`   | POST   | Script review before HeyGen       |
+| `/gate2-segment-qa`  | POST   | Samples first/middle/last segment |
+| `/gate3-assembly-qa` | POST   | Reviews assembled video           |
 
 ### Publish
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/generate-publish-copy` | POST | Title, description, hashtags via Claude |
-| `/generate-thumbnail` | POST | Auto-fills Canva template |
-| `/publish` | POST | Sends to Upload-Post API |
+
+| Endpoint                 | Method | Notes                                   |
+| ------------------------ | ------ | --------------------------------------- |
+| `/generate-publish-copy` | POST   | Title, description, hashtags via Claude |
+| `/generate-thumbnail`    | POST   | Auto-fills Canva template               |
+| `/publish`               | POST   | Sends to Upload-Post API                |
 
 ### Utility
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/cleanup` | POST | `{ keepCount, cleanTmp, cleanQaLogs }` |
-| `/disk-usage` | GET | Report current disk use |
-| `/burn-streamer-intro` | POST | Test intro card for one streamer |
+
+| Endpoint               | Method | Notes                                  |
+| ---------------------- | ------ | -------------------------------------- |
+| `/cleanup`             | POST   | `{ keepCount, cleanTmp, cleanQaLogs }` |
+| `/disk-usage`          | GET    | Report current disk use                |
+| `/burn-streamer-intro` | POST   | Test intro card for one streamer       |
 
 ---
 
 ## Streamer Roster (`streamers.json`)
 
-| Key | Display | Origin | Card Fact |
-|---|---|---|---|
-| jasontheween | Jason | Arlington | Dep Gai guy |
-| hasanabi | Hasan | NB/Istanbul | Hank Pecker bestie |
-| adapt | Adapt | Phoenix | Never faked a trickshot |
-| stableronaldo | Ron | Cherry Hill | At least he's stable |
-| lacy | Lacy | Erie | Married to Drew |
-| marlon | Marlon | Malmö | Fooled the Internet |
-| cinna | Cinna | VA | Rosi's Contract Extended....Again |
-| yonnajay | Yonna | Brevard | Number one roaster |
-| jaycinco | Jay Cinco | Watts | Retired his jersey |
-| maya | Maya | NorCal | The Gen Z Jane Goodall |
-| extraemily | Emily | Omaha | Engaged to Maya |
+| Key           | Display   | Origin      | Card Fact                         |
+| ------------- | --------- | ----------- | --------------------------------- |
+| jasontheween  | Jason     | Arlington   | Dep Gai guy                       |
+| hasanabi      | Hasan     | NB/Istanbul | Hank Pecker bestie                |
+| adapt         | Adapt     | Phoenix     | Never faked a trickshot           |
+| stableronaldo | Ron       | Cherry Hill | At least he's stable              |
+| lacy          | Lacy      | Erie        | Married to Drew                   |
+| marlon        | Marlon    | Malmö       | Fooled the Internet               |
+| cinna         | Cinna     | VA          | Rosi's Contract Extended....Again |
+| yonnajay      | Yonna     | Brevard     | Number one roaster                |
+| jaycinco      | Jay Cinco | Watts       | Retired his jersey                |
+| maya          | Maya      | NorCal      | The Gen Z Jane Goodall            |
+| extraemily    | Emily     | Omaha       | Engaged to Maya                   |
 
 ---
 
@@ -215,9 +222,9 @@ DASHBOARD_PORT=8765
 
 ## Thumbnail Templates (Canva)
 
-| Option | Design ID | URL |
-|---|---|---|
-| 3 — Ghostly Bobby G Navy | `DAHGB0qZod4` | [Open in Canva](https://www.canva.com/d/4yOalMvJrkVO1wD) |
+| Option                               | Design ID     | URL                                                      |
+| ------------------------------------ | ------------- | -------------------------------------------------------- |
+| 3 — Ghostly Bobby G Navy             | `DAHGB0qZod4` | [Open in Canva](https://www.canva.com/d/4yOalMvJrkVO1wD) |
 | 4 — Eerie Bobby G + Streamer Circles | `DAHGB-hGwds` | [Open in Canva](https://www.canva.com/d/lnXWvdOkQW6DPSF) |
 
 Auto-fill: `/generate-thumbnail` uploads streamer profile images, hook line, and date automatically.
@@ -237,11 +244,11 @@ Auto-fill: `/generate-thumbnail` uploads streamer profile images, hook line, and
 
 ## Platform Publishing
 
-| Platform | Format | Privacy | Notes |
-|---|---|---|---|
-| YouTube | MP4 16:9 or 9:16 | Public | Thumbnail + pinned comment |
-| TikTok | MP4 9:16 | Public (DIRECT_POST) | |
-| Instagram Reels | MP4 9:16 | Public | |
+| Platform        | Format           | Privacy              | Notes                      |
+| --------------- | ---------------- | -------------------- | -------------------------- |
+| YouTube         | MP4 16:9 or 9:16 | Public               | Thumbnail + pinned comment |
+| TikTok          | MP4 9:16         | Public (DIRECT_POST) |                            |
+| Instagram Reels | MP4 9:16         | Public               |                            |
 
 **Upload-Post profile:** `clipznashite`  
 **Thumbnail:** extracted at 15s mark by FFmpeg, stored as `_thumb.jpg`
@@ -265,13 +272,13 @@ Everything published is backed up to Google Drive before cleanup.
 
 ## Cost Model
 
-| Item | Rate | Monthly (60 long + 180 shorts) |
-|---|---|---|
-| HeyGen segments | ~$0.038/seg avg 8.5s | ~$311 |
-| Upload-Post | $50/mo Professional | $50 |
-| FMP API | included | $0 |
-| Anthropic/Gemini | pay-per-use | ~$20 est |
-| **Total est.** | | **~$381/mo** |
+| Item             | Rate                 | Monthly (60 long + 180 shorts) |
+| ---------------- | -------------------- | ------------------------------ |
+| HeyGen segments  | ~$0.038/seg avg 8.5s | ~$311                          |
+| Upload-Post      | $50/mo Professional  | $50                            |
+| FMP API          | included             | $0                             |
+| Anthropic/Gemini | pay-per-use          | ~$20 est                       |
+| **Total est.**   |                      | **~$381/mo**                   |
 
 ---
 
@@ -285,7 +292,7 @@ Three reference shows (in order of influence):
 
 `[beat]` serves dual purpose: delivery pause guide AND HeyGen segment edit point.
 
-**Always ends with:** *"I'm Bobby G. See you tomorrow."*
+**Always ends with:** _"I'm Bobby G. See you tomorrow."_
 
 ---
 
@@ -318,4 +325,4 @@ cwn-production/
 
 ---
 
-*Last updated: April 6, 2026 — Session 4*
+_Last updated: April 6, 2026 — Session 4_

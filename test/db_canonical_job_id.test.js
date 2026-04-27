@@ -29,10 +29,14 @@ afterAll(() => {
   db.closeDb();
   try {
     fs.unlinkSync(tmpDb);
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    /* ignore */
+  }
   try {
     fs.unlinkSync(TIMELINE_LOG);
-  } catch (_e) { /* ignore */ }
+  } catch (_e) {
+    /* ignore */
+  }
 });
 
 describe('db canonical job id spine', () => {
@@ -40,7 +44,9 @@ describe('db canonical job id spine', () => {
     db.closeDb();
     try {
       fs.unlinkSync(tmpDb);
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      /* ignore */
+    }
     db.initDb();
     resetTables();
   });
@@ -49,7 +55,9 @@ describe('db canonical job id spine', () => {
     const now = Date.now();
     db.saveJob('c0_sem_test', { contentType: 'news', status: 'pending', createdAt: now });
     db.saveJob('script_xyz_test', { contentType: 'news', status: 'pending', createdAt: now });
-    db.getDb().prepare('UPDATE jobs SET script_job_id = ? WHERE id = ?').run('script_xyz_test', 'c0_sem_test');
+    db.getDb()
+      .prepare('UPDATE jobs SET script_job_id = ? WHERE id = ?')
+      .run('script_xyz_test', 'c0_sem_test');
 
     expect(db.resolveCanonicalJobId('c0_sem_test')).toBe('script_xyz_test');
     expect(db.resolveCanonicalJobId('script_xyz_test')).toBe('script_xyz_test');
@@ -59,7 +67,9 @@ describe('db canonical job id spine', () => {
     const now = Date.now();
     db.saveJob('c0_sem2', { contentType: 'news', status: 'pending', createdAt: now });
     db.saveJob('script_link2', { contentType: 'news', status: 'pending', createdAt: now });
-    db.getDb().prepare('UPDATE jobs SET script_job_id = ? WHERE id = ?').run('script_link2', 'c0_sem2');
+    db.getDb()
+      .prepare('UPDATE jobs SET script_job_id = ? WHERE id = ?')
+      .run('script_link2', 'c0_sem2');
 
     db.saveGateResult('c0_sem2', 'gate1', { passed: true, score: 7 });
     const rows = db.getDb().prepare('SELECT job_id, gate FROM gate_results').all();
@@ -72,17 +82,27 @@ describe('db canonical job id spine', () => {
     const now = Date.now();
     db.saveJob('c0_merge', { contentType: 'news', status: 'pending', createdAt: now });
     db.saveJob('script_merge', { contentType: 'news', status: 'pending', createdAt: now });
-    db.getDb().prepare('UPDATE jobs SET script_job_id = ? WHERE id = ?').run('script_merge', 'c0_merge');
+    db.getDb()
+      .prepare('UPDATE jobs SET script_job_id = ? WHERE id = ?')
+      .run('script_merge', 'c0_merge');
 
     const ts = Date.now();
-    db.getDb().prepare(`
+    db.getDb()
+      .prepare(
+        `
       INSERT INTO gate_results (job_id, gate, passed, score, result, created_at)
       VALUES ('c0_merge', 'gate0', 1, 1, ?, ?)
-    `).run(JSON.stringify({ passed: true, score: 1, jobId: 'c0_merge' }), ts);
-    db.getDb().prepare(`
+    `
+      )
+      .run(JSON.stringify({ passed: true, score: 1, jobId: 'c0_merge' }), ts);
+    db.getDb()
+      .prepare(
+        `
       INSERT INTO gate_results (job_id, gate, passed, score, result, created_at)
       VALUES ('script_merge', 'gate0', 1, 9, ?, ?)
-    `).run(JSON.stringify({ passed: true, score: 9, jobId: 'script_merge' }), ts + 1);
+    `
+      )
+      .run(JSON.stringify({ passed: true, score: 9, jobId: 'script_merge' }), ts + 1);
 
     const gr = db.getGateResults('c0_merge');
     expect(gr.gate0.score).toBe(9);
@@ -92,9 +112,18 @@ describe('db canonical job id spine', () => {
     const now = Date.now();
     db.saveJob('c0_spec', { contentType: 'news', status: 'pending', createdAt: now });
     db.saveJob('script_spec', { contentType: 'news', status: 'pending', createdAt: now });
-    db.getDb().prepare('UPDATE jobs SET script_job_id = ? WHERE id = ?').run('script_spec', 'c0_spec');
-    const specObj = { jobId: 'c0_spec', scriptJobId: 'script_spec', customerId: 'c0', state: { gateResults: {} } };
-    db.getDb().prepare('UPDATE jobs SET job_spec = ? WHERE id = ?').run(JSON.stringify(specObj), 'script_spec');
+    db.getDb()
+      .prepare('UPDATE jobs SET script_job_id = ? WHERE id = ?')
+      .run('script_spec', 'c0_spec');
+    const specObj = {
+      jobId: 'c0_spec',
+      scriptJobId: 'script_spec',
+      customerId: 'c0',
+      state: { gateResults: {} },
+    };
+    db.getDb()
+      .prepare('UPDATE jobs SET job_spec = ? WHERE id = ?')
+      .run(JSON.stringify(specObj), 'script_spec');
 
     expect(db.getPrimaryJobSpecRowId('script_spec')).toBe('script_spec');
     expect(db.getPrimaryJobSpecRowId('c0_spec')).toBe('script_spec');
@@ -107,11 +136,15 @@ describe('pipeline_events emit + job_run_timeline', () => {
   beforeEach(() => {
     try {
       fs.unlinkSync(TIMELINE_LOG);
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      /* ignore */
+    }
     db.closeDb();
     try {
       fs.unlinkSync(tmpDb);
-    } catch (_e) { /* ignore */ }
+    } catch (_e) {
+      /* ignore */
+    }
     db.initDb();
     resetTables();
   });
@@ -139,7 +172,7 @@ describe('pipeline_events emit + job_run_timeline', () => {
       contentType: 'news',
       segmentUrls: urls,
       card: { x: 1 },
-      segmentData: Array.from({ length: 10 }, (_, i) => ({ i }))
+      segmentData: Array.from({ length: 10 }, (_, i) => ({ i })),
     });
     const line = fs.readFileSync(TIMELINE_LOG, 'utf8').trim().split('\n').filter(Boolean).pop();
     const row = JSON.parse(line);
@@ -153,7 +186,9 @@ describe('pipeline_events emit + job_run_timeline', () => {
     const now = Date.now();
     db.saveJob('obs_spec', { contentType: 'news', status: 'pending', createdAt: now });
     const specObj = { jobId: 'obs_spec', customerId: 'c0', state: { gateResults: {} } };
-    db.getDb().prepare('UPDATE jobs SET job_spec = ? WHERE id = ?').run(JSON.stringify(specObj), 'obs_spec');
+    db.getDb()
+      .prepare('UPDATE jobs SET job_spec = ? WHERE id = ?')
+      .run(JSON.stringify(specObj), 'obs_spec');
     const { getJobSpec } = require('../lib/job_spec');
     const got = getJobSpec('obs_spec');
     expect(got.observability.jobRunTimeline).toBe('logs/job_run_timeline.jsonl');

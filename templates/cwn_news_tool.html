@@ -1,429 +1,935 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@600;700;900&display=swap" rel="stylesheet">
-<style>
-* { box-sizing:border-box; margin:0; padding:0; }
-body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; padding:20px; min-height:100vh; }
-.header { background:linear-gradient(90deg,#22304b,#1a2538); border-bottom:3px solid #c7af4f; padding:16px 20px; border-radius:8px 8px 0 0; }
-.header h1 { font-family:'Bebas Neue',sans-serif; font-size:28px; color:#c7af4f; letter-spacing:4px; }
-.header p { font-size:12px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-top:2px; }
-.ctrl { background:#0d1524; border:1px solid rgba(199,175,79,0.2); padding:16px 20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; border-radius:0 0 8px 8px; margin-bottom:20px; }
-.ctrl label { font-size:11px; font-weight:700; color:rgba(199,175,79,0.6); letter-spacing:2px; }
-.ctrl select { background:#1a2538; border:1px solid rgba(199,175,79,0.3); color:#fff; padding:8px 12px; border-radius:4px; font-size:13px; min-width:200px; }
-.ctrl button { background:#c7af4f; color:#060a12; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px; padding:8px 24px; border:none; border-radius:4px; cursor:pointer; }
-.ctrl button:hover { background:#f0d060; }
-#status { font-size:12px; color:rgba(255,255,255,0.4); font-family:monospace; }
-.sec-title { font-family:'Bebas Neue',sans-serif; font-size:18px; color:#c7af4f; letter-spacing:3px; margin:20px 0 10px; }
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #060a12;
+        color: #fff;
+        font-family: 'Barlow Condensed', Arial, sans-serif;
+        padding: 20px;
+        min-height: 100vh;
+      }
+      .header {
+        background: linear-gradient(90deg, #22304b, #1a2538);
+        border-bottom: 3px solid #c7af4f;
+        padding: 16px 20px;
+        border-radius: 8px 8px 0 0;
+      }
+      .header h1 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 28px;
+        color: #c7af4f;
+        letter-spacing: 4px;
+      }
+      .header p {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+        letter-spacing: 2px;
+        margin-top: 2px;
+      }
+      .ctrl {
+        background: #0d1524;
+        border: 1px solid rgba(199, 175, 79, 0.2);
+        padding: 16px 20px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        border-radius: 0 0 8px 8px;
+        margin-bottom: 20px;
+      }
+      .ctrl label {
+        font-size: 11px;
+        font-weight: 700;
+        color: rgba(199, 175, 79, 0.6);
+        letter-spacing: 2px;
+      }
+      .ctrl select {
+        background: #1a2538;
+        border: 1px solid rgba(199, 175, 79, 0.3);
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 13px;
+        min-width: 200px;
+      }
+      .ctrl button {
+        background: #c7af4f;
+        color: #060a12;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 16px;
+        letter-spacing: 3px;
+        padding: 8px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .ctrl button:hover {
+        background: #f0d060;
+      }
+      #status {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: monospace;
+      }
+      .sec-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 18px;
+        color: #c7af4f;
+        letter-spacing: 3px;
+        margin: 20px 0 10px;
+      }
 
-/* Story cards */
-.stories-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px; margin-bottom:20px; }
-.story-card { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color 0.2s; }
-.story-card:hover { border-color:rgba(199,175,79,0.5); }
-.story-card.selected { border-color:#c7af4f; background:#131f35; }
-.story-img { width:100%; height:160px; object-fit:cover; display:block; background:#1a2538; }
-.story-body { padding:12px; }
-.story-source { font-size:9px; font-weight:900; color:#c7af4f; letter-spacing:3px; margin-bottom:4px; }
-.story-title { font-size:13px; font-weight:700; color:#fff; line-height:1.4; margin-bottom:6px; }
-.story-desc { font-size:11px; color:rgba(255,255,255,0.45); line-height:1.5; }
-.story-date { font-size:10px; color:rgba(255,255,255,0.25); margin-top:6px; font-family:monospace; }
-.story-btns { display:flex; gap:6px; margin-top:8px; }
-.btn-sm { font-size:10px; font-weight:700; letter-spacing:1px; padding:4px 12px; border-radius:3px; cursor:pointer; border:none; }
-.btn-sel { background:rgba(199,175,79,0.2); color:#c7af4f; }
-.btn-link { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6); }
+      /* Story cards */
+      .stories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .story-card {
+        background: #0d1524;
+        border: 1px solid rgba(199, 175, 79, 0.15);
+        border-radius: 6px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: border-color 0.2s;
+      }
+      .story-card:hover {
+        border-color: rgba(199, 175, 79, 0.5);
+      }
+      .story-card.selected {
+        border-color: #c7af4f;
+        background: #131f35;
+      }
+      .story-img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        display: block;
+        background: #1a2538;
+      }
+      .story-body {
+        padding: 12px;
+      }
+      .story-source {
+        font-size: 9px;
+        font-weight: 900;
+        color: #c7af4f;
+        letter-spacing: 3px;
+        margin-bottom: 4px;
+      }
+      .story-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.4;
+        margin-bottom: 6px;
+      }
+      .story-desc {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.45);
+        line-height: 1.5;
+      }
+      .story-date {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.25);
+        margin-top: 6px;
+        font-family: monospace;
+      }
+      .story-btns {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .btn-sm {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        padding: 4px 12px;
+        border-radius: 3px;
+        cursor: pointer;
+        border: none;
+      }
+      .btn-sel {
+        background: rgba(199, 175, 79, 0.2);
+        color: #c7af4f;
+      }
+      .btn-link {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+      }
 
-/* Thumbnail */
-#thumb { width:1280px; height:720px; position:relative; overflow:hidden; background:#060a12; }
-.thumb-bg-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(0.45) saturate(0.7) blur(8px); transform:scale(1.05); }
-.thumb-overlay { position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.75) 100%); }
-.thumb-brand { position:absolute; top:30px; left:40px; background:rgba(0,0,0,0.7); border:1px solid rgba(199,175,79,0.5); padding:8px 20px; border-radius:3px; font-family:'Bebas Neue',sans-serif; font-size:18px; color:#c7af4f; letter-spacing:4px; white-space:nowrap; }
-.thumb-content { position:absolute; bottom:0; left:0; right:0; padding:40px; }
-.thumb-category { font-size:20px; font-weight:900; color:#c7af4f; letter-spacing:6px; margin-bottom:12px; }
-.thumb-headline { font-family:'Bebas Neue',sans-serif; font-size:72px; line-height:0.9; color:#fff; text-shadow:0 4px 30px rgba(0,0,0,0.8); max-width:900px; }
-.thumb-sub { font-size:20px; font-weight:600; color:rgba(255,255,255,0.5); letter-spacing:3px; margin-top:16px; }
-.thumb-scaler { display:inline-block; transform-origin:top left; }
+      /* Thumbnail */
+      #thumb {
+        width: 1280px;
+        height: 720px;
+        position: relative;
+        overflow: hidden;
+        background: #060a12;
+      }
+      .thumb-bg-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.45) saturate(0.7) blur(8px);
+        transform: scale(1.05);
+      }
+      .thumb-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.75) 100%);
+      }
+      .thumb-brand {
+        position: absolute;
+        top: 30px;
+        left: 40px;
+        background: rgba(0, 0, 0, 0.7);
+        border: 1px solid rgba(199, 175, 79, 0.5);
+        padding: 8px 20px;
+        border-radius: 3px;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 18px;
+        color: #c7af4f;
+        letter-spacing: 4px;
+        white-space: nowrap;
+      }
+      .thumb-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 40px;
+      }
+      .thumb-category {
+        font-size: 20px;
+        font-weight: 900;
+        color: #c7af4f;
+        letter-spacing: 6px;
+        margin-bottom: 12px;
+      }
+      .thumb-headline {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 72px;
+        line-height: 0.9;
+        color: #fff;
+        text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+        max-width: 900px;
+      }
+      .thumb-sub {
+        font-size: 20px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 3px;
+        margin-top: 16px;
+      }
+      .thumb-scaler {
+        display: inline-block;
+        transform-origin: top left;
+      }
 
-/* Copy boxes */
-.copy-box { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:6px; padding:14px 16px; margin-bottom:14px; }
-.copy-lbl { font-size:9px; font-weight:900; color:rgba(199,175,79,0.5); letter-spacing:3px; margin-bottom:6px; }
-.copy-txt { font-size:13px; line-height:1.7; color:rgba(255,255,255,0.85); white-space:pre-wrap; font-family:Arial,sans-serif; }
-.copy-btn { background:rgba(199,175,79,0.15); border:1px solid rgba(199,175,79,0.3); color:#c7af4f; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; padding:5px 14px; border-radius:3px; cursor:pointer; margin-top:8px; }
-.copy-btn:hover { background:rgba(199,175,79,0.25); }
-.script-box { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:6px; padding:16px; }
-.script-box pre { font-family:Arial,sans-serif; font-size:13px; line-height:1.8; color:rgba(255,255,255,0.85); white-space:pre-wrap; }
+      /* Copy boxes */
+      .copy-box {
+        background: #0d1524;
+        border: 1px solid rgba(199, 175, 79, 0.15);
+        border-radius: 6px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+      }
+      .copy-lbl {
+        font-size: 9px;
+        font-weight: 900;
+        color: rgba(199, 175, 79, 0.5);
+        letter-spacing: 3px;
+        margin-bottom: 6px;
+      }
+      .copy-txt {
+        font-size: 13px;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.85);
+        white-space: pre-wrap;
+        font-family: Arial, sans-serif;
+      }
+      .copy-btn {
+        background: rgba(199, 175, 79, 0.15);
+        border: 1px solid rgba(199, 175, 79, 0.3);
+        color: #c7af4f;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 12px;
+        letter-spacing: 2px;
+        padding: 5px 14px;
+        border-radius: 3px;
+        cursor: pointer;
+        margin-top: 8px;
+      }
+      .copy-btn:hover {
+        background: rgba(199, 175, 79, 0.25);
+      }
+      .script-box {
+        background: #0d1524;
+        border: 1px solid rgba(199, 175, 79, 0.15);
+        border-radius: 6px;
+        padding: 16px;
+      }
+      .script-box pre {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.8;
+        color: rgba(255, 255, 255, 0.85);
+        white-space: pre-wrap;
+      }
 
-#gen-section { display:none; }
+      #gen-section {
+        display: none;
+      }
 
-.video-wrap-lbl { font-family:'Bebas Neue',sans-serif; font-size:18px; color:#c7af4f; letter-spacing:3px; margin:20px 0 10px; }
+      .video-wrap-lbl {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 18px;
+        color: #c7af4f;
+        letter-spacing: 3px;
+        margin: 20px 0 10px;
+      }
 
-/* SEO Status Bar */
-.seo-bar { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:4px; margin-top:8px; font-family:Arial,sans-serif; font-size:12px; cursor:pointer; }
-.seo-bar.all-pass { background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); color:#2ecc71; }
-.seo-bar.has-warn { background:rgba(243,156,18,0.1); border:1px solid rgba(243,156,18,0.3); color:#f39c12; }
-.seo-bar.has-fail { background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); color:#e74c3c; }
-.seo-bar-icon { font-size:14px; font-weight:900; }
-.seo-bar-txt { flex:1; font-weight:700; }
-.seo-bar-detail { font-size:10px; opacity:0.7; }
-.seo-issues { background:#0d1524; border:1px solid rgba(199,175,79,0.1); border-radius:4px; padding:10px 14px; margin-top:4px; display:none; }
-.seo-issues.show { display:block; }
-.seo-issue-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:11px; font-family:Arial,sans-serif; border-bottom:1px solid rgba(255,255,255,0.04); }
-.seo-issue-row:last-child { border-bottom:none; }
-.seo-badge { font-size:9px; font-weight:900; padding:2px 6px; border-radius:2px; flex-shrink:0; }
-.seo-badge.fail { background:rgba(231,76,60,0.2); color:#e74c3c; }
-.seo-badge.warn { background:rgba(243,156,18,0.2); color:#f39c12; }
-</style>
-</head>
-<body>
+      /* SEO Status Bar */
+      .seo-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 4px;
+        margin-top: 8px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .seo-bar.all-pass {
+        background: rgba(46, 204, 113, 0.1);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+        color: #2ecc71;
+      }
+      .seo-bar.has-warn {
+        background: rgba(243, 156, 18, 0.1);
+        border: 1px solid rgba(243, 156, 18, 0.3);
+        color: #f39c12;
+      }
+      .seo-bar.has-fail {
+        background: rgba(231, 76, 60, 0.1);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+        color: #e74c3c;
+      }
+      .seo-bar-icon {
+        font-size: 14px;
+        font-weight: 900;
+      }
+      .seo-bar-txt {
+        flex: 1;
+        font-weight: 700;
+      }
+      .seo-bar-detail {
+        font-size: 10px;
+        opacity: 0.7;
+      }
+      .seo-issues {
+        background: #0d1524;
+        border: 1px solid rgba(199, 175, 79, 0.1);
+        border-radius: 4px;
+        padding: 10px 14px;
+        margin-top: 4px;
+        display: none;
+      }
+      .seo-issues.show {
+        display: block;
+      }
+      .seo-issue-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+        font-size: 11px;
+        font-family: Arial, sans-serif;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      }
+      .seo-issue-row:last-child {
+        border-bottom: none;
+      }
+      .seo-badge {
+        font-size: 9px;
+        font-weight: 900;
+        padding: 2px 6px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .seo-badge.fail {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+      }
+      .seo-badge.warn {
+        background: rgba(243, 156, 18, 0.2);
+        color: #f39c12;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>CLIPZWORLD NEWS REACTION TOOL</h1>
+      <p>PULL STORIES FROM WORLD NEWS SOURCES -- BUILD THUMBNAIL + TITLE + DESCRIPTION + SCRIPT</p>
+    </div>
 
-<div class="header">
-  <h1>CLIPZWORLD NEWS REACTION TOOL</h1>
-  <p>PULL STORIES FROM WORLD NEWS SOURCES -- BUILD THUMBNAIL + TITLE + DESCRIPTION + SCRIPT</p>
-</div>
+    <div class="ctrl">
+      <label>SOURCE</label>
+      <select id="feed-select">
+        <option
+          value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.aljazeera.com%2Fxml%2Frss%2Fall.xml"
+        >
+          Al Jazeera -- All News
+        </option>
+        <option
+          value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.bbci.co.uk%2Fnews%2Fworld%2Frss.xml"
+        >
+          BBC -- World News
+        </option>
+        <option
+          value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.reuters.com%2Freuters%2FworldNews"
+        >
+          Reuters -- World News
+        </option>
+        <option
+          value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.npr.org%2F1004%2Frss.xml"
+        >
+          NPR -- World News
+        </option>
+        <option
+          value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.aljazeera.com%2Fxml%2Frss%2Fsports.xml"
+        >
+          Al Jazeera -- Sports
+        </option>
+        <option
+          value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.bbci.co.uk%2Fsport%2Frss.xml"
+        >
+          BBC -- Sport
+        </option>
+      </select>
+      <button onclick="loadFeed()">LOAD STORIES</button>
+      <span id="status">Select a source and load stories</span>
+    </div>
 
-<div class="ctrl">
-  <label>SOURCE</label>
-  <select id="feed-select">
-    <option value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.aljazeera.com%2Fxml%2Frss%2Fall.xml">Al Jazeera -- All News</option>
-    <option value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.bbci.co.uk%2Fnews%2Fworld%2Frss.xml">BBC -- World News</option>
-    <option value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.reuters.com%2Freuters%2FworldNews">Reuters -- World News</option>
-    <option value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.npr.org%2F1004%2Frss.xml">NPR -- World News</option>
-    <option value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.aljazeera.com%2Fxml%2Frss%2Fsports.xml">Al Jazeera -- Sports</option>
-    <option value="https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.bbci.co.uk%2Fsport%2Frss.xml">BBC -- Sport</option>
-  </select>
-  <button onclick="loadFeed()">LOAD STORIES</button>
-  <span id="status">Select a source and load stories</span>
-</div>
+    <div id="stories-section">
+      <div class="sec-title">LATEST STORIES -- CLICK ONE TO GENERATE</div>
+      <div class="stories-grid" id="stories-grid"></div>
+    </div>
 
-<div id="stories-section">
-  <div class="sec-title">LATEST STORIES -- CLICK ONE TO GENERATE</div>
-  <div class="stories-grid" id="stories-grid"></div>
-</div>
-
-<div id="gen-section">
-  <div class="sec-title">THUMBNAIL -- SCREENSHOT AT 1280x720</div>
-  <div style="overflow:auto;margin-bottom:20px;">
-    <div class="thumb-scaler" id="thumb-scaler">
-      <div id="thumb">
-        <img class="thumb-bg-img" id="thumb-bg" src="" alt="">
-        <div class="thumb-overlay"></div>
-        <div class="thumb-brand">CLIPZWORLD NEWS</div>
-        <div class="thumb-content">
-          <div class="thumb-category" id="thumb-cat">BECAUSE THE LIGHT WAS ON | WORLD NEWS SHOW</div>
-          <div class="thumb-headline" id="thumb-headline">Headline goes here</div>
-          <div class="thumb-sub" id="thumb-sub">APRIL 22, 2026 | EP 1</div>
+    <div id="gen-section">
+      <div class="sec-title">THUMBNAIL -- SCREENSHOT AT 1280x720</div>
+      <div style="overflow: auto; margin-bottom: 20px">
+        <div class="thumb-scaler" id="thumb-scaler">
+          <div id="thumb">
+            <img class="thumb-bg-img" id="thumb-bg" src="" alt="" />
+            <div class="thumb-overlay"></div>
+            <div class="thumb-brand">CLIPZWORLD NEWS</div>
+            <div class="thumb-content">
+              <div class="thumb-category" id="thumb-cat">
+                BECAUSE THE LIGHT WAS ON | WORLD NEWS SHOW
+              </div>
+              <div class="thumb-headline" id="thumb-headline">Headline goes here</div>
+              <div class="thumb-sub" id="thumb-sub">APRIL 22, 2026 | EP 1</div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <div id="video-embed-section" style="display: none">
+        <div class="video-wrap-lbl">VIDEO / ARTICLE</div>
+        <div id="video-wrap" style="margin-bottom: 14px"></div>
+      </div>
+      <div class="sec-title">YOUTUBE TITLE</div>
+      <div class="copy-box">
+        <div class="copy-lbl">TITLE</div>
+        <div class="copy-txt" id="yt-title">--</div>
+        <button class="copy-btn" onclick="copyEl('yt-title', this)">COPY TITLE</button>
+      </div>
+
+      <div class="sec-title">DESCRIPTION + HASHTAGS</div>
+      <div class="copy-box">
+        <div class="copy-lbl">DESCRIPTION</div>
+        <div class="copy-txt" id="yt-desc">--</div>
+        <button class="copy-btn" onclick="copyEl('yt-desc', this)">COPY DESCRIPTION</button>
+      </div>
+
+      <div class="sec-title">ON-SCREEN REACTION SCRIPT</div>
+      <div class="script-box">
+        <pre id="script-txt">--</pre>
+        <button class="copy-btn" onclick="copyEl('script-txt', this)">COPY SCRIPT</button>
+      </div>
     </div>
-  </div>
 
-  <div id="video-embed-section" style="display:none">
-    <div class="video-wrap-lbl">VIDEO / ARTICLE</div>
-    <div id="video-wrap" style="margin-bottom:14px;"></div>
-  </div>
-  <div class="sec-title">YOUTUBE TITLE</div>
-  <div class="copy-box">
-    <div class="copy-lbl">TITLE</div>
-    <div class="copy-txt" id="yt-title">--</div>
-    <button class="copy-btn" onclick="copyEl('yt-title',this)">COPY TITLE</button>
-  </div>
-
-  <div class="sec-title">DESCRIPTION + HASHTAGS</div>
-  <div class="copy-box">
-    <div class="copy-lbl">DESCRIPTION</div>
-    <div class="copy-txt" id="yt-desc">--</div>
-    <button class="copy-btn" onclick="copyEl('yt-desc',this)">COPY DESCRIPTION</button>
-  </div>
-
-  <div class="sec-title">ON-SCREEN REACTION SCRIPT</div>
-  <div class="script-box">
-    <pre id="script-txt">--</pre>
-    <button class="copy-btn" onclick="copyEl('script-txt',this)">COPY SCRIPT</button>
-  </div>
-</div>
-
-<script>
-function g(id) { return document.getElementById(id); }
-
-function copyEl(id, btn) {
-  var ta = document.createElement('textarea');
-  ta.value = g(id).textContent;
-  document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-  var orig = btn.textContent;
-  btn.textContent = 'COPIED!';
-  setTimeout(function() { btn.textContent = orig; }, 1500);
-}
-
-function sourceName(url) {
-  if (url.indexOf('aljazeera') > -1) return url.indexOf('sport') > -1 ? 'AL JAZEERA SPORT' : 'AL JAZEERA';
-  if (url.indexOf('bbc') > -1) return url.indexOf('sport') > -1 ? 'BBC SPORT' : 'BBC NEWS';
-  if (url.indexOf('reuters') > -1) return 'REUTERS';
-  if (url.indexOf('npr') > -1) return 'NPR';
-  return 'NEWS';
-}
-
-function loadFeed() {
-  var feedUrl = g('feed-select').value;
-  var src = sourceName(feedUrl);
-  g('status').textContent = 'Loading ' + src + '...';
-  g('stories-grid').innerHTML = '';
-
-  var apiUrl = feedUrl;
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', apiUrl, true);
-  xhr.timeout = 12000;
-  xhr.onload = function() {
-    try {
-      var d = JSON.parse(xhr.responseText);
-      buildStories(d.items || [], src);
-    } catch(e) {
-      g('status').textContent = 'Error: ' + e.message;
-    }
-  };
-  xhr.onerror = xhr.ontimeout = function() { g('status').textContent = 'Network error'; };
-  xhr.send();
-}
-
-function buildStories(items, src) {
-  var grid = g('stories-grid');
-  grid.innerHTML = '';
-  if (!items.length) { grid.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px">No stories returned</div>'; return; }
-
-  items.forEach(function(item, idx) {
-    var title = (item.title || '').trim();
-    var desc = (item.description || '').replace(/<[^>]+>/g, '').trim().slice(0, 200);
-    var img = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
-    var link = item.link || '';
-    var date = item.pubDate ? new Date(item.pubDate).toLocaleDateString([], {month:'short',day:'numeric',year:'numeric'}) : '';
-
-    var card = document.createElement('div');
-    card.className = 'story-card';
-    card.id = 'card-' + idx;
-    card.innerHTML =
-      (img ? '<img class="story-img" src="' + img + '" onerror="this.style.display=\'none\'">' : '') +
-      '<div class="story-body">' +
-      '<div class="story-source">' + src + '</div>' +
-      '<div class="story-title">' + title + '</div>' +
-      (desc ? '<div class="story-desc">' + desc + '</div>' : '') +
-      '<div class="story-date">' + date + '</div>' +
-      '<div class="story-btns">' +
-      '<button class="btn-sm btn-sel" onclick="selectStory(' + idx + ', this)">SELECT THIS STORY</button>' +
-      (link ? '<button class="btn-sm btn-link" onclick="window.open(\'' + link + '\',\'_blank\')">READ FULL STORY</button>' : '') +
-      '</div></div>';
-
-    card._data = { title: title, desc: desc, img: img, link: link, date: date, src: src };
-    grid.appendChild(card);
-  });
-
-  g('status').textContent = items.length + ' stories loaded from ' + src;
-  window._storyItems = items;
-  window._storySrc = src;
-}
-
-function selectStory(idx, btn) {
-  // Deselect all
-  var cards = document.querySelectorAll('.story-card');
-  cards.forEach(function(c) { c.className = 'story-card'; });
-
-  var card = g('card-' + idx);
-  card.className = 'story-card selected';
-
-  var items = window._storyItems;
-  var src = window._storySrc;
-  var item = items[idx];
-  if (!item) return;
-
-  var title = (item.title || '').trim();
-  var desc = (item.description || '').replace(/<[^>]+>/g, '').trim();
-  var img = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
-  var link = item.link || '';
-  var isVideo = link.indexOf('/video/') > -1;
-  var date = item.pubDate ? new Date(item.pubDate).toLocaleDateString([], {month:'long',day:'numeric',year:'numeric'}) : new Date().toLocaleDateString([], {month:'long',day:'numeric',year:'numeric'});
-
-  // Fetch og:image from article page via corsproxy
-  if (!img && link) {
-    var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(link);
-    var ogXhr = new XMLHttpRequest();
-    ogXhr.open('GET', proxyUrl, true);
-    ogXhr.timeout = 8000;
-    ogXhr.onload = function() {
-      var match = ogXhr.responseText.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/) ||
-                  ogXhr.responseText.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/) ||
-                  ogXhr.responseText.match(/og:image.*?content=["']([^"']+)["']/);
-      var ogImg = match ? match[1] : '';
-      generateContent(title, desc, ogImg || img, link, date, src, isVideo);
-    };
-    ogXhr.onerror = ogXhr.ontimeout = function() { generateContent(title, desc, img, link, date, src, isVideo); };
-    ogXhr.send();
-    g('status').textContent = 'Fetching article image...';
-  } else {
-    generateContent(title, desc, img, link, date, src, isVideo);
-  }
-}
-
-
-function runSeoCheck(title, desc, opts) {
-  opts = opts || {};
-  var checks = [];
-  var tLen = (title || '').length;
-  var dLen = (desc || '').length;
-  var firstLine = (desc || '').split('\n')[0] || '';
-  var hashCount = ((desc || '').match(/#\w+/g) || []).length;
-  var hasTimestamps = (desc || '').indexOf('00:00') > -1;
-  var hasCTA = (desc || '').toLowerCase().indexOf('subscribe') > -1;
-
-  checks.push({ label:'Title length', pass:tLen<=60, warn:tLen>60&&tLen<=100, fail:tLen>100,
-    msg:tLen<=60?'Perfect ('+tLen+' chars)':tLen<=100?'OK but shorter is better ('+tLen+' chars)':'Too long, trim to under 100 ('+tLen+' chars)' });
-
-  if (opts.teams && opts.teams.length >= 2) {
-    var both = title.indexOf(opts.teams[0])>-1 && title.indexOf(opts.teams[1])>-1;
-    checks.push({ label:'Names in title', pass:both, fail:!both,
-      msg:both?'Both names found':'Missing: '+opts.teams.join(' / ') });
-  }
-
-  checks.push({ label:'First line keywords', pass:firstLine.length>=40, warn:firstLine.length>=20&&firstLine.length<40, fail:firstLine.length<20,
-    msg:firstLine.length>=40?'Good ('+firstLine.length+' chars)':'First line too short, add keywords' });
-
-  checks.push({ label:'Timestamps', pass:hasTimestamps, fail:!hasTimestamps,
-    msg:hasTimestamps?'Timestamps included':'Add timestamps (00:00, 12:00 etc)' });
-
-  checks.push({ label:'Hashtags', pass:hashCount>=8&&hashCount<=20, warn:hashCount>0&&(hashCount<8||hashCount>20), fail:hashCount===0,
-    msg:hashCount+' hashtags '+(hashCount>=8&&hashCount<=20?'-- ideal':'-- aim for 8-20') });
-
-  checks.push({ label:'Subscribe CTA', pass:hasCTA, fail:!hasCTA,
-    msg:hasCTA?'CTA present':'Add a subscribe call to action' });
-
-  checks.push({ label:'Description length', pass:dLen>=300, warn:dLen>=100&&dLen<300, fail:dLen<100,
-    msg:dLen+' chars '+(dLen>=500?'-- great':dLen>=300?'-- good':'-- add more detail') });
-
-  var failures=checks.filter(function(c){return c.fail;});
-  var warnings=checks.filter(function(c){return c.warn&&!c.fail;});
-  var passes=checks.filter(function(c){return !c.fail&&!c.warn;});
-  return {checks:checks,failures:failures,warnings:warnings,passes:passes};
-}
-
-function renderSeoBar(containerId, title, desc, opts) {
-  var el = document.getElementById(containerId);
-  if (!el) return;
-  var r = runSeoCheck(title, desc, opts);
-  var f=r.failures.length, w=r.warnings.length, p=r.passes.length;
-  var cls = f>0?'has-fail':w>0?'has-warn':'all-pass';
-  var lbl = f>0?'ISSUES FOUND':w>0?'REVIEW SUGGESTED':'ALL CHECKS PASSED';
-  var msg = f>0?f+' thing'+(f>1?'s':'')+' to fix':w>0?w+' suggestion'+(w>1?'s':''):'Good to publish!';
-  var issHtml='';
-  if(f>0||w>0){
-    r.checks.forEach(function(c){
-      if(c.fail||c.warn){
-        issHtml+='<div class="seo-issue-row"><span class="seo-badge '+(c.fail?'fail':'warn')+'">'+(c.fail?'FIX':'TIP')+'</span><span>'+c.label+' -- '+c.msg+'</span></div>';
+    <script>
+      function g(id) {
+        return document.getElementById(id);
       }
-    });
-  }
-  el.innerHTML='<div class="seo-bar '+cls+'" onclick="var i=document.getElementById(\''+containerId+'-iss\');if(i)i.classList.toggle(\'show\')">'
-    +'<span class="seo-bar-icon">'+(f>0?'!!':w>0?'i':'OK')+'</span>'
-    +'<span class="seo-bar-txt">SEO: '+lbl+' -- '+msg+'</span>'
-    +(f>0||w>0?'<span class="seo-bar-detail">click for details</span>':'')
-    +'</div>'
-    +(issHtml?'<div class="seo-issues" id="'+containerId+'-iss">'+issHtml+'</div>':'');
-}
 
-function generateContent(title, desc, img, link, date, src, isVideo) {
-  // THUMBNAIL
-  var thumbBg = g('thumb-bg');
-  if (img) { thumbBg.src = img; thumbBg.style.display = 'block'; }
-  else { thumbBg.style.display = 'none'; }
+      function copyEl(id, btn) {
+        var ta = document.createElement('textarea');
+        ta.value = g(id).textContent;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        var orig = btn.textContent;
+        btn.textContent = 'COPIED!';
+        setTimeout(function () {
+          btn.textContent = orig;
+        }, 1500);
+      }
 
-  // Truncate headline for thumbnail
-  var shortTitle = title.length > 60 ? title.slice(0, 57) + '...' : title;
-  g('thumb-headline').textContent = shortTitle;
-  g('thumb-cat').textContent = 'BECAUSE THE LIGHT WAS ON';
-  g('thumb-sub').textContent = date.toUpperCase() + ' | BECAUSE THE LIGHT WAS ON';
+      function sourceName(url) {
+        if (url.indexOf('aljazeera') > -1)
+          return url.indexOf('sport') > -1 ? 'AL JAZEERA SPORT' : 'AL JAZEERA';
+        if (url.indexOf('bbc') > -1) return url.indexOf('sport') > -1 ? 'BBC SPORT' : 'BBC NEWS';
+        if (url.indexOf('reuters') > -1) return 'REUTERS';
+        if (url.indexOf('npr') > -1) return 'NPR';
+        return 'NEWS';
+      }
 
-  // Scale thumb
-  var scale = Math.min((window.innerWidth - 40) / 1280, 1);
-  var sc = g('thumb-scaler');
-  sc.style.transform = 'scale(' + scale + ')';
-  sc.style.width = Math.round(1280 * scale) + 'px';
-  sc.style.height = Math.round(720 * scale) + 'px';
+      function loadFeed() {
+        var feedUrl = g('feed-select').value;
+        var src = sourceName(feedUrl);
+        g('status').textContent = 'Loading ' + src + '...';
+        g('stories-grid').innerHTML = '';
 
-  // TITLE
-  // SEO Title - topic first, reaction second, brand last
-  var ytTitle = title.length <= 70 ? title + ' | My Reaction' : title.slice(0, 67) + '... | Reaction';
-  if (ytTitle.length > 100) ytTitle = ytTitle.slice(0, 97) + '...';
-  g('yt-title').textContent = ytTitle;
+        var apiUrl = feedUrl;
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', apiUrl, true);
+        xhr.timeout = 12000;
+        xhr.onload = function () {
+          try {
+            var d = JSON.parse(xhr.responseText);
+            buildStories(d.items || [], src);
+          } catch (e) {
+            g('status').textContent = 'Error: ' + e.message;
+          }
+        };
+        xhr.onerror = xhr.ontimeout = function () {
+          g('status').textContent = 'Network error';
+        };
+        xhr.send();
+      }
 
-  // DESCRIPTION - keyword-rich first 2 lines
-  var d = '';
-  d += title + '\n';
-  d += 'Reacting to breaking world news -- ' + src + ' | ' + date + '\n';
-  d += '\n';
-  if (desc) d += desc.slice(0, 400) + (desc.length > 400 ? '...' : '') + '\n\n';
-  if (link) d += 'Read the full story: ' + link + '\n\n';
-  d += 'ClipzWorld News covers breaking world news, sports and politics every weekday at noon ET. Subscribe for daily coverage.\n\n';
-  d += '00:00 Intro\n';
-  d += '00:30 Story Breakdown\n';
-  d += '02:00 My Reaction\n\n';
-  // Specific tags first, then broad
-  var topic = title.split(' ').slice(0, 3).join('');
-  var srcTag = '#' + src.split(' ')[0].charAt(0).toUpperCase() + src.split(' ')[0].slice(1).toLowerCase();
-  var tags = [srcTag, '#BreakingNews', '#WorldNews', '#NewsReaction', '#' + topic.replace(/[^a-zA-Z]/g,''),
-    '#ClipzWorldNews', '#News', '#DailyNews', '#NewsToday', '#CurrentEvents'];
-  d += tags.join(' ');
-  g('yt-desc').textContent = d;
-  // SEO check
-  var seoEl2 = document.getElementById('news-seo-status');
-  if (!seoEl2) {
-    seoEl2 = document.createElement('div');
-    seoEl2.id = 'news-seo-status';
-    var db2 = document.getElementById('yt-desc');
-    if (db2 && db2.parentNode) db2.parentNode.appendChild(seoEl2);
-  }
-  renderSeoBar('news-seo-status', g('yt-title').textContent, g('yt-desc').textContent, {teams:[title.split(' ')[0]]});
+      function buildStories(items, src) {
+        var grid = g('stories-grid');
+        grid.innerHTML = '';
+        if (!items.length) {
+          grid.innerHTML =
+            '<div style="color:rgba(255,255,255,0.3);font-size:13px">No stories returned</div>';
+          return;
+        }
 
-  // SCRIPT
-  var lines = [];
-  lines.push('CLIPZWORLD NEWS -- ' + src + ' REACTION');
-  lines.push(date);
-  lines.push('STORY: ' + title);
-  lines.push('');
-  lines.push('--- INTRO (0-10 sec) ---');
-  lines.push('What is UP ClipzWorld News. We are talking about this story right here -- ' + title.slice(0, 80) + '. Let me break this down.');
-  lines.push('');
-  lines.push('--- CONTEXT (10-40 sec) ---');
-  if (desc) {
-    var sentences = desc.replace(/([.!?])\s+/g, '$1|').split('|').slice(0, 4);
-    sentences.forEach(function(s) { if (s.trim()) lines.push('>> ' + s.trim()); });
-  }
-  lines.push('');
-  lines.push('--- YOUR REACTION (40-75 sec) ---');
-  lines.push('[YOUR TAKE ON THIS STORY -- what does this mean? Who is affected? Why does this matter?]');
-  lines.push('[Add your opinion and analysis here based on what you know about the topic]');
-  lines.push('');
-  lines.push('--- OUTRO (75-90 sec) ---');
-  lines.push('Drop a comment -- what do you think about this? I want to hear from you. Subscribe to ClipzWorld News for daily world news coverage every weekday at noon. Peace.');
-  g('script-txt').textContent = lines.join('\n');
+        items.forEach(function (item, idx) {
+          var title = (item.title || '').trim();
+          var desc = (item.description || '')
+            .replace(/<[^>]+>/g, '')
+            .trim()
+            .slice(0, 200);
+          var img = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
+          var link = item.link || '';
+          var date = item.pubDate
+            ? new Date(item.pubDate).toLocaleDateString([], {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })
+            : '';
 
-  // Video / article open button
-  var vidSec = g('video-embed-section');
-  var vidWrap = g('video-wrap');
-  if (link) {
-    var cleanLink = link.replace('?traffic_source=rss','');
-    var btnLabel = isVideo ? 'OPEN VIDEO IN BROWSER' : 'OPEN ARTICLE IN BROWSER';
-    var btnColor = isVideo ? '#e74c3c' : '#c7af4f';
-    var hint = isVideo
-      ? 'Open in Chrome, play the video, then use OBS Window Capture to show it on stream'
-      : 'Open the full article to read context before your reaction';
-    vidWrap.innerHTML = '<div style="background:#0d1524;border:1px solid rgba(199,175,79,0.2);border-radius:6px;padding:20px;">'
-      + '<button onclick="window.open(\'' + cleanLink + '\',\'_blank\')" style="background:'+btnColor+';color:#fff;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:4px;padding:12px 32px;border:none;border-radius:4px;cursor:pointer;margin-bottom:12px;">'+btnLabel+'</button>'
-      + '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;font-family:Arial,sans-serif;">'+hint+'</div>'
-      + '<div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:6px;font-family:monospace;word-break:break-all;">'+cleanLink+'</div>'
-      + '</div>';
-    vidSec.style.display = 'block';
-  } else {
-    vidSec.style.display = 'none';
-  }
-  g('gen-section').style.display = 'block';
-  g('gen-section').scrollIntoView({ behavior: 'smooth' });
-}
-</script>
-</body>
+          var card = document.createElement('div');
+          card.className = 'story-card';
+          card.id = 'card-' + idx;
+          card.innerHTML =
+            (img
+              ? '<img class="story-img" src="' + img + '" onerror="this.style.display=\'none\'">'
+              : '') +
+            '<div class="story-body">' +
+            '<div class="story-source">' +
+            src +
+            '</div>' +
+            '<div class="story-title">' +
+            title +
+            '</div>' +
+            (desc ? '<div class="story-desc">' + desc + '</div>' : '') +
+            '<div class="story-date">' +
+            date +
+            '</div>' +
+            '<div class="story-btns">' +
+            '<button class="btn-sm btn-sel" onclick="selectStory(' +
+            idx +
+            ', this)">SELECT THIS STORY</button>' +
+            (link
+              ? '<button class="btn-sm btn-link" onclick="window.open(\'' +
+                link +
+                "','_blank')\">READ FULL STORY</button>"
+              : '') +
+            '</div></div>';
+
+          card._data = { title: title, desc: desc, img: img, link: link, date: date, src: src };
+          grid.appendChild(card);
+        });
+
+        g('status').textContent = items.length + ' stories loaded from ' + src;
+        window._storyItems = items;
+        window._storySrc = src;
+      }
+
+      function selectStory(idx, btn) {
+        // Deselect all
+        var cards = document.querySelectorAll('.story-card');
+        cards.forEach(function (c) {
+          c.className = 'story-card';
+        });
+
+        var card = g('card-' + idx);
+        card.className = 'story-card selected';
+
+        var items = window._storyItems;
+        var src = window._storySrc;
+        var item = items[idx];
+        if (!item) return;
+
+        var title = (item.title || '').trim();
+        var desc = (item.description || '').replace(/<[^>]+>/g, '').trim();
+        var img = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
+        var link = item.link || '';
+        var isVideo = link.indexOf('/video/') > -1;
+        var date = item.pubDate
+          ? new Date(item.pubDate).toLocaleDateString([], {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            })
+          : new Date().toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+
+        // Fetch og:image from article page via corsproxy
+        if (!img && link) {
+          var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(link);
+          var ogXhr = new XMLHttpRequest();
+          ogXhr.open('GET', proxyUrl, true);
+          ogXhr.timeout = 8000;
+          ogXhr.onload = function () {
+            var match =
+              ogXhr.responseText.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/) ||
+              ogXhr.responseText.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/) ||
+              ogXhr.responseText.match(/og:image.*?content=["']([^"']+)["']/);
+            var ogImg = match ? match[1] : '';
+            generateContent(title, desc, ogImg || img, link, date, src, isVideo);
+          };
+          ogXhr.onerror = ogXhr.ontimeout = function () {
+            generateContent(title, desc, img, link, date, src, isVideo);
+          };
+          ogXhr.send();
+          g('status').textContent = 'Fetching article image...';
+        } else {
+          generateContent(title, desc, img, link, date, src, isVideo);
+        }
+      }
+
+      function runSeoCheck(title, desc, opts) {
+        opts = opts || {};
+        var checks = [];
+        var tLen = (title || '').length;
+        var dLen = (desc || '').length;
+        var firstLine = (desc || '').split('\n')[0] || '';
+        var hashCount = ((desc || '').match(/#\w+/g) || []).length;
+        var hasTimestamps = (desc || '').indexOf('00:00') > -1;
+        var hasCTA = (desc || '').toLowerCase().indexOf('subscribe') > -1;
+
+        checks.push({
+          label: 'Title length',
+          pass: tLen <= 60,
+          warn: tLen > 60 && tLen <= 100,
+          fail: tLen > 100,
+          msg:
+            tLen <= 60
+              ? 'Perfect (' + tLen + ' chars)'
+              : tLen <= 100
+                ? 'OK but shorter is better (' + tLen + ' chars)'
+                : 'Too long, trim to under 100 (' + tLen + ' chars)',
+        });
+
+        if (opts.teams && opts.teams.length >= 2) {
+          var both = title.indexOf(opts.teams[0]) > -1 && title.indexOf(opts.teams[1]) > -1;
+          checks.push({
+            label: 'Names in title',
+            pass: both,
+            fail: !both,
+            msg: both ? 'Both names found' : 'Missing: ' + opts.teams.join(' / '),
+          });
+        }
+
+        checks.push({
+          label: 'First line keywords',
+          pass: firstLine.length >= 40,
+          warn: firstLine.length >= 20 && firstLine.length < 40,
+          fail: firstLine.length < 20,
+          msg:
+            firstLine.length >= 40
+              ? 'Good (' + firstLine.length + ' chars)'
+              : 'First line too short, add keywords',
+        });
+
+        checks.push({
+          label: 'Timestamps',
+          pass: hasTimestamps,
+          fail: !hasTimestamps,
+          msg: hasTimestamps ? 'Timestamps included' : 'Add timestamps (00:00, 12:00 etc)',
+        });
+
+        checks.push({
+          label: 'Hashtags',
+          pass: hashCount >= 8 && hashCount <= 20,
+          warn: hashCount > 0 && (hashCount < 8 || hashCount > 20),
+          fail: hashCount === 0,
+          msg:
+            hashCount +
+            ' hashtags ' +
+            (hashCount >= 8 && hashCount <= 20 ? '-- ideal' : '-- aim for 8-20'),
+        });
+
+        checks.push({
+          label: 'Subscribe CTA',
+          pass: hasCTA,
+          fail: !hasCTA,
+          msg: hasCTA ? 'CTA present' : 'Add a subscribe call to action',
+        });
+
+        checks.push({
+          label: 'Description length',
+          pass: dLen >= 300,
+          warn: dLen >= 100 && dLen < 300,
+          fail: dLen < 100,
+          msg:
+            dLen +
+            ' chars ' +
+            (dLen >= 500 ? '-- great' : dLen >= 300 ? '-- good' : '-- add more detail'),
+        });
+
+        var failures = checks.filter(function (c) {
+          return c.fail;
+        });
+        var warnings = checks.filter(function (c) {
+          return c.warn && !c.fail;
+        });
+        var passes = checks.filter(function (c) {
+          return !c.fail && !c.warn;
+        });
+        return { checks: checks, failures: failures, warnings: warnings, passes: passes };
+      }
+
+      function renderSeoBar(containerId, title, desc, opts) {
+        var el = document.getElementById(containerId);
+        if (!el) return;
+        var r = runSeoCheck(title, desc, opts);
+        var f = r.failures.length,
+          w = r.warnings.length,
+          p = r.passes.length;
+        var cls = f > 0 ? 'has-fail' : w > 0 ? 'has-warn' : 'all-pass';
+        var lbl = f > 0 ? 'ISSUES FOUND' : w > 0 ? 'REVIEW SUGGESTED' : 'ALL CHECKS PASSED';
+        var msg =
+          f > 0
+            ? f + ' thing' + (f > 1 ? 's' : '') + ' to fix'
+            : w > 0
+              ? w + ' suggestion' + (w > 1 ? 's' : '')
+              : 'Good to publish!';
+        var issHtml = '';
+        if (f > 0 || w > 0) {
+          r.checks.forEach(function (c) {
+            if (c.fail || c.warn) {
+              issHtml +=
+                '<div class="seo-issue-row"><span class="seo-badge ' +
+                (c.fail ? 'fail' : 'warn') +
+                '">' +
+                (c.fail ? 'FIX' : 'TIP') +
+                '</span><span>' +
+                c.label +
+                ' -- ' +
+                c.msg +
+                '</span></div>';
+            }
+          });
+        }
+        el.innerHTML =
+          '<div class="seo-bar ' +
+          cls +
+          '" onclick="var i=document.getElementById(\'' +
+          containerId +
+          "-iss');if(i)i.classList.toggle('show')\">" +
+          '<span class="seo-bar-icon">' +
+          (f > 0 ? '!!' : w > 0 ? 'i' : 'OK') +
+          '</span>' +
+          '<span class="seo-bar-txt">SEO: ' +
+          lbl +
+          ' -- ' +
+          msg +
+          '</span>' +
+          (f > 0 || w > 0 ? '<span class="seo-bar-detail">click for details</span>' : '') +
+          '</div>' +
+          (issHtml
+            ? '<div class="seo-issues" id="' + containerId + '-iss">' + issHtml + '</div>'
+            : '');
+      }
+
+      function generateContent(title, desc, img, link, date, src, isVideo) {
+        // THUMBNAIL
+        var thumbBg = g('thumb-bg');
+        if (img) {
+          thumbBg.src = img;
+          thumbBg.style.display = 'block';
+        } else {
+          thumbBg.style.display = 'none';
+        }
+
+        // Truncate headline for thumbnail
+        var shortTitle = title.length > 60 ? title.slice(0, 57) + '...' : title;
+        g('thumb-headline').textContent = shortTitle;
+        g('thumb-cat').textContent = 'BECAUSE THE LIGHT WAS ON';
+        g('thumb-sub').textContent = date.toUpperCase() + ' | BECAUSE THE LIGHT WAS ON';
+
+        // Scale thumb
+        var scale = Math.min((window.innerWidth - 40) / 1280, 1);
+        var sc = g('thumb-scaler');
+        sc.style.transform = 'scale(' + scale + ')';
+        sc.style.width = Math.round(1280 * scale) + 'px';
+        sc.style.height = Math.round(720 * scale) + 'px';
+
+        // TITLE
+        // SEO Title - topic first, reaction second, brand last
+        var ytTitle =
+          title.length <= 70 ? title + ' | My Reaction' : title.slice(0, 67) + '... | Reaction';
+        if (ytTitle.length > 100) ytTitle = ytTitle.slice(0, 97) + '...';
+        g('yt-title').textContent = ytTitle;
+
+        // DESCRIPTION - keyword-rich first 2 lines
+        var d = '';
+        d += title + '\n';
+        d += 'Reacting to breaking world news -- ' + src + ' | ' + date + '\n';
+        d += '\n';
+        if (desc) d += desc.slice(0, 400) + (desc.length > 400 ? '...' : '') + '\n\n';
+        if (link) d += 'Read the full story: ' + link + '\n\n';
+        d +=
+          'ClipzWorld News covers breaking world news, sports and politics every weekday at noon ET. Subscribe for daily coverage.\n\n';
+        d += '00:00 Intro\n';
+        d += '00:30 Story Breakdown\n';
+        d += '02:00 My Reaction\n\n';
+        // Specific tags first, then broad
+        var topic = title.split(' ').slice(0, 3).join('');
+        var srcTag =
+          '#' +
+          src.split(' ')[0].charAt(0).toUpperCase() +
+          src.split(' ')[0].slice(1).toLowerCase();
+        var tags = [
+          srcTag,
+          '#BreakingNews',
+          '#WorldNews',
+          '#NewsReaction',
+          '#' + topic.replace(/[^a-zA-Z]/g, ''),
+          '#ClipzWorldNews',
+          '#News',
+          '#DailyNews',
+          '#NewsToday',
+          '#CurrentEvents',
+        ];
+        d += tags.join(' ');
+        g('yt-desc').textContent = d;
+        // SEO check
+        var seoEl2 = document.getElementById('news-seo-status');
+        if (!seoEl2) {
+          seoEl2 = document.createElement('div');
+          seoEl2.id = 'news-seo-status';
+          var db2 = document.getElementById('yt-desc');
+          if (db2 && db2.parentNode) db2.parentNode.appendChild(seoEl2);
+        }
+        renderSeoBar('news-seo-status', g('yt-title').textContent, g('yt-desc').textContent, {
+          teams: [title.split(' ')[0]],
+        });
+
+        // SCRIPT
+        var lines = [];
+        lines.push('CLIPZWORLD NEWS -- ' + src + ' REACTION');
+        lines.push(date);
+        lines.push('STORY: ' + title);
+        lines.push('');
+        lines.push('--- INTRO (0-10 sec) ---');
+        lines.push(
+          'What is UP ClipzWorld News. We are talking about this story right here -- ' +
+            title.slice(0, 80) +
+            '. Let me break this down.'
+        );
+        lines.push('');
+        lines.push('--- CONTEXT (10-40 sec) ---');
+        if (desc) {
+          var sentences = desc
+            .replace(/([.!?])\s+/g, '$1|')
+            .split('|')
+            .slice(0, 4);
+          sentences.forEach(function (s) {
+            if (s.trim()) lines.push('>> ' + s.trim());
+          });
+        }
+        lines.push('');
+        lines.push('--- YOUR REACTION (40-75 sec) ---');
+        lines.push(
+          '[YOUR TAKE ON THIS STORY -- what does this mean? Who is affected? Why does this matter?]'
+        );
+        lines.push('[Add your opinion and analysis here based on what you know about the topic]');
+        lines.push('');
+        lines.push('--- OUTRO (75-90 sec) ---');
+        lines.push(
+          'Drop a comment -- what do you think about this? I want to hear from you. Subscribe to ClipzWorld News for daily world news coverage every weekday at noon. Peace.'
+        );
+        g('script-txt').textContent = lines.join('\n');
+
+        // Video / article open button
+        var vidSec = g('video-embed-section');
+        var vidWrap = g('video-wrap');
+        if (link) {
+          var cleanLink = link.replace('?traffic_source=rss', '');
+          var btnLabel = isVideo ? 'OPEN VIDEO IN BROWSER' : 'OPEN ARTICLE IN BROWSER';
+          var btnColor = isVideo ? '#e74c3c' : '#c7af4f';
+          var hint = isVideo
+            ? 'Open in Chrome, play the video, then use OBS Window Capture to show it on stream'
+            : 'Open the full article to read context before your reaction';
+          vidWrap.innerHTML =
+            '<div style="background:#0d1524;border:1px solid rgba(199,175,79,0.2);border-radius:6px;padding:20px;">' +
+            '<button onclick="window.open(\'' +
+            cleanLink +
+            "','_blank')\" style=\"background:" +
+            btnColor +
+            ';color:#fff;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:4px;padding:12px 32px;border:none;border-radius:4px;cursor:pointer;margin-bottom:12px;">' +
+            btnLabel +
+            '</button>' +
+            '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;font-family:Arial,sans-serif;">' +
+            hint +
+            '</div>' +
+            '<div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:6px;font-family:monospace;word-break:break-all;">' +
+            cleanLink +
+            '</div>' +
+            '</div>';
+          vidSec.style.display = 'block';
+        } else {
+          vidSec.style.display = 'none';
+        }
+        g('gen-section').style.display = 'block';
+        g('gen-section').scrollIntoView({ behavior: 'smooth' });
+      }
+    </script>
+  </body>
 </html>

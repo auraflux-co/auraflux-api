@@ -1,6 +1,7 @@
 # Morning Briefing — 2026-04-24
 
 ## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 24)
+
 - **Task:** Process `OVERNIGHT_TASKS.md`.
 - **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
 - **Actions:** Updated `STATUS.md`, `MORNING_BRIEFING.md`, and `docs/ops/COMMIT_CHECKLIST.md` to reflect a no-op run.
@@ -10,6 +11,7 @@
 # Morning Briefing — 2026-04-23
 
 ## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 23)
+
 - **Task:** Process `OVERNIGHT_TASKS.md`.
 - **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
 - **Actions:** Updated `STATUS.md`, `MORNING_BRIEFING.md`, and `docs/ops/COMMIT_CHECKLIST.md` to reflect a no-op run.
@@ -19,6 +21,7 @@
 # Morning Briefing — 2026-04-22
 
 ## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 22)
+
 - **Task:** Process `OVERNIGHT_TASKS.md`.
 - **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
 - **Actions:** Updated `STATUS.md`, `MORNING_BRIEFING.md`, and `docs/ops/COMMIT_CHECKLIST.md` to reflect a no-op run.
@@ -28,6 +31,7 @@
 # Morning Briefing — 2026-04-21
 
 ## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 21)
+
 - **Task:** Process `OVERNIGHT_TASKS.md`.
 - **Result:** No tasks found. `OVERNIGHT_TASKS.md` was empty.
 - **Actions:** Updated `STATUS.md` and this briefing to reflect a no-op run.
@@ -43,16 +47,19 @@
 ## What Was Fixed Tonight
 
 ### 1. Chrome flag height (lib/chrome_overlay_ffmpeg.js)
+
 **Bug:** 2-line titles expanded flag from 88px → 110px, covering Bobby G's face (face zone ~y=120, flag was reaching y=158).
 **Fix:** Flag always stays at 88px spec max. 2-line titles use fontsize=20 instead of 28.
 **Visible in:** NBA video had massive flag covering Bobby G's head.
 
 ### 2. Twitch sidebar empty (lib/assembly.js)
+
 **Bug:** Twitch branch read sidebar data from `streamerRoster` — empty for all new pipeline jobs and synth tests.
 **Fix:** First scans INTRO segments for `cardData` (same pattern NBA/News already used), falls back to `streamerRoster`.
 **Visible in:** Twitch video had the sidebar panel but zero story cards inside it.
 
 ### 3. Synth test Twitch payload (test/synth_assembly_test.js)
+
 **Bug:** `JASON_INTRO` segment had no `cardData` — the test wasn't exercising the sidebar at all.
 **Fix:** Added `cardData: { title, displayName, origin, fact }` to match News/NBA pattern.
 
@@ -62,13 +69,14 @@
 
 **Synth test completed ✅ — all 3 content types assembled successfully.**
 
-| Content Type | Output File | Size |
-|---|---|---|
-| News | news_synth_test_3clips_asm_1776663598384.mp4 | 18.4 MB |
-| Twitch | twitch_synth_test_1clips_asm_1776663769570.mp4 | 6.6 MB |
-| NBA | nba_synth_test_1clips_asm_1776663907705.mp4 | 5.1 MB |
+| Content Type | Output File                                    | Size    |
+| ------------ | ---------------------------------------------- | ------- |
+| News         | news_synth_test_3clips_asm_1776663598384.mp4   | 18.4 MB |
+| Twitch       | twitch_synth_test_1clips_asm_1776663769570.mp4 | 6.6 MB  |
+| NBA          | nba_synth_test_1clips_asm_1776663907705.mp4    | 5.1 MB  |
 
 **Open these and visually verify:**
+
 - Flag is flush to left edge, does NOT cover Bobby G's face (88px max — was 110px before fix)
 - Sidebar cards visible on the right side for all 3 content types
 - News: 3 story cards (Ceasefire / Markets / Amazon)
@@ -100,11 +108,13 @@ Verify: Bobby G top, clip bottom, caption at ~y=920, no chrome flag (shorts have
 All 4 pass → ready to tell Rob we're ready for Render.
 
 ### Render deploy (when synth passes, Rob says go)
+
 - Sub-Agent A: render.yaml + server config
 - Sub-Agent B: Postgres migration plan + env vars
 - Remember: `TZ=UTC` in Render env vars
 
 ### Post-Render (do NOT touch now)
+
 - YouTube test channel (10/day limit hit last night — needs a separate channel for testing)
 - NBA narration accuracy — Gemini fabricates player names, needs real data source wired in
 - Deprecated Puppeteer chrome functions cleanup (delete after 2 clean synth test runs)
@@ -126,6 +136,7 @@ All 4 pass → ready to tell Rob we're ready for Render.
 ---
 
 ## Key Numbers From Last Night's Production Run
+
 - 3 videos assembled (NBA / News / Twitch long-form)
 - 0 published — YouTube 10/day rate limit hit on all 4 upload attempts
 - Chrome bugs visible in all 3 assembled videos (flag too large, sidebar empty)

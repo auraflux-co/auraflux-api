@@ -18,6 +18,6 @@ One JSON file per customer, keyed by `customerId`.
 
 ## File Contents
 
-| File     | Customer          | Show              |
-|----------|-------------------|-------------------|
-| `c0.json`| Customer 0 (CWN)  | ClipzWorld News   |
+| File      | Customer         | Show            |
+| --------- | ---------------- | --------------- |
+| `c0.json` | Customer 0 (CWN) | ClipzWorld News |

@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 # CWN Production — local dev compose
 # Usage:
@@ -20,7 +20,7 @@ services:
     container_name: cwn-server
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - '3000:3000'
     env_file:
       - .env
     environment:
@@ -28,12 +28,12 @@ services:
       PORT: 3000
       # Docker poller: server spawns cwn-poller container via Docker socket
       # Set USE_DOCKER_POLLER=1 to activate (requires /var/run/docker.sock mount)
-      USE_DOCKER_POLLER: "${USE_DOCKER_POLLER:-0}"
+      USE_DOCKER_POLLER: '${USE_DOCKER_POLLER:-0}'
       # Allow requests from dashboard static server and localhost
-      ALLOWED_ORIGINS: "http://localhost:8765,http://localhost:3000"
+      ALLOWED_ORIGINS: 'http://localhost:8765,http://localhost:3000'
       # Puppeteer uses system Chromium baked into the image
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
-      PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium"
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
+      PUPPETEER_EXECUTABLE_PATH: '/usr/bin/chromium'
     volumes:
       # Source code — live reload via nodemon
       - .:/app
@@ -48,14 +48,19 @@ services:
       # (lets server spawn cwn-poller containers)
       - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
-      test: ["CMD", "node", "-e",
-        "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
       interval: 30s
       timeout: 10s
       start_period: 20s
       retries: 3
     # nodemon for live reload in dev (override CMD from Dockerfile)
-    command: ["./node_modules/.bin/nodemon", "server.js"]
+    command: ['./node_modules/.bin/nodemon', 'server.js']
 
   # ── Dashboard static file server ─────────────────────────────────────────
   # Lightweight Python server for cwn_production.html
@@ -65,11 +70,11 @@ services:
     container_name: cwn-dashboard
     restart: unless-stopped
     ports:
-      - "8765:8765"
+      - '8765:8765'
     volumes:
       - .:/app:ro
     working_dir: /app
-    command: ["python3", "-m", "http.server", "8765"]
+    command: ['python3', '-m', 'http.server', '8765']
     depends_on:
       - server
 
