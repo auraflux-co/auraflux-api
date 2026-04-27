@@ -3816,11 +3816,9 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
         console.warn(`[scrapeAjNewsVideos] Manifest check failed: ${e.message}`);
       }
 
-      // Fix 2: portrait-only for news-short — landscape clips dropped silently
-      if (orientation !== 'portrait') {
-        console.log(`[scrapeAjNewsVideos] ⏭  LANDSCAPE dropped (${manifestWidth}x${manifestHeight}): ${articleUrl.slice(-60)}`);
-        continue;
-      }
+      // Accept both landscape and portrait — clips go into the split-screen bottom half
+      // and are cropped/scaled by FFmpeg regardless of source orientation.
+      console.log(`[scrapeAjNewsVideos] ✅ ${orientation.toUpperCase()} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
 
       const maxClipSec = parseFloat(process.env.NEWS_AJ_MAX_CLIP_SEC || '180', 10);
       if (Number.isFinite(maxClipSec) && maxClipSec > 0) {
@@ -3843,7 +3841,7 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
         sourceHeight:   manifestHeight
       });
 
-      console.log(`[scrapeAjNewsVideos] ✅ PORTRAIT ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
+      console.log(`[scrapeAjNewsVideos] ✅ added ${orientation} ${manifestWidth}x${manifestHeight}: ${articleUrl.slice(-60)}`);
     }
   } finally {
     await browser.close();
@@ -3972,30 +3970,24 @@ app.get('/news/us-canada-videos', async (req, res) => {
 
     videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
-    // Safety net: endpoint always returns portrait-only (scraper already filters, this is belt+suspenders)
-    const portraitVideos = videos.filter(v => v.orientation === 'portrait');
-    const droppedNonPortrait = videos.length - portraitVideos.length;
-    if (droppedNonPortrait > 0) {
-      console.log(`[news/us-canada-videos] Safety filter: dropped ${droppedNonPortrait} non-portrait clips (scraper should have dropped these)`);
-    }
+    const landscape = videos.filter(v => v.orientation === 'landscape').length;
+    const portrait  = videos.filter(v => v.orientation === 'portrait').length;
 
-    const hint =
-      portraitVideos.length === 0
-        ? 'No 9:16 portrait clips with Brightcove HLS from US/Canada AJ paths. Causes: Puppeteer did not capture HLS, only landscape articles today, duration over NEWS_AJ_MAX_CLIP_SEC, or Gemini sitemap recovery failed (check GEMINI_API_KEY). Server logs tag [news/us-canada-videos] and [scrapeAjNewsVideos].'
-        : null;
+    const hint = videos.length === 0
+      ? 'No clips with Brightcove HLS from US/Canada AJ paths. Causes: Puppeteer did not capture HLS, duration over NEWS_AJ_MAX_CLIP_SEC, or Gemini sitemap recovery failed (check GEMINI_API_KEY). Server logs tag [news/us-canada-videos] and [scrapeAjNewsVideos].'
+      : null;
 
     return res.json({
       ok: true,
-      videos: portraitVideos,
-      recentCount: portraitVideos.length,
-      totalFound: portraitVideos.length,
+      videos,
+      recentCount: videos.length,
+      totalFound: videos.length,
       scrapedWithVideo: ajVideos.length,
-      droppedNonPortrait,
+      droppedNonPortrait: 0,
       hint,
-      source:
-        'AJ where/united-states first, fallback us-canada — Puppeteer Brightcove — portrait-only — duration ≤ NEWS_AJ_MAX_CLIP_SEC',
-      landscape: droppedNonPortrait,
-      portrait:  portraitVideos.length
+      source: 'AJ where/united-states first, fallback us-canada — Puppeteer Brightcove — landscape + portrait — duration ≤ NEWS_AJ_MAX_CLIP_SEC',
+      landscape,
+      portrait
     });
   } catch (err) {
     console.error('[news/us-canada-videos] Error:', err.message);
