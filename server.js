@@ -2835,14 +2835,9 @@ app.get('/canva-import-status/:id', (req, res) => {
 // ── Streamer display name map ────────────────────────────────────
 // Maps Twitch username (lowercase) → on-air display name
 
-// ── Pinned first-comment templates (fixed per content type) ──────
-// Used by autonomous Gate 6 publish to set the YouTube first comment.
-// Rob's canonical wording — do NOT let Claude freestyle these.
-const PINNED_COMMENT_TEMPLATES = {
-  twitch: "What was your favorite streamer clip? Let me know below! 👇 If you enjoyed this, consider subscribing for more Twitch Soup episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
-  nba:    "What was your favorite game highlight? Let me know below! 👇 If you enjoyed this, consider subscribing for more Other Side of the Pillow episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
-  news:   "What was your favorite news story? Let me know below! 👇 If you enjoyed this, consider subscribing for more Because the Light Was On episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1"
-};
+// Pinned comment for Gate 6 publish — read from customerConfig delivery.pinnedComments
+// using getPinnedComment(contentType, customerId) from assembly.js.
+const { getPinnedComment } = require('./lib/assembly');
 
 
 // GET /ticker-status — check which tickers are cached
