@@ -181,6 +181,7 @@ You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **feat(runpod): RunPod client + env wiring** — lib/ai/runpod.js built (persistent pod + serverless modes, ComfyUI workflow submit/poll/download, health ping). render.yaml updated with RUNPOD_API_KEY/POD_ID/ENDPOINT_ID. .env updated locally. Awaiting pod HTTP port confirmation to test connection. | lib/ai/runpod.js, render.yaml, STATUS.md | — | 2026-04-27 |
 | Cursor | **chore(rename): Tier 1 CWN→AuraFlux renames in server.js** — Updated JSDoc header and startup console.log. ecosystem.config.js and lib/ already used AuraFlux branding. | server.js, STATUS.md | — | 2026-04-27 |
 | Cursor | **perf(health): cache expensive checks — /health now < 5ms** — Added _healthCache + _refreshHealthCache() that runs FFmpeg spawn, df disk check, VectCut HTTP, and API key checks once at startup then every 60s. /health route now returns cached state synchronously. Fixes load test: was 4.6s avg latency / 4 req/s because FFmpeg was spawned on every request. | server.js, STATUS.md | — | 2026-04-27 |
 | Cursor | **chore: rename repo cwn-production → auraflux-api** — updated package.json name, repository.url, bugs.url, homepage. Updated git remote origin to github.com/clipzworldnews/auraflux-api.git. | package.json, STATUS.md | — | 2026-04-27 |
