@@ -1,6 +1,7 @@
 # Post-Render Migration Task List
 
 **Created:** 2026-04-19  
+**Last updated:** 2026-04-27  
 **Status:** Pending — execute after Render deploy smoke test passes  
 **Owner:** Claude Code (architect) + Sub-Agents A/B/C (implementation)  
 **Trigger:** Rob says "Render is live, start post-render tasks"
@@ -117,6 +118,53 @@ These must be done before onboarding any paying customer.
 **What blocks it:** Duration test showed 6.45s (matching our text length) but Bobby G read the static placeholder text not our dynamic text. Variable substitution for speech not fully confirmed.  
 **When to revisit:** After stable production runs with avatar path. Contact HeyGen support with the specific variable structure question.  
 **Owner:** Claude Code
+
+---
+
+---
+
+## Environment Variables — Complete Render Panel Checklist
+
+Set all of these in **Render Dashboard → Environment** for `auraflux-api` before first deploy. Values marked `sync: false` in `render.yaml` must be filled manually. Non-secret values are already set inline in `render.yaml`.
+
+### Required (pipeline will not start without these)
+- [ ] `ANTHROPIC_API_KEY` — Claude script QA
+- [ ] `GEMINI_API_KEY` — Gemini script gen + gate analysis
+- [ ] `HEYGEN_API_KEY` — avatar rendering (c0 path)
+- [ ] `HEYGEN_AVATAR_ID` — landscape 16:9 avatar ID
+- [ ] `HEYGEN_AVATAR_SHORT_ID` — portrait 9:16 avatar ID
+- [ ] `HEYGEN_VOICE_ID` — voice ID for all avatar renders
+- [ ] `HEYGEN_SPEAK_SPEED` — e.g. `0.85` for long-form, `0.95` for shorts
+- [ ] `TWITCH_CLIENT_ID` — Twitch GQL clip resolution
+- [ ] `TWITCH_TOKEN` — Twitch API auth token
+- [ ] `UPLOADPOST_API_KEY` — multi-platform publish
+- [ ] `UPLOADPOST_PROFILE` — Upload-Post profile name
+- [ ] `NEW_RELIC_LICENSE_KEY` — **40-char license key** (not Ingest key)
+- [ ] `DRIVE_FOLDER_ID` — Google Drive folder for video uploads
+- [ ] `DRIVE_REFRESH_TOKEN` — OAuth2 refresh token (run `node cwn-auth.js` locally to generate)
+
+### Optional (features degrade gracefully without these)
+- [ ] `HEYGEN_AVATAR_SHORT_NBA_ID` — NBA-specific short avatar
+- [ ] `HEYGEN_AVATAR_SHORT_NEWS_ID` — News-specific short avatar
+- [ ] `HEYGEN_AVATAR_SHORT_TWITCH_ID` — Twitch-specific short avatar
+- [ ] `HEYGEN_TEMPLATE_LANDSCAPE` — HeyGen template ID for 16:9
+- [ ] `HEYGEN_TEMPLATE_PORTRAIT` — HeyGen template ID for 9:16
+- [ ] `HEYGEN_FOLDER_ID_NBA_NFL` — HeyGen folder routing for NBA
+- [ ] `HEYGEN_FOLDER_ID_NEWS` — HeyGen folder routing for News
+- [ ] `HEYGEN_FOLDER_ID_TWITCH` — HeyGen folder routing for Twitch
+- [ ] `CANVA_CLIENT_ID` — thumbnail generation via Canva
+- [ ] `CANVA_CLIENT_SECRET` — Canva API secret
+- [ ] `TOPAZLABS_API_KEY` — video upscaling (optional)
+- [ ] `ATLASSIAN_API_TOKEN` — Jira/Rovo MCP (IDE-side, not server-side)
+
+### Already set inline in render.yaml (verify, do not duplicate)
+- `NODE_ENV=production`
+- `PORT=10000`
+- `TZ=UTC`
+- `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium`
+- `GATE_TEST_MODE=false`
+- `NEW_RELIC_APP_NAME=auraflux-api-prod`
+- `C0_MANUAL_SEGMENT_CHECKPOINT=true`
 
 ---
 

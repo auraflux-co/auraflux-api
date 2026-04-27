@@ -1,0 +1,139 @@
+# render.yaml — AuraFlux API Blueprint
+# Deploy: connect this repo in the Render dashboard → "New → Blueprint"
+# Render will provision the web service, Postgres database, and persistent disk.
+#
+# BEFORE FIRST DEPLOY:
+#   1. Set all envVars marked sync: false in the Render environment panel
+#   2. Set PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium (already in Dockerfile ENV,
+#      but override here to be explicit for Render's container runtime)
+#   3. Set TZ=UTC for consistent log timestamps
+#   4. Confirm /health returns ok after first deploy
+#
+# See docs/ops/RENDER_DEPLOY_CHECKLIST.md for the full checklist.
+
+services:
+  - type: web
+    name: auraflux-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+
+    # Persistent disk — keeps SQLite (data/jobs.json) across deploys.
+    # Mount at /app/data only; output/ and tmp/ are ephemeral (videos upload to Drive/R2).
+    # Increase to 50GB when video output is stored locally before R2 migration.
+    disk:
+      name: auraflux-data
+      mountPath: /app/data
+      sizeGB: 10
+
+    envVars:
+      # ── Runtime config (non-secret, set inline) ──────────────────────────────
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: TZ
+        value: UTC
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: "true"
+      - key: GATE_TEST_MODE
+        value: "false"
+      - key: NEW_RELIC_APP_NAME
+        value: auraflux-api-prod
+      - key: NEW_RELIC_NO_CONFIG_FILE
+        value: "true"
+      - key: SHORT_FORM_LOGO_SIZE
+        value: "80"
+      - key: SHORT_FORM_AUDIO_MIX
+        value: both
+      - key: USE_LOCAL_FFMPEG
+        value: "false"
+      - key: VECTCUT_API_URL
+        value: ""
+
+      # ── Secrets — set values in Render environment panel (sync: false) ────────
+      # AI APIs
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+      # HeyGen — avatar rendering (c0 path only)
+      - key: HEYGEN_API_KEY
+        sync: false
+      - key: HEYGEN_AVATAR_ID
+        sync: false
+      - key: HEYGEN_AVATAR_SHORT_ID
+        sync: false
+      - key: HEYGEN_AVATAR_SHORT_NBA_ID
+        sync: false
+      - key: HEYGEN_AVATAR_SHORT_NEWS_ID
+        sync: false
+      - key: HEYGEN_AVATAR_SHORT_TWITCH_ID
+        sync: false
+      - key: HEYGEN_VOICE_ID
+        sync: false
+      - key: HEYGEN_SPEAK_SPEED
+        sync: false
+      - key: HEYGEN_TEMPLATE_LANDSCAPE
+        sync: false
+      - key: HEYGEN_TEMPLATE_PORTRAIT
+        sync: false
+      - key: HEYGEN_FOLDER_ID_NBA_NFL
+        sync: false
+      - key: HEYGEN_FOLDER_ID_NEWS
+        sync: false
+      - key: HEYGEN_FOLDER_ID_TWITCH
+        sync: false
+
+      # Twitch
+      - key: TWITCH_CLIENT_ID
+        sync: false
+      - key: TWITCH_TOKEN
+        sync: false
+
+      # Google Drive (c0 upload path)
+      - key: DRIVE_FOLDER_ID
+        sync: false
+      - key: DRIVE_REFRESH_TOKEN
+        sync: false
+
+      # Publishing
+      - key: UPLOADPOST_API_KEY
+        sync: false
+      - key: UPLOADPOST_PROFILE
+        sync: false
+
+      # New Relic
+      - key: NEW_RELIC_LICENSE_KEY
+        sync: false
+
+      # Canva (optional — thumbnail generation)
+      - key: CANVA_CLIENT_ID
+        sync: false
+      - key: CANVA_CLIENT_SECRET
+        sync: false
+
+      # Atlassian / Jira (optional)
+      - key: ATLASSIAN_API_TOKEN
+        sync: false
+      - key: ATLASSIAN_DOMAIN
+        sync: false
+      - key: ATLASSIAN_EMAIL
+        sync: false
+
+      # C0 manual workflow flag
+      - key: C0_MANUAL_SEGMENT_CHECKPOINT
+        value: "true"
+
+# ── PostgreSQL — future migration target (Phase 2)
+# Uncomment when ready to migrate from SQLite.
+# databases:
+#   - name: auraflux-pg
+#     plan: starter
+#     databaseName: auraflux
+#     user: auraflux

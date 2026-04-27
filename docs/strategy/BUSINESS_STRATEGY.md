@@ -570,3 +570,114 @@ Rob reads this doc, pushes back on anything that doesn't match his read, approve
 4. Smoke test loop for News / NBA / Twitch continues — this is Phase 1, and it's the prerequisite for everything else
 
 Until Rob approves, this doc is a proposal. After approval, it's the north-star for every CWN business-side conversation.
+
+---
+
+## 16. Pricing model (AuraFlux C1+)
+
+**Last updated:** 2026-04-27
+
+### Core model formula
+
+```
+PRICE = (ENTRY EFFORT) x (FORMAT COMPLEXITY) x (EXPERIENCE LAYER)
+```
+
+Three independent multipliers produce a single job cost. This aligns pricing with actual infrastructure cost, scales with usage, and reinforces the system positioning.
+
+---
+
+### Entry points (effort level)
+
+The base cost driver — how much work the system does to acquire content.
+
+| Level | Name | Description | Cost driver |
+|-------|------|-------------|-------------|
+| 1 | **Use My Content** | Customer uploads clips or long-form footage | Cheapest — no sourcing, no generation |
+| 2 | **Link / Fetch Content** | Scraping, sourcing, ingestion from URL/CDN | Moderate — pipeline cost + variability |
+| 3 | **Start From Idea** | RunPod / GPU generation from text prompt | Most expensive — full generation pipeline |
+
+---
+
+### Format complexity
+
+| Format | Multiplier | Why |
+|--------|-----------|-----|
+| **Short-form** | lower | Clips, captions, fast edits |
+| **Long-form** | higher | Structure, sequencing, scenes, overlays — more compute + orchestration |
+
+---
+
+### Credit multiplier grid (DIY usage pricing)
+
+Instead of fixed caps, jobs consume credits based on complexity:
+
+| Entry | Short | Long |
+|-------|-------|------|
+| Use My Content | 1x | 2x |
+| Fetch / Link | 1.5x | 2.5x |
+| Start From Idea | 3x | 5x |
+
+---
+
+### Experience layers (the three offers)
+
+#### Offer 1 — DIY (System Access)
+- **Price:** $500–$1,000/month
+- **Who:** streamers, creators, operators
+- **Includes:** full AuraFlux system, all entry points unlocked, short + long form
+- **Pricing:** credit-based on multiplier grid above
+- **Positioning:** "Run your content system yourself"
+
+#### Offer 2 — DWY (Content Acceleration)
+- **Price:** $1,500–$4,000/month OR $3K–$8K setup + lower monthly
+- **Who:** growth creators, small teams
+- **Includes:** everything in DIY + onboarding, setup, workflow configuration, optimization sessions
+- **What changes vs DIY:** better output faster, less trial and error, higher success rate
+- **Positioning:** "We help you build and run your content system"
+
+#### Offer 3 — DFY (Content Operation)
+- **Price:** $3,000–$10,000+/month
+- **Who:** businesses, brands, top creators
+- **Includes:** full execution — sourcing, structuring, production, publishing
+- **Pricing:** output cadence (not credits) — e.g., daily short-form + weekly long-form + multi-platform
+- **Positioning:** "We run your content operation for you"
+
+---
+
+### Shoppable multiplier (add-on)
+
+Shoppable output = base price x **1.3–1.8**
+
+Applies when the output includes:
+- Scene-level product overlay logic
+- CTA overlays (see `DECOUPLED_VIDEO_PRODUCT_STACK.md` for FFmpeg implementation)
+- Monetization structure per clip
+
+Shoppable is a multiplier on top of the base offer — it does not change the DIY/DWY/DFY tier.
+
+---
+
+### Competitive positioning
+
+| Position | Description |
+|----------|-------------|
+| **Tools (below AuraFlux)** | Fixed features, cheap, no orchestration |
+| **Agencies (parallel)** | Expensive, manual, no platform leverage |
+| **AuraFlux** | Dynamic pricing based on production complexity — infrastructure product pricing |
+
+---
+
+### Full structure summary
+
+```
+ENTRY (effort: upload / fetch / generate)
+    |
+FORMAT (short-form / long-form)
+    |
+EXPERIENCE (DIY / DWY / DFY)
+    |
+MONETIZATION (optional Shoppable layer)
+```
+
+This pricing model aligns with actual infrastructure cost, scales with usage, and reinforces the platform positioning (not a tool — a content operations system).
