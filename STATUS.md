@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-28 (Cursor — Phase 2A server.js route extraction: extracted lib/routes/jobs.js (GET /jobs, DELETE+POST /job/:id/*, GET /content-type-status — 10 routes) + lib/routes/admin.js (GET /health, /disk-usage, /errors, /news-tool, /newscast-overlay, /twitch-tool, /twitch-token, /market-keys, POST+GET /api/jira-webhook+queue — 11 routes) + lib/jira_queue.js (readJiraQueue, writeJiraQueue helpers); server.js reduced from 7052 → 6361 lines (-691 lines); boot test: 47 SQLite jobs loaded, all modules clean; branch: refactor/server-phase2-route-extraction)
+**Last Updated:** 2026-04-28 (Cursor — Phase 2A route extraction + C0 branding cleanup: neutralized HeyGen/Twitch/CWN-specific language in lib/routes/jobs.js — messages now use universal "video generation" terminology; added card.videoJobs dual-support (C0: card.heygen.videoJobs, C1+: card.videoJobs); marked C0-only routes in lib/routes/admin.js with design-intent comments; branch: refactor/server-phase2-route-extraction)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
