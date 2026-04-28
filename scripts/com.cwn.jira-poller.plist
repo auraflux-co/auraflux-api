@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cwn.jira-poller</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/robertgregory/cwn-production/scripts/jira_poller.sh</string>
+  </array>
+
+  <!-- Run every 5 minutes -->
+  <key>StartInterval</key>
+  <integer>300</integer>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/robertgregory/cwn-production</string>
+
+  <key>StandardOutPath</key>
+  <string>/Users/robertgregory/cwn-production/logs/jira_poller_launchd.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/robertgregory/cwn-production/logs/jira_poller_launchd.log</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key>
+    <string>/Users/robertgregory</string>
+  </dict>
+</dict>
+</plist>
