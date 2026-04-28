@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-28 (Cursor — chore: removed Roo Code entirely — deleted .roo/ dir, scripts/roo_watcher.sh, scripts/roo_auto_start.js, lib/roo_bridge.js, logs/roo_*, docs/reports/roo/; renamed roo_bridge → lib/pipeline_event_logger.js with output files renamed roo_status.json → pipeline_status.json, roo_trigger.json → pipeline_trigger.json; removed roo-watcher from ecosystem.config.js; updated lib/monitoring.js require; updated cursor.md monitoring section; PR open for review)
+**Last Updated:** 2026-04-28 (Cursor — refactor: Phase 2B server.js module split — extracted 16 routes into lib/routes/publish.js (12 publish/upload-post routes) and lib/routes/heygen.js (4 C0-only HeyGen routes); removed duplicate /job-spec/:jobId inline; server.js reduced from 6361 → 5623 lines (-738 lines); total reduction across all phases: ~2910 lines; PR open for review)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
