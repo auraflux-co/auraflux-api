@@ -18,6 +18,7 @@ set -euo pipefail
 REPO_DIR="/Users/robertgregory/cwn-production"
 LOG_FILE="$REPO_DIR/logs/jira_poller_$(date +%Y-%m-%d).log"
 AIDER="/opt/homebrew/bin/aider"
+ROVO_DISPATCH="$REPO_DIR/scripts/rovo_dispatch.sh"
 API_BASE="https://api.auraflux.co"
 
 mkdir -p "$REPO_DIR/logs"
@@ -63,22 +64,77 @@ if [ "$PENDING" -eq 0 ]; then
   exit 0
 fi
 
-echo "📋 $PENDING pending task(s) found — triggering Aider..." >> "$LOG_FILE"
+echo "📋 $PENDING pending task(s) found." >> "$LOG_FILE"
 
 cd "$REPO_DIR"
 
-# Write pending tasks into OVERNIGHT_TASKS.md via jira_sync.js
-# (jira_sync already pulls "In Progress" tickets from Jira — use it)
-node "$REPO_DIR/scripts/jira_sync.js" >> "$LOG_FILE" 2>&1 || \
-  echo "⚠️  jira_sync.js failed — continuing" >> "$LOG_FILE"
+# ── Rovo Dev tasks ──────────────────────────────────────────────────────────
+ROVO_KEYS=$(echo "$QUEUE" | python3 -c "
+import sys, json
+items = json.load(sys.stdin)
+keys = [i['key'] for i in items if not i.get('processed') and i.get('agent') == 'rovo']
+print(' '.join(keys))
+" 2>/dev/null || echo "")
 
-# Build list of issue keys for jira_complete after aider finishes
-ISSUE_KEYS=$(echo "$QUEUE" | python3 -c "
+if [ -n "$ROVO_KEYS" ]; then
+  echo "🤖 Rovo Dev tasks: $ROVO_KEYS" >> "$LOG_FILE"
+
+  for KEY in $ROVO_KEYS; do
+    SUMMARY=$(echo "$QUEUE" | python3 -c "
+import sys,json
+items=json.load(sys.stdin)
+t=next((i for i in items if i['key']=='$KEY'),{})
+print(t.get('summary',''))
+" 2>/dev/null || echo "")
+
+    DESCRIPTION=$(echo "$QUEUE" | python3 -c "
+import sys,json
+items=json.load(sys.stdin)
+t=next((i for i in items if i['key']=='$KEY'),{})
+print(t.get('description',''))
+" 2>/dev/null || echo "")
+
+    ROVO_PROMPT="You are working in /Users/robertgregory/cwn-production on Jira ticket $KEY.
+Title: $SUMMARY
+Description: $DESCRIPTION
+
+Instructions:
+1. Understand the requirement from the Jira ticket above.
+2. Implement the changes in the repository.
+3. Create a feature branch named feat/${KEY,,}-$(echo "$SUMMARY" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]//g' | cut -c1-40).
+4. Commit with a message referencing $KEY.
+5. Push the branch and create a PR using gh pr create.
+6. After the PR is created, run: cd /Users/robertgregory/cwn-production && node scripts/jira_complete.js $KEY
+Report the PR URL when done."
+
+    echo "Dispatching $KEY to Rovo Dev..." >> "$LOG_FILE"
+    bash "$ROVO_DISPATCH" "$ROVO_PROMPT" >> "$LOG_FILE" 2>&1 || \
+      echo "⚠️  Rovo Dev dispatch failed for $KEY" >> "$LOG_FILE"
+
+    curl -sf -X POST "${API_BASE}/api/jira-queue/${KEY}/done?secret=${SECRET}" \
+      -H "Content-Type: application/json" >> "$LOG_FILE" 2>&1 || true
+    echo "Marked $KEY done in queue" >> "$LOG_FILE"
+  done
+fi
+
+# ── Aider tasks ─────────────────────────────────────────────────────────────
+AIDER_KEYS=$(echo "$QUEUE" | python3 -c "
 import sys, json
 items = json.load(sys.stdin)
 keys = [i['key'] for i in items if not i.get('processed') and i.get('agent') == 'aider']
 print(' '.join(keys))
 " 2>/dev/null || echo "")
+
+if [ -z "$AIDER_KEYS" ]; then
+  echo "No Aider tasks — done." >> "$LOG_FILE"
+  exit 0
+fi
+
+echo "✏️  Aider tasks: $AIDER_KEYS — triggering Aider..." >> "$LOG_FILE"
+
+# Write pending tasks into OVERNIGHT_TASKS.md via jira_sync.js
+node "$REPO_DIR/scripts/jira_sync.js" >> "$LOG_FILE" 2>&1 || \
+  echo "⚠️  jira_sync.js failed — continuing" >> "$LOG_FILE"
 
 TASK_PROMPT="Work through ALL pending tasks in docs/ops/OVERNIGHT_TASKS.md (any section marked '🟡' or 'PENDING'). Work IN ORDER, commit each before starting the next. Create a feature branch. After ALL tasks: update STATUS.md, prepend summary to MORNING_BRIEFING.md, mark tasks [x], run git push origin HEAD. For each Jira-sourced task (CPD- key), run: node scripts/jira_complete.js <KEY>. Follow docs/ops/COMMIT_CHECKLIST.md."
 
@@ -96,12 +152,10 @@ TASK_PROMPT="Work through ALL pending tasks in docs/ops/OVERNIGHT_TASKS.md (any 
 EXIT_CODE=$?
 echo "Aider exited: $EXIT_CODE" >> "$LOG_FILE"
 
-# Mark all processed in the Render queue
-for KEY in $ISSUE_KEYS; do
+for KEY in $AIDER_KEYS; do
   curl -sf -X POST "${API_BASE}/api/jira-queue/${KEY}/done?secret=${SECRET}" \
     -H "Content-Type: application/json" >> "$LOG_FILE" 2>&1 || true
   echo "Marked $KEY done in queue" >> "$LOG_FILE"
 done
 
 echo "Poller run complete — $(date)" >> "$LOG_FILE"
-exit $EXIT_CODE
