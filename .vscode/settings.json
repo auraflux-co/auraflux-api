@@ -2,7 +2,5 @@
   "workbench.localHistory.exclude": {
     "**/VectCutAPI/**": true
   },
-  "git.ignoredRepositories": [
-    "VectCutAPI"
-  ]
+  "git.ignoredRepositories": ["VectCutAPI"]
 }
