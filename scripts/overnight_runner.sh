@@ -49,20 +49,50 @@ echo "✅ Starting Aider overnight task..." >> "$LOG_FILE"
 
 cd "$REPO_DIR"
 
-# The task prompt — tells Aider exactly what to do in one non-interactive pass
-TASK_PROMPT="Read OVERNIGHT_TASKS.md carefully. Find the FIRST task marked [ ] (not [x] or [~]) in the APPROVED section. Work on that ONE task only. Follow all rules in cursor.md and COMMIT_CHECKLIST.md. After completing: run 'node --check server.js' if you touched server.js, update STATUS.md Last Agent Action table, update MORNING_BRIEFING.md with what you did, mark the task [x] in OVERNIGHT_TASKS.md, commit all changed files with a clear message, then run 'git push origin main'. Do not start a second task. If you cannot complete the task safely, write the error to MORNING_BRIEFING.md and exit without committing."
+# ── Step 1: Sync Jira → OVERNIGHT_TASKS.md ───────────────────────────────────
+# Pull CPD tickets labelled "aider" (status: To Do) into the task queue.
+# Transitions each pulled ticket to "In Progress" so it's never double-queued.
+echo "🔄 Running jira_sync.js..." >> "$LOG_FILE"
+node "$REPO_DIR/scripts/jira_sync.js" >> "$LOG_FILE" 2>&1 || \
+  echo "⚠️  jira_sync.js exited non-zero — continuing anyway" >> "$LOG_FILE"
 
-# Run Aider non-interactively with --message flag
-# --yes-always: auto-confirm file edits (no interactive prompts)
-# All files Aider may need to edit are listed here so it never has to ask interactively.
-# STATUS.md, OVERNIGHT_TASKS.md, MORNING_BRIEFING.md are always needed for the commit workflow.
-# server.js is included for tasks that touch it; Aider will ignore it if not needed.
+# ── 2026-04-28 OVERNIGHT TASKS (legacy hardcoded section — kept for reference) ──
+# Task 1: Write test/runpod.test.js — Jest unit tests for lib/ai/runpod.js
+#   - Mock all HTTPS calls (no real network). Cover: pingPod, submitComfyWorkflow,
+#     pollComfyResult, generateWanVideo (missing prompt throws, defaults applied,
+#     submitComfyWorkflow called once). Run: npm test -- --testPathPattern=runpod
+#   - Commit: "test(runpod): unit tests for generateWanVideo and ComfyUI helpers"
+#
+# Task 2: Write scripts/rotate_qa_failures.sh
+#   - Keep 50 newest files per gate prefix in output/qa_failures/
+#   - Compress the rest into output/qa_failures/archive_YYYY-MM-DD.tar.gz
+#   - Delete .txt sources after successful archive. Delete .tar.gz older than 90 days.
+#   - Idempotent. Run: bash scripts/rotate_qa_failures.sh (safe even if dir is empty)
+#   - Commit: "chore(ops): rotate_qa_failures.sh — keep 50 newest per gate"
+#
+# Task 3: Write docs/ops/TOMORROW_PLAN_2026-04-28.md
+#   - Full session plan for Rob's morning. Read docs/ops/OVERNIGHT_TASKS.md
+#     section "Task 3" for the exact content to include.
+#   - Commit: "docs(ops): tomorrow plan 2026-04-28"
+#
+# After ALL THREE tasks: update STATUS.md Last Agent Action table, update
+# MORNING_BRIEFING.md summarising all 3, mark all 3 [x] in OVERNIGHT_TASKS.md,
+# push: git push origin HEAD. If any task fails, note it in MORNING_BRIEFING.md
+# and continue with the next task — do not abandon the whole run.
+# ──────────────────────────────────────────────────────────────────────────────
+
+TASK_PROMPT="Work through ALL pending tasks in docs/ops/OVERNIGHT_TASKS.md. Look for any section marked '🟡' or 'PENDING' — these are your tasks for tonight. They may come from a Jira sync (labelled with a CPD- ticket key) or be manually written tasks. Work through them IN ORDER. Commit each task separately before starting the next. Create a feature branch (do NOT commit to main). After ALL tasks: update STATUS.md Last Agent Action table, prepend a new dated section to MORNING_BRIEFING.md summarising what was done, mark all completed tasks [x] in OVERNIGHT_TASKS.md, then run git push origin HEAD. For each completed Jira-sourced task (has a CPD- key), run: node scripts/jira_complete.js <KEY> to mark it Done and post a comment. If a task fails, write the error to MORNING_BRIEFING.md and continue. Follow all rules in docs/ops/COMMIT_CHECKLIST.md."
+
+# Run Aider non-interactively
+# Files listed: only what Aider needs tonight — no server.js (not needed)
 "$AIDER" \
   --message "$TASK_PROMPT" \
   --yes-always \
-  server.js \
+  docs/ops/OVERNIGHT_TASKS.md \
+  lib/ai/runpod.js \
+  lib/ai/wan_t2v_workflow.json \
+  package.json \
   STATUS.md \
-  OVERNIGHT_TASKS.md \
   MORNING_BRIEFING.md \
   >> "$LOG_FILE" 2>&1
 
