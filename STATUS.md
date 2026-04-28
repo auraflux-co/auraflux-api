@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-28 (Cursor — 04/28 session: added .github/dependabot.yml — weekly npm audit PRs every Monday 9am ET, fluent-ffmpeg/gemini-ai/anthropic major updates flagged for manual review; Jira CPD-40 + CPD-41 created as monthly ops tasks for API changelog review and dependency audit)
+**Last Updated:** 2026-04-28 (Cursor — 04/28 session: added .github/dependabot.yml — weekly npm audit PRs every Monday 9am ET, fluent-ffmpeg/gemini-ai/anthropic major updates flagged for manual review; Jira CPD-40 + CPD-41 created as monthly ops tasks for API changelog review and dependency audit; token-based pricing model designed — 1 credit = 1 production video, DIY 20/DWY 30/DFY 45 credits included, overage $10/$18/$35 per credit; Jira CPD-42 through CPD-46 created for credit ledger schema, consume endpoint, balance API + dashboard widget, credit pack purchase flow, and Stripe metered billing integration)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
