@@ -12,22 +12,6 @@ require('dotenv').config({ path: path.join(__dirname, '.env'), override: true })
 module.exports = {
   apps: [
     {
-      name: 'roo-watcher',
-      script: 'scripts/roo_watcher.sh',
-      interpreter: 'bash',
-      watch: false,
-      max_restarts: 10,
-      min_uptime: '5s',
-      restart_delay: 3000,
-      out_file: 'logs/roo_watcher.log',
-      error_file: 'logs/roo_watcher.log',
-      merge_logs: true,
-      // Always runs locally. On Render the RENDER env var is set automatically
-      // and the script exits cleanly — no Cursor/Roo available in cloud.
-      env: { ROO_WATCHER: 'true' },
-      env_production: { ROO_WATCHER: 'true' },
-    },
-    {
       name: 'auraflux',
       script: 'server.js',
       watch: false, // nodemon handles dev watching — PM2 watch off in production
