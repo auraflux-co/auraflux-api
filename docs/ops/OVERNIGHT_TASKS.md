@@ -897,7 +897,7 @@ curl -X POST https://api.auraflux.co/api/generate-video \
 
 ---
 
-## 🟡 2026-04-28 Overnight Tasks — PENDING
+## ✅ 2026-04-28 Overnight Tasks — COMPLETE (done in session, not overnight)
 
 Work through Task 1, Task 2, and Task 3 IN ORDER.
 Commit each task separately before starting the next.
@@ -906,7 +906,7 @@ After all three: update MORNING_BRIEFING.md, mark all tasks [x] below, run `git 
 
 ---
 
-### [ ] Task 1 — Write test/runpod.test.js (30 min)
+### [x] Task 1 — Write test/runpod.test.js (30 min)
 
 **Goal:** Jest unit tests for `lib/ai/runpod.js`. No real network — mock all HTTPS.
 
@@ -925,7 +925,7 @@ After all three: update MORNING_BRIEFING.md, mark all tasks [x] below, run `git 
 
 ---
 
-### [ ] Task 2 — Write scripts/rotate_qa_failures.sh (20 min)
+### [x] Task 2 — Write scripts/rotate_qa_failures.sh (20 min)
 
 **Goal:** Prevent disk blowup from accumulating gate failure logs.
 
@@ -945,7 +945,7 @@ After all three: update MORNING_BRIEFING.md, mark all tasks [x] below, run `git 
 
 ---
 
-### [ ] Task 3 — Commit + push Wan2.1 session work (10 min)
+### [x] Task 3 — Commit + push Wan2.1 session work (10 min)
 
 **Goal:** Get the T2V pipeline code into git and onto Render.
 
