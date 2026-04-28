@@ -759,23 +759,219 @@ Build a standalone script that generates `MORNING_JIRA_REPORT.md` each night. Us
 - `.gitignore`
 - `scripts/jira_ping.js` (as reference for pattern)
 
-# CWN Overnight Task Schedule
+---
 
-**Window:** 1:00 AM – 7:00 AM Eastern (daily)
-**Agent:** Aider
+# 🗓️ 2026-04-28 Overnight Tasks
+
+**Added:** 2026-04-27 evening after Phase D (Wan2.1 T2V) session
+**Agent:** Aider (gemini/gemini-2.5-pro)
+**Window:** 1:00 AM – 7:00 AM Eastern
+**Context note:** DO NOT touch `server.js` unless task explicitly says so. Wan2.1 T2V pipeline is live; `lib/ai/runpod.js` and `lib/ai/wan_t2v_workflow.json` are new files added today. Routes `/api/generate-video` (POST + GET) wired in server.js today — DO NOT edit those routes.
 
 ---
-## Aider Task Queue
 
-Tasks are listed in priority order. Aider works through them top-to-bottom each night.
+## 🟢 TONIGHT'S QUEUE (in order)
 
-### 🟢 APPROVED — Ready to Run
+### Task 1 — Write unit tests for `lib/ai/runpod.js`
+**Files:** NEW `test/runpod.test.js`
+**Do NOT touch:** `server.js`, `lib/ai/runpod.js`
+**What:** Write Jest unit tests for the `runpod.js` module. Mock all HTTPS calls using `jest.mock` — no real network requests.
 
-- [ ] Health check code review — `/health` endpoint audit
-- [~] `server.js` Module Split — IN PROGRESS
-- [ ] Jira morning report script (`scripts/jira_morning_report.js`)
-# Overnight Tasks for 2026-04-20
+**Test cases to cover:**
+1. `pingPod()` — returns `{ ok: true }` when HTTP 200, `{ ok: false, error }` when non-200 or thrown
+2. `submitComfyWorkflow()` — returns `prompt_id` on success, throws on non-200
+3. `pollComfyResult()` — returns outputs when history contains prompt_id, throws on timeout
+4. `generateWanVideo()` — throws if `positivePrompt` is missing, passes correct values into workflow nodes 3/4/5/8, calls `submitComfyWorkflow` once
+5. `generateWanVideo()` — uses default width=832, height=480, numFrames=25 when not specified
 
-## APPROVED
+**How:**
+1. Create `test/runpod.test.js`
+2. Use `jest.mock('https')` to mock the `https.request` and `https.get` calls
+3. Read `lib/ai/runpod.js` and `lib/ai/wan_t2v_workflow.json` before writing tests
+4. Run `npm test -- --testPathPattern=runpod` to confirm all pass
+5. Commit: `test(runpod): unit tests for generateWanVideo and ComfyUI helpers`
 
-- [x] No tasks found in file.
+**Risk:** Low — new test file only
+**Estimate:** 1.5 hours
+**Safe for Aider:** ✅ New file only, no production code changes
+
+---
+
+### Task 2 — Write `scripts/rotate_qa_failures.sh`
+**Files:** NEW `scripts/rotate_qa_failures.sh`
+**Do NOT touch:** `server.js`, any `lib/` file
+**What:** Bash script that keeps the 50 most-recent files per gate kind in `output/qa_failures/` and compresses the rest into dated archives. Prevents unbounded disk growth.
+
+**How:**
+1. For each gate prefix (`gate1_`, `gate2_`, `gate3_`, `gate4_`, `gate5_`, `gate6_`): keep the 50 newest `.txt` files, tar.gz the rest into `output/qa_failures/archive_YYYY-MM-DD.tar.gz`
+2. Delete `.txt` source files after successful compression
+3. Delete any `.tar.gz` archives older than 90 days
+4. Log what was archived to stdout
+5. Make the script idempotent (safe to run multiple times)
+6. Commit: `chore(ops): rotate_qa_failures.sh — keep 50 newest per gate, archive the rest`
+
+**Test:** Run `bash scripts/rotate_qa_failures.sh` (if `output/qa_failures/` is empty/small, that's fine — the script should exit cleanly with "nothing to archive")
+**Risk:** Low — new script, touches only `output/` which is not in git
+**Estimate:** 45 min
+**Safe for Aider:** ✅ Pure new script
+
+---
+
+### Task 3 — Write `docs/ops/TOMORROW_PLAN_2026-04-28.md`
+**Files:** NEW `docs/ops/TOMORROW_PLAN_2026-04-28.md`
+**What:** Write the morning session plan for Rob to read first thing. Pull from the context below.
+
+**Content to include:**
+
+```markdown
+# Tomorrow's Plan — 2026-04-28
+
+## 🎯 Session Goal
+Deploy Wan2.1 T2V to production (Render) and wire the frontend generate UI.
+
+## ✅ Where We Left Off (2026-04-27 evening)
+- Wan2.1 text-to-video pipeline: WORKING on RunPod RTX 3090 pod (5a8c7dkr95eohw)
+- ~3s per generation (models warm in VRAM), ~5 min cold start
+- lib/ai/runpod.js — generateWanVideo() helper added
+- lib/ai/wan_t2v_workflow.json — canonical workflow with placeholders
+- server.js — POST /api/generate-video + GET /api/generate-video/:promptId wired
+- Test clips in output/svd/ — wan_t2v_001.mp4 (news anchor), wan_t2v_sports.mp4 (NBA dunk)
+- RunPod pod must be RUNNING before generation works — check dashboard.runpod.io
+
+## 🔴 Before Anything Else
+1. Check RunPod pod status — is it still running? (pods auto-stop after idle)
+   - If stopped: restart from dashboard.runpod.io → pod 5a8c7dkr95eohw
+   - Cost: ~$0.50/hr for RTX 3090 — stop when done testing
+2. Verify ComfyUI is up: curl https://5a8c7dkr95eohw-8188.proxy.runpod.net/system_stats
+
+## 📋 Session Tasks (in order)
+
+### 1. Commit + push today's code (15 min)
+- Files to commit: server.js, lib/ai/runpod.js, lib/ai/wan_t2v_workflow.json, lib/ai/svd_workflow.json
+- Branch: create feature/wan-t2v-api
+- Push → Render auto-deploys
+- Verify /api/generate-video route is live on api.auraflux.co
+
+### 2. Test the API live on Render (15 min)
+curl -X POST https://api.auraflux.co/api/generate-video \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A professional news anchor at a studio desk, 4K broadcast"}'
+- Should return { promptId, status: "queued" }
+- Then poll: curl https://api.auraflux.co/api/generate-video/{promptId}
+
+### 3. Build the Next.js frontend generate page (2-3 hrs)
+- Create /generate page in the Vercel frontend
+- Components: PromptInput, GenerateButton, StatusPoller, VideoPreview
+- Calls POST /api/generate-video → polls GET every 5s → shows video when done
+- Use Shadcn: Input, Button, Progress, Card
+
+### 4. Quality testing — longer clips (30 min)
+- Try 49 frames (3 sec at 16fps) and 81 frames (5 sec)
+- Try vertical 9:16 (720x1280) for Reels
+- Evaluate output quality vs 1.3B model limits
+
+### 5. Cost audit (15 min)
+- Check RunPod dashboard for GPU hours used
+- RTX 3090 at ~$0.50/hr × session hours = cost
+- Decide: keep pod running 24/7 vs stop between sessions
+
+## 📁 Key Files
+- lib/ai/runpod.js — RunPod client + generateWanVideo()
+- lib/ai/wan_t2v_workflow.json — ComfyUI workflow
+- lib/ai/svd_workflow.json — SVD image-to-video workflow
+- output/svd/ — test clips from yesterday
+- docs/architecture/DECOUPLED_VIDEO_PRODUCT_STACK.md — full architecture spec
+
+## ⚠️ Known Limitations of Wan2.1 1.3B
+- Output is lower quality than 14B model (fits in RTX 3090 24GB VRAM)
+- 25 frames = ~1.5 sec at 16fps — short clips only
+- Text rendering in video is unreliable (all open-source models struggle)
+- For talking-head/avatar: still use HeyGen
+- For B-roll/scene generation: Wan2.1 is the right tool
+```
+
+**Commit:** `docs(ops): tomorrow plan 2026-04-28 — Wan2.1 deploy + frontend wiring`
+**Risk:** None — new doc only
+**Estimate:** 20 min
+**Safe for Aider:** ✅ Pure new doc
+
+---
+
+## 🟡 2026-04-28 Overnight Tasks — PENDING
+
+Work through Task 1, Task 2, and Task 3 IN ORDER.
+Commit each task separately before starting the next.
+DO NOT touch server.js for tasks 1 or 2.
+After all three: update MORNING_BRIEFING.md, mark all tasks [x] below, run `git push origin HEAD`.
+
+---
+
+### [ ] Task 1 — Write test/runpod.test.js (30 min)
+
+**Goal:** Jest unit tests for `lib/ai/runpod.js`. No real network — mock all HTTPS.
+
+**File to create:** `test/runpod.test.js`
+
+**Tests to cover:**
+- `pingPod` — returns pod status when HTTP 200; throws when HTTP non-200
+- `submitComfyWorkflow` — posts correct body; returns prompt_id; throws on error
+- `pollComfyResult` — resolves when status is `success`; rejects after max retries
+- `generateWanVideo` — throws if `prompt` is missing; applies defaults (`num_frames`, `fps`); calls `submitComfyWorkflow` exactly once
+
+**Verify with:** `npm test -- --testPathPattern=runpod` — must be green before commit.
+
+**Commit:** `test(runpod): unit tests for generateWanVideo and ComfyUI helpers`
+**Risk:** Low — new test file only, no production changes.
+
+---
+
+### [ ] Task 2 — Write scripts/rotate_qa_failures.sh (20 min)
+
+**Goal:** Prevent disk blowup from accumulating gate failure logs.
+
+**File to create:** `scripts/rotate_qa_failures.sh`
+
+**Behaviour:**
+- For each gate prefix in `output/qa_failures/`, keep the 50 newest files.
+- Compress the rest into `output/qa_failures/archive_YYYY-MM-DD.tar.gz`.
+- Delete `.txt` sources after successful archive.
+- Delete `.tar.gz` archive files older than 90 days.
+- Idempotent — safe to run even if `output/qa_failures/` is empty or doesn't exist.
+
+**Verify with:** `bash scripts/rotate_qa_failures.sh` — exits 0 with no errors.
+
+**Commit:** `chore(ops): rotate_qa_failures.sh — keep 50 newest per gate`
+**Risk:** Low — new script only.
+
+---
+
+### [ ] Task 3 — Commit + push Wan2.1 session work (10 min)
+
+**Goal:** Get the T2V pipeline code into git and onto Render.
+
+**Dirty files to commit (check with `git status`):**
+- `lib/ai/runpod.js` — `generateWanVideo()` helper + auth fix
+- `server.js` — `POST /api/generate-video` + `GET /api/generate-video/:promptId` routes
+- `lib/ai/wan_t2v_workflow.json` — Wan2.1 ComfyUI workflow
+- `lib/ai/svd_workflow.json` — SVD image-to-video workflow (updated ImageScale node)
+
+**Steps:**
+1. `git add lib/ai/runpod.js server.js lib/ai/wan_t2v_workflow.json lib/ai/svd_workflow.json`
+2. `git commit -m "feat(runpod): Wan2.1 T2V pipeline + /api/generate-video routes"`
+3. `git push origin HEAD`
+
+**Commit:** `feat(runpod): Wan2.1 T2V pipeline + /api/generate-video routes`
+**Risk:** Low — additive routes, no breaking changes.
+
+---
+
+### After all tasks complete
+
+- Write summary of all 3 to `MORNING_BRIEFING.md` (prepend new dated section at top)
+- Mark all 3 tasks above `[x]`
+- Update `STATUS.md` Last Updated line with: `2026-04-28 (Aider — Task 1: runpod tests, Task 2: rotate script, Task 3: feat commit pushed)`
+
+---
+
+## ✅ COMPLETED 2026-04-27 OVERNIGHT
+_(populated by Aider after each completed task)_
