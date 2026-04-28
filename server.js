@@ -2358,11 +2358,12 @@ app.post('/api/jira-webhook', (req, res) => {
     const priority = issue.fields?.priority?.name || 'Medium';
     const event = payload.webhookEvent || '';
 
-    // Only queue tickets with label "aider" or "cursor"
+    // Only queue tickets with label "aider", "cursor", or "rovo"
     const isAider = labels.includes('aider');
     const isCursor = labels.includes('cursor');
-    if (!isAider && !isCursor) {
-      return res.json({ queued: false, reason: 'no aider/cursor label' });
+    const isRovo = labels.includes('rovo');
+    if (!isAider && !isCursor && !isRovo) {
+      return res.json({ queued: false, reason: 'no aider/cursor/rovo label' });
     }
 
     const queue = readJiraQueue();
@@ -2376,7 +2377,7 @@ app.post('/api/jira-webhook', (req, res) => {
       labels,
       status,
       priority,
-      agent: isAider ? 'aider' : 'cursor',
+      agent: isAider ? 'aider' : isRovo ? 'rovo' : 'cursor',
       event,
       receivedAt: new Date().toISOString(),
       processed: false,
