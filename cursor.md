@@ -381,7 +381,7 @@ When a job misbehaves, read in this order: **what happened → which failure buc
 | --------- | ----------------------------------------------------------------------------------------- |
 | SQLite    | `why_ledger` table — `lib/db.js` (`saveWhyLedger`)                                        |
 | New Relic | Custom event **`PipelineWhy`**                                                            |
-| JSONL     | `logs/pipeline_events.jsonl` — lines with `"type":"why:ledger"` (via `lib/roo_bridge.js`) |
+| JSONL     | `logs/pipeline_events.jsonl` — lines with `"type":"why:ledger"` (via `lib/pipeline_event_logger.js`) |
 
 **Wiring:** `lib/why_ledger.js`; emitted from `lib/monitoring.js` (gate bus + escalate + kill + restore), `lib/script_gen.js` (Gate 1 pipeline bus + auto-action), `lib/gates/gate1.js` (Claude JSON salvage path), `lib/assembly.js` (bus payload enrichment). Tests: `test/why_ledger.test.js`.
 
@@ -787,9 +787,9 @@ See `IMPLEMENTATION_SPEC.md` for full technical specifications.
 5. Implement short-form split-screen assembly
 6. Run production test suite (`test_3_longform_production.js`)
 
-## Monitoring Stack — Roo Replaced
+## Monitoring Stack
 
-**Roo Code is discontinued.** The `.roo/` directory and `lib/roo_bridge.js` stay in the repo (the bridge writes useful JSONL logs) but Roo itself is gone. Here is the replacement architecture:
+**Roo Code is fully removed.** The pipeline event logger (`lib/pipeline_event_logger.js`, formerly `roo_bridge.js`) still runs and writes useful JSONL logs. The `.roo/` directory and all Roo scripts have been deleted.
 
 ### What New Relic already covers (no change needed)
 
@@ -806,30 +806,25 @@ See `IMPLEMENTATION_SPEC.md` for full technical specifications.
 
 NR dashboards + alert policies cover all observability. **Do not replace New Relic.**
 
-### What Roo's "intelligence layer" was doing (and who does it now)
+### What replaced Roo's "intelligence layer"
 
-| Roo role                  | Reality                                             | Replacement                                                                                    |
-| ------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Gate owner autonomous fix | Never automated — Rob triggered everything manually | **Cursor at session start** reads `logs/pipeline_events.jsonl` + NR + pm2 logs, proposes fixes |
-| Hourly reports            | `docs/reports/roo/hourly.md` files — mostly empty   | **Drop.** NR dashboards serve this.                                                            |
-| Escalation protocol       | Roo was supposed to write `escalation_*.md` files   | **Cursor escalates directly to Rob in chat**                                                   |
-| Cross-gate correlation    | Read NR events + SQLite gate_results                | **Cursor reads SQLite at session start** — same data                                           |
-| Pipeline orchestrator     | `pipeline-orchestrator.yaml` mode                   | **Cursor + STATUS.md** — already the actual workflow                                           |
+| Roo role                  | Replacement                                                                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| Gate owner autonomous fix | **Cursor at session start** reads `logs/pipeline_events.jsonl` + NR + pm2 logs, proposes fixes |
+| Hourly reports            | **Dropped.** NR dashboards serve this.                                                         |
+| Escalation protocol       | **Cursor escalates directly to Rob in chat**                                                   |
+| Cross-gate correlation    | **Cursor reads SQLite at session start** — same data                                           |
+| Pipeline orchestrator     | **Cursor + STATUS.md** — already the actual workflow                                           |
 
-### What `roo_bridge.js` keeps doing (no change)
-
-The bridge is still useful — it writes:
+### What `pipeline_event_logger.js` writes
 
 - `logs/pipeline_events.jsonl` — append-only event log, all bus events
-- `logs/roo_status.json` — live active job snapshot (rename candidate: `job_status.json`)
+- `logs/pipeline_status.json` — live active job snapshot
+- `logs/pipeline_trigger.json` — latest job-started trigger for integrations
 
 **Cursor reads these at session start** to understand what happened overnight without querying NR.
 
-### `.roo/modes/*.yaml` — status
-
-These files are dead weight. They described how the Roo VS Code extension would respond to events. Remove in Block 4 cleanup (item 10 — GitHub cleanup). Not urgent.
-
-### Session-start monitoring protocol (replaces Roo)
+### Session-start monitoring protocol
 
 Every Cursor session starts with:
 
@@ -838,7 +833,7 @@ Every Cursor session starts with:
 pm2 logs auraflux --lines 100 --nostream | grep -E "Gate 3a|hard fail|Assembly complete|assembled"
 
 # 2. Check active job snapshot
-cat logs/roo_status.json
+cat logs/pipeline_status.json
 
 # 3. Check overnight event log
 tail -50 logs/pipeline_events.jsonl | node -e "
@@ -856,8 +851,6 @@ When on Render.com, set up:
 1. **New Relic alert policy** → `GateResult` where `outcome = 'hard_fail'` → email/Slack notification
 2. **PM2 + healthcheck** → Render has built-in health checks + email on crash
 3. **No separate monitoring process needed** — NR + Render handles it natively
-
-The `roo-watcher` pm2 process (id: 1) can be decommissioned once Render is live.
 
 ---
 
@@ -1487,8 +1480,8 @@ auraflux/
 - Prettier pass across all files
 - `.gitignore` audit — ensure `output/`, `tmp/`, `data/jobs.json`, `.env` are all ignored
 - CWN→AuraFlux rename audit — propose list, Rob approves
-- Remove `.roo/modes/*.yaml` (Roo dead weight)
-- Remove `roo-watcher` from `ecosystem.config.js`
+- ~~Remove `.roo/modes/*.yaml`~~ ✅ Done — entire `.roo/` directory removed
+- ~~Remove `roo-watcher` from `ecosystem.config.js`~~ ✅ Done
 
 #### Step 3.4 — Load test (Cursor)
 
