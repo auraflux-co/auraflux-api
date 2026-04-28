@@ -1,3 +1,44 @@
+# Morning Briefing — 2026-04-28
+
+## Daytime Session (Cursor — 9:07 AM → ~9:45 AM ET Apr 28)
+
+All three tasks from `docs/ops/OVERNIGHT_TASKS.md` → section "2026-04-28 Overnight Tasks" are complete.
+
+### Task 1 ✅ — test/runpod.test.js (unit tests for lib/ai/runpod.js)
+
+- **11/11 tests pass** (`npx jest --testPathPatterns=runpod --forceExit`)
+- Covers: `pingPod` (200, non-200, network throw), `submitComfyWorkflow` (success, error), `pollComfyResult` (resolves on history match, times out), `generateWanVideo` (missing prompt throws, defaults applied, node values patched, submitComfyWorkflow called once)
+- All mocked via `https.request` — no real network calls
+
+### Task 2 ✅ — scripts/rotate_qa_failures.sh
+
+- Keeps 50 newest files per gate prefix in `output/qa_failures/`
+- Archives excess into `archive_YYYY-MM-DD_<prefix>.tar.gz`
+- Deletes tarballs older than 90 days
+- Idempotent — exits cleanly if directory doesn't exist
+- Tested: `bash scripts/rotate_qa_failures.sh` → exit 0
+
+### Task 3 ✅ — Committed + pushed Wan2.1 session work
+
+- **Branch:** `feature/wan-t2v-api` pushed to `origin`
+- **Commit 1:** `feat(runpod): Wan2.1 T2V pipeline + /api/generate-video routes` (81f5da9)
+- **Commit 2:** `test(runpod): 11/11 unit tests + chore(ops): rotate_qa_failures.sh` (caa66a6)
+- Render will auto-deploy when branch is merged to main
+
+### What's next
+
+1. Open PR: `feature/wan-t2v-api` → `main` on GitHub (link above in push output)
+2. Merge → Render auto-deploys → test `POST https://api.auraflux.co/api/generate-video` live
+3. Build the Next.js `/generate` page (Shadcn: Input, Button, Progress, VideoPreview)
+4. Test longer clips (49 frames = 3s, 81 frames = 5s at 16fps; try 720×1280 vertical)
+5. Cost audit — RunPod GPU hours used
+
+### Ownership change — OVERNIGHT_TASKS.md
+
+Cursor now owns `docs/ops/OVERNIGHT_TASKS.md`. At the end of every session, Cursor will write the next session's tasks into the `## 🟡 YYYY-MM-DD Overnight Tasks — PENDING` section so Aider has a real queue to execute.
+
+---
+
 # Morning Briefing — 2026-04-24
 
 ## Overnight Aider Run (Session Start: ~3:00 AM ET Apr 24)
