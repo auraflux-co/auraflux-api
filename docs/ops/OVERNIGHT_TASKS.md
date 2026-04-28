@@ -897,6 +897,40 @@ curl -X POST https://api.auraflux.co/api/generate-video \
 
 ---
 
+## 🔒 BLOCKED — GitHub Org Rename (clipzworldnews → auraflux)
+
+**Trigger:** Do NOT start until ALL of the following are true:
+- [ ] Phase A E2E pipeline signed off (all 4 runs green)
+- [ ] Render deployed and stable (smoke test passed, NR monitoring live)
+- [ ] Rob gives explicit go-ahead ("rename GitHub now")
+
+**Why blocked:** Render's deploy webhook, all local `git remote origin` URLs, and `package.json` repo fields currently point to `clipzworldnews`. Renaming mid-active-dev adds friction with no benefit.
+
+**When unblocked — Aider tasks (in order):**
+
+### [ ] Step 1 — Update package.json repository URL
+- Change `"url": "https://github.com/clipzworldnews/auraflux-api.git"` → `"url": "https://github.com/auraflux/auraflux-api.git"`
+- Same for `bugs.url` and `homepage` if present
+- Commit: `chore(rename): update package.json GitHub org URL clipzworldnews → auraflux`
+
+### [ ] Step 2 — Update git remote on the server
+- `git remote set-url origin https://github.com/auraflux/auraflux-api.git`
+- Verify: `git remote -v`
+- Not a committed change — just local/server config
+
+### [ ] Step 3 — Remind Rob to do the manual steps (Aider write to MORNING_BRIEFING.md)
+Write a section to MORNING_BRIEFING.md with these manual steps Rob must do:
+1. Go to github.com → Settings → Organization → Rename to `auraflux`
+2. Go to Render dashboard → auraflux-api service → Settings → GitHub repo → reconnect to `auraflux/auraflux-api`
+3. On every local dev machine: `git remote set-url origin https://github.com/auraflux/auraflux-api.git`
+4. Verify Render auto-deploy still triggers on next push
+
+**Estimate:** 30 min total (10 min Aider + 20 min Rob manual)
+**Risk:** Low if done in a quiet window. Medium if done while a deploy is in-flight.
+**Safe for Aider:** Steps 1 only. Steps 2–3 require Rob.
+
+---
+
 ## ✅ 2026-04-28 Overnight Tasks — COMPLETE (done in session, not overnight)
 
 Work through Task 1, Task 2, and Task 3 IN ORDER.
