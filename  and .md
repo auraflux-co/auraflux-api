@@ -11,6 +11,7 @@
 **All critical automation features are implemented and ready for the 12-test framework.**
 
 The system can now:
+
 1. Generate scripts with proper pronunciation guidance (Gate 1 QA ≥90 = auto-pass)
 2. Auto-send approved scripts to HeyGen for avatar rendering
 3. QA HeyGen segments for lip sync and audio issues (Gate 2)
@@ -111,11 +112,13 @@ The system can now:
 ## 🔍 Gate System (QA Checkpoints)
 
 ### Gate 1: Script QA (Gemini validates Claude's script)
+
 **Location**: server.js:1159-1307
 **Trigger**: After Claude generates script, before HeyGen submission
 **Scoring**: 10-point checklist (each failed check = -5 to -15 points)
 
 **Checklist**:
+
 1. Clip count matches expected (3× streamers for Twitch)
 2. Outro ends with "Appreciate you!"
 3. Only approved display names used (no Twitch usernames)
@@ -128,16 +131,19 @@ The system can now:
 10. Word count per streamer ~80-100 words
 
 **Thresholds**:
+
 - **Pass (≥90)**: Auto-send to HeyGen
 - **Manual Review (70-89)**: Hold for approval
 - **Fail (<70)**: Regenerate script (max 3 retries)
 
 **Critical Failures** (auto-fail regardless of score):
+
 - Wrong clip count
 - Missing "Appreciate you!" in outro
 - Clip content mismatch (setup doesn't match Gemini's thumbnail analysis)
 
 **Status**: ✅ READY
+
 - Gemini cross-checks against clip analyses
 - Structured deduction tracking
 - Why-doc saved to output/qa_failures/ for every job
@@ -145,11 +151,13 @@ The system can now:
 ---
 
 ### Gate 2: Segment QA (Gemini checks HeyGen avatar segments)
+
 **Location**: server.js:1306-1461
 **Trigger**: Assembly start, before FFmpeg concat
 **Sampling**: First/middle/last HeyGen segments
 
 **Checklist** (per segment):
+
 1. Lip sync: Avatar mouth matches audio
 2. Audio: Clear and continuous
 3. Video freeze: No stuck frames while audio continues
@@ -157,11 +165,13 @@ The system can now:
 5. Segment playback: No black frames, pixelation, or glitches
 
 **Thresholds**:
+
 - **Pass (≥65)**: Auto-proceed to assembly
 - **Manual Review (50-64)**: Hold for approval
 - **Fail (<50 OR lip sync broken)**: Re-render segments (max 3 retries)
 
 **Status**: ✅ READY
+
 - Downloads sample segments to tmp/
 - Uploads to Gemini Files API for review
 - Tracks critical failures (lip sync, audio missing)
@@ -169,6 +179,7 @@ The system can now:
 ---
 
 ### Gate 3: Final Video QA (Gemini checks assembled video)
+
 **Location**: server.js:868-1074
 **Trigger**: After FFmpeg assembly, before Drive upload
 **Sampling**: 10%, 50%, 90% of video duration
@@ -176,6 +187,7 @@ The system can now:
 **Checklist** (varies by sample point):
 
 **EARLY Sample (10%)**:
+
 1. Lip sync: Avatar mouth synced with audio
 2. Ticker: Scrolling ticker visible at bottom
 3. Video freeze: No stuck frames
@@ -183,6 +195,7 @@ The system can now:
 5. Audio: Clear and continuous
 
 **MIDDLE Sample (50%)**:
+
 1. Video freeze: No stuck frames
 2. Ticker: Still visible and scrolling
 3. Video quality: 1080p, no pixelation, no black frames
@@ -190,23 +203,27 @@ The system can now:
 5. Audio: Clear and continuous
 
 **LATE Sample (90%)**:
+
 1. Video freeze: No stuck frames
 2. Ticker: Still scrolling at end
 3. Outro: Video ends cleanly
 4. Audio: Clear through to end
 
 **Thresholds**:
+
 - **Pass (≥70)**: Auto-upload to platforms
 - **Manual Review (60-69)**: Hold for approval
 - **Fail (<60 OR freeze detected)**: Re-assemble (max 3 retries)
 
 **Critical Failures** (auto-fail regardless of score):
+
 - Video freeze detected (video stuck, audio continues)
 - Ticker missing from all 3 sample points
 - Outro cut off ("Appreciate you!" not present)
 - A/V desync detected
 
 **Status**: ✅ READY
+
 - Samples extracted with FFmpeg at precise timestamps
 - Uploads to Gemini Files API (max 32MB per sample)
 - Why-doc saved to output/qa_failures/ for every job
@@ -230,11 +247,13 @@ All required environment variables are **CONFIGURED** in `.env`:
 ```
 
 **Missing (Non-Critical)**:
+
 - `HEYGEN_AVATAR_SHORT_ID` - Falls back to hardcoded default
 - `HEYGEN_VOICE_ID` - Falls back to hardcoded default
 - `HEYGEN_SPEAK_SPEED` - Falls back to 0.85
 
 **Optional**:
+
 - `CANVA_ACCESS_TOKEN` - For Canva MCP integration (not required for 12-test)
 - `CANVA_REFRESH_TOKEN` - For Canva token refresh
 
@@ -271,11 +290,13 @@ Claude now automatically applies pronunciation rules when generating scripts:
 **Solution**: Normalize ALL segments to -14 LUFS uniformly
 
 **Implementation**: server.js:2138-2140
+
 ```javascript
 '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=async=1:min_hard_comp=0.100000:first_pts=0',
 ```
 
 **Applied To**:
+
 - ✅ HeyGen avatar segments
 - ✅ Source clips (Twitch/NBA/News)
 - ✅ Intro cards
@@ -290,12 +311,14 @@ Claude now automatically applies pronunciation rules when generating scripts:
 ### Test Schedule (3 Days Accelerated)
 
 **Day 1: Twitch Long Form (Tests 1-4)**
+
 - Test 1-4: 3 streamers × 3 clips each = 9 total clips
 - Privacy: YouTube `private`, TikTok `SELF_ONLY`
 - Duration: 8-12 minutes per test
 - Estimated time: 6-8 hours
 
 **Day 2: NBA Long Form (Tests 5-8)**
+
 - Test 5-8: Full game coverage with highlights
 - Privacy: YouTube `private`
 - Show name: "Other Side of the Pillow" (not "CLIPZWORLD NBA")
@@ -303,6 +326,7 @@ Claude now automatically applies pronunciation rules when generating scripts:
 - Estimated time: 6-8 hours
 
 **Day 3: News Long Form (Tests 9-12)**
+
 - Test 9-12: In-depth story breakdown + reaction
 - Privacy: YouTube `private`
 - Duration: 8-12 minutes per test
@@ -312,6 +336,7 @@ Claude now automatically applies pronunciation rules when generating scripts:
 ### Test Mode Privacy Settings
 
 **YouTube**:
+
 ```json
 {
   "privacyStatus": "private"
@@ -319,6 +344,7 @@ Claude now automatically applies pronunciation rules when generating scripts:
 ```
 
 **TikTok**:
+
 ```json
 {
   "tiktokPrivacy": "SELF_ONLY"
@@ -326,10 +352,12 @@ Claude now automatically applies pronunciation rules when generating scripts:
 ```
 
 **Instagram**:
+
 - Set account to private manually in app
 - Upload-Post will honor account privacy
 
 **Status**: ✅ READY
+
 - Privacy parameters configurable per platform
 - Upload-Post endpoint: server.js:4780-4932
 
@@ -342,12 +370,14 @@ Claude now automatically applies pronunciation rules when generating scripts:
 **Endpoint**: `POST /generate-twitch-longform-thumbnail`
 
 **Features**:
+
 - Auto-increments episode number from `episode_counters.json`
 - Formats current date: "Apr 7, 2026"
 - FFmpeg drawtext overlay (white text + black border)
 - Outputs to `output/thumbnail_twitch_longform_ep{N}_{timestamp}.png`
 
 **Example**:
+
 ```
 EPISODE 1
 Apr 7, 2026
@@ -363,12 +393,14 @@ Apr 7, 2026
 **Endpoint**: `POST /analyze-style-library`
 
 **Enhancement**:
+
 - Gemini watches each reference video **10 times** (was 1)
 - Progressive focus: early viewings = broad patterns, late viewings = subtle details
 - Claude synthesizes all 10 viewings into deep style analysis
 - Stored in `cwn_style_guides.json` (6.9KB)
 
 **Reference Videos** (reference_library.json):
+
 - Twitch: 3 videos
 - NBA: 2 videos
 - News: 3 videos
@@ -383,6 +415,7 @@ Apr 7, 2026
 
 **Impact**: Gate 2A (Pronunciation Iteration Loop) cannot be implemented
 **Reason**: No MCP server exists to:
+
 - Monitor HeyGen rendering progress
 - Retrieve segment URLs when complete
 - Re-render specific segments with updated scripts
@@ -397,12 +430,14 @@ Apr 7, 2026
 ### 🟡 MANUAL STEP: HeyGen Segment Download
 
 **Current Workflow**:
+
 1. Script passes Gate 1 → Auto-sent to HeyGen
 2. HeyGen renders avatar segments (external API)
 3. **MANUAL**: User downloads segment URLs from HeyGen dashboard
 4. **MANUAL**: User uploads segments to assembly endpoint
 
 **Future Automation** (requires HeyGen MCP):
+
 - Poll HeyGen API for completion
 - Auto-download segments when ready
 - Auto-trigger assembly endpoint
@@ -414,6 +449,7 @@ Apr 7, 2026
 ## ✅ Pre-Launch Checklist
 
 ### Infrastructure
+
 - [x] Server running on port 3000
 - [x] Dashboard running on port 8765
 - [x] FFmpeg installed and accessible
@@ -421,6 +457,7 @@ Apr 7, 2026
 - [x] Google Drive folder shared with service account
 
 ### APIs & Credentials
+
 - [x] Anthropic Claude API (script generation)
 - [x] Google Gemini API (QA + clip analysis)
 - [x] HeyGen API (avatar rendering)
@@ -429,11 +466,13 @@ Apr 7, 2026
 - [x] Twitch API (clip downloads)
 
 ### QA Gates
+
 - [x] Gate 1: Script QA (Gemini validates Claude)
 - [x] Gate 2: Segment QA (Gemini checks HeyGen segments)
 - [x] Gate 3: Final Video QA (Gemini checks assembled video)
 
 ### Automation Features
+
 - [x] HeyGen auto-send when Gate 1 ≥90
 - [x] Audio normalization (-14 LUFS all segments)
 - [x] HeyGen pronunciation best practices in prompts
@@ -443,6 +482,7 @@ Apr 7, 2026
 - [x] NBA show rename ("Other Side of the Pillow")
 
 ### Documentation
+
 - [x] AUTOMATION_STATUS.md (all tasks documented)
 - [x] HEYGEN_SCRIPT_FORMAT.md (script requirements)
 - [x] PRODUCTION_SCHEDULE.md (60 long + 270 short/month)
@@ -464,6 +504,7 @@ Apr 7, 2026
 ### Test Execution Steps
 
 1. **Script Generation**:
+
    ```bash
    curl -X POST http://localhost:3000/generate-full-script \
      -H "Content-Type: application/json" \
@@ -475,6 +516,7 @@ Apr 7, 2026
    - Download segment URLs
 
 3. **Assembly**:
+
    ```bash
    curl -X POST http://localhost:3000/assemble \
      -H "Content-Type: application/json" \
@@ -482,6 +524,7 @@ Apr 7, 2026
    ```
 
 4. **Upload** (test mode):
+
    ```bash
    curl -X POST http://localhost:3000/publish \
      -H "Content-Type: application/json" \
@@ -504,6 +547,7 @@ Apr 7, 2026
 ## 📈 Success Metrics
 
 **Definition of Done (12-Test Framework)**:
+
 - All 12 tests complete end-to-end
 - Gate 1 average score ≥90
 - Gate 3 average score ≥70
@@ -529,21 +573,25 @@ Apr 7, 2026
 ## 📞 Support & Debugging
 
 **QA Logs**: output/qa_failures/
+
 - `gate1_script_*.txt` — Script QA reports
 - `gate2_segments_*.txt` — Segment QA reports
 - `gate3_assembly_*.txt` — Final video QA reports
 
 **Metrics**: Tracked per jobId with stage timers
+
 - Script generation: Claude tokens, Gemini API calls, Gate 1 score
 - Assembly: Segment count, duration, Gate 2/3 scores
 - Publish: Platforms, privacy settings, request_id
 
 **Server Logs**: stdout (real-time)
+
 ```bash
 tail -f output/server.log
 ```
 
 **Dashboard**: http://localhost:8765
+
 - Live job progress
 - QA score visibility
 - Manual approval for 70-89 scores
