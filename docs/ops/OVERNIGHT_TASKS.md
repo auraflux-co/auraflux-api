@@ -341,7 +341,7 @@ Each task is self-contained — Aider picks one per night, ships it, moves on. D
 
 ---
 
-#### [ ] Audit `logs/errors.jsonl` and write known-errors catalog
+#### [x] Audit `logs/errors.jsonl` and write known-errors catalog
 **File:** NEW `docs/KNOWN_ERRORS_CATALOG.md`
 **What:** Parse `logs/errors.jsonl`, group errors by pattern (same error message, same stack trace), count frequency per pattern. Write a markdown catalog documenting each known error with: pattern signature, frequency, root cause (if known), fix strategy (if known), example occurrences.
 **Why:** When a new error surfaces in production, the first question is "have we seen this before?" A searchable catalog cuts diagnosis time from hours to minutes. Also serves as input data for the Gate 1 diagnostic upgrade (Phase 2) which needs to distinguish specific failure modes.
