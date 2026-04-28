@@ -146,6 +146,13 @@ services:
       - key: R2_VIDEO_BUCKET
         value: auraflux-video-output
 
+      # PostgreSQL — CPD-51: injected automatically when auraflux-pg is linked to this service.
+      # Go to: Render dashboard → auraflux-pg → Connect → select auraflux-api
+      - key: DATABASE_URL
+        fromDatabase:
+          name: auraflux-pg
+          property: connectionString
+
       # C0 manual workflow flag
       - key: C0_MANUAL_SEGMENT_CHECKPOINT
         value: 'true'
@@ -175,13 +182,18 @@ services:
         sync: false
       - key: R2_BACKUP_BUCKET
         value: auraflux-backups
+      - key: DATABASE_URL
+        fromDatabase:
+          name: auraflux-pg
+          property: connectionString
 
-# ── PostgreSQL — CPD-51: uncomment when ready to migrate from SQLite.
-# Render auto-injects DATABASE_URL into linked services.
-# Plan: starter ($7/mo) for dev → standard ($20/mo, 30-day backups) before first paying customer.
-# databases:
-#   - name: auraflux-pg
-#     plan: starter
-#     databaseName: auraflux
-#     user: auraflux
-#     region: oregon
+# ── PostgreSQL — CPD-51: auraflux-pg provisioned manually in Render dashboard.
+# Render auto-injects DATABASE_URL into auraflux-api via the fromDatabase reference above.
+# Current plan: starter → upgrade to standard ($20/mo, 30-day backups) before first paying customer.
+# To run one-time migration: Render Shell on auraflux-api → node scripts/migrate_sqlite_to_pg.js
+databases:
+  - name: auraflux-pg
+    plan: starter
+    databaseName: auraflux
+    user: auraflux
+    region: oregon
