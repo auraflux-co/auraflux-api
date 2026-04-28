@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-28 (Cursor — refactor: Phase 2B server.js module split — extracted 16 routes into lib/routes/publish.js (12 publish/upload-post routes) and lib/routes/heygen.js (4 C0-only HeyGen routes); removed duplicate /job-spec/:jobId inline; server.js reduced from 6361 → 5623 lines (-738 lines); total reduction across all phases: ~2910 lines; PR open for review)
+**Last Updated:** 2026-04-28 (Cursor — feat: CPD-50 R2 backup — scripts/backup_to_r2.js nightly SQLite+JSON backup to Cloudflare R2; render.yaml updated with R2 env vars + nightly cron job at 03:00 UTC; .env.example updated; docs/ops/RESTORE_PROCEDURE.md written; PR open for review)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
