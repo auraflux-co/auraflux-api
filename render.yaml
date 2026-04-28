@@ -1,6 +1,6 @@
 # render.yaml — AuraFlux API Blueprint
 # Deploy: connect this repo in the Render dashboard → "New → Blueprint"
-# Render will provision the web service, Postgres database, and persistent disk.
+# Render will provision the web service, cron backup job, Postgres database, and persistent disk.
 #
 # BEFORE FIRST DEPLOY:
 #   1. Set all envVars marked sync: false in the Render environment panel
@@ -20,9 +20,9 @@ services:
     region: oregon
     healthCheckPath: /health
 
-    # Persistent disk — keeps SQLite (data/jobs.json) across deploys.
-    # Mount at /app/data only; output/ and tmp/ are ephemeral (videos upload to Drive/R2).
-    # Increase to 50GB when video output is stored locally before R2 migration.
+    # Persistent disk — keeps SQLite (data/cwn.db) and JSON state across deploys.
+    # Primary data store until CPD-51 Postgres migration is complete.
+    # Nightly backup to R2 (scripts/backup_to_r2.js) guards against disk loss.
     disk:
       name: auraflux-data
       mountPath: /app/data
@@ -62,7 +62,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
 
-      # HeyGen — avatar rendering (c0 path only)
+      # HeyGen — avatar rendering (C0 path only; C1+ optional add-on)
       - key: HEYGEN_API_KEY
         sync: false
       - key: HEYGEN_AVATAR_ID
@@ -96,7 +96,7 @@ services:
       - key: TWITCH_TOKEN
         sync: false
 
-      # Google Drive (c0 upload path)
+      # Google Drive (C0 upload path)
       - key: DRIVE_FOLDER_ID
         sync: false
       - key: DRIVE_REFRESH_TOKEN
@@ -134,14 +134,54 @@ services:
       - key: RUNPOD_ENDPOINT_ID
         sync: false
 
+      # Cloudflare R2 — backup storage + video output storage (CPD-50)
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BACKUP_BUCKET
+        value: auraflux-backups
+      - key: R2_VIDEO_BUCKET
+        value: auraflux-video-output
+
       # C0 manual workflow flag
       - key: C0_MANUAL_SEGMENT_CHECKPOINT
         value: 'true'
 
-# ── PostgreSQL — future migration target (Phase 2)
-# Uncomment when ready to migrate from SQLite.
+  # ── Nightly backup cron job (CPD-50) ─────────────────────────────────────────
+  # Runs daily at 03:00 UTC — after US midnight, before any morning operations.
+  # Backs up SQLite snapshot + data/*.json to Cloudflare R2 (30-day retention).
+  # Separate service so deploys to auraflux-api never skip a scheduled backup.
+  - type: cron
+    name: auraflux-backup
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    schedule: '0 3 * * *'
+    startCommand: node scripts/backup_to_r2.js
+    plan: starter
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TZ
+        value: UTC
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BACKUP_BUCKET
+        value: auraflux-backups
+
+# ── PostgreSQL — CPD-51: uncomment when ready to migrate from SQLite.
+# Render auto-injects DATABASE_URL into linked services.
+# Plan: starter ($7/mo) for dev → standard ($20/mo, 30-day backups) before first paying customer.
 # databases:
 #   - name: auraflux-pg
 #     plan: starter
 #     databaseName: auraflux
 #     user: auraflux
+#     region: oregon
