@@ -89,7 +89,7 @@
     "pino": "^9.14.0",
     "pino-pretty": "^11.3.0",
     "puppeteer": "^24.40.0",
-    "sharp": "^0.32.0"
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "autocannon": "^8.0.0",
