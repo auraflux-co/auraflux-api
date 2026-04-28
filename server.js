@@ -2313,6 +2313,120 @@ app.get('/api/generate-video/:promptId', async (req, res) => {
   }
 });
 
+// ── Jira Webhook Queue ───────────────────────────────────────────────────────
+// Receives Jira webhook payloads and stores them as a queue so the local Mac
+// poller (scripts/jira_poller.sh, runs every 5 min via launchd) can pick them
+// up and trigger Aider immediately instead of waiting until 1 AM.
+//
+// Queue file: data/jira_queue.json  (persisted on Render disk)
+// Secret:     JIRA_WEBHOOK_SECRET env var (passed as ?secret= query param)
+
+const JIRA_QUEUE_FILE = path.join(__dirname, 'data', 'jira_queue.json');
+const JIRA_WEBHOOK_SECRET = process.env.JIRA_WEBHOOK_SECRET || '';
+
+function readJiraQueue() {
+  try {
+    return JSON.parse(fs.readFileSync(JIRA_QUEUE_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function writeJiraQueue(queue) {
+  fs.writeFileSync(JIRA_QUEUE_FILE, JSON.stringify(queue, null, 2), 'utf8');
+}
+
+// POST /api/jira-webhook?secret=<JIRA_WEBHOOK_SECRET>
+// Jira sends this when an issue transitions or is updated.
+// Stores unprocessed tasks in jira_queue.json for the Mac poller to pick up.
+app.post('/api/jira-webhook', (req, res) => {
+  try {
+    const { secret } = req.query;
+    if (JIRA_WEBHOOK_SECRET && secret !== JIRA_WEBHOOK_SECRET) {
+      return res.status(403).json({ error: 'invalid secret' });
+    }
+
+    const payload = req.body;
+    const issue = payload?.issue;
+    if (!issue) return res.status(400).json({ error: 'no issue in payload' });
+
+    const key = issue.key;
+    const summary = issue.fields?.summary || '';
+    const description = issue.fields?.description || '';
+    const labels = issue.fields?.labels || [];
+    const status = issue.fields?.status?.name || '';
+    const priority = issue.fields?.priority?.name || 'Medium';
+    const event = payload.webhookEvent || '';
+
+    // Only queue tickets with label "aider" or "cursor"
+    const isAider = labels.includes('aider');
+    const isCursor = labels.includes('cursor');
+    if (!isAider && !isCursor) {
+      return res.json({ queued: false, reason: 'no aider/cursor label' });
+    }
+
+    const queue = readJiraQueue();
+
+    // Deduplicate — update existing entry if same key already pending
+    const existingIdx = queue.findIndex((t) => t.key === key && t.processed === false);
+    const entry = {
+      key,
+      summary,
+      description: typeof description === 'string' ? description : JSON.stringify(description),
+      labels,
+      status,
+      priority,
+      agent: isAider ? 'aider' : 'cursor',
+      event,
+      receivedAt: new Date().toISOString(),
+      processed: false,
+    };
+
+    if (existingIdx >= 0) {
+      queue[existingIdx] = entry;
+    } else {
+      queue.push(entry);
+    }
+
+    writeJiraQueue(queue);
+
+    console.log(`[jira-webhook] queued ${key} (${summary}) for ${entry.agent}`);
+    res.status(202).json({ queued: true, key, agent: entry.agent });
+  } catch (err) {
+    console.error('[jira-webhook] error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/jira-queue
+// Returns all unprocessed items from the queue. Called by Mac-side poller.
+app.get('/api/jira-queue', (req, res) => {
+  const { secret } = req.query;
+  if (JIRA_WEBHOOK_SECRET && secret !== JIRA_WEBHOOK_SECRET) {
+    return res.status(403).json({ error: 'invalid secret' });
+  }
+  const queue = readJiraQueue();
+  res.json(queue.filter((t) => !t.processed));
+});
+
+// POST /api/jira-queue/:issueKey/done
+// Called by the Mac poller after Aider finishes a task.
+// Marks the queue item as processed.
+app.post('/api/jira-queue/:issueKey/done', (req, res) => {
+  const { secret } = req.query;
+  if (JIRA_WEBHOOK_SECRET && secret !== JIRA_WEBHOOK_SECRET) {
+    return res.status(403).json({ error: 'invalid secret' });
+  }
+  const { issueKey } = req.params;
+  const queue = readJiraQueue();
+  const item = queue.find((t) => t.key === issueKey);
+  if (!item) return res.status(404).json({ error: 'not found' });
+  item.processed = true;
+  item.processedAt = new Date().toISOString();
+  writeJiraQueue(queue);
+  res.json({ ok: true, key: issueKey });
+});
+
 // ── Routes ────────────────────────────────────────────────────────
 
 // Health check — returns cached dependency state (refreshed every 60s at startup).
