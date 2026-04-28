@@ -101,9 +101,10 @@ Description: $DESCRIPTION
 Instructions:
 1. Understand the requirement from the Jira ticket above.
 2. Implement the changes in the repository.
-3. Create a feature branch named feat/${KEY,,}-$(echo "$SUMMARY" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]//g' | cut -c1-40).
-4. Commit with a message referencing $KEY.
-5. Push the branch and create a PR using gh pr create.
+3. Create a feature branch: git checkout -b feat/${KEY,,}
+4. Commit with message: '$KEY: $SUMMARY'
+5. Push and create a PR with EXACTLY this title format: '$KEY: $SUMMARY'
+   Use: gh pr create --title '$KEY: $SUMMARY' --body 'Implements $KEY\n\n$DESCRIPTION' --head feat/${KEY,,} --base main
 6. After the PR is created, run: cd /Users/robertgregory/cwn-production && node scripts/jira_complete.js $KEY
 Report the PR URL when done."
 
