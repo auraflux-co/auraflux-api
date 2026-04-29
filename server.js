@@ -796,12 +796,14 @@ setInterval(() => _refreshHealthCache().catch(() => {}), 60_000);
 
 // ── Route modules (Phase 2 extraction) ────────────────────────────
 const jobsRouter = require('./lib/routes/jobs');
+const jobsC1Router = require('./lib/routes/jobs_c1');
 const createAdminRouter = require('./lib/routes/admin');
 const publishRouter = require('./lib/routes/publish');
 const heygenRouter = require('./lib/routes/heygen');
 
 // Mount routers — must come after middleware and _healthCache init
 app.use('/', jobsRouter);
+app.use('/', jobsC1Router); // CPD-67: C1+ POST /jobs entry endpoint
 app.use('/', createAdminRouter({ _healthCache, BUILD_INFO }));
 app.use('/', publishRouter);
 app.use('/', heygenRouter);
