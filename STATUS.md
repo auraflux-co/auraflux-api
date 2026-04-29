@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-29 (Cursor — CPD-73: Clip sourcing module — lib/clip_sourcing/index.js (suggestClips, approveClipCandidates, buildClipManifest, rankCandidates), clip.sourcing feature gate, routes/clip_sourcing.js (3 endpoints), 29 new tests. 339/339 tests.)
+**Last Updated:** 2026-04-29 (Cursor — CPD-20: Next.js app shell — app/ (Next.js 16 App Router, TypeScript, Tailwind, shadcn/ui v4, Clerk v6), middleware auth, dashboard layout + sidebar, API client lib/api.ts, 9 routes building clean. 339/339 backend tests.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
