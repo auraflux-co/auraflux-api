@@ -2,9 +2,11 @@
 
 This file provides guidance to **Cursor** (AI coding agents in the Cursor IDE) and human contributors when working in this repository. It was formerly named `CLAUDE.md`.
 
+> **Terminology:** As of 2026-04-29, **"gate" is replaced by "portal"** in all documentation and discussion. A job passes through **portals**; each portal has a **portal worker** (does the work) and a **QA agent** (marks compliant or non-compliant). Self-healing fires on non-compliant. Code files (`lib/gates/`, `gate*.js`) retain old names until the rename ticket lands — until then "gate" and "portal" are interchangeable in code references only.
+
 ## Cursor and product owner
 
-**Cursor** is the day-to-day **architect and implementer** in this repo: it reads job specs and gates, proposes changes, runs tests and offline tooling, wires production behavior, and carries out technical work. **Rob** is the **product owner** — not expected to write code or run the CLI; he owns priorities, acceptance (“this matches what customers ordered”), and feedback on outcomes (pass/fail, creative/overlay bar, launch readiness). Plain product language is enough; Cursor maps it to files, env vars, tests, and scripts.
+**Cursor** is the day-to-day **architect and implementer** in this repo: it reads job specs and portals, proposes changes, runs tests and offline tooling, wires production behavior, and carries out technical work. **Rob** is the **product owner** — not expected to write code or run the CLI; he owns priorities, acceptance (“this matches what customers ordered”), and feedback on outcomes (pass/fail, creative/overlay bar, launch readiness). Plain product language is enough; Cursor maps it to files, env vars, tests, and scripts.
 
 **Offline checks Cursor can run without a live job** (examples): `npm test -- job_spec_contracts.test.js ai_prompt_replay.test.js`, `npm run prompt-replay:offline`, and optional `AI_MEMORY_TRACE_ENABLED=true` for prompt traces (`lib/ai_memory_trace.js`).
 
