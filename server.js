@@ -480,6 +480,12 @@ app.use((req, res, next) => {
 // Structured HTTP request logging (pino-http) — one JSON line per request
 app.use(requestLogger);
 
+// ── Clerk auth — CPD-21 ──────────────────────────────────────────────────────
+// clerkMiddleware() must run before any route that calls requireAuth.
+// It attaches the Clerk session to req without enforcing auth yet.
+const { clerkInit } = require('./lib/auth');
+app.use(clerkInit());
+
 app.use(
   cors({
     origin: (origin, callback) => {
