@@ -530,6 +530,12 @@ const server = app.listen(PORT, () => {
     });
     console.log('[billing-cron] Nightly overage cron scheduled (02:00 daily)');
   } catch (_e) { /* non-fatal if node-cron unavailable */ }
+
+  // CPD-48: scheduled publish cron — fires every 5 minutes
+  try {
+    const { startSchedulingCron } = require('./lib/services/scheduling_cron');
+    startSchedulingCron();
+  } catch (_e) { /* non-fatal */ }
 });
 
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs

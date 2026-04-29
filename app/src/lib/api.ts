@@ -212,6 +212,19 @@ export async function createJob(
   return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(payload), token });
 }
 
+export async function updateJobSchedule(
+  jobId: string,
+  publishMode: PublishMode,
+  scheduledPublishAt?: string,
+  token?: string,
+): Promise<{ ok: boolean; jobId: string; publishMode: PublishMode; scheduledPublishAt: string | null }> {
+  return apiFetch(`/jobs/${jobId}/schedule`, {
+    method: 'PUT',
+    body:   JSON.stringify({ publishMode, scheduledPublishAt }),
+    token,
+  });
+}
+
 // ─── Plan features API ────────────────────────────────────────────────────────
 
 export interface PlanFeatureMatrix {

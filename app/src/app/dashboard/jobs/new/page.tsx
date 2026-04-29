@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createJob, type CreateJobPayload } from '@/lib/api';
+import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
 
 type EntryType = 'fetch' | 'upload' | 'create';
 
@@ -40,6 +41,7 @@ export default function NewJobPage() {
   const [sourceUrls, setSourceUrls]     = useState('');
   const [promptText, setPromptText]     = useState('');
   const [fileKeys, setFileKeys]         = useState('');
+  const [schedule, setSchedule]         = useState<ScheduleValue>({ publishMode: 'immediate' });
 
   function togglePlatform(p: string) {
     setPlatforms((prev) =>
@@ -71,6 +73,13 @@ export default function NewJobPage() {
     }
 
     if (platforms.length === 0) { setError('Select at least one platform'); return; }
+
+    // Attach schedule
+    payload.publishMode = schedule.publishMode;
+    if (schedule.publishMode === 'scheduled') {
+      if (!schedule.scheduledPublishAt) { setError('Select a publish date and time'); return; }
+      payload.scheduledPublishAt = schedule.scheduledPublishAt;
+    }
 
     start(async () => {
       try {
@@ -199,6 +208,13 @@ export default function NewJobPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Schedule picker */}
+        <SchedulePicker
+          platforms={platforms}
+          value={schedule}
+          onChange={setSchedule}
+        />
 
         <Separator />
 
