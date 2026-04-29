@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-28 (Cursor — fix: jira-transition — stories stay In Progress after merge; only move to Done after Rovo posts [rovo-approved]; new Jira automation rule required)
+**Last Updated:** 2026-04-29 (Cursor — chore: remove Rovo Dev integration; replace with Serena MCP for code intelligence; pr-review.yml now posts review checklist without @rovo-dev)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
@@ -27,7 +27,7 @@ A run is **green / successful** only when **all** of the following are true:
 | ----- | --------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------- |
 | **A** | **Pipeline proof (E2E + full long-form)**                             | **Now** — always first until signed off                              | Block 2                            |
 | **B** | **Render deploy + post-deploy tasks**                                 | Only after Phase A is green **or** product explicitly waives         | Block 3                            |
-| **C** | **Platform / hygiene** (load test, rename audit doc, Rovo, UI review) | After Phase A is under control; some items can overlap B if low-risk | Block 4                            |
+| **C** | **Platform / hygiene** (load test, rename audit doc, Serena MCP, UI review) | After Phase A is under control; some items can overlap B if low-risk | Block 4                            |
 | **D** | **Future decoupled stack** (Vercel + RunPod ComfyUI, etc.)            | Not launch-blocking                                                  | `DECOUPLED_VIDEO_PRODUCT_STACK.md` |
 
 ### Codebase assessment (living — update when checkpoints change)
@@ -75,7 +75,7 @@ A run is **green / successful** only when **all** of the following are true:
 | 1   | `npm run load-test:health` (API up; hits `/health` only) | `scripts/load_test_autocannon.js`                                                       |
 | 2   | Prettier policy                                          | Scripts exist: `npm run format` / `format:check` — run when ready for a formatting pass |
 | 3   | Rename audit (not mass rename)                           | `docs/ops/RENAME_CWN_TO_AURAFLUX.md`                                                    |
-| 4   | Rovo / Jira MCP                                          | `docs/ops/ATLASSIAN_ROVO_MCP.md` (Cursor settings — not repo code)                      |
+| 4   | Serena MCP                                               | Code intelligence — symbolic search, analysis, editing. Active via MCP in Cursor. Replaces Rovo Dev. |
 | 5   | C0→C1 UI / Equinox                                       | Schedule as product/engineering review                                                  |
 
 ### Current focus (update every working session)
