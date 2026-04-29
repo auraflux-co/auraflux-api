@@ -1,4 +1,4 @@
-name: Jira — Auto-transition story on PR merge
+name: Jira — Post merge comment (awaiting Rovo review)
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  transition-to-done:
+  post-merge-comment:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
@@ -15,48 +15,14 @@ jobs:
         run: |
           BRANCH="${{ github.event.pull_request.head.ref }}"
           TITLE="${{ github.event.pull_request.title }}"
-          # Match CPD-NNN in branch name (e.g. feat/cpd-27-server-slim)
           KEY=$(echo "$BRANCH" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
-          # Fall back to PR title (e.g. feat(cpd-27): ...)
           if [ -z "$KEY" ]; then
             KEY=$(echo "$TITLE" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
           fi
           echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
           echo "Found Jira key: $KEY"
 
-      - name: Transition Jira story → Done
-        if: steps.extract.outputs.issue_key != ''
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
-        run: |
-          # Strip trailing slash from base URL if present
-          BASE="${JIRA_BASE_URL%/}"
-          ENDPOINT="$BASE/rest/api/3/issue/$ISSUE_KEY/transitions"
-          echo "Transitioning $ISSUE_KEY to Done..."
-          echo "Endpoint: $ENDPOINT"
-          HTTP_STATUS=$(curl -s -o /tmp/jira_resp.json -w "%{http_code}" \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
-            "$ENDPOINT" \
-            -d '{"transition":{"id":"31"}}')
-          echo "Response (HTTP $HTTP_STATUS):"
-          cat /tmp/jira_resp.json
-          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "✅ $ISSUE_KEY transitioned to Done"
-          else
-            echo "⚠️  Transition returned HTTP $HTTP_STATUS"
-            echo "Verify JIRA_BASE_URL=https://your-domain.atlassian.net (no trailing slash)"
-            echo "Verify JIRA_USER_EMAIL is your Atlassian login email"
-            echo "Verify JIRA_API_TOKEN was generated at id.atlassian.com/manage-profile/security/api-tokens"
-            exit 1
-          fi
-
-      - name: Add merge comment to Jira story
+      - name: Post merge comment — request Rovo review
         if: steps.extract.outputs.issue_key != ''
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -69,13 +35,36 @@ jobs:
           MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
-          BODY=$(printf '{"body":{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"PR #%s merged to main by @%s\\n%s\\n%s"}]}]}}' \
-            "$PR_NUMBER" "$MERGED_BY" "$PR_TITLE" "$PR_URL")
-          curl -s -o /dev/null \
+          # Story stays In Progress — only Rovo's review closes it to Done.
+          # Post a comment asking Rovo to review the merged code.
+          BODY=$(printf '{
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [{
+                "type": "paragraph",
+                "content": [
+                  {"type":"text","text":"✅ PR #%s merged to main by @%s\n"},
+                  {"type":"text","text":"%s\n%s\n\n"},
+                  {"type":"text","text":"@rovo-dev please review the merged code and confirm it is production-ready. If the implementation looks correct, reply with [rovo-approved] to close this story."}
+                ]
+              }]
+            }
+          }' "$PR_NUMBER" "$MERGED_BY" "$PR_TITLE" "$PR_URL")
+
+          HTTP_STATUS=$(curl -s -o /tmp/jira_comment_resp.json -w "%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
             -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
             "$BASE/rest/api/3/issue/$ISSUE_KEY/comment" \
-            -d "$BODY"
-          echo "Comment posted to $ISSUE_KEY"
+            -d "$BODY")
+
+          cat /tmp/jira_comment_resp.json
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Merge comment + Rovo review request posted to $ISSUE_KEY"
+            echo "   Story remains In Progress until Rovo posts [rovo-approved]"
+          else
+            echo "⚠️  Comment returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
