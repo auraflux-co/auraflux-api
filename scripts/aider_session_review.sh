@@ -138,7 +138,10 @@ ENV_MISSING=$(comm -23 <(echo "$ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | 
 echo ""
 echo "🤖 Running Aider review..."
 
-PROMPT_FILE=$(mktemp /tmp/aider_review_prompt.XXXXXX.md)
+# Clean up any stale temp files from previous runs
+rm -f /tmp/aider_review_*
+
+PROMPT_FILE=$(mktemp /tmp/aider_review_XXXXXX)
 
 cat > "$PROMPT_FILE" <<ENDPROMPT
 You are performing an end-of-session health review of the AuraFlux API platform.
