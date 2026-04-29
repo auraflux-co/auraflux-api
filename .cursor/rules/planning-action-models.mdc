@@ -26,7 +26,7 @@ Rob signals with things like: **act**, **execute**, **implement**, **go**, **shi
 | Security, edge cases, tests you care about | Exploratory “try 3 versions” on **non-prod** throwaway work |
 | When **unsure** — default to Sonnet | When task is **obvious, small, and well-specified** and speed matters |
 
-**Rule of thumb:** If a bug would be **painful in prod** (gates, `server.js` core, assembly, data shape), use **Sonnet** for act. If the task is **boring, bounded, and easy to verify** (or you’re just **reading/searching**), **Flash** is fine.
+**Rule of thumb:** If a bug would be **painful in prod** (portals, `server.js` core, assembly, data shape), use **Sonnet** for act. If the task is **boring, bounded, and easy to verify** (or you’re just **reading/searching**), **Flash** is fine.
 
 ## Exceptions
 

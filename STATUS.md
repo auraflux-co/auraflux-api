@@ -15,7 +15,7 @@
 
 A run is **green / successful** only when **all** of the following are true:
 
-1. **All gates pass** for that job (through the pipeline’s final gate, including publish/readiness gates as applicable). **Passing Gate 0 or Gate 1 alone is not success** for the whole job.
+1. **All portals mark compliant** for that job (through the pipeline’s final portal, including publish/readiness portals as applicable). **Portal 0 or Portal 1 marking compliant alone is not success** for the whole job.
 2. **Creative + overlay meet spec** — broadcast chrome, layout, and creative treatment match what product signed off (Rob’s creative review; QA may catch gaps he did not).
 3. **Usable video** — a deliverable in **`output/`** (or agreed handoff path) that is fit for review/shipping under the above. **No usable video ⇒ failure** for that job, even if earlier stages looked fine.
 
