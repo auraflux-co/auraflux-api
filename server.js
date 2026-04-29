@@ -136,6 +136,7 @@ console.error = (...a) => _origError(`[${_ts()}]`, ...a);
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const { strictLimit, apiLimit, healthLimit } = require('./lib/rateLimiter');
 const axios = require('axios');
 const fs = require('fs');
 const { execFile, exec, execSync } = require('child_process');
@@ -460,8 +461,14 @@ app.use(
 
 // CORS configuration with origin whitelist
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:8765', 'http://localhost:3000'];
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [
+      'http://localhost:8765',
+      'http://localhost:3000',
+      'https://app.auraflux.co',
+      'https://auraflux.co',
+      'https://www.auraflux.co',
+    ];
 
 // Request ID middleware for tracing
 app.use((req, res, next) => {
@@ -485,8 +492,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(require('express').json({ limit: '50mb' }));
-app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
+app.use(require('express').json({ limit: '10mb' }));
+app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
 
 const PORT = process.env.PORT || 3000;
 
@@ -786,7 +793,7 @@ const { generateWanVideo, pollComfyResult, downloadComfyOutput } = require('./li
 // POST /api/generate-video
 // Body: { prompt, negativePrompt?, width?, height?, numFrames?, seed? }
 // Returns: { promptId } — poll GET /api/generate-video/:promptId for result
-app.post('/api/generate-video', async (req, res) => {
+app.post('/api/generate-video', strictLimit, async (req, res) => {
   try {
     const { prompt, negativePrompt, width, height, numFrames, seed } = req.body || {};
     if (!prompt) return res.status(400).json({ error: 'prompt is required' });
