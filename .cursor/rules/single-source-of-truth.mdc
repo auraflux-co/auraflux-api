@@ -1,0 +1,35 @@
+---
+description: Enforce single source of truth — update existing docs, never create duplicates. Applies to Confluence, codebase comments, and markdown files.
+alwaysApply: true
+---
+
+# Single Source of Truth
+
+Every piece of information lives in exactly one place. Outdated docs are worse than no docs.
+
+## Before creating any new doc, file, or Confluence page
+
+Ask: **does a page/file already covering this topic exist?**
+
+- If yes → **update it**. Do not create a new page alongside it.
+- If no → create one, and note where it lives so future updates go there.
+
+## Confluence
+
+- Architecture → `CTO Architecture Diagram` (page ID 5931010)
+- Tech Stack → `Tech Stack` (page ID 5177364)
+- Security → pages under `AuraFlux / Security`
+- Product audit → pages under `AuraFlux / Product`
+- Do NOT create standalone pages for topics already covered by the above
+
+## Codebase
+
+- Stale comments must be removed or updated when the code they describe changes
+- Stale `.md` files in `docs/` must be updated or deleted — not added to
+- `STATUS.md` is updated on every commit (enforced by pre-commit hook)
+- `README.md` and `CONTRIBUTING.md` are updated when public-facing behaviour changes
+
+## Rule
+
+If you catch yourself creating a new doc instead of updating an existing one, stop.
+Find the existing doc and add a section to it.
