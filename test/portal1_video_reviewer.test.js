@@ -11,7 +11,7 @@ const {
   cacheKeyForUrl,
   pruneStalePartFiles,
   cacheRootPath,
-} = require('../lib/gates/gate1_video_reviewer');
+} = require('../lib/portals/portal1_video_reviewer');
 
 describe('gate1_video_reviewer helpers', () => {
   test('tryParseReviewerJson parses fenced JSON', () => {

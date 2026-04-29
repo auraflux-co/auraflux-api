@@ -8,7 +8,7 @@ const {
   digestPrompt,
   syntheticNewsScenario,
 } = require('../lib/ai_prompt_replay');
-const gate1 = require('../lib/gates/gate1');
+const gate1 = require('../lib/portals/portal1');
 
 describe('ai_prompt_replay (offline)', () => {
   test('runOfflinePromptReplay returns Gate 1 + Gate 3a Gemini digests per scenario', () => {
