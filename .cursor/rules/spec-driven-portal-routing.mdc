@@ -1,5 +1,5 @@
 ---
-description: Job spec drives portal routing. AuraFlux is a spec-driven production environment, not a fixed sequential pipeline.
+description: Job spec drives portal routing. AuraFlux is a spec-driven production environment, not a fixed sequential pipeline. Portals and extensions are distinct — extensions are only invoked when ordered by the job spec.
 alwaysApply: true
 ---
 
@@ -11,38 +11,65 @@ alwaysApply: true
 
 AuraFlux is NOT a fixed sequential production line where every portal runs on every job. It is a **spec-driven production environment** that adapts to what each job requires.
 
-## What this means
+## Portals vs Extensions — critical distinction
+
+These are two different things. Do not confuse them.
+
+### Portals (0, 1, 1b, 2, 3a, 3b, 4, 5)
+The production capabilities. Each portal has a **portal worker** (does the work) and a **QA agent** (marks compliant or non-compliant). A portal runs only when declared in the job spec for that job ID. Portals not declared are skipped — skipped ≠ failed.
+
+### Extensions (HeyGen, Shoppable, and future add-ons)
+Extensions are **not portals**. They have no standing position in the portal sequence. An extension is a service call invoked **only when the job spec explicitly orders it**. They are the exception, not the rule. Most jobs will not use any extension.
+
+Extensions plug into specific intercept points between portals — they do not replace portals and do not run their own QA agent. The portal that follows the extension validates whatever the extension produced, provider-agnostically.
+
+| Type | Position | Default | When active |
+|---|---|---|---|
+| HeyGen avatar render | Between Portal 1 and Portal 2 | OFF | `jobSpec.addOns.heygen.active: true` — ordered by job spec |
+| Shoppable tagging | Between Portal 3b and Portal 4 | OFF | `jobSpec.addOns.shoppable.active: true` — ordered by job spec |
+
+## What this means in practice
 
 - A job spec declares exactly which portal workers are needed for that job ID
-- Portals not declared in the spec are **skipped entirely** — they are irrelevant to that job
-- A successful output = the job spec's declared requirements are met
-- A successful output does NOT mean "all portals ran"
+- Extensions are declared in `jobSpec.addOns` — they are the exception, ordered only when that job requires them
+- Portals not declared in the spec are skipped entirely
+- A successful output = the job spec's declared portals all mark compliant
+- A successful output does NOT require all portals to have run, and does NOT require any extension to have run
 
 ## Example routing differences
 
-| Job type | Portals that run |
-|---|---|
-| Customer uploads pre-rendered video | Portal 0, Portal 2, Portal 3a, Portal 3b, Portal 4, Portal 5 — no script gen, no render |
-| Text prompt only, no avatar | Portal 0, Portal 1, Portal 2, Portal 3a, Portal 3b, Portal 4, Portal 5 |
-| Avatar add-on enabled | Same as above + HeyGen render before Portal 2 |
-| Customer provides own script | Portal 0 only for source confirm, skip Portal 1 (Script QA), then Portal 2 onward |
-| No publish needed (preview only) | Skip Portal 5 entirely |
+| Job type | Portals that run | Extensions |
+|---|---|---|
+| Customer uploads pre-rendered video | 0, 2, 3a, 3b, 4, 5 | None |
+| Text-to-video, no avatar | 0, 1, 1b, 2, 3a, 3b, 4, 5 | None |
+| Text-to-video + HeyGen ordered | 0, 1, 1b, 2, 3a, 3b, 4, 5 | HeyGen between Portal 1 and Portal 2 |
+| Customer provides own script, shoppable ordered | 0, 2, 3a, 3b, 4, 5 | Shoppable between Portal 3b and Portal 4 |
+| Preview only, no publish | 0, 1, 1b, 2, 3a, 3b, 4 | None — Portal 5 skipped |
 
 ## Rules for engineers
 
 **✅ MUST:**
-- Read the job spec before deciding whether a portal runs
-- Check `jobSpec.portals[]` (or equivalent spec field) to determine which portal workers are active for this job ID
+- Read the job spec before deciding whether a portal or extension runs
+- Check `jobSpec.addOns` for extensions — never assume an extension is active
 - Route the job through only what the spec declares
-- Mark a job successful when its spec-declared portals all mark compliant
+- Portal workers following an extension validate extension output provider-agnostically (Portal 2 validates HeyGen output the same way it validates WAN output)
 
 **❌ NEVER:**
-- Assume all portals must run for a job to succeed
-- Hard-code a fixed sequence that every job follows
-- Add a portal to every job "just in case" — it belongs in the spec declaration
-- Report a job as failed because a portal was skipped — skipped = not needed, not failed
+- Treat extensions as portals — they are not in the portal sequence
+- Add an extension to every job "just in case" — extensions are ordered by the job spec
+- Add portal-specific logic to handle extension output — the portal stays agnostic
+- Report a job as failed because a portal or extension was not ordered — not ordered = not needed
 
-## Adding new portal workers
+## Adding new extensions
+
+When adding a new extension:
+1. It must be declared in `jobSpec.addOns.<extensionName>.active` (default `false`)
+2. It must be invoked at a specific intercept point between two named portals
+3. The portal following it validates its output without extension-specific logic
+4. Default = OFF unless the job spec sets `active: true`
+5. Document the intercept point in `Portal Pipeline — AuraFlux` (Confluence 5341185)
+
+## Adding new portals
 
 When adding a new portal:
 1. It must be declarable in the job spec (opt-in per job)
@@ -52,4 +79,4 @@ When adding a new portal:
 
 ## Why this matters
 
-The production line adapts to the customer and the content. A news clip job and an avatar T2V job are fundamentally different products. Forcing both through the same portal sequence wastes compute, introduces false failure modes, and couples unrelated capabilities.
+The production environment adapts to the job — the job does not adapt to the production environment. Extensions exist for customers who order them. Portals exist for production steps that job requires. Neither runs without the job spec saying so.
