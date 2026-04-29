@@ -21,7 +21,7 @@ jobs:
         run: |
           MSG=$(git log -1 --format="%s %b")
           KEY=$(echo "$MSG" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
-          FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(md|txt)$' | head -10 | tr '\n' ', ')
+          FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(md|txt)$' | head -10 | tr '\n' ',')
           echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
           echo "files=$FILES" >> "$GITHUB_OUTPUT"
           echo "commit_msg=$(git log -1 --format='%s')" >> "$GITHUB_OUTPUT"
@@ -43,35 +43,16 @@ jobs:
           DATE=$(date -u +"%Y-%m-%d")
           REPO_URL="https://github.com/${{ github.repository }}"
 
-          PAYLOAD=$(python3 -c "
-import json
-title = '${ISSUE_KEY}: Docs — ${DATE}'
-body = '''## ${COMMIT_MSG}
+          TITLE="${ISSUE_KEY}: Docs — ${DATE}"
+          BODY=$(printf "## %s\n\n| Field | Value |\n|---|---|\n| **Jira** | [%s](%s/browse/%s) |\n| **Commit** | [%s](%s/commit/${{ github.sha }}) |\n| **Files** | %s |\n| **Date** | %s |" \
+            "$COMMIT_MSG" "$ISSUE_KEY" "$BASE" "$ISSUE_KEY" "$COMMIT_SHA" "$REPO_URL" "$FILES" "$DATE")
 
-| Field | Value |
-|---|---|
-| **Jira** | [${ISSUE_KEY}](${BASE}/browse/${ISSUE_KEY}) |
-| **Commit** | [\`${COMMIT_SHA}\`](${REPO_URL}/commit/${{ github.sha }}) |
-| **Files updated** | \`${FILES}\` |
-| **Date** | ${DATE} |
-
-## Changed files
-
-${FILES}
-
-## Links
-
-- [GitHub commit](${REPO_URL}/commit/${{ github.sha }})
-- [Jira ticket](${BASE}/browse/${ISSUE_KEY})
-'''
-data = {
-  'spaceId': '819202',
-  'parentId': '5537793',
-  'title': title,
-  'body': {'representation': 'wiki', 'value': body}
-}
-print(json.dumps(data))
-")
+          PAYLOAD=$(jq -n \
+            --arg spaceId "819202" \
+            --arg parentId "5537793" \
+            --arg title "$TITLE" \
+            --arg body "$BODY" \
+            '{spaceId: $spaceId, parentId: $parentId, title: $title, body: {representation: "wiki", value: $body}}')
 
           HTTP_STATUS=$(curl -s -o /tmp/conf_resp.json -w "%{http_code}" \
             -X POST \
@@ -85,11 +66,11 @@ print(json.dumps(data))
           echo "HTTP $HTTP_STATUS"
 
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            PAGE_ID=$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id',''))" < /tmp/conf_resp.json)
+            PAGE_ID=$(jq -r '.id // empty' /tmp/conf_resp.json)
             echo "page_id=$PAGE_ID" >> "$GITHUB_OUTPUT"
-            echo "✅ Confluence docs page created: $PAGE_ID"
+            echo "Confluence docs page created: $PAGE_ID"
           else
-            echo "⚠️  Confluence page creation returned HTTP $HTTP_STATUS"
+            echo "Confluence page creation returned HTTP $HTTP_STATUS"
           fi
 
       - name: Post Confluence docs link on Jira issue
@@ -102,22 +83,11 @@ print(json.dumps(data))
           PAGE_ID: ${{ steps.confluence.outputs.page_id }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
-          WIKI="${BASE/jira/wiki}"
-          CONF_URL="${WIKI}/spaces/AF/pages/${PAGE_ID}"
+          CONF_URL="${BASE}/wiki/spaces/CP/pages/${PAGE_ID}"
 
-          BODY=$(printf '{
-            "body": {
-              "type": "doc",
-              "version": 1,
-              "content": [{
-                "type": "paragraph",
-                "content": [
-                  {"type":"text","text":"📄 Docs committed and synced to Confluence: "},
-                  {"type":"text","text":"%s","marks":[{"type":"link","attrs":{"href":"%s"}}]}
-                ]
-              }]
-            }
-          }' "$CONF_URL" "$CONF_URL")
+          BODY=$(jq -n \
+            --arg url "$CONF_URL" \
+            '{body: {type: "doc", version: 1, content: [{type: "paragraph", content: [{type: "text", text: "Docs committed and synced to Confluence: "}, {type: "text", text: $url, marks: [{type: "link", attrs: {href: $url}}]}]}]}}')
 
           curl -s -o /dev/null -w "Jira comment: HTTP %{http_code}\n" \
             -X POST \
