@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "command": ".cursor/hooks/serena-commit-qa.sh",
+        "matcher": "Shell",
+        "timeout": 5,
+        "failClosed": false
+      }
+    ]
+  }
+}
