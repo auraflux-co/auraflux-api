@@ -1,4 +1,4 @@
-name: Rovo Dev — AI code review on PR
+name: Rovo Dev — Request AI review via Jira on PR open
 
 on:
   pull_request:
@@ -7,7 +7,6 @@ on:
 
 jobs:
   rovo-review:
-    # Skip draft PRs
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
@@ -24,34 +23,57 @@ jobs:
             KEY=$(echo "$TITLE" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
           fi
           echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "Found Jira key: $KEY"
 
-      - name: Request Rovo Dev review via PR comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issueKey = '${{ steps.extract.outputs.issue_key }}';
-            const jiraBase = '${{ secrets.JIRA_BASE_URL }}' || 'https://robertsworkspace-18914505.atlassian.net';
-            const jiraLink = issueKey
-              ? `\n\n📋 Jira: [${issueKey}](${jiraBase}/browse/${issueKey})`
-              : '';
+      - name: Post Rovo Dev review request on Jira issue
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          # Post a comment on the Jira issue asking Rovo Dev to review.
+          # Rovo Dev watches Jira comments that mention @rovo-dev for its trigger.
+          BODY=$(printf '{
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [{
+                "type": "paragraph",
+                "content": [
+                  {"type":"text","text":"🔍 PR #%s opened by @%s and is ready for review.\\n"},
+                  {"type":"text","text":"PR: %s\\n\\n"},
+                  {"type":"text","text":"@rovo-dev please review this pull request. Focus on:\\n"},
+                  {"type":"text","text":"- Correctness: no handler logic lost during extraction\\n"},
+                  {"type":"text","text":"- Require paths: all module imports resolve correctly\\n"},
+                  {"type":"text","text":"- Security: no hardcoded secrets, no unsafe eval\\n"},
+                  {"type":"text","text":"- C0/C1+ boundary: C0-only code not leaking into shared paths"}
+                ]
+              }]
+            }
+          }' "$PR_NUMBER" "$PR_AUTHOR" "$PR_URL")
 
-            const body = [
-              `@rovo-dev please review this PR.`,
-              ``,
-              `**Focus areas:**`,
-              `- Correctness of route extraction (no handler logic lost)`,
-              `- Dependency resolution (require paths, module imports)`,
-              `- Security: any hardcoded secrets, unsafe eval, injection vectors`,
-              `- C0 vs C1+ boundary violations (C0-only code leaking into shared paths)`,
-              jiraLink,
-            ].join('\n');
+          HTTP_STATUS=$(curl -s -o /tmp/jira_comment_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/comment" \
+            -d "$BODY")
 
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body,
-            });
+          cat /tmp/jira_comment_resp.json
+          echo "HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Rovo Dev review request posted to $ISSUE_KEY"
+          else
+            echo "⚠️  Comment post returned HTTP $HTTP_STATUS — non-fatal, continuing"
+          fi
 
       - name: Transition Jira story → In Progress
         if: steps.extract.outputs.issue_key != ''
@@ -61,11 +83,29 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
         run: |
-          # Only transition to In Progress if not already there (non-fatal if it fails)
+          BASE="${JIRA_BASE_URL%/}"
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
             -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
-            "$JIRA_BASE_URL/rest/api/3/issue/$ISSUE_KEY/transitions" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/transitions" \
             -d '{"transition":{"id":"21"}}')
-          echo "Transition to In Progress: HTTP $HTTP_STATUS"
+          echo "Transition to In Progress: HTTP $HTTP_STATUS (non-fatal)"
+
+      - name: Post PR link comment on GitHub PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueKey = '${{ steps.extract.outputs.issue_key }}';
+            const jiraBase = '${{ secrets.JIRA_BASE_URL }}'.replace(/\/$/, '');
+            const jiraLink = issueKey
+              ? `[${issueKey}](${jiraBase}/browse/${issueKey})`
+              : '_no Jira key found in branch name_';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🤖 **Automated review requested**\n\nJira: ${jiraLink} → moved to **In Progress**\nRovo Dev review request posted to the Jira issue.`,
+            });
