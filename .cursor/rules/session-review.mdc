@@ -1,0 +1,28 @@
+---
+description: Read the Aider session review report at the start of every session to catch structural issues before writing code.
+globs:
+alwaysApply: true
+---
+
+# End-of-Session Aider Review
+
+At the **start of every session**, read `logs/aider_session_review.md`.
+
+If the report contains `[BLOCKING]` items, address them before starting new feature work.
+If it contains `[SHOULD FIX]` items, note them and factor them into the current session plan.
+
+At the **end of every session** (or when the user says "we're done" / "end session"), remind the user to run:
+
+```bash
+bash scripts/aider_session_review.sh
+```
+
+This generates a fresh structural health report covering:
+- Commit delta since last review
+- Route file dependency correctness
+- C0 / C1+ boundary violations
+- Undocumented env vars or hardcoded secrets
+- Dead code after route extractions
+- Render deploy readiness
+
+The report is saved to `logs/aider_session_review.md` and committed automatically by Aider.
