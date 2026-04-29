@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.121",
+  "version": "1.0.122",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
