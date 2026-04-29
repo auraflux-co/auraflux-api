@@ -810,6 +810,7 @@ setInterval(() => _refreshHealthCache().catch(() => {}), 60_000);
 const jobsRouter = require('./lib/routes/jobs');
 const jobsC1Router = require('./lib/routes/jobs_c1');
 const creditsRouter = require('./lib/routes/credits'); // CPD-43
+const { runOverageBillingCycle } = require('./lib/services/billing_cron'); // CPD-46
 const createAdminRouter = require('./lib/routes/admin');
 const publishRouter = require('./lib/routes/publish');
 const heygenRouter = require('./lib/routes/heygen');
@@ -1163,6 +1164,21 @@ const server = app.listen(PORT, () => {
     else console.log('✅ FFmpeg:', v);
   });
   startMonitoring(); // Start pipeline event monitoring
+
+  // CPD-46: nightly overage billing cron — runs at 02:00 server time
+  try {
+    const cron = require('node-cron');
+    cron.schedule('0 2 * * *', async () => {
+      console.log('[billing-cron] Running nightly overage reporting...');
+      try {
+        const result = await runOverageBillingCycle();
+        console.log(`[billing-cron] Completed: ${JSON.stringify(result.results?.length)} clients processed`);
+      } catch (err) {
+        console.error('[billing-cron] Error:', err.message);
+      }
+    });
+    console.log('[billing-cron] Nightly overage cron scheduled (02:00 daily)');
+  } catch (_e) { /* non-fatal if node-cron unavailable */ }
 });
 
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
