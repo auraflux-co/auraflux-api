@@ -1,0 +1,49 @@
+---
+description: Serena-powered pre-PR code review gate — run before every `gh pr create`
+globs:
+alwaysApply: true
+---
+# Serena Pre-PR Code Review
+
+Before calling `gh pr create` on any branch, the agent **must** run a Serena review pass. This replaces Rovo Dev's automated PR review.
+
+## Required steps (in order)
+
+### 1. Read initial instructions
+Call Serena's `initial_instructions` tool to ensure the symbolic index is loaded.
+
+### 2. Symbol-level diff review
+For every file changed in the PR (from `git diff main...HEAD --name-only`):
+- Use `get_symbols_overview` to see what symbols exist in the file
+- Use `find_symbol` with `include_body=true` for any symbol that was added or modified
+- Flag any symbol where:
+  - A required import is missing or resolves to a wrong path
+  - A handler has been removed but is still referenced elsewhere (use `find_referencing_symbols`)
+  - Hardcoded secrets or credentials are present
+  - C0-only logic has leaked into a shared/C1+ path
+
+### 3. Checklist (must pass before PR)
+```
+[ ] No handler logic lost during extraction
+[ ] All require/import paths resolve correctly
+[ ] No hardcoded secrets, tokens, or API keys
+[ ] C0/C1+ boundary respected — C0 code not in shared paths
+[ ] New symbols have no dangling references to deleted symbols
+[ ] Job spec shape unchanged or migration provided if changed
+[ ] Portal/extension workers follow spec-driven routing (see spec-driven-portal-routing.mdc)
+[ ] .env.example updated if new env vars introduced
+```
+
+### 4. Post result as PR body section
+Include a `## Serena Review` section in the PR body summarizing:
+- Files reviewed
+- Any issues found (or "No issues found")
+- Checklist items passed/failed
+
+## What Serena provides that Rovo Dev did not
+- Symbol-level understanding — reads only relevant code slices, no context flood
+- `find_referencing_symbols` — catches dangling references after refactors
+- Precise edits via `replace_symbol_body` — can fix issues found during review in the same pass
+
+## Skipping review
+Only skip if Rob explicitly says "skip review" or "just push." Document the skip reason in the PR body.
