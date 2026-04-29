@@ -18,6 +18,53 @@ export class ApiError extends Error {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type UserRole = 'customer' | 'operator' | 'admin';
+export type PlanTier = 'diy' | 'dwy' | 'dfy' | 'custom';
+
+export type PortalStatus = 'pending' | 'running' | 'pass' | 'hold' | 'failed' | 'skipped';
+
+export interface PortalReport {
+  portal:  string;
+  status:  PortalStatus;
+  passed:  boolean;
+  score?:  number;
+  notes?:  string[];
+}
+
+export type PublishMode = 'immediate' | 'scheduled';
+
+export interface Job {
+  jobId:               string;
+  contentType:         string;
+  entryType:           'fetch' | 'upload' | 'create';
+  status:              'queued' | 'running' | 'complete' | 'failed' | 'held';
+  customerId:          string;
+  planTier:            PlanTier;
+  publishMode:         PublishMode;
+  scheduledPublishAt?: string | null;
+  createdAt:           string;
+  updatedAt:           string;
+  platforms:           string[];
+  portalReports?:      PortalReport[];
+  outputUrl?:          string;
+  thumbnailUrl?:       string;
+  publishCopy?: {
+    youtube?: { title?: string };
+    tiktok?:  { caption?: string };
+  };
+}
+
+export interface CreateJobPayload {
+  contentType:   string;
+  entryType:     'fetch' | 'upload' | 'create';
+  platforms:     string[];
+  fetchSpec?:    { sourceUrls: string[] };
+  uploadSpec?:   { fileKeys: string[] };
+  createSpec?:   { promptText: string };
+  publishMode?:  PublishMode;
+  scheduledPublishAt?: string;
+}
+
 export interface PortalContract {
   portal:      string;
   label:       string;
@@ -142,6 +189,42 @@ export async function approveClips(
     body:   JSON.stringify({ approvedIds, footageStorageKey }),
     token,
   });
+}
+
+// ─── Jobs API ─────────────────────────────────────────────────────────────────
+
+export async function listJobs(token?: string): Promise<{ jobs: Job[] }> {
+  return apiFetch('/jobs', { token });
+}
+
+export async function listAllJobs(token?: string): Promise<{ jobs: Job[] }> {
+  return apiFetch('/jobs?all=true', { token });
+}
+
+export async function getJob(jobId: string, token?: string): Promise<{ job: Job }> {
+  return apiFetch(`/jobs/${jobId}`, { token });
+}
+
+export async function createJob(
+  payload: CreateJobPayload,
+  token?: string,
+): Promise<{ jobId: string; job: Job }> {
+  return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(payload), token });
+}
+
+// ─── Plan features API ────────────────────────────────────────────────────────
+
+export interface PlanFeatureMatrix {
+  [featureKey: string]: {
+    label:       string;
+    description: string;
+    min_plan:    PlanTier;
+    plans:       Record<PlanTier, boolean>;
+  };
+}
+
+export async function getPlanFeatures(token?: string): Promise<{ features: PlanFeatureMatrix }> {
+  return apiFetch('/plan/features', { token });
 }
 
 // ─── Job validation ───────────────────────────────────────────────────────────

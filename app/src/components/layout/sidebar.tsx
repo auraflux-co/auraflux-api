@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { UserButton } from '@clerk/nextjs';
+import { useRole } from '@/hooks/use-role';
 
-const NAV_ITEMS = [
+const BASE_NAV = [
   { href: '/dashboard',          label: 'Overview' },
   { href: '/dashboard/jobs',     label: 'Jobs' },
   { href: '/dashboard/concierge',label: 'AI Concierge' },
@@ -13,8 +14,15 @@ const NAV_ITEMS = [
   { href: '/dashboard/settings', label: 'Settings' },
 ];
 
+const OPERATOR_NAV = [
+  { href: '/dashboard/operator', label: 'Operator' },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { isOperator } = useRole();
+
+  const navItems = isOperator ? [...BASE_NAV, ...OPERATOR_NAV] : BASE_NAV;
 
   return (
     <aside className="w-56 flex-shrink-0 border-r border-border bg-card flex flex-col h-screen">
@@ -23,7 +31,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
