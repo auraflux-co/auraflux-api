@@ -442,7 +442,6 @@ registerPipelineBusSubscribers();
 // Resume any pollers that were active when the server last exited
 setImmediate(resumeInFlightPollers);
 
-
 // Initialize Anthropic client for Claude API calls
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -504,7 +503,11 @@ app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({ ok: false, error: 'Invalid JSON body — check payload serialisation', label: 'BODY_PARSE_FAILED' });
+    return res.status(400).json({
+      ok: false,
+      error: 'Invalid JSON body — check payload serialisation',
+      label: 'BODY_PARSE_FAILED',
+    });
   }
   next(err);
 });
@@ -771,7 +774,9 @@ async function _refreshHealthCache() {
   // VectCut — optional external call
   try {
     const vectCutHealth = await vectCutClient.healthCheck();
-    _healthCache.vectcut = vectCutHealth.healthy ? { status: 'ok' } : { status: 'offline', error: vectCutHealth.error };
+    _healthCache.vectcut = vectCutHealth.healthy
+      ? { status: 'ok' }
+      : { status: 'offline', error: vectCutHealth.error };
   } catch (e) {
     _healthCache.vectcut = { status: 'offline', error: e.message };
   }
@@ -790,10 +795,10 @@ setInterval(() => _refreshHealthCache().catch(() => {}), 60_000);
 // Probe clip duration via ffprobe
 
 // ── Route modules (Phase 2 extraction) ────────────────────────────
-const jobsRouter        = require('./lib/routes/jobs');
+const jobsRouter = require('./lib/routes/jobs');
 const createAdminRouter = require('./lib/routes/admin');
-const publishRouter     = require('./lib/routes/publish');
-const heygenRouter      = require('./lib/routes/heygen');
+const publishRouter = require('./lib/routes/publish');
+const heygenRouter = require('./lib/routes/heygen');
 
 // Mount routers — must come after middleware and _healthCache init
 app.use('/', jobsRouter);
@@ -804,7 +809,6 @@ app.use('/', heygenRouter);
 // ── AI Video Generation ────────────────────────────────────────────────────────
 const videoRouter = require('./lib/routes/video');
 app.use('/', videoRouter);
-
 
 // ── Jira Webhook Queue ───────────────────────────────────────────────────────
 // Receives Jira webhook payloads and stores them as a queue so the local Mac
@@ -1201,4 +1205,3 @@ async function gracefulShutdown(signal) {
   console.log('[shutdown] Clean exit');
   process.exit(0);
 }
-
