@@ -18,7 +18,6 @@ set -euo pipefail
 REPO_DIR="/Users/robertgregory/cwn-production"
 LOG_FILE="$REPO_DIR/logs/jira_poller_$(date +%Y-%m-%d).log"
 AIDER="/opt/homebrew/bin/aider"
-ROVO_DISPATCH="$REPO_DIR/scripts/rovo_dispatch.sh"
 API_BASE="https://api.auraflux.co"
 
 mkdir -p "$REPO_DIR/logs"
@@ -67,56 +66,6 @@ fi
 echo "📋 $PENDING pending task(s) found." >> "$LOG_FILE"
 
 cd "$REPO_DIR"
-
-# ── Rovo Dev tasks ──────────────────────────────────────────────────────────
-ROVO_KEYS=$(echo "$QUEUE" | python3 -c "
-import sys, json
-items = json.load(sys.stdin)
-keys = [i['key'] for i in items if not i.get('processed') and i.get('agent') == 'rovo']
-print(' '.join(keys))
-" 2>/dev/null || echo "")
-
-if [ -n "$ROVO_KEYS" ]; then
-  echo "🤖 Rovo Dev tasks: $ROVO_KEYS" >> "$LOG_FILE"
-
-  for KEY in $ROVO_KEYS; do
-    SUMMARY=$(echo "$QUEUE" | python3 -c "
-import sys,json
-items=json.load(sys.stdin)
-t=next((i for i in items if i['key']=='$KEY'),{})
-print(t.get('summary',''))
-" 2>/dev/null || echo "")
-
-    DESCRIPTION=$(echo "$QUEUE" | python3 -c "
-import sys,json
-items=json.load(sys.stdin)
-t=next((i for i in items if i['key']=='$KEY'),{})
-print(t.get('description',''))
-" 2>/dev/null || echo "")
-
-    ROVO_PROMPT="You are working in /Users/robertgregory/cwn-production on Jira ticket $KEY.
-Title: $SUMMARY
-Description: $DESCRIPTION
-
-Instructions:
-1. Understand the requirement from the Jira ticket above.
-2. Implement the changes in the repository.
-3. Create a feature branch: git checkout -b feat/${KEY,,}
-4. Commit with message: '$KEY: $SUMMARY'
-5. Push and create a PR with EXACTLY this title format: '$KEY: $SUMMARY'
-   Use: gh pr create --title '$KEY: $SUMMARY' --body 'Implements $KEY\n\n$DESCRIPTION' --head feat/${KEY,,} --base main
-6. After the PR is created, run: cd /Users/robertgregory/cwn-production && node scripts/jira_complete.js $KEY
-Report the PR URL when done."
-
-    echo "Dispatching $KEY to Rovo Dev..." >> "$LOG_FILE"
-    bash "$ROVO_DISPATCH" "$ROVO_PROMPT" >> "$LOG_FILE" 2>&1 || \
-      echo "⚠️  Rovo Dev dispatch failed for $KEY" >> "$LOG_FILE"
-
-    curl -sf -X POST "${API_BASE}/api/jira-queue/${KEY}/done?secret=${SECRET}" \
-      -H "Content-Type: application/json" >> "$LOG_FILE" 2>&1 || true
-    echo "Marked $KEY done in queue" >> "$LOG_FILE"
-  done
-fi
 
 # ── Aider tasks ─────────────────────────────────────────────────────────────
 AIDER_KEYS=$(echo "$QUEUE" | python3 -c "

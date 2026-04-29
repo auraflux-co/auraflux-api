@@ -1650,7 +1650,7 @@ Every fix below is tagged **[C0]** (fixes c0 short/long production), **[C1+]** (
 
 ### Block 4 — Platform/Architecture (~remaining hours)
 
-6. **Rovo MCP setup** — `docs/ops/ATLASSIAN_ROVO_MCP.md`
+6. **Serena MCP** — code intelligence for symbolic search, analysis, and editing (replaces Rovo Dev; active via MCP in Cursor)
 7. **C0→C1+ UI code review + Equinox assessment**
    - Review `cwn_production.html` against C1+ Next.js/Shadcn target
    - Equinox = the new frontend design system; assess migration gap
