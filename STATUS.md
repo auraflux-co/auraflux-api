@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-29 (Cursor — CPD-48: Content scheduling — DB migration (publish_mode, scheduled_publish_at, actual_published_at columns), scheduling_cron.js (5-min interval, idempotent), PUT /jobs/:id/schedule (30-min min / 60-day max window), SchedulePicker React component (publish-now/schedule toggle, platform best-practice time windows with green hour strip for YouTube/TikTok/Instagram/Twitter). 0 TS errors. 351/351 tests.)
+**Last Updated:** 2026-04-29 (Cursor — Serena post-commit QA hook: .cursor/hooks.json (postToolUse on Shell, fires after git commit), .cursor/hooks/serena-commit-qa.sh (injects additional_context with 6-check QA checklist), serena-pr-review.mdc updated with Post-commit QA section. Replaces Rovo_AF automation.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
