@@ -10,6 +10,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_SLUG=$(git -C "$REPO_ROOT" remote get-url origin | sed -e 's|.*github.com[:/]\(.*\)\.git$|\1|' 2>/dev/null || echo "clipzworldnews/auraflux-api")
 REPORT="$REPO_ROOT/logs/aider_session_review.md"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -91,9 +92,9 @@ GH_OPEN_PRS=""
 GH_FAILING_CI=""
 
 if command -v gh &>/dev/null; then
-  GH_OPEN_PRS=$(gh pr list --repo clipzworldnews/auraflux-api --state open --json number,title,headRefName,statusCheckRollup \
+  GH_OPEN_PRS=$(gh pr list --repo "$REPO_SLUG" --state open --json number,title,headRefName,statusCheckRollup \
     --jq '.[] | "  #\(.number) \(.title) [\(.headRefName)] — CI: \((.statusCheckRollup // []) | map(.conclusion) | unique | join(","))"' 2>/dev/null || echo "  (gh pr list failed)")
-  GH_FAILING_CI=$(gh run list --repo clipzworldnews/auraflux-api --status failure --limit 5 \
+  GH_FAILING_CI=$(gh run list --repo "$REPO_SLUG" --status failure --limit 5 \
     --json displayTitle,headBranch,createdAt \
     --jq '.[] | "  \(.displayTitle) on \(.headBranch) at \(.createdAt)"' 2>/dev/null || echo "  none")
 else
@@ -123,7 +124,7 @@ fi
 
 # ── 5. Environment consistency ──────────────────────────────────────────────────
 echo "🔑 Checking environment consistency..."
-ENV_IN_CODE=$(grep -rh 'process\.env\.' "$REPO_ROOT/lib" "$REPO_ROOT/server.js" 2>/dev/null \
+ENV_IN_CODE=$(grep -rh 'process\.env\.' "$REPO_ROOT/lib" "$REPO_ROOT/server.js" "$REPO_ROOT/scripts" "$REPO_ROOT/test" "$REPO_ROOT/bin" 2>/dev/null \
   | grep -oE 'process\.env\.[A-Z_]+' | sort -u | sed 's/process\.env\.//')
 ENV_IN_EXAMPLE=$(grep -oE '^[A-Z_]+' "$REPO_ROOT/.env.example" 2>/dev/null | sort -u || echo "")
 ENV_MISSING=$(comm -23 <(echo "$ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | sort) 2>/dev/null || echo "")
