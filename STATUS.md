@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-28 (Cursor — feat: jira-webhook — accept rovo_review_requested action; lib/routes/admin.js updated to queue @rovo-dev comment triggers without requiring rovo label on issue)
+**Last Updated:** 2026-04-28 (Cursor — feat: CPD-60 session review — scripts/aider_session_review.sh + logs/aider_session_review.md + .cursor/rules/session-review.mdc; Aider health check runs at end of session, report read at next session start)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
