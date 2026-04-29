@@ -1,4 +1,4 @@
-name: Rovo Dev — PR open → In Review + request Rovo
+name: PR opened → In Review + post review checklist
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  rovo-review:
+  pr-review:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
@@ -34,7 +34,6 @@ jobs:
           ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
-          # Transition map: To Do=11, In Development=5, In Review=3, Approved=4, Done=31
           HTTP_STATUS=$(curl -s -o /tmp/jira_transition_resp.json -w "%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
@@ -50,7 +49,7 @@ jobs:
             echo "⚠️  Transition returned HTTP $HTTP_STATUS (non-fatal)"
           fi
 
-      - name: Post @rovo-dev review request on Jira issue
+      - name: Post review checklist on Jira issue
         if: steps.extract.outputs.issue_key != ''
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -59,7 +58,6 @@ jobs:
           ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
@@ -72,11 +70,12 @@ jobs:
                 "content": [
                   {"type":"text","text":"🔍 PR #%s opened by @%s — story moved to In Review.\n"},
                   {"type":"text","text":"PR: %s\n\n"},
-                  {"type":"text","text":"@rovo-dev please review this pull request. Focus on:\n"},
+                  {"type":"text","text":"Review checklist:\n"},
                   {"type":"text","text":"- Correctness: no handler logic lost during extraction\n"},
                   {"type":"text","text":"- Require paths: all module imports resolve correctly\n"},
                   {"type":"text","text":"- Security: no hardcoded secrets, no unsafe eval\n"},
-                  {"type":"text","text":"- C0/C1+ boundary: C0-only code not leaking into shared paths\n\n"},
+                  {"type":"text","text":"- C0/C1+ boundary: C0-only code not leaking into shared paths\n"},
+                  {"type":"text","text":"- Tests: relevant unit tests present and passing\n\n"},
                   {"type":"text","text":"When review is complete, transition this story to Approved."}
                 ]
               }]
@@ -94,9 +93,9 @@ jobs:
           cat /tmp/jira_comment_resp.json
           echo "HTTP $HTTP_STATUS"
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "✅ Rovo Dev review request posted to $ISSUE_KEY"
+            echo "✅ Review checklist posted to $ISSUE_KEY"
           else
-            echo "⚠️  Comment post returned HTTP $HTTP_STATUS — non-fatal, continuing"
+            echo "⚠️  Comment post returned HTTP $HTTP_STATUS — non-fatal"
           fi
 
       - name: Post PR link comment on GitHub PR
@@ -113,5 +112,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `🤖 **Review requested**\n\nJira: ${jiraLink} → moved to **In Review**\nRovo Dev review request posted on the Jira issue.\n\nFlow: In Development → **In Review** → Approved (Rob) → Done (merge)`,
+              body: `🔍 **Review requested**\n\nJira: ${jiraLink} → moved to **In Review**\nReview checklist posted on the Jira issue.\n\nFlow: In Development → **In Review** → Approved (Rob) → Done (merge)`,
             });
