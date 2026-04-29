@@ -6,7 +6,7 @@
         "command": ".cursor/hooks/serena-commit-qa.sh",
         "matcher": "Shell",
         "timeout": 5,
-        "failClosed": false
+        "failClosed": true
       }
     ]
   }
