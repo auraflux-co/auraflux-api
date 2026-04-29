@@ -1,11 +1,31 @@
 ---
-description: Serena-powered pre-PR code review gate — run before every `gh pr create`
+description: Serena MCP — session-wide code intelligence + pre-PR review gate
 globs:
 alwaysApply: true
 ---
-# Serena Pre-PR Code Review
+# Serena — Session-Wide Usage + Pre-PR Review
 
-Before calling `gh pr create` on any branch, the agent **must** run a Serena review pass. This replaces Rovo Dev's automated PR review.
+## Session start (REQUIRED every session)
+1. Call `initial_instructions` to load the Serena Instructions Manual
+2. Call `activate_project` with `project: "cwn-production"` to warm the index
+3. Call `list_memories` to load project context (architecture, sprint state, conventions)
+
+Serena in memory = less work for Aider overnight. Aider should focus on environment-level tasks, not re-reviewing every commit. Real-time Serena review during Cursor sessions handles that.
+
+## For ALL code work (not just PR time)
+
+**Reading code — forbidden patterns replaced:**
+- `Read` file → `get_symbols_overview` first, then `find_symbol` with `include_body=true`
+- `Grep` for symbols → `find_symbol` with name path pattern
+- Following references → `find_referencing_symbols`
+
+**Editing code — forbidden patterns replaced:**
+- `StrReplace` on code files → `replace_symbol_body` (whole symbol) or `replace_content` (partial)
+- Adding new code → `insert_after_symbol` / `insert_before_symbol`
+
+Exception: non-code files (markdown, yaml, JSON config, shell scripts) may use StrReplace/Write.
+
+## Pre-PR review gate (before every `gh pr create`)
 
 ## Required steps (in order)
 
