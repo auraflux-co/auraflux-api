@@ -13,17 +13,25 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPORT="$REPO_ROOT/logs/aider_session_review.md"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# Load .env if not already set
+# Load .env if not already set — only parse KEY=VALUE lines, skip comments and bare words
 if [ -z "${JIRA_API_TOKEN:-}" ] && [ -f "$REPO_ROOT/.env" ]; then
-  set -a; source "$REPO_ROOT/.env"; set +a
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Skip blank lines and comments
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    # Only process lines with KEY=VALUE format
+    if [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+      export "$line" 2>/dev/null || true
+    fi
+  done < "$REPO_ROOT/.env"
 fi
 
-JIRA_BASE="${JIRA_BASE_URL%/}"
-JIRA_AUTH="${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}"
+JIRA_BASE="${JIRA_BASE_URL:-}"
+JIRA_BASE="${JIRA_BASE%/}"
+JIRA_AUTH="${JIRA_USER_EMAIL:-}:${JIRA_API_TOKEN:-}"
 
 # --since override
-SINCE="${2:-}"
-if [ "$1" = "--since" ] && [ -n "$2" ]; then
+SINCE=""
+if [ "${1:-}" = "--since" ] && [ -n "${2:-}" ]; then
   SINCE="$2"; shift 2
 fi
 if [ -z "$SINCE" ]; then
@@ -124,7 +132,9 @@ ENV_MISSING=$(comm -23 <(echo "$ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | 
 echo ""
 echo "🤖 Running Aider review..."
 
-PROMPT=$(cat <<PROMPT
+PROMPT_FILE=$(mktemp /tmp/aider_review_prompt.XXXXXX.md)
+
+cat > "$PROMPT_FILE" <<ENDPROMPT
 You are performing an end-of-session health review of the AuraFlux API platform.
 Review the information below and write a structured report to logs/aider_session_review.md.
 
@@ -145,16 +155,16 @@ ${OPEN_BRANCHES:-none}
 
 ## JIRA BOARD STATE
 
-**To Do (backlog):**
+To Do (backlog):
 ${JIRA_TODO:-none}
 
-**In Development:**
+In Development:
 ${JIRA_IN_DEV:-none}
 
-**In Review:**
+In Review:
 ${JIRA_IN_REVIEW:-none}
 
-**Approved (awaiting merge):**
+Approved (awaiting merge):
 ${JIRA_APPROVED:-none}
 
 ---
@@ -179,13 +189,13 @@ ${CONF_RECENT:-none}
 ## ENVIRONMENT VARIABLES
 
 Vars referenced in code but NOT in .env.example:
-${ENV_MISSING:-none (all vars documented)}
+${ENV_MISSING:-none - all vars documented}
 
 ---
 
 ## REPORT STRUCTURE
 
-Write ALL sections below. Be direct — if clean, say so. No padding.
+Write ALL sections below. Be direct. If everything is clean, say so clearly.
 
 ### 1. Session Summary
 What was done this session (2-4 sentences based on commits).
@@ -193,11 +203,11 @@ What was done this session (2-4 sentences based on commits).
 ### 2. Jira Consistency
 - Are any tickets stuck in unexpected states?
 - Are In Development / In Review tickets matched to open GitHub PRs?
-- Any tickets that should be Done based on merged commits but aren't?
-- Any gaps in the Epic → Story hierarchy?
+- Any tickets that should be Done based on merged commits but are not?
+- Any gaps in the Epic to Story hierarchy?
 
 ### 3. GitHub Consistency
-- Any open PRs that have no corresponding Jira ticket in flight?
+- Any open PRs with no corresponding Jira ticket in flight?
 - Any CI failures that need attention?
 - Any branches that should have been deleted after merge?
 
@@ -215,7 +225,7 @@ What was done this session (2-4 sentences based on commits).
 - Any C0-only code that crept into shared lib/ paths?
 - Any hardcoded C0 branding in C1+ paths?
 
-### 7. Environment & Secrets
+### 7. Environment and Secrets
 - Any env vars in code missing from .env.example?
 - Any hardcoded secrets or tokens?
 - Any new features that need Render env vars before deploying?
@@ -228,13 +238,9 @@ What was done this session (2-4 sentences based on commits).
 Prioritised list. Mark each: [BLOCKING] [SHOULD FIX] [NICE TO HAVE]
 
 ---
-<!-- last-reviewed-commit: $HEAD_SHA -->
-<!-- reviewed-at: $TIMESTAMP -->
-PROMPT
-)
-
-PROMPT_FILE=$(mktemp /tmp/aider_review_prompt.XXXXXX.md)
-echo "$PROMPT" > "$PROMPT_FILE"
+<!-- last-reviewed-commit: ${HEAD_SHA} -->
+<!-- reviewed-at: ${TIMESTAMP} -->
+ENDPROMPT
 
 cd "$REPO_ROOT"
 aider \
