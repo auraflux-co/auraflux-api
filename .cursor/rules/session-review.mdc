@@ -6,10 +6,13 @@ alwaysApply: true
 
 # End-of-Session Aider Review
 
-At the **start of every session**, read `logs/aider_session_review.md`.
+At the **start of every session**, do the following in order:
 
-If the report contains `[BLOCKING]` items, address them before starting new feature work.
-If it contains `[SHOULD FIX]` items, note them and factor them into the current session plan.
+1. Read `logs/aider_session_review.md`
+2. Check whether `last-reviewed-commit` matches the current `git rev-parse HEAD`
+3. **If they do not match** (i.e. commits landed since last review, or Jira creds are now available), tell the user:
+   > "The review is stale — run `bash scripts/aider_session_review.sh` to get a fresh report with live Jira data before we start."
+4. Once the report is current: check for `[BLOCKING]` items (fix first) and `[SHOULD FIX]` items (fold into session plan).
 
 At the **end of every session** (or when the user says "we're done" / "end session" / "close out"), remind the user to run:
 
