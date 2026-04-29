@@ -118,14 +118,19 @@ describe('lib/ai/runpod', () => {
   describe('pollComfyResult', () => {
     it('returns outputs when history contains the prompt_id', async () => {
       const promptId = 'poll-id-1';
-      const expectedOutputs = { '8': { images: [{ filename: 'out.webp' }] } };
+      const expectedOutputs = { 8: { images: [{ filename: 'out.webp' }] } };
 
       // First call: history not ready yet. Second call: history populated.
       https.request
         .mockImplementationOnce(makeHttpsRequestMock(200, {}))
-        .mockImplementationOnce(makeHttpsRequestMock(200, { [promptId]: { outputs: expectedOutputs } }));
+        .mockImplementationOnce(
+          makeHttpsRequestMock(200, { [promptId]: { outputs: expectedOutputs } })
+        );
 
-      const outputs = await runpod.pollComfyResult(promptId, undefined, { intervalMs: 5, maxWaitMs: 5000 });
+      const outputs = await runpod.pollComfyResult(promptId, undefined, {
+        intervalMs: 5,
+        maxWaitMs: 5000,
+      });
 
       expect(outputs).toEqual(expectedOutputs);
       expect(https.request).toHaveBeenCalledTimes(2);
@@ -144,10 +149,10 @@ describe('lib/ai/runpod', () => {
 
   describe('generateWanVideo', () => {
     const MOCK_WORKFLOW = JSON.stringify({
-      '3': { inputs: {} },
-      '4': { inputs: {} },
-      '5': { inputs: {} },
-      '8': { inputs: {} },
+      3: { inputs: {} },
+      4: { inputs: {} },
+      5: { inputs: {} },
+      8: { inputs: {} },
     });
 
     beforeEach(() => {

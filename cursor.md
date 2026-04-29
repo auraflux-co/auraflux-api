@@ -377,10 +377,10 @@ When a job misbehaves, read in this order: **what happened → which failure buc
 
 **Sources of truth (all written by `recordWhyLedger()`):**
 
-| Sink      | Location                                                                                  |
-| --------- | ----------------------------------------------------------------------------------------- |
-| SQLite    | `why_ledger` table — `lib/db.js` (`saveWhyLedger`)                                        |
-| New Relic | Custom event **`PipelineWhy`**                                                            |
+| Sink      | Location                                                                                             |
+| --------- | ---------------------------------------------------------------------------------------------------- |
+| SQLite    | `why_ledger` table — `lib/db.js` (`saveWhyLedger`)                                                   |
+| New Relic | Custom event **`PipelineWhy`**                                                                       |
 | JSONL     | `logs/pipeline_events.jsonl` — lines with `"type":"why:ledger"` (via `lib/pipeline_event_logger.js`) |
 
 **Wiring:** `lib/why_ledger.js`; emitted from `lib/monitoring.js` (gate bus + escalate + kill + restore), `lib/script_gen.js` (Gate 1 pipeline bus + auto-action), `lib/gates/gate1.js` (Claude JSON salvage path), `lib/assembly.js` (bus payload enrichment). Tests: `test/why_ledger.test.js`.

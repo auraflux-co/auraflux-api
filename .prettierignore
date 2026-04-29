@@ -45,3 +45,5 @@ cwn_production.html
 STATUS.md
 # Canvas / media source files (not JS source)
 *.canvas.tsx
+# RunPod workflow templates — use {{PLACEHOLDER}} syntax, not valid JSON
+lib/ai/*.json
