@@ -1,4 +1,4 @@
-name: Jira — Post merge comment (awaiting Rovo review)
+name: Jira — PR merged → Done
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  post-merge-comment:
+  close-story:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +22,31 @@ jobs:
           echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
           echo "Found Jira key: $KEY"
 
-      - name: Post merge comment — request Rovo review
+      - name: Transition Jira story → Done
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          HTTP_STATUS=$(curl -s -o /tmp/jira_transition_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/transitions" \
+            -d '{"transition":{"id":"31"}}')
+          cat /tmp/jira_transition_resp.json
+          echo "Transition to Done: HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ $ISSUE_KEY → Done"
+          else
+            echo "⚠️  Transition returned HTTP $HTTP_STATUS"
+          fi
+
+      - name: Post merge summary comment on Jira
         if: steps.extract.outputs.issue_key != ''
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -35,8 +59,6 @@ jobs:
           MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
-          # Story stays In Progress — only Rovo's review closes it to Done.
-          # Post a comment asking Rovo to review the merged code.
           BODY=$(printf '{
             "body": {
               "type": "doc",
@@ -44,9 +66,10 @@ jobs:
               "content": [{
                 "type": "paragraph",
                 "content": [
-                  {"type":"text","text":"✅ PR #%s merged to main by @%s\n"},
-                  {"type":"text","text":"%s\n%s\n\n"},
-                  {"type":"text","text":"@rovo-dev please review the merged code and confirm it is production-ready. If the implementation looks correct, reply with [rovo-approved] to close this story."}
+                  {"type":"text","text":"✅ PR #%s merged to main by @%s — story closed.\n"},
+                  {"type":"text","text":"Title: %s\n"},
+                  {"type":"text","text":"Link: %s\n\n"},
+                  {"type":"text","text":"Flow completed: In Development → In Review → Approved → Done ✅"}
                 ]
               }]
             }
@@ -62,8 +85,7 @@ jobs:
 
           cat /tmp/jira_comment_resp.json
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "✅ Merge comment + Rovo review request posted to $ISSUE_KEY"
-            echo "   Story remains In Progress until Rovo posts [rovo-approved]"
+            echo "✅ Merge summary posted to $ISSUE_KEY"
           else
             echo "⚠️  Comment returned HTTP $HTTP_STATUS"
             exit 1

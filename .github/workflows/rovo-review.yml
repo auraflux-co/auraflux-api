@@ -1,4 +1,4 @@
-name: Rovo Dev — Request AI review via Jira on PR open
+name: Rovo Dev — PR open → In Review + request Rovo
 
 on:
   pull_request:
@@ -75,7 +75,7 @@ jobs:
             echo "⚠️  Comment post returned HTTP $HTTP_STATUS — non-fatal, continuing"
           fi
 
-      - name: Transition Jira story → In Progress
+      - name: Transition Jira story → In Review
         if: steps.extract.outputs.issue_key != ''
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -84,14 +84,17 @@ jobs:
           ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
+          # Transition ID for "In Review" — update once Jira workflow is published
+          # Current fallback: ID 21 = "In Development" until "In Review" transition exists
+          IN_REVIEW_ID="${IN_REVIEW_TRANSITION_ID:-21}"
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
             -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
             "$BASE/rest/api/3/issue/$ISSUE_KEY/transitions" \
-            -d '{"transition":{"id":"21"}}')
-          echo "Transition to In Progress: HTTP $HTTP_STATUS (non-fatal)"
+            -d "{\"transition\":{\"id\":\"$IN_REVIEW_ID\"}}")
+          echo "Transition to In Review (ID=$IN_REVIEW_ID): HTTP $HTTP_STATUS (non-fatal)"
 
       - name: Post PR link comment on GitHub PR
         uses: actions/github-script@v7
@@ -107,5 +110,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `🤖 **Automated review requested**\n\nJira: ${jiraLink} → moved to **In Progress**\nRovo Dev review request posted to the Jira issue.`,
+              body: `🤖 **Review requested**\n\nJira: ${jiraLink} → moved to **In Review**\nRovo Dev review request posted on the Jira issue.\n\nFlow: In Development → **In Review** → Approved → Done`,
             });
