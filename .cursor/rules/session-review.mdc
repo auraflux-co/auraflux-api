@@ -11,13 +11,15 @@ At the **start of every session**, read `logs/aider_session_review.md`.
 If the report contains `[BLOCKING]` items, address them before starting new feature work.
 If it contains `[SHOULD FIX]` items, note them and factor them into the current session plan.
 
-At the **end of every session** (or when the user says "we're done" / "end session"), remind the user to run:
+At the **end of every session** (or when the user says "we're done" / "end session" / "close out"), remind the user to run:
 
 ```bash
 bash scripts/aider_session_review.sh
 ```
 
-This generates a fresh structural health report covering:
+This generates a full cross-system health report covering:
+
+**Codebase**
 - Commit delta since last review
 - Route file dependency correctness
 - C0 / C1+ boundary violations
@@ -25,4 +27,18 @@ This generates a fresh structural health report covering:
 - Dead code after route extractions
 - Render deploy readiness
 
-The report is saved to `logs/aider_session_review.md` and committed automatically by Aider.
+**Jira**
+- Tickets stuck in wrong states
+- In Development / In Review tickets without matching open GitHub PRs
+- Merged commits with no corresponding Done ticket
+
+**GitHub**
+- Open PRs with no Jira ticket in flight
+- Recent CI failures
+- Stale unmerged branches
+
+**Confluence**
+- Stale docs given recent code changes
+- Missing docs for new routes or features
+
+The report is saved to `logs/aider_session_review.md`.
