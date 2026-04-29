@@ -424,6 +424,7 @@ const jobsC1Router = require('./lib/routes/jobs_c1');
 const creditsRouter    = require('./lib/routes/credits');    // CPD-43
 const thumbnailRouter  = require('./lib/routes/thumbnail');  // CPD-55
 const conciergeRouter  = require('./lib/routes/concierge');  // CPD-83
+const clipSourcingRouter = require('./lib/routes/clip_sourcing'); // CPD-73
 const { runOverageBillingCycle } = require('./lib/services/billing_cron'); // CPD-46
 const createAdminRouter = require('./lib/routes/admin');
 const publishRouter = require('./lib/routes/publish');
@@ -434,7 +435,8 @@ app.use('/', jobsRouter);
 app.use('/', jobsC1Router); // CPD-67: C1+ POST /jobs entry endpoint
 app.use('/', creditsRouter);   // CPD-43: credit ledger consume + balance
 app.use('/', thumbnailRouter); // CPD-55: thumbnail approval stage
-app.use('/', conciergeRouter); // CPD-83: AI Concierge
+app.use('/', conciergeRouter);     // CPD-83: AI Concierge
+app.use('/', clipSourcingRouter); // CPD-73: Clip sourcing
 app.use('/', createAdminRouter({ _healthCache, BUILD_INFO }));
 app.use('/', publishRouter);
 app.use('/', heygenRouter);
