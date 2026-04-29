@@ -1,0 +1,71 @@
+name: Rovo Dev — AI code review on PR
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+    branches: [main]
+
+jobs:
+  rovo-review:
+    # Skip draft PRs
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Extract Jira issue key
+        id: extract
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          TITLE="${{ github.event.pull_request.title }}"
+          KEY=$(echo "$BRANCH" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          if [ -z "$KEY" ]; then
+            KEY=$(echo "$TITLE" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          fi
+          echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Request Rovo Dev review via PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueKey = '${{ steps.extract.outputs.issue_key }}';
+            const jiraBase = '${{ secrets.JIRA_BASE_URL }}' || 'https://robertsworkspace-18914505.atlassian.net';
+            const jiraLink = issueKey
+              ? `\n\n📋 Jira: [${issueKey}](${jiraBase}/browse/${issueKey})`
+              : '';
+
+            const body = [
+              `@rovo-dev please review this PR.`,
+              ``,
+              `**Focus areas:**`,
+              `- Correctness of route extraction (no handler logic lost)`,
+              `- Dependency resolution (require paths, module imports)`,
+              `- Security: any hardcoded secrets, unsafe eval, injection vectors`,
+              `- C0 vs C1+ boundary violations (C0-only code leaking into shared paths)`,
+              jiraLink,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+      - name: Transition Jira story → In Progress
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+        run: |
+          # Only transition to In Progress if not already there (non-fatal if it fails)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$JIRA_BASE_URL/rest/api/3/issue/$ISSUE_KEY/transitions" \
+            -d '{"transition":{"id":"21"}}')
+          echo "Transition to In Progress: HTTP $HTTP_STATUS"

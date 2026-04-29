@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-28 (Cursor — feat: CPD-50 R2 backup — scripts/backup_to_r2.js nightly SQLite+JSON backup to Cloudflare R2; render.yaml updated with R2 env vars + nightly cron job at 03:00 UTC; .env.example updated; docs/ops/RESTORE_PROCEDURE.md written; PR open for review)
+**Last Updated:** 2026-04-28 (Cursor — feat: CPD-27 server.js slim — server.js 5633→1194 lines (79% reduction); extracted lib/routes/video.js, assembly_routes.js, c0_sources.js, c0_capcut.js, c0_gate_tools.js; all inline app.get/app.post handlers moved to routers; PR open)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
