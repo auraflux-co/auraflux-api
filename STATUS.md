@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-29 (Cursor — Serena post-commit QA hook: .cursor/hooks.json (postToolUse on Shell, fires after git commit), .cursor/hooks/serena-commit-qa.sh (injects additional_context with 6-check QA checklist), serena-pr-review.mdc updated with Post-commit QA section. Replaces Rovo_AF automation.)
+**Last Updated:** 2026-04-29 (Cursor — Serena hook hardening: failClosed=true, jq smoke-test (exit 1 if missing), --dry-run exclusion, malformed JSON guard. All 4 edge cases verified.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
