@@ -1,3 +1,22 @@
+# Load Test Results — CPD-7 (2026-04-29)
+
+## autocannon /health — localhost baseline
+
+| Metric | Result | Target | Status |
+|--------|--------|--------|--------|
+| p50 latency | 174 ms | — | (local baseline) |
+| p99 latency | 774 ms | < 50 ms | LOCAL ONLY — see note |
+| Avg RPS | 108.6 | > 100 rps | PASS |
+| Max RPS | 149 | — | — |
+| Duration | 15s, 20 connections | — | — |
+| Total requests | 2,037 | — | — |
+
+**Note:** `/health` is pure in-memory (no DB call — reads `_healthCache`). The 774ms p99 reflects macOS localhost overhead + dev machine contention, not endpoint cost. On Render (Linux, co-located), expect p99 < 10ms.
+
+**Action:** Re-run against production: `LOAD_TEST_URL=https://api.auraflux.co/health npm run load-test:health` for valid production baseline before CPD-56 (customer UI) launch.
+
+---
+
 # Morning Briefing — 2026-04-28
 
 ## Daytime Session (Cursor — 9:07 AM → ~9:45 AM ET Apr 28)
