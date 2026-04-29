@@ -437,6 +437,8 @@ app.use('/', creditsRouter);   // CPD-43: credit ledger consume + balance
 app.use('/', thumbnailRouter); // CPD-55: thumbnail approval stage
 app.use('/', conciergeRouter);     // CPD-83: AI Concierge
 app.use('/', clipSourcingRouter); // CPD-73: Clip sourcing
+const planRouter = require('./lib/routes/plan'); // CPD-84: Plan feature matrix
+app.use('/', planRouter);
 app.use('/', createAdminRouter({ _healthCache, BUILD_INFO }));
 app.use('/', publishRouter);
 app.use('/', heygenRouter);

@@ -46,15 +46,24 @@ describe('portal_tts_ext', () => {
   });
 
   const baseJobSpec = {
-    jobId: 'job-tts-001',
-    addOns: { tts: { active: true, voiceId: 'voice-abc' } },
+    jobId:     'job-tts-001',
+    planTier:  'dwy',   // tts.elevenlabs requires dwy+
+    addOns:    { tts: { active: true, voiceId: 'voice-abc' } },
     filledScript: 'Welcome to the show. Today we discuss AI news.',
     state: {},
   };
 
+  test('returns skip when plan tier is too low (diy)', async () => {
+    const result = await runWorker({
+      jobSpec: { jobId: 'job-plan', planTier: 'diy', addOns: { tts: { active: true } }, filledScript: 'text', state: {} },
+    });
+    expect(result.outcome).toBe('skip');
+    expect(result.passed).toBe(false);
+  });
+
   test('returns skip when tts not ordered', async () => {
     const result = await runWorker({
-      jobSpec: { jobId: 'job-001', addOns: {}, filledScript: 'text', state: {} },
+      jobSpec: { jobId: 'job-001', planTier: 'dwy', addOns: {}, filledScript: 'text', state: {} },
     });
     expect(result.outcome).toBe('skip');
     expect(result.passed).toBe(false);
@@ -62,20 +71,21 @@ describe('portal_tts_ext', () => {
 
   test('returns hard_fail when script is missing', async () => {
     const result = await runWorker({
-      jobSpec: { jobId: 'job-002', addOns: { tts: { active: true } }, state: {} },
+      jobSpec: { jobId: 'job-002', planTier: 'dwy', addOns: { tts: { active: true } }, state: {} },
     });
     expect(result.outcome).toBe('hard_fail');
     expect(result.passed).toBe(false);
     expect(result.reason).toMatch(/script not available/i);
   });
 
-  test('returns hard_fail when ELEVENLABS_API_KEY missing', async () => {
+  test('returns skip when ELEVENLABS_API_KEY missing (feature gate blocks)', async () => {
     delete process.env.ELEVENLABS_API_KEY;
     jest.resetModules();
     const { runWorker: rw } = require('../lib/portals/portal_tts_ext');
     const result = await rw({ jobSpec: baseJobSpec });
-    expect(result.outcome).toBe('hard_fail');
-    expect(result.reason).toMatch(/ELEVENLABS_API_KEY/);
+    // Feature gate returns skip when required env var is absent
+    expect(result.outcome).toBe('skip');
+    expect(result.passed).toBe(false);
   });
 
   test('successful generation returns passed=true', async () => {
