@@ -26,6 +26,11 @@ if [ -z "${JIRA_API_TOKEN:-}" ] && [ -f "$REPO_ROOT/.env" ]; then
   done < "$REPO_ROOT/.env"
 fi
 
+# Support both JIRA_* and ATLASSIAN_* variable naming conventions
+JIRA_API_TOKEN="${JIRA_API_TOKEN:-${ATLASSIAN_API_TOKEN:-}}"
+JIRA_USER_EMAIL="${JIRA_USER_EMAIL:-${ATLASSIAN_EMAIL:-}}"
+JIRA_BASE_URL="${JIRA_BASE_URL:-${ATLASSIAN_DOMAIN:-}}"
+
 JIRA_BASE="${JIRA_BASE_URL:-}"
 JIRA_BASE="${JIRA_BASE%/}"
 JIRA_AUTH="${JIRA_USER_EMAIL:-}:${JIRA_API_TOKEN:-}"
