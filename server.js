@@ -499,6 +499,16 @@ app.use(
 app.use(require('express').json({ limit: '10mb' }));
 app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
 
+// Catch malformed JSON bodies before they reach routes — returns 400 instead of 500.
+// Triggered when Jira Automation interpolates ADF comment bodies as raw strings.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ ok: false, error: 'Invalid JSON body — check payload serialisation', label: 'BODY_PARSE_FAILED' });
+  }
+  next(err);
+});
+
 const PORT = process.env.PORT || 3000;
 
 // ── VectCut Design Orchestrator ─────────────────────────────────────
