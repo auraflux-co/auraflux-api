@@ -32,18 +32,27 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
         run: |
-          echo "Transitioning $ISSUE_KEY to Done (transition id 31)..."
+          # Strip trailing slash from base URL if present
+          BASE="${JIRA_BASE_URL%/}"
+          ENDPOINT="$BASE/rest/api/3/issue/$ISSUE_KEY/transitions"
+          echo "Transitioning $ISSUE_KEY to Done..."
+          echo "Endpoint: $ENDPOINT"
           HTTP_STATUS=$(curl -s -o /tmp/jira_resp.json -w "%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
             -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
-            "$JIRA_BASE_URL/rest/api/3/issue/$ISSUE_KEY/transitions" \
+            "$ENDPOINT" \
             -d '{"transition":{"id":"31"}}')
+          echo "Response (HTTP $HTTP_STATUS):"
           cat /tmp/jira_resp.json
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
             echo "✅ $ISSUE_KEY transitioned to Done"
           else
-            echo "⚠️  Transition returned HTTP $HTTP_STATUS — check credentials/permissions"
+            echo "⚠️  Transition returned HTTP $HTTP_STATUS"
+            echo "Verify JIRA_BASE_URL=https://your-domain.atlassian.net (no trailing slash)"
+            echo "Verify JIRA_USER_EMAIL is your Atlassian login email"
+            echo "Verify JIRA_API_TOKEN was generated at id.atlassian.com/manage-profile/security/api-tokens"
             exit 1
           fi
 
@@ -59,26 +68,14 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
         run: |
-          BODY=$(cat <<EOF
-          {
-            "body": {
-              "type": "doc",
-              "version": 1,
-              "content": [{
-                "type": "paragraph",
-                "content": [{
-                  "type": "text",
-                  "text": "✅ PR #$PR_NUMBER merged to main by @$MERGED_BY\n$PR_TITLE\n$PR_URL"
-                }]
-              }]
-            }
-          }
-          EOF
-          )
+          BASE="${JIRA_BASE_URL%/}"
+          BODY=$(printf '{"body":{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"PR #%s merged to main by @%s\\n%s\\n%s"}]}]}}' \
+            "$PR_NUMBER" "$MERGED_BY" "$PR_TITLE" "$PR_URL")
           curl -s -o /dev/null \
             -X POST \
             -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
             -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
-            "$JIRA_BASE_URL/rest/api/3/issue/$ISSUE_KEY/comment" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/comment" \
             -d "$BODY"
           echo "Comment posted to $ISSUE_KEY"
