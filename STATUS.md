@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-29 (Cursor — Feature gate by plan: lib/services/feature_gate.js, 20 features, planTier baked into jobSpec, thumbnail_stage reference impl. 254/254 tests. CPD-84 created.)
+**Last Updated:** 2026-04-29 (Cursor — CPD-11 server.js module split complete: 1241→584 lines. Extracted topaz, puppeteer_utils, branding_assets, vectcut_client, health_cache, startup. 254/254 tests.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
