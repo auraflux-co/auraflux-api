@@ -809,7 +809,8 @@ setInterval(() => _refreshHealthCache().catch(() => {}), 60_000);
 // ── Route modules (Phase 2 extraction) ────────────────────────────
 const jobsRouter = require('./lib/routes/jobs');
 const jobsC1Router = require('./lib/routes/jobs_c1');
-const creditsRouter = require('./lib/routes/credits'); // CPD-43
+const creditsRouter    = require('./lib/routes/credits');    // CPD-43
+const thumbnailRouter  = require('./lib/routes/thumbnail');  // CPD-55
 const { runOverageBillingCycle } = require('./lib/services/billing_cron'); // CPD-46
 const createAdminRouter = require('./lib/routes/admin');
 const publishRouter = require('./lib/routes/publish');
@@ -818,7 +819,8 @@ const heygenRouter = require('./lib/routes/heygen');
 // Mount routers — must come after middleware and _healthCache init
 app.use('/', jobsRouter);
 app.use('/', jobsC1Router); // CPD-67: C1+ POST /jobs entry endpoint
-app.use('/', creditsRouter); // CPD-43: credit ledger consume + balance
+app.use('/', creditsRouter);   // CPD-43: credit ledger consume + balance
+app.use('/', thumbnailRouter); // CPD-55: thumbnail approval stage
 app.use('/', createAdminRouter({ _healthCache, BUILD_INFO }));
 app.use('/', publishRouter);
 app.use('/', heygenRouter);
