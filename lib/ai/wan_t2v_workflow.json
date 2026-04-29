@@ -1,9 +1,10 @@
 {
+  "_comment": "WAN 2.2 T2V workflow — upgraded from WAN 2.1 per CPD-78. Model: Wan-AI/Wan2.2-T2V-A14B (FP8). Same node graph structure — only model/VAE filenames changed.",
   "1": {
     "class_type": "WanVideoModelLoader",
     "inputs": {
-      "model": "Wan2_1-T2V-1_3B_bf16.safetensors",
-      "base_precision": "bf16",
+      "model": "Wan2.2-T2V-A14B-FP8.safetensors",
+      "base_precision": "fp8_e4m3fn",
       "quantization": "disabled",
       "load_device": "main_device",
       "attention_mode": "sdpa"
@@ -51,7 +52,7 @@
   "6": {
     "class_type": "WanVideoVAELoader",
     "inputs": {
-      "model_name": "wan_2.1_vae.safetensors",
+      "model_name": "wan2.2_vae.safetensors",
       "precision": "bf16"
     }
   },
