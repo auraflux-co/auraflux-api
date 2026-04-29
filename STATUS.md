@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-29 (Cursor — CPD-31+32 done: pre_publish_validator.js (30 tests, all platform limits), POST /jobs/:jobId/validate-publish, publish copy overhaul: segments→timestamps, categoryId, thumbnailTextOptions×4, coverTimestamp, mediaType=REELS, spec section order. 284/284 tests.)
+**Last Updated:** 2026-04-29 (Cursor — CPD-37: Portal 4 full-video QA wired — feature gate check on planTier, skips gracefully on diy, runs Gemini full-video broadcast review on dwy+. 284/284 tests.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
