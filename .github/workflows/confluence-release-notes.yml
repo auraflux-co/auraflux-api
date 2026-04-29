@@ -1,0 +1,153 @@
+name: Confluence — auto release notes on merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  release-notes:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for commit list)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          TITLE="${{ github.event.pull_request.title }}"
+          KEY=$(echo "$BRANCH" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          if [ -z "$KEY" ]; then
+            KEY=$(echo "$TITLE" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          fi
+          DATE=$(date -u +"%Y-%m-%d")
+          echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "pr_number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          echo "pr_title=$TITLE" >> "$GITHUB_OUTPUT"
+
+      - name: Build commit list
+        id: commits
+        run: |
+          COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} 2>/dev/null | head -20 || echo "- see PR for full commit history")
+          # Escape for JSON
+          COMMITS_ESCAPED=$(echo "$COMMITS" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+          echo "list=$COMMITS_ESCAPED" >> "$GITHUB_OUTPUT"
+
+      - name: Create Confluence release notes page
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.meta.outputs.issue_key }}
+          PR_DATE: ${{ steps.meta.outputs.date }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+          PR_TITLE: ${{ steps.meta.outputs.pr_title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.merged_by.login }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          WIKI_BASE="${BASE/jira/wiki}"
+          # Confluence Release Notes parent page ID
+          PARENT_ID="5537793"
+          SPACE_KEY="CP"
+
+          # Build page title
+          if [ -n "$ISSUE_KEY" ]; then
+            PAGE_TITLE="${ISSUE_KEY}: ${PR_TITLE} — ${PR_DATE}"
+          else
+            PAGE_TITLE="PR #${PR_NUMBER}: ${PR_TITLE} — ${PR_DATE}"
+          fi
+
+          JIRA_LINK=""
+          if [ -n "$ISSUE_KEY" ]; then
+            JIRA_LINK="${BASE}/browse/${ISSUE_KEY}"
+          fi
+
+          # Build markdown body
+          BODY=$(cat <<MDEOF
+## ${PAGE_TITLE}
+
+| Field | Value |
+|---|---|
+| **PR** | [#${PR_NUMBER} — ${PR_TITLE}](${PR_URL}) |
+| **Merged by** | @${PR_AUTHOR} |
+| **Branch** | \`${PR_BRANCH}\` |
+| **Date** | ${PR_DATE} |
+| **Jira** | ${JIRA_LINK:-_no ticket_} |
+
+## What changed
+
+<!-- Auto-filled from PR title; edit to add detail -->
+
+${PR_TITLE}
+
+## Commits
+
+\`\`\`
+$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} 2>/dev/null | head -20 || echo "see PR for commit history")
+\`\`\`
+
+## Notes
+
+<!-- Add any ops notes, env var changes, or follow-ups here -->
+MDEOF
+)
+
+          # URL-encode the body and create the page via Confluence REST API v2
+          PAYLOAD=$(python3 -c "
+import json, sys
+body = sys.stdin.read()
+data = {
+  'spaceId': '819202',
+  'parentId': '${PARENT_ID}',
+  'title': $(echo -n "${PAGE_TITLE}" | python3 -c \"import sys,json; print(json.dumps(sys.stdin.read()))\"),
+  'body': {
+    'representation': 'wiki',
+    'value': body
+  }
+}
+print(json.dumps(data))
+" <<< "$BODY")
+
+          HTTP_STATUS=$(curl -s -o /tmp/confluence_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+            "${BASE}/wiki/api/v2/pages" \
+            -d "$PAYLOAD")
+
+          cat /tmp/confluence_resp.json
+          echo "HTTP $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            PAGE_ID=$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id',''))" < /tmp/confluence_resp.json)
+            echo "✅ Confluence page created: ID $PAGE_ID"
+            echo "page_id=$PAGE_ID" >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️  Confluence page creation returned HTTP $HTTP_STATUS — non-fatal"
+          fi
+        id: confluence
+
+      - name: Post Confluence link as GitHub PR comment
+        if: steps.confluence.outputs.page_id != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pageId = '${{ steps.confluence.outputs.page_id }}';
+            const jiraBase = '${{ secrets.JIRA_BASE_URL }}'.replace(/\/$/, '').replace('jira', 'wiki');
+            const confluenceUrl = `${jiraBase}/spaces/AF/pages/${pageId}`;
+            const issueKey = '${{ steps.meta.outputs.issue_key }}';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `📄 **Release notes created in Confluence**\n\n[View release notes](${confluenceUrl})\n\n${issueKey ? `Jira: [${issueKey}](${'${{ secrets.JIRA_BASE_URL }}'.replace(/\\/$/, '')}/browse/${issueKey})` : ''}`,
+            });
