@@ -10,7 +10,7 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (for commit list)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 20
@@ -30,15 +30,8 @@ jobs:
           echo "pr_number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
           echo "pr_title=$TITLE" >> "$GITHUB_OUTPUT"
 
-      - name: Build commit list
-        id: commits
-        run: |
-          COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} 2>/dev/null | head -20 || echo "- see PR for full commit history")
-          # Escape for JSON
-          COMMITS_ESCAPED=$(echo "$COMMITS" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
-          echo "list=$COMMITS_ESCAPED" >> "$GITHUB_OUTPUT"
-
       - name: Create Confluence release notes page
+        id: confluence
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
@@ -52,68 +45,26 @@ jobs:
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
-          WIKI_BASE="${BASE/jira/wiki}"
-          # Confluence Release Notes parent page ID
-          PARENT_ID="5537793"
-          SPACE_KEY="CP"
 
-          # Build page title
           if [ -n "$ISSUE_KEY" ]; then
             PAGE_TITLE="${ISSUE_KEY}: ${PR_TITLE} — ${PR_DATE}"
+            JIRA_LINK="${BASE}/browse/${ISSUE_KEY}"
           else
             PAGE_TITLE="PR #${PR_NUMBER}: ${PR_TITLE} — ${PR_DATE}"
+            JIRA_LINK="(no ticket)"
           fi
 
-          JIRA_LINK=""
-          if [ -n "$ISSUE_KEY" ]; then
-            JIRA_LINK="${BASE}/browse/${ISSUE_KEY}"
-          fi
+          COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} 2>/dev/null | head -20 || echo "see PR for history")
 
-          # Build markdown body
-          BODY=$(cat <<MDEOF
-## ${PAGE_TITLE}
+          BODY=$(printf "## %s\n\n| Field | Value |\n|---|---|\n| **PR** | [#%s](%s) |\n| **Branch** | %s |\n| **Merged by** | @%s |\n| **Date** | %s |\n| **Jira** | %s |\n\n## Commits\n\n%s" \
+            "$PAGE_TITLE" "$PR_NUMBER" "$PR_URL" "$PR_BRANCH" "$PR_AUTHOR" "$PR_DATE" "$JIRA_LINK" "$COMMITS")
 
-| Field | Value |
-|---|---|
-| **PR** | [#${PR_NUMBER} — ${PR_TITLE}](${PR_URL}) |
-| **Merged by** | @${PR_AUTHOR} |
-| **Branch** | \`${PR_BRANCH}\` |
-| **Date** | ${PR_DATE} |
-| **Jira** | ${JIRA_LINK:-_no ticket_} |
-
-## What changed
-
-<!-- Auto-filled from PR title; edit to add detail -->
-
-${PR_TITLE}
-
-## Commits
-
-\`\`\`
-$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} 2>/dev/null | head -20 || echo "see PR for commit history")
-\`\`\`
-
-## Notes
-
-<!-- Add any ops notes, env var changes, or follow-ups here -->
-MDEOF
-)
-
-          # URL-encode the body and create the page via Confluence REST API v2
-          PAYLOAD=$(python3 -c "
-import json, sys
-body = sys.stdin.read()
-data = {
-  'spaceId': '819202',
-  'parentId': '${PARENT_ID}',
-  'title': $(echo -n "${PAGE_TITLE}" | python3 -c \"import sys,json; print(json.dumps(sys.stdin.read()))\"),
-  'body': {
-    'representation': 'wiki',
-    'value': body
-  }
-}
-print(json.dumps(data))
-" <<< "$BODY")
+          PAYLOAD=$(jq -n \
+            --arg spaceId "819202" \
+            --arg parentId "5537793" \
+            --arg title "$PAGE_TITLE" \
+            --arg body "$BODY" \
+            '{spaceId: $spaceId, parentId: $parentId, title: $title, body: {representation: "wiki", value: $body}}')
 
           HTTP_STATUS=$(curl -s -o /tmp/confluence_resp.json -w "%{http_code}" \
             -X POST \
@@ -127,13 +78,12 @@ print(json.dumps(data))
           echo "HTTP $HTTP_STATUS"
 
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            PAGE_ID=$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id',''))" < /tmp/confluence_resp.json)
-            echo "✅ Confluence page created: ID $PAGE_ID"
+            PAGE_ID=$(jq -r '.id // empty' /tmp/confluence_resp.json)
             echo "page_id=$PAGE_ID" >> "$GITHUB_OUTPUT"
+            echo "Confluence page created: $PAGE_ID"
           else
-            echo "⚠️  Confluence page creation returned HTTP $HTTP_STATUS — non-fatal"
+            echo "Confluence page creation returned HTTP $HTTP_STATUS — non-fatal"
           fi
-        id: confluence
 
       - name: Post Confluence link as GitHub PR comment
         if: steps.confluence.outputs.page_id != ''
@@ -141,13 +91,15 @@ print(json.dumps(data))
         with:
           script: |
             const pageId = '${{ steps.confluence.outputs.page_id }}';
-            const jiraBase = '${{ secrets.JIRA_BASE_URL }}'.replace(/\/$/, '').replace('jira', 'wiki');
-            const confluenceUrl = `${jiraBase}/spaces/AF/pages/${pageId}`;
+            const base = '${{ secrets.JIRA_BASE_URL }}'.replace(/\/$/, '');
+            const confluenceUrl = `${base}/wiki/spaces/CP/pages/${pageId}`;
             const issueKey = '${{ steps.meta.outputs.issue_key }}';
-
+            const jiraLine = issueKey
+              ? `\nJira: [${issueKey}](${base}/browse/${issueKey})`
+              : '';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `📄 **Release notes created in Confluence**\n\n[View release notes](${confluenceUrl})\n\n${issueKey ? `Jira: [${issueKey}](${'${{ secrets.JIRA_BASE_URL }}'.replace(/\\/$/, '')}/browse/${issueKey})` : ''}`,
+              issue_number: context.payload.pull_request.number,
+              body: `📄 **Release notes created in Confluence**\n\n[View release notes](${confluenceUrl})${jiraLine}`,
             });
