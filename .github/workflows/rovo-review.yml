@@ -25,7 +25,32 @@ jobs:
           echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
           echo "Found Jira key: $KEY"
 
-      - name: Post Rovo Dev review request on Jira issue
+      - name: Transition Jira story → In Review (ID 3)
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          # Transition map: To Do=11, In Development=5, In Review=3, Approved=4, Done=31
+          HTTP_STATUS=$(curl -s -o /tmp/jira_transition_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/transitions" \
+            -d '{"transition":{"id":"3"}}')
+          cat /tmp/jira_transition_resp.json
+          echo "Transition to In Review: HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ $ISSUE_KEY → In Review"
+          else
+            echo "⚠️  Transition returned HTTP $HTTP_STATUS (non-fatal)"
+          fi
+
+      - name: Post @rovo-dev review request on Jira issue
         if: steps.extract.outputs.issue_key != ''
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -38,8 +63,6 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
-          # Post a comment on the Jira issue asking Rovo Dev to review.
-          # Rovo Dev watches Jira comments that mention @rovo-dev for its trigger.
           BODY=$(printf '{
             "body": {
               "type": "doc",
@@ -47,13 +70,14 @@ jobs:
               "content": [{
                 "type": "paragraph",
                 "content": [
-                  {"type":"text","text":"🔍 PR #%s opened by @%s and is ready for review.\\n"},
-                  {"type":"text","text":"PR: %s\\n\\n"},
-                  {"type":"text","text":"@rovo-dev please review this pull request. Focus on:\\n"},
-                  {"type":"text","text":"- Correctness: no handler logic lost during extraction\\n"},
-                  {"type":"text","text":"- Require paths: all module imports resolve correctly\\n"},
-                  {"type":"text","text":"- Security: no hardcoded secrets, no unsafe eval\\n"},
-                  {"type":"text","text":"- C0/C1+ boundary: C0-only code not leaking into shared paths"}
+                  {"type":"text","text":"🔍 PR #%s opened by @%s — story moved to In Review.\n"},
+                  {"type":"text","text":"PR: %s\n\n"},
+                  {"type":"text","text":"@rovo-dev please review this pull request. Focus on:\n"},
+                  {"type":"text","text":"- Correctness: no handler logic lost during extraction\n"},
+                  {"type":"text","text":"- Require paths: all module imports resolve correctly\n"},
+                  {"type":"text","text":"- Security: no hardcoded secrets, no unsafe eval\n"},
+                  {"type":"text","text":"- C0/C1+ boundary: C0-only code not leaking into shared paths\n\n"},
+                  {"type":"text","text":"When review is complete, transition this story to Approved."}
                 ]
               }]
             }
@@ -75,27 +99,6 @@ jobs:
             echo "⚠️  Comment post returned HTTP $HTTP_STATUS — non-fatal, continuing"
           fi
 
-      - name: Transition Jira story → In Review
-        if: steps.extract.outputs.issue_key != ''
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
-        run: |
-          BASE="${JIRA_BASE_URL%/}"
-          # Transition ID for "In Review" — update once Jira workflow is published
-          # Current fallback: ID 21 = "In Development" until "In Review" transition exists
-          IN_REVIEW_ID="${IN_REVIEW_TRANSITION_ID:-21}"
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
-            "$BASE/rest/api/3/issue/$ISSUE_KEY/transitions" \
-            -d "{\"transition\":{\"id\":\"$IN_REVIEW_ID\"}}")
-          echo "Transition to In Review (ID=$IN_REVIEW_ID): HTTP $HTTP_STATUS (non-fatal)"
-
       - name: Post PR link comment on GitHub PR
         uses: actions/github-script@v7
         with:
@@ -110,5 +113,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `🤖 **Review requested**\n\nJira: ${jiraLink} → moved to **In Review**\nRovo Dev review request posted on the Jira issue.\n\nFlow: In Development → **In Review** → Approved → Done`,
+              body: `🤖 **Review requested**\n\nJira: ${jiraLink} → moved to **In Review**\nRovo Dev review request posted on the Jira issue.\n\nFlow: In Development → **In Review** → Approved (Rob) → Done (merge)`,
             });

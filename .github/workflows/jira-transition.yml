@@ -22,7 +22,7 @@ jobs:
           echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
           echo "Found Jira key: $KEY"
 
-      - name: Transition Jira story → Done
+      - name: Transition Jira story → Done (ID 31)
         if: steps.extract.outputs.issue_key != ''
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -31,6 +31,7 @@ jobs:
           ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
         run: |
           BASE="${JIRA_BASE_URL%/}"
+          # Transition map: To Do=11, In Development=5, In Review=3, Approved=4, Done=31
           HTTP_STATUS=$(curl -s -o /tmp/jira_transition_resp.json -w "%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
