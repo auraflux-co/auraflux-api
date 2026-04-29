@@ -112,5 +112,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `🔍 **Review requested**\n\nJira: ${jiraLink} → moved to **In Review**\nReview checklist posted on the Jira issue.\n\nFlow: In Development → **In Review** → Approved (Rob) → Done (merge)`,
+              body: `🔍 **Review requested**\n\nJira: ${jiraLink} → moved to **In Review**\nSerena pre-PR review ran locally before push (see \`.cursor/rules/serena-pr-review.mdc\`).\nReview checklist posted on the Jira issue.\n\nFlow: In Development → **In Review** → Approved (Rob) → Done (merge)`,
             });
