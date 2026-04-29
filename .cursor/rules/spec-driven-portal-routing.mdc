@@ -1,0 +1,55 @@
+---
+description: Job spec drives portal routing. AuraFlux is a spec-driven production environment, not a fixed sequential pipeline.
+alwaysApply: true
+---
+
+# Spec-Driven Portal Routing
+
+## Core principle
+
+**The job spec and its job ID determine which portal workers are needed for that job.**
+
+AuraFlux is NOT a fixed sequential production line where every portal runs on every job. It is a **spec-driven production environment** that adapts to what each job requires.
+
+## What this means
+
+- A job spec declares exactly which portal workers are needed for that job ID
+- Portals not declared in the spec are **skipped entirely** — they are irrelevant to that job
+- A successful output = the job spec's declared requirements are met
+- A successful output does NOT mean "all portals ran"
+
+## Example routing differences
+
+| Job type | Portals that run |
+|---|---|
+| Customer uploads pre-rendered video | Portal 0, Portal 2, Portal 3a, Portal 3b, Portal 4, Portal 5 — no script gen, no render |
+| Text prompt only, no avatar | Portal 0, Portal 1, Portal 2, Portal 3a, Portal 3b, Portal 4, Portal 5 |
+| Avatar add-on enabled | Same as above + HeyGen render before Portal 2 |
+| Customer provides own script | Portal 0 only for source confirm, skip Portal 1 (Script QA), then Portal 2 onward |
+| No publish needed (preview only) | Skip Portal 5 entirely |
+
+## Rules for engineers
+
+**✅ MUST:**
+- Read the job spec before deciding whether a portal runs
+- Check `jobSpec.portals[]` (or equivalent spec field) to determine which portal workers are active for this job ID
+- Route the job through only what the spec declares
+- Mark a job successful when its spec-declared portals all mark compliant
+
+**❌ NEVER:**
+- Assume all portals must run for a job to succeed
+- Hard-code a fixed sequence that every job follows
+- Add a portal to every job "just in case" — it belongs in the spec declaration
+- Report a job as failed because a portal was skipped — skipped = not needed, not failed
+
+## Adding new portal workers
+
+When adding a new portal:
+1. It must be declarable in the job spec (opt-in per job)
+2. It must run only when declared in that job's spec
+3. Default = NOT included unless the job spec explicitly requires it
+4. Document which job types include it in `Portal Pipeline — AuraFlux` (Confluence 5341185)
+
+## Why this matters
+
+The production line adapts to the customer and the content. A news clip job and an avatar T2V job are fundamentally different products. Forcing both through the same portal sequence wastes compute, introduces false failure modes, and couples unrelated capabilities.
