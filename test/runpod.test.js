@@ -42,7 +42,8 @@ function makeHttpsRequestMock(statusCode, responseBody) {
 describe('lib/ai/runpod', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    process.env.RUNPOD_POD_ID = 'test-pod-id';
+    process.env.RUNPOD_POD_ID  = 'test-pod-id';
+    process.env.RUNPOD_API_KEY = 'test-api-key'; // required by video.wan_t2v feature gate
 
     // Default: 200 with empty JSON body — overridden per-test where needed.
     https.request.mockImplementation(makeHttpsRequestMock(200, '{}'));
@@ -50,6 +51,7 @@ describe('lib/ai/runpod', () => {
 
   afterEach(() => {
     delete process.env.RUNPOD_POD_ID;
+    delete process.env.RUNPOD_API_KEY;
   });
 
   // ── pingPod ────────────────────────────────────────────────────────────────
@@ -160,8 +162,13 @@ describe('lib/ai/runpod', () => {
       https.request.mockImplementation(makeHttpsRequestMock(200, { prompt_id: 'wan-123' }));
     });
 
+    it('returns skipped when planTier is too low (diy)', async () => {
+      const result = await runpod.generateWanVideo({ positivePrompt: 'test', planTier: 'diy' });
+      expect(result).toMatchObject({ skipped: true });
+    });
+
     it('throws if positivePrompt is missing', async () => {
-      await expect(runpod.generateWanVideo()).rejects.toThrow('positivePrompt is required');
+      await expect(runpod.generateWanVideo({ planTier: 'dwy' })).rejects.toThrow('positivePrompt is required');
     });
 
     it('passes the correct values into workflow nodes 3/4/5/8', async () => {
@@ -173,6 +180,7 @@ describe('lib/ai/runpod', () => {
         numFrames: 49,
         seed: 42,
         outputPrefix: 'my_prefix',
+        planTier: 'dwy',
       };
 
       await runpod.generateWanVideo(opts);
@@ -190,7 +198,7 @@ describe('lib/ai/runpod', () => {
     });
 
     it('uses default width (832), height (480), and numFrames (25) when not specified', async () => {
-      await runpod.generateWanVideo({ positivePrompt: 'test prompt' });
+      await runpod.generateWanVideo({ positivePrompt: 'test prompt', planTier: 'dwy' });
 
       const reqMock = https.request.mock.results[0].value;
       const submitted = JSON.parse(reqMock._body).prompt;
@@ -201,7 +209,7 @@ describe('lib/ai/runpod', () => {
     });
 
     it('calls submitComfyWorkflow (https.request) exactly once', async () => {
-      await runpod.generateWanVideo({ positivePrompt: 'once only' });
+      await runpod.generateWanVideo({ positivePrompt: 'once only', planTier: 'dwy' });
 
       expect(https.request).toHaveBeenCalledTimes(1);
     });

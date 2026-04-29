@@ -157,11 +157,29 @@ describe('runPortalSequence — extension injection (CPD-68)', () => {
 // ── portal_heygen_ext worker unit tests ─────────────────────────────────────────
 
 describe('portal_heygen_ext worker (CPD-68)', () => {
-  const { runWorker, isPass } = require('../lib/portals/portal_heygen_ext');
+  let runWorker, isPass;
 
-  test('returns hard_fail when not ordered', async () => {
+  beforeEach(() => {
+    jest.resetModules();
+    process.env.HEYGEN_API_KEY = 'test-heygen-key'; // required for avatar.heygen feature gate
+    ({ runWorker, isPass } = require('../lib/portals/portal_heygen_ext'));
+  });
+
+  afterEach(() => {
+    delete process.env.HEYGEN_API_KEY;
+  });
+
+  test('returns skip when plan tier is too low (diy)', async () => {
     const result = await runWorker({
-      jobSpec: { jobId: 'test', addOns: { heygen: { active: false } } },
+      jobSpec: { jobId: 'test', planTier: 'diy', addOns: { heygen: { active: true } }, extensions: { heygen_ext: { ordered: true } } },
+    });
+    expect(result.passed).toBe(false);
+    expect(result.outcome).toBe('skip');
+  });
+
+  test('returns skip when not ordered', async () => {
+    const result = await runWorker({
+      jobSpec: { jobId: 'test', planTier: 'dfy', addOns: { heygen: { active: false } } },
     });
     expect(result.passed).toBe(false);
     expect(result.outcome).toBe('skip');
@@ -170,9 +188,10 @@ describe('portal_heygen_ext worker (CPD-68)', () => {
   test('returns hard_fail when no avatarId', async () => {
     const result = await runWorker({
       jobSpec: {
-        jobId: 'test',
-        addOns: { heygen: { active: true, avatarId: null } },
-        extensions: { heygen_ext: { ordered: true } },
+        jobId:       'test',
+        planTier:    'dfy',
+        addOns:      { heygen: { active: true, avatarId: null } },
+        extensions:  { heygen_ext: { ordered: true } },
       },
     });
     expect(result.passed).toBe(false);
@@ -182,10 +201,11 @@ describe('portal_heygen_ext worker (CPD-68)', () => {
   test('returns hard_fail when no script', async () => {
     const result = await runWorker({
       jobSpec: {
-        jobId: 'test',
-        addOns: { heygen: { active: true, avatarId: 'av_1' } },
-        extensions: { heygen_ext: { ordered: true, avatarId: 'av_1' } },
-        script: null,
+        jobId:       'test',
+        planTier:    'dfy',
+        addOns:      { heygen: { active: true, avatarId: 'av_1' } },
+        extensions:  { heygen_ext: { ordered: true, avatarId: 'av_1' } },
+        script:      null,
       },
     });
     expect(result.passed).toBe(false);

@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-29 (Cursor — CPD-23: Role-based dashboard UI — useRole hook (Clerk publicMetadata.role), JobCard component (portal strip + detailed breakdown), customer Jobs list (/dashboard/jobs), job submission form (/dashboard/jobs/new), Operator dashboard (/dashboard/operator — all clients, portal detail, metrics, role guard). Sidebar shows Operator link for operator/admin roles. 0 TS errors. 339/339 backend tests.)
+**Last Updated:** 2026-04-29 (Cursor — CPD-84: Platform-wide feature gate rollout — portal_tts_ext gated on tts.elevenlabs (dwy+), portal_heygen_ext gated on avatar.heygen (dfy+), runpod.generateWanVideo gated on video.wan_t2v/i2v, publish/youtube|tiktok|instagram gated on publish.direct_youtube/tiktok, GET /plan/features + /plan/features/matrix endpoints added. Tests updated to pass planTier+env. 342/342 tests.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
