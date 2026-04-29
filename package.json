@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.103",
+  "version": "1.0.104",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -97,7 +97,8 @@
     "eslint": "^10.2.1",
     "jest": "^30.3.0",
     "playwright": "^1.59.1",
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "supertest": "^7.2.2"
   },
   "repository": {
     "type": "git",
