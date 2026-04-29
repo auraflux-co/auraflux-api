@@ -501,7 +501,13 @@ app.use(
     credentials: true,
   })
 );
-app.use(require('express').json({ limit: '10mb' }));
+app.use(require('express').json({
+  limit: '10mb',
+  // CPD-45: capture raw body for Stripe webhook signature verification
+  verify: (req, _res, buf) => {
+    if (req.path === '/credits/webhook') req.rawBody = buf;
+  },
+}));
 app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
 
 // Catch malformed JSON bodies before they reach routes — returns 400 instead of 500.
