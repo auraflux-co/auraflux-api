@@ -1,0 +1,84 @@
+name: Jira — Auto-transition story on PR merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  transition-to-done:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract Jira issue key from branch or PR title
+        id: extract
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          TITLE="${{ github.event.pull_request.title }}"
+          # Match CPD-NNN in branch name (e.g. feat/cpd-27-server-slim)
+          KEY=$(echo "$BRANCH" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          # Fall back to PR title (e.g. feat(cpd-27): ...)
+          if [ -z "$KEY" ]; then
+            KEY=$(echo "$TITLE" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          fi
+          echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "Found Jira key: $KEY"
+
+      - name: Transition Jira story → Done
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+        run: |
+          echo "Transitioning $ISSUE_KEY to Done (transition id 31)..."
+          HTTP_STATUS=$(curl -s -o /tmp/jira_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$JIRA_BASE_URL/rest/api/3/issue/$ISSUE_KEY/transitions" \
+            -d '{"transition":{"id":"31"}}')
+          cat /tmp/jira_resp.json
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ $ISSUE_KEY transitioned to Done"
+          else
+            echo "⚠️  Transition returned HTTP $HTTP_STATUS — check credentials/permissions"
+            exit 1
+          fi
+
+      - name: Add merge comment to Jira story
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+        run: |
+          BODY=$(cat <<EOF
+          {
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [{
+                "type": "paragraph",
+                "content": [{
+                  "type": "text",
+                  "text": "✅ PR #$PR_NUMBER merged to main by @$MERGED_BY\n$PR_TITLE\n$PR_URL"
+                }]
+              }]
+            }
+          }
+          EOF
+          )
+          curl -s -o /dev/null \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$JIRA_BASE_URL/rest/api/3/issue/$ISSUE_KEY/comment" \
+            -d "$BODY"
+          echo "Comment posted to $ISSUE_KEY"
