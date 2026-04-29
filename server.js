@@ -137,6 +137,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const { strictLimit, apiLimit, healthLimit } = require('./lib/rateLimiter');
+const requestLogger = require('./lib/requestLogger');
 const axios = require('axios');
 const fs = require('fs');
 const { execFile, exec, execSync } = require('child_process');
@@ -476,6 +477,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Request-ID', req.id);
   next();
 });
+
+// Structured HTTP request logging (pino-http) — one JSON line per request
+app.use(requestLogger);
 
 app.use(
   cors({
