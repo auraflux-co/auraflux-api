@@ -12,6 +12,7 @@ const BASE_NAV = [
   { href: '/dashboard/concierge', label: 'AI Concierge' },
   { href: '/dashboard/schedule',  label: 'Schedule' },
   { href: '/dashboard/credits',   label: 'Credits' },
+  { href: '/dashboard/plans',     label: 'Plans' },
   { href: '/dashboard/settings',  label: 'Settings' },
 ];
 
