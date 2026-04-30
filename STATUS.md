@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (fix(server): checkFFmpeg used in server.js listening handler but missing from ffmpeg_utils destructure — ReferenceError crash on startup. Added checkFFmpeg to the require.)
+**Last Updated:** 2026-04-30 (fix(health): missing API keys demoted from 503 errors to warnings — health check was returning 503 on fresh Render deploys before secrets were set, causing Render to fail the deploy health check.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
