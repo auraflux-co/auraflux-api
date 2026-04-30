@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (feat(deploy): CPD-92 — add auraflux-app Next.js service to render.yaml; fix Clerk middleware location (proxy.ts → src/middleware.ts); add /api/health route for Render health check)
+**Last Updated:** 2026-04-30 (fix(deploy): auraflux-app build — move @tailwindcss/postcss + tailwindcss to dependencies (required at build time); rename src/middleware.ts → src/proxy.ts per Next.js 16 convention)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
