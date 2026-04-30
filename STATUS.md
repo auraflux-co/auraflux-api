@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-29 (Cursor — Serena hook hardening: failClosed=true, jq smoke-test (exit 1 if missing), --dry-run exclusion, malformed JSON guard. All 4 edge cases verified.)
+**Last Updated:** 2026-04-30 (Cursor Sprint 4 — CPD-41 dependency audit (patches @aws-sdk/client-s3, puppeteer; CPD-90 moderate vuln logged); CPD-40 API changelog review (CPD-91 Twitch GQL hash change logged, no C1+ impact); CPD-53 disaster recovery runbook written at docs/ops/DISASTER_RECOVERY.md; CPD-77 voice matcher in progress. 368/368 tests pass.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
