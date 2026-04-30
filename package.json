@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.173",
+  "version": "1.0.174",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -108,12 +108,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/clipzworldnews/auraflux-api.git"
+    "url": "https://github.com/auraflux/auraflux-api.git"
   },
   "bugs": {
-    "url": "https://github.com/clipzworldnews/auraflux-api/issues"
+    "url": "https://github.com/auraflux/auraflux-api/issues"
   },
-  "homepage": "https://github.com/clipzworldnews/auraflux-api#readme",
+  "homepage": "https://github.com/auraflux/auraflux-api#readme",
   "jest": {
     "testEnvironment": "node",
     "testMatch": [
