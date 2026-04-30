@@ -244,6 +244,53 @@ export async function getPlanFeatures(token?: string): Promise<{ features: PlanF
   return apiFetch('/plan/features', { token });
 }
 
+// ─── Credits API ──────────────────────────────────────────────────────────────
+
+export interface CreditBalance {
+  clientId:            string;
+  included_remaining:  number;
+  included_total:      number;
+  pack_remaining:      number;
+  overage_used:        number;
+  overage_cap:         number | null;
+  overage_price_cents: number;
+  tier:                PlanTier;
+  period_start:        string;
+  period_end:          string;
+}
+
+export interface CreditLedgerEntry {
+  id:          number;
+  job_id:      string | null;
+  type:        'included' | 'pack' | 'overage' | 'refund';
+  credits:     number;
+  description: string | null;
+  created_at:  string;
+}
+
+export interface CreditPack {
+  id:        string;
+  label:     string;
+  credits:   number;
+  price_usd: number;
+}
+
+export async function getCreditBalance(token?: string): Promise<CreditBalance & { ok: boolean }> {
+  return apiFetch('/credits/balance', { token });
+}
+
+export async function getCreditHistory(
+  limit = 20,
+  offset = 0,
+  token?: string,
+): Promise<{ ok: boolean; entries: CreditLedgerEntry[]; total: number }> {
+  return apiFetch(`/credits/history?limit=${limit}&offset=${offset}`, { token });
+}
+
+export async function getCreditPacks(token?: string): Promise<{ ok: boolean; packs: CreditPack[] }> {
+  return apiFetch('/credits/packs', { token });
+}
+
 // ─── Job validation ───────────────────────────────────────────────────────────
 
 export async function validatePublishCopy(

@@ -6,9 +6,10 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const CUSTOMER_LINKS = [
-  { title: 'New Job',       description: 'Start a new content production job',     href: '/dashboard/jobs/new',   badge: null },
-  { title: 'AI Concierge',  description: 'Get guided help building your job spec',  href: '/dashboard/concierge',  badge: 'dwy+' },
-  { title: 'Schedule',      description: 'View and manage your publish schedule',   href: '/dashboard/schedule',   badge: null },
+  { title: 'New Job',       description: 'Start a new content production job',      href: '/dashboard/jobs/new',   badge: null },
+  { title: 'AI Concierge',  description: 'Get guided help building your job spec',   href: '/dashboard/concierge',  badge: 'dwy+' },
+  { title: 'Schedule',      description: 'View and manage your publish schedule',    href: '/dashboard/schedule',   badge: null },
+  { title: 'Credits',       description: 'View balance, usage history, buy packs',  href: '/dashboard/credits',    badge: null },
 ];
 
 export default async function DashboardPage() {
