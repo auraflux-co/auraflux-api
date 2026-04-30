@@ -212,6 +212,10 @@ export async function createJob(
   return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(payload), token });
 }
 
+export async function getJobDetail(jobId: string, token?: string): Promise<{ job: Job }> {
+  return apiFetch(`/jobs/${jobId}`, { token });
+}
+
 export async function updateJobSchedule(
   jobId: string,
   publishMode: PublishMode,
