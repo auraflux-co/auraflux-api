@@ -9,6 +9,7 @@ import { useRole } from '@/hooks/use-role';
 const BASE_NAV = [
   { href: '/dashboard',           label: 'Overview' },
   { href: '/dashboard/jobs',      label: 'Jobs' },
+  { href: '/dashboard/generate',  label: 'Generate' },
   { href: '/dashboard/concierge', label: 'AI Concierge' },
   { href: '/dashboard/schedule',  label: 'Schedule' },
   { href: '/dashboard/credits',   label: 'Credits' },
