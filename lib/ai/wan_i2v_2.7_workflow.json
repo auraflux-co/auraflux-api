@@ -1,0 +1,36 @@
+{
+  "_comment": "WAN 2.7 I2V workflow — ComfyUI Partner Nodes (CPD-79). ComfyUI 0.18.5+ required. SCAFFOLD: validate against actual ComfyUI Partner Node schema on pod. Requires dfy+ plan tier. Image must be uploaded to the ComfyUI pod via /upload/image before submission — pass the returned filename as imageFilename. Auth: ComfyUI pod must be logged in with COMFYUI_API_KEY. Patches applied by runpod.js: node['1'].inputs.image, node['2'].inputs.{prompt,negative_prompt,resolution,ratio,duration,seed}",
+  "1": {
+    "class_type": "LoadImage",
+    "_meta": { "title": "Load Reference Image" },
+    "inputs": {
+      "image": "reference.png",
+      "upload": "image"
+    }
+  },
+  "2": {
+    "class_type": "Wan2ImageToVideoApi",
+    "_meta": { "title": "Wan 2.7 Image to Video" },
+    "inputs": {
+      "model": "wan2.7-i2v",
+      "image": ["1", 0],
+      "prompt": "the subject moves naturally in the scene",
+      "negative_prompt": "blurry, low quality, distorted, watermark, text, logo",
+      "resolution": "720P",
+      "ratio": "16:9",
+      "duration": 5,
+      "seed": 42,
+      "prompt_extend": true
+    }
+  },
+  "3": {
+    "class_type": "SaveVideo",
+    "_meta": { "title": "Save Video" },
+    "inputs": {
+      "video": ["2", 0],
+      "filename_prefix": "wan27_i2v",
+      "format": "video/h264-mp4",
+      "save_output": true
+    }
+  }
+}
