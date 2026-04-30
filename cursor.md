@@ -1711,3 +1711,31 @@ Per `docs/architecture/DECOUPLED_VIDEO_PRODUCT_STACK.md`:
 - ~~`groupSegmentsByLabel` `itemIdx: -1`~~ ✅ Fixed
 - ~~Gate 5 `passed: anySuccess` misleading~~ ✅ PR #141 (`platformOutcome`)
 - ~~Customer config `c0` hardcodes in C1+ paths~~ ✅ `c1_default` fallback wired
+- ~~CPD-86/33/34 direct publish layer~~ ✅ PR #144 — token_store (AES-256-GCM PG), youtube/tiktok/instagram adapters, social_connect OAuth routes, /dashboard/settings/social-connect UI
+- ~~CPD-12 Render smoke tests~~ ✅ PR #144 — test/smoke_render.test.js (SMOKE_API_URL-gated, 9 tests)
+- ~~CPD-4 long/short transform scaffold~~ ✅ PR #144 — lib/ai/video_transforms.js (longToShort + shortToLong, xfade chain)
+
+## Session Handoff — 2026-04-30 (Rob + Cursor, evening)
+
+### Completed this session
+| Ticket | Work |
+|--------|------|
+| CPD-86/33/34 | Direct publish layer: encrypted token store, YouTube/TikTok/Instagram adapters, OAuth connect routes + UI. Platform audits still needed externally (see notes below). |
+| CPD-12 | Render smoke test suite auto-skips w/o `SMOKE_API_URL`. Run: `SMOKE_API_URL=https://api.auraflux.co npx jest smoke_render` |
+| CPD-4 | `lib/ai/video_transforms.js` — `longToShort` + `shortToLong` scaffold; Wan2.1 feature-gated |
+| CPD-3 | Prettier pass on all new files; C0 UI audit (clean); `.env.example` updated |
+| CPD-5/6 | `/dashboard/generate` page + Wan2.1 test script (prior session, now merged) |
+
+### PR open
+- **PR #144** — `feat/cpd-86-direct-publishing` — all CPD-86/33/34/12/3/4 work
+
+### External blockers (human action required before public posts)
+1. **TOKEN_ENCRYPTION_KEY** — generate + add to Render env: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+2. **YouTube OAuth app** — Google Cloud Console → enable YouTube Data API v3 → OAuth client ID/secret → submit compliance audit (1–4 weeks quota increase)
+3. **TikTok app audit** — developers.tiktok.com → request `video.upload + video.publish` scopes → submit (5–10 business days)
+4. **Instagram Meta App Review** — Meta Developer app → request `instagram_business_basic + instagram_business_content_publish` → submit screencast demos (2–4 weeks)
+5. Until audits clear → all posts default to `private` / `SELF_ONLY`
+
+### Unblocked tickets remaining
+- **CPD-1** — Phase A E2E pipeline proof (needs live run with HeyGen keys + full job)
+- **CPD-89** — Marketing site (external — site not ready)
