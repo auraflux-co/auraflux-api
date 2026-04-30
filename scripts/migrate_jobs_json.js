@@ -1,6 +1,7 @@
 'use strict';
-// scripts/migrate_jobs_json.js — One-time migration from data/jobs.json into SQLite.
-// Safe to run multiple times — uses upsert so existing records are updated, not duplicated.
+// scripts/migrate_jobs_json.js — [ARCHIVED — SQLite removed, migration complete]
+// Was: One-time migration from data/jobs.json into SQLite.
+// SQLite has been removed (CPD-94). This script is kept for reference only.
 //
 // Usage:
 //   node scripts/migrate_jobs_json.js
