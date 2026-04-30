@@ -8,7 +8,7 @@
 #   3. Run: node scripts/smoke_test_render.js https://<your-service>.onrender.com
 #
 # See docs/ops/RENDER_DEPLOY_CHECKLIST.md for the full checklist.
-# Last updated: 2026-04-30 (CPD-35 — added Redis, Clerk, Stripe, ElevenLabs, COMFYUI_API_KEY)
+# Last updated: 2026-04-30 (CPD-92 — added auraflux-app Next.js web service)
 
 services:
   - type: web
@@ -189,6 +189,40 @@ services:
       # C0 manual workflow flag (localhost only — keeps C0 path from auto-advancing)
       - key: C0_MANUAL_SEGMENT_CHECKPOINT
         value: 'true'
+
+  # ── Next.js customer dashboard (CPD-92) ─────────────────────────────────────
+  # rootDir: app → build + start commands run inside the app/ subdirectory
+  # healthCheckPath must return 200; /api/health is a public no-auth route
+  - type: web
+    name: auraflux-app
+    runtime: node
+    rootDir: app
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Clerk auth — use NEXT_PUBLIC_ prefix for browser-exposed keys
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+        value: /sign-in
+      - key: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+        value: /sign-up
+      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
+        value: /dashboard
+      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
+        value: /dashboard
+      # AuraFlux API — update to custom domain once CPD-93 is complete
+      - key: NEXT_PUBLIC_API_URL
+        value: https://auraflux-api.onrender.com
+      - key: AURAFLUX_API_SECRET
+        sync: false
 
   # ── Redis Key Value — BullMQ job queues ──────────────────────────────────────
   # type: keyvalue (not databases — Key Value must live in services per Blueprint spec)
