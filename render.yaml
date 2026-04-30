@@ -180,10 +180,9 @@ services:
           name: auraflux-pg
           property: connectionString
 
-      # Redis — injected automatically from auraflux-redis service (BullMQ)
+      # Redis — injected automatically from auraflux-redis database (BullMQ)
       - key: REDIS_URL
-        fromService:
-          type: redis
+        fromDatabase:
           name: auraflux-redis
           property: connectionString
 
@@ -221,16 +220,8 @@ services:
           name: auraflux-pg
           property: connectionString
 
-  # ── Redis — BullMQ job queues ─────────────────────────────────────────────────
-  # lazy connection in lib/queue.js — service starts even if Redis is unavailable.
-  - type: redis
-    name: auraflux-redis
-    plan: starter
-    region: oregon
-    maxmemoryPolicy: noeviction
-
-# ── PostgreSQL ────────────────────────────────────────────────────────────────
-# Render auto-injects DATABASE_URL into auraflux-api via the fromDatabase reference above.
+# ── Databases (PostgreSQL + Redis) ───────────────────────────────────────────
+# Render auto-injects DATABASE_URL and REDIS_URL via the fromDatabase references above.
 # Plan: starter → upgrade to standard ($20/mo, 30-day backups) before first paying customer.
 # One-time data migration: Render Shell on auraflux-api → node scripts/migrate_sqlite_to_pg.js
 databases:
@@ -238,4 +229,10 @@ databases:
     plan: starter
     databaseName: auraflux
     user: auraflux
+    region: oregon
+
+  # Redis — BullMQ job queues (lazy connection in lib/queue.js — service starts even without Redis)
+  - name: auraflux-redis
+    plan: starter
+    maxmemoryPolicy: noeviction
     region: oregon
