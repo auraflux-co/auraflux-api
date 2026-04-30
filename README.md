@@ -3,8 +3,8 @@
 **AuraFlux** is an AI-powered video production backend that takes a content brief from intake to published video through a spec-driven portal pipeline.
 
 - **API** — Node.js / Express, deployed on Render (`auraflux-api`)
-- **App** — Next.js dashboard, deployed on Render (`auraflux-app`)
-- **Database** — PostgreSQL (billing, credits, voice profiles on Render) + SQLite (job pipeline, persistent disk on Render + local dev)
+- **App** — Next.js 16 dashboard, deployed on Render (`auraflux-app`)
+- **Database** — PostgreSQL (Render managed) — sole database for all environments (CPD-94)
 - **Storage** — Cloudflare R2 for video output and media assets
 - **Auth** — Clerk (JWT, role-based: customer / operator / admin)
 - **Payments** — Stripe (credit packs + plan subscriptions)
@@ -18,21 +18,15 @@ Jobs flow through a sequence of portals. Each portal has a worker (does the work
 ```
 Portal 0  — Job intake, source fetch, preflight validation
 Portal 1  — Script generation (Gemini → Claude QA)
-Portal 1b — Video reviewer: fact-checks script against source clip (Gemini)
-Portal 2  — Render segment structure QA
+Portal 1b — HeyGen avatar render (async poll)
+Portal 2  — Segment structure QA
 Portal 3a — Assembly (FFmpeg: normalize → chrome → clips → output)
 Portal 3b — Assembly commitment check
 Portal 4  — Full video QA (Gemini visual review)
 Portal 5  — Publish (Upload-Post → platform; video stored in R2)
 ```
 
-**Extensions** run between specific portals only when `jobSpec.addOns.<name>.active: true`. Default is OFF for every extension.
-
-| Extension | Intercept point | Plan |
-|---|---|---|
-| HeyGen avatar render | Between Portal 1 and Portal 2 | dfy+ |
-| Shoppable tagging | Between Portal 3b and Portal 4 | dfy+ |
-| ElevenLabs TTS | Between Portal 0 and Portal 1 | dwy+ |
+Extensions (HeyGen, Shoppable) run between specific portals only when `jobSpec.addOns.<name>.active: true`. Default is OFF.
 
 ---
 
@@ -42,7 +36,7 @@ Portal 5  — Publish (Upload-Post → platform; video stored in R2)
 |---|---|---|
 | `diy` | 50 | Self-serve |
 | `dwy` | 200 | AI-assisted (VectCut, TTS, scheduling) |
-| `dfy` | 1000 | Full done-for-you (HeyGen avatar, Imagen 3, direct publish) |
+| `dfy` | 1000 | Full done-for-you (HeyGen, Imagen 3, direct publish) |
 | `custom` | unlimited | Enterprise / white-label |
 
 Feature availability per tier is defined in `lib/services/feature_gate.js`.
@@ -52,12 +46,12 @@ Feature availability per tier is defined in `lib/services/feature_gate.js`.
 ## Development Setup
 
 ```bash
-git clone https://github.com/auraflux-co/auraflux-api
+git clone https://github.com/clipzworldnews/auraflux-api
 cd auraflux-api
 npm install
-cp .env.example .env       # fill in keys — see .env.example comments
+cp .env.example .env       # fill in keys — see docs/ops/REQUIRED_API_KEYS.md
 npm test                   # 395 tests, should all pass
-node server.js             # API on http://localhost:10000
+node server.js             # API on http://localhost:3000
 ```
 
 The Next.js app lives in `app/`:
@@ -80,7 +74,6 @@ npm run dev                         # App on http://localhost:3001
 | `POST` | `/jobs` | customer+ | Submit a new job |
 | `GET` | `/jobs` | customer+ | List jobs for authenticated user |
 | `GET` | `/jobs/:jobId` | customer+ | Job detail + portal pipeline status |
-| `PUT` | `/jobs/:jobId/schedule` | customer+ | Update publish schedule |
 
 ### Credits & Plans
 
@@ -88,18 +81,10 @@ npm run dev                         # App on http://localhost:3001
 |---|---|---|---|
 | `GET` | `/credits/balance` | customer+ | Current credit balance |
 | `GET` | `/credits/history` | customer+ | Ledger entries (paginated) |
-| `GET` | `/credits/packs` | public | Available credit packs |
-| `POST` | `/credits/purchase-pack` | customer+ | Stripe checkout for credit pack |
+| `GET` | `/credits/packs` | customer+ | Available credit packs |
+| `POST` | `/credits/packs/purchase` | customer+ | Stripe checkout for credit pack |
 | `GET` | `/plans` | public | Available subscription plans |
-| `POST` | `/plans/subscribe` | customer+ | Stripe checkout for plan subscription |
-
-### Concierge & Voice
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/concierge/portal-contracts` | customer+ | Structured portal QA requirements |
-| `POST` | `/concierge/chat` | customer+ | AI-guided assistant (Gemini) |
-| `GET` | `/plan/features` | customer+ | Feature matrix for current plan |
+| `POST` | `/plans/subscribe` | customer+ | Stripe checkout for plan |
 
 ### Health & Admin
 
@@ -126,21 +111,20 @@ auraflux-api/
 ├── server.js                  Express entry point
 ├── render.yaml                Render Blueprint (auraflux-api, auraflux-app, auraflux-backup)
 ├── lib/
-│   ├── portals/               portal0.js … portal5.js + extension workers
-│   ├── portal_policy_runner.js  Spec-driven portal sequence + retry/QA policy
-│   ├── routes/                jobs_c1.js, credits.js, admin.js, concierge.js, …
+│   ├── portals/               portal0.js … portal5.js
+│   ├── routes/                jobs_c1.js, credits.js, admin.js, …
 │   ├── services/              feature_gate.js, stripe_billing.js, gemini.js, …
-│   ├── db/                    postgres.js (billing/credits/voice — C1+ Render), db.js (job pipeline — SQLite, both envs)
+│   ├── db/                    postgres.js (C1+), db.js (SQLite local dev)
 │   ├── storage.js             R2 upload abstraction (uploadFile / uploadToR2)
 │   └── assembly.js            FFmpeg pipeline orchestration
-├── app/                       Next.js dashboard
-│   └── src/app/dashboard/     jobs, credits, plans, concierge pages
+├── app/                       Next.js 16 dashboard
+│   └── src/app/dashboard/     jobs, credits, plans pages
 ├── scripts/
 │   └── migrate_sqlite_to_pg.js  One-time SQLite → PostgreSQL migration
 └── test/                      Jest suites (395 tests)
 ```
 
-**Localhost-only code** (Canva, CapCut, Google Drive tooling, C0 browser utilities) lives in `lib/routes/c0_*.js` and `lib/routes/heygen.js`. These are **not mounted on Render** — gated by `if (!process.env.DATABASE_URL)` in `server.js`.
+**C0 / localhost code** (Canva, CapCut, Google Drive, static file server) lives in `lib/routes/c0_*.js` and is NOT mounted on the Render deployment. It is gated by `if (!process.env.DATABASE_URL)` in `server.js`.
 
 ---
 
@@ -152,7 +136,7 @@ The repo deploys via Render Blueprint (`render.yaml`):
 |---|---|---|
 | `auraflux-api` | Web service (Docker) | Express API |
 | `auraflux-app` | Web service (Docker) | Next.js dashboard |
-| `auraflux-backup` | Cron job | Nightly SQLite job DB + JSON state → R2 backup |
+| `auraflux-backup` | Cron job | Nightly SQLite → R2 backup |
 
 Push to `main` triggers auto-deploy. Required env vars are listed in `render.yaml` as `sync: false` — set them once in the Render dashboard.
 
