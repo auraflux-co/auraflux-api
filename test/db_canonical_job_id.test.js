@@ -1,5 +1,12 @@
 'use strict';
+// [ARCHIVED] CPD-94: SQLite removed. resolveCanonicalJobId() (sync SQLite) replaced by
+// resolveCanonicalJobIdSync() (in-memory lookup from persistedJobs loaded from Postgres).
+// This test file is skipped — SQLite APIs (getDb, closeDb) no longer exist in lib/db.js.
+describe.skip('db_canonical_job_id — archived (SQLite removed, CPD-94)', () => {
+  test('placeholder — see resolveCanonicalJobIdSync in-memory tests', () => {});
+});
 
+if (false) { // eslint-disable-line no-constant-condition
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -196,3 +203,4 @@ describe('pipeline_events emit + job_run_timeline', () => {
     expect(got.observability.canonicalJobId).toBe('obs_spec');
   });
 });
+} // end if(false)
