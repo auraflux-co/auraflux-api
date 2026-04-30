@@ -358,6 +358,32 @@ export async function pollVideoStatus(
   return apiFetch(`/api/generate-video/${promptId}`, { token });
 }
 
+// ─── Social / direct platform publishing (CPD-86) ────────────────────────────
+
+export type SocialPlatform = 'youtube' | 'tiktok' | 'instagram';
+
+export interface ConnectedAccount {
+  platform:       SocialPlatform;
+  handle:         string | null;
+  platformUserId: string | null;
+  tokenExpiry:    string | null;
+  connectedAt:    string;
+}
+
+export async function listConnectedAccounts(token?: string): Promise<{ ok: boolean; accounts: ConnectedAccount[] }> {
+  return apiFetch('/social/accounts', { token });
+}
+
+export async function disconnectPlatform(platform: SocialPlatform, token?: string): Promise<{ ok: boolean }> {
+  return apiFetch(`/social/accounts/${platform}`, { method: 'DELETE', token });
+}
+
+/** Returns the OAuth redirect URL to connect a platform. Opens in same window. */
+export function getSocialConnectUrl(platform: SocialPlatform): string {
+  const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  return `${base}/social/connect/${platform}`;
+}
+
 // ─── Job validation ───────────────────────────────────────────────────────────
 
 export async function validatePublishCopy(

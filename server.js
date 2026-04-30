@@ -340,6 +340,10 @@ app.use('/', publishRouter);
 const videoRouter = require('./lib/routes/video');
 app.use('/', videoRouter);
 
+// ── Social OAuth connect (CPD-86: direct platform publishing) ──────────────────
+const socialConnectRouter = require('./lib/routes/social_connect');
+app.use('/', socialConnectRouter);
+
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
