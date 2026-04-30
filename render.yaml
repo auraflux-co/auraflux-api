@@ -179,15 +179,25 @@ services:
       - key: DATABASE_URL
         sync: false
 
-      # Redis — injected automatically from auraflux-redis database (BullMQ)
+      # Redis — injected automatically from auraflux-redis Key Value instance (BullMQ)
       - key: REDIS_URL
-        fromDatabase:
+        fromService:
+          type: keyvalue
           name: auraflux-redis
           property: connectionString
 
       # C0 manual workflow flag (localhost only — keeps C0 path from auto-advancing)
       - key: C0_MANUAL_SEGMENT_CHECKPOINT
         value: 'true'
+
+  # ── Redis Key Value — BullMQ job queues ──────────────────────────────────────
+  # type: keyvalue (not databases — Key Value must live in services per Blueprint spec)
+  # ipAllowList required by spec; [] = internal connections only (Render private network)
+  - type: keyvalue
+    name: auraflux-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
 
   # ── Nightly backup cron job (CPD-50) ─────────────────────────────────────────
   # Runs daily at 03:00 UTC — after US midnight, before any morning operations.
@@ -198,7 +208,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     schedule: '0 3 * * *'
-    startCommand: node scripts/backup_to_r2.js
+    dockerCommand: node scripts/backup_to_r2.js
     plan: starter
     region: oregon
     envVars:
@@ -217,16 +227,9 @@ services:
       - key: DATABASE_URL
         sync: false
 
-# ── Databases (Redis only — PostgreSQL is managed outside this Blueprint) ────
-# auraflux-pg was manually created in Render before this Blueprint was set up.
-# Managing it here would cause a plan-mismatch sync failure. Set DATABASE_URL
-# manually in the Render environment panel using the Internal Connection String
-# from the auraflux-pg dashboard page.
-#
-# REDIS_URL is auto-injected from auraflux-redis (defined below).
-# Redis created fresh by this Blueprint — no prior manual instance exists.
-databases:
-  # Redis — BullMQ job queues (lazy connection in lib/queue.js — service starts even without Redis)
-  - name: auraflux-redis
-    plan: free
-    maxmemoryPolicy: noeviction
+# ── No managed databases ─────────────────────────────────────────────────────
+# auraflux-pg (PostgreSQL) was manually created in Render before this Blueprint
+# was set up. Managing it here causes a plan-mismatch sync failure (Blueprint
+# cannot claim ownership of a pre-existing manually-created database).
+# Set DATABASE_URL manually in the Render environment panel using the Internal
+# Connection String from the auraflux-pg dashboard page.
