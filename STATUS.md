@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (fix(render): remove auraflux-pg from Blueprint databases section — manually-created PG instance causes plan-mismatch sync failure; DATABASE_URL set to sync:false, set manually in Render env panel. Redis stays Blueprint-managed since it has no prior instance.)
+**Last Updated:** 2026-04-30 (fix(render): Key Value must be type:keyvalue in services (not databases); ipAllowList required; Docker cron uses dockerCommand not startCommand; REDIS_URL uses fromService not fromDatabase — all per Render Blueprint spec.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
