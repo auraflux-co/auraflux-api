@@ -1271,7 +1271,8 @@ Marketing    Vercel Static                 apps/marketing/    → auraflux.co
 AI Engine    RunPod.io / ComfyUI + SVD     external API
 Storage      Cloudflare R2                 replaces local output/   (free 10GB/mo)
 Queue        BullMQ + Redis                replaces pm2 + in-memory jobs
-DB           PostgreSQL on Render          replaces SQLite
+DB (billing) PostgreSQL on Render          credits, voice profiles, Stripe events
+DB (jobs)    SQLite on persistent disk     job pipeline — full PG cutover is CPD-51 phase 2
 ```
 
 **Render services at launch (~$34/mo total):**
@@ -1338,7 +1339,7 @@ RunPod implementation:
 | `lib/gates/gate5.js`                  | **Upload service** — reads Preflight block from Job Spec            |
 | `lib/thumbnail.js`                    | Stays in Assembly service                                           |
 | `lib/chrome_overlay_ffmpeg.js`        | Stays in Assembly service                                           |
-| `lib/job_spec.js`                     | **Job Spec store** — migrated from SQLite → PostgreSQL              |
+| `lib/job_spec.js`                     | **Job Spec store** — SQLite on persistent disk (sync); PG cutover in CPD-51 phase 2 |
 | `lib/publish.js` (Upload-Post calls)  | Stays in Upload service                                             |
 
 #### Removed from C1+ (stays in c0 code path, not deleted)

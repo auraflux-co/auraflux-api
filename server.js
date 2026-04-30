@@ -135,6 +135,16 @@ const {
   finalizeJobMetrics,
 } = require('./lib/metrics');
 const db = require('./lib/db');
+
+// C1+ Render: initialize Postgres pool + run migrations at startup.
+// Billing, credits, Stripe, and voice profile calls wait for this to resolve.
+if (process.env.DATABASE_URL) {
+  const pg = require('./lib/db/postgres');
+  pg.initDb()
+    .then(() => console.log('[db/postgres] Ready — billing and credits active'))
+    .catch((err) => console.error('[db/postgres] Init failed:', err.message));
+}
+
 const { createJobSpec, getJobSpec } = require('./lib/job_spec');
 const {
   shouldUseManualCheckpoint,

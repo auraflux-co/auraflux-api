@@ -19,9 +19,10 @@ services:
     region: oregon
     healthCheckPath: /health
 
-    # Persistent disk — keeps SQLite (data/cwn.db) and JSON state across deploys.
-    # Primary data store until CPD-51 Postgres migration is complete.
-    # Nightly backup to R2 (scripts/backup_to_r2.js) guards against disk loss.
+    # Persistent disk — keeps SQLite job pipeline data (data/cwn.db) and JSON
+    # state files across deploys. Billing/credits/voice use Postgres (see DATABASE_URL).
+    # Full pipeline migration to Postgres (job_spec.js async refactor) is CPD-51 phase 2.
+    # Nightly backup to R2 (scripts/backup_to_r2.js) covers both cwn.db and *.json.
     disk:
       name: auraflux-data
       mountPath: /app/data
