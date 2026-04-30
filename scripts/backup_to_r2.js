@@ -134,6 +134,41 @@ async function makeDataBackup() {
   return outPath;
 }
 
+// ── Postgres dump (pg_dump via system binary) ─────────────────────────────────
+
+async function makePostgresBackup() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.warn('[backup] DATABASE_URL not set — skipping Postgres backup');
+    return null;
+  }
+
+  // Check pg_dump is available (installed as postgresql-client in Dockerfile)
+  try {
+    execSync('pg_dump --version', { stdio: 'pipe' });
+  } catch {
+    console.warn('[backup] pg_dump not found — skipping Postgres backup (install postgresql-client)');
+    return null;
+  }
+
+  const outPath = path.join(os.tmpdir(), `auraflux-pg-${datestamp()}.dump`);
+  try {
+    // --format=custom produces a compressed binary dump usable with pg_restore
+    execSync(`pg_dump --format=custom --no-password --file="${outPath}" "${dbUrl}"`, {
+      stdio: 'pipe',
+      env: { ...process.env, PGPASSWORD: '' }, // password is in the URL
+      timeout: 120_000,
+    });
+  } catch (e) {
+    throw new Error(`pg_dump failed: ${e.stderr?.toString().trim() || e.message}`);
+  }
+
+  // Gzip for storage efficiency (custom format is already compressed, but gzip on top for R2 consistency)
+  const gzPath = await gzipFile(outPath);
+  fs.unlinkSync(outPath);
+  return gzPath;
+}
+
 // ── Cleanup old backups (belt-and-suspenders alongside R2 lifecycle rules) ───
 
 async function pruneOldBackups(client, bucket, prefix, keepDays = 35) {
@@ -179,7 +214,13 @@ function emitBackupEvent(status, details = {}) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-async function main() {
+/**
+ * Run the full backup cycle. Exported so server.js can call it via node-cron.
+ * When called as a CLI script it calls process.exit(); when imported it does not.
+ * @param {boolean} [exitOnComplete=false]
+ * @returns {Promise<{ ok: boolean, errors: Array }>}
+ */
+async function runBackup(exitOnComplete = false) {
   console.log(`[backup] Starting nightly backup — ${new Date().toISOString()}`);
   const startMs = Date.now();
   validateEnv();
@@ -189,7 +230,7 @@ async function main() {
   const date   = datestamp();
   const errors = [];
 
-  // 1. SQLite backup
+  // 1. SQLite backup (job pipeline data on persistent disk)
   try {
     const sqliteGz = await makeSQLiteBackup();
     if (sqliteGz) {
@@ -202,7 +243,20 @@ async function main() {
     errors.push({ stage: 'sqlite', error: e.message });
   }
 
-  // 2. JSON data backup
+  // 2. Postgres backup (billing, credits, Stripe events, voice profiles)
+  try {
+    const pgGz = await makePostgresBackup();
+    if (pgGz) {
+      await uploadToR2(client, bucket, `postgres/auraflux-pg-${date}.dump.gz`, pgGz);
+      fs.unlinkSync(pgGz);
+      await pruneOldBackups(client, bucket, 'postgres/');
+    }
+  } catch (e) {
+    console.error('[backup] Postgres backup failed:', e.message);
+    errors.push({ stage: 'postgres', error: e.message });
+  }
+
+  // 3. JSON state files backup
   try {
     const dataGz = await makeDataBackup();
     if (dataGz) {
@@ -220,15 +274,22 @@ async function main() {
   if (errors.length) {
     emitBackupEvent('failure', { errors, elapsedSec });
     console.error(`[backup] Completed with ${errors.length} error(s) in ${elapsedSec}s`);
-    process.exit(1);
+    if (exitOnComplete) process.exit(1);
+    return { ok: false, errors };
   } else {
     emitBackupEvent('success', { elapsedSec, bucket, date });
     console.log(`[backup] Backup complete in ${elapsedSec}s`);
-    process.exit(0);
+    if (exitOnComplete) process.exit(0);
+    return { ok: true, errors: [] };
   }
 }
 
-main().catch((e) => {
-  console.error('[backup] Unhandled error:', e);
-  process.exit(1);
-});
+module.exports = { runBackup };
+
+// Run directly when invoked as CLI
+if (require.main === module) {
+  runBackup(true).catch((e) => {
+    console.error('[backup] Unhandled error:', e);
+    process.exit(1);
+  });
+}
