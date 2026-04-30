@@ -57,10 +57,11 @@ function safeJson(val) {
 }
 
 async function applySchema(pg) {
-  const schemaPath = path.join(__dirname, '..', 'db', 'migrations', '001_initial_schema.sql');
-  const sql = fs.readFileSync(schemaPath, 'utf8');
-  await pg.query(sql);
-  console.log('[migrate] Schema applied.');
+  // Use the same migration runner as initDb() so all migrations are applied
+  // in sorted order and tracked in schema_migrations.
+  const { initDb } = require('../lib/db/postgres');
+  await initDb();
+  console.log('[migrate] All migrations applied via initDb().');
 }
 
 // ── Table migrations ──────────────────────────────────────────────────────────
@@ -76,27 +77,31 @@ async function migrateJobs(sqlite, pg) {
          id, content_type, form_type, status, stage,
          job_spec, customer_id, template_id, failed_gate, root_cause,
          restart_gate, script_job_id, drive_url, published_at,
-         created_at, updated_at, card
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+         created_at, updated_at, card,
+         publish_mode, scheduled_publish_at, actual_published_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
        ON CONFLICT (id) DO NOTHING`,
       [
         row.id,
         row.content_type,
-        row.form_type    || null,
-        row.status       || 'pending',
-        row.stage        || 'script_ready',
+        row.form_type         || null,
+        row.status            || 'pending',
+        row.stage             || 'script_ready',
         safeJson(row.job_spec),
-        row.customer_id  || null,
-        row.template_id  || null,
-        row.failed_gate  ?? null,
-        row.root_cause   || null,
-        row.restart_gate ?? null,
-        row.script_job_id || null,
-        row.drive_url    || null,
-        row.published_at ?? null,
+        row.customer_id       || null,
+        row.template_id       || null,
+        row.failed_gate       ?? null,
+        row.root_cause        || null,
+        row.restart_gate      ?? null,
+        row.script_job_id     || null,
+        row.drive_url         || null,
+        row.published_at      ?? null,
         row.created_at,
         row.updated_at,
         safeJson(row.card),
+        row.publish_mode      || null,
+        row.scheduled_publish_at ?? null,
+        row.actual_published_at  ?? null,
       ]
     );
     inserted += res.rowCount;
@@ -293,17 +298,16 @@ async function main() {
   console.log(`[migrate] Opening SQLite: ${DB_PATH}`);
   const sqlite = new Database(DB_PATH, { readonly: true });
 
-  const pg = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false },
-    max: 5,
-  });
+  // Use the shared postgres module so we get the same pool and migration
+  // runner as the application server. applySchema() delegates to initDb().
+  const pgModule = require('../lib/db/postgres');
+  const pg = pgModule.getPool();
 
   try {
-    console.log('[migrate] Applying schema to Postgres...');
+    console.log('[migrate] Applying schema to Postgres (all migrations)...');
     await applySchema(pg);
 
-    console.log('[migrate] Starting table migrations...');
+    console.log('[migrate] Starting data migration...');
     await migrateJobs(sqlite, pg);
     await migrateJobMetrics(sqlite, pg);
     await migrateGateFixes(sqlite, pg);
@@ -321,7 +325,7 @@ async function main() {
     process.exit(1);
   } finally {
     sqlite.close();
-    await pg.end();
+    // Do not call pg.end() — the shared pool is managed by lib/db/postgres.js.
   }
 }
 
