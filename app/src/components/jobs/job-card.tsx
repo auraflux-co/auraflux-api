@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -39,7 +40,8 @@ export function JobCard({ job, detailed = false }: JobCardProps) {
   );
 
   return (
-    <Card className="hover:border-border/80 transition-colors">
+    <Link href={`/dashboard/jobs/${job.jobId}`} className="block">
+    <Card className="hover:border-border/80 transition-colors cursor-pointer">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -112,5 +114,6 @@ export function JobCard({ job, detailed = false }: JobCardProps) {
         </p>
       </CardContent>
     </Card>
+    </Link>
   );
 }
