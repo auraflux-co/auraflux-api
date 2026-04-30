@@ -234,33 +234,12 @@ services:
     maxmemoryPolicy: noeviction
     ipAllowList: []
 
-  # ── Nightly backup cron job (CPD-50) ─────────────────────────────────────────
-  # Runs daily at 03:00 UTC — after US midnight, before any morning operations.
-  # Backs up SQLite snapshot + data/*.json to Cloudflare R2 (30-day retention).
-  # Separate service so deploys to auraflux-api never skip a scheduled backup.
-  - type: cron
-    name: auraflux-backup
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    schedule: '0 3 * * *'
-    dockerCommand: node scripts/backup_to_r2.js
-    plan: starter
-    region: oregon
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: TZ
-        value: UTC
-      - key: R2_ACCOUNT_ID
-        sync: false
-      - key: R2_ACCESS_KEY_ID
-        sync: false
-      - key: R2_SECRET_ACCESS_KEY
-        sync: false
-      - key: R2_BACKUP_BUCKET
-        value: auraflux-backups
-      - key: DATABASE_URL
-        sync: false
+  # ── Backup note ───────────────────────────────────────────────────────────────
+  # The nightly backup (SQLite + Postgres + JSON state → R2) now runs as a
+  # node-cron job inside auraflux-api at 03:00 UTC. A separate Render cron
+  # service cannot mount the persistent disk (Render: one disk = one service),
+  # so it was removed. R2 env vars (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
+  # R2_SECRET_ACCESS_KEY, R2_BACKUP_BUCKET) must be set on auraflux-api.
 
 # ── No managed databases ─────────────────────────────────────────────────────
 # auraflux-pg (PostgreSQL) was manually created in Render before this Blueprint

@@ -59,7 +59,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libxdamage1 \
     libxfixes3 \
     libxrandr2 \
-    xdg-utils
+    xdg-utils \
+    postgresql-client
 
 # Tell puppeteer to use the system Chromium, not download its own
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
