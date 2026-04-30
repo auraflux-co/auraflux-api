@@ -317,6 +317,47 @@ export async function subscribeToPlan(
   });
 }
 
+// ─── Video generation (Wan / RunPod) ─────────────────────────────────────────
+
+export interface GenerateVideoPayload {
+  prompt:          string;
+  negativePrompt?: string;
+  width?:          number;
+  height?:         number;
+  numFrames?:      number;
+  seed?:           number;
+}
+
+export interface GenerateVideoQueued {
+  promptId:     string;
+  outputPrefix: string;
+  status:       'queued';
+}
+
+export interface GenerateVideoResult {
+  status:  'running' | 'success' | 'error';
+  files?:  { filename: string; url: string }[];
+  error?:  string;
+}
+
+export async function generateVideo(
+  payload: GenerateVideoPayload,
+  token?: string,
+): Promise<GenerateVideoQueued> {
+  return apiFetch('/api/generate-video', {
+    method: 'POST',
+    body:   JSON.stringify(payload),
+    token,
+  });
+}
+
+export async function pollVideoStatus(
+  promptId: string,
+  token?: string,
+): Promise<GenerateVideoResult> {
+  return apiFetch(`/api/generate-video/${promptId}`, { token });
+}
+
 // ─── Job validation ───────────────────────────────────────────────────────────
 
 export async function validatePublishCopy(

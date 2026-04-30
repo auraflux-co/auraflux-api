@@ -24,7 +24,6 @@ docs/dispatches/
 docs/reports/
 
 # Operational / personal ops files — C0 daily ops, not C1+ product docs
-MORNING_BRIEFING.md
 OVERNIGHT_TASKS.md
 BRANCH_NOTES.md
 docs/ops/CLINE_PROMPT_TEMPLATES.md
