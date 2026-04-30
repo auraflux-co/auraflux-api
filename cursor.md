@@ -379,10 +379,10 @@ When a job misbehaves, read in this order: **what happened → which failure buc
 
 **Sources of truth (all written by `recordWhyLedger()`):**
 
-| Sink      | Location                                                                                             |
-| --------- | ---------------------------------------------------------------------------------------------------- |
-| SQLite    | `why_ledger` table — `lib/db.js` (`saveWhyLedger`)                                                   |
-| New Relic | Custom event **`PipelineWhy`**                                                                       |
+| Sink       | Location                                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| PostgreSQL | `why_ledger` table — `lib/db.js` → `lib/db/postgres.js` (`saveWhyLedger`, fire-and-forget)          |
+| New Relic  | Custom event **`PipelineWhy`**                                                                       |
 | JSONL     | `logs/pipeline_events.jsonl` — lines with `"type":"why:ledger"` (via `lib/pipeline_event_logger.js`) |
 
 **Wiring:** `lib/why_ledger.js`; emitted from `lib/monitoring.js` (gate bus + escalate + kill + restore), `lib/script_gen.js` (Gate 1 pipeline bus + auto-action), `lib/gates/gate1.js` (Claude JSON salvage path), `lib/assembly.js` (bus payload enrichment). Tests: `test/why_ledger.test.js`.
@@ -393,10 +393,10 @@ The pipeline is now a fully persistent, recoverable state machine. Three closely
 
 **1. Persistent job cards (`33a8800`)**
 
-- In-memory `persistedJobs` object loaded from `data/jobs.json` at server startup (`server.js:115-120`)
-- `saveJobCard(jobId, card)` writes to memory + disk on every mutation, prunes entries older than 7 days
-- `GET /jobs` (`server.js:894-920`) returns the list for dashboard restore
-- `data/jobs.json` is **runtime state** — must be gitignored, never committed
+- In-memory `persistedJobs` object loaded from PostgreSQL at server startup via `initJobCardPg()`
+- `saveJobCard(jobId, card)` writes to memory + fire-and-forgets to Postgres on every mutation, prunes entries older than 7 days
+- `GET /jobs` returns the list for dashboard restore
+- `data/jobs.json` is no longer used — PostgreSQL is the durable store for all job data
 - Jobs are persisted starting at Gate 1 pass (`server.js:~6763`) and updated at every subsequent stage
 
 **2. Dashboard auto-restore (`cfe2200`)**
@@ -815,7 +815,7 @@ NR dashboards + alert policies cover all observability. **Do not replace New Rel
 | Gate owner autonomous fix | **Cursor at session start** reads `logs/pipeline_events.jsonl` + NR + pm2 logs, proposes fixes |
 | Hourly reports            | **Dropped.** NR dashboards serve this.                                                         |
 | Escalation protocol       | **Cursor escalates directly to Rob in chat**                                                   |
-| Cross-gate correlation    | **Cursor reads SQLite at session start** — same data                                           |
+| Cross-gate correlation    | **Cursor reads Postgres at session start** — same data                                         |
 | Pipeline orchestrator     | **Cursor + STATUS.md** — already the actual workflow                                           |
 
 ### What `pipeline_event_logger.js` writes
@@ -1271,8 +1271,7 @@ Marketing    Vercel Static                 apps/marketing/    → auraflux.co
 AI Engine    RunPod.io / ComfyUI + SVD     external API
 Storage      Cloudflare R2                 replaces local output/   (free 10GB/mo)
 Queue        BullMQ + Redis                replaces pm2 + in-memory jobs
-DB (billing) PostgreSQL on Render          credits, voice profiles, Stripe events
-DB (jobs)    SQLite on persistent disk     job pipeline — full PG cutover is CPD-51 phase 2
+DB           PostgreSQL on Render          all data: jobs, credits, voice profiles, Stripe events (CPD-94 complete)
 ```
 
 **Render services at launch (~$34/mo total):**
@@ -1339,7 +1338,7 @@ RunPod implementation:
 | `lib/gates/gate5.js`                  | **Upload service** — reads Preflight block from Job Spec            |
 | `lib/thumbnail.js`                    | Stays in Assembly service                                           |
 | `lib/chrome_overlay_ffmpeg.js`        | Stays in Assembly service                                           |
-| `lib/job_spec.js`                     | **Job Spec store** — SQLite on persistent disk (sync); PG cutover in CPD-51 phase 2 |
+| `lib/job_spec.js`                     | **Job Spec store** — PostgreSQL via `lib/db/postgres.js`; in-memory cache via `persistedJobs` |
 | `lib/publish.js` (Upload-Post calls)  | Stays in Upload service                                             |
 
 #### Removed from C1+ (stays in c0 code path, not deleted)
@@ -1351,7 +1350,7 @@ RunPod implementation:
 | `bin/heygen-poller.js`              | **Kept for c0**       | HeyGen polling — c0 only                                               |
 | `lib/manual_segment_workflow.js`    | **Kept for c0**       | Manual hold + ordinal matching — c0 only                               |
 | HeyGen calls in `lib/script_gen.js` | **Kept for c0**       | Gated behind `shouldUseManualCheckpoint()`                             |
-| `data/jobs.json`                    | **Kept for c0 local** | Replaced by PostgreSQL on Render; local dev still uses JSON            |
+| `data/jobs.json`                    | **Removed** | Replaced by PostgreSQL for all environments (CPD-94)                  |
 | Google Drive upload                 | **Kept for c0 local** | Replaced by R2 on Render; c0 local can still try Drive                 |
 
 **Nothing gets deleted.** C1+ services are additive. C0's entire HeyGen → manual review → assembly workflow continues to run exactly as it does today on localhost. The flag `shouldUseManualCheckpoint()` (checks `jobSpecId.startsWith('c0_')`) is what keeps the paths separate.
@@ -1420,12 +1419,11 @@ RunPod implementation:
 - Wire delete-on-publish: after `publish:all_done`, delete R2 object
 - **Rob does:** create Cloudflare account, create R2 bucket, paste `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` into Render env
 
-#### Step 2.3 — PostgreSQL Job Spec migration (Sub-Agent A + Aider)
+#### Step 2.3 — PostgreSQL Job Spec migration ✅ COMPLETE (CPD-94)
 
-- Aider: generate Drizzle ORM schema for `job_specs` table (mirrors current SQLite schema + `order.services` + `workOrders` columns)
-- Sub-Agent A: `lib/db/job_spec_pg.js` — drop-in replacement for `lib/job_spec.js` using Postgres
-- Migrate existing SQLite data → Postgres (one-time script via Aider)
-- Feature flag: `USE_PG=true` in env to switch between SQLite (c0 local) and Postgres (Render)
+- `lib/db.js` is a thin re-export of `lib/db/postgres.js` — all job data uses PostgreSQL
+- `better-sqlite3` removed from `package.json`; `data/jobs.json` removed from persistence path
+- In-memory `persistedJobs` loaded from Postgres at startup via `initJobCardPg()`
 
 #### Step 2.4 — BullMQ orchestrator + queue workers (Sub-Agent A)
 
