@@ -71,6 +71,7 @@ describe('createJobSpec with contentType: show_commentary', () => {
     spec = createJobSpec({
       customerId: 'c0',
       contentType: 'show_commentary',
+      planTier: 'dwy',
       templateId: 'long-form',
       sourceType: 'url_list',
     });
