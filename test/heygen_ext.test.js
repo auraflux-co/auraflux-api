@@ -7,6 +7,15 @@
  *   3. portal_heygen_ext.js worker logic
  */
 
+// Mock Postgres layer so tests run without DATABASE_URL
+jest.mock('../lib/db', () => ({
+  saveJob: jest.fn().mockResolvedValue(undefined),
+  getJobBySpec: jest.fn().mockResolvedValue(null),
+  resolveCanonicalJobIdSync: jest.fn((id) => id),
+  updateJobSpec: jest.fn().mockResolvedValue(undefined),
+  getPool: jest.fn(() => ({ query: jest.fn().mockResolvedValue({ rows: [] }) })),
+}));
+
 const { runPortalSequence } = require('../lib/portal_policy_runner');
 
 // ── createJobSpec addOns wiring ────────────────────────────────────────────
