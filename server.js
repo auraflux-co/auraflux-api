@@ -421,8 +421,8 @@ const publishRouter = require('./lib/routes/publish');
 const heygenRouter = require('./lib/routes/heygen');
 
 // Mount routers — must come after middleware and _healthCache init
-app.use('/', jobsRouter);
-app.use('/', jobsC1Router); // CPD-67: C1+ POST /jobs entry endpoint
+app.use('/', jobsC1Router); // CPD-67: C1+ routes first — GET/POST /jobs, GET /jobs/:id
+app.use('/', jobsRouter);  // C0 legacy routes (rollback, advance, manual-segment ops)
 app.use('/', creditsRouter);   // CPD-43: credit ledger consume + balance
 app.use('/', thumbnailRouter); // CPD-55: thumbnail approval stage
 app.use('/', conciergeRouter);     // CPD-83: AI Concierge
