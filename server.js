@@ -280,8 +280,20 @@ const twitchClient = new TwitchClient({
 // Security headers via helmet
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Disabled for local dashboard with inline scripts
-    crossOriginEmbedderPolicy: false, // Disabled for embedded videos/images
+    // API server returns JSON only — strict CSP blocks any accidental HTML injection.
+    // 'none' for everything except self-connects; frameAncestors blocks clickjacking.
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        scriptSrc: ["'none'"],
+        styleSrc: ["'none'"],
+        imgSrc: ["'none'"],
+        connectSrc: ["'self'"],
+        frameAncestors: ["'none'"],
+        formAction: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false, // Disabled — API consumers include browser video players
   })
 );
 
@@ -544,6 +556,24 @@ const server = app.listen(PORT, () => {
     const { startSchedulingCron } = require('./lib/services/scheduling_cron');
     startSchedulingCron();
   } catch (_e) { /* non-fatal */ }
+
+  // Nightly backup — 03:00 UTC daily. Runs inside this service so it has access
+  // to the persistent disk (/app/data/cwn.db). The Render cron service was removed
+  // because it ran in a separate container without the disk mount.
+  try {
+    const cron = require('node-cron');
+    cron.schedule('0 3 * * *', async () => {
+      console.log('[backup-cron] Starting nightly backup...');
+      try {
+        const { runBackup } = require('./scripts/backup_to_r2');
+        const result = await runBackup();
+        console.log(`[backup-cron] ${result.ok ? 'Completed' : 'Completed with errors'}`);
+      } catch (err) {
+        console.error('[backup-cron] Backup error:', err.message);
+      }
+    }, { timezone: 'UTC' });
+    console.log('[backup-cron] Nightly backup cron scheduled (03:00 UTC daily)');
+  } catch (_e) { /* non-fatal if node-cron or backup env vars unavailable */ }
 });
 
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
