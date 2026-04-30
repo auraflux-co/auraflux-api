@@ -201,6 +201,19 @@ app.use((req, res, next) => {
 // Structured HTTP request logging (pino-http) — one JSON line per request
 app.use(requestLogger);
 
+// ── Admin service-to-service bypass — must run BEFORE Clerk ──────────────────
+// Requests with a valid x-admin-token bypass Clerk entirely.
+// Used for internal webhooks, CI smoke tests, and E2E job submission.
+app.use((req, _res, next) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (adminSecret && req.headers['x-admin-token'] === adminSecret) {
+    const { ROLES } = require('./lib/auth');
+    req.user = { id: 'internal', role: ROLES.ADMIN, email: 'internal@service' };
+    req._adminBypass = true;
+  }
+  next();
+});
+
 // ── Clerk auth — CPD-21 ──────────────────────────────────────────────────────
 // clerkMiddleware() must run before any route that calls requireAuth.
 // It attaches the Clerk session to req without enforcing auth yet.
