@@ -222,17 +222,15 @@ services:
 
 # ── Databases (PostgreSQL + Redis) ───────────────────────────────────────────
 # Render auto-injects DATABASE_URL and REDIS_URL via the fromDatabase references above.
-# Plan: starter → upgrade to standard ($20/mo, 30-day backups) before first paying customer.
+# Plan: free → upgrade to basic-256mb or standard ($20/mo, 30-day backups) before first paying customer.
 # One-time data migration: Render Shell on auraflux-api → node scripts/migrate_sqlite_to_pg.js
 databases:
   - name: auraflux-pg
-    plan: starter
+    plan: free
     databaseName: auraflux
     user: auraflux
-    region: oregon
 
   # Redis — BullMQ job queues (lazy connection in lib/queue.js — service starts even without Redis)
   - name: auraflux-redis
-    plan: starter
+    plan: free
     maxmemoryPolicy: noeviction
-    region: oregon

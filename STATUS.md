@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (fix: billing_cron.js startup crash on Render — broken require('../logError') corrected to require('../error_logger'). Service was crashing on every deploy restart. 395/395 tests pass.)
+**Last Updated:** 2026-04-30 (fix(render): Blueprint sync failure — `plan: starter` is invalid for databases (only valid for services); changed both auraflux-pg and auraflux-redis to `plan: free` and removed unsupported `region` field from database entries per Render Blueprint spec.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
