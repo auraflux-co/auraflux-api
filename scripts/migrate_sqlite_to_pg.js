@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * scripts/migrate_sqlite_to_pg.js
+ * scripts/migrate_sqlite_to_pg.js  [ARCHIVED — migration complete]
+ *
+ * This one-shot migration script has served its purpose. SQLite has been
+ * removed from the application (CPD-94). better-sqlite3 is no longer in
+ * package.json, so this script cannot be run without reinstalling it manually.
+ *
+ * Kept for reference only.
  *
  * One-shot migration: copies all data from the SQLite database (data/cwn.db)
  * into the Render PostgreSQL instance (DATABASE_URL).

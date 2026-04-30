@@ -136,15 +136,6 @@ const {
 } = require('./lib/metrics');
 const db = require('./lib/db');
 
-// C1+ Render: initialize Postgres pool + run migrations at startup.
-// Billing, credits, Stripe, and voice profile calls wait for this to resolve.
-if (process.env.DATABASE_URL) {
-  const pg = require('./lib/db/postgres');
-  pg.initDb()
-    .then(() => console.log('[db/postgres] Ready — billing and credits active'))
-    .catch((err) => console.error('[db/postgres] Init failed:', err.message));
-}
-
 const { createJobSpec, getJobSpec } = require('./lib/job_spec');
 const {
   shouldUseManualCheckpoint,
@@ -239,16 +230,12 @@ const heygenJobs = {};
 // ── Job Card Persistence (extracted to lib/job_card.js) ──────────────────────
 const {
   persistedJobs,
-  JOBS_FILE,
-  initJobCardSQLite,
+  initJobCardPg,
   inferJobStage,
   saveJobCard,
   markJobStuck,
   checkContentTypeStuckPattern,
 } = require('./lib/job_card');
-
-// Initialise SQLite alongside jobs.json (called immediately on require inside job_card.js)
-initJobCardSQLite();
 
 // ── HeyGen Poller (extracted to lib/heygen_poller.js) ───────────────────────
 const {
@@ -517,6 +504,15 @@ if (!process.env.DATABASE_URL) {
 app.use(errorMiddleware);
 
 // ── Start ─────────────────────────────────────────────────────────
+// Initialize Postgres (runs migrations) and load persisted jobs before accepting traffic.
+(async () => {
+  try {
+    await initJobCardPg();
+  } catch (err) {
+    console.error('[startup] Postgres init failed — starting with empty job store:', err.message);
+  }
+})();
+
 const server = app.listen(PORT, () => {
   console.log(`\n🚀 AuraFlux API running on http://localhost:${PORT}`);
   console.log(`   FFmpeg path: ${ffmpegPath()}`);
