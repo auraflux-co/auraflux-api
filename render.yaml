@@ -173,12 +173,11 @@ services:
       - key: R2_PUBLIC_URL
         sync: false
 
-      # PostgreSQL — injected automatically when auraflux-pg is linked.
-      # Render dashboard → auraflux-pg → Connect → select auraflux-api
+      # PostgreSQL — manually-created database, NOT managed by this Blueprint.
+      # Set DATABASE_URL in the Render environment panel → paste the Internal Connection String
+      # from the auraflux-pg dashboard page.
       - key: DATABASE_URL
-        fromDatabase:
-          name: auraflux-pg
-          property: connectionString
+        sync: false
 
       # Redis — injected automatically from auraflux-redis database (BullMQ)
       - key: REDIS_URL
@@ -216,20 +215,17 @@ services:
       - key: R2_BACKUP_BUCKET
         value: auraflux-backups
       - key: DATABASE_URL
-        fromDatabase:
-          name: auraflux-pg
-          property: connectionString
+        sync: false
 
-# ── Databases (PostgreSQL + Redis) ───────────────────────────────────────────
-# Render auto-injects DATABASE_URL and REDIS_URL via the fromDatabase references above.
-# Plan: free → upgrade to basic-256mb or standard ($20/mo, 30-day backups) before first paying customer.
-# One-time data migration: Render Shell on auraflux-api → node scripts/migrate_sqlite_to_pg.js
+# ── Databases (Redis only — PostgreSQL is managed outside this Blueprint) ────
+# auraflux-pg was manually created in Render before this Blueprint was set up.
+# Managing it here would cause a plan-mismatch sync failure. Set DATABASE_URL
+# manually in the Render environment panel using the Internal Connection String
+# from the auraflux-pg dashboard page.
+#
+# REDIS_URL is auto-injected from auraflux-redis (defined below).
+# Redis created fresh by this Blueprint — no prior manual instance exists.
 databases:
-  - name: auraflux-pg
-    plan: free
-    databaseName: auraflux
-    user: auraflux
-
   # Redis — BullMQ job queues (lazy connection in lib/queue.js — service starts even without Redis)
   - name: auraflux-redis
     plan: free
