@@ -1,15 +1,14 @@
 # render.yaml — AuraFlux API Blueprint
 # Deploy: connect this repo in the Render dashboard → "New → Blueprint"
-# Render will provision the web service, cron backup job, Postgres database, and persistent disk.
+# Render will provision the web service, backup cron, Postgres database, Redis, and persistent disk.
 #
 # BEFORE FIRST DEPLOY:
-#   1. Set all envVars marked sync: false in the Render environment panel
-#   2. Set PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium (already in Dockerfile ENV,
-#      but override here to be explicit for Render's container runtime)
-#   3. Set TZ=UTC for consistent log timestamps
-#   4. Confirm /health returns ok after first deploy
+#   1. Set all envVars marked sync: false in the Render environment panel (secrets only — never commit)
+#   2. Confirm /health returns ok: true after first deploy
+#   3. Run: node scripts/smoke_test_render.js https://<your-service>.onrender.com
 #
 # See docs/ops/RENDER_DEPLOY_CHECKLIST.md for the full checklist.
+# Last updated: 2026-04-30 (CPD-35 — added Redis, Clerk, Stripe, ElevenLabs, COMFYUI_API_KEY)
 
 services:
   - type: web
@@ -126,15 +125,41 @@ services:
       - key: ATLASSIAN_EMAIL
         sync: false
 
-      # RunPod / ComfyUI / SVD (Phase 4 — text-to-video + long-to-short)
+      # RunPod / ComfyUI (CPD-69, CPD-79 — video generation, WAN 2.7 Partner Nodes)
       - key: RUNPOD_API_KEY
         sync: false
       - key: RUNPOD_POD_ID
         sync: false
       - key: RUNPOD_ENDPOINT_ID
         sync: false
+      - key: WAN_MODEL_VERSION
+        value: '2.2'
+      - key: COMFYUI_API_KEY
+        sync: false
 
-      # Cloudflare R2 — backup storage + video output storage (CPD-50)
+      # ElevenLabs TTS (CPD-77 — voice matching)
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_DEFAULT_VOICE_ID
+        value: JBFqnCBsd6RMkjVDRZzb
+
+      # Clerk — auth (frontend + API)
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+
+      # Stripe — billing
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+      # AuraFlux frontend → API shared secret
+      - key: AURAFLUX_API_SECRET
+        sync: false
+
+      # Cloudflare R2 — backup storage + video output (CPD-50)
       - key: R2_ACCOUNT_ID
         sync: false
       - key: R2_ACCESS_KEY_ID
@@ -145,15 +170,24 @@ services:
         value: auraflux-backups
       - key: R2_VIDEO_BUCKET
         value: auraflux-video-output
+      - key: R2_PUBLIC_URL
+        sync: false
 
-      # PostgreSQL — CPD-51: injected automatically when auraflux-pg is linked to this service.
-      # Go to: Render dashboard → auraflux-pg → Connect → select auraflux-api
+      # PostgreSQL — injected automatically when auraflux-pg is linked.
+      # Render dashboard → auraflux-pg → Connect → select auraflux-api
       - key: DATABASE_URL
         fromDatabase:
           name: auraflux-pg
           property: connectionString
 
-      # C0 manual workflow flag
+      # Redis — injected automatically from auraflux-redis service (BullMQ)
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: auraflux-redis
+          property: connectionString
+
+      # C0 manual workflow flag (localhost only — keeps C0 path from auto-advancing)
       - key: C0_MANUAL_SEGMENT_CHECKPOINT
         value: 'true'
 
@@ -187,10 +221,18 @@ services:
           name: auraflux-pg
           property: connectionString
 
-# ── PostgreSQL — CPD-51: auraflux-pg provisioned manually in Render dashboard.
+  # ── Redis — BullMQ job queues ─────────────────────────────────────────────────
+  # lazy connection in lib/queue.js — service starts even if Redis is unavailable.
+  - type: redis
+    name: auraflux-redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: noeviction
+
+# ── PostgreSQL ────────────────────────────────────────────────────────────────
 # Render auto-injects DATABASE_URL into auraflux-api via the fromDatabase reference above.
-# Current plan: starter → upgrade to standard ($20/mo, 30-day backups) before first paying customer.
-# To run one-time migration: Render Shell on auraflux-api → node scripts/migrate_sqlite_to_pg.js
+# Plan: starter → upgrade to standard ($20/mo, 30-day backups) before first paying customer.
+# One-time data migration: Render Shell on auraflux-api → node scripts/migrate_sqlite_to_pg.js
 databases:
   - name: auraflux-pg
     plan: starter

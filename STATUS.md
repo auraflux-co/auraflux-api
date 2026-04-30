@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (Cursor Sprint 4 — CPD-79 WAN 2.7 Partner Nodes scaffold: wan_t2v_2.7_workflow.json + wan_i2v_2.7_workflow.json created; runpod.js updated with modelVersion routing + _generateWan27 helper + COMFYUI_API_KEY auth header; .env.example updated. 395/395 tests pass.)
+**Last Updated:** 2026-04-30 (Cursor Sprint 4 — CPD-35 Render deploy: render.yaml updated (Redis service added, Clerk/Stripe/ElevenLabs/COMFYUI_API_KEY env vars added); scripts/smoke_test_render.js created (npm run smoke:render <url>). 395/395 tests pass.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
