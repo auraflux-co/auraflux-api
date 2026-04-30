@@ -73,13 +73,13 @@ RUN mkdir -p output tmp logs data
 RUN chown -R node:node /app
 USER node
 
-EXPOSE 3000
+EXPOSE 10000
 
 ENV NODE_ENV=production \
-    PORT=3000 \
+    PORT=10000 \
     NEW_RELIC_NO_CONFIG_FILE=true
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 10000) + '/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 CMD ["node", "server.js"]
