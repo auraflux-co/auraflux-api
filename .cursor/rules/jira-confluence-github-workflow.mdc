@@ -1,0 +1,50 @@
+---
+description: Jira/Confluence/GitHub workflow — WHY/WHAT/HOW/WHEN hierarchy
+alwaysApply: true
+---
+# Work Hierarchy
+
+Every task follows this chain — nothing skips a layer:
+
+| Layer | Answers | Lives in |
+|---|---|---|
+| Strategy | WHY | Confluence strategy section |
+| Tickets | WHAT | Jira (sprint + backlog) |
+| Docs | HOW | Confluence pages linked to tickets |
+| Code | execution | GitHub (commits, PRs, branches) |
+| Roadmap / Sprints | WHEN | Jira roadmap + sprint board |
+
+## Before writing any code
+
+1. **Find the Jira ticket** — identify the WHAT. If no ticket exists, create one before touching code.
+2. **Find or create the Confluence HOW page** — check the ticket's "Confluence page" link field.
+   - If a HOW page exists: read it and implement what it specifies.
+   - If no HOW page exists and the work has meaningful decisions: create the page first, link it on the ticket, then code.
+   - If the work is trivial (< 10 line fix, no design decisions): note "implementation trivial — no HOW doc needed" in the ticket comment.
+
+## While coding
+
+- Branch name must include the Jira ticket ID: `feat/CPD-XX-short-description`
+- Every commit message must reference the ticket: `feat(cpd-XX): description`
+- The code implements what the Confluence HOW page specifies — not what the agent invents in the moment.
+
+## After coding
+
+1. If the implementation refined or deviated from the Confluence HOW page: **update the page first**.
+2. Update `STATUS.md` (required by pre-commit hook).
+3. Serena runs post-commit QA (see `serena-pr-review.mdc`).
+4. Open PR → Serena pre-PR review gate runs.
+5. Once merged: transition Jira ticket to Done.
+
+## GitHub is the result, not the source of truth
+
+- README: WHAT is this project + pointers to Jira/Confluence/Render. Not HOW.
+- `STATUS.md`: last agent action + deploy state. Not architecture decisions.
+- Architecture decisions live in Confluence, referenced from the ticket that drove them.
+
+## ❌ Never
+
+- Write code without a Jira ticket
+- Make architectural decisions without a Confluence HOW page
+- Use GitHub commit messages or PR bodies as the HOW documentation
+- Close a ticket before the Confluence page reflects what was actually built

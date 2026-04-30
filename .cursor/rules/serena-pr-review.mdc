@@ -25,41 +25,44 @@ Serena in memory = less work for Aider overnight. Aider should focus on environm
 
 Exception: non-code files (markdown, yaml, JSON config, shell scripts) may use StrReplace/Write.
 
-## Post-commit QA (after every `git commit`)
+## Commit review (after EVERY `git commit`)
 
-This fires automatically via the `postToolUse` hook. When triggered, run in order:
+Serena reviews every commit — no exceptions. This is not optional and does not require a PR.
 
-### 1. Warm the index
+### Run in order
+
+**Step 1 — Warm the index**
 ```
 initial_instructions → activate_project("cwn-production")
 ```
 
-### 2. Get changed files
+**Step 2 — Get changed files**
 ```bash
 git diff HEAD~1 --name-only
 ```
 
-### 3. Run these checks on each changed file
+**Step 3 — Symbol-level checks on each changed file**
 
 | Check | Tool | Pass condition |
 |-------|------|----------------|
 | Terminology | `find_symbol` for "gate" in comments/strings | No "gate N" or "Gate N" in new code (ok in schema fields `gate:`) |
-| Branding | `find_symbol` or `replace_content` scan in `app/` | No `cwn`, `c0_`, `clipzworld`, `ClipzWorld` in new platform files |
+| Branding | `find_symbol` scan in `app/` | No `cwn`, `c0_`, `clipzworld`, `ClipzWorld` in new platform files |
 | Feature gate | `find_symbol` `runWorker` body | All new portal extension workers call `isFeatureEnabled` before logic |
 | Route mounting | `find_referencing_symbols` on new route files | New `lib/routes/*.js` is `require`d + `app.use`d in `server.js` |
 | Test coverage | Check `test/` directory | New `lib/` module has a matching `test/*.test.js` |
 | Env vars | `find_symbol` for `process.env.` in new code | Each new env var appears in `.env.example` |
+| Confluence HOW | ticket linked doc | Implementation matches HOW page; update page if it deviated |
 
-### 4. Report
-Output a brief commit QA summary:
+**Step 4 — Output commit QA report**
 ```
 ✅ Commit QA — [commit hash]
 - Files reviewed: N
 - Checks: pass/fail per row above
+- Confluence HOW page: updated / not required / MISSING (needs page)
 - Issues: (list any, or "none")
 ```
 
-If issues are found: fix before continuing to the next task.
+**If issues are found: fix before moving to the next task.**
 
 ---
 
