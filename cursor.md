@@ -1619,11 +1619,14 @@ Every fix below is tagged **[C0]** (fixes c0 short/long production), **[C1+]** (
 **Pending tasks (not done):**
 
 - Audit Gate 2 prerequisite chain for C1+ escape hatch
-- Gate 5 single global `UPLOADPOST_PROFILE` → per-customer credentials for C1+
 - BullMQ queue workers for C1+ pipeline
-- `groupSegmentsByLabel` `itemIdx: -1` issue (LOW)
-- Gate 5 `passed: anySuccess` misleading outcome (LOW)
 - Twitch clip picker (no picker today — shorts auto-select highest-viewed clip across all streamers)
+
+**Resolved:**
+- ~~Gate 5 single global `UPLOADPOST_PROFILE` → per-customer credentials for C1+~~ ✅ PR #141
+- ~~`groupSegmentsByLabel` `itemIdx: -1` issue (LOW)~~ ✅ Fixed (INTRO→0, OUTRO→last item)
+- ~~Gate 5 `passed: anySuccess` misleading outcome (LOW)~~ ✅ PR #141 (`platformOutcome` field)
+- ~~Customer config isolation — c0.json leak into C1+ paths~~ ✅ `customerConfig.js` now falls back to `c1_default` for C1+ customers; `c0` default params removed from portal0, thumbnail, QA checklists
 
 ---
 
@@ -1700,8 +1703,11 @@ Per `docs/architecture/DECOUPLED_VIDEO_PRODUCT_STACK.md`:
 
 **Pending C1+ blockers (carry-forward):**
 
-- Gate 5 per-customer `UPLOADPOST_PROFILE` credentials
 - BullMQ queue workers for pipeline stages
 - Cloudflare R2 replacing local disk / Google Drive for C1+ assets
-- `groupSegmentsByLabel` `itemIdx: -1` (LOW)
-- Gate 5 `passed: anySuccess` misleading (LOW)
+
+**Resolved C1+ blockers:**
+- ~~Gate 5 per-customer `UPLOADPOST_PROFILE` credentials~~ ✅ PR #141
+- ~~`groupSegmentsByLabel` `itemIdx: -1`~~ ✅ Fixed
+- ~~Gate 5 `passed: anySuccess` misleading~~ ✅ PR #141 (`platformOutcome`)
+- ~~Customer config `c0` hardcodes in C1+ paths~~ ✅ `c1_default` fallback wired
