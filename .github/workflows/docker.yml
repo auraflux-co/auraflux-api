@@ -1,9 +1,9 @@
 name: Build & Push Docker Image to GHCR
 
 # Builds the production Docker image on every push to main and pushes it to
-# GitHub Container Registry. Render pulls from this as a build cache source
-# (buildCacheImage in render.yaml), reducing Render build times from 30+ min
-# to ~3–5 min because apt-get and npm ci layers are already cached in the image.
+# GitHub Container Registry using BuildKit inline cache.
+# The Dockerfile uses --mount=type=cache for apt and npm, so Render's own
+# Docker BuildKit build cache benefits from the same cached layers.
 
 on:
   push:
