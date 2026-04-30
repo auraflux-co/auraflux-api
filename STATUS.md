@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (fix(health): missing API keys demoted from 503 errors to warnings — health check was returning 503 on fresh Render deploys before secrets were set, causing Render to fail the deploy health check.)
+**Last Updated:** 2026-04-30 (fix(auth): clerkInit() only checked CLERK_SECRET_KEY; setting it without CLERK_PUBLISHABLE_KEY caused clerkMiddleware() to crash every request with 500. Guard now requires both keys before activating Clerk.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
