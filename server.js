@@ -209,6 +209,7 @@ const { downloadFile } = require('./lib/downloader');
 const {
   ffmpegPath: _ffmpegDockerPath,
   ffprobePath: _ffprobeDockerPath,
+  checkFFmpeg,
 } = require('./lib/ffmpeg_utils');
 const cheerio = require('cheerio');
 
