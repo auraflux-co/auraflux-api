@@ -78,23 +78,6 @@ const BROWSER_HEADERS = {
   'Sec-Ch-Ua-Platform': '"macOS"',
 };
 
-// Validate required environment variables on startup
-// validateRequiredEnv moved to lib/startup.js — called via runStartupChecks() below
-
-/**
- * AuraFlux API Server
- * - POST /assemble         → FFmpeg pipeline: download HeyGen segments → concat → output MP4
- * - GET  /assemble-progress/:id → SSE-style progress polling
- * - POST /canva-import     → Forward video URL to Canva MCP (import-design-from-url)
- * - POST /analyze-clip     → Gemini 2.5 Flash visual analysis + Claude CWN script rewrite
- * - GET  /canva-import-status/:id → Poll Canva import job status
- * - GET  /download/:file   → Serve assembled video
- * - GET  /health           → Server health check
- *
- * Install: npm install express cors axios fluent-ffmpeg @anthropic-ai/sdk
- * Run:     node server.js
- */
-
 // ── Timestamp all console output ──────────────────────────────────────────────
 const _origLog = console.log;
 const _origWarn = console.warn;
@@ -107,111 +90,33 @@ console.error = (...a) => _origError(`[${_ts()}]`, ...a);
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const { strictLimit, apiLimit, healthLimit } = require('./lib/rateLimiter');
 const requestLogger = require('./lib/requestLogger');
 const axios = require('axios');
 const fs = require('fs');
-const { execFile, exec, execSync } = require('child_process');
+const { execSync } = require('child_process');
 const Anthropic = require('@anthropic-ai/sdk');
-const { withPuppeteerExecutable, puppeteerExecutablePath } = require('./lib/services/puppeteer_utils');
-
-const { body, validationResult } = require('express-validator');
-const { logError, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
-const {
-  requireFields,
-  validateContentType,
-  validateArrayLength,
-  sanitizeStrings,
-} = require('./lib/validation');
-const TwitchClient = require('./lib/clients/twitch_client');
-const { CONFIG } = require('./lib/config');
-const logger = require('./lib/logger');
-const pipelineBus = require('./lib/pipeline_events');
-const {
-  StageTimer,
-  jobMetrics,
-  initJobMetrics,
-  addStageMetrics,
-  finalizeJobMetrics,
-} = require('./lib/metrics');
+const { errorMiddleware } = require('./lib/error_logger');
+// lib/validation imported directly by route files
+// lib/metrics imported directly by portal workers and assembly_routes.js
 const db = require('./lib/db');
 
-const { createJobSpec, getJobSpec } = require('./lib/job_spec');
-const {
-  shouldUseManualCheckpoint,
-  useC0ImmediateManualHold,
-  writeManualManifest,
-  prefetchManualSourceClips,
-  prepareC0ManualHoldAfterHeyGen,
-  applyManualOverrides,
-} = require('./lib/manual_segment_workflow');
-const { persistJobSpecGateContracts } = require('./lib/job_spec_contracts');
+// lib/manual_segment_workflow imported directly by lib/routes/jobs.js
 const { startMonitoring } = require('./lib/monitoring');
-const {
-  generateTwitchLongformThumbnail,
-  generateNewsNbaThumbnail,
-  burnSceneChromeFromDirective,
-  generateChromeOverlayFromDirective,
-  generateChromeOverlay,
-} = require('./lib/chrome_overlay');
-const {
-  geminiQACheck, // TODO: remove — dead code, gate2Worker.run() replaces this (see /gate2-segment-qa endpoint)
-  parseScriptIntoScenes,
-  generateClipAvailabilityReport,
-  claudeScriptQA,
-  claudeScriptFix,
-  geminiSegmentQA, // TODO: remove — dead code, gate2Worker.run() replaces this
-  callClaudeAPI,
-  uploadToGeminiFiles,
-  waitForGeminiFile,
-  deleteGeminiFile,
-  autoAction,
-} = require('./lib/qa');
-const {
-  sendScriptToHeyGen,
-  geminiScriptGeneration,
-  getVoiceGuide,
-  scrapeArticleVideo,
-  scrapeArticleOgImage,
-  geminiAnalyzeClip,
-  geminiAnalyzeThumbnail,
-  prioritizeNewsStories,
-  handleGenerateFullScript,
-} = require('./lib/script_gen');
+// lib/chrome_overlay imported directly by lib/routes/assembly_routes.js and c0_sources.js
+// lib/qa functions imported directly by portal workers and route files that need them
+// lib/script_gen imported directly by lib/routes/c0_sources.js and lib/assembly.js
 // lib/publish.js is loaded by lib/routes/publish.js — not used directly in server.js
-const {
-  handleAssemble,
-  generateIntroCardPNG,
-  generateGameStoryCardPNG,
-  generateNewsStoryCardPNG,
-  detectTrailingSilence,
-  computeNewsClipTrimDuration,
-  buildConcatCommand,
-  probeDuration,
-  checkDiskSpace,
-  captureTicker,
-  getPinnedComment,
-  TICKER_CACHE,
-  TICKER_MAP,
-  assemblyJobs,
-} = require('./lib/assembly');
-const { downloadFile } = require('./lib/downloader');
+const { assemblyJobs } = require('./lib/assembly'); // used in gracefulShutdown
 const {
   ffmpegPath: _ffmpegDockerPath,
   ffprobePath: _ffprobeDockerPath,
   checkFFmpeg,
 } = require('./lib/ffmpeg_utils');
-const cheerio = require('cheerio');
 
 const app = express();
 
-// ffmpegEncodeArgs lives in lib/ffmpeg_utils.js — used by lib/assembly.js directly
-const { ffmpegEncodeArgs } = require('./lib/ffmpeg_utils');
-console.log(`[ffmpeg] ffmpegEncodeArgs loaded from lib/ffmpeg_utils (platform: ${process.platform})`);
-
 const TMP_DIR    = require('path').join(__dirname, 'tmp');
 const OUTPUT_DIR = require('path').join(__dirname, 'output');
-const { CWN_LOGO_PATH, CWN_BANNER_PATH, SYSTEM_FONT } = require('./lib/services/branding_assets');
 require('fs').mkdirSync(TMP_DIR,    { recursive: true });
 require('fs').mkdirSync(OUTPUT_DIR, { recursive: true });
 
@@ -254,15 +159,6 @@ registerPipelineBusSubscribers();
 
 // Resume any pollers that were active when the server last exited
 setImmediate(resumeInFlightPollers);
-
-// Initialize Anthropic client for Claude API calls
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-// Initialize Twitch client
-const twitchClient = new TwitchClient({
-  clientId: process.env.TWITCH_CLIENT_ID,
-  token: process.env.TWITCH_TOKEN,
-});
 
 // Security headers via helmet
 app.use(
@@ -352,7 +248,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 // VectCutClient, findBrandingAsset, findSystemFont → extracted modules
-// SYSTEM_FONT, CWN_LOGO_PATH, CWN_BANNER_PATH already destructured above
 const { vectCutClient } = require('./lib/clients/vectcut_client');
 
 // ── Generate intro card PNG using Node Canvas ─────────────────────
@@ -445,35 +340,9 @@ app.use('/', publishRouter);
 const videoRouter = require('./lib/routes/video');
 app.use('/', videoRouter);
 
-// ── Jira Webhook Queue ───────────────────────────────────────────────────────
-// Receives Jira webhook payloads and stores them as a queue so the local Mac
-// poller (scripts/jira_poller.sh, runs every 5 min via launchd) can pick them
-// up and trigger Aider immediately instead of waiting until 1 AM.
-//
-// Queue file: data/jira_queue.json  (persisted on Render disk)
-// Secret:     JIRA_WEBHOOK_SECRET env var (passed as ?secret= query param)
-// Helpers + constants now in lib/jira_queue.js — mounted via createAdminRouter
-
-// POST /api/jira-webhook?secret=<JIRA_WEBHOOK_SECRET>
-// Jira sends this when an issue transitions or is updated.
-// Stores unprocessed tasks in jira_queue.json for the Mac poller to pick up.
-// ── Routes ────────────────────────────────────────────────────────
-// /api/jira-webhook, /api/jira-queue, /health — now in lib/routes/admin.js
-
-// /jobs, /job/:id/*, /content-type-status — now in lib/routes/jobs.js
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// ── POST /assemble ────────────────────────────────────────────────
-// ── GOOGLE DRIVE AUTO-UPLOAD ──────────────────────────────────────
-// Uses a service account key at ~/Downloads/cwn-drive-key.json
-// One-time setup: https://console.cloud.google.com → Drive API → Service Account
-// Share your "CWN Videos" Drive folder with the service account email (Editor)
-
-// DRIVE_KEY_PATH + DRIVE_FOLDER_NAME moved to lib/publish.js (only consumer after module split)
-
-// enhanceVideoWithTopaz → lib/services/topaz.js
-const { enhanceVideoWithTopaz } = require('./lib/services/topaz');
 
 // ── Assembly, Drive, Canva, Ticker routes ───────────────────────────────────────
 // assembly_routes mounts on both C0 and C1+; C0-only handlers inside are gated.
