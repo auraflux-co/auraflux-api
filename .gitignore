@@ -9,10 +9,30 @@ node_modules/
 .cline/
 .clinerules/
 .serena/
+.claude/
 data/assembly_jobs.json
 cwn-drive-key.json
 .DS_Store
 .aider*
+
+# C0-era internal docs — Cline/Aider handoffs, Phase A RCA reports, dispatches.
+# These describe localhost-only Gate workflows, Canva, CapCut, and C0 ops.
+# They stay on the local machine but must not appear on GitHub (C1+ repo).
+docs/archive/
+docs/handoffs/
+docs/dispatches/
+docs/reports/
+
+# Operational / personal ops files — C0 daily ops, not C1+ product docs
+MORNING_BRIEFING.md
+OVERNIGHT_TASKS.md
+BRANCH_NOTES.md
+docs/ops/CLINE_PROMPT_TEMPLATES.md
+docs/ops/ATLASSIAN_ROVO_MCP.md
+
+# Runtime log artifacts
+logs/aider_session_review.md
+logs/pipeline_status.json
 
 # Empty placeholder file created by aider venv setup
 env
