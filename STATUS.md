@@ -1,6 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (Cursor — feat: Portal 5 C1+ — per-customer uploadPostProfile (resolveUploadPostProfile reads publishConfig > deliverySpec > env), platformOutcome field (all_success|partial_success|all_failed|no_platforms); 9 new tests)
+**Last Updated:** 2026-04-30 (Cursor — feat: C1+ decoupling — customerConfig fallback c0→c1_default, portal0/thumbnail/QA checklists purged of c0 defaults, geminiScriptQA delegates to checklist modules (expectedScenesCount/deductionMap), groupSegmentsByLabel itemIdx fix; 406 pass)
+**Previous:** 2026-04-30 (Cursor — feat: Portal 5 C1+ — per-customer uploadPostProfile (resolveUploadPostProfile reads publishConfig > deliverySpec > env), platformOutcome field (all_success|partial_success|all_failed|no_platforms); 9 new tests)
 **Previous:** 2026-04-30 (Cursor — feat(POST_RENDER_TASKS 2.4): Gate 1 clip diagnostic — clipMismatches field in QA prompt schema, buildClipDiagnostic helper enriches fix directive with actual clip analysis text; 9 new tests pass)
 **Previous:** 2026-04-30 (Cursor — fix: test suite green after Postgres-only migration — archived SQLite canonical-job-id test, added Postgres mock to heygen_ext test, fixed duplicate delete handler in jobs.js; 388 pass / 1 skip)
 **Previous:** 2026-04-30 (Cursor — feat(CPD-104): server.js dead-import purge — 630→499 lines; removed 21 stale import groups (lib/qa, lib/script_gen, lib/assembly[-13], lib/chrome_overlay, lib/metrics, lib/validation, lib/manual_segment_workflow, Anthropic, TwitchClient, rateLimiter, puppeteer_utils, express-validator, CONFIG, pipelineBus, createJobSpec, persistJobSpecGateContracts, downloadFile, cheerio, enhanceVideoWithTopaz, ffmpegEncodeArgs, branding_assets))
