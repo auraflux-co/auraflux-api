@@ -1,6 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (Cursor — feat(monitoring): escalate() writes escalation report to docs/reports/roo/; POST /internal/alert NR webhook endpoint added to admin.js (CPD-101, CPD-102); 4 completed epics closed; CPD-90/91/93 closed)
+**Last Updated:** 2026-04-30 (Cursor — docs: cursor.md updated for Postgres-only arch (CPD-94 complete); SQLite/jobs.json references removed)
+**Previous:** 2026-04-30 (Cursor — feat(monitoring): escalate() writes escalation report to docs/reports/roo/; POST /internal/alert NR webhook endpoint added to admin.js (CPD-101, CPD-102); 4 completed epics closed; CPD-90/91/93 closed)
 **Previous:** 2026-04-30 (Cursor — fix(migrations): add schema_migrations self-registration to 002_scheduling_columns + 006_voice_profile; fix migrate_sqlite_to_pg to use initDb() and include scheduling columns — CPD-94 partial (data copy ready); CPD-90/91 closed; CPD-56 epic closed)
 **Previous:** 2026-04-30 (Cursor — fix(deploy): add pg to prod deps; NR agent_enabled guard; auraflux-backup cron suspended — resolves startup crash on Render; 395/395 tests)
 **Previous:** 2026-04-30 (Cursor — fix(infra): backup, NR, security audit fixes — backup moved inside auraflux-api (node-cron 03:00 UTC, disk access fixed); pg_dump added for Postgres; postgresql-client in Dockerfile; Render backup cron removed (broken — no disk mount); CSP re-enabled (strict API policy); NR license key fallback removed; Postgres SSL PGSSLROOTCERT support; 395/395 tests)
