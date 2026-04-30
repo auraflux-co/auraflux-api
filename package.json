@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.166",
+  "version": "1.0.167",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -90,6 +90,7 @@
     "multer": "^2.1.1",
     "newrelic": "^13.19.2",
     "node-cron": "^4.2.1",
+    "pg": "^8.20.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.3",
