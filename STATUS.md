@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (fix(auth): wrap clerkMiddleware in error boundary — browser requests with __clerk_handshake param caused Clerk to throw unhandled errors on public routes; wrap catches and logs without crashing; requireAuth() still enforces auth on protected routes.)
+**Last Updated:** 2026-04-30 (feat(deploy): CPD-92 — add auraflux-app Next.js service to render.yaml; fix Clerk middleware location (proxy.ts → src/middleware.ts); add /api/health route for Render health check)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
