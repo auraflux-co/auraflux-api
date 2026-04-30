@@ -1,6 +1,7 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (Cursor — feat(CPD-103): generateNewscastOverlay → generateChromeOverlay rename; lib/chrome_overlay.js, assembly/chrome_*.js, assembly.js, chromeDirectives.js, server.js — 26 refs updated, wrapper consolidated)
+**Last Updated:** 2026-04-30 (Cursor — feat(CPD-104): server.js dead-import purge — 630→499 lines; removed 21 stale import groups (lib/qa, lib/script_gen, lib/assembly[-13], lib/chrome_overlay, lib/metrics, lib/validation, lib/manual_segment_workflow, Anthropic, TwitchClient, rateLimiter, puppeteer_utils, express-validator, CONFIG, pipelineBus, createJobSpec, persistJobSpecGateContracts, downloadFile, cheerio, enhanceVideoWithTopaz, ffmpegEncodeArgs, branding_assets))
+**Previous:** 2026-04-30 (Cursor — feat(CPD-103): generateNewscastOverlay → generateChromeOverlay rename; lib/chrome_overlay.js, assembly/chrome_*.js, assembly.js, chromeDirectives.js, server.js — 26 refs updated, wrapper consolidated)
 **Previous:** 2026-04-30 (Cursor — docs: cursor.md updated for Postgres-only arch (CPD-94 complete); SQLite/jobs.json references removed)
 **Previous:** 2026-04-30 (Cursor — feat(monitoring): escalate() writes escalation report to docs/reports/roo/; POST /internal/alert NR webhook endpoint added to admin.js (CPD-101, CPD-102); 4 completed epics closed; CPD-90/91/93 closed)
 **Previous:** 2026-04-30 (Cursor — fix(migrations): add schema_migrations self-registration to 002_scheduling_columns + 006_voice_profile; fix migrate_sqlite_to_pg to use initDb() and include scheduling columns — CPD-94 partial (data copy ready); CPD-90/91 closed; CPD-56 epic closed)
