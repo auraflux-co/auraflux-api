@@ -7,11 +7,12 @@ import { UserButton } from '@clerk/nextjs';
 import { useRole } from '@/hooks/use-role';
 
 const BASE_NAV = [
-  { href: '/dashboard',          label: 'Overview' },
-  { href: '/dashboard/jobs',     label: 'Jobs' },
-  { href: '/dashboard/concierge',label: 'AI Concierge' },
-  { href: '/dashboard/schedule', label: 'Schedule' },
-  { href: '/dashboard/settings', label: 'Settings' },
+  { href: '/dashboard',           label: 'Overview' },
+  { href: '/dashboard/jobs',      label: 'Jobs' },
+  { href: '/dashboard/concierge', label: 'AI Concierge' },
+  { href: '/dashboard/schedule',  label: 'Schedule' },
+  { href: '/dashboard/credits',   label: 'Credits' },
+  { href: '/dashboard/settings',  label: 'Settings' },
 ];
 
 const OPERATOR_NAV = [
