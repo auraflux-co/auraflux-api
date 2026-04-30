@@ -177,18 +177,7 @@ const {
   prioritizeNewsStories,
   handleGenerateFullScript,
 } = require('./lib/script_gen');
-const {
-  getDriveClient,
-  getDriveFolderId,
-  uploadToDrive,
-  importToCanva,
-  readUploadStatus,
-  writeUploadStatus,
-  logUploadAttempt,
-  generateShortFormCaption,
-  handlePublish,
-  handleGeneratePublishCopy,
-} = require('./lib/publish');
+// lib/publish.js is loaded by lib/routes/publish.js — not used directly in server.js
 const {
   handleAssemble,
   generateIntroCardPNG,
@@ -481,20 +470,23 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 const { enhanceVideoWithTopaz } = require('./lib/services/topaz');
 
 // ── Assembly, Drive, Canva, Ticker routes ───────────────────────────────────────
+// assembly_routes mounts on both C0 and C1+; C0-only handlers inside are gated.
 const assemblyRouter = require('./lib/routes/assembly_routes');
 app.use('/', assemblyRouter);
 
-// ── C0 Content Sources (Twitch, NBA, News, Analyze) ────────────────────────────
-const c0SourcesRouter = require('./lib/routes/c0_sources');
-app.use('/', c0SourcesRouter);
+// ── C0-only routes — NOT mounted on C1+ Render (DATABASE_URL present) ──────────
+// These routes depend on localhost services (CapCut on :9001, static server on
+// :8765, Google Drive) that do not exist in the Render environment.
+if (!process.env.DATABASE_URL) {
+  const c0SourcesRouter = require('./lib/routes/c0_sources');
+  app.use('/', c0SourcesRouter);
 
-// ── C0 CapCut Progressive Assembly + Short-Form ────────────────────────────────
-const c0CapcutRouter = require('./lib/routes/c0_capcut');
-app.use('/', c0CapcutRouter);
+  const c0CapcutRouter = require('./lib/routes/c0_capcut');
+  app.use('/', c0CapcutRouter);
 
-// ── C0 Gate Tools, Remediation, Thumbnail, Cleanup ─────────────────────────────
-const c0GateToolsRouter = require('./lib/routes/c0_gate_tools');
-app.use('/', c0GateToolsRouter);
+  const c0GateToolsRouter = require('./lib/routes/c0_gate_tools');
+  app.use('/', c0GateToolsRouter);
+}
 
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
