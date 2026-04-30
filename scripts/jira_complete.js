@@ -87,7 +87,7 @@ function buildComment(sha, extraComment, branch) {
   if (sha) lines.push(`**Commit:** \`${sha}\``);
   if (branch) lines.push(`**Branch:** \`${branch}\``);
   if (extraComment) lines.push(`**Note:** ${extraComment}`);
-  lines.push(`**Repo:** https://github.com/clipzworldnews/auraflux-api`);
+  lines.push(`**Repo:** https://github.com/auraflux-co/auraflux-api`);
 
   // Build minimal ADF paragraph block
   return {
