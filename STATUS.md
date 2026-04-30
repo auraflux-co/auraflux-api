@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (Cursor — Phase E: PUT /jobs/:jobId/schedule route added; test refs gate_policy_runner→portal_policy_runner fixed; 395/395 tests)
+**Last Updated:** 2026-04-30 (Cursor — fix: C0 remnants — heygen router gated behind DATABASE_URL; C0_LEGACY_OVERLAY_ONLY defaults OFF on C1+; dup schedule route removed; README rewrite: correct portal pipeline, extensions table, auraflux-co URL, localhost:10000; 395/395 tests)
 **Previous:** 2026-04-29 (Cursor — CPD-84: Platform-wide feature gate rollout — portal_tts_ext gated on tts.elevenlabs (dwy+), portal_heygen_ext gated on avatar.heygen (dfy+), runpod.generateWanVideo gated on video.wan_t2v/i2v, publish/youtube|tiktok|instagram gated on publish.direct_youtube/tiktok, GET /plan/features + /plan/features/matrix endpoints added. Tests updated to pass planTier+env. 342/342 tests.)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.

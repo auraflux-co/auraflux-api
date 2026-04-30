@@ -418,11 +418,9 @@ const clipSourcingRouter = require('./lib/routes/clip_sourcing'); // CPD-73
 const { runOverageBillingCycle } = require('./lib/services/billing_cron'); // CPD-46
 const createAdminRouter = require('./lib/routes/admin');
 const publishRouter = require('./lib/routes/publish');
-const heygenRouter = require('./lib/routes/heygen');
-
 // Mount routers — must come after middleware and _healthCache init
 app.use('/', jobsC1Router); // CPD-67: C1+ routes first — GET/POST /jobs, GET /jobs/:id
-app.use('/', jobsRouter);  // C0 legacy routes (rollback, advance, manual-segment ops)
+app.use('/', jobsRouter);  // C0 legacy ops (rollback, advance, manual-segment, dismiss)
 app.use('/', creditsRouter);   // CPD-43: credit ledger consume + balance
 app.use('/', thumbnailRouter); // CPD-55: thumbnail approval stage
 app.use('/', conciergeRouter);     // CPD-83: AI Concierge
@@ -433,7 +431,6 @@ const voiceRouter = require('./lib/routes/voice'); // CPD-77: Voice matching + p
 app.use('/', voiceRouter);
 app.use('/', createAdminRouter({ _healthCache, BUILD_INFO }));
 app.use('/', publishRouter);
-app.use('/', heygenRouter);
 
 // ── AI Video Generation ────────────────────────────────────────────────────────
 const videoRouter = require('./lib/routes/video');
@@ -476,7 +473,7 @@ app.use('/', assemblyRouter);
 
 // ── C0-only routes — NOT mounted on C1+ Render (DATABASE_URL present) ──────────
 // These routes depend on localhost services (CapCut on :9001, static server on
-// :8765, Google Drive) that do not exist in the Render environment.
+// :8765, Google Drive, browser-side HeyGen utilities) that do not exist in Render.
 if (!process.env.DATABASE_URL) {
   const c0SourcesRouter = require('./lib/routes/c0_sources');
   app.use('/', c0SourcesRouter);
@@ -486,6 +483,12 @@ if (!process.env.DATABASE_URL) {
 
   const c0GateToolsRouter = require('./lib/routes/c0_gate_tools');
   app.use('/', c0GateToolsRouter);
+
+  // C0-only HeyGen browser utility routes (/heygen/latest-videos, /heygen/video-urls,
+  // /admin/heygen/delete-all, /log-heygen-metrics). C1+ HeyGen rendering uses
+  // lib/portals/portal_heygen_ext.js via the portal sequence — not these routes.
+  const heygenRouter = require('./lib/routes/heygen');
+  app.use('/', heygenRouter);
 }
 
 // ── Express error middleware (must be last) ───────────────────────
