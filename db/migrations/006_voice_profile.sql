@@ -6,3 +6,6 @@ ALTER TABLE client_plans
 
 COMMENT ON COLUMN client_plans.voice_profile IS
   'Customer voice profile: { selectedVoiceId, recommendations: [{ voiceId, matchScore, description }], characteristics, updatedAt }';
+
+INSERT INTO schema_migrations (version) VALUES ('006_voice_profile')
+  ON CONFLICT (version) DO NOTHING;
