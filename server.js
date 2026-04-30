@@ -152,7 +152,7 @@ const {
   generateNewsNbaThumbnail,
   burnSceneChromeFromDirective,
   generateChromeOverlayFromDirective,
-  generateNewscastOverlay,
+  generateChromeOverlay,
 } = require('./lib/chrome_overlay');
 const {
   geminiQACheck, // TODO: remove — dead code, gate2Worker.run() replaces this (see /gate2-segment-qa endpoint)
