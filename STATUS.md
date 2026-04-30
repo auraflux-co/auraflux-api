@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-04-30 (Cursor — CPD-5: /dashboard/generate page with PromptInput/StatusPoller/VideoPreview + frame presets; CPD-6: test script + MORNING_BRIEFING.md; pod EXITED, live run pending)
 **Last Updated:** 2026-04-30 (Cursor — feat: C1+ decoupling — customerConfig fallback c0→c1_default, portal0/thumbnail/QA checklists purged of c0 defaults, geminiScriptQA delegates to checklist modules (expectedScenesCount/deductionMap), groupSegmentsByLabel itemIdx fix; 406 pass)
 **Previous:** 2026-04-30 (Cursor — feat: Portal 5 C1+ — per-customer uploadPostProfile (resolveUploadPostProfile reads publishConfig > deliverySpec > env), platformOutcome field (all_success|partial_success|all_failed|no_platforms); 9 new tests)
 **Previous:** 2026-04-30 (Cursor — feat(POST_RENDER_TASKS 2.4): Gate 1 clip diagnostic — clipMismatches field in QA prompt schema, buildClipDiagnostic helper enriches fix directive with actual clip analysis text; 9 new tests pass)
