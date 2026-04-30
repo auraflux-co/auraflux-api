@@ -31,7 +31,7 @@ jest.mock('../lib/db', () => ({
   saveJob: jest.fn(),
 }));
 
-jest.mock('../lib/gate_policy_runner', () => ({
+jest.mock('../lib/portal_policy_runner', () => ({
   runPortalSequence: jest.fn(),
 }));
 

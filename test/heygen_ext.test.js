@@ -7,7 +7,7 @@
  *   3. portal_heygen_ext.js worker logic
  */
 
-const { runPortalSequence } = require('../lib/gate_policy_runner');
+const { runPortalSequence } = require('../lib/portal_policy_runner');
 
 // ── createJobSpec addOns wiring ────────────────────────────────────────────
 
