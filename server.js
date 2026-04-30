@@ -439,6 +439,8 @@ app.use('/', conciergeRouter);     // CPD-83: AI Concierge
 app.use('/', clipSourcingRouter); // CPD-73: Clip sourcing
 const planRouter = require('./lib/routes/plan'); // CPD-84: Plan feature matrix
 app.use('/', planRouter);
+const voiceRouter = require('./lib/routes/voice'); // CPD-77: Voice matching + profiles
+app.use('/', voiceRouter);
 app.use('/', createAdminRouter({ _healthCache, BUILD_INFO }));
 app.use('/', publishRouter);
 app.use('/', heygenRouter);
