@@ -15,7 +15,6 @@ services:
     name: auraflux-api
     runtime: docker
     dockerfilePath: ./Dockerfile
-    buildCacheImage: ghcr.io/auraflux-co/auraflux-api:buildcache
     plan: starter
     region: oregon
     healthCheckPath: /health
