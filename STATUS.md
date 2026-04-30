@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-30 (fix(deploy): Docker build cache via GHCR — GitHub Actions pushes image on main; render.yaml adds buildCacheImage to cut build time from 30+ min to ~5 min)
+**Last Updated:** 2026-04-30 (chore: rename GitHub org clipzworldnews → auraflux across codebase)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
