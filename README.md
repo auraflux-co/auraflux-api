@@ -4,7 +4,7 @@
 
 - **API** — Node.js / Express, deployed on Render (`auraflux-api`)
 - **App** — Next.js dashboard, deployed on Render (`auraflux-app`)
-- **Database** — PostgreSQL (Render managed), SQLite for local dev
+- **Database** — PostgreSQL (billing, credits, voice profiles on Render) + SQLite (job pipeline, persistent disk on Render + local dev)
 - **Storage** — Cloudflare R2 for video output and media assets
 - **Auth** — Clerk (JWT, role-based: customer / operator / admin)
 - **Payments** — Stripe (credit packs + plan subscriptions)
@@ -130,7 +130,7 @@ auraflux-api/
 │   ├── portal_policy_runner.js  Spec-driven portal sequence + retry/QA policy
 │   ├── routes/                jobs_c1.js, credits.js, admin.js, concierge.js, …
 │   ├── services/              feature_gate.js, stripe_billing.js, gemini.js, …
-│   ├── db/                    postgres.js (C1+ Render), db.js (SQLite local dev)
+│   ├── db/                    postgres.js (billing/credits/voice — C1+ Render), db.js (job pipeline — SQLite, both envs)
 │   ├── storage.js             R2 upload abstraction (uploadFile / uploadToR2)
 │   └── assembly.js            FFmpeg pipeline orchestration
 ├── app/                       Next.js dashboard
@@ -152,7 +152,7 @@ The repo deploys via Render Blueprint (`render.yaml`):
 |---|---|---|
 | `auraflux-api` | Web service (Docker) | Express API |
 | `auraflux-app` | Web service (Docker) | Next.js dashboard |
-| `auraflux-backup` | Cron job | Nightly SQLite → R2 backup |
+| `auraflux-backup` | Cron job | Nightly SQLite job DB + JSON state → R2 backup |
 
 Push to `main` triggers auto-deploy. Required env vars are listed in `render.yaml` as `sync: false` — set them once in the Render dashboard.
 
