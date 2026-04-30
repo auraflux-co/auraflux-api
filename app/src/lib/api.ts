@@ -291,6 +291,32 @@ export async function getCreditPacks(token?: string): Promise<{ ok: boolean; pac
   return apiFetch('/credits/packs', { token });
 }
 
+export interface Plan {
+  id:               PlanTier;
+  label:            string;
+  credits:          number;
+  price_usd:        number;
+  description:      string;
+  priceConfigured:  boolean;
+}
+
+export async function getPlans(token?: string): Promise<{ ok: boolean; plans: Plan[] }> {
+  return apiFetch('/plans', { token });
+}
+
+export async function subscribeToPlan(
+  planId: string,
+  successUrl: string,
+  cancelUrl: string,
+  token?: string,
+): Promise<{ ok: boolean; url: string }> {
+  return apiFetch('/plans/subscribe', {
+    method: 'POST',
+    body:   JSON.stringify({ planId, successUrl, cancelUrl }),
+    token,
+  });
+}
+
 // ─── Job validation ───────────────────────────────────────────────────────────
 
 export async function validatePublishCopy(
