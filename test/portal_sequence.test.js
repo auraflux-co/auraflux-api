@@ -4,7 +4,7 @@
  * Unit tests for runPortalSequence() — autonomous portal-to-portal progression.
  */
 
-const { runPortalSequence } = require('../lib/gate_policy_runner');
+const { runPortalSequence } = require('../lib/portal_policy_runner');
 
 // Minimal mock job spec with portals map
 function makeJobSpec(activePortalKeys = ['portal0', 'portal1']) {
