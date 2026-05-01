@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createJob, type CreateJobPayload } from '@/lib/api';
+import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
 import { useGuide } from '@/contexts/guide-context';
 
@@ -129,7 +130,7 @@ const STEP_GUIDE: Record<number, GuideContent> = {
     hint: 'Step 2 of 5 — Production path. I can explain which path is right for your content type and what happens to your video at each portal.',
   },
   2: {
-    tip:  'For URL fetch: paste YouTube, Twitch, Rumble, or direct video URLs. For upload: use the Upload API first to get your R2 storage keys, then paste them here. Fetch is faster to start — no upload wait.',
+    tip:  'For URL fetch: paste YouTube, Twitch, Rumble, or direct video URLs — we pull the video for you. For upload: drag your file or click to browse. MP4, MOV, AVI, WebM up to 2 GB.',
     hint: 'Step 3 of 5 — Source. Ask me about supported URL formats, how uploads work, or what happens to your source file in the pipeline.',
   },
   3: {
@@ -215,7 +216,9 @@ export default function NewJobPage() {
   const [path, setPath]             = useState<ProductionPath | null>(null);
   const [sourceMode, setSourceMode] = useState<SourceMode | null>(null);
   const [sourceUrls, setSourceUrls] = useState('');
-  const [fileKeys, setFileKeys]     = useState('');
+  const [fileKeys,    setFileKeys]    = useState('');
+  const [uploadedKey, setUploadedKey] = useState<string | null>(null);
+  const [uploadedName,setUploadedName]= useState<string | null>(null);
   const [features, setFeatures]     = useState<Set<string>>(
     () => new Set(FEATURES.filter((f) => f.default).map((f) => f.id))
   );
@@ -255,8 +258,8 @@ export default function NewJobPage() {
           setError('Enter at least one URL'); return;
         }
       } else {
-        if (!fileKeys.split('\n').map((k) => k.trim()).filter(Boolean).length) {
-          setError('Enter at least one storage key'); return;
+        if (!fileKeys.trim()) {
+          setError('Please upload a video file before continuing'); return;
         }
       }
     }
@@ -404,16 +407,21 @@ export default function NewJobPage() {
           )}
           {effectiveSource === 'upload' && (
             <div className="space-y-1.5">
-              <Label className="text-xs">Storage keys <span className="text-muted-foreground">(one per line — from Upload API or R2)</span></Label>
-              <Textarea
-                value={fileKeys}
-                onChange={(e) => setFileKeys(e.target.value)}
-                placeholder="r2://bucket/video.mp4"
-                className="min-h-[100px] text-sm font-mono"
+              <Label className="text-xs">Your video file</Label>
+              <VideoUpload
+                uploadedKey={uploadedKey}
+                uploadedName={uploadedName}
+                onUploaded={(key, name) => {
+                  setUploadedKey(key);
+                  setUploadedName(name);
+                  setFileKeys(key);
+                }}
+                onClear={() => {
+                  setUploadedKey(null);
+                  setUploadedName(null);
+                  setFileKeys('');
+                }}
               />
-              <p className="text-[10px] text-muted-foreground">
-                Upload via the Upload API first, then paste the returned storage keys here.
-              </p>
             </div>
           )}
           <GuideTip step={2} />

@@ -1,9 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
+import { getCreditBalance } from '@/lib/api';
 
 const CONFLUENCE_GUIDE_URL =
   'https://robertsworkspace-18914505.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
@@ -38,6 +41,36 @@ const OPERATOR_NAV: NavItem[] = [
   { href: '/dashboard/operator', label: 'Operator' },
 ];
 
+function CreditsBadge() {
+  const { getToken, isLoaded } = useAuth();
+  const [used, setUsed] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    let cancelled = false;
+    async function load() {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const b = await getCreditBalance(token);
+        if (!cancelled) setUsed(b.included_total - b.included_remaining);
+      } catch { /* non-fatal */ }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [getToken, isLoaded]);
+
+  return (
+    <Link
+      href="/dashboard/billing"
+      title="Credits used this period"
+      className="text-xs tabular-nums text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {used === null ? '—' : used.toLocaleString()} cr
+    </Link>
+  );
+}
+
 export function Sidebar() {
   const pathname       = usePathname();
   const { isOperator } = useRole();
@@ -55,8 +88,9 @@ export function Sidebar() {
 
   return (
     <aside className="w-52 flex-shrink-0 border-r border-border bg-card flex flex-col h-screen">
-      <div className="p-4 border-b border-border">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
         <span className="font-semibold text-sm tracking-tight">AuraFlux</span>
+        <CreditsBadge />
       </div>
 
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
