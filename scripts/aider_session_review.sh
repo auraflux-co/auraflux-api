@@ -237,6 +237,7 @@ ENDOFPROMPT
 cd "$REPO_ROOT"
 aider \
   --no-auto-commits \
+  --no-gitignore \
   --yes \
   --message "$(cat "$PROMPT_FILE")" \
   logs/aider_session_review.md \
