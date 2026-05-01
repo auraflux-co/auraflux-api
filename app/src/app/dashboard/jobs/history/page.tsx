@@ -135,11 +135,12 @@ function PublishLinks({ results }: { results: PublishResult[] }) {
 }
 
 export default function HistoryPage() {
-  const { getToken }    = useAuth();
-  const [jobs, setJobs] = useState<Job[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { getToken, isLoaded } = useAuth();
+  const [jobs, setJobs]        = useState<Job[] | null>(null);
+  const [error, setError]      = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isLoaded) return;
     async function load() {
       try {
         const token = await getToken();
@@ -150,7 +151,7 @@ export default function HistoryPage() {
       }
     }
     load();
-  }, [getToken]);
+  }, [getToken, isLoaded]);
 
   return (
     <div className="max-w-3xl space-y-6">

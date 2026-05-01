@@ -56,18 +56,17 @@ export function TopBar() {
 
         <button
           onClick={toggle}
+          title="AuraFlux AI"
           className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
+            'flex items-center justify-center w-8 h-8 rounded-full border transition-colors',
             isOpen
               ? 'bg-primary text-primary-foreground border-primary'
               : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent/50',
           )}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4M12 8h.01" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          Copilot
         </button>
 
         <UserButton />
