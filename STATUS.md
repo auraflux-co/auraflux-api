@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-05-01 (Cursor — fix: auth errors on dashboard load — isLoaded guard on all API fetches; top-bar AI button icon-only (no "Copilot" text)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-115): Support system — Gemini support AI, SMS via Twilio +15715001787, email escalation last resort, support history per user, tier-gated (DIY 30d / DWY/DFY full), /dashboard/support page, sidebar link, DB migration 008
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-114): AuraFlux Guide→Copilot rename; top-bar credits static (load-once, no poll); Guides link in sidebar footer → Confluence customer guide; Render API redeploy triggered for consecutive update_failed)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-113): AuraFlux Guide as job co-pilot — guide auto-opens on /jobs/new with step-0 context; context hint banner updates per step; inline GuideTip card on every wizard step with "Ask a question" link; jobs hub CTA "Get guided help" opens guide + navigates to wizard)

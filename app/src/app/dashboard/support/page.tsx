@@ -184,8 +184,8 @@ function SessionHistory({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function SupportPage() {
-  const { getToken }    = useAuth();
-  const { user }        = useUser();
+  const { getToken, isLoaded } = useAuth();
+  const { user }               = useUser();
 
   const plan    = getPlanTier(user);
   const ageDays = getAccountAgeDays(user);
@@ -215,7 +215,10 @@ export default function SupportPage() {
     } catch { /* non-fatal */ }
   }, [getToken]);
 
-  useEffect(() => { loadSessions(); }, [loadSessions]);
+  useEffect(() => {
+    if (!isLoaded) return;
+    loadSessions();
+  }, [loadSessions, isLoaded]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   async function handleSessionSelect(s: SupportSession) {

@@ -123,8 +123,8 @@ function JobStatusBadge({ status }: { status: string }) {
 
 export default function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
-  const { getToken } = useAuth();
-  const { isOperator } = useRole();
+  const { getToken, isLoaded } = useAuth();
+  const { isOperator }         = useRole();
   const [job, setJob]               = useState<Job | null>(null);
   const [error, setError]           = useState<string | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -158,8 +158,9 @@ export default function JobDetailPage() {
   }, [jobId, getToken]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     fetchJob();
-  }, [fetchJob]);
+  }, [fetchJob, isLoaded]);
 
   // Poll every 5s while job is active
   useEffect(() => {

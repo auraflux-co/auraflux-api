@@ -45,13 +45,14 @@ function StatCard({ href, label, count, sub, accent }: StatCardProps) {
 }
 
 export default function JobsHubPage() {
-  const { getToken }  = useAuth();
-  const router        = useRouter();
-  const { openWithContext } = useGuide();
-  const [jobs, setJobs]   = useState<Job[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { getToken, isLoaded } = useAuth();
+  const router                 = useRouter();
+  const { openWithContext }    = useGuide();
+  const [jobs, setJobs]        = useState<Job[] | null>(null);
+  const [error, setError]      = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isLoaded) return;
     async function load() {
       try {
         const token = await getToken();
@@ -62,7 +63,7 @@ export default function JobsHubPage() {
       }
     }
     load();
-  }, [getToken]);
+  }, [getToken, isLoaded]);
 
   const active   = jobs?.filter((j) => ACTIVE_STATUSES.has(j.status)) ?? [];
   const held     = jobs?.filter((j) => j.status === 'held' || j.status === 'failed') ?? [];
