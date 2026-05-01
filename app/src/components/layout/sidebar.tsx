@@ -28,12 +28,11 @@ const CUSTOMER_NAV: NavItem[] = [
       { href: '/dashboard/jobs/history', label: 'History'  },
     ],
   },
-  { href: '/dashboard/support',  label: 'Support'  },
   { href: '/dashboard/schedule', label: 'Schedule' },
-  { href: '/dashboard/credits',  label: 'Credits'  },
   { href: '/dashboard/billing',  label: 'Billing'  },
-  { href: '/dashboard/settings', label: 'Settings' },
+  { href: '/dashboard/support',  label: 'Support'  },
   { href: '/dashboard/profile',  label: 'Profile'  },
+  { href: '/dashboard/settings', label: 'Settings' },
 ];
 
 const OPERATOR_NAV: NavItem[] = [
