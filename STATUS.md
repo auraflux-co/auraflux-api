@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-05-01 (Cursor — feat(CPD-109): DIY/DWY feature parity — all features previously gated at dwy now open to diy; tier distinction is service level only; DFY-only: Imagen 3, HeyGen avatar, WAN i2v, TikTok direct; 416 pass)
 **Last Updated:** 2026-05-01 (Cursor — fix(jobs-c1): normaliseDashboardPayload now maps scheduledPublishAt→scheduledAt so UI-submitted scheduled jobs no longer silently drop their publish time; 416 pass)
 **Last Updated:** 2026-05-01 (Cursor — docs: .env.example patched — 9 undocumented env vars added (HEYGEN_AVATAR_SHORT_{NBA,NEWS,TWITCH}_ID, NEXT_PUBLIC_APP_URL, CAPCUT_URL, C0_LEGACY_OVERLAY_ONLY, C0_FORCE_SIDEBAR_VISIBLE, SMOKE_API_SECRET); stale remote branches pruned via git fetch --prune)
 **Last Updated:** 2026-04-30 (Cursor — fix: stageMap active=false respected in buildPortalMap — active:false on any stage now suppresses the corresponding portal regardless of customer config provider; 416 pass)

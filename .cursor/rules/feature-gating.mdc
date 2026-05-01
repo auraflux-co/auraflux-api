@@ -67,32 +67,34 @@ or call `isFeatureEnabled(key, jobSpec.planTier)` directly.
 
 | Tier | Included credits | Target customer |
 |---|---|---|
-| `diy` | 50/mo | Self-serve, basic automations |
-| `dwy` | 200/mo | Assisted — uses AI tools, scheduling, VectCut, TTS |
-| `dfy` | 1000/mo | Full done-for-you — HeyGen, Imagen 3, direct publish APIs |
+| `diy` | 50/mo | Self-serve — full platform access, customer runs it themselves |
+| `dwy` | 200/mo | Done-with-you — same features as DIY + operator monitoring and guidance |
+| `dfy` | 1000/mo | Full done-for-you — operator runs everything + HeyGen, Imagen 3, TikTok direct |
 | `custom` | unlimited | Enterprise / white-label |
 
-## Feature matrix (as of Sprint 3)
+**Key principle (CPD-109):** DIY and DWY are feature-identical. The distinction is service level only — DIY customers manage the platform themselves; DWY customers get operator support. Never gate a feature at `dwy` if the reason is anything other than "this requires operator involvement to use safely."
+
+## Feature matrix (as of Sprint 5 / CPD-109)
 
 | Feature key | DIY | DWY | DFY |
 |---|---|---|---|
 | `thumbnail.frame` | ✓ | ✓ | ✓ |
 | `thumbnail.designed` | ✓ | ✓ | ✓ |
-| `thumbnail.vectcut` | — | ✓ | ✓ |
-| `thumbnail.gemini_ranking` | — | ✓ | ✓ |
+| `thumbnail.vectcut` | ✓ | ✓ | ✓ |
+| `thumbnail.gemini_ranking` | ✓ | ✓ | ✓ |
 | `thumbnail.imagen` | — | — | ✓ |
-| `tts.elevenlabs` | — | ✓ | ✓ |
+| `tts.elevenlabs` | ✓ | ✓ | ✓ |
 | `avatar.heygen` | — | — | ✓ |
-| `concierge` | — | ✓ | ✓ |
-| `clip.sourcing` | — | ✓ | ✓ |
-| `content.show_commentary` | — | ✓ | ✓ |
-| `content.custom` | — | ✓ | ✓ |
-| `portal.full_video_qa` | — | ✓ | ✓ |
-| `portal.web_research` | — | ✓ | ✓ |
-| `video.wan_t2v` | — | ✓ | ✓ |
+| `concierge` | ✓ | ✓ | ✓ |
+| `clip.sourcing` | ✓ | ✓ | ✓ |
+| `content.show_commentary` | ✓ | ✓ | ✓ |
+| `content.custom` | ✓ | ✓ | ✓ |
+| `portal.full_video_qa` | ✓ | ✓ | ✓ |
+| `portal.web_research` | ✓ | ✓ | ✓ |
+| `video.wan_t2v` | ✓ | ✓ | ✓ |
 | `video.wan_i2v` | — | — | ✓ |
 | `scheduling` | ✓ | ✓ | ✓ |
 | `credits.packs` | ✓ | ✓ | ✓ |
 | `credits.overage` | ✓ | ✓ | ✓ |
-| `publish.direct_youtube` | — | ✓ | ✓ |
+| `publish.direct_youtube` | ✓ | ✓ | ✓ |
 | `publish.direct_tiktok` | — | — | ✓ |

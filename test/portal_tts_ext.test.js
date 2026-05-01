@@ -47,15 +47,19 @@ describe('portal_tts_ext', () => {
 
   const baseJobSpec = {
     jobId:     'job-tts-001',
-    planTier:  'dwy',   // tts.elevenlabs requires dwy+
+    planTier:  'diy',   // CPD-109: tts.elevenlabs available on all paid tiers
     addOns:    { tts: { active: true, voiceId: 'voice-abc' } },
     filledScript: 'Welcome to the show. Today we discuss AI news.',
     state: {},
   };
 
-  test('returns skip when plan tier is too low (diy)', async () => {
-    const result = await runWorker({
-      jobSpec: { jobId: 'job-plan', planTier: 'diy', addOns: { tts: { active: true } }, filledScript: 'text', state: {} },
+  // CPD-109: all paid tiers have tts access — credential missing still causes skip
+  test('returns skip when ELEVENLABS_API_KEY is missing', async () => {
+    delete process.env.ELEVENLABS_API_KEY;
+    jest.resetModules();
+    const { runWorker: runWorkerNoKey } = require('../lib/portals/portal_tts_ext');
+    const result = await runWorkerNoKey({
+      jobSpec: { jobId: 'job-cred', planTier: 'diy', addOns: { tts: { active: true } }, filledScript: 'text', state: {} },
     });
     expect(result.outcome).toBe('skip');
     expect(result.passed).toBe(false);
