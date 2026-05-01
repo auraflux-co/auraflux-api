@@ -1,9 +1,10 @@
 'use client';
 /**
- * AuraFlux Guide — inline right panel (CPD-111, updated CPD-112b).
+ * AuraFlux Guide — inline right panel (CPD-111, CPD-113).
  *
- * Renders as a right-side column within the page layout (not a fixed overlay).
- * Opens/closes via the top-bar toggle, sliding the content area.
+ * Renders as a right-side column within the page layout.
+ * When a contextHint is set (e.g. from the job wizard), a pinned
+ * banner shows at the top so the guide knows what you're working on.
  */
 
 import { useEffect } from 'react';
@@ -12,9 +13,8 @@ import { useGuide } from '@/contexts/guide-context';
 import { ConciergeChat } from '@/components/concierge/concierge-chat';
 
 export function GuidePanel() {
-  const { isOpen, close } = useGuide();
+  const { isOpen, close, contextHint } = useGuide();
 
-  // Close on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') close();
@@ -31,14 +31,13 @@ export function GuidePanel() {
         isOpen ? 'w-[360px]' : 'w-0 border-l-0',
       )}
     >
-      {/* Only render content when open to avoid invisible tab stops */}
       {isOpen && (
         <>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div>
               <p className="text-sm font-semibold">AuraFlux Guide</p>
-              <p className="text-[10px] text-muted-foreground">Ask anything about your content production</p>
+              <p className="text-[10px] text-muted-foreground">Your production co-pilot</p>
             </div>
             <button
               onClick={close}
@@ -51,7 +50,15 @@ export function GuidePanel() {
             </button>
           </div>
 
-          {/* Chat — fills remaining height, scrolls internally */}
+          {/* Context hint banner — shown when the guide knows what you're working on */}
+          {contextHint && (
+            <div className="mx-3 mt-3 rounded-md border border-primary/20 bg-primary/5 px-3 py-2.5 shrink-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-1">Active context</p>
+              <p className="text-xs text-foreground leading-relaxed">{contextHint}</p>
+            </div>
+          )}
+
+          {/* Chat */}
           <div className="flex-1 min-h-0">
             <ConciergeChat
               currentSpec={{}}

@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-05-01 (Cursor — feat(cpd-113): AuraFlux Guide as job co-pilot — guide auto-opens on /jobs/new with step-0 context; context hint banner updates per step; inline GuideTip card on every wizard step with "Ask a question" link; jobs hub CTA "Get guided help" opens guide + navigates to wizard)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-112b): guide UX — inline right panel (not fixed overlay, content shifts not covered), credit counter simplified to numeric value only, "AI Concierge" → "AuraFlux Guide" in chat widget + concierge page)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-112): Jobs section restructure — sidebar sub-menu (New/Active/History), hub page, Active page (auto-poll 15s + operator actions), History page (post-publish links + selection review + template stub), job detail enhanced (published links card, "what you selected" card); backend: getPublishResults + wizardConfig in GET /jobs and GET /jobs/:jobId)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-111b): Stripe Customer Portal wired — POST /plans/billing-portal, createBillingPortalSession (lookup by email), getBillingPortalUrl client call, "Manage payment" section on billing page; completes CPD-111 billing gap)

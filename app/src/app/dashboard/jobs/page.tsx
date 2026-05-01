@@ -14,6 +14,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { listJobs, type Job } from '@/lib/api';
+import { useGuide } from '@/contexts/guide-context';
+import { useRouter } from 'next/navigation';
 
 const ACTIVE_STATUSES  = new Set(['queued', 'running', 'held', 'failed']);
 const COMPLETE_STATUSES = new Set(['complete', 'published']);
@@ -43,7 +45,9 @@ function StatCard({ href, label, count, sub, accent }: StatCardProps) {
 }
 
 export default function JobsHubPage() {
-  const { getToken } = useAuth();
+  const { getToken }  = useAuth();
+  const router        = useRouter();
+  const { openWithContext } = useGuide();
   const [jobs, setJobs]   = useState<Job[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,6 +105,30 @@ export default function JobsHubPage() {
           count={jobs === null ? null : complete.length}
           sub="all time"
         />
+      </div>
+
+      {/* AuraFlux Guide CTA — first-time / pre-job prompt */}
+      <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 flex items-start gap-4">
+        <div className="mt-0.5 shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
+            <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium">Not sure what to select?</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            AuraFlux Guide walks you through every step — format, path, features, and add-ons — so your job is configured for maximum accuracy before it enters the pipeline.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            openWithContext('Ready to help you configure your next job. Tell me what type of content you produce and I\'ll walk you through the best setup.');
+            router.push('/dashboard/jobs/new');
+          }}
+          className={cn(buttonVariants({ size: 'sm' }), 'shrink-0')}
+        >
+          Get guided help
+        </button>
       </div>
 
       {/* Quick links */}

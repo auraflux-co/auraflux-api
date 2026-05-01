@@ -1,16 +1,21 @@
 'use client';
 /**
- * /dashboard/jobs/new — Job submission wizard (CPD-110)
+ * /dashboard/jobs/new — Job submission wizard (CPD-110, CPD-113)
  *
  * Platform-agnostic 5-step flow:
- *   1. Form factor   — Long-form (16:9) or Short-form (9:16)
- *   2. Production path — what the customer brings + what we produce
- *   3. Source          — upload file keys or fetch URLs
- *   4. Features        — production capabilities to apply
- *   5. Platform + Publish + Add-ons
+ *   1. Format        — Long-form (16:9) or Short-form (9:16)
+ *   2. Path          — production path based on what customer brings
+ *   3. Source        — upload file keys or fetch URLs
+ *   4. Features      — production capabilities to apply
+ *   5. Publish       — platform, schedule, add-on extensions
+ *
+ * CPD-113: AuraFlux Guide is integral to accuracy —
+ *   • Guide auto-opens on mount with step-0 context
+ *   • Context hint updates on every step change
+ *   • Inline GuideTip card visible beneath each step's choices
  */
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -23,17 +28,18 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createJob, type CreateJobPayload } from '@/lib/api';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
+import { useGuide } from '@/contexts/guide-context';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type FormFactor = 'long' | 'short';
 
 type ProductionPath =
-  | 'long_compile_clips'      // compile short clips → long-form
-  | 'long_produce_source'     // fetch/upload long-form source → produce finished video
-  | 'short_cut_longform'      // extract short clips from long-form
-  | 'short_enhance_upload'    // upload short clips + add design
-  | 'short_fetch_enhance';    // fetch short content + add design
+  | 'long_compile_clips'
+  | 'long_produce_source'
+  | 'short_cut_longform'
+  | 'short_enhance_upload'
+  | 'short_fetch_enhance';
 
 type SourceMode = 'upload' | 'fetch';
 
@@ -84,19 +90,19 @@ const PRODUCTION_PATHS: Record<FormFactor, { id: ProductionPath; label: string; 
 };
 
 const FEATURES: Feature[] = [
-  { id: 'script',       label: 'Script generation',        description: 'AI writes the video script from your source',          default: true  },
-  { id: 'tts',          label: 'TTS narration',            description: 'ElevenLabs voiceover on the generated script',         default: false },
-  { id: 'commentary',   label: 'Text narration',           description: 'Narrative commentary layered over the video',          default: false },
-  { id: 'scene_select', label: 'Scene selection',          description: 'AI selects the best clips and scenes from your source', default: false },
-  { id: 'generation',   label: 'AI video generation',      description: 'WAN text-to-video for segments without source footage', default: false },
-  { id: 'branding',     label: 'Logo & branding',          description: 'Apply your brand config — colours, logo, lower thirds', default: true  },
-  { id: 'burn_images',  label: 'Burn images',              description: 'Embed still images as overlays in the video',           default: false },
-  { id: 'dynamic',      label: 'Dynamic overlays',         description: 'Animated text, scoreboards, and motion graphics',      default: false },
+  { id: 'script',       label: 'Script generation',   description: 'AI writes the video script from your source',           default: true  },
+  { id: 'tts',          label: 'TTS narration',        description: 'ElevenLabs voiceover on the generated script',          default: false },
+  { id: 'commentary',   label: 'Text narration',       description: 'Narrative commentary layered over the video',           default: false },
+  { id: 'scene_select', label: 'Scene selection',      description: 'AI selects the best clips and scenes from your source', default: false },
+  { id: 'generation',   label: 'AI video generation',  description: 'WAN text-to-video for segments without source footage', default: false },
+  { id: 'branding',     label: 'Logo & branding',      description: 'Apply your brand config — colours, logo, lower thirds', default: true  },
+  { id: 'burn_images',  label: 'Burn images',          description: 'Embed still images as overlays in the video',           default: false },
+  { id: 'dynamic',      label: 'Dynamic overlays',     description: 'Animated text, scoreboards, and motion graphics',       default: false },
 ];
 
 const ADD_ONS = [
-  { id: 'heygen',    label: 'HeyGen avatar',     description: 'AI presenter rendered for each video',       badge: 'DFY' },
-  { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce',  badge: 'DFY' },
+  { id: 'heygen',    label: 'HeyGen avatar',     description: 'AI presenter rendered for each video',      badge: 'DFY' },
+  { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'DFY' },
 ];
 
 const PLATFORMS = [
@@ -105,24 +111,63 @@ const PLATFORMS = [
   { id: 'instagram', label: 'Instagram' },
 ];
 
-// ─── Path → backend fields ────────────────────────────────────────────────────
+// ─── Guide content ────────────────────────────────────────────────────────────
+// Inline tip shown beneath step choices + context hint sent to the guide panel.
 
-function pathToContentType(path: ProductionPath): string {
-  switch (path) {
-    case 'long_compile_clips':   return 'clips-long';
-    case 'long_produce_source':  return 'custom';
-    case 'short_cut_longform':   return 'clips-short';
-    case 'short_enhance_upload': return 'custom';
-    case 'short_fetch_enhance':  return 'custom';
-  }
+interface GuideContent {
+  tip:     string;
+  hint:    string; // sent to the guide panel context banner
 }
 
-function pathToEntryType(path: ProductionPath, source: SourceMode): 'fetch' | 'upload' {
-  if (source === 'fetch') return 'fetch';
-  return 'upload';
-}
+const STEP_GUIDE: Record<number, GuideContent> = {
+  0: {
+    tip:  'Format determines the entire pipeline. Long-form (16:9) is best for news, sports commentary, show clips, and compilations. Short-form (9:16) is built for TikTok, Reels, and YouTube Shorts. You can run both as separate jobs from the same source.',
+    hint: 'Step 1 of 5 — Format. Ask me which format works best for your content type, or what the difference means for your pipeline.',
+  },
+  1: {
+    tip:  '"Produce from source" runs the full AI pipeline — scripting, narration, and assembly. "Compile from clips" is best when you already have raw footage and want us to cut and sequence it. When in doubt, start with "Produce from source."',
+    hint: 'Step 2 of 5 — Production path. I can explain which path is right for your content type and what happens to your video at each portal.',
+  },
+  2: {
+    tip:  'For URL fetch: paste YouTube, Twitch, Rumble, or direct video URLs. For upload: use the Upload API first to get your R2 storage keys, then paste them here. Fetch is faster to start — no upload wait.',
+    hint: 'Step 3 of 5 — Source. Ask me about supported URL formats, how uploads work, or what happens to your source file in the pipeline.',
+  },
+  3: {
+    tip:  'Script + TTS together give you a fully AI-narrated video — no voiceover needed. Scene selection is key for sports and long-form compilations. AI video generation fills in segments where you have no source footage. Start conservative — you can always re-run with more features.',
+    hint: 'Step 4 of 5 — Features. I can explain what each feature does to your video, which ones work best together, and how they affect credits and production time.',
+  },
+  4: {
+    tip:  'Schedule at least 30 minutes out to allow production time. HeyGen and Shoppable are DFY add-ons — they add significant production value but require the DFY plan. Platforms you select here determine which portals run in the publish stage.',
+    hint: 'Step 5 of 5 — Platform, publish & add-ons. Ask me about platform requirements, scheduling, credit costs, or whether add-ons make sense for your plan.',
+  },
+};
 
-// ─── Wizard steps ─────────────────────────────────────────────────────────────
+// ─── Components ───────────────────────────────────────────────────────────────
+
+function GuideTip({ step }: { step: number }) {
+  const guide = useGuide();
+  const content = STEP_GUIDE[step];
+  if (!content) return null;
+
+  return (
+    <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary shrink-0">
+          <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+        </svg>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">AuraFlux Guide</span>
+        <button
+          type="button"
+          onClick={() => guide.openWithContext(content.hint)}
+          className="ml-auto text-[10px] text-primary hover:underline"
+        >
+          Ask a question →
+        </button>
+      </div>
+      <p className="text-xs text-foreground/80 leading-relaxed">{content.tip}</p>
+    </div>
+  );
+}
 
 const STEPS = ['Format', 'Path', 'Source', 'Features', 'Publish'] as const;
 type Step = 0 | 1 | 2 | 3 | 4;
@@ -134,13 +179,13 @@ function StepHeader({ step }: { step: Step }) {
         <div key={label} className="flex items-center">
           <div className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors',
-            i === step ? 'bg-primary text-primary-foreground font-medium'
+            i === step  ? 'bg-primary text-primary-foreground font-medium'
               : i < step  ? 'text-muted-foreground'
               : 'text-muted-foreground/40',
           )}>
             <span className={cn(
               'w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-semibold border',
-              i === step ? 'border-primary-foreground/30 bg-primary-foreground/10'
+              i === step  ? 'border-primary-foreground/30 bg-primary-foreground/10'
                 : i < step ? 'border-muted-foreground/30' : 'border-muted-foreground/20',
             )}>{i + 1}</span>
             {label}
@@ -163,57 +208,56 @@ export default function NewJobPage() {
   const [step, setStep] = useState<Step>(0);
   const [error, setError] = useState<string | null>(null);
 
+  const { openWithContext, setContextHint } = useGuide();
+
   // Wizard state
-  const [formFactor, setFormFactor]       = useState<FormFactor | null>(null);
-  const [path, setPath]                   = useState<ProductionPath | null>(null);
-  const [sourceMode, setSourceMode]       = useState<SourceMode | null>(null);
-  const [sourceUrls, setSourceUrls]       = useState('');
-  const [fileKeys, setFileKeys]           = useState('');
-  const [features, setFeatures]           = useState<Set<string>>(
+  const [formFactor, setFormFactor] = useState<FormFactor | null>(null);
+  const [path, setPath]             = useState<ProductionPath | null>(null);
+  const [sourceMode, setSourceMode] = useState<SourceMode | null>(null);
+  const [sourceUrls, setSourceUrls] = useState('');
+  const [fileKeys, setFileKeys]     = useState('');
+  const [features, setFeatures]     = useState<Set<string>>(
     () => new Set(FEATURES.filter((f) => f.default).map((f) => f.id))
   );
-  const [platforms, setPlatforms]         = useState<string[]>(['youtube']);
-  const [addOns, setAddOns]               = useState<Set<string>>(new Set());
-  const [schedule, setSchedule]           = useState<ScheduleValue>({ publishMode: 'immediate' });
+  const [platforms, setPlatforms]   = useState<string[]>(['youtube']);
+  const [addOns, setAddOns]         = useState<Set<string>>(new Set());
+  const [schedule, setSchedule]     = useState<ScheduleValue>({ publishMode: 'immediate' });
+
+  // CPD-113: Auto-open guide on mount with step-0 context
+  useEffect(() => {
+    openWithContext(STEP_GUIDE[0].hint);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // CPD-113: Update guide context hint whenever the step changes
+  useEffect(() => {
+    setContextHint(STEP_GUIDE[step]?.hint ?? null);
+  }, [step, setContextHint]);
 
   function toggleFeature(id: string) {
-    setFeatures((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setFeatures((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
-
   function togglePlatform(id: string) {
-    setPlatforms((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
+    setPlatforms((prev) => prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]);
   }
-
   function toggleAddOn(id: string) {
-    setAddOns((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setAddOns((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
 
   function advance() {
     setError(null);
-    if (step === 0 && !formFactor) { setError('Select a format'); return; }
-    if (step === 1 && !path) { setError('Select a production path'); return; }
+    if (step === 0 && !formFactor) { setError('Select a format to continue'); return; }
+    if (step === 1 && !path) { setError('Select a production path to continue'); return; }
     if (step === 2) {
       const pathConfig = PRODUCTION_PATHS[formFactor!].find((p) => p.id === path);
-      if (!sourceMode && pathConfig && pathConfig.sources.length > 1) {
-        // auto-select if only one option
-      }
       const mode = sourceMode ?? pathConfig?.sources[0];
       if (mode === 'fetch') {
-        const urls = sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean);
-        if (urls.length === 0) { setError('Enter at least one URL'); return; }
+        if (!sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean).length) {
+          setError('Enter at least one URL'); return;
+        }
       } else {
-        const keys = fileKeys.split('\n').map((k) => k.trim()).filter(Boolean);
-        if (keys.length === 0) { setError('Enter at least one storage key'); return; }
+        if (!fileKeys.split('\n').map((k) => k.trim()).filter(Boolean).length) {
+          setError('Enter at least one storage key'); return;
+        }
       }
     }
     if (step === 4) { handleSubmit(); return; }
@@ -227,7 +271,7 @@ export default function NewJobPage() {
 
     const payload: CreateJobPayload = {
       contentType:    pathToContentType(path!),
-      entryType:      pathToEntryType(path!, mode),
+      entryType:      mode,
       platforms,
       formFactor,
       productionPath: path,
@@ -237,11 +281,9 @@ export default function NewJobPage() {
     };
 
     if (mode === 'fetch') {
-      const urls = sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean);
-      payload.fetchSpec = { sourceUrls: urls };
+      payload.fetchSpec = { sourceUrls: sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean) };
     } else {
-      const keys = fileKeys.split('\n').map((k) => k.trim()).filter(Boolean);
-      payload.uploadSpec = { fileKeys: keys };
+      payload.uploadSpec = { fileKeys: fileKeys.split('\n').map((k) => k.trim()).filter(Boolean) };
     }
 
     if (schedule.publishMode === 'scheduled' && schedule.scheduledPublishAt) {
@@ -253,17 +295,17 @@ export default function NewJobPage() {
         const token = await getToken();
         const res = await createJob(payload, token ?? undefined);
         console.info('[new-job] created', res.jobId);
-        router.push('/dashboard/jobs');
+        router.push('/dashboard/jobs/active');
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Failed to create job');
       }
     });
   }
 
-  const pathOptions = formFactor ? PRODUCTION_PATHS[formFactor] : [];
+  const pathOptions        = formFactor ? PRODUCTION_PATHS[formFactor] : [];
   const selectedPathConfig = path ? pathOptions.find((p) => p.id === path) : null;
-  const availableSources = selectedPathConfig?.sources ?? [];
-  const effectiveSource = sourceMode ?? availableSources[0];
+  const availableSources   = selectedPathConfig?.sources ?? [];
+  const effectiveSource    = sourceMode ?? availableSources[0];
 
   return (
     <div className="max-w-2xl space-y-5">
@@ -276,9 +318,9 @@ export default function NewJobPage() {
 
       <Separator />
 
-      {/* Step 0 — Form factor */}
+      {/* Step 0 — Format */}
       {step === 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <p className="text-sm text-muted-foreground">What format do you want to produce?</p>
           <div className="grid grid-cols-2 gap-3">
             {([
@@ -291,9 +333,7 @@ export default function NewJobPage() {
                 onClick={() => { setFormFactor(opt.id); setPath(null); setSourceMode(null); }}
                 className={cn(
                   'text-left p-4 rounded-lg border transition-colors space-y-1',
-                  formFactor === opt.id
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-border/80',
+                  formFactor === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
                 )}
               >
                 <p className="text-sm font-medium">{opt.label}</p>
@@ -301,12 +341,13 @@ export default function NewJobPage() {
               </button>
             ))}
           </div>
+          <GuideTip step={0} />
         </div>
       )}
 
       {/* Step 1 — Production path */}
       {step === 1 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <p className="text-sm text-muted-foreground">What are you working with and what do you want to produce?</p>
           <div className="space-y-2">
             {pathOptions.map((opt) => (
@@ -316,9 +357,7 @@ export default function NewJobPage() {
                 onClick={() => { setPath(opt.id); setSourceMode(null); }}
                 className={cn(
                   'w-full text-left p-4 rounded-lg border transition-colors',
-                  path === opt.id
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-border/80',
+                  path === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
                 )}
               >
                 <p className="text-sm font-medium">{opt.label}</p>
@@ -326,13 +365,13 @@ export default function NewJobPage() {
               </button>
             ))}
           </div>
+          <GuideTip step={1} />
         </div>
       )}
 
       {/* Step 2 — Source */}
       {step === 2 && selectedPathConfig && (
         <div className="space-y-4">
-          {/* Source mode toggle — only show if path supports both */}
           {availableSources.length > 1 && (
             <div className="flex gap-2">
               {availableSources.map((s) => (
@@ -352,7 +391,6 @@ export default function NewJobPage() {
               ))}
             </div>
           )}
-
           {effectiveSource === 'fetch' && (
             <div className="space-y-1.5">
               <Label className="text-xs">Source URLs <span className="text-muted-foreground">(one per line)</span></Label>
@@ -364,7 +402,6 @@ export default function NewJobPage() {
               />
             </div>
           )}
-
           {effectiveSource === 'upload' && (
             <div className="space-y-1.5">
               <Label className="text-xs">Storage keys <span className="text-muted-foreground">(one per line — from Upload API or R2)</span></Label>
@@ -375,16 +412,17 @@ export default function NewJobPage() {
                 className="min-h-[100px] text-sm font-mono"
               />
               <p className="text-[10px] text-muted-foreground">
-                Upload your files via the Upload API first, then paste the returned storage keys here.
+                Upload via the Upload API first, then paste the returned storage keys here.
               </p>
             </div>
           )}
+          <GuideTip step={2} />
         </div>
       )}
 
       {/* Step 3 — Features */}
       {step === 3 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <p className="text-sm text-muted-foreground">Select the production capabilities to apply.</p>
           <div className="space-y-2">
             {FEATURES.map((feat) => {
@@ -413,13 +451,13 @@ export default function NewJobPage() {
               );
             })}
           </div>
+          <GuideTip step={3} />
         </div>
       )}
 
       {/* Step 4 — Platform, Publish, Add-ons */}
       {step === 4 && (
         <div className="space-y-5">
-          {/* Platforms */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Platforms</Label>
             <div className="flex flex-wrap gap-2">
@@ -441,10 +479,8 @@ export default function NewJobPage() {
             </div>
           </div>
 
-          {/* Schedule */}
           <SchedulePicker platforms={platforms} value={schedule} onChange={setSchedule} />
 
-          {/* Add-ons */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Add-on extensions</Label>
             <div className="space-y-2">
@@ -463,9 +499,7 @@ export default function NewJobPage() {
                     <span className={cn(
                       'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
                       on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
-                    )}>
-                      {on ? '✓' : ''}
-                    </span>
+                    )}>{on ? '✓' : ''}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium leading-tight">{ao.label}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{ao.description}</p>
@@ -477,28 +511,28 @@ export default function NewJobPage() {
             </div>
           </div>
 
-          {/* Summary */}
+          {/* Review summary */}
           <Card className="bg-muted/30 border-dashed">
             <CardContent className="pt-4 space-y-2 text-xs text-muted-foreground">
               <p><span className="font-medium text-foreground">Format:</span> {formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
               <p><span className="font-medium text-foreground">Path:</span> {selectedPathConfig?.label}</p>
               <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
-              <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).join(', ') || 'None'}</p>
+              <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
               <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ')}</p>
               {addOns.size > 0 && <p><span className="font-medium text-foreground">Add-ons:</span> {Array.from(addOns).join(', ')}</p>}
             </CardContent>
           </Card>
+
+          <GuideTip step={4} />
         </div>
       )}
 
-      {/* Error */}
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
 
       <Separator />
 
-      {/* Navigation */}
       <div className="flex gap-2 justify-between">
         <button
           type="button"
@@ -507,14 +541,20 @@ export default function NewJobPage() {
         >
           {step === 0 ? 'Cancel' : '← Back'}
         </button>
-        <Button
-          size="sm"
-          disabled={isPending}
-          onClick={advance}
-        >
+        <Button size="sm" disabled={isPending} onClick={advance}>
           {isPending ? 'Submitting…' : step === 4 ? 'Submit job' : 'Next →'}
         </Button>
       </div>
     </div>
   );
+}
+
+function pathToContentType(path: ProductionPath): string {
+  switch (path) {
+    case 'long_compile_clips':   return 'clips-long';
+    case 'long_produce_source':  return 'custom';
+    case 'short_cut_longform':   return 'clips-short';
+    case 'short_enhance_upload': return 'custom';
+    case 'short_fetch_enhance':  return 'custom';
+  }
 }
