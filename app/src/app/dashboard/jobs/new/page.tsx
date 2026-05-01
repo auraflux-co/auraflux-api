@@ -16,7 +16,7 @@
  */
 
 import { useState, useTransition, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { createJob, estimateCreditCost, type CreateJobPayload } from '@/lib/api';
+import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload } from '@/lib/api';
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
 import { useGuide } from '@/contexts/guide-context';
@@ -203,11 +203,13 @@ function StepHeader({ step }: { step: Step }) {
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
 export default function NewJobPage() {
-  const router = useRouter();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
   const { getToken } = useAuth();
   const [isPending, start] = useTransition();
   const [step, setStep] = useState<Step>(0);
   const [error, setError] = useState<string | null>(null);
+  const [templateBanner, setTemplateBanner] = useState<string | null>(null);
 
   const { openWithContext, setContextHint } = useGuide();
 
@@ -227,6 +229,34 @@ export default function NewJobPage() {
   const [schedule, setSchedule]     = useState<ScheduleValue>({ publishMode: 'immediate' });
   // CPD-115: duration + live credit estimate
   const [durationMins, setDurationMins] = useState<number>(formFactor === 'short' ? 1 : 3);
+
+  // CPD-125: pre-fill from template if ?templateId= is present
+  useEffect(() => {
+    const templateId = searchParams.get('templateId');
+    if (!templateId) return;
+    (async () => {
+      try {
+        const token = await getToken();
+        const { template } = await getTemplateById(templateId, token ?? undefined);
+        const spec = template.jobSpec as Record<string, unknown>;
+        // Apply template fields to wizard state
+        if (template.platforms?.length) setPlatforms(template.platforms);
+        const ff = (spec.formFactor as FormFactor) || null;
+        if (ff) setFormFactor(ff);
+        const pp = (spec.productionPath as ProductionPath) || null;
+        if (pp) setPath(pp);
+        const feats = spec.features as string[] | undefined;
+        if (feats?.length) setFeatures(new Set(feats));
+        const ao = spec.addOns as string[] | undefined;
+        if (ao?.length) setAddOns(new Set(ao));
+        const dur = spec.durationMins as number | undefined;
+        if (dur) setDurationMins(dur);
+        setTemplateBanner(template.name);
+        // Advance past format step if formFactor is set
+        if (ff) setStep(1);
+      } catch { /* template not found — silent */ }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // CPD-113: Auto-open guide on mount with step-0 context
   useEffect(() => {
@@ -319,6 +349,19 @@ export default function NewJobPage() {
         <h1 className="text-2xl font-semibold">New job</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Configure your content production job</p>
       </div>
+
+      {templateBanner && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center justify-between gap-3 text-sm">
+          <span>Using template: <strong>{templateBanner}</strong></span>
+          <button
+            type="button"
+            onClick={() => setTemplateBanner(null)}
+            className="text-xs text-muted-foreground hover:underline"
+          >
+            Clear
+          </button>
+        </div>
+      )}
 
       <StepHeader step={step} />
 
