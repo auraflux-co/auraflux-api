@@ -155,7 +155,7 @@ function GuideTip({ step }: { step: number }) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary shrink-0">
           <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
         </svg>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">AuraFlux Guide</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">AuraFlux Copilot</span>
         <button
           type="button"
           onClick={() => guide.openWithContext(content.hint)}
