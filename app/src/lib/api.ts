@@ -49,8 +49,9 @@ export interface Job {
   outputUrl?:          string;
   thumbnailUrl?:       string;
   publishCopy?: {
-    youtube?: { title?: string };
-    tiktok?:  { caption?: string };
+    youtube?:   { title?: string; description?: string; tags?: string[] };
+    tiktok?:    { caption?: string; hashtags?: string[] };
+    instagram?: { caption?: string; hashtags?: string[] };
   };
 }
 
@@ -382,6 +383,18 @@ export async function disconnectPlatform(platform: SocialPlatform, token?: strin
 export function getSocialConnectUrl(platform: SocialPlatform): string {
   const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
   return `${base}/social/connect/${platform}`;
+}
+
+// ─── Operator job actions (CPD-104) ──────────────────────────────────────────
+
+export type OperatorAction = 'retry' | 'advance' | 'rollback';
+
+export async function operatorJobAction(
+  jobId: string,
+  action: OperatorAction,
+  token?: string,
+): Promise<{ ok: boolean; jobId: string; action: OperatorAction; previousStatus?: string; advancedPortal?: string }> {
+  return apiFetch(`/jobs/${jobId}/${action}`, { method: 'POST', token });
 }
 
 // ─── Job validation ───────────────────────────────────────────────────────────

@@ -6,16 +6,18 @@
  * Renders a portal timeline with per-portal pass/fail/pending status.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useTransition } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
-import { buttonVariants } from '@/components/ui/button';
+import { buttonVariants, Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { getJobDetail, type Job, type PortalStatus } from '@/lib/api';
+import { getJobDetail, operatorJobAction, type Job, type PortalStatus, type OperatorAction } from '@/lib/api';
+import { labelForContentType } from '@/lib/content-types';
+import { useRole } from '@/hooks/use-role';
 
 const PORTAL_LABELS: Record<string, string> = {
   portal0:  'P0 — Source validation',
@@ -51,9 +53,25 @@ function JobStatusBadge({ status }: { status: string }) {
 export default function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const { getToken } = useAuth();
-  const [job, setJob]         = useState<Job | null>(null);
-  const [error, setError]     = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { isOperator } = useRole();
+  const [job, setJob]               = useState<Job | null>(null);
+  const [error, setError]           = useState<string | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isPending, startAction]    = useTransition();
+
+  async function handleOperatorAction(action: OperatorAction) {
+    setActionError(null);
+    startAction(async () => {
+      try {
+        const token = await getToken();
+        await operatorJobAction(jobId, action, token ?? undefined);
+        await fetchJob();
+      } catch (e: unknown) {
+        setActionError(e instanceof Error ? e.message : `Failed to ${action} job`);
+      }
+    });
+  }
 
   const fetchJob = useCallback(async () => {
     try {
@@ -111,7 +129,7 @@ export default function JobDetailPage() {
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            {job.contentType} · {job.entryType} ·{' '}
+            {labelForContentType(job.contentType)} · {job.entryType} ·{' '}
             {new Date(job.createdAt).toLocaleString()}
           </p>
         </div>
@@ -169,14 +187,58 @@ export default function JobDetailPage() {
         </Card>
       )}
 
-      {/* Publish copy preview */}
-      {job.publishCopy?.youtube?.title && (
+      {/* Publish copy */}
+      {job.publishCopy && Object.keys(job.publishCopy).length > 0 && (
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Publish copy</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium">{job.publishCopy.youtube.title}</p>
-            {job.publishCopy.tiktok?.caption && (
-              <p className="text-xs text-muted-foreground mt-1">{job.publishCopy.tiktok.caption}</p>
+          <CardContent className="space-y-4">
+            {job.publishCopy.youtube && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">YouTube</p>
+                {job.publishCopy.youtube.title && (
+                  <p className="text-sm font-medium">{job.publishCopy.youtube.title}</p>
+                )}
+                {job.publishCopy.youtube.description && (
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{job.publishCopy.youtube.description}</p>
+                )}
+                {job.publishCopy.youtube.tags && job.publishCopy.youtube.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {job.publishCopy.youtube.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-[10px] px-1.5">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {job.publishCopy.tiktok && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">TikTok</p>
+                {job.publishCopy.tiktok.caption && (
+                  <p className="text-xs text-muted-foreground">{job.publishCopy.tiktok.caption}</p>
+                )}
+                {job.publishCopy.tiktok.hashtags && job.publishCopy.tiktok.hashtags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {job.publishCopy.tiktok.hashtags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-[10px] px-1.5">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {job.publishCopy.instagram && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Instagram</p>
+                {job.publishCopy.instagram.caption && (
+                  <p className="text-xs text-muted-foreground">{job.publishCopy.instagram.caption}</p>
+                )}
+                {job.publishCopy.instagram.hashtags && job.publishCopy.instagram.hashtags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {job.publishCopy.instagram.hashtags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-[10px] px-1.5">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -190,6 +252,46 @@ export default function JobDetailPage() {
             <Badge key={p} variant="outline" className="capitalize text-xs">{p}</Badge>
           ))}
         </div>
+      )}
+
+      {/* Operator actions (CPD-104) */}
+      {isOperator && (
+        <Card className="border-dashed">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">Operator actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm" variant="outline"
+                disabled={isPending || !['failed', 'held', 'complete'].includes(job.status)}
+                onClick={() => handleOperatorAction('retry')}
+              >
+                Retry (full re-run)
+              </Button>
+              <Button
+                size="sm" variant="outline"
+                disabled={isPending || !['failed', 'held', 'running'].includes(job.status)}
+                onClick={() => handleOperatorAction('advance')}
+              >
+                Force advance
+              </Button>
+              <Button
+                size="sm" variant="destructive"
+                disabled={isPending}
+                onClick={() => handleOperatorAction('rollback')}
+              >
+                Rollback
+              </Button>
+            </div>
+            {actionError && (
+              <p className="text-xs text-destructive">{actionError}</p>
+            )}
+            <p className="text-[10px] text-muted-foreground">
+              Retry: re-runs full pipeline. Force advance: skips current blocked portal. Rollback: resets to held state.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

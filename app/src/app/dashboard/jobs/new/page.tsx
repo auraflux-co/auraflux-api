@@ -19,13 +19,9 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createJob, type CreateJobPayload } from '@/lib/api';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
+import { CONTENT_TYPES_ORDERED, labelForContentType } from '@/lib/content-types';
 
 type EntryType = 'fetch' | 'upload' | 'create';
-
-const CONTENT_TYPES = [
-  'news-long', 'news-short', 'clips-long', 'clips-short',
-  'sports-long', 'sports-short', 'custom',
-] as const;
 
 const PLATFORMS = ['youtube', 'tiktok', 'instagram'] as const;
 
@@ -106,7 +102,7 @@ export default function NewJobPage() {
           <CardHeader className="pb-2"><CardTitle className="text-sm">Content type</CardTitle></CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-1.5">
-              {CONTENT_TYPES.map((ct) => (
+              {CONTENT_TYPES_ORDERED.map((ct) => (
                 <button
                   key={ct} type="button"
                   onClick={() => setContentType(ct)}
@@ -117,7 +113,7 @@ export default function NewJobPage() {
                       : 'border-border text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  {ct}
+                  {labelForContentType(ct)}
                 </button>
               ))}
             </div>
