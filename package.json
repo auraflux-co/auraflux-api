@@ -1,7 +1,7 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.184",
-  "description": "ClipzWorld News - AI-powered news and reaction show production system",
+  "version": "1.0.185",
+  "description": "AuraFlux — AI-powered video content production platform",
   "main": "server.js",
   "scripts": {
     "start": "pm2 start ecosystem.config.js --env production",
@@ -61,7 +61,7 @@
     "ffmpeg",
     "automation"
   ],
-  "author": "ClipzWorld News",
+  "author": "AuraFlux",
   "license": "UNLICENSED",
   "private": true,
   "engines": {
@@ -108,12 +108,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/clipzworldnews/auraflux-api.git"
+    "url": "https://github.com/auraflux-co/auraflux-api.git"
   },
   "bugs": {
-    "url": "https://github.com/clipzworldnews/auraflux-api/issues"
+    "url": "https://github.com/auraflux-co/auraflux-api/issues"
   },
-  "homepage": "https://github.com/clipzworldnews/auraflux-api#readme",
+  "homepage": "https://github.com/auraflux-co/auraflux-api#readme",
   "jest": {
     "testEnvironment": "node",
     "testMatch": [
