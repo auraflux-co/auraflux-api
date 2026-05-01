@@ -1,103 +1,148 @@
 'use client';
 /**
- * /dashboard/jobs — Customer jobs list (CPD-23)
+ * /dashboard/jobs — Jobs hub (CPD-112)
  *
- * Shows the current user's jobs with portal status progress strip.
- * Fetches from GET /jobs using the Clerk session token.
+ * Quick-stat cards linking to Active and History sub-pages.
+ * Fetches job list on mount to compute counts.
  */
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { JobCard } from '@/components/jobs/job-card';
 import { listJobs, type Job } from '@/lib/api';
 
-export default function JobsPage() {
-  const { getToken } = useAuth();
-  const [jobs, setJobs]       = useState<Job[]>([]);
-  const [isPending, start]    = useTransition();
-  const [error, setError]     = useState<string | null>(null);
-  const [lastFetch, setLast]  = useState<Date | null>(null);
+const ACTIVE_STATUSES  = new Set(['queued', 'running', 'held', 'failed']);
+const COMPLETE_STATUSES = new Set(['complete', 'published']);
 
-  async function fetchJobs() {
-    start(async () => {
+interface StatCardProps {
+  href:    string;
+  label:   string;
+  count:   number | null;
+  sub?:    string;
+  accent?: boolean;
+}
+
+function StatCard({ href, label, count, sub, accent }: StatCardProps) {
+  return (
+    <Link href={href} className="group block">
+      <Card className={cn('transition-colors group-hover:border-primary/50', accent && count && count > 0 ? 'border-yellow-500/50' : '')}>
+        <CardContent className="pt-5 pb-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
+          <p className="text-3xl font-bold mt-1 tabular-nums">
+            {count === null ? '—' : count}
+          </p>
+          {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+export default function JobsHubPage() {
+  const { getToken } = useAuth();
+  const [jobs, setJobs]   = useState<Job[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
       try {
         const token = await getToken();
         const res = await listJobs(token ?? undefined);
         setJobs(res.jobs ?? []);
-        setLast(new Date());
-        setError(null);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load jobs');
       }
-    });
-  }
+    }
+    load();
+  }, [getToken]);
 
-  useEffect(() => { fetchJobs(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const active   = jobs?.filter((j) => ACTIVE_STATUSES.has(j.status)) ?? [];
+  const held     = jobs?.filter((j) => j.status === 'held' || j.status === 'failed') ?? [];
+  const complete = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
 
   return (
-    <div className="space-y-4 max-w-5xl">
+    <div className="max-w-3xl space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Jobs</h1>
-          {lastFetch && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Updated {lastFetch.toLocaleTimeString()}
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground mt-0.5">Create, monitor, and review your production jobs</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchJobs}
-            disabled={isPending}
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), isPending && 'opacity-50')}
-          >
-            {isPending ? 'Loading…' : 'Refresh'}
-          </button>
-          <Link href="/dashboard/jobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
-            New job
-          </Link>
-        </div>
+        <Link href="/dashboard/jobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
+          + New job
+        </Link>
       </div>
 
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
 
-      {!isPending && jobs.length === 0 && !error && (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-sm">No jobs yet.</p>
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          href="/dashboard/jobs/active"
+          label="Active"
+          count={jobs === null ? null : active.length}
+          sub="queued + running"
+        />
+        <StatCard
+          href="/dashboard/jobs/active"
+          label="Needs attention"
+          count={jobs === null ? null : held.length}
+          sub="held or failed"
+          accent
+        />
+        <StatCard
+          href="/dashboard/jobs/history"
+          label="Completed"
+          count={jobs === null ? null : complete.length}
+          sub="all time"
+        />
+      </div>
+
+      {/* Quick links */}
+      <div>
+        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Quick actions</h2>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard/jobs/new"     className={cn(buttonVariants({ size: 'sm' }))}>New job</Link>
+          <Link href="/dashboard/jobs/active"  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>View active</Link>
+          <Link href="/dashboard/jobs/history" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>View history</Link>
+        </div>
+      </div>
+
+      {/* Empty state */}
+      {jobs !== null && jobs.length === 0 && (
+        <div className="text-center py-16 border border-dashed rounded-lg">
+          <p className="text-sm text-muted-foreground">No jobs yet — create your first one.</p>
           <Link href="/dashboard/jobs/new" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-3')}>
-            Create your first job
+            Create job
           </Link>
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {jobs.map((job) => (
-          <JobCard key={job.jobId} job={job} />
-        ))}
-      </div>
-
-      {/* Portal legend */}
-      {jobs.length > 0 && (
-        <div className="flex gap-4 text-[10px] text-muted-foreground pt-2">
-          {(['pass', 'running', 'hold', 'failed', 'pending'] as const).map((s) => (
+      {/* Status legend */}
+      {jobs !== null && jobs.length > 0 && (
+        <div className="flex flex-wrap gap-4 text-[10px] text-muted-foreground">
+          {[
+            { s: 'running', label: 'Running',  color: 'bg-blue-500' },
+            { s: 'queued',  label: 'Queued',   color: 'bg-muted/40' },
+            { s: 'held',    label: 'Held',     color: 'bg-yellow-500' },
+            { s: 'failed',  label: 'Failed',   color: 'bg-destructive' },
+            { s: 'complete',label: 'Complete', color: 'bg-green-500' },
+          ].map(({ s, label, color }) => (
             <span key={s} className="flex items-center gap-1">
-              <span className={cn('w-2 h-2 rounded-full',
-                s === 'pass'    ? 'bg-green-500' :
-                s === 'running' ? 'bg-blue-500' :
-                s === 'hold'    ? 'bg-yellow-500' :
-                s === 'failed'  ? 'bg-destructive' :
-                'bg-muted/40'
-              )} />
-              {s}
+              <span className={cn('w-2 h-2 rounded-full', color)} />
+              {label}
+              {jobs && (
+                <Badge variant="outline" className="text-[9px] px-1 ml-0.5">
+                  {jobs.filter((j) => j.status === s).length}
+                </Badge>
+              )}
             </span>
           ))}
-          <Badge variant="outline" className="text-[10px] px-1.5 ml-auto">7 portals</Badge>
         </div>
       )}
     </div>

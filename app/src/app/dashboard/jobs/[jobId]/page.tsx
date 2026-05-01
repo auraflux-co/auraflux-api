@@ -15,9 +15,27 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { getJobDetail, operatorJobAction, type Job, type PortalStatus, type OperatorAction } from '@/lib/api';
+import { getJobDetail, operatorJobAction, type Job, type PortalStatus, type OperatorAction, type WizardConfig, type PublishResult } from '@/lib/api';
 import { labelForContentType } from '@/lib/content-types';
 import { useRole } from '@/hooks/use-role';
+
+const PLATFORM_ICONS: Record<string, string> = {
+  youtube:   '▶',
+  tiktok:    '♪',
+  instagram: '◎',
+};
+
+const ADDON_LABELS: Record<string, string> = {
+  tts:            'ElevenLabs TTS',
+  heygen:         'HeyGen avatar',
+  shoppable:      'Shoppable tagging',
+  wan:            'AI video generation',
+  clipSourcing:   'Scene selection',
+  showCommentary: 'Narrative narration',
+  branding:       'Brand overlay',
+  imageBurn:      'Image burn',
+  dynamicOverlays:'Dynamic overlays',
+};
 
 const PORTAL_LABELS: Record<string, string> = {
   portal0:  'P0 — Source validation',
@@ -31,6 +49,59 @@ const PORTAL_LABELS: Record<string, string> = {
 };
 
 const ACTIVE_STATUSES = new Set(['queued', 'running']);
+
+function WizardConfigReview({ wc }: { wc: WizardConfig }) {
+  const ff = wc.formFactor === 'short' || wc.templateId === 'short-form' ? 'Short-form (9:16)' : 'Long-form (16:9)';
+  const entryLabels: Record<string, string> = { fetch: 'URL fetch', upload: 'File upload', create: 'AI generated' };
+  return (
+    <div className="space-y-3 text-sm">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+        <span className="text-muted-foreground">Format</span>
+        <span>{ff}</span>
+        {wc.entryType && (
+          <>
+            <span className="text-muted-foreground">Source</span>
+            <span>{entryLabels[wc.entryType] ?? wc.entryType}</span>
+          </>
+        )}
+        {wc.contentType && (
+          <>
+            <span className="text-muted-foreground">Content type</span>
+            <span>{labelForContentType(wc.contentType)}</span>
+          </>
+        )}
+        <span className="text-muted-foreground">Publish</span>
+        <span className="capitalize">
+          {wc.publishMode}{wc.scheduledAt ? ` — ${new Date(wc.scheduledAt).toLocaleDateString()}` : ''}
+        </span>
+      </div>
+      {wc.addOns.length > 0 && (
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Features applied</p>
+          <div className="flex flex-wrap gap-1">
+            {wc.addOns.map((a) => (
+              <Badge key={a} variant="outline" className="text-[10px] px-1.5">
+                {ADDON_LABELS[a] ?? a}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+      {wc.platforms.length > 0 && (
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Platforms</p>
+          <div className="flex gap-1">
+            {wc.platforms.map((p) => (
+              <Badge key={p} variant="secondary" className="text-[10px] capitalize px-1.5">
+                {PLATFORM_ICONS[p] ?? '•'} {p}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function statusColor(s: PortalStatus) {
   if (s === 'pass')    return 'bg-green-500';
@@ -133,8 +204,8 @@ export default function JobDetailPage() {
             {new Date(job.createdAt).toLocaleString()}
           </p>
         </div>
-        <Link href="/dashboard/jobs" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
-          ← Jobs
+        <Link href={job.status === 'complete' ? '/dashboard/jobs/history' : '/dashboard/jobs/active'} className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+          ← {job.status === 'complete' ? 'History' : 'Active'}
         </Link>
       </div>
 
@@ -252,6 +323,50 @@ export default function JobDetailPage() {
             <Badge key={p} variant="outline" className="capitalize text-xs">{p}</Badge>
           ))}
         </div>
+      )}
+
+      {/* Published links (CPD-112) */}
+      {job.publishResults && job.publishResults.filter((r) => r.status === 'published').length > 0 && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Published</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {job.publishResults.filter((r) => r.status === 'published').map((r) => (
+              <div key={r.platform} className="flex items-center justify-between">
+                <span className="text-sm capitalize">{PLATFORM_ICONS[r.platform] ?? '•'} {r.platform}</span>
+                <div className="flex items-center gap-2">
+                  {r.publishedAt && (
+                    <span className="text-xs text-muted-foreground">{new Date(r.publishedAt).toLocaleDateString()}</span>
+                  )}
+                  {r.driveUrl && (
+                    <a
+                      href={r.driveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-xs h-7 px-2')}
+                    >
+                      View ↗
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Selection review — what customer configured (CPD-112) */}
+      {job.status === 'complete' && job.wizardConfig && (
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">What you selected</CardTitle>
+              <Badge variant="outline" className="text-[10px]">Templates — coming soon</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <WizardConfigReview wc={job.wizardConfig} />
+          </CardContent>
+        </Card>
       )}
 
       {/* Operator actions (CPD-104) */}
