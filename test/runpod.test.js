@@ -162,8 +162,9 @@ describe('lib/ai/runpod', () => {
       https.request.mockImplementation(makeHttpsRequestMock(200, { prompt_id: 'wan-123' }));
     });
 
-    it('returns skipped when planTier is too low (diy)', async () => {
-      const result = await runpod.generateWanVideo({ positivePrompt: 'test', planTier: 'diy' });
+    // CPD-109: DIY now has access to video.wan_t2v — use a missing-credential scenario to test skip
+    it('returns skipped when planTier is null (no plan assigned)', async () => {
+      const result = await runpod.generateWanVideo({ positivePrompt: 'test', planTier: null });
       expect(result).toMatchObject({ skipped: true });
     });
 

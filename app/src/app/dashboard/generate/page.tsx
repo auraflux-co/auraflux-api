@@ -6,8 +6,10 @@
  * GET /api/generate-video/:promptId every 5 s until success or error.
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useRole } from '@/hooks/use-role';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +20,13 @@ import { generateVideo, pollVideoStatus, type GenerateVideoResult } from '@/lib/
 type GenStatus = 'idle' | 'queued' | 'running' | 'success' | 'error';
 
 export default function GeneratePage() {
+  const router = useRouter();
+  const { isOperator, isLoaded } = useRole();
   const { getToken } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded && !isOperator) router.replace('/dashboard');
+  }, [isLoaded, isOperator, router]);
 
   const [prompt, setPrompt]         = useState('');
   const [numFrames, setNumFrames]   = useState(25);
@@ -82,6 +90,8 @@ export default function GeneratePage() {
       setStatus('error');
     }
   }
+
+  if (!isLoaded || !isOperator) return null;
 
   const isGenerating = status === 'queued' || status === 'running';
 

@@ -46,14 +46,21 @@ describe('isFeatureEnabled', () => {
   it('enables thumbnail.designed for diy', () => {
     expect(isFeatureEnabled('thumbnail.designed', 'diy')).toBe(true);
   });
-  it('does NOT enable thumbnail.vectcut for diy', () => {
-    expect(isFeatureEnabled('thumbnail.vectcut', 'diy')).toBe(false);
+  // CPD-109: DIY and DWY are feature-identical — tier distinction is service level only
+  it('enables thumbnail.vectcut for diy (CPD-109)', () => {
+    expect(isFeatureEnabled('thumbnail.vectcut', 'diy')).toBe(true);
   });
   it('does NOT enable thumbnail.imagen for diy', () => {
     expect(isFeatureEnabled('thumbnail.imagen', 'diy')).toBe(false);
   });
+  it('does NOT enable avatar.heygen for diy', () => {
+    expect(isFeatureEnabled('avatar.heygen', 'diy')).toBe(false);
+  });
+  it('enables tts.elevenlabs for diy (CPD-109)', () => {
+    expect(isFeatureEnabled('tts.elevenlabs', 'diy')).toBe(true);
+  });
 
-  // DWY plan
+  // DWY plan — same feature access as DIY
   it('enables thumbnail.vectcut for dwy (with env)', () => {
     expect(isFeatureEnabled('thumbnail.vectcut', 'dwy')).toBe(true);
   });
@@ -104,7 +111,7 @@ describe('isFeatureEnabled', () => {
   // Env var gates (plan is high enough but credential missing)
   it('returns false when plan qualifies but required env var is missing', () => {
     delete process.env.VECTCUT_API_URL;
-    expect(isFeatureEnabled('thumbnail.vectcut', 'dwy')).toBe(false);
+    expect(isFeatureEnabled('thumbnail.vectcut', 'diy')).toBe(false);
   });
   it('returns false when GEMINI_API_KEY missing for thumbnail.imagen even on dfy', () => {
     delete process.env.GEMINI_API_KEY;
@@ -119,17 +126,19 @@ describe('isFeatureEnabled', () => {
 // ─── getEnabledFeatures ───────────────────────────────────────────────────────
 
 describe('getEnabledFeatures', () => {
-  it('returns only diy-accessible features for diy plan', () => {
+  // CPD-109: DIY and DWY are feature-identical
+  it('returns full feature set for diy plan (CPD-109)', () => {
     const features = getEnabledFeatures('diy');
     expect(features).toContain('thumbnail.frame');
     expect(features).toContain('thumbnail.designed');
     expect(features).toContain('scheduling');
-    expect(features).not.toContain('thumbnail.vectcut');
+    expect(features).toContain('thumbnail.vectcut');
+    expect(features).toContain('tts.elevenlabs');
     expect(features).not.toContain('thumbnail.imagen');
     expect(features).not.toContain('avatar.heygen');
   });
 
-  it('returns dwy features including vectcut and gemini_ranking', () => {
+  it('returns same feature set for dwy as diy (CPD-109)', () => {
     const features = getEnabledFeatures('dwy');
     expect(features).toContain('thumbnail.vectcut');
     expect(features).toContain('thumbnail.gemini_ranking');
