@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-04-30 (Cursor — fix: url_list items pre-populate — createJobSpec now seeds order.inputs.items from sourceConfig.urls when sourceType is url_list so portal0 canProduce check passes; 416 pass)
 **Last Updated:** 2026-04-30 (Cursor — fix: portal adapter closure — jobSpec now passed to _resolvePortalWorkers so each runWorker call closes over live jobSpec; 416 pass)
 **Last Updated:** 2026-04-30 (Cursor — fix: _adaptLegacyPortal wrapper in jobs_c1 — legacy portals (run/canProduce/commit) now adapt to runWorker/isPass interface expected by portal_policy_runner; 416 pass)
 **Last Updated:** 2026-04-30 (Cursor — fix: jobs_c1 planTier passthrough — bodyPlanTier now forwarded to createJobSpec so E2E test callers can set dwy+ without c1_default customer config; 416 pass)
