@@ -63,6 +63,9 @@ export interface Job {
   planTier:            PlanTier;
   publishMode:         PublishMode;
   scheduledPublishAt?: string | null;
+  scheduledStartAt?:   string | null;
+  templateId?:         string | null;
+  templateName?:       string | null;
   createdAt:           string;
   updatedAt:           string;
   platforms:           string[];
@@ -268,6 +271,17 @@ export async function chatWithConcierge(
   });
 }
 
+export async function getScheduleSuggestion(
+  opts: { templates?: { name: string; contentType?: string | null }[]; platforms?: string[]; goals?: string; days?: number },
+  token?: string,
+): Promise<{ ok: boolean; suggestion: string }> {
+  return apiFetch('/concierge/schedule-suggest', {
+    method: 'POST',
+    body:   JSON.stringify(opts),
+    token,
+  });
+}
+
 // ─── Clip sourcing API ────────────────────────────────────────────────────────
 
 export async function suggestClips(
@@ -325,12 +339,76 @@ export async function updateJobSchedule(
   publishMode: PublishMode,
   scheduledPublishAt?: string,
   token?: string,
+  scheduledStartAt?: string | null,
 ): Promise<{ ok: boolean; jobId: string; publishMode: PublishMode; scheduledPublishAt: string | null }> {
   return apiFetch(`/jobs/${jobId}/schedule`, {
     method: 'PUT',
-    body:   JSON.stringify({ publishMode, scheduledPublishAt }),
+    body:   JSON.stringify({ publishMode, scheduledPublishAt, scheduledStartAt }),
     token,
   });
+}
+
+export async function saveJobAsTemplate(
+  jobId: string,
+  name: string,
+  opts: { description?: string; recurrenceType?: string; recurrenceDay?: number; recurrenceTime?: string } = {},
+  token?: string,
+): Promise<{ template: JobTemplate }> {
+  return apiFetch(`/jobs/${jobId}/save-as-template`, {
+    method: 'POST',
+    body:   JSON.stringify({ name, ...opts }),
+    token,
+  });
+}
+
+// ─── Templates API ────────────────────────────────────────────────────────────
+
+export type RecurrenceType = 'once' | 'daily' | 'weekly' | 'monthly';
+
+export interface JobTemplate {
+  id:               string;
+  name:             string;
+  description?:     string | null;
+  contentType?:     string | null;
+  platforms:        string[];
+  jobSpec:          Record<string, unknown>;
+  recurrenceType?:  RecurrenceType | null;
+  recurrenceDay?:   number | null;
+  recurrenceTime?:  string | null;
+  recurrenceActive: boolean;
+  nextFireAt?:      string | null;
+  lastFiredAt?:     string | null;
+  createdAt:        string;
+  updatedAt:        string;
+}
+
+export async function listTemplates(token?: string): Promise<{ templates: JobTemplate[] }> {
+  return apiFetch('/templates', { token });
+}
+
+export async function getTemplateById(templateId: string, token?: string): Promise<{ template: JobTemplate }> {
+  return apiFetch(`/templates/${templateId}`, { token });
+}
+
+export async function createTemplate(
+  payload: { name: string; description?: string; contentType?: string; platforms?: string[];
+             jobSpec: Record<string, unknown>; recurrenceType?: string;
+             recurrenceDay?: number; recurrenceTime?: string },
+  token?: string,
+): Promise<{ template: JobTemplate }> {
+  return apiFetch('/templates', { method: 'POST', body: JSON.stringify(payload), token });
+}
+
+export async function updateTemplate(
+  templateId: string,
+  patch: Partial<Pick<JobTemplate, 'name' | 'description' | 'recurrenceType' | 'recurrenceDay' | 'recurrenceTime' | 'recurrenceActive'>>,
+  token?: string,
+): Promise<{ template: JobTemplate }> {
+  return apiFetch(`/templates/${templateId}`, { method: 'PUT', body: JSON.stringify(patch), token });
+}
+
+export async function deleteTemplate(templateId: string, token?: string): Promise<{ ok: boolean }> {
+  return apiFetch(`/templates/${templateId}`, { method: 'DELETE', token });
 }
 
 // ─── Plan features API ────────────────────────────────────────────────────────
