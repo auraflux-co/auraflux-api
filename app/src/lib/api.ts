@@ -92,6 +92,86 @@ export interface CreateJobPayload {
   productionPath?:  string | null;
   features?:        string[];
   extensions?:      string[];  // add-on extensions: 'heygen', 'shoppable'
+  // CPD-115: duration-based credit estimation
+  durationMins?:    number;
+}
+
+// ─── Credit estimation ────────────────────────────────────────────────────────
+
+export interface CreditEstimate {
+  credits:   number;
+  breakdown: Record<string, number>;
+  message:   string; // Copilot-ready summary
+}
+
+const CREDIT_RATES = {
+  base:              10,
+  tts_per_min:        1,
+  wan_t2v_per_min:    6,
+  heygen_std_per_min: 30,
+  heygen_iv_per_min: 120,
+  script:            10,
+  research:          10,
+  content_fetch:     10,
+  shoppable:         10,
+  vectcut_thumbnail: 10,
+  narrative_clip:    10,
+  imagen_thumbnail:  20,
+};
+
+export function estimateCreditCost({
+  durationMins   = 1,
+  features       = [] as string[],
+  extensions     = [] as string[],
+  sourceMode     = '' as string,
+}: {
+  durationMins?:  number;
+  features?:      string[];
+  extensions?:    string[];
+  sourceMode?:    string;
+}): CreditEstimate {
+  const dur = Math.max(0.1, durationMins);
+
+  const hasTts      = features.includes('tts');
+  const hasWan      = features.includes('generation');
+  const hasHeygenIv = extensions.includes('heygen_iv');
+  const hasHeygen   = extensions.includes('heygen') || hasHeygenIv;
+
+  let aiFeatureCost = 0;
+  let aiLabel = '';
+  if (hasHeygenIv) {
+    aiFeatureCost = Math.ceil(CREDIT_RATES.heygen_iv_per_min * dur);
+    aiLabel = 'Avatar IV';
+  } else if (hasHeygen) {
+    aiFeatureCost = Math.ceil(CREDIT_RATES.heygen_std_per_min * dur);
+    aiLabel = 'HeyGen avatar';
+  } else if (hasWan) {
+    aiFeatureCost = Math.ceil(CREDIT_RATES.wan_t2v_per_min * dur);
+    aiLabel = 'AI video gen';
+  } else if (hasTts) {
+    aiFeatureCost = Math.ceil(CREDIT_RATES.tts_per_min * dur);
+    aiLabel = 'TTS narration';
+  }
+
+  const breakdown: Record<string, number> = {
+    base:      CREDIT_RATES.base,
+    ai:        aiFeatureCost,
+    script:    features.includes('script')    ? CREDIT_RATES.script    : 0,
+    shoppable: extensions.includes('shoppable') ? CREDIT_RATES.shoppable : 0,
+  };
+
+  const credits = Object.values(breakdown).reduce((s, v) => s + v, 0);
+
+  const parts: string[] = [];
+  if (aiFeatureCost > 0) parts.push(`${aiFeatureCost} ${aiLabel}`);
+  if (breakdown.script > 0) parts.push(`${breakdown.script} script`);
+  if (breakdown.shoppable > 0) parts.push(`${breakdown.shoppable} shoppable`);
+
+  const message = parts.length
+    ? `${credits} credits total — ${CREDIT_RATES.base} base + ${parts.join(' + ')}.`
+    : `${credits} credits (base job, no AI features selected).`;
+
+  return { credits, breakdown, message };
 }
 
 export interface PortalContract {

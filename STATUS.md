@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-01 (Cursor — feat(cpd-115): duration-based credit estimation — credit_calculator.js (rate card: 10 base, 1/6/30/120 cr/min per tier ×10 multiplier), durationMins+creditCost baked into createJobSpec, refundCredits for hard failure auto-refund, POST /credits/refund route, wizard duration slider + live Copilot estimate, estimateCreditCost in api.ts)
 **Last Updated:** 2026-05-01 (Cursor — chore: rebrand CWN→AuraFlux in package.json, lib headers, STATUS.md; real AF lettermark icons for PWA (192+512)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-118): PWA setup — manifest.json, sw.js (cache-first shell, push notification ready), PWARegister component, icons 192/512, Next.js metadata updated; native app (CPD-113) on roadmap)
 
