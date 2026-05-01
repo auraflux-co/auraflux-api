@@ -85,7 +85,7 @@ export function ConciergeChat({ currentSpec, planTier, className }: ConciergeCha
     <Card className={cn('flex flex-col h-full', className)}>
       <CardHeader className="pb-2 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-base">AI Concierge</CardTitle>
+          <CardTitle className="text-base">AuraFlux Guide</CardTitle>
           <Badge variant="secondary" className="text-xs">AuraFlux</Badge>
         </div>
       </CardHeader>
