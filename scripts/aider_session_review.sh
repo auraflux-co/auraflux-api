@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # scripts/aider_session_review.sh
-# End-of-session health review: pulls live state from Jira, GitHub, and Confluence,
-# then runs Aider to produce a structured report at logs/aider_session_review.md
+# End-of-session health review: pulls live state from Jira, GitHub, Confluence,
+# and the frontend (app/) then runs Aider to produce a structured report at
+# logs/aider_session_review.md
 #
 # Usage: bash scripts/aider_session_review.sh [--since <commit-sha>]
 # Requires: aider, gh (GitHub CLI), curl, python3
@@ -52,7 +53,7 @@ echo ""
 # ── 1. Git context ─────────────────────────────────────────────────────────────
 echo "📦 Collecting git context..."
 COMMIT_LOG=$(git -C "$REPO_ROOT" log --oneline "$SINCE..HEAD" 2>/dev/null | head -30 || git -C "$REPO_ROOT" log --oneline -20)
-CHANGED_FILES=$(git -C "$REPO_ROOT" diff --name-only "$SINCE..HEAD" 2>/dev/null | head -50 || echo "(unable to diff)")
+CHANGED_FILES=$(git -C "$REPO_ROOT" diff --name-only "$SINCE..HEAD" 2>/dev/null | head -80 || echo "(unable to diff)")
 OPEN_BRANCHES=$(git -C "$REPO_ROOT" branch -r --no-merged main 2>/dev/null | grep -v HEAD | head -10 || echo "none")
 
 # ── 2. Jira board state ────────────────────────────────────────────────────────
@@ -99,7 +100,7 @@ echo "📄 Fetching recent Confluence activity..."
 CONF_RECENT="(skipped — no API token)"
 if [ -n "${JIRA_API_TOKEN:-}" ]; then
   CONF_RECENT=$(curl -s -H "Accept: application/json" -u "$JIRA_AUTH" \
-    "${JIRA_BASE}/wiki/rest/api/content?spaceKey=CP&limit=5&orderby=modified&expand=version" \
+    "${JIRA_BASE}/wiki/rest/api/content?spaceKey=AF&limit=10&orderby=modified&expand=version" \
     2>/dev/null | python3 -c '
 import json,sys
 d=json.load(sys.stdin)
@@ -108,20 +109,76 @@ for p in d.get("results",[]):
 ' 2>/dev/null || echo "  (fetch failed)")
 fi
 
-# ── 5. Env consistency ─────────────────────────────────────────────────────────
+# ── 5. Env consistency — backend ──────────────────────────────────────────────
 echo "🔑 Checking environment consistency..."
 ENV_IN_CODE=$(grep -rh 'process\.env\.' \
   "$REPO_ROOT/lib" "$REPO_ROOT/server.js" "$REPO_ROOT/scripts" "$REPO_ROOT/test" "$REPO_ROOT/bin" \
   2>/dev/null | grep -oE 'process\.env\.[A-Z_]+' | sort -u | sed 's/process\.env\.//' || true)
+
+# ── 6. Env consistency — frontend (NEXT_PUBLIC_* vars) ────────────────────────
+FRONTEND_ENV_IN_CODE=$(grep -rh 'process\.env\.' "$REPO_ROOT/app/src" 2>/dev/null \
+  | grep -oE 'process\.env\.NEXT_PUBLIC_[A-Z_]+' | sort -u \
+  | sed 's/process\.env\.//' || true)
+
 ENV_IN_EXAMPLE=$(grep -oE '^[A-Z_]+' "$REPO_ROOT/.env.example" 2>/dev/null | sort -u || true)
 ENV_MISSING=$(comm -23 <(echo "$ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
+FRONTEND_ENV_MISSING=$(comm -23 <(echo "$FRONTEND_ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
 
-# ── 6. Write prompt and run Aider ──────────────────────────────────────────────
+# ── 7. Frontend UI inventory ──────────────────────────────────────────────────
+echo "🖥️  Auditing frontend UI layer..."
+
+# All dashboard pages that exist on disk
+UI_PAGES=$(find "$REPO_ROOT/app/src/app/dashboard" -name "page.tsx" 2>/dev/null \
+  | sed "s|$REPO_ROOT/app/src/app||" | sed 's|/page\.tsx||' | sort || echo "(none)")
+
+# Routes declared in sidebar nav
+SIDEBAR_ROUTES=$(grep -oE '/dashboard/[a-z/\[\]]+' "$REPO_ROOT/app/src/components/layout/sidebar.tsx" 2>/dev/null \
+  | sort -u || echo "(none)")
+
+# All apiFetch calls in api.ts — extract paths to verify backend routes exist
+API_TS_PATHS=$(grep -oE "apiFetch\('[^']+'" "$REPO_ROOT/app/src/lib/api.ts" 2>/dev/null \
+  | grep -oE "'[^']+'" | tr -d "'" | sort -u || echo "(none)")
+
+# Backend routes mounted in server.js
+BACKEND_ROUTES=$(grep -oE "app\.use\('/?[^']*'" "$REPO_ROOT/server.js" 2>/dev/null \
+  | grep -oE "'[^']+'" | tr -d "'" | sort -u || echo "(none)")
+
+# TypeScript check on frontend
+echo "🔷 Running frontend TypeScript check..."
+FRONTEND_TS_ERRORS="(skipped)"
+if [ -f "$REPO_ROOT/app/tsconfig.json" ] || [ -f "$REPO_ROOT/app/package.json" ]; then
+  FRONTEND_TS_ERRORS=$(cd "$REPO_ROOT/app" && npx --yes tsc --noEmit 2>&1 | head -30 || echo "(tsc not available)")
+  if [ -z "$FRONTEND_TS_ERRORS" ]; then
+    FRONTEND_TS_ERRORS="✅ No TypeScript errors"
+  fi
+fi
+
+# ── 8. API-to-UI mapping: check apiFetch paths have a backend route ───────────
+API_UNMAPPED=""
+while IFS= read -r path; do
+  [ -z "$path" ] && continue
+  # Simplify to first segment: /support/chat → support
+  segment=$(echo "$path" | sed 's|^/||' | cut -d'/' -f1)
+  if ! echo "$BACKEND_ROUTES" | grep -q "$segment" && \
+     ! grep -rq "router\.\(get\|post\|put\|delete\|patch\).*['\"].*${segment}" "$REPO_ROOT/lib/routes/" 2>/dev/null; then
+    API_UNMAPPED="${API_UNMAPPED}  MISSING backend route for: ${path}\n"
+  fi
+done <<< "$API_TS_PATHS"
+API_UNMAPPED="${API_UNMAPPED:-(all api.ts paths have matching backend routes)}"
+
+# ── 9. Write prompt and run Aider ─────────────────────────────────────────────
 echo ""
 echo "🤖 Running Aider review..."
 
 cat > "$PROMPT_FILE" <<ENDOFPROMPT
-You are performing an end-of-session health review of the AuraFlux API platform.
+You are performing an end-of-session health review of the AuraFlux platform.
+This platform has two layers:
+  1. Backend API — Express.js in lib/ and server.js
+  2. Frontend Dashboard — Next.js in app/src/app/dashboard/ (THIS IS THE CUSTOMER PRODUCT)
+
+The UI is what customers see and use every day after sign-up. Jira tickets, Confluence HOW docs,
+GitHub PRs, and deployed code must all align across BOTH layers.
+
 Write a structured report to logs/aider_session_review.md using the data below.
 
 SESSION GIT CONTEXT
@@ -139,21 +196,38 @@ GITHUB
 Open PRs: ${GH_OPEN_PRS:-none}
 CI failures: ${GH_FAILING_CI:-none}
 
-CONFLUENCE (recent pages): ${CONF_RECENT:-none}
+CONFLUENCE (recent pages, space AF): ${CONF_RECENT:-none}
 
-ENV VARS in code but missing from .env.example: ${ENV_MISSING:-none}
+BACKEND ENV VARS in code but missing from .env.example: ${ENV_MISSING:-none}
+FRONTEND NEXT_PUBLIC_* vars missing from .env.example: ${FRONTEND_ENV_MISSING:-none}
 
-Write these 9 sections. Be direct. No padding.
+FRONTEND UI PAGES (app/src/app/dashboard/*/page.tsx):
+${UI_PAGES}
 
-1. Session Summary (2-4 sentences)
+SIDEBAR NAV ROUTES (what customers can actually navigate to):
+${SIDEBAR_ROUTES}
+
+API CALLS in app/src/lib/api.ts (apiFetch paths):
+${API_TS_PATHS}
+
+API-TO-BACKEND MAPPING ISSUES:
+${API_UNMAPPED}
+
+FRONTEND TYPESCRIPT CHECK:
+${FRONTEND_TS_ERRORS}
+
+Write these 10 sections. Be direct. No padding.
+
+1. Session Summary (2-4 sentences covering both API and UI work)
 2. Jira Consistency (stuck tickets, PR mismatches, un-transitioned merged work)
 3. GitHub Consistency (stale PRs, CI failures, stale branches)
-4. Confluence Consistency (stale or missing docs)
-5. Codebase Structural Integrity (routes, server.js, circular deps)
-6. C0 / C1+ Boundary (leaks, hardcoded branding)
-7. Environment and Secrets (undocumented vars, hardcoded secrets)
-8. Render Deploy Readiness (will main deploy cleanly?)
-9. Recommendations — mark each: [BLOCKING] [SHOULD FIX] [NICE TO HAVE]
+4. Confluence Consistency — does each changed UI page/feature have a HOW doc? List gaps.
+5. Frontend UI Integrity — pages on disk vs sidebar nav (orphaned pages, missing nav entries), TypeScript errors
+6. API-to-UI Mapping — apiFetch paths in api.ts vs actual backend routes (missing routes, stale calls)
+7. Codebase Structural Integrity — backend routes, server.js, circular deps
+8. C0 / C1+ Boundary (leaks, hardcoded branding)
+9. Environment and Secrets (undocumented vars — both backend process.env.* and NEXT_PUBLIC_*)
+10. Recommendations — mark each: [BLOCKING] [SHOULD FIX] [NICE TO HAVE]
 
 End the file with exactly these two lines:
 <!-- last-reviewed-commit: ${HEAD_SHA} -->
