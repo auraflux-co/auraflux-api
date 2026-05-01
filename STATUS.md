@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-04-30 (Cursor — fix: jobs_c1 planTier passthrough — bodyPlanTier now forwarded to createJobSpec so E2E test callers can set dwy+ without c1_default customer config; 416 pass)
 **Last Updated:** 2026-04-30 (Cursor — fix: admin bypass middleware now runs before Clerk in server.js — prevents getAuth throw on x-admin-token E2E test requests; 416 pass)
 **Last Updated:** 2026-04-30 (Cursor — CPD-86/33/34: direct publish layer — token_store (AES-256-GCM, PG), youtube/tiktok/instagram adapters, publish/index.js (platform adapter pattern), social_connect OAuth routes, /dashboard/settings/social-connect UI; CPD-12: smoke_render.test.js (SMOKE_API_URL-gated); CPD-4: lib/ai/video_transforms.js longToShort+shortToLong scaffold; CPD-3: C0 UI audit clean; 416 pass / 9 skip)
 **Last Updated:** 2026-04-30 (Cursor — CPD-5: /dashboard/generate page with PromptInput/StatusPoller/VideoPreview + frame presets; CPD-6: test script + MORNING_BRIEFING.md; pod EXITED, live run pending)
