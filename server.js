@@ -330,6 +330,7 @@ const jobsRouter = require('./lib/routes/jobs');
 const jobsC1Router = require('./lib/routes/jobs_c1');
 const creditsRouter    = require('./lib/routes/credits');    // CPD-43
 const supportRouter    = require('./lib/routes/support');    // CPD-115
+const uploadRouter     = require('./lib/routes/upload');     // CPD-116
 const thumbnailRouter  = require('./lib/routes/thumbnail');  // CPD-55
 const conciergeRouter  = require('./lib/routes/concierge');  // CPD-83
 const clipSourcingRouter = require('./lib/routes/clip_sourcing'); // CPD-73
@@ -341,6 +342,7 @@ app.use('/', jobsC1Router); // CPD-67: C1+ routes first — GET/POST /jobs, GET 
 app.use('/', jobsRouter);  // C0 legacy ops (rollback, advance, manual-segment, dismiss)
 app.use('/', creditsRouter);   // CPD-43: credit ledger consume + balance
 app.use('/', supportRouter);   // CPD-115: support chat, sessions, SMS webhook
+app.use('/', uploadRouter);    // CPD-116: video file upload
 app.use('/', thumbnailRouter); // CPD-55: thumbnail approval stage
 app.use('/', conciergeRouter);     // CPD-83: AI Concierge
 app.use('/', clipSourcingRouter); // CPD-73: Clip sourcing
