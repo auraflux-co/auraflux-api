@@ -20,6 +20,7 @@ import {
   getPlans,
   getCreditPacks,
   subscribeToPlan,
+  getBillingPortalUrl,
   type CreditBalance,
   type Plan,
   type CreditPack,
@@ -58,10 +59,11 @@ export default function BillingPage() {
   const { getToken } = useAuth();
   const [isPending, start] = useTransition();
 
-  const [balance, setBalance]   = useState<CreditBalance | null>(null);
-  const [plans, setPlans]       = useState<Plan[]>([]);
-  const [packs, setPacks]       = useState<CreditPack[]>([]);
-  const [error, setError]       = useState<string | null>(null);
+  const [balance, setBalance]     = useState<CreditBalance | null>(null);
+  const [plans, setPlans]         = useState<Plan[]>([]);
+  const [packs, setPacks]         = useState<CreditPack[]>([]);
+  const [error, setError]         = useState<string | null>(null);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -81,6 +83,20 @@ export default function BillingPage() {
     }
     load();
   }, [getToken]);
+
+  async function handleManagePayment() {
+    setPortalError(null);
+    start(async () => {
+      try {
+        const token = await getToken();
+        const returnUrl = `${window.location.origin}/dashboard/billing`;
+        const res = await getBillingPortalUrl(returnUrl, token ?? undefined);
+        window.location.href = res.url;
+      } catch (e: unknown) {
+        setPortalError(e instanceof Error ? e.message : 'Failed to open billing portal');
+      }
+    });
+  }
 
   async function handleUpgrade(planId: string) {
     setError(null);
@@ -211,6 +227,35 @@ export default function BillingPage() {
         <p className="text-xs text-muted-foreground mt-3">
           All plans are monthly retainers. Contact us to discuss annual pricing or custom enterprise terms.
         </p>
+      </div>
+
+      <Separator />
+
+      {/* Payment method */}
+      <div>
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Payment method</h2>
+        <Card>
+          <CardContent className="pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Manage your payment method and invoices</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Opens the Stripe Customer Portal — update your card, download invoices, or cancel your subscription.
+              </p>
+              {portalError && (
+                <p className="text-xs text-destructive mt-1">{portalError}</p>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={isPending}
+              onClick={handleManagePayment}
+            >
+              Manage payment
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <Separator />
