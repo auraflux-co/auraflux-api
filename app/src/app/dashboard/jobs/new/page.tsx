@@ -102,7 +102,7 @@ const FEATURES: Feature[] = [
 ];
 
 const ADD_ONS = [
-  { id: 'heygen',    label: 'HeyGen avatar',     description: 'AI presenter rendered for each video',      badge: 'DFY' },
+  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'AI presenter rendered for each video',      badge: 'DFY' },
   { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'DFY' },
 ];
 
