@@ -2,45 +2,51 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
 import { getCreditBalance } from '@/lib/api';
+import { useSidebar } from '@/contexts/sidebar-context';
 
-const CONFLUENCE_GUIDE_URL =
-  'https://robertsworkspace-18914505.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
-interface NavItem {
-  href:      string;
-  label:     string;
-  external?: boolean;
-  children?: { href: string; label: string }[];
+function Icon({ d, d2, viewBox = '0 0 24 24' }: { d: string; d2?: string; viewBox?: string }) {
+  return (
+    <svg width="16" height="16" viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+      <path d={d} />
+      {d2 && <path d={d2} />}
+    </svg>
+  );
 }
 
-const CUSTOMER_NAV: NavItem[] = [
-  {
-    href: '/dashboard/jobs',
-    label: 'Jobs',
-    children: [
-      { href: '/dashboard/jobs/new',     label: 'New job'  },
-      { href: '/dashboard/jobs/active',  label: 'Active'   },
-      { href: '/dashboard/jobs/history', label: 'History'  },
-    ],
-  },
-  { href: '/dashboard/schedule', label: 'Schedule' },
-  { href: '/dashboard/billing',  label: 'Billing'  },
-  { href: '/dashboard/support',  label: 'Support'  },
-  { href: '/dashboard/profile',  label: 'Profile'  },
-  { href: '/dashboard/settings', label: 'Settings' },
-];
+const ICONS: Record<string, React.ReactNode> = {
+  jobs:     <Icon d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" d2="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z" />,
+  schedule: <Icon d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />,
+  billing:  <Icon d="M2 9h20M2 15h20M1 5h22a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />,
+  support:  <Icon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+  profile:  <Icon d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />,
+  settings: <Icon d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />,
+  generate: <Icon d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
+  operator: <Icon d="M4 6h16M4 12h16M4 18h16" />,
+  guide:    <Icon d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" d2="M14 2v6h6M16 13H8M16 17H8M10 9H8" />,
+};
 
-const OPERATOR_NAV: NavItem[] = [
-  { href: '/dashboard/generate', label: 'Generate' },
-  { href: '/dashboard/operator', label: 'Operator' },
-];
+function iconFor(href: string) {
+  if (href.includes('/jobs'))     return ICONS.jobs;
+  if (href.includes('/schedule')) return ICONS.schedule;
+  if (href.includes('/billing'))  return ICONS.billing;
+  if (href.includes('/support'))  return ICONS.support;
+  if (href.includes('/profile'))  return ICONS.profile;
+  if (href.includes('/settings')) return ICONS.settings;
+  if (href.includes('/generate')) return ICONS.generate;
+  if (href.includes('/operator')) return ICONS.operator;
+  return ICONS.jobs;
+}
 
-function CreditsBadge() {
+// ─── Credits badge ────────────────────────────────────────────────────────────
+
+function CreditsBadge({ collapsed }: { collapsed: boolean }) {
   const { getToken, isLoaded } = useAuth();
   const [used, setUsed] = useState<number | null>(null);
 
@@ -59,6 +65,8 @@ function CreditsBadge() {
     return () => { cancelled = true; };
   }, [getToken, isLoaded]);
 
+  if (collapsed) return null;
+
   return (
     <Link
       href="/dashboard/billing"
@@ -70,9 +78,47 @@ function CreditsBadge() {
   );
 }
 
+// ─── Nav item ─────────────────────────────────────────────────────────────────
+
+interface NavItem {
+  href:      string;
+  label:     string;
+  external?: boolean;
+  children?: { href: string; label: string }[];
+}
+
+const CUSTOMER_NAV: NavItem[] = [
+  {
+    href: '/dashboard/jobs',
+    label: 'Jobs',
+    children: [
+      { href: '/dashboard/jobs/new',     label: 'New job' },
+      { href: '/dashboard/jobs/active',  label: 'Active'  },
+      { href: '/dashboard/jobs/history', label: 'History' },
+    ],
+  },
+  { href: '/dashboard/schedule', label: 'Schedule' },
+  { href: '/dashboard/billing',  label: 'Billing'  },
+  { href: '/dashboard/support',  label: 'Support'  },
+  { href: '/dashboard/profile',  label: 'Profile'  },
+  { href: '/dashboard/settings', label: 'Settings' },
+];
+
+const OPERATOR_NAV: NavItem[] = [
+  { href: '/dashboard/generate', label: 'Generate' },
+  { href: '/dashboard/operator', label: 'Operator' },
+];
+
+const CONFLUENCE_GUIDE_URL =
+  'https://robertsworkspace-18914505.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
 export function Sidebar() {
-  const pathname       = usePathname();
-  const { isOperator } = useRole();
+  const pathname                               = usePathname();
+  const { isOperator }                         = useRole();
+  const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
+  const router                                 = useRouter();
 
   const navItems = isOperator ? [...CUSTOMER_NAV, ...OPERATOR_NAV] : CUSTOMER_NAV;
 
@@ -85,61 +131,108 @@ export function Sidebar() {
     return isActive(item.href) || (item.children ?? []).some((c) => isActive(c.href));
   }
 
+  function handleNavClick(href: string) {
+    closeMobile();
+    router.push(href);
+  }
+
   return (
-    <aside className="w-52 flex-shrink-0 border-r border-border bg-card flex flex-col h-screen">
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
-        <span className="font-semibold text-sm tracking-tight">AuraFlux</span>
-        <CreditsBadge />
+    <aside
+      className={cn(
+        'flex-shrink-0 border-r border-border bg-card flex flex-col h-screen transition-[width] duration-200 ease-in-out overflow-hidden',
+        collapsed ? 'w-14' : 'w-52',
+      )}
+    >
+      {/* Header */}
+      <div className={cn(
+        'border-b border-border flex items-center gap-2 shrink-0',
+        collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3 justify-between',
+      )}>
+        {!collapsed && (
+          <>
+            <Link href="/dashboard" className="font-semibold text-sm tracking-tight hover:text-foreground/80 transition-colors">
+              AuraFlux
+            </Link>
+            <CreditsBadge collapsed={collapsed} />
+          </>
+        )}
+        {collapsed && (
+          <Link href="/dashboard" title="AuraFlux" className="font-bold text-sm">
+            A
+          </Link>
+        )}
       </div>
 
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+      {/* Nav */}
+      <nav className={cn('flex-1 p-2 space-y-0.5 overflow-y-auto', collapsed && 'px-1.5')}>
         {navItems.map((item) => {
           const groupActive = isGroupActive(item);
+          const icon        = iconFor(item.href);
+
+          if (collapsed) {
+            return (
+              <button
+                key={item.href}
+                onClick={() => handleNavClick(item.href)}
+                title={item.label}
+                className={cn(
+                  'flex items-center justify-center w-full p-2 rounded-md transition-colors',
+                  groupActive
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+                )}
+              >
+                {icon}
+              </button>
+            );
+          }
 
           if (!item.children) {
             return (
-              <Link
+              <button
                 key={item.href}
-                href={item.href}
+                onClick={() => handleNavClick(item.href)}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors',
+                  'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
                   isActive(item.href)
                     ? 'bg-accent text-accent-foreground font-medium'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                 )}
               >
+                {icon}
                 {item.label}
-              </Link>
+              </button>
             );
           }
 
           return (
             <div key={item.href}>
-              <Link
-                href={item.href}
+              <button
+                onClick={() => handleNavClick(item.href)}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors',
+                  'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
                   groupActive
                     ? 'text-foreground font-medium'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                 )}
               >
+                {icon}
                 {item.label}
-              </Link>
+              </button>
               <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2">
                 {item.children.map((child) => (
-                  <Link
+                  <button
                     key={child.href}
-                    href={child.href}
+                    onClick={() => handleNavClick(child.href)}
                     className={cn(
-                      'flex items-center px-2 py-1.5 rounded-md text-xs transition-colors',
+                      'flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left',
                       isActive(child.href)
                         ? 'bg-accent text-accent-foreground font-medium'
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                     )}
                   >
                     {child.label}
-                  </Link>
+                  </button>
                 ))}
               </div>
             </div>
@@ -147,26 +240,136 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom — Guides link */}
-      <div className="p-2 border-t border-border">
+      {/* Footer */}
+      <div className={cn('border-t border-border p-2 space-y-0.5 shrink-0', collapsed && 'px-1.5')}>
+        {/* Guides link */}
         <a
           href={CONFLUENCE_GUIDE_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          title="Customer guides"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
+          {ICONS.guide}
+          {!collapsed && (
+            <>
+              Guides
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-auto shrink-0 opacity-50">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+            </>
+          )}
+        </a>
+
+        {/* Collapse toggle */}
+        <button
+          onClick={toggleCollapsed}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={cn('shrink-0 transition-transform', collapsed && 'rotate-180')}>
+            <polyline points="15 18 9 12 15 6" />
           </svg>
-          Guides
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-auto shrink-0 opacity-50">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
+          {!collapsed && <span>Collapse</span>}
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+// ─── Mobile overlay ───────────────────────────────────────────────────────────
+
+export function MobileSidebarOverlay() {
+  const { mobileOpen, closeMobile } = useSidebar();
+  if (!mobileOpen) return null;
+  return (
+    <div
+      className="fixed inset-0 z-40 bg-black/50 md:hidden"
+      onClick={closeMobile}
+      aria-hidden="true"
+    />
+  );
+}
+
+export function MobileSidebar() {
+  const { mobileOpen, closeMobile } = useSidebar();
+  const pathname                    = usePathname();
+  const { isOperator }              = useRole();
+  const router                      = useRouter();
+
+  const navItems = isOperator ? [...CUSTOMER_NAV, ...OPERATOR_NAV] : CUSTOMER_NAV;
+
+  function isActive(href: string) {
+    if (href === '/dashboard') return pathname === href;
+    return pathname === href || pathname.startsWith(href + '/');
+  }
+
+  function isGroupActive(item: NavItem) {
+    return isActive(item.href) || (item.children ?? []).some((c) => isActive(c.href));
+  }
+
+  function go(href: string) {
+    closeMobile();
+    router.push(href);
+  }
+
+  return (
+    <aside className={cn(
+      'fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border flex flex-col md:hidden',
+      'transition-transform duration-200 ease-in-out',
+      mobileOpen ? 'translate-x-0' : '-translate-x-full',
+    )}>
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+        <span className="font-semibold text-sm tracking-tight">AuraFlux</span>
+        <button onClick={closeMobile} className="text-muted-foreground hover:text-foreground p-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
           </svg>
+        </button>
+      </div>
+
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+        {navItems.map((item) => {
+          const groupActive = isGroupActive(item);
+          const icon        = iconFor(item.href);
+
+          if (!item.children) {
+            return (
+              <button key={item.href} onClick={() => go(item.href)}
+                className={cn('flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
+                  isActive(item.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
+                {icon}{item.label}
+              </button>
+            );
+          }
+
+          return (
+            <div key={item.href}>
+              <button onClick={() => go(item.href)}
+                className={cn('flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
+                  groupActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
+                {icon}{item.label}
+              </button>
+              <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2">
+                {item.children.map((child) => (
+                  <button key={child.href} onClick={() => go(child.href)}
+                    className={cn('flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left',
+                      isActive(child.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
+                    {child.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </nav>
+
+      <div className="p-2 border-t border-border">
+        <a href={CONFLUENCE_GUIDE_URL} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+          {ICONS.guide}Guides
         </a>
       </div>
     </aside>

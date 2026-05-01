@@ -1,6 +1,7 @@
 # CWN Production — Status & Task Tracker
 
 **Last Updated:** 2026-05-01 (Cursor — fix: sidebar nav order — Jobs, Schedule, Billing, Support, Profile, Settings; removed Credits (redundant with sidebar header)
+**Last Updated:** 2026-05-01 (Cursor — feat(cpd-117): collapsible sidebar, mobile slide-in, notifications bell (held/failed/complete), SidebarContext
 **Last Updated:** 2026-05-01 (Cursor — feat: usage history table on Billing page — date, type, job link, credits per entry; isLoaded guard added
 **Last Updated:** 2026-05-01 (Cursor — chore: aider review script extended to cover frontend UI layer — NEXT_PUBLIC_* env vars, TS check, page inventory, sidebar nav audit, api.ts-to-backend route mapping, Confluence space corrected to AF
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-116): drag-and-drop video upload, credits moved to sidebar header, AuraFlux Copilot restored in top bar
