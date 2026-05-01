@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * /dashboard/concierge — AI Concierge page (CPD-47)
+ * /dashboard/concierge — AuraFlux Guide page (CPD-47)
  *
  * Renders the ConciergeChat widget alongside the PortalStatus sidebar.
  * Spec state is managed here and passed to both children.

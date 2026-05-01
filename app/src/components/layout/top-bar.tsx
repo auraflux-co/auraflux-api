@@ -40,21 +40,17 @@ function CreditPill() {
   return (
     <Link
       href="/dashboard/billing"
+      title={`${used} of ${total} credits used`}
       className={cn(
-        'flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs transition-colors',
-        'hover:border-border/80 hover:bg-accent/50',
+        'flex items-center gap-1 text-sm tabular-nums font-medium transition-colors',
         nearLimit
-          ? 'border-yellow-500/40 bg-yellow-500/5 text-yellow-600 dark:text-yellow-400'
-          : 'border-border bg-card text-muted-foreground',
+          ? 'text-yellow-600 dark:text-yellow-400'
+          : 'text-muted-foreground hover:text-foreground',
       )}
     >
-      {/* Mini progress arc */}
-      <span className={cn('font-semibold tabular-nums', nearLimit ? '' : 'text-foreground')}>
-        {used.toLocaleString()}
-      </span>
-      <span>/</span>
-      <span>{total.toLocaleString()} credits</span>
-      {nearLimit && <span className="text-[10px]">⚠</span>}
+      {used.toLocaleString()}
+      <span className="text-xs font-normal text-muted-foreground">cr</span>
+      {nearLimit && <span className="text-[10px] ml-0.5">⚠</span>}
     </Link>
   );
 }
