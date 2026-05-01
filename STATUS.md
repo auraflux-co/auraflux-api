@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-05-01 (Cursor — feat(cpd-112): Jobs section restructure — sidebar sub-menu (New/Active/History), hub page, Active page (auto-poll 15s + operator actions), History page (post-publish links + selection review + template stub), job detail enhanced (published links card, "what you selected" card); backend: getPublishResults + wizardConfig in GET /jobs and GET /jobs/:jobId)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-111b): Stripe Customer Portal wired — POST /plans/billing-portal, createBillingPortalSession (lookup by email), getBillingPortalUrl client call, "Manage payment" section on billing page; completes CPD-111 billing gap)
 **Last Updated:** 2026-05-01 (Cursor — feat(CPD-111): dashboard UX overhaul — AuraFlux Guide slide-out panel (right side, any page), top bar credit counter → billing, sidebar cleanup (hide Overview, rename Concierge→Guide, add Billing+Profile), Job Status simplified, Billing page (plan cards + credit packs), Profile page (identity/security/appearance/billing); 418 pass)
 **Last Updated:** 2026-05-01 (Cursor — feat(CPD-110): platform-agnostic job wizard — 5-step: form factor → production path → source → features → platform/publish/add-ons; content type derived internally; 418 pass)
