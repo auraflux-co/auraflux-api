@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-01 (Cursor — feat(cpd-120): hard gap fixes — credit deduction wired to pipeline (consumeCredits before runPortalSequence, PAUSED=abort), HeyGen video_id destructure fix, shoppable extension worker (FFmpeg CTA overlay, fires after portal4), Copilot guide-mode for Operate / full for Guided+Managed)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-116c): Avatar IV only — removed heygen_std from rate card, Stripe packs, billing UI, and wizard; all heygen paths collapse to heygen_per_min:120 / $45/min)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-116b): add Shoppable Pack — 2 cr/min, $4/min, 10-min pack = 20 cr / $40; credit_calculator shoppable moved from flat 10 cr to 2 cr/min per-duration; api.ts CREDIT_RATES + estimateCreditCost updated to match)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-116): finalize plan + pack pricing — Operate $999/400cr, Guided $2,499/1200cr, Managed $4,499/2000cr; 4 feature packs (Narration $20, T2V $120, Avatar $300, Avatar IV $450); stripe_billing.js PLANS+PACKS, billing/page.tsx plan cards + pack section, pricing canvas updated with margins)
