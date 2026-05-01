@@ -22,7 +22,8 @@ function Icon({ d, d2, viewBox = '0 0 24 24' }: { d: string; d2?: string; viewBo
 
 const ICONS: Record<string, React.ReactNode> = {
   jobs:     <Icon d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" d2="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z" />,
-  schedule: <Icon d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />,
+  schedule:  <Icon d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />,
+  templates: <Icon d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" />,
   billing:  <Icon d="M2 9h20M2 15h20M1 5h22a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />,
   support:  <Icon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
   profile:  <Icon d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />,
@@ -34,7 +35,8 @@ const ICONS: Record<string, React.ReactNode> = {
 
 function iconFor(href: string) {
   if (href.includes('/jobs'))     return ICONS.jobs;
-  if (href.includes('/schedule')) return ICONS.schedule;
+  if (href.includes('/schedule'))  return ICONS.schedule;
+  if (href.includes('/templates')) return ICONS.templates;
   if (href.includes('/billing'))  return ICONS.billing;
   if (href.includes('/support'))  return ICONS.support;
   if (href.includes('/profile'))  return ICONS.profile;
@@ -97,7 +99,8 @@ const CUSTOMER_NAV: NavItem[] = [
       { href: '/dashboard/jobs/history', label: 'History' },
     ],
   },
-  { href: '/dashboard/schedule', label: 'Schedule' },
+  { href: '/dashboard/schedule',  label: 'Schedule'  },
+  { href: '/dashboard/templates', label: 'Templates' },
   { href: '/dashboard/billing',  label: 'Billing'  },
   { href: '/dashboard/support',  label: 'Support'  },
   { href: '/dashboard/profile',  label: 'Profile'  },
