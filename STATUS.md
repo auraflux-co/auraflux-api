@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-05-01 (Cursor — feat(CPD-110): platform-agnostic job wizard — 5-step: form factor → production path → source → features → platform/publish/add-ons; content type derived internally; 418 pass)
 **Last Updated:** 2026-05-01 (Cursor — feat(CPD-103/104/105/106/107/108): UI gap fixes — content type display labels + show_commentary added, /generate gated operator+, job detail full publish copy, dashboard pipeline status live widget, operator retry/advance/rollback actions; 418 pass)
 **Last Updated:** 2026-05-01 (Cursor — feat(CPD-109): DIY/DWY feature parity — all features previously gated at dwy now open to diy; tier distinction is service level only; DFY-only: Imagen 3, HeyGen avatar, WAN i2v, TikTok direct; 416 pass)
 **Last Updated:** 2026-05-01 (Cursor — fix(jobs-c1): normaliseDashboardPayload now maps scheduledPublishAt→scheduledAt so UI-submitted scheduled jobs no longer silently drop their publish time; 416 pass)

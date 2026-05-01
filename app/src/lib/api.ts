@@ -56,14 +56,19 @@ export interface Job {
 }
 
 export interface CreateJobPayload {
-  contentType:   string;
-  entryType:     'fetch' | 'upload' | 'create';
-  platforms:     string[];
-  fetchSpec?:    { sourceUrls: string[] };
-  uploadSpec?:   { fileKeys: string[] };
-  createSpec?:   { promptText: string };
-  publishMode?:  PublishMode;
+  contentType:      string;
+  entryType:        'fetch' | 'upload' | 'create';
+  platforms:        string[];
+  fetchSpec?:       { sourceUrls: string[] };
+  uploadSpec?:      { fileKeys: string[] };
+  createSpec?:      { promptText: string };
+  publishMode?:     PublishMode;
   scheduledPublishAt?: string;
+  // CPD-110: wizard fields (platform-agnostic job creation)
+  formFactor?:      'long' | 'short' | null;
+  productionPath?:  string | null;
+  features?:        string[];
+  extensions?:      string[];  // add-on extensions: 'heygen', 'shoppable'
 }
 
 export interface PortalContract {
