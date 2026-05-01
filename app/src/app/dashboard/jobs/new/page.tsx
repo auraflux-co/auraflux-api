@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { createJob, type CreateJobPayload } from '@/lib/api';
+import { createJob, estimateCreditCost, type CreateJobPayload } from '@/lib/api';
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
 import { useGuide } from '@/contexts/guide-context';
@@ -225,6 +225,8 @@ export default function NewJobPage() {
   const [platforms, setPlatforms]   = useState<string[]>(['youtube']);
   const [addOns, setAddOns]         = useState<Set<string>>(new Set());
   const [schedule, setSchedule]     = useState<ScheduleValue>({ publishMode: 'immediate' });
+  // CPD-115: duration + live credit estimate
+  const [durationMins, setDurationMins] = useState<number>(formFactor === 'short' ? 1 : 3);
 
   // CPD-113: Auto-open guide on mount with step-0 context
   useEffect(() => {
@@ -280,6 +282,7 @@ export default function NewJobPage() {
       productionPath: path,
       features:       Array.from(features),
       extensions:     Array.from(addOns),
+      durationMins,
       publishMode:    schedule.publishMode,
     };
 
@@ -429,39 +432,84 @@ export default function NewJobPage() {
       )}
 
       {/* Step 3 — Features */}
-      {step === 3 && (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Select the production capabilities to apply.</p>
-          <div className="space-y-2">
-            {FEATURES.map((feat) => {
-              const on = features.has(feat.id);
-              return (
-                <button
-                  key={feat.id}
-                  type="button"
-                  onClick={() => toggleFeature(feat.id)}
-                  className={cn(
-                    'w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors',
-                    on ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
-                  )}
-                >
-                  <span className={cn(
-                    'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
-                    on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
-                  )}>
-                    {on ? '✓' : ''}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium leading-tight">{feat.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
-                  </div>
-                </button>
-              );
-            })}
+      {step === 3 && (() => {
+        const estimate = estimateCreditCost({
+          durationMins,
+          features: Array.from(features),
+          extensions: Array.from(addOns),
+          sourceMode: effectiveSource ?? '',
+        });
+        return (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Select the production capabilities to apply.</p>
+
+            {/* Duration slider */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium">Target video duration</Label>
+                <span className="text-sm font-semibold tabular-nums">{durationMins} min</span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={formFactor === 'short' ? 3 : 15}
+                step={1}
+                value={durationMins}
+                onChange={(e) => setDurationMins(Number(e.target.value))}
+                className="w-full accent-primary"
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>1 min</span>
+                <span>{formFactor === 'short' ? '3 min' : '15 min'}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {FEATURES.map((feat) => {
+                const on = features.has(feat.id);
+                return (
+                  <button
+                    key={feat.id}
+                    type="button"
+                    onClick={() => toggleFeature(feat.id)}
+                    className={cn(
+                      'w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors',
+                      on ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
+                    )}
+                  >
+                    <span className={cn(
+                      'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
+                      on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
+                    )}>
+                      {on ? '✓' : ''}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium leading-tight">{feat.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Live credit estimate — replaces static GuideTip */}
+            <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+                  AuraFlux Copilot — Credit Estimate
+                </span>
+                <span className="text-sm font-bold text-primary tabular-nums">
+                  {estimate.credits} credits
+                </span>
+              </div>
+              <p className="text-xs text-foreground/80 leading-relaxed">{estimate.message}</p>
+              <p className="text-[10px] text-muted-foreground">
+                Credits are charged at submission. Adjust duration or features above to see the impact.
+              </p>
+            </div>
           </div>
-          <GuideTip step={3} />
-        </div>
-      )}
+        );
+      })()}
 
       {/* Step 4 — Platform, Publish, Add-ons */}
       {step === 4 && (
