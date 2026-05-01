@@ -1,5 +1,6 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-05-01 (Cursor — chore: aider review script extended to cover frontend UI layer — NEXT_PUBLIC_* env vars, TS check, page inventory, sidebar nav audit, api.ts-to-backend route mapping, Confluence space corrected to AF
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-116): drag-and-drop video upload, credits moved to sidebar header, AuraFlux Copilot restored in top bar
 **Last Updated:** 2026-05-01 (Cursor — fix: auth errors on dashboard load — isLoaded guard on all API fetches; top-bar AI button icon-only (no "Copilot" text)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-115): Support system — Gemini support AI, SMS via Twilio +15715001787, email escalation last resort, support history per user, tier-gated (DIY 30d / DWY/DFY full), /dashboard/support page, sidebar link, DB migration 008
