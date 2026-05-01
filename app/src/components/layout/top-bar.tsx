@@ -1,56 +1,45 @@
 'use client';
 /**
- * TopBar — dashboard top bar (CPD-111).
- * Shows credit counter (links to billing) and AuraFlux Guide toggle.
+ * TopBar — dashboard top bar (CPD-111, CPD-114).
+ * Static "Credits N" display (loads once, no polling).
+ * AuraFlux Copilot toggle. User button.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
 import { useGuide } from '@/contexts/guide-context';
-import { getCreditBalance, type CreditBalance } from '@/lib/api';
+import { getCreditBalance } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
-function CreditPill() {
+function CreditsDisplay() {
   const { getToken } = useAuth();
-  const [balance, setBalance] = useState<CreditBalance | null>(null);
-
-  const fetch = useCallback(async () => {
-    try {
-      const token = await getToken();
-      const b = await getCreditBalance(token ?? undefined);
-      setBalance(b);
-    } catch { /* non-fatal */ }
-  }, [getToken]);
+  const [used, setUsed] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch();
-    const t = setInterval(fetch, 60_000);
-    return () => clearInterval(t);
-  }, [fetch]);
-
-  if (!balance) return null;
-
-  const used  = balance.included_total - balance.included_remaining;
-  const total = balance.included_total;
-  const pct   = total > 0 ? Math.min((used / total) * 100, 100) : 0;
-  const nearLimit = pct >= 80;
+    let cancelled = false;
+    async function load() {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const b = await getCreditBalance(token);
+        if (!cancelled) setUsed(b.included_total - b.included_remaining);
+      } catch { /* non-fatal — show nothing if unavailable */ }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [getToken]);
 
   return (
     <Link
       href="/dashboard/billing"
-      title={`${used} of ${total} credits used`}
-      className={cn(
-        'flex items-center gap-1 text-sm tabular-nums font-medium transition-colors',
-        nearLimit
-          ? 'text-yellow-600 dark:text-yellow-400'
-          : 'text-muted-foreground hover:text-foreground',
-      )}
+      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
     >
-      {used.toLocaleString()}
-      <span className="text-xs font-normal text-muted-foreground">cr</span>
-      {nearLimit && <span className="text-[10px] ml-0.5">⚠</span>}
+      <span className="text-xs font-normal">Credits</span>
+      <span className="font-semibold tabular-nums text-foreground">
+        {used === null ? '—' : used.toLocaleString()}
+      </span>
     </Link>
   );
 }
@@ -60,12 +49,10 @@ export function TopBar() {
 
   return (
     <header className="h-12 shrink-0 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 gap-3">
-      {/* Left — empty or breadcrumb slot */}
       <div />
 
-      {/* Right — credits + guide toggle + user */}
-      <div className="flex items-center gap-3">
-        <CreditPill />
+      <div className="flex items-center gap-4">
+        <CreditsDisplay />
 
         <button
           onClick={toggle}
@@ -80,7 +67,7 @@ export function TopBar() {
             <circle cx="12" cy="12" r="10" />
             <path d="M12 16v-4M12 8h.01" />
           </svg>
-          AuraFlux Guide
+          Copilot
         </button>
 
         <UserButton />
