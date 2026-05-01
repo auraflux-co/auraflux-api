@@ -28,33 +28,43 @@ import {
   type CreditLedgerEntry,
 } from '@/lib/api';
 
-const PLAN_HIGHLIGHTS: Record<string, string[]> = {
-  diy: [
-    'Full AuraFlux platform access',
-    'Script generation, TTS, WAN video',
-    'VectCut composition + Gemini ranking',
-    'Direct YouTube publishing',
-    'Self-managed — no operator support',
-  ],
-  dwy: [
-    'Everything in DIY',
-    'Operator monitors your queue daily',
-    'Operator guidance + queue management',
-    'Priority Slack alert channel',
-  ],
-  dfy: [
-    'Everything in DWY',
-    'Operator runs production end-to-end',
-    'HeyGen AI avatar presenter',
-    'Imagen 3 AI-generated thumbnails',
-    'Direct TikTok + Instagram publishing',
-  ],
-};
-
-const PLAN_PRICES: Record<string, string> = {
-  diy: '$1,500',
-  dwy: '$2,000',
-  dfy: '$3,000',
+const PLAN_META: Record<string, { label: string; sub: string; price: string; highlights: string[] }> = {
+  diy: {
+    label:  'AuraFlux Operate',
+    sub:    'Run your content system',
+    price:  '$999',
+    highlights: [
+      '400 credits / month (no rollover)',
+      '1 brand',
+      'Full platform — script, TTS, WAN T2V, thumbnails, publish',
+      'AuraFlux Copilot — guide confirmation mode',
+      'Confluence self-serve guides',
+    ],
+  },
+  dwy: {
+    label:  'AuraFlux Guided',
+    sub:    'Build and optimize with us',
+    price:  '$2,499',
+    highlights: [
+      '1,200 credits / month (no rollover)',
+      'Up to 3 brands',
+      'Everything in Operate',
+      'Full AuraFlux Copilot — guidance, estimates, all features',
+      'SMS + chat support escalation',
+    ],
+  },
+  dfy: {
+    label:  'AuraFlux Managed',
+    sub:    'Full content operation, handled for you',
+    price:  '$4,499',
+    highlights: [
+      '2,000 credits / month (no rollover)',
+      'Up to 5 brands',
+      'Everything in Guided',
+      'Dedicated account manager',
+      'Full Copilot + priority support',
+    ],
+  },
 };
 
 function typeLabel(type: string) {
@@ -145,18 +155,21 @@ export default function BillingPage() {
         <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
 
-      {/* Current plan summary */}
+          {/* Current plan summary */}
       {balance && (
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <CardTitle className="text-base">Current plan</CardTitle>
-              <Badge className="capitalize">{currentTier.toUpperCase()}</Badge>
+              <Badge className="capitalize">{PLAN_META[currentTier]?.label ?? currentTier.toUpperCase()}</Badge>
             </div>
+            {PLAN_META[currentTier]?.sub && (
+              <p className="text-xs text-muted-foreground mt-0.5">{PLAN_META[currentTier].sub}</p>
+            )}
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold">{PLAN_PRICES[currentTier] ?? '—'}</span>
+              <span className="text-3xl font-bold">{PLAN_META[currentTier]?.price ?? '—'}</span>
               <span className="text-sm text-muted-foreground mb-1">/month</span>
             </div>
             <div className="space-y-1.5">
@@ -189,6 +202,7 @@ export default function BillingPage() {
           {(['diy', 'dwy', 'dfy'] as const).map((tier) => {
             const isCurrent = tier === currentTier;
             const plan = plans.find((p) => p.id === tier);
+            const meta = PLAN_META[tier];
             return (
               <Card
                 key={tier}
@@ -205,20 +219,21 @@ export default function BillingPage() {
                 )}
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm uppercase tracking-wide">{tier}</CardTitle>
+                    <CardTitle className="text-sm font-semibold">{meta.label}</CardTitle>
                     {isCurrent && <Badge variant="secondary" className="text-[10px]">Current</Badge>}
                   </div>
-                  <div className="flex items-end gap-1 mt-1">
-                    <span className="text-2xl font-bold">{PLAN_PRICES[tier]}</span>
+                  <p className="text-[11px] text-muted-foreground">{meta.sub}</p>
+                  <div className="flex items-end gap-1 mt-2">
+                    <span className="text-2xl font-bold">{meta.price}</span>
                     <span className="text-xs text-muted-foreground mb-0.5">/mo</span>
                   </div>
                   <CardDescription className="text-xs mt-1">
-                    {plan?.credits?.toLocaleString() ?? '—'} credits/month
+                    {plan?.credits?.toLocaleString() ?? '—'} credits/month · no rollover
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col gap-3">
                   <ul className="space-y-1.5 flex-1">
-                    {(PLAN_HIGHLIGHTS[tier] ?? []).map((h) => (
+                    {meta.highlights.map((h) => (
                       <li key={h} className="text-xs text-muted-foreground flex gap-1.5">
                         <span className="text-primary mt-0.5">✓</span>
                         {h}
@@ -232,7 +247,7 @@ export default function BillingPage() {
                     className="w-full mt-2"
                     onClick={() => !isCurrent && handleUpgrade(tier)}
                   >
-                    {isCurrent ? 'Current plan' : `Upgrade to ${tier.toUpperCase()}`}
+                    {isCurrent ? 'Current plan' : `Upgrade to ${meta.label}`}
                   </Button>
                 </CardContent>
               </Card>
@@ -327,27 +342,41 @@ export default function BillingPage() {
 
       <Separator />
 
-      {/* Credit pack add-ons — wired, not launch */}
+      {/* Credit top-up packs */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Credit Packs</h2>
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Credit Top-Up Packs</h2>
           <Badge variant="outline" className="text-[10px]">Coming soon</Badge>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {packs.length > 0 ? packs.map((pack) => (
-            <Card key={pack.id} className="opacity-60">
+        <p className="text-xs text-muted-foreground mb-4">
+          Add capacity for specific AI features beyond your plan credits. AuraFlux Copilot will prompt you when you need more.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { id: 'narration',     label: 'Clip Narration Pack',   feature: 'TTS narration',         rate: '1 cr/min',  price: '$20', credits: 10,   mins: 10 },
+            { id: 'text_to_video', label: 'Text to Video Pack',    feature: 'WAN T2V generation',    rate: '6 cr/min',  price: '$120', credits: 60,  mins: 10 },
+            { id: 'avatar',        label: 'Avatar Pack',           feature: 'HeyGen standard avatar', rate: '30 cr/min', price: '$300', credits: 300, mins: 10 },
+            { id: 'avatar_iv',     label: 'Avatar IV Pack',        feature: 'HeyGen Avatar IV',      rate: '120 cr/min',price: '$450', credits: 1200,mins: 10 },
+          ].map((pack) => (
+            <Card key={pack.id} className="opacity-70">
               <CardContent className="pt-4 space-y-2">
-                <p className="text-sm font-medium">{pack.label}</p>
-                <p className="text-xs text-muted-foreground">{pack.credits.toLocaleString()} credits</p>
-                <p className="text-lg font-bold">${pack.price_usd}</p>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">{pack.label}</p>
+                    <p className="text-xs text-muted-foreground">{pack.feature}</p>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] shrink-0">{pack.rate}</Badge>
+                </div>
+                <div className="flex items-end gap-1.5">
+                  <span className="text-xl font-bold">{pack.price}</span>
+                  <span className="text-xs text-muted-foreground mb-0.5">{pack.credits.toLocaleString()} cr · {pack.mins} min</span>
+                </div>
                 <Button size="sm" variant="outline" className="w-full" disabled>
                   Buy pack
                 </Button>
               </CardContent>
             </Card>
-          )) : (
-            <p className="col-span-3 text-sm text-muted-foreground">Credit packs will be available at launch.</p>
-          )}
+          ))}
         </div>
       </div>
     </div>
