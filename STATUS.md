@@ -1,4 +1,5 @@
 # CWN Production — Status & Task Tracker
+**Last Updated:** 2026-05-01 (Cursor — feat(cpd-118): PWA setup — manifest.json, sw.js (cache-first shell, push notification ready), PWARegister component, icons 192/512, Next.js metadata updated; native app (CPD-113) on roadmap)
 
 **Last Updated:** 2026-05-01 (Cursor — fix: sidebar nav order — Jobs, Schedule, Billing, Support, Profile, Settings; removed Credits (redundant with sidebar header)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-117): collapsible sidebar, mobile slide-in, notifications bell (held/failed/complete), SidebarContext
