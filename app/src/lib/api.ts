@@ -436,6 +436,67 @@ export async function operatorJobAction(
   return apiFetch(`/jobs/${jobId}/${action}`, { method: 'POST', token });
 }
 
+// ─── Support (CPD-115) ───────────────────────────────────────────────────────
+
+export interface SupportMessage {
+  id:         string;
+  session_id: string;
+  user_id:    string;
+  role:       'user' | 'assistant';
+  content:    string;
+  channel:    'web' | 'sms';
+  created_at: number;
+}
+
+export interface SupportSession {
+  id:                 string;
+  user_id:            string;
+  phone_number:       string | null;
+  created_at:         number;
+  resolved:           boolean;
+  escalated:          boolean;
+  escalation_channel: string | null;
+  message_count:      number;
+}
+
+export async function supportChat(
+  messages: { role: string; content: string }[],
+  sessionId: string | null,
+  token?: string,
+): Promise<{ ok: boolean; response: string; sessionId: string }> {
+  return apiFetch('/support/chat', {
+    method: 'POST',
+    body:   JSON.stringify({ messages, sessionId }),
+    token,
+  });
+}
+
+export async function getSupportSessions(token?: string): Promise<{ ok: boolean; sessions: SupportSession[] }> {
+  return apiFetch('/support/sessions', { token });
+}
+
+export async function getSupportSessionMessages(
+  sessionId: string,
+  token?: string,
+): Promise<{ ok: boolean; messages: SupportMessage[] }> {
+  return apiFetch(`/support/sessions/${sessionId}`, { token });
+}
+
+export async function resolveSupportSession(sessionId: string, token?: string): Promise<{ ok: boolean }> {
+  return apiFetch(`/support/sessions/${sessionId}/resolve`, { method: 'POST', token });
+}
+
+export async function escalateSupportSession(
+  payload: { sessionId: string | null; summary: string; userName: string; userEmail: string },
+  token?: string,
+): Promise<{ ok: boolean; message?: string }> {
+  return apiFetch('/support/escalate', {
+    method: 'POST',
+    body:   JSON.stringify(payload),
+    token,
+  });
+}
+
 // ─── Job validation ───────────────────────────────────────────────────────────
 
 export async function validatePublishCopy(

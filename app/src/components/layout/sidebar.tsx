@@ -25,6 +25,7 @@ const CUSTOMER_NAV: NavItem[] = [
       { href: '/dashboard/jobs/history', label: 'History'  },
     ],
   },
+  { href: '/dashboard/support',  label: 'Support'  },
   { href: '/dashboard/schedule', label: 'Schedule' },
   { href: '/dashboard/credits',  label: 'Credits'  },
   { href: '/dashboard/billing',  label: 'Billing'  },
