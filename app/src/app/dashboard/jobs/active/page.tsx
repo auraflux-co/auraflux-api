@@ -50,8 +50,8 @@ function elapsed(createdAt: string) {
 }
 
 export default function ActiveJobsPage() {
-  const { getToken }    = useAuth();
-  const { isOperator }  = useRole();
+  const { getToken, isLoaded } = useAuth();
+  const { isOperator }         = useRole();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [error, setError]       = useState<string | null>(null);
   const [lastPoll, setLastPoll] = useState<Date | null>(null);
@@ -73,10 +73,11 @@ export default function ActiveJobsPage() {
   }, [getToken]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     fetchJobs();
     const id = setInterval(fetchJobs, POLL_MS);
     return () => clearInterval(id);
-  }, [fetchJobs]);
+  }, [fetchJobs, isLoaded]);
 
   async function handleAction(jobId: string, action: OperatorAction) {
     setActionError(null);
