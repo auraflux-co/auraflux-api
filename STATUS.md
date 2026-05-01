@@ -1,5 +1,7 @@
 # CWN Production — Status & Task Tracker
 
+**Last Updated:** 2026-05-01 (Cursor — fix(jobs-c1): normaliseDashboardPayload now maps scheduledPublishAt→scheduledAt so UI-submitted scheduled jobs no longer silently drop their publish time; 416 pass)
+**Last Updated:** 2026-05-01 (Cursor — docs: .env.example patched — 9 undocumented env vars added (HEYGEN_AVATAR_SHORT_{NBA,NEWS,TWITCH}_ID, NEXT_PUBLIC_APP_URL, CAPCUT_URL, C0_LEGACY_OVERLAY_ONLY, C0_FORCE_SIDEBAR_VISIBLE, SMOKE_API_SECRET); stale remote branches pruned via git fetch --prune)
 **Last Updated:** 2026-04-30 (Cursor — fix: stageMap active=false respected in buildPortalMap — active:false on any stage now suppresses the corresponding portal regardless of customer config provider; 416 pass)
 **Last Updated:** 2026-04-30 (Cursor — fix: stageMap passthrough — request body stageMap now merged into stageMapOverride in jobs_c1 so callers can disable individual stages e.g. script for own-script fetch jobs; 416 pass)
 **Last Updated:** 2026-04-30 (Cursor — fix: url_list items pre-populate — createJobSpec now seeds order.inputs.items from sourceConfig.urls when sourceType is url_list so portal0 canProduce check passes; 416 pass)
