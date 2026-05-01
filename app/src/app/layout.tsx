@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { PWARegister } from '@/components/pwa/pwa-register';
 import './globals.css';
 
 const geistSans = Geist({
@@ -18,6 +19,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'AuraFlux — Content Operations Platform',
   description: 'AI-powered video content production at scale',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable:    true,
+    statusBarStyle: 'black-translucent',
+    title:      'AuraFlux',
+  },
+  icons: {
+    apple: '/icons/icon-192.png',
+    icon:  '/icons/icon-192.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -26,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+            <PWARegister />
             {children}
             <Toaster />
           </ThemeProvider>
