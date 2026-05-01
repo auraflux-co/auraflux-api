@@ -33,6 +33,27 @@ export interface PortalReport {
 
 export type PublishMode = 'immediate' | 'scheduled';
 
+export interface WizardConfig {
+  formFactor:     'long' | 'short' | string | null;
+  templateId:     string | null;
+  contentType:    string | null;
+  entryType:      string | null;
+  addOns:         string[];   // e.g. ['tts', 'heygen', 'shoppable']
+  platforms:      string[];
+  publishMode:    PublishMode;
+  scheduledAt:    string | null;
+  productionPath: string | null;
+}
+
+export interface PublishResult {
+  platform:      string;
+  platformJobId: string | null;
+  driveUrl:      string | null;
+  title:         string | null;
+  status:        'pending' | 'published' | 'failed';
+  publishedAt:   string | null;
+}
+
 export interface Job {
   jobId:               string;
   contentType:         string;
@@ -53,6 +74,8 @@ export interface Job {
     tiktok?:    { caption?: string; hashtags?: string[] };
     instagram?: { caption?: string; hashtags?: string[] };
   };
+  wizardConfig?:   WizardConfig;
+  publishResults?: PublishResult[];
 }
 
 export interface CreateJobPayload {
