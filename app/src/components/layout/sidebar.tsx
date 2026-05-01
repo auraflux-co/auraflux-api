@@ -3,29 +3,35 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { UserButton } from '@clerk/nextjs';
 import { useRole } from '@/hooks/use-role';
 
-const BASE_NAV = [
-  { href: '/dashboard',           label: 'Overview',      operatorOnly: false },
-  { href: '/dashboard/jobs',      label: 'Jobs',          operatorOnly: false },
-  { href: '/dashboard/concierge', label: 'AI Concierge',  operatorOnly: false },
-  { href: '/dashboard/schedule',  label: 'Schedule',      operatorOnly: false },
-  { href: '/dashboard/credits',   label: 'Credits',       operatorOnly: false },
-  { href: '/dashboard/plans',     label: 'Plans',         operatorOnly: false },
-  { href: '/dashboard/settings',  label: 'Settings',      operatorOnly: false },
-  { href: '/dashboard/generate',  label: 'Generate',      operatorOnly: true  },
-  { href: '/dashboard/operator',  label: 'Operator',      operatorOnly: true  },
+const CUSTOMER_NAV = [
+  { href: '/dashboard/jobs',     label: 'Jobs'      },
+  { href: '/dashboard/schedule', label: 'Schedule'  },
+  { href: '/dashboard/credits',  label: 'Credits'   },
+  { href: '/dashboard/billing',  label: 'Billing'   },
+  { href: '/dashboard/settings', label: 'Settings'  },
+  { href: '/dashboard/profile',  label: 'Profile'   },
+];
+
+const OPERATOR_NAV = [
+  { href: '/dashboard/generate', label: 'Generate'  },
+  { href: '/dashboard/operator', label: 'Operator'  },
 ];
 
 export function Sidebar() {
-  const pathname = usePathname();
+  const pathname  = usePathname();
   const { isOperator } = useRole();
 
-  const navItems = BASE_NAV.filter((item) => !item.operatorOnly || isOperator);
+  const navItems = isOperator ? [...CUSTOMER_NAV, ...OPERATOR_NAV] : CUSTOMER_NAV;
+
+  function isActive(href: string) {
+    if (href === '/dashboard') return pathname === href;
+    return pathname.startsWith(href);
+  }
 
   return (
-    <aside className="w-56 flex-shrink-0 border-r border-border bg-card flex flex-col h-screen">
+    <aside className="w-52 flex-shrink-0 border-r border-border bg-card flex flex-col h-screen">
       <div className="p-4 border-b border-border">
         <span className="font-semibold text-sm tracking-tight">AuraFlux</span>
       </div>
@@ -37,21 +43,15 @@ export function Sidebar() {
             href={item.href}
             className={cn(
               'flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors',
-              pathname.startsWith(item.href) && item.href !== '/dashboard'
-                ? 'bg-accent text-accent-foreground'
-                : pathname === item.href
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+              isActive(item.href)
+                ? 'bg-accent text-accent-foreground font-medium'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
             )}
           >
             {item.label}
           </Link>
         ))}
       </nav>
-
-      <div className="p-4 border-t border-border">
-        <UserButton />
-      </div>
     </aside>
   );
 }
