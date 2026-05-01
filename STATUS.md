@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-01 (Cursor — feat(cpd-116→125): job templates + scheduled starts + recurring + Copilot schedule suggestions — all three phases)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-73/cpd-48): clip sourcing + scheduler UI — autoSourceClipManifest in clip_sourcing/index.js wires Gemini footage analysis into portal3a commentary path; schedule page rebuilt with upcoming/past tables, reschedule datetime picker, cancel-schedule action)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-120): hard gap fixes — credit deduction wired to pipeline (consumeCredits before runPortalSequence, PAUSED=abort), HeyGen video_id destructure fix, shoppable extension worker (FFmpeg CTA overlay, fires after portal4), Copilot guide-mode for Operate / full for Guided+Managed)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-116c): Avatar IV only — removed heygen_std from rate card, Stripe packs, billing UI, and wizard; all heygen paths collapse to heygen_per_min:120 / $45/min)
