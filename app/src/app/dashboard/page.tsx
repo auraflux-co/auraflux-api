@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { PipelineStatusWidget } from '@/components/dashboard/pipeline-status-widget';
 
 const CUSTOMER_LINKS = [
   { title: 'New Job',       description: 'Start a new content production job',      href: '/dashboard/jobs/new',   badge: null },
@@ -68,9 +69,7 @@ export default async function DashboardPage() {
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">Pipeline Status</h2>
         <Card>
           <CardContent className="pt-4">
-            <p className="text-sm text-muted-foreground">
-              No active jobs. <Link href="/dashboard/jobs/new" className="text-foreground underline underline-offset-2">Start one</Link>.
-            </p>
+            <PipelineStatusWidget />
           </CardContent>
         </Card>
       </div>

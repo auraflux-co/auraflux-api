@@ -49,20 +49,26 @@ export interface Job {
   outputUrl?:          string;
   thumbnailUrl?:       string;
   publishCopy?: {
-    youtube?: { title?: string };
-    tiktok?:  { caption?: string };
+    youtube?:   { title?: string; description?: string; tags?: string[] };
+    tiktok?:    { caption?: string; hashtags?: string[] };
+    instagram?: { caption?: string; hashtags?: string[] };
   };
 }
 
 export interface CreateJobPayload {
-  contentType:   string;
-  entryType:     'fetch' | 'upload' | 'create';
-  platforms:     string[];
-  fetchSpec?:    { sourceUrls: string[] };
-  uploadSpec?:   { fileKeys: string[] };
-  createSpec?:   { promptText: string };
-  publishMode?:  PublishMode;
+  contentType:      string;
+  entryType:        'fetch' | 'upload' | 'create';
+  platforms:        string[];
+  fetchSpec?:       { sourceUrls: string[] };
+  uploadSpec?:      { fileKeys: string[] };
+  createSpec?:      { promptText: string };
+  publishMode?:     PublishMode;
   scheduledPublishAt?: string;
+  // CPD-110: wizard fields (platform-agnostic job creation)
+  formFactor?:      'long' | 'short' | null;
+  productionPath?:  string | null;
+  features?:        string[];
+  extensions?:      string[];  // add-on extensions: 'heygen', 'shoppable'
 }
 
 export interface PortalContract {
@@ -382,6 +388,18 @@ export async function disconnectPlatform(platform: SocialPlatform, token?: strin
 export function getSocialConnectUrl(platform: SocialPlatform): string {
   const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
   return `${base}/social/connect/${platform}`;
+}
+
+// ─── Operator job actions (CPD-104) ──────────────────────────────────────────
+
+export type OperatorAction = 'retry' | 'advance' | 'rollback';
+
+export async function operatorJobAction(
+  jobId: string,
+  action: OperatorAction,
+  token?: string,
+): Promise<{ ok: boolean; jobId: string; action: OperatorAction; previousStatus?: string; advancedPortal?: string }> {
+  return apiFetch(`/jobs/${jobId}/${action}`, { method: 'POST', token });
 }
 
 // ─── Job validation ───────────────────────────────────────────────────────────

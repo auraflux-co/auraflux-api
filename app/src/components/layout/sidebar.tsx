@@ -7,25 +7,22 @@ import { UserButton } from '@clerk/nextjs';
 import { useRole } from '@/hooks/use-role';
 
 const BASE_NAV = [
-  { href: '/dashboard',           label: 'Overview' },
-  { href: '/dashboard/jobs',      label: 'Jobs' },
-  { href: '/dashboard/generate',  label: 'Generate' },
-  { href: '/dashboard/concierge', label: 'AI Concierge' },
-  { href: '/dashboard/schedule',  label: 'Schedule' },
-  { href: '/dashboard/credits',   label: 'Credits' },
-  { href: '/dashboard/plans',     label: 'Plans' },
-  { href: '/dashboard/settings',  label: 'Settings' },
-];
-
-const OPERATOR_NAV = [
-  { href: '/dashboard/operator', label: 'Operator' },
+  { href: '/dashboard',           label: 'Overview',      operatorOnly: false },
+  { href: '/dashboard/jobs',      label: 'Jobs',          operatorOnly: false },
+  { href: '/dashboard/concierge', label: 'AI Concierge',  operatorOnly: false },
+  { href: '/dashboard/schedule',  label: 'Schedule',      operatorOnly: false },
+  { href: '/dashboard/credits',   label: 'Credits',       operatorOnly: false },
+  { href: '/dashboard/plans',     label: 'Plans',         operatorOnly: false },
+  { href: '/dashboard/settings',  label: 'Settings',      operatorOnly: false },
+  { href: '/dashboard/generate',  label: 'Generate',      operatorOnly: true  },
+  { href: '/dashboard/operator',  label: 'Operator',      operatorOnly: true  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { isOperator } = useRole();
 
-  const navItems = isOperator ? [...BASE_NAV, ...OPERATOR_NAV] : BASE_NAV;
+  const navItems = BASE_NAV.filter((item) => !item.operatorOnly || isOperator);
 
   return (
     <aside className="w-56 flex-shrink-0 border-r border-border bg-card flex flex-col h-screen">
