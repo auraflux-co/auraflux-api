@@ -356,7 +356,8 @@ export default function BillingPage() {
             { id: 'narration',     label: 'Clip Narration Pack',   feature: 'TTS narration',         rate: '1 cr/min',  price: '$20', credits: 10,   mins: 10 },
             { id: 'text_to_video', label: 'Text to Video Pack',    feature: 'WAN T2V generation',    rate: '6 cr/min',  price: '$120', credits: 60,  mins: 10 },
             { id: 'avatar',        label: 'Avatar Pack',           feature: 'HeyGen standard avatar', rate: '30 cr/min', price: '$300', credits: 300, mins: 10 },
-            { id: 'avatar_iv',     label: 'Avatar IV Pack',        feature: 'HeyGen Avatar IV',      rate: '120 cr/min',price: '$450', credits: 1200,mins: 10 },
+            { id: 'avatar_iv',     label: 'Avatar IV Pack',        feature: 'HeyGen Avatar IV',      rate: '120 cr/min',price: '$450', credits: 1200, mins: 10 },
+            { id: 'shoppable',     label: 'Shoppable Pack',        feature: 'FFmpeg CTA + platform tagging', rate: '2 cr/min', price: '$40', credits: 20,  mins: 10 },
           ].map((pack) => (
             <Card key={pack.id} className="opacity-70">
               <CardContent className="pt-4 space-y-2">

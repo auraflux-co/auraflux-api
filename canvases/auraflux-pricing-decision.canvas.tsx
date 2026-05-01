@@ -137,6 +137,7 @@ export default function PricingDecision() {
           { name: 'Text to Video Pack',  feature: 'WAN T2V generation',   crPerMin: 6,   pricePerMin: 12, mins: 10, afCostPerMin: 0.190 },
           { name: 'Avatar Pack',         feature: 'HeyGen standard avatar',crPerMin: 30,  pricePerMin: 30, mins: 10, afCostPerMin: 1.000 },
           { name: 'Avatar IV Pack',      feature: 'HeyGen Avatar IV',      crPerMin: 120, pricePerMin: 45, mins: 10, afCostPerMin: 4.000 },
+          { name: 'Shoppable Pack',      feature: 'FFmpeg CTA + platform tag', crPerMin: 2, pricePerMin: 4,  mins: 10, afCostPerMin: 0.050 },
         ];
         return (
           <Stack gap={8}>
