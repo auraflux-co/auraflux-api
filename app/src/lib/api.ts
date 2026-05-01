@@ -108,8 +108,7 @@ const CREDIT_RATES = {
   base:                10,
   tts_per_min:          1,
   wan_t2v_per_min:      6,
-  heygen_std_per_min:  30,
-  heygen_iv_per_min:  120,
+  heygen_per_min:     120,
   shoppable_per_min:    2,
   script:              10,
   research:            10,
@@ -134,17 +133,13 @@ export function estimateCreditCost({
 
   const hasTts      = features.includes('tts');
   const hasWan      = features.includes('generation');
-  const hasHeygenIv = extensions.includes('heygen_iv');
-  const hasHeygen   = extensions.includes('heygen') || hasHeygenIv;
+  const hasHeygen = extensions.includes('heygen') || extensions.includes('heygen_iv');
 
   let aiFeatureCost = 0;
   let aiLabel = '';
-  if (hasHeygenIv) {
-    aiFeatureCost = Math.ceil(CREDIT_RATES.heygen_iv_per_min * dur);
+  if (hasHeygen) {
+    aiFeatureCost = Math.ceil(CREDIT_RATES.heygen_per_min * dur);
     aiLabel = 'Avatar IV';
-  } else if (hasHeygen) {
-    aiFeatureCost = Math.ceil(CREDIT_RATES.heygen_std_per_min * dur);
-    aiLabel = 'HeyGen avatar';
   } else if (hasWan) {
     aiFeatureCost = Math.ceil(CREDIT_RATES.wan_t2v_per_min * dur);
     aiLabel = 'AI video gen';
