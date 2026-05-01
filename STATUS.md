@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-01 (Cursor — fix: aider_session_review.sh --no-gitignore so report writes correctly)
 **Last Updated:** 2026-05-01 (Cursor — chore: nav orphan pages wired, .env.example audited, stale branches pruned)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-116→125): job templates + scheduled starts + recurring + Copilot schedule suggestions — all three phases)
 **Last Updated:** 2026-05-01 (Cursor — feat(cpd-73/cpd-48): clip sourcing + scheduler UI — autoSourceClipManifest in clip_sourcing/index.js wires Gemini footage analysis into portal3a commentary path; schedule page rebuilt with upcoming/past tables, reschedule datetime picker, cancel-schedule action)
