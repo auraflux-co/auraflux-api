@@ -323,6 +323,17 @@ export async function subscribeToPlan(
   });
 }
 
+export async function getBillingPortalUrl(
+  returnUrl: string,
+  token?: string,
+): Promise<{ ok: boolean; url: string }> {
+  return apiFetch('/plans/billing-portal', {
+    method: 'POST',
+    body:   JSON.stringify({ returnUrl }),
+    token,
+  });
+}
+
 // ─── Video generation (Wan / RunPod) ─────────────────────────────────────────
 
 export interface GenerateVideoPayload {
