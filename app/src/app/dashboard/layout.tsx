@@ -10,11 +10,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <TopBar />
-          <main className="flex-1 overflow-y-auto p-6">
-            {children}
-          </main>
+          {/* Content row — main area + inline guide panel on the right */}
+          <div className="flex-1 flex overflow-hidden min-h-0">
+            <main className="flex-1 overflow-y-auto p-6 min-w-0">
+              {children}
+            </main>
+            <GuidePanel />
+          </div>
         </div>
-        <GuidePanel />
       </div>
     </GuideProvider>
   );
