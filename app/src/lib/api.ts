@@ -105,18 +105,18 @@ export interface CreditEstimate {
 }
 
 const CREDIT_RATES = {
-  base:              10,
-  tts_per_min:        1,
-  wan_t2v_per_min:    6,
-  heygen_std_per_min: 30,
-  heygen_iv_per_min: 120,
-  script:            10,
-  research:          10,
-  content_fetch:     10,
-  shoppable:         10,
-  vectcut_thumbnail: 10,
-  narrative_clip:    10,
-  imagen_thumbnail:  20,
+  base:                10,
+  tts_per_min:          1,
+  wan_t2v_per_min:      6,
+  heygen_std_per_min:  30,
+  heygen_iv_per_min:  120,
+  shoppable_per_min:    2,
+  script:              10,
+  research:            10,
+  content_fetch:       10,
+  vectcut_thumbnail:   10,
+  narrative_clip:      10,
+  imagen_thumbnail:    20,
 };
 
 export function estimateCreditCost({
@@ -157,7 +157,7 @@ export function estimateCreditCost({
     base:      CREDIT_RATES.base,
     ai:        aiFeatureCost,
     script:    features.includes('script')    ? CREDIT_RATES.script    : 0,
-    shoppable: extensions.includes('shoppable') ? CREDIT_RATES.shoppable : 0,
+    shoppable: extensions.includes('shoppable') ? Math.ceil(CREDIT_RATES.shoppable_per_min * dur) : 0,
   };
 
   const credits = Object.values(breakdown).reduce((s, v) => s + v, 0);
