@@ -3,9 +3,11 @@ import { TopBar } from '@/components/layout/top-bar';
 import { GuidePanel } from '@/components/guide/guide-panel';
 import { GuideProvider } from '@/contexts/guide-context';
 import { SidebarProvider } from '@/contexts/sidebar-context';
+import { PlanProvider } from '@/contexts/plan-context';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
+    <PlanProvider>
     <GuideProvider>
       <SidebarProvider>
         {/* Mobile sidebar + overlay (hidden on md+) */}
@@ -31,5 +33,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </SidebarProvider>
     </GuideProvider>
+    </PlanProvider>
   );
 }
