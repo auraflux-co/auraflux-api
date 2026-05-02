@@ -333,7 +333,7 @@ const supportRouter    = require('./lib/routes/support');    // CPD-115
 const uploadRouter     = require('./lib/routes/upload');        // CPD-116
 const templatesRouter  = require('./lib/routes/templates');     // CPD-116
 const developerApiRouter  = require('./lib/routes/developer_api');  // CPD-126
-const apiKeyMgmtRouter    = require('./lib/routes/api_key_mgmt');   // CPD-131: Clerk-auth key mgmt for dashboard
+const accountRouter       = require('./lib/routes/account');         // CPD-131: Clerk-auth key mgmt for dashboard
 const teamRouter          = require('./lib/routes/team');            // CPD-130: Multi-user RBAC
 const thumbnailRouter  = require('./lib/routes/thumbnail');  // CPD-55
 const conciergeRouter  = require('./lib/routes/concierge');  // CPD-83
@@ -343,7 +343,7 @@ const createAdminRouter = require('./lib/routes/admin');
 const publishRouter = require('./lib/routes/publish');
 // Mount routers — must come after middleware and _healthCache init
 app.use('/v1', developerApiRouter); // CPD-126: Developer API (Operate plan, API key auth)
-app.use('/', apiKeyMgmtRouter);     // CPD-131: Clerk-auth API key management (dashboard)
+app.use('/', accountRouter);        // CPD-131: Clerk-auth API key management (dashboard)
 app.use('/', teamRouter);           // CPD-130: Multi-user RBAC (team management)
 app.use('/', jobsC1Router); // CPD-67: C1+ routes first — GET/POST /jobs, GET /jobs/:id
 app.use('/', jobsRouter);  // C0 legacy ops (rollback, advance, manual-segment, dismiss)
