@@ -2,63 +2,61 @@
 /**
  * /auth/token — Clerk sign-in token redirect handler
  *
- * Accepts ?token=<clerk_sign_in_token> and uses Clerk's ticket strategy
- * to authenticate the user without a password or 2FA.
+ * Accepts ?token=<clerk_sign_in_token>&redirect=<path> and uses Clerk's
+ * ticket strategy to authenticate the user without password or 2FA.
  *
- * Used for:
- *   - Automated QA testing (no new-device email verification needed)
- *   - Any future magic-link flows the platform needs to support
- *
- * Usage: /auth/token?token=<token>&redirect=/dashboard/jobs
+ * Created for automated QA: Clerk Admin API issues tokens via
+ * POST /v1/sign_in_tokens, bypassing "new device" email verification.
  */
 
-import { useEffect, useState } from 'react';
-import { useSignIn } from '@clerk/nextjs';
+import { Suspense, useEffect, useState } from 'react';
+import { useClerk } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
 
 function TokenSignIn() {
-  const { signIn, isLoaded } = useSignIn();
-  const router = useRouter();
-  const params = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'error'>('loading');
-  const [errorMsg, setErrorMsg] = useState('');
+  const clerk    = useClerk();
+  const router   = useRouter();
+  const params   = useSearchParams();
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!isLoaded || !signIn) return;
+    if (!clerk.loaded) return;
 
     const token    = params.get('token');
     const redirect = params.get('redirect') || '/dashboard';
 
     if (!token) {
-      setErrorMsg('No token provided. Redirecting to sign-in…');
-      setStatus('error');
-      setTimeout(() => router.replace('/sign-in'), 2000);
+      router.replace('/sign-in');
       return;
     }
 
-    signIn
-      .create({ strategy: 'ticket', ticket: token })
-      .then((result) => {
-        if (result.status === 'complete') {
+    (async () => {
+      try {
+        const result = await clerk.client.signIn.create({
+          strategy: 'ticket',
+          ticket: token,
+        });
+
+        if (result.status === 'complete' && result.createdSessionId) {
+          await clerk.setActive({ session: result.createdSessionId });
           router.replace(redirect);
         } else {
-          setErrorMsg(`Unexpected sign-in status: ${result.status}`);
-          setStatus('error');
+          setError(`Unexpected sign-in status: ${result.status}. Redirecting…`);
+          setTimeout(() => router.replace('/sign-in'), 3000);
         }
-      })
-      .catch((err) => {
-        const msg = err?.errors?.[0]?.message || err?.message || 'Unknown error';
-        setErrorMsg(`Sign-in failed: ${msg}. Redirecting to sign-in…`);
-        setStatus('error');
+      } catch (err: unknown) {
+        const clerkErr = err as { errors?: Array<{ message?: string }>; message?: string };
+        const msg = clerkErr?.errors?.[0]?.message ?? clerkErr?.message ?? 'Unknown error';
+        setError(`Authentication failed: ${msg}`);
         setTimeout(() => router.replace('/sign-in'), 3000);
-      });
-  }, [isLoaded, params, router, signIn]);
+      }
+    })();
+  }, [clerk.loaded, clerk, params, router]);
 
-  if (status === 'error') {
+  if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-red-600">{errorMsg}</p>
+        <p className="text-sm text-red-600">{error}</p>
       </div>
     );
   }
