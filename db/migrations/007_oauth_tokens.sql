@@ -29,3 +29,5 @@ CREATE TABLE IF NOT EXISTS youtube_quota_log (
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (customer_id, quota_date)
 );
+
+INSERT INTO schema_migrations (version) VALUES ('007_oauth_tokens') ON CONFLICT DO NOTHING;

@@ -30,3 +30,5 @@ CREATE INDEX IF NOT EXISTS idx_job_templates_next_fire ON job_templates (next_fi
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS scheduled_start_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_jobs_scheduled_start ON jobs (scheduled_start_at)
   WHERE scheduled_start_at IS NOT NULL AND status = 'queued_scheduled';
+
+INSERT INTO schema_migrations (version) VALUES ('009_job_templates') ON CONFLICT DO NOTHING;

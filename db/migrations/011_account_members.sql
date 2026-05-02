@@ -25,22 +25,7 @@ CREATE INDEX IF NOT EXISTS idx_account_members_member     ON account_members (me
 CREATE INDEX IF NOT EXISTS idx_account_members_token      ON account_members (invite_token) WHERE invite_token IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_account_members_email      ON account_members (invited_email);
 
--- Seed the owner row for every existing customer by querying the jobs table.
--- Owners are implicit (they ARE the account) but a row makes permission queries uniform.
-INSERT INTO account_members (account_id, member_id, role, invited_by, invited_email, status)
-SELECT DISTINCT
-  customer_id,
-  customer_id,
-  'owner',
-  customer_id,
-  COALESCE((SELECT value FROM job_metadata WHERE key='email' AND job_id IN (
-    SELECT id FROM jobs WHERE customer_id = j.customer_id LIMIT 1
-  )), customer_id || '@placeholder'),
-  'active'
-FROM jobs j
-WHERE NOT EXISTS (
-  SELECT 1 FROM account_members am WHERE am.account_id = j.customer_id AND am.role = 'owner'
-)
-ON CONFLICT DO NOTHING;
+-- Owner rows are created lazily when a customer first accesses the team page
+-- rather than seeded here, since email data is not available in the jobs table.
 
 INSERT INTO schema_migrations (version) VALUES ('011_account_members') ON CONFLICT DO NOTHING;
