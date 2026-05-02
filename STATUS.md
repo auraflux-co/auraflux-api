@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-02 (Cursor — fix: planTier from req.user.planTier in normaliseDashboardPayload when not in body — ensures correct credit discounts and featureFlags for all wizard-submitted jobs)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): API keys chicken-and-egg — new /account/api-keys route (Clerk JWT auth) + restyle api-keys page to design-system; profile security links use openUserProfile() modal instead of hardcoded accounts.clerk.dev URLs; Gemini comprehensive dashboard QA running in background)
 **Last Updated:** 2026-05-02 (Cursor — fix: Next.js 16 Suspense boundary — useSearchParams in billing, jobs/new, team/accept wrapped in Suspense to unblock Render build)
 **Last Updated:** 2026-05-02 (Cursor — fix: QA gap fixes — wizard step3 formFactors filter regression, Feature interface + FEATURES array restored, default seeding on form factor select, settings hub page, support trial fallback 999→0, planTier in req.user from Clerk claims)
