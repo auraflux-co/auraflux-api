@@ -118,7 +118,13 @@ const CUSTOMER_NAV: NavItem[] = [
   },
   { href: '/dashboard/support',    label: 'Support'   },
   { href: '/dashboard/profile',    label: 'Profile'   },
-  { href: '/dashboard/settings',   label: 'Settings'  },
+  {
+    href: '/dashboard/settings', label: 'Settings',
+    children: [
+      { href: '/dashboard/settings/api-keys',       label: 'API Keys'       },
+      { href: '/dashboard/settings/social-connect', label: 'Social Connect' },
+    ],
+  },
 ];
 
 const OPERATOR_NAV: NavItem[] = [

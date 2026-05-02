@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { getJobDetail, operatorJobAction, type Job, type PortalStatus, type OperatorAction, type WizardConfig, type PublishResult } from '@/lib/api';
+import { getJobDetail, operatorJobAction, saveJobAsTemplate, type Job, type PortalStatus, type OperatorAction, type WizardConfig, type PublishResult } from '@/lib/api';
 import { labelForContentType } from '@/lib/content-types';
 import { useRole } from '@/hooks/use-role';
 
@@ -130,6 +130,22 @@ export default function JobDetailPage() {
   const [loading, setLoading]       = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startAction]    = useTransition();
+  const [savedAsTemplate, setSavedAsTemplate] = useState(false);
+  const [savingTemplate, setSavingTemplate]   = useState(false);
+
+  async function handleSaveAsTemplate() {
+    if (!job) return;
+    setSavingTemplate(true);
+    try {
+      const token = await getToken();
+      await saveJobAsTemplate(job.jobId, `Template from ${job.jobId.slice(0, 8)}`, {}, token ?? undefined);
+      setSavedAsTemplate(true);
+    } catch {
+      // non-fatal — show nothing
+    } finally {
+      setSavingTemplate(false);
+    }
+  }
 
   async function handleOperatorAction(action: OperatorAction) {
     setActionError(null);
@@ -361,7 +377,13 @@ export default function JobDetailPage() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm">What you selected</CardTitle>
-              <Badge variant="outline" className="text-[10px]">Templates — coming soon</Badge>
+              {savedAsTemplate ? (
+                <Badge variant="default" className="text-[10px]">Saved as template</Badge>
+              ) : (
+                <Button size="sm" variant="outline" className="text-[10px] h-6 px-2" onClick={handleSaveAsTemplate} disabled={savingTemplate}>
+                  {savingTemplate ? 'Saving…' : 'Save as template'}
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>

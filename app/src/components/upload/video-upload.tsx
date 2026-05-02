@@ -61,17 +61,25 @@ export function VideoUpload({ onUploaded, onClear, uploadedKey, uploadedName }: 
         };
 
         xhr.onload = () => {
-          const body = JSON.parse(xhr.responseText);
+          let body: { ok?: boolean; key?: string; error?: string } = {};
+          try {
+            body = JSON.parse(xhr.responseText);
+          } catch {
+            reject(new Error(`Upload failed (${xhr.status}) — unexpected server response`));
+            return;
+          }
           if (xhr.status === 200 && body.ok) {
             setProgress(100);
-            onUploaded(body.key, file.name);
+            onUploaded(body.key!, file.name);
             resolve();
           } else {
             reject(new Error(body.error || `Upload failed (${xhr.status})`));
           }
         };
 
-        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.onerror   = () => reject(new Error('Network error during upload'));
+        xhr.ontimeout = () => reject(new Error('Upload timed out — check your connection and try again'));
+        xhr.timeout   = 5 * 60 * 1000; // 5-minute hard timeout
         xhr.send(form);
       });
     } catch (err) {

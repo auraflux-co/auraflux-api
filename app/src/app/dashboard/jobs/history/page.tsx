@@ -105,8 +105,7 @@ function SelectionReview({ wc }: { wc: WizardConfig }) {
             </div>
           )}
           <p className="text-[10px] text-muted-foreground pt-1 border-t border-border">
-            Save this as a template to pre-fill your next job with these settings.
-            <span className="ml-1 opacity-60">(Templates — coming soon)</span>
+            Save this as a template to pre-fill your next job with these settings. Open the job to save it.
           </p>
         </div>
       )}
