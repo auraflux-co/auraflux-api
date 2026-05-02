@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-02 (Cursor — fix: Next.js 16 Suspense boundary — useSearchParams in billing, jobs/new, team/accept wrapped in Suspense to unblock Render build)
 **Last Updated:** 2026-05-02 (Cursor — fix: QA gap fixes — wizard step3 formFactors filter regression, Feature interface + FEATURES array restored, default seeding on form factor select, settings hub page, support trial fallback 999→0, planTier in req.user from Clerk claims)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): dashboard gap fixes — Clerk-auth API key mgmt route, PlanProvider token, OAuth social redirect, profile metadata bucket, wizard planTier for discounts, save-as-template UI, stale coming-soon badges, API Keys in sidebar nav)
 **Last Updated:** 2026-05-02 (Cursor — feat(cpd-127+129): plan-specific dashboard + LockedFeature upsell — PlanProvider/usePlan context, Jobs hub Operate API-first banner + API Keys CTA, LockedFeature component (lock overlay + upgrade tooltip + LockedBadge), plan-context.tsx, dashboard layout wraps PlanProvider)

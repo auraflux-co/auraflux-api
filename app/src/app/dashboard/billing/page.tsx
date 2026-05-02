@@ -8,7 +8,7 @@
  *  - Payment method (via Stripe subscribe flow)
  */
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -76,7 +76,7 @@ function typeLabel(type: string) {
   return type;
 }
 
-export default function BillingPage() {
+function BillingPageInner() {
   const { getToken, isLoaded } = useAuth();
   const searchParams = useSearchParams();
   const stripeSuccess = searchParams.get('success') === '1' || searchParams.get('pack_success') === '1';
@@ -416,5 +416,13 @@ export default function BillingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense>
+      <BillingPageInner />
+    </Suspense>
   );
 }
