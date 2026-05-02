@@ -26,3 +26,5 @@ CREATE TABLE IF NOT EXISTS support_messages (
 
 CREATE INDEX IF NOT EXISTS idx_support_messages_session ON support_messages (session_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_support_messages_user    ON support_messages (user_id);
+
+INSERT INTO schema_migrations (version) VALUES ('008_support') ON CONFLICT DO NOTHING;
