@@ -25,7 +25,7 @@ function TokenSignIn() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !signIn) return;
 
     const token    = params.get('token');
     const redirect = params.get('redirect') || '/dashboard';
