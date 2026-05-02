@@ -7,7 +7,7 @@
  */
 
 import { useState, useTransition } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,7 @@ const TIMEZONES = [
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
+  const { openUserProfile } = useClerk();
   const { theme, setTheme } = useTheme();
   const [isPending, start] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -203,14 +204,13 @@ export default function ProfilePage() {
               <p className="text-sm font-medium">Password</p>
               <p className="text-xs text-muted-foreground">Managed via Clerk authentication</p>
             </div>
-            <a
-              href={`https://accounts.clerk.dev/user`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary underline underline-offset-2"
+            <button
+              type="button"
+              onClick={() => openUserProfile()}
+              className="text-xs text-primary underline underline-offset-2 hover:no-underline"
             >
               Change password →
-            </a>
+            </button>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
@@ -230,14 +230,13 @@ export default function ProfilePage() {
               <p className="text-sm font-medium">Active sessions</p>
               <p className="text-xs text-muted-foreground">Manage active sessions in Clerk security settings</p>
             </div>
-            <a
-              href="https://accounts.clerk.dev/user/security"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary underline underline-offset-2"
+            <button
+              type="button"
+              onClick={() => openUserProfile()}
+              className="text-xs text-primary underline underline-offset-2 hover:no-underline"
             >
               Manage →
-            </a>
+            </button>
           </div>
         </CardContent>
       </Card>
