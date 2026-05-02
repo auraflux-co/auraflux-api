@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface ApiKey {
   id: string;
@@ -54,7 +60,11 @@ export default function ApiKeysPage() {
     setError('');
     try {
       const token = await getToken();
-      const data = await apiFetch<NewKeyResult & { ok: boolean }>('/account/api-keys', { method: 'POST', body: JSON.stringify({ name: newKeyName }), token: token ?? undefined });
+      const data = await apiFetch<NewKeyResult & { ok: boolean }>('/account/api-keys', {
+        method: 'POST',
+        body: JSON.stringify({ name: newKeyName }),
+        token: token ?? undefined,
+      });
       setNewKeyResult(data);
       setNewKeyName('');
       await loadKeys();
@@ -70,7 +80,10 @@ export default function ApiKeysPage() {
     setRevoking(keyId);
     try {
       const token = await getToken();
-      await apiFetch<{ ok: boolean; revoked: boolean }>(`/account/api-keys/${keyId}`, { method: 'DELETE', token: token ?? undefined });
+      await apiFetch<{ ok: boolean; revoked: boolean }>(`/account/api-keys/${keyId}`, {
+        method: 'DELETE',
+        token: token ?? undefined,
+      });
       setKeys(prev => prev.filter(k => k.id !== keyId));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to revoke key');
@@ -86,112 +99,137 @@ export default function ApiKeysPage() {
   }
 
   if (!isLoaded || loading) return (
-    <div className="p-8 text-gray-400 animate-pulse">Loading API keys…</div>
+    <div className="text-sm text-muted-foreground animate-pulse">Loading API keys…</div>
   );
 
   return (
-    <div className="p-6 max-w-3xl space-y-8">
+    <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-white">API Keys</h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <h1 className="text-2xl font-semibold">API Keys</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Use API keys to authenticate requests to{' '}
-          <code className="text-indigo-400">https://api.auraflux.co/v1/</code>.
+          <code className="text-xs bg-muted px-1 py-0.5 rounded">https://api.auraflux.co/v1/</code>.
           Keys are shown once at creation — store them securely.
         </p>
       </div>
 
       {/* New key reveal */}
       {newKeyResult && (
-        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400 font-medium">✓ Key created — copy it now</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-black/40 rounded px-3 py-2 text-sm text-emerald-300 break-all font-mono">
-              {newKeyResult.key}
-            </code>
+        <Card className="border-green-500/40 bg-green-50 dark:bg-green-950/20">
+          <CardContent className="pt-4 space-y-3">
+            <p className="text-sm font-medium text-green-700 dark:text-green-400">✓ Key created — copy it now</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 bg-background border border-border rounded px-3 py-2 text-sm break-all font-mono text-green-700 dark:text-green-300">
+                {newKeyResult.key}
+              </code>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => copyKey(newKeyResult.key)}
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+            </div>
+            <p className="text-xs text-yellow-600 dark:text-yellow-400">{newKeyResult.warning}</p>
             <button
-              onClick={() => copyKey(newKeyResult.key)}
-              className="shrink-0 px-3 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-sm"
+              onClick={() => setNewKeyResult(null)}
+              className="text-xs text-muted-foreground hover:text-foreground"
             >
-              {copied ? 'Copied!' : 'Copy'}
+              Dismiss
             </button>
-          </div>
-          <p className="text-xs text-amber-400">{newKeyResult.warning}</p>
-          <button onClick={() => setNewKeyResult(null)} className="text-xs text-gray-500 hover:text-gray-300">
-            Dismiss
-          </button>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Create form */}
-      <div className="rounded-lg border border-white/10 bg-white/5 p-5 space-y-4">
-        <h2 className="text-sm font-medium text-white">Create new API key</h2>
-        <div className="flex gap-3">
-          <input
-            type="text"
-            placeholder="e.g. Production bot"
-            value={newKeyName}
-            onChange={e => setNewKeyName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleCreate()}
-            className="flex-1 rounded bg-black/30 border border-white/10 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
-          />
-          <button
-            onClick={handleCreate}
-            disabled={creating}
-            className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium"
-          >
-            {creating ? 'Creating…' : 'Create key'}
-          </button>
-        </div>
-        {error && <p className="text-xs text-red-400">{error}</p>}
-      </div>
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Create new API key</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Key name</Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="e.g. Production bot"
+                value={newKeyName}
+                onChange={e => setNewKeyName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                className="h-8 text-sm"
+              />
+              <Button
+                size="sm"
+                onClick={handleCreate}
+                disabled={creating}
+              >
+                {creating ? 'Creating…' : 'Create key'}
+              </Button>
+            </div>
+          </div>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </CardContent>
+      </Card>
 
       {/* Keys list */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-medium text-gray-400">Active keys</h2>
+      <div className="space-y-2">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Active keys</h2>
         {keys.length === 0 ? (
-          <p className="text-sm text-gray-500">No API keys yet. Create one above to get started.</p>
+          <p className="text-sm text-muted-foreground">No API keys yet. Create one above to get started.</p>
         ) : (
-          <div className="divide-y divide-white/5 rounded-lg border border-white/10 overflow-hidden">
-            {keys.map(k => (
-              <div key={k.id} className="flex items-center justify-between px-4 py-3 bg-white/[0.03] hover:bg-white/[0.06] transition-colors">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-white font-medium">{k.name || 'Unnamed key'}</span>
-                    <code className="text-xs text-gray-500 font-mono">{k.key_prefix}…</code>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Created {new Date(k.created_at).toLocaleDateString()}
-                    {k.last_used_at && ` · Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
+          <Card>
+            <CardContent className="p-0">
+              {keys.map((k, i) => (
+                <div key={k.id}>
+                  {i > 0 && <Separator />}
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{k.name || 'Unnamed key'}</span>
+                        <code className="text-[10px] text-muted-foreground font-mono">{k.key_prefix}…</code>
+                        <Badge variant="outline" className="text-[10px] capitalize">{k.plan_tier}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Created {new Date(k.created_at).toLocaleDateString()}
+                        {k.last_used_at && ` · Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleRevoke(k.id)}
+                      disabled={revoking === k.id}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                    >
+                      {revoking === k.id ? 'Revoking…' : 'Revoke'}
+                    </Button>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleRevoke(k.id)}
-                  disabled={revoking === k.id}
-                  className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50 px-2 py-1 rounded hover:bg-red-950/30"
-                >
-                  {revoking === k.id ? 'Revoking…' : 'Revoke'}
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </CardContent>
+          </Card>
         )}
       </div>
 
       {/* Docs callout */}
-      <div className="rounded-lg border border-indigo-500/20 bg-indigo-950/20 p-4 text-sm text-gray-400 space-y-1">
-        <p className="text-indigo-300 font-medium">Using the API</p>
-        <p>Authenticate every request with: <code className="text-indigo-400">Authorization: Bearer af_live_…</code></p>
-        <p>Base URL: <code className="text-indigo-400">https://api.auraflux.co/v1/</code></p>
-        <a
-          href="https://robertsworkspace-18914505.atlassian.net/wiki/spaces/CP/pages/8192001"
-          target="_blank" rel="noopener noreferrer"
-          className="inline-block mt-1 text-indigo-400 hover:text-indigo-300 underline"
-        >
-          View full API documentation →
-        </a>
-      </div>
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-4 space-y-1 text-sm">
+          <p className="font-medium">Using the API</p>
+          <p className="text-muted-foreground">
+            Authenticate every request with:{' '}
+            <code className="text-xs bg-background border border-border rounded px-1 py-0.5">Authorization: Bearer af_live_…</code>
+          </p>
+          <p className="text-muted-foreground">
+            Base URL:{' '}
+            <code className="text-xs bg-background border border-border rounded px-1 py-0.5">https://api.auraflux.co/v1/</code>
+          </p>
+          <a
+            href="https://robertsworkspace-18914505.atlassian.net/wiki/spaces/CP/pages/8192001"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-1 text-sm text-primary hover:underline"
+          >
+            View full API documentation →
+          </a>
+        </CardContent>
+      </Card>
     </div>
   );
 }
