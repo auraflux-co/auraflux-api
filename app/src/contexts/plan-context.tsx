@@ -11,6 +11,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch, type PlanTier } from '@/lib/api';
 
+type PlanFeaturesResp = { ok: boolean; planTier: PlanTier; features: Record<string, boolean> };
+
 interface PlanContextValue {
   planTier:  PlanTier | null;
   isLoading: boolean;
@@ -19,17 +21,19 @@ interface PlanContextValue {
 const PlanContext = createContext<PlanContextValue>({ planTier: null, isLoading: true });
 
 export function PlanProvider({ children }: { children: ReactNode }) {
-  const { isLoaded } = useAuth();
+  const { isLoaded, getToken } = useAuth();
   const [planTier, setPlanTier]   = useState<PlanTier | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoaded) return;
-    apiFetch<{ planTier: PlanTier }>('/plan/features')
-      .then(d => setPlanTier(d.planTier ?? 'diy'))
-      .catch(() => setPlanTier('diy'))
-      .finally(() => setIsLoading(false));
-  }, [isLoaded]);
+    getToken().then(token =>
+      apiFetch<PlanFeaturesResp>('/plan/features', { token: token ?? undefined })
+        .then(d => setPlanTier(d.planTier ?? 'diy'))
+        .catch(() => setPlanTier('diy'))
+        .finally(() => setIsLoading(false))
+    );
+  }, [isLoaded, getToken]);
 
   return (
     <PlanContext.Provider value={{ planTier, isLoading }}>

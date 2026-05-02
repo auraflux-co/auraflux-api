@@ -23,7 +23,7 @@ interface NewKeyResult {
 }
 
 export default function ApiKeysPage() {
-  const { isLoaded } = useAuth();
+  const { isLoaded, getToken } = useAuth();
   const [keys, setKeys]               = useState<ApiKey[]>([]);
   const [loading, setLoading]         = useState(true);
   const [creating, setCreating]       = useState(false);
@@ -36,14 +36,15 @@ export default function ApiKeysPage() {
   const loadKeys = useCallback(async () => {
     if (!isLoaded) return;
     try {
-      const data = await apiFetch<{ apiKeys: ApiKey[] }>('/v1/account/api-keys');
+      const token = await getToken();
+      const data = await apiFetch<{ ok: boolean; apiKeys: ApiKey[] }>('/account/api-keys', { token: token ?? undefined });
       setKeys(data.apiKeys || []);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load API keys');
     } finally {
       setLoading(false);
     }
-  }, [isLoaded]);
+  }, [isLoaded, getToken]);
 
   useEffect(() => { loadKeys(); }, [loadKeys]);
 
@@ -52,7 +53,8 @@ export default function ApiKeysPage() {
     setCreating(true);
     setError('');
     try {
-      const data = await apiFetch<NewKeyResult>('/v1/account/api-keys', { method: 'POST', body: JSON.stringify({ name: newKeyName }) });
+      const token = await getToken();
+      const data = await apiFetch<NewKeyResult & { ok: boolean }>('/account/api-keys', { method: 'POST', body: JSON.stringify({ name: newKeyName }), token: token ?? undefined });
       setNewKeyResult(data);
       setNewKeyName('');
       await loadKeys();
@@ -67,7 +69,8 @@ export default function ApiKeysPage() {
     if (!confirm('Revoke this API key? Any integrations using it will stop working immediately.')) return;
     setRevoking(keyId);
     try {
-      await apiFetch<{ revoked: boolean }>(`/v1/account/api-keys/${keyId}`, { method: 'DELETE' });
+      const token = await getToken();
+      await apiFetch<{ ok: boolean; revoked: boolean }>(`/account/api-keys/${keyId}`, { method: 'DELETE', token: token ?? undefined });
       setKeys(prev => prev.filter(k => k.id !== keyId));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to revoke key');

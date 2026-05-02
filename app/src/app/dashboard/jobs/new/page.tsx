@@ -30,6 +30,7 @@ import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload }
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
 import { useGuide } from '@/contexts/guide-context';
+import { usePlan } from '@/contexts/plan-context';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -212,6 +213,7 @@ export default function NewJobPage() {
   const [templateBanner, setTemplateBanner] = useState<string | null>(null);
 
   const { openWithContext, setContextHint } = useGuide();
+  const { planTier } = usePlan();
 
   // Wizard state
   const [formFactor, setFormFactor] = useState<FormFactor | null>(null);
@@ -481,6 +483,7 @@ export default function NewJobPage() {
           features: Array.from(features),
           extensions: Array.from(addOns),
           sourceMode: effectiveSource ?? '',
+          planTier: planTier ?? 'diy',
         });
         return (
           <div className="space-y-4">

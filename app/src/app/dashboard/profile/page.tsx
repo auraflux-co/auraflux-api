@@ -43,9 +43,10 @@ export default function ProfilePage() {
     setDidInit(true);
     setFirstName(user.firstName ?? '');
     setLastName(user.lastName ?? '');
-    setJobTitle(((user.publicMetadata as Record<string,unknown>)?.jobTitle as string) ?? '');
-    setBio(((user.publicMetadata as Record<string,unknown>)?.bio as string) ?? '');
-    setTimezone(((user.publicMetadata as Record<string,unknown>)?.timezone as string) ?? 'America/New_York');
+    const meta = user.unsafeMetadata as Record<string, unknown>;
+    setJobTitle((meta?.jobTitle as string) ?? '');
+    setBio((meta?.bio as string) ?? '');
+    setTimezone((meta?.timezone as string) ?? 'America/New_York');
   }
 
   if (!isLoaded) return null;
