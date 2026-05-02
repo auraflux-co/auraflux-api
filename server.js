@@ -330,8 +330,9 @@ const jobsRouter = require('./lib/routes/jobs');
 const jobsC1Router = require('./lib/routes/jobs_c1');
 const creditsRouter    = require('./lib/routes/credits');    // CPD-43
 const supportRouter    = require('./lib/routes/support');    // CPD-115
-const uploadRouter     = require('./lib/routes/upload');     // CPD-116
-const templatesRouter  = require('./lib/routes/templates'); // CPD-116
+const uploadRouter     = require('./lib/routes/upload');        // CPD-116
+const templatesRouter  = require('./lib/routes/templates');     // CPD-116
+const developerApiRouter = require('./lib/routes/developer_api'); // CPD-126
 const thumbnailRouter  = require('./lib/routes/thumbnail');  // CPD-55
 const conciergeRouter  = require('./lib/routes/concierge');  // CPD-83
 const clipSourcingRouter = require('./lib/routes/clip_sourcing'); // CPD-73
@@ -339,6 +340,7 @@ const { runOverageBillingCycle } = require('./lib/services/billing_cron'); // CP
 const createAdminRouter = require('./lib/routes/admin');
 const publishRouter = require('./lib/routes/publish');
 // Mount routers — must come after middleware and _healthCache init
+app.use('/v1', developerApiRouter); // CPD-126: Developer API (Operate plan, API key auth)
 app.use('/', jobsC1Router); // CPD-67: C1+ routes first — GET/POST /jobs, GET /jobs/:id
 app.use('/', jobsRouter);  // C0 legacy ops (rollback, advance, manual-segment, dismiss)
 app.use('/', creditsRouter);   // CPD-43: credit ledger consume + balance
