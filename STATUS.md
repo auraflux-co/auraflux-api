@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-003 api_keys query-is-not-a-function — added query() export to lib/db/postgres.js; both api_keys.js service and api_key.js auth middleware were importing a non-existent export causing all /account/api-keys requests to 500)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-004 concierge ROLES.customer→ROLES.CUSTOMER (all users got 403 on /concierge/chat); fix migration 011 remove job_metadata seed (table missing, crashed startup silently); add schema_migrations to 007/008/009 to stop re-running on every deploy)
 **Last Updated:** 2026-05-02 (Cursor — fix: QA gap fixes — wizard step3 formFactors filter regression, Feature interface + FEATURES array restored, default seeding on form factor select, settings hub page, support trial fallback 999→0, planTier in req.user from Clerk claims)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): dashboard gap fixes — Clerk-auth API key mgmt route, PlanProvider token, OAuth social redirect, profile metadata bucket, wizard planTier for discounts, save-as-template UI, stale coming-soon badges, API Keys in sidebar nav)
