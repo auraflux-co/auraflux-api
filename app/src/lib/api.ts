@@ -121,41 +121,53 @@ const CREDIT_RATES = {
   imagen_thumbnail:    20,
 };
 
+// CPD-128: plan-tier discounts on AI production rates
+const TIER_DISCOUNT: Record<string, number> = {
+  diy:    1.00,
+  dwy:    0.90,
+  dfy:    0.75,
+  custom: 0.70,
+};
+
 export function estimateCreditCost({
   durationMins   = 1,
   features       = [] as string[],
   extensions     = [] as string[],
   sourceMode     = '' as string,
+  planTier       = 'diy' as string,
 }: {
   durationMins?:  number;
   features?:      string[];
   extensions?:    string[];
   sourceMode?:    string;
+  planTier?:      string;
 }): CreditEstimate {
-  const dur = Math.max(0.1, durationMins);
+  const dur      = Math.max(0.1, durationMins);
+  const discount = TIER_DISCOUNT[planTier] ?? 1.0;
+  const ai       = (rate: number) => Math.ceil(rate * dur * discount);
 
-  const hasTts      = features.includes('tts');
-  const hasWan      = features.includes('generation');
+  const hasTts    = features.includes('tts');
+  const hasWan    = features.includes('generation');
   const hasHeygen = extensions.includes('heygen') || extensions.includes('heygen_iv');
 
   let aiFeatureCost = 0;
   let aiLabel = '';
   if (hasHeygen) {
-    aiFeatureCost = Math.ceil(CREDIT_RATES.heygen_per_min * dur);
+    aiFeatureCost = ai(CREDIT_RATES.heygen_per_min);
     aiLabel = 'Avatar IV';
   } else if (hasWan) {
-    aiFeatureCost = Math.ceil(CREDIT_RATES.wan_t2v_per_min * dur);
+    aiFeatureCost = ai(CREDIT_RATES.wan_t2v_per_min);
     aiLabel = 'AI video gen';
   } else if (hasTts) {
-    aiFeatureCost = Math.ceil(CREDIT_RATES.tts_per_min * dur);
+    aiFeatureCost = ai(CREDIT_RATES.tts_per_min);
     aiLabel = 'TTS narration';
   }
 
   const breakdown: Record<string, number> = {
-    base:      CREDIT_RATES.base,
+    base:      CREDIT_RATES.base,  // no discount on base
     ai:        aiFeatureCost,
-    script:    features.includes('script')    ? CREDIT_RATES.script    : 0,
-    shoppable: extensions.includes('shoppable') ? Math.ceil(CREDIT_RATES.shoppable_per_min * dur) : 0,
+    script:    features.includes('script')      ? CREDIT_RATES.script    : 0,
+    shoppable: extensions.includes('shoppable') ? ai(CREDIT_RATES.shoppable_per_min) : 0,
   };
 
   const credits = Object.values(breakdown).reduce((s, v) => s + v, 0);
@@ -164,10 +176,11 @@ export function estimateCreditCost({
   if (aiFeatureCost > 0) parts.push(`${aiFeatureCost} ${aiLabel}`);
   if (breakdown.script > 0) parts.push(`${breakdown.script} script`);
   if (breakdown.shoppable > 0) parts.push(`${breakdown.shoppable} shoppable`);
+  const discountNote = discount < 1 ? ` (${Math.round((1 - discount) * 100)}% ${planTier.toUpperCase()} discount applied)` : '';
 
   const message = parts.length
-    ? `${credits} credits total — ${CREDIT_RATES.base} base + ${parts.join(' + ')}.`
-    : `${credits} credits (base job, no AI features selected).`;
+    ? `${credits} credits total — ${CREDIT_RATES.base} base + ${parts.join(' + ')}${discountNote}.`
+    : `${credits} credits (base job, no AI features selected)${discountNote}.`;
 
   return { credits, breakdown, message };
 }
