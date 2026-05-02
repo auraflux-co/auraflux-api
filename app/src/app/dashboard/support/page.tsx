@@ -46,7 +46,7 @@ function getPlanTier(user: ReturnType<typeof useUser>['user']): string {
 }
 
 function getAccountAgeDays(user: ReturnType<typeof useUser>['user']): number {
-  if (!user?.createdAt) return 999;
+  if (!user?.createdAt) return 0; // no date = new account, give benefit of the doubt
   return Math.floor((Date.now() - new Date(user.createdAt).getTime()) / 86_400_000);
 }
 
