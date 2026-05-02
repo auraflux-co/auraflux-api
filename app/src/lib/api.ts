@@ -215,7 +215,7 @@ export interface ClipCandidate {
 
 // ─── Core fetch helper ────────────────────────────────────────────────────────
 
-async function apiFetch<T>(
+export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string } = {},
 ): Promise<T> {
