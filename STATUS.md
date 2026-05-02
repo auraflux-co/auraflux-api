@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): wizard button clicks — replace <p> with <span pointer-events-none> inside all card-style buttons (steps 0,1,3,4) to fix browser automation and edge-click issues; all content children get pointer-events-none so clicks always hit the button)
 **Last Updated:** 2026-05-02 (Cursor — fix: planTier from req.user.planTier in normaliseDashboardPayload when not in body — ensures correct credit discounts and featureFlags for all wizard-submitted jobs)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): API keys chicken-and-egg — new /account/api-keys route (Clerk JWT auth) + restyle api-keys page to design-system; profile security links use openUserProfile() modal instead of hardcoded accounts.clerk.dev URLs; Gemini comprehensive dashboard QA running in background)
 **Last Updated:** 2026-05-02 (Cursor — fix: Next.js 16 Suspense boundary — useSearchParams in billing, jobs/new, team/accept wrapped in Suspense to unblock Render build)
