@@ -396,8 +396,8 @@ function NewJobPageInner() {
                   formFactor === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
                 )}
               >
-                <p className="text-sm font-medium">{opt.label}</p>
-                <p className="text-xs text-muted-foreground">{opt.sub}</p>
+                <span className="block text-sm font-medium pointer-events-none">{opt.label}</span>
+                <span className="block text-xs text-muted-foreground pointer-events-none">{opt.sub}</span>
               </button>
             ))}
           </div>
@@ -420,8 +420,8 @@ function NewJobPageInner() {
                   path === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
                 )}
               >
-                <p className="text-sm font-medium">{opt.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                <span className="block text-sm font-medium pointer-events-none">{opt.label}</span>
+                <span className="block text-xs text-muted-foreground mt-0.5 pointer-events-none">{opt.description}</span>
               </button>
             ))}
           </div>
@@ -538,9 +538,9 @@ function NewJobPageInner() {
                     )}>
                       {on ? '✓' : ''}
                     </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium leading-tight">{feat.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
+                    <div className="min-w-0 pointer-events-none">
+                      <span className="block text-sm font-medium leading-tight">{feat.label}</span>
+                      <span className="block text-xs text-muted-foreground mt-0.5">{feat.description}</span>
                     </div>
                   </button>
                 );
@@ -611,11 +611,11 @@ function NewJobPageInner() {
                       'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
                       on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
                     )}>{on ? '✓' : ''}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium leading-tight">{ao.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{ao.description}</p>
+                    <div className="flex-1 min-w-0 pointer-events-none">
+                      <span className="block text-sm font-medium leading-tight">{ao.label}</span>
+                      <span className="block text-xs text-muted-foreground mt-0.5">{ao.description}</span>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] shrink-0">{ao.badge}</Badge>
+                    <Badge variant="secondary" className="text-[10px] shrink-0 pointer-events-none">{ao.badge}</Badge>
                   </button>
                 );
               })}
