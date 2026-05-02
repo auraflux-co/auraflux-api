@@ -30,7 +30,6 @@ docs/ops/CLINE_PROMPT_TEMPLATES.md
 docs/ops/ATLASSIAN_ROVO_MCP.md
 
 # Runtime log artifacts
-logs/aider_session_review.md
 logs/pipeline_status.json
 
 # Empty placeholder file created by aider venv setup
