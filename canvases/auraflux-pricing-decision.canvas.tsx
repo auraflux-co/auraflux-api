@@ -23,7 +23,7 @@ const PLANS = [
   {
     name:      'Operate',
     tier:      'diy',
-    price:     999,
+    price:     1500,
     credits:   400,
     brands:    1,
     copilot:   'Guides only — Copilot confirms guide content',
@@ -33,7 +33,7 @@ const PLANS = [
   {
     name:      'Guided',
     tier:      'dwy',
-    price:     2499,
+    price:     2500,
     credits:   1200,
     brands:    3,
     copilot:   'Full Copilot — job guidance, credits, all features',
@@ -43,7 +43,7 @@ const PLANS = [
   {
     name:      'Managed',
     tier:      'dfy',
-    price:     4499,
+    price:     3500,
     credits:   2000,
     brands:    5,
     copilot:   'Full Copilot + dedicated account manager',
@@ -129,46 +129,6 @@ export default function PricingDecision() {
           One place. Plan structure · Credit model · Cost to serve · Margin · What customers get.
         </Text>
       </Stack>
-
-      {/* ── Pack pricing ── */}
-      {(() => {
-        const PACKS = [
-          { name: 'Clip Narration Pack', feature: 'TTS narration',        crPerMin: 1,   pricePerMin: 2,  mins: 10, afCostPerMin: 0.030 },
-          { name: 'Text to Video Pack',  feature: 'WAN T2V generation',   crPerMin: 6,   pricePerMin: 12, mins: 10, afCostPerMin: 0.190 },
-          { name: 'Avatar Pack',         feature: 'HeyGen Avatar IV',      crPerMin: 120, pricePerMin: 45, mins: 10, afCostPerMin: 4.000 },
-          { name: 'Shoppable Pack',      feature: 'FFmpeg CTA + platform tag', crPerMin: 2, pricePerMin: 4,  mins: 10, afCostPerMin: 0.050 },
-        ];
-        return (
-          <Stack gap={8}>
-            <H2>Credit Top-Up Packs</H2>
-            <Text tone="secondary" size="small">
-              Packs are top-ups beyond included plan credits. Each pack = 10 minutes of the feature.
-              Customers buy multiples if needed. Copilot quotes in credits, not dollars.
-            </Text>
-            <Table
-              headers={['Pack', 'Feature', 'Rate', 'Pack size', 'Credits', 'Customer price', 'AF cost', 'Margin']}
-              rows={PACKS.map(p => {
-                const revenue  = p.pricePerMin * p.mins;
-                const afCost   = p.afCostPerMin * p.mins;
-                const margin   = Math.round(((revenue - afCost) / revenue) * 100);
-                const credits  = p.crPerMin * p.mins;
-                return [
-                  p.name,
-                  p.feature,
-                  `${p.crPerMin} cr/min · $${p.pricePerMin}/min`,
-                  `${p.mins} min`,
-                  `${credits} cr`,
-                  `$${revenue}`,
-                  `$${afCost.toFixed(2)}`,
-                  <Pill key={p.name} tone="success">{margin}%</Pill>,
-                ];
-              })}
-            />
-          </Stack>
-        );
-      })()}
-
-      <Divider />
 
       {/* ── Plan summary ── */}
       <H2>Plan Summary</H2>
