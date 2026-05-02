@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/auth/token(.*)',  // token sign-in handler — must be public since it IS the auth step
   '/api/health',
 ]);
 
