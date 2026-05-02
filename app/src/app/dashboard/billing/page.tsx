@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useState, useTransition } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,7 @@ import {
   subscribeToPlan,
   getBillingPortalUrl,
   getCreditHistory,
+  purchasePack,
   type CreditBalance,
   type Plan,
   type CreditPack,
@@ -76,6 +78,9 @@ function typeLabel(type: string) {
 
 export default function BillingPage() {
   const { getToken, isLoaded } = useAuth();
+  const searchParams = useSearchParams();
+  const stripeSuccess = searchParams.get('success') === '1' || searchParams.get('pack_success') === '1';
+  const stripeCancelled = searchParams.get('cancelled') === '1' || searchParams.get('pack_cancelled') === '1';
   const [isPending, start] = useTransition();
 
   const [balance, setBalance]     = useState<CreditBalance | null>(null);
@@ -142,6 +147,25 @@ export default function BillingPage() {
     });
   }
 
+  async function handleBuyPack(packId: string) {
+    setError(null);
+    start(async () => {
+      try {
+        const token = await getToken();
+        const origin = window.location.origin;
+        const res = await purchasePack(
+          packId,
+          `${origin}/dashboard/billing?pack_success=1`,
+          `${origin}/dashboard/billing?pack_cancelled=1`,
+          token ?? undefined,
+        );
+        window.location.href = res.checkoutUrl;
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to start pack checkout');
+      }
+    });
+  }
+
   const currentTier = balance?.tier ?? 'diy';
 
   return (
@@ -151,6 +175,12 @@ export default function BillingPage() {
         <p className="text-sm text-muted-foreground mt-0.5">Manage your plan, credits, and payment</p>
       </div>
 
+      {stripeSuccess && (
+        <p className="text-sm text-emerald-600 bg-emerald-500/10 rounded px-3 py-2">Payment successful — your credits will appear shortly.</p>
+      )}
+      {stripeCancelled && (
+        <p className="text-sm text-muted-foreground bg-muted rounded px-3 py-2">Checkout cancelled — no charge was made.</p>
+      )}
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
@@ -346,7 +376,7 @@ export default function BillingPage() {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Credit Top-Up Packs</h2>
-          <Badge variant="outline" className="text-[10px]">Coming soon</Badge>
+
         </div>
         <p className="text-xs text-muted-foreground mb-4">
           Add capacity for specific AI features beyond your plan credits. AuraFlux Copilot will prompt you when you need more.
@@ -358,7 +388,7 @@ export default function BillingPage() {
             { id: 'avatar',        label: 'Avatar Pack',           feature: 'HeyGen Avatar IV',      rate: '120 cr/min', price: '$450', credits: 1200, mins: 10 },
             { id: 'shoppable',     label: 'Shoppable Pack',        feature: 'FFmpeg CTA + platform tagging', rate: '2 cr/min', price: '$40', credits: 20,  mins: 10 },
           ].map((pack) => (
-            <Card key={pack.id} className="opacity-70">
+            <Card key={pack.id}>
               <CardContent className="pt-4 space-y-2">
                 <div className="flex items-start justify-between">
                   <div>
@@ -371,7 +401,13 @@ export default function BillingPage() {
                   <span className="text-xl font-bold">{pack.price}</span>
                   <span className="text-xs text-muted-foreground mb-0.5">{pack.credits.toLocaleString()} cr · {pack.mins} min</span>
                 </div>
-                <Button size="sm" variant="outline" className="w-full" disabled>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  disabled={isPending}
+                  onClick={() => handleBuyPack(pack.id)}
+                >
                   Buy pack
                 </Button>
               </CardContent>
