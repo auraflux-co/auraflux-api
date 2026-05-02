@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-02 (Cursor — feat(cpd-126): Developer API — migration 010_api_keys, lib/auth/api_key.js, lib/services/api_keys.js, lib/routes/developer_api.js mounted at /v1/, api.developer_access feature gate, /dashboard/settings/api-keys UI, apiFetch exported from api.ts)
 **Last Updated:** 2026-05-02 (Cursor — fix: remove logs/aider_session_review.md from .gitignore so report can be written and committed; Serena memories updated to Sprint 5)
 **Last Updated:** 2026-05-01 (Cursor — fix: aider_session_review.sh --no-gitignore so report writes correctly)
 **Last Updated:** 2026-05-01 (Cursor — chore: nav orphan pages wired, .env.example audited, stale branches pruned)
