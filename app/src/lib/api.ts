@@ -512,6 +512,19 @@ export async function subscribeToPlan(
   });
 }
 
+export async function purchasePack(
+  packId: string,
+  successUrl: string,
+  cancelUrl: string,
+  token?: string,
+): Promise<{ ok: boolean; checkoutUrl: string; sessionId: string }> {
+  return apiFetch('/credits/purchase-pack', {
+    method: 'POST',
+    body:   JSON.stringify({ packId, successUrl, cancelUrl }),
+    token,
+  });
+}
+
 export async function getBillingPortalUrl(
   returnUrl: string,
   token?: string,

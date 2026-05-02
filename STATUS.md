@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-02 (Cursor — feat(cpd-86/33/34): portal5 direct-publish via OAuth adapters (prefers customer connected accounts over Upload-Post) + feat(cpd-114): billing credit pack purchases enabled, Stripe success/cancel banners)
 **Last Updated:** 2026-05-02 (Cursor — fix: video upload infinite spin (JSON.parse guard + XHR timeout), form factor feature filtering (short=scene_select/branding/overlays, long=all), DFY add-on plan gates in wizard)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): dashboard gap fixes — Clerk-auth API key mgmt route, PlanProvider token, OAuth social redirect, profile metadata bucket, wizard planTier for discounts, save-as-template UI, stale coming-soon badges, API Keys in sidebar nav)
 **Last Updated:** 2026-05-02 (Cursor — feat(cpd-127+129): plan-specific dashboard + LockedFeature upsell — PlanProvider/usePlan context, Jobs hub Operate API-first banner + API Keys CTA, LockedFeature component (lock overlay + upgrade tooltip + LockedBadge), plan-context.tsx, dashboard layout wraps PlanProvider)
