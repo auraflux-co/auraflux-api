@@ -31,7 +31,6 @@ import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
-import { LockedFeature } from '@/components/ui/locked-feature';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,7 +98,7 @@ const FEATURES: Feature[] = [
   { id: 'tts',          label: 'TTS narration',        description: 'ElevenLabs voiceover on the generated script',                         default: false, formFactors: ['long']          },
   { id: 'commentary',   label: 'Text narration',       description: 'Narrative commentary layered over the video',                          default: false, formFactors: ['long']          },
   { id: 'generation',   label: 'AI video generation',  description: 'WAN text-to-video for segments without source footage',                default: false, formFactors: ['long']          },
-  // Both — works for either format
+  // Both form factors
   { id: 'scene_select', label: 'Scene selection',      description: 'AI selects the best clips and scenes from your source',                default: true,  formFactors: ['long', 'short'] },
   { id: 'branding',     label: 'Logo & branding',      description: 'Apply your brand config — colours, logo, lower thirds',                default: true,  formFactors: ['long', 'short'] },
   { id: 'burn_images',  label: 'Burn images',          description: 'Embed still images as overlays in the video',                          default: false, formFactors: ['long', 'short'] },
@@ -227,7 +226,9 @@ export default function NewJobPage() {
   const [fileKeys,    setFileKeys]    = useState('');
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [uploadedName,setUploadedName]= useState<string | null>(null);
-  const [features, setFeatures]     = useState<Set<string>>(new Set());
+  const [features, setFeatures]     = useState<Set<string>>(
+    () => new Set(FEATURES.filter((f) => f.default).map((f) => f.id))
+  );
   const [platforms, setPlatforms]   = useState<string[]>(['youtube']);
   const [addOns, setAddOns]         = useState<Set<string>>(new Set());
   const [schedule, setSchedule]     = useState<ScheduleValue>({ publishMode: 'immediate' });
@@ -387,7 +388,7 @@ export default function NewJobPage() {
                   setFormFactor(opt.id);
                   setPath(null);
                   setSourceMode(null);
-                  // Reset features to defaults for the chosen form factor
+                  // Seed defaults for this form factor
                   setFeatures(new Set(FEATURES.filter((f) => f.default && f.formFactors.includes(opt.id)).map((f) => f.id)));
                 }}
                 className={cn(
@@ -595,24 +596,21 @@ export default function NewJobPage() {
             <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Add-on extensions</Label>
             <div className="space-y-2">
               {ADD_ONS.map((ao) => {
-                const on   = addOns.has(ao.id);
-                const locked = ao.badge === 'DFY' && planTier !== 'dfy' && planTier !== 'custom';
-                const btn = (
+                const on = addOns.has(ao.id);
+                return (
                   <button
                     key={ao.id}
                     type="button"
-                    disabled={locked}
-                    onClick={() => !locked && toggleAddOn(ao.id)}
+                    onClick={() => toggleAddOn(ao.id)}
                     className={cn(
                       'w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors',
-                      locked ? 'opacity-60 cursor-not-allowed border-border' :
                       on ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
                     )}
                   >
                     <span className={cn(
                       'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
-                      on && !locked ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
-                    )}>{on && !locked ? '✓' : ''}</span>
+                      on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
+                    )}>{on ? '✓' : ''}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium leading-tight">{ao.label}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{ao.description}</p>
@@ -620,9 +618,6 @@ export default function NewJobPage() {
                     <Badge variant="secondary" className="text-[10px] shrink-0">{ao.badge}</Badge>
                   </button>
                 );
-                return locked
-                  ? <LockedFeature key={ao.id} minPlan="dfy">{btn}</LockedFeature>
-                  : btn;
               })}
             </div>
           </div>
