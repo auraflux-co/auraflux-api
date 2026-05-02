@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { listJobs, type Job } from '@/lib/api';
 import { useGuide } from '@/contexts/guide-context';
+import { usePlan } from '@/contexts/plan-context';
 import { useRouter } from 'next/navigation';
 
 const ACTIVE_STATUSES  = new Set(['queued', 'running', 'held', 'failed']);
@@ -48,6 +49,8 @@ export default function JobsHubPage() {
   const { getToken, isLoaded } = useAuth();
   const router                 = useRouter();
   const { openWithContext }    = useGuide();
+  const { planTier }           = usePlan();
+  const isOperate              = planTier === 'diy' || planTier === null;
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
 
@@ -76,9 +79,15 @@ export default function JobsHubPage() {
           <h1 className="text-2xl font-semibold">Jobs</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Create, monitor, and review your production jobs</p>
         </div>
-        <Link href="/dashboard/jobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
-          + New job
-        </Link>
+        {isOperate ? (
+          <Link href="/dashboard/settings/api-keys" className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}>
+            API Keys
+          </Link>
+        ) : (
+          <Link href="/dashboard/jobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
+            + New job
+          </Link>
+        )}
       </div>
 
       {error && (
@@ -108,8 +117,40 @@ export default function JobsHubPage() {
         />
       </div>
 
-      {/* AuraFlux Guide CTA — first-time / pre-job prompt */}
-      <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 flex items-start gap-4">
+      {/* Operate plan: API-first banner */}
+      {isOperate && (
+        <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/20 p-5 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 shrink-0">
+              <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Submit jobs via API</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Your Operate plan is API-first. Use <code className="text-indigo-400">POST https://api.auraflux.co/v1/jobs</code> to submit jobs
+                programmatically. This page shows real-time status of everything running.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/dashboard/settings/api-keys" className={cn(buttonVariants({ size: 'sm' }))}>
+              Get API key
+            </Link>
+            <a
+              href="https://robertsworkspace-18914505.atlassian.net/wiki/spaces/CP/pages/8192001"
+              target="_blank" rel="noopener noreferrer"
+              className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}
+            >
+              API docs →
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* AuraFlux Guide CTA — Guided + Managed only (Operate users use the API) */}
+      {!isOperate && <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 flex items-start gap-4">
         <div className="mt-0.5 shrink-0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
             <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
@@ -130,7 +171,7 @@ export default function JobsHubPage() {
         >
           Get guided help
         </button>
-      </div>
+      </div>}
 
       {/* Quick links */}
       <div>
