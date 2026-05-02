@@ -33,6 +33,7 @@ const ICONS: Record<string, React.ReactNode> = {
   guide:     <Icon d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" d2="M14 2v6h6M16 13H8M16 17H8M10 9H8" />,
   copilot:   <Icon d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM12 16v-4M12 8h.01" />,
   credits:   <Icon d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
+  team:      <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />,
 };
 
 function iconFor(href: string) {
@@ -48,6 +49,7 @@ function iconFor(href: string) {
   if (href.includes('/concierge')) return ICONS.copilot;
   if (href.includes('/credits'))   return ICONS.credits;
   if (href.includes('/plans'))     return ICONS.billing;
+  if (href.includes('/team'))      return ICONS.team;
   return ICONS.jobs;
 }
 
@@ -123,6 +125,7 @@ const CUSTOMER_NAV: NavItem[] = [
     children: [
       { href: '/dashboard/settings/api-keys',       label: 'API Keys'       },
       { href: '/dashboard/settings/social-connect', label: 'Social Connect' },
+      { href: '/dashboard/settings/team',           label: 'Team'           },
     ],
   },
 ];
