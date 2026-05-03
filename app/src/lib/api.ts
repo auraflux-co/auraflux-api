@@ -332,6 +332,25 @@ export async function listAllJobs(token?: string): Promise<{ jobs: Job[] }> {
   return apiFetch('/jobs?all=true', { token });
 }
 
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+export interface CustomerRecord {
+  id:         string;
+  email:      string | null;
+  firstName:  string | null;
+  lastName:   string | null;
+  role:       UserRole;
+  planTier:   PlanTier;
+  credits:    number | null;
+  createdAt:  string | null;
+  jobCount:   number;
+  lastJobAt:  string | null;
+}
+
+export async function listCustomers(token?: string): Promise<{ customers: CustomerRecord[] }> {
+  return apiFetch('/admin/customers', { token });
+}
+
 export async function getJob(jobId: string, token?: string): Promise<{ job: Job }> {
   return apiFetch(`/jobs/${jobId}`, { token });
 }
