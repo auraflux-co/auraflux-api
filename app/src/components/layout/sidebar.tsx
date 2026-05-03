@@ -30,6 +30,7 @@ const ICONS: Record<string, React.ReactNode> = {
   settings: <Icon d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />,
   generate:  <Icon d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
   operator:  <Icon d="M4 6h16M4 12h16M4 18h16" />,
+  customers: <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" d2="M20 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" />,
   guide:     <Icon d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" d2="M14 2v6h6M16 13H8M16 17H8M10 9H8" />,
   copilot:   <Icon d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM12 16v-4M12 8h.01" />,
   credits:   <Icon d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
@@ -46,6 +47,7 @@ function iconFor(href: string) {
   if (href.includes('/settings')) return ICONS.settings;
   if (href.includes('/generate'))  return ICONS.generate;
   if (href.includes('/operator'))  return ICONS.operator;
+  if (href.includes('/admin'))     return ICONS.customers;
   if (href.includes('/staging'))   return ICONS.schedule;
   if (href.includes('/concierge')) return ICONS.copilot;
   if (href.includes('/credits'))   return ICONS.credits;
@@ -137,6 +139,10 @@ const OPERATOR_NAV: NavItem[] = [
   { href: '/dashboard/operator', label: 'Operator' },
 ];
 
+const ADMIN_NAV: NavItem[] = [
+  { href: '/dashboard/admin/customers', label: 'Customers' },
+];
+
 const CONFLUENCE_GUIDE_URL =
   'https://robertsworkspace-18914505.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
 
@@ -144,11 +150,15 @@ const CONFLUENCE_GUIDE_URL =
 
 export function Sidebar() {
   const pathname                               = usePathname();
-  const { isOperator }                         = useRole();
+  const { isOperator, isAdmin }                = useRole();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const router                                 = useRouter();
 
-  const navItems = isOperator ? [...CUSTOMER_NAV, ...OPERATOR_NAV] : CUSTOMER_NAV;
+  const navItems = isAdmin
+    ? [...CUSTOMER_NAV, ...OPERATOR_NAV, ...ADMIN_NAV]
+    : isOperator
+      ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
+      : CUSTOMER_NAV;
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === href;
@@ -324,10 +334,14 @@ export function MobileSidebarOverlay() {
 export function MobileSidebar() {
   const { mobileOpen, closeMobile } = useSidebar();
   const pathname                    = usePathname();
-  const { isOperator }              = useRole();
+  const { isOperator, isAdmin }     = useRole();
   const router                      = useRouter();
 
-  const navItems = isOperator ? [...CUSTOMER_NAV, ...OPERATOR_NAV] : CUSTOMER_NAV;
+  const navItems = isAdmin
+    ? [...CUSTOMER_NAV, ...OPERATOR_NAV, ...ADMIN_NAV]
+    : isOperator
+      ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
+      : CUSTOMER_NAV;
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === href;
