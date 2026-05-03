@@ -97,6 +97,9 @@ export interface CreateJobPayload {
   extensions?:      string[];  // add-on extensions: 'heygen', 'shoppable'
   // CPD-115: duration-based credit estimation
   durationMins?:    number;
+  // CPD-131: content context — used by script generation and portal QA
+  topic?:           string;
+  tone?:            string;
 }
 
 // ─── Credit estimation ────────────────────────────────────────────────────────

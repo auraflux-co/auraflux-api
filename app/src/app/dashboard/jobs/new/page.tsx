@@ -15,7 +15,7 @@
  *   • Inline GuideTip card visible beneath each step's choices
  */
 
-import { useState, useTransition, useEffect, Suspense } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -206,7 +206,7 @@ function StepHeader({ step }: { step: Step }) {
 
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
-function NewJobPageInner() {
+export default function NewJobPage() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const { getToken } = useAuth();
@@ -226,6 +226,8 @@ function NewJobPageInner() {
   const [fileKeys,    setFileKeys]    = useState('');
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [uploadedName,setUploadedName]= useState<string | null>(null);
+  const [topic, setTopic]           = useState('');
+  const [tone, setTone]             = useState('professional');
   const [features, setFeatures]     = useState<Set<string>>(
     () => new Set(FEATURES.filter((f) => f.default).map((f) => f.id))
   );
@@ -319,6 +321,8 @@ function NewJobPageInner() {
       extensions:     Array.from(addOns),
       durationMins,
       publishMode:    schedule.publishMode,
+      topic:          topic.trim() || undefined,
+      tone:           tone || undefined,
     };
 
     if (mode === 'fetch') {
@@ -396,8 +400,8 @@ function NewJobPageInner() {
                   formFactor === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
                 )}
               >
-                <span className="block text-sm font-medium pointer-events-none">{opt.label}</span>
-                <span className="block text-xs text-muted-foreground pointer-events-none">{opt.sub}</span>
+                <p className="text-sm font-medium">{opt.label}</p>
+                <p className="text-xs text-muted-foreground">{opt.sub}</p>
               </button>
             ))}
           </div>
@@ -420,8 +424,8 @@ function NewJobPageInner() {
                   path === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
                 )}
               >
-                <span className="block text-sm font-medium pointer-events-none">{opt.label}</span>
-                <span className="block text-xs text-muted-foreground mt-0.5 pointer-events-none">{opt.description}</span>
+                <p className="text-sm font-medium">{opt.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
               </button>
             ))}
           </div>
@@ -432,6 +436,33 @@ function NewJobPageInner() {
       {/* Step 2 — Source */}
       {step === 2 && selectedPathConfig && (
         <div className="space-y-4">
+          {/* Content context — topic and tone */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Video topic <span className="text-muted-foreground">(optional)</span></Label>
+              <Input
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="e.g. AI breakthrough in healthcare"
+                className="text-sm"
+              />
+              <p className="text-[10px] text-muted-foreground">What is this video about? Used for script generation.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Tone</Label>
+              <select
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                {['professional','informative','casual','energetic','hype','punchy','urgent','conversational'].map((t) => (
+                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground">Controls the script voice and language style.</p>
+            </div>
+          </div>
+
           {availableSources.length > 1 && (
             <div className="flex gap-2">
               {availableSources.map((s) => (
@@ -538,9 +569,9 @@ function NewJobPageInner() {
                     )}>
                       {on ? '✓' : ''}
                     </span>
-                    <div className="min-w-0 pointer-events-none">
-                      <span className="block text-sm font-medium leading-tight">{feat.label}</span>
-                      <span className="block text-xs text-muted-foreground mt-0.5">{feat.description}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium leading-tight">{feat.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
                     </div>
                   </button>
                 );
@@ -611,11 +642,11 @@ function NewJobPageInner() {
                       'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
                       on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
                     )}>{on ? '✓' : ''}</span>
-                    <div className="flex-1 min-w-0 pointer-events-none">
-                      <span className="block text-sm font-medium leading-tight">{ao.label}</span>
-                      <span className="block text-xs text-muted-foreground mt-0.5">{ao.description}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium leading-tight">{ao.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{ao.description}</p>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] shrink-0 pointer-events-none">{ao.badge}</Badge>
+                    <Badge variant="secondary" className="text-[10px] shrink-0">{ao.badge}</Badge>
                   </button>
                 );
               })}
@@ -628,6 +659,8 @@ function NewJobPageInner() {
               <p><span className="font-medium text-foreground">Format:</span> {formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
               <p><span className="font-medium text-foreground">Path:</span> {selectedPathConfig?.label}</p>
               <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
+              {topic.trim() && <p><span className="font-medium text-foreground">Topic:</span> {topic.trim()}</p>}
+              <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>
               <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
               <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ')}</p>
               {addOns.size > 0 && <p><span className="font-medium text-foreground">Add-ons:</span> {Array.from(addOns).join(', ')}</p>}
@@ -657,14 +690,6 @@ function NewJobPageInner() {
         </Button>
       </div>
     </div>
-  );
-}
-
-export default function NewJobPage() {
-  return (
-    <Suspense>
-      <NewJobPageInner />
-    </Suspense>
   );
 }
 
