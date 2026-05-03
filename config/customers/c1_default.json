@@ -25,6 +25,11 @@
         "assembly": "internal",
         "upload": "r2"
       },
+      "qaThresholds": {
+        "gate1": { "pass": 65, "manualReview": 45 },
+        "gate3a": { "pass": 60, "manualReview": 40 },
+        "gate4": { "pass": 65, "manualReview": 40 }
+      },
       "designDefaults": {
         "chrome": {
           "name": "AuraFlux",
@@ -62,6 +67,11 @@
         "assembly": "internal",
         "upload": "r2"
       },
+      "qaThresholds": {
+        "gate1": { "pass": 65, "manualReview": 45 },
+        "gate3a": { "pass": 60, "manualReview": 40 },
+        "gate4": { "pass": 65, "manualReview": 40 }
+      },
       "designDefaults": {
         "chrome": {
           "name": "AuraFlux",
@@ -79,7 +89,8 @@
   "voice": {
     "speakerName": "Host",
     "ttsProvider": "gemini",
-    "style": "professional"
+    "style": "professional",
+    "outroLine": ""
   },
   "qa": {
     "gate1": {
