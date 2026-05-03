@@ -86,6 +86,7 @@
       }
     }
   },
+  "qaMode": "suggestive",
   "voice": {
     "speakerName": "Host",
     "ttsProvider": "gemini",
