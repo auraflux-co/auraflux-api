@@ -46,6 +46,7 @@ function iconFor(href: string) {
   if (href.includes('/settings')) return ICONS.settings;
   if (href.includes('/generate'))  return ICONS.generate;
   if (href.includes('/operator'))  return ICONS.operator;
+  if (href.includes('/staging'))   return ICONS.schedule;
   if (href.includes('/concierge')) return ICONS.copilot;
   if (href.includes('/credits'))   return ICONS.credits;
   if (href.includes('/plans'))     return ICONS.billing;
@@ -108,6 +109,7 @@ const CUSTOMER_NAV: NavItem[] = [
   },
   { href: '/dashboard/schedule',   label: 'Schedule'  },
   { href: '/dashboard/templates',  label: 'Templates' },
+  { href: '/dashboard/staging',    label: 'Staging'   },
   { href: '/dashboard/concierge',  label: 'Copilot'   },
   {
     href:  '/dashboard/billing',
