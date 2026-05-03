@@ -21,7 +21,7 @@
       "providers": {
         "fetch": "url_ingest",
         "script": "gemini",
-        "avatar": "none",
+        "avatar": null,
         "assembly": "internal",
         "upload": "r2"
       },
@@ -63,7 +63,7 @@
       "providers": {
         "fetch": "url_ingest",
         "script": "gemini",
-        "avatar": "none",
+        "avatar": null,
         "assembly": "internal",
         "upload": "r2"
       },
