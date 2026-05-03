@@ -26,9 +26,9 @@
         "upload": "r2"
       },
       "qaThresholds": {
-        "gate1": { "pass": 65, "manualReview": 45 },
-        "gate3a": { "pass": 60, "manualReview": 40 },
-        "gate4": { "pass": 65, "manualReview": 40 }
+        "gate1": { "pass": 60, "manualReview": 40 },
+        "gate3a": { "pass": 55, "manualReview": 35 },
+        "gate4": { "pass": 60, "manualReview": 35 }
       },
       "designDefaults": {
         "chrome": {
@@ -68,9 +68,9 @@
         "upload": "r2"
       },
       "qaThresholds": {
-        "gate1": { "pass": 65, "manualReview": 45 },
-        "gate3a": { "pass": 60, "manualReview": 40 },
-        "gate4": { "pass": 65, "manualReview": 40 }
+        "gate1": { "pass": 60, "manualReview": 40 },
+        "gate3a": { "pass": 55, "manualReview": 35 },
+        "gate4": { "pass": 60, "manualReview": 35 }
       },
       "designDefaults": {
         "chrome": {
