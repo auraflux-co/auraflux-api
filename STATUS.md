@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): developer_api.js wrong imports v2 — estimateCreditCost→calculateCreditCost, getCredits→getCreditBalance; fixes all /v1/ API 500 errors for Operate users)
 **Last Updated:** 2026-05-02 (Cursor — fix: admin POST /api/generate-test-key for QA/CI — creates API key for any Clerk userId via X-Admin-Secret; unblocks E2E automated testing without browser-based key copy)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-008 credits page returns 404 for new users — getOrCreateClientPlan() auto-provisions client_plans row from Clerk planTier on first /credits/balance access; also added /auth/token page for Clerk sign-in token auth (bypasses new-device 2FA), fixed Clerk v7 API compatibility (useClerk vs useSignIn), added /auth/token to public middleware routes)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-005 job submission fails for new users — loadCustomerConfig now falls back to c1_default.json when no customer-specific config exists at config/customers/{userId}.json; all new Clerk signups can now submit jobs without manual config provisioning)
