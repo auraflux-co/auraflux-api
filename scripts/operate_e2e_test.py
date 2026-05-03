@@ -11,9 +11,11 @@ API_KEY = "af_live_03d154a8f2c0ee8c75a41a4619852df8886b235d7514f5db647f495d42870
 BASE = "https://auraflux-api.onrender.com"
 HEADERS = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
-# Public video URLs for testing (Creative Commons / public domain)
-PUBLIC_SHORT = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-PUBLIC_LONG  = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+# Public video URLs for testing — use reliable CDNs accessible from cloud/Render.
+# Google Cloud Storage buckets are blocked by HEAD from Render egress IPs.
+# W3C and samplelib serve with direct HTTPS and no CDN IP restrictions.
+PUBLIC_SHORT = "https://media.w3.org/2010/05/sintel/trailer_hd.mp4"  # ~52s Sintel trailer
+PUBLIC_LONG  = "https://media.w3.org/2010/05/sintel/trailer_hd.mp4"  # same for long-form test
 
 JOBS = [
     # O1 — Short form, news content type, topic + tone
