@@ -15,7 +15,7 @@
  *   • Inline GuideTip card visible beneath each step's choices
  */
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -206,7 +206,7 @@ function StepHeader({ step }: { step: Step }) {
 
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
-export default function NewJobPage() {
+function NewJobPageInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const { getToken } = useAuth();
@@ -690,6 +690,14 @@ export default function NewJobPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function NewJobPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-48 text-muted-foreground text-sm">Loading…</div>}>
+      <NewJobPageInner />
+    </Suspense>
   );
 }
 
