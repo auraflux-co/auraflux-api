@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-03 (Cursor — feat(cpd-131): topic + tone fields in jobs/new dashboard form — Step 2 adds Video topic input + Tone dropdown; wired into CreateJobPayload and normaliseDashboardPayload → order.topic/tone for script_gen_service pickup; review summary shows topic+tone before submit)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal1 hasAvatarWorkflow v2 — speakerName always 'Bobby G' (createJobSpec fallback L803); only addOns.heygen.active is reliable avatar signal; C1 API jobs no longer blocked by lockedOutro/sceneHeaders checks)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal1 canProduce fix — hasAvatarWorkflow now checks speakerName/heygen.active (not templateId); sceneHeaders not required for C1 API url_list jobs; failReason surfaced in not-ready return; _storeReport captures outcome+score+fixDirective)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): staging-assets response improvements — add failReason to portal summary, expose filledScript in script output field for C1 API jobs)
