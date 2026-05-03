@@ -90,7 +90,8 @@
     "speakerName": "Host",
     "ttsProvider": "gemini",
     "style": "professional",
-    "outroLine": ""
+    "outroLine": "",
+    "prohibitedWords": []
   },
   "qa": {
     "gate1": {
