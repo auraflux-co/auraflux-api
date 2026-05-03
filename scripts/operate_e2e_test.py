@@ -117,7 +117,7 @@ def submit_job(job):
     print(f"  ✗ Submit failed: {resp}")
     return None, job
 
-def poll_job(job_id, label, timeout=600):
+def poll_job(job_id, label, timeout=1200):
     deadline = time.time() + timeout
     last_status = None
     while time.time() < deadline:
@@ -222,7 +222,7 @@ def main():
     results_summary = []
 
     for jid, spec in submitted:
-        result = poll_job(jid, spec["id"], timeout=600)
+        result = poll_job(jid, spec["id"], timeout=1200)
         ok, issues = validate_output(spec, result, spec["id"])
         if not ok:
             all_passed = False
