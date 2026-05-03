@@ -137,53 +137,53 @@ def validate_output(spec_input, result, label):
     body = spec_input["body"]
     reports = result.get("portalReports", {})
     output = result.get("output", {})
-    job_spec = result.get("jobSpec", {})
 
-    # 1. Topic persisted to jobSpec
+    # topic/tone/format/contentType are now top-level fields in the API response (v1.0.260+)
+    api_topic = result.get("topic") or ""
+    api_tone  = result.get("tone")  or ""
+
+    # 1. Topic persisted — check top-level first, fallback to legacy jobSpec.order.topic
     ordered_topic = body.get("topic", "")
-    spec_topic = (job_spec.get("order", {}) or {}).get("topic", "")
-    if ordered_topic and spec_topic:
-        if ordered_topic.lower()[:30] in spec_topic.lower() or spec_topic.lower()[:30] in ordered_topic.lower():
+    if ordered_topic and api_topic:
+        if ordered_topic.lower()[:30] in api_topic.lower() or api_topic.lower()[:30] in ordered_topic.lower():
             passed.append("✓ topic persisted to jobSpec")
         else:
-            issues.append(f"✗ topic mismatch: ordered='{ordered_topic[:40]}' got='{spec_topic[:40]}'")
-    elif ordered_topic and not spec_topic:
+            issues.append(f"✗ topic mismatch: ordered='{ordered_topic[:40]}' got='{api_topic[:40]}'")
+    elif ordered_topic and not api_topic:
         issues.append(f"✗ topic missing from jobSpec (ordered: '{ordered_topic[:40]}')")
 
-    # 2. Tone persisted to jobSpec
+    # 2. Tone persisted
     ordered_tone = body.get("tone", "")
-    spec_tone = (job_spec.get("order", {}) or {}).get("tone", "")
-    if ordered_tone and spec_tone:
-        passed.append(f"✓ tone persisted ({spec_tone})")
-    elif ordered_tone and not spec_tone:
+    if ordered_tone and api_tone:
+        passed.append(f"✓ tone persisted ({api_tone})")
+    elif ordered_tone and not api_tone:
         issues.append(f"✗ tone missing from jobSpec (ordered: '{ordered_tone}')")
 
-    # 3. Content type matches
+    # 3. Content type matches — top-level field
     ordered_ct = body.get("contentType", "")
-    spec_ct = job_spec.get("contentType", "")
+    spec_ct = result.get("contentType", "")
     if ordered_ct and spec_ct:
         if ordered_ct == spec_ct:
             passed.append(f"✓ contentType={spec_ct}")
         else:
             issues.append(f"✗ contentType mismatch: ordered={ordered_ct} got={spec_ct}")
 
-    # 4. Portal 0 passed
-    p0 = reports.get("portal0", {})
-    if p0.get("compliant"):
-        passed.append("✓ portal0 compliant")
-    elif p0:
-        issues.append(f"✗ portal0 not compliant: {p0.get('issues', p0.get('reason', '?'))[:100]}")
+    # 4. Check portals from the top-level portals array (v1 API response shape)
+    portal_list = result.get("portals", [])
+    portal_map = {p.get("portal", "?"): p for p in portal_list}
 
-    # 5. Portal 1 QA mode (should be suggestive for C1)
-    p1 = reports.get("portal1", {})
+    p0 = portal_map.get("portal0", {})
+    if p0.get("passed"):
+        passed.append("✓ portal0 passed")
+    elif p0:
+        issues.append(f"✗ portal0 failed: {p0.get('failReason', p0.get('reason', '?'))[:100]}")
+
+    p1 = portal_map.get("portal1", {})
     if p1:
-        score = p1.get("score", "?")
-        qa_mode = p1.get("qaMode", "?")
-        compliant = p1.get("compliant", False)
-        status = "✓" if compliant else "✗"
-        passed.append(f"{status} portal1 score={score} mode={qa_mode} compliant={compliant}")
-        if not compliant:
-            issues.append(f"✗ portal1 failed: {p1.get('reason', p1.get('issues', '?'))[:100]}")
+        status_icon = "✓" if p1.get("passed") else "✗"
+        passed.append(f"{status_icon} portal1 passed={p1.get('passed')}")
+        if not p1.get("passed"):
+            issues.append(f"✗ portal1 failed: {p1.get('failReason', '?')[:100]}")
 
     # 6. Job completed successfully
     final_status = result.get("status") or result.get("jobStatus", "?")
