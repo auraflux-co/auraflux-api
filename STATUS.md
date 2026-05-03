@@ -1,5 +1,5 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): re-apply saveJob fix — squash merge of PR #206 re-introduced persistJobSpec on line 105; all /v1/ job creation fully unblocked)
+**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): db.getJobRow→db.loadJobRow in developer_api.js (getJobRow never existed); fixes GET /v1/jobs/:id, /result, /staging-assets, and /approve-publish all returning get_job_failed 500)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): wire portal workers into runPortalSequence in developer_api.js — without portalWorkers all v1 jobs stayed queued indefinitely; adds _resolvePortalWorkers/_resolveExtensionWorkers helpers + persistJobStatus callback matching jobs_c1.js pattern)
 **Last Updated:** 2026-05-02 (Cursor — fix: admin POST /api/generate-test-key for QA/CI — creates API key for any Clerk userId via X-Admin-Secret; unblocks E2E automated testing without browser-based key copy)
 **Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-008 credits page returns 404 for new users — getOrCreateClientPlan() auto-provisions client_plans row from Clerk planTier on first /credits/balance access; also added /auth/token page for Clerk sign-in token auth (bypasses new-device 2FA), fixed Clerk v7 API compatibility (useClerk vs useSignIn), added /auth/token to public middleware routes)
