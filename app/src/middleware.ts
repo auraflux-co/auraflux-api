@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
 // Public routes — no auth required
 const isPublicRoute = createRouteMatcher([
@@ -9,9 +10,18 @@ const isPublicRoute = createRouteMatcher([
   '/api/health',
 ]);
 
+// Clerk v7 + Next.js 16: auth.protect() has a known bug where it redirects to
+// the current URL instead of /sign-in when NEXT_PUBLIC_CLERK_SIGN_IN_URL is not
+// available at middleware runtime (GitHub clerk/javascript#8302). Use manual
+// redirect via NextResponse instead.
 export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
-    await auth.protect();
+    const { userId } = await auth();
+    if (!userId) {
+      const signInUrl = new URL('/sign-in', request.url);
+      signInUrl.searchParams.set('redirect_url', request.url);
+      return NextResponse.redirect(signInUrl);
+    }
   }
 });
 
