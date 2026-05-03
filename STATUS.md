@@ -1,5 +1,5 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal0 HEAD-then-GET fallback for URL reachability; test URLs switched to W3C CDN which is accessible from Render)
+**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal0 ffprobe moov-atom fallback to direct URL probe; add media.w3.org + GCS to downloader trusted domains)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-131): wrap NewJobPage useSearchParams in Suspense — Next.js 16 Turbopack static build was failing; topic+tone fields now visible in Guided dashboard form)
 **Last Updated:** 2026-05-03 (Cursor — refactor(cpd-126): purge C0/ClipzWorld/Bobby G hardcodes from all portals — portal1 DEFAULT_HYPE_WORDS→[], DEFAULT_REQUIRED_OUTROS→{}, DEFAULT_PASS_THRESHOLD→60; portal2/3a/4 || 'c0' fallbacks removed; portal4 ClipzWorld News skin→AuraFlux platform defaults; scaffold Bobby G locked intros/outros→null; QA checklists marked deprecated; portal1_video_reviewer cache path renamed)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal1 remove C0-as-default — getWritingQaMode no longer checks customerId==='c0', platform default is always 'suggestive'; DEFAULT_PASS_THRESHOLD corrected to 60/40 matching c1_default.json, not c0.json 90/55)
