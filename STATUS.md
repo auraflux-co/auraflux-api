@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal5 gate4 report fallback + store uploadSignal — portal5 reads gate4.uploadSignal from portalReports; _storeReport now persists uploadSignal)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal5 graceful skip when no platforms configured — pass_with_notes instead of hard-failing API jobs with no publish destination)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal3b + portal4 suggestive mode — mismatch_escalate→fixable in 3b; hard_fail→pass_with_notes in 4; uploadSignal=true in suggestive mode)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal3b gate3a fallback + chrome-committed guard + mismatch_fixable passes — C1 API clips jobs no longer blocked by portal3b chrome mismatch)
