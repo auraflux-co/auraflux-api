@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-04 (Cursor — chore(cpd-126): remove portal5 diagnostic logs — bug confirmed fixed; cleanup after v1.0.282 verification test passed — clip URL job completes in ~2min)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): conditional updateJobSpec — guard prevents non-terminal writes from overwriting 'complete'/'failed' in DB; fixes race where fire-and-forget _persist calls with stale status='running' commit after the awaited 'complete' write)
 **Last Updated:** 2026-05-04 (Cursor — debug(cpd-126): portal5 diagnostic logs to trace why jobs hang in 'running' after portal4 completes — adding console.log at run() entry, uploadSignal check, and canProduce skip path)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): R2 forcePathStyle + correct secret key — S3Client now uses forcePathStyle:true for Cloudflare R2; improved R2 error logging; corrected truncated R2_SECRET_ACCESS_KEY and R2_ACCOUNT_ID on auraflux-api)
