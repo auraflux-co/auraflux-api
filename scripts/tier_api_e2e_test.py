@@ -204,14 +204,17 @@ def validate_output(spec_input, result, label):
     else:
         issues.append(f"✗ job ended with status: {final_status}")
 
-    # Video output — must have an R2 URL for any job that goes through assembly
+    # Video output — only required for jobs that have a source URL (clips/sports from URL)
+    # News jobs without a URL only run portal0+portal1 (script gen) — assembly portals inactive.
+    # To produce video for URL-less news jobs, WAN T2V generation must be enabled in the job spec.
     output_url = result.get("outputUrl") or result.get("output", {}).get("url") or None
+    has_source_url = bool(body.get("url"))
     content_type = body.get("contentType", "")
-    needs_video = content_type in ("clips", "sports", "news")
+    needs_video = has_source_url and content_type in ("clips", "sports", "news")
     if output_url:
         passed.append(f"✓ video output present: {output_url[:60]}")
     elif needs_video and final_status in ("complete", "completed"):
-        issues.append(f"✗ no video output (outputUrl is null) — pipeline stopped before assembly/upload")
+        issues.append(f"✗ no video output (outputUrl is null) — assembly/upload failed for URL-sourced job")
 
     # Script must be present
     script = result.get("filledScript") or result.get("script") or None
