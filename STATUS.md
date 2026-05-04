@@ -1,5 +1,4 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): await final DB write in onJobComplete/onJobFailed — fire-and-forget race was leaving jobs stuck in 'running' forever; concurrent _persist writes could overwrite 'complete' with 'running' after server restart)
 **Last Updated:** 2026-05-04 (Cursor — debug(cpd-126): portal5 diagnostic logs to trace why jobs hang in 'running' after portal4 completes — adding console.log at run() entry, uploadSignal check, and canProduce skip path)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): R2 forcePathStyle + correct secret key — S3Client now uses forcePathStyle:true for Cloudflare R2; improved R2 error logging; corrected truncated R2_SECRET_ACCESS_KEY and R2_ACCOUNT_ID on auraflux-api)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal5 gate4 report fallback + store uploadSignal — portal5 reads gate4.uploadSignal from portalReports; _storeReport now persists uploadSignal)
