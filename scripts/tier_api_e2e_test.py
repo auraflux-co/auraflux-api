@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
 """
-AuraFlux tier API E2E — same job matrix against POST /v1/jobs for Operate (diy), Guided (dwy), or Managed (dfy).
+AuraFlux tier API E2E — same six scenarios × three API keys = 18 runs.
+
+Surface coverage (this script):
+  • Operate (diy)   — POST /v1/jobs with Operate API key (customer-driven choices via API body).
+  • Guided (dwy)    — same HTTP contract with Guided API key (mirrors plan tier; Guided UX is Copilot + Dashboard — not exercised here).
+  • Managed (dfy)   — same HTTP contract with Managed API key (Managed UX is Copilot-led — not exercised here).
+
+Ingress vocabulary (no legacy editorial labels in requests):
+  • compose — script-led start: topic/tone only (no source URL yet); assembly inactive until media exists.
+  • fetch   — pull source video from a URL (tests use a public MP4).
+  • upload  — not in the default six (requires fileId + prior POST /v1/upload); add when a fixture key exists.
+
+Presentation profiles (maps server-side to template/chrome keys until configs migrate):
+  • broadcast_desk — desk / lower-third broadcast layout
+  • vertical_reel — vertical highlights / b-roll style
+  • live_event    — live event framing / supers
 
 Requires an API key whose Clerk customer is on the target plan tier (Stripe ↔ plan mapping).
 
@@ -34,9 +49,10 @@ PUBLIC_LONG = PUBLIC_SHORT
 JOBS = [
     {
         "id": "T1",
-        "desc": "Short-form news: AI in healthcare, Professional tone",
+        "desc": "Compose · broadcast_desk · short · professional topic",
         "body": {
-            "contentType": "news",
+            "entry": "compose",
+            "productionProfile": "broadcast_desk",
             "format": "short",
             "topic": "AI breakthroughs in healthcare 2026",
             "tone": "professional",
@@ -45,9 +61,10 @@ JOBS = [
     },
     {
         "id": "T2",
-        "desc": "Short-form clips: sourced from public video URL",
+        "desc": "Fetch · vertical_reel · short · public MP4 URL",
         "body": {
-            "contentType": "clips",
+            "entry": "fetch",
+            "productionProfile": "vertical_reel",
             "format": "short",
             "topic": "Extreme sports highlights",
             "tone": "energetic",
@@ -57,9 +74,10 @@ JOBS = [
     },
     {
         "id": "T3",
-        "desc": "Long-form: AI revolution in business, Educational tone",
+        "desc": "Compose · broadcast_desk · long · educational topic",
         "body": {
-            "contentType": "news",
+            "entry": "compose",
+            "productionProfile": "broadcast_desk",
             "format": "long",
             "topic": "How AI is transforming small business operations",
             "tone": "educational",
@@ -68,9 +86,10 @@ JOBS = [
     },
     {
         "id": "T4",
-        "desc": "Short-form sports clips from URL",
+        "desc": "Fetch · live_event · short · public MP4 URL",
         "body": {
-            "contentType": "sports",
+            "entry": "fetch",
+            "productionProfile": "live_event",
             "format": "short",
             "topic": "Basketball championship highlights",
             "tone": "exciting",
@@ -80,9 +99,10 @@ JOBS = [
     },
     {
         "id": "T5",
-        "desc": "Short-form tech: cryptocurrency trends, Analytical tone",
+        "desc": "Compose · broadcast_desk · short · analytical topic",
         "body": {
-            "contentType": "news",
+            "entry": "compose",
+            "productionProfile": "broadcast_desk",
             "format": "short",
             "topic": "Bitcoin and Ethereum price trends 2026",
             "tone": "analytical",
@@ -91,9 +111,10 @@ JOBS = [
     },
     {
         "id": "T6",
-        "desc": "Long-form clips assembly from source video",
+        "desc": "Fetch · vertical_reel · long · public MP4 URL",
         "body": {
-            "contentType": "clips",
+            "entry": "fetch",
+            "productionProfile": "vertical_reel",
             "format": "long",
             "topic": "Nature documentary highlights",
             "tone": "calm",
@@ -174,13 +195,15 @@ def validate_output(spec_input, result, label):
     elif ordered_tone and not api_tone:
         issues.append(f"✗ tone missing from jobSpec (ordered: '{ordered_tone}')")
 
-    ordered_ct = body.get("contentType", "")
-    spec_ct = result.get("contentType", "")
-    if ordered_ct and spec_ct:
-        if ordered_ct == spec_ct:
-            passed.append(f"✓ contentType={spec_ct}")
+    ordered_profile = body.get("productionProfile", "")
+    result_profile = result.get("productionProfile") or ""
+    if ordered_profile:
+        if result_profile == ordered_profile:
+            passed.append(f"✓ productionProfile={result_profile}")
         else:
-            issues.append(f"✗ contentType mismatch: ordered={ordered_ct} got={spec_ct}")
+            issues.append(
+                f"✗ productionProfile mismatch: ordered={ordered_profile!r} got={result_profile!r}"
+            )
 
     portal_list = result.get("portals", [])
     portal_map = {p.get("portal", "?"): p for p in portal_list}
@@ -204,13 +227,12 @@ def validate_output(spec_input, result, label):
     else:
         issues.append(f"✗ job ended with status: {final_status}")
 
-    # Video output — only required for jobs that have a source URL (clips/sports from URL)
-    # News jobs without a URL only run portal0+portal1 (script gen) — assembly portals inactive.
-    # To produce video for URL-less news jobs, WAN T2V generation must be enabled in the job spec.
+    # Video output — required only when ingress is fetch and a URL was supplied (assembly path).
+    # compose (script-led) completes without rendered video until fetch/upload/create supplies clips.
     output_url = result.get("outputUrl") or result.get("output", {}).get("url") or None
+    entry = (body.get("entry") or "fetch").lower()
     has_source_url = bool(body.get("url"))
-    content_type = body.get("contentType", "")
-    needs_video = has_source_url and content_type in ("clips", "sports", "news")
+    needs_video = entry == "fetch" and has_source_url
     if output_url:
         passed.append(f"✓ video output present: {output_url[:60]}")
     elif needs_video and final_status in ("complete", "completed"):
