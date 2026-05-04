@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal3b gate3a fallback + chrome-committed guard + mismatch_fixable passes — C1 API clips jobs no longer blocked by portal3b chrome mismatch)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): chrome defaults false in job_spec.js + portal3a prompt — C1 API jobs no longer inherit hasTopBar=true; chromeBlocker root cause eliminated)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal3a diagnostic logging — qaMode/outcome/canProduce at run() entry and suggestive-mode check)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal3a suggestive mode — score/content hard-fails become pass_with_notes; bake qaMode into jobSpec at creation)
