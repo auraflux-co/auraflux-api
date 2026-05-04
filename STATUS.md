@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-04 (Cursor — chore(cpd-132): Aider report fixes — aider_session_review.sh normalizes Atlassian https host + CONFLUENCE_SPACE_KEY + strict report footer; removed unused lib/routes/api_key_mgmt.js; GET /jobs ?all=true tests; tier_api_e2e_test.py + guided/managed wrappers (env API keys; removed hardcoded operate key); .env.example API_BASE_URL + NEXT_PUBLIC_SMTP_CONFIGURED + E2E key hints)
 **Last Updated:** 2026-05-04 (Cursor — chore(cpd-126): remove portal5 diagnostic logs — bug confirmed fixed; cleanup after v1.0.282 verification test passed — clip URL job completes in ~2min)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): conditional updateJobSpec — guard prevents non-terminal writes from overwriting 'complete'/'failed' in DB; fixes race where fire-and-forget _persist calls with stale status='running' commit after the awaited 'complete' write)
 **Last Updated:** 2026-05-04 (Cursor — debug(cpd-126): portal5 diagnostic logs to trace why jobs hang in 'running' after portal4 completes — adding console.log at run() entry, uploadSignal check, and canProduce skip path)
