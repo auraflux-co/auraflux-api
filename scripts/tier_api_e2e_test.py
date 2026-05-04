@@ -204,6 +204,22 @@ def validate_output(spec_input, result, label):
     else:
         issues.append(f"✗ job ended with status: {final_status}")
 
+    # Video output — must have an R2 URL for any job that goes through assembly
+    output_url = result.get("outputUrl") or result.get("output", {}).get("url") or None
+    content_type = body.get("contentType", "")
+    needs_video = content_type in ("clips", "sports", "news")
+    if output_url:
+        passed.append(f"✓ video output present: {output_url[:60]}")
+    elif needs_video and final_status in ("complete", "completed"):
+        issues.append(f"✗ no video output (outputUrl is null) — pipeline stopped before assembly/upload")
+
+    # Script must be present
+    script = result.get("filledScript") or result.get("script") or None
+    if script:
+        passed.append(f"✓ script generated ({len(script)} chars)")
+    else:
+        issues.append("✗ no script generated (filledScript missing)")
+
     print(f"\n  === Input vs Output Report [{label}] ===")
     for p in passed:
         print(f"    {p}")
