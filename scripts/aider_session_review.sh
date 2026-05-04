@@ -29,8 +29,14 @@ fi
 JIRA_API_TOKEN="${JIRA_API_TOKEN:-${ATLASSIAN_API_TOKEN:-}}"
 JIRA_USER_EMAIL="${JIRA_USER_EMAIL:-${ATLASSIAN_EMAIL:-}}"
 JIRA_BASE_URL="${JIRA_BASE_URL:-${ATLASSIAN_DOMAIN:-}}"
+# Atlassian Cloud expects https://<site>.atlassian.net — many .env files store host-only DOMAIN.
+if [ -n "$JIRA_BASE_URL" ] && [[ ! "$JIRA_BASE_URL" =~ ^https?:// ]]; then
+  JIRA_BASE_URL="https://${JIRA_BASE_URL}"
+fi
 JIRA_BASE="${JIRA_BASE_URL%/}"
 JIRA_AUTH="${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}"
+# Confluence REST v1 uses the same site URL; space key must match your docs space (AuraFlux product space is usually AF).
+CONF_SPACE="${CONFLUENCE_SPACE_KEY:-AF}"
 
 # ── --since flag ───────────────────────────────────────────────────────────────
 SINCE=""
@@ -63,7 +69,7 @@ JIRA_IN_DEV=""
 JIRA_IN_REVIEW=""
 JIRA_APPROVED=""
 
-if [ -n "${JIRA_API_TOKEN:-}" ]; then
+if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
   _jira() {
     local s="$1"
     curl -s -H "Accept: application/json" -u "$JIRA_AUTH" \
@@ -80,6 +86,8 @@ for i in d.get("issues",[]):
   JIRA_IN_DEV=$(   _jira "In+Development")
   JIRA_IN_REVIEW=$(_jira "In+Review")
   JIRA_APPROVED=$( _jira "Approved")
+elif [ -n "${JIRA_API_TOKEN:-}" ] && [ -z "$JIRA_BASE" ]; then
+  JIRA_TODO="(skipped — set ATLASSIAN_DOMAIN or JIRA_BASE_URL to your-site.atlassian.net; https:// is optional)"
 fi
 
 # ── 3. GitHub state ────────────────────────────────────────────────────────────
@@ -98,9 +106,9 @@ fi
 # ── 4. Confluence ──────────────────────────────────────────────────────────────
 echo "📄 Fetching recent Confluence activity..."
 CONF_RECENT="(skipped — no API token)"
-if [ -n "${JIRA_API_TOKEN:-}" ]; then
+if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
   CONF_RECENT=$(curl -s -H "Accept: application/json" -u "$JIRA_AUTH" \
-    "${JIRA_BASE}/wiki/rest/api/content?spaceKey=AF&limit=10&orderby=modified&expand=version" \
+    "${JIRA_BASE}/wiki/rest/api/content?spaceKey=${CONF_SPACE}&limit=10&orderby=modified&expand=version" \
     2>/dev/null | python3 -c '
 import json,sys
 d=json.load(sys.stdin)
@@ -243,7 +251,7 @@ aider \
   logs/aider_session_review.md \
   2>&1 | tee "$LOG_FILE"
 
-if grep -q "last-reviewed-commit" "$REPORT" 2>/dev/null; then
+if grep -q "last-reviewed-commit: ${HEAD_SHA}" "$REPORT" 2>/dev/null; then
   echo ""
   echo "══════════════════════════════════════════════"
   echo "  Report: logs/aider_session_review.md"
@@ -251,6 +259,6 @@ if grep -q "last-reviewed-commit" "$REPORT" 2>/dev/null; then
   echo "══════════════════════════════════════════════"
   head -5 "$REPORT"
 else
-  echo "Report incomplete — check $LOG_FILE"
+  echo "Report footer does not match HEAD=${HEAD_SHA} — Aider may not have applied the update. See: $LOG_FILE"
   exit 1
 fi
