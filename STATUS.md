@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): chrome defaults false in job_spec.js + portal3a prompt — C1 API jobs no longer inherit hasTopBar=true; chromeBlocker root cause eliminated)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal3a diagnostic logging — qaMode/outcome/canProduce at run() entry and suggestive-mode check)
 **Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal3a suggestive mode — score/content hard-fails become pass_with_notes; bake qaMode into jobSpec at creation)
 **Last Updated:** 2026-05-03 (Cursor — feat(cpd-131): topic + tone fields in jobs/new dashboard form — Step 2 adds Video topic input + Tone dropdown; wired into CreateJobPayload and normaliseDashboardPayload → order.topic/tone for script_gen_service pickup; review summary shows topic+tone before submit)
