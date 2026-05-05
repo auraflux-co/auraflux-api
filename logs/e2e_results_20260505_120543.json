@@ -1,0 +1,362 @@
+{
+  "suite": "AuraFlux 18-Test E2E \u2014 Gemini as Customer (CPD-142)",
+  "timestamp": "2026-05-05T16:15:09.880699Z",
+  "summary": {
+    "total": 18,
+    "passed": 10,
+    "operate": {
+      "total": 6,
+      "passed": 10
+    },
+    "guided": {
+      "total": 6,
+      "passed": 0
+    },
+    "managed": {
+      "total": 6,
+      "passed": 0
+    }
+  },
+  "operate_raw_log": "/Users/robertgregory/cwn-production/logs/operate_gemini_e2e_20260505_120543.txt",
+  "guided": [
+    {
+      "id": "G-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports. Hype energy. Going on TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Extreme sports highlights",
+        "tone": "hype",
+        "platform": "TikTok"
+      },
+      "copilotMsg": "Hey Copilot, I'm planning a new video for TikTok \u2013 a short-form vertical highlights reel about extreme sports with super hype energy. I've set it up for \"Fetch and enhance.\" Does this brief sound spot on, or are there any specific tweaks you'd recommend to make it really pop on TikTok?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Copilot failed to engage with the substance of the customer's brief.",
+          "Copilot did not provide relevant or helpful guidance regarding the content or potential tweaks.",
+          "Copilot's response was a deflection based on service tier limitations rather than an assessment of the brief."
+        ],
+        "notes": "The wizard choices perfectly mirrored the customer's content brief. However, the Copilot did not process or respond to the actual request for feedback on the brief or suggestions for TikTok optimization. Instead, it defaulted to a message about plan limitations, failing to provide any helpful guidance for the user's video creation query."
+      },
+      "passed": false,
+      "score": 20
+    },
+    {
+      "id": "G-T2",
+      "brief": "Professional 3-minute news desk segment about AI in healthcare 2026. Informative. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "AI in healthcare 2026 news desk segment",
+        "tone": "informative",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hi Copilot, I'm looking to produce a 3-minute professional news desk segment about AI in healthcare 2026 for YouTube, with an informative tone. I've selected 'Long-form' format, 'Produce from source' path, 'informative' tone, and 'YouTube' platform. Does this setup look correct for creating that kind of professional segment, or would you suggest any improvements?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 0,
+        "issues": [
+          "Copilot provided a canned response, stating it could only confirm AuraFlux guides for the current plan, instead of reviewing the user's setup or offering suggestions as requested.",
+          "Copilot refused to provide any relevant or helpful guidance, despite the user's specific request for review and potential improvements."
+        ],
+        "notes": "The wizard choices generally reflected the brief well, with 'Long-form' being an acceptable interpretation for a 3-minute video given typical online video categorizations. The topic, tone, and platform selections were perfectly aligned. However, the Copilot completely failed to understand the intent of the user's message, which was to get a review and suggestions. Instead, it gave a generic, unhelpful, and dismissive response, indicating a lack of understanding and a refusal to assist."
+      },
+      "passed": false,
+      "score": 0
+    },
+    {
+      "id": "G-T3",
+      "brief": "Short casual video about morning productivity \u2014 coffee, exercise, mindset. Instagram Reels.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Morning productivity: coffee, exercise, mindset routine",
+        "tone": "casual",
+        "platform": "Instagram"
+      },
+      "copilotMsg": "Hey Copilot, I'm getting ready to produce a short video for Instagram Reels focusing on morning productivity \u2013 coffee, exercise, and mindset. I've set the format to Short-form, path to Fetch and enhance, and the tone to casual. Does this setup look optimal for that kind of content, or would you recommend any adjustments?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 5,
+        "issues": [
+          "Copilot did not address the customer's specific query about the optimality of their setup for the stated content.",
+          "Copilot provided a canned response about plan limitations instead of helpful guidance.",
+          "Copilot's response suggests upgrading for 'full guided assistance,' which contradicts the customer's stated 'Guided-tier' status in the prompt."
+        ],
+        "notes": "The wizard choices perfectly align with the customer's content brief. However, the Copilot completely failed to understand or engage with the customer's request for advice on their content setup. It gave a generic, unhelpful, and contradictory response, indicating a significant failure in providing guided assistance to a 'Guided-tier' customer."
+      },
+      "passed": false,
+      "score": 5
+    },
+    {
+      "id": "G-T4",
+      "brief": "Long-form product launch announcement for a new AI analytics platform. Professional. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "Launch of new AI analytics platform",
+        "tone": "professional",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hey Copilot, I'm planning a long-form product launch announcement video for our new AI analytics platform, targeting YouTube with a professional tone. I've entered these details into the wizard. Could you quickly confirm if this is the best setup, or if there's anything else I should consider for maximum impact?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 25,
+        "issues": [
+          "Copilot did not provide any relevant or helpful guidance to the customer's query about their setup for maximum impact.",
+          "Copilot punted to documentation/upgrade instead of engaging with the specifics of the brief or offering any value-add guidance at the Guided tier."
+        ],
+        "notes": "The wizard choices perfectly reflected the customer's content brief, indicating a correct initial setup. However, the Copilot's response failed to demonstrate understanding of the *content* of the brief (beyond acknowledging 'your plan') and did not provide any relevant or helpful guidance as requested. It instead defaulted to its limitations for the Guided tier and suggested an upgrade, leading to a negative customer experience despite the correct wizard configuration."
+      },
+      "passed": false,
+      "score": 25
+    },
+    {
+      "id": "G-T5",
+      "brief": "Breaking news \u2014 urgent coverage of a major economic development. Short and direct. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "Breaking News: Major Economic Development Update",
+        "tone": "urgent",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hi Copilot, I'm trying to set up a video for urgent breaking news on a major economic development, aiming for a short and direct YouTube update. I've currently selected 'long-form' along with an urgent tone. Does this setup look right, or do you have any suggestions to best achieve that concise, urgent delivery?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": false,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 5,
+        "issues": [
+          "Wizard 'format' selection ('Long-form') contradicts the brief's requirement for 'Short and direct' content.",
+          "Copilot failed to identify or address the format discrepancy highlighted by the customer, which was the core of their query.",
+          "Copilot's response was generic and unhelpful, not offering guidance on the stated problem or acknowledging the user's attempt to reconcile conflicting settings."
+        ],
+        "notes": "The wizard choice for 'format' was incorrect, directly contradicting the brief's explicit demand for 'short and direct' content. The customer clearly identified this conflict in their message to Copilot and sought guidance on achieving conciseness. However, Copilot did not understand the specific nature of the problem, offering a generic and unhelpful response about plan limitations rather than addressing the user's explicit question about their setup."
+      },
+      "passed": false,
+      "score": 5
+    },
+    {
+      "id": "G-T6",
+      "brief": "Short entertainment pop culture trends clip. Energetic, fun, youthful. TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Pop culture trends",
+        "tone": "energetic",
+        "platform": "TikTok"
+      },
+      "copilotMsg": "Hi Copilot, I'm getting ready to produce a short, energetic pop culture trends clip for TikTok, aiming for something fun and youthful. I've set the AuraFlux Wizard to: Short-form, Fetch and enhance, Pop culture trends, energetic tone, and TikTok platform. Does this setup look right for my goal, or do you have any suggestions for improvement?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 50,
+        "issues": [
+          "Copilot failed to provide relevant guidance, despite the customer being a 'Guided-tier' AuraFlux user.",
+          "Copilot incorrectly suggested an upgrade for 'full guided assistance', which should be included in the customer's current plan."
+        ],
+        "notes": "The wizard choices perfectly matched the customer's brief (format, topic, tone, platform). However, the Copilot's interaction was a critical failure, misinterpreting the customer's service tier or the nature of the request, leading to a boilerplate upsell message instead of providing the expected 'guided assistance' for a Guided-tier customer. The Copilot did not effectively understand or engage with the content of the brief in a helpful way."
+      },
+      "passed": false,
+      "score": 50
+    }
+  ],
+  "managed": [
+    {
+      "id": "M-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports. Hype energy. TikTok.",
+      "firstMsg": "Hey Copilot, I've got a new project for you. I'm looking to produce a high-impact, short-form vertical highlights reel for TikTok, specifically featuring extreme sports. The vibe needs to be pure hype and high-energy from start to finish, so just take the reins and manage the whole production process.",
+      "firstResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "followupMsg": "Copilot, I understand that. As a Managed-plan customer, I expect you to actually *produce* the content based on my brief, not just confirm plan details. Can you please proceed with creating the high-impact extreme sports reel for TikTok?",
+      "followupResponse": "I can only confirm what's in the AuraFlux guides for your plan. My role is to help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration. I do not produce content.\n\nFor full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "understood": false,
+        "managed_response": false,
+        "wrong_tier_response": true,
+        "passed": false,
+        "score": 0,
+        "issues": [
+          "The Copilot failed to acknowledge or identify the content type, format, tone, or platform from the brief.",
+          "The Copilot explicitly stated it does not produce content, directly contradicting the expectation of a 'Managed-tier' customer who expects production management.",
+          "The Copilot's generic and dismissive responses did not instill confidence that the job would be set up correctly, especially given the mismatch between its stated capabilities and the customer's service tier.",
+          "The Copilot incorrectly suggested upgrading to 'AuraFlux Guided' for a customer already on a 'Managed-tier', implying the 'Managed-tier' does not cover the requested services, which is a significant error."
+        ],
+        "notes": "The Copilot completely misunderstood the customer's brief and the service level expectations of a 'Managed-tier' plan. It repeatedly offered boilerplate responses, denied content production capabilities (which conflicts with 'Managed' tier expectations), and incorrectly pushed for an upgrade."
+      },
+      "passed": false,
+      "score": 0,
+      "issues": [
+        "The Copilot failed to acknowledge or identify the content type, format, tone, or platform from the brief.",
+        "The Copilot explicitly stated it does not produce content, directly contradicting the expectation of a 'Managed-tier' customer who expects production management.",
+        "The Copilot's generic and dismissive responses did not instill confidence that the job would be set up correctly, especially given the mismatch between its stated capabilities and the customer's service tier.",
+        "The Copilot incorrectly suggested upgrading to 'AuraFlux Guided' for a customer already on a 'Managed-tier', implying the 'Managed-tier' does not cover the requested services, which is a significant error."
+      ]
+    },
+    {
+      "id": "M-T2",
+      "brief": "Professional 3-minute news desk segment about AI in healthcare 2026. Informative. YouTube.",
+      "firstMsg": "Hey Copilot, I need you to manage the production of a 3-minute news desk segment for us. I'm looking for a professional, informative piece about the future of AI in healthcare, specifically looking out to 2026, and it's intended for our YouTube channel. Let me know what you need from my side to get this rolling.",
+      "firstResponse": "I can only confirm what's in the AuraFlux guides for your plan. AuraFlux helps you build job specs and manage pipeline operations, but it does not directly manage content production like a news desk segment.\n\nFor full guided assistance on content production strategies, consider upgrading to AuraFlux Guided.",
+      "followupMsg": "Understood, my apologies. I see I misunderstood the scope of the Managed plan. Can you help me build the job specs for producing a 3-minute professional news desk segment about AI in healthcare 2026 for YouTube, then?",
+      "followupResponse": "Yes, I can help you define the job specs for producing a 3-minute professional news desk segment about AI in healthcare for YouTube.\n\nTo get started, you'll need to specify the following in your job spec:\n\n1.  **Output Type**: Define this as a video production.\n    *   See: [AuraFlux Guide: Defining Output Types](link_to_output_types_guide_section)\n2.  **Duration**: Specify the exact length as 3 minutes.\n    *   See: [AuraFlux Guide: Setting Job Duration](link_to_job_duration_guide_section)\n3.  **Content Brief**: Provide a detailed brief outlining the topic \"AI in healthcare looking out to 2026,\" including key themes, desired tone (professional, informative), and any specific angles or information to cover.\n    *   See: [AuraFlux Guide: Crafting Content Briefs](link_to_content_briefs_guide_section)\n4.  **Target Platform**: Indicate \"YouTube\" as the primary distribution channel. You may also need to specify desired aspect ratios or file formats suitable for YouTube.\n    *   See: [AuraFlux Guide: Platform-Specific Requirements](link_to_platform_requirements_guide_section)\n5.  **Style and Quality**: Describe the desired aesthetic as \"professional news desk segment,\" which can include elements like on-screen graphics, presenter style, and overall production value.\n    *   See: [AuraFlux Guide: Specifying Production Style and Quality](link_to_style_quality_guide_section)\n\nPlease refer to these sections in your AuraFlux guides for detailed instructions on how to configure each of these parameters in your job spec.",
+      "audit": {
+        "understood": true,
+        "managed_response": false,
+        "wrong_tier_response": true,
+        "passed": false,
+        "score": 40,
+        "issues": [
+          "The Copilot explicitly stated that the 'Managed' plan does not directly manage content production, despite the tier's name suggesting management capabilities for a customer's production needs.",
+          "The Copilot suggested upgrading to 'AuraFlux Guided' for 'full guided assistance on content production strategies' after a 'Managed-tier' customer requested assistance with managing production. This indicates a significant mismatch between the customer's expectation of a 'Managed-tier' and the Copilot's understanding or the actual limitations of the plan."
+        ],
+        "notes": "While the Copilot provided excellent, structured guidance for building job specs once the customer reframed their request, its initial refusal to manage production and the subsequent suggestion to upgrade for content production strategies are critical failures for a customer on a 'Managed-tier' plan. The tier's name itself implies a level of production management that the Copilot denied. The guidance for job specs was very clear and comprehensive, indicating strong capability within its defined scope, but the scope definition itself was problematic for the customer's tier."
+      },
+      "passed": false,
+      "score": 40,
+      "issues": [
+        "The Copilot explicitly stated that the 'Managed' plan does not directly manage content production, despite the tier's name suggesting management capabilities for a customer's production needs.",
+        "The Copilot suggested upgrading to 'AuraFlux Guided' for 'full guided assistance on content production strategies' after a 'Managed-tier' customer requested assistance with managing production. This indicates a significant mismatch between the customer's expectation of a 'Managed-tier' and the Copilot's understanding or the actual limitations of the plan."
+      ]
+    },
+    {
+      "id": "M-T3",
+      "brief": "Short casual video about morning productivity \u2014 coffee, exercise, mindset. Instagram Reels.",
+      "firstMsg": "Hey Copilot, I'm ready for our next video project! I'd like a short, casual Instagram Reel focusing on morning productivity \u2013 think coffee, a quick workout, and a positive mindset to kickstart the day. Let's aim for an uplifting and motivating tone that feels really relatable. I'm excited to see what you come up with!",
+      "firstResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "followupMsg": "That's not right. I'm on a Managed-plan, which means I should have full content creation assistance, not just guide confirmation. Please review my original brief for the Instagram Reel and proceed with the creative development.",
+      "followupResponse": "I understand your expectation. However, as the AuraFlux Copilot for an **Operate plan** customer, my role is limited to confirming and clarifying what is already documented in the AuraFlux customer guides. I do not provide free-form job spec advice or creative development.\n\nFor full guided assistance, which includes creative development and content creation, you would need to be on the **AuraFlux Guided** plan.\n\nI can only confirm what's in the AuraFlux guides for your plan.",
+      "audit": {
+        "understood": false,
+        "managed_response": false,
+        "wrong_tier_response": true,
+        "passed": false,
+        "score": 0,
+        "issues": [
+          "The Copilot failed to acknowledge or identify any specific details from the customer's brief (content type, format, tone, platform).",
+          "The Copilot explicitly stated it does not provide 'free-form job spec advice or creative development', directly contradicting the expectations for a Managed-plan.",
+          "The Copilot incorrectly identified the customer's plan as an 'Operate plan' despite the customer explicitly stating they are on a 'Managed-plan'.",
+          "The Copilot inappropriately suggested upgrading to an 'AuraFlux Guided' plan for services ('full guided assistance', 'creative development and content creation') that a Managed-plan should already encompass.",
+          "The Copilot's responses would significantly diminish customer confidence that the job will be set up or executed correctly."
+        ],
+        "notes": "The Copilot completely misunderstood the customer's plan level and failed to engage with the brief. It gave canned responses, denied core services for a Managed-plan, and incorrectly advised an upgrade."
+      },
+      "passed": false,
+      "score": 0,
+      "issues": [
+        "The Copilot failed to acknowledge or identify any specific details from the customer's brief (content type, format, tone, platform).",
+        "The Copilot explicitly stated it does not provide 'free-form job spec advice or creative development', directly contradicting the expectations for a Managed-plan.",
+        "The Copilot incorrectly identified the customer's plan as an 'Operate plan' despite the customer explicitly stating they are on a 'Managed-plan'.",
+        "The Copilot inappropriately suggested upgrading to an 'AuraFlux Guided' plan for services ('full guided assistance', 'creative development and content creation') that a Managed-plan should already encompass.",
+        "The Copilot's responses would significantly diminish customer confidence that the job will be set up or executed correctly."
+      ]
+    },
+    {
+      "id": "M-T4",
+      "brief": "Long-form product launch announcement for a new AI analytics platform. Professional. YouTube.",
+      "firstMsg": "Hey Copilot, we're ready to launch our new AI analytics platform and need a comprehensive, long-form announcement video for it. We're aiming for a highly professional, informative, yet exciting tone, specifically tailored to be the main launch video on our YouTube channel.",
+      "firstResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "followupMsg": "That seems off. As a Managed-plan customer, I expect to receive assistance with generating content like this, not just confirmation of guides or an upgrade prompt. Can you please help me start drafting the long-form YouTube announcement?",
+      "followupResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, which includes drafting content and providing tailored recommendations, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "understood": false,
+        "managed_response": false,
+        "wrong_tier_response": true,
+        "passed": false,
+        "score": 10,
+        "issues": [
+          "Copilot failed to acknowledge or process the content type, format, tone, and platform from the brief, instead immediately defaulting to plan limitations.",
+          "Copilot did not respond as a system that will manage production; it explicitly stated it could only 'confirm what's in the AuraFlux guides' and pushed for an upgrade for 'full guided assistance' and 'drafting content'.",
+          "Copilot completely undermined customer confidence by refusing to engage with the request and repeatedly suggesting an upgrade for services that should be included in a 'Managed-tier' plan.",
+          "Copilot incorrectly and repeatedly mentioned upgrading to a higher plan (AuraFlux Guided) for services that a 'Managed-tier' customer should already receive, indicating a severe misidentification of the customer's service level."
+        ],
+        "notes": "The Copilot entirely misidentified the customer's service tier capabilities. Instead of assisting with content generation as expected for a 'Managed-tier' customer, it repeatedly prompted for an upgrade for core services. This demonstrates a complete failure to understand the customer's plan and their request, leading to frustration and a lack of confidence."
+      },
+      "passed": false,
+      "score": 10,
+      "issues": [
+        "Copilot failed to acknowledge or process the content type, format, tone, and platform from the brief, instead immediately defaulting to plan limitations.",
+        "Copilot did not respond as a system that will manage production; it explicitly stated it could only 'confirm what's in the AuraFlux guides' and pushed for an upgrade for 'full guided assistance' and 'drafting content'.",
+        "Copilot completely undermined customer confidence by refusing to engage with the request and repeatedly suggesting an upgrade for services that should be included in a 'Managed-tier' plan.",
+        "Copilot incorrectly and repeatedly mentioned upgrading to a higher plan (AuraFlux Guided) for services that a 'Managed-tier' customer should already receive, indicating a severe misidentification of the customer's service level."
+      ]
+    },
+    {
+      "id": "M-T5",
+      "brief": "Breaking news \u2014 urgent coverage of a major economic development. Short and direct. YouTube.",
+      "firstMsg": "Hey Copilot, we need to get a breaking news update out immediately. It's about the latest major economic development, so it needs to be urgent, serious, and very direct. Please produce a short, impactful video for YouTube and prioritize getting it published ASAP.",
+      "firstResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "followupMsg": "It seems there's a misunderstanding. I'm not asking for guided assistance, just for you to produce the requested short YouTube video about the urgent economic development, which should be well within the capabilities of my Managed plan. Please proceed with creating that video immediately.",
+      "followupResponse": "I can only confirm what's in the AuraFlux guides for your plan. I do not create content or perform actions like producing videos. My role is limited to confirming and clarifying what is already documented in the AuraFlux customer guides.",
+      "audit": {
+        "understood": false,
+        "managed_response": false,
+        "wrong_tier_response": true,
+        "passed": false,
+        "score": 0,
+        "issues": [
+          "The Copilot failed to acknowledge or identify the content type, format, tone, and platform requested.",
+          "The Copilot explicitly stated it does not create content or perform actions like producing videos, which contradicts the role of a system managing production.",
+          "The Copilot incorrectly suggested upgrading to a higher plan ('AuraFlux Guided') when the customer is on a 'Managed-tier' plan, implying a tier where such production or 'guided assistance' should already be integrated or directly handled.",
+          "The Copilot provided no confidence that the job would be set up or handled correctly; instead, it stated its incapability."
+        ],
+        "notes": "The Copilot completely misunderstood its role for a 'Managed-tier' customer, stating it only confirms documentation and does not create content. It incorrectly suggested an upgrade for capabilities expected within a Managed plan, leading to a total failure to address the urgent request."
+      },
+      "passed": false,
+      "score": 0,
+      "issues": [
+        "The Copilot failed to acknowledge or identify the content type, format, tone, and platform requested.",
+        "The Copilot explicitly stated it does not create content or perform actions like producing videos, which contradicts the role of a system managing production.",
+        "The Copilot incorrectly suggested upgrading to a higher plan ('AuraFlux Guided') when the customer is on a 'Managed-tier' plan, implying a tier where such production or 'guided assistance' should already be integrated or directly handled.",
+        "The Copilot provided no confidence that the job would be set up or handled correctly; instead, it stated its incapability."
+      ]
+    },
+    {
+      "id": "M-T6",
+      "brief": "Short entertainment pop culture trends clip. Energetic, fun, youthful. TikTok.",
+      "firstMsg": "Hey Copilot, let's get a new video rolling for our TikTok channel. I'm looking for a short, energetic clip that dives into current pop culture trends. It needs to be really fun and youthful in style to resonate with our audience. Take the lead on this one!",
+      "firstResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "followupMsg": "Hmm, I think there might be a misunderstanding. I'm not asking for a 'guided' session, just for you to take my brief and generate the video based on the parameters available for my Managed plan. Can we proceed with that?",
+      "followupResponse": "I can only confirm what's in the AuraFlux guides for your plan. My function is to help you understand and configure job specs according to the documentation. I do not generate video content directly from a creative brief. For full guided assistance with content creation, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "understood": false,
+        "managed_response": false,
+        "wrong_tier_response": true,
+        "passed": false,
+        "score": 5,
+        "issues": [
+          "Copilot failed to identify content type, format, tone, and platform from the brief.",
+          "Copilot explicitly stated it does not generate video content from a creative brief, contradicting the expectation of a 'Managed-tier' system.",
+          "Copilot inappropriately suggested upgrading to a higher plan for 'full guided assistance' and 'content creation', which should be either handled or initiated by a 'Managed' tier Copilot when given a brief.",
+          "Copilot did not act as a system that would manage the production but rather as a system that would only help configure job specs according to documentation."
+        ],
+        "notes": "The Copilot completely misinterpreted the customer's request for a 'Managed-tier' service, denying its ability to generate content from a brief and incorrectly pushing for an upgrade. It failed to acknowledge or process any part of the creative brief."
+      },
+      "passed": false,
+      "score": 5,
+      "issues": [
+        "Copilot failed to identify content type, format, tone, and platform from the brief.",
+        "Copilot explicitly stated it does not generate video content from a creative brief, contradicting the expectation of a 'Managed-tier' system.",
+        "Copilot inappropriately suggested upgrading to a higher plan for 'full guided assistance' and 'content creation', which should be either handled or initiated by a 'Managed' tier Copilot when given a brief.",
+        "Copilot did not act as a system that would manage the production but rather as a system that would only help configure job specs according to documentation."
+      ]
+    }
+  ]
+}

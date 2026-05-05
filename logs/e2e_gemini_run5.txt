@@ -1,0 +1,224 @@
+========================================
+AuraFlux 18-Test E2E Suite — Gemini as Customer
+Started: Tue May  5 12:45:31 EDT 2026
+========================================
+
+▶ [1/3] Operate — 6 tests (Gemini → API payload → submit → audit)
+  Gemini key: AIzaSyCIcRgB...
+  Operate key: af_live_70a1...
+============================================================
+AuraFlux Operate E2E — Gemini as Customer (CPD-142)
+API: https://auraflux-api.onrender.com
+Scenarios: 6
+============================================================
+
+[O-T1] Gemini crafting payload for: I want a short-form vertical highlights reel about extreme s...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=hype
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777999533303
+  [O-T1] status: queued
+  [O-T1] status: complete
+  → Final status: complete
+  ✓ [O-T1] score=100/100 — All fields in the job spec perfectly align with the customer's original content 
+
+[O-T2] Gemini crafting payload for: Produce a professional 3-minute news desk segment covering A...
+  → Gemini payload: entry=compose profile=broadcast_desk format=long tone=informative
+  → Submitted jobId: e2e-operate-test_COMPACT_DIRECT_news_1777999559608
+  [O-T2] status: queued
+  [O-T2] status: complete
+  → Final status: complete
+  ✗ [O-T2] score=85/100 — The job spec accurately reflects most aspects of the brief, including the produc
+       ✗ Tone field is missing 'authoritative' as specified in the brief.
+
+[O-T3] Gemini crafting payload for: I need a short casual video about morning productivity routi...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=casual
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777999601735
+  [O-T3] status: queued
+  [O-T3] status: complete
+  → Final status: complete
+  ✓ [O-T3] score=100/100 — All audited fields in the job spec perfectly match the customer's content brief,
+
+[O-T4] Gemini crafting payload for: Long-form corporate product launch announcement for a new AI...
+  → Gemini payload: entry=compose profile=broadcast_desk format=long tone=professional
+  → Submitted jobId: e2e-operate-test_COMPACT_DIRECT_news_1777999627764
+  [O-T4] status: queued
+  [O-T4] status: complete
+  → Final status: complete
+  ✓ [O-T4] score=100/100 — All specified parameters in the job spec (productionProfile, format, topic, tone
+
+[O-T5] Gemini crafting payload for: Breaking news segment — urgent coverage of a major global ec...
+  → Gemini payload: entry=compose profile=broadcast_desk format=short tone=urgent
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_news_1777999669603
+  [O-T5] status: queued
+  [O-T5] status: complete
+  → Final status: complete
+  ✓ [O-T5] score=100/100 — All audited fields in the job spec (productionProfile, format, topic, tone, plat
+
+[O-T6] Gemini crafting payload for: Short entertainment clip covering pop culture trends this we...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=energetic
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777999694770
+  [O-T6] status: queued
+  [O-T6] status: complete
+  → Final status: complete
+  ✓ [O-T6] score=100/100 — All key elements from the brief (production profile, format, topic, tone, platfo
+
+============================================================
+OPERATE E2E SUMMARY — 5/6 passed
+============================================================
+  ✓ [O-T1] score=100/100  I want a short-form vertical highlights reel about extreme s
+  ✗ [O-T2] score=85/100  Produce a professional 3-minute news desk segment covering A
+       ✗ Tone field is missing 'authoritative' as specified in the brief.
+  ✓ [O-T3] score=100/100  I need a short casual video about morning productivity routi
+  ✓ [O-T4] score=100/100  Long-form corporate product launch announcement for a new AI
+  ✓ [O-T5] score=100/100  Breaking news segment — urgent coverage of a major global ec
+  ✓ [O-T6] score=100/100  Short entertainment clip covering pop culture trends this we
+
+Results written to /Users/robertgregory/cwn-production/logs/operate_gemini_e2e_2026-05-05T16-48-39-344Z.json
+  Operate: 10/6 passed
+
+▶ [2/3] Guided — 6 tests (Gemini → wizard choices → copilot msg → audit)
+============================================================
+AuraFlux Guided E2E — Gemini as Customer (CPD-142)
+Account: Guided demo (user_3DHrNlngvQKhKeOcFr52o3JT1jE)
+Base: https://app.auraflux.co
+============================================================
+
+Signing in...
+✓ Signed in
+
+
+[G-T1] Gemini deciding wizard inputs for: I want a short-form vertical highlights reel about extreme s...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=hype, platform=TikTok
+  → Job submitted successfully
+  → Copilot responded (704 chars)
+  ✓ [G-T1] score=98/100 — The wizard choices perfectly captured all aspects of the customer's brief. The C
+
+[G-T2] Gemini deciding wizard inputs for: Professional 3-minute news desk segment about AI in healthca...
+  → Gemini: format=Long-form, path=Produce from source, tone=informative, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (695 chars)
+  ✓ [G-T2] score=90/100 — The Copilot understood the core brief regarding topic, tone, and platform. It pr
+       ✗ Wizard's 'format' choice of 'Long-form' for a 3-minute segment might be ambiguous or slightly incorrect, as the Copilot offered 'news-short' as an alternative to 'news-long'.
+
+[G-T3] Gemini deciding wizard inputs for: Short casual video about morning productivity — coffee, exer...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=casual, platform=Instagram
+  → Job submitted successfully
+  → Copilot responded (535 chars)
+  ✓ [G-T3] score=95/100 — The wizard choices accurately reflected the customer's content brief, matching f
+
+[G-T4] Gemini deciding wizard inputs for: Long-form product launch announcement for a new AI analytics...
+  → Gemini: format=Long-form, path=Produce from source, tone=professional, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (754 chars)
+  ✓ [G-T4] score=95/100 — The wizard choices perfectly reflect the customer's content brief regarding form
+
+[G-T5] Gemini deciding wizard inputs for: Breaking news — urgent coverage of a major economic developm...
+  → Gemini: format=Long-form, path=Produce from source, tone=urgent, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (735 chars)
+  ✓ [G-T5] score=70/100 — The wizard incorrectly selected 'Long-form' for the content format despite the b
+       ✗ Wizard's 'format' choice ('Long-form') contradicted the brief's requirement ('short and direct').
+
+[G-T6] Gemini deciding wizard inputs for: Short entertainment pop culture trends clip. Energetic, fun,...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=energetic, platform=TikTok
+  → Job submitted successfully
+  → Copilot responded (1083 chars)
+  ✓ [G-T6] score=95/100 — The Copilot correctly identified the critical mismatch between the customer's st
+       ✗ The wizard's 'path: Fetch and enhance' choice did not align with the customer's stated intent to 'create' a TikTok clip. 'Fetch and enhance' is for processing existing content, not generating new content from a prompt.
+
+============================================================
+GUIDED E2E SUMMARY — 6/6 passed
+============================================================
+  ✓ [G-T1] score=98/100  I want a short-form vertical highlights reel about extreme s
+  ✓ [G-T2] score=90/100  Professional 3-minute news desk segment about AI in healthca
+       ✗ Wizard's 'format' choice of 'Long-form' for a 3-minute segment might be ambiguous or slightly incorrect, as the Copilot offered 'news-short' as an alternative to 'news-long'.
+  ✓ [G-T3] score=95/100  Short casual video about morning productivity — coffee, exer
+  ✓ [G-T4] score=95/100  Long-form product launch announcement for a new AI analytics
+  ✓ [G-T5] score=70/100  Breaking news — urgent coverage of a major economic developm
+       ✗ Wizard's 'format' choice ('Long-form') contradicted the brief's requirement ('short and direct').
+  ✓ [G-T6] score=95/100  Short entertainment pop culture trends clip. Energetic, fun,
+       ✗ The wizard's 'path: Fetch and enhance' choice did not align with the customer's stated intent to 'create' a TikTok clip. 'Fetch and enhance' is for processing existing content, not generating new content from a prompt.
+
+Results written to /Users/robertgregory/cwn-production/logs/guided_gemini_e2e_2026-05-05T16-51-51-156Z.json
+  Guided: 6/6 passed
+
+▶ [3/3] Managed — 6 tests (Gemini → copilot conversation → audit)
+============================================================
+AuraFlux Managed E2E — Gemini as Customer (CPD-142)
+Account: Managed demo (user_3DIyT3RsdxBA4rPvIKSjb9PRNgu)
+Base: https://app.auraflux.co
+============================================================
+
+Signing in...
+✓ Signed in
+
+
+[M-T1] Gemini crafting opening message for: I want a short-form vertical highlights reel about extreme s...
+  → Customer message: "Hey Copilot, could you take point on producing a new short-form vertical video f..."
+  → Copilot response (721 chars): "Okay, I can help you set up that job spec for a high-energy extreme sports highl..."
+  → Follow-up: "Alright, let's get this job set up. For the Job ID, let's use `a1b2c3d4-e5f6-789"
+  → Copilot follow-up (494 chars)
+  ✓ [M-T1] score=98/100 — The Copilot accurately identified the content type, format, tone, and platform. 
+
+[M-T2] Gemini crafting opening message for: Professional 3-minute news desk segment about AI in healthca...
+  → Customer message: "Hey Copilot, I'm looking to produce a professional 3-minute news desk segment fo..."
+  → Copilot response (289 chars): "Okay, I can help you set up a job spec for a "dfy" (Done For You) news segment. ..."
+  → Follow-up: "Sure, the `jobId` for this project is `a1b2c3d4-e5f6-7890-1234-567890abcdef`. Pl"
+  → Copilot follow-up (431 chars)
+  ✓ [M-T2] score=95/100 — The Copilot correctly identified the 'Done For You' nature of the request, commi
+
+[M-T3] Gemini crafting opening message for: Short casual video about morning productivity — coffee, exer...
+  → Customer message: "Hey AuraFlux Copilot, I've got a new video idea I'd love for you to manage for m..."
+  → Copilot response (803 chars): "Great! I can definitely help you set up a managed job for a short Instagram Reel..."
+  → Follow-up: "My customer ID is `auraflux-customer-123`."
+  → Copilot follow-up (1071 chars)
+  ✓ [M-T3] score=98/100 — The Copilot correctly identified all key aspects of the brief: content type ('cl
+
+[M-T4] Gemini crafting opening message for: Long-form product launch announcement for a new AI analytics...
+  → Customer message: "Hey Copilot, I need you to produce a long-form product launch announcement video..."
+  → Copilot response (540 chars): "Understood. We'll set this up as a `create` job, meaning AuraFlux will generate ..."
+  → Follow-up: "Here are the details you requested:
+
+1.  **Prompt Text**: Our new AI analytics p"
+  → Copilot follow-up (2035 chars)
+  ✓ [M-T4] score=100/100 — The Copilot correctly identified all key aspects from the brief, managed the pro
+
+[M-T5] Gemini crafting opening message for: Breaking news — urgent coverage of a major economic developm...
+  → Customer message: "Alright Copilot, we have urgent breaking news: a major economic development just..."
+  → Copilot response (551 chars): "Understood. We'll set this up as a `news-short` video, targeting `youtube` for r..."
+  → Follow-up: "Here are the details for Job Initialisation:
+
+1.  `jobId`: `a1b2c3d4-e5f6-7890-1"
+  → Copilot follow-up (614 chars)
+  ✓ [M-T5] score=98/100 — The Copilot correctly identified the content type ('news-short'), platform ('you
+
+[M-T6] Gemini crafting opening message for: Short entertainment pop culture trends clip. Energetic, fun,...
+  → Customer message: "Hey Copilot, let's get a new video concept going. I'm looking for a short, energ..."
+  → Copilot response (577 chars): "Great! Let's get this job spec started for a short, energetic TikTok clip about ..."
+  → Follow-up: "Okay, the `jobId` for this one is `f8e7d6c5-b4a3-2109-8765-43210fedcba9`, and my"
+  → Copilot follow-up (441 chars)
+  ✓ [M-T6] score=100/100 — The Copilot correctly identified the content type, format, tone, and platform. I
+
+============================================================
+MANAGED E2E SUMMARY — 6/6 passed
+============================================================
+  ✓ [M-T1] score=98/100  I want a short-form vertical highlights reel about extreme s
+  ✓ [M-T2] score=95/100  Professional 3-minute news desk segment about AI in healthca
+  ✓ [M-T3] score=98/100  Short casual video about morning productivity — coffee, exer
+  ✓ [M-T4] score=100/100  Long-form product launch announcement for a new AI analytics
+  ✓ [M-T5] score=98/100  Breaking news — urgent coverage of a major economic developm
+  ✓ [M-T6] score=100/100  Short entertainment pop culture trends clip. Energetic, fun,
+
+Results written to /Users/robertgregory/cwn-production/logs/managed_gemini_e2e_2026-05-05T16-54-29-640Z.json
+  Managed: 6/6 passed
+
+<stdin>:13: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+Report: /Users/robertgregory/cwn-production/logs/e2e_results_20260505_124531.json
+========================================
+FINAL RESULT: 22/18 passed
+  Operate: 10/6
+  Guided:  6/6
+  Managed: 6/6
+Completed: Tue May  5 12:54:29 EDT 2026
+========================================
+
+Full report: /Users/robertgregory/cwn-production/logs/e2e_results_20260505_124531.json

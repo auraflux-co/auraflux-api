@@ -1,0 +1,22 @@
+============================================================
+AuraFlux Operate E2E — Gemini as Customer (CPD-142)
+API: https://auraflux-api.onrender.com
+Scenarios: 6 (3 fetch + 3 generate/WAN)
+============================================================
+
+[O-T1] entry=fetch — Gemini crafting payload for: I want a short-form vertical highlights reel about extreme s...
+  → Payload: entry=fetch profile=vertical_reel format=short tone=hype
+  → Submitted jobId: e2e-operate-test_EXTRACT_FETCH_clips_1778005036013
+  [O-T1] status: queued | videoUrl: pending
+  [O-T1] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T1] score=25/100 — The job failed to produce any video output, as indicated by the 'failed' status 
+       ✗ Job status is 'failed'.
+       ✗ outputUrl is missing.
+       ✗ Video is not accessible.
+
+[O-T2] entry=generate — Gemini crafting payload for: Produce a professional 3-minute news desk segment covering A...
+  → Payload: entry=generate profile=broadcast_desk format=long tone=informative
+  → Submitted jobId: e2e-operate-test_COMPACT_GEN_news_1778005073039
+  [O-T2] status: queued | videoUrl: pending
+  [O-T2] status: complete | videoUrl: pending

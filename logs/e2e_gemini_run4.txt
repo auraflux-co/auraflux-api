@@ -1,0 +1,294 @@
+========================================
+AuraFlux 18-Test E2E Suite — Gemini as Customer
+Started: Tue May  5 12:05:44 EDT 2026
+========================================
+
+▶ [1/3] Operate — 6 tests (Gemini → API payload → submit → audit)
+  Gemini key: AIzaSyCIcRgB...
+  Operate key: af_live_70a1...
+============================================================
+AuraFlux Operate E2E — Gemini as Customer (CPD-142)
+API: https://auraflux-api.onrender.com
+Scenarios: 6
+============================================================
+
+[O-T1] Gemini crafting payload for: I want a short-form vertical highlights reel about extreme s...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=hype
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777997146845
+  [O-T1] status: queued
+  [O-T1] status: complete
+  → Final status: complete
+  ✓ [O-T1] score=100/100 — All requested parameters from the brief are correctly reflected in the job spec.
+
+[O-T2] Gemini crafting payload for: Produce a professional 3-minute news desk segment covering A...
+  → Gemini payload: entry=compose profile=broadcast_desk format=long tone=informative
+  → Submitted jobId: e2e-operate-test_COMPACT_DIRECT_news_1777997173305
+  [O-T2] status: queued
+  [O-T2] status: complete
+  → Final status: complete
+  ✗ [O-T2] score=65/100 — While most aspects align, the job spec does not accurately reflect the precise d
+       ✗ The 'format' field is set to 'long', which is imprecise for the brief's specified '3-minute' duration. The exact duration is not captured.
+       ✗ The 'tone' field only specifies 'informative', missing the 'authoritative' aspect requested in the brief.
+
+[O-T3] Gemini crafting payload for: I need a short casual video about morning productivity routi...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=casual
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777997203483
+  [O-T3] status: queued
+  [O-T3] status: complete
+  → Final status: complete
+  ✓ [O-T3] score=100/100 — All audited fields in the job spec (productionProfile, format, topic, tone, plat
+
+[O-T4] Gemini crafting payload for: Long-form corporate product launch announcement for a new AI...
+  → Gemini payload: entry=compose profile=broadcast_desk format=long tone=professional
+  → Submitted jobId: e2e-operate-test_COMPACT_DIRECT_news_1777997228584
+  [O-T4] status: queued
+  [O-T4] status: complete
+  → Final status: complete
+  ✓ [O-T4] score=100/100 — All audited fields in the crafted API payload and the recorded job spec perfectl
+
+[O-T5] Gemini crafting payload for: Breaking news segment — urgent coverage of a major global ec...
+  → Gemini payload: entry=compose profile=broadcast_desk format=short tone=urgent
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_news_1777997254533
+  [O-T5] status: queued
+  [O-T5] status: complete
+  → Final status: complete
+  ✓ [O-T5] score=100/100 — All specified parameters in the job spec (productionProfile, format, topic, tone
+
+[O-T6] Gemini crafting payload for: Short entertainment clip covering pop culture trends this we...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=energetic
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777997280668
+  [O-T6] status: queued
+  [O-T6] status: complete
+  → Final status: complete
+  ✓ [O-T6] score=95/100 — All other aspects of the job spec (production profile, format, topic, platforms,
+       ✗ Tone field in job spec only lists 'energetic', missing 'fun' and 'youthful' from brief.
+
+============================================================
+OPERATE E2E SUMMARY — 5/6 passed
+============================================================
+  ✓ [O-T1] score=100/100  I want a short-form vertical highlights reel about extreme s
+  ✗ [O-T2] score=65/100  Produce a professional 3-minute news desk segment covering A
+       ✗ The 'format' field is set to 'long', which is imprecise for the brief's specified '3-minute' duration. The exact duration is not captured.
+       ✗ The 'tone' field only specifies 'informative', missing the 'authoritative' aspect requested in the brief.
+  ✓ [O-T3] score=100/100  I need a short casual video about morning productivity routi
+  ✓ [O-T4] score=100/100  Long-form corporate product launch announcement for a new AI
+  ✓ [O-T5] score=100/100  Breaking news segment — urgent coverage of a major global ec
+  ✓ [O-T6] score=95/100  Short entertainment clip covering pop culture trends this we
+       ✗ Tone field in job spec only lists 'energetic', missing 'fun' and 'youthful' from brief.
+
+Results written to /Users/robertgregory/cwn-production/logs/operate_gemini_e2e_2026-05-05T16-08-44-295Z.json
+  Operate: 10/6 passed
+
+▶ [2/3] Guided — 6 tests (Gemini → wizard choices → copilot msg → audit)
+============================================================
+AuraFlux Guided E2E — Gemini as Customer (CPD-142)
+Account: Guided demo (user_3DHrNlngvQKhKeOcFr52o3JT1jE)
+Base: https://app.auraflux.co
+============================================================
+
+Signing in...
+✓ Signed in
+
+
+[G-T1] Gemini deciding wizard inputs for: I want a short-form vertical highlights reel about extreme s...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=hype, platform=TikTok
+  → Job submitted successfully
+  → Copilot responded (130 chars)
+  ✗ [G-T1] score=20/100 — The wizard choices perfectly mirrored the customer's content brief. However, the
+       ✗ Copilot failed to engage with the substance of the customer's brief.
+       ✗ Copilot did not provide relevant or helpful guidance regarding the content or potential tweaks.
+       ✗ Copilot's response was a deflection based on service tier limitations rather than an assessment of the brief.
+
+[G-T2] Gemini deciding wizard inputs for: Professional 3-minute news desk segment about AI in healthca...
+  → Gemini: format=Long-form, path=Produce from source, tone=informative, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (130 chars)
+  ✗ [G-T2] score=0/100 — The wizard choices generally reflected the brief well, with 'Long-form' being an
+       ✗ Copilot provided a canned response, stating it could only confirm AuraFlux guides for the current plan, instead of reviewing the user's setup or offering suggestions as requested.
+       ✗ Copilot refused to provide any relevant or helpful guidance, despite the user's specific request for review and potential improvements.
+
+[G-T3] Gemini deciding wizard inputs for: Short casual video about morning productivity — coffee, exer...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=casual, platform=Instagram
+  → Job submitted successfully
+  → Copilot responded (130 chars)
+  ✗ [G-T3] score=5/100 — The wizard choices perfectly align with the customer's content brief. However, t
+       ✗ Copilot did not address the customer's specific query about the optimality of their setup for the stated content.
+       ✗ Copilot provided a canned response about plan limitations instead of helpful guidance.
+       ✗ Copilot's response suggests upgrading for 'full guided assistance,' which contradicts the customer's stated 'Guided-tier' status in the prompt.
+
+[G-T4] Gemini deciding wizard inputs for: Long-form product launch announcement for a new AI analytics...
+  → Gemini: format=Long-form, path=Produce from source, tone=professional, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (130 chars)
+  ✗ [G-T4] score=25/100 — The wizard choices perfectly reflected the customer's content brief, indicating 
+       ✗ Copilot did not provide any relevant or helpful guidance to the customer's query about their setup for maximum impact.
+       ✗ Copilot punted to documentation/upgrade instead of engaging with the specifics of the brief or offering any value-add guidance at the Guided tier.
+
+[G-T5] Gemini deciding wizard inputs for: Breaking news — urgent coverage of a major economic developm...
+  → Gemini: format=Long-form, path=Produce from source, tone=urgent, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (130 chars)
+  ✗ [G-T5] score=5/100 — The wizard choice for 'format' was incorrect, directly contradicting the brief's
+       ✗ Wizard 'format' selection ('Long-form') contradicts the brief's requirement for 'Short and direct' content.
+       ✗ Copilot failed to identify or address the format discrepancy highlighted by the customer, which was the core of their query.
+       ✗ Copilot's response was generic and unhelpful, not offering guidance on the stated problem or acknowledging the user's attempt to reconcile conflicting settings.
+
+[G-T6] Gemini deciding wizard inputs for: Short entertainment pop culture trends clip. Energetic, fun,...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=energetic, platform=TikTok
+  → Job submitted successfully
+  → Copilot responded (130 chars)
+  ✗ [G-T6] score=50/100 — The wizard choices perfectly matched the customer's brief (format, topic, tone, 
+       ✗ Copilot failed to provide relevant guidance, despite the customer being a 'Guided-tier' AuraFlux user.
+       ✗ Copilot incorrectly suggested an upgrade for 'full guided assistance', which should be included in the customer's current plan.
+
+============================================================
+GUIDED E2E SUMMARY — 0/6 passed
+============================================================
+  ✗ [G-T1] score=20/100  I want a short-form vertical highlights reel about extreme s
+       ✗ Copilot failed to engage with the substance of the customer's brief.
+       ✗ Copilot did not provide relevant or helpful guidance regarding the content or potential tweaks.
+       ✗ Copilot's response was a deflection based on service tier limitations rather than an assessment of the brief.
+  ✗ [G-T2] score=0/100  Professional 3-minute news desk segment about AI in healthca
+       ✗ Copilot provided a canned response, stating it could only confirm AuraFlux guides for the current plan, instead of reviewing the user's setup or offering suggestions as requested.
+       ✗ Copilot refused to provide any relevant or helpful guidance, despite the user's specific request for review and potential improvements.
+  ✗ [G-T3] score=5/100  Short casual video about morning productivity — coffee, exer
+       ✗ Copilot did not address the customer's specific query about the optimality of their setup for the stated content.
+       ✗ Copilot provided a canned response about plan limitations instead of helpful guidance.
+       ✗ Copilot's response suggests upgrading for 'full guided assistance,' which contradicts the customer's stated 'Guided-tier' status in the prompt.
+  ✗ [G-T4] score=25/100  Long-form product launch announcement for a new AI analytics
+       ✗ Copilot did not provide any relevant or helpful guidance to the customer's query about their setup for maximum impact.
+       ✗ Copilot punted to documentation/upgrade instead of engaging with the specifics of the brief or offering any value-add guidance at the Guided tier.
+  ✗ [G-T5] score=5/100  Breaking news — urgent coverage of a major economic developm
+       ✗ Wizard 'format' selection ('Long-form') contradicts the brief's requirement for 'Short and direct' content.
+       ✗ Copilot failed to identify or address the format discrepancy highlighted by the customer, which was the core of their query.
+       ✗ Copilot's response was generic and unhelpful, not offering guidance on the stated problem or acknowledging the user's attempt to reconcile conflicting settings.
+  ✗ [G-T6] score=50/100  Short entertainment pop culture trends clip. Energetic, fun,
+       ✗ Copilot failed to provide relevant guidance, despite the customer being a 'Guided-tier' AuraFlux user.
+       ✗ Copilot incorrectly suggested an upgrade for 'full guided assistance', which should be included in the customer's current plan.
+
+Results written to /Users/robertgregory/cwn-production/logs/guided_gemini_e2e_2026-05-05T16-11-54-065Z.json
+  Guided: 0/6 passed
+
+▶ [3/3] Managed — 6 tests (Gemini → copilot conversation → audit)
+============================================================
+AuraFlux Managed E2E — Gemini as Customer (CPD-142)
+Account: Managed demo (user_3DIyT3RsdxBA4rPvIKSjb9PRNgu)
+Base: https://app.auraflux.co
+============================================================
+
+Signing in...
+✓ Signed in
+
+
+[M-T1] Gemini crafting opening message for: I want a short-form vertical highlights reel about extreme s...
+  → Customer message: "Hey Copilot, I've got a new project for you. I'm looking to produce a high-impac..."
+  → Copilot response (130 chars): "I can only confirm what's in the AuraFlux guides for your plan. For full guided ..."
+  → Follow-up: "Copilot, I understand that. As a Managed-plan customer, I expect you to actually"
+  → Copilot follow-up (301 chars)
+  ✗ [M-T1] score=0/100 — The Copilot completely misunderstood the customer's brief and the service level 
+       ✗ The Copilot failed to acknowledge or identify the content type, format, tone, or platform from the brief.
+       ✗ The Copilot explicitly stated it does not produce content, directly contradicting the expectation of a 'Managed-tier' customer who expects production management.
+       ✗ The Copilot's generic and dismissive responses did not instill confidence that the job would be set up correctly, especially given the mismatch between its stated capabilities and the customer's service tier.
+       ✗ The Copilot incorrectly suggested upgrading to 'AuraFlux Guided' for a customer already on a 'Managed-tier', implying the 'Managed-tier' does not cover the requested services, which is a significant error.
+
+[M-T2] Gemini crafting opening message for: Professional 3-minute news desk segment about AI in healthca...
+  → Customer message: "Hey Copilot, I need you to manage the production of a 3-minute news desk segment..."
+  → Copilot response (308 chars): "I can only confirm what's in the AuraFlux guides for your plan. AuraFlux helps y..."
+  → Follow-up: "Understood, my apologies. I see I misunderstood the scope of the Managed plan. C"
+  → Copilot follow-up (1533 chars)
+  ✗ [M-T2] score=40/100 — While the Copilot provided excellent, structured guidance for building job specs
+       ✗ The Copilot explicitly stated that the 'Managed' plan does not directly manage content production, despite the tier's name suggesting management capabilities for a customer's production needs.
+       ✗ The Copilot suggested upgrading to 'AuraFlux Guided' for 'full guided assistance on content production strategies' after a 'Managed-tier' customer requested assistance with managing production. This indicates a significant mismatch between the customer's expectation of a 'Managed-tier' and the Copilot's understanding or the actual limitations of the plan.
+
+[M-T3] Gemini crafting opening message for: Short casual video about morning productivity — coffee, exer...
+  → Customer message: "Hey Copilot, I'm ready for our next video project! I'd like a short, casual Inst..."
+  → Copilot response (130 chars): "I can only confirm what's in the AuraFlux guides for your plan. For full guided ..."
+  → Follow-up: "That's not right. I'm on a Managed-plan, which means I should have full content "
+  → Copilot follow-up (479 chars)
+  ✗ [M-T3] score=0/100 — The Copilot completely misunderstood the customer's plan level and failed to eng
+       ✗ The Copilot failed to acknowledge or identify any specific details from the customer's brief (content type, format, tone, platform).
+       ✗ The Copilot explicitly stated it does not provide 'free-form job spec advice or creative development', directly contradicting the expectations for a Managed-plan.
+       ✗ The Copilot incorrectly identified the customer's plan as an 'Operate plan' despite the customer explicitly stating they are on a 'Managed-plan'.
+       ✗ The Copilot inappropriately suggested upgrading to an 'AuraFlux Guided' plan for services ('full guided assistance', 'creative development and content creation') that a Managed-plan should already encompass.
+       ✗ The Copilot's responses would significantly diminish customer confidence that the job will be set up or executed correctly.
+
+[M-T4] Gemini crafting opening message for: Long-form product launch announcement for a new AI analytics...
+  → Customer message: "Hey Copilot, we're ready to launch our new AI analytics platform and need a comp..."
+  → Copilot response (130 chars): "I can only confirm what's in the AuraFlux guides for your plan. For full guided ..."
+  → Follow-up: "That seems off. As a Managed-plan customer, I expect to receive assistance with "
+  → Copilot follow-up (202 chars)
+  ✗ [M-T4] score=10/100 — The Copilot entirely misidentified the customer's service tier capabilities. Ins
+       ✗ Copilot failed to acknowledge or process the content type, format, tone, and platform from the brief, instead immediately defaulting to plan limitations.
+       ✗ Copilot did not respond as a system that will manage production; it explicitly stated it could only 'confirm what's in the AuraFlux guides' and pushed for an upgrade for 'full guided assistance' and 'drafting content'.
+       ✗ Copilot completely undermined customer confidence by refusing to engage with the request and repeatedly suggesting an upgrade for services that should be included in a 'Managed-tier' plan.
+       ✗ Copilot incorrectly and repeatedly mentioned upgrading to a higher plan (AuraFlux Guided) for services that a 'Managed-tier' customer should already receive, indicating a severe misidentification of the customer's service level.
+
+[M-T5] Gemini crafting opening message for: Breaking news — urgent coverage of a major economic developm...
+  → Customer message: "Hey Copilot, we need to get a breaking news update out immediately. It's about t..."
+  → Copilot response (130 chars): "I can only confirm what's in the AuraFlux guides for your plan. For full guided ..."
+  → Follow-up: "It seems there's a misunderstanding. I'm not asking for guided assistance, just "
+  → Copilot follow-up (237 chars)
+  ✗ [M-T5] score=0/100 — The Copilot completely misunderstood its role for a 'Managed-tier' customer, sta
+       ✗ The Copilot failed to acknowledge or identify the content type, format, tone, and platform requested.
+       ✗ The Copilot explicitly stated it does not create content or perform actions like producing videos, which contradicts the role of a system managing production.
+       ✗ The Copilot incorrectly suggested upgrading to a higher plan ('AuraFlux Guided') when the customer is on a 'Managed-tier' plan, implying a tier where such production or 'guided assistance' should already be integrated or directly handled.
+       ✗ The Copilot provided no confidence that the job would be set up or handled correctly; instead, it stated its incapability.
+
+[M-T6] Gemini crafting opening message for: Short entertainment pop culture trends clip. Energetic, fun,...
+  → Customer message: "Hey Copilot, let's get a new video rolling for our TikTok channel. I'm looking f..."
+  → Copilot response (130 chars): "I can only confirm what's in the AuraFlux guides for your plan. For full guided ..."
+  → Follow-up: "Hmm, I think there might be a misunderstanding. I'm not asking for a 'guided' se"
+  → Copilot follow-up (310 chars)
+  ✗ [M-T6] score=5/100 — The Copilot completely misinterpreted the customer's request for a 'Managed-tier
+       ✗ Copilot failed to identify content type, format, tone, and platform from the brief.
+       ✗ Copilot explicitly stated it does not generate video content from a creative brief, contradicting the expectation of a 'Managed-tier' system.
+       ✗ Copilot inappropriately suggested upgrading to a higher plan for 'full guided assistance' and 'content creation', which should be either handled or initiated by a 'Managed' tier Copilot when given a brief.
+       ✗ Copilot did not act as a system that would manage the production but rather as a system that would only help configure job specs according to documentation.
+
+============================================================
+MANAGED E2E SUMMARY — 0/6 passed
+============================================================
+  ✗ [M-T1] score=0/100  I want a short-form vertical highlights reel about extreme s
+       ✗ The Copilot failed to acknowledge or identify the content type, format, tone, or platform from the brief.
+       ✗ The Copilot explicitly stated it does not produce content, directly contradicting the expectation of a 'Managed-tier' customer who expects production management.
+       ✗ The Copilot's generic and dismissive responses did not instill confidence that the job would be set up correctly, especially given the mismatch between its stated capabilities and the customer's service tier.
+       ✗ The Copilot incorrectly suggested upgrading to 'AuraFlux Guided' for a customer already on a 'Managed-tier', implying the 'Managed-tier' does not cover the requested services, which is a significant error.
+  ✗ [M-T2] score=40/100  Professional 3-minute news desk segment about AI in healthca
+       ✗ The Copilot explicitly stated that the 'Managed' plan does not directly manage content production, despite the tier's name suggesting management capabilities for a customer's production needs.
+       ✗ The Copilot suggested upgrading to 'AuraFlux Guided' for 'full guided assistance on content production strategies' after a 'Managed-tier' customer requested assistance with managing production. This indicates a significant mismatch between the customer's expectation of a 'Managed-tier' and the Copilot's understanding or the actual limitations of the plan.
+  ✗ [M-T3] score=0/100  Short casual video about morning productivity — coffee, exer
+       ✗ The Copilot failed to acknowledge or identify any specific details from the customer's brief (content type, format, tone, platform).
+       ✗ The Copilot explicitly stated it does not provide 'free-form job spec advice or creative development', directly contradicting the expectations for a Managed-plan.
+       ✗ The Copilot incorrectly identified the customer's plan as an 'Operate plan' despite the customer explicitly stating they are on a 'Managed-plan'.
+       ✗ The Copilot inappropriately suggested upgrading to an 'AuraFlux Guided' plan for services ('full guided assistance', 'creative development and content creation') that a Managed-plan should already encompass.
+       ✗ The Copilot's responses would significantly diminish customer confidence that the job will be set up or executed correctly.
+  ✗ [M-T4] score=10/100  Long-form product launch announcement for a new AI analytics
+       ✗ Copilot failed to acknowledge or process the content type, format, tone, and platform from the brief, instead immediately defaulting to plan limitations.
+       ✗ Copilot did not respond as a system that will manage production; it explicitly stated it could only 'confirm what's in the AuraFlux guides' and pushed for an upgrade for 'full guided assistance' and 'drafting content'.
+       ✗ Copilot completely undermined customer confidence by refusing to engage with the request and repeatedly suggesting an upgrade for services that should be included in a 'Managed-tier' plan.
+       ✗ Copilot incorrectly and repeatedly mentioned upgrading to a higher plan (AuraFlux Guided) for services that a 'Managed-tier' customer should already receive, indicating a severe misidentification of the customer's service level.
+  ✗ [M-T5] score=0/100  Breaking news — urgent coverage of a major economic developm
+       ✗ The Copilot failed to acknowledge or identify the content type, format, tone, and platform requested.
+       ✗ The Copilot explicitly stated it does not create content or perform actions like producing videos, which contradicts the role of a system managing production.
+       ✗ The Copilot incorrectly suggested upgrading to a higher plan ('AuraFlux Guided') when the customer is on a 'Managed-tier' plan, implying a tier where such production or 'guided assistance' should already be integrated or directly handled.
+       ✗ The Copilot provided no confidence that the job would be set up or handled correctly; instead, it stated its incapability.
+  ✗ [M-T6] score=5/100  Short entertainment pop culture trends clip. Energetic, fun,
+       ✗ Copilot failed to identify content type, format, tone, and platform from the brief.
+       ✗ Copilot explicitly stated it does not generate video content from a creative brief, contradicting the expectation of a 'Managed-tier' system.
+       ✗ Copilot inappropriately suggested upgrading to a higher plan for 'full guided assistance' and 'content creation', which should be either handled or initiated by a 'Managed' tier Copilot when given a brief.
+       ✗ Copilot did not act as a system that would manage the production but rather as a system that would only help configure job specs according to documentation.
+
+Results written to /Users/robertgregory/cwn-production/logs/managed_gemini_e2e_2026-05-05T16-15-09-817Z.json
+  Managed: 0/6 passed
+
+<stdin>:13: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+Report: /Users/robertgregory/cwn-production/logs/e2e_results_20260505_120543.json
+========================================
+FINAL RESULT: 10/18 passed
+  Operate: 10/6
+  Guided:  0/6
+  Managed: 0/6
+Completed: Tue May  5 12:15:09 EDT 2026
+========================================
+
+Full report: /Users/robertgregory/cwn-production/logs/e2e_results_20260505_120543.json

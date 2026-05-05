@@ -1,0 +1,202 @@
+{
+  "tier": "operate",
+  "timestamp": "2026-05-05T15-10-41-116Z",
+  "summary": {
+    "passed": 4,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "O-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports \u2014 skateboarding, surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "extreme sports: skateboarding, surfing, snowboarding",
+        "tone": "hype",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1777993673700",
+      "status": "complete",
+      "audit": {
+        "passed": false,
+        "score": 70,
+        "issues": [
+          "contentType: The brief requested a 'highlights reel' (implied by 'vertical highlights reel' and 'Energy is everything'), and the crafted API payload specified 'productionProfile: vertical_reel'. However, the returned job spec recorded 'contentType: news'. This is a fundamental mismatch in the intended content type and visual style.",
+          "Script structure/style: The 'filledScript' reflects the 'news' contentType, presenting a narrative structure (INTRO, STORY_CLIPs, OUTRO) with extensive descriptive voiceover. This style is not typical for a 'short-form vertical highlights reel,' which is usually more visually driven, fast-paced, and relies on quick cuts with minimal, punchy text or audio, rather than a detailed narrative."
+        ],
+        "notes": "While the format, topic, tone, and platforms match the brief, the core content type and resulting script structure are misaligned. The request for a 'highlights reel' and 'vertical_reel' production profile was translated into a 'news' content type, leading to a narrative script that does not align with the visual and pacing expectations of a highlights reel for extreme sports on TikTok."
+      },
+      "passed": false,
+      "score": 70,
+      "issues": [
+        "contentType: The brief requested a 'highlights reel' (implied by 'vertical highlights reel' and 'Energy is everything'), and the crafted API payload specified 'productionProfile: vertical_reel'. However, the returned job spec recorded 'contentType: news'. This is a fundamental mismatch in the intended content type and visual style.",
+        "Script structure/style: The 'filledScript' reflects the 'news' contentType, presenting a narrative structure (INTRO, STORY_CLIPs, OUTRO) with extensive descriptive voiceover. This style is not typical for a 'short-form vertical highlights reel,' which is usually more visually driven, fast-paced, and relies on quick cuts with minimal, punchy text or audio, rather than a detailed narrative."
+      ]
+    },
+    {
+      "id": "O-T2",
+      "brief": "Produce a professional 3-minute news desk segment covering AI breakthroughs in healthcare for 2026. Informative, authoritative tone. YouTube audience.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "AI breakthroughs in healthcare for 2026",
+        "tone": "informative",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1777993705902",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "All aspects of the crafted API payload and the returned job spec align perfectly with the original content brief. The production profile 'broadcast_desk' matches a 'news desk segment', 'long' format is appropriate for '3-minute', the topic and platform are exact matches, and 'informative' tone is consistent with an 'informative, authoritative' brief for a news segment. The 'compose' entry type correctly reflects the need to 'produce' content."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "O-T3",
+      "brief": "I need a short casual video about morning productivity routines \u2014 coffee, exercise, mindset. Relatable and casual tone. Instagram Reels.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "morning productivity routines \u2014 coffee, exercise, mindset",
+        "tone": "casual",
+        "order": {
+          "publish": {
+            "platforms": [
+              "instagram"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1777993732631",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "All aspects of the submitted API payload and the recorded job spec accurately reflect the original content brief. The production profile, format, topic, tone, and platforms are all consistent with the customer's request. The 'entry' type 'compose' is appropriate for generating content based on the brief."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "O-T4",
+      "brief": "Long-form corporate product launch announcement for a new AI-powered analytics platform. Professional tone. YouTube.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "corporate product launch announcement for a new AI-powered analytics platform",
+        "tone": "professional",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1777993756425",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "All specified parameters in the job spec (format, topic, tone, platforms, and implied entry type) accurately reflect the requirements outlined in the original brief. The 'productionProfile' of 'broadcast_desk' is also a suitable interpretation for a professional corporate product launch video on YouTube."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "O-T5",
+      "brief": "Breaking news segment \u2014 urgent coverage of a major global economic development. Urgent, direct tone. Short and punchy. YouTube.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "short",
+        "topic": "Major global economic development",
+        "tone": "urgent",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1777993783455",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "All aspects of the crafted API payload and the returned job spec accurately reflect the customer's content brief. The 'broadcast_desk' production profile aligns with a 'breaking news segment', the 'short' format matches 'short and punchy', the topic and urgent tone are correctly captured, 'YouTube' is specified as the platform, and 'compose' is an appropriate entry type for generating content."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "O-T6",
+      "brief": "Short entertainment clip covering pop culture trends this week. Energetic, fun, youthful tone. TikTok.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "pop culture trends this week",
+        "tone": "energetic",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1777993808328",
+      "status": "complete",
+      "audit": {
+        "passed": false,
+        "score": 75,
+        "issues": [
+          "Tone is incomplete: The brief requested an 'energetic, fun, youthful' tone, but the API payload and the job spec only captured 'energetic', omitting 'fun' and 'youthful'.",
+          "Content type mismatch: The brief describes an 'entertainment clip', but the job spec recorded 'contentType': 'news'. While pop culture trends can be news, the 'entertainment' aspect implies a different framing."
+        ],
+        "notes": "The core aspects like topic, format ('short'), and target platform (TikTok) are correctly reflected. However, the omission of 'fun' and 'youthful' from the tone, along with the categorization as 'news' instead of 'entertainment', represents a deviation from the full intent of the brief, potentially affecting the final output's feel and genre."
+      },
+      "passed": false,
+      "score": 75,
+      "issues": [
+        "Tone is incomplete: The brief requested an 'energetic, fun, youthful' tone, but the API payload and the job spec only captured 'energetic', omitting 'fun' and 'youthful'.",
+        "Content type mismatch: The brief describes an 'entertainment clip', but the job spec recorded 'contentType': 'news'. While pop culture trends can be news, the 'entertainment' aspect implies a different framing."
+      ]
+    }
+  ]
+}

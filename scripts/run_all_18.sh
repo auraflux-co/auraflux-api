@@ -61,7 +61,7 @@ echo "  Operate key: ${AURAFLUX_E2E_API_KEY_OPERATE:0:12}..."
 
 PYTHONUNBUFFERED=1 python3 -u "$REPO_DIR/scripts/operate_gemini_e2e.py" 2>&1 | tee "$OPERATE_LOG" || true
 
-OPERATE_PASS=$(grep -c "^  ✓" "$OPERATE_LOG" 2>/dev/null || echo 0)
+OPERATE_PASS=$(grep -c "^  ✓" "$OPERATE_LOG" 2>/dev/null); OPERATE_PASS=${OPERATE_PASS:-0}
 echo "  Operate: ${OPERATE_PASS}/6 passed"
 echo ""
 

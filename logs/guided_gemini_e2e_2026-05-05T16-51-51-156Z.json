@@ -1,0 +1,154 @@
+{
+  "tier": "guided",
+  "timestamp": "2026-05-05T16-51-51-156Z",
+  "summary": {
+    "passed": 6,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "G-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports. Hype energy. Going on TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Extreme sports highlights",
+        "tone": "hype",
+        "platform": "TikTok"
+      },
+      "copilotMsg": "Hey Copilot, I'm planning a short-form vertical highlights reel, all about extreme sports with a super hype energy, specifically for TikTok. I've set up my choices in the wizard accordingly. Does that sound like the right configuration, or do you have any pro tips to really nail that brief?",
+      "copilotResponse": "That sounds like a great plan for a high-impact short-form video!\n\nBased on your description:\n*   **`contentType`**: `sports-short` is the perfect fit for an extreme sports highlights reel.\n*   **`deliverySpec.platforms`**: `tiktok` is correctly identified.\n\nTo get started, I need a few more details for Portal 0, Job Initialisation:\n\n1.  **`jobId`**: Please provide a unique identifier for this job, in UUID format.\n2.  **`customerId`**: What is your customer account ID?\n3.  **`entryType`**: How will the source content for these highlights be provided? Is it `fetch` (AuraFlux downloads from URLs), `upload` (you've uploaded files via the API), or `create` (AuraFlux generates content from a prompt)?",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": true,
+        "passed": true,
+        "score": 98,
+        "issues": [],
+        "notes": "The wizard choices perfectly captured all aspects of the customer's brief. The Copilot demonstrated full understanding by confirming the correct content type and platform, and then proactively requesting the necessary details to move forward with job initialization, providing highly relevant and helpful guidance."
+      },
+      "passed": true,
+      "score": 98
+    },
+    {
+      "id": "G-T2",
+      "brief": "Professional 3-minute news desk segment about AI in healthcare 2026. Informative. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "AI in healthcare 2026: News desk segment",
+        "tone": "informative",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hey Copilot, I'm setting up a new video and just wanted to confirm my brief. I'm aiming for a 3-minute professional news desk segment about AI in healthcare 2026, with an informative tone for YouTube. Does that sound like the right setup given the wizard choices I've made, or do you have any suggestions to refine it?",
+      "copilotResponse": "That sounds like a great concept for a news segment. To get started, I need a few key pieces of information to initialise your job spec.\n\nPlease provide the following:\n\n1.  **jobId**: A unique ID for this job (UUID format).\n2.  **contentType**: Based on your description, `news-long` seems appropriate. Is this correct, or would you prefer `news-short` or `custom`?\n3.  **entryType**: How will the initial content be provided? `fetch` (from URLs), `upload` (from your storage keys), or `create` (from a text prompt)?\n4.  **deliverySpec.platforms**: You mentioned YouTube. Are there any other platforms you'd like to target (e.g., TikTok, Instagram)?\n5.  **customerId**: Your customer account ID.",
+      "audit": {
+        "wizardCorrect": false,
+        "copilotUnderstood": true,
+        "passed": true,
+        "score": 90,
+        "issues": [
+          "Wizard's 'format' choice of 'Long-form' for a 3-minute segment might be ambiguous or slightly incorrect, as the Copilot offered 'news-short' as an alternative to 'news-long'."
+        ],
+        "notes": "The Copilot understood the core brief regarding topic, tone, and platform. It provided highly relevant and helpful guidance by asking for necessary job initialisation details. Crucially, it identified the potential ambiguity in the content length ('3-minute segment') relative to its internal content type definitions ('news-long' vs. 'news-short'), proactively prompting the user for clarification. This demonstrates excellent understanding and problem-solving, compensating for a minor potential mismatch in the initial wizard 'format' selection."
+      },
+      "passed": true,
+      "score": 90
+    },
+    {
+      "id": "G-T3",
+      "brief": "Short casual video about morning productivity — coffee, exercise, mindset. Instagram Reels.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Morning productivity: coffee, exercise, and mindset",
+        "tone": "casual",
+        "platform": "Instagram"
+      },
+      "copilotMsg": "Hey Copilot, I'm planning a short, casual Instagram Reel focusing on morning productivity: coffee, exercise, and mindset. Does this brief sound right for the current setup, or would you suggest any improvements to get the best results?",
+      "copilotResponse": "That sounds like a great concept for an Instagram Reel! To get started, let's define the core parameters for your job spec in Portal 0.\n\nFirst, tell me:\n\n1.  **What is the `contentType` for this job?** Based on \"short, casual Instagram Reel,\" `clips-short` seems appropriate, but you can also choose `custom` if it doesn't fit a standard category.\n2.  **What is the `entryType`?** Are you providing source material (`fetch` from URLs, `upload` existing files), or do you want AuraFlux to generate content from a text prompt (`create`)?",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": true,
+        "passed": true,
+        "score": 95,
+        "issues": [],
+        "notes": "The wizard choices accurately reflected the customer's content brief, matching format, topic, tone, and platform. The Copilot demonstrated a clear understanding of the customer's request and provided relevant, helpful guidance by asking for crucial job spec parameters (`contentType` and `entryType`), including an appropriate suggestion for `clips-short` based on the provided brief."
+      },
+      "passed": true,
+      "score": 95
+    },
+    {
+      "id": "G-T4",
+      "brief": "Long-form product launch announcement for a new AI analytics platform. Professional. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "New AI analytics platform launch",
+        "tone": "professional",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hey Copilot, I'm setting up a long-form product launch video for our new AI analytics platform, aiming for a professional tone on YouTube. Does this configuration sound optimal, or do you have any recommendations to make sure we hit all the right notes? I want to make sure the brief is perfectly dialed in.",
+      "copilotResponse": "To get started, I need some foundational details for your job spec. Let's begin with Portal 0: Job Initialisation.\n\nPlease provide the following:\n\n1.  **jobId**: A unique identifier for this job (UUID format).\n2.  **customerId**: Your customer account ID.\n3.  **contentType**: Based on \"long-form product launch video,\" `custom` is often best for specific brand content. Does `custom` fit, or would `clips-long` be more appropriate?\n4.  **entryType**: How will the source content be provided? `fetch` (AuraFlux downloads from URLs), `upload` (you provide storage keys), or `create` (AuraFlux generates from a prompt)?\n5.  **deliverySpec.platforms**: You mentioned YouTube. Are there any other platforms you'd like to deliver to (e.g., TikTok, Instagram)?",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": true,
+        "passed": true,
+        "score": 95,
+        "issues": [],
+        "notes": "The wizard choices perfectly reflect the customer's content brief regarding format, topic, tone, and platform. The Copilot demonstrated a clear understanding of the brief by immediately moving to gather foundational details required for job initialization. Its questions regarding `contentType`, `entryType`, and additional `deliverySpec.platforms` are highly relevant and helpful for 'dialing in' the brief for execution, directly addressing the user's request for optimal configuration and ensuring all notes are hit from an operational perspective."
+      },
+      "passed": true,
+      "score": 95
+    },
+    {
+      "id": "G-T5",
+      "brief": "Breaking news — urgent coverage of a major economic development. Short and direct. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "Urgent Economic Development Breaking News",
+        "tone": "urgent",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hi Copilot, I'm setting up a new project for urgent breaking news on a major economic development. It needs to be short and direct for YouTube. I've selected 'Long-form' for the format and an 'urgent' tone. Does this setup look optimal for a time-sensitive, impactful video, or would you suggest any tweaks?",
+      "copilotResponse": "Thanks for reaching out! For urgent breaking news that needs to be short and direct, I recommend `news-short` as your `contentType`. You mentioned \"Long-form,\" but `news-short` is better suited for quick, impactful updates.\n\nLet's start building your job spec. To begin, I need the following for Portal 0:\n\n*   **jobId**: A unique identifier for this job (UUID format).\n*   **contentType**: Based on our discussion, I recommend `news-short`. Please confirm.\n*   **entryType**: How will the content be sourced? (One of: `fetch`, `upload`, `create`)\n*   **deliverySpec.platforms**: Which platforms will this video be delivered to? (Non-empty array, allowed: `youtube`, `tiktok`, `instagram`)\n*   **customerId**: Your customer account ID.",
+      "audit": {
+        "wizardCorrect": false,
+        "copilotUnderstood": true,
+        "passed": true,
+        "score": 70,
+        "issues": [
+          "Wizard's 'format' choice ('Long-form') contradicted the brief's requirement ('short and direct')."
+        ],
+        "notes": "The wizard incorrectly selected 'Long-form' for the content format despite the brief clearly stating 'short and direct.' However, the Copilot successfully identified this inconsistency from the user's message, correctly understood the user's intent for a concise video, and provided optimal, relevant guidance by recommending `news-short` as the `contentType`. The Copilot then correctly prompted for further job spec details, successfully course-correcting the interaction."
+      },
+      "passed": true,
+      "score": 70
+    },
+    {
+      "id": "G-T6",
+      "brief": "Short entertainment pop culture trends clip. Energetic, fun, youthful. TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Current pop culture entertainment trends",
+        "tone": "energetic",
+        "platform": "TikTok"
+      },
+      "copilotMsg": "Hey Copilot, I'm getting ready to create a short, energetic TikTok clip about current pop culture trends. I've set it up as Short-form, Fetch and enhance, topic \"Current pop culture entertainment trends,\" energetic tone, and TikTok platform. Does this configuration seem spot-on for a fun, youthful entertainment piece, or would you recommend any adjustments?",
+      "copilotResponse": "Thanks for providing these details! Let's get your job spec started.\n\nBased on what you've told me, here's what I have for Portal 0:\n*   `contentType`: `clips-short`\n*   `entryType`: `fetch`\n*   `deliverySpec.platforms`: `[\"tiktok\"]`\n\nYou mentioned \"topic 'Current pop culture entertainment trends'\". Since your `entryType` is `fetch`, AuraFlux will download content from URLs you provide. If you want AuraFlux to *generate* content based on a text prompt like \"Current pop culture entertainment trends,\" you would need to set `entryType` to `create`.\n\nCould you clarify if you intend to:\n1.  **Fetch** existing videos/articles about pop culture trends (requiring `fetchSpec.sourceUrls`)?\n2.  **Create** a new script and video based on the prompt \"Current pop culture entertainment trends\" (requiring `createSpec.promptText` and `entryType: create`)?\n\nOnce we clarify the `entryType` and its corresponding content source, I'll also need the following required fields for Portal 0:\n*   `jobId` (string): A unique ID in UUID format.\n*   `customerId` (string): Your customer account ID.",
+      "audit": {
+        "wizardCorrect": false,
+        "copilotUnderstood": true,
+        "passed": true,
+        "score": 95,
+        "issues": [
+          "The wizard's 'path: Fetch and enhance' choice did not align with the customer's stated intent to 'create' a TikTok clip. 'Fetch and enhance' is for processing existing content, not generating new content from a prompt."
+        ],
+        "notes": "The Copilot correctly identified the critical mismatch between the customer's stated intent ('to create') and the selected 'entryType' ('fetch' from 'Fetch and enhance'). It provided highly relevant and helpful guidance by explaining the difference between 'fetch' and 'create' and outlining the corresponding required fields. The Copilot also correctly identified other missing required job parameters."
+      },
+      "passed": true,
+      "score": 95
+    }
+  ]
+}

@@ -1,0 +1,273 @@
+{
+  "tier": "operate",
+  "timestamp": "2026-05-05T18-37-14-991Z",
+  "summary": {
+    "passed": 0,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "O-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports \u2014 skateboarding, surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok.",
+      "entry": "fetch",
+      "payload": {
+        "entry": "fetch",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "extreme sports - skateboarding, surfing, snowboarding",
+        "tone": "hype",
+        "sourceConfig": {
+          "urls": [
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/22/Squat_Jumps.webm/Squat_Jumps.webm.360p.webm",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/87/Schlossbergbahn.webm/Schlossbergbahn.webm.360p.webm"
+          ]
+        },
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_EXTRACT_FETCH_clips_1778006007216",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Job status is 'failed'.",
+          "Output video URL (outputUrl) is absent/null.",
+          "Video output not accessible as no URL was generated."
+        ],
+        "notes": "The job's specifications (production profile, format, topic, tone, and platforms) were accurately aligned with the content brief and API payload. However, the job ultimately failed to produce a deliverable video, with the 'outputUrl' being null and the overall job status marked as 'failed'. This constitutes a complete failure to fulfill the customer's request, despite the correct initial setup."
+      },
+      "passed": false,
+      "score": 20,
+      "issues": [
+        "Job status is 'failed'.",
+        "Output video URL (outputUrl) is absent/null.",
+        "Video output not accessible as no URL was generated."
+      ]
+    },
+    {
+      "id": "O-T2",
+      "brief": "Produce a professional 3-minute news desk segment covering AI breakthroughs in healthcare for 2026. Informative, authoritative tone. YouTube audience.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "AI breakthroughs in healthcare for 2026",
+        "tone": "informative",
+        "prompt": "A professional news desk segment: AI breakthroughs transforming healthcare in 2026. Cover predictive diagnostics, AI surgery assistants, and drug discovery acceleration. Informative and authoritative tone. 3 minutes.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_COMPACT_GEN_news_1778006051697",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 0,
+        "issues": [
+          "outputUrl is null (no video generated)",
+          "Video URL is not present",
+          "Video is not accessible (HTTP 200)",
+          "Job status is 'failed'"
+        ],
+        "notes": "While the API payload correctly reflected the customer's content brief in terms of production profile ('broadcast_desk' for news desk segment), format ('long' for 3 minutes), topic ('AI breakthroughs in healthcare for 2026'), tone ('informative' and authoritative implied), and platforms ('youtube'), the job ultimately failed. No video output was produced, as indicated by the 'outputUrl': null and the 'status': 'failed' in the job spec. Therefore, despite all input parameters being correct, the core deliverable was not created."
+      },
+      "passed": false,
+      "score": 0,
+      "issues": [
+        "outputUrl is null (no video generated)",
+        "Video URL is not present",
+        "Video is not accessible (HTTP 200)",
+        "Job status is 'failed'"
+      ]
+    },
+    {
+      "id": "O-T3",
+      "brief": "I need a short casual video about morning productivity routines \u2014 coffee, exercise, mindset. Relatable and casual tone. Instagram Reels.",
+      "entry": "fetch",
+      "payload": {
+        "entry": "fetch",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "morning productivity routines - coffee, exercise, mindset",
+        "tone": "casual",
+        "sourceConfig": {
+          "urls": [
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/b/b3/Big_Buck_Bunny_Trailer_400p.ogv/Big_Buck_Bunny_Trailer_400p.ogv.360p.webm",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/4/41/Big_Buck_Bunny_medium.ogv/Big_Buck_Bunny_medium.ogv.360p.webm"
+          ]
+        },
+        "order": {
+          "publish": {
+            "platforms": [
+              "instagram"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_EXTRACT_FETCH_clips_1778006089903",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 50,
+        "issues": [
+          "Job status is 'failed'",
+          "outputUrl is null",
+          "Video URL is not present and therefore not accessible"
+        ],
+        "notes": "The API payload accurately reflected the content brief regarding production profile, format, topic, tone, and platforms. However, the job itself failed to produce an output video, as indicated by the 'failed' status and the null 'outputUrl'. This means the end-to-end process did not successfully deliver a usable video."
+      },
+      "passed": false,
+      "score": 50,
+      "issues": [
+        "Job status is 'failed'",
+        "outputUrl is null",
+        "Video URL is not present and therefore not accessible"
+      ]
+    },
+    {
+      "id": "O-T4",
+      "brief": "Long-form corporate product launch announcement for a new AI-powered analytics platform. Professional tone. YouTube.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "AI-powered analytics platform launch",
+        "tone": "professional",
+        "prompt": "Corporate product launch video for an AI-powered business analytics platform. Highlight real-time insights, predictive modeling, executive dashboards, and ROI improvements. Professional, aspirational tone. Long-form for YouTube.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_COMPACT_GEN_news_1778006126140",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 25,
+        "issues": [
+          "Job failed to produce output (status: 'failed')",
+          "Video URL is absent (outputUrl is null)",
+          "Video is not accessible (external check reported 'False')",
+          "The 'broadcast_desk' production profile and 'news' contentType in the result, along with the generated script's journalistic style, do not fully align with the 'corporate product launch announcement' implied by the brief, which typically suggests a more marketing-oriented and aspirational visual style."
+        ],
+        "notes": "The job critically failed to generate any video output, rendering the entire process unsuccessful. While several core parameters like format, topic, tone, and platforms matched the brief and payload, the chosen production profile and content type led to a news-style script that slightly deviated from the expected format for a corporate product launch announcement."
+      },
+      "passed": false,
+      "score": 25,
+      "issues": [
+        "Job failed to produce output (status: 'failed')",
+        "Video URL is absent (outputUrl is null)",
+        "Video is not accessible (external check reported 'False')",
+        "The 'broadcast_desk' production profile and 'news' contentType in the result, along with the generated script's journalistic style, do not fully align with the 'corporate product launch announcement' implied by the brief, which typically suggests a more marketing-oriented and aspirational visual style."
+      ]
+    },
+    {
+      "id": "O-T5",
+      "brief": "Breaking news segment \u2014 urgent coverage of a major global economic development. Urgent, direct tone. Short and punchy. YouTube.",
+      "entry": "fetch",
+      "payload": {
+        "entry": "fetch",
+        "productionProfile": "broadcast_desk",
+        "format": "short",
+        "topic": "Major Global Economic Development Breaking News",
+        "tone": "urgent",
+        "sourceConfig": {
+          "urls": [
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.360p.webm",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/22/Squat_Jumps.webm/Squat_Jumps.webm.360p.webm"
+          ]
+        },
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_EXTRACT_FETCH_news_1778006164887",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 60,
+        "issues": [
+          "Video output URL is not present in the job result.",
+          "Video output is not accessible (HTTP 200 status)."
+        ],
+        "notes": "All content generation parameters specified in the API payload (productionProfile, format, topic, tone, platforms, and entry type) accurately reflect the requirements of the content brief. However, the job ultimately failed to produce a valid and accessible video output URL, which is a critical requirement for a successful end-to-end pass. The job status is also reported as 'failed'."
+      },
+      "passed": false,
+      "score": 60,
+      "issues": [
+        "Video output URL is not present in the job result.",
+        "Video output is not accessible (HTTP 200 status)."
+      ]
+    },
+    {
+      "id": "O-T6",
+      "brief": "Short entertainment clip covering pop culture trends this week. Energetic, fun, youthful tone. TikTok.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "pop culture trends this week",
+        "tone": "energetic",
+        "prompt": "Energetic short-form entertainment clip about the hottest pop culture trends this week: viral TikTok challenges, new music drops, celebrity moments, and trending memes. Fun, youthful tone for a Gen-Z TikTok audience.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_clips_1778006201281",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 10,
+        "issues": [
+          "Job status is 'failed'.",
+          "outputUrl is missing/null.",
+          "Video output was not accessible (HTTP 200)."
+        ],
+        "notes": "The job failed to produce a video output. Despite the production profile, format, topic, tone, and platforms aligning correctly with the brief and payload, the essential deliverable (the video) is missing, rendering the job unsuccessful. The 'outputUrl' is null, and the job status is 'failed'."
+      },
+      "passed": false,
+      "score": 10,
+      "issues": [
+        "Job status is 'failed'.",
+        "outputUrl is missing/null.",
+        "Video output was not accessible (HTTP 200)."
+      ]
+    }
+  ]
+}

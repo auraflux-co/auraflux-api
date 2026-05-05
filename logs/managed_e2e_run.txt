@@ -1,0 +1,76 @@
+============================================================
+AuraFlux Managed E2E — Copilot Only (CPD-142)
+Account: managed-demo@auraflux.co
+Base: https://app.auraflux.co
+============================================================
+
+Signing in...
+  → Loading app sign-in with Clerk ticket...
+  → After ticket sign-in, URL: https://app.auraflux.co/dashboard
+✓ Signed in via Clerk token
+
+[M-T1] Compose · broadcast_desk · short · professional
+  Prompt: "I need a short professional video about AI breakthroughs in healthcare for 2026...."
+  Waiting for Copilot response...
+  Response (1294 chars): "AuraFlux can help you generate a professional video once you provide the script and configure the visual elements.
+
+Regarding your request for a video..."
+
+[M-T2] Fetch · vertical_reel · short · energetic
+  Prompt: "Can you help me create a short energetic highlight reel from a video source? It'..."
+  Waiting for Copilot response...
+  Response (1093 chars): "Yes, AuraFlux can help you configure your job spec to create a video with selected segments and a vertical output format.
+
+To create a highlight reel,..."
+
+[M-T3] Compose · broadcast_desk · long · educational
+  Prompt: "I want a long-form educational video explaining how AI is transforming small bus..."
+  Waiting for Copilot response...
+  Response (130 chars): "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided...."
+
+[M-T4] Fetch · live_event · short · exciting
+  Prompt: "I have basketball championship footage and need a short exciting highlight clip ..."
+  Waiting for Copilot response...
+  Response (130 chars): "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided...."
+
+[M-T5] Compose · broadcast_desk · short · analytical
+  Prompt: "Create a short analytical video covering Bitcoin and Ethereum price trends for 2..."
+  Waiting for Copilot response...
+  Response (1788 chars): "Certainly! I can help you map out the parameters for a video production job spec based on your request and the AuraFlux guides.
+
+Here's how you can sp..."
+
+[M-T6] Fetch · vertical_reel · long · calm
+  Prompt: "I have nature documentary footage I'd like turned into a long-form calm highligh..."
+  Waiting for Copilot response...
+  Response (130 chars): "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided...."
+
+============================================================
+MANAGED E2E SUMMARY
+============================================================
+Passed: 0/6
+  ✗ [M-T1] Compose · broadcast_desk · short · professional
+       ✗ format "short" in response: Response: "AuraFlux can help you generate a professional video once you provide the script and configure the vi"
+       ✗ actionable next step provided: no job creation link in response
+  ✗ [M-T2] Fetch · vertical_reel · short · energetic
+       ✗ format "short" in response: Response: "Yes, AuraFlux can help you configure your job spec to create a video with selected segments and a ve"
+       ✗ actionable next step provided: no job creation link in response
+  ✗ [M-T3] Compose · broadcast_desk · long · educational
+       ✗ format "long" in response: Response: "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider"
+       ✗ topic understood: Expected one of: AI/small business/business
+       ✗ platform YouTube in response
+       ✗ actionable next step provided: no job creation link in response
+  ✗ [M-T4] Fetch · live_event · short · exciting
+       ✗ format "short" in response: Response: "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider"
+       ✗ topic understood: Expected one of: basketball/championship/sport
+       ✗ platform Instagram in response
+       ✗ actionable next step provided: no job creation link in response
+  ✗ [M-T5] Compose · broadcast_desk · short · analytical
+       ✗ actionable next step provided: no job creation link in response
+  ✗ [M-T6] Fetch · vertical_reel · long · calm
+       ✗ format "long" in response: Response: "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider"
+       ✗ topic understood: Expected one of: nature/documentary
+       ✗ platform YouTube in response
+       ✗ actionable next step provided: no job creation link in response
+
+Results written to /Users/robertgregory/cwn-production/logs/managed_e2e_2026-05-05T14-12-50-960Z.json

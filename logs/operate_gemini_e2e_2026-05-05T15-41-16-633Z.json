@@ -1,0 +1,136 @@
+{
+  "tier": "operate",
+  "timestamp": "2026-05-05T15-41-16-633Z",
+  "summary": {
+    "passed": 0,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "O-T1",
+      "passed": false,
+      "error": "Submit failed: {'error': 500, 'body': '{\"error\":\"job_creation_failed\",\"message\":\"null value in column \\\\\"card\\\\\" of relation \\\\\"jobs\\\\\" violates not-null constraint\"}'}",
+      "brief": "I want a short-form vertical highlights reel about extreme sports \u2014 skateboarding, surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "extreme sports: skateboarding, surfing, snowboarding",
+        "tone": "hype",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        },
+        "staging": true
+      }
+    },
+    {
+      "id": "O-T2",
+      "passed": false,
+      "error": "Submit failed: {'error': 500, 'body': '{\"error\":\"job_creation_failed\",\"message\":\"null value in column \\\\\"card\\\\\" of relation \\\\\"jobs\\\\\" violates not-null constraint\"}'}",
+      "brief": "Produce a professional 3-minute news desk segment covering AI breakthroughs in healthcare for 2026. Informative, authoritative tone. YouTube audience.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "AI breakthroughs in healthcare for 2026",
+        "tone": "informative",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      }
+    },
+    {
+      "id": "O-T3",
+      "passed": false,
+      "error": "Submit failed: {'error': 500, 'body': '{\"error\":\"job_creation_failed\",\"message\":\"null value in column \\\\\"card\\\\\" of relation \\\\\"jobs\\\\\" violates not-null constraint\"}'}",
+      "brief": "I need a short casual video about morning productivity routines \u2014 coffee, exercise, mindset. Relatable and casual tone. Instagram Reels.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "morning productivity routines \u2014 coffee, exercise, mindset",
+        "tone": "casual",
+        "order": {
+          "publish": {
+            "platforms": [
+              "instagram"
+            ]
+          }
+        },
+        "staging": true
+      }
+    },
+    {
+      "id": "O-T4",
+      "passed": false,
+      "error": "Submit failed: {'error': 500, 'body': '{\"error\":\"job_creation_failed\",\"message\":\"null value in column \\\\\"card\\\\\" of relation \\\\\"jobs\\\\\" violates not-null constraint\"}'}",
+      "brief": "Long-form corporate product launch announcement for a new AI-powered analytics platform. Professional tone. YouTube.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "new AI-powered analytics platform launch",
+        "tone": "professional",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      }
+    },
+    {
+      "id": "O-T5",
+      "passed": false,
+      "error": "Submit failed: {'error': 500, 'body': '{\"error\":\"job_creation_failed\",\"message\":\"null value in column \\\\\"card\\\\\" of relation \\\\\"jobs\\\\\" violates not-null constraint\"}'}",
+      "brief": "Breaking news segment \u2014 urgent coverage of a major global economic development. Urgent, direct tone. Short and punchy. YouTube.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "short",
+        "topic": "Major global economic development",
+        "tone": "urgent",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      }
+    },
+    {
+      "id": "O-T6",
+      "passed": false,
+      "error": "Submit failed: {'error': 500, 'body': '{\"error\":\"job_creation_failed\",\"message\":\"null value in column \\\\\"card\\\\\" of relation \\\\\"jobs\\\\\" violates not-null constraint\"}'}",
+      "brief": "Short entertainment clip covering pop culture trends this week. Energetic, fun, youthful tone. TikTok.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "pop culture trends this week",
+        "tone": "energetic",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        },
+        "staging": true
+      }
+    }
+  ]
+}

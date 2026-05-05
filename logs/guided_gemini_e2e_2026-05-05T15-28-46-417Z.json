@@ -1,0 +1,94 @@
+{
+  "tier": "guided",
+  "timestamp": "2026-05-05T15-28-46-417Z",
+  "summary": {
+    "passed": 0,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "G-T1",
+      "passed": false,
+      "error": "Wizard failed: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('button:has-text(\"Fetch and enhance\")').first()\n",
+      "brief": "I want a short-form vertical highlights reel about extreme sports. Hype energy. Going on TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "extreme sports highlights reel",
+        "tone": "hype",
+        "needsUrl": true,
+        "platform": "TikTok"
+      }
+    },
+    {
+      "id": "G-T2",
+      "passed": false,
+      "error": "Wizard failed: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('button:has-text(\"Script-led production\")').first()\n",
+      "brief": "Professional 3-minute news desk segment about AI in healthcare 2026. Informative. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Script-led production",
+        "topic": "AI in healthcare 2026",
+        "tone": "informative",
+        "needsUrl": false,
+        "platform": "YouTube"
+      }
+    },
+    {
+      "id": "G-T3",
+      "passed": false,
+      "error": "Wizard failed: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('button:has-text(\"Fetch and enhance\")').first()\n",
+      "brief": "Short casual video about morning productivity — coffee, exercise, mindset. Instagram Reels.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Morning productivity: coffee, exercise, mindset",
+        "tone": "casual",
+        "needsUrl": true,
+        "platform": "Instagram"
+      }
+    },
+    {
+      "id": "G-T4",
+      "passed": false,
+      "error": "Wizard failed: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('button:has-text(\"Script-led production\")').first()\n",
+      "brief": "Long-form product launch announcement for a new AI analytics platform. Professional. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Script-led production",
+        "topic": "Product launch announcement for new AI analytics platform",
+        "tone": "professional",
+        "needsUrl": false,
+        "platform": "YouTube"
+      }
+    },
+    {
+      "id": "G-T5",
+      "passed": false,
+      "error": "Wizard failed: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('button:has-text(\"Fetch and enhance\")').first()\n",
+      "brief": "Breaking news — urgent coverage of a major economic development. Short and direct. YouTube.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Urgent coverage of major economic development",
+        "tone": "urgent",
+        "needsUrl": true,
+        "platform": "YouTube"
+      }
+    },
+    {
+      "id": "G-T6",
+      "passed": false,
+      "error": "Wizard failed: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('button:has-text(\"Fetch and enhance\")').first()\n",
+      "brief": "Short entertainment pop culture trends clip. Energetic, fun, youthful. TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Entertainment pop culture trends",
+        "tone": "energetic",
+        "needsUrl": true,
+        "platform": "TikTok"
+      }
+    }
+  ]
+}
