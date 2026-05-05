@@ -11,11 +11,11 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ConciergeChat } from '@/components/concierge/concierge-chat';
 import { PortalStatus } from '@/components/concierge/portal-status';
+import { usePlan } from '@/contexts/plan-context';
 
 export default function ConciergePage() {
-  // Spec state — updated as the user fills in fields guided by the AI
-  // (In CPD-23 full dashboard, this will come from a job form)
   const [spec] = useState<Record<string, unknown>>({});
+  const { planTier } = usePlan();
 
   return (
     <div className="space-y-4 h-[calc(100vh-3.5rem)]">
@@ -33,6 +33,7 @@ export default function ConciergePage() {
         {/* Chat — takes remaining width */}
         <ConciergeChat
           currentSpec={spec}
+          planTier={planTier ?? undefined}
           className="flex-1 min-w-0"
         />
 

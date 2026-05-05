@@ -1,0 +1,414 @@
+{
+  "tier": "guided",
+  "timestamp": "2026-05-05T14:14:42.947Z",
+  "results": [
+    {
+      "id": "G-T1",
+      "desc": "short · Fetch and enhance · professional · YouTube",
+      "passed": true,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFl"
+        },
+        {
+          "label": "Short-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Fetch and enhance\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "topic entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "URL entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "job submitted",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/active"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 items visible"
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "G-T2",
+      "desc": "short · Fetch and enhance · energetic · TikTok",
+      "passed": true,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "AuraFlux guides detail how to specify the `outputFormat` and `aspectRatio` for your video, which are key considerations "
+        },
+        {
+          "label": "Short-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Fetch and enhance\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "topic entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "URL entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform TikTok visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "job submitted",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/active"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 items visible"
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "G-T3",
+      "desc": "long · Produce from source · informative · YouTube",
+      "passed": true,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFl"
+        },
+        {
+          "label": "Long-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Produce from source\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "topic entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "URL entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "job submitted",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/active"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 items visible"
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "G-T4",
+      "desc": "short · Fetch and enhance · hype · Instagram",
+      "passed": true,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFl"
+        },
+        {
+          "label": "Short-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Fetch and enhance\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "topic entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "URL entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform Instagram visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "job submitted",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/active"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 items visible"
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "G-T5",
+      "desc": "long · Compile from short clips · casual · YouTube",
+      "passed": true,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFl"
+        },
+        {
+          "label": "Long-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Compile from short clips\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "topic entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "URL entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "job submitted",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/active"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 items visible"
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "G-T6",
+      "desc": "long · Produce from source · urgent · YouTube",
+      "passed": true,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "AuraFlux allows you to specify various output formats and paths for your video jobs.\n\nFor **video format**, you can defi"
+        },
+        {
+          "label": "Long-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Produce from source\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "topic entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "URL entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "job submitted",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/active"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 items visible"
+        }
+      ],
+      "issues": []
+    }
+  ]
+}
