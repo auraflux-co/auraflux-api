@@ -1,5 +1,5 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-05-05 (Cursor — fix(cpd-142): sourceType path fix + fetch video URLs; _spec.order.inputs.sourceType used for WAN check (not top-level); fetch E2E scenarios now use direct .webm public video files from Wikimedia Commons so portal0 ffprobe QA passes)
+**Last Updated:** 2026-05-05 (Cursor — fix(cpd-142): job_spec.js now preserves prompt+genType in sourceConfig so WAN pre-gen can read them; all 6 Operate E2E scenarios changed to entry=generate (WAN) for reliable video output)
 **Last Updated:** 2026-05-04 (Cursor — feat(cpd-141): Operate /v1/jobs — productionProfile + entry compose; tier_api_e2e_test.py six scenarios use ingress (compose/fetch) and profiles (broadcast_desk/vertical_reel/live_event), not legacy editorial contentType labels; legacy contentType still accepted and mapped)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-141): add filledScript to _formatJob in developer_api.js — GET /v1/jobs/:id now exposes filledScript in response; was stored at spec.filledScript by script_gen_service but not surfaced in API)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-141): expose filledScript in GET /v1/jobs/:id response; E2E test only requires outputUrl for URL-sourced jobs — news without source URL correctly skips assembly)
