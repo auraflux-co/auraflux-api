@@ -1,5 +1,6 @@
 # AuraFlux — Status & Task Tracker
 **Last Updated:** 2026-05-05 (Cursor — fix(deploy): remove dangling fromService auraflux-redis ref that was causing all builds to fail in <1 second; REDIS_URL now sync: false for optional BullMQ use)
+**Last Updated:** 2026-05-05 (Cursor — fix(deploy): remove syntax=docker/dockerfile:1.4 directive — Docker Hub rate limit on build frontend image was causing instant build failures on Render; --mount=type=cache is natively supported in Docker 20+ without the directive)
 **Last Updated:** 2026-05-05 (Cursor — fix(deploy): change render.yaml plan: starter → standard for both services; starter plan rejects disk blocks in Blueprint validation)
 **Last Updated:** 2026-05-05 (Cursor — fix(ops): expand health check to cover all production-critical env vars by group — ai, heygen, storage (R2), runpod, tts, publish, stripe, auth, comfy — missingKeys array in /health response gives definitive runtime view of what is and isn't configured)
 **Last Updated:** 2026-05-05 (Cursor — fix(cpd-142): updateJobSpec NULL guard bug — NULL IN(...) = NULL in PostgreSQL so NOT(NULL)=NULL made WHERE clause never match for new jobs; adds IS NOT NULL check to guard; SELECT status in loadJobRow/listJobsByCustomer; _formatJob uses row.status fallback — jobs no longer stuck at queued forever)
