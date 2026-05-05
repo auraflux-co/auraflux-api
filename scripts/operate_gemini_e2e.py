@@ -44,9 +44,10 @@ SCENARIOS = [
             "I want a short-form vertical highlights reel about extreme sports — skateboarding, "
             "surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok."
         ),
+        # Direct public domain MP4 files (Wikimedia Commons / Archive.org — no auth required)
         "source_urls": [
-            "https://www.redbull.com/us-en/videos/top-10-skateboarding-tricks",
-            "https://www.surfer.com/surfing-news/best-surfing-moments/",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/22/Squat_Jumps.webm/Squat_Jumps.webm.360p.webm",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/87/Schlossbergbahn.webm/Schlossbergbahn.webm.360p.webm",
         ],
     },
     {
@@ -70,8 +71,8 @@ SCENARIOS = [
             "mindset. Relatable and casual tone. Instagram Reels."
         ),
         "source_urls": [
-            "https://www.health.com/mind-body/morning-routine-productivity",
-            "https://www.menshealth.com/fitness/a19537537/best-morning-workouts/",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/b/b3/Big_Buck_Bunny_Trailer_400p.ogv/Big_Buck_Bunny_Trailer_400p.ogv.360p.webm",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/4/41/Big_Buck_Bunny_medium.ogv/Big_Buck_Bunny_medium.ogv.360p.webm",
         ],
     },
     {
@@ -95,8 +96,8 @@ SCENARIOS = [
             "Urgent, direct tone. Short and punchy. YouTube."
         ),
         "source_urls": [
-            "https://www.reuters.com/markets/",
-            "https://apnews.com/hub/economy",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.360p.webm",
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/22/Squat_Jumps.webm/Squat_Jumps.webm.360p.webm",
         ],
     },
     {
