@@ -1,0 +1,200 @@
+{
+  "tier": "operate",
+  "timestamp": "2026-05-05T16-08-44-295Z",
+  "summary": {
+    "passed": 5,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "O-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports \u2014 skateboarding, surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "extreme sports - skateboarding, surfing, snowboarding",
+        "tone": "hype",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_EXTRACT_DIRECT_clips_1777997146845",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "All requested parameters from the brief are correctly reflected in the job spec. The production profile ('vertical_reel' for 'vertical highlights reel'), format ('short' for 'short-form'), topic ('extreme sports - skateboarding, surfing, snowboarding'), tone ('hype' for 'Hype tone. Energy is everything'), platforms ('tiktok' for 'Going on TikTok'), and entry type ('compose' for creating new content) all match the customer's request perfectly."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "O-T2",
+      "brief": "Produce a professional 3-minute news desk segment covering AI breakthroughs in healthcare for 2026. Informative, authoritative tone. YouTube audience.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "AI breakthroughs in healthcare for 2026",
+        "tone": "informative",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_COMPACT_DIRECT_news_1777997173305",
+      "status": "complete",
+      "audit": {
+        "passed": false,
+        "score": 65,
+        "issues": [
+          "The 'format' field is set to 'long', which is imprecise for the brief's specified '3-minute' duration. The exact duration is not captured.",
+          "The 'tone' field only specifies 'informative', missing the 'authoritative' aspect requested in the brief."
+        ],
+        "notes": "While most aspects align, the job spec does not accurately reflect the precise duration requested (3 minutes) and only captures one part of the desired tone ('informative' but not 'authoritative')."
+      },
+      "passed": false,
+      "score": 65,
+      "issues": [
+        "The 'format' field is set to 'long', which is imprecise for the brief's specified '3-minute' duration. The exact duration is not captured.",
+        "The 'tone' field only specifies 'informative', missing the 'authoritative' aspect requested in the brief."
+      ]
+    },
+    {
+      "id": "O-T3",
+      "brief": "I need a short casual video about morning productivity routines \u2014 coffee, exercise, mindset. Relatable and casual tone. Instagram Reels.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "morning productivity routines \u2014 coffee, exercise, mindset",
+        "tone": "casual",
+        "order": {
+          "publish": {
+            "platforms": [
+              "instagram"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_EXTRACT_DIRECT_clips_1777997203483",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "All audited fields in the job spec (productionProfile, format, topic, tone, platforms, and entry type) accurately reflect the customer's original content brief."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "O-T4",
+      "brief": "Long-form corporate product launch announcement for a new AI-powered analytics platform. Professional tone. YouTube.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "Corporate product launch announcement for a new AI-powered analytics platform",
+        "tone": "professional",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_COMPACT_DIRECT_news_1777997228584",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "All audited fields in the crafted API payload and the recorded job spec perfectly match the requirements outlined in the original brief. The 'broadcast_desk' production profile is appropriate for a corporate launch announcement, and 'compose' is the correct entry type for generating new content from a brief."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "O-T5",
+      "brief": "Breaking news segment \u2014 urgent coverage of a major global economic development. Urgent, direct tone. Short and punchy. YouTube.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "broadcast_desk",
+        "format": "short",
+        "topic": "Major global economic development",
+        "tone": "urgent",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_EXTRACT_DIRECT_news_1777997254533",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "All specified parameters in the job spec (productionProfile, format, topic, tone, platforms, and entry type) accurately reflect the requirements outlined in the original brief. The 'broadcast_desk' production profile is appropriate for a breaking news segment, the format is 'short' as requested, the topic is an exact match, the tone 'urgent' is captured, and the platform 'youtube' is correct. The 'compose' entry type is also appropriate for generating new news content."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "O-T6",
+      "brief": "Short entertainment clip covering pop culture trends this week. Energetic, fun, youthful tone. TikTok.",
+      "payload": {
+        "entry": "compose",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "pop culture trends this week",
+        "tone": "energetic",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        },
+        "staging": true
+      },
+      "jobId": "e2e-operate-test_EXTRACT_DIRECT_clips_1777997280668",
+      "status": "complete",
+      "audit": {
+        "passed": true,
+        "score": 95,
+        "issues": [
+          "Tone field in job spec only lists 'energetic', missing 'fun' and 'youthful' from brief."
+        ],
+        "notes": "All other aspects of the job spec (production profile, format, topic, platforms, and entry type) perfectly match the brief. Although the 'tone' field explicitly lists only 'energetic', the generated 'filledScript' text effectively conveys an energetic, fun, and youthful tone, indicating the overall intent was captured successfully despite the field's brevity."
+      },
+      "passed": true,
+      "score": 95,
+      "issues": [
+        "Tone field in job spec only lists 'energetic', missing 'fun' and 'youthful' from brief."
+      ]
+    }
+  ]
+}

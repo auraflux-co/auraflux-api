@@ -1,0 +1,381 @@
+{
+  "tier": "guided",
+  "timestamp": "2026-05-05T14:04:50.390Z",
+  "results": [
+    {
+      "id": "G-T1",
+      "desc": "Compose · broadcast_desk · short · professional",
+      "passed": false,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded on step 1",
+          "ok": true,
+          "detail": "(no response captured)"
+        },
+        {
+          "label": "Short-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Produce from source\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube visible",
+          "ok": false,
+          "detail": "platform option not found on publish step"
+        },
+        {
+          "label": "submit button found",
+          "ok": false,
+          "detail": "no submit button visible on publish step"
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 job items visible"
+        }
+      ],
+      "issues": [
+        "✗ platform YouTube visible: platform option not found on publish step",
+        "✗ submit button found: no submit button visible on publish step"
+      ]
+    },
+    {
+      "id": "G-T2",
+      "desc": "Fetch · vertical_reel · short · energetic",
+      "passed": false,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded on step 1",
+          "ok": true,
+          "detail": "(no response captured)"
+        },
+        {
+          "label": "Short-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Fetch and enhance\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "URL input found",
+          "ok": false,
+          "detail": "URL input not visible on source step"
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform TikTok visible",
+          "ok": false,
+          "detail": "platform option not found on publish step"
+        },
+        {
+          "label": "submit button found",
+          "ok": false,
+          "detail": "no submit button visible on publish step"
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 job items visible"
+        }
+      ],
+      "issues": [
+        "✗ URL input found: URL input not visible on source step",
+        "✗ platform TikTok visible: platform option not found on publish step",
+        "✗ submit button found: no submit button visible on publish step"
+      ]
+    },
+    {
+      "id": "G-T3",
+      "desc": "Compose · broadcast_desk · long · educational",
+      "passed": false,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded on step 1",
+          "ok": true,
+          "detail": "(no response captured)"
+        },
+        {
+          "label": "Long-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Produce from source\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "topic entered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube visible",
+          "ok": false,
+          "detail": "platform option not found on publish step"
+        },
+        {
+          "label": "submit button found",
+          "ok": false,
+          "detail": "no submit button visible on publish step"
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 job items visible"
+        }
+      ],
+      "issues": [
+        "✗ platform YouTube visible: platform option not found on publish step",
+        "✗ submit button found: no submit button visible on publish step"
+      ]
+    },
+    {
+      "id": "G-T4",
+      "desc": "Fetch · live_event · short · exciting",
+      "passed": false,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded on step 1",
+          "ok": true,
+          "detail": "(no response captured)"
+        },
+        {
+          "label": "Short-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Fetch and enhance\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "URL input found",
+          "ok": false,
+          "detail": "URL input not visible on source step"
+        },
+        {
+          "label": "tone set",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform Instagram visible",
+          "ok": false,
+          "detail": "platform option not found on publish step"
+        },
+        {
+          "label": "submit button found",
+          "ok": false,
+          "detail": "no submit button visible on publish step"
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 job items visible"
+        }
+      ],
+      "issues": [
+        "✗ URL input found: URL input not visible on source step",
+        "✗ platform Instagram visible: platform option not found on publish step",
+        "✗ submit button found: no submit button visible on publish step"
+      ]
+    },
+    {
+      "id": "G-T5",
+      "desc": "Compose · broadcast_desk · short · analytical",
+      "passed": false,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded on step 1",
+          "ok": true,
+          "detail": "(no response captured)"
+        },
+        {
+          "label": "Short-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path \"Produce from source\" selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube visible",
+          "ok": false,
+          "detail": "platform option not found on publish step"
+        },
+        {
+          "label": "submit button found",
+          "ok": false,
+          "detail": "no submit button visible on publish step"
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 job items visible"
+        }
+      ],
+      "issues": [
+        "✗ platform YouTube visible: platform option not found on publish step",
+        "✗ submit button found: no submit button visible on publish step"
+      ]
+    },
+    {
+      "id": "G-T6",
+      "desc": "Fetch · vertical_reel · long · calm",
+      "passed": false,
+      "checks": [
+        {
+          "label": "wizard loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "copilot responded on step 1",
+          "ok": true,
+          "detail": "(no response captured)"
+        },
+        {
+          "label": "Long-form selected",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "path selection visible",
+          "ok": false,
+          "detail": "Couldn't find \"Fetch and enhance\". Available: Jobs | New job | Active | History | Schedule"
+        },
+        {
+          "label": "URL input found",
+          "ok": false,
+          "detail": "URL input not visible on source step"
+        },
+        {
+          "label": "features step reached",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube visible",
+          "ok": false,
+          "detail": "platform option not found on publish step"
+        },
+        {
+          "label": "submit button found",
+          "ok": false,
+          "detail": "no submit button visible on publish step"
+        },
+        {
+          "label": "redirected after submit",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/jobs/new"
+        },
+        {
+          "label": "active jobs list visible",
+          "ok": true,
+          "detail": "4 job items visible"
+        }
+      ],
+      "issues": [
+        "✗ path selection visible: Couldn't find \"Fetch and enhance\". Available: Jobs | New job | Active | History | Schedule",
+        "✗ URL input found: URL input not visible on source step",
+        "✗ platform YouTube visible: platform option not found on publish step",
+        "✗ submit button found: no submit button visible on publish step"
+      ]
+    }
+  ]
+}

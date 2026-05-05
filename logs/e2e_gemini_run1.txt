@@ -1,0 +1,140 @@
+========================================
+AuraFlux 18-Test E2E Suite — Gemini as Customer
+Started: Tue May  5 11:07:51 EDT 2026
+========================================
+
+▶ [1/3] Operate — 6 tests (Gemini → API payload → submit → audit)
+  Gemini key: AIzaSyCIcRgB...
+  Operate key: af_live_70a1...
+============================================================
+AuraFlux Operate E2E — Gemini as Customer (CPD-142)
+API: https://auraflux-api.onrender.com
+Scenarios: 6
+============================================================
+
+[O-T1] Gemini crafting payload for: I want a short-form vertical highlights reel about extreme s...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=hype
+  → Submitted jobId: e2e-operate-test_COMPACT_FETCH_news_1777993673700
+  [O-T1] status: unknown
+  [O-T1] status: complete
+  → Final status: complete
+  ✗ [O-T1] score=70/100 — While the format, topic, tone, and platforms match the brief, the core content t
+       ✗ contentType: The brief requested a 'highlights reel' (implied by 'vertical highlights reel' and 'Energy is everything'), and the crafted API payload specified 'productionProfile: vertical_reel'. However, the returned job spec recorded 'contentType: news'. This is a fundamental mismatch in the intended content type and visual style.
+       ✗ Script structure/style: The 'filledScript' reflects the 'news' contentType, presenting a narrative structure (INTRO, STORY_CLIPs, OUTRO) with extensive descriptive voiceover. This style is not typical for a 'short-form vertical highlights reel,' which is usually more visually driven, fast-paced, and relies on quick cuts with minimal, punchy text or audio, rather than a detailed narrative.
+
+[O-T2] Gemini crafting payload for: Produce a professional 3-minute news desk segment covering A...
+  → Gemini payload: entry=compose profile=broadcast_desk format=long tone=informative
+  → Submitted jobId: e2e-operate-test_COMPACT_FETCH_news_1777993705902
+  [O-T2] status: unknown
+  [O-T2] status: complete
+  → Final status: complete
+  ✓ [O-T2] score=100/100 — All aspects of the crafted API payload and the returned job spec align perfectly
+
+[O-T3] Gemini crafting payload for: I need a short casual video about morning productivity routi...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=casual
+  → Submitted jobId: e2e-operate-test_COMPACT_FETCH_news_1777993732631
+  [O-T3] status: unknown
+  [O-T3] status: complete
+  → Final status: complete
+  ✓ [O-T3] score=100/100 — All aspects of the submitted API payload and the recorded job spec accurately re
+
+[O-T4] Gemini crafting payload for: Long-form corporate product launch announcement for a new AI...
+  → Gemini payload: entry=compose profile=broadcast_desk format=long tone=professional
+  → Submitted jobId: e2e-operate-test_COMPACT_FETCH_news_1777993756425
+  [O-T4] status: unknown
+  [O-T4] status: complete
+  → Final status: complete
+  ✓ [O-T4] score=100/100 — All specified parameters in the job spec (format, topic, tone, platforms, and im
+
+[O-T5] Gemini crafting payload for: Breaking news segment — urgent coverage of a major global ec...
+  → Gemini payload: entry=compose profile=broadcast_desk format=short tone=urgent
+  → Submitted jobId: e2e-operate-test_COMPACT_FETCH_news_1777993783455
+  [O-T5] status: unknown
+  [O-T5] status: complete
+  → Final status: complete
+  ✓ [O-T5] score=100/100 — All aspects of the crafted API payload and the returned job spec accurately refl
+
+[O-T6] Gemini crafting payload for: Short entertainment clip covering pop culture trends this we...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=energetic
+  → Submitted jobId: e2e-operate-test_COMPACT_FETCH_news_1777993808328
+  [O-T6] status: unknown
+  [O-T6] status: complete
+  → Final status: complete
+  ✗ [O-T6] score=75/100 — The core aspects like topic, format ('short'), and target platform (TikTok) are 
+       ✗ Tone is incomplete: The brief requested an 'energetic, fun, youthful' tone, but the API payload and the job spec only captured 'energetic', omitting 'fun' and 'youthful'.
+       ✗ Content type mismatch: The brief describes an 'entertainment clip', but the job spec recorded 'contentType': 'news'. While pop culture trends can be news, the 'entertainment' aspect implies a different framing.
+
+============================================================
+OPERATE E2E SUMMARY — 4/6 passed
+============================================================
+  ✗ [O-T1] score=70/100  I want a short-form vertical highlights reel about extreme s
+       ✗ contentType: The brief requested a 'highlights reel' (implied by 'vertical highlights reel' and 'Energy is everything'), and the crafted API payload specified 'productionProfile: vertical_reel'. However, the returned job spec recorded 'contentType: news'. This is a fundamental mismatch in the intended content type and visual style.
+       ✗ Script structure/style: The 'filledScript' reflects the 'news' contentType, presenting a narrative structure (INTRO, STORY_CLIPs, OUTRO) with extensive descriptive voiceover. This style is not typical for a 'short-form vertical highlights reel,' which is usually more visually driven, fast-paced, and relies on quick cuts with minimal, punchy text or audio, rather than a detailed narrative.
+  ✓ [O-T2] score=100/100  Produce a professional 3-minute news desk segment covering A
+  ✓ [O-T3] score=100/100  I need a short casual video about morning productivity routi
+  ✓ [O-T4] score=100/100  Long-form corporate product launch announcement for a new AI
+  ✓ [O-T5] score=100/100  Breaking news segment — urgent coverage of a major global ec
+  ✗ [O-T6] score=75/100  Short entertainment clip covering pop culture trends this we
+       ✗ Tone is incomplete: The brief requested an 'energetic, fun, youthful' tone, but the API payload and the job spec only captured 'energetic', omitting 'fun' and 'youthful'.
+       ✗ Content type mismatch: The brief describes an 'entertainment clip', but the job spec recorded 'contentType': 'news'. While pop culture trends can be news, the 'entertainment' aspect implies a different framing.
+
+Results written to /Users/robertgregory/cwn-production/logs/operate_gemini_e2e_2026-05-05T15-10-41-116Z.json
+  Operate: 8/6 passed
+
+▶ [2/3] Guided — 6 tests (Gemini → wizard choices → copilot msg → audit)
+============================================================
+AuraFlux Guided E2E — Gemini as Customer (CPD-142)
+Account: Guided demo (user_3DHrNlngvQKhKeOcFr52o3JT1jE)
+Base: https://auraflux-api.onrender.com
+============================================================
+
+Signing in...
+node:internal/process/promises:332
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.waitForURL: Timeout 20000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until "load"
+============================================================
+    at /Users/robertgregory/cwn-production/scripts/guided_gemini_e2e.js:333:14 {
+  name: 'TimeoutError'
+}
+
+Node.js v25.9.0
+  Guided: 0/6 passed
+
+▶ [3/3] Managed — 6 tests (Gemini → copilot conversation → audit)
+============================================================
+AuraFlux Managed E2E — Gemini as Customer (CPD-142)
+Account: Managed demo (user_3DIyT3RsdxBA4rPvIKSjb9PRNgu)
+Base: https://auraflux-api.onrender.com
+============================================================
+
+Signing in...
+node:internal/process/promises:332
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.waitForURL: Timeout 20000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until "load"
+============================================================
+    at /Users/robertgregory/cwn-production/scripts/managed_gemini_e2e.js:271:14 {
+  name: 'TimeoutError'
+}
+
+Node.js v25.9.0
+  Managed: 0/6 passed
+
+<stdin>:13: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+Report: /Users/robertgregory/cwn-production/logs/e2e_results_20260505_110751.json
+========================================
+FINAL RESULT: 8/18 passed
+  Operate: 8/6
+  Guided:  0/6
+  Managed: 0/6
+Completed: Tue May  5 11:11:24 EDT 2026
+========================================
+
+Full report: /Users/robertgregory/cwn-production/logs/e2e_results_20260505_110751.json

@@ -1,0 +1,262 @@
+========================================
+AuraFlux 18-Test E2E Suite — Gemini as Customer
+Started: Tue May  5 14:33:24 EDT 2026
+========================================
+
+▶ [1/3] Operate — 6 tests (Gemini → API payload → submit → audit)
+  Gemini key: AIzaSyCIcRgB...
+  Operate key: af_live_70a1...
+============================================================
+AuraFlux Operate E2E — Gemini as Customer (CPD-142)
+API: https://auraflux-api.onrender.com
+Scenarios: 6 (3 fetch + 3 generate/WAN)
+============================================================
+
+[O-T1] entry=fetch — Gemini crafting payload for: I want a short-form vertical highlights reel about extreme s...
+  → Payload: entry=fetch profile=vertical_reel format=short tone=hype
+  → Submitted jobId: e2e-operate-test_EXTRACT_FETCH_clips_1778006007216
+  [O-T1] status: queued | videoUrl: pending
+  [O-T1] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T1] score=20/100 — The job's specifications (production profile, format, topic, tone, and platforms
+       ✗ Job status is 'failed'.
+       ✗ Output video URL (outputUrl) is absent/null.
+       ✗ Video output not accessible as no URL was generated.
+
+[O-T2] entry=generate — Gemini crafting payload for: Produce a professional 3-minute news desk segment covering A...
+  → Payload: entry=generate profile=broadcast_desk format=long tone=informative
+  → Submitted jobId: e2e-operate-test_COMPACT_GEN_news_1778006051697
+  [O-T2] status: queued | videoUrl: pending
+  [O-T2] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T2] score=0/100 — While the API payload correctly reflected the customer's content brief in terms 
+       ✗ outputUrl is null (no video generated)
+       ✗ Video URL is not present
+       ✗ Video is not accessible (HTTP 200)
+       ✗ Job status is 'failed'
+
+[O-T3] entry=fetch — Gemini crafting payload for: I need a short casual video about morning productivity routi...
+  → Payload: entry=fetch profile=vertical_reel format=short tone=casual
+  → Submitted jobId: e2e-operate-test_EXTRACT_FETCH_clips_1778006089903
+  [O-T3] status: queued | videoUrl: pending
+  [O-T3] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T3] score=50/100 — The API payload accurately reflected the content brief regarding production prof
+       ✗ Job status is 'failed'
+       ✗ outputUrl is null
+       ✗ Video URL is not present and therefore not accessible
+
+[O-T4] entry=generate — Gemini crafting payload for: Long-form corporate product launch announcement for a new AI...
+  → Payload: entry=generate profile=broadcast_desk format=long tone=professional
+  → Submitted jobId: e2e-operate-test_COMPACT_GEN_news_1778006126140
+  [O-T4] status: queued | videoUrl: pending
+  [O-T4] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T4] score=25/100 — The job critically failed to generate any video output, rendering the entire pro
+       ✗ Job failed to produce output (status: 'failed')
+       ✗ Video URL is absent (outputUrl is null)
+       ✗ Video is not accessible (external check reported 'False')
+       ✗ The 'broadcast_desk' production profile and 'news' contentType in the result, along with the generated script's journalistic style, do not fully align with the 'corporate product launch announcement' implied by the brief, which typically suggests a more marketing-oriented and aspirational visual style.
+
+[O-T5] entry=fetch — Gemini crafting payload for: Breaking news segment — urgent coverage of a major global ec...
+  → Payload: entry=fetch profile=broadcast_desk format=short tone=urgent
+  → Submitted jobId: e2e-operate-test_EXTRACT_FETCH_news_1778006164887
+  [O-T5] status: queued | videoUrl: pending
+  [O-T5] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T5] score=60/100 — All content generation parameters specified in the API payload (productionProfil
+       ✗ Video output URL is not present in the job result.
+       ✗ Video output is not accessible (HTTP 200 status).
+
+[O-T6] entry=generate — Gemini crafting payload for: Short entertainment clip covering pop culture trends this we...
+  → Payload: entry=generate profile=vertical_reel format=short tone=energetic
+  → Submitted jobId: e2e-operate-test_EXTRACT_GEN_clips_1778006201281
+  [O-T6] status: queued | videoUrl: pending
+  [O-T6] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T6] score=10/100 — The job failed to produce a video output. Despite the production profile, format
+       ✗ Job status is 'failed'.
+       ✗ outputUrl is missing/null.
+       ✗ Video output was not accessible (HTTP 200).
+
+============================================================
+OPERATE E2E SUMMARY — 0/6 passed
+============================================================
+  ✗ [O-T1] score=20/100 video:✗  I want a short-form vertical highlights reel about extr
+       ✗ Job status is 'failed'.
+       ✗ Output video URL (outputUrl) is absent/null.
+       ✗ Video output not accessible as no URL was generated.
+  ✗ [O-T2] score=0/100 video:✗  Produce a professional 3-minute news desk segment cover
+       ✗ outputUrl is null (no video generated)
+       ✗ Video URL is not present
+       ✗ Video is not accessible (HTTP 200)
+       ✗ Job status is 'failed'
+  ✗ [O-T3] score=50/100 video:✗  I need a short casual video about morning productivity 
+       ✗ Job status is 'failed'
+       ✗ outputUrl is null
+       ✗ Video URL is not present and therefore not accessible
+  ✗ [O-T4] score=25/100 video:✗  Long-form corporate product launch announcement for a n
+       ✗ Job failed to produce output (status: 'failed')
+       ✗ Video URL is absent (outputUrl is null)
+       ✗ Video is not accessible (external check reported 'False')
+       ✗ The 'broadcast_desk' production profile and 'news' contentType in the result, along with the generated script's journalistic style, do not fully align with the 'corporate product launch announcement' implied by the brief, which typically suggests a more marketing-oriented and aspirational visual style.
+  ✗ [O-T5] score=60/100 video:✗  Breaking news segment — urgent coverage of a major glob
+       ✗ Video output URL is not present in the job result.
+       ✗ Video output is not accessible (HTTP 200 status).
+  ✗ [O-T6] score=10/100 video:✗  Short entertainment clip covering pop culture trends th
+       ✗ Job status is 'failed'.
+       ✗ outputUrl is missing/null.
+       ✗ Video output was not accessible (HTTP 200).
+
+Results written to /Users/robertgregory/cwn-production/logs/operate_gemini_e2e_2026-05-05T18-37-14-991Z.json
+  Operate: 0
+0/6 passed
+
+▶ [2/3] Guided — 6 tests (Gemini → wizard choices → copilot msg → audit)
+============================================================
+AuraFlux Guided E2E — Gemini as Customer (CPD-142)
+Account: Guided demo (user_3DHrNlngvQKhKeOcFr52o3JT1jE)
+Base: https://app.auraflux.co
+============================================================
+
+Signing in...
+✓ Signed in
+
+
+[G-T1] Gemini deciding wizard inputs for: I want a short-form vertical highlights reel about extreme s...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=hype, platform=TikTok
+  → Job submitted successfully
+  → Copilot responded (654 chars)
+  ✓ [G-T1] score=98/100 — The wizard choices accurately reflected all aspects of the brief. The Copilot de
+
+[G-T2] Gemini deciding wizard inputs for: Professional 3-minute news desk segment about AI in healthca...
+  → Gemini: format=Long-form, path=Produce from source, tone=informative, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (334 chars)
+  ✗ [G-T2] score=25/100 — The Copilot successfully parsed and reiterated the customer's brief, indicating 
+       ✗ Wizard: 'Long-form' was selected for a '3-minute' news segment; typically, a 3-minute segment would be considered 'Short-form'.
+       ✗ Copilot did not address the user's explicit request to confirm if the setup looked optimal or provide any suggestions for improvements to the wizard choices.
+       ✗ Copilot's response was a generic administrative request for a 'jobId' rather than offering guidance on the specific content creation parameters.
+
+[G-T3] Gemini deciding wizard inputs for: Short casual video about morning productivity — coffee, exer...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=casual, platform=Instagram
+  → Job submitted successfully
+  → Copilot responded (811 chars)
+  ✓ [G-T3] score=100/100 — The wizard choices precisely reflect the customer's brief. The Copilot clearly u
+
+[G-T4] Gemini deciding wizard inputs for: Long-form product launch announcement for a new AI analytics...
+  → Gemini: format=Long-form, path=Produce from source, tone=professional, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (593 chars)
+  ✓ [G-T4] score=100/100 — The wizard choices perfectly align with the customer's brief regarding format, t
+
+[G-T5] Gemini deciding wizard inputs for: Breaking news — urgent coverage of a major economic developm...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=urgent, platform=YouTube
+  → Job submitted successfully
+  → Copilot responded (858 chars)
+  ✓ [G-T5] score=100/100 — The wizard choices perfectly align with the customer's brief. The Copilot clearl
+
+[G-T6] Gemini deciding wizard inputs for: Short entertainment pop culture trends clip. Energetic, fun,...
+  → Gemini: format=Short-form, path=Fetch and enhance, tone=energetic, platform=TikTok
+  → Job submitted successfully
+  → Copilot responded (744 chars)
+  ✓ [G-T6] score=100/100 — The wizard choices perfectly aligned with the customer's brief. The Copilot accu
+
+============================================================
+GUIDED E2E SUMMARY — 5/6 passed
+============================================================
+  ✓ [G-T1] score=98/100  I want a short-form vertical highlights reel about extreme s
+  ✗ [G-T2] score=25/100  Professional 3-minute news desk segment about AI in healthca
+       ✗ Wizard: 'Long-form' was selected for a '3-minute' news segment; typically, a 3-minute segment would be considered 'Short-form'.
+       ✗ Copilot did not address the user's explicit request to confirm if the setup looked optimal or provide any suggestions for improvements to the wizard choices.
+       ✗ Copilot's response was a generic administrative request for a 'jobId' rather than offering guidance on the specific content creation parameters.
+  ✓ [G-T3] score=100/100  Short casual video about morning productivity — coffee, exer
+  ✓ [G-T4] score=100/100  Long-form product launch announcement for a new AI analytics
+  ✓ [G-T5] score=100/100  Breaking news — urgent coverage of a major economic developm
+  ✓ [G-T6] score=100/100  Short entertainment pop culture trends clip. Energetic, fun,
+
+Results written to /Users/robertgregory/cwn-production/logs/guided_gemini_e2e_2026-05-05T18-40-22-499Z.json
+  Guided: 5/6 passed
+
+▶ [3/3] Managed — 6 tests (Gemini → copilot conversation → audit)
+============================================================
+AuraFlux Managed E2E — Gemini as Customer (CPD-142)
+Account: Managed demo (user_3DIyT3RsdxBA4rPvIKSjb9PRNgu)
+Base: https://app.auraflux.co
+============================================================
+
+Signing in...
+✓ Signed in
+
+
+[M-T1] Gemini crafting opening message for: I want a short-form vertical highlights reel about extreme s...
+  → Customer message: "Hey Copilot, I'm looking for a new short-form video. Could you produce a vertica..."
+  → Copilot response (675 chars): "Great! I can help you set up a job spec for a short-form extreme sports highligh..."
+  → Follow-up: "Okay, here are those details:
+1.  **`jobId`**: `a1b2c3d4-e5f6-7890-1234-567890ab"
+  → Copilot follow-up (587 chars)
+  ✓ [M-T1] score=100/100 — The Copilot accurately identified the content type, format, tone, and platform. 
+
+[M-T2] Gemini crafting opening message for: Professional 3-minute news desk segment about AI in healthca...
+  → Customer message: "Alright Copilot, let's get a new video segment going. I need a professional, thr..."
+  → Copilot response (143 chars): "Okay, let's get this job spec started.
+
+First, I need a `jobId`. This is a uniqu..."
+  → Follow-up: "Okay, here's a jobId for you: `d1c9b2f3-a4e5-4f60-8a7b-1c2d3e4f5a6b`. Let me kno"
+  → Copilot follow-up (220 chars)
+  ✗ [M-T2] score=70/100 — The Copilot demonstrated a clear managerial approach to setting up the job, syst
+       ✗ Copilot did not explicitly identify or confirm the requested platform (YouTube) from the brief.
+       ✗ Copilot did not explicitly echo the requested tone ('professional', 'informative') back to the customer, though its content type suggestion implies it.
+
+[M-T3] Gemini crafting opening message for: Short casual video about morning productivity — coffee, exer...
+  → Customer message: "Hey Copilot, I need a new short video for Instagram Reels. I'm looking for a cas..."
+  → Copilot response (903 chars): "Okay, I can help you set up that job spec for a short video on Instagram Reels a..."
+  → Follow-up: "Okay, here are those details. For the jobId, let's use `a1b2c3d4-e5f6-7890-1234-"
+  → Copilot follow-up (1166 chars)
+  ✓ [M-T3] score=100/100 — The Copilot accurately captured all aspects of the customer's brief, including c
+
+[M-T4] Gemini crafting opening message for: Long-form product launch announcement for a new AI analytics...
+  → Customer message: "Hi Copilot, I need you to manage the full production for a long-form product lau..."
+  → Copilot response (713 chars): "Understood. You're looking for a full-service, managed production for a long-for..."
+  → Follow-up: "Our Customer ID is AF-CUST-7890. For the content style, `news-long` would be the"
+  → Copilot follow-up (930 chars)
+  ✓ [M-T4] score=98/100 — The Copilot correctly identified the content type, format, tone, and platform. I
+
+[M-T5] Gemini crafting opening message for: Breaking news — urgent coverage of a major economic developm...
+  → Customer message: "Copilot, we have a major economic development breaking right now that needs imme..."
+  → Copilot response (751 chars): "Understood. We can get this breaking news out quickly.
+
+First, let's set up the ..."
+  → Follow-up: "Okay, I'll provide those details.
+
+1.  **`jobId`**: `a1b2c3d4-e5f6-7890-1234-567"
+  → Copilot follow-up (1331 chars)
+  ✓ [M-T5] score=98/100 — The Copilot correctly identified the content type, format, tone, and platform. I
+
+[M-T6] Gemini crafting opening message for: Short entertainment pop culture trends clip. Energetic, fun,...
+  → Customer message: "Hey Copilot, I need your help producing a new short-form video for TikTok. The c..."
+  → Copilot response (518 chars): "Okay, I can help you with that. We'll start by setting up the basic job paramete..."
+  → Follow-up: "Okay, those settings look good. For this job, let's use `a1b2c3d4-e5f6-7890-1234"
+  → Copilot follow-up (503 chars)
+  ✓ [M-T6] score=100/100 — The Copilot correctly identified the content type, platform, and initiated the j
+
+============================================================
+MANAGED E2E SUMMARY — 5/6 passed
+============================================================
+  ✓ [M-T1] score=100/100  I want a short-form vertical highlights reel about extreme s
+  ✗ [M-T2] score=70/100  Professional 3-minute news desk segment about AI in healthca
+       ✗ Copilot did not explicitly identify or confirm the requested platform (YouTube) from the brief.
+       ✗ Copilot did not explicitly echo the requested tone ('professional', 'informative') back to the customer, though its content type suggestion implies it.
+  ✓ [M-T3] score=100/100  Short casual video about morning productivity — coffee, exer
+  ✓ [M-T4] score=98/100  Long-form product launch announcement for a new AI analytics
+  ✓ [M-T5] score=98/100  Breaking news — urgent coverage of a major economic developm
+  ✓ [M-T6] score=100/100  Short entertainment pop culture trends clip. Energetic, fun,
+
+Results written to /Users/robertgregory/cwn-production/logs/managed_gemini_e2e_2026-05-05T18-43-10-768Z.json
+  Managed: 5/6 passed
+
+scripts/run_all_18.sh: line 102: 0
+0: syntax error in expression (error token is "0")
+scripts/run_all_18.sh: line 104: TOTAL_PASS: unbound variable
+========================================
+scripts/run_all_18.sh: line 136: TOTAL_PASS: unbound variable

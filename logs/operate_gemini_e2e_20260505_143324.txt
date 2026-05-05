@@ -1,0 +1,103 @@
+============================================================
+AuraFlux Operate E2E — Gemini as Customer (CPD-142)
+API: https://auraflux-api.onrender.com
+Scenarios: 6 (3 fetch + 3 generate/WAN)
+============================================================
+
+[O-T1] entry=fetch — Gemini crafting payload for: I want a short-form vertical highlights reel about extreme s...
+  → Payload: entry=fetch profile=vertical_reel format=short tone=hype
+  → Submitted jobId: e2e-operate-test_EXTRACT_FETCH_clips_1778006007216
+  [O-T1] status: queued | videoUrl: pending
+  [O-T1] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T1] score=20/100 — The job's specifications (production profile, format, topic, tone, and platforms
+       ✗ Job status is 'failed'.
+       ✗ Output video URL (outputUrl) is absent/null.
+       ✗ Video output not accessible as no URL was generated.
+
+[O-T2] entry=generate — Gemini crafting payload for: Produce a professional 3-minute news desk segment covering A...
+  → Payload: entry=generate profile=broadcast_desk format=long tone=informative
+  → Submitted jobId: e2e-operate-test_COMPACT_GEN_news_1778006051697
+  [O-T2] status: queued | videoUrl: pending
+  [O-T2] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T2] score=0/100 — While the API payload correctly reflected the customer's content brief in terms 
+       ✗ outputUrl is null (no video generated)
+       ✗ Video URL is not present
+       ✗ Video is not accessible (HTTP 200)
+       ✗ Job status is 'failed'
+
+[O-T3] entry=fetch — Gemini crafting payload for: I need a short casual video about morning productivity routi...
+  → Payload: entry=fetch profile=vertical_reel format=short tone=casual
+  → Submitted jobId: e2e-operate-test_EXTRACT_FETCH_clips_1778006089903
+  [O-T3] status: queued | videoUrl: pending
+  [O-T3] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T3] score=50/100 — The API payload accurately reflected the content brief regarding production prof
+       ✗ Job status is 'failed'
+       ✗ outputUrl is null
+       ✗ Video URL is not present and therefore not accessible
+
+[O-T4] entry=generate — Gemini crafting payload for: Long-form corporate product launch announcement for a new AI...
+  → Payload: entry=generate profile=broadcast_desk format=long tone=professional
+  → Submitted jobId: e2e-operate-test_COMPACT_GEN_news_1778006126140
+  [O-T4] status: queued | videoUrl: pending
+  [O-T4] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T4] score=25/100 — The job critically failed to generate any video output, rendering the entire pro
+       ✗ Job failed to produce output (status: 'failed')
+       ✗ Video URL is absent (outputUrl is null)
+       ✗ Video is not accessible (external check reported 'False')
+       ✗ The 'broadcast_desk' production profile and 'news' contentType in the result, along with the generated script's journalistic style, do not fully align with the 'corporate product launch announcement' implied by the brief, which typically suggests a more marketing-oriented and aspirational visual style.
+
+[O-T5] entry=fetch — Gemini crafting payload for: Breaking news segment — urgent coverage of a major global ec...
+  → Payload: entry=fetch profile=broadcast_desk format=short tone=urgent
+  → Submitted jobId: e2e-operate-test_EXTRACT_FETCH_news_1778006164887
+  [O-T5] status: queued | videoUrl: pending
+  [O-T5] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T5] score=60/100 — All content generation parameters specified in the API payload (productionProfil
+       ✗ Video output URL is not present in the job result.
+       ✗ Video output is not accessible (HTTP 200 status).
+
+[O-T6] entry=generate — Gemini crafting payload for: Short entertainment clip covering pop culture trends this we...
+  → Payload: entry=generate profile=vertical_reel format=short tone=energetic
+  → Submitted jobId: e2e-operate-test_EXTRACT_GEN_clips_1778006201281
+  [O-T6] status: queued | videoUrl: pending
+  [O-T6] status: failed | videoUrl: pending
+  → Final status: failed | videoUrl: MISSING
+  ✗ [O-T6] score=10/100 — The job failed to produce a video output. Despite the production profile, format
+       ✗ Job status is 'failed'.
+       ✗ outputUrl is missing/null.
+       ✗ Video output was not accessible (HTTP 200).
+
+============================================================
+OPERATE E2E SUMMARY — 0/6 passed
+============================================================
+  ✗ [O-T1] score=20/100 video:✗  I want a short-form vertical highlights reel about extr
+       ✗ Job status is 'failed'.
+       ✗ Output video URL (outputUrl) is absent/null.
+       ✗ Video output not accessible as no URL was generated.
+  ✗ [O-T2] score=0/100 video:✗  Produce a professional 3-minute news desk segment cover
+       ✗ outputUrl is null (no video generated)
+       ✗ Video URL is not present
+       ✗ Video is not accessible (HTTP 200)
+       ✗ Job status is 'failed'
+  ✗ [O-T3] score=50/100 video:✗  I need a short casual video about morning productivity 
+       ✗ Job status is 'failed'
+       ✗ outputUrl is null
+       ✗ Video URL is not present and therefore not accessible
+  ✗ [O-T4] score=25/100 video:✗  Long-form corporate product launch announcement for a n
+       ✗ Job failed to produce output (status: 'failed')
+       ✗ Video URL is absent (outputUrl is null)
+       ✗ Video is not accessible (external check reported 'False')
+       ✗ The 'broadcast_desk' production profile and 'news' contentType in the result, along with the generated script's journalistic style, do not fully align with the 'corporate product launch announcement' implied by the brief, which typically suggests a more marketing-oriented and aspirational visual style.
+  ✗ [O-T5] score=60/100 video:✗  Breaking news segment — urgent coverage of a major glob
+       ✗ Video output URL is not present in the job result.
+       ✗ Video output is not accessible (HTTP 200 status).
+  ✗ [O-T6] score=10/100 video:✗  Short entertainment clip covering pop culture trends th
+       ✗ Job status is 'failed'.
+       ✗ outputUrl is missing/null.
+       ✗ Video output was not accessible (HTTP 200).
+
+Results written to /Users/robertgregory/cwn-production/logs/operate_gemini_e2e_2026-05-05T18-37-14-991Z.json

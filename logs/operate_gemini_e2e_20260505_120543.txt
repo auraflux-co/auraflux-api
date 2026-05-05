@@ -1,0 +1,71 @@
+============================================================
+AuraFlux Operate E2E — Gemini as Customer (CPD-142)
+API: https://auraflux-api.onrender.com
+Scenarios: 6
+============================================================
+
+[O-T1] Gemini crafting payload for: I want a short-form vertical highlights reel about extreme s...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=hype
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777997146845
+  [O-T1] status: queued
+  [O-T1] status: complete
+  → Final status: complete
+  ✓ [O-T1] score=100/100 — All requested parameters from the brief are correctly reflected in the job spec.
+
+[O-T2] Gemini crafting payload for: Produce a professional 3-minute news desk segment covering A...
+  → Gemini payload: entry=compose profile=broadcast_desk format=long tone=informative
+  → Submitted jobId: e2e-operate-test_COMPACT_DIRECT_news_1777997173305
+  [O-T2] status: queued
+  [O-T2] status: complete
+  → Final status: complete
+  ✗ [O-T2] score=65/100 — While most aspects align, the job spec does not accurately reflect the precise d
+       ✗ The 'format' field is set to 'long', which is imprecise for the brief's specified '3-minute' duration. The exact duration is not captured.
+       ✗ The 'tone' field only specifies 'informative', missing the 'authoritative' aspect requested in the brief.
+
+[O-T3] Gemini crafting payload for: I need a short casual video about morning productivity routi...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=casual
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777997203483
+  [O-T3] status: queued
+  [O-T3] status: complete
+  → Final status: complete
+  ✓ [O-T3] score=100/100 — All audited fields in the job spec (productionProfile, format, topic, tone, plat
+
+[O-T4] Gemini crafting payload for: Long-form corporate product launch announcement for a new AI...
+  → Gemini payload: entry=compose profile=broadcast_desk format=long tone=professional
+  → Submitted jobId: e2e-operate-test_COMPACT_DIRECT_news_1777997228584
+  [O-T4] status: queued
+  [O-T4] status: complete
+  → Final status: complete
+  ✓ [O-T4] score=100/100 — All audited fields in the crafted API payload and the recorded job spec perfectl
+
+[O-T5] Gemini crafting payload for: Breaking news segment — urgent coverage of a major global ec...
+  → Gemini payload: entry=compose profile=broadcast_desk format=short tone=urgent
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_news_1777997254533
+  [O-T5] status: queued
+  [O-T5] status: complete
+  → Final status: complete
+  ✓ [O-T5] score=100/100 — All specified parameters in the job spec (productionProfile, format, topic, tone
+
+[O-T6] Gemini crafting payload for: Short entertainment clip covering pop culture trends this we...
+  → Gemini payload: entry=compose profile=vertical_reel format=short tone=energetic
+  → Submitted jobId: e2e-operate-test_EXTRACT_DIRECT_clips_1777997280668
+  [O-T6] status: queued
+  [O-T6] status: complete
+  → Final status: complete
+  ✓ [O-T6] score=95/100 — All other aspects of the job spec (production profile, format, topic, platforms,
+       ✗ Tone field in job spec only lists 'energetic', missing 'fun' and 'youthful' from brief.
+
+============================================================
+OPERATE E2E SUMMARY — 5/6 passed
+============================================================
+  ✓ [O-T1] score=100/100  I want a short-form vertical highlights reel about extreme s
+  ✗ [O-T2] score=65/100  Produce a professional 3-minute news desk segment covering A
+       ✗ The 'format' field is set to 'long', which is imprecise for the brief's specified '3-minute' duration. The exact duration is not captured.
+       ✗ The 'tone' field only specifies 'informative', missing the 'authoritative' aspect requested in the brief.
+  ✓ [O-T3] score=100/100  I need a short casual video about morning productivity routi
+  ✓ [O-T4] score=100/100  Long-form corporate product launch announcement for a new AI
+  ✓ [O-T5] score=100/100  Breaking news segment — urgent coverage of a major global ec
+  ✓ [O-T6] score=95/100  Short entertainment clip covering pop culture trends this we
+       ✗ Tone field in job spec only lists 'energetic', missing 'fun' and 'youthful' from brief.
+
+Results written to /Users/robertgregory/cwn-production/logs/operate_gemini_e2e_2026-05-05T16-08-44-295Z.json

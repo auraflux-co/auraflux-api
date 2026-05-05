@@ -1,0 +1,113 @@
+============================================================
+AuraFlux Operate E2E — Input vs Output Validation (CPD-132)
+API: https://auraflux-api.onrender.com
+============================================================
+
+[T1] Submitting: Compose · broadcast_desk · short · professional topic
+  → jobId: e2e-operate-test_COMPACT_FETCH_news_1777990323198
+
+[T2] Submitting: Fetch · vertical_reel · short · public MP4 URL
+  → jobId: e2e-operate-test_COMPACT_FETCH_news_1777990325478
+
+[T3] Submitting: Compose · broadcast_desk · long · educational topic
+  → jobId: e2e-operate-test_COMPACT_FETCH_news_1777990327632
+
+[T4] Submitting: Fetch · live_event · short · public MP4 URL
+  → jobId: e2e-operate-test_COMPACT_FETCH_news_1777990329787
+
+[T5] Submitting: Compose · broadcast_desk · short · analytical topic
+  → jobId: e2e-operate-test_COMPACT_FETCH_news_1777990332105
+
+[T6] Submitting: Fetch · vertical_reel · long · public MP4 URL
+  → jobId: e2e-operate-test_COMPACT_FETCH_news_1777990334256
+
+Submitted 6/6 jobs. Polling for results...
+------------------------------------------------------------
+  [T1] status: unknown
+  [T1] status: complete
+
+  === Input vs Output Report [T1] ===
+    ✓ topic persisted to jobSpec
+    ✓ tone persisted (professional)
+    ✓ portal0 passed
+    ✓ portal1 passed=True
+    ✓ job completed
+    ✓ script generated (1800 chars)
+    ✗ productionProfile mismatch: ordered='broadcast_desk' got=''
+  [T2] status: unknown
+  [T2] status: failed
+
+  === Input vs Output Report [T2] ===
+    ✓ topic persisted to jobSpec
+    ✓ tone persisted (energetic)
+    ✓ portal0 passed
+    ✓ portal1 passed=True
+    ✓ video output present: https://df04bc264530390035c77664f1b403d9.r2.cloudflarestorag
+    ✓ script generated (1338 chars)
+    ✗ productionProfile mismatch: ordered='vertical_reel' got=''
+    ✗ job ended with status: failed
+  [T3] status: complete
+
+  === Input vs Output Report [T3] ===
+    ✓ topic persisted to jobSpec
+    ✓ tone persisted (educational)
+    ✓ portal0 passed
+    ✓ portal1 passed=True
+    ✓ job completed
+    ✓ script generated (2506 chars)
+    ✗ productionProfile mismatch: ordered='broadcast_desk' got=''
+  [T4] status: unknown
+  [T4] status: failed
+
+  === Input vs Output Report [T4] ===
+    ✓ topic persisted to jobSpec
+    ✓ tone persisted (exciting)
+    ✓ portal0 passed
+    ✓ portal1 passed=True
+    ✓ video output present: https://df04bc264530390035c77664f1b403d9.r2.cloudflarestorag
+    ✓ script generated (1255 chars)
+    ✗ productionProfile mismatch: ordered='live_event' got=''
+    ✗ job ended with status: failed
+  [T5] status: complete
+
+  === Input vs Output Report [T5] ===
+    ✓ topic persisted to jobSpec
+    ✓ tone persisted (analytical)
+    ✓ portal0 passed
+    ✓ portal1 passed=True
+    ✓ job completed
+    ✓ script generated (2521 chars)
+    ✗ productionProfile mismatch: ordered='broadcast_desk' got=''
+  [T6] status: failed
+
+  === Input vs Output Report [T6] ===
+    ✓ topic persisted to jobSpec
+    ✓ tone persisted (calm)
+    ✓ portal0 passed
+    ✓ portal1 passed=True
+    ✓ video output present: https://df04bc264530390035c77664f1b403d9.r2.cloudflarestorag
+    ✓ script generated (1340 chars)
+    ✗ productionProfile mismatch: ordered='vertical_reel' got=''
+    ✗ job ended with status: failed
+
+============================================================
+FINAL SUMMARY
+============================================================
+Passed: 0/6
+  ✗ [T1] Compose · broadcast_desk · short · professional to
+       ✗ productionProfile mismatch: ordered='broadcast_desk' got=''
+  ✗ [T2] Fetch · vertical_reel · short · public MP4 URL
+       ✗ productionProfile mismatch: ordered='vertical_reel' got=''
+       ✗ job ended with status: failed
+  ✗ [T3] Compose · broadcast_desk · long · educational topi
+       ✗ productionProfile mismatch: ordered='broadcast_desk' got=''
+  ✗ [T4] Fetch · live_event · short · public MP4 URL
+       ✗ productionProfile mismatch: ordered='live_event' got=''
+       ✗ job ended with status: failed
+  ✗ [T5] Compose · broadcast_desk · short · analytical topi
+       ✗ productionProfile mismatch: ordered='broadcast_desk' got=''
+  ✗ [T6] Fetch · vertical_reel · long · public MP4 URL
+       ✗ productionProfile mismatch: ordered='vertical_reel' got=''
+       ✗ job ended with status: failed
+
+✗ FAILURES DETECTED — Review issues above

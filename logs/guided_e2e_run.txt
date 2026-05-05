@@ -1,0 +1,35 @@
+============================================================
+AuraFlux Guided E2E — Dashboard + Copilot (CPD-142)
+Account: demo@auraflux.co
+Base: https://app.auraflux.co
+============================================================
+
+Signing in...
+  → Loading app sign-in with Clerk ticket...
+  → After ticket sign-in, URL: https://app.auraflux.co/dashboard
+✓ Signed in via Clerk token
+
+[G-T1] short · Fetch and enhance · professional · YouTube
+
+[G-T2] short · Fetch and enhance · energetic · TikTok
+
+[G-T3] long · Produce from source · informative · YouTube
+
+[G-T4] short · Fetch and enhance · hype · Instagram
+
+[G-T5] long · Compile from short clips · casual · YouTube
+
+[G-T6] long · Produce from source · urgent · YouTube
+
+============================================================
+GUIDED E2E SUMMARY
+============================================================
+Passed: 6/6
+  ✓ [G-T1] short · Fetch and enhance · professional · YouTube
+  ✓ [G-T2] short · Fetch and enhance · energetic · TikTok
+  ✓ [G-T3] long · Produce from source · informative · YouTube
+  ✓ [G-T4] short · Fetch and enhance · hype · Instagram
+  ✓ [G-T5] long · Compile from short clips · casual · YouTube
+  ✓ [G-T6] long · Produce from source · urgent · YouTube
+
+Results written to /Users/robertgregory/cwn-production/logs/guided_e2e_2026-05-05T14-14-42-946Z.json

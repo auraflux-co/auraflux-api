@@ -1,0 +1,258 @@
+{
+  "tier": "operate",
+  "timestamp": "2026-05-05T18-58-16-859Z",
+  "summary": {
+    "passed": 0,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "O-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports \u2014 skateboarding, surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "extreme sports",
+        "tone": "hype",
+        "prompt": "High-energy extreme sports short-form vertical reel: skateboarding tricks, surfers carving massive waves, snowboarders launching off jumps. Fast cuts, hype music feel. Short, punchy, vertical 9:16 for TikTok.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_clips_1778007283591",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 50,
+        "issues": [
+          "Job status is 'failed'",
+          "Video outputUrl is null (absent)",
+          "Video is not accessible"
+        ],
+        "notes": "The productionProfile, format, topic, tone, platforms, and entry type all correctly match the original brief and submitted payload. The job successfully generated a script matching the tone and topic. However, the job ultimately failed to produce a video output, indicated by the 'failed' status and the absence of an accessible output URL, which is critical for a complete end-to-end pass."
+      },
+      "passed": false,
+      "score": 50,
+      "issues": [
+        "Job status is 'failed'",
+        "Video outputUrl is null (absent)",
+        "Video is not accessible"
+      ]
+    },
+    {
+      "id": "O-T2",
+      "brief": "Produce a professional 3-minute news desk segment covering AI breakthroughs in healthcare for 2026. Informative, authoritative tone. YouTube audience.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "AI breakthroughs in healthcare for 2026",
+        "tone": "informative",
+        "prompt": "A professional news desk segment: AI breakthroughs transforming healthcare in 2026. Cover predictive diagnostics, AI surgery assistants, and drug discovery acceleration. Informative and authoritative tone. 3 minutes.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_COMPACT_GEN_news_1778007319779",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 25,
+        "issues": [
+          "Video URL is absent.",
+          "Video is not accessible.",
+          "Job status is 'failed'."
+        ],
+        "notes": "Although the `productionProfile`, `format`, `topic`, `tone`, `platforms`, and `entry` type correctly aligned with the brief and payload, the job ultimately failed to produce an accessible video output. The `outputUrl` is null and the job `status` is 'failed', indicating a critical end-to-end failure in delivering the requested content."
+      },
+      "passed": false,
+      "score": 25,
+      "issues": [
+        "Video URL is absent.",
+        "Video is not accessible.",
+        "Job status is 'failed'."
+      ]
+    },
+    {
+      "id": "O-T3",
+      "brief": "I need a short casual video about morning productivity routines \u2014 coffee, exercise, mindset. Relatable and casual tone. Instagram Reels.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "Morning Productivity Routines",
+        "tone": "casual",
+        "prompt": "Short casual lifestyle video: morning productivity routines. Person making coffee, doing a quick workout, journaling with a positive mindset. Warm, relatable, authentic feel. Vertical 9:16 for Instagram Reels.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "instagram"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_clips_1778007354363",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 25,
+        "issues": [
+          "Job failed to complete successfully (status: failed).",
+          "Video URL (outputUrl) is absent.",
+          "Video is not accessible."
+        ],
+        "notes": "The job's input parameters (production profile, format, topic, tone, platforms, entry type) align perfectly with the customer brief. The generated script also accurately reflects the requested content and tone. However, the job ultimately failed to produce a video output, and no video URL was generated or accessible. This constitutes a complete end-to-end failure, despite initial parameter alignment."
+      },
+      "passed": false,
+      "score": 25,
+      "issues": [
+        "Job failed to complete successfully (status: failed).",
+        "Video URL (outputUrl) is absent.",
+        "Video is not accessible."
+      ]
+    },
+    {
+      "id": "O-T4",
+      "brief": "Long-form corporate product launch announcement for a new AI-powered analytics platform. Professional tone. YouTube.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "topic": "AI-powered analytics platform launch",
+        "tone": "professional",
+        "prompt": "Corporate product launch video for an AI-powered business analytics platform. Highlight real-time insights, predictive modeling, executive dashboards, and ROI improvements. Professional, aspirational tone. Long-form for YouTube.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_COMPACT_GEN_news_1778007391112",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 15,
+        "issues": [
+          "Job status is 'failed'.",
+          "The 'contentType' in the result is 'news', which does not perfectly align with a 'corporate product launch announcement' as per the brief.",
+          "The 'outputUrl' is null, meaning no video was produced.",
+          "Video output was not present or accessible, failing the primary objective of the job."
+        ],
+        "notes": "While parameters such as 'format', 'topic', 'tone', 'platforms', and 'entry' correctly reflected the brief and API payload, the job ultimately failed to produce a video output. This is indicated by the 'status: failed' and the null 'outputUrl'. The 'contentType' also defaulted to 'news', which might not be the desired production style for a corporate launch."
+      },
+      "passed": false,
+      "score": 15,
+      "issues": [
+        "Job status is 'failed'.",
+        "The 'contentType' in the result is 'news', which does not perfectly align with a 'corporate product launch announcement' as per the brief.",
+        "The 'outputUrl' is null, meaning no video was produced.",
+        "Video output was not present or accessible, failing the primary objective of the job."
+      ]
+    },
+    {
+      "id": "O-T5",
+      "brief": "Breaking news segment \u2014 urgent coverage of a major global economic development. Urgent, direct tone. Short and punchy. YouTube.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "broadcast_desk",
+        "format": "short",
+        "topic": "global economic development",
+        "tone": "urgent",
+        "prompt": "Breaking news broadcast: urgent economic news coverage. News anchor at desk, stock market charts, global economy crisis. Urgent, direct, authoritative tone. Short-form punchy breaking news format.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "youtube"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_news_1778007428247",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 30,
+        "issues": [
+          "Video URL is absent (outputUrl is null).",
+          "Video is not accessible (HTTP 200).",
+          "Job status is 'failed'."
+        ],
+        "notes": "All requested parameters from the brief (productionProfile, format, topic, tone, platforms, entry type) were correctly captured in the API payload and reflected in the job spec. However, the job ultimately failed to produce a video output, resulting in a null outputUrl and a 'failed' status, which prevents a full end-to-end pass."
+      },
+      "passed": false,
+      "score": 30,
+      "issues": [
+        "Video URL is absent (outputUrl is null).",
+        "Video is not accessible (HTTP 200).",
+        "Job status is 'failed'."
+      ]
+    },
+    {
+      "id": "O-T6",
+      "brief": "Short entertainment clip covering pop culture trends this week. Energetic, fun, youthful tone. TikTok.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "topic": "Pop culture trends",
+        "tone": "energetic",
+        "prompt": "Energetic short-form entertainment clip about the hottest pop culture trends this week: viral TikTok challenges, new music drops, celebrity moments, and trending memes. Fun, youthful tone for a Gen-Z TikTok audience.",
+        "order": {
+          "publish": {
+            "platforms": [
+              "tiktok"
+            ]
+          }
+        }
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_clips_1778007465638",
+      "status": "failed",
+      "videoUrl": null,
+      "videoUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 10,
+        "issues": [
+          "Job status is 'failed'.",
+          "outputUrl is missing.",
+          "Video URL is not accessible."
+        ],
+        "notes": "Although the parameters (production profile, format, topic, tone, platforms, entry type) correctly matched the brief, the job ultimately failed to generate a video. The outputUrl is null and the video is not accessible, indicating a critical failure in the end-to-end process to produce the required output."
+      },
+      "passed": false,
+      "score": 10,
+      "issues": [
+        "Job status is 'failed'.",
+        "outputUrl is missing.",
+        "Video URL is not accessible."
+      ]
+    }
+  ]
+}

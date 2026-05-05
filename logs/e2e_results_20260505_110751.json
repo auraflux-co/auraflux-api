@@ -1,0 +1,23 @@
+{
+  "suite": "AuraFlux 18-Test E2E \u2014 Gemini as Customer (CPD-142)",
+  "timestamp": "2026-05-05T15:11:24.898081Z",
+  "summary": {
+    "total": 18,
+    "passed": 8,
+    "operate": {
+      "total": 6,
+      "passed": 8
+    },
+    "guided": {
+      "total": 6,
+      "passed": 0
+    },
+    "managed": {
+      "total": 6,
+      "passed": 0
+    }
+  },
+  "operate_raw_log": "/Users/robertgregory/cwn-production/logs/operate_gemini_e2e_20260505_110751.txt",
+  "guided": [],
+  "managed": []
+}

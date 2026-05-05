@@ -1,0 +1,2 @@
+usage: tier_api_e2e_test.py [-h] --tier {operate,guided,managed} [--base BASE]
+tier_api_e2e_test.py: error: the following arguments are required: --tier

@@ -1,0 +1,167 @@
+{
+  "tier": "guided",
+  "timestamp": "2026-05-05T15-44-20-641Z",
+  "summary": {
+    "passed": 1,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "G-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports. Hype energy. Going on TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Extreme sports highlights",
+        "tone": "hype",
+        "platform": "TikTok"
+      },
+      "copilotMsg": "Hi Copilot, I'm aiming to produce a super hype, short-form vertical highlights reel about extreme sports for TikTok. I've set the format as Short-form, path as Fetch and enhance, topic as Extreme sports highlights, tone as hype, and platform as TikTok. Does this look like the right setup to get exactly what I'm looking for, or would you recommend any adjustments?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 10,
+        "issues": [
+          "Copilot did not engage with the user's specific query about the setup.",
+          "Copilot provided a generic response about plan limitations instead of guidance.",
+          "Copilot did not confirm if the setup was correct or recommend adjustments as asked."
+        ],
+        "notes": "The wizard choices perfectly matched the customer's brief. However, the Copilot completely failed to understand or respond to the user's request for setup validation and potential adjustments. Its response was a canned message, indicating a lack of functionality for this type of query under the customer's current plan, rather than helpful guidance."
+      },
+      "passed": false,
+      "score": 10
+    },
+    {
+      "id": "G-T2",
+      "brief": "Professional 3-minute news desk segment about AI in healthcare 2026. Informative. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "AI in healthcare 2026 news outlook",
+        "tone": "informative",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hey Copilot, I'm planning a 3-minute professional news desk segment about AI in healthcare in 2026 for YouTube. I've set the format to long-form, the tone to informative, and 'produce from source'. Does this sound like the optimal configuration for my goal, or do you have any suggestions for improvement?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": false,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 15,
+        "issues": [
+          "Wizard format choice 'Long-form' contradicts the '3-minute' requirement in the brief.",
+          "Copilot failed to understand the request for optimal configuration and suggestions, instead providing a canned response about service tiers and an upgrade prompt."
+        ],
+        "notes": "The wizard misconfigured the content format, selecting 'Long-form' for a 3-minute segment. The Copilot did not offer any relevant guidance or evaluate the user's configuration, which was its explicit task. Instead, it delivered a generic message about plan limitations, failing to assist the customer effectively and directly address the user's query about 'optimal configuration' or 'suggestions for improvement'."
+      },
+      "passed": false,
+      "score": 15
+    },
+    {
+      "id": "G-T3",
+      "brief": "Short casual video about morning productivity — coffee, exercise, mindset. Instagram Reels.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Morning productivity: coffee, exercise, and mindset",
+        "tone": "casual",
+        "platform": "Instagram"
+      },
+      "copilotMsg": "Hi Copilot, I'm looking to create an Instagram Reel about morning productivity, focusing on coffee, exercise, and mindset. I've set the format to Short-form, path to Fetch and enhance, topic as \"Morning productivity: coffee, exercise, and mindset,\" tone to casual, and platform to Instagram. Does this setup look correct for what I want to achieve, or do you have any suggestions for improvements?",
+      "copilotResponse": "Yes, your setup uses valid parameters according to the AuraFlux guides for creating content.\n\n*   **Format: Short-form** is appropriate for platforms like Instagram Reels. You can find more details on content formats in the [Content Formats Guide](link-to-formats-guide).\n*   The **Path: Fetch and enhance** is a supported method for generating content from a specified topic. Learn more about available paths in the [Content Generation Paths Guide](link-to-paths-guide).\n*   Your **Topic: \"Morning productivity: coffee, exercise, and mindset\"** is a valid input for content generation. Guidelines for effective topic specification are available in the [Topic Specification Guide](link-to-topic-guide).\n*   **Tone: casual** is one of the supported tones for content generation. See all available tones in the [Tone Options Guide](link-to-tones-guide).\n*   **Platform: Instagram** is a supported output platform. Details on platform-specific requirements can be found in the [Supported Platforms Guide](link-to-platforms-guide).\n\nThis configuration aligns with the documented options for an Instagram Reel. I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": true,
+        "passed": false,
+        "score": 70,
+        "issues": [
+          "Copilot did not offer suggestions for improvement as requested by the customer.",
+          "Copilot's response to consider upgrading to 'AuraFlux Guided' is inappropriate given the customer is already described as 'Guided-tier'."
+        ],
+        "notes": "The wizard choices (format, path, topic, tone, platform) accurately reflected the customer's brief for an Instagram Reel about morning productivity. The Copilot successfully understood the customer's intent and correctly validated each parameter against AuraFlux guides. However, it failed to provide any 'suggestions for improvements' as requested, and its suggestion to upgrade for 'full guided assistance' contradicts the customer's described 'Guided-tier' status, indicating a misalignment in service delivery for this tier."
+      },
+      "passed": false,
+      "score": 70
+    },
+    {
+      "id": "G-T4",
+      "brief": "Long-form product launch announcement for a new AI analytics platform. Professional. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "AI analytics platform launch announcement",
+        "tone": "professional",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hi Copilot, I'm setting up a new project to produce a long-form product launch announcement for our AI analytics platform, intended for YouTube. I've selected 'Long-form' format, 'AI analytics platform launch announcement' topic, 'professional' tone, and 'YouTube' platform. Does this setup sound right for a comprehensive announcement video, or do you have any suggestions to optimize it further?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": true,
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Copilot provided no relevant guidance or suggestions regarding the project setup.",
+          "Copilot directed the customer to upgrade for assistance instead of engaging with the query."
+        ],
+        "notes": "The wizard choices accurately captured all aspects of the customer's brief. The Copilot understood the customer's request for confirmation and optimization suggestions for their project setup. However, it failed to provide any helpful or relevant guidance, instead referring to plan limitations and prompting an upgrade. This rendered the interaction unhelpful to the customer."
+      },
+      "passed": false,
+      "score": 20
+    },
+    {
+      "id": "G-T5",
+      "brief": "Breaking news — urgent coverage of a major economic development. Short and direct. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "Breaking news: Major economic development",
+        "tone": "urgent",
+        "platform": "YouTube"
+      },
+      "copilotMsg": "Hey Copilot, I'm planning an urgent breaking news video for YouTube on a major economic development, intending it to be short and direct. I chose 'long-form' in the wizard, but I want to ensure that's the ideal setting for a concise, urgent update. Could you confirm if this setup is optimal, or recommend any adjustments for achieving that 'short and direct' impact?",
+      "copilotResponse": "The AuraFlux guides describe the 'long-form' setting as optimized for videos typically exceeding 5 minutes, often used for detailed narratives or in-depth analysis. For content intended for quick consumption, urgent updates, or short news bites, the 'short-form' setting is typically optimized for videos under 5 minutes and prioritizes rapid processing and concise metadata.\n\nYou can find more details on these settings in the [Job Spec Configuration Guide, section 'Video Format Settings'](https://docs.auraflux.com/operate/job-spec-config#video-format-settings).",
+      "audit": {
+        "wizardCorrect": false,
+        "copilotUnderstood": true,
+        "passed": true,
+        "score": 90,
+        "issues": [
+          "Wizard's 'format' choice ('Long-form') did not align with the brief's requirement for 'short and direct' content."
+        ],
+        "notes": "The wizard incorrectly set the video format to 'Long-form' despite the brief explicitly stating 'short and direct'. However, the Copilot fully understood the customer's query regarding this discrepancy and provided excellent, relevant, and helpful guidance, correctly identifying 'short-form' as the optimal setting for concise, urgent updates and providing a link to relevant documentation. The Copilot successfully recovered the situation, ensuring the customer received accurate information."
+      },
+      "passed": true,
+      "score": 90
+    },
+    {
+      "id": "G-T6",
+      "brief": "Short entertainment pop culture trends clip. Energetic, fun, youthful. TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Pop culture trends",
+        "tone": "energetic",
+        "platform": "TikTok"
+      },
+      "copilotMsg": "Hey Copilot, I'm setting up a brief for a fun, energetic short-form TikTok clip all about current pop culture trends. I've selected `Short-form`, `Pop culture trends`, `Energetic` tone, `TikTok` platform, and the `Fetch and enhance` path. Does this combination look spot on for what I'm trying to create, or would you recommend any tweaks?",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 0,
+        "issues": [
+          "Copilot did not engage with the content of the request.",
+          "Copilot provided a generic response about plan limitations instead of offering guidance.",
+          "Copilot failed to confirm or recommend tweaks to the wizard choices."
+        ],
+        "notes": "The wizard choices perfectly matched the content brief. However, the Copilot's response completely bypassed the user's query about the brief and wizard selections, instead deferring to a plan limitation message and suggesting an upgrade. This indicates a failure to understand or process the request for guidance, making the interaction unhelpful."
+      },
+      "passed": false,
+      "score": 0
+    }
+  ]
+}

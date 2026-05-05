@@ -1,0 +1,136 @@
+{
+  "tier": "managed",
+  "timestamp": "2026-05-05T18-43-10-768Z",
+  "summary": {
+    "passed": 5,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "M-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports. Hype energy. TikTok.",
+      "firstMsg": "Hey Copilot, I'm looking for a new short-form video. Could you produce a vertical highlights reel featuring extreme sports for TikTok? I want it to have really high-energy, hype vibes to get people excited. Let me know what you need from me to kick this off.",
+      "firstResponse": "Great! I can help you set up a job spec for a short-form extreme sports highlights reel for TikTok. This will use the \"create\" entry type, where AuraFlux generates content based on your prompt.\n\nLet's start with the initial job setup (Portal 0). I need the following information:\n\n1.  **`jobId`**: A unique identifier for this job (UUID format).\n2.  **`contentType`**: Based on your request, this will be `clips-short`.\n3.  **`entryType`**: This will be `create`.\n4.  **`deliverySpec.platforms`**: You mentioned TikTok, so this will be `tiktok`.\n5.  **`customerId`**: Your customer account ID.\n\nOnce I have these, we can move on to the specific prompt for content generation.",
+      "followupMsg": "Okay, here are those details:\n1.  **`jobId`**: `a1b2c3d4-e5f6-7890-1234-567890abcdef`\n2.  **`contentType`**: `clips-short`\n3.  **`entryType`**: `create`\n4.  **`deliverySpec.platforms`**: `tiktok`\n5.  **`customerId`**: `AURAFLUX_CUSTOMER_123`\n\nLet me know when you're ready to move on to the content prompt.",
+      "followupResponse": "Excellent. Portal 0 is now complete with the following:\n\n```json\n{\n  \"jobId\": \"a1b2c3d4-e5f6-7890-1234-567890abcdef\",\n  \"contentType\": \"clips-short\",\n  \"entryType\": \"create\",\n  \"deliverySpec\": {\n    \"platforms\": [\"tiktok\"]\n  },\n  \"customerId\": \"AURAFLUX_CUSTOMER_123\"\n}\n```\n\nNext, for the `create` entry type, I need the **`createSpec.promptText`**. This is the text prompt AuraFlux will use to generate your content.\n\nPlease provide a detailed prompt (maximum 2000 characters) describing the extreme sports highlights reel you envision. Remember you mentioned \"high-energy, hype vibes.\"",
+      "audit": {
+        "understood": true,
+        "managed_response": true,
+        "wrong_tier_response": false,
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "The Copilot accurately identified the content type, format, tone, and platform. It demonstrated a clear managed approach by guiding the customer through the job setup process with structured steps and confirmation. The interaction built confidence in the customer that the job would be set up correctly, and there was no inappropriate mention of upgrading to a higher plan."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "M-T2",
+      "brief": "Professional 3-minute news desk segment about AI in healthcare 2026. Informative. YouTube.",
+      "firstMsg": "Alright Copilot, let's get a new video segment going. I need a professional, three-minute news desk piece focusing on AI in healthcare for 2026. Please ensure it's purely informative and tailored for our YouTube channel. Thanks for taking care of it!",
+      "firstResponse": "Okay, let's get this job spec started.\n\nFirst, I need a `jobId`. This is a unique identifier for your job, in UUID format. Can you provide one?",
+      "followupMsg": "Okay, here's a jobId for you: `d1c9b2f3-a4e5-4f60-8a7b-1c2d3e4f5a6b`. Let me know if you need anything else to get started!",
+      "followupResponse": "Thanks. `jobId` is set to `d1c9b2f3-a4e5-4f60-8a7b-1c2d3e4f5a6b`.\n\nNext, I need to know the `contentType`. Based on your request for a \"three-minute news desk piece,\" `news-long` seems appropriate. Does that sound right?",
+      "audit": {
+        "understood": false,
+        "managed_response": true,
+        "wrong_tier_response": false,
+        "passed": false,
+        "score": 70,
+        "issues": [
+          "Copilot did not explicitly identify or confirm the requested platform (YouTube) from the brief.",
+          "Copilot did not explicitly echo the requested tone ('professional', 'informative') back to the customer, though its content type suggestion implies it."
+        ],
+        "notes": "The Copilot demonstrated a clear managerial approach to setting up the job, systematically requesting and confirming job parameters. It correctly interpreted the content type and format. However, it did not explicitly confirm the intended platform (YouTube) or the stated tone from the brief in its initial responses, leading to an incomplete understanding acknowledgement."
+      },
+      "passed": false,
+      "score": 70,
+      "issues": [
+        "Copilot did not explicitly identify or confirm the requested platform (YouTube) from the brief.",
+        "Copilot did not explicitly echo the requested tone ('professional', 'informative') back to the customer, though its content type suggestion implies it."
+      ]
+    },
+    {
+      "id": "M-T3",
+      "brief": "Short casual video about morning productivity — coffee, exercise, mindset. Instagram Reels.",
+      "firstMsg": "Hey Copilot, I need a new short video for Instagram Reels. I'm looking for a casual piece about morning productivity, covering things like coffee rituals, quick exercise, and a positive mindset to kickstart the day. Make it feel motivating but also relaxed and achievable for viewers.",
+      "firstResponse": "Okay, I can help you set up that job spec for a short video on Instagram Reels about morning productivity. This sounds like a `create` entry type, where AuraFlux will generate the content based on your description.\n\nTo start, I need some basic information for **Portal 0 — Job Initialisation**:\n\n1.  **jobId**: Please provide a unique identifier for this job (UUID format).\n2.  **customerId**: What is your customer account ID?\n3.  **contentType**: Given your description, `custom` seems appropriate. Does that work for you, or would you prefer `clips-short`?\n4.  **deliverySpec.platforms**: You mentioned Instagram Reels, so I'll set this to `[\"instagram\"]`.\n\nI have your prompt text ready: \"A casual piece about morning productivity, covering things like coffee rituals, quick exercise, and a positive mindset to kickstart the day. Make it feel motivating but also relaxed and achievable for viewers.\"",
+      "followupMsg": "Okay, here are those details. For the jobId, let's use `a1b2c3d4-e5f6-7890-1234-567890abcdef`, and my customerId is `AF-CUST-45678`. `Custom` works well for the content type, and `[\"instagram\"]` for platforms is correct.",
+      "followupResponse": "Great. Here's what we have for **Portal 0 — Job Initialisation**:\n\n```json\n{\n  \"jobId\": \"a1b2c3d4-e5f6-7890-1234-567890abcdef\",\n  \"contentType\": \"custom\",\n  \"entryType\": \"create\",\n  \"deliverySpec\": {\n    \"platforms\": [\"instagram\"]\n  },\n  \"customerId\": \"AF-CUST-45678\",\n  \"createSpec\": {\n    \"promptText\": \"A casual piece about morning productivity, covering things like coffee rituals, quick exercise, and a positive mindset to kickstart the day. Make it feel motivating but also relaxed and achievable for viewers.\"\n  }\n}\n```\n\nNow let's move on to **Portal 1 — Script Generation**. This is where AuraFlux's AI will draft the script based on your prompt. To do this, I need:\n\n1.  **designSpec.voice.speakerName**: What is the name of the avatar/host you'd like to use (e.g., \"Bobby G\")?\n2.  **designSpec.voice.lockedOutro**: What fixed sign-off line should the avatar use at the end of the video (e.g., \"I'm Bobby G. See you tomorrow. — ClipzWorld News\")?\n3.  **designSpec.sceneStructure.sceneHeaders**: Please provide a non-empty array of section labels for the script. Based on your prompt, some ideas could be \"Coffee Ritual,\" \"Quick Workout,\" \"Positive Mindset.\"",
+      "audit": {
+        "understood": true,
+        "managed_response": true,
+        "wrong_tier_response": false,
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "The Copilot accurately captured all aspects of the customer's brief, including content type, format, tone, and platform. Its structured, portal-based approach and confirmation of details clearly indicate a managed production workflow, effectively building customer confidence. There was no mention of upgrading, which is appropriate for a Managed-tier customer."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    {
+      "id": "M-T4",
+      "brief": "Long-form product launch announcement for a new AI analytics platform. Professional. YouTube.",
+      "firstMsg": "Hi Copilot, I need you to manage the full production for a long-form product launch announcement. This video is for our new AI analytics platform and should be professional, informative, and optimized for YouTube. Please take care of all the details.",
+      "firstResponse": "Understood. You're looking for a full-service, managed production for a long-form product launch announcement, optimized for YouTube. This aligns with our dfy (Managed) plan tier, where AuraFlux handles content generation and full pipeline execution.\n\nTo begin, I need to initialize the job spec. Please provide the following:\n\n1.  **Customer ID:** Your unique account identifier.\n2.  **Content Type:** For a \"long-form product launch announcement,\" would `news-long` or `clips-long` best describe the content style?\n3.  **Product Launch Details:** A detailed prompt describing your new AI analytics platform and the key messages you want to convey. This will be used to generate the script. (Max 2000 characters)",
+      "followupMsg": "Our Customer ID is AF-CUST-7890. For the content style, `news-long` would be the best fit, given it's a detailed announcement.\n\nRegarding the product launch details, our new platform is called AuraInsight Pro. It's an enterprise-grade AI analytics platform designed to transform complex data into clear, actionable insights, empowering businesses to make faster, more informed decisions. Key messages to convey include its advanced predictive modeling, real-time interactive dashboards, natural language query interface for accessibility, and robust security features. We want to highlight how it increases operational efficiency, unlocks deeper market understanding, and reduces the manual effort typically associated with data analysis. The target audience is data analysts, business intelligence teams, and C-suite executives looking for a competitive edge through data-driven strategies.",
+      "followupResponse": "Thank you. I have initialized the job spec with the following details:\n\n*   **jobId:** `c7b3e1a8-9d2f-4c5e-8b1a-0e7d6f5c4b3a` (A unique identifier has been generated for your job.)\n*   **contentType:** `news-long`\n*   **entryType:** `create` (AuraFlux will generate content from your prompt.)\n*   **deliverySpec.platforms:** `youtube` (The final video will be optimized for and published to YouTube.)\n*   **customerId:** `AF-CUST-7890`\n*   **createSpec.promptText:** (Your detailed description of AuraInsight Pro.)\n\nNow, let's move to **Portal 1: Script Generation**. This stage requires details for the AI to write the script and for a secondary QA pass.\n\nPlease provide the following:\n\n1.  **Speaker Name:** The name of the avatar/host for the announcement (e.g., \"Dr. Evelyn Reed\").\n2.  **Locked Outro:** The fixed sign-off line for the video (e.g., \"I'm Dr. Evelyn Reed, and this is AuraInsight Pro. Thank you for watching.\").",
+      "audit": {
+        "understood": true,
+        "managed_response": true,
+        "wrong_tier_response": false,
+        "passed": true,
+        "score": 98,
+        "issues": [],
+        "notes": "The Copilot correctly identified the content type, format, tone, and platform. It explicitly confirmed the 'dfy (Managed)' plan tier, indicating a managed production approach, and proceeded to collect necessary details in a structured manner, giving the customer confidence. There was no mention of upgrading to a higher plan."
+      },
+      "passed": true,
+      "score": 98,
+      "issues": []
+    },
+    {
+      "id": "M-T5",
+      "brief": "Breaking news — urgent coverage of a major economic development. Short and direct. YouTube.",
+      "firstMsg": "Copilot, we have a major economic development breaking right now that needs immediate coverage. Please produce a short, direct YouTube video delivering the urgent news. I'm relying on you to manage this entirely and get it out swiftly.",
+      "firstResponse": "Understood. We can get this breaking news out quickly.\n\nFirst, let's set up the job specification for Portal 0 — Job Initialisation.\n\nBased on your request for a \"short, direct YouTube video delivering urgent news,\" I'll set:\n*   `contentType`: `news-short`\n*   `entryType`: `create` (AuraFlux will generate the content from a prompt)\n*   `deliverySpec.platforms`: `youtube`\n\nTo proceed, I need a few more details:\n\n1.  **`jobId`**: Please provide a unique identifier for this job (UUID format).\n2.  **`customerId`**: What is your customer account ID?\n3.  **`createSpec.promptText`**: Please provide the specific text prompt for the \"major economic development breaking right now\" that AuraFlux should use to generate the script. (Max 2000 characters)",
+      "followupMsg": "Okay, I'll provide those details.\n\n1.  **`jobId`**: `a1b2c3d4-e5f6-7890-1234-567890abcdef`\n2.  **`customerId`**: `ACME_CORP_GLOBAL_NEWS`\n3.  **`createSpec.promptText`**: \"Breaking: The Central Bank has just announced an emergency interest rate hike of 150 basis points, effective immediately, citing unexpected inflation surges. This move is anticipated to significantly impact global markets and consumer spending. Focus on the immediate implications and the urgency of the announcement.\"",
+      "followupResponse": "Thank you. I have received the following for Portal 0:\n\n*   `jobId`: `a1b2c3d4-e5f6-7890-1234-567890abcdef`\n*   `contentType`: `news-short`\n*   `entryType`: `create`\n*   `deliverySpec.platforms`: `youtube`\n*   `customerId`: `ACME_CORP_GLOBAL_NEWS`\n*   `createSpec.promptText`: \"Breaking: The Central Bank has just announced an emergency interest rate hike of 150 basis points, effective immediately, citing unexpected inflation surges. This move is anticipated to significantly impact global markets and consumer spending. Focus on the immediate implications and the urgency of the announcement.\"\n\nPortal 0 — Job Initialisation is now complete.\n\nNext, let's configure Portal 1 — Script Generation. This is where AuraFlux's AI will write the script based on your prompt.\n\nI need the following:\n\n1.  **`designSpec.voice.speakerName`**: What is the name of the avatar/host you want to deliver this news? (e.g., \"Bobby G\")\n2.  **`designSpec.voice.lockedOutro`**: Please provide the fixed sign-off line for the video. (e.g., \"I'm Bobby G. See you tomorrow. — ClipzWorld News\")\n3.  **`designSpec.sceneStructure.sceneHeaders`**: Please provide a non-empty array of section labels for the script. These will guide the AI in structuring the news. (e.g., `[\"Breaking News\", \"Key Details\", \"Market Impact\", \"Consumer Outlook\", \"Conclusion\"]`)",
+      "audit": {
+        "understood": true,
+        "managed_response": true,
+        "wrong_tier_response": false,
+        "passed": true,
+        "score": 98,
+        "issues": [],
+        "notes": "The Copilot correctly identified the content type, format, tone, and platform. It exhibited a managing role by guiding the customer through distinct 'Portals' for job setup, ensuring a structured and confident setup process. There was no mention of upgrading plans, which is appropriate for a Managed-tier customer."
+      },
+      "passed": true,
+      "score": 98,
+      "issues": []
+    },
+    {
+      "id": "M-T6",
+      "brief": "Short entertainment pop culture trends clip. Energetic, fun, youthful. TikTok.",
+      "firstMsg": "Hey Copilot, I need your help producing a new short-form video for TikTok. The content should be a fun, fast-paced clip about current pop culture trends, designed to be really entertaining and shareable. Please ensure the style is energetic, youthful, and overall very engaging for that audience.",
+      "firstResponse": "Okay, I can help you with that. We'll start by setting up the basic job parameters for Portal 0.\n\nBased on your request for a \"short-form video for TikTok about current pop culture trends,\" I'll set:\n*   **contentType:** `clips-short`\n*   **deliverySpec.platforms:** `tiktok`\n\nTo proceed, please provide the following:\n\n1.  **jobId:** (A unique identifier for this job, in UUID format)\n2.  **customerId:** (Your customer account ID)\n3.  **entryType:** (How will the content be sourced? `fetch`, `upload`, or `create`?)",
+      "followupMsg": "Okay, those settings look good. For this job, let's use `a1b2c3d4-e5f6-7890-1234-567890abcdef` as the `jobId` and `AURAFUX_CUSTOMER_123` as my `customerId`. For the `entryType`, please set it to `create` as I'd like the Copilot to generate the content based on current trends.",
+      "followupResponse": "Thank you. Here's the updated job spec:\n\n```json\n{\n  \"jobId\": \"a1b2c3d4-e5f6-7890-1234-567890abcdef\",\n  \"contentType\": \"clips-short\",\n  \"entryType\": \"create\",\n  \"deliverySpec\": {\n    \"platforms\": [\"tiktok\"]\n  },\n  \"customerId\": \"AURAFUX_CUSTOMER_123\"\n}\n```\n\nSince your `entryType` is `create`, I need a `createSpec.promptText`. This is where you'll describe the content you want AuraFlux to generate.\n\nPlease provide the `createSpec.promptText`. It should be a non-empty string, maximum 2000 characters.",
+      "audit": {
+        "understood": true,
+        "managed_response": true,
+        "wrong_tier_response": false,
+        "passed": true,
+        "score": 100,
+        "issues": [],
+        "notes": "The Copilot correctly identified the content type, platform, and initiated the job setup by setting parameters. It handled the 'energetic, fun, youthful' tone by requesting a 'createSpec.promptText' for the 'create' entryType, which is the correct next step. The interaction demonstrates a managed approach, clearly guiding the customer and updating the job spec, fostering confidence without any inappropriate upselling."
+      },
+      "passed": true,
+      "score": 100,
+      "issues": []
+    }
+  ]
+}

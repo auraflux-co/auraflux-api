@@ -1,0 +1,312 @@
+{
+  "tier": "managed",
+  "timestamp": "2026-05-05T14:02:40.373Z",
+  "results": [
+    {
+      "id": "M-T1",
+      "desc": "Compose · broadcast_desk · short · professional",
+      "prompt": "I need a short professional video about AI breakthroughs in healthcare for 2026. This should be suitable for YouTube — something broadcast-style with a desk presenter look.",
+      "copilotResponse": "",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": false,
+          "detail": "0 chars"
+        },
+        {
+          "label": "format \"short\" in response",
+          "ok": false,
+          "detail": "Response: \"\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: AI/healthcare/health"
+        },
+        {
+          "label": "platform YouTube in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ copilot responded: 0 chars",
+        "✗ format \"short\" in response: Response: \"\"",
+        "✗ topic understood: Expected one of: AI/healthcare/health",
+        "✗ platform YouTube in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T2",
+      "desc": "Fetch · vertical_reel · short · energetic",
+      "prompt": "Can you help me create a short energetic highlight reel from a video source? It's extreme sports content — fast-paced, vertical format for TikTok.",
+      "copilotResponse": "",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": false,
+          "detail": "0 chars"
+        },
+        {
+          "label": "format \"short\" in response",
+          "ok": false,
+          "detail": "Response: \"\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: extreme/sports/highlight"
+        },
+        {
+          "label": "platform TikTok in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ copilot responded: 0 chars",
+        "✗ format \"short\" in response: Response: \"\"",
+        "✗ topic understood: Expected one of: extreme/sports/highlight",
+        "✗ platform TikTok in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T3",
+      "desc": "Compose · broadcast_desk · long · educational",
+      "prompt": "I want a long-form educational video explaining how AI is transforming small business operations. Full episode format, YouTube, broadcast desk style.",
+      "copilotResponse": "",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": false,
+          "detail": "0 chars"
+        },
+        {
+          "label": "format \"long\" in response",
+          "ok": false,
+          "detail": "Response: \"\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: AI/small business/business"
+        },
+        {
+          "label": "platform YouTube in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ copilot responded: 0 chars",
+        "✗ format \"long\" in response: Response: \"\"",
+        "✗ topic understood: Expected one of: AI/small business/business",
+        "✗ platform YouTube in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T4",
+      "desc": "Fetch · live_event · short · exciting",
+      "prompt": "I have basketball championship footage and need a short exciting highlight clip for Instagram. Live event style.",
+      "copilotResponse": "",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": false,
+          "detail": "0 chars"
+        },
+        {
+          "label": "format \"short\" in response",
+          "ok": false,
+          "detail": "Response: \"\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: basketball/championship/sport"
+        },
+        {
+          "label": "platform Instagram in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ copilot responded: 0 chars",
+        "✗ format \"short\" in response: Response: \"\"",
+        "✗ topic understood: Expected one of: basketball/championship/sport",
+        "✗ platform Instagram in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T5",
+      "desc": "Compose · broadcast_desk · short · analytical",
+      "prompt": "Create a short analytical video covering Bitcoin and Ethereum price trends for 2026. Professional tone, broadcast desk layout, publish to YouTube.",
+      "copilotResponse": "",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": false,
+          "detail": "0 chars"
+        },
+        {
+          "label": "format \"short\" in response",
+          "ok": false,
+          "detail": "Response: \"\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: bitcoin/ethereum/crypto/price"
+        },
+        {
+          "label": "platform YouTube in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ copilot responded: 0 chars",
+        "✗ format \"short\" in response: Response: \"\"",
+        "✗ topic understood: Expected one of: bitcoin/ethereum/crypto/price",
+        "✗ platform YouTube in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T6",
+      "desc": "Fetch · vertical_reel · long · calm",
+      "prompt": "I have nature documentary footage I'd like turned into a long-form calm highlight video, vertical reel style for YouTube.",
+      "copilotResponse": "",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": false,
+          "detail": "0 chars"
+        },
+        {
+          "label": "format \"long\" in response",
+          "ok": false,
+          "detail": "Response: \"\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: nature/documentary"
+        },
+        {
+          "label": "platform YouTube in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ copilot responded: 0 chars",
+        "✗ format \"long\" in response: Response: \"\"",
+        "✗ topic understood: Expected one of: nature/documentary",
+        "✗ platform YouTube in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    }
+  ]
+}
