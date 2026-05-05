@@ -95,33 +95,27 @@ function getClerkTicket() {
 
 const WIZARD_PROMPT = `You are a Guided-plan AuraFlux customer using the new-job wizard on the dashboard.
 
-The wizard has these steps:
-1. Format: click "Long-form" or "Short-form"
-2. Path: click one of these buttons:
-   - "Produce from source" (for long-form with source URL)
-   - "Fetch and enhance" (for short-form with source URL)
-   - "Compile from short clips" (for long-form from clips)
-   - "Script-led production" (for compose/topic-only)
-3. Topic: type the subject
-4. Tone: select from dropdown: professional, energetic, informative, hype, casual, urgent
-5. Source URL: if the path requires it, enter a public video URL (use https://media.w3.org/2010/05/sintel/trailer_hd.mp4 as test URL)
-6. Platform: click "YouTube", "TikTok", or "Instagram"
+The wizard has exactly 5 steps: Format → Path → Source → Features → Publish.
 
-Rules:
-- "Short-form" format → use "Fetch and enhance" path (needs source URL)
-- "Long-form" format → use "Produce from source" (needs URL) or "Script-led production" (no URL)
-- For short content briefs, use Short-form. For 2min+ briefs, use Long-form.
-- TikTok/Instagram content → Short-form + "Fetch and enhance"
+Step 0 — Format: choose "Long-form" (16:9 YouTube) or "Short-form" (9:16 TikTok/Reels)
+Step 1 — Path: choose based on format selected:
+  Long-form paths: "Compile from short clips" | "Produce from source"
+  Short-form paths: "Cut clips from long-form" | "Enhance uploaded clips" | "Fetch and enhance"
+  Rules: always pick a path that uses URL source (not upload), so:
+  - Long-form → "Produce from source" (URL source)
+  - Short-form → "Fetch and enhance" (URL source)
+Step 2 — Source: fill in topic and select tone
+  Available tones: professional | informative | casual | energetic | hype | punchy | urgent | conversational
+Step 4 — Publish: choose platform "YouTube" | "TikTok" | "Instagram"
 
 Content brief: {brief}
 
 Respond with JSON:
 {
-  "format": "Short-form" | "Long-form",
-  "path": "Fetch and enhance" | "Produce from source" | "Compile from short clips" | "Script-led production",
-  "topic": "<concise topic string>",
-  "tone": "professional" | "energetic" | "informative" | "hype" | "casual" | "urgent",
-  "needsUrl": true | false,
+  "format": "Long-form" | "Short-form",
+  "path": "Produce from source" | "Fetch and enhance",
+  "topic": "<concise topic string max 60 chars>",
+  "tone": "professional" | "informative" | "casual" | "energetic" | "hype" | "punchy" | "urgent" | "conversational",
   "platform": "YouTube" | "TikTok" | "Instagram"
 }`;
 
@@ -173,67 +167,72 @@ async function runScenario(page, scenario) {
   // Step 2: Navigate to new job wizard
   await page.goto(`${BASE}/dashboard/jobs/new`);
   await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1000);
+
+  async function clickNext() {
+    // Button text is either "Next →" or "Submit job" on last step
+    const btn = page.locator('button:has-text("Next"), button:has-text("Submit job")').last();
+    await btn.waitFor({ timeout: 8000 });
+    await btn.click();
+    await page.waitForTimeout(600);
+  }
 
   try {
-    // Format step
+    // ── Step 0: Format ────────────────────────────────────────────
+    await page.locator(`button:has-text("${choices.format}")`).first().waitFor({ timeout: 10000 });
     await page.locator(`button:has-text("${choices.format}")`).first().click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(400);
+    await clickNext(); // → step 1
 
-    // Path step
+    // ── Step 1: Production path ───────────────────────────────────
+    await page.locator(`button:has-text("${choices.path}")`).first().waitFor({ timeout: 8000 });
     await page.locator(`button:has-text("${choices.path}")`).first().click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(400);
+    await clickNext(); // → step 2
 
-    // Next
-    const next1 = page.locator('button:has-text("Next")');
-    if (await next1.isVisible()) await next1.click();
-    await page.waitForTimeout(500);
-
-    // Topic
-    const topicInput = page.locator('input[placeholder*="topic" i], input[placeholder*="about" i], input[type="text"]').first();
-    await topicInput.fill(choices.topic);
-    await page.waitForTimeout(300);
-
-    // Tone
-    const toneSelect = page.locator('select');
-    if (await toneSelect.isVisible()) {
+    // ── Step 2: Source — topic, tone, URL ────────────────────────
+    // Fill topic
+    const topicInput = page.locator('input[placeholder*="topic" i], input[placeholder*="about" i]').first();
+    if (await topicInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await topicInput.fill(choices.topic);
+    }
+    // Select tone
+    const toneSelect = page.locator('select').first();
+    if (await toneSelect.isVisible({ timeout: 2000 }).catch(() => false)) {
       await toneSelect.selectOption(choices.tone);
     }
-
-    // Source URL if needed
-    if (choices.needsUrl) {
-      const urlBtn = page.locator('button:has-text("Fetch from URLs")');
-      if (await urlBtn.isVisible({ timeout: 2000 }).catch(() => false)) await urlBtn.click();
-      const urlArea = page.locator('textarea[placeholder*="https"]');
-      if (await urlArea.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await urlArea.fill('https://media.w3.org/2010/05/sintel/trailer_hd.mp4');
-      }
+    // Provide source URL — click "Fetch from URLs" if upload/fetch toggle is shown
+    const fetchBtn = page.locator('button:has-text("Fetch from URLs")');
+    if (await fetchBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await fetchBtn.click();
+      await page.waitForTimeout(300);
     }
+    // Fill URL textarea
+    const urlArea = page.locator('textarea[placeholder*="https"]');
+    if (await urlArea.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await urlArea.fill('https://media.w3.org/2010/05/sintel/trailer_hd.mp4');
+    }
+    await clickNext(); // → step 3
 
-    // Next
-    const next2 = page.locator('button:has-text("Next")');
-    if (await next2.isVisible()) await next2.click();
-    await page.waitForTimeout(500);
+    // ── Step 3: Features — accept defaults ────────────────────────
+    await clickNext(); // → step 4
 
-    // Platform
+    // ── Step 4: Publish — select platform ────────────────────────
+    await page.locator(`button:has-text("${choices.platform}")`).first().waitFor({ timeout: 8000 });
     await page.locator(`button:has-text("${choices.platform}")`).first().click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(400);
 
-    // Next
-    const next3 = page.locator('button:has-text("Next")');
-    if (await next3.isVisible()) await next3.click();
-    await page.waitForTimeout(500);
-
-    // Submit
+    // Submit job (button text changes to "Submit job" on step 4)
     const submitBtn = page.locator('button:has-text("Submit job")');
-    await submitBtn.waitFor({ timeout: 5000 });
+    await submitBtn.waitFor({ timeout: 8000 });
     await submitBtn.click();
 
-    // Wait for redirect to active jobs
-    await page.waitForURL(/\/(active|jobs)/, { timeout: 10000 });
+    // Wait for redirect after submission
+    await page.waitForURL(/\/(active|jobs|dashboard)/, { timeout: 15000 });
     console.log(`  → Job submitted successfully`);
   } catch (e) {
-    console.log(`  ✗ Wizard navigation failed: ${e.message}`);
-    return { id, passed: false, error: `Wizard failed: ${e.message}`, brief, choices };
+    console.log(`  ✗ Wizard navigation failed: ${e.message.split('\n')[0]}`);
+    return { id, passed: false, error: `Wizard failed: ${e.message.split('\n')[0]}`, brief, choices };
   }
 
   // Step 3: Gemini composes a Copilot message
