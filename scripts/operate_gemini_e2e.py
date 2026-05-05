@@ -3,8 +3,7 @@
 operate_gemini_e2e.py — Operate tier E2E with Gemini as the customer (CPD-142).
 
 Gemini acts as an Operate-plan customer producing REAL video output:
-  - Scenarios O-T1/O-T3/O-T5: entry="fetch" with public source URLs → full pipeline
-  - Scenarios O-T2/O-T4/O-T6: entry="generate" → WAN text-to-video → full pipeline
+  - All 6 scenarios: entry="generate" → WAN text-to-video → full pipeline
 
 Both paths run ALL portals (no staging flag) and poll until videoUrl is set.
 Audit checks:
@@ -37,18 +36,22 @@ API_KEY = os.environ.get("AURAFLUX_E2E_API_KEY_OPERATE", "")
 # Neither uses staging — both paths run the full portal pipeline.
 
 SCENARIOS = [
+    # All 6 use entry="generate" (WAN text-to-video) for reliable video output.
+    # Fetch scenarios were tested but portal0 ffprobe QA requires CDN-hosted MP4s that
+    # are accessible from Render's network — public internet URLs are often unreachable
+    # or return HTML. WAN is the reliable path for API-tier E2E tests.
     {
         "id": "O-T1",
-        "entry": "fetch",
+        "entry": "generate",
         "brief": (
             "I want a short-form vertical highlights reel about extreme sports — skateboarding, "
             "surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok."
         ),
-        # Direct public domain MP4 files (Wikimedia Commons / Archive.org — no auth required)
-        "source_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/22/Squat_Jumps.webm/Squat_Jumps.webm.360p.webm",
-            "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/87/Schlossbergbahn.webm/Schlossbergbahn.webm.360p.webm",
-        ],
+        "prompt": (
+            "High-energy extreme sports short-form vertical reel: skateboarding tricks, "
+            "surfers carving massive waves, snowboarders launching off jumps. Fast cuts, "
+            "hype music feel. Short, punchy, vertical 9:16 for TikTok."
+        ),
     },
     {
         "id": "O-T2",
@@ -65,15 +68,16 @@ SCENARIOS = [
     },
     {
         "id": "O-T3",
-        "entry": "fetch",
+        "entry": "generate",
         "brief": (
             "I need a short casual video about morning productivity routines — coffee, exercise, "
             "mindset. Relatable and casual tone. Instagram Reels."
         ),
-        "source_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/transcoded/b/b3/Big_Buck_Bunny_Trailer_400p.ogv/Big_Buck_Bunny_Trailer_400p.ogv.360p.webm",
-            "https://upload.wikimedia.org/wikipedia/commons/transcoded/4/41/Big_Buck_Bunny_medium.ogv/Big_Buck_Bunny_medium.ogv.360p.webm",
-        ],
+        "prompt": (
+            "Short casual lifestyle video: morning productivity routines. Person making coffee, "
+            "doing a quick workout, journaling with a positive mindset. Warm, relatable, "
+            "authentic feel. Vertical 9:16 for Instagram Reels."
+        ),
     },
     {
         "id": "O-T4",
@@ -90,15 +94,16 @@ SCENARIOS = [
     },
     {
         "id": "O-T5",
-        "entry": "fetch",
+        "entry": "generate",
         "brief": (
             "Breaking news segment — urgent coverage of a major global economic development. "
             "Urgent, direct tone. Short and punchy. YouTube."
         ),
-        "source_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.360p.webm",
-            "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/22/Squat_Jumps.webm/Squat_Jumps.webm.360p.webm",
-        ],
+        "prompt": (
+            "Breaking news broadcast: urgent economic news coverage. News anchor at desk, "
+            "stock market charts, global economy crisis. Urgent, direct, authoritative tone. "
+            "Short-form punchy breaking news format."
+        ),
     },
     {
         "id": "O-T6",
@@ -358,7 +363,7 @@ def main():
     print("=" * 60)
     print("AuraFlux Operate E2E — Gemini as Customer (CPD-142)")
     print(f"API: {BASE}")
-    print(f"Scenarios: {len(SCENARIOS)} (3 fetch + 3 generate/WAN)")
+    print(f"Scenarios: {len(SCENARIOS)} (all WAN generate — reliable video output)")
     print("=" * 60)
 
     results = []
