@@ -2,12 +2,14 @@
 """
 operate_gemini_e2e.py — Operate tier E2E with Gemini as the customer (CPD-142).
 
-Gemini acts as an Operate-plan customer:
-  1. Reads a plain-English content brief.
-  2. Crafts the full POST /v1/jobs API payload.
-  3. Submits it to the AuraFlux API.
-  4. Polls until complete or failed.
-  5. Audits the returned job spec to confirm it matches the brief.
+Gemini acts as an Operate-plan customer producing REAL video output:
+  - Scenarios O-T1/O-T3/O-T5: entry="fetch" with public source URLs → full pipeline
+  - Scenarios O-T2/O-T4/O-T6: entry="generate" → WAN text-to-video → full pipeline
+
+Both paths run ALL portals (no staging flag) and poll until videoUrl is set.
+Audit checks:
+  1. Job spec reflects the original brief (topic, tone, profile, format, platforms)
+  2. videoUrl is present and returns HTTP 200 (real video exists)
 
 Requires:
   AURAFLUX_E2E_API_KEY_OPERATE   — Operate-tier API key
@@ -29,90 +31,161 @@ from lib_gemini import ask_gemini_json, ask_gemini  # noqa: E402
 BASE    = os.environ.get("AURAFLUX_E2E_BASE", "https://auraflux-api.onrender.com")
 API_KEY = os.environ.get("AURAFLUX_E2E_API_KEY_OPERATE", "")
 
-# Six content briefs — Gemini will interpret these into API payloads.
+# ── Scenarios ─────────────────────────────────────────────────────────────────
+# Three use entry="fetch" with real public article/video URLs.
+# Three use entry="generate" (WAN text-to-video) with a text prompt.
+# Neither uses staging — both paths run the full portal pipeline.
+
 SCENARIOS = [
     {
         "id": "O-T1",
+        "entry": "fetch",
         "brief": (
             "I want a short-form vertical highlights reel about extreme sports — skateboarding, "
             "surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok."
         ),
+        "source_urls": [
+            "https://www.redbull.com/us-en/videos/top-10-skateboarding-tricks",
+            "https://www.surfer.com/surfing-news/best-surfing-moments/",
+        ],
     },
     {
         "id": "O-T2",
+        "entry": "generate",
         "brief": (
             "Produce a professional 3-minute news desk segment covering AI breakthroughs in "
             "healthcare for 2026. Informative, authoritative tone. YouTube audience."
         ),
+        "prompt": (
+            "A professional news desk segment: AI breakthroughs transforming healthcare in 2026. "
+            "Cover predictive diagnostics, AI surgery assistants, and drug discovery acceleration. "
+            "Informative and authoritative tone. 3 minutes."
+        ),
     },
     {
         "id": "O-T3",
+        "entry": "fetch",
         "brief": (
             "I need a short casual video about morning productivity routines — coffee, exercise, "
             "mindset. Relatable and casual tone. Instagram Reels."
         ),
+        "source_urls": [
+            "https://www.health.com/mind-body/morning-routine-productivity",
+            "https://www.menshealth.com/fitness/a19537537/best-morning-workouts/",
+        ],
     },
     {
         "id": "O-T4",
+        "entry": "generate",
         "brief": (
             "Long-form corporate product launch announcement for a new AI-powered analytics "
             "platform. Professional tone. YouTube."
         ),
+        "prompt": (
+            "Corporate product launch video for an AI-powered business analytics platform. "
+            "Highlight real-time insights, predictive modeling, executive dashboards, and "
+            "ROI improvements. Professional, aspirational tone. Long-form for YouTube."
+        ),
     },
     {
         "id": "O-T5",
+        "entry": "fetch",
         "brief": (
             "Breaking news segment — urgent coverage of a major global economic development. "
             "Urgent, direct tone. Short and punchy. YouTube."
         ),
+        "source_urls": [
+            "https://www.reuters.com/markets/",
+            "https://apnews.com/hub/economy",
+        ],
     },
     {
         "id": "O-T6",
+        "entry": "generate",
         "brief": (
             "Short entertainment clip covering pop culture trends this week. Energetic, fun, "
             "youthful tone. TikTok."
         ),
+        "prompt": (
+            "Energetic short-form entertainment clip about the hottest pop culture trends this week: "
+            "viral TikTok challenges, new music drops, celebrity moments, and trending memes. "
+            "Fun, youthful tone for a Gen-Z TikTok audience."
+        ),
     },
 ]
 
-CRAFT_PROMPT = """You are an Operate-plan AuraFlux customer building a video production job via API.
+# ── Prompts ───────────────────────────────────────────────────────────────────
 
-AuraFlux POST /v1/jobs accepts this JSON body:
+CRAFT_FETCH_PROMPT = """You are an Operate-plan AuraFlux customer building a video production job via API.
+
+AuraFlux POST /v1/jobs accepts this JSON body for fetch jobs:
 {{
-  "entry": "compose" | "fetch",
+  "entry": "fetch",
   "productionProfile": "broadcast_desk" | "vertical_reel" | "live_event",
   "format": "short" | "long",
-  "topic": "<string — the core subject of the video>",
+  "topic": "<string>",
   "tone": "professional" | "energetic" | "informative" | "hype" | "casual" | "urgent",
+  "sourceConfig": {{ "urls": ["<url1>", "<url2>"] }},
   "order": {{
     "publish": {{
-      "platforms": ["youtube"] | ["tiktok"] | ["instagram"] | ["youtube","tiktok"]
+      "platforms": ["youtube"] | ["tiktok"] | ["instagram"]
     }}
-  }},
-  "staging": true
+  }}
 }}
 
 Rules:
-- Use "entry": "compose" (topic-only, no source URL) unless the brief explicitly mentions a URL or existing footage.
-- "broadcast_desk" → desk/lower-third news layout (16:9, long-form friendly)
-- "vertical_reel" → vertical highlights / b-roll style (9:16, short-form friendly)
-- "live_event" → live event framing / supers (16:9)
-- "format": "short" for clips under ~90 seconds; "long" for 2 min+
-- Always include "staging": true so the job doesn't auto-publish.
-- Map the target platform in the brief to the correct platforms array value.
+- "broadcast_desk" → desk/news layout (16:9). Use for news, corporate, authoritative content.
+- "vertical_reel" → vertical 9:16. Use for TikTok/Instagram Reels/short-form social.
+- "format": "short" for under ~90 seconds; "long" for 2 min+.
+- Do NOT include staging — these are real production jobs.
+- Include all provided source_urls in sourceConfig.urls.
 
 Content brief: {brief}
+Source URLs to include: {source_urls}
 
 Respond with ONLY the JSON body — no commentary.
 """
 
-AUDIT_PROMPT = """You are auditing whether an AuraFlux job spec correctly reflects a customer's content brief.
+CRAFT_GENERATE_PROMPT = """You are an Operate-plan AuraFlux customer building a video production job via API.
+
+AuraFlux POST /v1/jobs accepts this JSON body for AI-generated (WAN text-to-video) jobs:
+{{
+  "entry": "generate",
+  "productionProfile": "broadcast_desk" | "vertical_reel" | "live_event",
+  "format": "short" | "long",
+  "topic": "<string>",
+  "tone": "professional" | "energetic" | "informative" | "hype" | "casual" | "urgent",
+  "prompt": "<text prompt for the AI video generator>",
+  "order": {{
+    "publish": {{
+      "platforms": ["youtube"] | ["tiktok"] | ["instagram"]
+    }}
+  }}
+}}
+
+Rules:
+- "broadcast_desk" → desk/news layout (16:9). Use for news, corporate, authoritative content.
+- "vertical_reel" → vertical 9:16. Use for TikTok/Instagram Reels/short-form social.
+- "format": "short" for under ~90 seconds; "long" for 2 min+.
+- Do NOT include staging — these are real production jobs.
+- Set "prompt" to the provided video generation prompt.
+
+Content brief: {brief}
+Video generation prompt: {prompt}
+
+Respond with ONLY the JSON body — no commentary.
+"""
+
+AUDIT_PROMPT = """You are auditing whether an AuraFlux job produced the correct video output for a customer's content brief.
 
 Original brief: {brief}
 
 Crafted API payload (what was submitted): {payload}
 
-Returned job spec (what the server recorded): {result}
+Returned job spec / result (what the server recorded): {result}
+
+Video URL present: {video_url_present}
+Video URL accessible (HTTP 200): {video_url_ok}
 
 Check:
 1. Does the productionProfile match the visual style described in the brief?
@@ -121,6 +194,8 @@ Check:
 4. Does the tone match the brief?
 5. Are the platforms correct?
 6. Is the entry type appropriate?
+7. Is a videoUrl present in the result? (required for a true E2E pass)
+8. Is the video accessible (HTTP 200)?
 
 Respond with JSON:
 {{
@@ -129,6 +204,8 @@ Respond with JSON:
   "issues": ["list any mismatches or missing fields"],
   "notes": "brief explanation"
 }}
+
+IMPORTANT: If videoUrl is absent or not accessible, passed must be false and score must be below 60.
 """
 
 
@@ -146,18 +223,48 @@ def api(method, path, body=None):
         return {"error": str(e)}
 
 
+def check_video_url(url):
+    """Return True if URL exists and returns HTTP 200."""
+    if not url:
+        return False
+    try:
+        req = urllib.request.Request(url, method="HEAD")
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
 def run_scenario(scenario):
     sid   = scenario["id"]
     brief = scenario["brief"]
-    print(f"\n[{sid}] Gemini crafting payload for: {brief[:60]}...")
+    entry = scenario["entry"]
+    print(f"\n[{sid}] entry={entry} — Gemini crafting payload for: {brief[:60]}...")
 
     # Step 1: Gemini crafts the API payload
     try:
-        payload = ask_gemini_json(CRAFT_PROMPT.format(brief=brief))
+        if entry == "fetch":
+            prompt_text = CRAFT_FETCH_PROMPT.format(
+                brief=brief,
+                source_urls=json.dumps(scenario.get("source_urls", [])),
+            )
+        else:
+            prompt_text = CRAFT_GENERATE_PROMPT.format(
+                brief=brief,
+                prompt=scenario.get("prompt", ""),
+            )
+        payload = ask_gemini_json(prompt_text)
     except Exception as e:
         return {"id": sid, "passed": False, "error": f"Gemini craft failed: {e}", "brief": brief}
 
-    print(f"  → Gemini payload: entry={payload.get('entry')} profile={payload.get('productionProfile')} "
+    # Ensure entry is set correctly regardless of what Gemini output
+    payload["entry"] = entry
+    if entry == "fetch" and "sourceConfig" not in payload:
+        payload["sourceConfig"] = {"urls": scenario.get("source_urls", [])}
+    if entry == "generate" and "prompt" not in payload:
+        payload["prompt"] = scenario.get("prompt", "")
+
+    print(f"  → Payload: entry={payload.get('entry')} profile={payload.get('productionProfile')} "
           f"format={payload.get('format')} tone={payload.get('tone')}")
 
     # Step 2: Submit
@@ -168,31 +275,46 @@ def run_scenario(scenario):
 
     print(f"  → Submitted jobId: {job_id}")
 
-    # Step 3: Poll (up to 10 min — these are staging jobs)
-    deadline = time.time() + 600
-    result   = {}
+    # Step 3: Poll until complete AND videoUrl is populated (up to 25 min for WAN + render)
+    poll_limit = 1500  # 25 minutes — WAN generation can take ~10-15 min
+    deadline   = time.time() + poll_limit
+    result     = {}
     last_status = None
+    video_url   = None
     while time.time() < deadline:
-        result = api("GET", f"/v1/jobs/{job_id}")
-        status = result.get("status", "unknown")
+        result     = api("GET", f"/v1/jobs/{job_id}")
+        status     = result.get("status", "unknown")
+        video_url  = result.get("videoUrl") or result.get("outputUrl")
         if status != last_status:
-            print(f"  [{sid}] status: {status}")
+            print(f"  [{sid}] status: {status} | videoUrl: {'set' if video_url else 'pending'}")
             last_status = status
-        if status in ("complete", "completed", "failed", "error"):
+        # Terminal states
+        if status in ("failed", "error", "credit_paused"):
             break
-        time.sleep(15)
+        # Complete with video = done; complete without video = keep polling (render may lag)
+        if status in ("complete", "completed", "published") and video_url:
+            break
+        time.sleep(20)
     else:
         result = {"status": "timeout"}
 
-    print(f"  → Final status: {result.get('status')}")
+    video_url = result.get("videoUrl") or result.get("outputUrl")
+    print(f"  → Final status: {result.get('status')} | videoUrl: {video_url or 'MISSING'}")
 
-    # Step 4: Gemini audits the output
+    # Step 4: Check video accessibility
+    video_url_ok = check_video_url(video_url)
+    if video_url:
+        print(f"  → Video HTTP check: {'200 OK' if video_url_ok else 'FAILED'}")
+
+    # Step 5: Gemini audits the output
     try:
         audit = ask_gemini_json(
             AUDIT_PROMPT.format(
                 brief=brief,
                 payload=json.dumps(payload, indent=2),
                 result=json.dumps(result, indent=2),
+                video_url_present=bool(video_url),
+                video_url_ok=video_url_ok,
             )
         )
     except Exception as e:
@@ -209,15 +331,18 @@ def run_scenario(scenario):
         print(f"       ✗ {issue}")
 
     return {
-        "id":      sid,
-        "brief":   brief,
-        "payload": payload,
-        "jobId":   job_id,
-        "status":  result.get("status"),
-        "audit":   audit,
-        "passed":  passed,
-        "score":   score,
-        "issues":  issues,
+        "id":          sid,
+        "brief":       brief,
+        "entry":       entry,
+        "payload":     payload,
+        "jobId":       job_id,
+        "status":      result.get("status"),
+        "videoUrl":    video_url,
+        "videoUrlOk":  video_url_ok,
+        "audit":       audit,
+        "passed":      passed,
+        "score":       score,
+        "issues":      issues,
     }
 
 
@@ -232,14 +357,14 @@ def main():
     print("=" * 60)
     print("AuraFlux Operate E2E — Gemini as Customer (CPD-142)")
     print(f"API: {BASE}")
-    print(f"Scenarios: {len(SCENARIOS)}")
+    print(f"Scenarios: {len(SCENARIOS)} (3 fetch + 3 generate/WAN)")
     print("=" * 60)
 
     results = []
     for s in SCENARIOS:
         r = run_scenario(s)
         results.append(r)
-        time.sleep(3)
+        time.sleep(5)
 
     passed = sum(1 for r in results if r.get("passed"))
     total  = len(results)
@@ -250,7 +375,8 @@ def main():
     for r in results:
         sym = "✓" if r.get("passed") else "✗"
         score = r.get("score", 0)
-        print(f"  {sym} [{r['id']}] score={score}/100  {r['brief'][:60]}")
+        vid   = "video:✓" if r.get("videoUrl") else "video:✗"
+        print(f"  {sym} [{r['id']}] score={score}/100 {vid}  {r['brief'][:55]}")
         for issue in r.get("issues", []):
             print(f"       ✗ {issue}")
 
@@ -262,7 +388,12 @@ def main():
     )
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w") as f:
-        json.dump({"tier": "operate", "timestamp": ts, "summary": {"passed": passed, "total": total}, "results": results}, f, indent=2)
+        json.dump({
+            "tier":      "operate",
+            "timestamp": ts,
+            "summary":   {"passed": passed, "total": total},
+            "results":   results,
+        }, f, indent=2)
     print(f"\nResults written to {out_path}")
 
     sys.exit(0 if passed == total else 1)
