@@ -23,7 +23,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const BASE       = process.env.AURAFLUX_E2E_BASE || 'https://app.auraflux.co';
+const BASE       = process.env.AURAFLUX_APP_BASE || 'https://app.auraflux.co';
 const CLERK_SK   = process.env.CLERK_SECRET_KEY  || 'sk_test_ImNgn23Q8kFm6u2jJ3tw6rWKxi5cbrSiGFTfKALWQl';
 const GEMINI_KEY = process.env.GEMINI_API_KEY    || '';
 const USER_ID    = 'user_3DIyT3RsdxBA4rPvIKSjb9PRNgu'; // Managed demo account
