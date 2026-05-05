@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-05 (Cursor — feat(cpd-142): 18 E2E tests implemented — Guided 6/6 PASS; Operate 0/6 productionProfile missing in response; Managed 0/6 planTier not passed to concierge)
 **Last Updated:** 2026-05-04 (Cursor — feat(cpd-141): Operate /v1/jobs — productionProfile + entry compose; tier_api_e2e_test.py six scenarios use ingress (compose/fetch) and profiles (broadcast_desk/vertical_reel/live_event), not legacy editorial contentType labels; legacy contentType still accepted and mapped)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-141): add filledScript to _formatJob in developer_api.js — GET /v1/jobs/:id now exposes filledScript in response; was stored at spec.filledScript by script_gen_service but not surfaced in API)
 **Last Updated:** 2026-05-04 (Cursor — fix(cpd-141): expose filledScript in GET /v1/jobs/:id response; E2E test only requires outputUrl for URL-sourced jobs — news without source URL correctly skips assembly)

@@ -1,0 +1,299 @@
+{
+  "tier": "managed",
+  "timestamp": "2026-05-05T14:12:50.961Z",
+  "results": [
+    {
+      "id": "M-T1",
+      "desc": "Compose · broadcast_desk · short · professional",
+      "prompt": "I need a short professional video about AI breakthroughs in healthcare for 2026. This should be suitable for YouTube — something broadcast-style with a desk presenter look.",
+      "copilotResponse": "AuraFlux can help you generate a professional video once you provide the script and configure the visual elements.\n\nRegarding your request for a video about \"AI breakthroughs in healthcare for 2026\":\n\n*   **Content:** AuraFlux generates videos based on a script you provide. The AuraFlux guides do not cover how AuraFlux generates original content or scripts on specific topics like future AI breakthroughs. You would need to provide the script for your video.\n*   **Broadcast-style with a desk prese",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "1294 chars"
+        },
+        {
+          "label": "format \"short\" in response",
+          "ok": false,
+          "detail": "Response: \"AuraFlux can help you generate a professional video once you provide the script and configure the vi\""
+        },
+        {
+          "label": "topic understood",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube in response",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ format \"short\" in response: Response: \"AuraFlux can help you generate a professional video once you provide the script and configure the vi\"",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T2",
+      "desc": "Fetch · vertical_reel · short · energetic",
+      "prompt": "Can you help me create a short energetic highlight reel from a video source? It's extreme sports content — fast-paced, vertical format for TikTok.",
+      "copilotResponse": "Yes, AuraFlux can help you configure your job spec to create a video with selected segments and a vertical output format.\n\nTo create a highlight reel, you can use the `clip_selection` parameter in your job spec to define specific start and end points for the moments you want to include from your source video. This allows you to select the most impactful and fast-paced segments.\n\nFor a vertical format suitable for platforms like TikTok, you can specify the `output_resolution` and `aspect_ratio` w",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "1093 chars"
+        },
+        {
+          "label": "format \"short\" in response",
+          "ok": false,
+          "detail": "Response: \"Yes, AuraFlux can help you configure your job spec to create a video with selected segments and a ve\""
+        },
+        {
+          "label": "topic understood",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform TikTok in response",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ format \"short\" in response: Response: \"Yes, AuraFlux can help you configure your job spec to create a video with selected segments and a ve\"",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T3",
+      "desc": "Compose · broadcast_desk · long · educational",
+      "prompt": "I want a long-form educational video explaining how AI is transforming small business operations. Full episode format, YouTube, broadcast desk style.",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "130 chars"
+        },
+        {
+          "label": "format \"long\" in response",
+          "ok": false,
+          "detail": "Response: \"I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: AI/small business/business"
+        },
+        {
+          "label": "platform YouTube in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ format \"long\" in response: Response: \"I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider\"",
+        "✗ topic understood: Expected one of: AI/small business/business",
+        "✗ platform YouTube in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T4",
+      "desc": "Fetch · live_event · short · exciting",
+      "prompt": "I have basketball championship footage and need a short exciting highlight clip for Instagram. Live event style.",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "130 chars"
+        },
+        {
+          "label": "format \"short\" in response",
+          "ok": false,
+          "detail": "Response: \"I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: basketball/championship/sport"
+        },
+        {
+          "label": "platform Instagram in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ format \"short\" in response: Response: \"I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider\"",
+        "✗ topic understood: Expected one of: basketball/championship/sport",
+        "✗ platform Instagram in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T5",
+      "desc": "Compose · broadcast_desk · short · analytical",
+      "prompt": "Create a short analytical video covering Bitcoin and Ethereum price trends for 2026. Professional tone, broadcast desk layout, publish to YouTube.",
+      "copilotResponse": "Certainly! I can help you map out the parameters for a video production job spec based on your request and the AuraFlux guides.\n\nHere's how you can specify these requirements:\n\n*   **Job Type & Content Style**: To create an analytical video, you would specify `job_type: video_production` and `content_style: analytical`.\n    *   See the [Video Production Job Types Guide](link-to-video-production-guide) and the [Content Styles Guide](link-to-content-styles-guide) for more details.\n*   **Topic**: Y",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "1788 chars"
+        },
+        {
+          "label": "format \"short\" in response",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "topic understood",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "platform YouTube in response",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    },
+    {
+      "id": "M-T6",
+      "desc": "Fetch · vertical_reel · long · calm",
+      "prompt": "I have nature documentary footage I'd like turned into a long-form calm highlight video, vertical reel style for YouTube.",
+      "copilotResponse": "I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider upgrading to AuraFlux Guided.",
+      "passed": false,
+      "checks": [
+        {
+          "label": "copilot page loaded",
+          "ok": true,
+          "detail": "https://app.auraflux.co/dashboard/concierge"
+        },
+        {
+          "label": "chat input visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "label": "copilot responded",
+          "ok": true,
+          "detail": "130 chars"
+        },
+        {
+          "label": "format \"long\" in response",
+          "ok": false,
+          "detail": "Response: \"I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider\""
+        },
+        {
+          "label": "topic understood",
+          "ok": false,
+          "detail": "Expected one of: nature/documentary"
+        },
+        {
+          "label": "platform YouTube in response",
+          "ok": false,
+          "detail": ""
+        },
+        {
+          "label": "actionable next step provided",
+          "ok": false,
+          "detail": "no job creation link in response"
+        }
+      ],
+      "issues": [
+        "✗ format \"long\" in response: Response: \"I can only confirm what's in the AuraFlux guides for your plan. For full guided assistance, consider\"",
+        "✗ topic understood: Expected one of: nature/documentary",
+        "✗ platform YouTube in response",
+        "✗ actionable next step provided: no job creation link in response"
+      ]
+    }
+  ]
+}
