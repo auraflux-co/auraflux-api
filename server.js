@@ -121,7 +121,7 @@ require('fs').mkdirSync(TMP_DIR,    { recursive: true });
 require('fs').mkdirSync(OUTPUT_DIR, { recursive: true });
 
 // Clean up orphaned temp files on startup (older than 24 hours)
-const { runStartupChecks } = require('./lib/startup');
+const { runStartupChecks, rescueInterruptedJobs } = require('./lib/startup');
 runStartupChecks({
   requiredEnv: ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'],
   tmpDir:      TMP_DIR,
@@ -402,13 +402,18 @@ if (!process.env.DATABASE_URL) {
 app.use(errorMiddleware);
 
 // ── Start ─────────────────────────────────────────────────────────
-// Initialize Postgres (runs migrations) and load persisted jobs before accepting traffic.
+// Initialize Postgres (runs migrations), rescue interrupted jobs, then listen.
 (async () => {
   try {
     await initJobCardPg();
   } catch (err) {
     console.error('[startup] Postgres init failed — starting with empty job store:', err.message);
   }
+  // CPD-139: mark any jobs left 'running' by a previous process exit as failed
+  // so they surface to operators for retry rather than hanging forever.
+  rescueInterruptedJobs().catch((e) =>
+    console.warn('[startup] rescueInterruptedJobs error:', e.message)
+  );
 })();
 
 const server = app.listen(PORT, () => {
