@@ -15,7 +15,7 @@ services:
     name: auraflux-api
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: starter
+    plan: standard
     region: oregon
     healthCheckPath: /health
 
@@ -199,7 +199,7 @@ services:
     rootDir: app
     buildCommand: npm install && npm run build
     startCommand: npm start
-    plan: starter
+    plan: standard
     region: oregon
     healthCheckPath: /api/health
     envVars:

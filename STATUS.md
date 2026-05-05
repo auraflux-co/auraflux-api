@@ -1,5 +1,6 @@
 # AuraFlux — Status & Task Tracker
 **Last Updated:** 2026-05-05 (Cursor — fix(deploy): remove dangling fromService auraflux-redis ref that was causing all builds to fail in <1 second; REDIS_URL now sync: false for optional BullMQ use)
+**Last Updated:** 2026-05-05 (Cursor — fix(deploy): change render.yaml plan: starter → standard for both services; starter plan rejects disk blocks in Blueprint validation)
 **Last Updated:** 2026-05-05 (Cursor — fix(ops): expand health check to cover all production-critical env vars by group — ai, heygen, storage (R2), runpod, tts, publish, stripe, auth, comfy — missingKeys array in /health response gives definitive runtime view of what is and isn't configured)
 **Last Updated:** 2026-05-05 (Cursor — fix(cpd-142): updateJobSpec NULL guard bug — NULL IN(...) = NULL in PostgreSQL so NOT(NULL)=NULL made WHERE clause never match for new jobs; adds IS NOT NULL check to guard; SELECT status in loadJobRow/listJobsByCustomer; _formatJob uses row.status fallback — jobs no longer stuck at queued forever)
 **Last Updated:** 2026-05-05 (Cursor — fix(cpd-142): geminiScriptGeneration gets 60s axios timeout; script_gen_service passes form-qualified contentType (clips-short not clips) so short-form generate jobs use 4k token budget not 16k — eliminates script_gen hang on WAN generate jobs)
