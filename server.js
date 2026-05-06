@@ -1153,6 +1153,7 @@ setImmediate(() => {
   const MAX_RESUME_POLLERS = 2;
   let resumed = 0;
 
+  const ALL_SENT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // only resume pollers for jobs created in last 24h
   const candidates = Object.entries(persistedJobs).filter(([jobId, card]) => {
     if ((card.status || '') === 'dismissed') return false;
     const stage = card.stage || inferJobStage(card);
@@ -1164,6 +1165,9 @@ setImmediate(() => {
     if (!videoJobs.length) return false;
     // Skip if a poller is already running for this job (shouldn't happen at startup but guard anyway)
     if (activePollers.has(jobId)) return false;
+    // Skip stale jobs — don't resume HeyGen pollers for jobs older than 24h
+    const createdAt = card.createdAt ? new Date(card.createdAt).getTime() : 0;
+    if (createdAt && (Date.now() - createdAt) > ALL_SENT_MAX_AGE_MS) return false;
     return true;
   });
 
@@ -1211,6 +1215,7 @@ setImmediate(() => {
   // between Gate 1 pass and HeyGen submission (e.g. HeyGen timeout, process kill).
   // Jobs reach script_ready via rollback (all_sent → script_ready clears video IDs).
   // Cap at MAX_RESUME_POLLERS to match all_sent resume and avoid HeyGen flood.
+  const SCRIPT_READY_MAX_AGE_MS = 24 * 60 * 60 * 1000; // only auto-send jobs created in last 24h
   const scriptReadyCandidates = Object.values(persistedJobs).filter(card => {
     if ((card.status || '') === 'dismissed') return false;
     const stage = card.stage || inferJobStage(card);
@@ -1220,6 +1225,9 @@ setImmediate(() => {
     // Must have a script but no HeyGen video IDs
     const videoJobs = card.heygen?.videoJobs || [];
     if (videoJobs.length > 0) return false;
+    // Skip stale jobs — only auto-send recent jobs to avoid burning credits on old queue items
+    const createdAt = card.createdAt ? new Date(card.createdAt).getTime() : 0;
+    if (createdAt && (Date.now() - createdAt) > SCRIPT_READY_MAX_AGE_MS) return false;
     return true;
   });
 
