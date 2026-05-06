@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-06 v1.0.321 (Cursor — fix(cpd-142): portal0 WAN gen item handling — items with localPath+sourceType=wan_gen now probe the local file and pass through without URL checks)
 **Last Updated:** 2026-05-06 v1.0.319 (Cursor — fix(cpd-142): null seed → KSampler crash; ANTHROPIC_API_KEY removed from env guard skip list — both blocked all Operate E2E tests from producing video)
 **Last Updated:** 2026-05-06 v1.0.317 (Cursor — fix(cpd-142): createJobSpec now preserves WAN gen fields (prompt, genType, imageId, width, height, numFrames, seed) in sourceConfig — previously these were silently dropped, causing _runWanPreGeneration to find an empty prompt and immediately return false; all 6 Operate E2E tests were failing in ~10s for this reason)
 **Last Updated:** 2026-05-04 (Cursor — feat(cpd-141): Operate /v1/jobs — productionProfile + entry compose; tier_api_e2e_test.py six scenarios use ingress (compose/fetch) and profiles (broadcast_desk/vertical_reel/live_event), not legacy editorial contentType labels; legacy contentType still accepted and mapped)
