@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-06 v1.0.329 (Cursor — fix(cpd-142): WAN workflow length 25→97 frames (6s) to clear portal3a 5s minimum)
 **Last Updated:** 2026-05-06 v1.0.327 (Cursor — fix(cpd-142): switch ComfyUI output SaveAnimatedWEBP→SaveAnimatedPNG; FFmpeg apng demuxer handles animation natively unlike webp_pipe)
 **Last Updated:** 2026-05-06 v1.0.325 (Cursor — fix(cpd-142): _encodeWanToMp4 uses libx264 transcode instead of stream copy for WAN animated WebP files)
 **Last Updated:** 2026-05-06 v1.0.323 (Cursor — fix(cpd-142): assembly_service uses WAN gen localPath directly, skipping URL download step)
