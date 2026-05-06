@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-04-26 (Cursor — 04/26 session: generalized factual QA gates + short-form platform fix + Gate 3a short-form chrome spec fix)
+**Last Updated:** 2026-05-06 (Cursor — 05/06 session: scene scaffold / clip-count mismatch fixes, sidebar pagination, HeyGen folder label-first matching)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
