@@ -1,11 +1,16 @@
 # AuraFlux Status
 
-**Version:** 1.0.311
-**Last Updated:** 2026-05-06 (Cursor — fix(ops): WAN 2.1 pod auto-detection + workflow adapter)
+**Version:** 1.0.314
+**Last Updated:** 2026-05-06 (Cursor — fix(ops): use correct UMT5-XXL FP8 scaled file for WAN 2.1)
 **Deploy State:** pending
 
 ## Last Agent Action
-Fixed WAN video generation pipeline to work with WAN 2.1 pod (5a8c7dkr95eohw):
+Fixed WAN 2.1 workflow to reference correct UMT5-XXL text encoder:
+- wan_t2v_wan21_workflow.json: umt5_xxl_fp8_e4m3fn.safetensors → umt5_xxl_fp8_e4m3fn_scaled.safetensors
+- Old file was 768-dim (T5-base size); correct file is ~9.3GB 4096-dim UMT5-XXL
+- CLIPLoader type set back to "wan" (correct for UMT5)
+
+Previously:
 - lib/ai/runpod.js: added _probeWan21Nodes() to detect pod's node schema at runtime (cached per pod ID)
 - lib/ai/runpod.js: generateWanVideo() selects workflow file based on probe result — wan_t2v_wan21_workflow.json for newer kijai nodes, wan_t2v_workflow.json for legacy nodes
 - lib/ai/wan_t2v_wan21_workflow.json: new workflow for WAN 2.1 using CLIPLoader(wan type) + WanImageToVideo + KSampler + VAEDecodeTiled + SaveAnimatedWEBP
