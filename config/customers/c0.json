@@ -198,12 +198,7 @@
       },
       "voice": {
         "style": "jon-stewart-norm-macdonald-space-ghost",
-        "prohibitedWords": [
-          "incredible",
-          "amazing",
-          "crazy",
-          "wild"
-        ],
+        "prohibitedWords": [],
         "outroLine": "Goodnight and good luck.",
         "speakerName": "Bobby G"
       },
@@ -385,12 +380,7 @@
       },
       "voice": {
         "style": "jon-stewart-norm-macdonald-space-ghost",
-        "prohibitedWords": [
-          "incredible",
-          "amazing",
-          "crazy",
-          "wild"
-        ],
+        "prohibitedWords": [],
         "outroLine": "Subscribe. Appreciate you.",
         "speakerName": "Bobby G"
       },
