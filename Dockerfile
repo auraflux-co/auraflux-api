@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.4
 # ── Stage 1: Build native deps ────────────────────────────────────────────────
 # canvas (Cairo), sharp, and puppeteer all need system libs that aren't in
 # Alpine. Debian slim has them via apt and avoids Alpine's musl libc issues.

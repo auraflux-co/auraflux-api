@@ -141,3 +141,10 @@ venv/
 env/
 ENV/
 venv-*/
+
+# E2E test output logs
+logs/e2e_*.txt
+logs/e2e_*.json
+logs/e2e_results_*.json
+logs/e2e_gemini_*.txt
+logs/e2e_full_*.txt
