@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-06 v1.0.337 (Cursor — fix(cpd-142): WAN workflow scheduler karras→simple + steps 20→30; flow matching model requires simple scheduler or output is solid blue)
 **Last Updated:** 2026-05-06 v1.0.335 (Cursor — fix(cpd-142): export _runWanPreGeneration from jobs_c1; restore ensurePodRunning; developer_api could not import function)
 **Last Updated:** 2026-05-06 v1.0.333 (Cursor — fix(cpd-142): jobs_c1.js numFrames fallback 25→97; was overriding runpod.js default)
 **Last Updated:** 2026-05-06 v1.0.331 (Cursor — fix(cpd-142): runpod.js numFrames default 25→97; workflow JSON was overridden by hardcoded param)
