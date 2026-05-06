@@ -8,6 +8,7 @@ Usage:
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 
@@ -45,16 +46,19 @@ def ask_gemini(prompt: str, model: str = "gemini-2.5-flash", json_mode: bool = F
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        data = json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            data = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Gemini HTTP {e.code}: {e.read().decode()[:200]}") from e
 
     text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
 
     if json_mode:
-        # Strip accidental code fences
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1]
-            text = text.rsplit("```", 1)[0]
+        # Strip accidental code fences robustly — handles leading spaces, language tags,
+        # multiple fences, and edge cases Gemini 2.5 occasionally produces.
+        text = re.sub(r'^\s*```[a-zA-Z]*\n?', '', text)
+        text = re.sub(r'\n?```\s*$', '', text)
         text = text.strip()
 
     return text
@@ -63,4 +67,7 @@ def ask_gemini(prompt: str, model: str = "gemini-2.5-flash", json_mode: bool = F
 def ask_gemini_json(prompt: str, model: str = "gemini-2.5-flash") -> dict:
     """Convenience wrapper — returns parsed JSON dict."""
     raw = ask_gemini(prompt, model=model, json_mode=True)
-    return json.loads(raw)
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"Gemini returned invalid JSON: {e}\nRaw response: {raw[:400]}") from e
