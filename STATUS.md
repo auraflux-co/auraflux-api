@@ -1,16 +1,16 @@
 # AuraFlux Status
 
-**Version:** 1.0.315
-**Last Updated:** 2026-05-06 (Cursor — fix(ops): correct clip_name in wan21 workflow to _scaled file)
-**Deploy State:** pending
+**Version:** 1.0.316
+**Last Updated:** 2026-05-06 (Cursor — fix(ops): predeploy_env_guard.sh — auto-restore missing Render env vars)
+**Deploy State:** deploying
 
 ## Last Agent Action
-Fixed wan_t2v_wan21_workflow.json CLIPLoader clip_name:
-- umt5_xxl_fp8_e4m3fn.safetensors → umt5_xxl_fp8_e4m3fn_scaled.safetensors
-- Root cause of persistent 768-dim KSampler error: workflow JSON on disk never had the _scaled filename
-- Non-scaled file (Wan-AI custom tensor naming) silently loads as SD1ClipModel (768-dim) in ComfyUI
-- _scaled file (Comfy-Org repackaged, 6.74GB) loads as WanTEModel (4096-dim) — confirmed via Jupyter
-- Direct workflow test (promptId a1a4b188) succeeded: test_scaled_clip_00001_.webp generated
+Added scripts/predeploy_env_guard.sh — permanent fix for recurring Render env var wipes:
+- Root cause: Render PUT /env-vars is a full replacement; any partial PUT silently deletes all other vars
+- Secondary cause: render.yaml Blueprint sync clears sync:false vars with no value on every push
+- Guard runs at pre-commit: GET current Render vars → compare against .env → auto-restore missing via GET-merge-PUT
+- Wired into pre-commit hook replacing check_render_env.sh (detect-only → active auto-restore)
+- Confirmed: all 54 Render env vars present (RUNPOD_API_KEY, GEMINI_API_KEY restored from earlier wipe)
 Previously:
 - lib/ai/runpod.js: added _probeWan21Nodes() to detect pod's node schema at runtime (cached per pod ID)
 - lib/ai/runpod.js: generateWanVideo() selects workflow file based on probe result — wan_t2v_wan21_workflow.json for newer kijai nodes, wan_t2v_workflow.json for legacy nodes
