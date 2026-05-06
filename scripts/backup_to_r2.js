@@ -27,6 +27,7 @@ const os      = require('os');
 const zlib    = require('zlib');
 const { execSync } = require('child_process');
 const { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
+const { backupRenderEnvVars } = require('./backup_render_env');
 
 const ROOT_DIR = path.join(__dirname, '..');
 const DATA_DIR = path.join(ROOT_DIR, 'data');
@@ -267,6 +268,17 @@ async function runBackup(exitOnComplete = false) {
   } catch (e) {
     console.error('[backup] Data backup failed:', e.message);
     errors.push({ stage: 'data', error: e.message });
+  }
+
+  // 4. Render env var backup (all services → R2 under envvars/<service-id>/<date>.json.gz)
+  try {
+    const envResult = await backupRenderEnvVars();
+    if (!envResult.ok) {
+      envResult.errors.forEach((e) => errors.push({ stage: `env-vars:${e.serviceId}`, error: e.error }));
+    }
+  } catch (e) {
+    console.error('[backup] Render env var backup failed:', e.message);
+    errors.push({ stage: 'env-vars', error: e.message });
   }
 
   const elapsedSec = ((Date.now() - startMs) / 1000).toFixed(1);
