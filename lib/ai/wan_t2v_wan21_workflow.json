@@ -50,10 +50,10 @@
     "inputs": {
       "model": ["1", 0],
       "seed": 42,
-      "steps": 20,
+      "steps": 30,
       "cfg": 6.0,
       "sampler_name": "euler",
-      "scheduler": "karras",
+      "scheduler": "simple",
       "positive": ["6", 0],
       "negative": ["6", 1],
       "latent_image": ["6", 2],
