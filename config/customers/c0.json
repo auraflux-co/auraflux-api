@@ -218,7 +218,7 @@
         },
         "clips": {
           "templateType": "overlay",
-          "backgroundPath": "assets/twitch_thumbnail_canva.png",
+          "backgroundPath": "assets/longform_twitch_Thumbnail.png",
           "viewport": {
             "width": 1280,
             "height": 720
