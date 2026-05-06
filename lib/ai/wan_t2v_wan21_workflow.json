@@ -50,7 +50,7 @@
     "inputs": {
       "model": ["1", 0],
       "seed": 42,
-      "steps": 30,
+      "steps": 20,
       "cfg": 6.0,
       "sampler_name": "euler",
       "scheduler": "simple",
