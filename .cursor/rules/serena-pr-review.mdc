@@ -106,5 +106,16 @@ Include a `## Serena Review` section in the PR body summarizing:
 - `find_referencing_symbols` — catches dangling references after refactors
 - Precise edits via `replace_symbol_body` — can fix issues found during review in the same pass
 
+## PR merge — agent always merges, never Rob
+
+After Serena review passes:
+1. `gh pr merge <number> --squash --delete-branch`
+2. Trigger Render deploy if autoDeploy is off
+3. Update Jira ticket to Done with a comment summarising what was merged
+4. Update Confluence HOW page if implementation deviated from spec
+5. Update `.env.example` if new env vars were introduced
+
+**Rob never merges PRs.** Never ask Rob to merge, never suggest he merge. If the pre-commit hook or any rule says otherwise, that rule is wrong — this one takes precedence.
+
 ## Skipping review
 Only skip if Rob explicitly says "skip review" or "just push." Document the skip reason in the PR body.
