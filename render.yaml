@@ -15,7 +15,7 @@ services:
     name: auraflux-api
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: starter
+    plan: standard
     region: oregon
     healthCheckPath: /health
 
@@ -180,12 +180,11 @@ services:
       - key: DATABASE_URL
         sync: false
 
-      # Redis — injected automatically from auraflux-redis Key Value instance (BullMQ)
+      # Redis — optional BullMQ queue (admin routes only; pipeline uses Postgres directly)
+      # If not set, queue.js falls back to redis://localhost:6379 and fails gracefully.
+      # To enable: create a key-value service in Render and paste its connection string here.
       - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: auraflux-redis
-          property: connectionString
+        sync: false
 
       # C0 manual workflow flag (localhost only — keeps C0 path from auto-advancing)
       - key: C0_MANUAL_SEGMENT_CHECKPOINT
@@ -200,7 +199,7 @@ services:
     rootDir: app
     buildCommand: npm install && npm run build
     startCommand: npm start
-    plan: starter
+    plan: standard
     region: oregon
     healthCheckPath: /api/health
     envVars:
@@ -225,14 +224,10 @@ services:
       - key: AURAFLUX_API_SECRET
         sync: false
 
-  # ── Redis Key Value — BullMQ job queues ──────────────────────────────────────
-  # type: keyvalue (not databases — Key Value must live in services per Blueprint spec)
-  # ipAllowList required by spec; [] = internal connections only (Render private network)
-  - type: keyvalue
-    name: auraflux-redis
-    plan: free
-    maxmemoryPolicy: noeviction
-    ipAllowList: []
+  # ── Redis Key Value — BullMQ job queues (optional) ───────────────────────────
+  # The auraflux-redis key-value service was removed to unblock builds.
+  # BullMQ / admin queue routes fall back gracefully when REDIS_URL is not set.
+  # Re-add a key-value service here when Redis is needed for production job queuing.
 
   # ── Backup note ───────────────────────────────────────────────────────────────
   # The nightly backup (SQLite + Postgres + JSON state → R2) now runs as a

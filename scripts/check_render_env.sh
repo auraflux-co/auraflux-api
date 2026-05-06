@@ -2,36 +2,34 @@
 # scripts/check_render_env.sh
 #
 # Pre-deploy guard: verify all required env vars are present in the Render
-# service before a deploy is triggered. Exits non-zero if any are missing,
-# which blocks the commit/deploy.
+# API service before a deploy is triggered. Exits non-zero if any are missing.
+#
+# These vars must be set directly in the Render dashboard — never from local files.
+# The Render API /env-vars endpoint only shows API-managed vars; dashboard-managed
+# vars (ANTHROPIC, GEMINI, HEYGEN_API_KEY, R2_*) are confirmed via GET /health.
 #
 # Usage:
-#   bash scripts/check_render_env.sh              # check against live Render
-#   SKIP_RENDER_ENV_CHECK=1 git commit ...         # bypass for docs-only commits
-#
-# Required env:  RENDER_API_KEY, RENDER_SERVICE_ID
+#   bash scripts/check_render_env.sh
+#   SKIP_RENDER_ENV_CHECK=1 git commit ...   # bypass for docs-only commits
 
 set -euo pipefail
 
 : "${RENDER_API_KEY:?RENDER_API_KEY must be set}"
 : "${RENDER_SERVICE_ID:?RENDER_SERVICE_ID must be set}"
 
-# Keys that must exist in the Render service env — add new required vars here.
+# API-managed vars that must exist — only AuraFlux API (C1+) vars.
+# Do NOT add C0 / local-dev / sports-pipeline vars here.
 REQUIRED_KEYS=(
-  ANTHROPIC_API_KEY
-  GEMINI_API_KEY
-  HEYGEN_API_KEY
+  DATABASE_URL
   RUNPOD_API_KEY
   RUNPOD_POD_ID
-  DATABASE_URL
-  RENDER_API_KEY
-  RENDER_SERVICE_ID
   STRIPE_SECRET_KEY
-  ATLASSIAN_API_TOKEN
+  STRIPE_WEBHOOK_SECRET
+  JIRA_WEBHOOK_SECRET
   AURAFLUX_E2E_API_KEY_OPERATE
+  AURAFLUX_E2E_API_KEY_GUIDED
+  AURAFLUX_E2E_API_KEY_MANAGED
 )
-
-echo "[check_render_env] Fetching env vars from Render service ${RENDER_SERVICE_ID}..."
 
 PRESENT=$(curl -sf \
   -H "Authorization: Bearer ${RENDER_API_KEY}" \
@@ -53,18 +51,18 @@ for key in "${REQUIRED_KEYS[@]}"; do
 done
 
 TOTAL=$(echo "$PRESENT" | grep -c '.' || true)
-echo "[check_render_env] ${TOTAL} env vars found in Render."
+echo "[check_render_env] ${TOTAL} API-managed env vars found on Render."
 
 if [[ ${#MISSING[@]} -gt 0 ]]; then
   echo ""
-  echo "❌  RENDER ENV CHECK FAILED — the following required vars are MISSING:"
+  echo "❌  RENDER ENV CHECK FAILED — missing vars (add in Render dashboard):"
   for k in "${MISSING[@]}"; do
     echo "     - $k"
   done
   echo ""
-  echo "    Fix: run  bash scripts/restore_render_env.sh  then retry."
-  echo "    To bypass (docs-only commit): set SKIP_RENDER_ENV_CHECK=1"
+  echo "    Add missing vars at: https://dashboard.render.com/web/${RENDER_SERVICE_ID}/env"
+  echo "    To bypass (docs-only commit): SKIP_RENDER_ENV_CHECK=1 git commit"
   exit 1
 fi
 
-echo "✅  All required Render env vars present (${#REQUIRED_KEYS[@]}/${#REQUIRED_KEYS[@]})."
+echo "✅  All required API-managed Render env vars present."
