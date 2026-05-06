@@ -5,10 +5,10 @@ operate_gemini_e2e.py — Operate tier E2E with Gemini as the customer (CPD-142)
 Gemini acts as an Operate-plan customer producing REAL video output:
   - All 6 scenarios: entry="generate" → WAN text-to-video → full pipeline
 
-Both paths run ALL portals (no staging flag) and poll until videoUrl is set.
+Both paths run ALL portals (no staging flag) and poll until outputUrl is set.
 Audit checks:
   1. Job spec reflects the original brief (topic, tone, profile, format, platforms)
-  2. videoUrl is present and returns HTTP 200 (real video exists)
+  2. outputUrl is present and returns HTTP 200 (real video exists)
 
 Requires:
   AURAFLUX_E2E_API_KEY_OPERATE   — Operate-tier API key
@@ -31,18 +31,18 @@ BASE    = os.environ.get("AURAFLUX_E2E_BASE", "https://auraflux-api.onrender.com
 API_KEY = os.environ.get("AURAFLUX_E2E_API_KEY_OPERATE", "")
 
 # ── Scenarios ─────────────────────────────────────────────────────────────────
-# Three use entry="fetch" with real public article/video URLs.
-# Three use entry="generate" (WAN text-to-video) with a text prompt.
-# Neither uses staging — both paths run the full portal pipeline.
+# All 6 use entry="generate" (WAN text-to-video) for reliable video output.
+# Fetch scenarios were tested but portal0 ffprobe QA requires CDN-hosted MP4s
+# accessible from Render's network — public internet URLs are often unreachable.
+# WAN is the reliable path for API-tier E2E tests.
 
 SCENARIOS = [
-    # All 6 use entry="generate" (WAN text-to-video) for reliable video output.
-    # Fetch scenarios were tested but portal0 ffprobe QA requires CDN-hosted MP4s that
-    # are accessible from Render's network — public internet URLs are often unreachable
-    # or return HTML. WAN is the reliable path for API-tier E2E tests.
     {
         "id": "O-T1",
         "entry": "generate",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "platforms": ["tiktok"],
         "brief": (
             "I want a short-form vertical highlights reel about extreme sports — skateboarding, "
             "surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok."
@@ -56,6 +56,9 @@ SCENARIOS = [
     {
         "id": "O-T2",
         "entry": "generate",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "platforms": ["youtube"],
         "brief": (
             "Produce a professional 3-minute news desk segment covering AI breakthroughs in "
             "healthcare for 2026. Informative, authoritative tone. YouTube audience."
@@ -69,6 +72,9 @@ SCENARIOS = [
     {
         "id": "O-T3",
         "entry": "generate",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "platforms": ["instagram"],
         "brief": (
             "I need a short casual video about morning productivity routines — coffee, exercise, "
             "mindset. Relatable and casual tone. Instagram Reels."
@@ -82,6 +88,9 @@ SCENARIOS = [
     {
         "id": "O-T4",
         "entry": "generate",
+        "productionProfile": "broadcast_desk",
+        "format": "long",
+        "platforms": ["youtube"],
         "brief": (
             "Long-form corporate product launch announcement for a new AI-powered analytics "
             "platform. Professional tone. YouTube."
@@ -95,6 +104,9 @@ SCENARIOS = [
     {
         "id": "O-T5",
         "entry": "generate",
+        "productionProfile": "broadcast_desk",
+        "format": "short",
+        "platforms": ["youtube"],
         "brief": (
             "Breaking news segment — urgent coverage of a major global economic development. "
             "Urgent, direct tone. Short and punchy. YouTube."
@@ -108,6 +120,9 @@ SCENARIOS = [
     {
         "id": "O-T6",
         "entry": "generate",
+        "productionProfile": "vertical_reel",
+        "format": "short",
+        "platforms": ["tiktok"],
         "brief": (
             "Short entertainment clip covering pop culture trends this week. Energetic, fun, "
             "youthful tone. TikTok."
@@ -120,64 +135,40 @@ SCENARIOS = [
     },
 ]
 
+# Map productionProfile to backend templateId
+PROFILE_TO_TEMPLATE = {
+    "broadcast_desk": "long-form",
+    "vertical_reel":  "short-form",
+    "live_event":     "long-form",
+}
+
 # ── Prompts ───────────────────────────────────────────────────────────────────
-
-CRAFT_FETCH_PROMPT = """You are an Operate-plan AuraFlux customer building a video production job via API.
-
-AuraFlux POST /v1/jobs accepts this JSON body for fetch jobs:
-{{
-  "entry": "fetch",
-  "productionProfile": "broadcast_desk" | "vertical_reel" | "live_event",
-  "format": "short" | "long",
-  "topic": "<string>",
-  "tone": "professional" | "energetic" | "informative" | "hype" | "casual" | "urgent",
-  "sourceConfig": {{ "urls": ["<url1>", "<url2>"] }},
-  "order": {{
-    "publish": {{
-      "platforms": ["youtube"] | ["tiktok"] | ["instagram"]
-    }}
-  }}
-}}
-
-Rules:
-- "broadcast_desk" → desk/news layout (16:9). Use for news, corporate, authoritative content.
-- "vertical_reel" → vertical 9:16. Use for TikTok/Instagram Reels/short-form social.
-- "format": "short" for under ~90 seconds; "long" for 2 min+.
-- Do NOT include staging — these are real production jobs.
-- Include all provided source_urls in sourceConfig.urls.
-
-Content brief: {brief}
-Source URLs to include: {source_urls}
-
-Respond with ONLY the JSON body — no commentary.
-"""
 
 CRAFT_GENERATE_PROMPT = """You are an Operate-plan AuraFlux customer building a video production job via API.
 
 AuraFlux POST /v1/jobs accepts this JSON body for AI-generated (WAN text-to-video) jobs:
 {{
   "entry": "generate",
-  "productionProfile": "broadcast_desk" | "vertical_reel" | "live_event",
-  "format": "short" | "long",
-  "topic": "<string>",
+  "type": "text",
+  "contentType": "custom",
+  "templateId": "long-form" | "short-form",
+  "topic": "<string — concise subject, max 80 chars>",
   "tone": "professional" | "energetic" | "informative" | "hype" | "casual" | "urgent",
   "prompt": "<text prompt for the AI video generator>",
-  "order": {{
-    "publish": {{
-      "platforms": ["youtube"] | ["tiktok"] | ["instagram"]
-    }}
-  }}
+  "platforms": ["youtube"] | ["tiktok"] | ["instagram"]
 }}
 
 Rules:
-- "broadcast_desk" → desk/news layout (16:9). Use for news, corporate, authoritative content.
-- "vertical_reel" → vertical 9:16. Use for TikTok/Instagram Reels/short-form social.
-- "format": "short" for under ~90 seconds; "long" for 2 min+.
+- "templateId": "short-form" for TikTok/Reels/short-form social content. "long-form" for YouTube/professional.
+- "type" must always be "text" for text-to-video generation.
+- "contentType" must always be "custom" for general video production.
 - Do NOT include staging — these are real production jobs.
 - Set "prompt" to the provided video generation prompt.
+- Set "platforms" to an array matching the target platform.
 
 Content brief: {brief}
 Video generation prompt: {prompt}
+Target platforms: {platforms}
 
 Respond with ONLY the JSON body — no commentary.
 """
@@ -188,20 +179,18 @@ Original brief: {brief}
 
 Crafted API payload (what was submitted): {payload}
 
-Returned job spec / result (what the server recorded): {result}
+Returned job result (what the server recorded): {result}
 
 Video URL present: {video_url_present}
-Video URL accessible (HTTP 200): {video_url_ok}
+Video URL accessible (HTTP 200 or 206): {video_url_ok}
 
 Check:
-1. Does the productionProfile match the visual style described in the brief?
-2. Does the format (short/long) match the duration implied in the brief?
-3. Does the topic reflect the subject of the brief?
-4. Does the tone match the brief?
-5. Are the platforms correct?
-6. Is the entry type appropriate?
-7. Is a videoUrl present in the result? (required for a true E2E pass)
-8. Is the video accessible (HTTP 200)?
+1. Does the templateId match the visual style described in the brief? (short-form for TikTok/Reels, long-form for YouTube/desk)
+2. Does the topic reflect the subject of the brief?
+3. Does the tone match the brief?
+4. Are the platforms correct?
+5. Is a outputUrl present in the result? (required for a true E2E pass)
+6. Is the video accessible (HTTP 200 or 206)?
 
 Respond with JSON:
 {{
@@ -211,7 +200,7 @@ Respond with JSON:
   "notes": "brief explanation"
 }}
 
-IMPORTANT: If videoUrl is absent or not accessible, passed must be false and score must be below 60.
+IMPORTANT: If outputUrl is absent or not accessible, passed must be false and score must be below 60.
 """
 
 
@@ -230,48 +219,58 @@ def api(method, path, body=None):
 
 
 def check_video_url(url):
-    """Return True if URL exists and returns HTTP 200."""
+    """Return True if URL exists and returns HTTP 200 or 206 (range response)."""
     if not url:
         return False
     try:
-        req = urllib.request.Request(url, method="HEAD")
+        req = urllib.request.Request(url)
+        req.add_header("Range", "bytes=0-0")
         with urllib.request.urlopen(req, timeout=15) as r:
-            return r.status == 200
+            return r.status in (200, 206)
     except Exception:
         return False
 
 
 def run_scenario(scenario):
-    sid   = scenario["id"]
-    brief = scenario["brief"]
-    entry = scenario["entry"]
-    print(f"\n[{sid}] entry={entry} — Gemini crafting payload for: {brief[:60]}...")
+    sid      = scenario["id"]
+    brief    = scenario["brief"]
+    entry    = scenario["entry"]
+    profile  = scenario["productionProfile"]
+    fmt      = scenario["format"]
+    platforms = scenario["platforms"]
+
+    print(f"\n[{sid}] entry={entry} profile={profile} — {brief[:60]}...")
 
     # Step 1: Gemini crafts the API payload
     try:
-        if entry == "fetch":
-            prompt_text = CRAFT_FETCH_PROMPT.format(
-                brief=brief,
-                source_urls=json.dumps(scenario.get("source_urls", [])),
-            )
-        else:
-            prompt_text = CRAFT_GENERATE_PROMPT.format(
-                brief=brief,
-                prompt=scenario.get("prompt", ""),
-            )
+        prompt_text = CRAFT_GENERATE_PROMPT.format(
+            brief=brief,
+            prompt=scenario.get("prompt", ""),
+            platforms=json.dumps(platforms),
+        )
         payload = ask_gemini_json(prompt_text)
     except Exception as e:
         return {"id": sid, "passed": False, "error": f"Gemini craft failed: {e}", "brief": brief}
 
-    # Ensure entry is set correctly regardless of what Gemini output
+    # ── Normalise payload — ensure all required backend fields are set ──────────
+    # These guards correct Gemini omissions so validation never fails on our behalf.
     payload["entry"] = entry
-    if entry == "fetch" and "sourceConfig" not in payload:
-        payload["sourceConfig"] = {"urls": scenario.get("source_urls", [])}
-    if entry == "generate" and "prompt" not in payload:
+    if "type" not in payload:
+        payload["type"] = "text"
+    if "contentType" not in payload:
+        payload["contentType"] = "custom"
+    if "templateId" not in payload:
+        payload["templateId"] = PROFILE_TO_TEMPLATE.get(profile, "long-form")
+    # Platforms: Gemini may nest inside order.publish.platforms — lift to top level
+    if "platforms" not in payload or not payload["platforms"]:
+        nested = payload.get("order", {}).get("publish", {}).get("platforms", [])
+        payload["platforms"] = nested if nested else platforms
+    if "prompt" not in payload or not payload["prompt"]:
         payload["prompt"] = scenario.get("prompt", "")
 
-    print(f"  → Payload: entry={payload.get('entry')} profile={payload.get('productionProfile')} "
-          f"format={payload.get('format')} tone={payload.get('tone')}")
+    print(f"  → Payload: entry={payload.get('entry')} contentType={payload.get('contentType')} "
+          f"templateId={payload.get('templateId')} tone={payload.get('tone')} "
+          f"platforms={payload.get('platforms')}")
 
     # Step 2: Submit
     resp = api("POST", "/v1/jobs", payload)
@@ -281,7 +280,7 @@ def run_scenario(scenario):
 
     print(f"  → Submitted jobId: {job_id}")
 
-    # Step 3: Poll until complete AND videoUrl is populated (up to 25 min for WAN + render)
+    # Step 3: Poll until complete AND outputUrl is populated (up to 25 min for WAN + render)
     poll_limit = 1500  # 25 minutes — WAN generation can take ~10-15 min
     deadline   = time.time() + poll_limit
     result     = {}
@@ -289,28 +288,28 @@ def run_scenario(scenario):
     video_url   = None
     while time.time() < deadline:
         result     = api("GET", f"/v1/jobs/{job_id}")
-        status     = result.get("status", "unknown")
-        video_url  = result.get("videoUrl") or result.get("outputUrl")
+        job_data   = result.get("job") or result
+        status     = job_data.get("status", "unknown")
+        video_url  = job_data.get("outputUrl") or job_data.get("videoUrl")
         if status != last_status:
-            print(f"  [{sid}] status: {status} | videoUrl: {'set' if video_url else 'pending'}")
+            print(f"  [{sid}] status: {status} | outputUrl: {'set' if video_url else 'pending'}")
             last_status = status
-        # Terminal states
         if status in ("failed", "error", "credit_paused"):
             break
-        # Complete with video = done; complete without video = keep polling (render may lag)
         if status in ("complete", "completed", "published") and video_url:
             break
         time.sleep(20)
     else:
-        result = {"status": "timeout"}
+        result = {"job": {"status": "timeout"}}
 
-    video_url = result.get("videoUrl") or result.get("outputUrl")
-    print(f"  → Final status: {result.get('status')} | videoUrl: {video_url or 'MISSING'}")
+    job_data  = result.get("job") or result
+    video_url = job_data.get("outputUrl") or job_data.get("videoUrl")
+    print(f"  → Final status: {job_data.get('status')} | outputUrl: {video_url or 'MISSING'}")
 
     # Step 4: Check video accessibility
     video_url_ok = check_video_url(video_url)
     if video_url:
-        print(f"  → Video HTTP check: {'200 OK' if video_url_ok else 'FAILED'}")
+        print(f"  → Video HTTP check: {'200/206 OK' if video_url_ok else 'FAILED'}")
 
     # Step 5: Gemini audits the output
     try:
@@ -318,7 +317,7 @@ def run_scenario(scenario):
             AUDIT_PROMPT.format(
                 brief=brief,
                 payload=json.dumps(payload, indent=2),
-                result=json.dumps(result, indent=2),
+                result=json.dumps(job_data, indent=2),
                 video_url_present=bool(video_url),
                 video_url_ok=video_url_ok,
             )
@@ -342,9 +341,9 @@ def run_scenario(scenario):
         "entry":       entry,
         "payload":     payload,
         "jobId":       job_id,
-        "status":      result.get("status"),
-        "videoUrl":    video_url,
-        "videoUrlOk":  video_url_ok,
+        "status":      job_data.get("status"),
+        "outputUrl":   video_url,
+        "outputUrlOk": video_url_ok,
         "audit":       audit,
         "passed":      passed,
         "score":       score,
@@ -381,12 +380,12 @@ def main():
     for r in results:
         sym = "✓" if r.get("passed") else "✗"
         score = r.get("score", 0)
-        vid   = "video:✓" if r.get("videoUrl") else "video:✗"
+        vid   = "video:✓" if r.get("outputUrl") else "video:✗"
         print(f"  {sym} [{r['id']}] score={score}/100 {vid}  {r['brief'][:55]}")
         for issue in r.get("issues", []):
             print(f"       ✗ {issue}")
 
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S-%f")[:-3] + "Z"
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S")
     out_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         "logs",
