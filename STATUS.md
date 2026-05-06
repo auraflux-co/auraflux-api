@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-05-06 (Cursor — 05/06 session: scene scaffold / clip-count mismatch fixes, sidebar pagination, HeyGen folder label-first matching, thumbnail background path + episodeNumber flow fixed, Gate 0 min duration lowered 10→9s, fix twitchThumbToMp4 not defined in script_gen.js)
+**Last Updated:** 2026-05-06 (Cursor — 05/06 session: scaffold/clip mismatch, sidebar pagination, HeyGen label matching, thumbnail fix, Gate 0 min 10→9s, twitchThumbToMp4 fix, Gate 1 pre-scrub for prohibited words + threshold 90→85)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.

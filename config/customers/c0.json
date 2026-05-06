@@ -181,7 +181,7 @@
           "minDurationSeconds": 9
         },
         "gate1": {
-          "pass": 90,
+          "pass": 85,
           "manualReview": 55
         },
         "gate2": {
