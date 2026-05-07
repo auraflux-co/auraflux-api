@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.340",
+  "version": "1.0.341",
   "description": "AuraFlux — AI-powered video content production platform",
   "main": "server.js",
   "scripts": {
