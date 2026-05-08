@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-05-06 (Cursor — fixed twitch_source displayName stamped before allClips build so Jason/Ron clips match manifest; isRealTitle 2→1 word; isClipUsed soft fallback; 12-streamer defaults with correct hasanabi/yourragegaming; localStorage migration for typos)
+**Last Updated:** 2026-05-08 (Cursor — Twitch clip picker: PICK CLIPS button fetches all 12 streamers, shows clip cards with thumbnails/views/used badges, drop reasons, select/deselect per clip; LONG FORM uses selection if picker was used)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
