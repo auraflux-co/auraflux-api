@@ -1801,6 +1801,35 @@ function checkFFmpeg(cb) {
 // ── Routes ────────────────────────────────────────────────────────
 
 // Health check with dependency validation
+// GET /episode-counters — read current episode numbers
+app.get('/episode-counters', (req, res) => {
+  const epPath = path.join(__dirname, 'data', 'episode_counters.json');
+  try {
+    const data = JSON.parse(fs.readFileSync(epPath, 'utf8'));
+    res.json({ ok: true, counters: data });
+  } catch(e) {
+    res.json({ ok: true, counters: { twitch: 1, nba: 1, news: 1 } });
+  }
+});
+
+// POST /episode-counters — update episode numbers
+app.post('/episode-counters', (req, res) => {
+  const { twitch, nba, news } = req.body || {};
+  const epPath = path.join(__dirname, 'data', 'episode_counters.json');
+  let current = {};
+  try { current = JSON.parse(fs.readFileSync(epPath, 'utf8')); } catch(e) {}
+  if (typeof twitch === 'number' && twitch > 0) current.twitch = twitch;
+  if (typeof nba    === 'number' && nba    > 0) current.nba    = nba;
+  if (typeof news   === 'number' && news   > 0) current.news   = news;
+  try {
+    fs.writeFileSync(epPath, JSON.stringify(current, null, 2));
+    console.log(`[episode-counters] Updated: ${JSON.stringify(current)}`);
+    res.json({ ok: true, counters: current });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/health', async (req, res) => {
   const health = {
     ok: true,

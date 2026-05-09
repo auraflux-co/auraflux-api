@@ -831,6 +831,7 @@ maya: she/her</textarea>
         <button class="tab-btn" onclick="switchTab('twitch-cfg')">TWITCH</button>
         <button class="tab-btn" onclick="switchTab('ffmpeg-cfg')">FFMPEG SERVER</button>
         <button class="tab-btn" onclick="switchTab('schedule-cfg')">SCHEDULE</button>
+        <button class="tab-btn" onclick="switchTab('episode-cfg');loadEpisodeCounters()">EPISODES</button>
       </div>
 
       <div class="tab-pane active" id="tab-heygen">
@@ -1040,6 +1041,37 @@ https://www.youtube.com/watch?v=j4vcHuc3VzI</textarea>
             <div class="field"><label>LONG FORM POST TIME</label><input id="cfg-longform-time" value="10:30 AM ET"></div>
             <div class="field"><label>SHORTS POST TIME</label><input id="cfg-shorts-time" value="5:00 PM ET"></div>
             <div class="field"><label>PRODUCTION DEADLINE</label><input id="cfg-deadline" value="10:00 AM ET"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="tab-episode-cfg">
+        <div class="card"><div class="card-header"><div class="card-title">EPISODE NUMBERS</div></div>
+          <div class="card-body">
+            <div class="alert alert-info" style="margin-bottom:14px;font-size:11px;">
+              Set the <strong>next</strong> episode number for each show. This number appears in the top-right flag overlay and custom thumbnail. After each episode airs, the counter auto-increments. You can override here any time.
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:480px;">
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">TWITCH SOUP</div>
+                <input id="ep-twitch" type="number" min="1" step="1" value="1"
+                  style="width:80px;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:18px;font-weight:700;text-align:center;border-radius:4px;">
+              </div>
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">OTHER SIDE</div>
+                <input id="ep-nba" type="number" min="1" step="1" value="1"
+                  style="width:80px;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:18px;font-weight:700;text-align:center;border-radius:4px;">
+              </div>
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">BECAUSE THE LIGHT</div>
+                <input id="ep-news" type="number" min="1" step="1" value="1"
+                  style="width:80px;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:18px;font-weight:700;text-align:center;border-radius:4px;">
+              </div>
+            </div>
+            <div style="margin-top:14px;display:flex;align-items:center;gap:12px;">
+              <button class="btn btn-gold btn-sm" onclick="saveEpisodeCounters()">SAVE EPISODE NUMBERS</button>
+              <span id="ep-save-status" style="font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -4686,6 +4718,51 @@ function regenScript() {
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────
+function loadEpisodeCounters() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/episode-counters', true);
+  xhr.timeout = 5000;
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.ok && r.counters) {
+        if (g('ep-twitch')) g('ep-twitch').value = r.counters.twitch || 1;
+        if (g('ep-nba'))    g('ep-nba').value    = r.counters.nba    || 1;
+        if (g('ep-news'))   g('ep-news').value   = r.counters.news   || 1;
+      }
+    } catch(e) {}
+  };
+  xhr.send();
+}
+
+function saveEpisodeCounters() {
+  var twitch = parseInt(g('ep-twitch').value, 10);
+  var nba    = parseInt(g('ep-nba').value,    10);
+  var news   = parseInt(g('ep-news').value,   10);
+  if (!twitch || !nba || !news) return;
+  var statusEl = g('ep-save-status');
+  statusEl.textContent = 'Saving...';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/episode-counters', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 5000;
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.ok) {
+        statusEl.textContent = '✓ Saved — Twitch: ' + r.counters.twitch + ' · NBA: ' + r.counters.nba + ' · News: ' + r.counters.news;
+        statusEl.style.color = '#2ecc71';
+        setTimeout(function(){ statusEl.style.color = 'rgba(255,255,255,0.4)'; }, 3000);
+      } else {
+        statusEl.textContent = '✗ ' + (r.error || 'Failed');
+        statusEl.style.color = '#e74c3c';
+      }
+    } catch(e) { statusEl.textContent = '✗ Error'; statusEl.style.color = '#e74c3c'; }
+  };
+  xhr.onerror = function() { statusEl.textContent = '✗ Network error'; statusEl.style.color = '#e74c3c'; };
+  xhr.send(JSON.stringify({ twitch: twitch, nba: nba, news: news }));
+}
+
 function saveSettings() {
   CFG.hgKey = g('cfg-hg-key').value;
   CFG.avatarId = g('cfg-avatar-id').value;
