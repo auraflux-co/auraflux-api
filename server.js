@@ -3106,20 +3106,29 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       }
     }
 
-    // Step 3: Fall back to play clips (d.videos) — longest duration
-    console.warn(`[nba-scrape] ⚠️ article.video empty — falling back to API play clips (longest duration)`);
-    const videos = summaryData.videos || [];
-
-    if (!videos.length) {
-      // Gate 0 FAIL: Puppeteer failed and API has no videos either
+    // Long-form requires the compiled Game Highlights reel — individual play clips are too short
+    // and don't give Bobby G enough material for voiced narration.
+    if (!isShortFormRequest) {
       return res.json({
         ok: false,
         gate0: 'fail',
-        error: `No videos found for game ${gameId} — video page Puppeteer failed and ESPN API returned empty videos[]. Game may be too recent or too old.`
+        error: `No Game Highlights reel found for game ${gameId} — article.video is empty. ESPN may not have processed the highlights yet. Try again in a few minutes, or pick a different game.`
       });
     }
 
-    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting ${isShortFormRequest ? 'best 30-90s clip for short-form' : 'longest clip for long-form'}`);
+    // Short-form only: fall back to individual play clips (30-90s range preferred)
+    console.warn(`[nba-scrape] ⚠️ article.video empty — falling back to API play clips for short-form`);
+    const videos = summaryData.videos || [];
+
+    if (!videos.length) {
+      return res.json({
+        ok: false,
+        gate0: 'fail',
+        error: `No videos found for game ${gameId} — ESPN API returned empty videos[]. Game may be too recent or too old.`
+      });
+    }
+
+    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting best 30-90s clip for short-form`);
 
     // Step 2: Use full video pool — select best clip based on form type.
     // Long-form: select longest duration (game highlights reel is reliably longest at 115s).
