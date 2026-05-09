@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-05-09 (Cursor — Gemini writes 3 OPTION A/B/C reaction lines per clip in script; episode counter reset to 3 for next Twitch run)
+**Last Updated:** 2026-05-09 (Cursor — fix NBA Gate 1 UNFILLED_SLOTS false positive: strip locked blocks before slot scan; remove [DIALOGUE] literal from NBA TS lock instruction text)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
