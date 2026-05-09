@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-05-09 (Cursor — "Follow + link in description" now only on last clip reaction per streamer)
+**Last Updated:** 2026-05-09 (Cursor — removed isRealTitle filter from Twitch clip fetcher and picker; titles are viewer-created and never used in video)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.

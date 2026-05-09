@@ -3401,12 +3401,11 @@ function generateTwitch() {
         xC.onload=function(){
           try{
             var cd=JSON.parse(xC.responseText);
-            // Fetch all valid clips — server picks first N that resolve via GQL
-            // Extra clips act as backups for deleted/expired ones
-            var realClips=(cd.data||[]).filter(function(c){ return isRealTitle(c.title); });
-            // Prefer unused clips; fall back to used ones if needed to fill the quota
-            var unusedClips = realClips.filter(function(c){ return !isClipUsed(c.url); });
-            var allValidClips = unusedClips.length >= clipsPerStreamer ? unusedClips : realClips;
+            // All clips are valid — titles are viewer-created and never used in the video
+            var allClips=(cd.data||[]);
+            // Prefer unused clips; fall back to all clips if needed to fill the quota
+            var unusedClips = allClips.filter(function(c){ return !isClipUsed(c.url); });
+            var allValidClips = unusedClips.length >= clipsPerStreamer ? unusedClips : allClips;
             var validClips=allValidClips.slice(0, clipsPerStreamer);
             var backupClips=allValidClips.slice(clipsPerStreamer); // all remaining clips as backup
             if(validClips.length >= clipsPerStreamer) {
@@ -6117,9 +6116,9 @@ function previewTwitchClips() {
           try {
             var cd = JSON.parse(xC.responseText);
             var allRaw = (cd.data || []);
-            var realClips = allRaw.filter(function(c){ return isRealTitle(c.title); });
-            var unused = realClips.filter(function(c){ return !isClipUsed(c.url); });
-            var pool = unused.length >= clipsPerStreamer ? unused : realClips;
+            // Titles are viewer-created and never used in the video — no title filter
+            var unused = allRaw.filter(function(c){ return !isClipUsed(c.url); });
+            var pool = unused.length >= clipsPerStreamer ? unused : allRaw;
             entry.clips = pool.slice(0, Math.max(clipsPerStreamer * 2, 6)).map(function(c, ci) {
               return {
                 title: c.title, url: c.url, views: c.view_count || 0,
@@ -6132,7 +6131,7 @@ function previewTwitchClips() {
               var rawCount = allRaw.length;
               entry.dropReason = rawCount === 0
                 ? 'No clips in 48h window'
-                : 'Only ' + realClips.length + '/' + rawCount + ' clips passed title filter (need ' + clipsPerStreamer + ')';
+                : 'Only ' + rawCount + ' clip' + (rawCount === 1 ? '' : 's') + ' in 48h window (need ' + clipsPerStreamer + ')';
               entry.selected = false;
             }
           } catch(e) { entry.dropReason = 'Parse error'; }
