@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-05-09 (Cursor — NBA long-form: Gate 0 hard fail if no game highlights reel; never fall back to individual play clips for long-form)
+**Last Updated:** 2026-05-09 (Cursor — remove script_ready startup auto-send; server restart no longer burns HeyGen credits on pending scripts)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.

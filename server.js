@@ -1210,70 +1210,16 @@ setImmediate(() => {
     console.log(`[startup-resume] Resumed ${resumed} in-flight job(s) (cap: ${MAX_RESUME_POLLERS})`);
   }
 
-  // ── Resume script_ready jobs — Gate 1 passed but HeyGen not yet submitted ──
-  // Handles: server restart after GATE_TEST_MODE was flipped, or any interruption
-  // between Gate 1 pass and HeyGen submission (e.g. HeyGen timeout, process kill).
-  // Jobs reach script_ready via rollback (all_sent → script_ready clears video IDs).
-  // Cap at MAX_RESUME_POLLERS to match all_sent resume and avoid HeyGen flood.
-  const SCRIPT_READY_MAX_AGE_MS = 24 * 60 * 60 * 1000; // only auto-send jobs created in last 24h
-  const scriptReadyCandidates = Object.values(persistedJobs).filter(card => {
+  // ── script_ready jobs: DO NOT auto-send on startup ────────────────────────────
+  // script_ready means Gate 1 passed and the script is waiting for operator review.
+  // Auto-sending on restart burns HeyGen credits without operator approval.
+  // Operator must explicitly click SEND TO HEYGEN in the dashboard.
+  const scriptReadyCount = Object.values(persistedJobs).filter(card => {
     if ((card.status || '') === 'dismissed') return false;
-    const stage = card.stage || inferJobStage(card);
-    if (stage !== 'script_ready') return false;
-    const script = card.script?.raw || card.script;
-    if (!script || (typeof script === 'string' && script.length < 10)) return false;
-    // Must have a script but no HeyGen video IDs
-    const videoJobs = card.heygen?.videoJobs || [];
-    if (videoJobs.length > 0) return false;
-    // Skip stale jobs — only auto-send recent jobs to avoid burning credits on old queue items
-    const createdAt = card.createdAt ? new Date(card.createdAt).getTime() : 0;
-    if (createdAt && (Date.now() - createdAt) > SCRIPT_READY_MAX_AGE_MS) return false;
-    return true;
-  });
-
-  if (scriptReadyCandidates.length > 0) {
-    const MAX_SCRIPT_READY_RESUME = MAX_RESUME_POLLERS;
-    console.log(`[startup-resume] ${scriptReadyCandidates.length} script_ready job(s) found — auto-sending to HeyGen (cap: ${MAX_SCRIPT_READY_RESUME})`);
-    const toResumeScriptReady = scriptReadyCandidates.slice(0, MAX_SCRIPT_READY_RESUME);
-
-    // Use async IIFE — setImmediate callback is not async so await requires this wrapper
-    (async () => { for (const card of toResumeScriptReady) {
-      const jobId = card.jobId || card.id || card.scriptJobId;
-      if (!jobId) { console.warn('[startup-resume:script_ready] Card has no jobId — skipping'); continue; }
-      const contentType = card.contentType || 'twitch';
-      const script = card.script?.raw || (typeof card.script === 'string' ? card.script : null);
-      if (!script) { console.warn(`[startup-resume:${jobId}] No script found in card — skipping`); continue; }
-
-      try {
-        const format = contentType.includes('-short') ? 'portrait' : 'landscape';
-        console.log(`[startup-resume:${jobId}] Sending to HeyGen (${contentType}, ${format})`);
-        const heygenResult = await sendScriptToHeyGen(script, { contentType, format, jobId });
-        if (heygenResult?.videoJobs?.length) {
-          card.heygen = heygenResult;
-          const useManualImmediate = useC0ImmediateManualHold(card);
-          if (useManualImmediate) {
-            const prep = await prepareC0ManualHoldAfterHeyGen(jobId, card);
-            card.stage = 'awaiting_manual_segments';
-            card.manualSegments = prep.manualSegments;
-            saveJobCard(jobId, card);
-            console.log(
-              `[startup-resume:${jobId}] ✅ c0 immediate manual hold (${heygenResult.videoJobs.length} scenes sent, no poll) — ${prep.manualSegments.manualDir}`
-            );
-          } else {
-            card.stage = 'all_sent';
-            saveJobCard(jobId, card);
-            console.log(`[startup-resume:${jobId}] ✅ Sent ${heygenResult.videoJobs.length} scenes to HeyGen`);
-            startHeyGenPoller(jobId, card).catch(e => {
-              console.error(`[startup-resume:${jobId}] Poller error: ${e.message}`);
-            });
-          }
-        } else {
-          console.warn(`[startup-resume:${jobId}] HeyGen returned no videoJobs — skipping poller start`);
-        }
-      } catch(e) {
-        console.error(`[startup-resume:${jobId}] HeyGen send failed: ${e.message}`);
-      }
-    } })().catch(e => console.error('[startup-resume:script_ready] Async error:', e.message));
+    return (card.stage || inferJobStage(card)) === 'script_ready';
+  }).length;
+  if (scriptReadyCount > 0) {
+    console.log(`[startup-resume] ${scriptReadyCount} script_ready job(s) found — NOT auto-sending (operator must click SEND TO HEYGEN)`);
   }
 });
 
