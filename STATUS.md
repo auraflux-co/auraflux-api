@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-05-09 (Cursor — fix NBA Gate 1 UNFILLED_SLOTS false positive: strip locked blocks before slot scan; remove [DIALOGUE] literal from NBA TS lock instruction text)
+**Last Updated:** 2026-05-09 (Cursor — NBA: raise long-form min clip duration 10s→30s; improve Gemini timestamp table prompt for denser play-by-play grounding)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.

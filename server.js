@@ -3057,9 +3057,9 @@ app.get('/nba/game-clips/:gameId', async (req, res) => {
 app.post('/nba/scrape-game-highlight', async (req, res) => {
   const { gameId, formType } = req.body;
   if (!gameId) return res.status(400).json({ error: 'gameId required' });
-  // Short-form clips need 30-90s for split-screen. Long-form uses any duration ≥ 10s.
+  // Short-form clips need 30-90s for split-screen. Long-form needs ≥ 30s for narration value.
   const isShortFormRequest = formType === 'short';
-  const minDurationSecs = isShortFormRequest ? 30 : 10;
+  const minDurationSecs = isShortFormRequest ? 30 : 30;
   const maxDurationSecs = isShortFormRequest ? 90 : null;
 
   try {
