@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-05-08 (Cursor — sidebar+flag hidden during source_clip segments, visible during Bobby G avatar segments only)
+**Last Updated:** 2026-05-08 (Cursor — thumbnail date/episode fix: drawbox hardcoded x, correct PNG background, episode_counters.json created)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
