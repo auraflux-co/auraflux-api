@@ -1935,25 +1935,42 @@ app.get('/jobs', (req, res) => {
   res.json({ ok: true, count: jobsWithGateStatus.length, jobs: jobsWithGateStatus });
 });
 
-// DELETE /job/:id — remove a job from persistedJobs + jobs.json
+// DELETE /job/:id — remove a job from persistedJobs + jobs.json AND kill any active work
 // Called by dashboard clearAllJobs() and clearDone() so cleared jobs don't reappear on restore
 app.delete('/job/:id', (req, res) => {
   const jobId = req.params.id;
   if (!persistedJobs[jobId]) return res.json({ ok: false, error: 'Job not found: ' + jobId });
+
+  // 1. Stop active HeyGen poller for this job (prevents further polling / credit use)
+  if (activePollers.has(jobId)) {
+    unregisterPoller(jobId);
+    console.log(`[jobs] Killed active HeyGen poller for: ${jobId}`);
+  }
+
+  // 2. Mark any running assembly jobs for this job as cancelled
+  Object.keys(assemblyJobs).forEach(asmId => {
+    if (assemblyJobs[asmId]?.sourceJobId === jobId) {
+      assemblyJobs[asmId].status = 'cancelled';
+      console.log(`[jobs] Cancelled assembly job ${asmId} for: ${jobId}`);
+    }
+  });
+
+  // 3. Remove from persisted state
   delete persistedJobs[jobId];
-  // Write to jobs.json
   try {
     fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
   } catch(e) {
     console.error('[jobs] Failed to save jobs.json after delete:', e.message);
   }
-  // Also delete from SQLite DB so job doesn't reappear on server restart
+
+  // 4. Delete from SQLite DB so job doesn't reappear on server restart
   try {
     const { deleteJob } = require('./lib/db');
     if (typeof deleteJob === 'function') deleteJob(jobId);
   } catch(e) {
     // DB delete is best-effort — non-fatal
   }
+
   console.log(`[jobs] Deleted job: ${jobId}`);
   res.json({ ok: true, deleted: jobId });
 });
