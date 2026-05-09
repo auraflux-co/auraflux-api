@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-05-09 (Cursor — Episode Numbers tab in Settings: dashboard controls for Twitch/NBA/News episode counters; GET+POST /episode-counters)
+**Last Updated:** 2026-05-09 (Cursor — fix NBA source_clip missing from manual hold manifest; streamer-key fallback to sequential index for hasClipInsert scenes)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
