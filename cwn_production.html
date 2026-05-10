@@ -269,7 +269,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           </div>
           <div class="card-body">
             <div class="field"><label>STREAMERS (top clips from each)</label>
-              <textarea id="twitch-streamers" style="min-height:60px" onchange="saveStreamerList()" oninput="saveStreamerList()">jasontheween, hasanabi, adapt, stableronaldo, lacy, marlon, cinna, yonnajay, jaycinco, maya</textarea>
+              <textarea id="twitch-streamers" style="min-height:60px" onchange="saveStreamerList()" oninput="saveStreamerList()">jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming</textarea>
               <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
             </div>
             <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
@@ -290,8 +290,12 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               </select>
               <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:8px;">(applies to this generation)</span>
             </div>
+            <!-- Twitch inline clip picker -->
+            <div id="twitch-inline-picker" style="display:none;margin-bottom:10px;border:1px solid rgba(199,175,79,0.2);border-radius:6px;padding:10px;background:#060a12;"></div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;margin-bottom:8px;" id="twitch-fetch-status"></div>
             <div class="btn-row">
-              <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitch()">LONG FORM</button>
+              <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">PICK CLIPS</button>
+              <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitchWithPicker()">LONG FORM</button>
               <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ openTwitchShortClipPicker(platforms); })">SHORT</button>
             </div>
           </div>
@@ -379,15 +383,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="card"><div class="card-body">
         <div class="field"><label>YOUR STREAMERS</label>
           <textarea style="min-height:80px" id="twitch-config-streamers">jasontheween
-hasanabi
 adapt
-stableronaldo
-lacy
 marlon
+extraemily
+stableronaldo
+maya
 cinna
 yonnajay
 jaycinco
-maya</textarea>
+lacy
+hasanabi
+yourragegaming</textarea>
         </div>
         <div class="field"><label>STREAMER NOTES <span style="font-size:9px;color:rgba(255,255,255,0.35);font-weight:400;">(one per line: name: pronoun, context)</span></label>
           <textarea id="twitch-streamer-notes" style="min-height:100px;font-family:monospace;font-size:11px;">jasontheween: he/him
@@ -825,6 +831,7 @@ maya: she/her</textarea>
         <button class="tab-btn" onclick="switchTab('twitch-cfg')">TWITCH</button>
         <button class="tab-btn" onclick="switchTab('ffmpeg-cfg')">FFMPEG SERVER</button>
         <button class="tab-btn" onclick="switchTab('schedule-cfg')">SCHEDULE</button>
+        <button class="tab-btn" onclick="switchTab('episode-cfg');loadEpisodeCounters()">EPISODES</button>
       </div>
 
       <div class="tab-pane active" id="tab-heygen">
@@ -1034,6 +1041,37 @@ https://www.youtube.com/watch?v=j4vcHuc3VzI</textarea>
             <div class="field"><label>LONG FORM POST TIME</label><input id="cfg-longform-time" value="10:30 AM ET"></div>
             <div class="field"><label>SHORTS POST TIME</label><input id="cfg-shorts-time" value="5:00 PM ET"></div>
             <div class="field"><label>PRODUCTION DEADLINE</label><input id="cfg-deadline" value="10:00 AM ET"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="tab-episode-cfg">
+        <div class="card"><div class="card-header"><div class="card-title">EPISODE NUMBERS</div></div>
+          <div class="card-body">
+            <div class="alert alert-info" style="margin-bottom:14px;font-size:11px;">
+              Set the <strong>next</strong> episode number for each show. This number appears in the top-right flag overlay and custom thumbnail. After each episode airs, the counter auto-increments. You can override here any time.
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:480px;">
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">TWITCH SOUP</div>
+                <input id="ep-twitch" type="number" min="1" step="1" value="1"
+                  style="width:80px;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:18px;font-weight:700;text-align:center;border-radius:4px;">
+              </div>
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">OTHER SIDE</div>
+                <input id="ep-nba" type="number" min="1" step="1" value="1"
+                  style="width:80px;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:18px;font-weight:700;text-align:center;border-radius:4px;">
+              </div>
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">BECAUSE THE LIGHT</div>
+                <input id="ep-news" type="number" min="1" step="1" value="1"
+                  style="width:80px;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:18px;font-weight:700;text-align:center;border-radius:4px;">
+              </div>
+            </div>
+            <div style="margin-top:14px;display:flex;align-items:center;gap:12px;">
+              <button class="btn btn-gold btn-sm" onclick="saveEpisodeCounters()">SAVE EPISODE NUMBERS</button>
+              <span id="ep-save-status" style="font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -1716,32 +1754,6 @@ function triggerGate5(job) {
 
       if (qaEl) qaEl.innerHTML = html;
 
-      // ── Auto-advance: Gate 5 PASS → generate publish copy → approveAndUpload ──
-      // Per GATED_PIPELINE_ARCHITECTURE.md Stage 5 → Stage 6 → Stage 7:
-      // Stage 5 PASS sets status='publishable' and Stage 6 (Drive + Upload-Post)
-      // is pure-code automation. The only human checkpoint is Stage 7 (Rob
-      // reviewing drafts on YouTube/TikTok/IG themselves — NOT in the dashboard).
-      // Any button here is a regression against the spec's "full automation
-      // runs without manual intervention" definition of done.
-      if (result.score >= 85 && !job._autoPublishFired) {
-        job._autoPublishFired = true;
-        var approvalEl = document.getElementById('gate3-approval-' + job.id);
-        if (approvalEl) {
-          approvalEl.style.display = '';
-          approvalEl.innerHTML = '<div style="margin-top:8px;padding:10px 12px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.4);border-radius:4px;">'
-            + '<div style="font-size:9px;letter-spacing:2px;color:#2ecc71;font-weight:900;margin-bottom:6px;">✅ GATE 5 PASS — AUTO-PUBLISHING</div>'
-            + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;">Gate 5 passed (' + result.score + '/100). Generating publish copy → Upload-Post → YouTube/TikTok/IG as private draft.</div>'
-            + '<div id="gate3-upload-status-' + job.id + '" style="margin-top:6px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);">⏳ Generating title, description, and hashtags...</div>'
-            + '<button onclick="rejectJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="margin-top:6px;border-color:rgba(231,76,60,0.5);color:#e74c3c;">❌ REJECT — STOP AUTO-PUBLISH</button>'
-            + '</div>';
-        }
-        cwn_log('[auto-advance] Gate 5 PASS (' + result.score + '/100) — auto-generating publish copy then firing Upload-Post', false);
-        console.log('[auto-advance] Gate 5 → autoGeneratePublishPrep → approveAndUpload');
-        setTimeout(function(){
-          try { autoGeneratePublishPrep(job.id); } catch(e) { console.error('[auto-advance] autoGeneratePublishPrep threw:', e); }
-        }, 1500);
-      }
-
       renderQueue();
     } catch(e) {
       job._gate5Running = false;
@@ -2142,10 +2154,13 @@ function restoreJobsFromServer(showAlert) {
           return;
         }
 
+        // gate5_forced / gate5_running — Gate 5 is actively uploading; restore and poll.
+        var isGate5InFlight = (serverStage === 'gate5_forced' || serverStage === 'gate5_running');
+
         // On AUTO-restore (page load), skip assembled jobs too — they are done and awaiting manual publish.
-        // On MANUAL restore (operator clicked ↩ RESTORE JOBS), allow assembled jobs to come back
-        // so the operator can re-trigger publish if needed.
-        var isAssembledDone = !!(serverJob.assembledAt || serverStage === 'assembled');
+        // On MANUAL restore (operator clicked ↩ RESTORE JOBS), allow assembled jobs to come back.
+        // Always restore gate5_in_flight jobs so the dashboard shows upload progress.
+        var isAssembledDone = !isGate5InFlight && !!(serverJob.assembledAt || serverStage === 'assembled');
         if (isAssembledDone && !showAlert) {
           cwn_log('[restore] Skipping assembled job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS to bring it back', false);
           return;
@@ -2193,6 +2208,12 @@ function restoreJobsFromServer(showAlert) {
         JOBS.push(restoredJob);
         existingIds[serverJob.jobId] = true;
         added++;
+
+        // If Gate 5 is actively uploading, start polling so the card auto-updates to "published".
+        if (isGate5InFlight) {
+          cwn_log('[restore] ' + serverJob.jobId + ' Gate 5 in-flight — polling for published status.', false);
+          (function(jid){ setTimeout(function(){ _pollForPublished(jid); }, 3000); })(serverJob.jobId);
+        }
       });
 
       if (added > 0) {
@@ -2270,8 +2291,9 @@ function renderQueue() {
     pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
     pipe += pipeStep('FFMPEG', !!job.assembledAt, !!(status==='all_sent'&&doneSegs.length>0&&!job.assembledAt), '#e67e22');
     pipe += pipeStep('GATE 5 QA', !!(job.gate5&&job.gate5.score>=85), !!(job.assembledAt&&!job.gate5), '#3498db');
-    pipe += pipeStep('GATE 3 APPROVE', !!(job._gate3Approved), !!(job.gate5&&job.gate5.score>=85&&!job._gate3Approved&&!job._gate3Rejected), '#c7af4f');
-    pipe += pipeStep('PUBLISHED', !!(job.publishRecord&&job.publishRecord.gate4==='pass'), !!(job._gate3Approved&&!(job.publishRecord&&job.publishRecord.gate4==='pass')), '#27ae60');
+    var isGate5Running = !!(job.stage === 'gate5_forced' || job.stage === 'gate5_running');
+    pipe += pipeStep('UPLOAD-POST', isGate5Running, !!(job.gate5&&!isGate5Running&&job.stage!=='published'), '#c7af4f');
+    pipe += pipeStep('PUBLISHED', !!(job.stage==='published'||!!(job.publishRecord&&job.publishRecord.gate4==='pass')), isGate5Running, '#27ae60');
     pipe += '</div>';
 
     // PLATFORM STATUS
@@ -2391,7 +2413,7 @@ function renderQueue() {
       +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+'<div id="gate3-approval-'+job.id+'" style="display:'+(job._gate3Approved||job._gate3Rejected?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
+      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -2682,14 +2704,17 @@ function advanceJob(jobId) {
           // Mark all avatar segments as completed so ASSEMBLE button appears
           (job.segments||[]).forEach(function(s){ if(s.type==='avatar' && !s.url){ s.status='completed'; s.url='forced'; } });
         }
-        if (resp.before === 'assembled') {
-          job._gate5Done = true;
-          if (!job.gate5) job.gate5 = { score: 100, outcome: 'force_passed', _forced: true };
-        }
         saveJobs();
       }
       restoreJobsFromServer(false);
-      alert('✅ Force-advanced: ' + resp.before + ' → ' + resp.after + '\n\n' + (resp.message || ''));
+      if (resp.after === 'gate5_forced') {
+        // Gate 5 is already running server-side (advance endpoint triggers it automatically).
+        // Show a non-blocking notice; polling will pick up the stage change when published.
+        cwn_log('[advance] ' + jobId + ': Gate 5 triggered — upload in progress. Polling for published status.', false);
+        _pollForPublished(jobId);
+      } else {
+        alert('✅ Force-advanced: ' + resp.before + ' → ' + resp.after + '\n\n' + (resp.message || ''));
+      }
     } catch(e) {
       cwn_log('[advance] Error: ' + e.message, true);
       alert('❌ Force-advance failed: ' + e.message);
@@ -2700,6 +2725,48 @@ function advanceJob(jobId) {
     alert('❌ Server unreachable — is server.js running?');
   };
   xhr.send(JSON.stringify({}));
+}
+
+// Polls server every 10 s until the job stage becomes 'published' or 'gate5_failed'.
+// Used after Gate 5 is triggered via force-advance so the dashboard auto-refreshes
+// without Rob needing to click ↩ RESTORE JOBS.
+function _pollForPublished(jobId) {
+  var attempts = 0;
+  var maxAttempts = 36; // 6 minutes total
+  function check() {
+    attempts++;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', CFG.ffmpegUrl + '/jobs', true);
+    xhr.timeout = 10000;
+    xhr.onload = function() {
+      try {
+        var resp = JSON.parse(xhr.responseText);
+        var serverJob = (resp.jobs || []).find(function(j){ return j.jobId === jobId; });
+        if (!serverJob) return;
+        var stage = serverJob.stage || '';
+        if (stage === 'published') {
+          cwn_log('[gate5] ' + jobId + ' published ✅ — refreshing queue.', false);
+          restoreJobsFromServer(false);
+          renderQueue();
+        } else if (stage === 'gate5_failed') {
+          cwn_log('[gate5] ' + jobId + ': Gate 5 FAILED. Check server logs for details.', true);
+          restoreJobsFromServer(false);
+          renderQueue();
+        } else if (attempts < maxAttempts) {
+          setTimeout(check, 10000);
+        } else {
+          cwn_log('[gate5] ' + jobId + ': still not published after ' + maxAttempts + ' polls — stopping. Click ↩ RESTORE JOBS to check.', true);
+        }
+      } catch(_e) {
+        if (attempts < maxAttempts) setTimeout(check, 10000);
+      }
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+      if (attempts < maxAttempts) setTimeout(check, 10000);
+    };
+    xhr.send();
+  }
+  setTimeout(check, 5000); // first check after 5 s
 }
 
 function dismissJob(jobId) {
@@ -3054,9 +3121,11 @@ var SCRIPTS = {
 
 function isRealTitle(title) {
   if (!title) return false;
-  var words = title.trim().split(/\s+/);
-  var realWords = words.filter(function(w){ return w.length > 2 && /[aeiou]/i.test(w); });
-  return realWords.length >= 2;
+  var t = title.trim();
+  if (t.length < 2) return false;
+  // At least 1 word with a vowel (handles single-word titles like "gangsta")
+  var words = t.split(/\s+/);
+  return words.some(function(w){ return w.length >= 2 && /[aeiou]/i.test(w); });
 }
 
 // ── GENERATE ACTIONS ──────────────────────────────────────────────
@@ -3393,11 +3462,11 @@ function generateTwitch() {
         xC.onload=function(){
           try{
             var cd=JSON.parse(xC.responseText);
-            // Fetch all valid clips — server picks first N that resolve via GQL
-            // Extra clips act as backups for deleted/expired ones
-            var allValidClips=(cd.data||[]).filter(function(c){
-              return isRealTitle(c.title) && !isClipUsed(c.url);
-            });
+            // All clips are valid — titles are viewer-created and never used in the video
+            var allClips=(cd.data||[]);
+            // Prefer unused clips; fall back to all clips if needed to fill the quota
+            var unusedClips = allClips.filter(function(c){ return !isClipUsed(c.url); });
+            var allValidClips = unusedClips.length >= clipsPerStreamer ? unusedClips : allClips;
             var validClips=allValidClips.slice(0, clipsPerStreamer);
             var backupClips=allValidClips.slice(clipsPerStreamer); // all remaining clips as backup
             if(validClips.length >= clipsPerStreamer) {
@@ -3405,10 +3474,10 @@ function generateTwitch() {
               // Send only the requested clips — backups stay client-side for GQL fallback
               var allClipsToSend = validClips;
               var DISPLAY_NAMES = {
-                'jasontheween':'Jason','hasanabi':'Hasan','adapt':'Adapt',
+                'jasontheween':'Jason','hasanabi':'Hasan','hasanbi':'Hasan','adapt':'Adapt',
                 'stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon',
                 'cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya',
-                'extraemily':'ExtraEmily','yourragegaming':'Rage'
+                'extraemily':'ExtraEmily','yourragegaming':'Rage','yourrage':'Rage'
               };
               var displayName = DISPLAY_NAMES[nameKey] || user.display_name;
               items.push({
@@ -3438,10 +3507,10 @@ function generateTwitch() {
             } else {
               var rawCount = (cd.data || []).length;
               var reason = rawCount === 0
-                ? 'No clips in 7d window'
-                : 'All ' + rawCount + ' clips had invalid titles (filtered by isRealTitle)';
+                ? 'No clips in 48h window'
+                : 'Only ' + realClips.length + '/' + rawCount + ' clips passed title filter (need ' + clipsPerStreamer + ')';
               droppedStreamers.push({name: name, reason: reason});
-              CURRENT_META.clipFailureReasons[name] = { cause: rawCount === 0 ? 'TWITCH_API_EMPTY' : 'NO_CLIPS_AFTER_FILTERING', evidence: reason };
+              CURRENT_META.clipFailureReasons[name] = { cause: rawCount === 0 ? 'TWITCH_API_EMPTY' : 'INSUFFICIENT_CLIPS', evidence: reason };
               console.warn('[generateTwitch] DROPPED: ' + name + ' — ' + reason);
             }
           }catch(e){}
@@ -4678,6 +4747,51 @@ function regenScript() {
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────
+function loadEpisodeCounters() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/episode-counters', true);
+  xhr.timeout = 5000;
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.ok && r.counters) {
+        if (g('ep-twitch')) g('ep-twitch').value = r.counters.twitch || 1;
+        if (g('ep-nba'))    g('ep-nba').value    = r.counters.nba    || 1;
+        if (g('ep-news'))   g('ep-news').value   = r.counters.news   || 1;
+      }
+    } catch(e) {}
+  };
+  xhr.send();
+}
+
+function saveEpisodeCounters() {
+  var twitch = parseInt(g('ep-twitch').value, 10);
+  var nba    = parseInt(g('ep-nba').value,    10);
+  var news   = parseInt(g('ep-news').value,   10);
+  if (!twitch || !nba || !news) return;
+  var statusEl = g('ep-save-status');
+  statusEl.textContent = 'Saving...';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/episode-counters', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 5000;
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.ok) {
+        statusEl.textContent = '✓ Saved — Twitch: ' + r.counters.twitch + ' · NBA: ' + r.counters.nba + ' · News: ' + r.counters.news;
+        statusEl.style.color = '#2ecc71';
+        setTimeout(function(){ statusEl.style.color = 'rgba(255,255,255,0.4)'; }, 3000);
+      } else {
+        statusEl.textContent = '✗ ' + (r.error || 'Failed');
+        statusEl.style.color = '#e74c3c';
+      }
+    } catch(e) { statusEl.textContent = '✗ Error'; statusEl.style.color = '#e74c3c'; }
+  };
+  xhr.onerror = function() { statusEl.textContent = '✗ Network error'; statusEl.style.color = '#e74c3c'; };
+  xhr.send(JSON.stringify({ twitch: twitch, nba: nba, news: news }));
+}
+
 function saveSettings() {
   CFG.hgKey = g('cfg-hg-key').value;
   CFG.avatarId = g('cfg-avatar-id').value;
@@ -4716,7 +4830,7 @@ function buildCalendar() {
     items.push({cls:'nba',lbl:'NBA Compilation 10:30AM'});
     items.push({cls:'news',lbl:'News Compilation 10:45AM'});
     items.push({cls:'twitch',lbl:'Twitch Compilation 11:00AM'});
-    var twitchStreamers=['jasontheween','hasanabi','adapt','stableronaldo','lacy','marlon','cinna','yonnajay','jaycinco','maya'];
+    var twitchStreamers=['jasontheween','adapt','marlon','extraemily','stableronaldo','maya','cinna','yonnajay','jaycinco','lacy','hasanabi','yourragegaming'];
     items.push({cls:'short',lbl:'Twitch Short: '+twitchStreamers[i%twitchStreamers.length]+' 5PM'});
     if (i%2===0) items.push({cls:'short',lbl:'News Short: Iran/Trump 6PM'});
     if (i%3===0) items.push({cls:'short',lbl:'NBA Short: Top Scorer 7PM'});
@@ -5316,7 +5430,7 @@ function generateShort(type, platforms) {
     if (!streamers.length) { unlockGenerateButtons(); g('script-type-label').textContent='TWITCH SHORT -- no streamers configured'; return; }
     var notes = parseStreamerNotes ? parseStreamerNotes() : {};
     var since = new Date(Date.now() - 86400000 * 2).toISOString(); // 48h window
-    var SMAP = {'jasontheween':'Jason','hasanabi':'Hasan','adapt':'Adapt','stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon','cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya','extraemily':'ExtraEmily','yourragegaming':'Rage'};
+    var SMAP = {'jasontheween':'Jason','adapt':'Adapt','marlon':'Marlon','extraemily':'ExtraEmily','stableronaldo':'Ron','maya':'Maya','cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','lacy':'Lacy','hasanabi':'Hasan','yourragegaming':'Rage'};
     var allCandidates = []; // {streamer, displayName, notes, clip}
     var pending = streamers.length;
 
@@ -5706,6 +5820,7 @@ function nbaUseSelected() {} // legacy stub — no longer used
 // State for main-page pickers
 var _nbaPickerGames = [];   // [{gameId, away, home, awayAbbr, homeAbbr, awayScore, homeScore, clipUrl, clipDuration, thumbnail, localPath, selected}]
 var _newsPickerStories = []; // [{title, link, videoUrl, hlsUrl, thumbnailUrl, orientation, pillarboxFilter, pubDate, selected}]
+var _twitchPickerStreamers = []; // [{name, displayName, selected, clips:[{title,url,views,game,thumbnailUrl,mp4Url,isBackup}], dropReason}]
 
 // ── NBA inline clip picker ─────────────────────────────────────────────────────
 
@@ -6058,6 +6173,248 @@ var _origGenerateNews = null;
   };
 })();
 
+// ── Twitch inline clip picker ─────────────────────────────────────────────────
+
+var TWITCH_PICKER_DISPLAY_NAMES = {
+  'jasontheween':'Jason','hasanabi':'Hasan','hasanbi':'Hasan','adapt':'Adapt',
+  'stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon','cinna':'Cinna',
+  'yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya',
+  'extraemily':'ExtraEmily','yourragegaming':'Rage','yourrage':'Rage'
+};
+
+function previewTwitchClips() {
+  var btn = g('btn-preview-twitch');
+  var picker = g('twitch-inline-picker');
+  // Toggle: if already open with data, hide it
+  if (picker.style.display !== 'none' && _twitchPickerStreamers.length > 0) {
+    picker.style.display = 'none';
+    btn.textContent = 'PICK CLIPS';
+    return;
+  }
+  btn.textContent = 'FETCHING...'; btn.disabled = true;
+  _twitchPickerStreamers = [];
+  var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
+  var fetchWindow = Math.max(clipsPerStreamer * 6, 24);
+  var done = 0;
+  var since = new Date(Date.now() - 86400000 * 2).toISOString();
+
+  streamers.forEach(function(name) {
+    var entry = { name: name, displayName: TWITCH_PICKER_DISPLAY_NAMES[name] || name, selected: true, clips: [], dropReason: null };
+    _twitchPickerStreamers.push(entry);
+
+    var xU = new XMLHttpRequest();
+    xU.open('GET', 'https://api.twitch.tv/helix/users?login=' + name, true);
+    xU.setRequestHeader('Client-Id', CFG.twitchId);
+    xU.setRequestHeader('Authorization', 'Bearer ' + CFG.twitchToken);
+    xU.timeout = 8000;
+    xU.onload = function() {
+      try {
+        var u = JSON.parse(xU.responseText); var user = u.data && u.data[0];
+        if (!user) { entry.dropReason = 'Twitch user not found'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); return; }
+        entry.userId = user.id; entry.displayName = TWITCH_PICKER_DISPLAY_NAMES[name] || user.display_name;
+        var xC = new XMLHttpRequest();
+        xC.open('GET', 'https://api.twitch.tv/helix/clips?broadcaster_id=' + user.id + '&first=' + fetchWindow + '&started_at=' + since, true);
+        xC.setRequestHeader('Client-Id', CFG.twitchId);
+        xC.setRequestHeader('Authorization', 'Bearer ' + CFG.twitchToken);
+        xC.timeout = 8000;
+        xC.onload = function() {
+          try {
+            var cd = JSON.parse(xC.responseText);
+            var allRaw = (cd.data || []);
+            // Titles are viewer-created and never used in the video — no title filter
+            var unused = allRaw.filter(function(c){ return !isClipUsed(c.url); });
+            var pool = unused.length >= clipsPerStreamer ? unused : allRaw;
+            entry.clips = pool.slice(0, Math.max(clipsPerStreamer * 2, 6)).map(function(c, ci) {
+              return {
+                title: c.title, url: c.url, views: c.view_count || 0,
+                game: c.game_name || '', thumbnailUrl: c.thumbnail_url || '',
+                duration: c.duration || 0, isUsed: isClipUsed(c.url),
+                selected: ci < clipsPerStreamer  // default: first N selected
+              };
+            });
+            if (pool.length < clipsPerStreamer) {
+              var rawCount = allRaw.length;
+              entry.dropReason = rawCount === 0
+                ? 'No clips in 48h window'
+                : 'Only ' + rawCount + ' clip' + (rawCount === 1 ? '' : 's') + ' in 48h window (need ' + clipsPerStreamer + ')';
+              entry.selected = false;
+            }
+          } catch(e) { entry.dropReason = 'Parse error'; }
+          done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length);
+        };
+        xC.onerror = xC.ontimeout = function() { entry.dropReason = 'Clips API timeout'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); };
+        xC.send();
+      } catch(e) { entry.dropReason = 'Error: ' + e.message; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); }
+    };
+    xU.onerror = xU.ontimeout = function() { entry.dropReason = 'User API timeout'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); };
+    xU.send();
+  });
+}
+
+function renderTwitchPickerWhenDone(btn, clipsPerStreamer, total) {
+  // Update status while loading
+  var loaded = _twitchPickerStreamers.filter(function(e){ return e.clips.length > 0 || e.dropReason; }).length;
+  var statusEl = g('twitch-fetch-status');
+  if (statusEl) statusEl.textContent = 'Fetching... ' + loaded + '/' + total;
+  if (loaded < total) return; // still waiting on others
+  renderTwitchPicker(btn, clipsPerStreamer);
+}
+
+function renderTwitchPicker(btn, clipsPerStreamer) {
+  btn.textContent = 'HIDE PICKER'; btn.disabled = false;
+  var ok = _twitchPickerStreamers.filter(function(e){ return !e.dropReason; }).length;
+  var total = _twitchPickerStreamers.length;
+  var statusEl = g('twitch-fetch-status');
+  if (statusEl) statusEl.textContent = ok + '/' + total + ' streamers have clips';
+  var picker = g('twitch-inline-picker');
+
+  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:8px;letter-spacing:1px;">'
+    + 'SELECT STREAMERS — UNCHECK TO EXCLUDE — ' + ok + '/' + total + ' HAVE CLIPS'
+    + '</div>';
+
+  _twitchPickerStreamers.forEach(function(entry, si) {
+    var hasClips = entry.clips.length >= clipsPerStreamer && !entry.dropReason;
+    var isDropped = !!entry.dropReason;
+    var borderColor = isDropped ? 'rgba(255,60,60,0.2)' : 'rgba(255,255,255,0.05)';
+    var nameColor = isDropped ? 'rgba(255,80,80,0.7)' : '#fff';
+
+    html += '<div style="border-bottom:1px solid ' + borderColor + ';padding:8px 4px;">';
+    // Header row: checkbox + name + clip count + drop reason
+    html += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:' + (hasClips ? '6' : '0') + 'px;">'
+      + '<input type="checkbox" id="tpick-' + si + '" ' + (entry.selected && !isDropped ? 'checked' : '') + (isDropped ? ' disabled' : '')
+      + ' onchange="_twitchPickerStreamers[' + si + '].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;">'
+      + '<span style="font-weight:700;font-family:Barlow Condensed,sans-serif;font-size:14px;color:' + nameColor + ';min-width:90px;">'
+      + entry.displayName + '</span>';
+
+    if (isDropped) {
+      html += '<span style="font-size:10px;color:rgba(255,80,80,0.7);font-family:monospace;">✗ ' + entry.dropReason + '</span>';
+    } else {
+      var clipCount = entry.clips.filter(function(c){ return c.selected; }).length;
+      html += '<span style="font-size:10px;color:rgba(46,204,113,0.8);font-family:monospace;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);padding:1px 8px;border-radius:8px;">'
+        + clipCount + ' clip' + (clipCount !== 1 ? 's' : '') + ' selected</span>';
+    }
+    html += '</label>';
+
+    // Clip cards row
+    if (entry.clips.length > 0) {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;padding-left:24px;">';
+      entry.clips.forEach(function(clip, ci) {
+        var isSelected = clip.selected;
+        var cardBorder = isSelected ? 'rgba(199,175,79,0.5)' : 'rgba(255,255,255,0.1)';
+        var cardBg = isSelected ? 'rgba(199,175,79,0.05)' : 'rgba(255,255,255,0.02)';
+        var thumb = clip.thumbnailUrl
+          ? clip.thumbnailUrl.replace('{width}', '160').replace('{height}', '90')
+          : '';
+        var views = clip.views >= 1000 ? (clip.views / 1000).toFixed(1) + 'K' : clip.views;
+        var usedBadge = clip.isUsed ? '<span style="font-size:8px;background:rgba(255,165,0,0.2);color:rgba(255,165,0,0.8);padding:1px 4px;border-radius:3px;margin-left:4px;">USED</span>' : '';
+        var rankLabel = ci < clipsPerStreamer ? 'PRIMARY' : 'BACKUP';
+        var rankColor = ci < clipsPerStreamer ? 'rgba(199,175,79,0.7)' : 'rgba(255,255,255,0.25)';
+
+        html += '<div onclick="_toggleTwitchClip(' + si + ',' + ci + ')" style="cursor:pointer;width:155px;border:1px solid ' + cardBorder + ';border-radius:5px;background:' + cardBg + ';padding:4px;transition:all 0.15s;">';
+        if (thumb) {
+          html += '<img src="' + thumb + '" style="width:100%;height:55px;object-fit:cover;border-radius:3px;margin-bottom:4px;" onerror="this.style.display=\'none\'">';
+        } else {
+          html += '<div style="width:100%;height:55px;background:rgba(255,255,255,0.05);border-radius:3px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.2);font-size:10px;">NO THUMB</span></div>';
+        }
+        html += '<div style="font-size:9px;color:rgba(255,255,255,0.6);line-height:1.3;margin-bottom:3px;max-height:32px;overflow:hidden;">' + (clip.title || '').slice(0, 60) + '</div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;">'
+          + '<span style="font-size:8px;color:rgba(255,255,255,0.3);">' + views + ' views</span>'
+          + usedBadge
+          + '<span style="font-size:8px;color:' + rankColor + ';font-family:monospace;font-weight:700;">' + rankLabel + '</span>'
+          + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  picker.innerHTML = html;
+  picker.style.display = '';
+}
+
+function _toggleTwitchClip(si, ci) {
+  if (!_twitchPickerStreamers[si]) return;
+  var clip = _twitchPickerStreamers[si].clips[ci];
+  if (!clip) return;
+  clip.selected = !clip.selected;
+  // Sync streamer-level selected to true if any clip is selected
+  _twitchPickerStreamers[si].selected = _twitchPickerStreamers[si].clips.some(function(c){ return c.selected; });
+  // Re-render picker in place
+  var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
+  renderTwitchPicker(g('btn-preview-twitch'), clipsPerStreamer);
+}
+
+function generateTwitchWithPicker() {
+  // If picker has selections, use them; otherwise fall through to auto-fetch
+  var activeStreamers = _twitchPickerStreamers.filter(function(e){ return e.selected && !e.dropReason && e.clips.some(function(c){ return c.selected; }); });
+  if (!activeStreamers.length) {
+    // No picker data — run normal auto-fetch flow
+    generateTwitch();
+    return;
+  }
+  var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
+  var streamerNotes = parseStreamerNotes();
+  lockGenerateButton('btn-gen-twitch');
+  setGenerateModeActive('twitch', 'long');
+  CURRENT_TYPE = 'twitch';
+  CURRENT_META = { streamers: activeStreamers.map(function(e){ return e.name; }), clipMp4Urls: {}, clipFailureReasons: {} };
+  setGeneratingState('twitch-gen-status', 'TWITCH (MANUAL) — Resolving ' + activeStreamers.length + ' streamers...');
+
+  var items = activeStreamers.map(function(entry) {
+    var selectedClips = entry.clips.filter(function(c){ return c.selected; });
+    if (!selectedClips.length) selectedClips = entry.clips.slice(0, clipsPerStreamer);
+    return {
+      streamer: entry.displayName,
+      displayName: entry.displayName,
+      notes: streamerNotes[entry.name] || '',
+      clipsPerStreamer: selectedClips.length,
+      targetClipsPerStreamer: clipsPerStreamer,
+      clips: selectedClips.map(function(c, ci) {
+        return { rank: ci + 1, isBackup: false, title: c.title, url: c.url, views: c.views, game: c.game, thumbnailUrl: c.thumbnailUrl };
+      }),
+      title: selectedClips[0].title, url: selectedClips[0].url,
+      views: selectedClips[0].views, game: selectedClips[0].game,
+      thumbnailUrl: selectedClips[0].thumbnailUrl
+    };
+  });
+
+  // Flatten clips for URL resolution
+  var allClips = [];
+  items.forEach(function(item) {
+    (item.clips || []).forEach(function(clip) {
+      clip.streamer = item.streamer || '';
+      clip.displayName = item.displayName || item.streamer || '';
+      allClips.push(clip);
+    });
+  });
+
+  if (g('script-type-label')) g('script-type-label').textContent = 'TWITCH — Resolving clip URLs...';
+  resolveTwitchClipUrls(allClips, function() {
+    CURRENT_META.clipMp4Urls = {};
+    CURRENT_META.orderedClipUrls = [];
+    CURRENT_META.clipsByStreamer = {};
+    allClips.forEach(function(clip) {
+      if (clip.mp4Url) CURRENT_META.clipMp4Urls[clip.url] = clip.mp4Url;
+      var entry2 = { url: clip.mp4Url || clip.url || '', pageUrl: clip.url || '',
+        streamer: clip.streamer || '', displayName: clip.displayName || '',
+        title: clip.title || '', isBackup: false };
+      CURRENT_META.orderedClipUrls.push(entry2);
+      var sKey = (clip.streamer || 'unknown').toLowerCase();
+      if (!CURRENT_META.clipsByStreamer[sKey]) CURRENT_META.clipsByStreamer[sKey] = [];
+      CURRENT_META.clipsByStreamer[sKey].push(entry2);
+    });
+    var primaryUrls = [];
+    items.forEach(function(item) {
+      (item.clips || []).forEach(function(clip) { if (clip.url) primaryUrls.push(clip.url); });
+    });
+    markClipsUsed(primaryUrls);
+    if (g('script-type-label')) g('script-type-label').textContent = 'TWITCH — Gemini + Claude writing full script...';
+    callFullScriptServer('twitch', items, 'twitch-gen-status', null);
+  });
+}
+
 function fetchNewsStories() {
   // Fix 25b: use new CWN endpoint instead of rss2json
   g('news-stories-found').innerHTML='Fetching...';
@@ -6388,147 +6745,6 @@ function checkPublishStatus() {
   xhr.send();
 }
 
-// ── Auto-fire publish copy generation (headless) ──────────────────
-function autoGeneratePublishPrep(jobId) {
-  var job = JOBS.find(function(j){ return j.id === jobId; });
-  if (!job) { console.error('[autoGeneratePublishPrep] Job not found:', jobId); return; }
-  var statusEl = document.getElementById('gate3-upload-status-' + jobId);
-  var setStatus = function(txt, isErr) {
-    if (statusEl) { statusEl.textContent = txt; statusEl.style.color = isErr ? '#e74c3c' : 'rgba(255,255,255,0.6)'; }
-  };
-  if (job.publishPrep && job.publishPrep.title) {
-    cwn_log('[autoGeneratePublishPrep] publishPrep already exists — skipping generation, firing approveAndUpload', false);
-    setStatus('⏳ Publish copy ready — firing Upload-Post...');
-    setTimeout(function(){ approveAndUpload(jobId); }, 500);
-    return;
-  }
-  setStatus('⏳ Generating title, description, and hashtags...');
-  var type = (job.type || 'twitch').toLowerCase();
-  var contentTypeKey = type.indexOf('nba') > -1 ? 'nba' : type.indexOf('twitch') > -1 ? 'twitch' : 'news';
-  var isShort = (job.format === 'portrait') || (type.indexOf('short') > -1);
-  var scriptContext = job.script || '';
-  var streamersList = (contentTypeKey === 'twitch' && Array.isArray(job.streamers)) ? job.streamers : [];
-  var today = new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'});
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', CFG.ffmpegUrl + '/generate-publish-copy', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 60000;
-  xhr.onload = function() {
-    try {
-      var resp = JSON.parse(xhr.responseText);
-      if (resp.error) throw new Error(resp.error);
-      var yt = (resp.platforms && resp.platforms.youtube) || resp;
-      var tt = (resp.platforms && resp.platforms.tiktok) || {};
-      var ig = (resp.platforms && resp.platforms.instagram) || {};
-      job.publishPrep = {
-        title: yt.title || resp.title || job.title || 'ClipzWorld News',
-        description: yt.description || resp.description || '',
-        pinnedComment: yt.pinnedComment || resp.pinnedComment || '',
-        endscreen: yt.endscreen || '', cards: yt.cards || '', twitchTitle: yt.twitchTitle || '',
-        tiktokCaption: tt.caption || '', igCaption: ig.caption || '',
-        igAlt: ig.altText || ig.alt_text || '',
-        generatedAt: new Date().toISOString(), autoGenerated: true
-      };
-      saveJobs();
-      cwn_log('[autoGeneratePublishPrep] Publish copy generated for ' + jobId + ' — firing approveAndUpload', false);
-      setStatus('⏳ Publish copy ready — firing Upload-Post...');
-      renderQueue();
-      setTimeout(function(){ approveAndUpload(jobId); }, 500);
-    } catch(e) {
-      console.error('[autoGeneratePublishPrep] Parse error:', e);
-      setStatus('❌ Publish copy generation failed: ' + e.message + '. Click 📋 PUBLISH COPY to run manually.', true);
-      cwn_log('[autoGeneratePublishPrep] Failed: ' + e.message, true);
-    }
-  };
-  xhr.onerror = xhr.ontimeout = function() {
-    var msg = xhr.ontimeout ? 'Request timed out' : 'Server unreachable';
-    setStatus('❌ ' + msg + '. Click 📋 PUBLISH COPY to run manually.', true);
-    cwn_log('[autoGeneratePublishPrep] ' + msg, true);
-  };
-  xhr.send(JSON.stringify({
-    contentType: contentTypeKey, formType: isShort ? 'short' : 'long',
-    script: scriptContext, date: today, streamers: streamersList,
-    platforms: ['youtube', 'tiktok', 'instagram']
-  }));
-}
-
-// ── GATE 3: Human Approval + Gate 6 Auto-Publish ─────────────────
-// Called when Rob clicks "APPROVE & UPLOAD →" in the Gate 3 checkpoint
-function approveAndUpload(jobId) {
-  var job = JOBS.find(function(j){ return j.id === jobId; });
-  if (!job) return;
-
-  var statusEl = document.getElementById('gate3-upload-status-' + jobId);
-  if (statusEl) statusEl.textContent = '⏳ Approving — triggering Gate 6 auto-publish...';
-
-  // Mark job as approved
-  job._gate3Approved = true;
-  job._gate3Rejected = false;
-  saveJobs();
-
-  // Determine platforms based on content type
-  var contentType = (job.format === 'portrait' || (job.type||'').indexOf('short') > -1) ? 'short' : 'long';
-  var platforms = contentType === 'short'
-    ? ['tiktok', 'instagram', 'youtube']
-    : ['youtube'];
-
-  var prep = job.publishPrep || {};
-  if (statusEl) statusEl.textContent = '⏳ Sending to Upload-Post for ' + platforms.join(', ') + '...';
-
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', CFG.ffmpegUrl + '/publish', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 120000;
-  xhr.onload = function() {
-    try {
-      var resp = JSON.parse(xhr.responseText);
-      if (resp.error) throw new Error(resp.error);
-
-      var gate4Pass = !!(resp.request_id || resp.job_id);
-      if (gate4Pass) {
-        var jobRef = resp.job_id ? resp.job_id : resp.request_id;
-        if (statusEl) statusEl.innerHTML = '<span style="color:#2ecc71;font-weight:700;">✅ GATE 6 — UPLOAD TRIGGERED</span><br>'
-          + 'job_id: ' + jobRef + '<br>'
-          + 'Platforms: ' + platforms.join(', ') + '<br>'
-          + '<button onclick="pollPublishStatus(\'' + jobId + '\')" class="btn btn-outline btn-sm" style="margin-top:6px;">🔍 POLL STATUS</button>';
-
-        // Save publish record
-        job.publishRecord = {
-          requestId:   resp.request_id,
-          jobId:       resp.job_id,
-          platforms:   platforms,
-          publishedAt: new Date().toISOString(),
-          gate4:       'pass',
-          gate6:       'triggered'
-        };
-        saveJobs();
-
-        // Auto-start polling
-        setTimeout(function() { pollPublishStatus(jobId); }, 5000);
-      } else {
-        if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ GATE 6 FAIL — no job_id returned from Upload-Post</span>';
-      }
-    } catch(e) {
-      if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ Upload error: ' + e.message + '</span>';
-    }
-  };
-  xhr.onerror = xhr.ontimeout = function() {
-    if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ Server unreachable — is server.js running?</span>';
-  };
-
-  xhr.send(JSON.stringify({
-    driveUrl:      job.driveUrl || '',
-    filename:      job.filename || '',
-    platforms:     platforms,
-    title:         prep.title || job.title || 'ClipzWorld News',
-    description:   prep.description || prep.ytDescription || '',
-    tags:          prep.tags || [],
-    contentType:   contentType,
-    thumbnailUrl:  prep.thumbnailUrl || job.canvaUrl || job.thumbDriveUrl || job.thumbnailUrl || '',
-    pinnedComment: prep.pinnedComment || prep.comment || '',
-    async:         true
-  }));
-}
 
 // Called when Rob clicks "REJECT — BACK TO EDIT"
 function rejectJob(jobId) {
@@ -7076,6 +7292,18 @@ function isClipUsed(clipUrl) {
 
 function loadStreamerList() {
   var saved = localStorage.getItem('CWN_STREAMERS');
+  if (saved) {
+    // Migrate known bad handles to correct Twitch usernames
+    var migrations = { 'hasanbi': 'hasanabi', 'yourrage': 'yourragegaming' };
+    var migrated = saved.split(',').map(function(s) {
+      var trimmed = s.trim().toLowerCase();
+      return migrations[trimmed] || s.trim();
+    }).join(',');
+    if (migrated !== saved) {
+      localStorage.setItem('CWN_STREAMERS', migrated);
+      saved = migrated;
+    }
+  }
   if (!saved) return;
   var el = g('twitch-streamers');
   if (el) el.value = saved;
@@ -7417,7 +7645,7 @@ function pubRenderText(type) {
     twitchTitle = (headline ? headline + ' | ' : '') + 'World News ' + today + ' | ClipzWorld News';
 
   } else if (isTwitch) {
-    var streamers = 'jasontheween, hasanabi, adapt, stableronaldo, lacy, marlon, cinna, yonnajay, jaycinco, maya';
+    var streamers = 'jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming';
     title = isShort
       ? 'Best Twitch Clip Today | ClipzWorld News'
       : 'Best Twitch Clips ' + today + ' | ClipzWorld News';

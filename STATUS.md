@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-10 (Cursor — feat: wire gate5_forced to auto-trigger server-side Gate 5; remove dashboard /publish bypass — advance endpoint fires Gate 5 async; approveAndUpload removed; _pollForPublished polls for published stage)
 **Last Updated:** 2026-05-06 v1.0.339 (Cursor — fix(cpd-142): revert steps 30→20 timeout; extend poll timeout 300s→600s; scheduler stays simple)
 **Last Updated:** 2026-05-06 v1.0.335 (Cursor — fix(cpd-142): export _runWanPreGeneration from jobs_c1; restore ensurePodRunning; developer_api could not import function)
 **Last Updated:** 2026-05-06 v1.0.333 (Cursor — fix(cpd-142): jobs_c1.js numFrames fallback 25→97; was overriding runpod.js default)
