@@ -307,12 +307,10 @@ const {
   generateNewscastOverlay
 } = require('./lib/chrome_overlay');
 const {
-  geminiQACheck, // TODO: remove — dead code, gate2Worker.run() replaces this (see /gate2-segment-qa endpoint)
   parseScriptIntoScenes,
   generateClipAvailabilityReport,
   claudeScriptQA,
   claudeScriptFix,
-  geminiSegmentQA, // TODO: remove — dead code, gate2Worker.run() replaces this
   callClaudeAPI,
   uploadToGeminiFiles,
   waitForGeminiFile,
@@ -541,14 +539,16 @@ function saveJobCard(jobId, card) {
       const sourceClipSegments = sourceClipScenes.map((scene, i) => {
         const clipData = card.orderedClipUrls[i] || {};
         return {
-          type: 'source_clip',
-          sceneId: scene.name,
-          label: scene.name || `STORY${i+1}_CLIP`,
-          clipUrl: clipData.clipUrl || clipData.url || '',
-          pageUrl: clipData.pageUrl || '',
+          type:            'source_clip',
+          sceneId:         scene.name,
+          label:           scene.name || `STORY${i+1}_CLIP`,
+          clipUrl:         clipData.clipUrl || clipData.url || '',
+          pageUrl:         clipData.pageUrl || '',
+          pillarboxFilter: clipData.pillarboxFilter || null,
+          orientation:     clipData.orientation || 'portrait',
           clipTimingTargets: Array.isArray(clipData.clipTimingTargets) ? clipData.clipTimingTargets : [],
           clipTimingFormat: clipData.clipTimingFormat || 'none',
-          storyIndex: clipData.storyIndex ?? i,
+          storyIndex:      clipData.storyIndex ?? i,
           status: 'ready'  // source clips don't render via HeyGen
         };
       });
@@ -722,11 +722,13 @@ async function startHeyGenPoller(jobId, card) {
           const clip = orderedClipUrls[clipIdx++];
           if (clip && (clip.url || clip.clipUrl)) {
             segmentData.push({
-              url: clip.clipUrl || clip.url || '',
-              pageUrl: clip.pageUrl || '',
-              label: clip.label || scene.name || `CLIP_${clipIdx}`,
-              type: 'source_clip',
-              clipUrl: clip.clipUrl || clip.url || '',
+              url:             clip.clipUrl || clip.url || '',
+              pageUrl:         clip.pageUrl || '',
+              label:           clip.label || scene.name || `CLIP_${clipIdx}`,
+              type:            'source_clip',
+              clipUrl:         clip.clipUrl || clip.url || '',
+              pillarboxFilter: clip.pillarboxFilter || null,
+              orientation:     clip.orientation || 'portrait',
               clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
               clipTimingFormat: clip.clipTimingFormat || 'none'
             });
@@ -740,11 +742,13 @@ async function startHeyGenPoller(jobId, card) {
               const clip = orderedClipUrls[clipIdx++];
               if (clip && (clip.url || clip.clipUrl)) {
                 segmentData.push({
-                  url: clip.clipUrl || clip.url || '',
-                  pageUrl: clip.pageUrl || '',
-                  label: clip.label || `${sceneKey}_CLIP`,
-                  type: 'source_clip',
-                  clipUrl: clip.clipUrl || clip.url || '',
+                  url:             clip.clipUrl || clip.url || '',
+                  pageUrl:         clip.pageUrl || '',
+                  label:           clip.label || `${sceneKey}_CLIP`,
+                  type:            'source_clip',
+                  clipUrl:         clip.clipUrl || clip.url || '',
+                  pillarboxFilter: clip.pillarboxFilter || null,
+                  orientation:     clip.orientation || 'portrait',
                   clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
                   clipTimingFormat: clip.clipTimingFormat || 'none'
                 });
@@ -956,11 +960,13 @@ async function startHeyGenPoller(jobId, card) {
             clipIdx++;
             if (clip && (clip.url || clip.clipUrl)) {
               segmentData.push({
-                url:     clip.clipUrl || clip.url || '',
-                pageUrl: clip.pageUrl || '',
-                label:   clip.label || scene.name || `CLIP_${clipIdx}`,
-                type:    'source_clip',
-                clipUrl: clip.clipUrl || clip.url || '',
+                url:             clip.clipUrl || clip.url || '',
+                pageUrl:         clip.pageUrl || '',
+                label:           clip.label || scene.name || `CLIP_${clipIdx}`,
+                type:            'source_clip',
+                clipUrl:         clip.clipUrl || clip.url || '',
+                pillarboxFilter: clip.pillarboxFilter || null,
+                orientation:     clip.orientation || 'portrait',
                 clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
                 clipTimingFormat: clip.clipTimingFormat || 'none'
               });
@@ -981,11 +987,13 @@ async function startHeyGenPoller(jobId, card) {
                 clipIdx++;
                 if (clip && (clip.url || clip.clipUrl)) {
                   segmentData.push({
-                    url:     clip.clipUrl || clip.url || '',
-                    pageUrl: clip.pageUrl || '',
-                    label:   clip.label || `${sceneKey}_CLIP`,
-                    type:    'source_clip',
-                    clipUrl: clip.clipUrl || clip.url || '',
+                    url:             clip.clipUrl || clip.url || '',
+                    pageUrl:         clip.pageUrl || '',
+                    label:           clip.label || `${sceneKey}_CLIP`,
+                    type:            'source_clip',
+                    clipUrl:         clip.clipUrl || clip.url || '',
+                    pillarboxFilter: clip.pillarboxFilter || null,
+                    orientation:     clip.orientation || 'portrait',
                     clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
                     clipTimingFormat: clip.clipTimingFormat || 'none'
                   });
@@ -1227,6 +1235,19 @@ setImmediate(() => {
 // The HeyGen poller emits this when all segments are done.
 // This listener owns Gate 2 QA + logging + assembly trigger + assembly completion polling.
 // Dashboard is view-only — it reads persistedJobs, never drives this flow.
+pipelineBus.on('thumbnail:uploaded', ({ jobId, thumbnailDriveUrl }) => {
+  if (!jobId || !thumbnailDriveUrl) return;
+  const card = persistedJobs[jobId];
+  if (card) {
+    card.thumbnailDriveUrl = thumbnailDriveUrl;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.thumbnailDriveUrl = thumbnailDriveUrl;
+    saveJobCard(jobId, card);
+    console.log(`[thumbnail:uploaded] Saved thumbnailDriveUrl to job card ${jobId}`);
+  }
+});
+
 pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
   // Concurrent job isolation guard: verify the card in persistedJobs matches the event's jobId
   // and contentType. If a concurrent job mutated persistedJobs[jobId] with the wrong contentType,
@@ -1274,14 +1295,16 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
           const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
           if (clip) {
             segmentData.push({
-              type: 'source_clip',
-              url: clip.clipUrl || clip.url || '',
-              label: clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
-              pageUrl: clip.pageUrl || '',
+              type:            'source_clip',
+              url:             clip.clipUrl || clip.url || '',
+              label:           clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
+              pageUrl:         clip.pageUrl || '',
+              pillarboxFilter: clip.pillarboxFilter || null,
+              orientation:     clip.orientation || 'portrait',
               clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
               clipTimingFormat: clip.clipTimingFormat || 'none',
-              storyIndex: clip.storyIndex ?? clipIdx,
-              sceneId: scene.name || scene.id
+              storyIndex:      clip.storyIndex ?? clipIdx,
+              sceneId:         scene.name || scene.id
             });
           }
           clipIdx++;
@@ -1346,10 +1369,12 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
               const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
               if (clip) {
                 segmentData.push({
-                  type: 'source_clip',
-                  url: clip.clipUrl || clip.url || '',
-                  label: clip.label || `${sceneKey}_CLIP`,
-                  pageUrl: clip.pageUrl || '',
+                  type:            'source_clip',
+                  url:             clip.clipUrl || clip.url || '',
+                  label:           clip.label || `${sceneKey}_CLIP`,
+                  pageUrl:         clip.pageUrl || '',
+                  pillarboxFilter: clip.pillarboxFilter || null,
+                  orientation:     clip.orientation || 'portrait',
                   clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
                   clipTimingFormat: clip.clipTimingFormat || 'none',
                   storyIndex: clip.storyIndex ?? clipIdx,
@@ -2156,28 +2181,324 @@ app.post('/job/:id/advance', (req, res) => {
   }
 
   if (stage === 'assembled') {
-    // Force-advance: mark Gate 5 as force-passed so APPROVE button appears
+    // Force-advance: mark stage then kick off server-side Gate 5 automatically.
+    // Dashboard no longer needs an APPROVE button — Gate 5 runs the same path as the
+    // normal auto-flow (assembly → Gate 4 → Gate 5) just triggered by the operator's
+    // force-advance instead of a Gate 4 uploadSignal.
     card.gate5 = card.gate5 || {};
-    card.gate5.score    = card.gate5.score || 0;
-    card.gate5.outcome  = 'force_pass';
+    card.gate5.outcome  = 'force_advance';
     card.gate5.forcedAt = new Date().toISOString();
-    card._gate5Done     = true;
     card.stage = 'gate5_forced';
     saveJobCard(jobId, card);
-    console.log(`[advance] ${jobId}: assembled → gate5 force-passed`);
+    console.log(`[advance] ${jobId}: assembled → gate5_forced → triggering Gate 5`);
     logError('PIPELINE_ADVANCE', `Job force-advanced: assembled → gate5_forced`, { jobId, before: 'assembled', after: 'gate5_forced', at: new Date().toISOString() });
     try {
       pipelineBus.emit('job:advance', {
         jobId,
         from: 'assembled',
         to: 'gate5_forced',
-        message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.'
+        message: 'Gate 5 triggered automatically — upload to Upload-Post is in progress.'
       });
     } catch (_e) { /* non-fatal */ }
-    return res.json({ ok: true, jobId, before: 'assembled', after: 'gate5_forced', message: 'Gate 5 force-passed — APPROVE & UPLOAD button is now unlocked.' });
+
+    // Respond immediately so the dashboard doesn't wait; Gate 5 runs async.
+    res.json({ ok: true, jobId, before: 'assembled', after: 'gate5_forced', message: 'Gate 5 triggered — upload is in progress. Job will move to "published" when complete.' });
+
+    // Fire Gate 5 async (same logic as POST /job/:id/run-gate5)
+    setImmediate(async () => {
+      try {
+        await _runGate5ForCard(jobId);
+      } catch (err) {
+        console.error(`[advance] Gate 5 async error for ${jobId}:`, err.message);
+      }
+    });
+    return;
   }
 
   return res.json({ ok: false, error: `Job is at stage "${stage}" — cannot advance further (already at publish stage or unknown stage).` });
+});
+
+// ── Gate 5 helper — builds job spec from saved card and calls gate5.run() ────────────────────
+async function _runGate5ForCard(jobId) {
+  const gate5Worker = require('./lib/gates/gate5');
+  const { readAutoPublishPlatformsEnv } = require('./lib/auto_publish_env');
+
+  const card = persistedJobs[jobId];
+  if (!card) throw new Error(`Job not found: ${jobId}`);
+
+  const savedOutputs = card.state?.savedOutputs || {};
+  const driveUrl = savedOutputs.driveUrl || card.driveUrl;
+  if (!driveUrl) throw new Error(`driveUrl missing for ${jobId} — Drive upload may not have completed`);
+
+  // publishCopy may be in the DB spec's savedOutputs but not yet flushed to the in-memory card
+  // (assembly saves it via saveOutput() which writes to DB, but card is in-memory snapshot).
+  // Load from DB as fallback so Gate 5 always has the correct title/description.
+  let publishCopy = savedOutputs.publishCopy || card.publishCopy || null;
+  if (!publishCopy || !publishCopy.title) {
+    try {
+      const { getJobSpec: _g5GetSpec } = require('./lib/job_spec');
+      const _dbSpec = _g5GetSpec(jobId);
+      const _dbPc = _dbSpec?.state?.savedOutputs?.publishCopy;
+      if (_dbPc && _dbPc.title) publishCopy = _dbPc;
+    } catch (_e) { /* non-fatal */ }
+  }
+  publishCopy = publishCopy || {};
+  const thumbnailDriveUrl = savedOutputs.thumbnailDriveUrl || card.thumbnailDriveUrl || null;
+  const contentType      = card.contentType || 'news';
+
+  // Resolve platforms: env override → contentTypes.json config → content-type default
+  let platforms = readAutoPublishPlatformsEnv();
+  if (!platforms) {
+    try {
+      const cfg = require('./config/contentTypes.json');
+      platforms = cfg.contentTypes?.[contentType]?.publish?.platforms || null;
+    } catch (_e) { /* non-fatal */ }
+  }
+  if (!platforms || !platforms.length) {
+    const isShort = contentType.includes('short');
+    platforms = isShort ? ['youtube', 'tiktok', 'instagram'] : ['youtube'];
+  }
+
+  const g5JobSpec = {
+    jobId,
+    contentType,
+    driveUrl,
+    state: {
+      ...(card.state || {}),
+      savedOutputs: { ...savedOutputs, publishCopy, thumbnailDriveUrl }
+    },
+    deliverySpec: card.deliverySpec || {
+      platforms,
+      driveFolderId: process.env.DRIVE_FOLDER_ID || null,
+      uploadPostProfile: process.env.UPLOADPOST_PROFILE || null,
+      categoryId: '24',
+      scheduledAt: null
+    },
+    order: card.order || {},
+    planTier: card.planTier || 'dfy'
+  };
+
+  // Mark as running
+  card.stage = 'gate5_running';
+  saveJobCard(jobId, card);
+  console.log(`[run-gate5] ${jobId}: Gate 5 starting — driveUrl=${driveUrl}`);
+
+  let g5Result;
+  try {
+    g5Result = await gate5Worker.run(g5JobSpec, { uploadSignal: true, passed: true, gate: 4 });
+  } catch (err) {
+    card.stage = 'gate5_failed';
+    card.gate5Error = err.message;
+    saveJobCard(jobId, card);
+    console.error(`[run-gate5] ${jobId}: Gate 5 threw:`, err.message);
+    pipelineBus.emit('gate5:failed', { jobId, error: err.message });
+    return;
+  }
+
+  card.gate5Result = g5Result;
+  if (g5Result.passed) {
+    card.stage = 'published';
+    card.publishedAt = new Date().toISOString();
+    console.log(`[run-gate5] ${jobId}: Gate 5 PASS — marked published`);
+    pipelineBus.emit('publish:complete', { jobId });
+  } else {
+    card.stage = 'gate5_failed';
+    const violations = g5Result.prePublishValidation?.violations || [];
+    console.warn(`[run-gate5] ${jobId}: Gate 5 FAIL — ${violations.slice(0, 3).join('; ')}`);
+    pipelineBus.emit('gate5:failed', { jobId, violations });
+  }
+  saveJobCard(jobId, card);
+}
+
+// POST /job/:id/run-gate5 — trigger Gate 5 upload for an assembled/force-advanced job
+app.post('/job/:id/run-gate5', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const stage = card.stage || '';
+  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running'].includes(stage)) {
+    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/gate5_forced/gate5_failed/gate5_running` });
+  }
+
+  // Allow caller to inject driveUrl / assembledPath when Gate 3b blocked the normal save path
+  if (req.body.driveUrl) {
+    card.driveUrl = req.body.driveUrl;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.driveUrl = req.body.driveUrl;
+  }
+  if (req.body.assembledPath) {
+    card.assembledPath = req.body.assembledPath;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.assembledPath = req.body.assembledPath;
+  }
+  if (req.body.thumbnailDriveUrl) {
+    card.thumbnailDriveUrl = req.body.thumbnailDriveUrl;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.thumbnailDriveUrl = req.body.thumbnailDriveUrl;
+  }
+
+  // Mark forced so the advance branch doesn't re-fire on page reload
+  card.gate5 = card.gate5 || {};
+  card.gate5.retriggeredAt = new Date().toISOString();
+  card.stage = 'gate5_forced';
+  saveJobCard(jobId, card);
+
+  res.json({ ok: true, message: 'Gate 5 triggered — upload is in progress.' });
+
+  setImmediate(async () => {
+    try { await _runGate5ForCard(jobId); } catch (err) {
+      console.error(`[run-gate5 endpoint] ${jobId}:`, err.message);
+    }
+  });
+});
+
+// GET /job/:id/assembly-preflight — verify manual_segments folder before triggering assembly.
+// Returns a report showing every expected segment: present/missing, dimensions, chrome story mapping.
+// Run this after placing HeyGen exports but BEFORE hitting resume — catch mismatches before spending credits.
+app.get('/job/:id/assembly-preflight', (req, res) => {
+  const jobId = req.params.id;
+  const card  = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const { getManualDir, discoverHeyGenNestedExports: _discoverNestedExports } = require('./lib/manual_segment_workflow');
+  const manualDir = getManualDir(jobId);
+  const dirExists = fs.existsSync(manualDir);
+
+  // Load manifest to get expected segments in correct order
+  const manifestPath = path.join(manualDir, 'manifest.json');
+  let manifest = null;
+  try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch(_) {}
+
+  const segments = manifest?.segments || [];
+  const sceneItems = card?.designSpec?.sceneStructure?.items || [];
+
+  // Build expected chrome story order from the CARD (picker order), not DB spec
+  const chromeStoryOrder = sceneItems.map((it, i) => ({
+    position: i + 1,
+    title: (it.label || '').slice(0, 50),
+    sceneId: it.sceneId || `ITEM${i+1}`
+  }));
+
+  const report = {
+    jobId,
+    contentType: card.contentType,
+    manualDir,
+    dirExists,
+    chromeStoryOrder,
+    segments: [],
+    summary: { total: 0, avatar: 0, sourceClip: 0, present: 0, missing: 0, dimensionOk: 0, dimensionWrong: 0, audioOk: 0, audioMissing: 0 }
+  };
+
+  if (!dirExists || segments.length === 0) {
+    report.error = dirExists ? 'manifest.json missing — job has not reached manual checkpoint yet' : 'manual_segments folder does not exist yet';
+    return res.json(report);
+  }
+
+  const { spawnSync } = require('child_process');
+
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    const segType = seg.type || 'avatar';
+
+    // Determine expected file for this segment
+    let expectedFile = null;
+    if (segType === 'source_clip') {
+      // Flat mp4 files for clips
+      const typeTag = 'clip';
+      const safeLabel = String(seg.label || 'seg').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      expectedFile = path.join(manualDir, `${String(i).padStart(2, '0')}_${typeTag}_${safeLabel}.mp4`);
+    } else {
+      // Nested HeyGen folder for avatar segments
+      expectedFile = null; // checked via label matching below
+    }
+
+    // For avatar: find matching nested folder using same logic as applyManualOverrides
+    let foundMp4 = null;
+    if (segType === 'avatar') {
+      if (dirExists) {
+        const nested = _discoverNestedExports(manualDir);
+        const segLabel = String(seg.label || '').toUpperCase();
+        const match = nested.find(n => n.label === segLabel);
+        if (match) foundMp4 = match.mp4Path;
+      }
+    } else {
+      if (expectedFile && fs.existsSync(expectedFile) && fs.statSync(expectedFile).size > 10000) {
+        foundMp4 = expectedFile;
+      }
+    }
+
+    // Probe dimensions + audio if file found
+    let width = null, height = null, hasAudio = null;
+    if (foundMp4) {
+      try {
+        const probe = spawnSync('ffprobe', [
+          '-v', 'quiet', '-show_streams', '-of', 'json', foundMp4
+        ], { encoding: 'utf8', timeout: 8000 });
+        if (probe.status === 0) {
+          const streams = JSON.parse(probe.stdout).streams || [];
+          const v = streams.find(s => s.codec_type === 'video');
+          const a = streams.find(s => s.codec_type === 'audio');
+          if (v) { width = v.width; height = v.height; }
+          hasAudio = !!a;
+        }
+      } catch(_) {}
+    }
+
+    // Determine which chrome story this segment maps to
+    const storyMatch = String(seg.label || '').match(/(?:STORY|ITEM|GAME)(\d+)/i);
+    const storyNum = storyMatch ? parseInt(storyMatch[1], 10) : null;
+    const chromeStory = storyNum ? chromeStoryOrder[storyNum - 1] : null;
+
+    // Dimension check: avatars must be 1920x1080 (HeyGen standard).
+    // Source clips can be any resolution — assembly pillarboxes portrait clips automatically.
+    let dimOk = null;
+    if (width && height) {
+      if (segType === 'avatar') {
+        dimOk = (width === 1920 && height === 1080);
+      } else {
+        // For clips: just require video track present — any resolution is acceptable
+        dimOk = true;
+      }
+    }
+    const isPortraitClip = segType === 'source_clip' && width && height && height > width;
+
+    const row = {
+      index: i,
+      label: seg.label,
+      type: segType,
+      present: !!foundMp4,
+      file: foundMp4 ? path.basename(path.dirname(foundMp4) === manualDir ? foundMp4 : path.dirname(foundMp4)) : (expectedFile ? path.basename(expectedFile) : '(nested folder)'),
+      dimensions: width ? `${width}x${height}${isPortraitClip ? ' (portrait→pillarbox)' : ''}` : null,
+      dimensionsOk: dimOk,
+      hasAudio,
+      chromeStory: chromeStory ? `[${chromeStory.position}] ${chromeStory.title}` : null,
+      issue: null
+    };
+
+    if (!row.present) row.issue = 'MISSING';
+    else if (dimOk === false) row.issue = `WRONG_DIMS: ${width}x${height} (expected 1920x1080)`;
+    else if (hasAudio === false && segType === 'avatar') row.issue = 'NO_AUDIO on avatar segment — Bobby G will be silent';
+
+    report.segments.push(row);
+    report.summary.total++;
+    if (segType === 'avatar') report.summary.avatar++;
+    else report.summary.sourceClip++;
+    if (row.present) report.summary.present++;
+    else report.summary.missing++;
+    if (dimOk === true) report.summary.dimensionOk++;
+    if (dimOk === false) report.summary.dimensionWrong++;
+    if (hasAudio === true) report.summary.audioOk++;
+    if (hasAudio === false) report.summary.audioMissing++;
+  }
+
+  report.ready = report.summary.missing === 0 && report.summary.dimensionWrong === 0 && report.summary.audioMissing === 0;
+  report.issues = report.segments.filter(s => s.issue).map(s => `[${s.index}] ${s.label}: ${s.issue}`);
+
+  res.json(report);
 });
 
 // POST /job/:id/manual-segments/resume — continue pipeline after c0 manual checkpoint
@@ -2256,6 +2577,112 @@ app.post('/job/:id/manual-segments/resume', (req, res) => {
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message || String(e) });
   }
+});
+
+// POST /job/:id/reassemble — skip Gate 2, build segmentData from the card's heygen.videoJobs
+// and orderedClipUrls, then fire /assemble directly.  Any files the operator dropped into
+// tmp/manual_segments/<jobId>/ are picked up automatically by applyManualOverrides inside
+// the assembly handler, so expired HeyGen URLs don't matter — they get replaced.
+//
+// Safe to call from any stage except 'published'. Increments _assemblyRetryCount so the
+// asmId is unique and the dedup lock does not block it.
+app.post('/job/:id/reassemble', async (req, res) => {
+  const jobId = req.params.id;
+  const card  = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job is already published — rollback first if you need to re-assemble.' });
+  }
+
+  const videoJobs     = card.heygen?.videoJobs || [];
+  const orderedClips  = card.orderedClipUrls   || [];
+
+  if (!videoJobs.length) {
+    return res.status(400).json({ ok: false, error: 'No heygen.videoJobs on this card — cannot build segment data.' });
+  }
+
+  // ── Build segmentData (same logic as the manual reassemble script) ─────────
+  let clipIdx = 0;
+  const segmentData = videoJobs.map(job => {
+    const sceneName    = job.sceneName || job.scene || `SEG_${clipIdx}`;
+    const isClipScene  = /CLIP/i.test(sceneName) && !/COLD_OPEN/i.test(sceneName);
+    if (isClipScene) {
+      const clipEntry = orderedClips[clipIdx++] || {};
+      return {
+        type:               'source_clip',
+        url:                clipEntry.url || clipEntry.pageUrl || '',
+        label:              sceneName,
+        clipTimingTargets:  clipEntry.clipTimingTargets  || [],
+        clipTimingFormat:   clipEntry.clipTimingFormat   || 'timestamp_table',
+        pillarboxFilter:    clipEntry.pillarboxFilter    || null,
+        sourceOrientation:  clipEntry.sourceOrientation  || 'landscape'
+      };
+    }
+    return { type: 'avatar', url: job.video_url || '', label: sceneName };
+  });
+
+  // ── Reset assembly-related state so old stitch artefacts are gone ──────────
+  const retryNum  = (card._assemblyRetryCount || 0) + 1;
+  const assemblyId = `asm_${jobId}_r${retryNum}`;
+
+  card._assemblyRetryCount = retryNum;
+  // Clear previous assembly artefacts but preserve heygen, script, designSpec, etc.
+  delete card.assembledAt;
+  delete card.finalUrl;
+  delete card.outputPath;
+  delete card.gate5;
+  delete card._gate5Done;
+  delete card._gate5Running;
+  delete card._gate3Approved;
+  delete card._gate3Rejected;
+  Object.keys(assemblyJobs).forEach(asmId => {
+    if (assemblyJobs[asmId]?.sourceJobId === jobId) delete assemblyJobs[asmId];
+  });
+  card.stage = 'heygen_done';
+  saveJobCard(jobId, card);
+
+  // ── Fire /assemble (internal axios call so all middleware runs normally) ───
+  const port = process.env.PORT || 3000;
+  const payload = {
+    segments:     segmentData.map(s => s.url),
+    segmentData,
+    labels:       segmentData.map(s => s.label),
+    transition:   'crossfade',
+    format:       'mp4',
+    assemblyId,
+    contentType:  card.contentType || 'nba',
+    jobId,
+    jobSpecId:    card.specId || card.jobSpecId || null,
+    sceneTextMap: card.heygen?.sceneTextMap || null,
+    fullScript:   card.script?.raw || card.script || null,
+    streamers:    card.streamers || [],
+    items:        card.nbaItems  || card.newsItems || card.items || [],
+    expectedClips: orderedClips.length,
+    designSpec:   card.designSpec  || null,
+    nbaItems:     card.nbaItems    || [],
+    captionText:  card.captionText || null,
+    captionStyle: card.captionStyle || null
+  };
+
+  res.json({
+    ok: true,
+    jobId,
+    assemblyId,
+    retryNum,
+    message: `Re-assembly r${retryNum} started — files from manual_segments will be used. Watch the dashboard for Gate 3 result.`,
+    segmentCount: segmentData.length,
+    clipCount: clipIdx
+  });
+
+  // Fire async so the HTTP response goes out first
+  setImmediate(async () => {
+    try {
+      await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
+      console.log(`[reassemble] ${jobId} r${retryNum}: /assemble fired (${segmentData.length} segs, ${clipIdx} clips)`);
+    } catch (err) {
+      console.error(`[reassemble] ${jobId} r${retryNum}: /assemble failed — ${err.message}`);
+    }
+  });
 });
 
 // POST /job/:id/dismiss — operator closed the job card on the dashboard.
@@ -2361,6 +2788,12 @@ app.get('/market-keys', (req, res) => {
 
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// Serve dashboard — no-cache so hard refresh always picks up latest on-disk version
+app.get('/', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'cwn_production.html'));
+});
 
 // ── POST /assemble ────────────────────────────────────────────────
 // ── GOOGLE DRIVE AUTO-UPLOAD ──────────────────────────────────────
@@ -3962,7 +4395,8 @@ app.get('/news/us-canada-videos', async (req, res) => {
         const [_, yyyy, mm, dd] = dateMatch;
         publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T23:59:59Z`).toISOString();
       }
-      const slug = v.articleUrl.split('/').filter(Boolean).pop() || '';
+      const rawSlug = v.articleUrl.split('/').filter(Boolean).pop() || '';
+      const slug = rawSlug.split('?')[0]; // strip ?update=... query params from live-blog URLs
       const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
       return {
@@ -4000,6 +4434,398 @@ app.get('/news/us-canada-videos', async (req, res) => {
     });
   } catch (err) {
     console.error('[news/us-canada-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
+
+// ── BBC news scraper ─────────────────────────────────────────────────────────
+// Fetches BBC US/Canada RSS, runs yt-dlp in parallel on each article, returns
+// only articles that have an extractable video.
+// Returns items in the same shape as /news/us-canada-videos.
+
+const BBC_RSS_URLS = [
+  'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml',
+  'https://feeds.bbci.co.uk/news/world/rss.xml'
+];
+const BBC_YTDLP_CONCURRENCY = 8;   // parallel yt-dlp workers — local machine, no throttle needed
+const BBC_FETCH_LIMIT      = 30;   // articles to attempt (40% hit rate → ~12 videos from 30)
+const BBC_VIDEO_MIN_SEC    = 8;
+const BBC_VIDEO_MAX_SEC    = parseInt(process.env.NEWS_BBC_MAX_CLIP_SEC || '180');
+
+/**
+ * Parse a simple RSS feed with axios — no external xml parser needed.
+ * Returns [{ title, link, pubDate, description }]
+ */
+function parseBbcRss(xmlText) {
+  const items = [];
+  const itemRe = /<item>([\s\S]*?)<\/item>/g;
+  let m;
+  while ((m = itemRe.exec(xmlText)) !== null) {
+    const block = m[1];
+    const title   = (block.match(/<title><!\[CDATA\[([^\]]*)\]\]><\/title>/) || block.match(/<title>([^<]*)<\/title>/) || [])[1] || '';
+    const link    = (block.match(/<link>([^<]*)<\/link>/) || [])[1] || '';
+    const pubDate = (block.match(/<pubDate>([^<]*)<\/pubDate>/) || [])[1] || '';
+    const desc    = (block.match(/<description><!\[CDATA\[([^\]]*)\]\]><\/description>/) || block.match(/<description>([^<]*)<\/description>/) || [])[1] || '';
+    if (link && link.includes('bbc.com/news')) items.push({ title: title.trim(), link: link.trim(), pubDate: pubDate.trim(), description: desc.replace(/<[^>]+>/g,'').trim() });
+  }
+  return items;
+}
+
+/**
+ * Run yt-dlp on a single BBC article URL.
+ * Returns { url, title, hlsUrl, duration, thumbnail, publishedAt } or null.
+ */
+async function extractBbcVideo(articleUrl) {
+  return new Promise(resolve => {
+    let out = '';
+    const { execFile } = require('child_process');
+    const proc = execFile('yt-dlp', ['--no-download', '--dump-json', articleUrl], { timeout: 14000 });
+    proc.stdout.on('data', d => out += d);
+    proc.on('close', () => {
+      try {
+        const d = JSON.parse(out);
+        const duration = d.duration || 0;
+        if (!duration || duration < BBC_VIDEO_MIN_SEC || duration > BBC_VIDEO_MAX_SEC) return resolve(null);
+        // Prefer HLS manifest over DASH for compatibility
+        const formats = d.formats || [];
+        let hlsUrl = null;
+        for (const f of formats) {
+          const u = f.url || '';
+          if (u.includes('.m3u8') && (f.vcodec !== 'none') && f.height && f.height >= 360) {
+            if (!hlsUrl) hlsUrl = u;
+          }
+        }
+        // Fall back to best available URL if no HLS
+        if (!hlsUrl) hlsUrl = d.url || null;
+        if (!hlsUrl) return resolve(null);
+
+        resolve({
+          url:         articleUrl,
+          title:       d.title || '',
+          hlsUrl,
+          duration,
+          thumbnail:   d.thumbnail || null,
+          publishedAt: d.upload_date
+            ? new Date(`${d.upload_date.slice(0,4)}-${d.upload_date.slice(4,6)}-${d.upload_date.slice(6,8)}`).toISOString()
+            : new Date().toISOString(),
+          orientation: 'landscape',   // BBC is always landscape 16:9 — fits 1920x1080 assembly frame directly
+          pillarboxFilter: null,
+          source: 'bbc'
+        });
+      } catch(_) { resolve(null); }
+    });
+    proc.on('error', () => resolve(null));
+  });
+}
+
+/**
+ * Scrape BBC news articles with video. Returns up to `limit` results.
+ */
+async function scrapeBbcNewsVideos(limit = 10) {
+  // Fetch both RSS feeds in parallel, dedupe by URL
+  const feeds = await Promise.allSettled(
+    BBC_RSS_URLS.map(u => axios.get(u, { timeout: 10000 }))
+  );
+  const seen = new Set();
+  const articles = [];
+  for (const r of feeds) {
+    if (r.status !== 'fulfilled') continue;
+    for (const item of parseBbcRss(r.value.data)) {
+      const key = item.link.split('?')[0];
+      if (!seen.has(key)) { seen.add(key); articles.push(item); }
+    }
+  }
+
+  console.log(`[bbc-scraper] ${articles.length} unique articles from RSS — testing ${Math.min(articles.length, BBC_FETCH_LIMIT)} for video...`);
+
+  // Run yt-dlp in batches of BBC_YTDLP_CONCURRENCY
+  const candidates = articles.slice(0, BBC_FETCH_LIMIT);
+  const results = [];
+  for (let i = 0; i < candidates.length && results.length < limit; i += BBC_YTDLP_CONCURRENCY) {
+    const batch = candidates.slice(i, i + BBC_YTDLP_CONCURRENCY);
+    const batchResults = await Promise.all(batch.map(art => extractBbcVideo(art.link).then(v => {
+      if (v) {
+        // Merge RSS title/desc (cleaner than URL-slug title) if yt-dlp title is short
+        if (!v.title || v.title.length < 10) v.title = art.title;
+        v.description = art.description || '';
+      }
+      return v;
+    })));
+    for (const v of batchResults) {
+      if (v && results.length < limit) results.push(v);
+    }
+  }
+
+  console.log(`[bbc-scraper] ✅ ${results.length} BBC articles with video (tested ${Math.min(candidates.length, BBC_FETCH_LIMIT)})`);
+  return results;
+}
+
+// ── AP / Reuters YouTube channel scrapers ────────────────────────────────────
+// AP and Reuters block direct article scraping (JS-rendered / bot-blocked).
+// Their YouTube channels post the same stories as short clips (20-150s) —
+// 100% hit rate since the channel only contains videos.
+
+const YT_NEWS_CHANNELS = {
+  ap:      { handle: '@AssociatedPress/videos', label: 'AP',      maxSec: 180 },
+  reuters: { handle: '@Reuters/videos',         label: 'Reuters', maxSec: 180 },
+};
+
+/**
+ * Scrape a YouTube news channel for recent short clips.
+ * Returns items in the same shape as the BBC/AJ scrapers.
+ */
+async function scrapeYtNewsChannel(source, limit = 12) {
+  const cfg = YT_NEWS_CHANNELS[source];
+  if (!cfg) throw new Error(`Unknown YT news source: ${source}`);
+
+  const channelUrl = `https://www.youtube.com/${cfg.handle}`;
+
+  // Step 1: get playlist metadata (fast, no video download)
+  const ids = await new Promise((resolve, reject) => {
+    let out = '';
+    const { execFile } = require('child_process');
+    const proc = execFile('yt-dlp', [
+      '--no-download', '--dump-json', '--flat-playlist',
+      '--playlist-end', String(Math.min(limit * 3, 40)), // over-fetch to account for long-form
+      channelUrl
+    ], { timeout: 30000 });
+    proc.stdout.on('data', d => out += d);
+    proc.on('close', () => {
+      const entries = out.trim().split('\n').filter(Boolean).flatMap(line => {
+        try {
+          const d = JSON.parse(line);
+          const dur = d.duration || 0;
+          if (dur > 0 && dur <= cfg.maxSec) return [{ id: d.id, title: d.title || '', duration: dur }];
+        } catch(_) {}
+        return [];
+      });
+      console.log(`[${source}-yt] Playlist: ${entries.length} clips ≤${cfg.maxSec}s`);
+      resolve(entries);
+    });
+    proc.on('error', reject);
+  });
+
+  if (!ids.length) return [];
+
+  // Step 2: extract direct video URLs in parallel batches
+  const CONCURRENCY = 6;
+  const results = [];
+  for (let i = 0; i < ids.length && results.length < limit; i += CONCURRENCY) {
+    const batch = ids.slice(i, i + CONCURRENCY);
+    const batchResults = await Promise.all(batch.map(entry => new Promise(resolve => {
+      const { execFile } = require('child_process');
+      const ytUrl = `https://www.youtube.com/watch?v=${entry.id}`;
+      const proc = execFile('yt-dlp',
+        ['--get-url', '-f', 'best[ext=mp4][height<=720]/best[ext=mp4]/best', ytUrl],
+        { timeout: 14000 }
+      );
+      let url = '';
+      proc.stdout.on('data', d => url += d);
+      proc.on('close', () => {
+        const hlsUrl = url.trim().split('\n')[0].trim();
+        if (!hlsUrl || hlsUrl.length < 20) return resolve(null);
+        resolve({
+          url:         ytUrl,
+          title:       entry.title,
+          hlsUrl,
+          duration:    entry.duration,
+          thumbnail:   `https://i.ytimg.com/vi/${entry.id}/maxresdefault.jpg`,
+          publishedAt: new Date().toISOString(), // channel doesn't give publish date in flat mode
+          orientation: 'landscape',   // AP/Reuters YouTube clips are 16:9 — fit 1920x1080 assembly frame directly
+          pillarboxFilter: null,
+          source
+        });
+      });
+      proc.on('error', () => resolve(null));
+    })));
+    for (const v of batchResults) { if (v && results.length < limit) results.push(v); }
+  }
+
+  console.log(`[${source}-yt] ✅ ${results.length} extractable clips`);
+  return results;
+}
+
+// GET /news/ap-videos
+app.get('/news/ap-videos', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '12'), 20);
+    const videos = await scrapeYtNewsChannel('ap', limit);
+    return res.json({ ok: true, source: 'ap', videos, recentCount: videos.length, totalFound: videos.length });
+  } catch (err) {
+    console.error('[news/ap-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
+
+// GET /news/reuters-videos
+app.get('/news/reuters-videos', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '12'), 20);
+    const videos = await scrapeYtNewsChannel('reuters', limit);
+    return res.json({ ok: true, source: 'reuters', videos, recentCount: videos.length, totalFound: videos.length });
+  } catch (err) {
+    console.error('[news/reuters-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
+
+// GET /news/bbc-videos — BBC news video scraper endpoint
+app.get('/news/bbc-videos', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '12'), 20);
+    const videos = await scrapeBbcNewsVideos(limit);
+    return res.json({
+      ok: true,
+      source: 'bbc',
+      videos,
+      recentCount: videos.length,
+      totalFound: videos.length
+    });
+  } catch (err) {
+    console.error('[news/bbc-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
+
+// Per-source result cache — protects "All Sources" from transient yt-dlp failures.
+// If a source returns 0 results (cold-start rate-limit, network blip), the last
+// successful batch is served instead. TTL: 30 min.
+const _newsSourceCache = {};
+const NEWS_SOURCE_CACHE_TTL_MS = 30 * 60 * 1000;
+
+function _cacheNewsResults(src, videos) {
+  if (videos.length > 0) {
+    _newsSourceCache[src] = { videos, ts: Date.now() };
+  }
+}
+
+function _getCachedNewsResults(src) {
+  const entry = _newsSourceCache[src];
+  if (!entry) return null;
+  if (Date.now() - entry.ts > NEWS_SOURCE_CACHE_TTL_MS) return null;
+  return entry.videos;
+}
+
+// GET /news/stories?source=aljazeera|bbc|all — unified multi-source news endpoint
+// Replaces hardcoded /news/us-canada-videos calls when source != aljazeera.
+// Returns same video shape as /news/us-canada-videos so dashboard needs minimal change.
+app.get('/news/stories', async (req, res) => {
+  const source = (req.query.source || 'aljazeera').toLowerCase();
+  const limit  = Math.min(parseInt(req.query.limit || '12'), 20);
+
+  try {
+    let videos = [];
+
+    // Run all requested sources in parallel — local machine, accuracy > speed
+    const fetchTasks = [];
+
+    if (source === 'aljazeera' || source === 'all') {
+      fetchTasks.push(
+        axios.get(`http://localhost:${process.env.PORT || 3000}/news/us-canada-videos`, { timeout: 180000 })
+          .then(r => {
+            const v = (r.data?.videos || []).map(v => ({ ...v, source: 'aljazeera' }));
+            _cacheNewsResults('aljazeera', v);
+            console.log(`[news/stories] AJ: ${v.length} videos`);
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] AJ failed: ${e.message}`);
+            const cached = _getCachedNewsResults('aljazeera');
+            if (cached) { console.log(`[news/stories] AJ: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    if (source === 'bbc' || source === 'all') {
+      const bbcLimit = source === 'all' ? 8 : limit;
+      fetchTasks.push(
+        scrapeBbcNewsVideos(bbcLimit)
+          .then(v => {
+            _cacheNewsResults('bbc', v);
+            console.log(`[news/stories] BBC: ${v.length} videos`);
+            if (v.length === 0) {
+              const cached = _getCachedNewsResults('bbc');
+              if (cached) { console.log(`[news/stories] BBC: 0 fresh — using ${cached.length} cached`); return cached; }
+            }
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] BBC failed: ${e.message}`);
+            const cached = _getCachedNewsResults('bbc');
+            if (cached) { console.log(`[news/stories] BBC: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    if (source === 'ap' || source === 'all') {
+      const apLimit = source === 'all' ? 6 : limit;
+      fetchTasks.push(
+        scrapeYtNewsChannel('ap', apLimit)
+          .then(v => {
+            _cacheNewsResults('ap', v);
+            console.log(`[news/stories] AP: ${v.length} videos`);
+            if (v.length === 0) {
+              const cached = _getCachedNewsResults('ap');
+              if (cached) { console.log(`[news/stories] AP: 0 fresh — using ${cached.length} cached`); return cached; }
+            }
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] AP failed: ${e.message}`);
+            const cached = _getCachedNewsResults('ap');
+            if (cached) { console.log(`[news/stories] AP: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    if (source === 'reuters' || source === 'all') {
+      const reutersLimit = source === 'all' ? 6 : limit;
+      fetchTasks.push(
+        scrapeYtNewsChannel('reuters', reutersLimit)
+          .then(v => {
+            _cacheNewsResults('reuters', v);
+            console.log(`[news/stories] Reuters: ${v.length} videos`);
+            if (v.length === 0) {
+              const cached = _getCachedNewsResults('reuters');
+              if (cached) { console.log(`[news/stories] Reuters: 0 fresh — using ${cached.length} cached`); return cached; }
+            }
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] Reuters failed: ${e.message}`);
+            const cached = _getCachedNewsResults('reuters');
+            if (cached) { console.log(`[news/stories] Reuters: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    const results = await Promise.all(fetchTasks);
+    for (const batch of results) videos.push(...batch);
+
+    // Sort by recency, then dedupe by normalised title (AJ can return URL variants of same story)
+    videos.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+    const seenTitles = new Set();
+    videos = videos.filter(v => {
+      const key = (v.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (seenTitles.has(key)) return false;
+      seenTitles.add(key);
+      return true;
+    });
+    if (source === 'all') videos = videos.slice(0, limit);
+
+    return res.json({
+      ok: true,
+      source,
+      videos,
+      recentCount: videos.length,
+      totalFound: videos.length
+    });
+  } catch (err) {
+    console.error('[news/stories] Error:', err.message);
     return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
   }
 });
