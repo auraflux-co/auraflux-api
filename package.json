@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.342",
+  "version": "1.0.343",
   "description": "AuraFlux — AI-powered video content production platform",
   "main": "server.js",
   "scripts": {
@@ -90,6 +90,7 @@
     "newrelic": "^13.19.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.7",
+    "openai": "^6.37.0",
     "pg": "^8.20.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
