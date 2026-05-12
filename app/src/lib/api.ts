@@ -331,8 +331,9 @@ export async function listJobs(token?: string): Promise<{ jobs: Job[] }> {
   return apiFetch('/jobs', { token });
 }
 
-export async function listAllJobs(token?: string): Promise<{ jobs: Job[] }> {
-  return apiFetch('/jobs?all=true', { token });
+export async function listAllJobs(token?: string, customerId?: string): Promise<{ jobs: Job[] }> {
+  const qs = customerId ? `?all=true&customerId=${encodeURIComponent(customerId)}` : '?all=true';
+  return apiFetch(`/jobs${qs}`, { token });
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
