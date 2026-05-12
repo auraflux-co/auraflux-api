@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-06 v1.0.363 (Cursor — fix(cpd-151): operator page reads ?customerId from search params; backend /jobs?all=true&customerId= scoped filter; customer drill-in banner + back link)
 **Last Updated:** 2026-05-12 v1.0.362 (Cursor — feat(cpd-320): E2E suite: Gemini video understanding via Files API; Claude UX observer lib_claude.py; inline per-test scoring; 18/18 tests passing; Jira CPD-149—154 created; Confluence HOW page for org RBAC)
 **Last Updated:** 2026-05-12 v1.0.361 (Cursor — feat(sms): migrate from Twilio to Telnyx; adapter pattern lib/sms/; SMS_PROVIDER=telnyx; +15716002835 active; rollback via SMS_PROVIDER=twilio)
 **Last Updated:** 2026-05-12 v1.0.358 (Cursor — fix(portal0): partial-probe fallback — re-probe full URL when 8MB range download returns ≤12s duration; fixes high-bitrate E2E clips being incorrectly rejected; O-T6 confirmed passing; G-T3 fix deploying)
