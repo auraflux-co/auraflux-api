@@ -60,7 +60,7 @@ function iconFor(href: string) {
 
 function CreditsBadge({ collapsed }: { collapsed: boolean }) {
   const { getToken, isLoaded } = useAuth();
-  const [used, setUsed] = useState<number | null>(null);
+  const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -70,7 +70,7 @@ function CreditsBadge({ collapsed }: { collapsed: boolean }) {
         const token = await getToken();
         if (!token) return;
         const b = await getCreditBalance(token);
-        if (!cancelled) setUsed(b.included_total - b.included_remaining);
+        if (!cancelled) setRemaining(b.included_remaining);
       } catch { /* non-fatal */ }
     }
     load();
@@ -81,11 +81,11 @@ function CreditsBadge({ collapsed }: { collapsed: boolean }) {
 
   return (
     <Link
-      href="/dashboard/billing"
-      title="Credits used this period"
+      href="/dashboard/credits"
+      title="Credits remaining this period"
       className="text-xs tabular-nums text-muted-foreground hover:text-foreground transition-colors"
     >
-      {used === null ? '—' : used.toLocaleString()} cr
+      {remaining === null ? '—' : remaining.toLocaleString()} left
     </Link>
   );
 }
@@ -97,6 +97,7 @@ interface NavItem {
   label:     string;
   external?: boolean;
   children?: { href: string; label: string }[];
+  divider?:  string; // section label shown above this item when sidebar is expanded
 }
 
 const CUSTOMER_NAV: NavItem[] = [
@@ -109,10 +110,10 @@ const CUSTOMER_NAV: NavItem[] = [
       { href: '/dashboard/jobs/history', label: 'History' },
     ],
   },
-  { href: '/dashboard/schedule',   label: 'Schedule'  },
-  { href: '/dashboard/templates',  label: 'Templates' },
-  { href: '/dashboard/staging',    label: 'Staging'   },
-  { href: '/dashboard/concierge',  label: 'Collab'   },
+  { href: '/dashboard/schedule',   label: 'Schedule'      },
+  { href: '/dashboard/templates',  label: 'Templates'     },
+  { href: '/dashboard/staging',    label: 'Review Queue'  },
+  { href: '/dashboard/concierge',  label: 'Collab'        },
   {
     href:  '/dashboard/billing',
     label: 'Billing',
@@ -135,7 +136,7 @@ const CUSTOMER_NAV: NavItem[] = [
 ];
 
 const OPERATOR_NAV: NavItem[] = [
-  { href: '/dashboard/generate', label: 'Generate' },
+  { href: '/dashboard/generate', label: 'Generate', divider: 'Operator tools' },
   { href: '/dashboard/operator', label: 'Operator' },
 ];
 
@@ -227,19 +228,25 @@ export function Sidebar() {
 
           if (!item.children) {
             return (
-              <button
-                key={item.href}
-                onClick={() => handleNavClick(item.href)}
-                className={cn(
-                  'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
-                  isActive(item.href)
-                    ? 'bg-accent text-accent-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+              <div key={item.href}>
+                {item.divider && (
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 select-none">
+                    {item.divider}
+                  </p>
                 )}
-              >
-                {icon}
-                {item.label}
-              </button>
+                <button
+                  onClick={() => handleNavClick(item.href)}
+                  className={cn(
+                    'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
+                    isActive(item.href)
+                      ? 'bg-accent text-accent-foreground font-medium'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+                  )}
+                >
+                  {icon}
+                  {item.label}
+                </button>
+              </div>
             );
           }
 

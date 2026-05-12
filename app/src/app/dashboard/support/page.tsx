@@ -49,7 +49,7 @@ function getAccountAgeDays(user: ReturnType<typeof useUser>['user']): number {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function GuidesPanel() {
+function GuidesPanel({ canEsc }: { canEsc: boolean }) {
   return (
     <aside className="w-full lg:w-72 shrink-0 space-y-4">
       <div className="rounded-lg border border-border p-4">
@@ -76,16 +76,25 @@ function GuidesPanel() {
 
       <div className="rounded-lg border border-border p-4 space-y-2">
         <h2 className="text-sm font-semibold">SMS Support</h2>
-        <p className="text-xs text-muted-foreground">Text us directly — your conversation will appear in your support history here.</p>
-        <a
-          href={`sms:${SUPPORT_SMS.replace(/\s/g, '')}`}
-          className="flex items-center gap-2 mt-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium w-full justify-center hover:bg-primary/90 transition-colors"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-          </svg>
-          Text {SUPPORT_SMS}
-        </a>
+        {canEsc ? (
+          <>
+            <p className="text-xs text-muted-foreground">Text us directly — your conversation will appear in your support history here.</p>
+            <a
+              href={`sms:${SUPPORT_SMS.replace(/\s/g, '')}`}
+              className="flex items-center gap-2 mt-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium w-full justify-center hover:bg-primary/90 transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              Text {SUPPORT_SMS}
+            </a>
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            SMS support is included with Guided and Managed plans.{' '}
+            <Link href="/dashboard/billing" className="text-primary underline">Upgrade to unlock</Link>.
+          </p>
+        )}
       </div>
     </aside>
   );
@@ -372,7 +381,7 @@ export default function SupportPage() {
         </div>
 
         {/* ── Guides + SMS panel ── */}
-        <GuidesPanel />
+        <GuidesPanel canEsc={canEsc} />
       </div>
 
       {showEsc && (
