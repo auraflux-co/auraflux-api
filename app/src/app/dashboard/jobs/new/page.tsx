@@ -106,8 +106,8 @@ const FEATURES: Feature[] = [
 ];
 
 const ADD_ONS = [
-  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'AI presenter rendered for each video',      badge: 'DFY' },
-  { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'DFY' },
+  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'AI presenter rendered for each video',      badge: 'Managed' },
+  { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'Managed' },
 ];
 
 const PLATFORMS = [
@@ -142,7 +142,7 @@ const STEP_GUIDE: Record<number, GuideContent> = {
     hint: 'Step 4 of 5 — Features. I can explain what each feature does to your video, which ones work best together, and how they affect credits and production time.',
   },
   4: {
-    tip:  'Schedule at least 30 minutes out to allow production time. HeyGen and Shoppable are DFY add-ons — they add significant production value but require the DFY plan. Platforms you select here determine which portals run in the publish stage.',
+    tip:  'Schedule at least 30 minutes out to allow production time. HeyGen and Shoppable are Managed plan add-ons — they add significant production value. Platforms you select here determine which portals run in the publish stage.',
     hint: 'Step 5 of 5 — Platform, publish & add-ons. Ask me about platform requirements, scheduling, credit costs, or whether add-ons make sense for your plan.',
   },
 };

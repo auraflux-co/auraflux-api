@@ -8,7 +8,7 @@
  * and an upgrade tooltip. Creates an upsell surface rather than an invisible wall.
  *
  * Usage:
- *   <LockedFeature minPlan="dfy" label="Available on Managed">
+ *   <LockedFeature minPlan="dfy" label="Available on Managed plan">
  *     <AvatarOption />
  *   </LockedFeature>
  */

@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { listCustomers, type CustomerRecord, type PlanTier } from '@/lib/api';
+import { tierLabel } from '@/lib/tier-labels';
 import { useRole } from '@/hooks/use-role';
 
 const TIER_COLORS: Record<PlanTier | string, string> = {
@@ -78,6 +79,7 @@ export default function AdminCustomersPage() {
   if (!isLoaded || !isAdmin) return null;
 
   const TIERS: Array<PlanTier | 'all'> = ['all', 'diy', 'dwy', 'dfy', 'custom'];
+  const TIER_DISPLAY: Record<string, string> = { all: 'All', diy: 'Operate', dwy: 'Guided', dfy: 'Managed', custom: 'Custom' };
 
   const filtered = customers.filter((c) => {
     const matchesTier   = tierFilter === 'all' || c.planTier === tierFilter;
@@ -90,11 +92,11 @@ export default function AdminCustomersPage() {
   });
 
   const metrics = {
-    total:   customers.length,
-    diy:     customers.filter((c) => c.planTier === 'diy').length,
-    dwy:     customers.filter((c) => c.planTier === 'dwy').length,
-    dfy:     customers.filter((c) => c.planTier === 'dfy').length,
-    custom:  customers.filter((c) => c.planTier === 'custom').length,
+    total:    customers.length,
+    operate:  customers.filter((c) => c.planTier === 'diy').length,
+    guided:   customers.filter((c) => c.planTier === 'dwy').length,
+    managed:  customers.filter((c) => c.planTier === 'dfy').length,
+    custom:   customers.filter((c) => c.planTier === 'custom').length,
     withJobs: customers.filter((c) => c.jobCount > 0).length,
   };
 
@@ -144,13 +146,13 @@ export default function AdminCustomersPage() {
               key={t}
               onClick={() => setTierFilter(t)}
               className={cn(
-                'px-2.5 py-1 text-xs rounded border transition-colors capitalize',
+                'px-2.5 py-1 text-xs rounded border transition-colors',
                 tierFilter === t
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'border-border text-muted-foreground hover:text-foreground',
               )}
             >
-              {t}
+              {TIER_DISPLAY[t] ?? t}
             </button>
           ))}
         </div>
@@ -196,7 +198,7 @@ export default function AdminCustomersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={cn('inline-block px-2 py-0.5 rounded text-xs font-medium', TIER_COLORS[c.planTier] || TIER_COLORS.diy)}>
-                      {c.planTier}
+                      {tierLabel(c.planTier)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
