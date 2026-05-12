@@ -1,0 +1,4 @@
+AuraFlux E2E Results — 20260512_130806
+Tests: 1  Passed: 0  Failed: 1
+
+❌ O-T1   hasanabi        score=?    NO OUTPUT

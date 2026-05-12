@@ -256,7 +256,7 @@ If the Copilot's response seems off, politely correct it.
 
 Write ONLY your next message — nothing else.`;
 
-const EXTRACT_PARAMS_PROMPT = `Based on this conversation between a customer and the AuraFlux Copilot, extract the video job parameters.
+const EXTRACT_PARAMS_PROMPT = `Based on this conversation between a customer and the AuraFlux Collab, extract the video job parameters.
 
 Customer brief: {brief}
 Full conversation:
@@ -282,7 +282,7 @@ Rules:
 - platforms: single-item array matching the target platform in the brief.
 - prompt: visual description of what should appear in the video — not the script narration.`;
 
-const AUDIT_PROMPT = `You are auditing a Managed-tier AuraFlux Copilot interaction.
+const AUDIT_PROMPT = `You are auditing a Managed-tier AuraFlux Collab interaction.
 
 The customer's brief: {brief}
 

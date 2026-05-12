@@ -2,7 +2,7 @@
 /**
  * Managed (dfy) tier E2E — browser-only, Copilot page ONLY, no API access.
  *
- * Interaction mode: customer describes intent to the AuraFlux Copilot.
+ * Interaction mode: customer describes intent to the AuraFlux Collab.
  * The system (Copilot) should understand the intent and route toward
  * the correct job configuration — no wizard, no manual form filling.
  *
