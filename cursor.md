@@ -1739,3 +1739,10 @@ Per `docs/architecture/DECOUPLED_VIDEO_PRODUCT_STACK.md`:
 ### Unblocked tickets remaining
 - **CPD-1** — Phase A E2E pipeline proof (needs live run with HeyGen keys + full job)
 - **CPD-89** — Marketing site (external — site not ready)
+
+
+## Local operator commands
+
+| Command | Where to run | What it does |
+|---------|-------------|--------------|
+| `bash scripts/aider_session_review_local.sh` | `cwn-production/` | End-of-session health review (git, pm2, errors, Jira, GitHub, Confluence) |
