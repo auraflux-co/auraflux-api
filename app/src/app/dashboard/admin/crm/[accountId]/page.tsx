@@ -213,9 +213,9 @@ export default function CrmAccountPage() {
               <span className="text-xs text-muted-foreground">
                 {jobs?.totalCount ?? 0} jobs
               </span>
-              {identity?.lastSignIn && (
+              {Boolean(identity?.lastSignIn) && (
                 <span className="text-xs text-muted-foreground">
-                  Last sign-in: {relTime(identity.lastSignIn as string)}
+                  Last sign-in: {relTime(identity?.lastSignIn as string)}
                 </span>
               )}
             </div>
@@ -350,14 +350,14 @@ export default function CrmAccountPage() {
                 <tr key={j.id as string}>
                   <td className="px-4 py-2">
                     <p className="font-mono text-xs">{(j.id as string)?.slice(0, 8)}…</p>
-                    {j.outputUrl && <a href={j.outputUrl as string} target="_blank" rel="noreferrer" className="text-xs text-primary underline">Output</a>}
+                    {Boolean(j.outputUrl) && <a href={j.outputUrl as string} target="_blank" rel="noreferrer" className="text-xs text-primary underline">Output</a>}
                   </td>
                   <td className="px-4 py-2 text-xs">{j.contentType as string}</td>
                   <td className="px-4 py-2">
                     <span className={cn('text-xs px-1.5 py-0.5 rounded', STATUS_COLOR[j.status as string] ?? 'bg-muted text-muted-foreground')}>
                       {j.status as string}
                     </span>
-                    {j.failReason && <p className="text-xs text-red-600 mt-0.5 max-w-xs truncate">{j.failReason as string}</p>}
+                    {Boolean(j.failReason) && <p className="text-xs text-red-600 mt-0.5 max-w-xs truncate">{j.failReason as string}</p>}
                   </td>
                   <td className="px-4 py-2 text-xs">{((j.platforms as string[]) || []).join(', ') || '—'}</td>
                   <td className="px-4 py-2 text-right text-xs text-muted-foreground">{relTime(j.createdAt as string)}</td>
@@ -378,7 +378,7 @@ export default function CrmAccountPage() {
                 <p className="font-medium">{t.name as string}</p>
                 <p className="text-xs text-muted-foreground">
                   {t.contentType as string} · {((t.platforms as string[]) || []).join(', ') || '—'}
-                  {t.recurrenceType && ` · ${t.recurrenceType as string}`}
+                  {Boolean(t.recurrenceType) && ` · ${t.recurrenceType as string}`}
                 </p>
               </CardContent>
             </Card>
