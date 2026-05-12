@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-12 v1.0.360 (Cursor — feat(sms): migrate from Twilio to Telnyx; adapter pattern lib/sms/; SMS_PROVIDER=telnyx; +15716002835 active; rollback via SMS_PROVIDER=twilio)
 **Last Updated:** 2026-05-12 v1.0.358 (Cursor — fix(portal0): partial-probe fallback — re-probe full URL when 8MB range download returns ≤12s duration; fixes high-bitrate E2E clips being incorrectly rejected; O-T6 confirmed passing; G-T3 fix deploying)
 **Last Updated:** 2026-05-10 (Cursor — feat: wire gate5_forced to auto-trigger server-side Gate 5; remove dashboard /publish bypass — advance endpoint fires Gate 5 async; approveAndUpload removed; _pollForPublished polls for published stage)
 **Last Updated:** 2026-05-06 v1.0.339 (Cursor — fix(cpd-142): revert steps 30→20 timeout; extend poll timeout 300s→600s; scheduler stays simple)
