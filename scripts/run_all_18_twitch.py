@@ -122,7 +122,7 @@ TESTS = [
     },
     {
         "id": "O-T6", "tier": "operate", "streamer": "lacy",
-        "profile": "live_event", "format": "short", "platform": "instagram",
+        "profile": "vertical_reel", "format": "short", "platform": "instagram",
         "brief": (
             "Lacy gaming stream highlights — skill moments and personality. "
             "Short Instagram Reels format, punchy edits."
@@ -184,7 +184,7 @@ TESTS = [
     },
     {
         "id": "G-T5", "tier": "guided", "streamer": "jasontheween",
-        "profile": "live_event", "format": "short", "platform": "instagram",
+        "profile": "vertical_reel", "format": "short", "platform": "instagram",
         "brief": (
             "Short live event style clip from Jason's stream. "
             "Collab helps with pacing and structure."
@@ -261,7 +261,7 @@ TESTS = [
     },
     {
         "id": "M-T6", "tier": "managed", "streamer": "lacy",
-        "profile": "live_event", "format": "short", "platform": "instagram",
+        "profile": "vertical_reel", "format": "short", "platform": "instagram",
         "brief": "Full managed run — Collab produces Lacy Instagram clip.",
         "collab_prompt": (
             "Run full production on a Lacy gaming clip for Instagram. "
