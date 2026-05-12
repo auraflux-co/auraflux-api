@@ -21,7 +21,7 @@ export default function ConciergePage() {
     <div className="space-y-4 h-[calc(100vh-3.5rem)]">
       <div className="flex items-center justify-between flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-semibold">AuraFlux Copilot</h1>
+          <h1 className="text-2xl font-semibold">AuraFlux Collab</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             Get guided help building and validating your job spec
           </p>
