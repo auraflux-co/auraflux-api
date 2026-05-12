@@ -113,7 +113,6 @@ const CUSTOMER_NAV: NavItem[] = [
   { href: '/dashboard/schedule',   label: 'Schedule'      },
   { href: '/dashboard/templates',  label: 'Templates'     },
   { href: '/dashboard/staging',    label: 'Review Queue'  },
-  { href: '/dashboard/concierge',  label: 'Collab'        },
   {
     href:  '/dashboard/billing',
     label: 'Billing',

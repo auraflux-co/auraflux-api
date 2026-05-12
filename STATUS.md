@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-06 v1.0.371 (Cursor — feat(cpd-156): Collab scoped to job creation + staging only; /concierge redirect to support; Gemini customer memory — last 20 jobs + templates injected into system prompt per session; portal outcome summaries included; internal tier IDs removed from Collab prompt)
 **Last Updated:** 2026-05-06 v1.0.369 (Cursor — feat(cpd-155/157-165): UX polish batch — Staging→Review Queue, Operator section divider in nav, Credits badge shows remaining, Home plan badge+quick links, Support SMS gated by plan, Profile skeleton loader, Team error+retry state, tierLabel on billing/profile, GuidesPanel accepts canEsc prop)
 **Last Updated:** 2026-05-06 v1.0.367 (Cursor — feat(cpd-152): wire LockedFeature for HeyGen/Shoppable add-ons and TikTok platform in New Job wizard; Managed-only options now show lock overlay + upgrade tooltip on Operate/Guided plans)
 **Last Updated:** 2026-05-06 v1.0.365 (Cursor — fix(cpd-153): support page reads planTier from usePlan() not Clerk direct; GuidePanel passes planTier to ConciergeChat; dead usePlan import removed from team page)
