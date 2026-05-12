@@ -2,7 +2,7 @@
 /**
  * TopBar — dashboard top bar (CPD-111, CPD-117).
  * Left:  hamburger (mobile only)
- * Right: notifications bell | AuraFlux Copilot toggle | UserButton
+ * Right: notifications bell | AuraFlux Collab toggle | UserButton
  */
 
 import { UserButton } from '@clerk/nextjs';
@@ -48,7 +48,7 @@ export function TopBar() {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          AuraFlux Copilot
+          AuraFlux Collab
         </button>
 
         <UserButton />

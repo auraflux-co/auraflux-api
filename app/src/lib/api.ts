@@ -107,7 +107,7 @@ export interface CreateJobPayload {
 export interface CreditEstimate {
   credits:   number;
   breakdown: Record<string, number>;
-  message:   string; // Copilot-ready summary
+  message:   string; // Collab-ready summary
 }
 
 const CREDIT_RATES = {

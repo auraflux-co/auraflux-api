@@ -39,7 +39,7 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
       '400 credits / month (no rollover)',
       '1 brand',
       'Full platform — script, TTS, WAN T2V, thumbnails, publish',
-      'AuraFlux Copilot — guide confirmation mode',
+      'AuraFlux Collab — guide confirmation mode',
       'Confluence self-serve guides',
     ],
   },
@@ -51,7 +51,7 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
       '1,200 credits / month (no rollover)',
       'Up to 3 brands',
       'Everything in Operate',
-      'Full AuraFlux Copilot — guidance, estimates, all features',
+      'Full AuraFlux Collab — guidance, estimates, all features',
       'SMS + chat support escalation',
     ],
   },
@@ -64,7 +64,7 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
       'Up to 5 brands',
       'Everything in Guided',
       'Dedicated account manager',
-      'Full Copilot + priority support',
+      'Full Collab + priority support',
     ],
   },
 };
@@ -379,7 +379,7 @@ function BillingPageInner() {
 
         </div>
         <p className="text-xs text-muted-foreground mb-4">
-          Add capacity for specific AI features beyond your plan credits. AuraFlux Copilot will prompt you when you need more.
+          Add capacity for specific AI features beyond your plan credits. AuraFlux Collab will prompt you when you need more.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[

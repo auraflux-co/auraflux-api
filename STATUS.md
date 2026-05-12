@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-12 v1.0.349 (Cursor — feat: rename AuraFlux Copilot→AuraFlux Collab everywhere; Stripe live mode configured; STRIPE_PRICE_DIY/DWY/DFY added to .env.example)
 **Last Updated:** 2026-05-12 v1.0.348 (Cursor — fix(cors): ALLOWED_ORIGINS missing from Render API env — all pages showed "Error: Failed to fetch"; CORS preflight was returning 500; added app.auraflux.co to whitelist)
 **Last Updated:** 2026-05-12 v1.0.345 (Cursor — fix(docker): .dockerignore missing **/node_modules/ and app/.next/ — build context was 1.5GB causing Render Docker builds to fail; context now 2MB)
 **Last Updated:** 2026-05-12 (Cursor — fix(auth): clerkInit no-op when CLERK_PUBLISHABLE_KEY missing — blocked Schedule page with 500 Internal Server Error; now only requires CLERK_SECRET_KEY for backend; CLERK_PUBLISHABLE_KEY added to API Render env)
