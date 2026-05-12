@@ -7184,6 +7184,10 @@ app.get('/errors', (req, res) => {
   res.json({ ok: true, errorRate: rate, recent, logFile: ERROR_LOG });
 });
 
+// ── Developer API — /v1/ surface for Operate plan (CPD-126) ──────
+const developerApiRouter = require('./lib/routes/developer_api');
+app.use('/v1', developerApiRouter);
+
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
 

@@ -6,42 +6,50 @@ alwaysApply: true
 
 # End-of-Session Aider Review
 
-At the **start of every session**, do the following in order:
+There are **two separate review scripts** — use the right one for the work done in the session:
 
-1. Read `logs/aider_session_review.md`
-2. Check whether `last-reviewed-commit` matches the current `git rev-parse HEAD`
-3. **If they do not match** (i.e. commits landed since last review, or Jira creds are now available), tell the user:
-   > "The review is stale — run `bash scripts/aider_session_review.sh` to get a fresh report with live Jira data before we start."
-4. Once the report is current: check for `[BLOCKING]` items (fix first) and `[SHOULD FIX]` items (fold into session plan).
+| Work done in | Script | Report |
+|---|---|---|
+| `cwn-production` (Next.js / Render) | `bash scripts/aider_session_review.sh` | `logs/aider_session_review.md` |
+| `cwn-c0` (Express / localhost / pm2) | `bash scripts/aider_session_review_local.sh` | `logs/aider_session_review_local.md` |
 
-At the **end of every session** (or when the user says "we're done" / "end session" / "close out"), remind the user to run:
+If work touched both repos, run both.
+
+## Start of every session
+
+1. Identify which repo the session is working in (`cwn-production` vs `cwn-c0`)
+2. Read the matching report file
+3. Check whether `last-reviewed-commit` matches `git rev-parse HEAD` in that repo
+4. **If stale**, tell the user which script to run before starting
+5. Once current: check for `[BLOCKING]` items (fix first) and `[SHOULD FIX]` items (fold into plan)
+
+## End of every session
+
+Remind the user to run the appropriate script (or both if work spanned both repos):
 
 ```bash
+# cwn-c0 localhost work:
+bash scripts/aider_session_review_local.sh
+
+# cwn-production / Render work:
 bash scripts/aider_session_review.sh
 ```
 
-This generates a full cross-system health report covering:
+## What each script checks
 
-**Codebase**
-- Commit delta since last review
+**`aider_session_review_local.sh`** (cwn-c0 / localhost):
+- pm2 process health + restart count
+- Recent server errors from pm2 logs
+- Stuck/failed jobs in SQLite (last 48h)
+- Dashboard fetch calls vs registered server.js routes
+- Env vars in code not in `.env.example`
+- Lib modules without test files
+- Jira, GitHub, Confluence cross-checks
+
+**`aider_session_review.sh`** (cwn-production / Render):
 - Route file dependency correctness
 - C0 / C1+ boundary violations
-- Undocumented env vars or hardcoded secrets
-- Dead code after route extractions
 - Render deploy readiness
-
-**Jira**
-- Tickets stuck in wrong states
-- In Development / In Review tickets without matching open GitHub PRs
-- Merged commits with no corresponding Done ticket
-
-**GitHub**
-- Open PRs with no Jira ticket in flight
-- Recent CI failures
-- Stale unmerged branches
-
-**Confluence**
-- Stale docs given recent code changes
-- Missing docs for new routes or features
-
-The report is saved to `logs/aider_session_review.md`.
+- Next.js frontend TypeScript check
+- API-to-UI mapping (apiFetch paths vs backend routes)
+- Jira, GitHub, Confluence cross-checks

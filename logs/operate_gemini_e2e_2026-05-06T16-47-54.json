@@ -1,0 +1,256 @@
+{
+  "tier": "operate",
+  "timestamp": "2026-05-06T16-47-54",
+  "summary": {
+    "passed": 0,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "O-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports \u2014 skateboarding, surfing, snowboarding. Energy is everything. Hype tone. Going on TikTok.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "type": "text",
+        "contentType": "custom",
+        "templateId": "short-form",
+        "topic": "extreme sports highlights",
+        "tone": "hype",
+        "prompt": "High-energy extreme sports short-form vertical reel: skateboarding tricks, surfers carving massive waves, snowboarders launching off jumps. Fast cuts, hype music feel. Short, punchy, vertical 9:16 for TikTok.",
+        "platforms": [
+          "tiktok"
+        ]
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_custom_1778085852472",
+      "status": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 15,
+        "issues": [
+          "Job status is 'failed'.",
+          "The `outputUrl` is missing (null).",
+          "Video output is not accessible.",
+          "The `platforms` field in the job result is empty, but 'tiktok' was requested in the payload.",
+          "The `filledScript` content includes sports (wingsuit, motocross, ice climbing) not specified in the brief, which primarily requested skateboarding, surfing, and snowboarding (only surfing is present).",
+          "The `productionProfile` in the job result is 'broadcast_desk', which seems to contradict the 'short-form vertical for TikTok' style requested via `templateId: short-form` and the brief."
+        ],
+        "notes": "The job critically failed to produce any video output. The `outputUrl` is absent and inaccessible, leading to an automatic 'failed' status and a low score. There are also mismatches in the recorded platforms and the specific content generated in the script compared to the brief, as well as an apparent mismatch in the `productionProfile` for a TikTok short-form video."
+      },
+      "passed": false,
+      "score": 15,
+      "issues": [
+        "Job status is 'failed'.",
+        "The `outputUrl` is missing (null).",
+        "Video output is not accessible.",
+        "The `platforms` field in the job result is empty, but 'tiktok' was requested in the payload.",
+        "The `filledScript` content includes sports (wingsuit, motocross, ice climbing) not specified in the brief, which primarily requested skateboarding, surfing, and snowboarding (only surfing is present).",
+        "The `productionProfile` in the job result is 'broadcast_desk', which seems to contradict the 'short-form vertical for TikTok' style requested via `templateId: short-form` and the brief."
+      ]
+    },
+    {
+      "id": "O-T2",
+      "brief": "Produce a professional 3-minute news desk segment covering AI breakthroughs in healthcare for 2026. Informative, authoritative tone. YouTube audience.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "type": "text",
+        "contentType": "custom",
+        "templateId": "long-form",
+        "topic": "AI breakthroughs in healthcare for 2026",
+        "tone": "informative",
+        "prompt": "A professional news desk segment: AI breakthroughs transforming healthcare in 2026. Cover predictive diagnostics, AI surgery assistants, and drug discovery acceleration. Informative and authoritative tone. 3 minutes.",
+        "platforms": [
+          "youtube"
+        ]
+      },
+      "jobId": "e2e-operate-test_COMPACT_GEN_custom_1778085894570",
+      "status": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Job status is 'failed'.",
+          "outputUrl is missing from the job result (null).",
+          "Video output is not accessible.",
+          "Platforms mismatch: 'youtube' was requested in the payload but the job result recorded an empty list of platforms."
+        ],
+        "notes": "While the brief's requirements for template (long-form/broadcast_desk), topic ('AI breakthroughs in healthcare for 2026'), and tone ('informative') were correctly interpreted and reflected in the API payload and the job's metadata and generated script, the job ultimately failed to produce a video output. The outputUrl is missing, the video is inaccessible, and the specified platform ('youtube') was not recorded in the job result, indicating a critical failure in the end-to-end process."
+      },
+      "passed": false,
+      "score": 20,
+      "issues": [
+        "Job status is 'failed'.",
+        "outputUrl is missing from the job result (null).",
+        "Video output is not accessible.",
+        "Platforms mismatch: 'youtube' was requested in the payload but the job result recorded an empty list of platforms."
+      ]
+    },
+    {
+      "id": "O-T3",
+      "brief": "I need a short casual video about morning productivity routines \u2014 coffee, exercise, mindset. Relatable and casual tone. Instagram Reels.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "type": "text",
+        "contentType": "custom",
+        "templateId": "short-form",
+        "topic": "Morning Productivity Routines",
+        "tone": "casual",
+        "prompt": "Short casual lifestyle video: morning productivity routines. Person making coffee, doing a quick workout, journaling with a positive mindset. Warm, relatable, authentic feel. Vertical 9:16 for Instagram Reels.",
+        "platforms": [
+          "instagram"
+        ]
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_custom_1778085932613",
+      "status": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 50,
+        "issues": [
+          "Job status is 'failed'.",
+          "outputUrl is missing.",
+          "Video output is not accessible.",
+          "Result platforms array is empty, expected 'instagram' based on the payload and brief."
+        ],
+        "notes": "The job failed to produce an output URL, making the video inaccessible, and the requested platform was not recorded in the result. The core requirement of generating a video was not met."
+      },
+      "passed": false,
+      "score": 50,
+      "issues": [
+        "Job status is 'failed'.",
+        "outputUrl is missing.",
+        "Video output is not accessible.",
+        "Result platforms array is empty, expected 'instagram' based on the payload and brief."
+      ]
+    },
+    {
+      "id": "O-T4",
+      "brief": "Long-form corporate product launch announcement for a new AI-powered analytics platform. Professional tone. YouTube.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "type": "text",
+        "contentType": "custom",
+        "templateId": "long-form",
+        "topic": "AI-powered analytics platform launch",
+        "tone": "professional",
+        "prompt": "Corporate product launch video for an AI-powered business analytics platform. Highlight real-time insights, predictive modeling, executive dashboards, and ROI improvements. Professional, aspirational tone. Long-form for YouTube.",
+        "platforms": [
+          "youtube"
+        ]
+      },
+      "jobId": "e2e-operate-test_COMPACT_GEN_custom_1778085967698",
+      "status": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 25,
+        "issues": [
+          "Job status is 'failed'.",
+          "Job result 'platforms' array is empty; expected 'youtube' based on brief and API payload.",
+          "Output URL is absent (null).",
+          "Video is not accessible."
+        ],
+        "notes": "The job critically failed to produce an output video, as indicated by the 'failed' status, the absence of an 'outputUrl', and the lack of an accessible video. Although the topic, tone, and template ID aligned with the brief, the job did not successfully complete, rendering it a failure from an end-to-end perspective. The 'platforms' field in the result also did not reflect the 'youtube' platform specified."
+      },
+      "passed": false,
+      "score": 25,
+      "issues": [
+        "Job status is 'failed'.",
+        "Job result 'platforms' array is empty; expected 'youtube' based on brief and API payload.",
+        "Output URL is absent (null).",
+        "Video is not accessible."
+      ]
+    },
+    {
+      "id": "O-T5",
+      "brief": "Breaking news segment \u2014 urgent coverage of a major global economic development. Urgent, direct tone. Short and punchy. YouTube.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "type": "text",
+        "contentType": "custom",
+        "templateId": "short-form",
+        "topic": "Urgent Global Economic Development: Breaking News",
+        "tone": "urgent",
+        "prompt": "Breaking news broadcast: urgent economic news coverage. News anchor at desk, stock market charts, global economy crisis. Urgent, direct, authoritative tone. Short-form punchy breaking news format.",
+        "platforms": [
+          "youtube"
+        ]
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_custom_1778086005351",
+      "status": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 10,
+        "issues": [
+          "Job status is 'failed'.",
+          "Template ID 'short-form' in the payload does not align with 'YouTube' platform and 'broadcast_desk' production profile, which typically implies a 'long-form' template.",
+          "Requested platform 'youtube' was not recorded in the job result's 'platforms' field, which is empty.",
+          "Output URL is absent (null) in the job result.",
+          "Video content is not accessible as no output URL was generated."
+        ],
+        "notes": "The job explicitly failed and did not produce an output URL, making it a complete failure from an end-to-end perspective. While the topic and tone matched the brief, the templateId choice was inappropriate for YouTube/desk content, and the requested platform was not registered in the final job result."
+      },
+      "passed": false,
+      "score": 10,
+      "issues": [
+        "Job status is 'failed'.",
+        "Template ID 'short-form' in the payload does not align with 'YouTube' platform and 'broadcast_desk' production profile, which typically implies a 'long-form' template.",
+        "Requested platform 'youtube' was not recorded in the job result's 'platforms' field, which is empty.",
+        "Output URL is absent (null) in the job result.",
+        "Video content is not accessible as no output URL was generated."
+      ]
+    },
+    {
+      "id": "O-T6",
+      "brief": "Short entertainment clip covering pop culture trends this week. Energetic, fun, youthful tone. TikTok.",
+      "entry": "generate",
+      "payload": {
+        "entry": "generate",
+        "type": "text",
+        "contentType": "custom",
+        "templateId": "short-form",
+        "topic": "Pop culture trends this week",
+        "tone": "energetic",
+        "prompt": "Energetic short-form entertainment clip about the hottest pop culture trends this week: viral TikTok challenges, new music drops, celebrity moments, and trending memes. Fun, youthful tone for a Gen-Z TikTok audience.",
+        "platforms": [
+          "tiktok"
+        ]
+      },
+      "jobId": "e2e-operate-test_EXTRACT_GEN_custom_1778086039984",
+      "status": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "passed": false,
+        "score": 30,
+        "issues": [
+          "Job status is 'failed'.",
+          "outputUrl is missing (null).",
+          "Video is not accessible.",
+          "Platforms in job result are empty, but 'tiktok' was requested in the API payload and brief."
+        ],
+        "notes": "While the topic, tone, and implied templateId largely matched the brief and API payload, the job ultimately failed to produce a video output. The outputUrl is null and the video is not accessible, which are critical failures for an end-to-end pass. The 'platforms' field also shows a mismatch between the requested 'tiktok' and the empty array in the result."
+      },
+      "passed": false,
+      "score": 30,
+      "issues": [
+        "Job status is 'failed'.",
+        "outputUrl is missing (null).",
+        "Video is not accessible.",
+        "Platforms in job result are empty, but 'tiktok' was requested in the API payload and brief."
+      ]
+    }
+  ]
+}
