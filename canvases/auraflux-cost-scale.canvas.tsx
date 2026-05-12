@@ -303,7 +303,7 @@ export default function CostScale() {
       />
 
       {/* Copilot tiers */}
-      <H2>AuraFlux Copilot — Access by Plan</H2>
+      <H2>AuraFlux Collab — Access by Plan</H2>
       <Table
         headers={['Plan', 'Copilot mode', 'Support access', 'AF cost/mo']}
         rows={[

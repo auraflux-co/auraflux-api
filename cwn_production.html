@@ -2350,6 +2350,14 @@ function renderQueue() {
     if (canRetryAsm) {
       actions += '<button onclick="retryAssembly(\'' + job.asmId + '\',\'' + (job.type||'news') + '\',\'' + (job.title||'').replace(/'/g,"\\'") + '\',\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(230,126,34,0.6);" title="Re-run FFmpeg assembly from existing tmp segments — skips HeyGen, no credits used">🔄 RETRY ASSEMBLY</button>';
     }
+    // RE-ASSEMBLE FROM FILES — uses manual_segments folder overrides, skips Gate 2 (chrome burning).
+    // Show for any job that has been through HeyGen (not just submitted — any post-script stage).
+    // Server validates that heygen.videoJobs exists; shows error toast if not ready.
+    var pastHeygenStage = ['all_sent','awaiting_manual_segments','heygen_done','assembled',
+      'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1;
+    if (pastHeygenStage && status !== 'published') {
+      actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Skip Gate 2 — build segments from card data and fire assembly. Files in manual_segments folder are used automatically.">📁 RE-ASSEMBLE FROM FILES</button>';
+    }
     actions += '</div>';
     // Short-form status div (for thumbnail + CapCut feedback)
     if (isShortJob) {
@@ -2792,6 +2800,55 @@ function dismissJob(jobId) {
   };
   xhr.onerror = xhr.ontimeout = function() {
     cwn_log('[dismiss] Server unreachable', true);
+    alert('❌ Server unreachable — is server.js running?');
+  };
+  xhr.send(JSON.stringify({}));
+}
+
+// POST /job/:id/reassemble — skip Gate 2, go straight to assembly using
+// manual_segments folder overrides. Expired HeyGen URLs don't matter.
+function reassembleFromFiles(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  var retryNum = ((job && job._assemblyRetryCount) || 0) + 1;
+  var msg = '📁 RE-ASSEMBLE FROM FILES\n\n'
+    + 'This will:\n'
+    + '  • Skip Gate 2 (chrome burning) and jump straight to FFmpeg assembly\n'
+    + '  • Automatically pick up any files you dropped in:\n'
+    + '    tmp/manual_segments/' + jobId + '/\n'
+    + '  • Ignore expired HeyGen URLs (local files take priority)\n'
+    + '  • Start assembly retry r' + retryNum + '\n\n'
+    + 'Make sure your HeyGen renders and source clips are already in that folder before continuing.';
+  if (!confirm(msg)) return;
+
+  cwn_log('[reassemble] ' + jobId + ' — requesting r' + retryNum + ' from manual_segments files…', false);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/reassemble', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 20000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Reassemble failed');
+      if (job) {
+        job._assemblyRetryCount = retryNum;
+        job.stage = 'heygen_done';
+        delete job.assembledAt;
+        delete job.finalUrl;
+        saveJobs();
+      }
+      renderQueue();
+      cwn_log('[reassemble] ' + jobId + ' r' + retryNum + ' started — ' + resp.segmentCount + ' segs, ' + resp.clipCount + ' clips', false);
+      alert('✅ Re-assembly r' + retryNum + ' started!\n\n'
+        + resp.segmentCount + ' segments (' + resp.clipCount + ' clips)\n\n'
+        + 'Watch the dashboard — Gate 3 QA result will appear when FFmpeg finishes.');
+    } catch(e) {
+      cwn_log('[reassemble] Error: ' + e.message, true);
+      alert('❌ Reassemble failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    cwn_log('[reassemble] Server unreachable', true);
     alert('❌ Server unreachable — is server.js running?');
   };
   xhr.send(JSON.stringify({}));
