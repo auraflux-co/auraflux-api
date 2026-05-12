@@ -36,7 +36,7 @@ export function GuidePanel() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div>
-              <p className="text-sm font-semibold">AuraFlux Copilot</p>
+              <p className="text-sm font-semibold">AuraFlux Collab</p>
               <p className="text-[10px] text-muted-foreground">Your production co-pilot</p>
             </div>
             <button
