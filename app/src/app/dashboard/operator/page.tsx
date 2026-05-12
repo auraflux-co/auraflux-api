@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,10 @@ import { listAllJobs, type Job } from '@/lib/api';
 import { useRole } from '@/hooks/use-role';
 
 export default function OperatorPage() {
-  const router  = useRouter();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const scopedId     = searchParams.get('customerId') ?? undefined;
+
   const { role, isOperator, isLoaded } = useRole();
   const { getToken } = useAuth();
 
@@ -38,7 +41,7 @@ export default function OperatorPage() {
     start(async () => {
       try {
         const token = await getToken();
-        const res = await listAllJobs(token ?? undefined);
+        const res = await listAllJobs(token ?? undefined, scopedId);
         setJobs(res.jobs ?? []);
         setLast(new Date());
         setError(null);
@@ -69,9 +72,21 @@ export default function OperatorPage() {
 
   return (
     <div className="space-y-4 max-w-6xl">
+      {scopedId && (
+        <div className="flex items-center gap-3 rounded-md border border-border bg-muted/40 px-4 py-2.5 text-sm">
+          <span className="text-muted-foreground">Viewing jobs for customer</span>
+          <code className="font-mono text-xs bg-background px-1.5 py-0.5 rounded border border-border">{scopedId}</code>
+          <button
+            onClick={() => router.push('/dashboard/admin/customers')}
+            className="ml-auto text-xs text-primary hover:underline"
+          >
+            ← Back to all customers
+          </button>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Operator</h1>
+          <h1 className="text-2xl font-semibold">{scopedId ? 'Customer Jobs' : 'Operator'}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Role: <span className="font-medium">{role}</span>
             {lastFetch && ` · Updated ${lastFetch.toLocaleTimeString()}`}
