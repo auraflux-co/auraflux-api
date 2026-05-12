@@ -1,11 +1,5 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-05-12 v1.0.356 (Cursor — fix(copy): remove all diy/dwy/dfy tier acronyms from app/dashboard; add tier-labels.ts utility; Operate/Guided/Managed everywhere; E2E 18-test spec-output canvas + O-T1..T5 all produce video output)
-**Last Updated:** 2026-05-12 v1.0.354 (Cursor — fix(cpd-126): restore app.use('/v1', developerApiRouter) lost in PR #308 squash — POST /v1/jobs was 404; add 18-test Twitch corpus pipeline: prepare_e2e_corpus.py + run_all_18_twitch.py; all 18 clips uploaded to R2 as permanent fixtures)
-**Last Updated:** 2026-05-12 v1.0.351 (Cursor — feat: Stripe as source of truth for plans; stripe_plans_sync.js loads plans live; webhook invalidates cache on product/price changes; sync_stripe_plans.js CLI updates Render env vars automatically)
-**Last Updated:** 2026-05-12 v1.0.349 (Cursor — feat: rename AuraFlux Copilot→AuraFlux Collab everywhere; Stripe live mode configured; STRIPE_PRICE_DIY/DWY/DFY added to .env.example)
-**Last Updated:** 2026-05-12 v1.0.348 (Cursor — fix(cors): ALLOWED_ORIGINS missing from Render API env — all pages showed "Error: Failed to fetch"; CORS preflight was returning 500; added app.auraflux.co to whitelist)
-**Last Updated:** 2026-05-12 v1.0.345 (Cursor — fix(docker): .dockerignore missing **/node_modules/ and app/.next/ — build context was 1.5GB causing Render Docker builds to fail; context now 2MB)
-**Last Updated:** 2026-05-12 (Cursor — fix(auth): clerkInit no-op when CLERK_PUBLISHABLE_KEY missing — blocked Schedule page with 500 Internal Server Error; now only requires CLERK_SECRET_KEY for backend; CLERK_PUBLISHABLE_KEY added to API Render env)
+**Last Updated:** 2026-05-12 v1.0.358 (Cursor — fix(portal0): partial-probe fallback — re-probe full URL when 8MB range download returns ≤12s duration; fixes high-bitrate E2E clips being incorrectly rejected; O-T6 confirmed passing; G-T3 fix deploying)
 **Last Updated:** 2026-05-10 (Cursor — feat: wire gate5_forced to auto-trigger server-side Gate 5; remove dashboard /publish bypass — advance endpoint fires Gate 5 async; approveAndUpload removed; _pollForPublished polls for published stage)
 **Last Updated:** 2026-05-06 v1.0.339 (Cursor — fix(cpd-142): revert steps 30→20 timeout; extend poll timeout 300s→600s; scheduler stays simple)
 **Last Updated:** 2026-05-06 v1.0.335 (Cursor — fix(cpd-142): export _runWanPreGeneration from jobs_c1; restore ensurePodRunning; developer_api could not import function)
