@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api';
-import { usePlan } from '@/contexts/plan-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -46,7 +45,6 @@ const ROLE_BADGE_VARIANT: Record<MemberRole, 'default' | 'secondary' | 'outline'
 
 export default function TeamPage() {
   const { getToken }                            = useAuth();
-  const { planTier }                            = usePlan();
   const [members, setMembers]                   = useState<TeamMember[]>([]);
   const [myRole, setMyRole]                     = useState<MemberRole>('owner');
   const [loading, setLoading]                   = useState(true);
