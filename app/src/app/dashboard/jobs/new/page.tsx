@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload } from '@/lib/api';
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
+import { LockedFeature } from '@/components/ui/locked-feature';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
 
@@ -106,14 +107,14 @@ const FEATURES: Feature[] = [
 ];
 
 const ADD_ONS = [
-  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'AI presenter rendered for each video',      badge: 'Managed' },
-  { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'Managed' },
+  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'AI presenter rendered for each video',      badge: 'Managed', minPlan: 'dfy' as const },
+  { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'Managed', minPlan: 'dfy' as const },
 ];
 
 const PLATFORMS = [
-  { id: 'youtube',   label: 'YouTube'   },
-  { id: 'tiktok',    label: 'TikTok'    },
-  { id: 'instagram', label: 'Instagram' },
+  { id: 'youtube',   label: 'YouTube',   minPlan: undefined },
+  { id: 'tiktok',    label: 'TikTok',    minPlan: 'dfy' as const },
+  { id: 'instagram', label: 'Instagram', minPlan: undefined },
 ];
 
 // ─── Guide content ────────────────────────────────────────────────────────────
@@ -604,19 +605,26 @@ function NewJobPageInner() {
             <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Platforms</Label>
             <div className="flex flex-wrap gap-2">
               {PLATFORMS.map((p) => (
-                <button
+                <LockedFeature
                   key={p.id}
-                  type="button"
-                  onClick={() => togglePlatform(p.id)}
-                  className={cn(
-                    'px-3 py-1.5 text-xs rounded-md border transition-colors',
-                    platforms.includes(p.id)
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'border-border text-muted-foreground hover:text-foreground',
-                  )}
+                  minPlan={p.minPlan ?? 'diy'}
+                  currentPlan={planTier ?? 'diy'}
+                  label={p.label}
+                  upgradeMsg={`TikTok direct publishing is included in the Managed plan`}
                 >
-                  {p.label}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => p.minPlan ? undefined : togglePlatform(p.id)}
+                    className={cn(
+                      'px-3 py-1.5 text-xs rounded-md border transition-colors',
+                      platforms.includes(p.id)
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                </LockedFeature>
               ))}
             </div>
           </div>
@@ -629,25 +637,32 @@ function NewJobPageInner() {
               {ADD_ONS.map((ao) => {
                 const on = addOns.has(ao.id);
                 return (
-                  <button
+                  <LockedFeature
                     key={ao.id}
-                    type="button"
-                    onClick={() => toggleAddOn(ao.id)}
-                    className={cn(
-                      'w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors',
-                      on ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
-                    )}
+                    minPlan={ao.minPlan ?? 'diy'}
+                    currentPlan={planTier ?? 'diy'}
+                    label={ao.label}
+                    upgradeMsg={`${ao.label} is included in the Managed plan`}
                   >
-                    <span className={cn(
-                      'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
-                      on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
-                    )}>{on ? '✓' : ''}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium leading-tight">{ao.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{ao.description}</p>
-                    </div>
-                    <Badge variant="secondary" className="text-[10px] shrink-0">{ao.badge}</Badge>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleAddOn(ao.id)}
+                      className={cn(
+                        'w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors',
+                        on ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
+                      )}
+                    >
+                      <span className={cn(
+                        'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
+                        on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
+                      )}>{on ? '✓' : ''}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium leading-tight">{ao.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{ao.description}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px] shrink-0">{ao.badge}</Badge>
+                    </button>
+                  </LockedFeature>
                 );
               })}
             </div>
