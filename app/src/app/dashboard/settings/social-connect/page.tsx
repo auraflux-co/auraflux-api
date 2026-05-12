@@ -31,13 +31,13 @@ const PLATFORMS: { id: SocialPlatform; label: string; color: string; hint: strin
     id: 'tiktok',
     label: 'TikTok',
     color: 'bg-black',
-    hint: 'Requires Managed (dfy) plan. TikTok Content Posting API.',
+    hint: 'Requires Managed plan. TikTok Content Posting API.',
   },
   {
     id: 'instagram',
     label: 'Instagram',
     color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-    hint: 'Requires Managed (dfy) plan. Instagram Graph API — Reels.',
+    hint: 'Requires Managed plan. Instagram Graph API — Reels.',
   },
 ];
 

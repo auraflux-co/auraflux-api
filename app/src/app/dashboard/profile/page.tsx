@@ -257,7 +257,9 @@ export default function ProfilePage() {
         <CardHeader className="pb-2"><CardTitle className="text-base">Plan &amp; billing</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium capitalize">{(meta?.planTier as string) ?? 'diy'} plan</p>
+            <p className="text-sm font-medium">{
+              { diy: 'Operate', dwy: 'Guided', dfy: 'Managed', custom: 'Enterprise' }[meta?.planTier as string] ?? 'Operate'
+            } plan</p>
             <p className="text-xs text-muted-foreground">View usage, upgrade, and manage payment</p>
           </div>
           <Link href="/dashboard/billing" className="text-xs text-primary underline underline-offset-2">

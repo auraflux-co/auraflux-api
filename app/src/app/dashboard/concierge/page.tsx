@@ -26,7 +26,7 @@ export default function ConciergePage() {
             Get guided help building and validating your job spec
           </p>
         </div>
-        <Badge variant="secondary">dwy+</Badge>
+        <Badge variant="secondary">Guided+</Badge>
       </div>
 
       <div className="flex gap-4 h-[calc(100%-4rem)]">
