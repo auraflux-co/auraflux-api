@@ -462,30 +462,26 @@ try {
 global.persistedJobsRef = persistedJobs;
 
 // ── SQLite init + fallback load ───────────────────────────────────────────────
-// Initialize SQLite alongside jobs.json. During transition both run in parallel.
-// If SQLite has more jobs than the JSON file (e.g. after a partial migration),
-// prefer SQLite so no jobs are lost.
-try {
-  // initDb() is async; attach .catch() so DATABASE_URL missing (or any async
-  // failure) does not produce an unhandled rejection that kills the process
-  // before the HTTP port is bound. The server degrades to JSON/SQLite fallback.
-  const _initResult = db.initDb();
-  if (_initResult && typeof _initResult.catch === 'function') {
-    _initResult.catch((e) => console.warn('[db] initDb warn (non-fatal):', e.message));
-  }
-  const sqliteJobs = db.loadAllJobs();
-  if (sqliteJobs.length > Object.keys(persistedJobs).length) {
-    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
-    persistedJobs = {};
-    for (const card of sqliteJobs) {
-      if (card && card.jobId) persistedJobs[card.jobId] = card;
+// Both db.initDb() and db.loadAllJobs() are async. Calling them without await
+// inside a sync try/catch leaves Promise rejections unhandled, crashing Node.
+// Use .then().catch() chains so every rejection is handled and the server
+// degrades gracefully to the JSON fallback when DATABASE_URL is absent.
+db.initDb()
+  .catch((e) => console.warn('[db] initDb (1) warn (non-fatal):', e.message));
+db.loadAllJobs()
+  .then((sqliteJobs) => {
+    if (!sqliteJobs) return;
+    if (sqliteJobs.length > Object.keys(persistedJobs).length) {
+      console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
+      persistedJobs = {};
+      for (const card of sqliteJobs) {
+        if (card && card.jobId) persistedJobs[card.jobId] = card;
+      }
+    } else {
+      console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
     }
-  } else {
-    console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
-  }
-} catch (e) {
-  console.error('[db] SQLite init failed — falling back to jobs.json only:', e.message);
-}
+  })
+  .catch((e) => console.warn('[db] loadAllJobs (1) warn (non-fatal):', e.message));
 
 // Infer job stage from card fields for legacy jobs that predate the explicit stage field.
 // Used by /jobs filter and startup resume logic.
@@ -503,29 +499,24 @@ function inferJobStage(job) {
   return '';
 }
 
-// ── SQLite init + fallback load ───────────────────────────────────────────────
-// Initialize SQLite alongside jobs.json. During transition both run in parallel.
-// If SQLite has more jobs than the JSON file (e.g. after a partial migration),
-// prefer SQLite so no jobs are lost.
-try {
-  // initDb() is async — attach .catch() to prevent unhandled rejection crash.
-  const _r2 = db.initDb();
-  if (_r2 && typeof _r2.catch === 'function') {
-    _r2.catch((e) => console.warn('[db] initDb warn (non-fatal):', e.message));
-  }
-  const sqliteJobs = db.loadAllJobs();
-  if (sqliteJobs.length > Object.keys(persistedJobs).length) {
-    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
-    persistedJobs = {};
-    for (const card of sqliteJobs) {
-      if (card && card.jobId) persistedJobs[card.jobId] = card;
+// ── SQLite init + fallback load (2) ─────────────────────────────────────────
+// Same async-safe pattern — both calls use .then().catch() chains.
+db.initDb()
+  .catch((e) => console.warn('[db] initDb (2) warn (non-fatal):', e.message));
+db.loadAllJobs()
+  .then((sqliteJobs) => {
+    if (!sqliteJobs) return;
+    if (sqliteJobs.length > Object.keys(persistedJobs).length) {
+      console.log(`[db] SQLite (2) has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
+      persistedJobs = {};
+      for (const card of sqliteJobs) {
+        if (card && card.jobId) persistedJobs[card.jobId] = card;
+      }
+    } else {
+      console.log(`[db] SQLite (2) ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
     }
-  } else {
-    console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
-  }
-} catch (e) {
-  console.error('[db] SQLite init failed — falling back to jobs.json only:', e.message);
-}
+  })
+  .catch((e) => console.warn('[db] loadAllJobs (2) warn (non-fatal):', e.message));
 
 // Infer job stage from card fields for legacy jobs that predate the explicit stage field.
 // Used by /jobs filter and startup resume logic.
