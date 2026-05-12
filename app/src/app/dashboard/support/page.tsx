@@ -11,6 +11,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
+import { usePlan } from '@/contexts/plan-context';
 import { cn } from '@/lib/utils';
 import {
   supportChat,
@@ -40,10 +41,6 @@ const GUIDE_LINKS = [
 interface ChatMsg { role: 'user' | 'assistant'; content: string }
 
 // ─── Tier helpers ─────────────────────────────────────────────────────────────
-
-function getPlanTier(user: ReturnType<typeof useUser>['user']): string {
-  return (user?.publicMetadata?.planTier as string) || 'diy';
-}
 
 function getAccountAgeDays(user: ReturnType<typeof useUser>['user']): number {
   if (!user?.createdAt) return 0; // no date = new account, give benefit of the doubt
@@ -186,8 +183,9 @@ function SessionHistory({
 export default function SupportPage() {
   const { getToken, isLoaded } = useAuth();
   const { user }               = useUser();
+  const { planTier }           = usePlan();
 
-  const plan    = getPlanTier(user);
+  const plan    = planTier || 'diy';
   const ageDays = getAccountAgeDays(user);
   const canChat = plan === 'dwy' || plan === 'dfy' || (plan === 'diy' && ageDays <= 30);
   const canEsc  = plan === 'dwy' || plan === 'dfy';

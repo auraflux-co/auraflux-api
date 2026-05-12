@@ -10,10 +10,12 @@
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useGuide } from '@/contexts/guide-context';
+import { usePlan } from '@/contexts/plan-context';
 import { ConciergeChat } from '@/components/concierge/concierge-chat';
 
 export function GuidePanel() {
   const { isOpen, close, contextHint } = useGuide();
+  const { planTier } = usePlan();
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -62,6 +64,7 @@ export function GuidePanel() {
           <div className="flex-1 min-h-0">
             <ConciergeChat
               currentSpec={{}}
+              planTier={planTier ?? undefined}
               className="h-full rounded-none border-0 shadow-none"
             />
           </div>
