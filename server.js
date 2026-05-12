@@ -7188,6 +7188,10 @@ app.get('/errors', (req, res) => {
 const developerApiRouter = require('./lib/routes/developer_api');
 app.use('/v1', developerApiRouter);
 
+// ── Admin CRM + Permissions (CPD-150 / CPD-154) ───────────────────
+const adminCrmRouter = require('./lib/routes/admin_crm');
+app.use('/v1', adminCrmRouter);
+
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
 
