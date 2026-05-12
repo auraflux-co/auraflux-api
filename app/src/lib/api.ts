@@ -355,6 +355,29 @@ export async function listCustomers(token?: string): Promise<{ customers: Custom
   return apiFetch('/admin/customers', { token });
 }
 
+// ─── Admin CRM (CPD-154) ──────────────────────────────────────────────────────
+
+export async function listCrmAccounts(token?: string) {
+  return apiFetch<{ ok: boolean; accounts: unknown[] }>('/admin/crm', { token });
+}
+
+export async function getCrmAccount(accountId: string, token?: string) {
+  return apiFetch<Record<string, unknown>>(`/admin/crm/${accountId}`, { token });
+}
+
+// ─── Admin Permissions (CPD-150) ─────────────────────────────────────────────
+
+export async function listPermissions(token?: string) {
+  return apiFetch<{ ok: boolean; accounts: unknown[] }>('/admin/permissions', { token });
+}
+
+export async function warpIntoAccount(userId: string, token?: string) {
+  return apiFetch<{ ok: boolean; url: string }>(`/admin/warp/${userId}`, {
+    method: 'POST',
+    token,
+  });
+}
+
 export async function getJob(jobId: string, token?: string): Promise<{ job: Job }> {
   return apiFetch(`/jobs/${jobId}`, { token });
 }
