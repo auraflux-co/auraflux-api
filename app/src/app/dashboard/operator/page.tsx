@@ -4,9 +4,12 @@
  *
  * Full portal detail view for all clients' jobs.
  * Accessible only to users with role = operator | admin.
+ *
+ * useSearchParams() is isolated in OperatorPageInner so the outer export
+ * can wrap it in <Suspense> — required by Next.js 16 for static generation.
  */
 
-import { useEffect, useState, useTransition } from 'react';
+import { Suspense, useEffect, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +22,14 @@ import { listAllJobs, type Job } from '@/lib/api';
 import { useRole } from '@/hooks/use-role';
 
 export default function OperatorPage() {
+  return (
+    <Suspense>
+      <OperatorPageInner />
+    </Suspense>
+  );
+}
+
+function OperatorPageInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const scopedId     = searchParams.get('customerId') ?? undefined;
@@ -156,3 +167,4 @@ export default function OperatorPage() {
     </div>
   );
 }
+

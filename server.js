@@ -466,7 +466,13 @@ global.persistedJobsRef = persistedJobs;
 // If SQLite has more jobs than the JSON file (e.g. after a partial migration),
 // prefer SQLite so no jobs are lost.
 try {
-  db.initDb();
+  // initDb() is async; attach .catch() so DATABASE_URL missing (or any async
+  // failure) does not produce an unhandled rejection that kills the process
+  // before the HTTP port is bound. The server degrades to JSON/SQLite fallback.
+  const _initResult = db.initDb();
+  if (_initResult && typeof _initResult.catch === 'function') {
+    _initResult.catch((e) => console.warn('[db] initDb warn (non-fatal):', e.message));
+  }
   const sqliteJobs = db.loadAllJobs();
   if (sqliteJobs.length > Object.keys(persistedJobs).length) {
     console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
