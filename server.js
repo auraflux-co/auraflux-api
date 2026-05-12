@@ -7189,8 +7189,10 @@ const developerApiRouter = require('./lib/routes/developer_api');
 app.use('/v1', developerApiRouter);
 
 // ── Admin CRM + Permissions (CPD-150 / CPD-154) ───────────────────
+// Mounted without prefix so routes are /admin/crm, /admin/permissions, etc.
+// matching the NEXT_PUBLIC_API_URL + path pattern used by the frontend.
 const adminCrmRouter = require('./lib/routes/admin_crm');
-app.use('/v1', adminCrmRouter);
+app.use(adminCrmRouter);
 
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
