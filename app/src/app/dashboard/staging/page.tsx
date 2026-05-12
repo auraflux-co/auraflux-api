@@ -387,10 +387,10 @@ export default function StagingPage() {
   return (
     <div className="space-y-6 p-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-xl font-semibold">Staging Review</h1>
+        <h1 className="text-xl font-semibold">Review Queue</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Review job outputs before publishing to social platforms.
-          Input spec vs output comparison — video, thumbnail, script, and publish copy.
+          Videos ready for your review before publishing to social platforms.
+          Compare the input spec against the output — video, thumbnail, script, and publish copy.
         </p>
       </div>
 
@@ -400,11 +400,7 @@ export default function StagingPage() {
       {!loading && !error && jobs.length === 0 && (
         <Card>
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            No completed jobs yet.{' '}
-            <Link href="/dashboard/generate" className="text-blue-600 hover:underline">
-              Submit a job
-            </Link>{' '}
-            with <code className="text-xs bg-muted px-1 rounded">&quot;staging&quot;: true</code> via the API to review output here.
+            No completed jobs yet. Once a job finishes processing, it will appear here for your review before publishing.
           </CardContent>
         </Card>
       )}

@@ -10,6 +10,7 @@ import { useState, useTransition } from 'react';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
+import { tierLabel } from '@/lib/tier-labels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,8 +51,18 @@ export default function ProfilePage() {
     setTimezone((meta?.timezone as string) ?? 'America/New_York');
   }
 
-  if (!isLoaded) return null;
-  if (!user)     return null;
+  if (!isLoaded || !user) return (
+    <div className="max-w-2xl space-y-8 animate-pulse">
+      <div className="h-8 bg-muted rounded w-40" />
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="rounded-xl border border-border p-6 space-y-4">
+          <div className="h-4 bg-muted rounded w-32" />
+          <div className="h-10 bg-muted rounded" />
+          <div className="h-10 bg-muted rounded" />
+        </div>
+      ))}
+    </div>
+  );
 
   const meta     = user.publicMetadata as Record<string, unknown>;
   const role     = (meta?.role as string) ?? 'customer';
@@ -257,9 +268,7 @@ export default function ProfilePage() {
         <CardHeader className="pb-2"><CardTitle className="text-base">Plan &amp; billing</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">{
-              { diy: 'Operate', dwy: 'Guided', dfy: 'Managed', custom: 'Enterprise' }[meta?.planTier as string] ?? 'Operate'
-            } plan</p>
+            <p className="text-sm font-medium">{tierLabel(meta?.planTier as string)} plan</p>
             <p className="text-xs text-muted-foreground">View usage, upgrade, and manage payment</p>
           </div>
           <Link href="/dashboard/billing" className="text-xs text-primary underline underline-offset-2">

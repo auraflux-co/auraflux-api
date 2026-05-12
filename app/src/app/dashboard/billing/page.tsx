@@ -11,6 +11,7 @@
 import { useEffect, useState, useTransition, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
+import { tierLabel } from '@/lib/tier-labels';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -191,7 +192,7 @@ function BillingPageInner() {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <CardTitle className="text-base">Current plan</CardTitle>
-              <Badge className="capitalize">{PLAN_META[currentTier]?.label ?? currentTier.toUpperCase()}</Badge>
+              <Badge className="capitalize">{PLAN_META[currentTier]?.label ?? tierLabel(currentTier)}</Badge>
             </div>
             {PLAN_META[currentTier]?.sub && (
               <p className="text-xs text-muted-foreground mt-0.5">{PLAN_META[currentTier].sub}</p>

@@ -56,8 +56,11 @@ export default function TeamPage() {
   const [removingId, setRemovingId]             = useState<string | null>(null);
   const [changingRole, setChangingRole]         = useState<string | null>(null);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const token = await getToken();
       const data = await apiFetch<{ ok: boolean; members: TeamMember[]; myRole: MemberRole }>(
@@ -65,8 +68,8 @@ export default function TeamPage() {
       );
       setMembers(data.members);
       setMyRole(data.myRole);
-    } catch {
-      // non-fatal
+    } catch (err: unknown) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load team members');
     } finally {
       setLoading(false);
     }
@@ -148,6 +151,21 @@ export default function TeamPage() {
 
   const activeMembers  = members.filter(m => m.status === 'active');
   const pendingInvites = members.filter(m => m.status === 'pending');
+
+  if (loadError) return (
+    <div className="max-w-3xl mx-auto py-10 px-4 space-y-4">
+      <h1 className="text-2xl font-semibold">Team</h1>
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 flex items-center justify-between gap-4">
+        <p className="text-sm text-destructive">{loadError}</p>
+        <button
+          onClick={load}
+          className="shrink-0 text-xs text-destructive underline hover:no-underline"
+        >
+          Retry
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4 space-y-8">
