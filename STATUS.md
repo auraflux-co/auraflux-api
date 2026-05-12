@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-12 v1.0.379 (Cursor — fix: 5 remaining build/startup errors — 4x unknown→ReactNode in CRM account page (Boolean() guard); afterSignOutUrl prop removed from UserButton (Clerk v6); second db.initDb() unhandled rejection in server.js now caught)
 **Last Updated:** 2026-05-12 v1.0.377 (Cursor — fix: app build failure — useSearchParams on /dashboard/operator wrapped in Suspense (Next.js 16 requirement); API startup crash — db.initDb() unhandled rejection now caught, prevents port-bind failure on missing DATABASE_URL)
 **Last Updated:** 2026-05-06 v1.0.375 (Cursor — fix: admin CRM + permissions routes were 404 — was mounted at /v1/admin/* but frontend calls /admin/*; now mounted at root to match existing route pattern)
 **Last Updated:** 2026-05-06 v1.0.373 (Cursor — feat(cpd-150/154): Permission management panel + Internal CRM; lib/routes/admin_crm.js; /admin/permissions, /admin/crm, /admin/crm/[accountId] pages; actor banner in top bar; Clerk warp via actor tokens; operator notes table; admin_audit_log table; CRM + Permissions in sidebar)

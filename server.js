@@ -508,7 +508,11 @@ function inferJobStage(job) {
 // If SQLite has more jobs than the JSON file (e.g. after a partial migration),
 // prefer SQLite so no jobs are lost.
 try {
-  db.initDb();
+  // initDb() is async — attach .catch() to prevent unhandled rejection crash.
+  const _r2 = db.initDb();
+  if (_r2 && typeof _r2.catch === 'function') {
+    _r2.catch((e) => console.warn('[db] initDb warn (non-fatal):', e.message));
+  }
   const sqliteJobs = db.loadAllJobs();
   if (sqliteJobs.length > Object.keys(persistedJobs).length) {
     console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
