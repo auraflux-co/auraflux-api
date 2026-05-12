@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-12 v1.0.351 (Cursor — feat: Stripe as source of truth for plans; stripe_plans_sync.js loads plans live; webhook invalidates cache on product/price changes; sync_stripe_plans.js CLI updates Render env vars automatically)
 **Last Updated:** 2026-05-12 v1.0.349 (Cursor — feat: rename AuraFlux Copilot→AuraFlux Collab everywhere; Stripe live mode configured; STRIPE_PRICE_DIY/DWY/DFY added to .env.example)
 **Last Updated:** 2026-05-12 v1.0.348 (Cursor — fix(cors): ALLOWED_ORIGINS missing from Render API env — all pages showed "Error: Failed to fetch"; CORS preflight was returning 500; added app.auraflux.co to whitelist)
 **Last Updated:** 2026-05-12 v1.0.345 (Cursor — fix(docker): .dockerignore missing **/node_modules/ and app/.next/ — build context was 1.5GB causing Render Docker builds to fail; context now 2MB)
