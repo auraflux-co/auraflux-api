@@ -53,12 +53,22 @@ def _load_dotenv(path):
 _load_dotenv(REPO_DIR / ".env")
 
 try:
-    from lib_gemini import ask_gemini_json, ask_gemini
+    from lib_gemini import ask_gemini_json, ask_gemini, ask_gemini_video_json
 except ImportError:
     def ask_gemini_json(prompt, schema=None):
         raise RuntimeError("lib_gemini not available — check GEMINI_API_KEY")
     def ask_gemini(prompt):
         raise RuntimeError("lib_gemini not available — check GEMINI_API_KEY")
+    def ask_gemini_video_json(video_url, prompt):
+        raise RuntimeError("lib_gemini not available — check GEMINI_API_KEY")
+
+try:
+    from lib_claude import claude_ux_observe
+except ImportError:
+    def claude_ux_observe(test, api_response, job_spec, output_url, final_job):
+        return [{"page": "import_error", "observation": "lib_claude not available",
+                 "severity": "info", "suggested_change": "Check ANTHROPIC_API_KEY",
+                 "test_id": test.get("id", "?"), "surface": "unknown"}]
 
 BASE     = os.environ.get("AURAFLUX_E2E_BASE", "https://auraflux-api.onrender.com")
 APP_BASE = os.environ.get("AURAFLUX_APP_BASE", "https://app.auraflux.co")
@@ -359,8 +369,64 @@ Return ONLY valid JSON for the AuraFlux POST /v1/jobs body:
 # ── Gemini output validator ───────────────────────────────────────────────────
 
 def gemini_validate_output(test, job, output_url, corpus_entry):
-    """Ask Gemini to validate the output against the job spec."""
+    """
+    Validate the output against the job spec.
+
+    When output_url is present, Gemini watches the actual video and scores it.
+    Falls back to spec-only text analysis if video processing fails.
+    """
     job_spec_str = json.dumps(job.get("jobSpec", job), indent=2)[:1000]
+
+    # ── Video-based validation (primary path) ────────────────────────────────
+    if output_url:
+        video_prompt = f"""
+You are a QA engineer validating an AuraFlux video output. Watch the entire video carefully.
+
+Test ID: {test['id']}
+Streamer source: {test['streamer']} — style: {corpus_entry.get('style', '')}
+Source clip title: {corpus_entry.get('title', '?')} ({corpus_entry.get('duration_s', 0):.0f}s)
+Expected production profile: {test['profile']}
+Expected format: {test['format']}
+Expected platform: {test['platform']}
+Brief: {test['brief']}
+Job spec sent: {job_spec_str[:600]}
+
+Watch the video and evaluate:
+1. Does the video content match the source clip's topic/streamer?
+2. Is the video format appropriate for {test['platform']}? (aspect ratio, length)
+3. Does the production style match "{test['profile']}"?
+4. Is audio/video quality acceptable?
+5. Are there any captions, titles, or graphics? Do they match the topic?
+6. Overall: does this video meet the brief?
+
+Return JSON:
+{{
+  "passed": true/false,
+  "score": 0-100,
+  "method": "video",
+  "spec_matches_brief": true/false,
+  "has_output": true,
+  "video_observations": {{
+    "content_matches_source": true/false,
+    "format_correct": true/false,
+    "quality_acceptable": true/false,
+    "captions_present": true/false,
+    "captions_match_topic": true/false
+  }},
+  "issues": ["list of specific issues observed in the video"],
+  "notes": "brief QA summary of what you watched"
+}}
+"""
+        try:
+            print(f"         🎥 Gemini watching output video…", end="", flush=True)
+            result = ask_gemini_video_json(output_url, video_prompt)
+            result["method"] = "video"
+            print(f" score={result.get('score','?')}")
+            return result
+        except Exception as e:
+            print(f" ⚠️  video analysis failed ({e.__class__.__name__}), falling back to spec check")
+
+    # ── Spec-only fallback (no output or video processing failed) ────────────
     prompt = f"""
 You are a QA engineer validating an AuraFlux E2E test result.
 
@@ -381,6 +447,7 @@ Return JSON:
 {{
   "passed": true/false,
   "score": 0-100,
+  "method": "spec_only",
   "spec_matches_brief": true/false,
   "has_output": true/false,
   "issues": ["list of issues"],
@@ -388,11 +455,14 @@ Return JSON:
 }}
 """
     try:
-        return ask_gemini_json(prompt)
+        result = ask_gemini_json(prompt)
+        result["method"] = result.get("method", "spec_only")
+        return result
     except Exception:
         return {
             "passed": bool(output_url),
             "score": 80 if output_url else 0,
+            "method": "fallback",
             "spec_matches_brief": True,
             "has_output": bool(output_url),
             "issues": [] if output_url else ["No output URL"],
@@ -430,7 +500,7 @@ Return a JSON array of all observations. Be specific and actionable.
 
 # ── Run a single test ─────────────────────────────────────────────────────────
 
-def run_test(test, corpus, ux_observations, dry_run=False):
+def run_test(test, corpus, ux_observations, dry_run=False, args_no_ux=False):
     corpus_key = f"{test['tier']}-{test['streamer']}"
     corpus_entry = corpus.get(corpus_key, {})
     clip_url = corpus_entry.get("url", "")
@@ -474,6 +544,7 @@ def run_test(test, corpus, ux_observations, dry_run=False):
 
     # Submit job
     resp, code = api("POST", "/v1/jobs", job_spec, api_key)
+    resp["_http_status"] = code  # carry status code for Claude UX analysis
     if code not in (200, 201, 202):
         result["error"] = f"Job submit failed: HTTP {code} — {resp.get('error', str(resp))[:80]}"
         print(f"  ❌  {test['id']}: {result['error']}")
@@ -490,22 +561,26 @@ def run_test(test, corpus, ux_observations, dry_run=False):
     result["output_url"] = output_url
     print(f" {'✅' if output_url else '❌'} {output_url[:60] if output_url else 'TIMEOUT'}")
 
-    # Validate with Gemini — but primary pass criterion is output_url existence
+    # Gemini watches the video and scores it (falls back to spec-only if video fails)
     validation = gemini_validate_output(test, final_job, output_url, corpus_entry)
     result["validation"] = validation
-    # Primary: video output exists. Gemini flags issues as informational only.
-    result["passed"] = bool(output_url)
+    result["passed"]       = bool(output_url)
     result["gemini_passed"] = validation.get("passed", bool(output_url))
 
-    # Queue UX observation for Guided/Managed
-    if test["tier"] in ("guided", "managed"):
-        ux_prompt = build_ux_observation_prompt(test, final_job, output_url)
-        ux_observations.append({
-            "test_id": test["id"],
-            "tier": test["tier"],
-            "prompt": ux_prompt,
-            "collab_prompt": test.get("collab_prompt", ""),
-        })
+    # Claude UX observer — runs for ALL tiers inline, not deferred
+    if not args_no_ux:
+        print(f"         🔍 Claude observing UX ({test['tier']} surface)…", end="", flush=True)
+        try:
+            ux_obs = claude_ux_observe(test, resp, job_spec, output_url, final_job)
+            result["ux_observations"] = ux_obs
+            highs = sum(1 for o in ux_obs if o.get("severity") in ("critical", "high"))
+            print(f" {len(ux_obs)} observations ({highs} high+)")
+        except Exception as e:
+            result["ux_observations"] = []
+            print(f" ⚠️  Claude UX failed: {e}")
+        ux_observations.extend(result.get("ux_observations", []))
+    else:
+        result["ux_observations"] = []
 
     result["finished_at"] = datetime.now(timezone.utc).isoformat()
     return result
@@ -516,7 +591,8 @@ def run_test(test, corpus, ux_observations, dry_run=False):
 def main():
     parser = argparse.ArgumentParser(description="AuraFlux 18-test E2E suite")
     parser.add_argument("--tier", choices=["operate", "guided", "managed", "all"], default="all")
-    parser.add_argument("--test", help="Run a single test by ID (e.g. O-T1)")
+    parser.add_argument("--test", action="append", dest="tests", metavar="ID",
+                        help="Run specific test(s) by ID — can be repeated (e.g. --test M-T4 --test M-T5)")
     parser.add_argument("--dry-run", action="store_true", help="Skip API calls, test corpus only")
     parser.add_argument("--no-ux", action="store_true", help="Skip Claude UX observations")
     args = parser.parse_args()
@@ -530,8 +606,8 @@ def main():
 
     # Filter tests
     tests_to_run = TESTS
-    if args.test:
-        tests_to_run = [t for t in TESTS if t["id"] == args.test]
+    if args.tests:
+        tests_to_run = [t for t in TESTS if t["id"] in args.tests]
     elif args.tier != "all":
         tests_to_run = [t for t in TESTS if t["tier"] == args.tier]
 
@@ -546,15 +622,15 @@ def main():
     ux_observations = []
 
     for test in tests_to_run:
-        result = run_test(test, corpus, ux_observations, dry_run=args.dry_run)
+        result = run_test(test, corpus, ux_observations,
+                          dry_run=args.dry_run, args_no_ux=args.no_ux)
         results.append(result)
         # Save incrementally
         (out_dir / "results.json").write_text(json.dumps(results, indent=2))
 
-    # ── UX report ─────────────────────────────────────────────────────────────
+    # ── UX report — built from inline Claude observations already collected ────
     if ux_observations and not args.no_ux:
-        print(f"\n🔍  Running Claude UX observations for {len(ux_observations)} Guided/Managed tests…")
-        ux_report = run_ux_observations(ux_observations)
+        ux_report = _build_ux_report(ux_observations)
         (out_dir / "ux_report.json").write_text(json.dumps(ux_report, indent=2))
         print_ux_summary(ux_report)
 
@@ -568,10 +644,15 @@ def main():
         "",
     ]
     for r in results:
-        icon = "✅" if r["passed"] else "❌"
-        score = (r.get("validation") or {}).get("score", "?")
-        out = (r["output_url"] or "")[:60] if r["output_url"] else "NO OUTPUT"
-        summary.append(f"{icon} {r['id']:6s} {r['streamer']:15s} score={score:3}  {out}")
+        icon    = "✅" if r["passed"] else "❌"
+        val     = r.get("validation") or {}
+        score   = val.get("score", "?")
+        method  = val.get("method", "?")[:5]   # video / spec_ / fallb
+        ux_obs  = r.get("ux_observations", [])
+        ux_hi   = sum(1 for o in ux_obs if o.get("severity") in ("critical", "high"))
+        ux_tag  = f"  ux:{len(ux_obs)}obs/{ux_hi}hi" if ux_obs else ""
+        out     = (r["output_url"] or "")[:55] if r["output_url"] else "NO OUTPUT"
+        summary.append(f"{icon} {r['id']:6s} {r['streamer']:15s} score={score:3} [{method}]{ux_tag}  {out}")
 
     summary_text = "\n".join(summary)
     (out_dir / "summary.txt").write_text(summary_text)
@@ -583,61 +664,39 @@ def main():
     sys.exit(0 if failed == 0 else 1)
 
 
-def run_ux_observations(observations):
-    """
-    Run Claude UX observations. Each observation queues a browser-use prompt.
-    Returns structured UX report.
-    In production this would spawn Cursor browser-use subagents.
-    Here we use Gemini as a proxy for the UX assessment.
-    """
-    ux_items = []
+def _build_ux_report(observations: list) -> dict:
+    """Assemble the final UX report from inline Claude observations."""
+    by_severity = {s: [] for s in ["critical", "high", "medium", "low", "info"]}
     for obs in observations:
-        prompt = f"""
-{obs['prompt']}
+        sev = obs.get("severity", "info")
+        by_severity.setdefault(sev, []).append(obs)
 
-Since you cannot browse the dashboard right now, reason about what UX issues
-are LIKELY for a {obs['tier']} tier user with this Collab interaction:
-"{obs.get('collab_prompt', '')}"
-
-Based on common dashboard UX patterns, what issues might exist?
-Return a JSON array of observations (page, observation, severity, suggested_change, test_id).
-"""
-        try:
-            items = ask_gemini_json(prompt)
-            if isinstance(items, list):
-                ux_items.extend(items)
-            elif isinstance(items, dict) and "observations" in items:
-                ux_items.extend(items["observations"])
-        except Exception as e:
-            ux_items.append({
-                "page": "unknown",
-                "observation": f"UX analysis failed: {e}",
-                "severity": "info",
-                "suggested_change": "Manual review needed",
-                "test_id": obs["test_id"],
-            })
+    by_surface = {}
+    for obs in observations:
+        surf = obs.get("surface", "unknown")
+        by_surface.setdefault(surf, []).append(obs)
 
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "total_observations": len(ux_items),
-        "by_severity": {
-            s: [x for x in ux_items if x.get("severity") == s]
-            for s in ["critical", "high", "medium", "low", "info"]
-        },
-        "observations": ux_items,
+        "generated_at":       datetime.now(timezone.utc).isoformat(),
+        "total_observations": len(observations),
+        "by_severity":        by_severity,
+        "by_surface":         by_surface,
+        "observations":       observations,
     }
 
 
 def print_ux_summary(report):
-    by_sev = report.get("by_severity", {})
-    print(f"\n🎨  UX Report — {report['total_observations']} observations:")
+    by_sev  = report.get("by_severity", {})
+    by_surf = report.get("by_surface", {})
+    print(f"\n🎨  UX Report — {report['total_observations']} Claude observations")
+    print(f"    Surfaces: {', '.join(f'{s} ({len(v)})' for s, v in by_surf.items() if v)}")
     for sev in ["critical", "high", "medium", "low"]:
         items = by_sev.get(sev, [])
         if items:
-            print(f"  {sev.upper()} ({len(items)})")
-            for item in items[:3]:
-                print(f"    • [{item.get('test_id','?')}] {item.get('observation','')[:60]}")
-                print(f"      → {item.get('suggested_change','')[:60]}")
+            print(f"\n  {sev.upper()} ({len(items)})")
+            for item in items[:4]:
+                print(f"    • [{item.get('test_id','?')}] {item.get('page','?')} — {item.get('observation','')[:70]}")
+                print(f"      ↳ {item.get('suggested_change','')[:75]}")
 
 
 if __name__ == "__main__":
