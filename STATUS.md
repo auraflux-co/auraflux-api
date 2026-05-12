@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-12 v1.0.383 (Cursor — cleanup: remove all SQLite references from server.js; deduplicate double init+inferJobStage blocks; saveJob now uses .catch() not sync try/catch)
 **Last Updated:** 2026-05-12 v1.0.381 (Cursor — fix: API crash root cause — db.loadAllJobs() is async; calling without await in sync try/catch left rejection unhandled, crashing server post-bind; both SQLite init blocks converted to .then().catch() chains)
 **Last Updated:** 2026-05-12 v1.0.379 (Cursor — fix: 5 remaining build/startup errors — 4x unknown→ReactNode in CRM account page (Boolean() guard); afterSignOutUrl prop removed from UserButton (Clerk v6); second db.initDb() unhandled rejection in server.js now caught)
 **Last Updated:** 2026-05-12 v1.0.377 (Cursor — fix: app build failure — useSearchParams on /dashboard/operator wrapped in Suspense (Next.js 16 requirement); API startup crash — db.initDb() unhandled rejection now caught, prevents port-bind failure on missing DATABASE_URL)

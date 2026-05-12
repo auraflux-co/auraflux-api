@@ -461,27 +461,22 @@ try {
 // Expose to assembly.js Gate 2 bypass (avoids circular require)
 global.persistedJobsRef = persistedJobs;
 
-// ── SQLite init + fallback load ───────────────────────────────────────────────
-// Both db.initDb() and db.loadAllJobs() are async. Calling them without await
-// inside a sync try/catch leaves Promise rejections unhandled, crashing Node.
-// Use .then().catch() chains so every rejection is handled and the server
-// degrades gracefully to the JSON fallback when DATABASE_URL is absent.
+// ── Postgres init + job hydration ────────────────────────────────────────────
+// Both db.initDb() and db.loadAllJobs() are async. Use .then().catch() chains
+// so Promise rejections (e.g. DATABASE_URL absent) are always handled and the
+// server degrades gracefully instead of crashing after port bind.
 db.initDb()
-  .catch((e) => console.warn('[db] initDb (1) warn (non-fatal):', e.message));
+  .catch((e) => console.warn('[db] initDb warn (non-fatal):', e.message));
 db.loadAllJobs()
-  .then((sqliteJobs) => {
-    if (!sqliteJobs) return;
-    if (sqliteJobs.length > Object.keys(persistedJobs).length) {
-      console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
-      persistedJobs = {};
-      for (const card of sqliteJobs) {
-        if (card && card.jobId) persistedJobs[card.jobId] = card;
-      }
-    } else {
-      console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
+  .then((pgJobs) => {
+    if (!pgJobs || pgJobs.length === 0) return;
+    console.log(`[db] Postgres: hydrating ${pgJobs.length} jobs into memory`);
+    persistedJobs = {};
+    for (const card of pgJobs) {
+      if (card && card.jobId) persistedJobs[card.jobId] = card;
     }
   })
-  .catch((e) => console.warn('[db] loadAllJobs (1) warn (non-fatal):', e.message));
+  .catch((e) => console.warn('[db] loadAllJobs warn (non-fatal):', e.message));
 
 // Infer job stage from card fields for legacy jobs that predate the explicit stage field.
 // Used by /jobs filter and startup resume logic.
@@ -499,40 +494,6 @@ function inferJobStage(job) {
   return '';
 }
 
-// ── SQLite init + fallback load (2) ─────────────────────────────────────────
-// Same async-safe pattern — both calls use .then().catch() chains.
-db.initDb()
-  .catch((e) => console.warn('[db] initDb (2) warn (non-fatal):', e.message));
-db.loadAllJobs()
-  .then((sqliteJobs) => {
-    if (!sqliteJobs) return;
-    if (sqliteJobs.length > Object.keys(persistedJobs).length) {
-      console.log(`[db] SQLite (2) has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
-      persistedJobs = {};
-      for (const card of sqliteJobs) {
-        if (card && card.jobId) persistedJobs[card.jobId] = card;
-      }
-    } else {
-      console.log(`[db] SQLite (2) ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
-    }
-  })
-  .catch((e) => console.warn('[db] loadAllJobs (2) warn (non-fatal):', e.message));
-
-// Infer job stage from card fields for legacy jobs that predate the explicit stage field.
-// Used by /jobs filter and startup resume logic.
-function inferJobStage(job) {
-  if (job.finalUrl) return 'assembled';
-  if (job.assembly?.url || job.assembledUrl) return 'assembled';
-  const videoJobs = job.heygen?.videoJobs || [];
-  if (videoJobs.length > 0) {
-    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
-    if (allComplete) return 'all_sent'; // all done — ready for assembly
-    const anyStarted = videoJobs.some(vj => vj.video_id);
-    if (anyStarted) return 'all_sent'; // in-flight in HeyGen
-  }
-  if (job.script) return 'script_ready';
-  return '';
-}
 
 function saveJobCard(jobId, card) {
   // Fix 2 Part A: Extract source_clip segments from script and save to card
@@ -572,12 +533,8 @@ function saveJobCard(jobId, card) {
   } catch(e) {
     console.error('[jobs] Failed to save jobs.json:', e.message);
   }
-  // ── SQLite write (additive — runs alongside JSON during transition) ──────────
-  try {
-    db.saveJob(jobId, persistedJobs[jobId]);
-  } catch (e) {
-    console.error('[db] Failed to save job to SQLite:', e.message);
-  }
+  db.saveJob(jobId, persistedJobs[jobId])
+    .catch((e) => console.error('[db] Failed to save job to Postgres:', e.message));
 }
 
 // ── markJobStuck() — Mark a job as stuck and trigger auto-disable pattern check ──
@@ -1993,7 +1950,7 @@ app.delete('/job/:id', (req, res) => {
     console.error('[jobs] Failed to save jobs.json after delete:', e.message);
   }
 
-  // 4. Delete from SQLite DB so job doesn't reappear on server restart
+  // 4. Delete from Postgres so job doesn't reappear on server restart
   try {
     const { deleteJob } = require('./lib/db');
     if (typeof deleteJob === 'function') deleteJob(jobId);
