@@ -17,9 +17,9 @@ import { ReactNode } from 'react';
 import { type PlanTier } from '@/lib/api';
 
 const TIER_RANK: Record<string, number> = {
-  diy:    1,
-  dwy:    2,
-  dfy:    3,
+  operate:  1,
+  guided:   2,
+  managed:  3,
   custom: 99,
 };
 

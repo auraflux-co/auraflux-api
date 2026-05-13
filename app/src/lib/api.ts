@@ -126,9 +126,9 @@ const CREDIT_RATES = {
 
 // CPD-128: plan-tier discounts on AI production rates
 const TIER_DISCOUNT: Record<string, number> = {
-  diy:    1.00,
-  dwy:    0.90,
-  dfy:    0.75,
+  operate:    1.00,
+  guided:    0.90,
+  managed:    0.75,
   custom: 0.70,
 };
 

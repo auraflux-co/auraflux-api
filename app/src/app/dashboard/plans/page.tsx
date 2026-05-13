@@ -15,9 +15,9 @@ import { cn } from '@/lib/utils';
 import { getPlans, subscribeToPlan, type Plan } from '@/lib/api';
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  diy: ['400 credits/mo', 'Scheduling', 'Full platform access', 'Credit packs', 'AuraFlux Collab'],
-  dwy: ['1,200 credits/mo', 'Everything in Operate', 'Operator guidance & monitoring', 'SMS + chat support'],
-  dfy: ['2,000 credits/mo', 'Everything in Guided', 'HeyGen avatars', 'Imagen 3 thumbnails', 'Dedicated account manager'],
+  operate: ['400 credits/mo', 'Scheduling', 'Full platform access', 'Credit packs', 'AuraFlux Collab'],
+  guided: ['1,200 credits/mo', 'Everything in Operate', 'Operator guidance & monitoring', 'SMS + chat support'],
+  managed: ['2,000 credits/mo', 'Everything in Guided', 'HeyGen avatars', 'Imagen 3 thumbnails', 'Dedicated account manager'],
 };
 
 export default function PlansPage() {

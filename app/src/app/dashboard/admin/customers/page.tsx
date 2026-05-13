@@ -18,9 +18,9 @@ import { tierLabel } from '@/lib/tier-labels';
 import { useRole } from '@/hooks/use-role';
 
 const TIER_COLORS: Record<PlanTier | string, string> = {
-  diy:    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  dwy:    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  dfy:    'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  operate:    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  guided:    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  managed:    'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
   custom: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
 };
 
@@ -79,7 +79,7 @@ export default function AdminCustomersPage() {
   if (!isLoaded || !isAdmin) return null;
 
   const TIERS: Array<PlanTier | 'all'> = ['all', 'operate', 'guided', 'managed', 'custom'];
-  const TIER_DISPLAY: Record<string, string> = { all: 'All', diy: 'Operate', dwy: 'Guided', dfy: 'Managed', custom: 'Custom' };
+  const TIER_DISPLAY: Record<string, string> = { all: 'All', operate: 'Operate', guided: 'Guided', managed: 'Managed', custom: 'Custom' };
 
   const filtered = customers.filter((c) => {
     const matchesTier   = tierFilter === 'all' || c.planTier === tierFilter;
