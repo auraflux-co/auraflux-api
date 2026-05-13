@@ -549,7 +549,7 @@ def ask_gemini_video_json(video_url, prompt):
         raise RuntimeError(f'Video download failed: {e}')
 
     # Upload to Gemini Files API using multipart upload
-    upload_url = f'https://generativelanguage.googleapis.com/upload/v1beta/files?key={GEMINI_API_KEY}'
+    upload_url = f'https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key={GEMINI_API_KEY}'
     boundary = 'gemini_e2e_boundary_xk7'
     meta_json = json.dumps({'file': {'display_name': 'e2e_output.mp4'}})
     body_parts = [
