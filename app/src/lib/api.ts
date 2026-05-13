@@ -355,6 +355,56 @@ export async function listCustomers(token?: string): Promise<{ customers: Custom
   return apiFetch('/admin/customers', { token });
 }
 
+// ─── Admin Activity Overview (CPD-177) ───────────────────────────────────────
+
+export interface ActivityStats {
+  totalJobs:       number;
+  running:         number;
+  complete:        number;
+  published:       number;
+  failed:          number;
+  jobs7d:          number;
+  accountsWithJobs: number;
+  credits30d:      number;
+}
+
+export interface ActivityFeedItem {
+  id:           string;
+  customerId:   string;
+  email:        string;
+  contentType:  string;
+  status:       string;
+  topic:        string | null;
+  durationMins: number | null;
+  createdAt:    string | null;
+}
+
+export interface AccountActivity {
+  customerId:     string;
+  email:          string | null;
+  firstName:      string | null;
+  lastName:       string | null;
+  role:           string;
+  planTier:       string;
+  jobCount:       number;
+  publishedCount: number;
+  runningCount:   number;
+  failedCount:    number;
+  jobs7d:         number;
+  lastJobAt:      string | null;
+}
+
+export interface ActivityOverview {
+  ok:       boolean;
+  stats:    ActivityStats;
+  feed:     ActivityFeedItem[];
+  accounts: AccountActivity[];
+}
+
+export async function getActivityOverview(token?: string): Promise<ActivityOverview> {
+  return apiFetch('/admin/activity-overview', { token });
+}
+
 // ─── Admin CRM (CPD-154) ──────────────────────────────────────────────────────
 
 export async function listCrmAccounts(token?: string) {

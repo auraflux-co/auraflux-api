@@ -141,8 +141,9 @@ const OPERATOR_NAV: NavItem[] = [
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { href: '/dashboard/admin/crm',         label: 'CRM',         divider: 'Admin tools' },
+  { href: '/dashboard/admin/overview',    label: 'Overview',    divider: 'Admin tools' },
   { href: '/dashboard/admin/customers',   label: 'Customers'   },
+  { href: '/dashboard/admin/crm',         label: 'CRM'         },
   { href: '/dashboard/admin/permissions', label: 'Permissions' },
 ];
 
@@ -157,8 +158,9 @@ export function Sidebar() {
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const router                                 = useRouter();
 
+  // Admin (superuser) = platform command centre only — not a job runner.
   const navItems = isAdmin
-    ? [...CUSTOMER_NAV, ...OPERATOR_NAV, ...ADMIN_NAV]
+    ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
     : isOperator
       ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
       : CUSTOMER_NAV;
@@ -347,7 +349,7 @@ export function MobileSidebar() {
   const router                      = useRouter();
 
   const navItems = isAdmin
-    ? [...CUSTOMER_NAV, ...OPERATOR_NAV, ...ADMIN_NAV]
+    ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
     : isOperator
       ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
       : CUSTOMER_NAV;
