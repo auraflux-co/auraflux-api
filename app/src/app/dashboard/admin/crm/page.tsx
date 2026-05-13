@@ -23,9 +23,9 @@ interface AccountSummary {
 }
 
 const TIER_BADGE: Record<string, string> = {
-  diy:    'bg-slate-100 text-slate-700',
-  dwy:    'bg-blue-100 text-blue-700',
-  dfy:    'bg-violet-100 text-violet-700',
+  operate:    'bg-slate-100 text-slate-700',
+  guided:    'bg-blue-100 text-blue-700',
+  managed:    'bg-violet-100 text-violet-700',
   custom: 'bg-amber-100 text-amber-700',
 };
 
@@ -172,7 +172,7 @@ export default function CrmListPage() {
                   <p className="text-xs text-muted-foreground font-mono">{a.accountId.slice(0, 18)}…</p>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', TIER_BADGE[a.planTier] ?? TIER_BADGE.diy)}>
+                  <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', TIER_BADGE[a.planTier] ?? TIER_BADGE.operate)}>
                     {tierLabel(a.planTier)}
                   </span>
                 </td>

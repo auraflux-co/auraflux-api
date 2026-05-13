@@ -6,16 +6,16 @@
  */
 
 export const TIER_LABELS: Record<string, string> = {
-  diy:    'Operate',
-  dwy:    'Guided',
-  dfy:    'Managed',
+  operate:    'Operate',
+  guided:    'Guided',
+  managed:    'Managed',
   custom: 'Enterprise',
 };
 
 export const TIER_LABEL_LOWER: Record<string, string> = {
-  diy:    'operate',
-  dwy:    'guided',
-  dfy:    'managed',
+  operate:    'operate',
+  guided:    'guided',
+  managed:    'managed',
   custom: 'enterprise',
 };
 

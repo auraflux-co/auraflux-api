@@ -30,9 +30,9 @@ const TIER_QUICK_LINKS: Record<string, { label: string; href: string; descriptio
 };
 
 const TIER_BADGE_COLORS: Record<string, string> = {
-  diy:    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  dwy:    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  dfy:    'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+  operate:    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  guided:    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  managed:    'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
   custom: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
 };
 
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
   const user      = await currentUser();
   const firstName = user?.firstName ?? 'there';
   const planTier  = (user?.publicMetadata?.planTier as string) ?? 'operate';
-  const quickLinks = TIER_QUICK_LINKS[planTier] ?? TIER_QUICK_LINKS.diy;
+  const quickLinks = TIER_QUICK_LINKS[planTier] ?? TIER_QUICK_LINKS.operate;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-semibold">Welcome back, {firstName}</h1>
           <p className="text-muted-foreground text-sm mt-1">AuraFlux Content Operations Platform</p>
         </div>
-        <span className={cn('shrink-0 mt-1 inline-block px-2.5 py-1 rounded-full text-xs font-semibold', TIER_BADGE_COLORS[planTier] ?? TIER_BADGE_COLORS.diy)}>
+        <span className={cn('shrink-0 mt-1 inline-block px-2.5 py-1 rounded-full text-xs font-semibold', TIER_BADGE_COLORS[planTier] ?? TIER_BADGE_COLORS.operate)}>
           {tierLabel(planTier)}
         </span>
       </div>
