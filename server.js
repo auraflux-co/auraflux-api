@@ -1182,10 +1182,8 @@ setImmediate(() => {
 });
 
 // ── Pipeline Bus: heygen:all_complete → Gate 2 QA → assembly ─────────────────
-// The HeyGen poller emits this when all segments are done.
-// This listener owns Gate 2 QA + logging + assembly trigger + assembly completion polling.
-// Dashboard is view-only — it reads persistedJobs, never drives this flow.
-pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
+// C0 localhost only. On Render (DATABASE_URL set) HeyGen flows through portal_heygen_ext.js only.
+if (!process.env.DATABASE_URL) pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
   // Concurrent job isolation guard: verify the card in persistedJobs matches the event's jobId
   // and contentType. If a concurrent job mutated persistedJobs[jobId] with the wrong contentType,
   // this guard aborts before assembly uses mismatched context (e.g. long-form assembled as short-form).
@@ -4886,11 +4884,8 @@ app.post('/generate-publish-copy', handleGeneratePublishCopy);
 //     { index: number, renderTimeMs: number, retries: number }
 //   ]
 // }
-// GET /heygen/latest-videos — fetch most recent N videos from HeyGen account
-// Used by dashboard "REFRESH IDs" button to get new video_ids after Avatar V web UI renders
-// Returns videos sorted by created_at desc, with download URLs fetched for completed ones
-// Query params: ?limit=20 (default 20, max 50)
-app.get('/heygen/latest-videos', async (req, res) => {
+// GET /heygen/latest-videos — C0 localhost only. Gated: not mounted on Render (DATABASE_URL set).
+if (!process.env.DATABASE_URL) app.get('/heygen/latest-videos', async (req, res) => {
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
   if (!HEYGEN_API_KEY) return res.status(400).json({ error: 'HEYGEN_API_KEY not set' });
 
@@ -5048,7 +5043,8 @@ async function bulkDeleteHeyGenVideos({ apiKey, dryRun = false, maxPasses = 100,
 // POST /admin/heygen/delete-all — dangerous operation; token + explicit confirmation required.
 // Header: x-admin-token: <HEYGEN_ADMIN_TOKEN>
 // Body: { confirmDeleteAll: "DELETE_ALL_HEYGEN_VIDEOS", dryRun?: boolean, maxPasses?: number, perPassLimit?: number }
-app.post('/admin/heygen/delete-all', async (req, res) => {
+// C0 localhost only — gated behind DATABASE_URL absence
+if (!process.env.DATABASE_URL) app.post('/admin/heygen/delete-all', async (req, res) => {
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
   if (!HEYGEN_API_KEY) return res.status(400).json({ ok: false, error: 'HEYGEN_API_KEY not set' });
 
@@ -5095,7 +5091,8 @@ app.post('/admin/heygen/delete-all', async (req, res) => {
 // Used by dashboard REFRESH IDs fallback when title-prefix matching returns 0 results
 // (jobs sent before the title format was added to generateVideo())
 // Body: { videoIds: ["abc123", "def456", ...] }
-app.post('/heygen/video-urls', async (req, res) => {
+// C0 localhost only — gated behind DATABASE_URL absence
+if (!process.env.DATABASE_URL) app.post('/heygen/video-urls', async (req, res) => {
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
   if (!HEYGEN_API_KEY) return res.status(400).json({ error: 'HEYGEN_API_KEY not set' });
 
@@ -5143,7 +5140,8 @@ app.post('/heygen/video-urls', async (req, res) => {
   res.json({ ok: true, count: results.length, videos: results });
 });
 
-app.post('/log-heygen-metrics', async (req, res) => {
+// C0 localhost only — gated behind DATABASE_URL absence
+if (!process.env.DATABASE_URL) app.post('/log-heygen-metrics', async (req, res) => {
   const { jobId, segmentCount, totalWaitTimeMs, avgRenderTimeMs, segments } = req.body;
 
   if (!jobId) {
