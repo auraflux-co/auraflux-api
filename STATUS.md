@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-13 v1.0.405 (Cursor — fix(cpd-175): final — all 18 E2E tests run with real Gemini video QA; 4/18 pass (G-T6 95/100 best); 4 follow-up tickets created CPD-178/179/180/181; canvas updated with actual scores + video URLs + UX audit + pipeline issue table)
 **Last Updated:** 2026-05-13 v1.0.404 (Cursor — fix(cpd-175): Gemini video analysis — poll file state until ACTIVE before calling generateContent; without polling, 404 returned on immediate use of freshly-uploaded file)
 **Last Updated:** 2026-05-13 v1.0.403 (Cursor — fix(cpd-175): Gemini Files API upload fix — add uploadType=multipart query param; resolves RuntimeError causing metadata fallback scoring at 76/100 instead of true video QA score)
 **Last Updated:** 2026-05-13 v1.0.402 (Cursor — feat(cpd-175): VOD CDN access confirmed + 18 E2E tests redesigned (3S+3L per tier, 9 ENHANCE/6 COMPACT/3 EXTRACT); twitch_client.js adds extractVideoId/getVideos/resolveVideoHls via usher.ttvnw.net; test runner adds get_vod_for_streamer/get_live_vod_url/source_type branching; Jira+Confluence updated; tests running)
