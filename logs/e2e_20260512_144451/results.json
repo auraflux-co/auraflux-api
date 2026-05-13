@@ -1,0 +1,113 @@
+[
+  {
+    "id": "M-T1",
+    "tier": "managed",
+    "streamer": "hasanabi",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-hasanabi.mp4",
+    "clip_title": "irl ban",
+    "started_at": "2026-05-12T18:44:51.718439+00:00",
+    "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_FETCH_news_1778611494800",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_FETCH_news_1778611494800/1778611512748_assembled_user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_FETCH_news_1778611494800.mp4",
+    "validation": {
+      "passed": true,
+      "score": 80,
+      "spec_matches_brief": true,
+      "has_output": true,
+      "issues": [],
+      "notes": "Gemini validation unavailable \u2014 basic check only"
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": true,
+    "finished_at": "2026-05-12T18:45:15.719613+00:00"
+  },
+  {
+    "id": "M-T2",
+    "tier": "managed",
+    "streamer": "stableronaldo",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-stableronaldo.mp4",
+    "clip_title": ".",
+    "started_at": "2026-05-12T18:45:15.720827+00:00",
+    "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611520191",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611520191/1778611539525_assembled_user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611520191.mp4",
+    "validation": {
+      "passed": false,
+      "score": 75,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job spec 'platforms' array is empty, but the expected platform is 'tiktok'."
+      ],
+      "notes": "The job spec correctly identifies 'vertical_reel' profile and 'short' format, which align with TikTok content. An output URL is present, and a script is confirmed by the 'filledScript' content. However, the 'platforms' field in the job spec is empty, indicating a mismatch with the expected 'tiktok' platform, which is a critical miss for platform-specific generation."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T18:45:46.559901+00:00"
+  },
+  {
+    "id": "M-T3",
+    "tier": "managed",
+    "streamer": "extraemily",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-extraemily.mp4",
+    "clip_title": "FULCRUM",
+    "started_at": "2026-05-12T18:45:46.561193+00:00",
+    "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611549049",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611549049/1778611561620_assembled_user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611549049.mp4",
+    "validation": {
+      "passed": false,
+      "score": 20,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job spec 'platforms' field is empty [], but the expected output requires 'platform: instagram'.",
+        "Job status is 'running'. For an E2E test result providing a final output, the job status should typically be 'completed' or 'succeeded'.",
+        "Job spec 'sourceType' is null. Given the 'entry: \"fetch\"' and provided 'Streamer: extraemily', it's expected that 'sourceType' would be populated (e.g., 'twitch' or 'youtube')."
+      ],
+      "notes": "The test fails due to a mismatch in the platform specification within the job spec and the 'running' job status, which indicates an incomplete job despite an output URL being available. The absence of a 'sourceType' is also a notable issue given the 'fetch' entry type."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T18:46:22.210413+00:00"
+  },
+  {
+    "id": "M-T4",
+    "tier": "managed",
+    "streamer": "maya",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-maya.mp4",
+    "clip_title": "Amazon Denies Another Employee a Bathroom Break",
+    "started_at": "2026-05-12T18:46:22.211040+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 502 \u2014 <!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta n"
+  },
+  {
+    "id": "M-T5",
+    "tier": "managed",
+    "streamer": "jasontheween",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-jasontheween.mp4",
+    "clip_title": "who is he talking to",
+    "started_at": "2026-05-12T18:46:25.013796+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 502 \u2014 <!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta n"
+  },
+  {
+    "id": "M-T6",
+    "tier": "managed",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-lacy-1778611450.mp4",
+    "clip_title": "cpr",
+    "started_at": "2026-05-12T18:46:28.130295+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 502 \u2014 <!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta n"
+  }
+]

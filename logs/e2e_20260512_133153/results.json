@@ -1,0 +1,152 @@
+[
+  {
+    "id": "G-T1",
+    "tier": "guided",
+    "streamer": "hasanabi",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-hasanabi.mp4",
+    "clip_title": "Andrew Tate has been to space thats how he knows the earth i",
+    "started_at": "2026-05-12T17:31:53.243576+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607117093",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607117093/1778607134690_assembled_user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607117093.mp4",
+    "validation": {
+      "passed": false,
+      "score": 50,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running', but a completed or successful status is expected for an E2E test result.",
+        "The 'platforms' array in the job spec is empty, which does not match the 'Expected' platform of 'youtube'.",
+        "The 'sourceType' in the job spec is null, indicating potentially incomplete source metadata capture, despite 'Streamer' and 'Clip title' being available."
+      ],
+      "notes": "The test failed due to a mismatch in the expected platform, as the job spec's 'platforms' array was empty instead of containing 'youtube'. Additionally, the job's 'status' is still 'running', which is an incomplete state for a test result. While a valid output URL exists and a script is present (meeting 'has_video' and 'has_script' expectations), the core platform and job completion status issues prevent a pass."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T17:32:40.961698+00:00"
+  },
+  {
+    "id": "G-T2",
+    "tier": "guided",
+    "streamer": "stableronaldo",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-stableronaldo.mp4",
+    "clip_title": "duke \"who is you\" \ud83d\ude2d\ud83d\ude2d",
+    "started_at": "2026-05-12T17:32:40.963425+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778607163258",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778607163258/1778607177068_assembled_user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778607163258.mp4",
+    "validation": {
+      "passed": false,
+      "score": 60,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job spec 'platforms' array is empty, but the expected platform is 'tiktok'.",
+        "Job status is 'running', which indicates the job is not yet complete and the output may not be final for E2E validation."
+      ],
+      "notes": "The job successfully generated a vertical, short-form video with a script and a valid output URL, aligning with content characteristics like production profile, format, and content presence. However, the job spec did not explicitly include 'tiktok' in its platform configuration, and the job's 'running' status means the E2E test is not fully concluded."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T17:33:20.242036+00:00"
+  },
+  {
+    "id": "G-T3",
+    "tier": "guided",
+    "streamer": "extraemily",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-extraemily.mp4",
+    "clip_title": "ELBOW DROP FROM THE TOP ROPES",
+    "started_at": "2026-05-12T17:33:20.244644+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778607203085",
+    "output_url": null,
+    "validation": {
+      "passed": false,
+      "score": 0,
+      "spec_matches_brief": false,
+      "has_output": false,
+      "issues": [
+        "The job specification is empty, failing to provide necessary instructions for the brief (platform, content type, script).",
+        "The output URL is missing, making it impossible to verify if the actual output matches expectations.",
+        "The brief expects 'has_script: true', but there is no information in the job spec or test result to confirm script usage."
+      ],
+      "notes": "The test fails entirely due to a completely empty job specification and a missing output URL. Without a job spec, no instructions for content creation were provided, and without an output URL, no verification of any generated content can be performed against the expected brief."
+    },
+    "passed": false,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T17:43:36.048335+00:00"
+  },
+  {
+    "id": "G-T4",
+    "tier": "guided",
+    "streamer": "maya",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-maya.mp4",
+    "clip_title": "DisguisedToast works for Maya now",
+    "started_at": "2026-05-12T17:43:36.051762+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607819570",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607819570/1778607840622_assembled_user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607819570.mp4",
+    "validation": {
+      "passed": true,
+      "score": 80,
+      "spec_matches_brief": true,
+      "has_output": true,
+      "issues": [],
+      "notes": "Gemini validation unavailable \u2014 basic check only"
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": true,
+    "finished_at": "2026-05-12T17:44:10.679925+00:00"
+  },
+  {
+    "id": "G-T5",
+    "tier": "guided",
+    "streamer": "jasontheween",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-jasontheween.mp4",
+    "clip_title": "NAH THEY ALL TWEAKIN\ud83e\udd23",
+    "started_at": "2026-05-12T17:44:10.681657+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_sports_1778607854490",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_sports_1778607854490/1778607875125_assembled_user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_sports_1778607854490.mp4",
+    "validation": {
+      "passed": false,
+      "score": 55,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running' instead of 'completed', indicating the E2E test did not finish.",
+        "Job spec 'platforms' array is empty, but 'instagram' was expected.",
+        "Job spec 'sourceType' is null, which might indicate missing metadata."
+      ],
+      "notes": "The test produced an output URL implying a video and had a filled script, meeting some expectations. However, the job did not complete ('running' status), and the critical 'platform' expectation for 'instagram' was not met as the job spec's platforms array was empty. A minor issue is the null 'sourceType'."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T17:44:58.192251+00:00"
+  },
+  {
+    "id": "G-T6",
+    "tier": "guided",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-lacy.mp4",
+    "clip_title": "dd",
+    "started_at": "2026-05-12T17:44:58.194123+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778607900242",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778607900242/1778607915713_assembled_user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778607900242.mp4",
+    "validation": {
+      "passed": false,
+      "score": 30,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running' instead of 'completed' for an E2E test result.",
+        "Job spec 'platforms' array is empty; expected 'tiktok' as the target platform."
+      ],
+      "notes": "The job produced an output URL and a filled script, and its content type and format (vertical_reel, short, clips) are conceptually consistent with TikTok content. However, the job is still marked as 'running', indicating it hasn't completed successfully. Crucially, the 'platforms' field in the job specification is an empty array, which contradicts the expectation for 'tiktok' as the target platform."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T17:45:37.630052+00:00"
+  }
+]

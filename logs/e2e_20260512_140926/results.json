@@ -1,0 +1,27 @@
+[
+  {
+    "id": "O-T6",
+    "tier": "operate",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-lacy-v2.mp4",
+    "clip_title": "dd",
+    "started_at": "2026-05-12T18:09:26.583508+00:00",
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1778609368990",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1778609368990/1778609391827_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1778609368990.mp4",
+    "validation": {
+      "passed": false,
+      "score": 40,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running', indicating the test is not yet complete and final output may not be ready.",
+        "Job spec 'platforms' array is empty, but the expected output platform is 'instagram'."
+      ],
+      "notes": "The E2E test is incomplete as the job status is 'running'. The job specification's 'platforms' array is empty, which does not match the expected output platform of 'instagram'. However, the 'productionProfile' ('vertical_reel'), 'format' ('short'), and 'contentType' ('clips') are consistent with Instagram's requirements. An output URL is present, but its content availability is uncertain due to the 'running' status."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T18:10:13.783319+00:00"
+  }
+]

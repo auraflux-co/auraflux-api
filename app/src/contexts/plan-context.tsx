@@ -29,8 +29,8 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     if (!isLoaded) return;
     getToken().then(token =>
       apiFetch<PlanFeaturesResp>('/plan/features', { token: token ?? undefined })
-        .then(d => setPlanTier(d.planTier ?? 'diy'))
-        .catch(() => setPlanTier('diy'))
+        .then(d => setPlanTier(d.planTier ?? 'operate'))
+        .catch(() => setPlanTier('operate'))
         .finally(() => setIsLoading(false))
     );
   }, [isLoaded, getToken]);

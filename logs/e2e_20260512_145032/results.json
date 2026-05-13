@@ -1,0 +1,54 @@
+[
+  {
+    "id": "M-T4",
+    "tier": "managed",
+    "streamer": "maya",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-maya.mp4",
+    "clip_title": "Amazon Denies Another Employee a Bathroom Break",
+    "started_at": "2026-05-12T18:50:32.983824+00:00",
+    "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_FETCH_news_1778611835762",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_FETCH_news_1778611835762/1778611854720_assembled_user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_FETCH_news_1778611835762.mp4",
+    "validation": {
+      "passed": false,
+      "score": 40,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job spec 'platforms' field is empty, but the expected platform is 'youtube'.",
+        "Job status is 'running', indicating it is not yet complete.",
+        "Inconsistency: The job's 'topic' explicitly mentions 'YouTube long-form content', but its 'platforms' field is empty."
+      ],
+      "notes": "The test failed primarily because the job specification's 'platforms' field is empty, directly contradicting the expected platform 'youtube'. Additionally, the job is still 'running', and there's an inconsistency between the job's topic (mentioning YouTube) and its empty platforms field. While a valid output URL exists and a script is present, the core platform configuration and job completion status are critical issues."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T18:51:09.596855+00:00"
+  },
+  {
+    "id": "M-T5",
+    "tier": "managed",
+    "streamer": "jasontheween",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-jasontheween.mp4",
+    "clip_title": "who is he talking to",
+    "started_at": "2026-05-12T18:51:09.598258+00:00",
+    "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611872214",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611872214/1778611894606_assembled_user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611872214.mp4",
+    "validation": {
+      "passed": false,
+      "score": 45,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running', indicating the job has not completed yet, which is unexpected for a final E2E test result.",
+        "Job spec's 'platforms' array is empty, but the expected brief specified 'tiktok' as the platform.",
+        "Job spec's 'sourceType' is null, which may indicate an incomplete or missing input source definition for a 'fetch' job."
+      ],
+      "notes": "While the job spec correctly identifies 'vertical_reel' profile, 'short' format, and includes a filled script, indicating video and script presence as expected, the job's 'running' status and the missing 'tiktok' platform are critical failures. An output URL is present and valid."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T18:51:51.697133+00:00"
+  }
+]

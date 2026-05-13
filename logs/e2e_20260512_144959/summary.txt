@@ -1,0 +1,4 @@
+AuraFlux E2E Results — 20260512_144959
+Tests: 1  Passed: 1  Failed: 0
+
+✅ M-T6   lacy            score= 15  https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQk

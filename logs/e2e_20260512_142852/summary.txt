@@ -1,0 +1,4 @@
+AuraFlux E2E Results — 20260512_142852
+Tests: 1  Passed: 0  Failed: 1
+
+❌ G-T3   extraemily      score= 10  NO OUTPUT

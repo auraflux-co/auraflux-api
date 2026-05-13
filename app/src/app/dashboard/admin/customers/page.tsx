@@ -78,7 +78,7 @@ export default function AdminCustomersPage() {
 
   if (!isLoaded || !isAdmin) return null;
 
-  const TIERS: Array<PlanTier | 'all'> = ['all', 'diy', 'dwy', 'dfy', 'custom'];
+  const TIERS: Array<PlanTier | 'all'> = ['all', 'operate', 'guided', 'managed', 'custom'];
   const TIER_DISPLAY: Record<string, string> = { all: 'All', diy: 'Operate', dwy: 'Guided', dfy: 'Managed', custom: 'Custom' };
 
   const filtered = customers.filter((c) => {
@@ -93,9 +93,9 @@ export default function AdminCustomersPage() {
 
   const metrics = {
     total:    customers.length,
-    operate:  customers.filter((c) => c.planTier === 'diy').length,
-    guided:   customers.filter((c) => c.planTier === 'dwy').length,
-    managed:  customers.filter((c) => c.planTier === 'dfy').length,
+    operate:  customers.filter((c) => c.planTier === 'operate').length,
+    guided:   customers.filter((c) => c.planTier === 'guided').length,
+    managed:  customers.filter((c) => c.planTier === 'managed').length,
     custom:   customers.filter((c) => c.planTier === 'custom').length,
     withJobs: customers.filter((c) => c.jobCount > 0).length,
   };

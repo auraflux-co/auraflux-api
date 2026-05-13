@@ -107,13 +107,13 @@ const FEATURES: Feature[] = [
 ];
 
 const ADD_ONS = [
-  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'AI presenter rendered for each video',      badge: 'Managed', minPlan: 'dfy' as const },
-  { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'Managed', minPlan: 'dfy' as const },
+  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'AI presenter rendered for each video',      badge: 'Managed', minPlan: 'managed' as const },
+  { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'Managed', minPlan: 'managed' as const },
 ];
 
 const PLATFORMS = [
   { id: 'youtube',   label: 'YouTube',   minPlan: undefined },
-  { id: 'tiktok',    label: 'TikTok',    minPlan: 'dfy' as const },
+  { id: 'tiktok',    label: 'TikTok',    minPlan: 'managed' as const },
   { id: 'instagram', label: 'Instagram', minPlan: undefined },
 ];
 
@@ -524,7 +524,7 @@ function NewJobPageInner() {
           features: Array.from(features),
           extensions: Array.from(addOns),
           sourceMode: effectiveSource ?? '',
-          planTier: planTier ?? 'diy',
+          planTier: planTier ?? 'operate',
         });
         return (
           <div className="space-y-4">
@@ -607,8 +607,8 @@ function NewJobPageInner() {
               {PLATFORMS.map((p) => (
                 <LockedFeature
                   key={p.id}
-                  minPlan={p.minPlan ?? 'diy'}
-                  currentPlan={planTier ?? 'diy'}
+                  minPlan={p.minPlan ?? 'operate'}
+                  currentPlan={planTier ?? 'operate'}
                   label={p.label}
                   upgradeMsg={`TikTok direct publishing is included in the Managed plan`}
                 >
@@ -639,8 +639,8 @@ function NewJobPageInner() {
                 return (
                   <LockedFeature
                     key={ao.id}
-                    minPlan={ao.minPlan ?? 'diy'}
-                    currentPlan={planTier ?? 'diy'}
+                    minPlan={ao.minPlan ?? 'operate'}
+                    currentPlan={planTier ?? 'operate'}
                     label={ao.label}
                     upgradeMsg={`${ao.label} is included in the Managed plan`}
                   >

@@ -39,7 +39,7 @@ const TIER_BADGE_COLORS: Record<string, string> = {
 export default async function DashboardPage() {
   const user      = await currentUser();
   const firstName = user?.firstName ?? 'there';
-  const planTier  = (user?.publicMetadata?.planTier as string) ?? 'diy';
+  const planTier  = (user?.publicMetadata?.planTier as string) ?? 'operate';
   const quickLinks = TIER_QUICK_LINKS[planTier] ?? TIER_QUICK_LINKS.diy;
 
   return (

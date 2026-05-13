@@ -1,0 +1,27 @@
+[
+  {
+    "id": "G-T3",
+    "tier": "guided",
+    "streamer": "extraemily",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-extraemily.mp4",
+    "clip_title": "Parking lot crackhead",
+    "started_at": "2026-05-12T18:10:17.073624+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778609419616",
+    "output_url": null,
+    "validation": {
+      "passed": false,
+      "score": 10,
+      "spec_matches_brief": false,
+      "has_output": false,
+      "issues": [
+        "Job spec is empty, does not contain expected parameters like 'has_script', 'has_video', or 'platform'.",
+        "Output URL is missing, making it impossible to validate the actual content produced."
+      ],
+      "notes": "The test failed critically due to an empty job specification, indicating a significant issue in the job creation process. Additionally, the absence of an output URL prevents any form of content validation against the expected brief. This result points to a fundamental pipeline or configuration failure."
+    },
+    "passed": false,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T18:20:30.653891+00:00"
+  }
+]

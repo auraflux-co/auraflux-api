@@ -1,0 +1,384 @@
+[
+  {
+    "id": "O-T1",
+    "tier": "operate",
+    "streamer": "stableronaldo",
+    "profile": "vertical_reel",
+    "format": "short",
+    "platform": "tiktok",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/1080/index.mp4?sig=60072e5a16b27247d971e2a0c37992de58f2dd27&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698182%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "nahh (22s)"
+    ],
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1778626190788",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1778626190788/1778626218847_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1778626190788.mp4",
+    "passed": true,
+    "error": null,
+    "started_at": "2026-05-12T22:49:41.915396+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "vertical_reel",
+      "format": "short",
+      "contentType": "clips",
+      "platforms": [
+        "tiktok"
+      ],
+      "targetPlatform": "tiktok",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/1080/index.mp4?sig=60072e5a16b27247d971e2a0c37992de58f2dd27&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698182%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/1080/index.mp4?sig=60072e5a16b27247d971e2a0c37992de58f2dd27&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698182%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "Stableronaldo's unbelievable 'nahh' moment: an insane FPS clutch play highlighted by a hype TTS voiceover and a dash of his signature funny reaction.",
+      "tone": "High-energy, exhilarating, slightly comedic, and celebratory of a skill-based 'clutch' play, designed for maximum viral impact on TikTok.",
+      "brandName": "AuraFlux E2E",
+      "brandVoice": "Fast-paced, confident, playfully arrogant, and genuinely surprised, mirroring stableronaldo's dynamic in-game personality and reaction.",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        },
+        "showCommentary": {
+          "active": false
+        }
+      }
+    },
+    "validation": {
+      "passed": true,
+      "score": 50,
+      "method": "fallback",
+      "issues": [
+        "Video analysis unavailable: HTTP Error 404: Not Found"
+      ],
+      "notes": "Gemini could not watch video \u2014 basic check only"
+    },
+    "gemini_passed": true,
+    "ux_observations": [],
+    "finished_at": "2026-05-12T22:51:53.384311+00:00"
+  },
+  {
+    "id": "O-T2",
+    "tier": "operate",
+    "streamer": "hasanabi",
+    "profile": "broadcast_desk",
+    "format": "long",
+    "platform": "youtube",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/1080/index.mp4?sig=9898c00a584bd3e25f71bebeebe324395971707f&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698313%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/0252c9d3-2c08-4170-b4bd-83987eec0a55/landscape/avc/1080/index.mp4?sig=1fb213b48ab9da116a86e94b61e12b795d586a52&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/0252c9d3-2c08-4170-b4bd-83987eec0a55/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698313%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/07ebf438-49cb-4ac9-adc8-2626c68dcc2a/landscape/avc/1080/index.mp4?sig=c8a9929db41d73474944afc4027ec9ebf89bcf96&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/07ebf438-49cb-4ac9-adc8-2626c68dcc2a/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698314%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/15cebc17-aa43-4997-97cb-42a4d2ce837d/landscape/avc/1080/index.mp4?sig=948c368c71ec7133a3e04f27872d2aa8260d9cb6&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/15cebc17-aa43-4997-97cb-42a4d2ce837d/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698314%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "? (35s)",
+      "irl ban (51s)",
+      "Emiru calls out streamers for exploiting the situation (43s)",
+      "Hasan gets flashbanged (32s)"
+    ],
+    "job_id": "e2e-operate-test_COMPACT_FETCH_news_1778626326951",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_news_1778626326951/1778626365856_assembled_e2e-operate-test_COMPACT_FETCH_news_1778626326951.mp4",
+    "passed": true,
+    "error": null,
+    "started_at": "2026-05-12T22:51:53.386942+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "broadcast_desk",
+      "format": "long",
+      "contentType": "clips",
+      "platforms": [
+        "youtube"
+      ],
+      "targetPlatform": "youtube",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/1080/index.mp4?sig=9898c00a584bd3e25f71bebeebe324395971707f&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698313%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/1080/index.mp4?sig=9898c00a584bd3e25f71bebeebe324395971707f&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698313%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/0252c9d3-2c08-4170-b4bd-83987eec0a55/landscape/avc/1080/index.mp4?sig=1fb213b48ab9da116a86e94b61e12b795d586a52&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/0252c9d3-2c08-4170-b4bd-83987eec0a55/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698313%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/07ebf438-49cb-4ac9-adc8-2626c68dcc2a/landscape/avc/1080/index.mp4?sig=c8a9929db41d73474944afc4027ec9ebf89bcf96&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/07ebf438-49cb-4ac9-adc8-2626c68dcc2a/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698314%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/15cebc17-aa43-4997-97cb-42a4d2ce837d/landscape/avc/1080/index.mp4?sig=948c368c71ec7133a3e04f27872d2aa8260d9cb6&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/15cebc17-aa43-4997-97cb-42a4d2ce837d/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698314%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "The Daily Dose of Piker: Unpacking Hasan's Most Viral Reactions, From Heated Debates to Unfiltered IRL Chaos, presented as a broadcast expos\u00e9.",
+      "tone": "Sharp, opinionated, politically charged, and humorously reactive, mirroring Hasan's signature on-stream persona, with an overarching analytical yet entertaining broadcast feel.",
+      "brandName": "AuraFlux E2E",
+      "brandVoice": "Direct, confident, and slightly provocative, delivering commentary with the conviction and wit characteristic of Hasan Piker's unique blend of political analysis and internet culture takes.",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        },
+        "showCommentary": {
+          "active": false
+        }
+      }
+    },
+    "validation": {
+      "passed": true,
+      "score": 50,
+      "method": "fallback",
+      "issues": [
+        "Video analysis unavailable: HTTP Error 404: Not Found"
+      ],
+      "notes": "Gemini could not watch video \u2014 basic check only"
+    },
+    "gemini_passed": true,
+    "ux_observations": [],
+    "finished_at": "2026-05-12T22:54:39.742027+00:00"
+  },
+  {
+    "id": "O-T3",
+    "tier": "operate",
+    "streamer": "hasanabi",
+    "profile": "broadcast_desk",
+    "format": "long",
+    "platform": "youtube",
+    "clip_urls": [],
+    "clip_titles": [],
+    "job_id": "e2e-operate-test_COMPACT_FETCH_news_1778626484309",
+    "output_url": null,
+    "passed": false,
+    "error": null,
+    "started_at": "2026-05-12T22:54:39.743692+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "research",
+      "productionProfile": "broadcast_desk",
+      "format": "long",
+      "contentType": "news",
+      "platforms": [
+        "youtube"
+      ],
+      "targetPlatform": "youtube",
+      "url": "",
+      "urls": [],
+      "topic": "Hasan Piker's Week in Focus: Unpacking the Top 3 Political Controversies That Sparked His Livestream, from Corporate Greed to Right-Wing Media Gaffes, with Deep Dive Analysis.",
+      "tone": "Sharp, analytical, and critically engaged, reflecting Hasan Piker's progressive political commentary with a focus on deconstructing capitalist narratives, exposing hypocrisy, and reacting to current events with his characteristic blend of outrage and insight.",
+      "brandName": "AuraFlux E2E",
+      "brandVoice": "Direct, passionate, and critically discerning, mirroring Hasan Piker's outspoken progressive commentary, often infused with an anti-capitalist perspective and a current, meme-aware vocabulary.",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        },
+        "showCommentary": {
+          "active": false
+        }
+      },
+      "query": "Hasan Piker political commentary streaming politics 2026"
+    },
+    "validation": {
+      "passed": false,
+      "score": 0,
+      "method": "no_output",
+      "issues": [
+        "No output URL produced"
+      ]
+    },
+    "gemini_passed": false,
+    "ux_observations": [],
+    "finished_at": "2026-05-12T22:54:59.658587+00:00"
+  },
+  {
+    "id": "O-T4",
+    "tier": "operate",
+    "streamer": "extraemily",
+    "profile": "vertical_reel",
+    "format": "short",
+    "platform": "instagram",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/1080/index.mp4?sig=2acb87e2796fa65c67a7451c824ff58a58f88157&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PiliableKnottyLeopardOSfrog-9AfrgWqhjMCyflR4%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698500%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "Emily with the XXXTentacion performance  (39s)"
+    ],
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1778626509435",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1778626509435/1778626541782_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1778626509435.mp4",
+    "passed": true,
+    "error": null,
+    "started_at": "2026-05-12T22:54:59.659622+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "vertical_reel",
+      "format": "short",
+      "contentType": "clips",
+      "platforms": [
+        "instagram"
+      ],
+      "targetPlatform": "instagram",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/1080/index.mp4?sig=2acb87e2796fa65c67a7451c824ff58a58f88157&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PiliableKnottyLeopardOSfrog-9AfrgWqhjMCyflR4%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698500%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/1080/index.mp4?sig=2acb87e2796fa65c67a7451c824ff58a58f88157&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PiliableKnottyLeopardOSfrog-9AfrgWqhjMCyflR4%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698500%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "ExtraEmily's electrifying, impromptu XXXTentacion tribute performance during an IRL event, highlighting her fearless energy and ability to turn any moment into a stage.",
+      "tone": "High-energy, chaotic fun, slightly humorous, with an emphasis on ExtraEmily's spontaneous and fearless personality, perfectly suited for a viral Instagram Reel.",
+      "brandName": "AuraFlux E2E",
+      "brandVoice": "Enthusiastic, playful, and slightly over-the-top, mirroring ExtraEmily's vibrant and unpredictable IRL persona.",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        },
+        "showCommentary": {
+          "active": false
+        }
+      }
+    },
+    "validation": {
+      "passed": true,
+      "score": 50,
+      "method": "fallback",
+      "issues": [
+        "Video analysis unavailable: HTTP Error 404: Not Found"
+      ],
+      "notes": "Gemini could not watch video \u2014 basic check only"
+    },
+    "gemini_passed": true,
+    "ux_observations": [],
+    "finished_at": "2026-05-12T22:57:26.653487+00:00"
+  },
+  {
+    "id": "O-T5",
+    "tier": "operate",
+    "streamer": "maya",
+    "profile": "broadcast_desk",
+    "format": "short",
+    "platform": "youtube",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=83f8e6ef2ee549097308486dac7b9c4cd9df0f3e&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698646%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/1080/index.mp4?sig=a86dbb129295f9051f9c00f5d80326270b07ff57&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CharmingSlickSwordBrainSlug-MhFkvDFU4fhmlt8r%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698647%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "Push Pop (21s)",
+      "Ragequit (37s)"
+    ],
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_news_1778626661222",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_news_1778626661222/1778626691651_assembled_e2e-operate-test_EXTRACT_FETCH_news_1778626661222.mp4",
+    "passed": true,
+    "error": null,
+    "started_at": "2026-05-12T22:57:26.655406+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "broadcast_desk",
+      "format": "short",
+      "contentType": "show_commentary",
+      "platforms": [
+        "youtube"
+      ],
+      "targetPlatform": "youtube",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=83f8e6ef2ee549097308486dac7b9c4cd9df0f3e&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698646%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=83f8e6ef2ee549097308486dac7b9c4cd9df0f3e&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698646%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/1080/index.mp4?sig=a86dbb129295f9051f9c00f5d80326270b07ff57&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CharmingSlickSwordBrainSlug-MhFkvDFU4fhmlt8r%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698647%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "Maya's Unfiltered Gaming Trials: Navigating Puzzling Push Pops and Epic Rage Quits with Signature Charm.",
+      "tone": "Playfully exasperated, self-deprecating, empathetic, and genuinely amused, capturing Maya's signature blend of wholesome frustration and quick wit, perfectly suited for a viral YouTube Short.",
+      "brandName": "AuraFlux E2E",
+      "brandVoice": "Maya's authentic, high-energy conversational style; a voice that oscillates between genuine curiosity, lighthearted struggle, and adorable frustration, punctuated by her characteristic 'aww's and 'what!?' moments.",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        },
+        "showCommentary": {
+          "active": true
+        }
+      }
+    },
+    "validation": {
+      "passed": true,
+      "score": 50,
+      "method": "fallback",
+      "issues": [
+        "Video analysis unavailable: HTTP Error 404: Not Found"
+      ],
+      "notes": "Gemini could not watch video \u2014 basic check only"
+    },
+    "gemini_passed": true,
+    "ux_observations": [],
+    "finished_at": "2026-05-12T22:59:59.217441+00:00"
+  },
+  {
+    "id": "O-T6",
+    "tier": "operate",
+    "streamer": "lacy",
+    "profile": "vertical_reel",
+    "format": "short",
+    "platform": [
+      "youtube",
+      "instagram"
+    ],
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4?sig=fc8fbf187e958d17a7fe65f284e16e0a758c8c14&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22SneakySpineyHummingbirdMrDestructoid-SgkpkbBM6u39qU7j%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698799%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/bf4cf979-0e2f-415f-aa0b-31b0ef0f3e57/landscape/avc/1080/index.mp4?sig=166442d3465c8c0b79623f66d2b046b5918cf604&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/bf4cf979-0e2f-415f-aa0b-31b0ef0f3e57/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22WrongMuddyHerdPoooound-92-NjTb-8Mp7joJR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698799%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/c9880058-3744-46cc-98d8-8a98bbe1b317/landscape/avc/1080/index.mp4?sig=8431be910442eae77250bdf970144facd806315a&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/c9880058-3744-46cc-98d8-8a98bbe1b317/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22EphemeralCaringNikudonRlyTho-5DrZbdGP_NHRvT9Z%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698800%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "dd (48s)",
+      "Lacy texting and driving without seatbelt driving Adapts E-wagon after he stole it (30s)",
+      "cpr (60s)"
+    ],
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1778626809502",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1778626809502/1778626853254_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1778626809502.mp4",
+    "passed": true,
+    "error": null,
+    "started_at": "2026-05-12T22:59:59.220209+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "vertical_reel",
+      "format": "short",
+      "contentType": "clips",
+      "platforms": [
+        "youtube",
+        "instagram"
+      ],
+      "targetPlatform": "youtube",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4?sig=fc8fbf187e958d17a7fe65f284e16e0a758c8c14&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22SneakySpineyHummingbirdMrDestructoid-SgkpkbBM6u39qU7j%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698799%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4?sig=fc8fbf187e958d17a7fe65f284e16e0a758c8c14&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22SneakySpineyHummingbirdMrDestructoid-SgkpkbBM6u39qU7j%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698799%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/bf4cf979-0e2f-415f-aa0b-31b0ef0f3e57/landscape/avc/1080/index.mp4?sig=166442d3465c8c0b79623f66d2b046b5918cf604&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/bf4cf979-0e2f-415f-aa0b-31b0ef0f3e57/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22WrongMuddyHerdPoooound-92-NjTb-8Mp7joJR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698799%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/c9880058-3744-46cc-98d8-8a98bbe1b317/landscape/avc/1080/index.mp4?sig=8431be910442eae77250bdf970144facd806315a&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/c9880058-3744-46cc-98d8-8a98bbe1b317/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22EphemeralCaringNikudonRlyTho-5DrZbdGP_NHRvT9Z%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778698800%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "Lacy's High-Octane FPS Plays & Unforgettable Streamer Shenanigans: A Short-Form Highlight Reel",
+      "tone": "Energetic, dynamic, witty, and humorously chaotic, reflecting Lacy's unique gaming and personality blend.",
+      "brandName": "AuraFlux E2E",
+      "brandVoice": "Lacy's signature blend of high-energy hype, sharp FPS commentary, and genuine, sometimes unhinged, reactions.",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        },
+        "showCommentary": {
+          "active": false
+        }
+      }
+    },
+    "validation": {
+      "passed": true,
+      "score": 50,
+      "method": "fallback",
+      "issues": [
+        "Video analysis unavailable: HTTP Error 404: Not Found"
+      ],
+      "notes": "Gemini could not watch video \u2014 basic check only"
+    },
+    "gemini_passed": true,
+    "ux_observations": [],
+    "finished_at": "2026-05-12T23:02:27.243059+00:00"
+  }
+]

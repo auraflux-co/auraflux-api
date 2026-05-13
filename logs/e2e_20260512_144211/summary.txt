@@ -1,0 +1,4 @@
+AuraFlux E2E Results — 20260512_144211
+Tests: 1  Passed: 1  Failed: 0
+
+✅ G-T3   extraemily      score= 45  https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCl
