@@ -169,7 +169,7 @@ describe('lib/ai/runpod', () => {
     });
 
     it('throws if positivePrompt is missing', async () => {
-      await expect(runpod.generateWanVideo({ planTier: 'dwy' })).rejects.toThrow('positivePrompt is required');
+      await expect(runpod.generateWanVideo({ planTier: 'guided' })).rejects.toThrow('positivePrompt is required');
     });
 
     it('passes the correct values into workflow nodes 3/4/5/8', async () => {
@@ -181,7 +181,7 @@ describe('lib/ai/runpod', () => {
         numFrames: 49,
         seed: 42,
         outputPrefix: 'my_prefix',
-        planTier: 'dwy',
+        planTier: 'guided',
       };
 
       await runpod.generateWanVideo(opts);
@@ -198,19 +198,19 @@ describe('lib/ai/runpod', () => {
       expect(submitted['8'].inputs.filename_prefix).toBe(opts.outputPrefix);
     });
 
-    it('uses default width (832), height (480), and numFrames (25) when not specified', async () => {
-      await runpod.generateWanVideo({ positivePrompt: 'test prompt', planTier: 'dwy' });
+    it('uses default width (832), height (480), and numFrames (97) when not specified', async () => {
+      await runpod.generateWanVideo({ positivePrompt: 'test prompt', planTier: 'guided' });
 
       const reqMock = https.request.mock.results[0].value;
       const submitted = JSON.parse(reqMock._body).prompt;
 
       expect(submitted['4'].inputs.width).toBe(832);
       expect(submitted['4'].inputs.height).toBe(480);
-      expect(submitted['4'].inputs.num_frames).toBe(25);
+      expect(submitted['4'].inputs.num_frames).toBe(97);
     });
 
     it('calls submitComfyWorkflow (https.request) exactly once', async () => {
-      await runpod.generateWanVideo({ positivePrompt: 'once only', planTier: 'dwy' });
+      await runpod.generateWanVideo({ positivePrompt: 'once only', planTier: 'guided' });
 
       expect(https.request).toHaveBeenCalledTimes(1);
     });

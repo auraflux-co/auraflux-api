@@ -178,9 +178,9 @@ describe('portal_heygen_ext worker (CPD-68)', () => {
     delete process.env.HEYGEN_API_KEY;
   });
 
-  test('returns skip when plan tier is too low (diy)', async () => {
+  test('returns skip when plan tier is too low (operate)', async () => {
     const result = await runWorker({
-      jobSpec: { jobId: 'test', planTier: 'diy', addOns: { heygen: { active: true } }, extensions: { heygen_ext: { ordered: true } } },
+      jobSpec: { jobId: 'test', planTier: 'operate', addOns: { heygen: { active: true } }, extensions: { heygen_ext: { ordered: true } } },
     });
     expect(result.passed).toBe(false);
     expect(result.outcome).toBe('skip');
@@ -188,7 +188,7 @@ describe('portal_heygen_ext worker (CPD-68)', () => {
 
   test('returns skip when not ordered', async () => {
     const result = await runWorker({
-      jobSpec: { jobId: 'test', planTier: 'dfy', addOns: { heygen: { active: false } } },
+      jobSpec: { jobId: 'test', planTier: 'managed', addOns: { heygen: { active: false } } },
     });
     expect(result.passed).toBe(false);
     expect(result.outcome).toBe('skip');
@@ -198,7 +198,7 @@ describe('portal_heygen_ext worker (CPD-68)', () => {
     const result = await runWorker({
       jobSpec: {
         jobId:       'test',
-        planTier:    'dfy',
+        planTier:    'managed',
         addOns:      { heygen: { active: true, avatarId: null } },
         extensions:  { heygen_ext: { ordered: true } },
       },
@@ -211,7 +211,7 @@ describe('portal_heygen_ext worker (CPD-68)', () => {
     const result = await runWorker({
       jobSpec: {
         jobId:       'test',
-        planTier:    'dfy',
+        planTier:    'managed',
         addOns:      { heygen: { active: true, avatarId: 'av_1' } },
         extensions:  { heygen_ext: { ordered: true, avatarId: 'av_1' } },
         script:      null,

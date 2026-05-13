@@ -29,10 +29,10 @@ afterEach(() => { process.env = savedEnv; });
 // ─── TIER_RANK ────────────────────────────────────────────────────────────────
 
 describe('TIER_RANK', () => {
-  it('orders diy < dwy < dfy < custom', () => {
-    expect(TIER_RANK.diy).toBeLessThan(TIER_RANK.dwy);
-    expect(TIER_RANK.dwy).toBeLessThan(TIER_RANK.dfy);
-    expect(TIER_RANK.dfy).toBeLessThan(TIER_RANK.custom);
+  it('orders operate < guided < managed < custom', () => {
+    expect(TIER_RANK.operate).toBeLessThan(TIER_RANK.guided);
+    expect(TIER_RANK.guided).toBeLessThan(TIER_RANK.managed);
+    expect(TIER_RANK.managed).toBeLessThan(TIER_RANK.custom);
   });
 });
 
@@ -41,54 +41,54 @@ describe('TIER_RANK', () => {
 describe('isFeatureEnabled', () => {
   // DIY plan
   it('enables thumbnail.frame for diy', () => {
-    expect(isFeatureEnabled('thumbnail.frame', 'diy')).toBe(true);
+    expect(isFeatureEnabled('thumbnail.frame', 'operate')).toBe(true);
   });
   it('enables thumbnail.designed for diy', () => {
-    expect(isFeatureEnabled('thumbnail.designed', 'diy')).toBe(true);
+    expect(isFeatureEnabled('thumbnail.designed', 'operate')).toBe(true);
   });
   // CPD-109: DIY and DWY are feature-identical — tier distinction is service level only
-  it('enables thumbnail.vectcut for diy (CPD-109)', () => {
-    expect(isFeatureEnabled('thumbnail.vectcut', 'diy')).toBe(true);
+  it('enables thumbnail.vectcut for operate (CPD-109)', () => {
+    expect(isFeatureEnabled('thumbnail.vectcut', 'operate')).toBe(true);
   });
   it('does NOT enable thumbnail.imagen for diy', () => {
-    expect(isFeatureEnabled('thumbnail.imagen', 'diy')).toBe(false);
+    expect(isFeatureEnabled('thumbnail.imagen', 'operate')).toBe(false);
   });
   it('does NOT enable avatar.heygen for diy', () => {
-    expect(isFeatureEnabled('avatar.heygen', 'diy')).toBe(false);
+    expect(isFeatureEnabled('avatar.heygen', 'operate')).toBe(false);
   });
-  it('enables tts.elevenlabs for diy (CPD-109)', () => {
-    expect(isFeatureEnabled('tts.elevenlabs', 'diy')).toBe(true);
+  it('enables tts.elevenlabs for operate (CPD-109)', () => {
+    expect(isFeatureEnabled('tts.elevenlabs', 'operate')).toBe(true);
   });
 
   // DWY plan — same feature access as DIY
-  it('enables thumbnail.vectcut for dwy (with env)', () => {
-    expect(isFeatureEnabled('thumbnail.vectcut', 'dwy')).toBe(true);
+  it('enables thumbnail.vectcut for guided (with env)', () => {
+    expect(isFeatureEnabled('thumbnail.vectcut', 'guided')).toBe(true);
   });
-  it('enables thumbnail.gemini_ranking for dwy (with env)', () => {
-    expect(isFeatureEnabled('thumbnail.gemini_ranking', 'dwy')).toBe(true);
+  it('enables thumbnail.gemini_ranking for guided (with env)', () => {
+    expect(isFeatureEnabled('thumbnail.gemini_ranking', 'guided')).toBe(true);
   });
   it('does NOT enable thumbnail.imagen for dwy', () => {
-    expect(isFeatureEnabled('thumbnail.imagen', 'dwy')).toBe(false);
+    expect(isFeatureEnabled('thumbnail.imagen', 'guided')).toBe(false);
   });
-  it('enables tts.elevenlabs for dwy (with env)', () => {
-    expect(isFeatureEnabled('tts.elevenlabs', 'dwy')).toBe(true);
+  it('enables tts.elevenlabs for guided (with env)', () => {
+    expect(isFeatureEnabled('tts.elevenlabs', 'guided')).toBe(true);
   });
   it('does NOT enable avatar.heygen for dwy', () => {
-    expect(isFeatureEnabled('avatar.heygen', 'dwy')).toBe(false);
+    expect(isFeatureEnabled('avatar.heygen', 'guided')).toBe(false);
   });
 
   // DFY plan
-  it('enables thumbnail.imagen for dfy (with env)', () => {
-    expect(isFeatureEnabled('thumbnail.imagen', 'dfy')).toBe(true);
+  it('enables thumbnail.imagen for managed (with env)', () => {
+    expect(isFeatureEnabled('thumbnail.imagen', 'managed')).toBe(true);
   });
-  it('enables avatar.heygen for dfy (with env)', () => {
-    expect(isFeatureEnabled('avatar.heygen', 'dfy')).toBe(true);
+  it('enables avatar.heygen for managed (with env)', () => {
+    expect(isFeatureEnabled('avatar.heygen', 'managed')).toBe(true);
   });
-  it('enables video.wan_i2v for dfy (with env)', () => {
-    expect(isFeatureEnabled('video.wan_i2v', 'dfy')).toBe(true);
+  it('enables video.wan_i2v for managed (with env)', () => {
+    expect(isFeatureEnabled('video.wan_i2v', 'managed')).toBe(true);
   });
   it('enables publish.direct_tiktok for dfy', () => {
-    expect(isFeatureEnabled('publish.direct_tiktok', 'dfy')).toBe(true);
+    expect(isFeatureEnabled('publish.direct_tiktok', 'managed')).toBe(true);
   });
 
   // Custom plan
@@ -99,7 +99,7 @@ describe('isFeatureEnabled', () => {
 
   // Missing / unknown
   it('returns false for unknown feature key', () => {
-    expect(isFeatureEnabled('nonexistent.feature', 'dfy')).toBe(false);
+    expect(isFeatureEnabled('nonexistent.feature', 'managed')).toBe(false);
   });
   it('returns false for null planTier', () => {
     expect(isFeatureEnabled('thumbnail.frame', null)).toBe(false);
@@ -111,15 +111,15 @@ describe('isFeatureEnabled', () => {
   // Env var gates (plan is high enough but credential missing)
   it('returns false when plan qualifies but required env var is missing', () => {
     delete process.env.VECTCUT_API_URL;
-    expect(isFeatureEnabled('thumbnail.vectcut', 'diy')).toBe(false);
+    expect(isFeatureEnabled('thumbnail.vectcut', 'operate')).toBe(false);
   });
   it('returns false when GEMINI_API_KEY missing for thumbnail.imagen even on dfy', () => {
     delete process.env.GEMINI_API_KEY;
-    expect(isFeatureEnabled('thumbnail.imagen', 'dfy')).toBe(false);
+    expect(isFeatureEnabled('thumbnail.imagen', 'managed')).toBe(false);
   });
   it('returns true when all required env vars are present', () => {
     process.env.GEMINI_API_KEY = 'present';
-    expect(isFeatureEnabled('thumbnail.gemini_ranking', 'dwy')).toBe(true);
+    expect(isFeatureEnabled('thumbnail.gemini_ranking', 'guided')).toBe(true);
   });
 });
 
@@ -127,8 +127,8 @@ describe('isFeatureEnabled', () => {
 
 describe('getEnabledFeatures', () => {
   // CPD-109: DIY and DWY are feature-identical
-  it('returns full feature set for diy plan (CPD-109)', () => {
-    const features = getEnabledFeatures('diy');
+  it('returns full feature set for operate plan (CPD-109)', () => {
+    const features = getEnabledFeatures('operate');
     expect(features).toContain('thumbnail.frame');
     expect(features).toContain('thumbnail.designed');
     expect(features).toContain('scheduling');
@@ -138,8 +138,8 @@ describe('getEnabledFeatures', () => {
     expect(features).not.toContain('avatar.heygen');
   });
 
-  it('returns same feature set for dwy as diy (CPD-109)', () => {
-    const features = getEnabledFeatures('dwy');
+  it('returns same feature set for guided as operate (CPD-109)', () => {
+    const features = getEnabledFeatures('guided');
     expect(features).toContain('thumbnail.vectcut');
     expect(features).toContain('thumbnail.gemini_ranking');
     expect(features).toContain('tts.elevenlabs');
@@ -147,8 +147,8 @@ describe('getEnabledFeatures', () => {
     expect(features).not.toContain('avatar.heygen');
   });
 
-  it('returns all features for dfy plan (with all env vars set)', () => {
-    const features = getEnabledFeatures('dfy');
+  it('returns all features for managed plan (with all env vars set)', () => {
+    const features = getEnabledFeatures('managed');
     expect(features).toContain('thumbnail.imagen');
     expect(features).toContain('avatar.heygen');
     expect(features).toContain('video.wan_i2v');
@@ -164,24 +164,24 @@ describe('getEnabledFeatures', () => {
 
 describe('getPlanFeatureMatrix', () => {
   it('returns an entry for every feature in FEATURE_PLANS', () => {
-    const matrix = getPlanFeatureMatrix('dwy');
+    const matrix = getPlanFeatureMatrix('guided');
     expect(matrix.length).toBe(Object.keys(FEATURE_PLANS).length);
   });
 
-  it('has enabled:true for diy features on dwy plan', () => {
-    const matrix = getPlanFeatureMatrix('dwy');
+  it('has enabled:true for operate features on guided plan', () => {
+    const matrix = getPlanFeatureMatrix('guided');
     const frame   = matrix.find((f) => f.key === 'thumbnail.frame');
     expect(frame.enabled).toBe(true);
   });
 
-  it('has enabled:false for dfy features on dwy plan', () => {
-    const matrix = getPlanFeatureMatrix('dwy');
+  it('has enabled:false for managed features on guided plan', () => {
+    const matrix = getPlanFeatureMatrix('guided');
     const imagen  = matrix.find((f) => f.key === 'thumbnail.imagen');
     expect(imagen.enabled).toBe(false);
   });
 
   it('includes label, description, min_plan on each entry', () => {
-    const matrix = getPlanFeatureMatrix('diy');
+    const matrix = getPlanFeatureMatrix('operate');
     for (const entry of matrix) {
       expect(entry.label).toBeTruthy();
       expect(entry.description).toBeTruthy();
@@ -194,19 +194,19 @@ describe('getPlanFeatureMatrix', () => {
 
 describe('buildFeatureFlags', () => {
   it('returns a flat boolean map', () => {
-    const flags = buildFeatureFlags('dwy');
+    const flags = buildFeatureFlags('guided');
     expect(typeof flags['thumbnail.frame']).toBe('boolean');
     expect(typeof flags['thumbnail.imagen']).toBe('boolean');
   });
 
-  it('has true for diy features on dwy plan', () => {
-    const flags = buildFeatureFlags('dwy');
+  it('has true for operate features on guided plan', () => {
+    const flags = buildFeatureFlags('guided');
     expect(flags['thumbnail.frame']).toBe(true);
     expect(flags['thumbnail.designed']).toBe(true);
   });
 
-  it('has false for dfy features on dwy plan', () => {
-    const flags = buildFeatureFlags('dwy');
+  it('has false for managed features on guided plan', () => {
+    const flags = buildFeatureFlags('guided');
     expect(flags['thumbnail.imagen']).toBe(false);
     expect(flags['avatar.heygen']).toBe(false);
   });

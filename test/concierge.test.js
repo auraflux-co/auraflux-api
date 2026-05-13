@@ -22,7 +22,7 @@ jest.mock('../lib/services/gemini', () => ({
 
 jest.mock('../lib/services/feature_gate', () => ({
   isFeatureEnabled: jest.fn((feature, plan) => {
-    if (feature === 'concierge') return plan === 'dwy' || plan === 'dfy' || plan === 'custom';
+    if (feature === 'concierge') return plan === 'guided' || plan === 'managed' || plan === 'custom';
     return true;
   }),
 }));
@@ -187,10 +187,15 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toMatch(/create/);
   });
 
-  it('mentions plan tiers', () => {
-    const prompt = buildSystemPrompt();
-    expect(prompt).toMatch(/diy/);
-    expect(prompt).toMatch(/dwy/);
+  it('guide mode mentions Operate plan', () => {
+    const guidePrompt = buildSystemPrompt('guide');
+    expect(guidePrompt).toMatch(/Operate/i);
+  });
+
+  it('full mode returns non-empty string', () => {
+    const fullPrompt = buildSystemPrompt('full');
+    expect(typeof fullPrompt).toBe('string');
+    expect(fullPrompt.length).toBeGreaterThan(100);
   });
 });
 
@@ -209,7 +214,7 @@ describe('chatWithConcierge', () => {
     const result = await chatWithConcierge(
       [{ role: 'user', content: 'How do I start?' }],
       {},
-      { planTier: 'dwy' }
+      { planTier: 'guided' }
     );
     expect(result).toBe('Hello from AuraFlux assistant');
   });
@@ -218,7 +223,7 @@ describe('chatWithConcierge', () => {
     await chatWithConcierge(
       [{ role: 'user', content: 'Test' }],
       {},
-      { planTier: 'dwy' }
+      { planTier: 'guided' }
     );
     const call = callGeminiChat.mock.calls[0];
     expect(call[1]).toHaveProperty('systemInstruction');
@@ -229,7 +234,7 @@ describe('chatWithConcierge', () => {
     await chatWithConcierge(
       [{ role: 'user', content: 'What is missing?' }],
       { contentType: 'news-long', entryType: 'fetch' },
-      { planTier: 'dwy' }
+      { planTier: 'guided' }
     );
     const contents = callGeminiChat.mock.calls[0][0];
     const lastMsg = contents[contents.length - 1];
@@ -240,7 +245,7 @@ describe('chatWithConcierge', () => {
     await chatWithConcierge(
       [{ role: 'user', content: 'Hello' }],
       {},
-      { planTier: 'dwy' }
+      { planTier: 'guided' }
     );
     const contents = callGeminiChat.mock.calls[0][0];
     const lastMsg = contents[contents.length - 1];
@@ -255,7 +260,7 @@ describe('chatWithConcierge', () => {
         { role: 'user',      content: 'Follow up' },
       ],
       {},
-      { planTier: 'dwy' }
+      { planTier: 'guided' }
     );
     const contents = callGeminiChat.mock.calls[0][0];
     expect(contents[1].role).toBe('model');
@@ -265,7 +270,7 @@ describe('chatWithConcierge', () => {
   it('throws when Gemini is not configured', async () => {
     isConfigured.mockReturnValue(false);
     await expect(
-      chatWithConcierge([{ role: 'user', content: 'Hi' }], {}, { planTier: 'dwy' })
+      chatWithConcierge([{ role: 'user', content: 'Hi' }], {}, { planTier: 'guided' })
     ).rejects.toThrow('GEMINI_API_KEY');
   });
 
@@ -276,21 +281,21 @@ describe('chatWithConcierge', () => {
       return true;
     });
     await expect(
-      chatWithConcierge([{ role: 'user', content: 'Hi' }], {}, { planTier: 'diy' })
-    ).rejects.toThrow('dwy plan or higher');
+      chatWithConcierge([{ role: 'user', content: 'Hi' }], {}, { planTier: 'operate' })
+    ).rejects.toThrow('operate plan or higher');
   });
 
   it('returns empty string when Gemini returns no candidates', async () => {
     const { isFeatureEnabled } = require('../lib/services/feature_gate');
     isFeatureEnabled.mockImplementation((f, p) => {
-      if (f === 'concierge') return p === 'dwy' || p === 'dfy' || p === 'custom';
+      if (f === 'concierge') return p === 'guided' || p === 'managed' || p === 'custom';
       return true;
     });
     callGeminiChat.mockResolvedValue({ candidates: [] });
     const result = await chatWithConcierge(
       [{ role: 'user', content: 'Hi' }],
       {},
-      { planTier: 'dwy' }
+      { planTier: 'guided' }
     );
     expect(result).toBe('');
   });
