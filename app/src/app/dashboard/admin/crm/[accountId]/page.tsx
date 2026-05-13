@@ -199,10 +199,10 @@ export default function CrmAccountPage() {
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
                 plan?.planTier === 'custom' ? 'bg-amber-100 text-amber-700' :
-                plan?.planTier === 'dfy'    ? 'bg-violet-100 text-violet-700' :
-                plan?.planTier === 'dwy'    ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700',
+                plan?.planTier === 'managed'    ? 'bg-violet-100 text-violet-700' :
+                plan?.planTier === 'guided'    ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700',
               )}>
-                {tierLabel(plan?.planTier as string || 'diy')}
+                {tierLabel(plan?.planTier as string || 'operate')}
               </span>
               <span className="text-xs text-muted-foreground">
                 {credits?.totalRemaining != null ? `${(credits.totalRemaining as number).toLocaleString()} credits left` : '—'}
@@ -258,7 +258,7 @@ export default function CrmAccountPage() {
             <CardContent className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Tier</span>
-                <span>{tierLabel(plan?.planTier as string || 'diy')}</span>
+                <span>{tierLabel(plan?.planTier as string || 'operate')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Stripe status</span>
@@ -275,9 +275,9 @@ export default function CrmAccountPage() {
                   className="flex-1 text-xs border border-border rounded px-2 py-1 bg-background"
                 >
                   <option value="">Change plan…</option>
-                  <option value="diy">Operate</option>
-                  <option value="dwy">Guided</option>
-                  <option value="dfy">Managed</option>
+                  <option value="operate">Operate</option>
+                  <option value="guided">Guided</option>
+                  <option value="managed">Managed</option>
                   <option value="custom">Enterprise</option>
                 </select>
                 <button
@@ -439,7 +439,7 @@ export default function CrmAccountPage() {
       {tab === 'billing' && (
         <Card>
           <CardContent className="py-4 px-4 space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Plan tier</span><span>{tierLabel(plan?.planTier as string || 'diy')}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Plan tier</span><span>{tierLabel(plan?.planTier as string || 'operate')}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Stripe sub ID</span><span className="text-xs font-mono">{plan?.stripeSubscriptionId as string || '—'}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Stripe status</span><span>{plan?.stripeStatus as string || '—'}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Period end</span><span>{plan?.currentPeriodEnd ? new Date(plan.currentPeriodEnd as string).toLocaleDateString() : '—'}</span></div>

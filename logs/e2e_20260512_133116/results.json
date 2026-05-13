@@ -1,0 +1,27 @@
+[
+  {
+    "id": "G-T1",
+    "tier": "guided",
+    "streamer": "hasanabi",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-hasanabi.mp4",
+    "clip_title": "Andrew Tate has been to space thats how he knows the earth i",
+    "started_at": "2026-05-12T17:31:16.730965+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607080261",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607080261/1778607097336_assembled_user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778607080261.mp4",
+    "validation": {
+      "passed": false,
+      "score": 40,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Expected platform 'youtube' but job spec 'platforms' array is empty.",
+        "Job status is 'running' for a test result, which should ideally be a completion status (e.g., 'completed', 'finished')."
+      ],
+      "notes": "The job successfully generated a script and an output video URL, matching the 'has_script' and 'has_video' expectations. However, it failed to specify 'youtube' as a platform in the job spec's 'platforms' field, which was expected. Additionally, the job's status is still 'running', which indicates the test may not have fully completed as expected for a final result."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T17:31:47.570122+00:00"
+  }
+]

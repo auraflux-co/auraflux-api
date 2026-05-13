@@ -1,0 +1,9 @@
+AuraFlux E2E Results — 20260512_175638
+Tests: 6  Passed: 0  Failed: 6
+
+❌ O-T1   hasanabi        score=?   [?]  NO OUTPUT
+❌ O-T2   stableronaldo   score=?   [?]  NO OUTPUT
+❌ O-T3   extraemily      score=?   [?]  NO OUTPUT
+❌ O-T4   maya            score=?   [?]  NO OUTPUT
+❌ O-T5   jasontheween    score=?   [?]  NO OUTPUT
+❌ O-T6   lacy            score=?   [?]  NO OUTPUT

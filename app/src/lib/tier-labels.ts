@@ -19,7 +19,7 @@ export const TIER_LABEL_LOWER: Record<string, string> = {
   custom: 'enterprise',
 };
 
-/** Returns the display name for a tier ID (e.g. "diy" → "Operate"). */
+/** Returns the display name for a tier ID (e.g. "operate" → "Operate"). */
 export function tierLabel(tier: string | null | undefined): string {
   return TIER_LABELS[tier ?? ''] ?? 'Operate';
 }

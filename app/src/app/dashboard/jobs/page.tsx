@@ -50,7 +50,7 @@ export default function JobsHubPage() {
   const router                 = useRouter();
   const { openWithContext }    = useGuide();
   const { planTier }           = usePlan();
-  const isOperate              = planTier === 'diy' || planTier === null;
+  const isOperate              = planTier === 'operate' || planTier === null;
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
 

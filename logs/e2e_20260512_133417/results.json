@@ -1,0 +1,28 @@
+[
+  {
+    "id": "O-T6",
+    "tier": "operate",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-lacy.mp4",
+    "clip_title": "dd",
+    "started_at": "2026-05-12T17:34:17.370774+00:00",
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_sports_1778607260828",
+    "output_url": null,
+    "validation": {
+      "passed": false,
+      "score": 0,
+      "spec_matches_brief": false,
+      "has_output": false,
+      "issues": [
+        "Job spec is empty, therefore it does not match the expected brief for content type, script, or platform.",
+        "Output URL is missing, indicating no test artifact was produced.",
+        "Cannot validate content type against the expected platform (instagram) because the job spec is empty and output is missing."
+      ],
+      "notes": "The test critically failed. The job specification was completely empty, providing no instructions for content generation. Consequently, no output URL was provided, meaning no test artifact was produced. This prevents any validation against the brief or the expected platform."
+    },
+    "passed": false,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T17:44:32.883065+00:00"
+  }
+]

@@ -79,7 +79,7 @@ export default function PlansPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {plans.map((plan) => {
           const features = PLAN_FEATURES[plan.id] ?? [];
-          const isPopular = plan.id === 'dwy'; // Guided is the recommended plan
+          const isPopular = plan.id === 'guided'; // Guided is the recommended plan
           const isBusy = subscribing === plan.id;
           const isNotConfigured = !plan.priceConfigured;
 

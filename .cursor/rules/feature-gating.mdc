@@ -9,7 +9,7 @@ alwaysApply: true
 ## Core rule
 
 **ALL platform features are wired into the codebase.** Runtime activation is controlled exclusively by:
-1. The customer's **plan tier** (`diy` < `dwy` < `dfy` < `custom`)
+1. The customer's **plan tier** (`operate` < `guided` < `managed` < `custom`)
 2. **Infrastructure credentials** (env vars) — for credentials only, never for feature activation
 
 **Environment variables are infrastructure, not feature switches.**
@@ -40,7 +40,7 @@ async function someFeature(jobSpec) {
 
 `planTier` is baked into the job spec at creation time by `createJobSpec()`:
 ```js
-createJobSpec({ customerId, contentType, planTier: 'dwy', ... })
+createJobSpec({ customerId, contentType, planTier: 'guided', ... })
 ```
 
 `featureFlags` is also baked in — a pre-computed map of all feature keys to booleans
@@ -54,7 +54,7 @@ or call `isFeatureEnabled(key, jobSpec.planTier)` directly.
 1. Add it to `FEATURE_PLANS` in `lib/services/feature_gate.js`:
    ```js
    'my_feature.key': {
-     min_plan:    'dwy',                      // lowest tier that unlocks it
+     min_plan:    'guided',                   // lowest tier that unlocks it
      label:       'Human-readable name',
      requires_env: ['MY_API_KEY'],            // credentials (optional)
      description: 'What it does',
@@ -67,16 +67,16 @@ or call `isFeatureEnabled(key, jobSpec.planTier)` directly.
 
 | Tier | Included credits | Target customer |
 |---|---|---|
-| `diy` | 50/mo | Self-serve — full platform access, customer runs it themselves |
-| `dwy` | 200/mo | Done-with-you — same features as DIY + operator monitoring and guidance |
-| `dfy` | 1000/mo | Full done-for-you — operator runs everything + HeyGen, Imagen 3, TikTok direct |
+| `operate` | 50/mo | Self-serve — full platform access, customer runs it themselves |
+| `guided` | 200/mo | Done-with-you — same features as Operate + operator monitoring and guidance |
+| `managed` | 1000/mo | Full done-for-you — operator runs everything + HeyGen, Imagen 3, TikTok direct |
 | `custom` | unlimited | Enterprise / white-label |
 
-**Key principle (CPD-109):** DIY and DWY are feature-identical. The distinction is service level only — DIY customers manage the platform themselves; DWY customers get operator support. Never gate a feature at `dwy` if the reason is anything other than "this requires operator involvement to use safely."
+**Key principle (CPD-109):** Operate and Guided are feature-identical. The distinction is service level only — Operate customers manage the platform themselves; Guided customers get operator support. Never gate a feature at `guided` if the reason is anything other than "this requires operator involvement to use safely."
 
-## Feature matrix (as of Sprint 5 / CPD-109)
+## Feature matrix (as of Sprint 6 / CPD-176)
 
-| Feature key | DIY | DWY | DFY |
+| Feature key | Operate | Guided | Managed |
 |---|---|---|---|
 | `thumbnail.frame` | ✓ | ✓ | ✓ |
 | `thumbnail.designed` | ✓ | ✓ | ✓ |

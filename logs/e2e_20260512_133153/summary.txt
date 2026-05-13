@@ -1,0 +1,9 @@
+AuraFlux E2E Results — 20260512_133153
+Tests: 6  Passed: 5  Failed: 1
+
+✅ G-T1   hasanabi        score= 50  https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCl
+✅ G-T2   stableronaldo   score= 60  https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCl
+❌ G-T3   extraemily      score=  0  NO OUTPUT
+✅ G-T4   maya            score= 80  https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCl
+✅ G-T5   jasontheween    score= 55  https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCl
+✅ G-T6   lacy            score= 30  https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCl
