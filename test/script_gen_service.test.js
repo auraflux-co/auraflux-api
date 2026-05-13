@@ -125,13 +125,19 @@ describe('_extractSourceUrls priority order', () => {
     );
   });
 
-  test('throws when no source URLs found anywhere', async () => {
+  test('topic-only mode succeeds with no source URLs (WAN / scheduled jobs)', async () => {
+    // script_gen_service supports topic-only generation when no clip URLs are
+    // provided — used by WAN video gen and scheduled jobs without pre-fetched clips.
     const spec = {
       ...baseSpec,
       sourceConfig: {},
       order: { ...baseSpec.order, inputs: {} },
     };
-    await expect(generateJobScript(spec)).rejects.toThrow('No source URLs in job spec');
+    const result = await generateJobScript(spec);
+    expect(result).toHaveProperty('filledScript');
+    expect(typeof result.filledScript).toBe('string');
+    expect(result.filledScript.length).toBeGreaterThan(0);
+    expect(result.orderedClipUrls).toEqual([]);
   });
 });
 
