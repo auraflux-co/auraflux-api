@@ -95,183 +95,256 @@ STREAMERS = {
 
 TESTS = [
     # ─── OPERATE — API surface, diy plan ─────────────────────────────────────
-    # O-T1: Short clip reel → TikTok, TTS voiceover
+    # CPD-175: 6 tests covering short+long, all non-add-on dashboard options
+    # O-T1: Short TikTok — TTS + thumbnail + branding overlay
     {
         'id': 'O-T1', 'tier': 'operate', 'streamer': 'stableronaldo',
         'clips_count': 1, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': 'tiktok', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'High-energy TikTok from a gaming clip. TTS voiceover calls out the highlight.',
+        'features': ['tts', 'thumbnail', 'branding'],
+        'topic': 'Stableronaldo clutch gaming highlight',
+        'tone': 'high-energy, hype',
+        'durationMins': 1,
+        'publishMode': 'immediate',
+        'brief': 'High-energy TikTok from a gaming clip. TTS voiceover calls out the highlight. Brand logo burned in.',
     },
-    # O-T2: Multiple clips → long-form broadcast desk → YouTube, TTS
+    # O-T2: Long YouTube — TTS + thumbnail + scene selection (auto clip sourcing)
     {
         'id': 'O-T2', 'tier': 'operate', 'streamer': 'hasanabi',
         'clips_count': 4, 'min_duration_s': 30,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Long-form YouTube highlight reel: 4 Hasan clips woven into a broadcast commentary show.',
+        'features': ['tts', 'thumbnail', 'scene_select'],
+        'topic': 'Hasan political commentary compilation',
+        'tone': 'opinionated, broadcast',
+        'durationMins': 8,
+        'publishMode': 'immediate',
+        'brief': 'Long-form YouTube: 4 Hasan clips, scene selection ON, TTS voiceover for each segment.',
     },
-    # O-T3: Multiple clips → show_commentary → YouTube, TTS (replaced research which needs web API)
+    # O-T3: Long YouTube — show_commentary + TTS + burn_images
     {
         'id': 'O-T3', 'tier': 'operate', 'streamer': 'hasanabi',
         'clips_count': 3, 'min_duration_s': 25,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'show_commentary',
-        'features': ['tts', 'thumbnail', 'commentary'],
-        'brief': 'Host commentary over 3 Hasan clips — opinionated political take, TTS-narrated broadcast style.',
+        'features': ['tts', 'thumbnail', 'commentary', 'burn_images'],
+        'topic': 'Hasan political take — host commentary episode',
+        'tone': 'authoritative, punchy',
+        'durationMins': 10,
+        'publishMode': 'immediate',
+        'brief': 'Host commentary over 3 Hasan clips. Burn_images overlays political context cards. TTS voices the script.',
     },
-    # O-T4: Single clip → Instagram reel, TTS, thumbnail
+    # O-T4: Short Instagram — TTS + thumbnail + scheduled publish
     {
         'id': 'O-T4', 'tier': 'operate', 'streamer': 'extraemily',
         'clips_count': 1, 'min_duration_s': 15,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': 'instagram', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Short Instagram Reel from ExtraEmily\'s IRL content. TTS voiceover sets the scene.',
+        'features': ['tts', 'thumbnail', 'scheduled'],
+        'topic': 'ExtraEmily IRL lifestyle moment',
+        'tone': 'fun, relatable',
+        'durationMins': 1,
+        'publishMode': 'scheduled',
+        'brief': 'Short Instagram Reel. TTS sets the scene. Scheduled for next morning.',
     },
-    # O-T5: show_commentary → full narration pipeline → YouTube
+    # O-T5: Short YouTube — show_commentary + TTS + dynamic_overlays
     {
         'id': 'O-T5', 'tier': 'operate', 'streamer': 'maya',
         'clips_count': 2, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'short',
         'platform': 'youtube', 'content_type': 'show_commentary',
-        'features': ['tts', 'thumbnail', 'commentary'],
-        'brief': 'Show commentary segment — host narrates over Maya clips. Script + TTS drives the whole piece.',
+        'features': ['tts', 'thumbnail', 'commentary', 'dynamic_overlays'],
+        'topic': 'Maya variety stream — host commentary segment',
+        'tone': 'warm, entertaining',
+        'durationMins': 3,
+        'publishMode': 'immediate',
+        'brief': 'Host narration over Maya clips. Dynamic lower-third overlays. Script + TTS drives the piece.',
     },
-    # O-T6: Multi-platform (YouTube + Instagram), multiple clips, TTS
+    # O-T6: Short multi-platform (YouTube + Instagram) — TTS + thumbnail + branding
     {
         'id': 'O-T6', 'tier': 'operate', 'streamer': 'lacy',
         'clips_count': 3, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': ['youtube', 'instagram'], 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Gaming highlights reel for both YouTube Shorts and Instagram. Energy and personality.',
+        'features': ['tts', 'thumbnail', 'branding'],
+        'topic': 'Lacy gaming highlights reel',
+        'tone': 'energetic, personality-driven',
+        'durationMins': 2,
+        'publishMode': 'immediate',
+        'brief': 'Gaming highlights for YouTube Shorts + Instagram simultaneously. Brand logo overlay.',
     },
 
     # ─── GUIDED — Dashboard + Collab, dwy plan ───────────────────────────────
-    # G-T1: Collab consults on clip selection → short TikTok
+    # G-T1: Short TikTok — TTS + thumbnail + scene_select, Collab picks hook
     {
         'id': 'G-T1', 'tier': 'guided', 'streamer': 'jasontheween',
         'clips_count': 1, 'min_duration_s': 15,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': 'tiktok', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'TikTok reel from a Jason reaction moment. Collab picks the hook angle.',
-        'collab_prompt': 'I have a Jason Wee reaction clip and want a TikTok. What\'s the strongest hook approach and how should I open?',
+        'features': ['tts', 'thumbnail', 'scene_select'],
+        'topic': 'Jason reaction TikTok hook',
+        'tone': 'chaotic, expressive',
+        'durationMins': 1,
+        'publishMode': 'immediate',
+        'brief': 'TikTok reel from a Jason reaction moment. Collab picks the hook angle. Scene selection ON.',
+        'collab_prompt': 'I have a Jason Wee reaction clip and want a TikTok. What\'s the strongest hook and how should I open the reel?',
     },
-    # G-T2: Multiple clips → long YouTube, Collab structures narrative
+    # G-T2: Long YouTube — TTS + thumbnail + branding, Collab structures narrative
     {
         'id': 'G-T2', 'tier': 'guided', 'streamer': 'hasanabi',
         'clips_count': 4, 'min_duration_s': 30,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Long-form Hasan YouTube video. Collab designs the narrative arc across 4 clips.',
-        'collab_prompt': 'I have 4 clips from Hasan\'s stream. Help me structure a long-form YouTube video with a clear narrative arc — intro, 2 main segments, and a strong outro.',
+        'features': ['tts', 'thumbnail', 'branding'],
+        'topic': 'Hasan political commentary — narrative arc',
+        'tone': 'opinionated, broadcast',
+        'durationMins': 10,
+        'publishMode': 'immediate',
+        'brief': 'Long-form Hasan YouTube. Collab designs the narrative arc. Brand logo in chrome.',
+        'collab_prompt': 'I have 4 clips from Hasan\'s stream. Help me structure a long-form YouTube with a clear narrative arc — intro, 2 main segments, strong outro.',
     },
-    # G-T3: Multiple clips + commentary → long YouTube, Collab writes segment titles
+    # G-T3: Long YouTube — show_commentary + TTS + burn_images, Collab writes titles
     {
         'id': 'G-T3', 'tier': 'guided', 'streamer': 'maya',
         'clips_count': 3, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'show_commentary',
-        'features': ['tts', 'thumbnail', 'commentary'],
-        'brief': 'Maya variety clips + Collab-written host commentary → long YouTube episode with TTS narration.',
-        'collab_prompt': 'I have 3 Maya variety stream clips for a long YouTube episode. Write a punchy host intro and one-sentence transition for each clip, in a warm but entertaining voice.',
+        'features': ['tts', 'thumbnail', 'commentary', 'burn_images'],
+        'topic': 'Maya variety stream — host episode with context cards',
+        'tone': 'warm, relatable',
+        'durationMins': 8,
+        'publishMode': 'immediate',
+        'brief': 'Maya variety clips + Collab host commentary. Burn_images: context cards between clips.',
+        'collab_prompt': 'I have 3 Maya variety stream clips for a long YouTube episode. Write a punchy host intro and one-sentence transition for each clip.',
     },
-    # G-T4: Instagram + TikTok same job — multi-platform distribution
+    # G-T4: Short multi-platform — TTS + thumbnail + scheduled, Collab adapts per platform
     {
         'id': 'G-T4', 'tier': 'guided', 'streamer': 'extraemily',
         'clips_count': 2, 'min_duration_s': 10,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': ['tiktok', 'instagram'], 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'ExtraEmily IRL moment distributed to both TikTok and Instagram. Collab adapts tone per platform.',
-        'collab_prompt': 'I\'m pushing ExtraEmily IRL content to both TikTok and Instagram at once. How should I adjust the tone and caption for each platform?',
+        'features': ['tts', 'thumbnail', 'scheduled'],
+        'topic': 'ExtraEmily IRL — dual platform distribution',
+        'tone': 'fun, lifestyle',
+        'durationMins': 1,
+        'publishMode': 'scheduled',
+        'brief': 'ExtraEmily IRL pushed to TikTok + Instagram. Collab adapts tone. Scheduled publish.',
+        'collab_prompt': 'I\'m distributing ExtraEmily IRL clips to TikTok and Instagram simultaneously. How should I adjust the tone and caption for each?',
     },
-    # G-T5: show_commentary — Collab writes the host script
+    # G-T5: Short YouTube — show_commentary + TTS + dynamic_overlays, Collab writes script
     {
         'id': 'G-T5', 'tier': 'guided', 'streamer': 'maya',
         'clips_count': 2, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'short',
         'platform': 'youtube', 'content_type': 'show_commentary',
-        'features': ['tts', 'thumbnail', 'commentary'],
-        'brief': 'Maya variety clip with Collab-written host commentary. Script → TTS → broadcast overlay.',
-        'collab_prompt': 'Write a 60-second host commentary script for a Maya variety stream moment. Conversational, warm, engaging. Don\'t describe the video — react to it like a co-host.',
+        'features': ['tts', 'thumbnail', 'commentary', 'dynamic_overlays'],
+        'topic': 'Maya variety — host segment with lower-thirds',
+        'tone': 'conversational, warm',
+        'durationMins': 3,
+        'publishMode': 'immediate',
+        'brief': 'Maya clip with Collab-written host commentary. Dynamic lower-third overlays.',
+        'collab_prompt': 'Write a 60-second host commentary for a Maya variety stream moment. Conversational, warm. React like a co-host, don\'t describe the video.',
     },
-    # G-T6: Gaming highlights → multiple clips → long YouTube
+    # G-T6: Long YouTube — TTS + thumbnail + scene_select, Collab titles segments
     {
         'id': 'G-T6', 'tier': 'guided', 'streamer': 'lacy',
         'clips_count': 4, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Lacy gaming compilation — 4 clips into a long YouTube episode. Collab titles each segment.',
-        'collab_prompt': 'I have 4 Lacy gaming clips for a long YouTube video. Give me a title for each segment that builds excitement throughout the episode.',
+        'features': ['tts', 'thumbnail', 'scene_select'],
+        'topic': 'Lacy gaming compilation — episode structure',
+        'tone': 'energetic, episodic',
+        'durationMins': 10,
+        'publishMode': 'immediate',
+        'brief': 'Lacy gaming compilation: 4 clips, scene selection ON. Collab titles each segment.',
+        'collab_prompt': 'I have 4 Lacy gaming clips for a long YouTube video. Give me a title for each segment that builds excitement throughout.',
     },
 
     # ─── MANAGED — Collab-driven, dfy plan ───────────────────────────────────
-    # M-T1: Full Collab-driven brief → long YouTube, Collab owns the spec
+    # M-T1: Long YouTube — TTS + thumbnail + branding + scene_select, Collab owns spec
     {
         'id': 'M-T1', 'tier': 'managed', 'streamer': 'hasanabi',
         'clips_count': 5, 'min_duration_s': 30,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Collab owns the entire production. 5 Hasan clips. Collab picks structure, tone, script angle.',
-        'collab_prompt': 'Take full ownership. I have 5 Hasan political commentary clips. You decide the video structure, narrative angle, tone, and title. Tell me your production plan, then I\'ll submit.',
+        'features': ['tts', 'thumbnail', 'branding', 'scene_select'],
+        'topic': 'Hasan political compilation — full Collab production',
+        'tone': 'authoritative, opinionated',
+        'durationMins': 12,
+        'publishMode': 'immediate',
+        'brief': 'Collab owns the entire production. 5 Hasan clips. Scene selection + brand overlay.',
+        'collab_prompt': 'Take full ownership. 5 Hasan political commentary clips. You decide the structure, narrative angle, tone, and title. Tell me your production plan.',
     },
-    # M-T2: Template-based job → Collab fills the template → TikTok
+    # M-T2: Short TikTok — TTS + thumbnail + burn_images, Collab applies template
     {
         'id': 'M-T2', 'tier': 'managed', 'streamer': 'stableronaldo',
         'clips_count': 2, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': 'tiktok', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Template-based TikTok from Ronaldo gaming clips. Collab applies the template and writes the hook.',
-        'collab_prompt': 'I want to use our gaming highlights template for a Ronaldo TikTok. Pick the best hook from these clips and fill the template.',
+        'features': ['tts', 'thumbnail', 'burn_images'],
+        'topic': 'Stableronaldo gaming TikTok — template-based',
+        'tone': 'hype, fast-paced',
+        'durationMins': 1,
+        'publishMode': 'immediate',
+        'brief': 'Template-based TikTok. Burn_images: stat cards overlaid at key moments. Collab picks the hook.',
+        'collab_prompt': 'I want to use the gaming highlights template for a Ronaldo TikTok. Pick the best hook and fill the template.',
     },
-    # M-T3: 4 gaming clips + full commentary → YouTube, Collab owns the script
+    # M-T3: Long YouTube — show_commentary + TTS + dynamic_overlays, Collab owns script
     {
         'id': 'M-T3', 'tier': 'managed', 'streamer': 'stableronaldo',
         'clips_count': 4, 'min_duration_s': 15,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'show_commentary',
-        'features': ['tts', 'thumbnail', 'commentary'],
-        'brief': 'Collab writes the full host script for a commentary episode on Ronaldo\'s best FPS moments. TTS voices it end to end.',
-        'collab_prompt': 'Take full ownership of this episode. 4 Stableronaldo FPS clips. Write a punchy host intro, commentary for each clip (30-60 words each), and a sign-off outro. Deliver everything ready to go.',
+        'features': ['tts', 'thumbnail', 'commentary', 'dynamic_overlays'],
+        'topic': 'Stableronaldo FPS commentary episode — full script',
+        'tone': 'punchy, expert',
+        'durationMins': 10,
+        'publishMode': 'immediate',
+        'brief': 'Collab writes the full host script. Dynamic lower-third overlays per clip. TTS voices end to end.',
+        'collab_prompt': 'Full ownership. 4 Stableronaldo FPS clips. Write host intro, clip commentary (30-60 words each), and sign-off. Ready to produce.',
     },
-    # M-T4: Short Instagram reel, Collab picks the moment, template
+    # M-T4: Short Instagram — TTS + thumbnail + scheduled + branding, Collab picks moment
     {
         'id': 'M-T4', 'tier': 'managed', 'streamer': 'extraemily',
         'clips_count': 1, 'min_duration_s': 10,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': 'instagram', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Collab picks the best ExtraEmily IRL moment and produces it as an Instagram reel end-to-end.',
-        'collab_prompt': 'Pick the strongest ExtraEmily IRL clip from the batch. Tell me which you\'d choose and why, then produce it as a polished Instagram reel.',
+        'features': ['tts', 'thumbnail', 'scheduled', 'branding'],
+        'topic': 'ExtraEmily IRL Instagram reel — Collab curated',
+        'tone': 'relatable, lifestyle',
+        'durationMins': 1,
+        'publishMode': 'scheduled',
+        'brief': 'Collab picks the best ExtraEmily IRL moment. Brand logo. Scheduled for next morning.',
+        'collab_prompt': 'Pick the strongest ExtraEmily IRL clip. Tell me which and why, then produce it as a polished Instagram reel.',
     },
-    # M-T5: Multiple clips, long YouTube, Collab-structured with full QA
+    # M-T5: Long YouTube — TTS + thumbnail + scene_select + burn_images, Collab structures
     {
         'id': 'M-T5', 'tier': 'managed', 'streamer': 'maya',
         'clips_count': 4, 'min_duration_s': 25,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Collab produces a Maya variety long-form YouTube video. Drives structure, script, and delivery.',
-        'collab_prompt': 'Own this Maya variety content production entirely. 4 clips. Design the episode arc, write host commentary for each segment, and bring it to a publish-ready state.',
+        'features': ['tts', 'thumbnail', 'scene_select', 'burn_images'],
+        'topic': 'Maya variety long-form — fully produced episode',
+        'tone': 'warm, episodic',
+        'durationMins': 12,
+        'publishMode': 'immediate',
+        'brief': 'Collab produces a Maya long-form YouTube. Scene select + image context burns.',
+        'collab_prompt': 'Own this Maya variety content production entirely. 4 clips. Design the episode arc, write host commentary for each segment, publish-ready.',
     },
-    # M-T6: Collab-driven gaming TikTok → lacy, full pipeline
+    # M-T6: Short multi-platform — TTS + thumbnail + dynamic_overlays, Collab drives
     {
         'id': 'M-T6', 'tier': 'managed', 'streamer': 'lacy',
         'clips_count': 2, 'min_duration_s': 15,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
-        'platform': 'tiktok', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail'],
-        'brief': 'Collab produces a Lacy gaming TikTok from scratch. Picks clips, writes hook, drives full production.',
-        'collab_prompt': 'Run full production on a Lacy gaming TikTok. Short vertical reel. You pick the moment, write the hook, and drive it to output. I\'ll review at the end.',
+        'platform': ['tiktok', 'instagram'], 'content_type': 'clips',
+        'features': ['tts', 'thumbnail', 'dynamic_overlays'],
+        'topic': 'Lacy gaming TikTok + Instagram — full Collab production',
+        'tone': 'high-energy, personality',
+        'durationMins': 1,
+        'publishMode': 'immediate',
+        'brief': 'Collab produces a Lacy gaming reel for TikTok + Instagram. Dynamic overlays throughout.',
+        'collab_prompt': 'Run full production on a Lacy gaming short for TikTok + Instagram. Pick the moment, write the hook, drive it to output.',
     },
 ]
 
@@ -495,6 +568,19 @@ def gemini_build_job_spec(test, clip_urls, clip_titles, collab_reply=''):
 
     collab_section = f'\nCollab guidance for this job:\n"""\n{collab_reply}\n"""\nUse this to inform the topic, tone, and structure.' if collab_reply else ''
 
+    # Build features list for the prompt
+    feats = test.get('features', [])
+    has_scene_select   = 'scene_select'    in feats
+    has_branding       = 'branding'        in feats
+    has_burn_images    = 'burn_images'     in feats
+    has_dynamic_ovlys  = 'dynamic_overlays' in feats
+    has_scheduled      = 'scheduled'       in feats
+    has_commentary     = 'commentary'      in feats
+    publish_mode       = test.get('publishMode', 'immediate')
+    duration_mins      = test.get('durationMins', 5)
+    topic_hint         = test.get('topic', '')
+    tone_hint          = test.get('tone', '')
+
     prompt = f"""
 You are producing content on the AuraFlux platform. Build a creative, specific job spec JSON.
 
@@ -504,6 +590,10 @@ Production profile: {test['profile']}
 Format: {test['format']}
 Platforms: {', '.join(platforms)}
 Content type: {test['content_type']}
+Topic: {topic_hint}
+Tone: {tone_hint}
+Duration: {duration_mins} minutes
+Publish mode: {publish_mode}
 {clips_section}{collab_section}
 
 Rules:
@@ -513,7 +603,9 @@ Rules:
 - ALWAYS set addOns.tts.active = true (ElevenLabs voiceover is enabled)
 - ALWAYS set addOns.thumbnail.active = true
 - If content_type is show_commentary, set addOns.showCommentary.active = true
-- Be specific with topic and tone based on the streamer's actual style
+- Use the provided topic and tone directly — do not invent different ones
+- Set durationMins to {duration_mins}
+- Set publishMode to "{publish_mode}"
 
 Return ONLY valid JSON:
 {{
@@ -525,30 +617,45 @@ Return ONLY valid JSON:
   "targetPlatform": "{platforms[0]}",
   "url": "<primary clip URL or empty string if research>",
   "urls": {json.dumps(clip_urls) if clip_urls else '[]'},
-  "topic": "<specific, creative topic based on brief and streamer style>",
-  "tone": "<specific tone matching streamer and platform>",
+  "topic": "{topic_hint}",
+  "tone": "{tone_hint}",
+  "durationMins": {duration_mins},
+  "publishMode": "{publish_mode}",
   "brandName": "AuraFlux E2E",
   "brandVoice": "<voice matching streamer style>",
   "addOns": {{
     "tts": {{"active": true}},
     "thumbnail": {{"active": true}},
-    "showCommentary": {{"active": {"true" if test.get("content_type") == "show_commentary" else "false"}}}
-  }}
+    "showCommentary": {{"active": {"true" if has_commentary else "false"}}},
+    "clipSourcing": {{"active": {"true" if has_scene_select else "false"}}},
+    "branding": {{"active": {"true" if has_branding else "false"}}},
+    "imageBurn": {{"active": {"true" if has_burn_images else "false"}}},
+    "dynamicOverlays": {{"active": {"true" if has_dynamic_ovlys else "false"}}}
+  }},
+  "feats": {json.dumps(feats)}
   {', "query": "' + test.get("research_query", test["brief"]) + '"' if test.get("entry") == "research" else ''}
 }}
 """
     try:
         spec = ask_gemini_json(prompt)
-        # Enforce non-negotiables
+        # Enforce non-negotiables — Gemini output must not override these
         spec['platforms'] = platforms
         spec['targetPlatform'] = platforms[0]
         spec['entry'] = test['entry']
+        spec['topic'] = topic_hint or spec.get('topic', '')
+        spec['tone']  = tone_hint  or spec.get('tone', '')
+        spec['durationMins'] = duration_mins
+        spec['publishMode']  = publish_mode
         if not spec.get('addOns'):
             spec['addOns'] = {}
-        spec['addOns']['tts'] = {'active': True}
-        spec['addOns']['thumbnail'] = {'active': True}
-        if test.get('content_type') == 'show_commentary':
-            spec['addOns']['showCommentary'] = {'active': True}
+        spec['addOns']['tts']      = {'active': True}
+        spec['addOns']['thumbnail']= {'active': True}
+        spec['addOns']['showCommentary']  = {'active': has_commentary}
+        spec['addOns']['clipSourcing']    = {'active': has_scene_select}
+        spec['addOns']['branding']        = {'active': has_branding}
+        spec['addOns']['imageBurn']       = {'active': has_burn_images}
+        spec['addOns']['dynamicOverlays'] = {'active': has_dynamic_ovlys}
+        spec['feats'] = feats
         if clip_urls:
             spec['url'] = clip_urls[0]
             spec['urls'] = clip_urls
