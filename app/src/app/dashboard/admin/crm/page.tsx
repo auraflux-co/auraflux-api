@@ -126,9 +126,9 @@ export default function CrmListPage() {
           className="rounded-md border border-border bg-background px-3 py-2 text-sm"
         >
           <option value="all">All plans</option>
-          <option value="diy">Operate</option>
-          <option value="dwy">Guided</option>
-          <option value="dfy">Managed</option>
+          <option value="operate">Operate</option>
+          <option value="guided">Guided</option>
+          <option value="managed">Managed</option>
           <option value="custom">Enterprise</option>
         </select>
         <select

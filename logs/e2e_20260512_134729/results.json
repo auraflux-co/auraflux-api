@@ -1,0 +1,28 @@
+[
+  {
+    "id": "O-T6",
+    "tier": "operate",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-lacy.mp4",
+    "clip_title": "dd",
+    "started_at": "2026-05-12T17:47:29.440556+00:00",
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1778608051782",
+    "output_url": null,
+    "validation": {
+      "passed": false,
+      "score": 0,
+      "spec_matches_brief": false,
+      "has_output": false,
+      "issues": [
+        "Job spec is empty, providing no instructions for content creation.",
+        "Output URL is MISSING, indicating no content was produced.",
+        "Unable to verify if content type matches expected platform due to missing output."
+      ],
+      "notes": "The E2E test for O-T6 critically failed. The job specification was empty, meaning the system was given no parameters for content creation (e.g., script, video, platform). As a direct consequence, no output URL was generated, and therefore, no content could be produced or validated against the brief's expectations."
+    },
+    "passed": false,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T17:57:44.304194+00:00"
+  }
+]

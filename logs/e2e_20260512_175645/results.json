@@ -1,0 +1,80 @@
+[
+  {
+    "id": "M-T1",
+    "tier": "managed",
+    "streamer": "hasanabi",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-hasanabi.mp4",
+    "clip_title": "irl ban",
+    "started_at": "2026-05-12T21:56:45.277951+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "M-T2",
+    "tier": "managed",
+    "streamer": "stableronaldo",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-stableronaldo.mp4",
+    "clip_title": ".",
+    "started_at": "2026-05-12T21:56:49.832185+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "M-T3",
+    "tier": "managed",
+    "streamer": "extraemily",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-extraemily.mp4",
+    "clip_title": "FULCRUM",
+    "started_at": "2026-05-12T21:56:53.000839+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "M-T4",
+    "tier": "managed",
+    "streamer": "maya",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-maya.mp4",
+    "clip_title": "Amazon Denies Another Employee a Bathroom Break",
+    "started_at": "2026-05-12T21:56:56.191495+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "M-T5",
+    "tier": "managed",
+    "streamer": "jasontheween",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-jasontheween.mp4",
+    "clip_title": "who is he talking to",
+    "started_at": "2026-05-12T21:56:59.134450+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "M-T6",
+    "tier": "managed",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-lacy-1778611450.mp4",
+    "clip_title": "cpr",
+    "started_at": "2026-05-12T21:57:02.150735+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  }
+]

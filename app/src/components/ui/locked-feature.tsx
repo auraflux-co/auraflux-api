@@ -8,7 +8,7 @@
  * and an upgrade tooltip. Creates an upsell surface rather than an invisible wall.
  *
  * Usage:
- *   <LockedFeature minPlan="dfy" label="Available on Managed plan">
+ *   <LockedFeature minPlan="managed" label="Available on Managed plan">
  *     <AvatarOption />
  *   </LockedFeature>
  */
@@ -46,7 +46,7 @@ interface LockedFeatureProps {
 
 export function LockedFeature({
   minPlan,
-  currentPlan = 'diy',
+  currentPlan = 'operate',
   label,
   upgradeMsg,
   children,

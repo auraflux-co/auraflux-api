@@ -19,7 +19,7 @@ export class ApiError extends Error {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type UserRole = 'customer' | 'operator' | 'admin';
-export type PlanTier = 'diy' | 'dwy' | 'dfy' | 'custom';
+export type PlanTier = 'operate' | 'guided' | 'managed' | 'custom';
 
 export type PortalStatus = 'pending' | 'running' | 'pass' | 'hold' | 'failed' | 'skipped';
 
@@ -137,7 +137,7 @@ export function estimateCreditCost({
   features       = [] as string[],
   extensions     = [] as string[],
   sourceMode     = '' as string,
-  planTier       = 'diy' as string,
+  planTier       = 'operate' as string,
 }: {
   durationMins?:  number;
   features?:      string[];

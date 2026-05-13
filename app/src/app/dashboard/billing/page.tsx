@@ -167,7 +167,7 @@ function BillingPageInner() {
     });
   }
 
-  const currentTier = balance?.tier ?? 'diy';
+  const currentTier = balance?.tier ?? 'operate';
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -230,7 +230,7 @@ function BillingPageInner() {
       <div>
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Plans — monthly retainer</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {(['diy', 'dwy', 'dfy'] as const).map((tier) => {
+          {(['operate', 'guided', 'managed'] as const).map((tier) => {
             const isCurrent = tier === currentTier;
             const plan = plans.find((p) => p.id === tier);
             const meta = PLAN_META[tier];
@@ -240,10 +240,10 @@ function BillingPageInner() {
                 className={cn(
                   'relative flex flex-col',
                   isCurrent && 'border-primary',
-                  tier === 'dwy' && 'ring-1 ring-primary/30',
+                  tier === 'guided' && 'ring-1 ring-primary/30',
                 )}
               >
-                {tier === 'dwy' && (
+                {tier === 'guided' && (
                   <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
                     <Badge className="text-[10px] px-2">Most popular</Badge>
                   </div>

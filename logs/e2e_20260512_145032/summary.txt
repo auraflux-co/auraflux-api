@@ -1,0 +1,5 @@
+AuraFlux E2E Results — 20260512_145032
+Tests: 2  Passed: 2  Failed: 0
+
+✅ M-T4   maya            score= 40  https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQk
+✅ M-T5   jasontheween    score= 45  https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQk

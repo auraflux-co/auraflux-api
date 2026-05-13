@@ -194,10 +194,10 @@ export default function SupportPage() {
   const { user }               = useUser();
   const { planTier }           = usePlan();
 
-  const plan    = planTier || 'diy';
+  const plan    = planTier || 'operate';
   const ageDays = getAccountAgeDays(user);
-  const canChat = plan === 'dwy' || plan === 'dfy' || (plan === 'diy' && ageDays <= 30);
-  const canEsc  = plan === 'dwy' || plan === 'dfy';
+  const canChat = plan === 'guided' || plan === 'managed' || (plan === 'operate' && ageDays <= 30);
+  const canEsc  = plan === 'guided' || plan === 'managed';
 
   const [messages,   setMessages]   = useState<ChatMsg[]>([
     { role: 'assistant', content: "Hi! I'm AuraFlux Support. What issue are you running into today?" },
@@ -285,9 +285,9 @@ export default function SupportPage() {
       <div>
         <h1 className="text-2xl font-semibold">Support</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {plan === 'diy' && ageDays <= 30
+          {plan === 'operate' && ageDays <= 30
             ? `AI support is available during your first month (${30 - ageDays} days remaining). Upgrade to Guided for ongoing support.`
-            : plan === 'diy'
+            : plan === 'operate'
             ? 'Your trial support period has ended. Use the guides below or upgrade to Guided for ongoing AI support and SMS escalation.'
             : 'AI support + SMS escalation included with your plan.'}
         </p>

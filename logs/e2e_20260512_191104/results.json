@@ -1,0 +1,73 @@
+[
+  {
+    "id": "G-T3",
+    "tier": "guided",
+    "streamer": "maya",
+    "profile": "broadcast_desk",
+    "format": "long",
+    "platform": "youtube",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=e678d0ca54d8ddda50d0a8e2cbad651999871f96&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778699464%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/1080/index.mp4?sig=59df34fe5dbe2d045a2f59e5f5700958a11a0277&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CharmingSlickSwordBrainSlug-MhFkvDFU4fhmlt8r%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778699464%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/c42a6a7e-7230-461b-b569-2339d11d0309/landscape/avc/1080/index.mp4?sig=46791b37eede0cc37208fa38f658801c514e6348&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/c42a6a7e-7230-461b-b569-2339d11d0309/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22ArtsyShortNoodleRalpherZ-GgJoIyuT-H4bGslt%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778699465%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "Push Pop (21s)",
+      "Ragequit (37s)",
+      "!ALVEUS HALLOWEEN FUNDRAISING EVENT \ud83c\udf83 !donate (28s)"
+    ],
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778627474849",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778627474849/1778627506434_assembled_user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_news_1778627474849.mp4",
+    "passed": true,
+    "error": null,
+    "started_at": "2026-05-12T23:11:04.356569+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "broadcast_desk",
+      "format": "long",
+      "contentType": "show_commentary",
+      "platforms": [
+        "youtube"
+      ],
+      "targetPlatform": "youtube",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=e678d0ca54d8ddda50d0a8e2cbad651999871f96&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778699464%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=e678d0ca54d8ddda50d0a8e2cbad651999871f96&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778699464%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/1080/index.mp4?sig=59df34fe5dbe2d045a2f59e5f5700958a11a0277&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CharmingSlickSwordBrainSlug-MhFkvDFU4fhmlt8r%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778699464%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/c42a6a7e-7230-461b-b569-2339d11d0309/landscape/avc/1080/index.mp4?sig=46791b37eede0cc37208fa38f658801c514e6348&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/c42a6a7e-7230-461b-b569-2339d11d0309/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22ArtsyShortNoodleRalpherZ-GgJoIyuT-H4bGslt%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778699465%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "The Many Moods of Maya: From Sweet Treats and Gaming Rage to Heartfelt Charity",
+      "tone": "Engaging, lighthearted, and appreciative, with a touch of observational humor that highlights Maya's authentic reactions and diverse content, from playful to passionate.",
+      "brandName": "AuraFlux E2E",
+      "brandVoice": "Authentic, witty, and warm, mirroring Maya's genuine and candid online persona while celebrating her community engagement and dynamic personality.",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        },
+        "showCommentary": {
+          "active": true
+        }
+      }
+    },
+    "validation": {
+      "passed": true,
+      "score": 76,
+      "method": "metadata",
+      "has_script": true,
+      "portals_passed": 4,
+      "portals_total": 6,
+      "issues": [
+        "Video analysis unavailable (RuntimeError)",
+        "platforms[] mismatch or empty in job record"
+      ],
+      "notes": "output_url \u2713 | script \u2713 | portals 4/6"
+    },
+    "gemini_passed": true,
+    "ux_observations": [],
+    "finished_at": "2026-05-12T23:13:19.392779+00:00"
+  }
+]
