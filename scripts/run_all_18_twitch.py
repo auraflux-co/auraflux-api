@@ -567,10 +567,25 @@ def ask_gemini_video_json(video_url, prompt):
         with urllib.request.urlopen(up_req, timeout=60) as r:
             file_meta = json.loads(r.read())
         file_uri = file_meta.get('file', {}).get('uri', '')
+        file_name = file_meta.get('file', {}).get('name', '')
         if not file_uri:
             raise RuntimeError('Files API returned no URI')
     except Exception as e:
         raise RuntimeError(f'Files API upload failed: {e}')
+
+    # Poll until file is ACTIVE (video processing may take a few seconds)
+    import time as _time
+    if file_name:
+        poll_url = f'https://generativelanguage.googleapis.com/v1beta/{file_name}?key={GEMINI_API_KEY}'
+        for _attempt in range(12):
+            _time.sleep(5)
+            try:
+                with urllib.request.urlopen(urllib.request.Request(poll_url), timeout=10) as _r:
+                    _fstate = json.loads(_r.read()).get('state', '')
+                if _fstate == 'ACTIVE':
+                    break
+            except Exception:
+                pass
 
     # Generate content using the uploaded file
     gc_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}'
