@@ -10,7 +10,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { useRole } from '@/hooks/use-role';
-import { getActivityOverview, type ActivityOverview, type ActivityFeedItem, type AccountActivity } from '@/lib/api';
+import {
+  getActivityOverview, type ActivityOverview, type ActivityFeedItem, type AccountActivity,
+  getSystemHealth,     type SystemHealth, type RenderService, type NrIncident,
+} from '@/lib/api';
 import { tierLabel } from '@/lib/tier-labels';
 import { cn } from '@/lib/utils';
 
@@ -68,9 +71,98 @@ function StatCard({ label, value, sub, accent }: { label: string; value: number 
   );
 }
 
+// ── service health helpers ─────────────────────────────────────────────────────
+
+const DEPLOY_BADGE: Record<string, string> = {
+  live:              'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  build_in_progress:'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  build_failed:      'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  deactivated:       'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+  canceled:          'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+};
+
+const PRIORITY_BADGE: Record<string, string> = {
+  CRITICAL: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  HIGH:     'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  MEDIUM:   'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
+  LOW:      'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+};
+
+function ServiceCard({ svc }: { svc: RenderService }) {
+  const deploy    = svc.deploy;
+  const status    = deploy?.status ?? 'unknown';
+  const isFailed  = status === 'build_failed';
+  const isLive    = status === 'live';
+  const isSuspended = svc.suspended === 'suspended';
+
+  return (
+    <div className={cn(
+      'rounded-lg border p-4 space-y-2',
+      isFailed ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30'
+      : isSuspended ? 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/30'
+      : 'border-border bg-card',
+    )}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className={cn(
+            'w-2.5 h-2.5 rounded-full flex-shrink-0',
+            isFailed ? 'bg-red-500' : isSuspended ? 'bg-slate-400' : isLive ? 'bg-emerald-500' : 'bg-blue-400 animate-pulse',
+          )} />
+          <span className="font-medium text-sm">{svc.name}</span>
+          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{svc.type}</span>
+        </div>
+        {!isSuspended && (
+          <span className={cn('text-xs px-2 py-0.5 rounded font-medium', DEPLOY_BADGE[status] ?? 'bg-muted text-muted-foreground')}>
+            {status.replace(/_/g, ' ')}
+          </span>
+        )}
+        {isSuspended && (
+          <span className="text-xs px-2 py-0.5 rounded font-medium bg-slate-100 text-slate-500 dark:bg-slate-800">suspended</span>
+        )}
+      </div>
+      {deploy && (
+        <div className="text-xs text-muted-foreground space-y-0.5">
+          {deploy.commit && <p className="truncate" title={deploy.commit}>{deploy.commit}</p>}
+          {deploy.finishedAt && <p>{relTime(deploy.finishedAt)}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MetricBox({ label, value, sub, warn }: { label: string; value: string | number | null; sub?: string; warn?: boolean }) {
+  return (
+    <div className="rounded-md border border-border bg-card p-3 text-center">
+      <p className={cn('text-lg font-bold tabular-nums', warn ? 'text-red-600 dark:text-red-400' : '')}>{value ?? '—'}</p>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      {sub && <p className="text-[10px] text-muted-foreground/70">{sub}</p>}
+    </div>
+  );
+}
+
+function IncidentCard({ inc }: { inc: NrIncident }) {
+  return (
+    <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30 px-4 py-3 flex items-start gap-3">
+      <span className="mt-0.5 w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={cn('text-xs font-medium px-1.5 py-0.5 rounded', PRIORITY_BADGE[inc.priority] ?? PRIORITY_BADGE.LOW)}>
+            {inc.priority}
+          </span>
+          <span className="font-medium text-sm text-foreground">{inc.title}</span>
+        </div>
+        {inc.entityNames?.length > 0 && (
+          <p className="text-xs text-muted-foreground mt-0.5">{inc.entityNames.join(', ')}</p>
+        )}
+        <p className="text-xs text-muted-foreground mt-0.5">Opened {relTime(inc.createdAt)}</p>
+      </div>
+    </div>
+  );
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────
 
-type Tab = 'feed' | 'accounts';
+type Tab = 'feed' | 'accounts' | 'system';
 
 export default function AdminOverviewPage() {
   const router                = useRouter();
@@ -78,10 +170,12 @@ export default function AdminOverviewPage() {
   const { getToken }          = useAuth();
 
   const [data, setData]       = useState<ActivityOverview | null>(null);
+  const [health, setHealth]   = useState<SystemHealth | null>(null);
   const [loading, setLoading] = useState(true);
+  const [healthLoading, setHealthLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
   const [lastFetch, setLast]  = useState<Date | null>(null);
-  const [tab, setTab]         = useState<Tab>('feed');
+  const [tab, setTab]         = useState<Tab>('system');
   const [search, setSearch]   = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -94,13 +188,18 @@ export default function AdminOverviewPage() {
     setError(null);
     try {
       const token = await getToken();
-      const res   = await getActivityOverview(token ?? undefined);
-      setData(res);
+      const [overview, sys] = await Promise.all([
+        getActivityOverview(token ?? undefined),
+        getSystemHealth(token ?? undefined),
+      ]);
+      setData(overview);
+      setHealth(sys);
       setLast(new Date());
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load');
     } finally {
       setLoading(false);
+      setHealthLoading(false);
     }
   }, [getToken]);
 
@@ -177,7 +276,11 @@ export default function AdminOverviewPage() {
       {/* Tabs + filters */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-1">
-          {(['feed', 'accounts'] as Tab[]).map((t) => (
+          {([
+            ['system',   'System Health'],
+            ['feed',     'Activity Feed'],
+            ['accounts', 'Accounts'],
+          ] as [Tab, string][]).map(([t, label]) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -188,7 +291,10 @@ export default function AdminOverviewPage() {
                   : 'border-border text-muted-foreground hover:text-foreground',
               )}
             >
-              {t === 'feed' ? 'Activity Feed' : 'Accounts'}
+              {label}
+              {t === 'system' && (health?.incidents?.length ?? 0) > 0 && (
+                <span className="ml-1.5 bg-red-500 text-white text-[10px] rounded-full px-1.5">{health!.incidents.length}</span>
+              )}
             </button>
           ))}
         </div>
@@ -347,6 +453,101 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
+      {/* ── System Health tab ── */}
+      {tab === 'system' && (
+        <div className="space-y-6">
+
+          {/* Open incidents */}
+          <section className="space-y-2">
+            <h2 className="text-sm font-semibold text-foreground">
+              New Relic Incidents
+              {' '}
+              <span className="font-normal text-muted-foreground">
+                {healthLoading ? '(loading…)' : health?.incidents?.length === 0 ? '— all clear' : `— ${health?.incidents?.length} open`}
+              </span>
+            </h2>
+            {(health?.incidents ?? []).length === 0 && !healthLoading && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30 px-4 py-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                <span className="text-sm text-emerald-700 dark:text-emerald-300">No open incidents — all clear</span>
+              </div>
+            )}
+            {(health?.incidents ?? []).map((inc) => (
+              <IncidentCard key={inc.issueId} inc={inc} />
+            ))}
+          </section>
+
+          {/* Render services */}
+          <section className="space-y-2">
+            <h2 className="text-sm font-semibold text-foreground">Render Services</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {(health?.renderServices ?? RENDER_SERVICES_PLACEHOLDER).map((svc) => (
+                <ServiceCard key={svc.id} svc={svc as RenderService} />
+              ))}
+            </div>
+          </section>
+
+          {/* NR metrics */}
+          <section className="space-y-2">
+            <h2 className="text-sm font-semibold text-foreground">
+              New Relic Metrics
+              <span className="ml-1 font-normal text-muted-foreground text-xs">last 1 hour</span>
+            </h2>
+            {health?.nrMetrics && (() => {
+              const m = health.nrMetrics;
+              const apps = Array.from(new Set([
+                ...Object.keys(m.errorRate),
+                ...Object.keys(m.throughput),
+              ])).filter(Boolean);
+              return (
+                <div className="space-y-4">
+                  {apps.map((app) => (
+                    <div key={app} className="rounded-lg border border-border p-4 space-y-3">
+                      <p className="text-sm font-medium">{app}</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <MetricBox
+                          label="Error rate"
+                          value={m.errorRate[app] != null ? `${m.errorRate[app]!.toFixed(2)}%` : null}
+                          warn={(m.errorRate[app] ?? 0) > 1}
+                        />
+                        <MetricBox
+                          label="Throughput"
+                          value={m.throughput[app] != null ? `${m.throughput[app]!.toFixed(1)} rpm` : null}
+                        />
+                        <MetricBox
+                          label="Avg latency"
+                          value={m.latencyMs[app] != null ? `${Math.round(m.latencyMs[app]!)} ms` : null}
+                          warn={(m.latencyMs[app] ?? 0) > 2000}
+                        />
+                        <MetricBox
+                          label="Apdex"
+                          value={m.apdex[app] != null ? m.apdex[app]!.toFixed(2) : null}
+                          warn={(m.apdex[app] ?? 1) < 0.7}
+                        />
+                        <MetricBox
+                          label="Errors (24h)"
+                          value={m.errors24h[app] ?? 0}
+                          warn={(m.errors24h[app] ?? 0) > 0}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {apps.length === 0 && !healthLoading && (
+                    <p className="text-sm text-muted-foreground">No APM data yet — agents may still be warming up.</p>
+                  )}
+                </div>
+              );
+            })()}
+          </section>
+
+          {health?.generatedAt && (
+            <p className="text-xs text-muted-foreground">
+              Snapshot generated at {new Date(health.generatedAt).toLocaleTimeString()} — click Refresh for latest data.
+            </p>
+          )}
+        </div>
+      )}
+
       <p className="text-xs text-muted-foreground">
         Click any row to view that account in the operator view. &nbsp;·&nbsp;
         Showing most recent 50 jobs in the activity feed.
@@ -354,3 +555,9 @@ export default function AdminOverviewPage() {
     </div>
   );
 }
+
+const RENDER_SERVICES_PLACEHOLDER = [
+  { id: 'srv-d7nsd77avr4c73frifcg', name: 'auraflux-api',    type: 'web',  suspended: null, url: null, deploy: null, previousDeploy: null },
+  { id: 'srv-d7pnalhj2pic73btevl0', name: 'auraflux-app',    type: 'web',  suspended: null, url: null, deploy: null, previousDeploy: null },
+  { id: 'crn-d7plhl0js32c73dviho0', name: 'auraflux-backup', type: 'cron', suspended: 'suspended', url: null, deploy: null, previousDeploy: null },
+];
