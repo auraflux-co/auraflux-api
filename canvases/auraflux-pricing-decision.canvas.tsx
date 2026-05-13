@@ -22,7 +22,7 @@ import {
 const PLANS = [
   {
     name:      'Operate',
-    tier:      'diy',
+    tier:      'operate',
     price:     1500,
     credits:   400,
     brands:    1,
@@ -32,7 +32,7 @@ const PLANS = [
   },
   {
     name:      'Guided',
-    tier:      'dwy',
+    tier:      'guided',
     price:     2500,
     credits:   1200,
     brands:    3,
@@ -42,7 +42,7 @@ const PLANS = [
   },
   {
     name:      'Managed',
-    tier:      'dfy',
+    tier:      'managed',
     price:     3500,
     credits:   2000,
     brands:    5,

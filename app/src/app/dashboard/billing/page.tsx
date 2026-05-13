@@ -32,7 +32,7 @@ import {
 } from '@/lib/api';
 
 const PLAN_META: Record<string, { label: string; sub: string; price: string; highlights: string[] }> = {
-  diy: {
+  operate: {
     label:  'AuraFlux Operate',
     sub:    'Run your content system',
     price:  '$999',
@@ -44,7 +44,7 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
       'Confluence self-serve guides',
     ],
   },
-  dwy: {
+  guided: {
     label:  'AuraFlux Guided',
     sub:    'Build and optimize with us',
     price:  '$2,499',
@@ -56,7 +56,7 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
       'SMS + chat support escalation',
     ],
   },
-  dfy: {
+  managed: {
     label:  'AuraFlux Managed',
     sub:    'Full content operation, handled for you',
     price:  '$4,499',

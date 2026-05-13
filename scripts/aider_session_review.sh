@@ -72,15 +72,21 @@ JIRA_APPROVED=""
 if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
   _jira() {
     local s="$1"
-    curl -s -H "Accept: application/json" -u "$JIRA_AUTH" \
+    HTTP_STATUS=$(curl -s -o /tmp/auraflux_jira_issues.json -w "%{http_code}" \
+      -H "Accept: application/json" -u "$JIRA_AUTH" \
       "${JIRA_BASE}/rest/api/3/search?jql=project=CPD+AND+status=%22${s}%22+ORDER+BY+priority+DESC&maxResults=20&fields=summary,priority" \
-      2>/dev/null | python3 -c '
+      2>/dev/null)
+    if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+      python3 -c '
 import json,sys
-d=json.load(sys.stdin)
+d=json.load(open("/tmp/auraflux_jira_issues.json"))
 for i in d.get("issues",[]):
     f=i["fields"]
     print("  " + i["key"] + ": " + f["summary"][:80] + " [" + f["priority"]["name"] + "]")
-' 2>/dev/null || echo "  (fetch failed)"
+' 2>/dev/null || echo "  (python parse failed)"
+    else
+      echo "  (Jira API fetch failed with HTTP ${HTTP_STATUS})"
+    fi
   }
   JIRA_TODO=$(     _jira "To+Do")
   JIRA_IN_DEV=$(   _jira "In+Development")
@@ -107,14 +113,20 @@ fi
 echo "📄 Fetching recent Confluence activity..."
 CONF_RECENT="(skipped — no API token)"
 if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
-  CONF_RECENT=$(curl -s -H "Accept: application/json" -u "$JIRA_AUTH" \
+  HTTP_STATUS_CONF=$(curl -s -o /tmp/auraflux_conf_pages.json -w "%{http_code}" \
+    -H "Accept: application/json" -u "$JIRA_AUTH" \
     "${JIRA_BASE}/wiki/rest/api/content?spaceKey=${CONF_SPACE}&limit=10&orderby=modified&expand=version" \
-    2>/dev/null | python3 -c '
+    2>/dev/null)
+  if [ "$HTTP_STATUS_CONF" -ge 200 ] && [ "$HTTP_STATUS_CONF" -lt 300 ]; then
+    CONF_RECENT=$(python3 -c '
 import json,sys
-d=json.load(sys.stdin)
+d=json.load(open("/tmp/auraflux_conf_pages.json"))
 for p in d.get("results",[]):
     print("  [" + p.get("id","") + "] " + p.get("title","") + " v" + str(p["version"]["number"]))
-' 2>/dev/null || echo "  (fetch failed)")
+' 2>/dev/null || echo "  (python parse failed)")
+  else
+    CONF_RECENT="  (Confluence API fetch failed with HTTP ${HTTP_STATUS_CONF})"
+  fi
 fi
 
 # ── 5. Env consistency — backend ──────────────────────────────────────────────
@@ -128,7 +140,7 @@ FRONTEND_ENV_IN_CODE=$(grep -rh 'process\.env\.' "$REPO_ROOT/app/src" 2>/dev/nul
   | grep -oE 'process\.env\.NEXT_PUBLIC_[A-Z_]+' | sort -u \
   | sed 's/process\.env\.//' || true)
 
-ENV_IN_EXAMPLE=$(grep -oE '^[A-Z_]+' "$REPO_ROOT/.env.example" 2>/dev/null | sort -u || true)
+ENV_IN_EXAMPLE=$(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)=' "$REPO_ROOT/.env.example" 2>/dev/null | sed -E 's/^[# ]*//;s/=.*//' | sort -u || true)
 ENV_MISSING=$(comm -23 <(echo "$ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
 FRONTEND_ENV_MISSING=$(comm -23 <(echo "$FRONTEND_ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
 
@@ -140,8 +152,8 @@ UI_PAGES=$(find "$REPO_ROOT/app/src/app/dashboard" -name "page.tsx" 2>/dev/null 
   | sed "s|$REPO_ROOT/app/src/app||" | sed 's|/page\.tsx||' | sort || echo "(none)")
 
 # Routes declared in sidebar nav
-SIDEBAR_ROUTES=$(grep -oE '/dashboard/[a-z/\[\]]+' "$REPO_ROOT/app/src/components/layout/sidebar.tsx" 2>/dev/null \
-  | sort -u || echo "(none)")
+SIDEBAR_ROUTES=$(grep -oE "href: *'/dashboard/[^']+'" "$REPO_ROOT/app/src/components/layout/sidebar.tsx" 2>/dev/null \
+  | sed "s/href: *'//;s/'$//" | sort -u || echo "(none)")
 
 # All apiFetch calls in api.ts — extract paths to verify backend routes exist
 API_TS_PATHS=$(grep -oE "apiFetch\('[^']+'" "$REPO_ROOT/app/src/lib/api.ts" 2>/dev/null \
