@@ -40,6 +40,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libgif7 librsvg2-2 \
     libvips \
     ffmpeg \
+    python3 \
+    python3-pip \
     chromium \
     ca-certificates \
     fonts-liberation \
@@ -60,6 +62,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libxrandr2 \
     xdg-utils \
     postgresql-client
+
+# Install yt-dlp (required for VOD EXTRACT flow in assembly_service.js)
+RUN pip3 install --break-system-packages yt-dlp 2>/dev/null || pip3 install yt-dlp
 
 # Tell puppeteer to use the system Chromium, not download its own
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
