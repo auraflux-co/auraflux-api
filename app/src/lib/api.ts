@@ -405,6 +405,57 @@ export async function getActivityOverview(token?: string): Promise<ActivityOverv
   return apiFetch('/admin/activity-overview', { token });
 }
 
+// ─── Admin System Health (CPD-177) ────────────────────────────────────────────
+
+export interface NrIncident {
+  issueId:     string;
+  title:       string;
+  priority:    string;
+  state:       string;
+  createdAt:   string;
+  updatedAt:   string;
+  entityNames: string[];
+  sources:     string[];
+}
+
+export interface RenderDeploy {
+  id:         string;
+  status:     string;
+  commit:     string | null;
+  finishedAt: string | null;
+}
+
+export interface RenderService {
+  id:             string;
+  name:           string;
+  type:           string;
+  suspended:      string | null;
+  url:            string | null;
+  deploy:         RenderDeploy | null;
+  previousDeploy: { status: string; finishedAt: string | null } | null;
+}
+
+export interface NrMetrics {
+  errorRate:  Record<string, number | null>;
+  throughput: Record<string, number | null>;
+  latencyMs:  Record<string, number | null>;
+  apdex:      Record<string, number | null>;
+  jsErrors:   Record<string, number | null>;
+  errors24h:  Record<string, number | null>;
+}
+
+export interface SystemHealth {
+  ok:             boolean;
+  generatedAt:    string;
+  incidents:      NrIncident[];
+  nrMetrics:      NrMetrics;
+  renderServices: RenderService[];
+}
+
+export async function getSystemHealth(token?: string): Promise<SystemHealth> {
+  return apiFetch('/admin/system-health', { token });
+}
+
 // ─── Admin CRM (CPD-154) ──────────────────────────────────────────────────────
 
 export async function listCrmAccounts(token?: string) {
