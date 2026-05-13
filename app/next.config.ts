@@ -2,10 +2,7 @@ import path from 'path';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Required for New Relic APM instrumentation (instrumentation.ts)
-  experimental: {
-    instrumentationHook: true,
-  },
+  // instrumentation.ts is supported natively in Next.js 15+ — no config flag needed
   turbopack: {
     root: path.resolve(__dirname),
   },
