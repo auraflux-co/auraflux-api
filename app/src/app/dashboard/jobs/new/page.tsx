@@ -999,42 +999,8 @@ function NewJobPageInner() {
 
           <SchedulePicker platforms={platforms} value={schedule} onChange={setSchedule} />
 
-          <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Add-on extensions</Label>
-            <div className="space-y-2">
-              {ADD_ONS.map((ao) => {
-                const on = addOns.has(ao.id);
-                return (
-                  <LockedFeature
-                    key={ao.id}
-                    minPlan={ao.minPlan ?? 'operate'}
-                    currentPlan={planTier ?? 'operate'}
-                    label={ao.label}
-                    upgradeMsg={`${ao.label} is included in the Managed plan`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleAddOn(ao.id)}
-                      className={cn(
-                        'w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors',
-                        on ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
-                      )}
-                    >
-                      <span className={cn(
-                        'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
-                        on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
-                      )}>{on ? '✓' : ''}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium leading-tight">{ao.label}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{ao.description}</p>
-                      </div>
-                      <Badge variant="secondary" className="text-[10px] shrink-0">{ao.badge}</Badge>
-                    </button>
-                  </LockedFeature>
-                );
-              })}
-            </div>
-          </div>
+          {/* Add-on extensions (HeyGen, Shoppable) — hidden from UI, wired in code.
+               Managed-plan add-ons will be surfaced once onboarding flow is complete. */}
 
           {/* Review summary */}
           <Card className="bg-muted/30 border-dashed">
@@ -1046,7 +1012,7 @@ function NewJobPageInner() {
               <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>
               <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
               <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ')}</p>
-              {addOns.size > 0 && <p><span className="font-medium text-foreground">Add-ons:</span> {Array.from(addOns).join(', ')}</p>}
+              {/* Add-ons summary hidden — add-ons not surfaced in UI yet */}
             </CardContent>
           </Card>
 
