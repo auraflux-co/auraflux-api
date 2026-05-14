@@ -7155,6 +7155,22 @@ app.use(clerkInit());
 const adminCrmRouter = require('./lib/routes/admin_crm');
 app.use(adminCrmRouter);
 
+// ── Admin infrastructure routes (CPD-204) ────────────────────────────────────
+// Provides: /api/generate-test-key, /api/admin/migrate-pg, /api/portal0-creds,
+//           /api/jira-webhook, /api/github-sync, /internal/alert, etc.
+// Note: /health in this router is shadowed by server.js's own /health above.
+const _adminHealthCacheStub = {
+  ffmpeg: { status: 'ok' },
+  directories: {},
+  freeSpaceGB: null,
+  apiKeys: {},
+  vectcut: { status: 'unknown' },
+  lastRefreshed: null,
+};
+const createAdminRouter = require('./lib/routes/admin');
+const adminRouter = createAdminRouter({ _healthCache: _adminHealthCacheStub, BUILD_INFO });
+app.use(adminRouter);
+
 // ── Dashboard API routes (CPD-177 / frontend api.ts surface) ─────
 // These route files define the paths the Next.js dashboard calls directly
 // (no /v1 prefix). All require Clerk auth — must come after clerkInit().
