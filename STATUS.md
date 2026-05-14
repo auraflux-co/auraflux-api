@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-14 v1.0.424 (Cursor — feat(cpd-204): v0 UI redesign — dashboard home (gradient name, inline badge, icon buttons, left-border card hover, separator + pipeline section) + pipeline widget (skeleton loading, rich empty state with film icon, topic display, larger dots, refresh indicator))
 **Last Updated:** 2026-05-14 v1.0.423 (Cursor — fix(sw): skip cross-origin requests in service worker + catch fetch error; fixes TypeError at sw.js:47 and New Relic preload warnings on app.auraflux.co/dashboard)
 **Last Updated:** 2026-05-14 v1.0.422 (Cursor — fix(dashboard): update stale tier keys diy/dwy/dfy → operate/guided/managed in TIER_QUICK_LINKS; CPD-176 renamed keys but missed dashboard/page.tsx causing dashboard home crash for all users)
 **Last Updated:** 2026-05-14 v1.0.421 (Cursor — fix: render-env-safety — scripts/render_env_set.sh safe single-var setter (fetch→merge→PUT) + .cursor/rules/render-env-safety.mdc blocking bare PUT; fixes 29+ production env var wipes; Jira batch-closed 22 tickets CPD-177 through CPD-198)
