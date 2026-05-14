@@ -352,7 +352,7 @@ export interface CustomerRecord {
 }
 
 export async function listCustomers(token?: string): Promise<{ customers: CustomerRecord[] }> {
-  return apiFetch('/admin/customers', { token });
+  return apiFetch('/admin/crm', { token });
 }
 
 // ─── Admin Activity Overview (CPD-177) ───────────────────────────────────────
