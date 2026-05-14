@@ -100,6 +100,8 @@ export interface CreateJobPayload {
   // CPD-131: content context — used by script generation and portal QA
   topic?:           string;
   tone?:            string;
+  // Feature-level configuration: keyed by feature ID (script, tts, commentary, generation, burn_images)
+  featureConfig?:   Record<string, Record<string, string>>;
 }
 
 // ─── Credit estimation ────────────────────────────────────────────────────────

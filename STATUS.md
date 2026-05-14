@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-14 v1.0.429 (Cursor — feat: mount voice/video/thumbnail/clip_sourcing/heygen routes; features wizard inline config panels — TTS voice+speed, script tone+brief, commentary style+notes, WAN prompt+visual style, burn_images URL+position; featureConfig wired into job spec via jobs_c1.js)
 **Last Updated:** 2026-05-14 v1.0.428 (Cursor — fix: mount team/upload/account routes in server.js (all three were defined but never app.use'd — caused 404 on /team/*, /upload/video, /account/api-keys); upload.js now falls back to /tmp/auraflux-uploads if /app/data/uploads is unavailable)
 **Last Updated:** 2026-05-14 v1.0.427 (Cursor — fix(auth): pass secretKey+publishableKey explicitly to clerkMiddleware() — silent env-var discovery failure was causing getAuth() to throw on every request; also add CLERK_PUBLISHABLE_KEY to auraflux-api Render env)
 **Last Updated:** 2026-05-14 v1.0.426 (Cursor — fix: sign-out spinning — add afterSignOutUrl="/sign-in" to ClerkProvider so sign-out has a clear destination instead of looping)
