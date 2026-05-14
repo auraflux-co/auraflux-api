@@ -7,11 +7,19 @@ import { cn } from '@/lib/utils';
 import { PipelineStatusWidget } from '@/components/dashboard/pipeline-status-widget';
 import { tierLabel } from '@/lib/tier-labels';
 
+// Default links shown when planTier is unset or unknown — job-focused, not developer API links.
+// Operate-specific API links only show when planTier is explicitly 'operate'.
+const DEFAULT_QUICK_LINKS = [
+  { label: 'New job',      href: '/dashboard/jobs/new', description: 'Start a new content production job' },
+  { label: 'Review queue', href: '/dashboard/staging',  description: 'Review completed jobs before publishing' },
+  { label: 'Credits',      href: '/dashboard/credits',  description: 'Check your remaining credits' },
+];
+
 const TIER_QUICK_LINKS: Record<string, { label: string; href: string; description: string }[]> = {
   operate: [
-    { label: 'API docs',     href: 'https://robertsworkspace-18914505.atlassian.net/wiki/spaces/AF', description: 'Browse the AuraFlux API reference' },
-    { label: 'API keys',     href: '/dashboard/settings/api-keys', description: 'Manage your API credentials' },
-    { label: 'View credits', href: '/dashboard/credits',           description: 'Check your remaining credits' },
+    { label: 'New job',      href: '/dashboard/jobs/new',                                            description: 'Start a new content production job' },
+    { label: 'API keys',     href: '/dashboard/settings/api-keys',                                   description: 'Manage your API credentials' },
+    { label: 'View credits', href: '/dashboard/credits',                                             description: 'Check your remaining credits' },
   ],
   guided: [
     { label: 'New job',      href: '/dashboard/jobs/new', description: 'Start a new content production job' },
@@ -64,7 +72,7 @@ export default async function DashboardPage() {
   const user       = await currentUser();
   const firstName  = user?.firstName ?? 'there';
   const planTier   = (user?.publicMetadata?.planTier as string) ?? 'operate';
-  const quickLinks = TIER_QUICK_LINKS[planTier] ?? TIER_QUICK_LINKS.operate;
+  const quickLinks = TIER_QUICK_LINKS[planTier] ?? DEFAULT_QUICK_LINKS;
 
   return (
     <div className="space-y-8 max-w-3xl">
