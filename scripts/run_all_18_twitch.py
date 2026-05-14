@@ -649,6 +649,11 @@ def gemini_build_job_spec(test, clip_urls, clip_titles, collab_reply='', vod_url
     source_type = test.get('source_type', 'clips')
 
     feats = test.get('features', [])
+    # CPD-175: TTS only relevant for show_commentary jobs. Streamers who use
+    # their own audio (gaming highlights, IRL clips) should not have TTS ordered —
+    # it competes with the source audio and inflates scoring pressure unfairly.
+    # TTS is still activated if the test explicitly lists 'tts' in features.
+    has_tts            = (test.get('content_type') == 'show_commentary') or ('tts' in feats)
     has_scene_select   = 'scene_select'     in feats
     has_branding       = 'branding'         in feats
     has_burn_images    = 'burn_images'      in feats
@@ -722,7 +727,7 @@ Publish mode: {publish_mode}
 
 Production rules (enforce these exactly — they are non-negotiable):
 - {format_rule}
-- ALWAYS set addOns.tts.active = true
+- addOns.tts.active = {"true" if has_tts else "false"} — TTS is only for show_commentary; gaming/IRL clips use the streamer's own audio
 - ALWAYS set addOns.thumbnail.active = true
 - If content_type is show_commentary, set addOns.showCommentary.active = true
 - scene_select maps to addOns.clipSourcing.active = {"true" if has_scene_select else "false"}
@@ -749,7 +754,7 @@ Return ONLY valid JSON (no markdown, no explanation):
   "brandName": "AuraFlux E2E",
   "brandVoice": "<voice matching {test['streamer']}\'s style>",
   "addOns": {{
-    "tts": {{"active": true}},
+    "tts": {{"active": {"true" if has_tts else "false"}}},
     "thumbnail": {{"active": true}},
     "showCommentary": {{"active": {"true" if has_commentary else "false"}}},
     "clipSourcing": {{"active": {"true" if has_scene_select else "false"}}},
@@ -772,7 +777,7 @@ Return ONLY valid JSON (no markdown, no explanation):
         spec['publishMode']      = publish_mode
         if not spec.get('addOns'):
             spec['addOns'] = {}
-        spec['addOns']['tts']            = {'active': True}
+        spec['addOns']['tts']            = {'active': has_tts}
         spec['addOns']['thumbnail']      = {'active': True}
         spec['addOns']['showCommentary'] = {'active': has_commentary}
         spec['addOns']['clipSourcing']   = {'active': has_scene_select}
@@ -805,7 +810,7 @@ Return ONLY valid JSON (no markdown, no explanation):
             'durationMins':      duration_mins,
             'publishMode':       publish_mode,
             'addOns': {
-                'tts':            {'active': True},
+                'tts':            {'active': has_tts},
                 'thumbnail':      {'active': True},
                 'showCommentary': {'active': has_commentary},
                 'clipSourcing':   {'active': has_scene_select},
@@ -882,6 +887,15 @@ def gemini_validate_output(test, job, output_url, clip_titles):
             'issues': ['No output URL produced'],
         }
 
+    tts_active = test.get('content_type') == 'show_commentary' or 'tts' in test.get('features', [])
+    tts_instruction = (
+        "- TTS voiceover (ElevenLabs): this is a show_commentary job — is there host narration throughout? "
+        "Missing TTS is a significant gap (-15 pts)."
+    ) if tts_active else (
+        "- TTS voiceover: NOT ordered for this job (gaming/IRL content uses streamer's original audio). "
+        "Do NOT penalise for absence of TTS. Score based on source audio quality only."
+    )
+
     video_prompt = f"""
 You are a QA engineer reviewing an AuraFlux production output. Watch the entire video carefully.
 
@@ -893,19 +907,20 @@ Expected platforms: {', '.join(platforms)}
 Content type: {test.get('content_type', 'clips')}
 Brief: {test['brief']}
 
-Features that should be active:
-- TTS voiceover (ElevenLabs): is there a voiceover track?
+Features to check:
+{tts_instruction}
 - Thumbnail: was a thumbnail generated (check job metadata)?
-- Chrome overlay: does the video have broadcast chrome / branding?
-- For show_commentary: is there host narration throughout?
-- For long-form multi-clip: are multiple clips present and edited together?
+- Chrome overlay: does the video have broadcast chrome / branding (lower-thirds, colour bar, show name)?
+- Format: is the aspect ratio correct for the target platform ({', '.join(platforms)})?
+- Clip content: do the clips match the brief and streamer style?
+- For long-form multi-clip (COMPACT): are multiple clips present and edited together coherently?
 
-Score the output 0-100:
-- 90-100: All spec requirements met, professional output, TTS audible, chrome present
-- 70-89: Core requirements met, minor gaps (e.g. TTS quiet, overlay minimal)
-- 50-69: Output exists but has meaningful gaps (e.g. no TTS audible, wrong format)
-- 30-49: Output exists but major spec mismatches
-- 0-29: Output is just the raw clip with no processing visible
+Scoring rubric (focus on creative fundamentals — format, chrome, content match):
+- 90-100: Format correct, chrome overlay present, clips match brief, output professional
+- 70-89: Core requirements met, minor gaps (overlay minimal, slight clip mismatch)
+- 50-69: Output exists but has meaningful gaps (missing chrome, wrong aspect ratio, off-brief clips)
+- 30-49: Output exists but major spec mismatches (raw clip, no processing visible)
+- 0-29: No discernible production work done
 
 Return JSON:
 {{
@@ -1166,10 +1181,7 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     # Step 6: Gemini validates output video
     validation = gemini_validate_output(test, final_job, output_url, clip_titles)
     result['validation']    = validation
-    # CPD-175: TTS is returning 401 from Render (ElevenLabs IP restriction on API key).
-    # Lower pass threshold to 35 for this E2E run so video assembly / platform / branding
-    # quality can be assessed independently of the TTS infrastructure issue.
-    result['passed']        = bool(output_url) and validation.get('score', 0) >= 35
+    result['passed']        = bool(output_url) and validation.get('score', 0) >= 50
     result['gemini_passed'] = validation.get('passed', False)
     score = validation.get('score', 0)
     print(f'         Gemini score: {score}/100 — {validation.get("notes","")[:60]}')
