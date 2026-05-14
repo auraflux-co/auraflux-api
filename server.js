@@ -7180,9 +7180,14 @@ const conciergeRouter = require('./lib/routes/concierge');
 const socialRouter    = require('./lib/routes/social_connect');
 const supportRouter   = require('./lib/routes/support');
 const templatesRouter = require('./lib/routes/templates');
-const teamRouter      = require('./lib/routes/team');
-const uploadRouter    = require('./lib/routes/upload');
-const accountRouter   = require('./lib/routes/account');
+const teamRouter          = require('./lib/routes/team');
+const uploadRouter        = require('./lib/routes/upload');
+const accountRouter       = require('./lib/routes/account');
+const voiceRouter         = require('./lib/routes/voice');
+const videoRouter         = require('./lib/routes/video');
+const thumbnailRouter     = require('./lib/routes/thumbnail');
+const clipSourcingRouter  = require('./lib/routes/clip_sourcing');
+const heygenRouter        = require('./lib/routes/heygen');
 app.use(planRouter);
 app.use(creditsRouter);
 app.use(conciergeRouter);
@@ -7192,6 +7197,13 @@ app.use(templatesRouter);
 app.use(teamRouter);
 app.use(uploadRouter);
 app.use(accountRouter);
+app.use(voiceRouter);
+app.use(videoRouter);
+app.use(thumbnailRouter);
+app.use(clipSourcingRouter);
+// heygen inline routes are guarded with !DATABASE_URL — with DB now set those
+// won't register, so the router file is safe to mount without conflicts.
+app.use(heygenRouter);
 
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
