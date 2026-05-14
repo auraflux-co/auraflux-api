@@ -1,7 +1,7 @@
 // AuraFlux service worker — CPD-118
 // Enables PWA installability. Caches the app shell for fast loads.
 
-const CACHE = 'auraflux-v1';
+const CACHE = 'auraflux-v2';
 const SHELL = ['/dashboard/jobs', '/dashboard/jobs/active'];
 
 self.addEventListener('install', (e) => {
@@ -23,13 +23,21 @@ self.addEventListener('fetch', (e) => {
   const { request } = e;
   const url = new URL(request.url);
 
-  // Always network for API and auth
-  if (url.pathname.startsWith('/api') || url.hostname.includes('clerk')) return;
+  // Always network for API, auth routes, and Clerk
+  if (
+    url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/sign-in') ||
+    url.pathname.startsWith('/sign-up') ||
+    url.hostname.includes('clerk')
+  ) return;
 
-  // Network-first for navigation
+  // Network-first for navigation with safe fallback
   if (request.mode === 'navigate') {
     e.respondWith(
-      fetch(request).catch(() => caches.match('/dashboard/jobs'))
+      fetch(request).catch(async () => {
+        const cached = await caches.match('/dashboard/jobs');
+        return cached || Response.error();
+      })
     );
     return;
   }
