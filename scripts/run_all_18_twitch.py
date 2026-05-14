@@ -72,12 +72,17 @@ API_KEYS = {
 # ── Streamers — broadcaster IDs verified 2026-05 ──────────────────────────────
 
 STREAMERS = {
+    # primary_game_id: Twitch game ID used to filter clips to relevant content.
+    # Omit for variety/IRL streamers where any clip is valid.
+    # Valorant=516575, CS2=32399, Fortnite=33214, Apex=511224
     'hasanabi':      {'id': '207813352',  'style': 'political commentary, reaction, IRL'},
-    'stableronaldo': {'id': '246450563',  'style': 'FPS gaming, clutch plays, funny moments'},
+    'stableronaldo': {'id': '246450563',  'style': 'FPS gaming, clutch plays, funny moments',
+                      'primary_game_id': '516575'},   # Valorant
     'extraemily':    {'id': '517475551',  'style': 'IRL lifestyle, cosplay, events'},
     'maya':          {'id': '235835559',  'style': 'variety, conversations, gaming, react'},
     'jasontheween':  {'id': '107117952',  'style': 'expressive reactions, commentary, chaos'},
-    'lacy':          {'id': '494543675',  'style': 'FPS gaming, skill highlights, personality'},
+    'lacy':          {'id': '494543675',  'style': 'FPS gaming, skill highlights, personality',
+                      'primary_game_id': '516575'},   # Valorant
 }
 
 # ── 18 Tests — 6 per tier (3 short-form + 3 long-form each) ──────────────────
@@ -361,14 +366,21 @@ TESTS = [
 # ── Twitch live clip fetching ─────────────────────────────────────────────────
 
 def get_clips_for_streamer(streamer_name, count=5, min_duration_s=0):
-    """Fetch fresh clips from Twitch Helix API. Returns list of {title, slug, duration_s, thumbnail}."""
+    """Fetch fresh clips from Twitch Helix API. Returns list of {title, slug, duration_s, thumbnail}.
+    CPD-210: For streamers with a primary_game_id, filter clips to that game so off-brief
+    content (IRL, reactions) doesn't pollute gaming highlights briefs.
+    """
     streamer = STREAMERS.get(streamer_name, {})
     broadcaster_id = streamer.get('id', '')
     if not broadcaster_id or not TWITCH_CLIENT_ID or not TWITCH_TOKEN:
         return []
 
     fetch_count = max(count * 4, 20)  # fetch extra to filter by duration
-    url = f'https://api.twitch.tv/helix/clips?broadcaster_id={broadcaster_id}&first={min(fetch_count, 100)}'
+    game_filter = ''
+    primary_game_id = streamer.get('primary_game_id')
+    if primary_game_id:
+        game_filter = f'&game_id={primary_game_id}'
+    url = f'https://api.twitch.tv/helix/clips?broadcaster_id={broadcaster_id}&first={min(fetch_count, 100)}{game_filter}'
     req = urllib.request.Request(url, headers={
         'Client-ID': TWITCH_CLIENT_ID,
         'Authorization': f'Bearer {TWITCH_TOKEN}',
