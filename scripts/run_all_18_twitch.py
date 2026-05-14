@@ -529,7 +529,7 @@ def ask_gemini_video_json(video_url, prompt):
     """
     Ask Gemini about a video via the Files API (upload then analyze).
     Gemini's file_data field requires a URI from the Files API — not a public URL.
-    Downloads the video (up to 50MB), uploads to Files API, then runs generateContent.
+    Downloads the video (up to 200MB), uploads to Files API, then runs generateContent.
     Raises RuntimeError if upload fails so caller can use metadata fallback.
     """
     if not GEMINI_API_KEY:
@@ -537,14 +537,16 @@ def ask_gemini_video_json(video_url, prompt):
 
     import tempfile, os
 
-    # Download video (cap at 50MB)
+    # CPD-203: Increased size limit from 50MB → 200MB — COMPACT long-form outputs can
+    # be 100-150MB for 4 stitched clips. Gemini Files API supports up to 2GB.
+    MAX_VIDEO_MB = 200
     try:
         dl_req = urllib.request.Request(video_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(dl_req, timeout=30) as r:
+        with urllib.request.urlopen(dl_req, timeout=90) as r:
             content_length = int(r.headers.get('Content-Length', 0))
-            if content_length > 50 * 1024 * 1024:
-                raise RuntimeError(f'Video too large ({content_length/1e6:.0f}MB)')
-            video_bytes = r.read(50 * 1024 * 1024)
+            if content_length > MAX_VIDEO_MB * 1024 * 1024:
+                raise RuntimeError(f'Video too large ({content_length/1e6:.0f}MB > {MAX_VIDEO_MB}MB limit)')
+            video_bytes = r.read(MAX_VIDEO_MB * 1024 * 1024)
     except Exception as e:
         raise RuntimeError(f'Video download failed: {e}')
 
@@ -564,7 +566,7 @@ def ask_gemini_video_json(video_url, prompt):
         headers={'Content-Type': f'multipart/related; boundary={boundary}'},
     )
     try:
-        with urllib.request.urlopen(up_req, timeout=60) as r:
+        with urllib.request.urlopen(up_req, timeout=180) as r:  # CPD-203: 3min for large uploads
             file_meta = json.loads(r.read())
         file_uri = file_meta.get('file', {}).get('uri', '')
         file_name = file_meta.get('file', {}).get('name', '')
@@ -573,17 +575,22 @@ def ask_gemini_video_json(video_url, prompt):
     except Exception as e:
         raise RuntimeError(f'Files API upload failed: {e}')
 
-    # Poll until file is ACTIVE (video processing may take a few seconds)
+    # Poll until file is ACTIVE (video processing may take a few seconds for small files,
+    # up to 60s for large multi-clip outputs). CPD-203: extended poll to 30 attempts × 5s = 150s.
     import time as _time
     if file_name:
         poll_url = f'https://generativelanguage.googleapis.com/v1beta/{file_name}?key={GEMINI_API_KEY}'
-        for _attempt in range(12):
+        for _attempt in range(30):
             _time.sleep(5)
             try:
-                with urllib.request.urlopen(urllib.request.Request(poll_url), timeout=10) as _r:
+                with urllib.request.urlopen(urllib.request.Request(poll_url), timeout=15) as _r:
                     _fstate = json.loads(_r.read()).get('state', '')
                 if _fstate == 'ACTIVE':
                     break
+                if _fstate == 'FAILED':
+                    raise RuntimeError(f'Gemini file processing FAILED after {(_attempt+1)*5}s')
+            except RuntimeError:
+                raise
             except Exception:
                 pass
 
@@ -598,7 +605,7 @@ def ask_gemini_video_json(video_url, prompt):
         }]
     }).encode()
     gc_req = urllib.request.Request(gc_url, data=gc_body, headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(gc_req, timeout=120) as resp:
+    with urllib.request.urlopen(gc_req, timeout=180) as resp:  # CPD-203: 3min for large video analysis
         text = json.loads(resp.read())['candidates'][0]['content']['parts'][0]['text']
     import re
     m = re.search(r'```(?:json)?\s*([\s\S]+?)\s*```', text)
@@ -1143,8 +1150,16 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     print(f'         job_id: {job_id}')
 
     # Step 5: Poll for TERMINAL state (not just outputUrl)
-    print(f'         polling for terminal state (max 15min)… ', end='', flush=True)
-    final_job, output_url = poll_job_terminal(job_id, api_key, max_wait=900, interval=15)
+    # CPD-200: Long-form COMPACT (multi-clip stitch) and EXTRACT (VOD breakdown) jobs
+    # can take 20-30min on Render — double the timeout for these flows.
+    is_long_job = (
+        test.get('source_type') == 'vod' or
+        (test.get('format') == 'long') or
+        test.get('clips_count', 0) >= 3
+    )
+    poll_max = 1800 if is_long_job else 900
+    print(f'         polling for terminal state (max {poll_max//60}min)… ', end='', flush=True)
+    final_job, output_url = poll_job_terminal(job_id, api_key, max_wait=poll_max, interval=15)
     result['output_url'] = output_url
     print(f'\n         {"✅" if output_url else "❌"} {output_url[:70] if output_url else "NO OUTPUT"}')
 
@@ -1200,7 +1215,21 @@ def main():
     results, ux_observations = [], []
 
     for test in tests_to_run:
-        result = run_test(test, ux_observations, dry_run=args.dry_run, no_ux=args.no_ux, args=args)
+        # CPD-202: Wrap each test in try/except so an unhandled exception in one test
+        # does not stop the entire 18-test suite. Log the error and continue.
+        try:
+            result = run_test(test, ux_observations, dry_run=args.dry_run, no_ux=args.no_ux, args=args)
+        except Exception as e:
+            print(f'\n  ❌  {test["id"]}: UNHANDLED EXCEPTION — {type(e).__name__}: {e}')
+            result = {
+                'id':         test['id'],
+                'tier':       test['tier'],
+                'streamer':   test['streamer'],
+                'passed':     False,
+                'error':      f'Unhandled exception: {type(e).__name__}: {e}',
+                'started_at': None,
+                'finished_at': None,
+            }
         results.append(result)
         (out_dir / 'results.json').write_text(json.dumps(results, indent=2))
 
