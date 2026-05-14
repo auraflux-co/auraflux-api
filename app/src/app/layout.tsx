@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script src="/newrelic-browser.js" strategy="beforeInteractive" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClerkProvider>
+        <ClerkProvider afterSignOutUrl="/sign-in">
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <PWARegister />
             {children}
