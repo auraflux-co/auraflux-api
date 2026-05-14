@@ -190,7 +190,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'flex-shrink-0 border-r border-border bg-card flex flex-col h-screen transition-[width] duration-200 ease-in-out overflow-hidden',
+        'flex-shrink-0 border-r border-sidebar-border bg-sidebar flex flex-col h-screen transition-[width] duration-200 ease-in-out overflow-hidden',
         collapsed ? 'w-14' : 'w-52',
       )}
     >
@@ -378,7 +378,7 @@ export function MobileSidebar() {
 
   return (
     <aside className={cn(
-      'fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border flex flex-col md:hidden',
+      'fixed top-0 left-0 z-50 h-full w-64 bg-sidebar border-r border-sidebar-border flex flex-col md:hidden',
       'transition-transform duration-200 ease-in-out',
       mobileOpen ? 'translate-x-0' : '-translate-x-full',
     )}>
