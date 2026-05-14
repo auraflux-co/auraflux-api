@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
+import { HeroMonogram } from '@/components/icons/brand-icons';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -201,15 +202,16 @@ export function Sidebar() {
       )}>
         {!collapsed && (
           <>
-            <Link href="/dashboard" className="font-semibold text-sm tracking-tight hover:text-foreground/80 transition-colors">
-              AuraFlux
+            <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <HeroMonogram size={22} className="text-primary shrink-0" />
+              <span className="font-semibold text-sm tracking-tight text-foreground">AuraFlux</span>
             </Link>
             <CreditsBadge collapsed={collapsed} />
           </>
         )}
         {collapsed && (
-          <Link href="/dashboard" title="AuraFlux" className="font-bold text-sm">
-            A
+          <Link href="/dashboard" title="AuraFlux">
+            <HeroMonogram size={20} className="text-primary" />
           </Link>
         )}
       </div>
