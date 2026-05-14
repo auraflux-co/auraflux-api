@@ -7145,6 +7145,11 @@ const developerApiRouter = require('./lib/routes/developer_api');
 app.use('/v1', developerApiRouter);
 
 // ── Admin CRM + Permissions (CPD-150 / CPD-154) ───────────────────
+// Clerk middleware — must run before any route that calls requireAuth.
+// Initialises session context so getAuth(req) can verify JWTs.
+const { clerkInit } = require('./lib/auth');
+app.use(clerkInit());
+
 // Mounted without prefix so routes are /admin/crm, /admin/permissions, etc.
 // matching the NEXT_PUBLIC_API_URL + path pattern used by the frontend.
 const adminCrmRouter = require('./lib/routes/admin_crm');
