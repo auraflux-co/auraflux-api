@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-14 v1.0.426 (Cursor — fix: sign-out spinning — add afterSignOutUrl="/sign-in" to ClerkProvider so sign-out has a clear destination instead of looping)
 **Last Updated:** 2026-05-14 v1.0.425 (Cursor — fix(cpd-204): post-auth redirect lands directly on /dashboard (forceRedirectUrl + Render env vars); requireAuth wraps getAuth() in try/catch to prevent EXPRESS_UNHANDLED 500s; admin_crm ensureAdminTables() now idempotently creates account_members for fresh PG instances; all "AI" stripped from user-visible dashboard copy across 8 files)
 **Last Updated:** 2026-05-14 v1.0.424 (Cursor — feat(cpd-204): v0 UI redesign — dashboard home (gradient name, inline badge, icon buttons, left-border card hover, separator + pipeline section) + pipeline widget (skeleton loading, rich empty state with film icon, topic display, larger dots, refresh indicator))
 **Last Updated:** 2026-05-14 v1.0.423 (Cursor — fix(sw): skip cross-origin requests in service worker + catch fetch error; fixes TypeError at sw.js:47 and New Relic preload warnings on app.auraflux.co/dashboard)
