@@ -6,37 +6,44 @@ Do not edit directly — your changes will be overwritten.
 -->
 
 ### 1. Session Summary
-Massive feature delivery on 2026-05-01: complete frontend customer dashboard in Next.js (Jobs hub/active/history/new, Scheduling, Billing, Support, Job Templates). Backend supported with new API endpoints for all features: recurring jobs, scheduled starts, credit consumption (duration-based with auto-refund), Twilio SMS for support. Session finalized platform pricing (Operate/Guided/Managed) and credit model, shipped Shoppable Pack, Avatar IV-only tier, and PWA foundation.
+This session was heavily focused on backend pipeline stabilization and E2E quality, shipping over a dozen fixes for TTS (CPD-199), VOD extraction (CPD-200/201), error handling, and pipeline robustness (CPD-202/203). Critical production issues resolved: Clerk custom domain DNS (missing 4 of 5 required CNAMEs causing complete sign-in outage), `NEXT_PUBLIC_API_URL` missing from auraflux-app Render env (all API calls hitting localhost), `clerkInit()` missing from server.js (500 on all admin routes), `/admin/customers` 404 (route renamed to `/admin/crm`). Composio v0 MCP added to Cursor for tomorrow's UI pass (CPD-204).
 
 ### 2. Jira Consistency
-Jira API fetch failed during review run. Large number of PRs merged (PRs #152–#177); ticket transitions should be verified manually to confirm Done state on CPD-111 through CPD-125 range.
+Jira API fetch completed. Tickets CPD-199 through CPD-203 transitioned to Done this session. CPD-204 created for Claude Code + v0 UI design pass. Manual check recommended for any PRs #330–356 not yet transitioned.
 
 ### 3. GitHub Consistency
-✅ No open PRs. ✅ No stale branches. ✅ All recent CI runs passing (10/10 success, verified post-report).
+No open pull requests. PRs #352–#356 merged this session (sign-in fallback, admin route fix, review script fix, Composio setup). 11 uncommitted E2E log directories in `logs/` — should be gitignored or cleaned up.
 
 ### 4. Confluence Consistency
-Confluence API fetch failed during review run. New user-facing features (Jobs, Billing, Support, Templates pages) likely need HOW documentation. Verify and create/update as needed.
+Confluence API returned 400 (invalid `orderby` param — now fixed in script). New admin UI pages added (Overview, CRM, Customers, Permissions, System Health) — HOW pages not yet created in Confluence. Recommend creating as part of CPD-204 UI pass.
 
 ### 5. Frontend UI Integrity
-✅ TypeScript check passes with zero errors. ✅ Sidebar nav fully wired (Jobs/sub-menu, Schedule, Templates, Copilot, Billing/Credits, Support, Profile, Settings) — verified post-report. All 18 dashboard pages reachable.
+- **Sign-in page:** Now shows actionable error + Retry button if Clerk JS fails to load (no more black screen)
+- **CRM page:** Was calling `/admin/customers` (404) — fixed to `/admin/crm`
+- **TypeScript check:** Skipped this run — `tsc` not in `node_modules/.bin` (run `cd app && npm install` to restore)
+- **API URL:** `NEXT_PUBLIC_API_URL` now set on Render; was defaulting to `localhost:3000` causing all dashboard API calls to fail
 
 ### 6. API-to-UI Mapping
-Frontend `GET /jobs?all=true` for operator role — confirm backend `jobs_c1.js` handles `all` query param. Low risk; likely handled by existing route. Verify in next E2E pass.
+All `apiFetch` paths in `api.ts` now have matching backend routes. One resolved this session: `/admin/customers` → `/admin/crm`. No remaining unmapped paths detected.
 
 ### 7. Codebase Structural Integrity
-50+ files touched. New services: `scheduling_cron.js`, `support.js`, `credit_calculator.js`, `stripe_billing.js`. Portal shoppable extension added (`portal_shoppable_ext.js`). Scale of changes warrants Phase A E2E run to confirm pipeline integrity end-to-end.
+`clerkInit()` middleware added to `server.js` — was missing, causing `getAuth(req)` to fail on all Clerk-authenticated admin routes. `adminCrmRouter` was mounted correctly but without Clerk context initialized. Pipeline portals (CPD-199–203) are stable.
 
 ### 8. C0 / C1+ Boundary
-Rebrand commit (CWN→AuraFlux) is positive hygiene. Risk: legacy C0 strings may remain in older lib/ files. Run `rg -r 'ClipzWorld|cwn_production|c0_' lib/` as a spot check.
+No new C0 boundary violations introduced this session. `cwn_production.html` still present in repo root — legacy artifact, safe to delete. Run `rg 'ClipzWorld|cwn_production|c0_' lib/` as a spot check before next major release.
 
 ### 9. Environment and Secrets
-✅ `NEXT_PUBLIC_API_URL`, `STRIPE_PRICE_*`, `API_BASE_URL` all present in `.env.example` — verified post-report. New Twilio support vars should be confirmed present (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`).
+- `NEXT_PUBLIC_API_URL` added to `.env.example` (was undocumented)
+- `COMPOSIO_API_KEY` and `COMPOSIO_MCP_URL` added to `.env.example`
+- All 64 Render vars confirmed present by pre-deploy guard
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` documented in Render env — not in `.env.example` backend section (frontend only, acceptable)
 
 ### 10. Recommendations
-- **[SHOULD FIX]** Repair Jira + Confluence API connections in `scripts/aider_session_review.sh` so live data is available on next run.
-- **[SHOULD FIX]** Verify `GET /jobs?all=true` is handled correctly for operator role in `jobs_c1.js`.
-- **[NICE TO HAVE]** Spot-check for remaining `ClipzWorld`/`cwn_production` strings in `lib/` after rebrand.
-- **[NICE TO HAVE]** Create Confluence HOW pages for Jobs, Schedule, Billing, Support dashboard pages.
+- **[SHOULD FIX]** Add `logs/e2e_*/` to `.gitignore` — 11 E2E log dirs are untracked and will pollute `git status`
+- **[SHOULD FIX]** Run `cd app && npm install` to restore `node_modules/.bin/tsc` so TypeScript check works in next review
+- **[SHOULD FIX]** Create Confluence HOW pages for admin dashboard features (System Health, CRM, Permissions, Overview)
+- **[NICE TO HAVE]** Delete `cwn_production.html` from repo root — legacy file no longer needed
+- **[NICE TO HAVE]** Full 18-test E2E run (2 tests at a time) tomorrow to close remaining 9 failing gaps
 
-<!-- last-reviewed-commit: 8c5ed5e4c2681f47f0bc34919969b1c4274e7699 -->
-<!-- reviewed-at: 2026-05-02T17:41:34Z -->
+<!-- last-reviewed-commit: a5bf66e7d84f875a4f140e0a41403248022a588a -->
+<!-- reviewed-at: 2026-05-14T03:29:00Z -->
