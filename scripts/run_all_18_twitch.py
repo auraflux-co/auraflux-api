@@ -1157,7 +1157,10 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
         (test.get('format') == 'long') or
         test.get('clips_count', 0) >= 3
     )
-    poll_max = 1800 if is_long_job else 900
+    # CPD-175: Short jobs can take up to 16-17min on Render due to queue depth or
+    # server restart recovery. Increase from 900→1200 (20min) so the poller catches
+    # jobs that complete just outside the old 15min window.
+    poll_max = 1800 if is_long_job else 1200
     print(f'         polling for terminal state (max {poll_max//60}min)… ', end='', flush=True)
     final_job, output_url = poll_job_terminal(job_id, api_key, max_wait=poll_max, interval=15)
     result['output_url'] = output_url
