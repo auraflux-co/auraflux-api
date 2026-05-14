@@ -72,10 +72,10 @@ JIRA_APPROVED=""
 if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
   _jira() {
     local s="$1"
-    HTTP_STATUS=$(curl -s -o /tmp/auraflux_jira_issues.json -w "%{http_code}" \
+    HTTP_STATUS=$(curl -s --max-time 10 --connect-timeout 5 -o /tmp/auraflux_jira_issues.json -w "%{http_code}" \
       -H "Accept: application/json" -u "$JIRA_AUTH" \
       "${JIRA_BASE}/rest/api/3/search?jql=project=CPD+AND+status=%22${s}%22+ORDER+BY+priority+DESC&maxResults=20&fields=summary,priority" \
-      2>/dev/null)
+      2>/dev/null) || HTTP_STATUS="000"
     if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
       python3 -c '
 import json,sys
@@ -113,10 +113,10 @@ fi
 echo "📄 Fetching recent Confluence activity..."
 CONF_RECENT="(skipped — no API token)"
 if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
-  HTTP_STATUS_CONF=$(curl -s -o /tmp/auraflux_conf_pages.json -w "%{http_code}" \
+  HTTP_STATUS_CONF=$(curl -s --max-time 10 --connect-timeout 5 -o /tmp/auraflux_conf_pages.json -w "%{http_code}" \
     -H "Accept: application/json" -u "$JIRA_AUTH" \
-    "${JIRA_BASE}/wiki/rest/api/content?spaceKey=${CONF_SPACE}&limit=10&orderby=modified&expand=version" \
-    2>/dev/null)
+    "${JIRA_BASE}/wiki/rest/api/content?spaceKey=${CONF_SPACE}&limit=10&expand=version" \
+    2>/dev/null) || HTTP_STATUS_CONF="000"
   if [ "$HTTP_STATUS_CONF" -ge 200 ] && [ "$HTTP_STATUS_CONF" -lt 300 ]; then
     CONF_RECENT=$(python3 -c '
 import json,sys
@@ -167,9 +167,14 @@ BACKEND_ROUTES=$(grep -oE "app\.use\('/?[^']*'" "$REPO_ROOT/server.js" 2>/dev/nu
 echo "🔷 Running frontend TypeScript check..."
 FRONTEND_TS_ERRORS="(skipped)"
 if [ -f "$REPO_ROOT/app/tsconfig.json" ] || [ -f "$REPO_ROOT/app/package.json" ]; then
-  FRONTEND_TS_ERRORS=$(cd "$REPO_ROOT/app" && npx --yes tsc --noEmit 2>&1 | head -30 || echo "(tsc not available)")
-  if [ -z "$FRONTEND_TS_ERRORS" ]; then
-    FRONTEND_TS_ERRORS="✅ No TypeScript errors"
+  # Run tsc with a 60s timeout — skip if tsc is not installed (avoid npx download delay)
+  if command -v tsc &>/dev/null || [ -x "$REPO_ROOT/app/node_modules/.bin/tsc" ]; then
+    FRONTEND_TS_ERRORS=$(cd "$REPO_ROOT/app" && timeout 60 node_modules/.bin/tsc --noEmit 2>&1 | head -30 || echo "(tsc check failed or timed out)")
+    if [ -z "$FRONTEND_TS_ERRORS" ]; then
+      FRONTEND_TS_ERRORS="✅ No TypeScript errors"
+    fi
+  else
+    FRONTEND_TS_ERRORS="(skipped — tsc not in node_modules/.bin; run: cd app && npm install)"
   fi
 fi
 
