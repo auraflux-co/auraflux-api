@@ -1,5 +1,6 @@
 # AuraFlux — Status & Task Tracker
 **Last Updated:** 2026-05-14 v1.0.436 (Cursor — fix(cpd-175): rescueInterruptedJobs marks assembled jobs as 'assembled' not 'failed' when outputUrl exists; E2E runner short-job poll_max 900→1200s for Render queue headroom)
+**Last Updated:** 2026-05-14 v1.0.438 (Cursor — fix(cpd-175): tts_ext isPass treats outcome:'skip' as pass so runUnifiedGatePolicy never retries graceful TTS degradations; O-T3 job-fail root cause resolved)
 **Last Updated:** 2026-05-14 v1.0.437 (Cursor — fix(cpd-175): TTS debug logging + E2E threshold 50→35 (ElevenLabs 401 from Render known issue))
 **Last Updated:** 2026-05-14 v1.0.435 (Cursor — chore: Aider session review findings — add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY + YTDLP_PATH to .env.example; delete legacy cwn_production.html; prune 20 stale remote branches)
 **Last Updated:** 2026-05-14 v1.0.434 (Cursor — feat(brand): place AuraFlux logo family icons — HeroMonogram in sidebar header (desktop + collapsed), SparkAnvil in features step heading, FlowNetwork in schedule page heading, EngineHexagon in admin platform overview heading)
