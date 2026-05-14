@@ -27,6 +27,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -48,73 +50,90 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── AuraFlux Brand Theme ─────────────────────────────────────────────────────
+ *  Palette:
+ *    Dark Navy   #0B1220  — sidebar / nav anchor
+ *    Workspace   #070C15  — main canvas background
+ *    Card        #0F1929  — elevated surfaces
+ *    Gold        #F5C542  — primary actions (CTA buttons, active states)
+ *    Prod Gold   #C7AF4F  — hover / interactive states
+ *    Emerald     #10B981  — success / positive data (never use gold for success)
+ *    Border      #1A2540  — subtle dividers
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* Light fallback — not the primary mode for this app */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background:              oklch(0.97 0.005 265);
+  --foreground:              oklch(0.213 0.035 259.5);
+  --card:                    oklch(1 0 0);
+  --card-foreground:         oklch(0.213 0.035 259.5);
+  --popover:                 oklch(1 0 0);
+  --popover-foreground:      oklch(0.213 0.035 259.5);
+  --primary:                 oklch(0.844 0.151 87.9);   /* Gold #F5C542 */
+  --primary-foreground:      oklch(0.183 0.031 263.4);  /* Dark Navy on gold */
+  --secondary:               oklch(0.935 0.01 265);
+  --secondary-foreground:    oklch(0.213 0.035 259.5);
+  --muted:                   oklch(0.935 0.01 265);
+  --muted-foreground:        oklch(0.579 0.051 264.6);
+  --accent:                  oklch(0.756 0.119 95.4);   /* Prod Gold #C7AF4F */
+  --accent-foreground:       oklch(0.183 0.031 263.4);
+  --destructive:             oklch(0.577 0.245 27.325);
+  --success:                 oklch(0.696 0.149 162.5);  /* Emerald #10B981 */
+  --success-foreground:      oklch(1 0 0);
+  --border:                  oklch(0.922 0 0);
+  --input:                   oklch(0.922 0 0);
+  --ring:                    oklch(0.844 0.151 87.9);   /* Gold focus ring */
+  --chart-1:                 oklch(0.844 0.151 87.9);   /* Gold */
+  --chart-2:                 oklch(0.696 0.149 162.5);  /* Emerald */
+  --chart-3:                 oklch(0.756 0.119 95.4);   /* Prod Gold */
+  --chart-4:                 oklch(0.568 0.092 92.3);   /* Gold Muted */
+  --chart-5:                 oklch(0.579 0.051 264.6);  /* Muted Blue */
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar:                 oklch(0.183 0.031 263.4);  /* Dark Navy */
+  --sidebar-foreground:      oklch(0.937 0.008 271.3);
+  --sidebar-primary:         oklch(0.844 0.151 87.9);   /* Gold */
+  --sidebar-primary-foreground: oklch(0.183 0.031 263.4);
+  --sidebar-accent:          oklch(0.269 0.053 266.2);
+  --sidebar-accent-foreground: oklch(0.937 0.008 271.3);
+  --sidebar-border:          oklch(0.269 0.053 266.2);
+  --sidebar-ring:            oklch(0.844 0.151 87.9);
 }
 
+/* Dark mode — the primary AuraFlux application theme */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background:              oklch(0.154 0.021 260.7);  /* Workspace Canvas #070C15 */
+  --foreground:              oklch(0.937 0.008 271.3);  /* Text Primary #E8EAF0 */
+  --card:                    oklch(0.213 0.035 259.5);  /* Card Surface #0F1929 */
+  --card-foreground:         oklch(0.937 0.008 271.3);
+  --popover:                 oklch(0.213 0.035 259.5);
+  --popover-foreground:      oklch(0.937 0.008 271.3);
+  --primary:                 oklch(0.844 0.151 87.9);   /* Gold #F5C542 — CTAs */
+  --primary-foreground:      oklch(0.183 0.031 263.4);  /* Dark Navy on gold */
+  --secondary:               oklch(0.269 0.053 266.2);  /* Border Subtle */
+  --secondary-foreground:    oklch(0.937 0.008 271.3);
+  --muted:                   oklch(0.269 0.053 266.2);
+  --muted-foreground:        oklch(0.579 0.051 264.6);  /* Text Muted #6B7A99 */
+  --accent:                  oklch(0.756 0.119 95.4);   /* Prod Gold #C7AF4F — hover */
+  --accent-foreground:       oklch(0.183 0.031 263.4);
+  --destructive:             oklch(0.704 0.191 22.216);
+  --success:                 oklch(0.696 0.149 162.5);  /* Emerald #10B981 — success only */
+  --success-foreground:      oklch(0.154 0.021 260.7);
+  --border:                  oklch(0.269 0.053 266.2);  /* Border Subtle #1A2540 */
+  --input:                   oklch(0.269 0.053 266.2 / 70%);
+  --ring:                    oklch(0.844 0.151 87.9);   /* Gold focus ring */
+  --chart-1:                 oklch(0.844 0.151 87.9);   /* Gold */
+  --chart-2:                 oklch(0.696 0.149 162.5);  /* Emerald */
+  --chart-3:                 oklch(0.756 0.119 95.4);   /* Prod Gold */
+  --chart-4:                 oklch(0.568 0.092 92.3);   /* Gold Muted */
+  --chart-5:                 oklch(0.579 0.051 264.6);  /* Blue Muted */
+  --sidebar:                 oklch(0.183 0.031 263.4);  /* Dark Navy #0B1220 */
+  --sidebar-foreground:      oklch(0.937 0.008 271.3);
+  --sidebar-primary:         oklch(0.844 0.151 87.9);   /* Gold — active nav item */
+  --sidebar-primary-foreground: oklch(0.183 0.031 263.4);
+  --sidebar-accent:          oklch(0.269 0.053 266.2);  /* Hover bg in sidebar */
+  --sidebar-accent-foreground: oklch(0.937 0.008 271.3);
+  --sidebar-border:          oklch(0.269 0.053 266.2);
+  --sidebar-ring:            oklch(0.844 0.151 87.9);
 }
 
 @layer base {
