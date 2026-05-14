@@ -7155,6 +7155,22 @@ app.use(clerkInit());
 const adminCrmRouter = require('./lib/routes/admin_crm');
 app.use(adminCrmRouter);
 
+// ── Dashboard API routes (CPD-177 / frontend api.ts surface) ─────
+// These route files define the paths the Next.js dashboard calls directly
+// (no /v1 prefix). All require Clerk auth — must come after clerkInit().
+const planRouter    = require('./lib/routes/plan');
+const creditsRouter = require('./lib/routes/credits');
+const conciergeRouter = require('./lib/routes/concierge');
+const socialRouter  = require('./lib/routes/social_connect');
+const supportRouter = require('./lib/routes/support');
+const templatesRouter = require('./lib/routes/templates');
+app.use(planRouter);
+app.use(creditsRouter);
+app.use(conciergeRouter);
+app.use(socialRouter);
+app.use(supportRouter);
+app.use(templatesRouter);
+
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
 

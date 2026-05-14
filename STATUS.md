@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-14 v1.0.417 (Cursor — fix(dashboard): add CLERK_PUBLISHABLE_KEY to auraflux-api Render env (was missing — clerkMiddleware crash caused 500 on all auth routes); mount credits/plan/concierge/social/support/templates route files in server.js (were defined but never mounted — caused 404 on /credits/balance, /plan/features, etc.))
 **Last Updated:** 2026-05-14 v1.0.414 (Cursor — chore: add logs/e2e_*/ to .gitignore; npm install in app to restore tsc; Confluence HOW page created for CPD-177 Activity Overview + System Health)
 **Last Updated:** 2026-05-14 v1.0.413 (Cursor — fix(review-script): curl timeout guards + Confluence orderby 400 fix; script now completes without hanging)
 **Last Updated:** 2026-05-14 v1.0.416 (Cursor — fix(admin-routes): add clerkInit() to server.js so getAuth(req) works on admin routes; fix listCustomers calling /admin/customers which doesnt exist — changed to /admin/crm; add NEXT_PUBLIC_API_URL to auraflux-app Render env)
