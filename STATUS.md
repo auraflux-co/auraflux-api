@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-14 v1.0.428 (Cursor — fix: mount team/upload/account routes in server.js (all three were defined but never app.use'd — caused 404 on /team/*, /upload/video, /account/api-keys); upload.js now falls back to /tmp/auraflux-uploads if /app/data/uploads is unavailable)
 **Last Updated:** 2026-05-14 v1.0.427 (Cursor — fix(auth): pass secretKey+publishableKey explicitly to clerkMiddleware() — silent env-var discovery failure was causing getAuth() to throw on every request; also add CLERK_PUBLISHABLE_KEY to auraflux-api Render env)
 **Last Updated:** 2026-05-14 v1.0.426 (Cursor — fix: sign-out spinning — add afterSignOutUrl="/sign-in" to ClerkProvider so sign-out has a clear destination instead of looping)
 **Last Updated:** 2026-05-14 v1.0.425 (Cursor — fix(cpd-204): post-auth redirect lands directly on /dashboard (forceRedirectUrl + Render env vars); requireAuth wraps getAuth() in try/catch to prevent EXPRESS_UNHANDLED 500s; admin_crm ensureAdminTables() now idempotently creates account_members for fresh PG instances; all "AI" stripped from user-visible dashboard copy across 8 files)
