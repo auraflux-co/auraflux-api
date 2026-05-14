@@ -30,7 +30,7 @@ const ADDON_LABELS: Record<string, string> = {
   tts:            'ElevenLabs TTS',
   heygen:         'HeyGen avatar',
   shoppable:      'Shoppable tagging',
-  wan:            'AI video generation',
+  wan:            'Video generation',
   clipSourcing:   'Scene selection',
   showCommentary: 'Narrative narration',
   branding:       'Brand overlay',
@@ -46,7 +46,7 @@ function formFactorLabel(wc: WizardConfig) {
 function entryTypeLabel(et: string | null) {
   if (et === 'fetch')  return 'URL fetch';
   if (et === 'upload') return 'File upload';
-  if (et === 'create') return 'AI generated';
+  if (et === 'create') return 'Generated';
   return et ?? '—';
 }
 

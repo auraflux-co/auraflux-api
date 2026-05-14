@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'AuraFlux — Content Operations Platform',
-  description: 'AI-powered video content production at scale',
+  description: 'Video content production at scale',
   manifest: '/manifest.json',
   appleWebApp: {
     capable:    true,

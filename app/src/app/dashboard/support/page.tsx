@@ -286,10 +286,10 @@ export default function SupportPage() {
         <h1 className="text-2xl font-semibold">Support</h1>
         <p className="text-sm text-muted-foreground mt-1">
           {plan === 'operate' && ageDays <= 30
-            ? `AI support is available during your first month (${30 - ageDays} days remaining). Upgrade to Guided for ongoing support.`
+            ? `Support is available during your first month (${30 - ageDays} days remaining). Upgrade to Guided for ongoing support.`
             : plan === 'operate'
-            ? 'Your trial support period has ended. Use the guides below or upgrade to Guided for ongoing AI support and SMS escalation.'
-            : 'AI support + SMS escalation included with your plan.'}
+            ? 'Your trial support period has ended. Use the guides below or upgrade to Guided for ongoing support and SMS escalation.'
+            : 'Support + SMS escalation included with your plan.'}
         </p>
       </div>
 
@@ -325,7 +325,7 @@ export default function SupportPage() {
             <div className="border-t border-border p-3">
               {!canChat ? (
                 <div className="text-center text-sm text-muted-foreground py-2">
-                  AI support chat is not available on your current plan.{' '}
+                  Support chat is not available on your current plan.{' '}
                   <Link href="/dashboard/billing" className="text-primary underline">Upgrade to Guided</Link>
                 </div>
               ) : resolved ? (

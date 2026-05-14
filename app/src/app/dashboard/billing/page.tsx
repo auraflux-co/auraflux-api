@@ -380,7 +380,7 @@ function BillingPageInner() {
 
         </div>
         <p className="text-xs text-muted-foreground mb-4">
-          Add capacity for specific AI features beyond your plan credits. AuraFlux Collab will prompt you when you need more.
+          Add capacity for specific features beyond your plan credits. AuraFlux Collab will prompt you when you need more.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
