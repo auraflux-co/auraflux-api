@@ -95,19 +95,19 @@ const PRODUCTION_PATHS: Record<FormFactor, { id: ProductionPath; label: string; 
 
 const FEATURES: Feature[] = [
   // Long-form only — scripting & narration pipeline
-  { id: 'script',       label: 'Script generation',   description: 'AI writes the video script from your source',                          default: true,  formFactors: ['long']          },
+  { id: 'script',       label: 'Script generation',   description: 'Writes the video script from your source',                             default: true,  formFactors: ['long']          },
   { id: 'tts',          label: 'TTS narration',        description: 'ElevenLabs voiceover on the generated script',                         default: false, formFactors: ['long']          },
   { id: 'commentary',   label: 'Text narration',       description: 'Narrative commentary layered over the video',                          default: false, formFactors: ['long']          },
-  { id: 'generation',   label: 'AI video generation',  description: 'WAN text-to-video for segments without source footage',                default: false, formFactors: ['long']          },
+  { id: 'generation',   label: 'Video generation',     description: 'WAN text-to-video for segments without source footage',                default: false, formFactors: ['long']          },
   // Both form factors
-  { id: 'scene_select', label: 'Scene selection',      description: 'AI selects the best clips and scenes from your source',                default: true,  formFactors: ['long', 'short'] },
+  { id: 'scene_select', label: 'Scene selection',      description: 'Selects the best clips and scenes from your source',                   default: true,  formFactors: ['long', 'short'] },
   { id: 'branding',     label: 'Logo & branding',      description: 'Apply your brand config — colours, logo, lower thirds',                default: true,  formFactors: ['long', 'short'] },
   { id: 'burn_images',  label: 'Burn images',          description: 'Embed still images as overlays in the video',                          default: false, formFactors: ['long', 'short'] },
   { id: 'dynamic',      label: 'Dynamic overlays',     description: 'Animated text, scoreboards, and motion graphics',                      default: false, formFactors: ['long', 'short'] },
 ];
 
 const ADD_ONS = [
-  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'AI presenter rendered for each video',      badge: 'Managed', minPlan: 'managed' as const },
+  { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'Avatar presenter rendered for each video',  badge: 'Managed', minPlan: 'managed' as const },
   { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'Managed', minPlan: 'managed' as const },
 ];
 
@@ -131,7 +131,7 @@ const STEP_GUIDE: Record<number, GuideContent> = {
     hint: 'Step 1 of 5 — Format. Ask me which format works best for your content type, or what the difference means for your pipeline.',
   },
   1: {
-    tip:  '"Produce from source" runs the full AI pipeline — scripting, narration, and assembly. "Compile from clips" is best when you already have raw footage and want us to cut and sequence it. When in doubt, start with "Produce from source."',
+    tip:  '"Produce from source" runs the full production pipeline — scripting, narration, and assembly. "Compile from clips" is best when you already have raw footage and want us to cut and sequence it. When in doubt, start with "Produce from source."',
     hint: 'Step 2 of 5 — Production path. I can explain which path is right for your content type and what happens to your video at each portal.',
   },
   2: {
@@ -139,7 +139,7 @@ const STEP_GUIDE: Record<number, GuideContent> = {
     hint: 'Step 3 of 5 — Source. Ask me about supported URL formats, how uploads work, or what happens to your source file in the pipeline.',
   },
   3: {
-    tip:  'Script + TTS together give you a fully AI-narrated video — no voiceover needed. Scene selection is key for sports and long-form compilations. AI video generation fills in segments where you have no source footage. Start conservative — you can always re-run with more features.',
+    tip:  'Script + TTS together give you a fully narrated video — no voiceover needed. Scene selection is key for sports and long-form compilations. Video generation fills in segments where you have no source footage. Start conservative — you can always re-run with more features.',
     hint: 'Step 4 of 5 — Features. I can explain what each feature does to your video, which ones work best together, and how they affect credits and production time.',
   },
   4: {
@@ -444,7 +444,7 @@ function NewJobPageInner() {
               <Input
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. AI breakthrough in healthcare"
+                placeholder="e.g. breakthrough in healthcare"
                 className="text-sm"
               />
               <p className="text-[10px] text-muted-foreground">What is this video about? Used for script generation.</p>
