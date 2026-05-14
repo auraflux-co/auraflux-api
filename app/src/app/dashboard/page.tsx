@@ -7,17 +7,17 @@ import { PipelineStatusWidget } from '@/components/dashboard/pipeline-status-wid
 import { tierLabel } from '@/lib/tier-labels';
 
 const TIER_QUICK_LINKS: Record<string, { label: string; href: string; description: string }[]> = {
-  diy: [
+  operate: [
     { label: 'API docs',       href: 'https://robertsworkspace-18914505.atlassian.net/wiki/spaces/AF', description: 'Browse the AuraFlux API reference' },
     { label: 'API keys',       href: '/dashboard/settings/api-keys', description: 'Manage your API credentials' },
     { label: 'View credits',   href: '/dashboard/credits',           description: 'Check your remaining credits' },
   ],
-  dwy: [
+  guided: [
     { label: 'New job',        href: '/dashboard/jobs/new',     description: 'Start a new content production job' },
     { label: 'Review queue',   href: '/dashboard/staging',      description: 'Review completed jobs before publishing' },
     { label: 'Get help',       href: '/dashboard/support',      description: 'Chat with AuraFlux support' },
   ],
-  dfy: [
+  managed: [
     { label: 'New job',        href: '/dashboard/jobs/new',     description: 'Start a new content production job' },
     { label: 'Review queue',   href: '/dashboard/staging',      description: 'Review completed jobs before publishing' },
     { label: 'Support',        href: '/dashboard/support',      description: 'Reach your account team' },
