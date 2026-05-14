@@ -137,12 +137,10 @@ const CUSTOMER_NAV: NavItem[] = [
 const OPERATOR_NAV: NavItem[] = [
   { href: '/dashboard/generate',      label: 'Generate', divider: 'Operator tools' },
   { href: '/dashboard/operator',      label: 'Operator'  },
-  { href: '/dashboard/admin/crm',     label: 'CRM'       },
 ];
 
 const ADMIN_NAV: NavItem[] = [
   { href: '/dashboard/admin/overview',    label: 'Overview',    divider: 'Admin tools' },
-  { href: '/dashboard/admin/customers',   label: 'Customers'   },
   { href: '/dashboard/admin/crm',         label: 'CRM'         },
   { href: '/dashboard/admin/permissions', label: 'Permissions' },
 ];
