@@ -367,20 +367,17 @@ TESTS = [
 
 def get_clips_for_streamer(streamer_name, count=5, min_duration_s=0):
     """Fetch fresh clips from Twitch Helix API. Returns list of {title, slug, duration_s, thumbnail}.
-    CPD-210: For streamers with a primary_game_id, filter clips to that game so off-brief
-    content (IRL, reactions) doesn't pollute gaming highlights briefs.
+    CPD-210/CPD-212: Twitch /helix/clips requires exactly one of broadcaster_id, game_id, or id.
+    We always fetch by broadcaster_id, then filter client-side by primary_game_id if set.
     """
     streamer = STREAMERS.get(streamer_name, {})
     broadcaster_id = streamer.get('id', '')
     if not broadcaster_id or not TWITCH_CLIENT_ID or not TWITCH_TOKEN:
         return []
 
-    fetch_count = max(count * 4, 20)  # fetch extra to filter by duration
-    game_filter = ''
-    primary_game_id = streamer.get('primary_game_id')
-    if primary_game_id:
-        game_filter = f'&game_id={primary_game_id}'
-    url = f'https://api.twitch.tv/helix/clips?broadcaster_id={broadcaster_id}&first={min(fetch_count, 100)}{game_filter}'
+    # Fetch extra to have headroom after duration + game_id client-side filtering
+    fetch_count = max(count * 6, 30)
+    url = f'https://api.twitch.tv/helix/clips?broadcaster_id={broadcaster_id}&first={min(fetch_count, 100)}'
     req = urllib.request.Request(url, headers={
         'Client-ID': TWITCH_CLIENT_ID,
         'Authorization': f'Bearer {TWITCH_TOKEN}',
@@ -392,16 +389,21 @@ def get_clips_for_streamer(streamer_name, count=5, min_duration_s=0):
         print(f'  ⚠️  Twitch fetch failed for {streamer_name}: {e}')
         return []
 
+    primary_game_id = streamer.get('primary_game_id')
     results = []
     for c in clips:
         dur = c.get('duration', 0)
         if dur < min_duration_s:
+            continue
+        # CPD-212: client-side game filter — Twitch clips response includes game_id per clip
+        if primary_game_id and c.get('game_id') and str(c['game_id']) != str(primary_game_id):
             continue
         results.append({
             'slug':      c['id'],
             'title':     c.get('title', 'Untitled'),
             'duration_s': dur,
             'thumbnail': c.get('thumbnail_url', ''),
+            'game_id':   c.get('game_id', ''),
         })
         if len(results) >= count:
             break
