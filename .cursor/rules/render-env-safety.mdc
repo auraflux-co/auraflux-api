@@ -1,0 +1,49 @@
+# Render Env Var Safety — NEVER do a bare PUT
+
+## The problem (has caused 29+ production outages)
+
+`PUT /v1/services/{id}/env-vars` **REPLACES ALL environment variables** with only what's in the payload.
+Sending a partial list (e.g. just one new var) wipes every other env var on the service.
+
+This has happened 29+ times, each time taking the production API offline.
+
+## ❌ NEVER do this
+
+```bash
+# WRONG — wipes all other vars
+curl -X PUT .../env-vars -d '[{"key":"MY_KEY","value":"val"}]'
+```
+
+```python
+# WRONG — wipes all other vars
+requests.put(f"/services/{id}/env-vars", json=[{"key": k, "value": v}])
+```
+
+## ✅ ALWAYS use the safe helper
+
+```bash
+# CORRECT — fetches existing vars, merges, then does full PUT
+bash scripts/render_env_set.sh MY_KEY=value
+bash scripts/render_env_set.sh KEY1=val1 KEY2=val2
+```
+
+## If you must call the Render API directly
+
+You MUST follow this pattern:
+
+1. `GET /v1/services/{id}/env-vars?limit=100` → fetch all current vars
+2. Merge your new/changed vars into the existing list
+3. `PUT /v1/services/{id}/env-vars` with the **complete merged list**
+
+## Pre-commit hook
+
+`scripts/predeploy_env_guard.sh` runs on every commit and auto-restores any missing vars
+using the safe fetch→merge→PUT pattern. It cannot protect against mid-session API calls
+made before a commit.
+
+## Rule
+
+Any time an agent needs to add or change a Render env var:
+1. Run `bash scripts/render_env_set.sh KEY=value`
+2. Do NOT call the Render REST API directly for env var changes
+3. Do NOT run the pre-commit hook guard as a substitute — it only fixes missing vars, not wrong values
