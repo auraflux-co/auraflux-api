@@ -42,9 +42,12 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Cache-first for static assets
+  // Skip cross-origin requests (e.g. New Relic, Clerk CDN) — let browser handle them
+  if (url.origin !== self.location.origin) return;
+
+  // Cache-first for same-origin static assets, with safe fetch fallback
   e.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request))
+    caches.match(request).then((cached) => cached || fetch(request).catch(() => Response.error()))
   );
 });
 
