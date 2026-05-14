@@ -35,6 +35,7 @@ import { usePlan } from '@/contexts/plan-context';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type PlanTier = 'operate' | 'guided' | 'managed' | 'custom';
 type FormFactor = 'long' | 'short';
 
 type ProductionPath =
@@ -50,7 +51,19 @@ interface Feature {
   id:          string;
   label:       string;
   description: string;
+  outputImpact: string;
   default:     boolean;
+  formFactors: ('long' | 'short')[];
+  requires?:   string[];
+  minPlan?:    PlanTier;
+  hasConfig:   boolean;
+}
+
+interface FeatureGroup {
+  id:          string;
+  label:       string;
+  description: string;
+  featureIds:  string[];
   formFactors: ('long' | 'short')[];
 }
 
@@ -94,17 +107,94 @@ const PRODUCTION_PATHS: Record<FormFactor, { id: ProductionPath; label: string; 
 };
 
 const FEATURES: Feature[] = [
-  // Long-form only — scripting & narration pipeline
-  { id: 'script',       label: 'Script generation',   description: 'Writes the video script from your source',                             default: true,  formFactors: ['long']          },
-  { id: 'tts',          label: 'TTS narration',        description: 'ElevenLabs voiceover on the generated script',                         default: false, formFactors: ['long']          },
-  { id: 'commentary',   label: 'Text narration',       description: 'Narrative commentary layered over the video',                          default: false, formFactors: ['long']          },
-  { id: 'generation',   label: 'Video generation',     description: 'WAN text-to-video for segments without source footage',                default: false, formFactors: ['long']          },
-  // Both form factors
-  { id: 'scene_select', label: 'Scene selection',      description: 'Selects the best clips and scenes from your source',                   default: true,  formFactors: ['long', 'short'] },
-  { id: 'branding',     label: 'Logo & branding',      description: 'Apply your brand config — colours, logo, lower thirds',                default: true,  formFactors: ['long', 'short'] },
-  { id: 'burn_images',  label: 'Burn images',          description: 'Embed still images as overlays in the video',                          default: false, formFactors: ['long', 'short'] },
-  { id: 'dynamic',      label: 'Dynamic overlays',     description: 'Animated text, scoreboards, and motion graphics',                      default: false, formFactors: ['long', 'short'] },
+  // ── Scripting & narration ──────────────────────────────────────────────────
+  {
+    id: 'script', label: 'Script generation',
+    description: 'Writes the video script from your source material',
+    outputImpact: 'Your video gets a structured script — intro, key segments, and a close — written to your tone.',
+    default: true, formFactors: ['long'], hasConfig: true,
+  },
+  {
+    id: 'tts', label: 'TTS narration',
+    description: 'ElevenLabs voiceover narrates the generated script',
+    outputImpact: 'A professional voice reads your script in the video — no separate recording needed.',
+    default: false, formFactors: ['long'], requires: ['script'], hasConfig: true,
+  },
+  {
+    id: 'commentary', label: 'Text narration',
+    description: 'Narrative commentary layered over your footage at the assembly stage',
+    outputImpact: 'Commentary text appears timed to key moments — styled as captions or lower thirds.',
+    default: false, formFactors: ['long'], hasConfig: true,
+  },
+  // ── Visual production ──────────────────────────────────────────────────────
+  {
+    id: 'generation', label: 'Video generation',
+    description: 'WAN text-to-video fills segments where source footage is missing',
+    outputImpact: 'Gaps in your footage are filled with generated video clips that match your topic and style.',
+    default: false, formFactors: ['long'], hasConfig: true,
+  },
+  {
+    id: 'generation_i2v', label: 'Image-to-video (I2V)',
+    description: 'Animate a still image into a video clip using WAN I2V',
+    outputImpact: 'Reference images you provide are animated into video segments instead of being static overlays.',
+    default: false, formFactors: ['long'], minPlan: 'managed', hasConfig: true,
+  },
+  {
+    id: 'burn_images', label: 'Burn images',
+    description: 'Embed still images as overlay segments in the assembled video',
+    outputImpact: 'Your images appear in the video at the position and duration you specify.',
+    default: false, formFactors: ['long', 'short'], hasConfig: true,
+  },
+  // ── Assembly & finishing ───────────────────────────────────────────────────
+  {
+    id: 'scene_select', label: 'Scene selection',
+    description: 'Selects the best clips and scenes from your source material',
+    outputImpact: 'Only the most relevant segments from your source are used — weak clips are cut automatically.',
+    default: true, formFactors: ['long', 'short'], hasConfig: false,
+  },
+  {
+    id: 'branding', label: 'Logo & branding',
+    description: 'Applies your brand config — colours, logo, lower thirds',
+    outputImpact: 'Your brand logo, colour palette, and lower-third templates are applied across the assembled video.',
+    default: true, formFactors: ['long', 'short'], hasConfig: false,
+  },
+  {
+    id: 'dynamic', label: 'Dynamic overlays',
+    description: 'Animated text, scoreboards, and motion graphics',
+    outputImpact: 'Live data overlays (scores, stats, headlines) are animated into the video using your brand style.',
+    default: false, formFactors: ['long', 'short'], hasConfig: false,
+  },
 ];
+
+// Feature groups — drives UI layout in step 3
+const FEATURE_GROUPS: FeatureGroup[] = [
+  {
+    id: 'scripting', label: 'Scripting & narration',
+    description: 'Write, voice, and narrate your video',
+    featureIds: ['script', 'tts', 'commentary'],
+    formFactors: ['long'],
+  },
+  {
+    id: 'visual', label: 'Visual production',
+    description: 'Generate and source footage',
+    featureIds: ['generation', 'generation_i2v', 'burn_images'],
+    formFactors: ['long', 'short'],
+  },
+  {
+    id: 'assembly', label: 'Assembly & finishing',
+    description: 'Cut, brand, and animate',
+    featureIds: ['scene_select', 'branding', 'dynamic'],
+    formFactors: ['long', 'short'],
+  },
+];
+
+// Plan-based feature defaults — higher tiers get richer pipelines on by default
+const PLAN_DEFAULTS: Record<string, Record<FormFactor, string[]>> = {
+  operate:  { long: ['script', 'scene_select', 'branding'],                                               short: ['scene_select', 'branding'] },
+  guided:   { long: ['script', 'tts', 'scene_select', 'branding'],                                        short: ['scene_select', 'branding', 'dynamic'] },
+  managed:  { long: ['script', 'tts', 'commentary', 'generation', 'scene_select', 'branding', 'dynamic'], short: ['scene_select', 'branding', 'dynamic'] },
+  custom:   { long: ['script', 'tts', 'commentary', 'generation', 'scene_select', 'branding', 'dynamic'], short: ['scene_select', 'branding', 'dynamic'] },
+};
 
 const ADD_ONS = [
   { id: 'heygen',    label: 'HeyGen Avatar IV',  description: 'Avatar presenter rendered for each video',  badge: 'Managed', minPlan: 'managed' as const },
@@ -229,9 +319,7 @@ function NewJobPageInner() {
   const [uploadedName,setUploadedName]= useState<string | null>(null);
   const [topic, setTopic]           = useState('');
   const [tone, setTone]             = useState('professional');
-  const [features, setFeatures]     = useState<Set<string>>(
-    () => new Set(FEATURES.filter((f) => f.default).map((f) => f.id))
-  );
+  const [features, setFeatures]     = useState<Set<string>>(new Set());
   const [featureConfig, setFeatureConfig] = useState<Record<string, Record<string, string>>>({});
   function setFeatureCfg(featureId: string, key: string, value: string) {
     setFeatureConfig((prev) => ({
@@ -407,8 +495,10 @@ function NewJobPageInner() {
                   setFormFactor(opt.id);
                   setPath(null);
                   setSourceMode(null);
-                  // Seed defaults for this form factor
-                  setFeatures(new Set(FEATURES.filter((f) => f.default && f.formFactors.includes(opt.id)).map((f) => f.id)));
+                  // Seed defaults from plan tier — higher tiers get richer pipelines on by default
+                  const tier = planTier ?? 'operate';
+                  const defaults = PLAN_DEFAULTS[tier]?.[opt.id] ?? PLAN_DEFAULTS.operate[opt.id];
+                  setFeatures(new Set(defaults));
                 }}
                 className={cn(
                   'text-left p-4 rounded-lg border transition-colors space-y-1',
@@ -531,18 +621,289 @@ function NewJobPageInner() {
         </div>
       )}
 
-      {/* Step 3 — Features */}
+      {/* Step 3 — Features & configuration */}
       {step === 3 && (() => {
+        const tier = planTier ?? 'operate';
         const estimate = estimateCreditCost({
           durationMins,
           features: Array.from(features),
           extensions: Array.from(addOns),
           sourceMode: effectiveSource ?? '',
-          planTier: planTier ?? 'operate',
+          planTier: tier,
         });
+
+        // Helper: render inline config panel for a feature
+        function FeatureConfigPanel({ feat, cfg }: { feat: Feature; cfg: Record<string, string> }) {
+          if (!feat.hasConfig) return null;
+          return (
+            <div className="px-3 pb-3 pt-2 border-t border-primary/10 bg-primary/[0.04] space-y-3">
+              {/* Output impact line */}
+              <p className="text-[11px] text-foreground/70 leading-relaxed italic border-l-2 border-primary/30 pl-2">
+                {feat.outputImpact}
+              </p>
+
+              {feat.id === 'script' && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Script tone</Label>
+                    <select
+                      value={tone}
+                      onChange={(e) => setTone(e.target.value)}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="professional">Professional — clear, authoritative, on-brand</option>
+                      <option value="conversational">Conversational — natural, friendly, accessible</option>
+                      <option value="energetic">Energetic — fast-paced, punchy, high-impact</option>
+                      <option value="educational">Educational — structured, informative, step-by-step</option>
+                      <option value="dramatic">Dramatic — cinematic, emotional, story-driven</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                      Content brief{' '}
+                      <span className="normal-case font-normal text-muted-foreground/70">optional — key angles, stats, context for script gen</span>
+                    </Label>
+                    <textarea
+                      value={cfg.brief ?? ''}
+                      onChange={(e) => setFeatureCfg('script', 'brief', e.target.value)}
+                      placeholder="e.g. Focus on the comeback story in Q4. Include player stats for Johnson and Moore. Lead with the highlight reel."
+                      rows={3}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                    />
+                    <p className="text-[10px] text-muted-foreground">{(cfg.brief ?? '').length}/500 chars</p>
+                  </div>
+                </>
+              )}
+
+              {feat.id === 'tts' && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Voice</Label>
+                    <select
+                      value={cfg.voiceId ?? 'JBFqnCBsd6RMkjVDRZzb'}
+                      onChange={(e) => setFeatureCfg('tts', 'voiceId', e.target.value)}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="JBFqnCBsd6RMkjVDRZzb">George — deep, authoritative (default)</option>
+                      <option value="EXAVITQu4vr4xnSDxMaL">Bella — warm, professional female</option>
+                      <option value="ErXwobaYiN019PkySvjV">Antoni — natural, friendly male</option>
+                      <option value="MF3mGyEYCl7XYWbV9V6O">Elli — energetic, bright female</option>
+                      <option value="AZnzlk1XvdvUeBnXmlld">Domi — strong, clear male</option>
+                      <option value="pNInz6obpgDQGcFmaJgB">Adam — conversational, relatable</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Speaking speed</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range" min={0.7} max={1.3} step={0.1}
+                        value={cfg.speed ?? '1.0'}
+                        onChange={(e) => setFeatureCfg('tts', 'speed', e.target.value)}
+                        className="flex-1 accent-primary"
+                      />
+                      <span className="text-xs font-semibold tabular-nums w-10 text-right">{cfg.speed ?? '1.0'}×</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground"><span>Slower</span><span>Normal</span><span>Faster</span></div>
+                  </div>
+                </>
+              )}
+
+              {feat.id === 'commentary' && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Narration style</Label>
+                    <select
+                      value={cfg.style ?? 'commentary'}
+                      onChange={(e) => setFeatureCfg('commentary', 'style', e.target.value)}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="commentary">Commentary — live, reactive, play-by-play</option>
+                      <option value="documentary">Documentary — reflective, contextual, narrated</option>
+                      <option value="explainer">Explainer — clear, educational, structured</option>
+                      <option value="promotional">Promotional — persuasive, benefit-focused</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                      Narration notes <span className="normal-case font-normal text-muted-foreground/70">optional</span>
+                    </Label>
+                    <textarea
+                      value={cfg.notes ?? ''}
+                      onChange={(e) => setFeatureCfg('commentary', 'notes', e.target.value)}
+                      placeholder="e.g. Focus on emotional moments. Mention the crowd reaction. Keep segments under 20 words."
+                      rows={2}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {(feat.id === 'generation' || feat.id === 'generation_i2v') && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                      Visual prompt <span className="normal-case font-normal text-muted-foreground/70">optional — auto-generated from topic if blank</span>
+                    </Label>
+                    <textarea
+                      value={cfg.prompt ?? ''}
+                      onChange={(e) => setFeatureCfg(feat.id, 'prompt', e.target.value)}
+                      placeholder="e.g. Wide establishing shot of a packed stadium at sunset, crowd cheering, cinematic lens flare"
+                      rows={3}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Visual style</Label>
+                    <select
+                      value={cfg.visualStyle ?? 'cinematic'}
+                      onChange={(e) => setFeatureCfg(feat.id, 'visualStyle', e.target.value)}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="cinematic">Cinematic — film-grade, dramatic lighting</option>
+                      <option value="documentary">Documentary — natural, handheld feel</option>
+                      <option value="clean">Clean — bright, modern, commercial</option>
+                      <option value="dynamic">Dynamic — fast cuts, high energy, sports</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {feat.id === 'burn_images' && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                      Image URLs <span className="normal-case font-normal text-muted-foreground/70">one per line — direct .jpg .png .webp links</span>
+                    </Label>
+                    <textarea
+                      value={cfg.imageUrls ?? ''}
+                      onChange={(e) => setFeatureCfg('burn_images', 'imageUrls', e.target.value)}
+                      placeholder={'https://cdn.example.com/image1.jpg\nhttps://cdn.example.com/image2.png'}
+                      rows={3}
+                      className="w-full text-sm font-mono border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Position</Label>
+                      <select
+                        value={cfg.position ?? 'lower-third'}
+                        onChange={(e) => setFeatureCfg('burn_images', 'position', e.target.value)}
+                        className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="lower-third">Lower third</option>
+                        <option value="full-frame">Full frame</option>
+                        <option value="corner">Corner</option>
+                        <option value="center">Center (title card)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Duration (s)</Label>
+                      <input
+                        type="number" min={1} max={10} step={0.5}
+                        value={cfg.durationSec ?? '3'}
+                        onChange={(e) => setFeatureCfg('burn_images', 'durationSec', e.target.value)}
+                        className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        }
+
+        // Render a single feature row (used inside each group)
+        function FeatureRow({ feat }: { feat: Feature }) {
+          const on   = features.has(feat.id);
+          const cfg  = featureConfig[feat.id] ?? {};
+          const depUnmet = feat.requires?.some((dep) => !features.has(dep)) ?? false;
+
+          // Managed-only feature — wrap with LockedFeature
+          if (feat.minPlan && feat.minPlan !== 'operate' && feat.minPlan !== 'guided' && tier !== 'managed' && tier !== 'custom') {
+            return (
+              <LockedFeature
+                minPlan={feat.minPlan}
+                currentPlan={tier as 'operate' | 'guided' | 'managed' | 'custom'}
+                label={feat.label}
+                upgradeMsg={`${feat.label} is available on the Managed plan`}
+              >
+                <div className="rounded-lg border border-dashed border-border/60 opacity-50">
+                  <div className="flex items-center gap-3 p-3">
+                    <span className="w-4 h-4 rounded border border-muted-foreground/20 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium leading-tight">{feat.label}</p>
+                        <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-medium">Managed</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
+                    </div>
+                  </div>
+                </div>
+              </LockedFeature>
+            );
+          }
+
+          return (
+            <div className={cn('rounded-lg border transition-all', on ? 'border-primary' : 'border-border')}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (depUnmet && !on) return; // block enable if dependency not met
+                  toggleFeature(feat.id);
+                }}
+                disabled={depUnmet && !on}
+                className={cn(
+                  'w-full flex items-center gap-3 p-3 text-left transition-colors',
+                  on ? 'bg-primary/5 rounded-t-lg' : 'hover:bg-muted/40 rounded-lg',
+                  depUnmet && !on && 'opacity-40 cursor-not-allowed',
+                )}
+              >
+                <span className={cn(
+                  'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold transition-colors',
+                  on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
+                )}>
+                  {on ? '✓' : ''}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium leading-tight">{feat.label}</p>
+                    {depUnmet && !on && feat.requires && (
+                      <span className="text-[10px] text-muted-foreground border border-dashed border-muted-foreground/40 rounded px-1.5 py-0.5">
+                        requires {feat.requires.map((r) => FEATURES.find((f) => f.id === r)?.label ?? r).join(' + ')}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
+                </div>
+                {on && feat.hasConfig && (
+                  <span className="text-[10px] text-primary font-medium shrink-0 opacity-60">configured ↓</span>
+                )}
+              </button>
+              {on && <FeatureConfigPanel feat={feat} cfg={cfg} />}
+            </div>
+          );
+        }
+
         return (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Select production capabilities and configure each one.</p>
+          <div className="space-y-5">
+            {/* Plan context banner for guided/managed */}
+            {(tier === 'guided' || tier === 'managed') && (
+              <div className={cn(
+                'rounded-lg border px-3 py-2 text-xs flex items-start gap-2',
+                tier === 'managed'
+                  ? 'border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-300'
+                  : 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300',
+              )}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+                </svg>
+                <span>
+                  {tier === 'managed'
+                    ? 'Managed plan — full pipeline enabled by default. Adjust or add to customise your production.'
+                    : 'Guided plan — scripting and narration pipeline enabled. Enable additional capabilities below.'}
+                </span>
+              </div>
+            )}
 
             {/* Duration slider */}
             <div className="space-y-2">
@@ -551,222 +912,42 @@ function NewJobPageInner() {
                 <span className="text-sm font-semibold tabular-nums">{durationMins} min</span>
               </div>
               <input
-                type="range"
-                min={1}
-                max={formFactor === 'short' ? 3 : 15}
-                step={1}
+                type="range" min={1} max={formFactor === 'short' ? 3 : 15} step={1}
                 value={durationMins}
                 onChange={(e) => setDurationMins(Number(e.target.value))}
                 className="w-full accent-primary"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>1 min</span>
-                <span>{formFactor === 'short' ? '3 min' : '15 min'}</span>
+                <span>1 min</span><span>{formFactor === 'short' ? '3 min' : '15 min'}</span>
               </div>
             </div>
 
-            <div className="space-y-2">
-              {FEATURES.filter((f) => formFactor && f.formFactors.includes(formFactor)).map((feat) => {
-                const on = features.has(feat.id);
-                const cfg = featureConfig[feat.id] ?? {};
-                return (
-                  <div
-                    key={feat.id}
-                    className={cn(
-                      'rounded-lg border transition-colors',
-                      on ? 'border-primary' : 'border-border',
-                    )}
-                  >
-                    {/* Toggle row */}
-                    <button
-                      type="button"
-                      onClick={() => toggleFeature(feat.id)}
-                      className={cn(
-                        'w-full flex items-center gap-3 p-3 text-left transition-colors rounded-lg',
-                        on ? 'bg-primary/5' : 'hover:bg-muted/40',
-                      )}
-                    >
-                      <span className={cn(
-                        'w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold',
-                        on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30',
-                      )}>
-                        {on ? '✓' : ''}
+            {/* Feature groups */}
+            {FEATURE_GROUPS.filter((g) => formFactor && g.formFactors.includes(formFactor)).map((group) => {
+              const groupFeats = FEATURES.filter(
+                (f) => group.featureIds.includes(f.id) && formFactor && f.formFactors.includes(formFactor)
+              );
+              if (!groupFeats.length) return null;
+              const activeCount = groupFeats.filter((f) => features.has(f.id)).length;
+              return (
+                <div key={group.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{group.label}</p>
+                      <p className="text-[11px] text-muted-foreground">{group.description}</p>
+                    </div>
+                    {activeCount > 0 && (
+                      <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5 shrink-0">
+                        {activeCount} active
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium leading-tight">{feat.label}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
-                      </div>
-                      {on && feat.id !== 'scene_select' && feat.id !== 'branding' && feat.id !== 'dynamic' && (
-                        <span className="text-[10px] text-primary font-medium shrink-0">configure ↓</span>
-                      )}
-                    </button>
-
-                    {/* Inline config panel — shown when feature is ON */}
-                    {on && feat.id === 'script' && (
-                      <div className="px-3 pb-3 pt-1 border-t border-primary/10 bg-primary/5 space-y-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Script tone</Label>
-                          <select
-                            value={tone}
-                            onChange={(e) => setTone(e.target.value)}
-                            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            <option value="professional">Professional — clear, authoritative, on-brand</option>
-                            <option value="conversational">Conversational — natural, friendly, accessible</option>
-                            <option value="energetic">Energetic — fast-paced, punchy, high-impact</option>
-                            <option value="educational">Educational — structured, informative, step-by-step</option>
-                            <option value="dramatic">Dramatic — cinematic, emotional, story-driven</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                            Content brief <span className="normal-case font-normal">(optional — key points, angles, context)</span>
-                          </Label>
-                          <textarea
-                            value={cfg.brief ?? ''}
-                            onChange={(e) => setFeatureCfg('script', 'brief', e.target.value)}
-                            placeholder="e.g. Focus on the comeback story in the 4th quarter. Include player stats for Johnson and Moore."
-                            rows={3}
-                            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {on && feat.id === 'tts' && (
-                      <div className="px-3 pb-3 pt-1 border-t border-primary/10 bg-primary/5 space-y-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Voice</Label>
-                          <select
-                            value={cfg.voiceId ?? 'JBFqnCBsd6RMkjVDRZzb'}
-                            onChange={(e) => setFeatureCfg('tts', 'voiceId', e.target.value)}
-                            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            <option value="JBFqnCBsd6RMkjVDRZzb">George — deep, authoritative (default)</option>
-                            <option value="EXAVITQu4vr4xnSDxMaL">Bella — warm, professional female</option>
-                            <option value="ErXwobaYiN019PkySvjV">Antoni — natural, friendly male</option>
-                            <option value="MF3mGyEYCl7XYWbV9V6O">Elli — energetic, bright female</option>
-                            <option value="AZnzlk1XvdvUeBnXmlld">Domi — strong, clear male</option>
-                            <option value="pNInz6obpgDQGcFmaJgB">Adam — conversational, relatable</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                            Speaking speed
-                          </Label>
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="range"
-                              min={0.7}
-                              max={1.3}
-                              step={0.1}
-                              value={cfg.speed ?? '1.0'}
-                              onChange={(e) => setFeatureCfg('tts', 'speed', e.target.value)}
-                              className="flex-1 accent-primary"
-                            />
-                            <span className="text-xs font-medium tabular-nums w-8">{cfg.speed ?? '1.0'}×</span>
-                          </div>
-                          <div className="flex justify-between text-[10px] text-muted-foreground">
-                            <span>Slower</span>
-                            <span>Faster</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {on && feat.id === 'commentary' && (
-                      <div className="px-3 pb-3 pt-1 border-t border-primary/10 bg-primary/5 space-y-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Narration style</Label>
-                          <select
-                            value={cfg.style ?? 'commentary'}
-                            onChange={(e) => setFeatureCfg('commentary', 'style', e.target.value)}
-                            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            <option value="commentary">Commentary — live, reactive, play-by-play</option>
-                            <option value="documentary">Documentary — reflective, contextual, narrated</option>
-                            <option value="explainer">Explainer — clear, educational, structured</option>
-                            <option value="promotional">Promotional — persuasive, benefit-focused</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                            Narration notes <span className="normal-case font-normal">(optional)</span>
-                          </Label>
-                          <textarea
-                            value={cfg.notes ?? ''}
-                            onChange={(e) => setFeatureCfg('commentary', 'notes', e.target.value)}
-                            placeholder="e.g. Focus on emotional moments, mention the crowd reaction, keep under 20 words per segment."
-                            rows={2}
-                            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {on && feat.id === 'generation' && (
-                      <div className="px-3 pb-3 pt-1 border-t border-primary/10 bg-primary/5 space-y-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                            Visual prompt <span className="normal-case font-normal">(optional — auto-generated from topic if blank)</span>
-                          </Label>
-                          <textarea
-                            value={cfg.prompt ?? ''}
-                            onChange={(e) => setFeatureCfg('generation', 'prompt', e.target.value)}
-                            placeholder="e.g. Wide establishing shot of a packed stadium at sunset, crowd cheering, cinematic lens flare"
-                            rows={3}
-                            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Visual style</Label>
-                          <select
-                            value={cfg.visualStyle ?? 'cinematic'}
-                            onChange={(e) => setFeatureCfg('generation', 'visualStyle', e.target.value)}
-                            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            <option value="cinematic">Cinematic — film-grade, dramatic lighting</option>
-                            <option value="documentary">Documentary — natural, handheld feel</option>
-                            <option value="clean">Clean — bright, modern, commercial</option>
-                            <option value="dynamic">Dynamic — fast cuts, high energy, sports</option>
-                          </select>
-                        </div>
-                      </div>
-                    )}
-
-                    {on && feat.id === 'burn_images' && (
-                      <div className="px-3 pb-3 pt-1 border-t border-primary/10 bg-primary/5 space-y-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                            Image URLs <span className="normal-case font-normal">(one per line — direct links to .jpg, .png, .webp)</span>
-                          </Label>
-                          <textarea
-                            value={cfg.imageUrls ?? ''}
-                            onChange={(e) => setFeatureCfg('burn_images', 'imageUrls', e.target.value)}
-                            placeholder="https://cdn.example.com/image1.jpg&#10;https://cdn.example.com/image2.png"
-                            rows={3}
-                            className="w-full text-sm font-mono border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Overlay position</Label>
-                          <select
-                            value={cfg.position ?? 'lower-third'}
-                            onChange={(e) => setFeatureCfg('burn_images', 'position', e.target.value)}
-                            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            <option value="lower-third">Lower third</option>
-                            <option value="full-frame">Full frame (transitions)</option>
-                            <option value="corner">Corner watermark</option>
-                            <option value="center">Center (title card)</option>
-                          </select>
-                        </div>
-                      </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
+                  <div className="space-y-1.5">
+                    {groupFeats.map((feat) => <FeatureRow key={feat.id} feat={feat} />)}
+                  </div>
+                </div>
+              );
+            })}
 
             {/* Live credit estimate */}
             <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1.5">
@@ -774,9 +955,7 @@ function NewJobPageInner() {
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
                   AuraFlux Collab — Credit Estimate
                 </span>
-                <span className="text-sm font-bold text-primary tabular-nums">
-                  {estimate.credits} credits
-                </span>
+                <span className="text-sm font-bold text-primary tabular-nums">{estimate.credits} credits</span>
               </div>
               <p className="text-xs text-foreground/80 leading-relaxed">{estimate.message}</p>
               <p className="text-[10px] text-muted-foreground">
