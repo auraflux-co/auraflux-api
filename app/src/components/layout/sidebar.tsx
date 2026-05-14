@@ -143,6 +143,16 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/dashboard/admin/overview',    label: 'Overview',    divider: 'Admin tools' },
   { href: '/dashboard/admin/crm',         label: 'CRM'         },
   { href: '/dashboard/admin/permissions', label: 'Permissions' },
+  // Customer preview — lets admin test the job wizard and staging queue
+  {
+    href: '/dashboard/jobs', label: 'Jobs (preview)', divider: 'Customer preview',
+    children: [
+      { href: '/dashboard/jobs/new',     label: 'New job'  },
+      { href: '/dashboard/jobs/active',  label: 'Active'   },
+      { href: '/dashboard/jobs/history', label: 'History'  },
+    ],
+  },
+  { href: '/dashboard/staging', label: 'Review Queue' },
 ];
 
 const CONFLUENCE_GUIDE_URL =

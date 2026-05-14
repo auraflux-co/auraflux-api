@@ -7,9 +7,13 @@
 
 export const TIER_LABELS: Record<string, string> = {
   operate:    'Operate',
-  guided:    'Guided',
+  guided:     'Guided',
   managed:    'Managed',
-  custom: 'Enterprise',
+  custom:     'Enterprise',
+  // Legacy aliases — diy/dwy/dfy were the old internal keys
+  diy:        'Operate',
+  dwy:        'Guided',
+  dfy:        'Managed',
 };
 
 export const TIER_LABEL_LOWER: Record<string, string> = {

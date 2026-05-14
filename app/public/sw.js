@@ -1,7 +1,7 @@
 // AuraFlux service worker — CPD-118
 // Enables PWA installability. Caches the app shell for fast loads.
 
-const CACHE = 'auraflux-v2';
+const CACHE = 'auraflux-v3';
 const SHELL = ['/dashboard/jobs', '/dashboard/jobs/active'];
 
 self.addEventListener('install', (e) => {

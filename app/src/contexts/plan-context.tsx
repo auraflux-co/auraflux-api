@@ -13,6 +13,13 @@ import { apiFetch, type PlanTier } from '@/lib/api';
 
 type PlanFeaturesResp = { ok: boolean; planTier: PlanTier; features: Record<string, boolean> };
 
+// Map legacy tier keys emitted by the API before migration
+const TIER_ALIASES: Record<string, PlanTier> = { diy: 'operate', dwy: 'guided', dfy: 'managed' };
+function normaliseTier(raw: string | null | undefined): PlanTier {
+  if (!raw) return 'operate';
+  return (TIER_ALIASES[raw] ?? raw) as PlanTier;
+}
+
 interface PlanContextValue {
   planTier:  PlanTier | null;
   isLoading: boolean;
@@ -29,7 +36,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     if (!isLoaded) return;
     getToken().then(token =>
       apiFetch<PlanFeaturesResp>('/plan/features', { token: token ?? undefined })
-        .then(d => setPlanTier(d.planTier ?? 'operate'))
+        .then(d => setPlanTier(normaliseTier(d.planTier)))
         .catch(() => setPlanTier('operate'))
         .finally(() => setIsLoading(false))
     );
