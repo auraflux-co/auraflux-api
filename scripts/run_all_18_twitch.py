@@ -910,12 +910,30 @@ def gemini_validate_output(test, job, output_url, clip_titles):
         "Do NOT penalise for absence of TTS. Score based on source audio quality only."
     )
 
+    clips_count = test.get('clips_count', 1)
+    # CPD-213: Gemini must know how many source clips were provided.
+    # A single source clip with natural variation (different moments within one clip) is NOT stitching.
+    # Only penalise stitching if MULTIPLE clips were supposed to be combined but weren't (or vice versa).
+    if clips_count == 1:
+        stitch_instruction = (
+            "- Clip count: this is a SINGLE-CLIP enhance job (1 source clip). "
+            "The pipeline enhances that one clip — crops, overlays, chrome. "
+            "Do NOT penalise for variation within the clip (natural moments in a single clip "
+            "are expected and are NOT stitching). multi_clip_edited should be false for single-clip jobs."
+        )
+    else:
+        stitch_instruction = (
+            f"- Clip count: this job used {clips_count} source clips that should be edited together. "
+            "Check that multiple distinct clips are visible in the output. "
+            "If only 1 clip appears, that is a stitching failure."
+        )
+
     video_prompt = f"""
 You are a QA engineer reviewing an AuraFlux production output. Watch the entire video carefully.
 
 Test: {test['id']} | Tier: {test['tier'].upper()}
 Streamer: {test['streamer']}
-Source clips: {', '.join(clip_titles) if clip_titles else 'research-based'}
+Source clips ({clips_count} clip(s)): {', '.join(clip_titles) if clip_titles else 'research-based'}
 Expected profile: {test['profile']} / {test['format']}
 Expected platforms: {', '.join(platforms)}
 Content type: {test.get('content_type', 'clips')}
@@ -927,7 +945,7 @@ Features to check:
 - Chrome overlay: does the video have broadcast chrome / branding (lower-thirds, colour bar, show name)?
 - Format: is the aspect ratio correct for the target platform ({', '.join(platforms)})?
 - Clip content: do the clips match the brief and streamer style?
-- For long-form multi-clip (COMPACT): are multiple clips present and edited together coherently?
+{stitch_instruction}
 
 Scoring rubric (focus on creative fundamentals — format, chrome, content match):
 - 90-100: Format correct, chrome overlay present, clips match brief, output professional
