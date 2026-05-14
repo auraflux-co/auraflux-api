@@ -10,6 +10,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { useRole } from '@/hooks/use-role';
+import { EngineHexagon } from '@/components/icons/brand-icons';
 import {
   getActivityOverview, type ActivityOverview, type ActivityFeedItem, type AccountActivity,
   getSystemHealth,     type SystemHealth, type RenderService, type NrIncident,
@@ -237,7 +238,10 @@ export default function AdminOverviewPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Platform Overview</h1>
+          <h1 className="text-2xl font-semibold flex items-center gap-2.5">
+            <EngineHexagon size={26} className="text-primary shrink-0" />
+            Platform Overview
+          </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             {lastFetch
               ? `Last updated ${lastFetch.toLocaleTimeString()}`

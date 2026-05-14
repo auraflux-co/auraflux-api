@@ -30,6 +30,7 @@ import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload }
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
 import { LockedFeature } from '@/components/ui/locked-feature';
+import { SparkAnvil } from '@/components/icons/brand-icons';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
 
@@ -886,6 +887,15 @@ function NewJobPageInner() {
 
         return (
           <div className="space-y-5">
+            {/* Section heading */}
+            <div className="flex items-center gap-2.5">
+              <SparkAnvil size={20} className="text-primary shrink-0" />
+              <div>
+                <p className="text-sm font-semibold leading-tight">Production features</p>
+                <p className="text-[11px] text-muted-foreground">Select and configure what gets applied during assembly</p>
+              </div>
+            </div>
+
             {/* Plan context banner for guided/managed */}
             {(tier === 'guided' || tier === 'managed') && (
               <div className={cn(

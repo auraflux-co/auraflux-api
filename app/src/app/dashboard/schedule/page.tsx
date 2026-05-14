@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { FlowNetwork } from '@/components/icons/brand-icons';
 import {
   listJobs, updateJobSchedule, listTemplates, updateTemplate,
   getScheduleSuggestion,
@@ -142,7 +143,10 @@ export default function SchedulePage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-semibold">Schedule</h1>
+        <h1 className="text-2xl font-semibold flex items-center gap-2.5">
+          <FlowNetwork size={26} className="text-primary shrink-0" />
+          Schedule
+        </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Upcoming job starts and deferred publishes. Cron checks every 5 minutes.
         </p>
