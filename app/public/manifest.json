@@ -1,7 +1,7 @@
 {
   "name": "AuraFlux",
   "short_name": "AuraFlux",
-  "description": "AI-powered video content production platform",
+  "description": "Video content production platform",
   "start_url": "/dashboard/jobs",
   "display": "standalone",
   "background_color": "#09090b",

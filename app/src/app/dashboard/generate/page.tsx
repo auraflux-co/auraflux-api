@@ -109,7 +109,7 @@ export default function GeneratePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Generate Video</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Create a short AI video clip from a text prompt via Wan / RunPod.
+          Create a short video clip from a text prompt via Wan / RunPod.
         </p>
       </div>
 

@@ -29,7 +29,7 @@ const ADDON_LABELS: Record<string, string> = {
   tts:            'ElevenLabs TTS',
   heygen:         'HeyGen avatar',
   shoppable:      'Shoppable tagging',
-  wan:            'AI video generation',
+  wan:            'Video generation',
   clipSourcing:   'Scene selection',
   showCommentary: 'Narrative narration',
   branding:       'Brand overlay',
@@ -52,7 +52,7 @@ const ACTIVE_STATUSES = new Set(['queued', 'running']);
 
 function WizardConfigReview({ wc }: { wc: WizardConfig }) {
   const ff = wc.formFactor === 'short' || wc.templateId === 'short-form' ? 'Short-form (9:16)' : 'Long-form (16:9)';
-  const entryLabels: Record<string, string> = { fetch: 'URL fetch', upload: 'File upload', create: 'AI generated' };
+  const entryLabels: Record<string, string> = { fetch: 'URL fetch', upload: 'File upload', create: 'Generated' };
   return (
     <div className="space-y-3 text-sm">
       <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">

@@ -10,7 +10,7 @@ export default function LandingPage() {
         <div className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">AuraFlux</h1>
           <p className="text-muted-foreground text-lg">
-            AI-powered content operations platform
+            Content operations platform
           </p>
         </div>
         <p className="text-muted-foreground">
