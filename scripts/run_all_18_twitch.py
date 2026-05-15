@@ -916,16 +916,18 @@ def gemini_validate_output(test, job, output_url, clip_titles):
     # Only penalise stitching if MULTIPLE clips were supposed to be combined but weren't (or vice versa).
     if clips_count == 1:
         stitch_instruction = (
-            "- Clip count: this is a SINGLE-CLIP enhance job (1 source clip). "
-            "The pipeline enhances that one clip — crops, overlays, chrome. "
-            "Do NOT penalise for variation within the clip (natural moments in a single clip "
-            "are expected and are NOT stitching). multi_clip_edited should be false for single-clip jobs."
+            "- Clip count: EXACTLY 1 SOURCE CLIP was provided. "
+            "This is an ENHANCE job — the pipeline adds chrome, TTS, and crops. It does NOT stitch clips. "
+            "IMPORTANT: Set multi_clip_edited=false and award ZERO deduction for any perceived stitching or cuts. "
+            "IRL and concert clips naturally contain camera angle changes, reaction shots, and jump cuts within "
+            "a single continuous recording — these are NOT stitching and must NOT be penalised. "
+            "Any cuts you see in the output come from the source clip, not from the pipeline."
         )
     else:
         stitch_instruction = (
             f"- Clip count: this job used {clips_count} source clips that should be edited together. "
             "Check that multiple distinct clips are visible in the output. "
-            "If only 1 clip appears, that is a stitching failure."
+            "If only 1 clip appears, that is a stitching failure (deduct -15)."
         )
 
     video_prompt = f"""
