@@ -1,6 +1,6 @@
 # AuraFlux — Status & Task Tracker
 **Last Updated:** 2026-05-14 v1.0.436 (Cursor — fix(cpd-175): rescueInterruptedJobs marks assembled jobs as 'assembled' not 'failed' when outputUrl exists; E2E runner short-job poll_max 900→1200s for Render queue headroom)
-**Last Updated:** 2026-05-14 v1.0.448 (Cursor — fix(cpd-220): VOD clip extraction ffmpeg timeout 5min→15min; large HLS VODs (7.5h, 2700+ segments) need 5-10min to parse playlist and seek; O-T5 NO OUTPUT traced to extraction timeout or server restart mid-HLS parse)
+**Last Updated:** 2026-05-14 v1.0.449 (Cursor — fix(cpd-221): always fetch 100 Twitch clips when primary_game_id filter active; O-T6 only got 1 Valorant clip from stableronaldo because fetch_count=30 didn't have enough Valorant clips to choose from after game filter)
 **Last Updated:** 2026-05-14 v1.0.437 (Cursor — fix(cpd-175): TTS debug logging + E2E threshold 50→35 (ElevenLabs 401 from Render known issue))
 **Last Updated:** 2026-05-14 v1.0.435 (Cursor — chore: Aider session review findings — add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY + YTDLP_PATH to .env.example; delete legacy cwn_production.html; prune 20 stale remote branches)
 **Last Updated:** 2026-05-14 v1.0.434 (Cursor — feat(brand): place AuraFlux logo family icons — HeroMonogram in sidebar header (desktop + collapsed), SparkAnvil in features step heading, FlowNetwork in schedule page heading, EngineHexagon in admin platform overview heading)
