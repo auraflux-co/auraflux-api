@@ -470,7 +470,15 @@ def resolve_clip_mp4(slug):
         qualities = clip.get('videoQualities', [])
         if not qualities:
             return None
-        best = next((q for q in qualities if q['quality'] == '1080'), qualities[0])
+        # CPD-231: Prefer 1080p, then 720p, then best available.
+        # Older Twitch clips may only have 360p or 480p — falling back to qualities[0]
+        # without logging caused silent resolution mismatches in multi-clip concat.
+        best = (
+            next((q for q in qualities if q['quality'] == '1080'), None) or
+            next((q for q in qualities if q['quality'] == '720'), None) or
+            qualities[0]
+        )
+        print(f'    quality selected: {best["quality"]}p')
         sig = token['signature']
         tok = token['value']
         return f"{best['sourceURL']}?sig={sig}&token={urllib.parse.quote(tok)}"
