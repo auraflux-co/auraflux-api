@@ -1,6 +1,6 @@
 # AuraFlux — Status & Task Tracker
 **Last Updated:** 2026-05-14 v1.0.436 (Cursor — fix(cpd-175): rescueInterruptedJobs marks assembled jobs as 'assembled' not 'failed' when outputUrl exists; E2E runner short-job poll_max 900→1200s for Render queue headroom)
-**Last Updated:** 2026-05-14 v1.0.446 (Cursor — fix(cpd-218): persist TTS R2 URL to DB immediately after upload; rescueInterruptedJobs now sets outputUrl from assembledVideoUrl; rescued assembled jobs get a validatable output URL instead of timing out E2E runner)
+**Last Updated:** 2026-05-14 v1.0.447 (Cursor — fix(cpd-219): TTS audio trimmed to video duration-1s before mix; prevents mid-sentence cutoff on short ENHANCE clips where script exceeds clip length; ffprobe detects video duration, fallback to full audio on error)
 **Last Updated:** 2026-05-14 v1.0.437 (Cursor — fix(cpd-175): TTS debug logging + E2E threshold 50→35 (ElevenLabs 401 from Render known issue))
 **Last Updated:** 2026-05-14 v1.0.435 (Cursor — chore: Aider session review findings — add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY + YTDLP_PATH to .env.example; delete legacy cwn_production.html; prune 20 stale remote branches)
 **Last Updated:** 2026-05-14 v1.0.434 (Cursor — feat(brand): place AuraFlux logo family icons — HeroMonogram in sidebar header (desktop + collapsed), SparkAnvil in features step heading, FlowNetwork in schedule page heading, EngineHexagon in admin platform overview heading)
