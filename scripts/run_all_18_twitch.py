@@ -376,7 +376,11 @@ def get_clips_for_streamer(streamer_name, count=5, min_duration_s=0):
         return []
 
     # Fetch extra to have headroom after duration + game_id client-side filtering
-    fetch_count = max(count * 6, 30)
+    # CPD-221: When a game_id filter is active, we need a larger initial fetch because many
+    # top-N clips may be from different games (IRL, subathons, etc.). Always fetch 100 when
+    # a game filter is present so we have the best chance of finding the required clip count.
+    primary_game_id = streamer.get('primary_game_id')
+    fetch_count = 100 if primary_game_id else max(count * 6, 30)
     url = f'https://api.twitch.tv/helix/clips?broadcaster_id={broadcaster_id}&first={min(fetch_count, 100)}'
     req = urllib.request.Request(url, headers={
         'Client-ID': TWITCH_CLIENT_ID,
@@ -389,7 +393,6 @@ def get_clips_for_streamer(streamer_name, count=5, min_duration_s=0):
         print(f'  ⚠️  Twitch fetch failed for {streamer_name}: {e}')
         return []
 
-    primary_game_id = streamer.get('primary_game_id')
     results = []
     for c in clips:
         dur = c.get('duration', 0)
