@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-14 v1.0.450 (Cursor — feat(cpd-208): burn_images stat card overlay extension — portal_burn_image_ext.js uses Gemini to derive 2 stat labels then burns ffmpeg drawtext overlays after chrome; fix(cpd-218): promoteAssembledJobs() scans assembled jobs with outputUrl and promotes to published on startup + every 5min; Jira triage: 10 tickets closed Done, 4 moved In Development)
 **Last Updated:** 2026-05-14 v1.0.436 (Cursor — fix(cpd-175): rescueInterruptedJobs marks assembled jobs as 'assembled' not 'failed' when outputUrl exists; E2E runner short-job poll_max 900→1200s for Render queue headroom)
 **Last Updated:** 2026-05-14 v1.0.449 (Cursor — fix(cpd-221): always fetch 100 Twitch clips when primary_game_id filter active; O-T6 only got 1 Valorant clip from stableronaldo because fetch_count=30 didn't have enough Valorant clips to choose from after game filter)
 **Last Updated:** 2026-05-14 v1.0.437 (Cursor — fix(cpd-175): TTS debug logging + E2E threshold 50→35 (ElevenLabs 401 from Render known issue))
