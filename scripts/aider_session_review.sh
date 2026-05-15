@@ -72,9 +72,12 @@ JIRA_APPROVED=""
 if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
   _jira() {
     local s="$1"
+    # Atlassian deprecated /rest/api/3/search (HTTP 410) — use /rest/api/3/search/jql instead.
+    # Ref: https://developer.atlassian.com/changelog/#CHANGE-2046
     HTTP_STATUS=$(curl -s --max-time 10 --connect-timeout 5 -o /tmp/auraflux_jira_issues.json -w "%{http_code}" \
-      -H "Accept: application/json" -u "$JIRA_AUTH" \
-      "${JIRA_BASE}/rest/api/3/search?jql=project=CPD+AND+status=%22${s}%22+ORDER+BY+priority+DESC&maxResults=20&fields=summary,priority" \
+      -H "Accept: application/json" -H "Content-Type: application/json" -u "$JIRA_AUTH" \
+      -X POST --data "{\"jql\":\"project=CPD AND status=\\\"${s}\\\" ORDER BY priority DESC\",\"maxResults\":20,\"fields\":[\"summary\",\"priority\"]}" \
+      "${JIRA_BASE}/rest/api/3/search/jql" \
       2>/dev/null) || HTTP_STATUS="000"
     if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
       python3 -c '
