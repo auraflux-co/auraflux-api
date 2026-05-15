@@ -7227,10 +7227,13 @@ const server = app.listen(PORT, () => {
   startMonitoring(); // Start pipeline event monitoring
 
   // Rescue any jobs left in 'running' state by the previous process (CPD-183)
-  const { rescueInterruptedJobs } = require('./lib/startup');
+  const { rescueInterruptedJobs, promoteAssembledJobs } = require('./lib/startup');
   rescueInterruptedJobs();
+  // CPD-218: Promote assembled-with-outputUrl jobs to published 5s after rescue runs
+  setTimeout(() => promoteAssembledJobs(), 5000);
   // Periodic rescue — catches jobs orphaned >90s after Render restarts mid-assembly
   setInterval(rescueInterruptedJobs, 5 * 60 * 1000); // every 5 minutes
+  setInterval(promoteAssembledJobs, 5 * 60 * 1000);  // CPD-218: scan every 5 min
 });
 
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
