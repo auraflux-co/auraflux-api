@@ -977,11 +977,12 @@ Features to check:
 - Clip content: do the clips match the brief and streamer style?
 {stitch_instruction}
 
-Scoring rubric (focus on creative fundamentals — format, chrome, content match):
-- 90-100: Format correct, chrome overlay present, clips match brief, output professional
-- 70-89: Core requirements met, minor gaps (overlay minimal, slight clip mismatch)
-- 50-69: Output exists but has meaningful gaps (missing chrome, wrong aspect ratio, off-brief clips)
-- 30-49: Output exists but major spec mismatches (raw clip, no processing visible)
+Scoring rubric (spec compliance first — does the output match exactly what was ordered?):
+- 100: FULL COMPLIANCE — ALL ordered features confirmed present: correct format for platform, chrome overlay visible, TTS narration audible (if ordered), branding applied (if ordered), clips match brief exactly. No gaps. Award 100 when everything ordered is verified delivered.
+- 90-99: All core requirements present but with a minor imperfection only (overlay partial/thin, TTS present but slightly weak, minor clip mismatch within brief spirit)
+- 70-89: Core requirements mostly met, one meaningful gap (overlay missing, TTS present but thin, format slightly off)
+- 50-69: Output exists but significant gaps (missing chrome, wrong aspect ratio, off-brief clips)
+- 30-49: Output exists but major spec mismatches (raw clip, minimal processing visible)
 - 0-29: No discernible production work done
 
 Return JSON:
