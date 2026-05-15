@@ -77,7 +77,7 @@ STREAMERS = {
     # Valorant=516575, CS2=32399, Fortnite=33214, Apex=511224
     'hasanabi':      {'id': '207813352',  'style': 'political commentary, reaction, IRL'},
     'stableronaldo': {'id': '246450563',  'style': 'FPS gaming, clutch plays, funny moments',
-                      'primary_game_id': '516575'},   # Valorant
+                      'primary_game_id': '32399'},    # CPD-228: CS2 (was 516575=Valorant)
     'extraemily':    {'id': '517475551',  'style': 'IRL lifestyle, cosplay, events'},
     'maya':          {'id': '235835559',  'style': 'variety, conversations, gaming, react'},
     'jasontheween':  {'id': '107117952',  'style': 'expressive reactions, commentary, chaos'},
@@ -425,12 +425,17 @@ def get_clips_for_streamer(streamer_name, count=5, min_duration_s=0):
             dur = c.get('duration', 0)
             if dur < min_duration_s:
                 continue
+            # CPD-228: reject game_id=0 even in relaxation — these are non-gameplay clips
+            # (Steam library, chatting, offline segments) that break COMPACT sync.
+            raw_game_id = c.get('game_id', '')
+            if str(raw_game_id) in ('0', '', 'None', 'null'):
+                continue
             results.append({
                 'slug':      c['id'],
                 'title':     c.get('title', 'Untitled'),
                 'duration_s': dur,
                 'thumbnail': c.get('thumbnail_url', ''),
-                'game_id':   c.get('game_id', ''),
+                'game_id':   raw_game_id,
             })
             needed -= 1
             if needed <= 0:
