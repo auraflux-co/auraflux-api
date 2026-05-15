@@ -411,6 +411,31 @@ def get_clips_for_streamer(streamer_name, count=5, min_duration_s=0):
         if len(results) >= count:
             break
 
+    # CPD-220: if game filter is set but yielded fewer clips than required, relax the filter
+    # and fill remaining slots with any clip from the same broadcaster. This prevents E2E tests
+    # from running with too few clips when the streamer's recent Valorant/CS2 clip count is low.
+    if primary_game_id and len(results) < count:
+        print(f'  ⚠️  game_id={primary_game_id} filter yielded {len(results)}/{count} clips — '
+              f'relaxing to any content for remaining slots')
+        needed      = count - len(results)
+        seen_slugs  = {r['slug'] for r in results}
+        for c in clips:
+            if c['id'] in seen_slugs:
+                continue
+            dur = c.get('duration', 0)
+            if dur < min_duration_s:
+                continue
+            results.append({
+                'slug':      c['id'],
+                'title':     c.get('title', 'Untitled'),
+                'duration_s': dur,
+                'thumbnail': c.get('thumbnail_url', ''),
+                'game_id':   c.get('game_id', ''),
+            })
+            needed -= 1
+            if needed <= 0:
+                break
+
     return results
 
 
