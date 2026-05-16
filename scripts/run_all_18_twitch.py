@@ -263,7 +263,7 @@ TESTS = [
     # G-T6: Short clips → long stitch | TTS + thumbnail + burn_images, Collab titles segments (COMPACT)
     {
         'id': 'G-T6', 'tier': 'guided', 'streamer': 'lacy',
-        'source_type': 'clips', 'clips_count': 4, 'min_duration_s': 20,
+        'source_type': 'clips', 'clips_count': 3, 'min_duration_s': 20,  # CPD-242: reduced from 4; clips 3+4 were 360p-only causing intermittent 4xx failures in assembly download
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'show_commentary',  # CPD-240: clips→show_commentary
         'features': ['tts', 'thumbnail'],  # CPD-241: removed burn_images; requires Collab-generated title card content not available in API-only test
