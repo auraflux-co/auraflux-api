@@ -133,11 +133,11 @@ TESTS = [
         'publishMode': 'scheduled',
         'brief': 'Single IRL clip → Instagram Reel. TTS sets the scene. Scheduled for next morning. Enhance the clip, not stitch.',
     },
-    # O-T3: Short YouTube — show_commentary + TTS + dynamic_overlays
+    # O-T3: Short YouTube (Shorts) — show_commentary + TTS + dynamic_overlays
     {
         'id': 'O-T3', 'tier': 'operate', 'streamer': 'maya',
         'source_type': 'clips', 'clips_count': 1, 'min_duration_s': 20,
-        'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'short',
+        'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': 'youtube', 'content_type': 'show_commentary',
         'features': ['tts', 'thumbnail', 'commentary', 'dynamic_overlays'],
         'topic': 'Maya variety stream — host commentary segment',
