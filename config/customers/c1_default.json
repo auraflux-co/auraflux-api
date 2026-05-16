@@ -5,18 +5,20 @@
   "notes": "Universal C1+ defaults. Customer-specific configs override these values. This file is the baseline for all new customers onboarded to the platform.",
   "templates": {
     "long-form": {
-      "contentTypes": ["news", "sports", "clips", "custom"],
+      "contentTypes": ["news", "sports", "clips", "custom", "show_commentary"],
       "sceneFormulas": {
         "news": "1 + (items * 4) + 1",
         "sports": "1 + (items * 4) + 1",
         "clips": "1 + (items * 7) + 1",
-        "custom": "1 + (items * 4) + 1"
+        "custom": "1 + (items * 4) + 1",
+        "show_commentary": "1 + (items * 4) + 1"
       },
       "maxItems": {
         "news": 5,
         "sports": 5,
         "clips": 10,
-        "custom": 5
+        "custom": 5,
+        "show_commentary": 5
       },
       "providers": {
         "fetch": "url_ingest",
@@ -53,7 +55,7 @@
       }
     },
     "short-form": {
-      "contentTypes": ["news", "sports", "clips", "custom"],
+      "contentTypes": ["news", "sports", "clips", "custom", "show_commentary"],
       "maxItems": {
         "news": 3,
         "sports": 3,
