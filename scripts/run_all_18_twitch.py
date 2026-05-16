@@ -265,14 +265,14 @@ TESTS = [
         'id': 'G-T6', 'tier': 'guided', 'streamer': 'lacy',
         'source_type': 'clips', 'clips_count': 4, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
-        'platform': 'youtube', 'content_type': 'show_commentary',  # CPD-240: clips→show_commentary; brief says "TTS voices transitions" which requires per-clip narration
-        'features': ['tts', 'thumbnail', 'burn_images'],
-        'topic': 'Lacy gaming compilation — segment-titled long episode',
+        'platform': 'youtube', 'content_type': 'show_commentary',  # CPD-240: clips→show_commentary
+        'features': ['tts', 'thumbnail'],  # CPD-241: removed burn_images; requires Collab-generated title card content not available in API-only test
+        'topic': 'Lacy gaming compilation — show commentary long episode',
         'tone': 'energetic, episodic',
         'durationMins': 10,
         'publishMode': 'immediate',
-        'brief': 'Stitch 4 Lacy clips into a long YouTube. Collab writes title cards for each segment. Burn_images overlays the title at segment starts. TTS voices transitions.',
-        'collab_prompt': 'I\'m stitching 4 Lacy gaming clips into a long YouTube compilation. Write a punchy title card for each segment that builds excitement — these will be burned in as text overlays.',
+        'brief': 'Stitch 4 Lacy clips into a long YouTube with per-clip TTS narration and smooth voiced transitions between segments.',
+        'collab_prompt': 'I\'m stitching 4 Lacy gaming clips into a long YouTube compilation. For each clip, describe what makes the moment memorable in 1-2 sentences.',
     },
 
     # ─── MANAGED — Collab-driven, dfy plan ───────────────────────────────────
