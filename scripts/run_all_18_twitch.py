@@ -505,30 +505,47 @@ def resolve_clip_mp4(slug):
                 qualities[0]
             )
 
+        quality_int = int(best['quality']) if str(best.get('quality', '')).isdigit() else 0
         print(f'    quality selected: {best["quality"]}p (token_authorized: {authorized_quality or "unknown"})')
-        return f"{best['sourceURL']}?sig={sig}&token={urllib.parse.quote(tok)}"
+        url = f"{best['sourceURL']}?sig={sig}&token={urllib.parse.quote(tok)}"
+        return (url, quality_int)
     except Exception as e:
         print(f'  ⚠️  GQL resolve failed for {slug}: {e}')
-        return None
+        return (None, 0)
 
 
 def get_live_clip_urls(streamer_name, count, min_duration_s):
-    """Get N resolved MP4 URLs for a streamer. Returns (urls, titles)."""
-    clips = get_clips_for_streamer(streamer_name, count=max(count, 1), min_duration_s=min_duration_s)
-    if not clips:
-        print(f'  ⚠️  No clips found for {streamer_name} — check Twitch credentials')
+    """Get N resolved MP4 URLs for a streamer.
+
+    CPD-245: Fetch up to count*3 candidates, resolve quality for each, prefer >=720p clips.
+    Returns (urls, titles).
+    """
+    candidates = get_clips_for_streamer(
+        streamer_name, count=max(count * 3, count + 5), min_duration_s=min_duration_s
+    )
+    if not candidates:
+        print(f'  \u26a0\ufe0f  No clips found for {streamer_name} \u2014 check Twitch credentials')
         return [], []
 
-    urls = []
-    titles = []
-    for clip in clips:
-        mp4 = resolve_clip_mp4(clip['slug'])
+    resolved = []  # list of (url, quality_int, title)
+    for clip in candidates:
+        mp4, quality_int = resolve_clip_mp4(clip['slug'])
         if mp4:
-            urls.append(mp4)
-            titles.append(f"{clip['title']} ({clip['duration_s']:.0f}s)")
-        if len(urls) >= count:
-            break
+            resolved.append((mp4, quality_int, f"{clip['title']} ({clip['duration_s']:.0f}s)"))
 
+    # CPD-245: Prefer >=720p clips; fall back to 360p only if not enough higher-quality clips.
+    high_q = [(u, q, t) for u, q, t in resolved if q >= 720]
+    low_q  = [(u, q, t) for u, q, t in resolved if q < 720 and q > 0]
+    if len(high_q) < count:
+        needed = count - len(high_q)
+        print(f'  \u26a0\ufe0f  Only {len(high_q)} clips at >=720p for {streamer_name} \u2014 '
+              f'filling {needed} slot(s) from {len(low_q)} lower-quality clips')
+        selected = high_q + low_q[:needed]
+    else:
+        selected = high_q
+
+    urls   = [u for u, _, _ in selected[:count]]
+    titles = [t for _, _, t in selected[:count]]
     return urls, titles
 
 
@@ -710,9 +727,51 @@ def consult_collab(test, clip_titles, api_key):
     return ''
 
 
+def get_vod_clip_timestamps(vod_id, count=5):
+    """CPD-246: Fetch popular Twitch clip timestamps for a VOD via Helix API.
+
+    Returns list of {'start_s': int, 'end_s': int, 'title': str} dicts, sorted by view_count.
+    Falls back to [] if the VOD has no associated clips or API fails.
+    """
+    if not vod_id or not TWITCH_CLIENT_ID or not TWITCH_TOKEN:
+        return []
+    url = f'https://api.twitch.tv/helix/clips?video_id={vod_id}&first=20'
+    req = urllib.request.Request(url, headers={
+        'Client-ID': TWITCH_CLIENT_ID,
+        'Authorization': f'Bearer {TWITCH_TOKEN}',
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            clips = json.loads(resp.read()).get('data', [])
+    except Exception as e:
+        print(f'  \u26a0\ufe0f  VOD clip lookup failed (vod_id={vod_id}): {e}')
+        return []
+
+    seen = set()
+    results = []
+    for c in sorted(clips, key=lambda x: x.get('view_count', 0), reverse=True):
+        offset = c.get('vod_offset')
+        if offset is None:
+            continue
+        dur = c.get('duration', 30)
+        start_s = int(offset)
+        end_s   = start_s + int(dur)
+        # Deduplicate overlapping windows (>50% overlap)
+        key = start_s // 30  # bucket by 30s
+        if key in seen:
+            continue
+        seen.add(key)
+        results.append({'start_s': start_s, 'end_s': end_s, 'title': c.get('title', '')})
+        if len(results) >= count:
+            break
+
+    return results
+
+
 # ── Job spec builder ──────────────────────────────────────────────────────────
 
-def gemini_build_job_spec(test, clip_urls, clip_titles, collab_reply='', vod_url=None, vod_title=None):
+def gemini_build_job_spec(test, clip_urls, clip_titles, collab_reply='', vod_url=None, vod_title=None,
+                          vod_clip_timestamps=None):
     """
     Gemini builds a creative job spec from the test brief + live source URLs.
 
@@ -873,6 +932,11 @@ Return ONLY valid JSON (no markdown, no explanation):
         if source_type == 'vod' and vod_url:
             spec['url']  = vod_url
             spec['urls'] = [vod_url]
+            # CPD-246: pass VOD highlight timestamps so pipeline extracts real moments.
+            if vod_clip_timestamps:
+                spec['sourceConfig'] = {
+                    'vodClipTimestamps': vod_clip_timestamps,  # [{start_s, end_s, title}]
+                }
         elif clip_urls:
             spec['url']  = clip_urls[0]
             spec['urls'] = clip_urls
@@ -1203,17 +1267,26 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     clip_urls, clip_titles = [], []
     vod_url, vod_title = None, None
 
+    vod_clip_timestamps = []  # CPD-246: popular clip timestamps for VOD-based tests
     if source_type == 'vod':
-        print(f'         fetching VOD from Twitch for {test["streamer"]}…', end='', flush=True)
+        print(f'         fetching VOD from Twitch for {test["streamer"]}\u2026', end='', flush=True)
         vod_url, vod_title = get_live_vod_url(test['streamer'])
         if not vod_url:
             result['error'] = f'No VOD found for {test["streamer"]}'
-            print(f' ❌ {result["error"]}')
+            print(f' \u274c {result["error"]}')
             return result
-        print(f' ✓ VOD found')
-        print(f'           · {vod_title}')
+        print(f' \u2713 VOD found')
+        print(f'           \u00b7 {vod_title}')
         result['vod_url']   = vod_url
         result['vod_title'] = vod_title
+        # CPD-246: Look up popular clip timestamps so the pipeline extracts real highlights.
+        vod = get_vod_for_streamer(test['streamer'])
+        if vod and vod.get('id'):
+            vod_clip_timestamps = get_vod_clip_timestamps(vod['id'], count=3)
+            if vod_clip_timestamps:
+                print(f'         found {len(vod_clip_timestamps)} highlight timestamp(s) for VOD {vod["id"]}')
+            else:
+                print(f'         no clip timestamps for VOD {vod["id"]} \u2014 pipeline will use evenly-spaced')
     elif test.get('clips_count', 0) > 0:
         print(f'         fetching {test["clips_count"]} clip(s) from Twitch…', end='', flush=True)
         clip_urls, clip_titles = get_live_clip_urls(
@@ -1248,10 +1321,11 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     result['collab_reply'] = collab_reply[:500] if collab_reply else ''
 
     # Step 3: Build job spec via Gemini
-    print(f'         Gemini building spec ({source_type})…', end='', flush=True)
+    print(f'         Gemini building spec ({source_type})\u2026', end='', flush=True)
     job_spec = gemini_build_job_spec(
         test, clip_urls, clip_titles, collab_reply,
         vod_url=vod_url, vod_title=vod_title,
+        vod_clip_timestamps=vod_clip_timestamps,  # CPD-246
     )
     result['job_spec'] = job_spec
     flow = 'EXTRACT (VOD→clips)' if source_type == 'vod' else ('COMPACT (clips→long)' if test['format'] == 'long' else 'ENHANCE (clip+features)')
