@@ -471,17 +471,38 @@ def resolve_clip_mp4(slug):
         qualities = clip.get('videoQualities', [])
         if not qualities:
             return None
-        # CPD-231: Prefer 1080p, then 720p, then best available.
-        # Older Twitch clips may only have 360p or 480p — falling back to qualities[0]
-        # without logging caused silent resolution mismatches in multi-clip concat.
-        best = (
-            next((q for q in qualities if q['quality'] == '1080'), None) or
-            next((q for q in qualities if q['quality'] == '720'), None) or
-            qualities[0]
-        )
-        print(f'    quality selected: {best["quality"]}p')
         sig = token['signature']
         tok = token['value']
+
+        # CPD-243: The playbackAccessToken.value (JWT) encodes the authorized clip_uri.
+        # Twitch CDN rejects requests where the URL quality differs from the token's clip_uri.
+        # Extract the authorized quality level from the token before selecting a sourceURL.
+        authorized_quality = None
+        try:
+            tok_data = json.loads(urllib.parse.unquote(tok))
+            clip_uri = tok_data.get('clip_uri', '')
+            for segment in clip_uri.split('/'):
+                if segment.isdigit():
+                    authorized_quality = segment  # e.g. '360', '720', '1080'
+                    break
+        except Exception:
+            pass
+
+        if authorized_quality:
+            # Use the quality the token actually authorizes; fall back to qualities[0]
+            best = (
+                next((q for q in qualities if q['quality'] == authorized_quality), None) or
+                qualities[0]
+            )
+        else:
+            # CPD-231: Prefer 1080p, then 720p, then best available.
+            best = (
+                next((q for q in qualities if q['quality'] == '1080'), None) or
+                next((q for q in qualities if q['quality'] == '720'), None) or
+                qualities[0]
+            )
+
+        print(f'    quality selected: {best["quality"]}p (token_authorized: {authorized_quality or "unknown"})')
         return f"{best['sourceURL']}?sig={sig}&token={urllib.parse.quote(tok)}"
     except Exception as e:
         print(f'  ⚠️  GQL resolve failed for {slug}: {e}')
