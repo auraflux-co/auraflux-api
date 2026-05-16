@@ -714,7 +714,9 @@ def gemini_build_job_spec(test, clip_urls, clip_titles, collab_reply='', vod_url
     has_burn_images    = 'burn_images'      in feats
     has_dynamic_ovlys  = 'dynamic_overlays' in feats
     has_scheduled      = 'scheduled'        in feats
-    has_commentary     = 'commentary'       in feats
+    # CPD-235: has_commentary must mirror has_tts — show_commentary content_type implies the
+    # showCommentary addon even when 'commentary' is not listed explicitly in features.
+    has_commentary     = (test.get('content_type') == 'show_commentary') or ('commentary' in feats)
     publish_mode       = test.get('publishMode', 'immediate')
     duration_mins      = test.get('durationMins', 5)
     topic_hint         = test.get('topic', '')
@@ -826,6 +828,9 @@ Return ONLY valid JSON (no markdown, no explanation):
         spec['targetPlatform']   = platforms[0]
         spec['entry']            = test['entry']
         spec['format']           = 'short' if source_type == 'vod' else test['format']
+        # CPD-235: enforce contentType — Gemini may override to 'clips' even when prompted
+        # for 'show_commentary', causing the server to silently mis-route the job.
+        spec['contentType']      = test.get('content_type', 'clips')
         spec['topic']            = topic_hint or spec.get('topic', '')
         spec['tone']             = tone_hint  or spec.get('tone', '')
         spec['durationMins']     = duration_mins
