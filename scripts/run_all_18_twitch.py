@@ -260,19 +260,22 @@ TESTS = [
         'brief': 'Customer brings a full Maya stream VOD. Collab identifies which moments to extract as short clips. Pipeline extracts and applies TTS to each. 3 clips output.',
         'collab_prompt': 'I\'m extracting short clips from a full Maya variety stream VOD. What types of moments make the best TikTok clips from her content? Give me criteria the pipeline should use for scene selection.',
     },
-    # G-T6: Short clips → long stitch | TTS + thumbnail + burn_images, Collab titles segments (COMPACT)
+    # G-T6: Short clips → long stitch | TTS + thumbnail, Collab narrates IRL moments (COMPACT)
     {
         'id': 'G-T6', 'tier': 'guided', 'streamer': 'lacy',
         'source_type': 'clips', 'clips_count': 3, 'min_duration_s': 20,  # CPD-242: reduced from 4; clips 3+4 were 360p-only causing intermittent 4xx failures in assembly download
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
         'platform': 'youtube', 'content_type': 'show_commentary',  # CPD-240: clips→show_commentary
         'features': ['tts', 'thumbnail'],  # CPD-241: removed burn_images; requires Collab-generated title card content not available in API-only test
-        'topic': 'Lacy gaming compilation — show commentary long episode',
-        'tone': 'energetic, episodic',
+        # CPD-244: topic/brief updated from "gaming" to "IRL highlights" — Lacy's current clips are
+        # IRL/driving content (CPD-239 removed Valorant game_id filter). TTS narration must match
+        # the actual video content or Gemini will deduct points for topic/content mismatch.
+        'topic': 'Lacy IRL highlights — best moments compilation',
+        'tone': 'energetic, candid',
         'durationMins': 10,
         'publishMode': 'immediate',
-        'brief': 'Stitch 4 Lacy clips into a long YouTube with per-clip TTS narration and smooth voiced transitions between segments.',
-        'collab_prompt': 'I\'m stitching 4 Lacy gaming clips into a long YouTube compilation. For each clip, describe what makes the moment memorable in 1-2 sentences.',
+        'brief': 'Stitch 3 Lacy IRL clips into a long YouTube compilation with per-clip TTS narration and smooth voiced transitions between each moment.',
+        'collab_prompt': 'I\'m stitching 3 Lacy IRL clips into a long YouTube compilation. Lacy is a variety streamer known for candid real-life moments. For each clip, describe what makes the moment memorable in 1-2 sentences.',
     },
 
     # ─── MANAGED — Collab-driven, dfy plan ───────────────────────────────────
