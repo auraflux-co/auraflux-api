@@ -265,7 +265,7 @@ TESTS = [
         'id': 'G-T6', 'tier': 'guided', 'streamer': 'lacy',
         'source_type': 'clips', 'clips_count': 4, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'broadcast_desk', 'format': 'long',
-        'platform': 'youtube', 'content_type': 'clips',
+        'platform': 'youtube', 'content_type': 'show_commentary',  # CPD-240: clips→show_commentary; brief says "TTS voices transitions" which requires per-clip narration
         'features': ['tts', 'thumbnail', 'burn_images'],
         'topic': 'Lacy gaming compilation — segment-titled long episode',
         'tone': 'energetic, episodic',
