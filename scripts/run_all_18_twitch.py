@@ -81,8 +81,9 @@ STREAMERS = {
     'extraemily':    {'id': '517475551',  'style': 'IRL lifestyle, cosplay, events'},
     'maya':          {'id': '235835559',  'style': 'variety, conversations, gaming, react'},
     'jasontheween':  {'id': '107117952',  'style': 'expressive reactions, commentary, chaos'},
-    'lacy':          {'id': '494543675',  'style': 'FPS gaming, skill highlights, personality',
-                      'primary_game_id': '516575'},   # Valorant
+    'lacy':          {'id': '494543675',  'style': 'FPS gaming, skill highlights, personality, IRL'},
+    # CPD-239: lacy's clips are currently IRL content — removed Valorant game_id filter so
+    # clip fetch falls through to any-content rather than yielding 0 filtered clips.
 }
 
 # ── 18 Tests — 6 per tier (3 short-form + 3 long-form each) ──────────────────
