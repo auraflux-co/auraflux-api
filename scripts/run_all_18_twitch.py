@@ -250,7 +250,7 @@ TESTS = [
         'id': 'G-T5', 'tier': 'guided', 'streamer': 'maya',
         'source_type': 'vod', 'clips_count': 0, 'min_duration_s': 0,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
-        'platform': 'tiktok', 'content_type': 'clips',
+        'platform': 'tiktok', 'content_type': 'show_commentary',  # CPD-235: clips→show_commentary for per-clip TTS narration
         'features': ['tts', 'thumbnail', 'scene_select'],
         'topic': 'Maya stream best moments — Collab curated extraction',
         'tone': 'warm, variety',
