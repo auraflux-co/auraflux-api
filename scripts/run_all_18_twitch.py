@@ -1441,6 +1441,14 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
         result['ux_observations'] = []
 
     result['finished_at'] = datetime.now(timezone.utc).isoformat()
+    # Wall-clock elapsed for this test (seconds)
+    try:
+        from datetime import datetime as _dt
+        _s = _dt.fromisoformat(result['started_at'].replace('Z', '+00:00'))
+        _e = _dt.fromisoformat(result['finished_at'].replace('Z', '+00:00'))
+        result['elapsed_s'] = round((_e - _s).total_seconds())
+    except Exception:
+        result['elapsed_s'] = None
     return result
 
 
@@ -1581,10 +1589,17 @@ def main():
         v     = r.get('validation') or {}
         score = v.get('score', '?')
         tts   = '🎙' if v.get('has_tts_voiceover') else '  '
-        out   = (r['output_url'] or '')[:55] if r['output_url'] else 'NO OUTPUT'
         ux_hi = sum(1 for o in r.get('ux_observations', []) if o.get('severity') in ('critical', 'high'))
         tpl   = '📋' if r.get('fromTemplateId') else '  '
-        print(f'{icon} {r["id"]:5s} {r["streamer"]:15s} score={str(score):>3} {tts}{tpl} ux:{ux_hi}hi  {out}')
+        elapsed = r.get('elapsed_s')
+        elapsed_str = f'{elapsed//60}m{elapsed%60:02d}s' if elapsed is not None else '  ?'
+        job_id_str = (r.get('job_id') or '')[:24]
+        print(f'{icon} {r["id"]:5s} {r["streamer"]:15s} score={str(score):>3} {tts}{tpl} ux:{ux_hi}hi  {elapsed_str:>7}  job:{job_id_str}')
+    print(f'\n{"─"*65}  VIDEO OUTPUTS')
+    for r in results:
+        icon = '✅' if r['passed'] else '❌'
+        out  = r.get('output_url') or 'NO OUTPUT'
+        print(f'{icon} {r["id"]:5s}  {out}')
     print(f'{"="*65}')
     print(f'\nResults: {out_dir}/results.json')
     if run_mode == 'run4':
