@@ -7234,6 +7234,26 @@ const server = app.listen(PORT, () => {
   // Periodic rescue — catches jobs orphaned >90s after Render restarts mid-assembly
   setInterval(rescueInterruptedJobs, 5 * 60 * 1000); // every 5 minutes
   setInterval(promoteAssembledJobs, 5 * 60 * 1000);  // CPD-218: scan every 5 min
+
+  // Nightly backup to R2 — 03:00 UTC daily (runs inside auraflux-api so it can
+  // access the persistent disk at /app/data). The separate auraflux-backup Render
+  // cron service was removed because Render only allows one service to mount a disk.
+  try {
+    const cron = require('node-cron');
+    cron.schedule('0 3 * * *', async () => {
+      console.log('[backup] Starting nightly backup to R2...');
+      try {
+        const { runBackup } = require('./scripts/backup_to_r2');
+        await runBackup();
+        console.log('[backup] Nightly backup completed successfully.');
+      } catch (backupErr) {
+        console.error('[backup] Nightly backup failed:', backupErr.message);
+      }
+    }, { timezone: 'UTC' });
+    console.log('   ✅ Nightly R2 backup cron scheduled (03:00 UTC)');
+  } catch (cronErr) {
+    console.warn('   ⚠️  node-cron not available — nightly backup disabled:', cronErr.message);
+  }
 });
 
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
