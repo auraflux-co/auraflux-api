@@ -50,9 +50,21 @@ const PORTAL_LABELS: Record<string, string> = {
 
 const ACTIVE_STATUSES = new Set(['queued', 'running']);
 
+const FEATURE_LABELS: Record<string, string> = {
+  script:      'Script generation',
+  tts:         'TTS narration',
+  commentary:  'Show commentary',
+  generation:  'Video generation',
+  burn_images: 'Image overlays',
+};
+
 function WizardConfigReview({ wc }: { wc: WizardConfig }) {
   const ff = wc.formFactor === 'short' || wc.templateId === 'short-form' ? 'Short-form (9:16)' : 'Long-form (16:9)';
   const entryLabels: Record<string, string> = { fetch: 'URL fetch', upload: 'File upload', create: 'Generated' };
+  const allBadges = [
+    ...(wc.addOns ?? []).map((a) => ADDON_LABELS[a] ?? a),
+    ...(wc.activeFeatures ?? []).map((f) => FEATURE_LABELS[f] ?? f),
+  ];
   return (
     <div className="space-y-3 text-sm">
       <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
@@ -70,18 +82,48 @@ function WizardConfigReview({ wc }: { wc: WizardConfig }) {
             <span>{labelForContentType(wc.contentType)}</span>
           </>
         )}
+        {wc.topic && (
+          <>
+            <span className="text-muted-foreground">Topic</span>
+            <span className="truncate" title={wc.topic}>{wc.topic}</span>
+          </>
+        )}
+        {wc.tone && (
+          <>
+            <span className="text-muted-foreground">Tone</span>
+            <span className="capitalize">{wc.tone}</span>
+          </>
+        )}
+        {wc.durationMins != null && (
+          <>
+            <span className="text-muted-foreground">Duration</span>
+            <span>{wc.durationMins} min</span>
+          </>
+        )}
+        {wc.planTier && (
+          <>
+            <span className="text-muted-foreground">Plan tier</span>
+            <span className="capitalize">{wc.planTier}</span>
+          </>
+        )}
+        {wc.creditCost != null && (
+          <>
+            <span className="text-muted-foreground">Credit cost</span>
+            <span>{wc.creditCost} credits</span>
+          </>
+        )}
         <span className="text-muted-foreground">Publish</span>
         <span className="capitalize">
           {wc.publishMode}{wc.scheduledAt ? ` — ${new Date(wc.scheduledAt).toLocaleDateString()}` : ''}
         </span>
       </div>
-      {wc.addOns.length > 0 && (
+      {allBadges.length > 0 && (
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Features applied</p>
+          <p className="text-xs text-muted-foreground mb-1">Production features</p>
           <div className="flex flex-wrap gap-1">
-            {wc.addOns.map((a) => (
-              <Badge key={a} variant="outline" className="text-[10px] px-1.5">
-                {ADDON_LABELS[a] ?? a}
+            {allBadges.map((label) => (
+              <Badge key={label} variant="outline" className="text-[10px] px-1.5">
+                {label}
               </Badge>
             ))}
           </div>
@@ -371,19 +413,26 @@ export default function JobDetailPage() {
         </Card>
       )}
 
-      {/* Selection review — what customer configured (CPD-112) */}
-      {job.status === 'complete' && job.wizardConfig && (
+      {/* Job spec card — visible for all statuses so customer can see what is locked in (CPD-112) */}
+      {job.wizardConfig && (
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm">What you selected</CardTitle>
-              {savedAsTemplate ? (
-                <Badge variant="default" className="text-[10px]">Saved as template</Badge>
-              ) : (
-                <Button size="sm" variant="outline" className="text-[10px] h-6 px-2" onClick={handleSaveAsTemplate} disabled={savingTemplate}>
-                  {savingTemplate ? 'Saving…' : 'Save as template'}
-                </Button>
-              )}
+              <div>
+                <CardTitle className="text-sm">Job spec</CardTitle>
+                <p className="text-[10px] text-muted-foreground mt-0.5">What is locked in for this job</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {job.status === 'complete' && (
+                  savedAsTemplate ? (
+                    <Badge variant="default" className="text-[10px]">Saved as template</Badge>
+                  ) : (
+                    <Button size="sm" variant="outline" className="text-[10px] h-6 px-2" onClick={handleSaveAsTemplate} disabled={savingTemplate}>
+                      {savingTemplate ? 'Saving…' : 'Save as template'}
+                    </Button>
+                  )
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
