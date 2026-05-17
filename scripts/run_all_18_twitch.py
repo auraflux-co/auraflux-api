@@ -1331,6 +1331,13 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     flow = 'EXTRACT (VOD→clips)' if source_type == 'vod' else ('COMPACT (clips→long)' if test['format'] == 'long' else 'ENHANCE (clip+features)')
     print(f' ✓ flow={flow} topic="{job_spec.get("topic","?")[:35]}"')
 
+    # Run 5: inject fromTemplateId so the API loads the saved template as the base spec.
+    # Fresh clip/VOD URLs are still used — template provides the production configuration.
+    if test.get('fromTemplateId'):
+        job_spec['fromTemplateId'] = test['fromTemplateId']
+        result['fromTemplateId'] = test['fromTemplateId']
+        print(f'         📋 using template {test["fromTemplateId"]}')
+
     # Step 4: Submit job
     resp, code = api('POST', '/v1/jobs', job_spec, api_key)
     resp['_http_status'] = code
@@ -1385,6 +1392,47 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     return result
 
 
+# ── Template registry helpers (Run 4 → Run 5) ────────────────────────────────
+
+def save_template_for_job(test, job_id, job_spec, api_key, registry_path):
+    """After a successful Run 4 job, save the job spec as a named template.
+    Writes the template ID into the registry JSON so Run 5 can load it.
+    """
+    name = f'E2E-Run4-{test["id"]}'
+    body = {'name': name, 'description': f'Auto-saved from E2E Run 4 job {job_id}', 'jobSpec': job_spec}
+    resp, code = api('POST', '/v1/templates', body, api_key)
+    if code not in (200, 201):
+        print(f'         ⚠  template save failed ({code}): {resp}')
+        return None
+    tpl = resp.get('template') or resp
+    tpl_id = tpl.get('id') if isinstance(tpl, dict) else None
+    if not tpl_id:
+        print(f'         ⚠  template save: no id in response')
+        return None
+    # Load or create registry
+    registry = {}
+    if Path(registry_path).exists():
+        try:
+            registry = json.loads(Path(registry_path).read_text())
+        except Exception:
+            pass
+    registry[test['id']] = {'template_id': tpl_id, 'name': name, 'job_id': job_id}
+    Path(registry_path).write_text(json.dumps(registry, indent=2))
+    print(f'         💾  template saved: {name} → {tpl_id}')
+    return tpl_id
+
+
+def load_template_for_test(test_id, registry_path):
+    """Load the template ID from a Run 4 registry for a given test ID."""
+    if not Path(registry_path).exists():
+        return None
+    try:
+        registry = json.loads(Path(registry_path).read_text())
+        return registry.get(test_id, {}).get('template_id')
+    except Exception:
+        return None
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -1393,6 +1441,15 @@ def main():
     parser.add_argument('--test',  action='append', dest='tests', metavar='ID')
     parser.add_argument('--dry-run',  action='store_true')
     parser.add_argument('--no-ux',    action='store_true')
+    # Run 4: save a template after each successful job
+    parser.add_argument('--save-templates', action='store_true',
+                        help='Run 4 mode: save each completed job as a named template')
+    # Run 5: submit jobs using templates saved in Run 4
+    parser.add_argument('--use-templates', action='store_true',
+                        help='Run 5 mode: submit each job from the Run 4 template')
+    parser.add_argument('--template-registry',
+                        default=str(REPO_DIR / 'logs' / 'e2e_run4_templates.json'),
+                        help='Path to the Run 4 template registry JSON (default: logs/e2e_run4_templates.json)')
     args = parser.parse_args()
 
     tests_to_run = TESTS
@@ -1401,7 +1458,15 @@ def main():
     elif args.tier != 'all':
         tests_to_run = [t for t in TESTS if t['tier'] == args.tier]
 
-    print(f'🚀  AuraFlux E2E — {len(tests_to_run)} test(s)\n')
+    run_mode = 'run5' if args.use_templates else ('run4' if args.save_templates else 'normal')
+    print(f'🚀  AuraFlux E2E — {len(tests_to_run)} test(s)  mode={run_mode}\n')
+    if run_mode == 'run4':
+        print(f'    📋  Template registry: {args.template_registry}')
+    if run_mode == 'run5':
+        print(f'    📋  Loading templates from: {args.template_registry}')
+        if not Path(args.template_registry).exists():
+            print(f'    ❌  Template registry not found — run Run 4 first (--save-templates)')
+            sys.exit(1)
 
     ts = datetime.now().strftime('%Y%m%d_%H%M%S')
     out_dir = REPO_DIR / 'logs' / f'e2e_{ts}'
@@ -1410,10 +1475,21 @@ def main():
     results, ux_observations = [], []
 
     for test in tests_to_run:
+        # Inject fromTemplateId for Run 5
+        test_with_overrides = dict(test)
+        if run_mode == 'run5':
+            tpl_id = load_template_for_test(test['id'], args.template_registry)
+            if tpl_id:
+                test_with_overrides['fromTemplateId'] = tpl_id
+                print(f'\n  [{test["id"]}] using template {tpl_id}')
+            else:
+                print(f'\n  [{test["id"]}] ⚠  no template found in registry — running fresh')
+
         # CPD-202: Wrap each test in try/except so an unhandled exception in one test
         # does not stop the entire 18-test suite. Log the error and continue.
         try:
-            result = run_test(test, ux_observations, dry_run=args.dry_run, no_ux=args.no_ux, args=args)
+            result = run_test(test_with_overrides, ux_observations,
+                              dry_run=args.dry_run, no_ux=args.no_ux, args=args)
         except Exception as e:
             print(f'\n  ❌  {test["id"]}: UNHANDLED EXCEPTION — {type(e).__name__}: {e}')
             result = {
@@ -1425,6 +1501,14 @@ def main():
                 'started_at': None,
                 'finished_at': None,
             }
+
+        # Run 4: save template after every successful job
+        if run_mode == 'run4' and result.get('passed') and result.get('job_id'):
+            api_key = API_KEYS.get(test['tier'], '')
+            job_spec = result.get('job_spec') or {}
+            save_template_for_job(test, result['job_id'], job_spec,
+                                  api_key, args.template_registry)
+
         results.append(result)
         (out_dir / 'results.json').write_text(json.dumps(results, indent=2))
 
@@ -1438,7 +1522,7 @@ def main():
     passed = sum(1 for r in results if r['passed'])
     failed = len(results) - passed
     print(f'\n{"="*65}')
-    print(f'AuraFlux E2E — {ts}')
+    print(f'AuraFlux E2E ({run_mode}) — {ts}')
     print(f'Tests: {len(results)}  Passed: {passed}  Failed: {failed}\n')
     for r in results:
         icon  = '✅' if r['passed'] else '❌'
@@ -1447,9 +1531,12 @@ def main():
         tts   = '🎙' if v.get('has_tts_voiceover') else '  '
         out   = (r['output_url'] or '')[:55] if r['output_url'] else 'NO OUTPUT'
         ux_hi = sum(1 for o in r.get('ux_observations', []) if o.get('severity') in ('critical', 'high'))
-        print(f'{icon} {r["id"]:5s} {r["streamer"]:15s} score={str(score):>3} {tts} ux:{ux_hi}hi  {out}')
+        tpl   = '📋' if r.get('fromTemplateId') else '  '
+        print(f'{icon} {r["id"]:5s} {r["streamer"]:15s} score={str(score):>3} {tts}{tpl} ux:{ux_hi}hi  {out}')
     print(f'{"="*65}')
     print(f'\nResults: {out_dir}/results.json')
+    if run_mode == 'run4':
+        print(f'Templates: {args.template_registry}')
 
     sys.exit(0 if failed == 0 else 1)
 
