@@ -590,6 +590,24 @@ def get_live_clip_urls(streamer_name, count, min_duration_s):
 
 # ── Twitch VOD sourcing (long-form → EXTRACT tests) ───────────────────────────
 
+def _parse_twitch_duration(duration_str):
+    """Parse Twitch VOD duration strings like '59m1s', '6h30m20s', '2h' into seconds."""
+    import re
+    if not duration_str:
+        return None
+    total = 0
+    m = re.search(r'(\d+)h', duration_str)
+    if m:
+        total += int(m.group(1)) * 3600
+    m = re.search(r'(\d+)m', duration_str)
+    if m:
+        total += int(m.group(1)) * 60
+    m = re.search(r'(\d+)s', duration_str)
+    if m:
+        total += int(m.group(1))
+    return total or None
+
+
 def get_vod_for_streamer(streamer_name):
     """
     Fetch the most recent archive VOD for a streamer via Helix API.
@@ -616,12 +634,15 @@ def get_vod_for_streamer(streamer_name):
         return None
 
     v = vods[0]
+    duration_str = v.get('duration', '')
+    duration_s = _parse_twitch_duration(duration_str)
     return {
-        'id':       v['id'],
-        'title':    v.get('title', 'Untitled VOD'),
-        'duration': v.get('duration', 'unknown'),
-        'url':      v.get('url', f'https://www.twitch.tv/videos/{v["id"]}'),
-        'page_url': f'https://www.twitch.tv/videos/{v["id"]}',
+        'id':         v['id'],
+        'title':      v.get('title', 'Untitled VOD'),
+        'duration':   duration_str,
+        'duration_s': duration_s,
+        'url':        v.get('url', f'https://www.twitch.tv/videos/{v["id"]}'),
+        'page_url':   f'https://www.twitch.tv/videos/{v["id"]}',
     }
 
 
@@ -752,18 +773,133 @@ def ask_gemini_video_json(video_url, prompt):
 # ── Collab consultation ───────────────────────────────────────────────────────
 
 def consult_collab(test, clip_titles, api_key, auth_headers=None):
-    """Call /v1/concierge to get Collab's input before building the spec (Guided/Managed)."""
+    """Call /v1/concierge to get Collab's input before building the spec (Guided/Managed).
+
+    CPD-270: Retries up to 2 times if Collab returns an empty reply (0 chars). This
+    handles cases where the concierge returns 200 but an empty string during deploy
+    windows or transient Gemini hiccups.
+    """
     if not test.get('collab_prompt'):
         return ''
     clip_context = '\n'.join(f'  - {t}' for t in clip_titles) if clip_titles else '  (research-based, no clips)'
     message = f"{test['collab_prompt']}\n\nAvailable clips:\n{clip_context}"
-    resp, code = api('POST', '/v1/concierge', {
-        'messages': [{'role': 'user', 'content': message}],
-        'currentSpec': {'streamer': test['streamer'], 'platform': test['platform']},
-    }, auth_headers=auth_headers)
-    if code == 200:
-        return resp.get('reply', '')
+
+    for attempt in range(3):
+        resp, code = api('POST', '/v1/concierge', {
+            'messages': [{'role': 'user', 'content': message}],
+            'currentSpec': {'streamer': test['streamer'], 'platform': test['platform']},
+        }, auth_headers=auth_headers)
+        if code == 200:
+            reply = resp.get('reply', '')
+            if reply and len(reply) > 20:
+                return reply
+            if attempt < 2:
+                print(f'\n         ⚠️  Collab returned empty reply (attempt {attempt + 1}/3) — retrying in 8s', end='', flush=True)
+                time.sleep(8)
+        elif code in (502, 503, 504) and attempt < 2:
+            print(f'\n         ⚠️  Collab HTTP {code} (attempt {attempt + 1}/3) — retrying in 10s', end='', flush=True)
+            time.sleep(10)
+        else:
+            break
     return ''
+
+
+def parse_collab_timestamps(collab_reply, count=3, vod_duration_s=None):
+    """CPD-269: Parse timestamp suggestions from a Collab response into {start_s, end_s, title} dicts.
+
+    Collab returns text like "Clip 1: 25m (energetic gaming moment)" or "at 1h 30m (chat goes crazy)".
+    This extracts the times and converts to seconds. Falls back to [] if no timestamps found.
+    """
+    import re
+    results = []
+
+    # Match patterns: "25m", "1h30m", "1h 30m", "25:30", "1:30:00"
+    # Also handles "at minute 25" or "around the 30 minute mark"
+    patterns = [
+        r'(?:clip\s*\d+\s*[:–-]\s*)?(\d+)h\s*(\d+)m',  # 1h30m or 1h 30m
+        r'(?:clip\s*\d+\s*[:–-]\s*)?(\d+):(\d+):(\d+)',  # 1:30:00
+        r'(?:clip\s*\d+\s*[:–-]\s*)?(\d+):(\d+)',         # 25:30
+        r'(?:clip\s*\d+\s*[:–-]\s*)?(?:at\s+)?(?:minute\s+)?(\d+)\s*m(?:in)?(?:\s*\d+s?)?',  # 25m or 25min
+    ]
+
+    lines = collab_reply.split('\n')
+    for line in lines:
+        start_s = None
+        # Try H:M:S
+        m = re.search(r'(\d+)h\s*(\d+)\s*m', line, re.I)
+        if m:
+            start_s = int(m.group(1)) * 3600 + int(m.group(2)) * 60
+        if start_s is None:
+            m = re.search(r'(\d+):(\d+):(\d+)', line)
+            if m:
+                start_s = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + int(m.group(3))
+        if start_s is None:
+            m = re.search(r'(\d+):(\d+)', line)
+            if m and int(m.group(1)) < 100:  # guard against random numbers
+                start_s = int(m.group(1)) * 60 + int(m.group(2))
+        if start_s is None:
+            m = re.search(r'(\d+)\s*m(?:in(?:ute)?)?', line, re.I)
+            if m and int(m.group(1)) > 0:
+                start_s = int(m.group(1)) * 60
+
+        if start_s is not None:
+            # Validate against VOD duration if known
+            if vod_duration_s and start_s >= vod_duration_s - 120:
+                continue
+            # Extract title from parenthetical or trailing text
+            title_m = re.search(r'[\(\-–]\s*([^)]+)', line)
+            title = title_m.group(1).strip()[:60] if title_m else f'Highlight at {start_s // 60}m'
+            end_s = start_s + 60  # default 60s clip
+            results.append({'start_s': start_s, 'end_s': end_s, 'title': title})
+            if len(results) >= count:
+                break
+
+    return results
+
+
+def ask_collab_for_timestamps(test, vod_title, vod_duration_s, auth_headers, count=3):
+    """CPD-269: When Twitch Helix clip timestamps are unavailable (HTTP 400), ask Collab to
+    suggest specific extraction timestamps based on the VOD title and stream context.
+
+    Returns list of {start_s, end_s, title} dicts, or [] if Collab can't help.
+    """
+    tier = test['tier']
+    streamer = test['streamer']
+    duration_min = vod_duration_s // 60 if vod_duration_s else '?'
+    platform = test['platform'] if isinstance(test['platform'], str) else test['platform'][0]
+
+    prompt = (
+        f"I need to extract {count} clips from a {streamer} stream VOD for {platform}.\n"
+        f"VOD title: {vod_title}\n"
+        f"VOD duration: approximately {duration_min} minutes.\n"
+        f"The popular clips API has no usable timestamps for this VOD.\n\n"
+        f"Based on the VOD title, typical stream structure, and the platform ({platform}), "
+        f"suggest {count} specific timestamps (in minutes) where I should extract clips. "
+        f"Pick moments that are likely to be engaging highlights.\n\n"
+        f"Respond EXACTLY in this format (one clip per line):\n"
+        f"Clip 1: Xm (brief description of why this moment)\n"
+        f"Clip 2: Xm (brief description)\n"
+        f"Clip 3: Xm (brief description)\n\n"
+        f"Use specific minute marks, spread across the VOD. Avoid the first 10 minutes and last 5 minutes."
+    )
+
+    resp, code = api('POST', '/v1/concierge', {
+        'messages': [{'role': 'user', 'content': prompt}],
+        'currentSpec': {'streamer': streamer, 'platform': platform},
+    }, auth_headers=auth_headers)
+
+    if code != 200:
+        return []
+
+    reply = resp.get('reply', '')
+    if not reply:
+        return []
+
+    timestamps = parse_collab_timestamps(reply, count=count, vod_duration_s=vod_duration_s)
+    if timestamps:
+        ts_summary = ', '.join(str(t['start_s'] // 60) + 'm (' + t['title'][:25] + ')' for t in timestamps)
+        print(f'\n         Collab timestamp suggestions: [{ts_summary}]')
+    return timestamps
 
 
 def get_vod_clip_timestamps(vod_id, count=5):
@@ -1011,10 +1147,13 @@ Return ONLY valid JSON (no markdown, no explanation):
 
 # ── API helpers ───────────────────────────────────────────────────────────────
 
-def api(method, path, body=None, api_key='', auth_headers=None):
+def api(method, path, body=None, api_key='', auth_headers=None, _retries=3, _retry_delay=10):
     """Make an authenticated API request.
     Prefer passing auth_headers (from get_auth_headers(tier)) for Clerk-user auth.
     Falls back to api_key for backward compatibility.
+
+    CPD-266: Retries up to _retries times on 502/503/504 (gateway errors that occur
+    during Render rolling deploys) with _retry_delay seconds between attempts.
     """
     url = BASE + path
     data = json.dumps(body).encode() if body else None
@@ -1022,17 +1161,25 @@ def api(method, path, body=None, api_key='', auth_headers=None):
         headers = {'Content-Type': 'application/json', **auth_headers}
     else:
         headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {api_key}'}
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read()), resp.status
-    except urllib.error.HTTPError as e:
+
+    for attempt in range(_retries + 1):
+        req = urllib.request.Request(url, data=data, headers=headers, method=method)
         try:
-            return json.loads(e.read()), e.code
-        except Exception:
-            return {'error': str(e)}, e.code
-    except Exception as e:
-        return {'error': str(e)}, 0
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read()), resp.status
+        except urllib.error.HTTPError as e:
+            if e.code in (502, 503, 504) and attempt < _retries:
+                print(f'\n         ⚠️  HTTP {e.code} — rolling deploy? retrying in {_retry_delay}s ({attempt + 1}/{_retries})', end='', flush=True)
+                time.sleep(_retry_delay)
+                continue
+            try:
+                return json.loads(e.read()), e.code
+            except Exception:
+                return {'error': str(e)}, e.code
+        except Exception as e:
+            return {'error': str(e)}, 0
+
+    return {'error': 'max retries exceeded'}, 0
 
 
 # ── Polling — wait for TERMINAL state ────────────────────────────────────────
@@ -1072,9 +1219,29 @@ def poll_job_terminal(job_id, api_key, max_wait=900, interval=15, auth_headers=N
 
 # ── Gemini output validator ───────────────────────────────────────────────────
 
+def _normalize_output_url(url):
+    """CPD-267: Convert raw R2 storage URLs to CDN URLs so Gemini can fetch them.
+
+    Raw R2 URLs (https://<accountId>.r2.cloudflarestorage.com/<bucket>/<key>) are not
+    publicly accessible without auth, causing Gemini video analysis to fail with
+    RuntimeError. The CDN domain (assets.auraflux.co) is publicly accessible.
+    """
+    if url and 'r2.cloudflarestorage.com' in url:
+        # Extract the key after the bucket name: .../auraflux-video-output/<key>
+        import re
+        m = re.search(r'r2\.cloudflarestorage\.com/[^/]+/(.+)$', url)
+        if m:
+            key = m.group(1)
+            return f'https://assets.auraflux.co/{key}'
+    return url
+
+
 def gemini_validate_output(test, job, output_url, clip_titles):
     """Gemini watches the output video and scores spec-vs-output."""
     platforms = test['platform'] if isinstance(test['platform'], list) else [test['platform']]
+
+    # CPD-267: Normalise R2 → CDN so Gemini can fetch the video
+    output_url = _normalize_output_url(output_url)
 
     if not output_url:
         return {
@@ -1339,6 +1506,16 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
                 print(f'         found {len(vod_clip_timestamps)} highlight timestamp(s) for VOD {vod["id"]}')
             else:
                 print(f'         no clip timestamps for VOD {vod["id"]} \u2014 pipeline will use evenly-spaced')
+                # CPD-269: For Guided/Managed tier, ask Collab to suggest timestamps when
+                # Twitch Helix has none. This gives targeted clip selection vs pure evenly-spaced.
+                if test['tier'] in ('guided', 'managed') and not dry_run:
+                    auth_hdrs_early = get_auth_headers(tier)
+                    vod_duration_s = vod.get('duration_s') or None
+                    collab_ts = ask_collab_for_timestamps(
+                        test, vod_title or '', vod_duration_s, auth_hdrs_early, count=3)
+                    if collab_ts:
+                        vod_clip_timestamps = collab_ts
+                        print(f'         using {len(vod_clip_timestamps)} Collab-suggested timestamp(s)')
     elif test.get('clips_count', 0) > 0:
         print(f'         fetching {test["clips_count"]} clip(s) from Twitch…', end='', flush=True)
         clip_urls, clip_titles = get_live_clip_urls(
@@ -1390,7 +1567,7 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
         result['fromTemplateId'] = test['fromTemplateId']
         print(f'         📋 using template {test["fromTemplateId"]}')
 
-    # Step 4: Submit job
+    # Step 4: Submit job — api() already retries on 502/503/504 (CPD-266)
     resp, code = api('POST', '/v1/jobs', job_spec, auth_headers=auth_hdrs)
     resp['_http_status'] = code
     if code not in (200, 201, 202):
@@ -1415,6 +1592,26 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     print(f'         polling for terminal state (max {poll_max//60}min)… ', end='', flush=True)
     final_job, output_url = poll_job_terminal(job_id, api_key, max_wait=poll_max, interval=15, auth_headers=auth_hdrs)
     result['output_url'] = output_url
+
+    # CPD-266: If the job was killed by a rolling deploy (failReason='interrupted_by_restart'),
+    # wait 30s for the new container to stabilise, then resubmit the job once.
+    fail_reason = (final_job.get('failReason') or final_job.get('job_spec', {}).get('failReason') or '').lower()
+    if not output_url and 'interrupted_by_restart' in fail_reason:
+        print(f'\n         ⚠️  Job killed by rolling deploy — waiting 30s then retrying…', flush=True)
+        time.sleep(30)
+        resp2, code2 = api('POST', '/v1/jobs', job_spec, auth_headers=auth_hdrs)
+        if code2 in (200, 201, 202):
+            job2    = resp2.get('job', resp2)
+            job_id2 = job2.get('id') or job2.get('jobId')
+            result['job_id'] = job_id2
+            print(f'         retry job_id: {job_id2}')
+            print(f'         polling for terminal state (max {poll_max//60}min)… ', end='', flush=True)
+            final_job, output_url = poll_job_terminal(job_id2, api_key, max_wait=poll_max, interval=15, auth_headers=auth_hdrs)
+            result['output_url'] = output_url
+            print(f'\n         retry {"✅" if output_url else "❌"} {output_url[:70] if output_url else "NO OUTPUT"}')
+        else:
+            print(f'\n         retry submit failed: HTTP {code2}')
+
     print(f'\n         {"✅" if output_url else "❌"} {output_url[:70] if output_url else "NO OUTPUT"}')
 
     # Step 6: Gemini validates output video
@@ -1562,8 +1759,9 @@ def main():
                 'finished_at': None,
             }
 
-        # Run 4: save template after every successful job
-        if run_mode == 'run4' and result.get('passed') and result.get('job_id'):
+        # Run 4: save template for any job that produced output (not just passed >= 50)
+        # This ensures all 18 tests have templates for Run 5 even if Gemini scored low.
+        if run_mode == 'run4' and result.get('output_url') and result.get('job_id'):
             api_key = API_KEYS.get(test['tier'], '')
             job_spec = result.get('job_spec') or {}
             save_template_for_job(test, result['job_id'], job_spec,
