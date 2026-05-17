@@ -63,11 +63,50 @@ GEMINI_API_KEY   = os.environ.get('GEMINI_API_KEY', '')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 
 BASE     = os.environ.get('AURAFLUX_E2E_BASE', 'https://auraflux-api.onrender.com')
+
+# ── Auth — Clerk user auth (Run 4+) or API key fallback ──────────────────────
+#
+# Preferred: Clerk user auth authenticates as the real test accounts so jobs are
+# attributed to those Clerk users and appear in the admin CRM under their profiles.
+#
+# Format: Authorization: Bearer clerk_user_{clerkUserId}
+#         X-E2E-Secret: {E2E_AUTH_SECRET}
+#
+# Fallback: API key auth (AURAFLUX_E2E_API_KEY_*) — used when E2E_AUTH_SECRET
+# is not set or for backward compatibility.
+#
+# Clerk user IDs for AuraFlux test accounts (set in app.auraflux.co Clerk dashboard):
+E2E_AUTH_SECRET = os.environ.get('E2E_AUTH_SECRET', '')
+
+CLERK_USER_IDS = {
+    'operate': os.environ.get('AURAFLUX_E2E_CLERK_USER_OPERATE', 'user_3DBxzHO7eOqKgioa0HowEWbtUg3'),
+    'guided':  os.environ.get('AURAFLUX_E2E_CLERK_USER_GUIDED',  'user_3DBm0Nzn7YIWxSh1WqCllxA6fLc'),
+    'managed': os.environ.get('AURAFLUX_E2E_CLERK_USER_MANAGED', 'user_3DBm0RZNiq9T6qCILNQkMuWo8o2'),
+}
+
 API_KEYS = {
     'operate': os.environ.get('AURAFLUX_E2E_API_KEY_OPERATE', ''),
     'guided':  os.environ.get('AURAFLUX_E2E_API_KEY_GUIDED', ''),
     'managed': os.environ.get('AURAFLUX_E2E_API_KEY_MANAGED', ''),
 }
+
+
+def get_auth_headers(tier: str) -> dict:
+    """Return the Authorization + optional X-E2E-Secret headers for a given tier.
+    Prefers Clerk user auth when E2E_AUTH_SECRET is set; falls back to API key."""
+    if E2E_AUTH_SECRET and CLERK_USER_IDS.get(tier):
+        return {
+            'Authorization': f'Bearer clerk_user_{CLERK_USER_IDS[tier]}',
+            'X-E2E-Secret':  E2E_AUTH_SECRET,
+        }
+    api_key = API_KEYS.get(tier, '')
+    return {'Authorization': f'Bearer {api_key}'}
+
+
+def get_api_key(tier: str) -> str:
+    """Compatibility shim — returns the raw API key or a clerk_user_ bearer value.
+    Code that passes the key to api() should use get_auth_headers() instead."""
+    return API_KEYS.get(tier, '')
 
 # ── Streamers — broadcaster IDs verified 2026-05 ──────────────────────────────
 
@@ -712,7 +751,7 @@ def ask_gemini_video_json(video_url, prompt):
 
 # ── Collab consultation ───────────────────────────────────────────────────────
 
-def consult_collab(test, clip_titles, api_key):
+def consult_collab(test, clip_titles, api_key, auth_headers=None):
     """Call /v1/concierge to get Collab's input before building the spec (Guided/Managed)."""
     if not test.get('collab_prompt'):
         return ''
@@ -721,7 +760,7 @@ def consult_collab(test, clip_titles, api_key):
     resp, code = api('POST', '/v1/concierge', {
         'messages': [{'role': 'user', 'content': message}],
         'currentSpec': {'streamer': test['streamer'], 'platform': test['platform']},
-    }, api_key)
+    }, auth_headers=auth_headers)
     if code == 200:
         return resp.get('reply', '')
     return ''
@@ -972,10 +1011,17 @@ Return ONLY valid JSON (no markdown, no explanation):
 
 # ── API helpers ───────────────────────────────────────────────────────────────
 
-def api(method, path, body=None, api_key=''):
+def api(method, path, body=None, api_key='', auth_headers=None):
+    """Make an authenticated API request.
+    Prefer passing auth_headers (from get_auth_headers(tier)) for Clerk-user auth.
+    Falls back to api_key for backward compatibility.
+    """
     url = BASE + path
     data = json.dumps(body).encode() if body else None
-    headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {api_key}'}
+    if auth_headers:
+        headers = {'Content-Type': 'application/json', **auth_headers}
+    else:
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {api_key}'}
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -994,7 +1040,7 @@ def api(method, path, body=None, api_key=''):
 TERMINAL_STAGES  = {'assembled', 'published', 'failed', 'error', 'cancelled'}
 TERMINAL_STATUS  = {'complete', 'failed', 'error', 'assembled', 'published', 'done'}
 
-def poll_job_terminal(job_id, api_key, max_wait=900, interval=15):
+def poll_job_terminal(job_id, api_key, max_wait=900, interval=15, auth_headers=None):
     """
     Poll until job reaches a terminal stage/status (not just outputUrl).
     Returns (final_job_dict, output_url).
@@ -1003,7 +1049,7 @@ def poll_job_terminal(job_id, api_key, max_wait=900, interval=15):
     deadline = time.time() + max_wait
     last_stage = None
     while time.time() < deadline:
-        resp, code = api('GET', f'/v1/jobs/{job_id}', api_key=api_key)
+        resp, code = api('GET', f'/v1/jobs/{job_id}', auth_headers=auth_headers)
         if code == 200:
             job = resp.get('job', resp)
             stage  = (job.get('stage')  or '').lower()
@@ -1235,10 +1281,14 @@ def print_ux_summary(report):
 # ── Run a single test ─────────────────────────────────────────────────────────
 
 def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
-    api_key = API_KEYS.get(test['tier'], '')
+    tier    = test['tier']
+    api_key = API_KEYS.get(tier, '')
+    auth_hdrs = get_auth_headers(tier)  # Clerk-user auth if E2E_AUTH_SECRET set, else API key
+    auth_mode = 'clerk-user' if E2E_AUTH_SECRET and CLERK_USER_IDS.get(tier) else 'api-key'
+
     result = {
         'id':         test['id'],
-        'tier':       test['tier'],
+        'tier':       tier,
         'streamer':   test['streamer'],
         'profile':    test['profile'],
         'format':     test['format'],
@@ -1250,16 +1300,18 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
         'passed':     False,
         'error':      None,
         'started_at': datetime.now(timezone.utc).isoformat(),
+        'auth_mode':  auth_mode,
     }
 
     platforms = test['platform'] if isinstance(test['platform'], list) else [test['platform']]
 
-    if not api_key:
-        result['error'] = f"No API key for tier '{test['tier']}'"
+    if auth_mode == 'api-key' and not api_key:
+        result['error'] = f"No API key for tier '{tier}' and E2E_AUTH_SECRET not set"
         print(f'  ❌  {test["id"]}: {result["error"]}')
         return result
 
-    print(f'\n  [{test["id"]}] {test["streamer"]} → {test["profile"]}/{test["format"]} → {"/".join(platforms)}')
+    auth_label = f'🔑 {CLERK_USER_IDS.get(tier, "?")[:20]}' if auth_mode == 'clerk-user' else '🗝 api-key'
+    print(f'\n  [{test["id"]}] {test["streamer"]} → {test["profile"]}/{test["format"]} → {"/".join(platforms)} ({auth_label})')
 
     source_type = test.get('source_type', 'clips')
 
@@ -1315,7 +1367,7 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     if test['tier'] in ('guided', 'managed') and test.get('collab_prompt'):
         print(f'         consulting Collab…', end='', flush=True)
         collab_context = clip_titles if clip_titles else ([vod_title] if vod_title else [])
-        collab_reply = consult_collab(test, collab_context, api_key)
+        collab_reply = consult_collab(test, collab_context, api_key, auth_headers=auth_hdrs)
         print(f' ✓ ({len(collab_reply)} chars)')
 
     result['collab_reply'] = collab_reply[:500] if collab_reply else ''
@@ -1339,7 +1391,7 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
         print(f'         📋 using template {test["fromTemplateId"]}')
 
     # Step 4: Submit job
-    resp, code = api('POST', '/v1/jobs', job_spec, api_key)
+    resp, code = api('POST', '/v1/jobs', job_spec, auth_headers=auth_hdrs)
     resp['_http_status'] = code
     if code not in (200, 201, 202):
         result['error'] = f'Submit failed: HTTP {code} — {resp.get("error", str(resp))[:80]}'
@@ -1361,7 +1413,7 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
     )
     poll_max = 1800 if is_long_job else 900
     print(f'         polling for terminal state (max {poll_max//60}min)… ', end='', flush=True)
-    final_job, output_url = poll_job_terminal(job_id, api_key, max_wait=poll_max, interval=15)
+    final_job, output_url = poll_job_terminal(job_id, api_key, max_wait=poll_max, interval=15, auth_headers=auth_hdrs)
     result['output_url'] = output_url
     print(f'\n         {"✅" if output_url else "❌"} {output_url[:70] if output_url else "NO OUTPUT"}')
 
@@ -1394,13 +1446,13 @@ def run_test(test, ux_observations, dry_run=False, no_ux=False, args=None):
 
 # ── Template registry helpers (Run 4 → Run 5) ────────────────────────────────
 
-def save_template_for_job(test, job_id, job_spec, api_key, registry_path):
+def save_template_for_job(test, job_id, job_spec, api_key, registry_path, auth_headers=None):
     """After a successful Run 4 job, save the job spec as a named template.
     Writes the template ID into the registry JSON so Run 5 can load it.
     """
     name = f'E2E-Run4-{test["id"]}'
     body = {'name': name, 'description': f'Auto-saved from E2E Run 4 job {job_id}', 'jobSpec': job_spec}
-    resp, code = api('POST', '/v1/templates', body, api_key)
+    resp, code = api('POST', '/v1/templates', body, auth_headers=auth_headers)
     if code not in (200, 201):
         print(f'         ⚠  template save failed ({code}): {resp}')
         return None
@@ -1507,7 +1559,7 @@ def main():
             api_key = API_KEYS.get(test['tier'], '')
             job_spec = result.get('job_spec') or {}
             save_template_for_job(test, result['job_id'], job_spec,
-                                  api_key, args.template_registry)
+                                  api_key, args.template_registry, auth_headers=get_auth_headers(test['tier']))
 
         results.append(result)
         (out_dir / 'results.json').write_text(json.dumps(results, indent=2))
