@@ -7256,25 +7256,33 @@ const server = app.listen(PORT, () => {
   }
 });
 
-// Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
+// CPD-266: Graceful shutdown — waits for HeyGen pollers, assembly jobs, AND
+// in-flight portal-pipeline jobs before exiting on SIGTERM.
+// Render sends SIGTERM and gives 90s before SIGKILL — we use 85s to leave
+// a small buffer. Jobs still running after 85s are marked failed by the next
+// boot's rescueInterruptedJobs(), which records failReason:'interrupted_by_restart'
+// so E2E scripts and operators can identify and resubmit them.
 async function gracefulShutdown(signal) {
   console.log(`\n[shutdown] ${signal} received — checking in-flight work...`);
 
+  const { getActivePipelineJobs } = require('./lib/active_jobs');
+  const pipelineJobs  = getActivePipelineJobs();
   const pollerCount   = activePollers.size;
   const assemblyCount = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
+  const pipelineCount = pipelineJobs.size;
 
-  if (pollerCount === 0 && assemblyCount === 0) {
-    console.log('[shutdown] No active pollers or assemblies — exiting cleanly');
+  if (pollerCount === 0 && assemblyCount === 0 && pipelineCount === 0) {
+    console.log('[shutdown] No active pollers, assemblies, or pipeline jobs — exiting cleanly');
     process.exit(0);
   }
 
-  console.log(`[shutdown] ${pollerCount} poller(s), ${assemblyCount} assembly job(s) in flight — waiting up to 35s...`);
+  console.log(`[shutdown] ${pollerCount} poller(s), ${assemblyCount} assembly job(s), ${pipelineCount} pipeline job(s) in flight — waiting up to 85s...`);
 
-  // Hard exit after 35s no matter what
+  // Hard exit after 85s — Render SIGKILL at 90s so we exit first
   const forceTimer = setTimeout(() => {
-    console.error('[shutdown] 35s timeout — forcing exit');
+    console.error('[shutdown] 85s timeout — forcing exit (Render SIGKILL imminent)');
     process.exit(1);
-  }, 35000);
+  }, 85000);
   forceTimer.unref();
 
   // Wait for all pollers to checkpoint their current poll cycle
@@ -7298,6 +7306,24 @@ async function gracefulShutdown(signal) {
       new Promise(r => setTimeout(r, 30000))
     ]);
     console.log('[shutdown] Assemblies checkpointed');
+  }
+
+  // CPD-266: Wait for in-flight portal-pipeline jobs (registered by developer_api.js).
+  // These are the long-running COMPACT/EXTRACT jobs that can take 20–30 minutes.
+  // We wait up to 80s so short-to-mid jobs (most are <15 min from this signal) finish.
+  if (pipelineCount > 0) {
+    const ids = [...pipelineJobs.keys()].join(', ').slice(0, 120);
+    console.log(`[shutdown] Waiting for ${pipelineCount} pipeline job(s): ${ids}…`);
+    await Promise.race([
+      Promise.all([...pipelineJobs.values()].map(e => e.done)),
+      new Promise(r => setTimeout(r, 80000))
+    ]);
+    const remaining = getActivePipelineJobs().size;
+    if (remaining > 0) {
+      console.warn(`[shutdown] ${remaining} pipeline job(s) still in flight after 80s — they will be rescued on next boot`);
+    } else {
+      console.log('[shutdown] Pipeline jobs checkpointed');
+    }
   }
 
   console.log('[shutdown] Clean exit');
