@@ -15,19 +15,67 @@ cwn-drive-key.json
 .DS_Store
 .aider*
 
+# ── Moved to private repo auraflux-co/auraflux-dev ──────────────────────────
+# localhost-only scripts — never re-add to this public repo
+scripts/cwn-auth.js
+scripts/aider_plan.sh
+scripts/aider_session_review.sh
+scripts/aider_session_review_local.sh
+scripts/backup_render_env.js
+scripts/restore_render_env.js
+scripts/render_env_set.sh
+scripts/canva_oauth_helper.js
+scripts/get_canva_token.js
+scripts/com.cwn.*.plist
+scripts/claude_consult.sh
+scripts/jira_poller.sh
+scripts/overnight_runner.sh
+scripts/pre-commit.sh
+scripts/heygen_*.cjs
+scripts/heygen_monitor.js
+scripts/tail_heygen.sh
+scripts/check_render_env.sh
+scripts/lib_claude.py
+scripts/lib_gemini.py
+scripts/measure_bobby_g.js
+scripts/debug_test2_prompt.js
+scripts/manual_ingest.cjs
+scripts/flatten_manual_heygen_drop.cjs
+scripts/jira_complete.js
+scripts/jira_ping.js
+scripts/jira_sync.js
+scripts/rotate_qa_failures.sh
+scripts/phase_a_batch.cjs
+scripts/phase_a_gate_watch.cjs
+scripts/prompt_replay_offline.cjs
+scripts/offline_pipeline_observability_smoke.cjs
+scripts/tpad_snippet.js
+scripts/patch_assembly_chrome.py
+scripts/patch_outro_tpad.py
+scripts/prepare_e2e_corpus.py
+scripts/gate_contract_consistency_check.cjs
+scripts/check_scaffold_templates.cjs
+scripts/backfill_canonical_job_ids.cjs
+scripts/job_monitor_daemon.cjs
+scripts/load_test_autocannon.js
+scripts/guided_e2e_browser.js
+scripts/managed_e2e_browser.js
+# internal ops runbooks → auraflux-dev/docs/ops/
+docs/ops/
+# localhost HTML tools → auraflux-dev/templates/
+templates/
+# archived backup file → auraflux-dev/lib/
+lib/publish.js.backup
+
 # C0-era internal docs — Cline/Aider handoffs, Phase A RCA reports, dispatches.
-# These describe localhost-only Gate workflows, Canva, CapCut, and C0 ops.
-# They stay on the local machine but must not appear on GitHub (C1+ repo).
 docs/archive/
 docs/handoffs/
 docs/dispatches/
 docs/reports/
 
-# Operational / personal ops files — C0 daily ops, not C1+ product docs
+# Operational / personal ops files
 OVERNIGHT_TASKS.md
 BRANCH_NOTES.md
-docs/ops/CLINE_PROMPT_TEMPLATES.md
-docs/ops/ATLASSIAN_ROVO_MCP.md
 
 # Runtime log artifacts
 logs/pipeline_status.json
