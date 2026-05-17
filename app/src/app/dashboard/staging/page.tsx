@@ -259,12 +259,12 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
             return (
               <div className="mt-2 rounded-md border bg-background/60 p-3 space-y-1.5 text-xs">
                 <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">Spec detail</p>
-                {wc.productionPath && <p><span className="text-muted-foreground">Path:</span> {String(wc.productionPath)}</p>}
-                {wc.entryType    && <p><span className="text-muted-foreground">Entry:</span> {String(wc.entryType)}</p>}
+                {!!wc.productionPath && <p><span className="text-muted-foreground">Path:</span> {String(wc.productionPath)}</p>}
+                {!!wc.entryType    && <p><span className="text-muted-foreground">Entry:</span> {String(wc.entryType)}</p>}
                 {wc.durationMins != null && <p><span className="text-muted-foreground">Duration:</span> {String(wc.durationMins)} min</p>}
-                {wc.planTier     && <p><span className="text-muted-foreground">Plan tier:</span> <span className="capitalize">{String(wc.planTier)}</span></p>}
+                {!!wc.planTier     && <p><span className="text-muted-foreground">Plan tier:</span> <span className="capitalize">{String(wc.planTier)}</span></p>}
                 {wc.creditCost != null && <p><span className="text-muted-foreground">Credit cost:</span> {String(wc.creditCost)}</p>}
-                {wc.publishMode  && <p><span className="text-muted-foreground">Publish:</span> <span className="capitalize">{String(wc.publishMode)}{wc.scheduledAt ? ` — ${new Date(String(wc.scheduledAt)).toLocaleDateString()}` : ''}</span></p>}
+                {!!wc.publishMode  && <p><span className="text-muted-foreground">Publish:</span> <span className="capitalize">{String(wc.publishMode)}{wc.scheduledAt ? ` — ${new Date(String(wc.scheduledAt)).toLocaleDateString()}` : ''}</span></p>}
                 {allFeatures.length > 0 && (
                   <p><span className="text-muted-foreground">Features:</span> {allFeatures.join(', ')}</p>
                 )}
