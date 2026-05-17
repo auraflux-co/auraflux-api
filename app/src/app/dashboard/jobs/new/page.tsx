@@ -1012,17 +1012,18 @@ function NewJobPageInner() {
           {/* Add-on extensions (HeyGen, Shoppable) — hidden from UI, wired in code.
                Managed-plan add-ons will be surfaced once onboarding flow is complete. */}
 
-          {/* Review summary */}
+          {/* Job spec confirmation card — shows everything locked in before submit */}
           <Card className="bg-muted/30 border-dashed">
-            <CardContent className="pt-4 space-y-2 text-xs text-muted-foreground">
+            <CardContent className="pt-4 space-y-1.5 text-xs text-muted-foreground">
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70 mb-2">Locked in for this job</p>
               <p><span className="font-medium text-foreground">Format:</span> {formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
+              <p><span className="font-medium text-foreground">Duration:</span> {durationMins} min</p>
               <p><span className="font-medium text-foreground">Path:</span> {selectedPathConfig?.label}</p>
               <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
               {topic.trim() && <p><span className="font-medium text-foreground">Topic:</span> {topic.trim()}</p>}
               <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>
               <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
-              <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ')}</p>
-              {/* Add-ons summary hidden — add-ons not surfaced in UI yet */}
+              <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ') || '—'}</p>
             </CardContent>
           </Card>
 
