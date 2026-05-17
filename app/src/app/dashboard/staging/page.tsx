@@ -250,14 +250,30 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
             <dt className="text-muted-foreground">Submitted</dt>
             <dd>{input.submittedAt ? new Date(input.submittedAt).toLocaleString() : '—'}</dd>
           </dl>
-          {input.wizardConfig && (
-            <details className="text-xs">
-              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Wizard config</summary>
-              <pre className="mt-1 overflow-auto rounded bg-muted p-2 text-[10px] max-h-32">
-                {JSON.stringify(input.wizardConfig, null, 2)}
-              </pre>
-            </details>
-          )}
+          {input.wizardConfig && (() => {
+            const wc = input.wizardConfig as Record<string, unknown>;
+            const addOns = Array.isArray(wc.addOns) ? (wc.addOns as string[]) : [];
+            const activeFeatures = Array.isArray(wc.activeFeatures) ? (wc.activeFeatures as string[]) : [];
+            const platforms = Array.isArray(wc.platforms) ? (wc.platforms as string[]) : [];
+            const allFeatures = [...addOns, ...activeFeatures].filter(Boolean);
+            return (
+              <div className="mt-2 rounded-md border bg-background/60 p-3 space-y-1.5 text-xs">
+                <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">Spec detail</p>
+                {wc.productionPath && <p><span className="text-muted-foreground">Path:</span> {String(wc.productionPath)}</p>}
+                {wc.entryType    && <p><span className="text-muted-foreground">Entry:</span> {String(wc.entryType)}</p>}
+                {wc.durationMins != null && <p><span className="text-muted-foreground">Duration:</span> {String(wc.durationMins)} min</p>}
+                {wc.planTier     && <p><span className="text-muted-foreground">Plan tier:</span> <span className="capitalize">{String(wc.planTier)}</span></p>}
+                {wc.creditCost != null && <p><span className="text-muted-foreground">Credit cost:</span> {String(wc.creditCost)}</p>}
+                {wc.publishMode  && <p><span className="text-muted-foreground">Publish:</span> <span className="capitalize">{String(wc.publishMode)}{wc.scheduledAt ? ` — ${new Date(String(wc.scheduledAt)).toLocaleDateString()}` : ''}</span></p>}
+                {allFeatures.length > 0 && (
+                  <p><span className="text-muted-foreground">Features:</span> {allFeatures.join(', ')}</p>
+                )}
+                {platforms.length > 0 && (
+                  <p><span className="text-muted-foreground">Platforms:</span> {platforms.join(', ')}</p>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* RIGHT: What was produced */}

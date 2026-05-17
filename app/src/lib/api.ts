@@ -43,6 +43,13 @@ export interface WizardConfig {
   publishMode:    PublishMode;
   scheduledAt:    string | null;
   productionPath: string | null;
+  // Extended fields for job spec card display
+  topic?:          string | null;
+  tone?:           string | null;
+  durationMins?:   number | null;
+  planTier?:       string | null;
+  creditCost?:     number | null;
+  activeFeatures?: string[];
 }
 
 export interface PublishResult {
