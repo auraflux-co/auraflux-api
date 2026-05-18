@@ -453,7 +453,7 @@ function NewJobPageInner() {
           contentType:  i.contentType || i.type,
         })),
       };
-      payload.entryType = 'fetch';
+      // entryType already set to 'fetch' in payload initializer above
     } else {
       payload.uploadSpec = { fileKeys: fileKeys.split('\n').map((k) => k.trim()).filter(Boolean) };
     }

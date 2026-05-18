@@ -13,7 +13,7 @@
  * auto-populate title / thumbnail / duration.
  */
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import {
@@ -286,6 +286,9 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   const [playlists, setPlaylists]       = useState<SourcePlaylist[]>([]);
   const [activePlaylist, setActivePlaylist] = useState<string | null>(null);
 
+  // Track which channel+platform combo we've already loaded playlists for
+  const playlistLoadedFor = useRef<string | null>(null);
+
   const cfg = PLATFORMS.find((p) => p.id === platform);
 
   // Keyword filter is applied client-side for responsiveness
@@ -295,9 +298,12 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     return items.filter((i) => i.title.toLowerCase().includes(q));
   }, [items, keyword]);
 
-  // Load YouTube playlists once channel is browsed
+  // Load YouTube playlists exactly once per channel browse
   useEffect(() => {
-    if (platform !== 'youtube' || !username.trim() || items.length === 0) return;
+    if (platform !== 'youtube' || !channelName) return;
+    const key = `${platform}:${username.trim()}`;
+    if (playlistLoadedFor.current === key) return;
+    playlistLoadedFor.current = key;
     let cancelled = false;
     (async () => {
       try {
@@ -307,7 +313,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
       } catch { /* playlists are a bonus, not required */ }
     })();
     return () => { cancelled = true; };
-  }, [platform, username, items.length, getToken]);
+  }, [platform, username, channelName, getToken]);
 
   const handlePlatformSelect = useCallback((p: SourcePlatform) => {
     setPlatform(p);
@@ -322,37 +328,57 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     setContentType('all');
     setDurationPreset(0);
     setKeyword('');
+    playlistLoadedFor.current = null;
   }, []);
 
+  /**
+   * durationPresetIdx is passed explicitly to avoid stale closure
+   * (setDurationPreset + doFetch called synchronously — state not yet committed).
+   * isNewChannel: true = reset selections; false = preserve selections that
+   * survive the new result set.
+   */
   const doFetch = useCallback(async (
     targetPlatform: SourcePlatform,
     targetUsername: string,
     filters: SourceFilters,
+    durationPresetIdx: number,
+    isNewChannel = false,
   ) => {
     setLoading(true);
     setError(null);
     setItems([]);
-    setSelected(new Set());
     try {
       const token  = await getToken();
-      const preset = DURATION_PRESETS[durationPreset];
+      const preset = DURATION_PRESETS[durationPresetIdx];
       const f: SourceFilters = {
         ...filters,
         minDuration: preset.min > 0     ? preset.min    : undefined,
         maxDuration: preset.max < 99999 ? preset.max    : undefined,
       };
       const res = await fetchSourceContent(targetPlatform, targetUsername, 50, token ?? undefined, f);
-      setItems(res.items);
+      const newItems = res.items;
+      setItems(newItems);
       setChannelName(res.channel?.displayName || res.channel?.name || targetUsername);
-      if (!res.items.length) {
-        setError(`No content found for "${targetUsername}" on ${targetPlatform} with the current filters.`);
+      if (isNewChannel) {
+        setSelected(new Set());
+      } else {
+        // Preserve selections whose URLs still appear in the new result set
+        const newUrls = new Set(newItems.map((i) => i.url));
+        setSelected((prev) => {
+          const next = new Set<string>();
+          for (const url of prev) { if (newUrls.has(url)) next.add(url); }
+          return next;
+        });
+      }
+      if (!newItems.length) {
+        setError(`no-results:No content found for "${targetUsername}" on ${targetPlatform} with these filters. Try a wider date range or "All" type.`);
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load content — check the username and try again.');
     } finally {
       setLoading(false);
     }
-  }, [getToken, durationPreset]);
+  }, [getToken]);
 
   const handleBrowse = useCallback(() => {
     if (!platform || !username.trim()) return;
@@ -360,15 +386,19 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
       dateRange,
       type: contentType,
       playlistId: activePlaylist ?? undefined,
-    });
-  }, [platform, username, dateRange, contentType, activePlaylist, doFetch]);
+    }, durationPreset, true /* new channel browse = reset selections */);
+  }, [platform, username, dateRange, contentType, activePlaylist, durationPreset, doFetch]);
 
   // Re-fetch when server-side filters change (only if already browsed)
-  const handleFilterChange = useCallback((patch: Partial<SourceFilters & { dateRange: SourceDateRange; type: SourceType }>) => {
-    if (!platform || !username.trim() || items.length === 0) return;
+  const handleFilterChange = useCallback((
+    patch: Partial<SourceFilters & { dateRange: SourceDateRange; type: SourceType }>,
+    newDurationPresetIdx?: number,
+  ) => {
+    if (!platform || !username.trim() || !channelName) return;
     const newDateRange    = patch.dateRange   ?? dateRange;
     const newContentType  = patch.type        ?? contentType;
     const newPlaylistId   = patch.playlistId  ?? activePlaylist ?? undefined;
+    const presetIdx       = newDurationPresetIdx ?? durationPreset;
     if (patch.dateRange  !== undefined) setDateRange(newDateRange);
     if (patch.type       !== undefined) setContentType(newContentType);
     if (patch.playlistId !== undefined) setActivePlaylist(patch.playlistId ?? null);
@@ -376,8 +406,8 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
       dateRange:  newDateRange,
       type:       newContentType,
       playlistId: newPlaylistId,
-    });
-  }, [platform, username, items.length, dateRange, contentType, activePlaylist, doFetch]);
+    }, presetIdx, false /* preserve surviving selections */);
+  }, [platform, username, channelName, dateRange, contentType, activePlaylist, durationPreset, doFetch]);
 
   const toggleItem = useCallback((item: SourceItem) => {
     setSelected((prev) => {
@@ -448,9 +478,18 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
         </div>
       )}
 
-      {error && (
-        <p className="text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-lg">{error}</p>
-      )}
+      {error && (() => {
+        const isNoResults = error.startsWith('no-results:');
+        const msg = isNoResults ? error.slice('no-results:'.length) : error;
+        return (
+          <p className={cn(
+            'text-xs px-3 py-2 rounded-lg',
+            isNoResults
+              ? 'text-muted-foreground bg-muted/40 border border-border/50'
+              : 'text-destructive bg-destructive/10',
+          )}>{msg}</p>
+        );
+      })()}
 
       {/* Filter bar — shown once we have results (or channel is loaded) */}
       {platform && cfg && channelName && (
@@ -508,14 +547,8 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
                   active={durationPreset === i}
                   onClick={() => {
                     setDurationPreset(i);
-                    // Re-fetch with new duration (server-side filter)
-                    if (platform && username.trim()) {
-                      doFetch(platform, username.trim(), {
-                        dateRange,
-                        type: contentType,
-                        playlistId: activePlaylist ?? undefined,
-                      });
-                    }
+                    // Pass index directly to avoid stale closure bug
+                    handleFilterChange({}, i);
                   }}
                 >
                   {d.label}
@@ -576,47 +609,67 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
         </div>
       )}
 
-      {/* Results grid */}
-      {displayItems.length > 0 && (
+      {/* Results grid — shown while loading (skeleton) or once items exist */}
+      {(loading && channelName) || displayItems.length > 0 ? (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[420px] overflow-y-auto pr-1">
-            {displayItems.map((item) => (
-              <ClipCard
-                key={item.id}
-                item={item}
-                selected={selected.has(item.url)}
-                onToggle={() => toggleItem(item)}
-                accentBorder={cfg?.activeBorder ?? 'border-primary'}
-              />
-            ))}
+          {/* Scroll container with bottom fade hint */}
+          <div className="relative">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[420px] overflow-y-auto pr-1">
+              {loading
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="rounded-xl overflow-hidden border border-border/30 animate-pulse">
+                      <div className="aspect-video bg-muted" />
+                      <div className="p-2.5 space-y-1.5 bg-card">
+                        <div className="h-2.5 bg-muted rounded w-3/4" />
+                        <div className="h-2 bg-muted rounded w-1/2" />
+                      </div>
+                    </div>
+                  ))
+                : displayItems.map((item) => (
+                    <ClipCard
+                      key={item.id}
+                      item={item}
+                      selected={selected.has(item.url)}
+                      onToggle={() => toggleItem(item)}
+                      accentBorder={cfg?.activeBorder ?? 'border-primary'}
+                    />
+                  ))}
+            </div>
+            {/* Bottom fade hint when content overflows */}
+            {displayItems.length > 5 && (
+              <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent" />
+            )}
           </div>
 
           {/* Confirm strip */}
-          <div className={cn(
-            'flex items-center gap-3 p-3 rounded-xl border transition-all',
-            selected.size > 0 ? 'border-primary/40 bg-primary/5' : 'border-border bg-muted/20',
-          )}>
-            <div className="flex-1 min-w-0">
-              {selected.size > 0 ? (
-                <p className="text-xs font-medium text-foreground truncate">
-                  {selected.size} clip{selected.size > 1 ? 's' : ''} selected
-                  <span className="text-muted-foreground font-normal"> · max {maxSelect}</span>
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">Select clips to add to your job</p>
-              )}
+          {!loading && (
+            <div className={cn(
+              'flex items-center gap-3 p-3 rounded-xl border transition-all',
+              selected.size > 0 ? 'border-primary/40 bg-primary/5' : 'border-border bg-muted/20',
+            )}>
+              <div className="flex-1 min-w-0">
+                {selected.size > 0 ? (
+                  <p className="text-xs font-medium text-foreground truncate">
+                    {selected.size} of {maxSelect} clips selected
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Select up to {maxSelect} clips to add to your job
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={selected.size === 0}
+                className="px-4 h-8 text-xs rounded-lg border font-semibold transition-colors shrink-0 bg-primary text-primary-foreground border-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {selected.size === 0 ? 'Select clips' : `Add ${selected.size} clip${selected.size !== 1 ? 's' : ''}`}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={selected.size === 0}
-              className="px-4 h-8 text-xs rounded-lg border font-semibold transition-colors shrink-0 bg-primary text-primary-foreground border-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Use {selected.size > 0 ? selected.size : ''} clip{selected.size !== 1 ? 's' : ''}
-            </button>
-          </div>
+          )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
