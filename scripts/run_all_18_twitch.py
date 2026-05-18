@@ -199,18 +199,20 @@ TESTS = [
         'publishMode': 'immediate',
         'brief': 'Take 4 short Hasan clips and stitch into a long-form YouTube compilation. Scene selection picks the best moments from each. TTS voiceover connects the segments.',
     },
-    # O-T5: Long VOD → short clips extraction | TTS + thumbnail + scene_select (EXTRACT)
+    # O-T5: Short clips → TikTok | no TTS + thumbnail + scheduled publish (CPD-271: redesigned from VOD to clips)
+    # Original O-T5 spec from CPD-175: "short / clips / no TTS / scheduled publish"
+    # Previous VOD variant (hasanabi 2774434594) failed — subscriber-only, yt-dlp requires auth.
     {
         'id': 'O-T5', 'tier': 'operate', 'streamer': 'hasanabi',
-        'source_type': 'vod', 'min_duration_s': 20,
+        'source_type': 'clips', 'clips_count': 2, 'min_duration_s': 20,
         'entry': 'fetch', 'profile': 'vertical_reel', 'format': 'short',
         'platform': 'tiktok', 'content_type': 'clips',
-        'features': ['tts', 'thumbnail', 'scene_select', 'overlays'],
-        'topic': 'Best moments extracted from 6h Hasanabi VOD',
-        'tone': 'energetic, commentary-driven',
-        'durationMins': 3,
-        'publishMode': 'immediate',
-        'brief': 'Customer brings a long Hasan stream VOD. Pipeline extracts the 3 best highlight moments as individual short clips. TTS adds voiceover to each extracted clip.',
+        'features': ['thumbnail'],  # no TTS — tests pipeline without narration
+        'topic': 'Hasanabi reaction clips — no-narration TikTok cut',
+        'tone': 'reactive, raw',
+        'durationMins': 1,
+        'publishMode': 'scheduled',
+        'brief': 'Two Hasan reaction clips assembled into a TikTok without TTS narration. Thumbnail overlay only. Scheduled publish — tests the scheduling path for Operate tier.',
     },
     # O-T6: Short clips → long stitch | TTS + thumbnail + commentary + burn_images (COMPACT)
     {
@@ -296,7 +298,7 @@ TESTS = [
         'tone': 'warm, variety',
         'durationMins': 3,
         'publishMode': 'immediate',
-        'brief': 'Customer brings a full Maya stream VOD. Collab identifies which moments to extract as short clips. Pipeline extracts and applies TTS to each. 3 clips output.',
+        'brief': 'Customer brings a full Maya stream VOD. Collab identifies which moments to extract. Pipeline extracts 3 moments and assembles them into a single short-form video with TTS commentary bridging each clip.',
         'collab_prompt': 'I\'m extracting short clips from a full Maya variety stream VOD. What types of moments make the best TikTok clips from her content? Give me criteria the pipeline should use for scene selection.',
     },
     # G-T6: Short clips → long stitch | TTS + thumbnail, Collab narrates IRL moments (COMPACT)
