@@ -474,12 +474,19 @@ def poll_job(job_id, auth_headers, poll_max=1200, interval=15):
 
 # ── Source Library API ────────────────────────────────────────────────────────
 
-def fetch_source_clips(platform, username, count, auth_headers):
+def fetch_source_clips(platform, username, count, auth_headers, type_filter=None):
     """
     Call GET /source/{platform}/{username}/content to fetch clips.
     Returns list of normalized items: {id, title, url, duration, thumbnailUrl, platform}
+
+    type_filter: 'clip' | 'vod' | 'short' | None — maps to ?type= param.
+      - Use 'clip' for Kick (avoids VODs that yt-dlp can't resolve from Render IPs)
+      - Use 'clip' for Twitch COMPACT tests (avoids DVR HLS stream expiry on multi-clip jobs)
     """
-    path = f'/source/{platform}/{urllib.parse.quote(username)}/content?limit={count * 3}'
+    params = f'limit={count * 3}'
+    if type_filter:
+        params += f'&type={type_filter}'
+    path = f'/source/{platform}/{urllib.parse.quote(username)}/content?{params}'
     resp, code = api('GET', path, auth_headers=auth_headers, timeout=30)
     if code != 200:
         print(f'  ⚠️  Source Library {platform}/{username}: HTTP {code} — {resp}')
@@ -719,8 +726,17 @@ def run_test(test, args):
     auth = get_auth_headers(tier)
 
     # ── 1. Fetch clips from Source Library ───────────────────────────────────
+    # CPD-287: Kick must use type=clip — yt-dlp can't resolve kick.com/video/ URLs
+    # from Render's data center IPs (HTTP 403). Kick clips have direct CDN URLs.
+    # CPD-289: Twitch COMPACT (use_clip_spec=True) must use type=clip — VOD URLs
+    # route through EXTRACT path which fails on DVR HLS expiry for multi-clip jobs.
+    src_type_filter = None
+    if platform == 'kick':
+        src_type_filter = 'clip'
+    elif platform == 'twitch' and use_spec:
+        src_type_filter = 'clip'
     print(f'  1. Fetching {test["clips_count"]} clip(s) from {platform} Source Library…')
-    source_items = fetch_source_clips(platform, account, test['clips_count'], auth)
+    source_items = fetch_source_clips(platform, account, test['clips_count'], auth, type_filter=src_type_filter)
     if not source_items:
         return {'id': tid, 'status': 'SKIP', 'reason': f'Source Library returned no clips for {platform}/{account}'}
     print(f'     ✓ {len(source_items)} clip(s) fetched')
