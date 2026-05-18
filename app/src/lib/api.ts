@@ -488,6 +488,46 @@ export async function warpIntoAccount(userId: string, token?: string) {
   });
 }
 
+// ─── Creator Source Library (CPD-274) ────────────────────────────────────────
+
+export type SourcePlatform = 'twitch' | 'kick' | 'youtube';
+
+export interface SourceItem {
+  id:           string;
+  title:        string;
+  thumbnailUrl: string;
+  duration:     number;
+  publishedAt:  string;
+  url:          string;
+  viewCount:    number;
+  platform:     SourcePlatform;
+  type?:        'clip' | 'vod' | 'video' | 'short';
+}
+
+export interface SourceChannel {
+  id:          string;
+  name:        string;
+  displayName: string;
+  avatarUrl?:  string;
+  url:         string;
+}
+
+export interface SourceContentResult {
+  ok:       boolean;
+  platform: SourcePlatform;
+  channel:  SourceChannel;
+  items:    SourceItem[];
+}
+
+export async function fetchSourceContent(
+  platform: SourcePlatform,
+  username: string,
+  limit = 20,
+  token?: string,
+): Promise<SourceContentResult> {
+  return apiFetch(`/source/${platform}/${encodeURIComponent(username)}/content?limit=${limit}`, { token });
+}
+
 export async function getJob(jobId: string, token?: string): Promise<{ job: Job }> {
   return apiFetch(`/jobs/${jobId}`, { token });
 }

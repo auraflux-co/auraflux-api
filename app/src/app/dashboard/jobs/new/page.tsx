@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload } from '@/lib/api';
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
+import { SourceLibraryPicker } from '@/components/jobs/source-library-picker';
 import { LockedFeature } from '@/components/ui/locked-feature';
 import { SparkAnvil } from '@/components/icons/brand-icons';
 import { useGuide } from '@/contexts/guide-context';
@@ -46,7 +47,7 @@ type ProductionPath =
   | 'short_enhance_upload'
   | 'short_fetch_enhance';
 
-type SourceMode = 'upload' | 'fetch';
+type SourceMode = 'upload' | 'fetch' | 'source';
 
 interface Feature {
   id:          string;
@@ -226,8 +227,8 @@ const STEP_GUIDE: Record<number, GuideContent> = {
     hint: 'Step 2 of 5 — Production path. I can explain which path is right for your content type and what happens to your video at each portal.',
   },
   2: {
-    tip:  'For URL fetch: paste YouTube, Twitch, Rumble, or direct video URLs — we pull the video for you. For upload: drag your file or click to browse. MP4, MOV, AVI, WebM up to 2 GB.',
-    hint: 'Step 3 of 5 — Source. Ask me about supported URL formats, how uploads work, or what happens to your source file in the pipeline.',
+    tip:  'Source from channel: enter your Twitch, Kick, or YouTube username to browse and select clips directly. Or paste URLs manually, or upload a file.',
+    hint: 'Step 3 of 5 — Source. Ask me about sourcing from Twitch/Kick/YouTube, supported URL formats, how uploads work, or what happens to your source file in the pipeline.',
   },
   3: {
     tip:  'Script + TTS together give you a fully narrated video — no voiceover needed. Scene selection is key for sports and long-form compilations. Video generation fills in segments where you have no source footage. Start conservative — you can always re-run with more features.',
@@ -416,7 +417,7 @@ function NewJobPageInner() {
 
     const payload: CreateJobPayload = {
       contentType:    pathToContentType(path!),
-      entryType:      mode,
+      entryType:      (mode === 'source' ? 'fetch' : mode) as 'fetch' | 'upload' | 'create',
       platforms,
       formFactor,
       productionPath: path,
@@ -569,7 +570,7 @@ function NewJobPageInner() {
             </div>
           </div>
 
-          {availableSources.length > 1 && (
+          {availableSources.length > 0 && (
             <div className="flex gap-2">
               {availableSources.map((s) => (
                 <button
@@ -583,10 +584,33 @@ function NewJobPageInner() {
                       : 'border-border text-muted-foreground hover:text-foreground',
                   )}
                 >
-                  {s === 'upload' ? 'Upload files' : 'Fetch from URLs'}
+                  {s === 'upload' ? 'Upload files' : s === 'source' ? 'Source from channel' : 'Fetch from URLs'}
                 </button>
               ))}
+              {/* Source from channel always available alongside fetch */}
+              {availableSources.includes('fetch') && !availableSources.includes('source') && (
+                <button
+                  type="button"
+                  onClick={() => setSourceMode('source')}
+                  className={cn(
+                    'px-3 py-1.5 text-xs rounded-md border transition-colors',
+                    effectiveSource === 'source'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-border text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  Source from channel
+                </button>
+              )}
             </div>
+          )}
+          {effectiveSource === 'source' && (
+            <SourceLibraryPicker
+              onSelect={(urls) => {
+                setSourceUrls(urls.join('\n'));
+                setSourceMode('fetch');
+              }}
+            />
           )}
           {effectiveSource === 'fetch' && (
             <div className="space-y-1.5">
@@ -1019,7 +1043,7 @@ function NewJobPageInner() {
               <p><span className="font-medium text-foreground">Format:</span> {formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
               <p><span className="font-medium text-foreground">Duration:</span> {durationMins} min</p>
               <p><span className="font-medium text-foreground">Path:</span> {selectedPathConfig?.label}</p>
-              <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
+              <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'fetch' ? 'Fetch from URLs' : effectiveSource === 'source' ? 'Source from channel' : 'Upload files'}</p>
               {topic.trim() && <p><span className="font-medium text-foreground">Topic:</span> {topic.trim()}</p>}
               <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>
               <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
