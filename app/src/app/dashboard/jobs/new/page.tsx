@@ -611,7 +611,13 @@ function NewJobPageInner() {
                   <button
                     key={s}
                     type="button"
-                    onClick={() => setSourceMode(s)}
+                    onClick={() => {
+                      setSourceMode(s);
+                      // P1-5: clear stale state from the mode we're leaving
+                      if (s !== 'source') setSourceItems([]);
+                      if (s !== 'fetch')  setSourceUrls('');
+                      if (s !== 'upload') { setUploadedKey(null); setUploadedName(null); setFileKeys(''); }
+                    }}
                     className={cn(
                       'px-3 py-1.5 text-xs rounded-md border transition-colors',
                       effectiveSource === s
