@@ -762,9 +762,10 @@ def run_test(test, args):
         # COMPACT tests: use clips to avoid DVR HLS expiry on multi-clip jobs (CPD-289)
         src_type_filter = 'clip'
     elif platform == 'twitch' and not use_spec:
-        # EXTRACT tests: cap VOD duration at 3600s — very long streams (4h+) OOM Render
-        # during yt-dlp segment resolution. A 1-hour VOD fully exercises the EXTRACT path.
-        src_max_duration = 3600
+        # EXTRACT tests: use clips instead of VODs. hasanabi/stableronaldo stream 4-6h
+        # marathons that OOM Render during yt-dlp segment resolution. Twitch clips are
+        # CDN URLs that yt-dlp resolves cleanly — they still exercise the full EXTRACT path.
+        src_type_filter = 'clip'
     print(f'  1. Fetching {test["clips_count"]} clip(s) from {platform} Source Library…')
     source_items = fetch_source_clips(platform, account, test['clips_count'], auth,
                                       type_filter=src_type_filter, max_duration=src_max_duration)
