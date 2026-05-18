@@ -1,5 +1,6 @@
 # AuraFlux — Status & Task Tracker
 **Last Updated:** 2026-05-18 v1.0.497 (Cursor — fix(cpd-280): CORS — ALLOWED_ORIGINS updated on Render auraflux-api to include https://app.auraflux.co and https://auraflux-app.onrender.com; server.js ALLOWED_ORIGINS split() now trims whitespace from each origin; redeploy triggered)
+**Last Updated:** 2026-05-18 v1.0.503 (Cursor — fix(cpd-283): youtube_client sends Referer header so HTTP-referrer-restricted API keys work server-side; set key to allow auraflux-api.onrender.com/*)
 **Last Updated:** 2026-05-18 v1.0.502 (Cursor — temp(cpd-283): add /debug/outbound-ip to find Render outbound IP for YouTube API key fix)
 **Last Updated:** 2026-05-18 v1.0.501 (Cursor — fix(cpd-279): run_6_e2e.py accept HTTP 202 from job submit; fixes 6 tests that failed despite successful job queuing)
 **Last Updated:** 2026-05-18 v1.0.500 (Cursor — fix(cpd-281): source.js auth — flexAuth accepts API key + Clerk; ROLES.customer → ROLES.CUSTOMER; both bugs blocked all 18 Run 6 tests)
