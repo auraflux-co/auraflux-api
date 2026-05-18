@@ -30,6 +30,7 @@ import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload }
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
 import { SourceLibraryPicker } from '@/components/jobs/source-library-picker';
+import { ClipEditor, type ClipSpec, type EditorMode } from '@/components/jobs/clip-editor';
 import { LockedFeature } from '@/components/ui/locked-feature';
 import { SparkAnvil } from '@/components/icons/brand-icons';
 import { useGuide } from '@/contexts/guide-context';
@@ -268,7 +269,7 @@ function GuideTip({ step }: { step: number }) {
 }
 
 const STEPS = ['Format', 'Path', 'Source', 'Features', 'Publish'] as const;
-type Step = 0 | 1 | 2 | 3 | 4;
+type Step = 0 | 1 | 2 | 2.5 | 3 | 4;
 
 function StepHeader({ step }: { step: Step }) {
   return (
@@ -319,6 +320,8 @@ function NewJobPageInner() {
   const [fileKeys,    setFileKeys]    = useState('');
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [uploadedName,setUploadedName]= useState<string | null>(null);
+  const [clipSpec, setClipSpec]       = useState<ClipSpec | null>(null);
+  const [useEditor, setUseEditor]     = useState(false);
   const [topic, setTopic]           = useState('');
   const [tone, setTone]             = useState('professional');
   const [features, setFeatures]     = useState<Set<string>>(new Set());
@@ -383,6 +386,14 @@ function NewJobPageInner() {
     setAddOns((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
 
+  // Determine which editor mode to use based on production path
+  function editorMode(): EditorMode | null {
+    if (!path) return null;
+    if (path === 'short_cut_longform' || path === 'long_produce_source') return 'extract';
+    if (path === 'long_compile_clips' || path === 'short_enhance_upload' || path === 'short_fetch_enhance') return 'compact';
+    return null;
+  }
+
   function advance() {
     setError(null);
     if (step === 0 && !formFactor) { setError('Select a format to continue'); return; }
@@ -394,14 +405,23 @@ function NewJobPageInner() {
         if (!sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean).length) {
           setError('Enter at least one URL'); return;
         }
-      } else {
+      } else if (mode !== 'source') {
         if (!fileKeys.trim()) {
           setError('Please upload a video file before continuing'); return;
         }
       }
+      // If editor is enabled, insert editor step (2.5) before features (3)
+      if (useEditor && editorMode()) {
+        setStep(2.5 as Step);
+        return;
+      }
     }
     if (step === 4) { handleSubmit(); return; }
-    setStep((s) => (s + 1) as Step);
+    setStep((s) => {
+      // Skip 2.5 when going forward without editor
+      const next = (s as number) + 1;
+      return next as Step;
+    });
   }
 
   async function handleSubmit() {
@@ -434,6 +454,10 @@ function NewJobPageInner() {
       payload.fetchSpec = { sourceUrls: sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean) };
     } else {
       payload.uploadSpec = { fileKeys: fileKeys.split('\n').map((k) => k.trim()).filter(Boolean) };
+    }
+    if (clipSpec) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (payload as any).clipSpec = clipSpec;
     }
 
     if (schedule.publishMode === 'scheduled' && schedule.scheduledPublishAt) {
@@ -643,7 +667,61 @@ function NewJobPageInner() {
             </div>
           )}
           <GuideTip step={2} />
+
+          {/* Editor opt-in toggle — only shown when an editor mode applies */}
+          {editorMode() && (
+            <div className={cn(
+              'flex items-center justify-between rounded-lg border px-4 py-3 transition-colors',
+              useEditor ? 'border-primary/40 bg-primary/5' : 'border-border',
+            )}>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {useEditor ? 'Editor on — you control clips' : 'Let AuraFlux decide clips'}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {editorMode() === 'extract'
+                    ? 'Mark exactly which moments to extract from your source'
+                    : 'Set the assembly order and trim points for each clip'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUseEditor((v) => !v)}
+                className={cn(
+                  'relative w-10 h-5 rounded-full border transition-colors shrink-0',
+                  useEditor ? 'bg-primary border-primary' : 'border-border bg-muted',
+                )}
+              >
+                <span className={cn(
+                  'absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm',
+                  useEditor ? 'translate-x-5' : 'translate-x-0.5',
+                )} />
+              </button>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Step 2.5 — Clip editor */}
+      {(step as number) === 2.5 && editorMode() && (
+        <ClipEditor
+          mode={editorMode()!}
+          sourceUrl={effectiveSource === 'fetch' ? sourceUrls.split('\n')[0]?.trim() : undefined}
+          sourceClips={
+            effectiveSource === 'fetch'
+              ? sourceUrls.split('\n').filter(Boolean).map((url, i) => ({ url: url.trim(), title: `Clip ${i + 1}` }))
+              : undefined
+          }
+          availableFeatures={Array.from(features)}
+          onConfirm={(spec) => {
+            setClipSpec(spec);
+            setStep(3 as Step);
+          }}
+          onCancel={() => {
+            setClipSpec(null);
+            setStep(3 as Step);
+          }}
+        />
       )}
 
       {/* Step 3 — Features & configuration */}
@@ -1064,7 +1142,12 @@ function NewJobPageInner() {
       <div className="flex gap-2 justify-between">
         <button
           type="button"
-          onClick={() => step === 0 ? router.back() : setStep((s) => (s - 1) as Step)}
+          onClick={() => {
+            if (step === 0) { router.back(); return; }
+            // From step 3, skip 2.5 unless editor is on
+            if ((step as number) === 3 && !useEditor) { setStep(2 as Step); return; }
+            setStep((s) => ((s as number) - 1) as Step);
+          }}
           className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
         >
           {step === 0 ? 'Cancel' : '← Back'}
