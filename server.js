@@ -1788,6 +1788,23 @@ app.post('/episode-counters', (req, res) => {
   }
 });
 
+// Temporary: expose outbound IP for YouTube API key IP restriction setup (CPD-283)
+app.get('/debug/outbound-ip', async (req, res) => {
+  try {
+    const https = require('https');
+    const ip = await new Promise((resolve, reject) => {
+      https.get('https://api.ipify.org', (r) => {
+        let d = '';
+        r.on('data', (c) => { d += c; });
+        r.on('end', () => resolve(d.trim()));
+      }).on('error', reject);
+    });
+    res.json({ outboundIp: ip });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/health', async (req, res) => {
   const health = {
     ok: true,
