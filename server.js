@@ -7187,6 +7187,7 @@ const voiceRouter         = require('./lib/routes/voice');
 const videoRouter         = require('./lib/routes/video');
 const thumbnailRouter     = require('./lib/routes/thumbnail');
 const clipSourcingRouter  = require('./lib/routes/clip_sourcing');
+const sourceRouter        = require('./lib/routes/source');
 const heygenRouter        = require('./lib/routes/heygen');
 app.use(planRouter);
 app.use(creditsRouter);
@@ -7201,6 +7202,7 @@ app.use(voiceRouter);
 app.use(videoRouter);
 app.use(thumbnailRouter);
 app.use(clipSourcingRouter);
+app.use(sourceRouter);
 // heygen inline routes are guarded with !DATABASE_URL — with DB now set those
 // won't register, so the router file is safe to mount without conflicts.
 app.use(heygenRouter);
