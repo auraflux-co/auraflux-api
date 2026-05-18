@@ -211,13 +211,19 @@ function ClipCard({
           selected
             ? 'bg-primary/25 opacity-100'
             : 'opacity-0 group-hover:opacity-100 bg-black/15',
+        )} />
+
+        {/* Selection indicator — always top-right, hollow on hover, filled when selected */}
+        <div className={cn(
+          'absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shadow-sm',
+          selected
+            ? 'bg-primary border-primary opacity-100'
+            : 'bg-black/30 border-white/80 opacity-0 group-hover:opacity-100',
         )}>
           {selected && (
-            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary shadow-lg flex items-center justify-center">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
           )}
         </div>
       </div>
@@ -275,6 +281,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   const [items, setItems]               = useState<SourceItem[]>([]);
   const [channelName, setChannelName]   = useState('');
   const [selected, setSelected]         = useState<Set<string>>(new Set());
+  const [limitReached, setLimitReached] = useState(false);
 
   // Filters
   const [dateRange, setDateRange]       = useState<SourceDateRange>('all');
@@ -410,12 +417,17 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   }, [platform, username, channelName, dateRange, contentType, activePlaylist, durationPreset, doFetch]);
 
   const toggleItem = useCallback((item: SourceItem) => {
+    setLimitReached(false);
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(item.url)) {
         next.delete(item.url);
       } else if (next.size < maxSelect) {
         next.add(item.url);
+      } else {
+        // Already at max — surface the limit message
+        setLimitReached(true);
+        return prev;
       }
       return next;
     });
@@ -505,6 +517,11 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
             </span>
           </div>
 
+          {/* ── Refine results (server-side refetch) ─────────────────────────── */}
+          <p className="text-[9px] uppercase tracking-widest text-muted-foreground/60 font-semibold pt-0.5">
+            Refine results
+          </p>
+
           {/* Date range pills */}
           <div className="space-y-1">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Date</p>
@@ -581,36 +598,41 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
             </div>
           )}
 
-          {/* Keyword search — client-side */}
-          <div className="relative">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Filter by title…"
-              className="w-full h-8 pl-8 pr-3 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-            {keyword && (
-              <button
-                type="button"
-                onClick={() => setKeyword('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-              </button>
-            )}
+          {/* ── Search within results (client-side, no refetch) ─────────────── */}
+          <div className="pt-1 border-t border-border/30 space-y-1">
+            <p className="text-[9px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
+              Search within results
+            </p>
+            <div className="relative">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="Filter by title…"
+                className="w-full h-8 pl-8 pr-3 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+              {keyword && (
+                <button
+                  type="button"
+                  onClick={() => setKeyword('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Results grid — shown while loading (skeleton) or once items exist */}
-      {(loading && channelName) || displayItems.length > 0 ? (
+      {/* Results grid — shown while loading (skeleton) or once server items exist */}
+      {(loading && channelName) || items.length > 0 ? (
         <div className="space-y-3">
           {/* Scroll container with bottom fade hint */}
           <div className="relative">
@@ -625,7 +647,8 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
                       </div>
                     </div>
                   ))
-                : displayItems.map((item) => (
+                : displayItems.length > 0
+                ? displayItems.map((item) => (
                     <ClipCard
                       key={item.id}
                       item={item}
@@ -633,13 +656,39 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
                       onToggle={() => toggleItem(item)}
                       accentBorder={cfg?.activeBorder ?? 'border-primary'}
                     />
-                  ))}
+                  ))
+                : (
+                    /* P1-4: keyword zeroed results — keep grid visible with inline clear prompt */
+                    <div className="col-span-2 sm:col-span-3 flex flex-col items-center justify-center py-8 gap-2 text-center">
+                      <p className="text-xs text-muted-foreground">
+                        No clips match <span className="font-medium text-foreground">"{keyword}"</span>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setKeyword('')}
+                        className="text-xs text-primary underline underline-offset-2 hover:no-underline"
+                      >
+                        Clear — show all {items.length} result{items.length !== 1 ? 's' : ''}
+                      </button>
+                    </div>
+                  )
+              }
             </div>
             {/* Bottom fade hint when content overflows */}
             {displayItems.length > 5 && (
               <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent" />
             )}
           </div>
+
+          {/* P1-1: Limit reached callout */}
+          {limitReached && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              You&apos;ve selected {maxSelect} clips (the maximum). Deselect one to swap it.
+            </div>
+          )}
 
           {/* Confirm strip */}
           {!loading && (
