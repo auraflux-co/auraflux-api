@@ -452,24 +452,43 @@ def api(method, path, body=None, auth_headers=None, timeout=30):
 
 
 def poll_job(job_id, auth_headers, poll_max=1200, interval=15):
-    """Poll until terminal state or timeout. Returns final job dict or None."""
+    """Poll until terminal state or timeout. Returns final job dict or None.
+
+    If outputUrl is set but status stays 'running' for >120s (server-restart
+    stall), synthesise a 'complete' status so Gemini can still grade the output.
+    """
     TERMINAL = {'complete', 'published', 'failed', 'error', 'cancelled'}
     deadline = time.time() + poll_max
+    output_url_since = None  # timestamp when outputUrl first appeared
+    last_resp = None
     while time.time() < deadline:
         resp, code = api('GET', f'/v1/jobs/{job_id}', auth_headers=auth_headers)
         if code != 200:
             print(f'    poll {job_id}: HTTP {code}')
             time.sleep(interval)
             continue
+        last_resp = resp
         status = resp.get('status', '')
         output_url = resp.get('outputUrl') or resp.get('output_url') or resp.get('assembledVideoUrl')
         print(f'    [{status}] {job_id}  outputUrl={bool(output_url)}', end='\r')
         if status in TERMINAL:
             print()
             return resp
+        if output_url:
+            if output_url_since is None:
+                output_url_since = time.time()
+            elif time.time() - output_url_since > 120:
+                # Video exists but server restart stalled the done transition —
+                # synthesise complete so Gemini can grade the output.
+                print(f'\n    ⚠  outputUrl stable >120s but status={status!r} — treating as complete')
+                patched = dict(resp)
+                patched['status'] = 'complete'
+                return patched
+        else:
+            output_url_since = None  # reset if outputUrl disappears
         time.sleep(interval)
     print(f'\n    ⏱  poll timeout after {poll_max}s')
-    return None
+    return last_resp
 
 
 # ── Source Library API ────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-18 v1.0.509 (Cursor — fix(cpd-279): poll_job treats outputUrl stable >120s as complete — prevents 20min timeout stall when Render restarts after heavy VOD job leaves job in running+outputUrl state)
 **Last Updated:** 2026-05-18 v1.0.508 (Cursor — fix(session-review): Add /dashboard/admin/customers to ADMIN_NAV in sidebar.tsx — page existed but was unreachable without direct URL)
 **Last Updated:** 2026-05-18 v1.0.507 (Cursor — fix(cpd-287/288/289): Run 6 post-mortem fixes — kick_client contentType+ms duration; assembly_service YouTube yt-dlp ANDROID_VR bypass flags; render.yaml yt-dlp auto-update on deploy; run_6_e2e type=clip for Kick+Twitch COMPACT to avoid VOD yt-dlp failures)
 **Last Updated:** 2026-05-18 v1.0.505 (Cursor — fix(cpd-286): 7 bugs from Gemini QA + Claude UX review — stale durationPreset closure fixed; selection preserved on filter change; loading skeleton during refetch; button copy fixed; Kick/Twitch ignore YouTube-only type values; getPlaylists adds contentDetails; useEffect fires once per channel; no-results vs error tone differentiated)
