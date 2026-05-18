@@ -493,7 +493,7 @@ def poll_job(job_id, auth_headers, poll_max=1200, interval=15):
 
 # ── Source Library API ────────────────────────────────────────────────────────
 
-def fetch_source_clips(platform, username, count, auth_headers, type_filter=None):
+def fetch_source_clips(platform, username, count, auth_headers, type_filter=None, max_duration=None):
     """
     Call GET /source/{platform}/{username}/content to fetch clips.
     Returns list of normalized items: {id, title, url, duration, thumbnailUrl, platform}
@@ -501,6 +501,9 @@ def fetch_source_clips(platform, username, count, auth_headers, type_filter=None
     type_filter: 'clip' | 'vod' | 'short' | None — maps to ?type= param.
       - Use 'clip' for Kick (avoids VODs that yt-dlp can't resolve from Render IPs)
       - Use 'clip' for Twitch COMPACT tests (avoids DVR HLS stream expiry on multi-clip jobs)
+
+    max_duration: cap in seconds applied client-side after fetch.
+      - Use 3600 for Twitch EXTRACT tests to avoid very long VODs (4h+) that OOM Render.
     """
     params = f'limit={count * 3}'
     if type_filter:
@@ -513,6 +516,8 @@ def fetch_source_clips(platform, username, count, auth_headers, type_filter=None
     items = resp.get('items', [])
     # Filter for items with a usable URL and reasonable duration
     valid = [i for i in items if i.get('url') and (i.get('duration') or 0) >= 10]
+    if max_duration:
+        valid = [i for i in valid if (i.get('duration') or 0) <= max_duration]
     if not valid:
         print(f'  ⚠️  Source Library {platform}/{username}: no valid items in response')
         return []
@@ -750,12 +755,19 @@ def run_test(test, args):
     # CPD-289: Twitch COMPACT (use_clip_spec=True) must use type=clip — VOD URLs
     # route through EXTRACT path which fails on DVR HLS expiry for multi-clip jobs.
     src_type_filter = None
+    src_max_duration = None
     if platform == 'kick':
         src_type_filter = 'clip'
     elif platform == 'twitch' and use_spec:
+        # COMPACT tests: use clips to avoid DVR HLS expiry on multi-clip jobs (CPD-289)
         src_type_filter = 'clip'
+    elif platform == 'twitch' and not use_spec:
+        # EXTRACT tests: cap VOD duration at 3600s — very long streams (4h+) OOM Render
+        # during yt-dlp segment resolution. A 1-hour VOD fully exercises the EXTRACT path.
+        src_max_duration = 3600
     print(f'  1. Fetching {test["clips_count"]} clip(s) from {platform} Source Library…')
-    source_items = fetch_source_clips(platform, account, test['clips_count'], auth, type_filter=src_type_filter)
+    source_items = fetch_source_clips(platform, account, test['clips_count'], auth,
+                                      type_filter=src_type_filter, max_duration=src_max_duration)
     if not source_items:
         return {'id': tid, 'status': 'SKIP', 'reason': f'Source Library returned no clips for {platform}/{account}'}
     print(f'     ✓ {len(source_items)} clip(s) fetched')
