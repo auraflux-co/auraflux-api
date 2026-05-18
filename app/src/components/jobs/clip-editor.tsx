@@ -92,7 +92,7 @@ function fmtTime(s: number): string {
   const m   = Math.floor((s % 3600) / 60);
   const sec = Math.floor(s % 60);
   if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-  return `${m}:${String(sec).padStart(2, '0')}`;
+  return `${m}:${String(sec).padStart(2, '0')}`; // always 2-digit seconds (Gemini: was showing "0:5")
 }
 
 function parseTime(v: string): number {
@@ -100,6 +100,25 @@ function parseTime(v: string): number {
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
   if (parts.length === 2) return parts[0] * 60 + parts[1];
   return Number(v) || 0;
+}
+
+// P1-1: Twitch/Kick/YouTube watch URLs cannot be embedded in a <video> tag.
+// Show a platform-specific guidance message instead of a silent broken player.
+const UNEMBEDDABLE_PATTERNS = [
+  /twitch\.tv/i,
+  /kick\.com/i,
+  /youtube\.com\/watch/i,
+  /youtu\.be\//i,
+];
+
+function isUnembeddableUrl(url: string): boolean {
+  return UNEMBEDDABLE_PATTERNS.some((p) => p.test(url));
+}
+
+function unembeddablePlatformName(url: string): string {
+  if (/twitch\.tv/i.test(url))  return 'Twitch Video Producer';
+  if (/kick\.com/i.test(url))   return 'Kick VOD manager';
+  return 'YouTube Studio';
 }
 
 // ─── Feature override row ─────────────────────────────────────────────────────
@@ -162,6 +181,7 @@ function ExtractEditor({
   const [duration, setDuration]     = useState(0);
   const [videoOk, setVideoOk]       = useState<boolean | null>(null);
   const [inPoint, setInPoint]       = useState<number | null>(null);
+  const [outError, setOutError]     = useState(false);
   const [manualIn, setManualIn]     = useState('');
   const [manualOut, setManualOut]   = useState('');
 
@@ -172,9 +192,14 @@ function ExtractEditor({
   }, []);
 
   const markOut = useCallback(() => {
-    const t   = videoRef.current?.currentTime ?? 0;
+    const t     = videoRef.current?.currentTime ?? 0;
     const start = inPoint ?? 0;
-    if (t <= start) return;
+    if (t <= start) {
+      // P1-3: give visible feedback instead of silent failure
+      setOutError(true);
+      setTimeout(() => setOutError(false), 600);
+      return;
+    }
     const newClip: ExtractClip = {
       id:               uid(),
       startTime:        start,
@@ -186,6 +211,7 @@ function ExtractEditor({
     setInPoint(null);
     setManualIn('');
     setManualOut('');
+    setOutError(false);
   }, [inPoint, clips.length, setClips]);
 
   function addManual() {
@@ -221,12 +247,23 @@ function ExtractEditor({
     <div className="space-y-4">
       {/* Video player */}
       <div className="rounded-lg border border-border overflow-hidden bg-black">
-        {sourceUrl ? (
+        {sourceUrl && isUnembeddableUrl(sourceUrl) ? (
+          // P1-1: Twitch/Kick/YouTube links can't play in a browser <video> tag — show guidance
+          <div className="px-4 py-5 space-y-1.5">
+            <p className="text-sm font-medium text-foreground">
+              {unembeddablePlatformName(sourceUrl)} links can&apos;t be previewed here.
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Open {unembeddablePlatformName(sourceUrl)} to find the exact timestamps,
+              then enter them manually in the fields below.
+            </p>
+          </div>
+        ) : sourceUrl ? (
           <video
             ref={videoRef}
             src={sourceUrl}
             controls
-            className="w-full max-h-56 object-contain"
+            className="w-full max-h-72 object-contain"
             onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime ?? 0)}
             onLoadedMetadata={() => {
               setDuration(videoRef.current?.duration ?? 0);
@@ -242,7 +279,8 @@ function ExtractEditor({
       </div>
 
       {/* Playback info + mark buttons */}
-      {videoOk !== false && sourceUrl && (
+      {/* P1-1: only show mark buttons when video is actually loaded and playable */}
+      {videoOk === true && sourceUrl && !isUnembeddableUrl(sourceUrl) && (
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-xs tabular-nums text-muted-foreground font-mono">
             {fmtTime(currentTime)} / {duration > 0 ? fmtTime(duration) : '—'}
@@ -263,9 +301,16 @@ function ExtractEditor({
             type="button"
             onClick={markOut}
             disabled={inPoint === null}
-            className="px-3 py-1.5 text-xs rounded-md border font-medium border-border text-muted-foreground hover:text-foreground disabled:opacity-40 transition-colors"
+            title={outError ? `Out point must be after In (${fmtTime(inPoint ?? 0)})` : undefined}
+            className={cn(
+              'px-3 py-1.5 text-xs rounded-md border font-medium transition-all disabled:opacity-40',
+              outError
+                ? 'border-destructive/60 text-destructive'
+                : 'border-border text-muted-foreground hover:text-foreground',
+            )}
           >
-            ▷ Mark Out
+            {/* P1-3: button text changes on failure — no shake animation needed */}
+            {outError ? 'Out must be after In' : '▷ Mark Out'}
           </button>
           <span className="text-[10px] text-muted-foreground">or enter timestamps manually →</span>
         </div>
@@ -659,8 +704,9 @@ function CompactEditor({
         <div className="flex items-center gap-1.5 flex-wrap">
           {clips.map((c, i) => (
             <div key={c.id} className="flex items-center gap-1">
-              <span className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground font-mono truncate max-w-[80px]" title={c.title}>
-                {i + 1}. {c.title.split(' ')[0]}
+              {/* P1-2: show actual title (truncated), not just first word */}
+              <span className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground font-mono truncate max-w-[96px]" title={c.title}>
+                {i + 1}. {c.title.length > 12 ? `${c.title.slice(0, 12)}…` : c.title}
               </span>
               {i < clips.length - 1 && (
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/40 shrink-0">

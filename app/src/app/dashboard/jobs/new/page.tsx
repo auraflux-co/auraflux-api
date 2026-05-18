@@ -29,8 +29,6 @@ import { cn } from '@/lib/utils';
 import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload } from '@/lib/api';
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
-import { SourceLibraryPicker } from '@/components/jobs/source-library-picker';
-import { ClipEditor, type ClipSpec, type EditorMode } from '@/components/jobs/clip-editor';
 import { LockedFeature } from '@/components/ui/locked-feature';
 import { SparkAnvil } from '@/components/icons/brand-icons';
 import { useGuide } from '@/contexts/guide-context';
@@ -48,7 +46,7 @@ type ProductionPath =
   | 'short_enhance_upload'
   | 'short_fetch_enhance';
 
-type SourceMode = 'upload' | 'fetch' | 'source';
+type SourceMode = 'upload' | 'fetch';
 
 interface Feature {
   id:          string;
@@ -228,8 +226,8 @@ const STEP_GUIDE: Record<number, GuideContent> = {
     hint: 'Step 2 of 5 — Production path. I can explain which path is right for your content type and what happens to your video at each portal.',
   },
   2: {
-    tip:  'Source from channel: enter your Twitch, Kick, or YouTube username to browse and select clips directly. Or paste URLs manually, or upload a file.',
-    hint: 'Step 3 of 5 — Source. Ask me about sourcing from Twitch/Kick/YouTube, supported URL formats, how uploads work, or what happens to your source file in the pipeline.',
+    tip:  'For URL fetch: paste YouTube, Twitch, Rumble, or direct video URLs — we pull the video for you. For upload: drag your file or click to browse. MP4, MOV, AVI, WebM up to 2 GB.',
+    hint: 'Step 3 of 5 — Source. Ask me about supported URL formats, how uploads work, or what happens to your source file in the pipeline.',
   },
   3: {
     tip:  'Script + TTS together give you a fully narrated video — no voiceover needed. Scene selection is key for sports and long-form compilations. Video generation fills in segments where you have no source footage. Start conservative — you can always re-run with more features.',
@@ -269,7 +267,7 @@ function GuideTip({ step }: { step: number }) {
 }
 
 const STEPS = ['Format', 'Path', 'Source', 'Features', 'Publish'] as const;
-type Step = 0 | 1 | 2 | 2.5 | 3 | 4;
+type Step = 0 | 1 | 2 | 3 | 4;
 
 function StepHeader({ step }: { step: Step }) {
   return (
@@ -278,13 +276,14 @@ function StepHeader({ step }: { step: Step }) {
         <div key={label} className="flex items-center">
           <div className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors',
-            i === step  ? 'bg-primary text-primary-foreground font-medium'
+            // P0-2: Math.floor handles step 2.5 — Source stays highlighted during editor step
+            Math.floor(step) === i  ? 'bg-primary text-primary-foreground font-medium'
               : i < step  ? 'text-muted-foreground'
               : 'text-muted-foreground/40',
           )}>
             <span className={cn(
               'w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-semibold border',
-              i === step  ? 'border-primary-foreground/30 bg-primary-foreground/10'
+              Math.floor(step) === i  ? 'border-primary-foreground/30 bg-primary-foreground/10'
                 : i < step ? 'border-muted-foreground/30' : 'border-muted-foreground/20',
             )}>{i + 1}</span>
             {label}
@@ -320,8 +319,6 @@ function NewJobPageInner() {
   const [fileKeys,    setFileKeys]    = useState('');
   const [uploadedKey, setUploadedKey] = useState<string | null>(null);
   const [uploadedName,setUploadedName]= useState<string | null>(null);
-  const [clipSpec, setClipSpec]       = useState<ClipSpec | null>(null);
-  const [useEditor, setUseEditor]     = useState(false);
   const [topic, setTopic]           = useState('');
   const [tone, setTone]             = useState('professional');
   const [features, setFeatures]     = useState<Set<string>>(new Set());
@@ -386,14 +383,6 @@ function NewJobPageInner() {
     setAddOns((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
 
-  // Determine which editor mode to use based on production path
-  function editorMode(): EditorMode | null {
-    if (!path) return null;
-    if (path === 'short_cut_longform' || path === 'long_produce_source') return 'extract';
-    if (path === 'long_compile_clips' || path === 'short_enhance_upload' || path === 'short_fetch_enhance') return 'compact';
-    return null;
-  }
-
   function advance() {
     setError(null);
     if (step === 0 && !formFactor) { setError('Select a format to continue'); return; }
@@ -405,23 +394,14 @@ function NewJobPageInner() {
         if (!sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean).length) {
           setError('Enter at least one URL'); return;
         }
-      } else if (mode !== 'source') {
+      } else {
         if (!fileKeys.trim()) {
           setError('Please upload a video file before continuing'); return;
         }
       }
-      // If editor is enabled, insert editor step (2.5) before features (3)
-      if (useEditor && editorMode()) {
-        setStep(2.5 as Step);
-        return;
-      }
     }
     if (step === 4) { handleSubmit(); return; }
-    setStep((s) => {
-      // Skip 2.5 when going forward without editor
-      const next = (s as number) + 1;
-      return next as Step;
-    });
+    setStep((s) => (s + 1) as Step);
   }
 
   async function handleSubmit() {
@@ -437,7 +417,7 @@ function NewJobPageInner() {
 
     const payload: CreateJobPayload = {
       contentType:    pathToContentType(path!),
-      entryType:      (mode === 'source' ? 'fetch' : mode) as 'fetch' | 'upload' | 'create',
+      entryType:      mode,
       platforms,
       formFactor,
       productionPath: path,
@@ -454,10 +434,6 @@ function NewJobPageInner() {
       payload.fetchSpec = { sourceUrls: sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean) };
     } else {
       payload.uploadSpec = { fileKeys: fileKeys.split('\n').map((k) => k.trim()).filter(Boolean) };
-    }
-    if (clipSpec) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (payload as any).clipSpec = clipSpec;
     }
 
     if (schedule.publishMode === 'scheduled' && schedule.scheduledPublishAt) {
@@ -594,7 +570,7 @@ function NewJobPageInner() {
             </div>
           </div>
 
-          {availableSources.length > 0 && (
+          {availableSources.length > 1 && (
             <div className="flex gap-2">
               {availableSources.map((s) => (
                 <button
@@ -608,33 +584,10 @@ function NewJobPageInner() {
                       : 'border-border text-muted-foreground hover:text-foreground',
                   )}
                 >
-                  {s === 'upload' ? 'Upload files' : s === 'source' ? 'Source from channel' : 'Fetch from URLs'}
+                  {s === 'upload' ? 'Upload files' : 'Fetch from URLs'}
                 </button>
               ))}
-              {/* Source from channel always available alongside fetch */}
-              {availableSources.includes('fetch') && !availableSources.includes('source') && (
-                <button
-                  type="button"
-                  onClick={() => setSourceMode('source')}
-                  className={cn(
-                    'px-3 py-1.5 text-xs rounded-md border transition-colors',
-                    effectiveSource === 'source'
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'border-border text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  Source from channel
-                </button>
-              )}
             </div>
-          )}
-          {effectiveSource === 'source' && (
-            <SourceLibraryPicker
-              onSelect={(urls) => {
-                setSourceUrls(urls.join('\n'));
-                setSourceMode('fetch');
-              }}
-            />
           )}
           {effectiveSource === 'fetch' && (
             <div className="space-y-1.5">
@@ -667,61 +620,7 @@ function NewJobPageInner() {
             </div>
           )}
           <GuideTip step={2} />
-
-          {/* Editor opt-in toggle — only shown when an editor mode applies */}
-          {editorMode() && (
-            <div className={cn(
-              'flex items-center justify-between rounded-lg border px-4 py-3 transition-colors',
-              useEditor ? 'border-primary/40 bg-primary/5' : 'border-border',
-            )}>
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  {useEditor ? 'Editor on — you control clips' : 'Let AuraFlux decide clips'}
-                </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {editorMode() === 'extract'
-                    ? 'Mark exactly which moments to extract from your source'
-                    : 'Set the assembly order and trim points for each clip'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setUseEditor((v) => !v)}
-                className={cn(
-                  'relative w-10 h-5 rounded-full border transition-colors shrink-0',
-                  useEditor ? 'bg-primary border-primary' : 'border-border bg-muted',
-                )}
-              >
-                <span className={cn(
-                  'absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm',
-                  useEditor ? 'translate-x-5' : 'translate-x-0.5',
-                )} />
-              </button>
-            </div>
-          )}
         </div>
-      )}
-
-      {/* Step 2.5 — Clip editor */}
-      {(step as number) === 2.5 && editorMode() && (
-        <ClipEditor
-          mode={editorMode()!}
-          sourceUrl={effectiveSource === 'fetch' ? sourceUrls.split('\n')[0]?.trim() : undefined}
-          sourceClips={
-            effectiveSource === 'fetch'
-              ? sourceUrls.split('\n').filter(Boolean).map((url, i) => ({ url: url.trim(), title: `Clip ${i + 1}` }))
-              : undefined
-          }
-          availableFeatures={Array.from(features)}
-          onConfirm={(spec) => {
-            setClipSpec(spec);
-            setStep(3 as Step);
-          }}
-          onCancel={() => {
-            setClipSpec(null);
-            setStep(3 as Step);
-          }}
-        />
       )}
 
       {/* Step 3 — Features & configuration */}
@@ -1114,18 +1013,17 @@ function NewJobPageInner() {
           {/* Add-on extensions (HeyGen, Shoppable) — hidden from UI, wired in code.
                Managed-plan add-ons will be surfaced once onboarding flow is complete. */}
 
-          {/* Job spec confirmation card — shows everything locked in before submit */}
+          {/* Review summary */}
           <Card className="bg-muted/30 border-dashed">
-            <CardContent className="pt-4 space-y-1.5 text-xs text-muted-foreground">
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70 mb-2">Locked in for this job</p>
+            <CardContent className="pt-4 space-y-2 text-xs text-muted-foreground">
               <p><span className="font-medium text-foreground">Format:</span> {formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
-              <p><span className="font-medium text-foreground">Duration:</span> {durationMins} min</p>
               <p><span className="font-medium text-foreground">Path:</span> {selectedPathConfig?.label}</p>
-              <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'fetch' ? 'Fetch from URLs' : effectiveSource === 'source' ? 'Source from channel' : 'Upload files'}</p>
+              <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
               {topic.trim() && <p><span className="font-medium text-foreground">Topic:</span> {topic.trim()}</p>}
               <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>
               <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
-              <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ') || '—'}</p>
+              <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ')}</p>
+              {/* Add-ons summary hidden — add-ons not surfaced in UI yet */}
             </CardContent>
           </Card>
 
@@ -1139,23 +1037,26 @@ function NewJobPageInner() {
 
       <Separator />
 
-      <div className="flex gap-2 justify-between">
-        <button
-          type="button"
-          onClick={() => {
-            if (step === 0) { router.back(); return; }
-            // From step 3, skip 2.5 unless editor is on
-            if ((step as number) === 3 && !useEditor) { setStep(2 as Step); return; }
-            setStep((s) => ((s as number) - 1) as Step);
-          }}
-          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-        >
-          {step === 0 ? 'Cancel' : '← Back'}
-        </button>
-        <Button size="sm" disabled={isPending} onClick={advance}>
-          {isPending ? 'Submitting…' : step === 4 ? 'Submit job' : 'Next →'}
-        </Button>
-      </div>
+      {/* P0-1: hide wizard nav at step 2.5 — ClipEditor has its own Confirm/Cancel */}
+      {(step as number) !== 2.5 && (
+        <div className="flex gap-2 justify-between">
+          <button
+            type="button"
+            onClick={() => {
+              if (step === 0) { router.back(); return; }
+              // P1-4: step 2.5 Back must go to step 2, not step 1.5
+              if ((step as number) === 2.5) { setStep(2 as Step); return; }
+              setStep((s) => ((s as number) - 1) as Step);
+            }}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+          >
+            {step === 0 ? 'Cancel' : '← Back'}
+          </button>
+          <Button size="sm" disabled={isPending} onClick={advance}>
+            {isPending ? 'Submitting…' : step === 4 ? 'Submit job' : 'Next →'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
