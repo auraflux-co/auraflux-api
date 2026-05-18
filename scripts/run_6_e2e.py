@@ -759,7 +759,7 @@ def run_test(test, args):
     # ── 5. Submit job ────────────────────────────────────────────────────────
     print(f'  5. Submitting job via {"dashboard (Clerk user)" if is_dashboard else "API key"}…')
     resp, code = api('POST', '/v1/jobs', spec, auth_headers=auth)
-    if code not in (200, 201):
+    if code not in (200, 201, 202):
         return {'id': tid, 'status': 'FAIL', 'reason': f'Submit HTTP {code}: {resp}'}
     job_id = resp.get('jobId') or resp.get('id') or resp.get('job_id')
     if not job_id:
