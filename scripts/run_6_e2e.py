@@ -801,6 +801,47 @@ def run_test(test, args):
     }
 
 
+# ── Template helpers ─────────────────────────────────────────────────────────
+
+RUN6_TEMPLATE_REGISTRY = REPO_DIR / 'logs' / 'e2e_run6_templates.json'
+
+
+def save_template_for_job(test, job_id, spec, auth_headers):
+    """Save a completed job as a named template for Run 7 reuse."""
+    name = f'E2E-Run6-{test["id"]}'
+    body = {
+        'name':        name,
+        'description': f'Auto-saved from Run 6 E2E — {test["id"]} ({test["tier"]}/{test["platform_src"]})',
+        'jobSpec':     spec,
+    }
+    resp, code = api('POST', '/v1/templates', body, auth_headers=auth_headers)
+    if code not in (200, 201):
+        print(f'  ⚠️  template save failed ({code}): {resp}')
+        return None
+    tpl  = resp.get('template') or resp
+    tpl_id = tpl.get('id') if isinstance(tpl, dict) else None
+    if not tpl_id:
+        print(f'  ⚠️  template save: no id in response')
+        return None
+    registry = {}
+    if RUN6_TEMPLATE_REGISTRY.exists():
+        try:
+            registry = json.loads(RUN6_TEMPLATE_REGISTRY.read_text())
+        except Exception:
+            pass
+    registry[test['id']] = {
+        'template_id':  tpl_id,
+        'name':         name,
+        'job_id':       job_id,
+        'tier':         test['tier'],
+        'platform_src': test['platform_src'],
+        'use_clip_spec': test['use_clip_spec'],
+    }
+    RUN6_TEMPLATE_REGISTRY.write_text(json.dumps(registry, indent=2))
+    print(f'  💾  template saved: {name} → {tpl_id}')
+    return tpl_id
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -811,6 +852,8 @@ def main():
                         help='Run only this source platform (repeatable)')
     parser.add_argument('--test',     action='append', help='Run specific test ID(s) (repeatable)')
     parser.add_argument('--no-ux',    action='store_true', help='Skip Gemini QA scoring')
+    parser.add_argument('--save-templates', action='store_true', default=True,
+                        help='Save each passing job as a template for Run 7 (default: on)')
     args = parser.parse_args()
 
     # Filter tests
@@ -844,6 +887,27 @@ def main():
             print(f'  ✗ {test["id"]} ERROR: {e}')
         results.append(result)
 
+        # Save template for Run 7 if job produced output
+        if args.save_templates and result.get('job_id') and result.get('output_url'):
+            auth = get_auth_headers(test['tier'])
+            # Reconstruct minimal spec for template from result
+            tpl_spec = {
+                'entry':             'fetch',
+                'productionProfile': test['profile'],
+                'format':            test['format'],
+                'contentType':       test['content_type'],
+                'platforms':         [test['platform_pub']] if isinstance(test['platform_pub'], str) else test['platform_pub'],
+                'topic':             test['topic'],
+                'tone':              test['tone'],
+                'durationMins':      test['durationMins'],
+                'source_platform':   test['platform_src'],
+                'source_account':    test['account'],
+            }
+            if result.get('use_clip_spec'):
+                tpl_spec['clipSpec'] = {'mode': 'compact', 'uniformFeatures': True}
+            tpl_id = save_template_for_job(test, result['job_id'], tpl_spec, auth)
+            result['template_id'] = tpl_id
+
     # Summary
     elapsed = time.time() - start
     passed  = [r for r in results if r.get('pass')]
@@ -852,13 +916,15 @@ def main():
     print(f'\n{"═"*60}')
     print(f'  Run 6 Summary — {len(passed)}/{len(results)} passed  ({elapsed/60:.1f} min)')
     print(f'{"═"*60}')
-    print(f'  {"ID":<10} {"Tier":<8} {"Platform":<8} {"Auth":<10} {"clipSpec":<9} {"Status":<12} {"Score":<6} Pass')
-    print(f'  {"─"*10} {"─"*8} {"─"*8} {"─"*10} {"─"*9} {"─"*12} {"─"*6} {"─"*4}')
+    print(f'  {"ID":<10} {"Tier":<8} {"Platform":<8} {"Auth":<10} {"clipSpec":<9} {"Status":<12} {"Score":<6} {"Pass":<5} {"Template":<12} Output URL')
+    print(f'  {"─"*10} {"─"*8} {"─"*8} {"─"*10} {"─"*9} {"─"*12} {"─"*6} {"─"*5} {"─"*12} {"─"*40}')
     for r in results:
         score_s = str(r.get('score', '—'))
+        tpl     = r.get('template_id', '—')[:12]
+        out_url = (r.get('output_url') or '—')[:60]
         print(f'  {r["id"]:<10} {r.get("tier",""):<8} {r.get("platform_src",""):<8} '
               f'{r.get("auth_surface",""):<10} {str(r.get("use_clip_spec","")):<9} '
-              f'{r.get("status",""):<12} {score_s:<6} {"✅" if r.get("pass") else "❌"}')
+              f'{r.get("status",""):<12} {score_s:<6} {"✅" if r.get("pass") else "❌":<5} {tpl:<12} {out_url}')
 
     if failed:
         print(f'\n  Failed tests:')
