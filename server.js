@@ -1521,8 +1521,10 @@ app.use(helmet({
 }));
 
 // CORS configuration with origin whitelist
+// CPD-280: ALLOWED_ORIGINS must include app.auraflux.co in production.
+// Render env var: https://app.auraflux.co,https://auraflux-app.onrender.com,http://localhost:3000
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
   : ['http://localhost:8765', 'http://localhost:3000'];
 
 // Request ID middleware for tracing
