@@ -490,26 +490,46 @@ export async function warpIntoAccount(userId: string, token?: string) {
 
 // ─── Creator Source Library (CPD-274) ────────────────────────────────────────
 
-export type SourcePlatform = 'twitch' | 'kick' | 'youtube';
+export type SourcePlatform  = 'twitch' | 'kick' | 'youtube';
+export type SourceDateRange = '24h' | '7d' | '30d' | 'all';
+export type SourceType      = 'all' | 'clip' | 'vod' | 'short' | 'video';
 
 export interface SourceItem {
   id:           string;
   title:        string;
-  thumbnailUrl: string;
+  thumbnailUrl: string | null;
   duration:     number;
-  publishedAt:  string;
+  publishedAt:  string | null;
   url:          string;
   viewCount:    number;
   platform:     SourcePlatform;
+  contentType?: 'clip' | 'vod' | 'video' | 'short';
+  /** legacy alias for contentType */
   type?:        'clip' | 'vod' | 'video' | 'short';
+  isShort?:     boolean;
+}
+
+export interface SourcePlaylist {
+  id:          string;
+  title:       string;
+  thumbnailUrl: string | null;
 }
 
 export interface SourceChannel {
   id:          string;
-  name:        string;
-  displayName: string;
+  name?:       string;
+  displayName?: string;
   avatarUrl?:  string;
-  url:         string;
+  url?:        string;
+}
+
+export interface SourceFilters {
+  dateRange?:   SourceDateRange;
+  type?:        SourceType;
+  minDuration?: number;   // seconds
+  maxDuration?: number;
+  q?:           string;   // keyword
+  playlistId?:  string;   // YouTube only
 }
 
 export interface SourceContentResult {
@@ -524,8 +544,23 @@ export async function fetchSourceContent(
   username: string,
   limit = 20,
   token?: string,
+  filters?: SourceFilters,
 ): Promise<SourceContentResult> {
-  return apiFetch(`/source/${platform}/${encodeURIComponent(username)}/content?limit=${limit}`, { token });
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (filters?.dateRange && filters.dateRange !== 'all') params.set('after', filters.dateRange);
+  if (filters?.type && filters.type !== 'all')          params.set('type', filters.type);
+  if (filters?.minDuration)                             params.set('minDuration', String(filters.minDuration));
+  if (filters?.maxDuration)                             params.set('maxDuration', String(filters.maxDuration));
+  if (filters?.q)                                       params.set('q', filters.q);
+  if (filters?.playlistId)                              params.set('playlistId', filters.playlistId);
+  return apiFetch(`/source/${platform}/${encodeURIComponent(username)}/content?${params}`, { token });
+}
+
+export async function fetchYouTubePlaylists(
+  handle: string,
+  token?: string,
+): Promise<{ ok: boolean; playlists: SourcePlaylist[] }> {
+  return apiFetch(`/source/youtube/${encodeURIComponent(handle)}/playlists`, { token });
 }
 
 export async function getJob(jobId: string, token?: string): Promise<{ job: Job }> {

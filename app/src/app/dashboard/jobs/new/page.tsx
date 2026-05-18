@@ -33,6 +33,8 @@ import { LockedFeature } from '@/components/ui/locked-feature';
 import { SparkAnvil } from '@/components/icons/brand-icons';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
+import { SourceLibraryPicker } from '@/components/jobs/source-library-picker';
+import type { SourceItem } from '@/lib/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,7 +48,7 @@ type ProductionPath =
   | 'short_enhance_upload'
   | 'short_fetch_enhance';
 
-type SourceMode = 'upload' | 'fetch';
+type SourceMode = 'upload' | 'fetch' | 'source';
 
 interface Feature {
   id:          string;
@@ -314,11 +316,12 @@ function NewJobPageInner() {
   // Wizard state
   const [formFactor, setFormFactor] = useState<FormFactor | null>(null);
   const [path, setPath]             = useState<ProductionPath | null>(null);
-  const [sourceMode, setSourceMode] = useState<SourceMode | null>(null);
-  const [sourceUrls, setSourceUrls] = useState('');
-  const [fileKeys,    setFileKeys]    = useState('');
-  const [uploadedKey, setUploadedKey] = useState<string | null>(null);
-  const [uploadedName,setUploadedName]= useState<string | null>(null);
+  const [sourceMode, setSourceMode]       = useState<SourceMode | null>(null);
+  const [sourceUrls, setSourceUrls]       = useState('');
+  const [sourceItems, setSourceItems]     = useState<SourceItem[]>([]);
+  const [fileKeys,    setFileKeys]         = useState('');
+  const [uploadedKey, setUploadedKey]     = useState<string | null>(null);
+  const [uploadedName,setUploadedName]    = useState<string | null>(null);
   const [topic, setTopic]           = useState('');
   const [tone, setTone]             = useState('professional');
   const [features, setFeatures]     = useState<Set<string>>(new Set());
@@ -394,6 +397,10 @@ function NewJobPageInner() {
         if (!sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean).length) {
           setError('Enter at least one URL'); return;
         }
+      } else if (mode === 'source') {
+        if (!sourceItems.length) {
+          setError('Select at least one clip from the Source Library'); return;
+        }
       } else {
         if (!fileKeys.trim()) {
           setError('Please upload a video file before continuing'); return;
@@ -417,7 +424,7 @@ function NewJobPageInner() {
 
     const payload: CreateJobPayload = {
       contentType:    pathToContentType(path!),
-      entryType:      mode,
+      entryType:      (mode === 'source' ? 'fetch' : mode) as 'fetch' | 'upload' | 'create',
       platforms,
       formFactor,
       productionPath: path,
@@ -432,6 +439,21 @@ function NewJobPageInner() {
 
     if (mode === 'fetch') {
       payload.fetchSpec = { sourceUrls: sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean) };
+    } else if (mode === 'source') {
+      // Source Library: pass URLs as fetchSpec + enrich with titles/thumbnails
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (payload as any).fetchSpec = {
+        sourceUrls: sourceItems.map((i) => i.url),
+        sourceLibrary: sourceItems.map((i) => ({
+          url:          i.url,
+          title:        i.title,
+          duration:     i.duration,
+          thumbnailUrl: i.thumbnailUrl,
+          platform:     i.platform,
+          contentType:  i.contentType || i.type,
+        })),
+      };
+      payload.entryType = 'fetch';
     } else {
       payload.uploadSpec = { fileKeys: fileKeys.split('\n').map((k) => k.trim()).filter(Boolean) };
     }
@@ -570,25 +592,40 @@ function NewJobPageInner() {
             </div>
           </div>
 
-          {availableSources.length > 1 && (
-            <div className="flex gap-2">
-              {availableSources.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSourceMode(s)}
-                  className={cn(
-                    'px-3 py-1.5 text-xs rounded-md border transition-colors',
-                    effectiveSource === s
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'border-border text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {s === 'upload' ? 'Upload files' : 'Fetch from URLs'}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Source mode tabs — always show all three if path supports fetch */}
+          {(() => {
+            const allModes: SourceMode[] = availableSources.includes('upload')
+              ? ['upload', 'fetch', 'source']
+              : availableSources.includes('fetch')
+              ? ['fetch', 'source']
+              : availableSources;
+            if (allModes.length <= 1) return null;
+            const labels: Record<SourceMode, string> = {
+              upload: 'Upload file',
+              fetch:  'Paste URLs',
+              source: 'Browse channel',
+            };
+            return (
+              <div className="flex gap-2">
+                {allModes.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSourceMode(s)}
+                    className={cn(
+                      'px-3 py-1.5 text-xs rounded-md border transition-colors',
+                      effectiveSource === s
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {labels[s]}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
+
           {effectiveSource === 'fetch' && (
             <div className="space-y-1.5">
               <Label className="text-xs">Source URLs <span className="text-muted-foreground">(one per line)</span></Label>
@@ -600,6 +637,23 @@ function NewJobPageInner() {
               />
             </div>
           )}
+
+          {effectiveSource === 'source' && (
+            <div className="space-y-1.5">
+              <SourceLibraryPicker
+                maxSelect={10}
+                onSelect={(items) => {
+                  setSourceItems(items);
+                }}
+              />
+              {sourceItems.length > 0 && (
+                <p className="text-xs text-primary font-medium">
+                  ✓ {sourceItems.length} clip{sourceItems.length !== 1 ? 's' : ''} selected — ready for next step
+                </p>
+              )}
+            </div>
+          )}
+
           {effectiveSource === 'upload' && (
             <div className="space-y-1.5">
               <Label className="text-xs">Your video file</Label>
