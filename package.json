@@ -100,7 +100,7 @@
     "stripe": "^22.1.0",
     "svix": "^1.93.0",
     "telnyx": "^6.63.0",
-    "twilio": "^6.0.0"
+    "twilio": "^6.0.2"
   },
   "devDependencies": {
     "autocannon": "^8.0.0",
