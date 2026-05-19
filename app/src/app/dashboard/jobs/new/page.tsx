@@ -2,12 +2,11 @@
 /**
  * /dashboard/jobs/new — Job submission wizard (CPD-110, CPD-113)
  *
- * Platform-agnostic 5-step flow:
+ * Platform-agnostic 4-step flow (CPD-303):
  *   1. Format        — Long-form (16:9) or Short-form (9:16)
- *   2. Path          — production path based on what customer brings
- *   3. Source        — upload file keys or fetch URLs
- *   4. Features      — production capabilities to apply
- *   5. Publish       — platform, schedule, add-on extensions
+ *   2. Source        — browse channel or upload file (production path inferred silently)
+ *   3. Features      — production capabilities to apply
+ *   4. Publish       — platform, schedule, add-on extensions
  *
  * CPD-113: AuraFlux Guide is integral to accuracy —
  *   • Guide auto-opens on mount with step-0 context
@@ -220,24 +219,20 @@ interface GuideContent {
 
 const STEP_GUIDE: Record<number, GuideContent> = {
   0: {
-    tip:  'Format determines the entire pipeline. Long-form (16:9) is best for news, sports commentary, show clips, and compilations. Short-form (9:16) is built for TikTok, Reels, and YouTube Shorts. You can run both as separate jobs from the same source.',
-    hint: 'Step 1 of 5 — Format. Ask me which format works best for your content type, or what the difference means for your pipeline.',
+    tip:  'Format determines the entire pipeline. Long-form (16:9) is best for compilations, full episodes, and commentary. Short-form (9:16) is built for TikTok, Reels, and YouTube Shorts.',
+    hint: 'Step 1 of 4 — Format. Ask me which format works best for your content type.',
   },
   1: {
-    tip:  '"Produce from source" runs the full production pipeline — scripting, narration, and assembly. "Compile from clips" is best when you already have raw footage and want us to cut and sequence it. When in doubt, start with "Produce from source."',
-    hint: 'Step 2 of 5 — Production path. I can explain which path is right for your content type and what happens to your video at each portal.',
+    tip:  'Browse your Twitch, YouTube, or Kick channel to pick clips directly — or upload your own file. The production path is set automatically based on what you provide.',
+    hint: 'Step 2 of 4 — Source. Ask me how browsing works, what file formats are supported, or how clips are processed.',
   },
   2: {
-    tip:  'For URL fetch: paste YouTube, Twitch, Rumble, or direct video URLs — we pull the video for you. For upload: drag your file or click to browse. MP4, MOV, AVI, WebM up to 2 GB.',
-    hint: 'Step 3 of 5 — Source. Ask me about supported URL formats, how uploads work, or what happens to your source file in the pipeline.',
+    tip:  'Script + TTS together give you a fully narrated video. Scene selection is key for sports and compilations. Captions, branding, and overlays are applied at assembly.',
+    hint: 'Step 3 of 4 — Features. I can explain what each feature does, how they interact, and how they affect credits.',
   },
   3: {
-    tip:  'Script + TTS together give you a fully narrated video — no voiceover needed. Scene selection is key for sports and long-form compilations. Video generation fills in segments where you have no source footage. Start conservative — you can always re-run with more features.',
-    hint: 'Step 4 of 5 — Features. I can explain what each feature does to your video, which ones work best together, and how they affect credits and production time.',
-  },
-  4: {
-    tip:  'Schedule at least 30 minutes out to allow production time. HeyGen and Shoppable are Managed plan add-ons — they add significant production value. Platforms you select here determine which portals run in the publish stage.',
-    hint: 'Step 5 of 5 — Platform, publish & add-ons. Ask me about platform requirements, scheduling, credit costs, or whether add-ons make sense for your plan.',
+    tip:  'Schedule at least 30 minutes out to allow production time. Platforms you select here determine which publish portals run.',
+    hint: 'Step 4 of 4 — Publish. Ask me about platform requirements, scheduling, or credit costs.',
   },
 };
 
@@ -268,8 +263,8 @@ function GuideTip({ step }: { step: number }) {
   );
 }
 
-const STEPS = ['Format', 'Path', 'Source', 'Features', 'Publish'] as const;
-type Step = 0 | 1 | 2 | 3 | 4;
+const STEPS = ['Format', 'Source', 'Features', 'Publish'] as const;
+type Step = 0 | 1 | 2 | 3;
 
 function StepHeader({ step }: { step: Step }) {
   return (
@@ -278,7 +273,7 @@ function StepHeader({ step }: { step: Step }) {
         <div key={label} className="flex items-center">
           <div className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors',
-            // P0-2: Math.floor handles step 2.5 — Source stays highlighted during editor step
+            // P0-2: Math.floor handles step 1.5 — Source stays highlighted during editor step
             Math.floor(step) === i  ? 'bg-primary text-primary-foreground font-medium'
               : i < step  ? 'text-muted-foreground'
               : 'text-muted-foreground/40',
@@ -309,8 +304,7 @@ function NewJobPageInner() {
 
   // ── Hydrate wizard state from URL params so refresh/back preserves progress ──
   const _initFormat   = (searchParams.get('format') as FormFactor) || null;
-  const _initStep     = Math.min(4, Math.max(0, Number(searchParams.get('step') || 0))) as Step;
-  const _initPath     = (searchParams.get('path') as ProductionPath) || null;
+  const _initStep     = Math.min(3, Math.max(0, Number(searchParams.get('step') || 0))) as Step;
   const _initMode     = (searchParams.get('mode') as SourceMode) || null;
   const _initTone     = searchParams.get('tone') || 'professional';
   const _initFeatures = new Set<string>(searchParams.get('features')?.split(',').filter(Boolean) ?? []);
@@ -326,7 +320,6 @@ function NewJobPageInner() {
 
   // Wizard state
   const [formFactor, setFormFactor] = useState<FormFactor | null>(_initFormat);
-  const [path, setPath]             = useState<ProductionPath | null>(_initPath);
   const [sourceMode, setSourceMode]       = useState<SourceMode | null>(_initMode);
   const [sourceUrls, setSourceUrls]       = useState('');
   const [sourceItems, setSourceItems]     = useState<SourceItem[]>([]);
@@ -362,8 +355,6 @@ function NewJobPageInner() {
         if (template.platforms?.length) setPlatforms(template.platforms);
         const ff = (spec.formFactor as FormFactor) || null;
         if (ff) setFormFactor(ff);
-        const pp = (spec.productionPath as ProductionPath) || null;
-        if (pp) setPath(pp);
         const feats = spec.features as string[] | undefined;
         if (feats?.length) setFeatures(new Set(feats));
         const ao = spec.addOns as string[] | undefined;
@@ -393,7 +384,6 @@ function NewJobPageInner() {
     const p = new URLSearchParams();
     if (step > 0)                                   p.set('step',      String(step));
     if (formFactor)                                  p.set('format',    formFactor);
-    if (path)                                        p.set('path',      path);
     if (sourceMode)                                  p.set('mode',      sourceMode);
     if (tone && tone !== 'professional')             p.set('tone',      tone);
     if (features.size > 0)                           p.set('features',  Array.from(features).join(','));
@@ -404,7 +394,7 @@ function NewJobPageInner() {
     const qs = p.toString();
     router.replace(`/dashboard/jobs/new${qs ? '?' + qs : ''}`, { scroll: false });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, formFactor, path, sourceMode, tone, features, platforms, durationMins]);
+  }, [step, formFactor, sourceMode, tone, features, platforms, durationMins]);
 
   function toggleFeature(id: string) {
     setFeatures((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -419,15 +409,9 @@ function NewJobPageInner() {
   function advance() {
     setError(null);
     if (step === 0 && !formFactor) { setError('Select a format to continue'); return; }
-    if (step === 1 && !path) { setError('Select a production path to continue'); return; }
-    if (step === 2) {
-      const pathConfig  = PRODUCTION_PATHS[formFactor!].find((p) => p.id === path);
-      const pathSources = pathConfig?.sources ?? [];
-      const mode = sourceMode ?? (
-        pathSources.includes('source') ? 'source' :
-        pathSources.includes('fetch')  ? 'fetch'  :
-        pathSources[0]
-      );
+    if (step === 1) {
+      // Source is now always 'source' (browse) or 'upload'; 'fetch' (paste URLs) is hidden
+      const mode = effectiveSource;
       if (mode === 'fetch') {
         if (!sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean).length) {
           setError('Enter at least one URL'); return;
@@ -442,14 +426,19 @@ function NewJobPageInner() {
         }
       }
     }
-    if (step === 4) { handleSubmit(); return; }
+    if (step === 3) { handleSubmit(); return; }
     setStep((s) => (s + 1) as Step);
   }
 
   async function handleSubmit() {
     setError(null);
-    const pathConfig = PRODUCTION_PATHS[formFactor!].find((p) => p.id === path!);
-    const mode = sourceMode ?? pathConfig!.sources[0];
+    const mode = effectiveSource;
+
+    // Infer production path from format + source type
+    const inferredPath: ProductionPath = (() => {
+      if (formFactor === 'short') return mode === 'upload' ? 'short_cut_longform' : 'short_fetch_enhance';
+      return mode === 'upload' ? 'long_produce_source' : 'long_compile_clips';
+    })();
 
     // Merge tone into featureConfig.script so it travels with the feature
     const mergedConfig = { ...featureConfig };
@@ -458,11 +447,11 @@ function NewJobPageInner() {
     }
 
     const payload: CreateJobPayload = {
-      contentType:    pathToContentType(path!),
+      contentType:    pathToContentType(inferredPath),
       entryType:      (mode === 'source' ? 'fetch' : mode) as 'fetch' | 'upload' | 'create',
       platforms,
       formFactor,
-      productionPath: path,
+      productionPath: inferredPath,
       features:       Array.from(features),
       extensions:     Array.from(addOns),
       durationMins,
@@ -509,18 +498,8 @@ function NewJobPageInner() {
     });
   }
 
-  const pathOptions        = formFactor ? PRODUCTION_PATHS[formFactor] : [];
-  const selectedPathConfig = path ? pathOptions.find((p) => p.id === path) : null;
-  const availableSources   = selectedPathConfig?.sources ?? [];
-  // Default to 'source' (Browse channel) for paths that support URL-based fetch,
-  // since Browse channel is now the primary entry point (Paste URLs is hidden).
-  // Prefer 'source' (Browse channel) when the path supports it — it's the primary entry point.
-  // Falls back to 'fetch', then the first declared source for upload-only paths.
-  const effectiveSource    = sourceMode ?? (
-    availableSources.includes('source') ? 'source' :
-    availableSources.includes('fetch')  ? 'fetch'  :
-    availableSources[0] as SourceMode
-  );
+  // Source is always browse-channel-or-upload — path is inferred at submit time
+  const effectiveSource    = (sourceMode ?? 'source') as SourceMode;
 
   return (
     <div className="max-w-2xl space-y-5">
@@ -560,7 +539,6 @@ function NewJobPageInner() {
                 type="button"
                 onClick={() => {
                   setFormFactor(opt.id);
-                  setPath(null);
                   setSourceMode(null);
                   // Seed defaults from plan tier — higher tiers get richer pipelines on by default
                   const tier = planTier ?? 'operate';
@@ -580,73 +558,35 @@ function NewJobPageInner() {
         </div>
       )}
 
-      {/* Step 1 — Production path */}
+      {/* Step 1 — Source */}
       {step === 1 && (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">What are you working with and what do you want to produce?</p>
-          <div className="space-y-2">
-            {pathOptions.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => { setPath(opt.id); setSourceMode(null); }}
-                className={cn(
-                  'w-full text-left p-4 rounded-lg border transition-colors',
-                  path === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
-                )}
-              >
-                <p className="text-sm font-medium">{opt.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Step 2 — Source */}
-      {step === 2 && selectedPathConfig && (
-        <div className="space-y-4">
           {/* Source mode tabs — Browse channel first, Upload second; Paste URLs hidden */}
-          {(() => {
-            // Paste URLs (fetch) is hidden — streamers browse their channel or upload.
-            // Order: Browse channel → Upload file.
-            const allModes: SourceMode[] = availableSources.includes('upload')
-              ? ['source', 'upload']
-              : availableSources.includes('fetch')
-              ? ['source']
-              : availableSources as SourceMode[];
-            if (allModes.length <= 1) return null;
-            const labels: Record<SourceMode, string> = {
-              upload: 'Upload file',
-              fetch:  'Paste URLs',
-              source: 'Browse channel',
-            };
-            return (
-              <div className="flex gap-2">
-                {allModes.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => {
-                      setSourceMode(s);
-                      // P1-5: clear stale state from the mode we're leaving
-                      if (s !== 'source') setSourceItems([]);
-                      if (s !== 'fetch')  setSourceUrls('');
-                      if (s !== 'upload') { setUploadedKey(null); setUploadedName(null); setFileKeys(''); }
-                    }}
-                    className={cn(
-                      'px-3 py-1.5 text-xs rounded-md border transition-colors',
-                      effectiveSource === s
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {labels[s]}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+          <div className="flex gap-2">
+            {(['source', 'upload'] as SourceMode[]).map((s) => {
+              const labels: Record<SourceMode, string> = { source: 'Browse channel', upload: 'Upload file', fetch: 'Paste URLs' };
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    setSourceMode(s);
+                    if (s !== 'source') setSourceItems([]);
+                    if (s !== 'fetch')  setSourceUrls('');
+                    if (s !== 'upload') { setUploadedKey(null); setUploadedName(null); setFileKeys(''); }
+                  }}
+                  className={cn(
+                    'px-3 py-1.5 text-xs rounded-md border transition-colors',
+                    effectiveSource === s
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-border text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {labels[s]}
+                </button>
+              );
+            })}
+          </div>
 
           {effectiveSource === 'fetch' && (
             <div className="space-y-1.5">
@@ -698,8 +638,8 @@ function NewJobPageInner() {
         </div>
       )}
 
-      {/* Step 3 — Features & configuration */}
-      {step === 3 && (() => {
+      {/* Step 2 — Features & configuration */}
+      {step === 2 && (() => {
         const tier = planTier ?? 'operate';
         const estimate = estimateCreditCost({
           durationMins,
@@ -1052,8 +992,8 @@ function NewJobPageInner() {
         );
       })()}
 
-      {/* Step 4 — Platform, Publish, Add-ons */}
-      {step === 4 && (
+      {/* Step 3 — Platform, Publish, Add-ons */}
+      {step === 3 && (
         <div className="space-y-5">
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Platforms</Label>
@@ -1092,7 +1032,6 @@ function NewJobPageInner() {
           <Card className="bg-muted/30 border-dashed">
             <CardContent className="pt-4 space-y-2 text-xs text-muted-foreground">
               <p><span className="font-medium text-foreground">Format:</span> {formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
-              <p><span className="font-medium text-foreground">Path:</span> {selectedPathConfig?.label}</p>
               <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'source' ? 'Browse channel' : effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
               {topic.trim() && <p><span className="font-medium text-foreground">Topic:</span> {topic.trim()}</p>}
               {features.has('script') && <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>}
@@ -1111,15 +1050,15 @@ function NewJobPageInner() {
 
       <Separator />
 
-      {/* P0-1: hide wizard nav at step 2.5 — ClipEditor has its own Confirm/Cancel */}
-      {(step as number) !== 2.5 && (
+      {/* P0-1: hide wizard nav at step 1.5 — ClipEditor has its own Confirm/Cancel */}
+      {(step as number) !== 1.5 && (
         <div className="flex gap-2 justify-between">
           <button
             type="button"
             onClick={() => {
               if (step === 0) { router.back(); return; }
-              // P1-4: step 2.5 Back must go to step 2, not step 1.5
-              if ((step as number) === 2.5) { setStep(2 as Step); return; }
+              // step 1.5 Back must go to step 1
+              if ((step as number) === 1.5) { setStep(1 as Step); return; }
               setStep((s) => ((s as number) - 1) as Step);
             }}
             className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
@@ -1127,7 +1066,7 @@ function NewJobPageInner() {
             {step === 0 ? 'Cancel' : '← Back'}
           </button>
           <Button size="sm" disabled={isPending} onClick={advance}>
-            {isPending ? 'Submitting…' : step === 4 ? 'Submit job' : 'Next →'}
+            {isPending ? 'Submitting…' : step === 3 ? 'Submit job' : 'Next →'}
           </Button>
         </div>
       )}
