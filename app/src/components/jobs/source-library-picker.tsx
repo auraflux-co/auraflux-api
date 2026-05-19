@@ -414,7 +414,12 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
       } else if (status === 503 && targetPlatform === 'kick') {
         setError('platform-unavailable:Kick clips cannot be listed from this server — Cloudflare blocks datacenter requests to Kick\'s API. Paste a direct Kick clip URL when submitting a job instead.');
       } else {
-        setError(e instanceof Error ? e.message : 'Failed to load content — check the username and try again.');
+        const raw = e instanceof Error ? e.message : String(e);
+        // "Failed to fetch" = browser-level network error (server restart, offline, etc.)
+        const msg = raw === 'Failed to fetch'
+          ? 'retry:Could not reach the server — it may be restarting. Please try again.'
+          : raw;
+        setError(msg);
       }
     } finally {
       setLoading(false);
@@ -527,18 +532,30 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
       {error && (() => {
         const isNoResults       = error.startsWith('no-results:');
         const isPlatformUnavail = error.startsWith('platform-unavailable:');
+        const isRetryable       = error.startsWith('retry:');
         const msg = isNoResults       ? error.slice('no-results:'.length)
                   : isPlatformUnavail ? error.slice('platform-unavailable:'.length)
+                  : isRetryable       ? error.slice('retry:'.length)
                   : error;
         return (
-          <p className={cn(
-            'text-xs px-3 py-2 rounded-lg',
+          <div className={cn(
+            'text-xs px-3 py-2 rounded-lg flex items-center gap-2',
             isNoResults
               ? 'text-muted-foreground bg-muted/40 border border-border/50'
               : isPlatformUnavail
               ? 'text-amber-600 bg-amber-500/10 border border-amber-500/30'
               : 'text-destructive bg-destructive/10',
-          )}>{msg}</p>
+          )}>
+            <span className="flex-1">{msg}</span>
+            {isRetryable && platform && username.trim() && (
+              <button
+                onClick={handleBrowse}
+                className="shrink-0 underline underline-offset-2 hover:no-underline font-medium"
+              >
+                Retry
+              </button>
+            )}
+          </div>
         );
       })()}
 
