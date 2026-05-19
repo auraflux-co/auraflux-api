@@ -325,11 +325,17 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
     return () => { cancelled = true; };
   }, [getToken]);
 
-  // Sync contentType when the parent changes the filter (e.g. user flips sourceIntent)
+  // Sync contentType when the parent changes the filter (e.g. user flips sourceIntent).
+  // If a channel is already loaded, re-fetch immediately with the new type.
+  // If not yet browsed, just update state so the next browse uses the correct type.
   useEffect(() => {
-    if (contentTypeFilter) setContentType(contentTypeFilter);
-    else setContentType('all');
-  }, [contentTypeFilter]);
+    const newType = contentTypeFilter ?? 'all';
+    if (channelName) {
+      handleFilterChange({ type: newType });
+    } else {
+      setContentType(newType);
+    }
+  }, [contentTypeFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load YouTube playlists exactly once per channel browse
   useEffect(() => {
@@ -617,27 +623,23 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
             </div>
           </div>
 
-          {/* Content type pills — hidden options are filtered out when contentTypeFilter is set */}
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Type</p>
-            <div className="flex flex-wrap gap-1.5">
-              {cfg.typeOptions
-                .filter((t) => {
-                  if (!contentTypeFilter) return true;
-                  // When locked, show only the matching type (hide 'all' and the other type)
-                  return t.value === contentTypeFilter;
-                })
-                .map((t) => (
+          {/* Content type pills — hidden entirely when contentTypeFilter is locked by parent */}
+          {!contentTypeFilter && (
+            <div className="space-y-1">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Type</p>
+              <div className="flex flex-wrap gap-1.5">
+                {cfg.typeOptions.map((t) => (
                   <FilterPill
                     key={t.value}
                     active={contentType === t.value}
-                    onClick={() => !contentTypeFilter && handleFilterChange({ type: t.value })}
+                    onClick={() => handleFilterChange({ type: t.value })}
                   >
                     {t.label}
                   </FilterPill>
                 ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Duration presets */}
           <div className="space-y-1">
