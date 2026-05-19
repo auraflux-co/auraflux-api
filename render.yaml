@@ -197,7 +197,7 @@ services:
     name: auraflux-app
     runtime: node
     rootDir: app
-    buildCommand: npm install && npm run build && (pip3 install -U yt-dlp --quiet 2>/dev/null || python3 -m pip install -U yt-dlp --quiet 2>/dev/null || true)
+    buildCommand: npm install && npm run build && (pip3 install -U yt-dlp tls-client --quiet 2>/dev/null || python3 -m pip install -U yt-dlp tls-client --quiet 2>/dev/null || true)
     startCommand: npm start
     plan: standard
     region: oregon
