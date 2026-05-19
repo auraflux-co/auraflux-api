@@ -106,7 +106,7 @@ export default function ApiKeysPage() {
 
   if (planTier && planTier !== 'operate') return (
     <div className="max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold">API Keys</h1>
+      <h1 className="text-2xl font-semibold">My API Keys</h1>
       <Card className="border-muted">
         <CardContent className="pt-6 space-y-2">
           <p className="text-sm font-medium">Not available on your plan</p>
@@ -126,7 +126,7 @@ export default function ApiKeysPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">API Keys</h1>
+        <h1 className="text-2xl font-semibold">My API Keys</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Use API keys to authenticate requests to{' '}
           <code className="text-xs bg-muted px-1 py-0.5 rounded">https://api.auraflux.co/v1/</code>.

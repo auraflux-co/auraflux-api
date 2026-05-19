@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.537 (Cursor — feat(cpd-304): first-person label pass — Jobs→My Jobs, API Keys→My API Keys, Social Accounts→My Social Accounts across sidebar, settings hub, page headings)
 **Last Updated:** 2026-05-19 v1.0.536 (Cursor — fix(cpd-303): wizard source step — rename question to "What type of content transformation would you like?"; "Browse my channels" label; contentTypeFilter prop on SourceLibraryPicker locks TYPE filter to clips or VODs based on sourceIntent — hides incompatible type tab)
 **Last Updated:** 2026-05-19 v1.0.535 (Cursor — fix(cpd-302): add sourceIntent selector to Source step — clips vs long-form VOD; path inference now correct for all 5 cases; pluralization in summary and step descriptions; URL persists intent param)
 **Last Updated:** 2026-05-19 v1.0.534 (Cursor — feat(cpd-303): remove Path step from job wizard — flow is now Format→Source→Features→Publish (4 steps); production path inferred silently from format+source type; short+browse→short_fetch_enhance, short+upload→short_cut_longform, long+browse→long_compile_clips, long+upload→long_produce_source)

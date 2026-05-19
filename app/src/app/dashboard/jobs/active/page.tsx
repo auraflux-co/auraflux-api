@@ -97,7 +97,7 @@ export default function ActiveJobsPage() {
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Active jobs</h1>
+          <h1 className="text-2xl font-semibold">My active jobs</h1>
           {lastPoll && (
             <p className="text-xs text-muted-foreground mt-0.5">
               Auto-refreshes every 15s · last at {lastPoll.toLocaleTimeString()}

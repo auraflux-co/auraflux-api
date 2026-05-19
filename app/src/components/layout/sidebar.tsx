@@ -105,7 +105,7 @@ interface NavItem {
 const CUSTOMER_NAV: NavItem[] = [
   {
     href: '/dashboard/jobs',
-    label: 'Jobs',
+    label: 'My Jobs',
     children: [
       { href: '/dashboard/jobs/new',     label: 'New job' },
       { href: '/dashboard/jobs/active',  label: 'Active'  },
@@ -129,8 +129,8 @@ const CUSTOMER_NAV: NavItem[] = [
   {
     href: '/dashboard/settings', label: 'Settings',
     children: [
-      { href: '/dashboard/settings/api-keys',        label: 'API Keys'        },
-      { href: '/dashboard/settings/social-connect', label: 'Social Accounts' },
+      { href: '/dashboard/settings/api-keys',        label: 'My API Keys'        },
+      { href: '/dashboard/settings/social-connect', label: 'My Social Accounts' },
       { href: '/dashboard/settings/team',           label: 'My Team'         },
       { href: '/dashboard/settings/source-channels',label: 'My Channels'     },
     ],
@@ -149,7 +149,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/dashboard/admin/permissions', label: 'Permissions' },
   // Customer preview — lets admin test the job wizard and staging queue
   {
-    href: '/dashboard/jobs', label: 'Jobs (preview)', divider: 'Customer preview',
+    href: '/dashboard/jobs', label: 'My Jobs (preview)', divider: 'Customer preview',
     children: [
       { href: '/dashboard/jobs/new',     label: 'New job'  },
       { href: '/dashboard/jobs/active',  label: 'Active'   },

@@ -76,7 +76,7 @@ export default function JobsHubPage() {
     <div className="max-w-3xl space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Jobs</h1>
+          <h1 className="text-2xl font-semibold">My Jobs</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Create, monitor, and review your production jobs</p>
         </div>
         {isOperate ? (
