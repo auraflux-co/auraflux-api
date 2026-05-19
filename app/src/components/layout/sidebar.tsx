@@ -128,9 +128,10 @@ const CUSTOMER_NAV: NavItem[] = [
   {
     href: '/dashboard/settings', label: 'Settings',
     children: [
-      { href: '/dashboard/settings/api-keys',       label: 'API Keys'       },
-      { href: '/dashboard/settings/social-connect', label: 'Social Connect' },
-      { href: '/dashboard/settings/team',           label: 'Team'           },
+      { href: '/dashboard/settings/api-keys',        label: 'API Keys'        },
+      { href: '/dashboard/settings/social-connect', label: 'Social Connect'  },
+      { href: '/dashboard/settings/team',           label: 'Team'            },
+      { href: '/dashboard/settings/source-channels',label: 'Source Channels' },
     ],
   },
 ];

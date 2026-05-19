@@ -22,6 +22,12 @@ const SETTINGS_SECTIONS = [
     description: 'Invite team members and manage their roles — Admin, Member, or Billing.',
     cta:         'Manage team →',
   },
+  {
+    href:        '/dashboard/settings/source-channels',
+    title:       'Source Channels',
+    description: 'Save your default Twitch, Kick, and YouTube channels so the source picker pre-fills them.',
+    cta:         'Manage source channels →',
+  },
 ];
 
 export default function SettingsPage() {

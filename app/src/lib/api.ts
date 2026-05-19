@@ -834,6 +834,22 @@ export function getSocialConnectUrl(platform: SocialPlatform): string {
   return `${base}/social/connect/${platform}`;
 }
 
+// ─── Source channel defaults (CPD-292) ───────────────────────────────────────
+
+export interface SourceChannels {
+  twitchLogin?:    string;
+  kickUsername?:   string;
+  youtubeHandle?:  string;
+}
+
+export async function getSourceChannels(token?: string): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
+  return apiFetch('/account/source-channels', { token });
+}
+
+export async function saveSourceChannels(channels: SourceChannels, token?: string): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
+  return apiFetch('/account/source-channels', { method: 'PATCH', body: JSON.stringify(channels), token });
+}
+
 // ─── Operator job actions (CPD-104) ──────────────────────────────────────────
 
 export type OperatorAction = 'retry' | 'advance' | 'rollback';
