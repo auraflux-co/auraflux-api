@@ -421,8 +421,13 @@ function NewJobPageInner() {
     if (step === 0 && !formFactor) { setError('Select a format to continue'); return; }
     if (step === 1 && !path) { setError('Select a production path to continue'); return; }
     if (step === 2) {
-      const pathConfig = PRODUCTION_PATHS[formFactor!].find((p) => p.id === path);
-      const mode = sourceMode ?? pathConfig?.sources[0];
+      const pathConfig  = PRODUCTION_PATHS[formFactor!].find((p) => p.id === path);
+      const pathSources = pathConfig?.sources ?? [];
+      const mode = sourceMode ?? (
+        pathSources.includes('source') ? 'source' :
+        pathSources.includes('fetch')  ? 'fetch'  :
+        pathSources[0]
+      );
       if (mode === 'fetch') {
         if (!sourceUrls.split('\n').map((u) => u.trim()).filter(Boolean).length) {
           setError('Enter at least one URL'); return;
@@ -509,7 +514,13 @@ function NewJobPageInner() {
   const availableSources   = selectedPathConfig?.sources ?? [];
   // Default to 'source' (Browse channel) for paths that support URL-based fetch,
   // since Browse channel is now the primary entry point (Paste URLs is hidden).
-  const effectiveSource    = sourceMode ?? (availableSources.includes('fetch') ? 'source' : availableSources[0] as SourceMode);
+  // Prefer 'source' (Browse channel) when the path supports it — it's the primary entry point.
+  // Falls back to 'fetch', then the first declared source for upload-only paths.
+  const effectiveSource    = sourceMode ?? (
+    availableSources.includes('source') ? 'source' :
+    availableSources.includes('fetch')  ? 'fetch'  :
+    availableSources[0] as SourceMode
+  );
 
   return (
     <div className="max-w-2xl space-y-5">
