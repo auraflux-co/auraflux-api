@@ -96,7 +96,7 @@ export default function SocialConnectPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Social Accounts</h2>
+        <h2 className="text-xl font-semibold">My Social Accounts</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Connect your publishing channels. AuraFlux will post directly without a third-party proxy.
         </p>

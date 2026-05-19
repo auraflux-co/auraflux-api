@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const API_KEYS    = { href: '/dashboard/settings/api-keys',        title: 'API Keys',        description: 'Create and manage API keys for the AuraFlux developer API.',                                             cta: 'Manage API keys →'        };
+const API_KEYS    = { href: '/dashboard/settings/api-keys',        title: 'My API Keys',     description: 'Create and manage API keys for the AuraFlux developer API.',                                             cta: 'Manage my API keys →'     };
 const MY_CHANNELS = { href: '/dashboard/settings/source-channels', title: 'My Channels',     description: 'Save your default Twitch, Kick, and YouTube channels so the source picker pre-fills them.',              cta: 'Manage my channels →'     };
-const SOCIAL      = { href: '/dashboard/settings/social-connect',  title: 'Social Accounts', description: 'Connect YouTube, TikTok, and Instagram to publish directly without a third-party proxy.',                cta: 'Manage social accounts →' };
+const SOCIAL      = { href: '/dashboard/settings/social-connect',  title: 'My Social Accounts', description: 'Connect YouTube, TikTok, and Instagram to publish directly without a third-party proxy.',             cta: 'Manage my social accounts →' };
 const MY_TEAM     = { href: '/dashboard/settings/team',            title: 'My Team',         description: 'Invite team members and manage their roles — Admin, Member, or Billing.',                                cta: 'Manage my team →'         };
 
 function sectionsForTier(planTier: string | undefined) {
