@@ -4,12 +4,14 @@ import { GuidePanel } from '@/components/guide/guide-panel';
 import { GuideProvider } from '@/contexts/guide-context';
 import { SidebarProvider } from '@/contexts/sidebar-context';
 import { PlanProvider } from '@/contexts/plan-context';
+import { SessionGuard } from '@/components/auth/session-guard';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <PlanProvider>
     <GuideProvider>
       <SidebarProvider>
+        <SessionGuard />
         {/* Mobile sidebar + overlay (hidden on md+) */}
         <MobileSidebarOverlay />
         <MobileSidebar />
