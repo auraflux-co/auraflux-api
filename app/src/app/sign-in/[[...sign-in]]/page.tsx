@@ -2,9 +2,12 @@
 
 import { SignIn } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export default function SignInPage() {
   const [loadFailed, setLoadFailed] = useState(false);
+  const searchParams = useSearchParams();
+  const sessionExpired = searchParams.get('reason') === 'session_expired';
 
   useEffect(() => {
     // Detect Clerk JS load failure — if the sign-in form hasn't mounted
@@ -46,7 +49,12 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background">
+      {sessionExpired && (
+        <div className="w-full max-w-md rounded-lg border border-amber-400/40 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          <span className="font-medium">Your session expired.</span> Please sign in again to continue.
+        </div>
+      )}
       <SignIn forceRedirectUrl="/dashboard" />
     </div>
   );
