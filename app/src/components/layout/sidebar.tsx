@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
+import { usePlan } from '@/contexts/plan-context';
 import { HeroMonogram } from '@/components/icons/brand-icons';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -129,9 +130,9 @@ const CUSTOMER_NAV: NavItem[] = [
     href: '/dashboard/settings', label: 'Settings',
     children: [
       { href: '/dashboard/settings/api-keys',        label: 'API Keys'        },
-      { href: '/dashboard/settings/social-connect', label: 'Social Connect'  },
+      { href: '/dashboard/settings/social-connect', label: 'Social Accounts' },
       { href: '/dashboard/settings/team',           label: 'Team'            },
-      { href: '/dashboard/settings/source-channels',label: 'Source Channels' },
+      { href: '/dashboard/settings/source-channels',label: 'My Channels'     },
     ],
   },
 ];
@@ -166,15 +167,26 @@ const CONFLUENCE_GUIDE_URL =
 export function Sidebar() {
   const pathname                               = usePathname();
   const { isOperator, isAdmin }                = useRole();
+  const { planTier }                           = usePlan();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const router                                 = useRouter();
 
   // Admin (superuser) = platform command centre only — not a job runner.
-  const navItems = isAdmin
+  const baseNav = isAdmin
     ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
     : isOperator
       ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
       : CUSTOMER_NAV;
+
+  // API Keys are Operate-only — guided and managed customers are operator-run
+  // and don't integrate directly with the API.
+  const navItems = planTier && planTier !== 'operate'
+    ? baseNav.map(item =>
+        item.href === '/dashboard/settings'
+          ? { ...item, children: item.children?.filter(c => c.href !== '/dashboard/settings/api-keys') }
+          : item,
+      )
+    : baseNav;
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === href;
