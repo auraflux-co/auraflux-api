@@ -270,11 +270,13 @@ function FilterPill({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
-  onSelect:   (items: SourceItem[]) => void;
-  maxSelect?: number;
+  onSelect:            (items: SourceItem[]) => void;
+  maxSelect?:          number;
+  /** Lock the TYPE filter to a specific content type. Hides the tab for the other type. */
+  contentTypeFilter?:  'clip' | 'vod';
 }
 
-export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
+export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilter }: Props) {
   const { getToken }                    = useAuth();
   const [platform, setPlatform]         = useState<SourcePlatform | null>(null);
   const [username, setUsername]         = useState('');
@@ -290,7 +292,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
 
   // Filters
   const [dateRange, setDateRange]       = useState<SourceDateRange>('all');
-  const [contentType, setContentType]   = useState<SourceType>('all');
+  const [contentType, setContentType]   = useState<SourceType>(contentTypeFilter ?? 'all');
   const [durationPreset, setDurationPreset] = useState(0); // index into DURATION_PRESETS
   const [keyword, setKeyword]           = useState('');
 
@@ -322,6 +324,12 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     })();
     return () => { cancelled = true; };
   }, [getToken]);
+
+  // Sync contentType when the parent changes the filter (e.g. user flips sourceIntent)
+  useEffect(() => {
+    if (contentTypeFilter) setContentType(contentTypeFilter);
+    else setContentType('all');
+  }, [contentTypeFilter]);
 
   // Load YouTube playlists exactly once per channel browse
   useEffect(() => {
@@ -609,19 +617,25 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
             </div>
           </div>
 
-          {/* Content type pills */}
+          {/* Content type pills — hidden options are filtered out when contentTypeFilter is set */}
           <div className="space-y-1">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Type</p>
             <div className="flex flex-wrap gap-1.5">
-              {cfg.typeOptions.map((t) => (
-                <FilterPill
-                  key={t.value}
-                  active={contentType === t.value}
-                  onClick={() => handleFilterChange({ type: t.value })}
-                >
-                  {t.label}
-                </FilterPill>
-              ))}
+              {cfg.typeOptions
+                .filter((t) => {
+                  if (!contentTypeFilter) return true;
+                  // When locked, show only the matching type (hide 'all' and the other type)
+                  return t.value === contentTypeFilter;
+                })
+                .map((t) => (
+                  <FilterPill
+                    key={t.value}
+                    active={contentType === t.value}
+                    onClick={() => !contentTypeFilter && handleFilterChange({ type: t.value })}
+                  >
+                    {t.label}
+                  </FilterPill>
+                ))}
             </div>
           </div>
 
