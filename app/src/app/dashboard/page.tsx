@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PipelineStatusWidget } from '@/components/dashboard/pipeline-status-widget';
+import { SetupChecklist } from '@/components/dashboard/setup-checklist';
 import { tierLabel } from '@/lib/tier-labels';
 
 // Default links shown when planTier is unset or unknown — job-focused, not developer API links.
@@ -69,10 +70,11 @@ function ListIcon() {
 }
 
 export default async function DashboardPage() {
-  const user       = await currentUser();
-  const firstName  = user?.firstName ?? 'there';
-  const planTier   = (user?.publicMetadata?.planTier as string) ?? 'operate';
-  const quickLinks = TIER_QUICK_LINKS[planTier] ?? DEFAULT_QUICK_LINKS;
+  const user            = await currentUser();
+  const firstName       = user?.firstName ?? 'there';
+  const planTier        = (user?.publicMetadata?.planTier as string) ?? 'operate';
+  const quickLinks      = TIER_QUICK_LINKS[planTier] ?? DEFAULT_QUICK_LINKS;
+  const setupDismissed  = !!(user?.publicMetadata?.setupDismissed);
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -90,6 +92,9 @@ export default async function DashboardPage() {
           </Badge>
         </div>
       </div>
+
+      {/* Setup checklist — hidden once dismissed or all steps complete */}
+      <SetupChecklist setupDismissed={setupDismissed} />
 
       {/* Quick actions — icon + label */}
       <div className="flex gap-3 flex-wrap">
