@@ -573,7 +573,7 @@ function NewJobPageInner() {
         <div className="space-y-4">
           {/* Source content type — determines production path */}
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What are you working with?</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What type of content transformation would you like?</p>
             <div className="grid grid-cols-2 gap-2">
               {([
                 {
@@ -610,7 +610,7 @@ function NewJobPageInner() {
           {/* Source mode tabs — Browse channel first, Upload second; Paste URLs hidden */}
           <div className="flex gap-2">
             {(['source', 'upload'] as SourceMode[]).map((s) => {
-              const labels: Record<SourceMode, string> = { source: 'Browse channel', upload: 'Upload file', fetch: 'Paste URLs' };
+              const labels: Record<SourceMode, string> = { source: 'Browse my channels', upload: 'Upload file', fetch: 'Paste URLs' };
               return (
                 <button
                   key={s}
@@ -650,6 +650,7 @@ function NewJobPageInner() {
             <div className="space-y-1.5">
               <SourceLibraryPicker
                 maxSelect={10}
+                contentTypeFilter={sourceIntent === 'clips' ? 'clip' : sourceIntent === 'longform' ? 'vod' : undefined}
                 onSelect={(items) => {
                   setSourceItems(items);
                 }}
