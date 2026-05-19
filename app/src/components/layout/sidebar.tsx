@@ -225,9 +225,17 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
           <p className="text-xs text-muted-foreground/70 leading-relaxed">
             Complete your setup to unlock navigation
           </p>
-          <Link href="/dashboard" className="text-xs text-primary hover:underline">
-            ← Back to setup
-          </Link>
+          {/* Only show the back link when NOT already on the dashboard home */}
+          {pathname !== '/dashboard' && (
+            <Link href="/dashboard" className="text-xs text-primary hover:underline">
+              ← Back to setup
+            </Link>
+          )}
+          {pathname === '/dashboard' && (
+            <p className="text-xs text-muted-foreground/50">
+              Complete the checklist above ↑
+            </p>
+          )}
         </div>
       </aside>
     );
@@ -441,7 +449,11 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean }) {
       {setupLocked && (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 px-5 text-center">
           <p className="text-xs text-muted-foreground/70 leading-relaxed">Complete your setup to unlock navigation</p>
-          <Link href="/dashboard" onClick={closeMobile} className="text-xs text-primary hover:underline">← Back to setup</Link>
+          {pathname !== '/dashboard' ? (
+            <Link href="/dashboard" onClick={closeMobile} className="text-xs text-primary hover:underline">← Back to setup</Link>
+          ) : (
+            <p className="text-xs text-muted-foreground/50">Complete the checklist above ↑</p>
+          )}
         </div>
       )}
       <nav className={cn('flex-1 p-2 space-y-0.5 overflow-y-auto', setupLocked && 'hidden')}>
