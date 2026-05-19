@@ -255,7 +255,10 @@ export async function apiFetch<T>(
   const body = await res.json().catch(() => ({})) as { ok: boolean; error?: string; label?: string } & T;
 
   if (!res.ok) {
-    if (res.status === 401 && typeof window !== 'undefined') {
+    // Only treat 401 as an expired session when we actually sent a token.
+    // If token was absent (Clerk still initialising on page load), the 401
+    // just means "not authenticated yet" — don't sign the user out for that.
+    if (res.status === 401 && token && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('api-unauthorized'));
     }
     throw new ApiError(

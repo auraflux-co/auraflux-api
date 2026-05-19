@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.526 (Cursor — fix(cpd-293): prevent SessionGuard infinite-loop — apiFetch only fires api-unauthorized when token was sent and rejected; SessionGuard checks isSignedIn before calling signOut)
 **Last Updated:** 2026-05-19 v1.0.525 (Cursor — fix(cpd-293): source-library-picker maps "Failed to fetch" to a human-readable retry message; error display shows inline Retry button for transient network failures)
 **Last Updated:** 2026-05-19 v1.0.524 (Cursor — fix(cpd-293): source-library-picker suppresses inline 401 error — SessionGuard handles redirect; bail early if getToken() returns null to avoid hitting API without a session)
 **Last Updated:** 2026-05-19 v1.0.523 (Cursor — feat(cpd-293): session expiry UX — apiFetch dispatches api-unauthorized event on 401; SessionGuard in dashboard layout signs user out and redirects to /sign-in?reason=session_expired; sign-in page shows amber "Your session expired" banner)
