@@ -37,6 +37,7 @@ const ICONS: Record<string, React.ReactNode> = {
   collab:   <Icon d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM12 16v-4M12 8h.01" />,
   credits:   <Icon d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
   team:      <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />,
+  review:    <Icon d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />,
 };
 
 function iconFor(href: string) {
@@ -50,7 +51,7 @@ function iconFor(href: string) {
   if (href.includes('/generate'))  return ICONS.generate;
   if (href.includes('/operator'))  return ICONS.operator;
   if (href.includes('/admin'))     return ICONS.customers;
-  if (href.includes('/staging'))   return ICONS.schedule;
+  if (href.includes('/staging'))   return ICONS.review;
   if (href.includes('/concierge')) return ICONS.collab;
   if (href.includes('/credits'))   return ICONS.credits;
   if (href.includes('/plans'))     return ICONS.billing;
@@ -112,9 +113,9 @@ const CUSTOMER_NAV: NavItem[] = [
       { href: '/dashboard/jobs/history', label: 'History' },
     ],
   },
+  { href: '/dashboard/staging',    label: 'Review Queue'  },
   { href: '/dashboard/schedule',   label: 'Schedule'      },
   { href: '/dashboard/templates',  label: 'Templates'     },
-  { href: '/dashboard/staging',    label: 'Review Queue'  },
   {
     href:  '/dashboard/billing',
     label: 'Billing',
@@ -124,17 +125,17 @@ const CUSTOMER_NAV: NavItem[] = [
       { href: '/dashboard/plans',    label: 'Plans'        },
     ],
   },
-  { href: '/dashboard/support',    label: 'Support'   },
-  { href: '/dashboard/profile',    label: 'Profile'   },
   {
     href: '/dashboard/settings', label: 'Settings',
     children: [
       { href: '/dashboard/settings/api-keys',        label: 'My API Keys'        },
-      { href: '/dashboard/settings/social-connect', label: 'My Social Accounts' },
-      { href: '/dashboard/settings/team',           label: 'My Team'         },
-      { href: '/dashboard/settings/source-channels',label: 'My Channels'     },
+      { href: '/dashboard/settings/source-channels', label: 'My Channels'        },
+      { href: '/dashboard/settings/social-connect',  label: 'My Social Accounts' },
+      { href: '/dashboard/settings/team',            label: 'My Team'            },
+      { href: '/dashboard/profile',                  label: 'My Profile'         },
     ],
   },
+  { href: '/dashboard/support',    label: 'Support'   },
 ];
 
 const OPERATOR_NAV: NavItem[] = [
