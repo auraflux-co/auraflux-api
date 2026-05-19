@@ -477,7 +477,9 @@ function NewJobPageInner() {
   const pathOptions        = formFactor ? PRODUCTION_PATHS[formFactor] : [];
   const selectedPathConfig = path ? pathOptions.find((p) => p.id === path) : null;
   const availableSources   = selectedPathConfig?.sources ?? [];
-  const effectiveSource    = sourceMode ?? availableSources[0];
+  // Default to 'source' (Browse channel) for paths that support URL-based fetch,
+  // since Browse channel is now the primary entry point (Paste URLs is hidden).
+  const effectiveSource    = sourceMode ?? (availableSources.includes('fetch') ? 'source' : availableSources[0] as SourceMode);
 
   return (
     <div className="max-w-2xl space-y-5">
@@ -534,7 +536,6 @@ function NewJobPageInner() {
               </button>
             ))}
           </div>
-          <GuideTip step={0} />
         </div>
       )}
 
@@ -558,47 +559,21 @@ function NewJobPageInner() {
               </button>
             ))}
           </div>
-          <GuideTip step={1} />
         </div>
       )}
 
       {/* Step 2 — Source */}
       {step === 2 && selectedPathConfig && (
         <div className="space-y-4">
-          {/* Content context — topic and tone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Video topic <span className="text-muted-foreground">(optional)</span></Label>
-              <Input
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. breakthrough in healthcare"
-                className="text-sm"
-              />
-              <p className="text-[10px] text-muted-foreground">What is this video about? Used for script generation.</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Tone</Label>
-              <select
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                {['professional','informative','casual','energetic','hype','punchy','urgent','conversational'].map((t) => (
-                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                ))}
-              </select>
-              <p className="text-[10px] text-muted-foreground">Controls the script voice and language style.</p>
-            </div>
-          </div>
-
-          {/* Source mode tabs — always show all three if path supports fetch */}
+          {/* Source mode tabs — Browse channel first, Upload second; Paste URLs hidden */}
           {(() => {
+            // Paste URLs (fetch) is hidden — streamers browse their channel or upload.
+            // Order: Browse channel → Upload file.
             const allModes: SourceMode[] = availableSources.includes('upload')
-              ? ['upload', 'fetch', 'source']
+              ? ['source', 'upload']
               : availableSources.includes('fetch')
-              ? ['fetch', 'source']
-              : availableSources;
+              ? ['source']
+              : availableSources as SourceMode[];
             if (allModes.length <= 1) return null;
             const labels: Record<SourceMode, string> = {
               upload: 'Upload file',
@@ -679,7 +654,6 @@ function NewJobPageInner() {
               />
             </div>
           )}
-          <GuideTip step={2} />
         </div>
       )}
 
@@ -1078,16 +1052,15 @@ function NewJobPageInner() {
             <CardContent className="pt-4 space-y-2 text-xs text-muted-foreground">
               <p><span className="font-medium text-foreground">Format:</span> {formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
               <p><span className="font-medium text-foreground">Path:</span> {selectedPathConfig?.label}</p>
-              <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
+              <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'source' ? 'Browse channel' : effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
               {topic.trim() && <p><span className="font-medium text-foreground">Topic:</span> {topic.trim()}</p>}
-              <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>
+              {features.has('script') && <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>}
               <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
               <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ')}</p>
               {/* Add-ons summary hidden — add-ons not surfaced in UI yet */}
             </CardContent>
           </Card>
 
-          <GuideTip step={4} />
         </div>
       )}
 
