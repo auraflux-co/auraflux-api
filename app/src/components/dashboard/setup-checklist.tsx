@@ -94,13 +94,14 @@ interface Props {
 }
 
 export function SetupChecklist({ setupDismissed, planTier }: Props) {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
   const { openWithContext } = useGuide();
 
   // Guided and managed customers have an operator who can help them complete setup.
   const isOperatorRun = planTier === 'guided' || planTier === 'managed';
 
   const [status, setStatus]         = useState<SetupStatus | null>(null);
+  const [fetchError, setFetchError] = useState(false);
   const [hidden, setHidden]         = useState(false);
   const [confirmDismiss, setConfirmDismiss] = useState(false);
   const [dismissing, setDismissing] = useState(false);
@@ -123,19 +124,22 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
     try {
       const data = await apiFetch<SetupStatus>('/account/setup-status', { token });
       setStatus(data);
+      setFetchError(false);
       // Auto-dismiss in Clerk when all steps complete so nav unlocks on next render
       if (data.allComplete) {
         await callDismissApi();
         setHidden(true);
       }
     } catch {
-      // Non-blocking — checklist just won't show
+      setFetchError(true);
     }
   }, [getToken, callDismissApi]);
 
+  // Wait until Clerk has loaded before attempting the fetch so getToken()
+  // reliably returns a token rather than null on the first render.
   useEffect(() => {
-    if (!setupDismissed) fetchStatus();
-  }, [setupDismissed, fetchStatus]);
+    if (!setupDismissed && isLoaded) fetchStatus();
+  }, [setupDismissed, isLoaded, fetchStatus]);
 
   const handleDismiss = useCallback(async () => {
     setDismissing(true);
@@ -146,12 +150,41 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
 
   // Don't render if dismissed (server-side or in-session)
   if (setupDismissed || hidden) return null;
-  // Don't render until data loads
-  if (!status) return null;
   // Collapse once all steps done (auto-dismiss was called above)
-  if (status.allComplete) return null;
+  if (status?.allComplete) return null;
 
-  const pct = Math.round((status.doneCount / status.totalSteps) * 100);
+  // If status is still loading, show a skeleton so the user knows something is here
+  if (!status && !fetchError) {
+    return (
+      <div className="rounded-lg border border-primary/20 bg-card p-5 space-y-3 animate-pulse">
+        <div className="h-4 w-48 rounded bg-muted" />
+        <div className="h-1.5 w-full rounded-full bg-muted" />
+        <div className="space-y-2 pt-1">
+          {[1,2,3,4].map((i) => <div key={i} className="h-4 w-full rounded bg-muted" />)}
+        </div>
+      </div>
+    );
+  }
+
+  // If the fetch failed, show static links so the user is never stuck
+  if (fetchError && !status) {
+    return (
+      <div className="rounded-lg border border-primary/20 bg-card px-5 py-4 space-y-3">
+        <p className="text-sm font-semibold flex items-center gap-1.5">
+          <span className="text-primary">✦</span> Complete your setup
+        </p>
+        <ul className="space-y-2 text-sm">
+          <li><Link href="/dashboard/settings/source-channels" className="text-primary hover:underline">Save a source channel →</Link></li>
+          <li><Link href="/dashboard/settings/social-connect" className="text-primary hover:underline">Connect a publishing platform →</Link></li>
+          <li><Link href="/dashboard/jobs/new" className="text-primary hover:underline">Submit your first job →</Link></li>
+        </ul>
+      </div>
+    );
+  }
+
+  // At this point status is guaranteed non-null (all null paths returned above)
+  const s   = status!;
+  const pct = Math.round((s.doneCount / s.totalSteps) * 100);
 
   return (
     <Card className="border-primary/20 bg-card">
@@ -163,7 +196,7 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
               <span className="text-primary">✦</span>
               Complete your setup
               <span className="text-xs font-normal text-muted-foreground ml-1">
-                ({status.doneCount} of {status.totalSteps} done)
+                ({s.doneCount} of {s.totalSteps} done)
               </span>
             </p>
             {/* Progress bar */}
@@ -224,7 +257,7 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
         {/* Step list */}
         <ul className="space-y-2">
           {STEPS.map(({ key, label, href, note }) => {
-            const done = status.steps[key];
+            const done = s.steps[key];
             return (
               <li key={key} className="flex items-start gap-2.5 text-sm">
                 {/* Check / circle */}
@@ -240,7 +273,7 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
 
                 <div className="flex-1 min-w-0">
                   <span className={done ? 'line-through text-muted-foreground' : 'text-foreground'}>
-                    {label(status)}
+                    {label(s)}
                   </span>
                   {!done && note && (
                     <p className="text-xs text-muted-foreground mt-0.5">{note}</p>
@@ -260,7 +293,7 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
         </ul>
 
         {/* Guided/managed — Collab CTA */}
-        {isOperatorRun && !status.allComplete && (
+        {isOperatorRun && !s.allComplete && (
           <div className="border-t border-border pt-3 mt-1">
             <button
               onClick={() => openWithContext('Completing account setup — source channels (Settings → My Channels) and publishing platforms (Settings → Social Accounts)')}

@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.544 (Cursor — fix(cpd-310): setup checklist loop — gate fetch on isLoaded; skeleton while loading; static fallback links on error; locked sidebar shows "Complete checklist above ↑" instead of looping ← Back to setup when already on /dashboard)
 **Last Updated:** 2026-05-19 v1.0.543 (Cursor — feat(cpd-307): settings nav order My Channels→My Social Accounts→My Team; nav locked to minimal sidebar during setup (customer role + !setupDismissed); auto-dismiss Clerk flag when all setup steps complete to unlock nav)
 **Last Updated:** 2026-05-19 v1.0.542 (Cursor — feat(cpd-309): nav reorder — My Jobs → Review Queue → Schedule → Templates → Billing → Settings → Support; Profile moved under Settings as My Profile; Review Queue gets distinct checkbox icon)
 **Last Updated:** 2026-05-19 v1.0.541 (Cursor — feat(cpd-308): post-onboarding dashboard home — status board layout; ReviewQueueWidget, CreditsSummary, RecentJobsList; removed quick-link nav-dupe cards + All Jobs button; single New Job CTA)
