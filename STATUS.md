@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-18 v1.0.514 (Cursor — fix(cpd-292): portal0 resolves Twitch clip URLs via yt-dlp before rejecting as web-page; source.js validates .mp4 before using thumbnailToMp4 CDN URL)
 **Last Updated:** 2026-05-18 v1.0.513 (Cursor — fix(cpd-292): Twitch clip source URLs — source.js now uses thumbnailToMp4() CDN URL instead of watch-page URL; Portal 0 was rejecting twitch.tv/user/clip/* as web pages)
 **Last Updated:** 2026-05-18 v1.0.512 (Cursor — fix(cpd-290): YouTube cookie auth — assembly_service reads YOUTUBE_COOKIES_BASE64 env var, writes temp cookie file, passes --cookies to yt-dlp; falls back to ANDROID_VR if not set; .env.example updated)
 **Last Updated:** 2026-05-18 v1.0.511 (Cursor — fix(cpd-279+290): COMPACT regex adds clips.twitch.tv; Twitch EXTRACT uses type=clip; YouTube ANDROID_VR confirmed patched — CPD-291 raised for cookie auth; Kick Cloudflare — CPD-292 raised)
