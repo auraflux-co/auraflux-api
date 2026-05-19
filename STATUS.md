@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.516 (Cursor — fix(cpd-292): twitch_client getClips adds started_at=90d filter — Helix default sorts by view count, returning deleted old viral clips)
 **Last Updated:** 2026-05-19 v1.0.515 (Cursor — fix(cpd-292): portal0 const url → effectiveUrl; url was const so url=resolved threw Assignment to constant variable at runtime)
 **Last Updated:** 2026-05-18 v1.0.514 (Cursor — fix(cpd-292): portal0 resolves Twitch clip URLs via yt-dlp before rejecting as web-page; source.js validates .mp4 before using thumbnailToMp4 CDN URL)
 **Last Updated:** 2026-05-18 v1.0.513 (Cursor — fix(cpd-292): Twitch clip source URLs — source.js now uses thumbnailToMp4() CDN URL instead of watch-page URL; Portal 0 was rejecting twitch.tv/user/clip/* as web pages)
