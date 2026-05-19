@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.531 (Cursor — fix(cpd-296): Twitch clips date-range filter misses recent clips — pass user's after value as started_at to Helix API so 24h/7d clips aren't buried behind high-view-count older clips)
 **Last Updated:** 2026-05-19 v1.0.530 (Cursor — fix(cpd-295): SetupChecklist persists across all logins until complete/dismissed; guided/managed users get Collab CTA that opens guide panel with setup context hint)
 **Last Updated:** 2026-05-19 v1.0.529 (Cursor — feat(cpd-295): setup checklist card on dashboard home — GET /account/setup-status, POST /account/setup-status/dismiss (Clerk publicMetadata), SetupChecklist client component with progress bar + dismiss warning + Collab mention; OAuth callback auto-populates source_channels for YouTube/TikTok)
 **Last Updated:** 2026-05-19 v1.0.528 (Cursor — feat(cpd-294): CRM routes locked to ROLES.ADMIN; API Keys gated to operate tier (backend + sidebar + page); Settings labels: Source Channels→My Channels, Social Connect→Social Accounts; settings hub reordered per plan tier server-side)
