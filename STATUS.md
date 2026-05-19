@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.518 (Cursor — fix(cpd-292): portal0 replaces checkUrlReachable+probeSource for Twitch URLs with probeWithYtdlp — yt-dlp uses browser-like UA headers that bypass Twitch CloudFront datacenter IP blocking; handles both watch-page and CDN URLs; eliminates PORTAL0_URL_DEAD for Twitch clips)
 **Last Updated:** 2026-05-19 v1.0.517 (Cursor — fix(cpd-292): source.js resolves Twitch clip URLs via GQL VideoAccessToken_Clip before normalising — bypasses yt-dlp dependency in portal0; TwitchClient.resolveClipMp4 already existed and returns signed CloudFront CDN URL)
 **Last Updated:** 2026-05-19 v1.0.516 (Cursor — fix(cpd-292): twitch_client getClips adds started_at=90d filter — Helix default sorts by view count, returning deleted old viral clips)
 **Last Updated:** 2026-05-19 v1.0.515 (Cursor — fix(cpd-292): portal0 const url → effectiveUrl; url was const so url=resolved threw Assignment to constant variable at runtime)
