@@ -154,7 +154,7 @@ export default function SourceChannelsPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Source Channels</h2>
+        <h2 className="text-xl font-semibold">My Channels</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Save your default source channels. The source library picker will pre-fill these
           so you don&apos;t have to type them every time.
