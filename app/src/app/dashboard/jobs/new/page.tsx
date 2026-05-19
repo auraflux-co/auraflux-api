@@ -306,6 +306,7 @@ function NewJobPageInner() {
   const _initFormat   = (searchParams.get('format') as FormFactor) || null;
   const _initStep     = Math.min(3, Math.max(0, Number(searchParams.get('step') || 0))) as Step;
   const _initMode     = (searchParams.get('mode') as SourceMode) || null;
+  const _initIntent   = (searchParams.get('intent') as 'clips' | 'longform') || null;
   const _initTone     = searchParams.get('tone') || 'professional';
   const _initFeatures = new Set<string>(searchParams.get('features')?.split(',').filter(Boolean) ?? []);
   const _initPlatforms = searchParams.get('platforms')?.split(',').filter(Boolean) ?? ['youtube'];
@@ -320,6 +321,7 @@ function NewJobPageInner() {
 
   // Wizard state
   const [formFactor, setFormFactor] = useState<FormFactor | null>(_initFormat);
+  const [sourceIntent, setSourceIntent] = useState<'clips' | 'longform' | null>(_initIntent);
   const [sourceMode, setSourceMode]       = useState<SourceMode | null>(_initMode);
   const [sourceUrls, setSourceUrls]       = useState('');
   const [sourceItems, setSourceItems]     = useState<SourceItem[]>([]);
@@ -384,6 +386,7 @@ function NewJobPageInner() {
     const p = new URLSearchParams();
     if (step > 0)                                   p.set('step',      String(step));
     if (formFactor)                                  p.set('format',    formFactor);
+    if (sourceIntent)                                p.set('intent',    sourceIntent);
     if (sourceMode)                                  p.set('mode',      sourceMode);
     if (tone && tone !== 'professional')             p.set('tone',      tone);
     if (features.size > 0)                           p.set('features',  Array.from(features).join(','));
@@ -394,7 +397,7 @@ function NewJobPageInner() {
     const qs = p.toString();
     router.replace(`/dashboard/jobs/new${qs ? '?' + qs : ''}`, { scroll: false });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, formFactor, sourceMode, tone, features, platforms, durationMins]);
+  }, [step, formFactor, sourceIntent, sourceMode, tone, features, platforms, durationMins]);
 
   function toggleFeature(id: string) {
     setFeatures((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -410,6 +413,7 @@ function NewJobPageInner() {
     setError(null);
     if (step === 0 && !formFactor) { setError('Select a format to continue'); return; }
     if (step === 1) {
+      if (!sourceIntent) { setError('Tell us what type of content you\'re working with'); return; }
       // Source is now always 'source' (browse) or 'upload'; 'fetch' (paste URLs) is hidden
       const mode = effectiveSource;
       if (mode === 'fetch') {
@@ -434,10 +438,15 @@ function NewJobPageInner() {
     setError(null);
     const mode = effectiveSource;
 
-    // Infer production path from format + source type
+    // Infer production path from output format + source content type (clips vs long-form)
     const inferredPath: ProductionPath = (() => {
-      if (formFactor === 'short') return mode === 'upload' ? 'short_cut_longform' : 'short_fetch_enhance';
-      return mode === 'upload' ? 'long_produce_source' : 'long_compile_clips';
+      if (formFactor === 'short') {
+        if (sourceIntent === 'longform') return 'short_cut_longform'; // long video → cut into clips
+        return mode === 'upload' ? 'short_enhance_upload' : 'short_fetch_enhance'; // clips → enhance
+      }
+      // Long-form output
+      if (sourceIntent === 'longform') return 'long_produce_source'; // long video → produce/enhance
+      return 'long_compile_clips'; // clips → compile into long form
     })();
 
     // Merge tone into featureConfig.script so it travels with the feature
@@ -539,6 +548,7 @@ function NewJobPageInner() {
                 type="button"
                 onClick={() => {
                   setFormFactor(opt.id);
+                  setSourceIntent(null);
                   setSourceMode(null);
                   // Seed defaults from plan tier — higher tiers get richer pipelines on by default
                   const tier = planTier ?? 'operate';
@@ -561,6 +571,42 @@ function NewJobPageInner() {
       {/* Step 1 — Source */}
       {step === 1 && (
         <div className="space-y-4">
+          {/* Source content type — determines production path */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What are you working with?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                {
+                  id:    'clips'    as const,
+                  label: formFactor === 'long' ? 'Short clips' : 'Short clips / footage',
+                  sub:   formFactor === 'long'
+                    ? 'We\'ll compile your clips into a long-form video'
+                    : 'We\'ll enhance and assemble your clips into a short-form video',
+                },
+                {
+                  id:    'longform' as const,
+                  label: 'Long-form video / VOD',
+                  sub:   formFactor === 'long'
+                    ? 'We\'ll produce and enhance your long-form content'
+                    : 'We\'ll cut clips from your long video',
+                },
+              ]).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSourceIntent(opt.id)}
+                  className={cn(
+                    'text-left p-3 rounded-lg border transition-colors space-y-0.5',
+                    sourceIntent === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
+                  )}
+                >
+                  <p className="text-sm font-medium">{opt.label}</p>
+                  <p className="text-xs text-muted-foreground">{opt.sub}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Source mode tabs — Browse channel first, Upload second; Paste URLs hidden */}
           <div className="flex gap-2">
             {(['source', 'upload'] as SourceMode[]).map((s) => {
@@ -1031,8 +1077,10 @@ function NewJobPageInner() {
           {/* Review summary */}
           <Card className="bg-muted/30 border-dashed">
             <CardContent className="pt-4 space-y-2 text-xs text-muted-foreground">
-              <p><span className="font-medium text-foreground">Format:</span> {formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
-              <p><span className="font-medium text-foreground">Source:</span> {effectiveSource === 'source' ? 'Browse channel' : effectiveSource === 'fetch' ? 'Fetch from URLs' : 'Upload files'}</p>
+              <p><span className="font-medium text-foreground">Output:</span> {formFactor === 'long' ? 'Long-form video (16:9)' : 'Short-form clips (9:16)'}</p>
+              <p><span className="font-medium text-foreground">Source:</span> {sourceIntent === 'longform' ? 'Long-form video / VOD' : 'Short clips'} via {effectiveSource === 'source' ? 'channel browse' : effectiveSource === 'fetch' ? 'URL fetch' : 'file upload'}</p>
+              {sourceIntent === 'longform' && formFactor === 'short' && <p className="text-xs text-primary">→ We&apos;ll cut clips from your long video</p>}
+              {sourceIntent === 'clips' && formFactor === 'long' && <p className="text-xs text-primary">→ We&apos;ll compile your clips into a long-form video</p>}
               {topic.trim() && <p><span className="font-medium text-foreground">Topic:</span> {topic.trim()}</p>}
               {features.has('script') && <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>}
               <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
