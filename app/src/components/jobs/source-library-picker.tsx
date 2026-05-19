@@ -285,6 +285,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   const [channelName, setChannelName]   = useState('');
   const [channelAvatar, setChannelAvatar] = useState<string | null>(null);
   const [selected, setSelected]         = useState<Set<string>>(new Set());
+  const [confirmed, setConfirmed]       = useState(false);
   const [limitReached, setLimitReached] = useState(false);
 
   // Filters
@@ -351,6 +352,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     setError(null);
     setChannelName('');
     setChannelAvatar(null);
+    setConfirmed(false);
     setPlaylists([]);
     setActivePlaylist(null);
     setDateRange('all');
@@ -478,6 +480,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   const handleConfirm = useCallback(() => {
     const chosen = items.filter((i) => selected.has(i.url));
     onSelect(chosen);
+    setConfirmed(true);
   }, [items, selected, onSelect]);
 
   return (
@@ -699,8 +702,27 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
         </div>
       )}
 
+      {/* Confirmed summary — replaces the grid once user clicks "Add clips" */}
+      {confirmed && selected.size > 0 && (
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-primary/40 bg-primary/5">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-primary shrink-0">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <p className="flex-1 text-xs font-semibold text-foreground">
+            {selected.size} clip{selected.size !== 1 ? 's' : ''} added — continue to next step
+          </p>
+          <button
+            type="button"
+            onClick={() => setConfirmed(false)}
+            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground shrink-0"
+          >
+            Change
+          </button>
+        </div>
+      )}
+
       {/* Results grid — shown while loading (skeleton) or once server items exist */}
-      {(loading && channelName) || items.length > 0 ? (
+      {!confirmed && ((loading && channelName) || items.length > 0) ? (
         <div className="space-y-3">
           {/* Scroll container with bottom fade hint */}
           <div className="relative">
