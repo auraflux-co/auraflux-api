@@ -105,23 +105,7 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
   const [confirmDismiss, setConfirmDismiss] = useState(false);
   const [dismissing, setDismissing] = useState(false);
 
-  const fetchStatus = useCallback(async () => {
-    const token = await getToken();
-    if (!token) return;
-    try {
-      const data = await apiFetch<SetupStatus>('/account/setup-status', { token });
-      setStatus(data);
-    } catch {
-      // Non-blocking — checklist just won't show
-    }
-  }, [getToken]);
-
-  useEffect(() => {
-    if (!setupDismissed) fetchStatus();
-  }, [setupDismissed, fetchStatus]);
-
-  const handleDismiss = useCallback(async () => {
-    setDismissing(true);
+  const callDismissApi = useCallback(async () => {
     const token = await getToken();
     try {
       await apiFetch('/account/setup-status/dismiss', {
@@ -131,15 +115,40 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
     } catch {
       // Best-effort
     }
+  }, [getToken]);
+
+  const fetchStatus = useCallback(async () => {
+    const token = await getToken();
+    if (!token) return;
+    try {
+      const data = await apiFetch<SetupStatus>('/account/setup-status', { token });
+      setStatus(data);
+      // Auto-dismiss in Clerk when all steps complete so nav unlocks on next render
+      if (data.allComplete) {
+        await callDismissApi();
+        setHidden(true);
+      }
+    } catch {
+      // Non-blocking — checklist just won't show
+    }
+  }, [getToken, callDismissApi]);
+
+  useEffect(() => {
+    if (!setupDismissed) fetchStatus();
+  }, [setupDismissed, fetchStatus]);
+
+  const handleDismiss = useCallback(async () => {
+    setDismissing(true);
+    await callDismissApi();
     setHidden(true);
     setDismissing(false);
-  }, [getToken]);
+  }, [callDismissApi]);
 
   // Don't render if dismissed (server-side or in-session)
   if (setupDismissed || hidden) return null;
   // Don't render until data loads
   if (!status) return null;
-  // Collapse once all steps done
+  // Collapse once all steps done (auto-dismiss was called above)
   if (status.allComplete) return null;
 
   const pct = Math.round((status.doneCount / status.totalSteps) * 100);
