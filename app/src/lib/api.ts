@@ -846,6 +846,28 @@ export async function getSourceChannels(token?: string): Promise<{ ok: boolean; 
   return apiFetch('/account/source-channels', { token });
 }
 
+export interface ResolvedChannel {
+  id:          string;
+  username?:   string;
+  displayName: string;
+  avatarUrl:   string | null;
+  handle?:     string;
+  title?:      string;
+  thumbnailUrl?: string | null;
+}
+
+/** Verify a channel exists and return its avatar/display name. */
+export async function resolveSourceChannel(
+  platform: SourcePlatform,
+  username: string,
+  token?: string,
+): Promise<{ ok: boolean; channel: ResolvedChannel }> {
+  if (platform === 'youtube') {
+    return apiFetch(`/source/youtube/${encodeURIComponent(username)}/resolve`, { token });
+  }
+  return apiFetch(`/source/${platform}/${encodeURIComponent(username)}/resolve`, { token });
+}
+
 export async function saveSourceChannels(channels: SourceChannels, token?: string): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
   return apiFetch('/account/source-channels', { method: 'PATCH', body: JSON.stringify(channels), token });
 }
