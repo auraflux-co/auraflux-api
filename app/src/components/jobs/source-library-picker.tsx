@@ -381,7 +381,11 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
         setError(`no-results:No content found for "${targetUsername}" on ${targetPlatform} with these filters. Try a wider date range or "All" type.`);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to load content — check the username and try again.');
+      if (e && typeof e === 'object' && 'status' in e && (e as { status: number }).status === 503 && targetPlatform === 'kick') {
+        setError('platform-unavailable:Kick clips cannot be listed from this server — Cloudflare blocks datacenter requests to Kick\'s API. Paste a direct Kick clip URL when submitting a job instead.');
+      } else {
+        setError(e instanceof Error ? e.message : 'Failed to load content — check the username and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -491,13 +495,18 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
       )}
 
       {error && (() => {
-        const isNoResults = error.startsWith('no-results:');
-        const msg = isNoResults ? error.slice('no-results:'.length) : error;
+        const isNoResults       = error.startsWith('no-results:');
+        const isPlatformUnavail = error.startsWith('platform-unavailable:');
+        const msg = isNoResults       ? error.slice('no-results:'.length)
+                  : isPlatformUnavail ? error.slice('platform-unavailable:'.length)
+                  : error;
         return (
           <p className={cn(
             'text-xs px-3 py-2 rounded-lg',
             isNoResults
               ? 'text-muted-foreground bg-muted/40 border border-border/50'
+              : isPlatformUnavail
+              ? 'text-amber-600 bg-amber-500/10 border border-amber-500/30'
               : 'text-destructive bg-destructive/10',
           )}>{msg}</p>
         );
