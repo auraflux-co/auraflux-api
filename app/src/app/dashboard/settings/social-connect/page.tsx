@@ -87,8 +87,14 @@ export default function SocialConnectPage() {
     }
   }
 
-  function handleConnect(platform: SocialPlatform) {
-    window.location.href = getSocialConnectUrl(platform);
+  async function handleConnect(platform: SocialPlatform) {
+    // The connect route is on the API domain — a plain browser redirect can't
+    // send an Authorization header cross-origin. Pass the Clerk JWT as a query
+    // param so the backend can verify it without a session cookie.
+    const token = await getToken();
+    const url   = new URL(getSocialConnectUrl(platform));
+    if (token) url.searchParams.set('token', token);
+    window.location.href = url.toString();
   }
 
   const accountMap = Object.fromEntries(accounts.map((a) => [a.platform, a]));
