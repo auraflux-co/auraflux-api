@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import {
   fetchSourceContent,
   fetchYouTubePlaylists,
+  getSourceChannels,
+  type SourceChannels,
   type SourcePlatform,
   type SourceItem,
   type SourceFilters,
@@ -276,6 +278,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   const { getToken }                    = useAuth();
   const [platform, setPlatform]         = useState<SourcePlatform | null>(null);
   const [username, setUsername]         = useState('');
+  const [savedChannels, setSavedChannels] = useState<SourceChannels>({});
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [items, setItems]               = useState<SourceItem[]>([]);
@@ -305,6 +308,19 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     return items.filter((i) => i.title.toLowerCase().includes(q));
   }, [items, keyword]);
 
+  // Load saved source channel defaults once on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res   = await getSourceChannels(token ?? undefined);
+        if (!cancelled) setSavedChannels(res.sourceChannels ?? {});
+      } catch { /* non-blocking */ }
+    })();
+    return () => { cancelled = true; };
+  }, [getToken]);
+
   // Load YouTube playlists exactly once per channel browse
   useEffect(() => {
     if (platform !== 'youtube' || !channelName) return;
@@ -323,8 +339,12 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   }, [platform, username, channelName, getToken]);
 
   const handlePlatformSelect = useCallback((p: SourcePlatform) => {
+    const prefill =
+      p === 'twitch'  ? (savedChannels.twitchLogin   ?? '') :
+      p === 'kick'    ? (savedChannels.kickUsername   ?? '') :
+      p === 'youtube' ? (savedChannels.youtubeHandle  ?? '') : '';
     setPlatform(p);
-    setUsername('');
+    setUsername(prefill);
     setItems([]);
     setSelected(new Set());
     setError(null);
@@ -336,7 +356,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     setDurationPreset(0);
     setKeyword('');
     playlistLoadedFor.current = null;
-  }, []);
+  }, [savedChannels]);
 
   /**
    * durationPresetIdx is passed explicitly to avoid stale closure
