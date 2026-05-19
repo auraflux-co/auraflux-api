@@ -376,13 +376,18 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     setItems([]);
     try {
       const token  = await getToken();
+      // If Clerk hasn't established a session yet, don't hit the API — bail silently.
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       const preset = DURATION_PRESETS[durationPresetIdx];
       const f: SourceFilters = {
         ...filters,
         minDuration: preset.min > 0     ? preset.min    : undefined,
         maxDuration: preset.max < 99999 ? preset.max    : undefined,
       };
-      const res = await fetchSourceContent(targetPlatform, targetUsername, 50, token ?? undefined, f);
+      const res = await fetchSourceContent(targetPlatform, targetUsername, 50, token, f);
       const newItems = res.items;
       setItems(newItems);
       setChannelName(res.channel?.displayName || res.channel?.name || targetUsername);
@@ -401,7 +406,12 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
         setError(`no-results:No content found for "${targetUsername}" on ${targetPlatform} with these filters. Try a wider date range or "All" type.`);
       }
     } catch (e: unknown) {
-      if (e && typeof e === 'object' && 'status' in e && (e as { status: number }).status === 503 && targetPlatform === 'kick') {
+      const status = e && typeof e === 'object' && 'status' in e ? (e as { status: number }).status : 0;
+      if (status === 401) {
+        // SessionGuard in the dashboard layout handles 401 — it signs the user
+        // out and redirects to /sign-in. Don't show a raw auth error here.
+        return;
+      } else if (status === 503 && targetPlatform === 'kick') {
         setError('platform-unavailable:Kick clips cannot be listed from this server — Cloudflare blocks datacenter requests to Kick\'s API. Paste a direct Kick clip URL when submitting a job instead.');
       } else {
         setError(e instanceof Error ? e.message : 'Failed to load content — check the username and try again.');
