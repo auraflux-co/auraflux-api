@@ -7,11 +7,11 @@ import { cn } from '@/lib/utils';
 const API_KEYS    = { href: '/dashboard/settings/api-keys',        title: 'API Keys',        description: 'Create and manage API keys for the AuraFlux developer API.',                                             cta: 'Manage API keys →'        };
 const MY_CHANNELS = { href: '/dashboard/settings/source-channels', title: 'My Channels',     description: 'Save your default Twitch, Kick, and YouTube channels so the source picker pre-fills them.',              cta: 'Manage my channels →'     };
 const SOCIAL      = { href: '/dashboard/settings/social-connect',  title: 'Social Accounts', description: 'Connect YouTube, TikTok, and Instagram to publish directly without a third-party proxy.',                cta: 'Manage social accounts →' };
-const TEAM        = { href: '/dashboard/settings/team',            title: 'Team',            description: 'Invite team members and manage their roles — Admin, Member, or Billing.',                                cta: 'Manage team →'            };
+const MY_TEAM     = { href: '/dashboard/settings/team',            title: 'My Team',         description: 'Invite team members and manage their roles — Admin, Member, or Billing.',                                cta: 'Manage my team →'         };
 
 function sectionsForTier(planTier: string | undefined) {
-  if (planTier === 'operate') return [API_KEYS, MY_CHANNELS, SOCIAL, TEAM];
-  return [MY_CHANNELS, SOCIAL, TEAM];
+  if (planTier === 'operate') return [MY_CHANNELS, SOCIAL, API_KEYS, MY_TEAM];
+  return [MY_CHANNELS, SOCIAL, MY_TEAM];
 }
 
 export default async function SettingsPage() {

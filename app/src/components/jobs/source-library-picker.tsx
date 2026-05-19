@@ -283,6 +283,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   const [error, setError]               = useState<string | null>(null);
   const [items, setItems]               = useState<SourceItem[]>([]);
   const [channelName, setChannelName]   = useState('');
+  const [channelAvatar, setChannelAvatar] = useState<string | null>(null);
   const [selected, setSelected]         = useState<Set<string>>(new Set());
   const [limitReached, setLimitReached] = useState(false);
 
@@ -349,6 +350,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     setSelected(new Set());
     setError(null);
     setChannelName('');
+    setChannelAvatar(null);
     setPlaylists([]);
     setActivePlaylist(null);
     setDateRange('all');
@@ -391,6 +393,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
       const newItems = res.items;
       setItems(newItems);
       setChannelName(res.channel?.displayName || res.channel?.name || targetUsername);
+      setChannelAvatar(res.channel?.avatarUrl || null);
       if (isNewChannel) {
         setSelected(new Set());
       } else {
@@ -565,7 +568,16 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
 
           {/* Channel header */}
           <div className="flex items-center gap-2">
-            <span className={cn('text-xs font-semibold', cfg.accent)}>{cfg.icon}</span>
+            {channelAvatar ? (
+              <img
+                src={channelAvatar}
+                alt={channelName}
+                className="w-6 h-6 rounded-full object-cover shrink-0"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            ) : (
+              <span className={cn('text-xs font-semibold', cfg.accent)}>{cfg.icon}</span>
+            )}
             <span className="text-xs font-semibold text-foreground">{channelName}</span>
             <span className="text-[10px] text-muted-foreground ml-auto">
               {displayItems.length} result{displayItems.length !== 1 ? 's' : ''}

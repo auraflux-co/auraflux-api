@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.533 (Cursor — fix(cpd-298): source picker shows channel profile image in header; settings: My Channels first, Social Accounts second, Team renamed My Team)
 **Last Updated:** 2026-05-19 v1.0.532 (Cursor — fix(cpd-297): new job wizard — hide Video Topic + Tone from step 2 (stay under Features/Script); source tabs reordered to Browse channel first, Upload second, Paste URLs hidden; inline Collab GuideTip boxes removed)
 **Last Updated:** 2026-05-19 v1.0.531 (Cursor — fix(cpd-296): Twitch clips date-range filter misses recent clips — pass user's after value as started_at to Helix API so 24h/7d clips aren't buried behind high-view-count older clips)
 **Last Updated:** 2026-05-19 v1.0.530 (Cursor — fix(cpd-295): SetupChecklist persists across all logins until complete/dismissed; guided/managed users get Collab CTA that opens guide panel with setup context hint)
