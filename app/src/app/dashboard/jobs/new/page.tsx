@@ -223,7 +223,7 @@ const STEP_GUIDE: Record<number, GuideContent> = {
     hint: 'Step 1 of 4 — Format. Ask me which format works best for your content type.',
   },
   1: {
-    tip:  'Browse your Twitch, YouTube, or Kick channel to pick clips directly — or upload your own file. The production path is set automatically based on what you provide.',
+    tip:  'Browse your Twitch, YouTube, or Kick channel to pick clips directly — or upload your own files. The production path is set automatically based on what you provide.',
     hint: 'Step 2 of 4 — Source. Ask me how browsing works, what file formats are supported, or how clips are processed.',
   },
   2: {
@@ -570,11 +570,16 @@ function NewJobPageInner() {
 
       {/* Step 1 — Source */}
       {step === 1 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Source content type — determines production path */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What type of content transformation would you like?</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-semibold">What type of content transformation would you like?</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                This determines what we pull from your channels or file — make sure to select before browsing.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               {([
                 {
                   id:    'clips'    as const,
@@ -596,21 +601,26 @@ function NewJobPageInner() {
                   type="button"
                   onClick={() => setSourceIntent(opt.id)}
                   className={cn(
-                    'text-left p-3 rounded-lg border transition-colors space-y-0.5',
-                    sourceIntent === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80',
+                    'text-left p-4 rounded-lg border-2 transition-colors space-y-1 min-h-[88px]',
+                    sourceIntent === opt.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/40',
                   )}
                 >
-                  <p className="text-sm font-medium">{opt.label}</p>
-                  <p className="text-xs text-muted-foreground">{opt.sub}</p>
+                  <p className="text-sm font-semibold">{opt.label}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{opt.sub}</p>
                 </button>
               ))}
             </div>
+            {!sourceIntent && (
+              <p className="text-xs text-muted-foreground/60 italic">Select one above to unlock your source options below.</p>
+            )}
           </div>
 
-          {/* Source mode tabs — Browse channel first, Upload second; Paste URLs hidden */}
+          {/* Source mode tabs — Browse my channels first, Upload files second; Paste URLs hidden */}
           <div className="flex gap-2">
             {(['source', 'upload'] as SourceMode[]).map((s) => {
-              const labels: Record<SourceMode, string> = { source: 'Browse my channels', upload: 'Upload file', fetch: 'Paste URLs' };
+              const labels: Record<SourceMode, string> = { source: 'Browse my channels', upload: 'Upload files', fetch: 'Paste URLs' };
               return (
                 <button
                   key={s}

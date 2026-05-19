@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.539 (Cursor — fix(cpd-306): source step visual weight — transformation selector promoted to semibold heading + subtitle, border-2 cards with min-h, "Select one" hint when unselected, space-y-6; Upload files (plural); brand names verified correct)
 **Last Updated:** 2026-05-19 v1.0.538 (Cursor — fix(cpd-305): source library picker — contentTypeFilter re-fetch bug: useEffect now calls handleFilterChange (re-fetches) when channel already loaded, vs setContentType-only (no re-fetch); TYPE filter section hidden entirely when filter locked)
 **Last Updated:** 2026-05-19 v1.0.537 (Cursor — feat(cpd-304): first-person label pass — Jobs→My Jobs, API Keys→My API Keys, Social Accounts→My Social Accounts across sidebar, settings hub, page headings)
 **Last Updated:** 2026-05-19 v1.0.536 (Cursor — fix(cpd-303): wizard source step — rename question to "What type of content transformation would you like?"; "Browse my channels" label; contentTypeFilter prop on SourceLibraryPicker locks TYPE filter to clips or VODs based on sourceIntent — hides incompatible type tab)
