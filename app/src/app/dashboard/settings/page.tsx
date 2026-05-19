@@ -10,7 +10,7 @@ const SOCIAL      = { href: '/dashboard/settings/social-connect',  title: 'Socia
 const MY_TEAM     = { href: '/dashboard/settings/team',            title: 'My Team',         description: 'Invite team members and manage their roles — Admin, Member, or Billing.',                                cta: 'Manage my team →'         };
 
 function sectionsForTier(planTier: string | undefined) {
-  if (planTier === 'operate') return [MY_CHANNELS, SOCIAL, API_KEYS, MY_TEAM];
+  if (planTier === 'operate') return [API_KEYS, MY_CHANNELS, SOCIAL, MY_TEAM];
   return [MY_CHANNELS, SOCIAL, MY_TEAM];
 }
 
