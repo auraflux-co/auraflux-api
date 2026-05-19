@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.543 (Cursor — feat(cpd-307): settings nav order My Channels→My Social Accounts→My Team; nav locked to minimal sidebar during setup (customer role + !setupDismissed); auto-dismiss Clerk flag when all setup steps complete to unlock nav)
 **Last Updated:** 2026-05-19 v1.0.542 (Cursor — feat(cpd-309): nav reorder — My Jobs → Review Queue → Schedule → Templates → Billing → Settings → Support; Profile moved under Settings as My Profile; Review Queue gets distinct checkbox icon)
 **Last Updated:** 2026-05-19 v1.0.541 (Cursor — feat(cpd-308): post-onboarding dashboard home — status board layout; ReviewQueueWidget, CreditsSummary, RecentJobsList; removed quick-link nav-dupe cards + All Jobs button; single New Job CTA)
 **Last Updated:** 2026-05-19 v1.0.539 (Cursor — fix(cpd-306): source step visual weight — transformation selector promoted to semibold heading + subtitle, border-2 cards with min-h, "Select one" hint when unselected, space-y-6; Upload files (plural); brand names verified correct)

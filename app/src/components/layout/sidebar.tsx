@@ -128,11 +128,11 @@ const CUSTOMER_NAV: NavItem[] = [
   {
     href: '/dashboard/settings', label: 'Settings',
     children: [
-      { href: '/dashboard/settings/api-keys',        label: 'My API Keys'        },
-      { href: '/dashboard/settings/source-channels', label: 'My Channels'        },
-      { href: '/dashboard/settings/social-connect',  label: 'My Social Accounts' },
-      { href: '/dashboard/settings/team',            label: 'My Team'            },
-      { href: '/dashboard/profile',                  label: 'My Profile'         },
+      { href: '/dashboard/settings/api-keys',        label: 'My API Keys'         },
+      { href: '/dashboard/settings/source-channels', label: 'My Channels'         },
+      { href: '/dashboard/settings/social-connect',  label: 'My Social Accounts'  },
+      { href: '/dashboard/settings/team',            label: 'My Team'             },
+      { href: '/dashboard/profile',                  label: 'My Profile'          },
     ],
   },
   { href: '/dashboard/support',    label: 'Support'   },
@@ -165,7 +165,7 @@ const CONFLUENCE_GUIDE_URL =
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-export function Sidebar() {
+export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
   const pathname                               = usePathname();
   const { isOperator, isAdmin }                = useRole();
   const { planTier }                           = usePlan();
@@ -201,6 +201,36 @@ export function Sidebar() {
   function handleNavClick(href: string) {
     closeMobile();
     router.push(href);
+  }
+
+  // During initial setup, lock nav to a minimal branded sidebar so users
+  // focus on the setup checklist rather than exploring an incomplete app.
+  if (setupLocked) {
+    return (
+      <aside className="flex-shrink-0 border-r border-sidebar-border bg-sidebar flex flex-col h-screen w-52">
+        {/* Header */}
+        <div className="border-b border-border flex items-center gap-2 px-4 py-3">
+          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <HeroMonogram size={22} className="text-primary shrink-0" />
+            <span className="font-semibold text-sm tracking-tight text-foreground">AuraFlux</span>
+          </Link>
+        </div>
+
+        {/* Lock message */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-5 text-center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground/30">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          <p className="text-xs text-muted-foreground/70 leading-relaxed">
+            Complete your setup to unlock navigation
+          </p>
+          <Link href="/dashboard" className="text-xs text-primary hover:underline">
+            ← Back to setup
+          </Link>
+        </div>
+      </aside>
+    );
   }
 
   return (
@@ -367,7 +397,7 @@ export function MobileSidebarOverlay() {
   );
 }
 
-export function MobileSidebar() {
+export function MobileSidebar({ setupLocked }: { setupLocked?: boolean }) {
   const { mobileOpen, closeMobile } = useSidebar();
   const pathname                    = usePathname();
   const { isOperator, isAdmin }     = useRole();
@@ -408,7 +438,13 @@ export function MobileSidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+      {setupLocked && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-5 text-center">
+          <p className="text-xs text-muted-foreground/70 leading-relaxed">Complete your setup to unlock navigation</p>
+          <Link href="/dashboard" onClick={closeMobile} className="text-xs text-primary hover:underline">← Back to setup</Link>
+        </div>
+      )}
+      <nav className={cn('flex-1 p-2 space-y-0.5 overflow-y-auto', setupLocked && 'hidden')}>
         {navItems.map((item) => {
           const groupActive = isGroupActive(item);
           const icon        = iconFor(item.href);
