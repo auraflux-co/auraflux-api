@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
+import { useGuide } from '@/contexts/guide-context';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,10 +89,16 @@ function capitalize(s: string) {
 interface Props {
   /** Passed from server via currentUser() publicMetadata. When true, skip render entirely. */
   setupDismissed?: boolean;
+  /** Passed from server — 'operate' | 'guided' | 'managed' | 'custom' */
+  planTier?: string;
 }
 
-export function SetupChecklist({ setupDismissed }: Props) {
+export function SetupChecklist({ setupDismissed, planTier }: Props) {
   const { getToken } = useAuth();
+  const { openWithContext } = useGuide();
+
+  // Guided and managed customers have an operator who can help them complete setup.
+  const isOperatorRun = planTier === 'guided' || planTier === 'managed';
 
   const [status, setStatus]         = useState<SetupStatus | null>(null);
   const [hidden, setHidden]         = useState(false);
@@ -242,6 +249,22 @@ export function SetupChecklist({ setupDismissed }: Props) {
             );
           })}
         </ul>
+
+        {/* Guided/managed — Collab CTA */}
+        {isOperatorRun && !status.allComplete && (
+          <div className="border-t border-border pt-3 mt-1">
+            <button
+              onClick={() => openWithContext('Completing account setup — source channels (Settings → My Channels) and publishing platforms (Settings → Social Accounts)')}
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <span className="text-primary group-hover:scale-110 transition-transform">✦</span>
+              <span>
+                Need help? Your AuraFlux operator can complete this setup for you —
+                <span className="text-primary font-medium ml-1">open Collab →</span>
+              </span>
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

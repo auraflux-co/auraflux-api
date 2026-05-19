@@ -94,7 +94,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Setup checklist — hidden once dismissed or all steps complete */}
-      <SetupChecklist setupDismissed={setupDismissed} />
+      <SetupChecklist setupDismissed={setupDismissed} planTier={planTier} />
 
       {/* Quick actions — icon + label */}
       <div className="flex gap-3 flex-wrap">
