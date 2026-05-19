@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-19 v1.0.527 (Cursor — fix(cpd-293): requireRole ROLES.CUSTOMER → minLevel so operator/admin accounts pass customer-gated routes; fixes Forbidden 403 on source, concierge, thumbnail routes for non-customer roles)
 **Last Updated:** 2026-05-19 v1.0.526 (Cursor — fix(cpd-293): prevent SessionGuard infinite-loop — apiFetch only fires api-unauthorized when token was sent and rejected; SessionGuard checks isSignedIn before calling signOut)
 **Last Updated:** 2026-05-19 v1.0.525 (Cursor — fix(cpd-293): source-library-picker maps "Failed to fetch" to a human-readable retry message; error display shows inline Retry button for transient network failures)
 **Last Updated:** 2026-05-19 v1.0.524 (Cursor — fix(cpd-293): source-library-picker suppresses inline 401 error — SessionGuard handles redirect; bail early if getToken() returns null to avoid hitting API without a session)
