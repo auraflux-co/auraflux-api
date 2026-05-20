@@ -8,10 +8,9 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   listConnectedAccounts,
   disconnectPlatform,
@@ -172,13 +171,6 @@ export default function SocialConnectPage() {
         })}
       </div>
 
-      <Separator />
-
-      <div className="text-xs text-muted-foreground space-y-1">
-        <p><strong>Platform audit status:</strong> Direct publishing requires platform approval before public posts.</p>
-        <p>YouTube: Google OAuth compliance audit (1–4 weeks) · TikTok: App audit (5–10 days) · Instagram: Meta App Review (2–4 weeks)</p>
-        <p>Until approved, posts use <code>privacyStatus: private</code> / <code>privacy_level: SELF_ONLY</code>.</p>
-      </div>
     </div>
   );
 }
