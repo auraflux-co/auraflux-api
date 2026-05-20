@@ -28,7 +28,6 @@ interface SetupStatus {
     accountCreated:     boolean;
     sourceChannelSaved: boolean;
     platformConnected:  boolean;
-    firstJobSubmitted:  boolean;
   };
   doneCount:  number;
   totalSteps: number;
@@ -72,11 +71,6 @@ const STEPS: StepDef[] = [
     },
     href: '/dashboard/settings/social-connect',
     note: 'Skip if you plan to download and upload manually.',
-  },
-  {
-    key:   'firstJobSubmitted',
-    label: (s) => s.steps.firstJobSubmitted ? 'First job submitted' : 'Submit your first job',
-    href:  '/dashboard/jobs/new',
   },
 ];
 
@@ -160,7 +154,7 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
         <div className="h-4 w-48 rounded bg-muted" />
         <div className="h-1.5 w-full rounded-full bg-muted" />
         <div className="space-y-2 pt-1">
-          {[1,2,3,4].map((i) => <div key={i} className="h-4 w-full rounded bg-muted" />)}
+          {[1,2,3].map((i) => <div key={i} className="h-4 w-full rounded bg-muted" />)}
         </div>
       </div>
     );
@@ -176,7 +170,6 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
         <ul className="space-y-2 text-sm">
           <li><Link href="/dashboard/settings/source-channels" className="text-primary hover:underline">Save a source channel →</Link></li>
           <li><Link href="/dashboard/settings/social-connect" className="text-primary hover:underline">Connect a publishing platform →</Link></li>
-          <li><Link href="/dashboard/jobs/new" className="text-primary hover:underline">Submit your first job →</Link></li>
         </ul>
       </div>
     );
