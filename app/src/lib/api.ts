@@ -964,3 +964,33 @@ export async function validatePublishCopy(
     token,
   });
 }
+
+// ─── Notifications (CPD-307) ──────────────────────────────────────────────────
+
+export interface AppNotification {
+  id:        number;
+  type:      string;
+  title:     string;
+  body:      string | null;
+  actionUrl: string | null;
+  read:      boolean;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  ok:             boolean;
+  notifications:  AppNotification[];
+  unreadCount:    number;
+}
+
+export async function listNotifications(token?: string): Promise<NotificationsResponse> {
+  return apiFetch('/notifications', { token });
+}
+
+export async function markNotificationRead(id: number, token?: string): Promise<{ ok: boolean }> {
+  return apiFetch(`/notifications/${id}/read`, { method: 'PATCH', token });
+}
+
+export async function markAllNotificationsRead(token?: string): Promise<{ ok: boolean }> {
+  return apiFetch('/notifications/read-all', { method: 'PATCH', token });
+}
