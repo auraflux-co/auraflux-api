@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-20 v1.0.555 (Cursor — feat(cpd-315): dashboard home 3×2 nav grid — replaced signal widgets with 6 nav tiles: My Jobs, Review Queue (live count badge), Schedule, Templates, Billing, Settings)
 **Last Updated:** 2026-05-20 v1.0.554 (Cursor — fix(cpd-314): remove firstJobSubmitted from setup checklist — submit first job is the next step after setup, not a setup gate; nav unlocks when channel + platform connected)
 **Last Updated:** 2026-05-20 v1.0.553 (Cursor — chore(cpd-313): remove platform audit status footer from My Social Accounts — internal dev note was visible to end users)
 **Last Updated:** 2026-05-20 v1.0.549 (Cursor — feat(cpd-312): TikTok + Instagram connect via Upload-Post white-label — new uploadpost_users.js service; TikTok/Instagram connect routes generate Upload-Post JWT connect URL instead of direct OAuth; accounts endpoint merges direct OAuth (YouTube) + Upload-Post profile (TikTok/Instagram))

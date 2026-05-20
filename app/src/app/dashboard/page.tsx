@@ -1,14 +1,9 @@
 import { currentUser } from '@clerk/nextjs/server';
-import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { PipelineStatusWidget } from '@/components/dashboard/pipeline-status-widget';
-import { ReviewQueueWidget } from '@/components/dashboard/review-queue-widget';
-import { CreditsSummary } from '@/components/dashboard/credits-summary';
-import { RecentJobsList } from '@/components/dashboard/recent-jobs-list';
 import { SetupChecklist } from '@/components/dashboard/setup-checklist';
+import { ReviewCountBadge } from '@/components/dashboard/review-count-badge';
 import { tierLabel } from '@/lib/tier-labels';
 
 const TIER_BADGE_VARIANT: Record<string, string> = {
@@ -18,13 +13,90 @@ const TIER_BADGE_VARIANT: Record<string, string> = {
   custom:  'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
 };
 
-function SparklesIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-    </svg>
-  );
-}
+// ─── Nav tile definitions ─────────────────────────────────────────────────────
+
+const TILES = [
+  {
+    id:   'jobs',
+    href: '/dashboard/jobs',
+    title: 'My Jobs',
+    description: 'Create and track all your video production jobs.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <path d="M3 9h18M9 21V9" />
+      </svg>
+    ),
+  },
+  {
+    id:   'review',
+    href: '/dashboard/staging',
+    title: 'Review Queue',
+    description: 'Approve, reject, or publish completed outputs.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+      </svg>
+    ),
+    badge: <ReviewCountBadge />,
+  },
+  {
+    id:   'schedule',
+    href: '/dashboard/schedule',
+    title: 'Schedule',
+    description: 'Plan and automate your content publishing calendar.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+      </svg>
+    ),
+  },
+  {
+    id:   'templates',
+    href: '/dashboard/templates',
+    title: 'Templates',
+    description: 'Save job configurations and automate recurring content.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+        <path d="M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" />
+      </svg>
+    ),
+  },
+  {
+    id:   'billing',
+    href: '/dashboard/billing',
+    title: 'Billing',
+    description: 'Credits, usage, and subscription management.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="22" height="16" x="1" y="4" rx="2" />
+        <path d="M1 10h22" />
+      </svg>
+    ),
+  },
+  {
+    id:   'settings',
+    href: '/dashboard/settings',
+    title: 'Settings',
+    description: 'Channels, social accounts, team, and preferences.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+  },
+] as const;
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
   const user           = await currentUser();
@@ -42,7 +114,10 @@ export default async function DashboardPage() {
             {firstName}
           </span>
         </h1>
-        <Badge className={cn('text-[11px] font-semibold uppercase tracking-wider', TIER_BADGE_VARIANT[planTier] ?? TIER_BADGE_VARIANT.operate)}>
+        <Badge className={cn(
+          'text-[11px] font-semibold uppercase tracking-wider',
+          TIER_BADGE_VARIANT[planTier] ?? TIER_BADGE_VARIANT.operate,
+        )}>
           {tierLabel(planTier)}
         </Badge>
       </div>
@@ -50,45 +125,41 @@ export default async function DashboardPage() {
       {/* ── Setup checklist — hidden once dismissed or complete ────── */}
       <SetupChecklist setupDismissed={setupDismissed} planTier={planTier} />
 
-      {/* ── Signal row: Pipeline + Review queue ───────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Pipeline */}
-        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Pipeline
-          </p>
-          <PipelineStatusWidget />
-        </div>
+      {/* ── 3×2 nav grid ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {TILES.map((tile) => (
+          <Link
+            key={tile.id}
+            href={tile.href}
+            className={cn(
+              'group relative flex flex-col gap-3 rounded-xl border border-border bg-card p-5',
+              'transition-all duration-150 hover:border-primary/50 hover:bg-card/80 hover:shadow-sm',
+            )}
+          >
+            {/* Icon + optional count badge */}
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground group-hover:text-primary transition-colors">
+                {tile.icon}
+              </span>
+              {'badge' in tile && tile.badge}
+            </div>
 
-        {/* Review queue */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-            Review queue
-          </p>
-          <ReviewQueueWidget />
-        </div>
-      </div>
+            {/* Title */}
+            <div>
+              <p className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors">
+                {tile.title}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                {tile.description}
+              </p>
+            </div>
 
-      {/* ── Credits bar ────────────────────────────────────────────── */}
-      <CreditsSummary />
-
-      {/* ── Recent jobs ────────────────────────────────────────────── */}
-      <div>
-        <Separator className="mb-6" />
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Recent jobs
-          </h2>
-        </div>
-        <RecentJobsList />
-      </div>
-
-      {/* ── Primary CTA ────────────────────────────────────────────── */}
-      <div>
-        <Link href="/dashboard/jobs/new" className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}>
-          <SparklesIcon />
-          New job
-        </Link>
+            {/* Arrow hint */}
+            <span className="absolute bottom-4 right-4 text-muted-foreground/30 group-hover:text-primary/50 transition-colors text-sm">
+              →
+            </span>
+          </Link>
+        ))}
       </div>
     </div>
   );
