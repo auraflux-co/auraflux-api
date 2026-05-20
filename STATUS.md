@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-20 v1.0.557 (Cursor — feat(cpd-290/291): YouTube cookie auth docs + Kick Cloudflare bypass (curl_cffi fallback, blocked-200 detection, proxy support); wire remaining notification triggers: template_failed, scheduled_missed, support_resolved, operator_note)
 **Last Updated:** 2026-05-20 v1.0.556 (Cursor — feat(cpd-307): DB-backed notifications infrastructure — 014_notifications migration, lib/services/notifications.js, GET/PATCH /notifications routes, wired into pipeline (complete/failed), credits (low/exhausted/pack), social connect (platform connected), NotificationsBell rewritten to poll /notifications)
 **Last Updated:** 2026-05-20 v1.0.555 (Cursor — feat(cpd-315): dashboard home 3×2 nav grid — replaced signal widgets with 6 nav tiles: My Jobs, Review Queue (live count badge), Schedule, Templates, Billing, Settings)
 **Last Updated:** 2026-05-20 v1.0.554 (Cursor — fix(cpd-314): remove firstJobSubmitted from setup checklist — submit first job is the next step after setup, not a setup gate; nav unlocks when channel + platform connected)
