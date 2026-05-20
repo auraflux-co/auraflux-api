@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-20 v1.0.553 (Cursor — chore(cpd-313): remove platform audit status footer from My Social Accounts — internal dev note was visible to end users)
 **Last Updated:** 2026-05-20 v1.0.549 (Cursor — feat(cpd-312): TikTok + Instagram connect via Upload-Post white-label — new uploadpost_users.js service; TikTok/Instagram connect routes generate Upload-Post JWT connect URL instead of direct OAuth; accounts endpoint merges direct OAuth (YouTube) + Upload-Post profile (TikTok/Instagram))
 **Last Updated:** 2026-05-20 v1.0.548 (Cursor — feat: open TikTok and Instagram direct publishing to all plans — publish.direct_tiktok min_plan managed→operate; UI hints updated from "Requires Managed plan" to "Available on all plans"; feature matrix in feature-gating.mdc updated)
 **Last Updated:** 2026-05-20 v1.0.547 (Cursor — fix(cpd-311): customerId null in platform_oauth_tokens — requireAuthOrQueryToken sets req.user.id not req.auth.userId; _pkceStore now uses req.auth?.userId || req.user?.id so token-based connect preserves the customer ID through the callback)
