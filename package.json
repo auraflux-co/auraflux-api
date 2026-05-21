@@ -106,7 +106,7 @@
     "autocannon": "^8.0.0",
     "eslint": "^10.2.1",
     "jest": "^30.3.0",
-    "playwright": "^1.59.1",
+    "playwright": "^1.60.0",
     "prettier": "^3.5.3",
     "supertest": "^7.2.2"
   },
