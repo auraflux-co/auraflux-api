@@ -9,11 +9,14 @@ import type { Job, PortalStatus } from '@/lib/api';
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
 const STATUS_MAP: Record<Job['status'], { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  queued:   { label: 'Queued',    variant: 'secondary' },
-  running:  { label: 'Running',   variant: 'default'   },
-  complete: { label: 'Complete',  variant: 'default'   },
-  failed:   { label: 'Failed',    variant: 'destructive' },
-  held:     { label: 'On Hold',   variant: 'outline'   },
+  queued:    { label: 'Queued',     variant: 'secondary'   },
+  running:   { label: 'Running',    variant: 'default'     },
+  complete:  { label: 'Complete',   variant: 'default'     },
+  failed:    { label: 'Failed',     variant: 'destructive' },
+  held:      { label: 'On Hold',    variant: 'outline'     },
+  staged:    { label: 'In Review',  variant: 'secondary'   },
+  published: { label: 'Published',  variant: 'default'     },
+  cancelled: { label: 'Cancelled',  variant: 'outline'     },
 };
 
 const PORTAL_STATUS_COLOR: Record<PortalStatus, string> = {
