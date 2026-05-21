@@ -137,9 +137,9 @@ function settingsNavItem(planTier: string | null): NavItem {
     children.push({ href: '/dashboard/settings/api-keys', label: 'API Keys' });
   }
   children.push(
-    { href: '/dashboard/settings/channels',       label: 'My Channels'      },
-    { href: '/dashboard/settings/social-connect', label: 'My Social Accounts' },
-    { href: '/dashboard/settings/team',           label: 'My Team'          },
+    { href: '/dashboard/settings/source-channels', label: 'My Channels'       },
+    { href: '/dashboard/settings/social-connect',  label: 'My Social Accounts' },
+    { href: '/dashboard/settings/team',            label: 'My Team'           },
   );
   return { href: '/dashboard/settings', label: 'Settings', children };
 }
