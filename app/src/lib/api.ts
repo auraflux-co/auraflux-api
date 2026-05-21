@@ -860,6 +860,90 @@ export async function sendOperatorReply(
   });
 }
 
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+export interface AppNotification {
+  id:        number;
+  type:      string;
+  title:     string;
+  body:      string;
+  actionUrl: string | null;
+  read:      boolean;
+  createdAt: string;
+}
+
+export async function listNotifications(
+  token?: string,
+): Promise<{ ok: boolean; notifications: AppNotification[] }> {
+  return apiFetch('/notifications', { token });
+}
+
+export async function markNotificationRead(
+  id: number,
+  token?: string,
+): Promise<{ ok: boolean }> {
+  return apiFetch(`/notifications/${id}/read`, { method: 'PATCH', token });
+}
+
+export async function markAllNotificationsRead(
+  token?: string,
+): Promise<{ ok: boolean }> {
+  return apiFetch('/notifications/read-all', { method: 'PATCH', token });
+}
+
+// ─── Source library (Browse My Channels) ─────────────────────────────────────
+
+export type SourceDateRange = '24h' | '7d' | '30d' | 'all';
+export type SourceType      = 'all' | 'vod' | 'clip' | 'short';
+
+export interface SourceFilters {
+  dateRange?:   SourceDateRange;
+  type?:        SourceType;
+  minDuration?: number;
+  maxDuration?: number;
+  keyword?:     string;
+  playlistId?:  string;
+}
+
+export interface SourceItem {
+  id:            string;
+  title:         string;
+  thumbnailUrl:  string | null;
+  duration:      number | null;
+  url:           string;
+  type:          SourceType;
+  publishedAt?:  string;
+  viewCount?:    number;
+  platform?:     SourcePlatform;
+}
+
+export interface SourcePlaylist {
+  id:    string;
+  title: string;
+  itemCount?: number;
+}
+
+export async function fetchSourceContent(
+  platform: SourcePlatform,
+  handle: string,
+  limit = 50,
+  token?: string,
+  filters?: SourceFilters,
+): Promise<{ ok: boolean; channel: ResolvedChannel; items: SourceItem[] }> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (filters?.dateRange)   params.set('range',       filters.dateRange);
+  if (filters?.type)        params.set('type',        filters.type);
+  if (filters?.playlistId)  params.set('playlistId',  filters.playlistId);
+  return apiFetch(`/source/${platform}/${encodeURIComponent(handle)}/content?${params}`, { token });
+}
+
+export async function fetchYouTubePlaylists(
+  handle: string,
+  token?: string,
+): Promise<{ ok: boolean; channel: ResolvedChannel; playlists: SourcePlaylist[] }> {
+  return apiFetch(`/source/youtube/${encodeURIComponent(handle)}/playlists`, { token });
+}
+
 // ─── Source channels (My Channels settings) ──────────────────────────────────
 
 export interface SourceChannels {
