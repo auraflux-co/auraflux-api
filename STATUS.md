@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-21 v1.0.579 (Cursor — fix(cpd-315): review queue shows only complete+staged — published jobs clear from queue on approve, live in Jobs→History only)
 **Last Updated:** 2026-05-21 v1.0.578 (Cursor — feat(cpd-315): dashboard home redesign — numbered tile stats, CTA rows, social badges on Settings, gold bell, HeroMonogram v2, Download+Redo in Review Queue)
 **Last Updated:** 2026-05-21 v1.0.577 (Cursor — feat(cpd-314): dashboard UX ship — sidebar AF logo + CreditToken credits pill, templates/recurrence UI, job wizard timing, active scheduled queue, jobs_c1 mount + scheduling cron)
 **Last Updated:** 2026-05-21 v1.0.576 (Cursor — fix(cpd-313): repair broken JSX in active jobs page blocking Render build)

@@ -436,9 +436,9 @@ export default function StagingPage() {
         const t = await getToken();
         setToken(t);
         const data = await apiFetch<{ jobs: JobRow[] }>('/jobs', { token: t ?? undefined });
-        // Show all jobs that have completed — not just staging:true, so operator can review any job
+        // Review queue = work to do only. Published jobs live in Jobs → History.
         const withOutput = (data.jobs ?? []).filter(
-          (j) => j.outputUrl || ['complete', 'staged', 'published', 'failed'].includes(j.status)
+          (j) => ['complete', 'staged'].includes(j.status)
         );
         setJobs(withOutput);
       } catch {
