@@ -1905,9 +1905,8 @@ app.get('/health', async (req, res) => {
   res.status(statusCode).json(health);
 });
 
-// GET /jobs — return all persisted job cards for dashboard recovery after server restart
-// Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
-app.get('/jobs', (req, res) => {
+// GET /jobs — C0 localhost only. C1+ dashboard uses jobs_c1 router (PG-backed).
+if (!process.env.DATABASE_URL) app.get('/jobs', (req, res) => {
   // Only return in-flight jobs. Completed (assembled, published) and
   // failed/dismissed jobs are excluded — they do not need to restore on page load.
   const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling']);
@@ -7209,6 +7208,7 @@ const thumbnailRouter     = require('./lib/routes/thumbnail');
 const clipSourcingRouter  = require('./lib/routes/clip_sourcing');
 const sourceRouter        = require('./lib/routes/source');
 const heygenRouter        = require('./lib/routes/heygen');
+const jobsC1Router        = require('./lib/routes/jobs_c1');
 app.use(planRouter);
 app.use(creditsRouter);
 app.use(notificationsRouter);
@@ -7224,6 +7224,7 @@ app.use(videoRouter);
 app.use(thumbnailRouter);
 app.use(clipSourcingRouter);
 app.use(sourceRouter);
+app.use(jobsC1Router);
 // heygen inline routes are guarded with !DATABASE_URL — with DB now set those
 // won't register, so the router file is safe to mount without conflicts.
 app.use(heygenRouter);
@@ -7248,6 +7249,9 @@ const server = app.listen(PORT, () => {
     else console.log('✅ FFmpeg:', v);
   });
   startMonitoring(); // Start pipeline event monitoring
+
+  const { startSchedulingCron } = require('./lib/services/scheduling_cron');
+  startSchedulingCron();
 
   // Rescue any jobs left in 'running' state by the previous process (CPD-183)
   const { rescueInterruptedJobs, promoteAssembledJobs } = require('./lib/startup');

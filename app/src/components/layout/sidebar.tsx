@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
 import { usePlan } from '@/contexts/plan-context';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
-import { HeroMonogram } from '@/components/icons/brand-icons';
+import { HeroMonogram, CreditToken } from '@/components/icons/brand-icons';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -73,7 +73,6 @@ const TIER_INCLUDED_CREDITS: Record<string, number> = {
 
 function CreditsBadge({ collapsed }: { collapsed: boolean }) {
   const { getToken, isLoaded } = useAuth();
-  const { user }               = useUser();
   const { planTier }           = usePlan();
   const [remaining, setRemaining] = useState<number | null>(null);
   const tierFallback = planTier ? (TIER_INCLUDED_CREDITS[planTier] ?? 50) : null;
@@ -96,36 +95,27 @@ function CreditsBadge({ collapsed }: { collapsed: boolean }) {
   if (collapsed) return null;
 
   const display = remaining ?? tierFallback;
-  const avatarUrl = user?.imageUrl;
-  const initials  = user?.firstName?.[0] ?? user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ?? '?';
 
   return (
     <Link
       href="/dashboard/credits"
       title="Credits remaining this period"
       className={cn(
-        'flex items-center gap-1.5 px-2 py-1 rounded-md border border-border/70',
-        'bg-card/30 hover:bg-accent/40 hover:border-border transition-colors shrink-0',
+        'flex items-center gap-2 w-full px-2.5 py-2 rounded-lg border border-border',
+        'bg-card/50 hover:bg-accent/40 hover:border-primary/30 transition-colors',
       )}
     >
-      {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={avatarUrl}
-          alt=""
-          className="w-5 h-5 rounded-full object-cover ring-1 ring-border/50 shrink-0"
-        />
-      ) : (
-        <span
-          className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-semibold text-muted-foreground ring-1 ring-border/50 shrink-0"
-          aria-hidden
-        >
-          {initials}
+      <span
+        className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/15 text-primary shrink-0"
+        aria-hidden
+      >
+        <CreditToken size={16} />
+      </span>
+      <span className="min-w-0 leading-tight">
+        <span className="block text-sm font-semibold tabular-nums text-foreground">
+          {display === null ? '—' : display.toLocaleString()}
         </span>
-      )}
-      <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap">
-        {display === null ? '—' : display.toLocaleString()}
-        <span className="text-muted-foreground/70"> left</span>
+        <span className="block text-[11px] text-muted-foreground">credits left</span>
       </span>
     </Link>
   );
@@ -251,21 +241,21 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
     >
       {/* Header */}
       <div className={cn(
-        'border-b border-border flex items-center gap-2 shrink-0',
-        collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3 justify-between',
+        'border-b border-border shrink-0',
+        collapsed ? 'px-3 py-3 flex justify-center' : 'px-3 py-3 space-y-2.5',
       )}>
         {!collapsed && (
           <>
-            <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <HeroMonogram size={22} className="text-primary shrink-0" />
-              <span className="font-semibold text-sm tracking-tight text-foreground">AuraFlux</span>
+            <Link href="/dashboard" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
+              <HeroMonogram size={28} className="text-primary shrink-0" />
+              <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">AuraFlux</span>
             </Link>
             <CreditsBadge collapsed={collapsed} />
           </>
         )}
         {collapsed && (
           <Link href="/dashboard" title="AuraFlux">
-            <HeroMonogram size={20} className="text-primary" />
+            <HeroMonogram size={24} className="text-primary" />
           </Link>
         )}
       </div>
@@ -444,9 +434,9 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
       mobileOpen ? 'translate-x-0' : '-translate-x-full',
     )}>
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2" onClick={closeMobile}>
-          <HeroMonogram size={20} className="text-primary shrink-0" />
-          <span className="font-semibold text-sm tracking-tight">AuraFlux</span>
+        <Link href="/dashboard" className="flex items-center gap-2.5" onClick={closeMobile}>
+          <HeroMonogram size={26} className="text-primary shrink-0" />
+          <span className="font-semibold text-[15px] tracking-tight">AuraFlux</span>
         </Link>
         <button onClick={closeMobile} className="text-muted-foreground hover:text-foreground p-1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

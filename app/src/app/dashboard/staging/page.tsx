@@ -402,10 +402,10 @@ export default function StagingPage() {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-xl font-semibold">Review Queue</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-semibold">Review Queue</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Videos ready for your review before publishing to social platforms.
           Compare the input spec against the output — video, thumbnail, script, and publish copy.
         </p>

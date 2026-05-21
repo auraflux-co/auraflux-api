@@ -1,5 +1,6 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-05-21 v1.0.575 (Cursor — fix(cpd-313): active jobs page — remove auto-refresh banner, show started + last active per job)
+**Last Updated:** 2026-05-21 v1.0.577 (Cursor — feat(cpd-314): dashboard UX ship — sidebar AF logo + CreditToken credits pill, templates/recurrence UI, job wizard timing, active scheduled queue, jobs_c1 mount + scheduling cron)
+**Last Updated:** 2026-05-21 v1.0.576 (Cursor — fix(cpd-313): repair broken JSX in active jobs page blocking Render build)
 **Last Updated:** 2026-05-21 v1.0.574 (Cursor — fix(cpd-312): sidebar credits pill shows tier fallback + avatar + border; HeroMonogram AF letters separated)
 **Last Updated:** 2026-05-21 v1.0.573 (Cursor — fix(cpd-311): Browse + Collab auth — Clerk kid mismatch detection, verifyToken publishableKey, source fetch after param fix, Collab panel rebrand)
 **Last Updated:** 2026-05-21 v1.0.572 (Cursor — fix(auth): Bearer token fallback in requireAuth when getAuth throws; PlanContext no longer defaults to operate on API failure; API Keys page uses Clerk metadata and skips fetch for Guided/Managed)

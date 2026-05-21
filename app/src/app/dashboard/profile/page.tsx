@@ -52,7 +52,7 @@ export default function ProfilePage() {
   }
 
   if (!isLoaded || !user) return (
-    <div className="max-w-2xl space-y-8 animate-pulse">
+    <div className="max-w-2xl space-y-6 animate-pulse">
       <div className="h-8 bg-muted rounded w-40" />
       {[1, 2, 3].map((i) => (
         <div key={i} className="rounded-xl border border-border p-6 space-y-4">
@@ -93,7 +93,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-8">
+    <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Your Profile</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Manage your identity, security, and preferences</p>

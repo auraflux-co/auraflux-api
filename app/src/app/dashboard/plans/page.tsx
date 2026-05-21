@@ -62,7 +62,7 @@ export default function PlansPage() {
   if (loading) return <div className="text-sm text-muted-foreground">Loading…</div>;
 
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-semibold">Plans</h1>
         <p className="text-sm text-muted-foreground mt-0.5">

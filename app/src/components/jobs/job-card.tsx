@@ -10,6 +10,7 @@ import type { Job, PortalStatus } from '@/lib/api';
 
 const STATUS_MAP: Record<Job['status'], { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   queued:    { label: 'Queued',     variant: 'secondary'   },
+  queued_scheduled: { label: 'Scheduled', variant: 'outline' },
   running:   { label: 'Running',    variant: 'default'     },
   complete:  { label: 'Complete',   variant: 'default'     },
   failed:    { label: 'Failed',     variant: 'destructive' },
