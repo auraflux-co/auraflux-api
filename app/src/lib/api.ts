@@ -38,17 +38,24 @@ export interface WizardConfig {
   templateId:     string | null;
   contentType:    string | null;
   entryType:      string | null;
-  addOns:         string[];   // e.g. ['tts', 'heygen', 'shoppable']
+  addOns:         string[];
+  activeFeatures: string[];
   platforms:      string[];
   publishMode:    PublishMode;
   scheduledAt:    string | null;
   productionPath: string | null;
+  topic?:         string | null;
+  tone?:          string | null;
+  durationMins?:  number | null;
+  planTier?:      string | null;
+  creditCost?:    number | null;
 }
 
 export interface PublishResult {
   platform:      string;
   platformJobId: string | null;
   driveUrl:      string | null;
+  error?:        string | null;
   title:         string | null;
   status:        'pending' | 'published' | 'failed';
   publishedAt:   string | null;
@@ -894,7 +901,7 @@ export async function markAllNotificationsRead(
 // ─── Source library (Browse My Channels) ─────────────────────────────────────
 
 export type SourceDateRange = '24h' | '7d' | '30d' | 'all';
-export type SourceType      = 'all' | 'vod' | 'clip' | 'short';
+export type SourceType      = 'all' | 'vod' | 'clip' | 'short' | 'video';
 
 export interface SourceFilters {
   dateRange?:   SourceDateRange;
@@ -909,11 +916,12 @@ export interface SourceItem {
   id:            string;
   title:         string;
   thumbnailUrl:  string | null;
-  duration:      number | null;
+  duration:      number;
   url:           string;
   type:          SourceType;
+  contentType?:  string;
   publishedAt?:  string;
-  viewCount?:    number;
+  viewCount:     number;
   platform?:     SourcePlatform;
 }
 
@@ -958,6 +966,7 @@ export interface ResolvedChannel {
   id?:           string;
   username?:     string;
   displayName?:  string;
+  name?:         string;
   title?:        string;
   avatarUrl?:    string;
   thumbnailUrl?: string;
