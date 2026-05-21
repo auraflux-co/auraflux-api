@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import {
   fetchSourceContent,
   fetchYouTubePlaylists,
+  getSourceChannels,
+  type SourceChannels,
   type SourcePlatform,
   type SourceItem,
   type SourceFilters,
@@ -268,24 +270,29 @@ function FilterPill({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
-  onSelect:   (items: SourceItem[]) => void;
-  maxSelect?: number;
+  onSelect:            (items: SourceItem[]) => void;
+  maxSelect?:          number;
+  /** Lock the TYPE filter to a specific content type. Hides the tab for the other type. */
+  contentTypeFilter?:  'clip' | 'vod';
 }
 
-export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
+export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilter }: Props) {
   const { getToken }                    = useAuth();
   const [platform, setPlatform]         = useState<SourcePlatform | null>(null);
   const [username, setUsername]         = useState('');
+  const [savedChannels, setSavedChannels] = useState<SourceChannels>({});
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [items, setItems]               = useState<SourceItem[]>([]);
   const [channelName, setChannelName]   = useState('');
+  const [channelAvatar, setChannelAvatar] = useState<string | null>(null);
   const [selected, setSelected]         = useState<Set<string>>(new Set());
+  const [confirmed, setConfirmed]       = useState(false);
   const [limitReached, setLimitReached] = useState(false);
 
   // Filters
   const [dateRange, setDateRange]       = useState<SourceDateRange>('all');
-  const [contentType, setContentType]   = useState<SourceType>('all');
+  const [contentType, setContentType]   = useState<SourceType>(contentTypeFilter ?? 'all');
   const [durationPreset, setDurationPreset] = useState(0); // index into DURATION_PRESETS
   const [keyword, setKeyword]           = useState('');
 
@@ -305,6 +312,31 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     return items.filter((i) => i.title.toLowerCase().includes(q));
   }, [items, keyword]);
 
+  // Load saved source channel defaults once on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res   = await getSourceChannels(token ?? undefined);
+        if (!cancelled) setSavedChannels(res.sourceChannels ?? {});
+      } catch { /* non-blocking */ }
+    })();
+    return () => { cancelled = true; };
+  }, [getToken]);
+
+  // Sync contentType when the parent changes the filter (e.g. user flips sourceIntent).
+  // If a channel is already loaded, re-fetch immediately with the new type.
+  // If not yet browsed, just update state so the next browse uses the correct type.
+  useEffect(() => {
+    const newType = contentTypeFilter ?? 'all';
+    if (channelName) {
+      handleFilterChange({ type: newType });
+    } else {
+      setContentType(newType);
+    }
+  }, [contentTypeFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Load YouTube playlists exactly once per channel browse
   useEffect(() => {
     if (platform !== 'youtube' || !channelName) return;
@@ -323,12 +355,18 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   }, [platform, username, channelName, getToken]);
 
   const handlePlatformSelect = useCallback((p: SourcePlatform) => {
+    const prefill =
+      p === 'twitch'  ? (savedChannels.twitchLogin   ?? '') :
+      p === 'kick'    ? (savedChannels.kickUsername   ?? '') :
+      p === 'youtube' ? (savedChannels.youtubeHandle  ?? '') : '';
     setPlatform(p);
-    setUsername('');
+    setUsername(prefill);
     setItems([]);
     setSelected(new Set());
     setError(null);
     setChannelName('');
+    setChannelAvatar(null);
+    setConfirmed(false);
     setPlaylists([]);
     setActivePlaylist(null);
     setDateRange('all');
@@ -336,7 +374,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     setDurationPreset(0);
     setKeyword('');
     playlistLoadedFor.current = null;
-  }, []);
+  }, [savedChannels]);
 
   /**
    * durationPresetIdx is passed explicitly to avoid stale closure
@@ -356,16 +394,22 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
     setItems([]);
     try {
       const token  = await getToken();
+      // If Clerk hasn't established a session yet, don't hit the API — bail silently.
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       const preset = DURATION_PRESETS[durationPresetIdx];
       const f: SourceFilters = {
         ...filters,
         minDuration: preset.min > 0     ? preset.min    : undefined,
         maxDuration: preset.max < 99999 ? preset.max    : undefined,
       };
-      const res = await fetchSourceContent(targetPlatform, targetUsername, 50, token ?? undefined, f);
+      const res = await fetchSourceContent(targetPlatform, targetUsername, 50, token, f);
       const newItems = res.items;
       setItems(newItems);
       setChannelName(res.channel?.displayName || res.channel?.name || targetUsername);
+      setChannelAvatar(res.channel?.avatarUrl || null);
       if (isNewChannel) {
         setSelected(new Set());
       } else {
@@ -381,7 +425,20 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
         setError(`no-results:No content found for "${targetUsername}" on ${targetPlatform} with these filters. Try a wider date range or "All" type.`);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to load content — check the username and try again.');
+      const status = e && typeof e === 'object' && 'status' in e ? (e as { status: number }).status : 0;
+      if (status === 401) {
+        // SessionGuard in the dashboard layout handles 401 — it signs the user
+        // out and redirects to /sign-in. Don't show a raw auth error here.
+        return;
+      } else if (status === 503 && targetPlatform === 'kick') {
+        setError('platform-unavailable:Kick browsing isn\'t available right now. Paste a Kick clip URL directly when submitting your job instead.');
+      } else {
+        const raw = e instanceof Error ? e.message : String(e);
+        const msg = raw === 'Failed to fetch'
+          ? 'retry:Could not reach the server — it may be restarting. Please try again.'
+          : 'error:Couldn\'t load content. Try again or paste a direct URL.';
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -436,6 +493,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
   const handleConfirm = useCallback(() => {
     const chosen = items.filter((i) => selected.has(i.url));
     onSelect(chosen);
+    setConfirmed(true);
   }, [items, selected, onSelect]);
 
   return (
@@ -491,15 +549,32 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
       )}
 
       {error && (() => {
-        const isNoResults = error.startsWith('no-results:');
-        const msg = isNoResults ? error.slice('no-results:'.length) : error;
+        const isNoResults       = error.startsWith('no-results:');
+        const isPlatformUnavail = error.startsWith('platform-unavailable:');
+        const isRetryable       = error.startsWith('retry:');
+        const msg = isNoResults       ? error.slice('no-results:'.length)
+                  : isPlatformUnavail ? error.slice('platform-unavailable:'.length)
+                  : isRetryable       ? error.slice('retry:'.length)
+                  : error;
         return (
-          <p className={cn(
-            'text-xs px-3 py-2 rounded-lg',
+          <div className={cn(
+            'text-xs px-3 py-2 rounded-lg flex items-center gap-2',
             isNoResults
               ? 'text-muted-foreground bg-muted/40 border border-border/50'
+              : isPlatformUnavail
+              ? 'text-amber-600 bg-amber-500/10 border border-amber-500/30'
               : 'text-destructive bg-destructive/10',
-          )}>{msg}</p>
+          )}>
+            <span className="flex-1">{msg}</span>
+            {isRetryable && platform && username.trim() && (
+              <button
+                onClick={handleBrowse}
+                className="shrink-0 underline underline-offset-2 hover:no-underline font-medium"
+              >
+                Retry
+              </button>
+            )}
+          </div>
         );
       })()}
 
@@ -509,7 +584,16 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
 
           {/* Channel header */}
           <div className="flex items-center gap-2">
-            <span className={cn('text-xs font-semibold', cfg.accent)}>{cfg.icon}</span>
+            {channelAvatar ? (
+              <img
+                src={channelAvatar}
+                alt={channelName}
+                className="w-6 h-6 rounded-full object-cover shrink-0"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            ) : (
+              <span className={cn('text-xs font-semibold', cfg.accent)}>{cfg.icon}</span>
+            )}
             <span className="text-xs font-semibold text-foreground">{channelName}</span>
             <span className="text-[10px] text-muted-foreground ml-auto">
               {displayItems.length} result{displayItems.length !== 1 ? 's' : ''}
@@ -538,21 +622,23 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
             </div>
           </div>
 
-          {/* Content type pills */}
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Type</p>
-            <div className="flex flex-wrap gap-1.5">
-              {cfg.typeOptions.map((t) => (
-                <FilterPill
-                  key={t.value}
-                  active={contentType === t.value}
-                  onClick={() => handleFilterChange({ type: t.value })}
-                >
-                  {t.label}
-                </FilterPill>
-              ))}
+          {/* Content type pills — hidden entirely when contentTypeFilter is locked by parent */}
+          {!contentTypeFilter && (
+            <div className="space-y-1">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Type</p>
+              <div className="flex flex-wrap gap-1.5">
+                {cfg.typeOptions.map((t) => (
+                  <FilterPill
+                    key={t.value}
+                    active={contentType === t.value}
+                    onClick={() => handleFilterChange({ type: t.value })}
+                  >
+                    {t.label}
+                  </FilterPill>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Duration presets */}
           <div className="space-y-1">
@@ -631,8 +717,27 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10 }: Props) {
         </div>
       )}
 
+      {/* Confirmed summary — replaces the grid once user clicks "Add clips" */}
+      {confirmed && selected.size > 0 && (
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-primary/40 bg-primary/5">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-primary shrink-0">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <p className="flex-1 text-xs font-semibold text-foreground">
+            {selected.size} clip{selected.size !== 1 ? 's' : ''} added — continue to next step
+          </p>
+          <button
+            type="button"
+            onClick={() => setConfirmed(false)}
+            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground shrink-0"
+          >
+            Change
+          </button>
+        </div>
+      )}
+
       {/* Results grid — shown while loading (skeleton) or once server items exist */}
-      {(loading && channelName) || items.length > 0 ? (
+      {!confirmed && ((loading && channelName) || items.length > 0) ? (
         <div className="space-y-3">
           {/* Scroll container with bottom fade hint */}
           <div className="relative">

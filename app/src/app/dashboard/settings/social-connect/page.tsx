@@ -8,10 +8,9 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   listConnectedAccounts,
   disconnectPlatform,
@@ -25,19 +24,19 @@ const PLATFORMS: { id: SocialPlatform; label: string; color: string; hint: strin
     id: 'youtube',
     label: 'YouTube',
     color: 'bg-red-500',
-    hint: 'Available on all plans. Direct upload via YouTube Data API v3.',
+    hint: 'Publish directly to YouTube. Available on all plans.',
   },
   {
     id: 'tiktok',
     label: 'TikTok',
     color: 'bg-black',
-    hint: 'Requires Managed plan. TikTok Content Posting API.',
+    hint: 'Publish directly to TikTok. Available on Managed plan.',
   },
   {
     id: 'instagram',
     label: 'Instagram',
     color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-    hint: 'Requires Managed plan. Instagram Graph API — Reels.',
+    hint: 'Publish directly to Instagram Reels. Available on all plans.',
   },
 ];
 
@@ -87,8 +86,14 @@ export default function SocialConnectPage() {
     }
   }
 
-  function handleConnect(platform: SocialPlatform) {
-    window.location.href = getSocialConnectUrl(platform);
+  async function handleConnect(platform: SocialPlatform) {
+    // The connect route is on the API domain — a plain browser redirect can't
+    // send an Authorization header cross-origin. Pass the Clerk JWT as a query
+    // param so the backend can verify it without a session cookie.
+    const token = await getToken();
+    const url   = new URL(getSocialConnectUrl(platform));
+    if (token) url.searchParams.set('token', token);
+    window.location.href = url.toString();
   }
 
   const accountMap = Object.fromEntries(accounts.map((a) => [a.platform, a]));
@@ -96,7 +101,7 @@ export default function SocialConnectPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Social Accounts</h2>
+        <h2 className="text-xl font-semibold">My Social Accounts</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Connect your publishing channels. AuraFlux will post directly without a third-party proxy.
         </p>
@@ -166,13 +171,6 @@ export default function SocialConnectPage() {
         })}
       </div>
 
-      <Separator />
-
-      <div className="text-xs text-muted-foreground space-y-1">
-        <p><strong>Platform audit status:</strong> Direct publishing requires platform approval before public posts.</p>
-        <p>YouTube: Google OAuth compliance audit (1–4 weeks) · TikTok: App audit (5–10 days) · Instagram: Meta App Review (2–4 weeks)</p>
-        <p>Until approved, posts use <code>privacyStatus: private</code> / <code>privacy_level: SELF_ONLY</code>.</p>
-      </div>
     </div>
   );
 }

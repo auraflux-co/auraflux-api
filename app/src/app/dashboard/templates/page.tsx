@@ -87,7 +87,7 @@ export default function TemplatesPage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Templates</h1>
+          <h1 className="text-2xl font-semibold">My Templates</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Reusable job configurations. Save from any completed job and schedule recurring runs.
           </p>

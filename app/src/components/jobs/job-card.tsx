@@ -9,11 +9,14 @@ import type { Job, PortalStatus } from '@/lib/api';
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
 const STATUS_MAP: Record<Job['status'], { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  queued:   { label: 'Queued',    variant: 'secondary' },
-  running:  { label: 'Running',   variant: 'default'   },
-  complete: { label: 'Complete',  variant: 'default'   },
-  failed:   { label: 'Failed',    variant: 'destructive' },
-  held:     { label: 'On Hold',   variant: 'outline'   },
+  queued:    { label: 'Queued',     variant: 'secondary'   },
+  running:   { label: 'Running',    variant: 'default'     },
+  complete:  { label: 'Complete',   variant: 'default'     },
+  failed:    { label: 'Failed',     variant: 'destructive' },
+  held:      { label: 'On Hold',    variant: 'outline'     },
+  staged:    { label: 'In Review',  variant: 'secondary'   },
+  published: { label: 'Published',  variant: 'default'     },
+  cancelled: { label: 'Cancelled',  variant: 'outline'     },
 };
 
 const PORTAL_STATUS_COLOR: Record<PortalStatus, string> = {
@@ -26,6 +29,23 @@ const PORTAL_STATUS_COLOR: Record<PortalStatus, string> = {
 };
 
 const PORTALS = ['portal0', 'portal1', 'portal2', 'portal3a', 'portal3b', 'portal4', 'portal5'];
+
+const PLATFORM_LABELS: Record<string, string> = {
+  youtube:   'YouTube',
+  tiktok:    'TikTok',
+  instagram: 'Instagram',
+};
+
+const PORTAL_STEP_LABELS: Record<string, string> = {
+  portal0:  'Source validation',
+  portal1:  'Script generation',
+  portal1b: 'Script review',
+  portal2:  'Video assembly',
+  portal3a: 'Assembly review',
+  portal3b: 'Quality check',
+  portal4:  'Broadcast QA',
+  portal5:  'Delivery',
+};
 
 interface JobCardProps {
   job:      Job;
@@ -82,7 +102,7 @@ export function JobCard({ job, detailed = false }: JobCardProps) {
         <div className="flex gap-1 flex-wrap">
           {job.platforms.map((p) => (
             <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-              {p}
+              {PLATFORM_LABELS[p] ?? p}
             </span>
           ))}
           {job.publishMode === 'scheduled' && job.scheduledPublishAt && (
@@ -100,7 +120,7 @@ export function JobCard({ job, detailed = false }: JobCardProps) {
                 <span className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', PORTAL_STATUS_COLOR[r.status])}>
                   {r.status}
                 </span>
-                <span className="text-muted-foreground">{r.portal}</span>
+                <span className="text-muted-foreground">{PORTAL_STEP_LABELS[r.portal] ?? r.portal}</span>
                 {r.score !== undefined && (
                   <span className="ml-auto text-muted-foreground">{r.score}</span>
                 )}

@@ -38,24 +38,24 @@ export interface WizardConfig {
   templateId:     string | null;
   contentType:    string | null;
   entryType:      string | null;
-  addOns:         string[];   // e.g. ['tts', 'heygen', 'shoppable']
+  addOns:         string[];
+  activeFeatures: string[];
   platforms:      string[];
   publishMode:    PublishMode;
   scheduledAt:    string | null;
   productionPath: string | null;
-  // Extended fields for job spec card display
-  topic?:          string | null;
-  tone?:           string | null;
-  durationMins?:   number | null;
-  planTier?:       string | null;
-  creditCost?:     number | null;
-  activeFeatures?: string[];
+  topic?:         string | null;
+  tone?:          string | null;
+  durationMins?:  number | null;
+  planTier?:      string | null;
+  creditCost?:    number | null;
 }
 
 export interface PublishResult {
   platform:      string;
   platformJobId: string | null;
   driveUrl:      string | null;
+  error?:        string | null;
   title:         string | null;
   status:        'pending' | 'published' | 'failed';
   publishedAt:   string | null;
@@ -65,7 +65,7 @@ export interface Job {
   jobId:               string;
   contentType:         string;
   entryType:           'fetch' | 'upload' | 'create';
-  status:              'queued' | 'running' | 'complete' | 'failed' | 'held';
+  status:              'queued' | 'running' | 'complete' | 'failed' | 'held' | 'staged' | 'published' | 'cancelled';
   customerId:          string;
   planTier:            PlanTier;
   publishMode:         PublishMode;
@@ -488,81 +488,6 @@ export async function warpIntoAccount(userId: string, token?: string) {
   });
 }
 
-// ─── Creator Source Library (CPD-274) ────────────────────────────────────────
-
-export type SourcePlatform  = 'twitch' | 'kick' | 'youtube';
-export type SourceDateRange = '24h' | '7d' | '30d' | 'all';
-export type SourceType      = 'all' | 'clip' | 'vod' | 'short' | 'video';
-
-export interface SourceItem {
-  id:           string;
-  title:        string;
-  thumbnailUrl: string | null;
-  duration:     number;
-  publishedAt:  string | null;
-  url:          string;
-  viewCount:    number;
-  platform:     SourcePlatform;
-  contentType?: 'clip' | 'vod' | 'video' | 'short';
-  /** legacy alias for contentType */
-  type?:        'clip' | 'vod' | 'video' | 'short';
-  isShort?:     boolean;
-}
-
-export interface SourcePlaylist {
-  id:          string;
-  title:       string;
-  thumbnailUrl: string | null;
-}
-
-export interface SourceChannel {
-  id:          string;
-  name?:       string;
-  displayName?: string;
-  avatarUrl?:  string;
-  url?:        string;
-}
-
-export interface SourceFilters {
-  dateRange?:   SourceDateRange;
-  type?:        SourceType;
-  minDuration?: number;   // seconds
-  maxDuration?: number;
-  q?:           string;   // keyword
-  playlistId?:  string;   // YouTube only
-}
-
-export interface SourceContentResult {
-  ok:       boolean;
-  platform: SourcePlatform;
-  channel:  SourceChannel;
-  items:    SourceItem[];
-}
-
-export async function fetchSourceContent(
-  platform: SourcePlatform,
-  username: string,
-  limit = 20,
-  token?: string,
-  filters?: SourceFilters,
-): Promise<SourceContentResult> {
-  const params = new URLSearchParams({ limit: String(limit) });
-  if (filters?.dateRange && filters.dateRange !== 'all') params.set('after', filters.dateRange);
-  if (filters?.type && filters.type !== 'all')          params.set('type', filters.type);
-  if (filters?.minDuration)                             params.set('minDuration', String(filters.minDuration));
-  if (filters?.maxDuration)                             params.set('maxDuration', String(filters.maxDuration));
-  if (filters?.q)                                       params.set('q', filters.q);
-  if (filters?.playlistId)                              params.set('playlistId', filters.playlistId);
-  return apiFetch(`/source/${platform}/${encodeURIComponent(username)}/content?${params}`, { token });
-}
-
-export async function fetchYouTubePlaylists(
-  handle: string,
-  token?: string,
-): Promise<{ ok: boolean; playlists: SourcePlaylist[] }> {
-  return apiFetch(`/source/youtube/${encodeURIComponent(handle)}/playlists`, { token });
-}
-
 export async function getJob(jobId: string, token?: string): Promise<{ job: Job }> {
   return apiFetch(`/jobs/${jobId}`, { token });
 }
@@ -867,6 +792,10 @@ export interface SupportSession {
   escalated:          boolean;
   escalation_channel: string | null;
   message_count:      number;
+  last_message_at:    number | null;
+  last_message_preview: string | null;
+  human_took_over:    boolean;
+  operator_id:        string | null;
 }
 
 export async function supportChat(
@@ -905,6 +834,168 @@ export async function escalateSupportSession(
     body:   JSON.stringify(payload),
     token,
   });
+}
+
+// ─── Operator support inbox (CPD-310) ────────────────────────────────────────
+
+export async function listAllSupportSessions(
+  opts: { open?: boolean; limit?: number } = {},
+  token?: string,
+): Promise<{ ok: boolean; sessions: SupportSession[] }> {
+  const params = new URLSearchParams();
+  if (opts.open) params.set('open', '1');
+  if (opts.limit) params.set('limit', String(opts.limit));
+  return apiFetch(`/admin/support/sessions?${params}`, { token });
+}
+
+export async function getOperatorSessionMessages(
+  sessionId: string,
+  token?: string,
+): Promise<{ ok: boolean; session: SupportSession; messages: SupportMessage[] }> {
+  return apiFetch(`/admin/support/sessions/${sessionId}`, { token });
+}
+
+export async function sendOperatorReply(
+  sessionId: string,
+  message: string,
+  token?: string,
+): Promise<{ ok: boolean; channel: string }> {
+  return apiFetch(`/support/sessions/${sessionId}/reply`, {
+    method: 'POST',
+    body:   JSON.stringify({ message }),
+    token,
+  });
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+export interface AppNotification {
+  id:        number;
+  type:      string;
+  title:     string;
+  body:      string;
+  actionUrl: string | null;
+  read:      boolean;
+  createdAt: string;
+}
+
+export async function listNotifications(
+  token?: string,
+): Promise<{ ok: boolean; notifications: AppNotification[] }> {
+  return apiFetch('/notifications', { token });
+}
+
+export async function markNotificationRead(
+  id: number,
+  token?: string,
+): Promise<{ ok: boolean }> {
+  return apiFetch(`/notifications/${id}/read`, { method: 'PATCH', token });
+}
+
+export async function markAllNotificationsRead(
+  token?: string,
+): Promise<{ ok: boolean }> {
+  return apiFetch('/notifications/read-all', { method: 'PATCH', token });
+}
+
+// ─── Source library (Browse My Channels) ─────────────────────────────────────
+
+export type SourceDateRange = '24h' | '7d' | '30d' | 'all';
+export type SourceType      = 'all' | 'vod' | 'clip' | 'short' | 'video';
+
+export interface SourceFilters {
+  dateRange?:   SourceDateRange;
+  type?:        SourceType;
+  minDuration?: number;
+  maxDuration?: number;
+  keyword?:     string;
+  playlistId?:  string;
+}
+
+export interface SourceItem {
+  id:            string;
+  title:         string;
+  thumbnailUrl:  string | null;
+  duration:      number;
+  url:           string;
+  type:          SourceType;
+  contentType?:  string;
+  publishedAt?:  string;
+  viewCount:     number;
+  platform?:     SourcePlatform;
+}
+
+export interface SourcePlaylist {
+  id:    string;
+  title: string;
+  itemCount?: number;
+}
+
+export async function fetchSourceContent(
+  platform: SourcePlatform,
+  handle: string,
+  limit = 50,
+  token?: string,
+  filters?: SourceFilters,
+): Promise<{ ok: boolean; channel: ResolvedChannel; items: SourceItem[] }> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (filters?.dateRange)   params.set('range',       filters.dateRange);
+  if (filters?.type)        params.set('type',        filters.type);
+  if (filters?.playlistId)  params.set('playlistId',  filters.playlistId);
+  return apiFetch(`/source/${platform}/${encodeURIComponent(handle)}/content?${params}`, { token });
+}
+
+export async function fetchYouTubePlaylists(
+  handle: string,
+  token?: string,
+): Promise<{ ok: boolean; channel: ResolvedChannel; playlists: SourcePlaylist[] }> {
+  return apiFetch(`/source/youtube/${encodeURIComponent(handle)}/playlists`, { token });
+}
+
+// ─── Source channels (My Channels settings) ──────────────────────────────────
+
+export interface SourceChannels {
+  twitchLogin?:   string;
+  kickUsername?:  string;
+  youtubeHandle?: string;
+}
+
+export type SourcePlatform = 'twitch' | 'kick' | 'youtube';
+
+export interface ResolvedChannel {
+  id?:           string;
+  username?:     string;
+  displayName?:  string;
+  name?:         string;
+  title?:        string;
+  avatarUrl?:    string;
+  thumbnailUrl?: string;
+}
+
+export async function getSourceChannels(
+  token?: string,
+): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
+  return apiFetch('/account/source-channels', { token });
+}
+
+export async function saveSourceChannels(
+  channels: SourceChannels,
+  token?: string,
+): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
+  return apiFetch('/account/source-channels', {
+    method: 'PATCH',
+    body:   JSON.stringify(channels),
+    token,
+  });
+}
+
+export async function resolveSourceChannel(
+  platform: SourcePlatform,
+  handle: string,
+  token?: string,
+): Promise<{ ok: boolean; channel: ResolvedChannel }> {
+  const encoded = encodeURIComponent(handle);
+  return apiFetch(`/source/${platform}/${encoded}/resolve`, { token });
 }
 
 // ─── Job validation ───────────────────────────────────────────────────────────

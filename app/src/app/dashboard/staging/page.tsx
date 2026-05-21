@@ -77,20 +77,26 @@ interface JobRow {
 // ── Portal labels ─────────────────────────────────────────────────────────────
 
 const PORTAL_LABELS: Record<string, string> = {
-  portal0:  'P0 Source validation',
-  portal1:  'P1 Script generation',
-  portal1b: 'P1b Script QA',
-  portal2:  'P2 Video assembly',
-  portal3a: 'P3a Assembly review',
-  portal3b: 'P3b Commitment check',
-  portal4:  'P4 Broadcast QA',
-  portal5:  'P5 Delivery',
+  portal0:  'Source validation',
+  portal1:  'Script generation',
+  portal1b: 'Script review',
+  portal2:  'Video assembly',
+  portal3a: 'Assembly review',
+  portal3b: 'Quality check',
+  portal4:  'Broadcast QA',
+  portal5:  'Delivery',
 };
 
 const PLATFORM_ICONS: Record<string, string> = {
   youtube:   '▶',
   tiktok:    '♪',
   instagram: '◎',
+};
+
+const PLATFORM_DISPLAY: Record<string, string> = {
+  youtube:   'YouTube',
+  tiktok:    'TikTok',
+  instagram: 'Instagram',
 };
 
 // ── Status badge ──────────────────────────────────────────────────────────────
@@ -175,7 +181,7 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
-  const [publishResult, setPublishResult] = useState<Record<string, unknown> | null>(null);
+  const [publishResult, setPublishResult] = useState<{ error?: string | null } | null>(null);
   const [showScript, setShowScript] = useState(false);
 
   useEffect(() => {
@@ -187,8 +193,7 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
         );
         setAssets(data);
       } catch (e: unknown) {
-        const err = e as Error;
-        setError(err.message || 'Failed to load staging assets');
+        setError('Failed to load review assets. Please refresh and try again.');
       } finally {
         setLoading(false);
       }
@@ -210,14 +215,14 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
       setPublishResult(result);
     } catch (e: unknown) {
       const err = e as Error;
-      setPublishResult({ error: err.message });
+      setPublishResult({ error: 'Publish failed. Please try again.' });
     } finally {
       setPublishing(false);
     }
   }, [assets, jobId, token]);
 
-  if (loading) return <p className="text-xs text-muted-foreground py-4 text-center">Loading staging assets…</p>;
-  if (error)   return <p className="text-xs text-red-600 py-4">Error: {error}</p>;
+  if (loading) return <p className="text-xs text-muted-foreground py-4 text-center">Loading review assets…</p>;
+  if (error)   return <p className="text-xs text-red-600 py-4">{error}</p>;
   if (!assets) return null;
 
   const { input, output, portalReports } = assets;
@@ -237,16 +242,10 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
             <dd>{input.contentType ?? '—'}</dd>
             <dt className="text-muted-foreground">Source</dt>
             <dd>{input.sourceType ?? '—'}</dd>
-            <dt className="text-muted-foreground">Topic/prompt</dt>
-            <dd className="truncate" title={input.topic ?? ''}>{input.topic ?? '—'}</dd>
-            <dt className="text-muted-foreground">Tone</dt>
-            <dd>{input.tone ?? '—'}</dd>
             <dt className="text-muted-foreground">Duration</dt>
             <dd>{input.duration ?? '—'}</dd>
             <dt className="text-muted-foreground">Platforms</dt>
-            <dd>{input.platforms.length ? input.platforms.join(', ') : '—'}</dd>
-            <dt className="text-muted-foreground">Plan tier</dt>
-            <dd>{input.planTier ?? '—'}</dd>
+            <dd>{input.platforms.length ? input.platforms.map((p) => PLATFORM_DISPLAY[p] ?? p).join(', ') : '—'}</dd>
             <dt className="text-muted-foreground">Submitted</dt>
             <dd>{input.submittedAt ? new Date(input.submittedAt).toLocaleString() : '—'}</dd>
           </dl>
@@ -259,10 +258,8 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
             return (
               <div className="mt-2 rounded-md border bg-background/60 p-3 space-y-1.5 text-xs">
                 <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">Spec detail</p>
-                {!!wc.productionPath && <p><span className="text-muted-foreground">Path:</span> {String(wc.productionPath)}</p>}
-                {!!wc.entryType    && <p><span className="text-muted-foreground">Entry:</span> {String(wc.entryType)}</p>}
+                {!!wc.entryType    && <p><span className="text-muted-foreground">Source type:</span> {String(wc.entryType)}</p>}
                 {wc.durationMins != null && <p><span className="text-muted-foreground">Duration:</span> {String(wc.durationMins)} min</p>}
-                {!!wc.planTier     && <p><span className="text-muted-foreground">Plan tier:</span> <span className="capitalize">{String(wc.planTier)}</span></p>}
                 {wc.creditCost != null && <p><span className="text-muted-foreground">Credit cost:</span> {String(wc.creditCost)}</p>}
                 {!!wc.publishMode  && <p><span className="text-muted-foreground">Publish:</span> <span className="capitalize">{String(wc.publishMode)}{wc.scheduledAt ? ` — ${new Date(String(wc.scheduledAt)).toLocaleDateString()}` : ''}</span></p>}
                 {allFeatures.length > 0 && (
@@ -327,9 +324,9 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
         </div>
       )}
 
-      {/* Portal timeline */}
+      {/* Production steps */}
       <div>
-        <p className="text-xs font-semibold mb-2">Portal pipeline</p>
+        <p className="text-xs font-semibold mb-2">Production steps</p>
         <PortalTimeline reports={portalReports} />
       </div>
 
@@ -338,10 +335,15 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
       {/* Approve & Publish */}
       {publishResult ? (
         <div className="rounded-md border p-3 text-xs">
-          <p className="font-medium mb-1">Publish result</p>
-          <pre className="text-[10px] text-muted-foreground overflow-auto">
-            {JSON.stringify(publishResult, null, 2)}
-          </pre>
+          <p className="font-medium mb-1">
+            {publishResult.error ? 'Publish failed' : 'Published successfully'}
+          </p>
+          {publishResult.error && (
+            <p className="text-red-600">{String(publishResult.error)}</p>
+          )}
+          {!publishResult.error && (
+            <p className="text-green-600">Your video has been sent to the selected platforms.</p>
+          )}
         </div>
       ) : (
         <div className="flex items-center gap-3">
@@ -385,9 +387,8 @@ export default function StagingPage() {
           (j) => j.outputUrl || ['complete', 'staged', 'published', 'failed'].includes(j.status)
         );
         setJobs(withOutput);
-      } catch (e: unknown) {
-        const err = e as Error;
-        setError(err.message || 'Failed to load jobs');
+      } catch {
+        setError('Failed to load jobs. Refresh to try again.');
       } finally {
         setLoading(false);
       }
@@ -411,7 +412,7 @@ export default function StagingPage() {
       </div>
 
       {loading && <p className="text-sm text-muted-foreground">Loading jobs…</p>}
-      {error   && <p className="text-sm text-red-600">Error: {error}</p>}
+      {error   && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && jobs.length === 0 && (
         <Card>

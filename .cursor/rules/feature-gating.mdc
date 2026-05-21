@@ -97,4 +97,4 @@ or call `isFeatureEnabled(key, jobSpec.planTier)` directly.
 | `credits.packs` | ✓ | ✓ | ✓ |
 | `credits.overage` | ✓ | ✓ | ✓ |
 | `publish.direct_youtube` | ✓ | ✓ | ✓ |
-| `publish.direct_tiktok` | — | — | ✓ |
+| `publish.direct_tiktok` | ✓ | ✓ | ✓ |

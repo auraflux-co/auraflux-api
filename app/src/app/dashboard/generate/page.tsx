@@ -1,6 +1,6 @@
 'use client';
 /**
- * /dashboard/generate — AI video generation via Wan / RunPod (CPD-5)
+ * /dashboard/generate — AI video generation (CPD-5)
  *
  * Sends a text prompt to POST /api/generate-video, then polls
  * GET /api/generate-video/:promptId every 5 s until success or error.
@@ -109,7 +109,7 @@ export default function GeneratePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Generate Video</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Create a short video clip from a text prompt via Wan / RunPod.
+          Generate a short AI video clip from a text prompt.
         </p>
       </div>
 
@@ -263,8 +263,8 @@ export default function GeneratePage() {
           <CardContent className="pt-4">
             <p className="text-sm text-muted-foreground animate-pulse">
               {status === 'queued'
-                ? 'Job queued — waiting for RunPod to pick it up…'
-                : 'RunPod is rendering your video. Polling every 5 s…'}
+                ? 'Job queued — processing will start shortly…'
+                : 'Processing your video. This may take a minute…'}
             </p>
           </CardContent>
         </Card>

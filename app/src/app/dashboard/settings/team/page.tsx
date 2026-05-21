@@ -154,7 +154,7 @@ export default function TeamPage() {
 
   if (loadError) return (
     <div className="max-w-3xl mx-auto py-10 px-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Team</h1>
+      <h1 className="text-2xl font-semibold">My Team</h1>
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 flex items-center justify-between gap-4">
         <p className="text-sm text-destructive">{loadError}</p>
         <button
@@ -171,7 +171,7 @@ export default function TeamPage() {
     <div className="max-w-3xl mx-auto py-10 px-4 space-y-8">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Team</h1>
+          <h1 className="text-2xl font-semibold">My Team</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Manage who has access to your AuraFlux account.
           </p>

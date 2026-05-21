@@ -26,7 +26,7 @@ interface ConciergeChatProps {
 const WELCOME_MESSAGE: ChatMessage = {
   role: 'assistant',
   content:
-    'Hi! I\'m your AuraFlux assistant. I can help you build a job spec, check what\'s required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?',
+    'Hi! I\'m your AuraFlux assistant. I can help you configure your video job, explain what each option does, and guide you toward a ready-to-submit setup.\n\nWhat would you like help with today?',
 };
 
 export function ConciergeChat({ currentSpec, planTier, className }: ConciergeChatProps) {
@@ -65,8 +65,7 @@ export function ConciergeChat({ currentSpec, planTier, className }: ConciergeCha
           { role: 'assistant', content: result.response },
         ]);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Something went wrong';
-        setError(msg);
+        setError('Something went wrong. Please try again.');
         // Remove the user message from display so they can retry
         setMessages(nextMessages.slice(0, -1));
         setInput(text);
@@ -85,7 +84,7 @@ export function ConciergeChat({ currentSpec, planTier, className }: ConciergeCha
     <Card className={cn('flex flex-col h-full', className)}>
       <CardHeader className="pb-2 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-base">AuraFlux Collab</CardTitle>
+          <CardTitle className="text-base">Help</CardTitle>
           <Badge variant="secondary" className="text-xs">AuraFlux</Badge>
         </div>
       </CardHeader>
@@ -114,7 +113,7 @@ export function ConciergeChat({ currentSpec, planTier, className }: ConciergeCha
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about job specs, portal requirements, or get guided help…"
+          placeholder="Ask what to select for your video job, or get guided help…"
           className="min-h-[60px] max-h-[150px] resize-none text-sm flex-1"
           disabled={isPending}
         />

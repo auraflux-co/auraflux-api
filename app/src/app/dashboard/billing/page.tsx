@@ -39,9 +39,9 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
     highlights: [
       '400 credits / month (no rollover)',
       '1 brand',
-      'Full platform — script, TTS, WAN T2V, thumbnails, publish',
-      'AuraFlux Collab — guide confirmation mode',
-      'Confluence self-serve guides',
+      'Full platform — script, narration, AI video, thumbnails, publish',
+      'Guided setup & help',
+      'Self-serve knowledge base',
     ],
   },
   guided: {
@@ -52,7 +52,7 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
       '1,200 credits / month (no rollover)',
       'Up to 3 brands',
       'Everything in Operate',
-      'Full AuraFlux Collab — guidance, estimates, all features',
+      'Full guided setup — guidance, estimates, all features',
       'SMS + chat support escalation',
     ],
   },
@@ -109,7 +109,7 @@ function BillingPageInner() {
         setHistory(h.entries ?? []);
         setHistTotal(h.total ?? 0);
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Failed to load billing info');
+        setError("Couldn't load billing info. Refresh to try again.");
       }
     }
     load();
@@ -124,7 +124,7 @@ function BillingPageInner() {
         const res = await getBillingPortalUrl(returnUrl, token ?? undefined);
         window.location.href = res.url;
       } catch (e: unknown) {
-        setPortalError(e instanceof Error ? e.message : 'Failed to open billing portal');
+        setPortalError("Couldn't open the billing portal. Please try again.");
       }
     });
   }
@@ -143,7 +143,7 @@ function BillingPageInner() {
         );
         window.location.href = res.url;
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Failed to start checkout');
+        setError("Couldn't start checkout. Please try again.");
       }
     });
   }
@@ -300,7 +300,7 @@ function BillingPageInner() {
             <div>
               <p className="text-sm font-medium">Manage your payment method and invoices</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Opens the Stripe Customer Portal — update your card, download invoices, or cancel your subscription.
+                Opens the secure billing portal — update your card, download invoices, or cancel your subscription.
               </p>
               {portalError && (
                 <p className="text-xs text-destructive mt-1">{portalError}</p>
@@ -380,12 +380,12 @@ function BillingPageInner() {
 
         </div>
         <p className="text-xs text-muted-foreground mb-4">
-          Add capacity for specific features beyond your plan credits. AuraFlux Collab will prompt you when you need more.
+          Add capacity for specific features beyond your plan credits. We'll notify you when you're running low.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
             { id: 'narration',     label: 'Clip Narration Pack',   feature: 'TTS narration',      rate: '1 cr/min', price: '$20',  credits: 10, mins: 10 },
-            { id: 'text_to_video', label: 'Text to Video Pack',    feature: 'WAN T2V generation',  rate: '6 cr/min', price: '$120', credits: 60, mins: 10 },
+            { id: 'text_to_video', label: 'Text to Video Pack',    feature: 'AI video generation',  rate: '6 cr/min', price: '$120', credits: 60, mins: 10 },
             // avatar + shoppable packs hidden — add-ons not exposed in dashboard UI yet
           ].map((pack) => (
             <Card key={pack.id}>

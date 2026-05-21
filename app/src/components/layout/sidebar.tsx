@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
+import { usePlan } from '@/contexts/plan-context';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { HeroMonogram } from '@/components/icons/brand-icons';
@@ -101,19 +102,20 @@ interface NavItem {
   divider?:  string; // section label shown above this item when sidebar is expanded
 }
 
-const CUSTOMER_NAV: NavItem[] = [
+// Base nav — same for all customer tiers
+const CUSTOMER_NAV_BASE: NavItem[] = [
   {
     href: '/dashboard/jobs',
-    label: 'Jobs',
+    label: 'My Jobs',
     children: [
       { href: '/dashboard/jobs/new',     label: 'New job' },
       { href: '/dashboard/jobs/active',  label: 'Active'  },
       { href: '/dashboard/jobs/history', label: 'History' },
     ],
   },
-  { href: '/dashboard/schedule',   label: 'Schedule'      },
-  { href: '/dashboard/templates',  label: 'Templates'     },
   { href: '/dashboard/staging',    label: 'Review Queue'  },
+  { href: '/dashboard/schedule',   label: 'Schedule'      },
+  { href: '/dashboard/templates',  label: 'My Templates'  },
   {
     href:  '/dashboard/billing',
     label: 'Billing',
@@ -125,15 +127,22 @@ const CUSTOMER_NAV: NavItem[] = [
   },
   { href: '/dashboard/support',    label: 'Support'   },
   { href: '/dashboard/profile',    label: 'Profile'   },
-  {
-    href: '/dashboard/settings', label: 'Settings',
-    children: [
-      { href: '/dashboard/settings/api-keys',       label: 'API Keys'       },
-      { href: '/dashboard/settings/social-connect', label: 'Social Connect' },
-      { href: '/dashboard/settings/team',           label: 'Team'           },
-    ],
-  },
 ];
+
+// Settings children differ by plan tier
+function settingsNavItem(planTier: string | null): NavItem {
+  const isOperate = !planTier || planTier === 'operate' || planTier === 'custom';
+  const children: { href: string; label: string }[] = [];
+  if (isOperate) {
+    children.push({ href: '/dashboard/settings/api-keys', label: 'API Keys' });
+  }
+  children.push(
+    { href: '/dashboard/settings/source-channels', label: 'My Channels'       },
+    { href: '/dashboard/settings/social-connect',  label: 'My Social Accounts' },
+    { href: '/dashboard/settings/team',            label: 'My Team'           },
+  );
+  return { href: '/dashboard/settings', label: 'Settings', children };
+}
 
 const OPERATOR_NAV: NavItem[] = [
   { href: '/dashboard/generate',      label: 'Generate', divider: 'Operator tools' },
@@ -142,6 +151,7 @@ const OPERATOR_NAV: NavItem[] = [
 
 const ADMIN_NAV: NavItem[] = [
   { href: '/dashboard/admin/overview',    label: 'Overview',    divider: 'Admin tools' },
+  { href: '/dashboard/admin/support',     label: 'Support Inbox' },
   { href: '/dashboard/admin/crm',         label: 'CRM'         },
   { href: '/dashboard/admin/permissions', label: 'Permissions' },
   // Customer preview — lets admin test the job wizard and staging queue
@@ -161,18 +171,23 @@ const CONFLUENCE_GUIDE_URL =
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-export function Sidebar() {
+export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const pathname                               = usePathname();
   const { isOperator, isAdmin }                = useRole();
+  const { planTier }                           = usePlan();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const router                                 = useRouter();
 
-  // Admin (superuser) = platform command centre only — not a job runner.
-  const navItems = isAdmin
-    ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
-    : isOperator
-      ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
-      : CUSTOMER_NAV;
+  const CUSTOMER_NAV = [...CUSTOMER_NAV_BASE, settingsNavItem(planTier)];
+
+  // When setup is incomplete: only the dashboard home is accessible
+  const navItems = setupLocked
+    ? []
+    : isAdmin
+      ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
+      : isOperator
+        ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
+        : CUSTOMER_NAV;
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === href;
@@ -232,7 +247,7 @@ export function Sidebar() {
                   'flex items-center justify-center w-full p-2 rounded-md transition-colors',
                   groupActive
                     ? 'bg-accent text-accent-foreground'
-                    : 'text-foreground/65 hover:text-foreground hover:bg-accent/50',
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                 )}
               >
                 {icon}
@@ -244,7 +259,7 @@ export function Sidebar() {
             return (
               <div key={item.href}>
                 {item.divider && (
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 select-none">
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 select-none">
                     {item.divider}
                   </p>
                 )}
@@ -254,7 +269,7 @@ export function Sidebar() {
                     'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
                     isActive(item.href)
                       ? 'bg-accent text-accent-foreground font-medium'
-                      : 'text-foreground/65 hover:text-foreground hover:bg-accent/50',
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                   )}
                 >
                   {icon}
@@ -272,7 +287,7 @@ export function Sidebar() {
                   'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
                   groupActive
                     ? 'text-foreground font-medium'
-                    : 'text-foreground/65 hover:text-foreground hover:bg-accent/50',
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                 )}
               >
                 {icon}
@@ -287,7 +302,7 @@ export function Sidebar() {
                       'flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left',
                       isActive(child.href)
                         ? 'bg-accent text-accent-foreground font-medium'
-                        : 'text-foreground/65 hover:text-foreground hover:bg-accent/50',
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                     )}
                   >
                     {child.label}
@@ -307,7 +322,7 @@ export function Sidebar() {
           target="_blank"
           rel="noopener noreferrer"
           title="Customer guides"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-foreground/65 hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           {ICONS.guide}
           {!collapsed && (
@@ -326,7 +341,7 @@ export function Sidebar() {
         <button
           onClick={toggleCollapsed}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-xs text-foreground/65 hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={cn('shrink-0 transition-transform', collapsed && 'rotate-180')}>
             <polyline points="15 18 9 12 15 6" />
@@ -352,17 +367,22 @@ export function MobileSidebarOverlay() {
   );
 }
 
-export function MobileSidebar() {
+export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const { mobileOpen, closeMobile } = useSidebar();
   const pathname                    = usePathname();
   const { isOperator, isAdmin }     = useRole();
+  const { planTier }                = usePlan();
   const router                      = useRouter();
 
-  const navItems = isAdmin
-    ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
-    : isOperator
-      ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
-      : CUSTOMER_NAV;
+  const CUSTOMER_NAV = [...CUSTOMER_NAV_BASE, settingsNavItem(planTier)];
+
+  const navItems = setupLocked
+    ? []
+    : isAdmin
+      ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
+      : isOperator
+        ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
+        : CUSTOMER_NAV;
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === href;
@@ -402,7 +422,7 @@ export function MobileSidebar() {
             return (
               <button key={item.href} onClick={() => go(item.href)}
                 className={cn('flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
-                  isActive(item.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-foreground/65 hover:text-foreground hover:bg-accent/50')}>
+                  isActive(item.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
                 {icon}{item.label}
               </button>
             );
@@ -412,14 +432,14 @@ export function MobileSidebar() {
             <div key={item.href}>
               <button onClick={() => go(item.href)}
                 className={cn('flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
-                  groupActive ? 'text-foreground font-medium' : 'text-foreground/65 hover:text-foreground hover:bg-accent/50')}>
+                  groupActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
                 {icon}{item.label}
               </button>
               <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2">
                 {item.children.map((child) => (
                   <button key={child.href} onClick={() => go(child.href)}
                     className={cn('flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left',
-                      isActive(child.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-foreground/65 hover:text-foreground hover:bg-accent/50')}>
+                      isActive(child.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
                     {child.label}
                   </button>
                 ))}
@@ -431,7 +451,7 @@ export function MobileSidebar() {
 
       <div className="p-2 border-t border-border">
         <a href={CONFLUENCE_GUIDE_URL} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-foreground/65 hover:text-foreground hover:bg-accent/50 transition-colors">
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
           {ICONS.guide}Guides
         </a>
       </div>

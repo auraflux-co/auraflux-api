@@ -655,7 +655,7 @@ function CompactEditor({
       {/* Header + uniform toggle */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          Drag to set the assembly order. Use In/Out sliders to trim each clip.
+          Drag to set the clip order. Use In/Out sliders to trim each clip.
         </p>
         <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none shrink-0">
           <span>Uniform features</span>
@@ -769,7 +769,7 @@ export function ClipEditor({ mode, sourceUrl, sourceClips, availableFeatures, on
           <p className="text-[11px] text-muted-foreground">
             {mode === 'extract'
               ? 'Set in/out timestamps — each range becomes one extracted short-form clip'
-              : 'Set the assembly order and trim each clip — uniform features apply to all, or override per clip'}
+              : 'Set the clip order and trim each clip — uniform features apply to all, or override per clip'}
           </p>
         </div>
       </div>

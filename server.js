@@ -7194,7 +7194,8 @@ app.use(adminRouter);
 // These route files define the paths the Next.js dashboard calls directly
 // (no /v1 prefix). All require Clerk auth — must come after clerkInit().
 const planRouter      = require('./lib/routes/plan');
-const creditsRouter   = require('./lib/routes/credits');
+const creditsRouter        = require('./lib/routes/credits');
+const notificationsRouter  = require('./lib/routes/notifications');
 const conciergeRouter = require('./lib/routes/concierge');
 const socialRouter    = require('./lib/routes/social_connect');
 const supportRouter   = require('./lib/routes/support');
@@ -7210,6 +7211,7 @@ const sourceRouter        = require('./lib/routes/source');
 const heygenRouter        = require('./lib/routes/heygen');
 app.use(planRouter);
 app.use(creditsRouter);
+app.use(notificationsRouter);
 app.use(conciergeRouter);
 app.use(socialRouter);
 app.use(supportRouter);

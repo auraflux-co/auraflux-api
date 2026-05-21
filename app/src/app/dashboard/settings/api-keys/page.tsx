@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { usePlan } from '@/contexts/plan-context';
 
 interface ApiKey {
   id: string;
@@ -29,6 +30,7 @@ interface NewKeyResult {
 }
 
 export default function ApiKeysPage() {
+  const { planTier, isLoading: planLoading } = usePlan();
   const { isLoaded, getToken } = useAuth();
   const [keys, setKeys]               = useState<ApiKey[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -98,14 +100,33 @@ export default function ApiKeysPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  if (!isLoaded || loading) return (
+  if (!isLoaded || loading || planLoading) return (
     <div className="text-sm text-muted-foreground animate-pulse">Loading API keys…</div>
+  );
+
+  if (planTier && planTier !== 'operate') return (
+    <div className="max-w-2xl space-y-4">
+      <h1 className="text-2xl font-semibold">My API Keys</h1>
+      <Card className="border-muted">
+        <CardContent className="pt-6 space-y-2">
+          <p className="text-sm font-medium">Not available on your plan</p>
+          <p className="text-sm text-muted-foreground">
+            API key access is available on the <strong>Operate</strong> plan for customers who
+            integrate directly with the AuraFlux API. On {planTier.charAt(0).toUpperCase() + planTier.slice(1)},
+            your operator submits and manages jobs on your behalf.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Contact your operator if you need programmatic access.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">API Keys</h1>
+        <h1 className="text-2xl font-semibold">My API Keys</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Use API keys to authenticate requests to{' '}
           <code className="text-xs bg-muted px-1 py-0.5 rounded">https://api.auraflux.co/v1/</code>.

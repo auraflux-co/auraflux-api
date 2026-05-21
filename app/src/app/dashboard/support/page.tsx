@@ -75,7 +75,7 @@ function GuidesPanel({ canEsc }: { canEsc: boolean }) {
       </div>
 
       <div className="rounded-lg border border-border p-4 space-y-2">
-        <h2 className="text-sm font-semibold">SMS Support</h2>
+        <h2 className="text-sm font-semibold">Text support</h2>
         {canEsc ? (
           <>
             <p className="text-xs text-muted-foreground">Text us directly — your conversation will appear in your support history here.</p>
@@ -86,12 +86,12 @@ function GuidesPanel({ canEsc }: { canEsc: boolean }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
               </svg>
-              Text {SUPPORT_SMS}
+              Contact us by text
             </a>
           </>
         ) : (
           <p className="text-xs text-muted-foreground">
-            SMS support is included with Guided and Managed plans.{' '}
+            Text support is included with Guided and Managed plans.{' '}
             <Link href="/dashboard/billing" className="text-primary underline">Upgrade to unlock</Link>.
           </p>
         )}
@@ -131,7 +131,7 @@ function EscalateModal({
       <div className="bg-card border border-border rounded-lg w-full max-w-md p-6 space-y-4 mx-4">
         <h3 className="text-base font-semibold">Email the AuraFlux team</h3>
         <p className="text-sm text-muted-foreground">
-          This is the last resort. We recommend texting <strong>{SUPPORT_SMS}</strong> for a faster response.
+          This sends your issue directly to the AuraFlux team. For a faster response, use the text support button instead.
         </p>
         <textarea
           className="w-full rounded-md border border-border bg-background text-sm p-3 resize-none h-28 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -263,7 +263,7 @@ export default function SupportPage() {
     } catch {
       setMessages((prev) => [...prev, {
         role: 'assistant',
-        content: 'Sorry, I had trouble responding. Please try again or text us at ' + SUPPORT_SMS,
+        content: 'Sorry, I had trouble responding. Please try again or use the text support button on the right.',
       }]);
     } finally {
       setLoading(false);
@@ -366,9 +366,9 @@ export default function SupportPage() {
               {canEsc && !escalated && (
                 <button
                   onClick={() => setShowEsc(true)}
-                  className="text-xs text-muted-foreground hover:text-destructive underline ml-auto"
+                  className="text-xs text-muted-foreground hover:text-foreground underline ml-auto"
                 >
-                  Escalate via email (last resort)
+                  Contact our team
                 </button>
               )}
               {escalated && (
