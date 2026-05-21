@@ -13,23 +13,24 @@ import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { chatWithConcierge, type ChatMessage } from '@/lib/api';
+import { chatWithConcierge, ApiError, type ChatMessage } from '@/lib/api';
 
 interface ConciergeChatProps {
   currentSpec?: Record<string, unknown>;
   planTier?: string;
   className?: string;
+  /** Hide inner header when rendered inside GuidePanel (header is in the panel chrome). */
+  embedded?: boolean;
 }
 
 const WELCOME_MESSAGE: ChatMessage = {
   role: 'assistant',
   content:
-    'Hi! I\'m your AuraFlux assistant. I can help you configure your video job, explain what each option does, and guide you toward a ready-to-submit setup.\n\nWhat would you like help with today?',
+    'Hi! I\'m Collab. I can help you configure your video job, explain what each option does, and guide you toward a ready-to-submit setup.\n\nWhat would you like help with today?',
 };
 
-export function ConciergeChat({ currentSpec, planTier, className }: ConciergeChatProps) {
+export function ConciergeChat({ currentSpec, planTier, className, embedded = false }: ConciergeChatProps) {
   const { getToken } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState('');
@@ -65,7 +66,15 @@ export function ConciergeChat({ currentSpec, planTier, className }: ConciergeCha
           { role: 'assistant', content: result.response },
         ]);
       } catch (err: unknown) {
-        setError('Something went wrong. Please try again.');
+        const label = err instanceof ApiError ? err.label : undefined;
+        const msg   = err instanceof ApiError ? err.message : '';
+        if (label === 'CLERK_INSTANCE_MISMATCH' || label === 'GEMINI_NOT_CONFIGURED') {
+          setError(msg || 'Collab is temporarily unavailable. Please try again shortly.');
+        } else if (label === 'PLAN_GATE') {
+          setError('Collab requires an Operate plan or higher.');
+        } else {
+          setError('Something went wrong. Please try again.');
+        }
         // Remove the user message from display so they can retry
         setMessages(nextMessages.slice(0, -1));
         setInput(text);
@@ -82,12 +91,11 @@ export function ConciergeChat({ currentSpec, planTier, className }: ConciergeCha
 
   return (
     <Card className={cn('flex flex-col h-full', className)}>
-      <CardHeader className="pb-2 border-b border-border flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <CardTitle className="text-base">Help</CardTitle>
-          <Badge variant="secondary" className="text-xs">AuraFlux</Badge>
-        </div>
-      </CardHeader>
+      {!embedded && (
+        <CardHeader className="pb-2 border-b border-border flex-shrink-0">
+          <CardTitle className="text-base">Collab</CardTitle>
+        </CardHeader>
+      )}
 
       {/* Message thread */}
       <CardContent className="flex-1 overflow-y-auto p-4 space-y-3">

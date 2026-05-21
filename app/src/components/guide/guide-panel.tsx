@@ -38,7 +38,7 @@ export function GuidePanel() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div>
-              <p className="text-sm font-semibold">Help</p>
+              <p className="text-sm font-semibold">Collab</p>
               <p className="text-[10px] text-muted-foreground">Your guided setup assistant</p>
             </div>
             <button
@@ -54,15 +54,16 @@ export function GuidePanel() {
 
           {/* Context hint banner — shown when the guide knows what you're working on */}
           {contextHint && (
-            <div className="mx-3 mt-3 rounded-md border border-primary/20 bg-primary/5 px-3 py-2.5 shrink-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-1">Active context</p>
-              <p className="text-xs text-foreground leading-relaxed">{contextHint}</p>
+            <div className="mx-3 mt-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3.5 shrink-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-1.5">Active context</p>
+              <p className="text-sm text-foreground leading-relaxed">{contextHint}</p>
             </div>
           )}
 
           {/* Chat */}
           <div className="flex-1 min-h-0">
             <ConciergeChat
+              embedded
               currentSpec={{}}
               planTier={planTier ?? undefined}
               className="h-full rounded-none border-0 shadow-none"

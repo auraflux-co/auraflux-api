@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-21 v1.0.573 (Cursor — fix(cpd-311): Browse + Collab auth — Clerk kid mismatch detection, verifyToken publishableKey, source fetch after param fix, Collab panel rebrand)
 **Last Updated:** 2026-05-21 v1.0.572 (Cursor — fix(auth): Bearer token fallback in requireAuth when getAuth throws; PlanContext no longer defaults to operate on API failure; API Keys page uses Clerk metadata and skips fetch for Guided/Managed)
 **Last Updated:** 2026-05-21 v1.0.571 (Cursor — fix(auth): disable nav setupLocked — was locking out all users without setupDismissed flag; setupDismissed only set on explicit dismiss click, not on setup completion, causing empty nav for legitimate users)
 **Last Updated:** 2026-05-21 v1.0.570 (Cursor — fix(dashboard): bigger tiles — min-h-[220px] p-7; icon in 44px muted container; title text-base; each tile has status line + persistent description; renamed tile body components)
