@@ -43,13 +43,6 @@ export interface WizardConfig {
   publishMode:    PublishMode;
   scheduledAt:    string | null;
   productionPath: string | null;
-  // Extended fields for job spec card display
-  topic?:          string | null;
-  tone?:           string | null;
-  durationMins?:   number | null;
-  planTier?:       string | null;
-  creditCost?:     number | null;
-  activeFeatures?: string[];
 }
 
 export interface PublishResult {
@@ -188,8 +181,7 @@ export function estimateCreditCost({
   if (aiFeatureCost > 0) parts.push(`${aiFeatureCost} ${aiLabel}`);
   if (breakdown.script > 0) parts.push(`${breakdown.script} script`);
   if (breakdown.shoppable > 0) parts.push(`${breakdown.shoppable} shoppable`);
-  const TIER_DISPLAY: Record<string, string> = { operate: 'Operate', guided: 'Guided', managed: 'Managed', custom: 'Custom' };
-  const discountNote = discount < 1 ? ` (${Math.round((1 - discount) * 100)}% ${TIER_DISPLAY[planTier] ?? planTier} plan discount applied)` : '';
+  const discountNote = discount < 1 ? ` (${Math.round((1 - discount) * 100)}% ${planTier.toUpperCase()} discount applied)` : '';
 
   const message = parts.length
     ? `${credits} credits total — ${CREDIT_RATES.base} base + ${parts.join(' + ')}${discountNote}.`
@@ -256,12 +248,6 @@ export async function apiFetch<T>(
   const body = await res.json().catch(() => ({})) as { ok: boolean; error?: string; label?: string } & T;
 
   if (!res.ok) {
-    // Only treat 401 as an expired session when we actually sent a token.
-    // If token was absent (Clerk still initialising on page load), the 401
-    // just means "not authenticated yet" — don't sign the user out for that.
-    if (res.status === 401 && token && typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('api-unauthorized'));
-    }
     throw new ApiError(
       body.error ?? `HTTP ${res.status}`,
       res.status,
@@ -493,81 +479,6 @@ export async function warpIntoAccount(userId: string, token?: string) {
     method: 'POST',
     token,
   });
-}
-
-// ─── Creator Source Library (CPD-274) ────────────────────────────────────────
-
-export type SourcePlatform  = 'twitch' | 'kick' | 'youtube';
-export type SourceDateRange = '24h' | '7d' | '30d' | 'all';
-export type SourceType      = 'all' | 'clip' | 'vod' | 'short' | 'video';
-
-export interface SourceItem {
-  id:           string;
-  title:        string;
-  thumbnailUrl: string | null;
-  duration:     number;
-  publishedAt:  string | null;
-  url:          string;
-  viewCount:    number;
-  platform:     SourcePlatform;
-  contentType?: 'clip' | 'vod' | 'video' | 'short';
-  /** legacy alias for contentType */
-  type?:        'clip' | 'vod' | 'video' | 'short';
-  isShort?:     boolean;
-}
-
-export interface SourcePlaylist {
-  id:          string;
-  title:       string;
-  thumbnailUrl: string | null;
-}
-
-export interface SourceChannel {
-  id:          string;
-  name?:       string;
-  displayName?: string;
-  avatarUrl?:  string;
-  url?:        string;
-}
-
-export interface SourceFilters {
-  dateRange?:   SourceDateRange;
-  type?:        SourceType;
-  minDuration?: number;   // seconds
-  maxDuration?: number;
-  q?:           string;   // keyword
-  playlistId?:  string;   // YouTube only
-}
-
-export interface SourceContentResult {
-  ok:       boolean;
-  platform: SourcePlatform;
-  channel:  SourceChannel;
-  items:    SourceItem[];
-}
-
-export async function fetchSourceContent(
-  platform: SourcePlatform,
-  username: string,
-  limit = 20,
-  token?: string,
-  filters?: SourceFilters,
-): Promise<SourceContentResult> {
-  const params = new URLSearchParams({ limit: String(limit) });
-  if (filters?.dateRange && filters.dateRange !== 'all') params.set('after', filters.dateRange);
-  if (filters?.type && filters.type !== 'all')          params.set('type', filters.type);
-  if (filters?.minDuration)                             params.set('minDuration', String(filters.minDuration));
-  if (filters?.maxDuration)                             params.set('maxDuration', String(filters.maxDuration));
-  if (filters?.q)                                       params.set('q', filters.q);
-  if (filters?.playlistId)                              params.set('playlistId', filters.playlistId);
-  return apiFetch(`/source/${platform}/${encodeURIComponent(username)}/content?${params}`, { token });
-}
-
-export async function fetchYouTubePlaylists(
-  handle: string,
-  token?: string,
-): Promise<{ ok: boolean; playlists: SourcePlaylist[] }> {
-  return apiFetch(`/source/youtube/${encodeURIComponent(handle)}/playlists`, { token });
 }
 
 export async function getJob(jobId: string, token?: string): Promise<{ job: Job }> {
@@ -841,44 +752,6 @@ export function getSocialConnectUrl(platform: SocialPlatform): string {
   return `${base}/social/connect/${platform}`;
 }
 
-// ─── Source channel defaults (CPD-292) ───────────────────────────────────────
-
-export interface SourceChannels {
-  twitchLogin?:    string;
-  kickUsername?:   string;
-  youtubeHandle?:  string;
-}
-
-export async function getSourceChannels(token?: string): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
-  return apiFetch('/account/source-channels', { token });
-}
-
-export interface ResolvedChannel {
-  id:          string;
-  username?:   string;
-  displayName: string;
-  avatarUrl:   string | null;
-  handle?:     string;
-  title?:      string;
-  thumbnailUrl?: string | null;
-}
-
-/** Verify a channel exists and return its avatar/display name. */
-export async function resolveSourceChannel(
-  platform: SourcePlatform,
-  username: string,
-  token?: string,
-): Promise<{ ok: boolean; channel: ResolvedChannel }> {
-  if (platform === 'youtube') {
-    return apiFetch(`/source/youtube/${encodeURIComponent(username)}/resolve`, { token });
-  }
-  return apiFetch(`/source/${platform}/${encodeURIComponent(username)}/resolve`, { token });
-}
-
-export async function saveSourceChannels(channels: SourceChannels, token?: string): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
-  return apiFetch('/account/source-channels', { method: 'PATCH', body: JSON.stringify(channels), token });
-}
-
 // ─── Operator job actions (CPD-104) ──────────────────────────────────────────
 
 export type OperatorAction = 'retry' | 'advance' | 'rollback';
@@ -912,6 +785,10 @@ export interface SupportSession {
   escalated:          boolean;
   escalation_channel: string | null;
   message_count:      number;
+  last_message_at:    number | null;
+  last_message_preview: string | null;
+  human_took_over:    boolean;
+  operator_id:        string | null;
 }
 
 export async function supportChat(
@@ -952,6 +829,37 @@ export async function escalateSupportSession(
   });
 }
 
+// ─── Operator support inbox (CPD-310) ────────────────────────────────────────
+
+export async function listAllSupportSessions(
+  opts: { open?: boolean; limit?: number } = {},
+  token?: string,
+): Promise<{ ok: boolean; sessions: SupportSession[] }> {
+  const params = new URLSearchParams();
+  if (opts.open) params.set('open', '1');
+  if (opts.limit) params.set('limit', String(opts.limit));
+  return apiFetch(`/admin/support/sessions?${params}`, { token });
+}
+
+export async function getOperatorSessionMessages(
+  sessionId: string,
+  token?: string,
+): Promise<{ ok: boolean; session: SupportSession; messages: SupportMessage[] }> {
+  return apiFetch(`/admin/support/sessions/${sessionId}`, { token });
+}
+
+export async function sendOperatorReply(
+  sessionId: string,
+  message: string,
+  token?: string,
+): Promise<{ ok: boolean; channel: string }> {
+  return apiFetch(`/support/sessions/${sessionId}/reply`, {
+    method: 'POST',
+    body:   JSON.stringify({ message }),
+    token,
+  });
+}
+
 // ─── Job validation ───────────────────────────────────────────────────────────
 
 export async function validatePublishCopy(
@@ -964,34 +872,4 @@ export async function validatePublishCopy(
     body:   JSON.stringify({ publishCopy }),
     token,
   });
-}
-
-// ─── Notifications (CPD-307) ──────────────────────────────────────────────────
-
-export interface AppNotification {
-  id:        number;
-  type:      string;
-  title:     string;
-  body:      string | null;
-  actionUrl: string | null;
-  read:      boolean;
-  createdAt: string;
-}
-
-export interface NotificationsResponse {
-  ok:             boolean;
-  notifications:  AppNotification[];
-  unreadCount:    number;
-}
-
-export async function listNotifications(token?: string): Promise<NotificationsResponse> {
-  return apiFetch('/notifications', { token });
-}
-
-export async function markNotificationRead(id: number, token?: string): Promise<{ ok: boolean }> {
-  return apiFetch(`/notifications/${id}/read`, { method: 'PATCH', token });
-}
-
-export async function markAllNotificationsRead(token?: string): Promise<{ ok: boolean }> {
-  return apiFetch('/notifications/read-all', { method: 'PATCH', token });
 }

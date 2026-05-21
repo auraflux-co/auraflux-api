@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
-import { usePlan } from '@/contexts/plan-context';
 import { HeroMonogram } from '@/components/icons/brand-icons';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -37,7 +36,6 @@ const ICONS: Record<string, React.ReactNode> = {
   collab:   <Icon d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM12 16v-4M12 8h.01" />,
   credits:   <Icon d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
   team:      <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />,
-  review:    <Icon d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />,
 };
 
 function iconFor(href: string) {
@@ -51,7 +49,7 @@ function iconFor(href: string) {
   if (href.includes('/generate'))  return ICONS.generate;
   if (href.includes('/operator'))  return ICONS.operator;
   if (href.includes('/admin'))     return ICONS.customers;
-  if (href.includes('/staging'))   return ICONS.review;
+  if (href.includes('/staging'))   return ICONS.schedule;
   if (href.includes('/concierge')) return ICONS.collab;
   if (href.includes('/credits'))   return ICONS.credits;
   if (href.includes('/plans'))     return ICONS.billing;
@@ -106,16 +104,16 @@ interface NavItem {
 const CUSTOMER_NAV: NavItem[] = [
   {
     href: '/dashboard/jobs',
-    label: 'My Jobs',
+    label: 'Jobs',
     children: [
       { href: '/dashboard/jobs/new',     label: 'New job' },
       { href: '/dashboard/jobs/active',  label: 'Active'  },
       { href: '/dashboard/jobs/history', label: 'History' },
     ],
   },
-  { href: '/dashboard/staging',    label: 'Review Queue'  },
   { href: '/dashboard/schedule',   label: 'Schedule'      },
-  { href: '/dashboard/templates',  label: 'My Templates'  },
+  { href: '/dashboard/templates',  label: 'Templates'     },
+  { href: '/dashboard/staging',    label: 'Review Queue'  },
   {
     href:  '/dashboard/billing',
     label: 'Billing',
@@ -125,17 +123,16 @@ const CUSTOMER_NAV: NavItem[] = [
       { href: '/dashboard/plans',    label: 'Plans'        },
     ],
   },
+  { href: '/dashboard/support',    label: 'Support'   },
+  { href: '/dashboard/profile',    label: 'Profile'   },
   {
     href: '/dashboard/settings', label: 'Settings',
     children: [
-      { href: '/dashboard/settings/api-keys',        label: 'My API Keys'         },
-      { href: '/dashboard/settings/source-channels', label: 'My Channels'         },
-      { href: '/dashboard/settings/social-connect',  label: 'My Social Accounts'  },
-      { href: '/dashboard/settings/team',            label: 'My Team'             },
-      { href: '/dashboard/profile',                  label: 'My Profile'          },
+      { href: '/dashboard/settings/api-keys',       label: 'API Keys'       },
+      { href: '/dashboard/settings/social-connect', label: 'Social Connect' },
+      { href: '/dashboard/settings/team',           label: 'Team'           },
     ],
   },
-  { href: '/dashboard/support',    label: 'Support'   },
 ];
 
 const OPERATOR_NAV: NavItem[] = [
@@ -145,12 +142,12 @@ const OPERATOR_NAV: NavItem[] = [
 
 const ADMIN_NAV: NavItem[] = [
   { href: '/dashboard/admin/overview',    label: 'Overview',    divider: 'Admin tools' },
-  { href: '/dashboard/admin/customers',   label: 'Customers'   },
+  { href: '/dashboard/admin/support',     label: 'Support Inbox' },
   { href: '/dashboard/admin/crm',         label: 'CRM'         },
   { href: '/dashboard/admin/permissions', label: 'Permissions' },
   // Customer preview — lets admin test the job wizard and staging queue
   {
-    href: '/dashboard/jobs', label: 'My Jobs (preview)', divider: 'Customer preview',
+    href: '/dashboard/jobs', label: 'Jobs (preview)', divider: 'Customer preview',
     children: [
       { href: '/dashboard/jobs/new',     label: 'New job'  },
       { href: '/dashboard/jobs/active',  label: 'Active'   },
@@ -165,29 +162,18 @@ const CONFLUENCE_GUIDE_URL =
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
+export function Sidebar() {
   const pathname                               = usePathname();
   const { isOperator, isAdmin }                = useRole();
-  const { planTier }                           = usePlan();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const router                                 = useRouter();
 
   // Admin (superuser) = platform command centre only — not a job runner.
-  const baseNav = isAdmin
+  const navItems = isAdmin
     ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
     : isOperator
       ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
       : CUSTOMER_NAV;
-
-  // API Keys are Operate-only — guided and managed customers are operator-run
-  // and don't integrate directly with the API.
-  const navItems = planTier && planTier !== 'operate'
-    ? baseNav.map(item =>
-        item.href === '/dashboard/settings'
-          ? { ...item, children: item.children?.filter(c => c.href !== '/dashboard/settings/api-keys') }
-          : item,
-      )
-    : baseNav;
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === href;
@@ -201,44 +187,6 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
   function handleNavClick(href: string) {
     closeMobile();
     router.push(href);
-  }
-
-  // During initial setup, lock nav to a minimal branded sidebar so users
-  // focus on the setup checklist rather than exploring an incomplete app.
-  if (setupLocked) {
-    return (
-      <aside className="flex-shrink-0 border-r border-sidebar-border bg-sidebar flex flex-col h-screen w-52">
-        {/* Header */}
-        <div className="border-b border-border flex items-center gap-2 px-4 py-3">
-          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <HeroMonogram size={22} className="text-primary shrink-0" />
-            <span className="font-semibold text-sm tracking-tight text-foreground">AuraFlux</span>
-          </Link>
-        </div>
-
-        {/* Lock message */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-5 text-center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground/30">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-          <p className="text-xs text-muted-foreground/70 leading-relaxed">
-            Complete your setup to unlock navigation
-          </p>
-          {/* Only show the back link when NOT already on the dashboard home */}
-          {pathname !== '/dashboard' && (
-            <Link href="/dashboard" className="text-xs text-primary hover:underline">
-              ← Back to setup
-            </Link>
-          )}
-          {pathname === '/dashboard' && (
-            <p className="text-xs text-muted-foreground/50">
-              Complete the checklist above ↑
-            </p>
-          )}
-        </div>
-      </aside>
-    );
   }
 
   return (
@@ -285,7 +233,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
                   'flex items-center justify-center w-full p-2 rounded-md transition-colors',
                   groupActive
                     ? 'bg-accent text-accent-foreground'
-                    : 'text-foreground/65 hover:text-foreground hover:bg-accent/50',
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                 )}
               >
                 {icon}
@@ -297,7 +245,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
             return (
               <div key={item.href}>
                 {item.divider && (
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 select-none">
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 select-none">
                     {item.divider}
                   </p>
                 )}
@@ -307,7 +255,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
                     'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
                     isActive(item.href)
                       ? 'bg-accent text-accent-foreground font-medium'
-                      : 'text-foreground/65 hover:text-foreground hover:bg-accent/50',
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                   )}
                 >
                   {icon}
@@ -325,7 +273,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
                   'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
                   groupActive
                     ? 'text-foreground font-medium'
-                    : 'text-foreground/65 hover:text-foreground hover:bg-accent/50',
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                 )}
               >
                 {icon}
@@ -340,7 +288,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
                       'flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left',
                       isActive(child.href)
                         ? 'bg-accent text-accent-foreground font-medium'
-                        : 'text-foreground/65 hover:text-foreground hover:bg-accent/50',
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
                     )}
                   >
                     {child.label}
@@ -360,7 +308,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
           target="_blank"
           rel="noopener noreferrer"
           title="Customer guides"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-foreground/65 hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           {ICONS.guide}
           {!collapsed && (
@@ -379,7 +327,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean }) {
         <button
           onClick={toggleCollapsed}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-xs text-foreground/65 hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={cn('shrink-0 transition-transform', collapsed && 'rotate-180')}>
             <polyline points="15 18 9 12 15 6" />
@@ -405,7 +353,7 @@ export function MobileSidebarOverlay() {
   );
 }
 
-export function MobileSidebar({ setupLocked }: { setupLocked?: boolean }) {
+export function MobileSidebar() {
   const { mobileOpen, closeMobile } = useSidebar();
   const pathname                    = usePathname();
   const { isOperator, isAdmin }     = useRole();
@@ -446,17 +394,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean }) {
         </button>
       </div>
 
-      {setupLocked && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-5 text-center">
-          <p className="text-xs text-muted-foreground/70 leading-relaxed">Complete your setup to unlock navigation</p>
-          {pathname !== '/dashboard' ? (
-            <Link href="/dashboard" onClick={closeMobile} className="text-xs text-primary hover:underline">← Back to setup</Link>
-          ) : (
-            <p className="text-xs text-muted-foreground/50">Complete the checklist above ↑</p>
-          )}
-        </div>
-      )}
-      <nav className={cn('flex-1 p-2 space-y-0.5 overflow-y-auto', setupLocked && 'hidden')}>
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const groupActive = isGroupActive(item);
           const icon        = iconFor(item.href);
@@ -465,7 +403,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean }) {
             return (
               <button key={item.href} onClick={() => go(item.href)}
                 className={cn('flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
-                  isActive(item.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-foreground/65 hover:text-foreground hover:bg-accent/50')}>
+                  isActive(item.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
                 {icon}{item.label}
               </button>
             );
@@ -475,14 +413,14 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean }) {
             <div key={item.href}>
               <button onClick={() => go(item.href)}
                 className={cn('flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
-                  groupActive ? 'text-foreground font-medium' : 'text-foreground/65 hover:text-foreground hover:bg-accent/50')}>
+                  groupActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
                 {icon}{item.label}
               </button>
               <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2">
                 {item.children.map((child) => (
                   <button key={child.href} onClick={() => go(child.href)}
                     className={cn('flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left',
-                      isActive(child.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-foreground/65 hover:text-foreground hover:bg-accent/50')}>
+                      isActive(child.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
                     {child.label}
                   </button>
                 ))}
@@ -494,7 +432,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean }) {
 
       <div className="p-2 border-t border-border">
         <a href={CONFLUENCE_GUIDE_URL} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-foreground/65 hover:text-foreground hover:bg-accent/50 transition-colors">
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
           {ICONS.guide}Guides
         </a>
       </div>
