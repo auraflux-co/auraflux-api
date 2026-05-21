@@ -180,6 +180,7 @@ const OPERATOR_NAV: NavItem[] = [
 
 const ADMIN_NAV: NavItem[] = [
   { href: '/dashboard/admin/overview',    label: 'Overview',    divider: 'Admin tools' },
+  { href: '/dashboard/admin/users',       label: 'All Users'   },
   { href: '/dashboard/admin/support',     label: 'Support Inbox' },
   { href: '/dashboard/admin/crm',         label: 'CRM'         },
   { href: '/dashboard/admin/permissions', label: 'Permissions' },
