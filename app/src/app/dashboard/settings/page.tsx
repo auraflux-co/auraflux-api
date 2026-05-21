@@ -20,10 +20,10 @@ export default async function SettingsPage() {
   const sections  = sectionsForTier(planTier);
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your account integrations and access.</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Manage your account integrations and access.</p>
       </div>
 
       {sections.map((s) => (

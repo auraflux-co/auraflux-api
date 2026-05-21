@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { getJobDetail, operatorJobAction, saveJobAsTemplate, type Job, type PortalStatus, type OperatorAction, type WizardConfig, type PublishResult } from '@/lib/api';
+import { SaveTemplateDialog, type SaveTemplateOptions } from '@/components/jobs/save-template-dialog';
 import { labelForContentType } from '@/lib/content-types';
 import { useRole } from '@/hooks/use-role';
 
@@ -174,16 +175,23 @@ export default function JobDetailPage() {
   const [isPending, startAction]    = useTransition();
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
   const [savingTemplate, setSavingTemplate]   = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
 
-  async function handleSaveAsTemplate() {
+  async function handleSaveAsTemplate(opts: SaveTemplateOptions) {
     if (!job) return;
     setSavingTemplate(true);
     try {
       const token = await getToken();
-      await saveJobAsTemplate(job.jobId, `Template from ${job.jobId.slice(0, 8)}`, {}, token ?? undefined);
+      await saveJobAsTemplate(job.jobId, opts.name, {
+        description: opts.description,
+        recurrenceType: opts.recurrenceType,
+        recurrenceDay: opts.recurrenceDay,
+        recurrenceTime: opts.recurrenceTime,
+      }, token ?? undefined);
       setSavedAsTemplate(true);
+      setShowSaveTemplate(false);
     } catch {
-      // non-fatal — show nothing
+      // non-fatal
     } finally {
       setSavingTemplate(false);
     }
@@ -427,8 +435,8 @@ export default function JobDetailPage() {
                   savedAsTemplate ? (
                     <Badge variant="default" className="text-[10px]">Saved as template</Badge>
                   ) : (
-                    <Button size="sm" variant="outline" className="text-[10px] h-6 px-2" onClick={handleSaveAsTemplate} disabled={savingTemplate}>
-                      {savingTemplate ? 'Saving…' : 'Save as template'}
+                    <Button size="sm" variant="outline" className="text-[10px] h-6 px-2" onClick={() => setShowSaveTemplate(true)} disabled={savingTemplate}>
+                      Save as template
                     </Button>
                   )
                 )}
@@ -480,6 +488,14 @@ export default function JobDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      <SaveTemplateDialog
+        open={showSaveTemplate}
+        defaultName={job ? `Template from ${job.jobId.slice(0, 8)}` : 'My template'}
+        saving={savingTemplate}
+        onClose={() => setShowSaveTemplate(false)}
+        onSave={handleSaveAsTemplate}
+      />
     </div>
   );
 }

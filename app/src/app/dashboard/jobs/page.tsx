@@ -19,6 +19,7 @@ import { usePlan } from '@/contexts/plan-context';
 import { useRouter } from 'next/navigation';
 
 const ACTIVE_STATUSES  = new Set(['queued', 'running', 'held', 'failed']);
+const SCHEDULED_STATUSES = new Set(['queued_scheduled']);
 const COMPLETE_STATUSES = new Set(['complete', 'published']);
 
 interface StatCardProps {
@@ -73,7 +74,7 @@ export default function JobsHubPage() {
   const complete = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
 
   return (
-    <div className="max-w-3xl space-y-8">
+    <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">My Jobs</h1>

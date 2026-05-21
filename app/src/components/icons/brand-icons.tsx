@@ -15,25 +15,55 @@ import { SVGProps } from 'react';
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
-// ── The Hero — AF Monogram (separated letters, no overlap) ─────────────────
+// ── The Hero — AF Monogram (block letters, clear gap, crisp at 20–28px) ─────
 export function HeroMonogram({ size = 24, ...props }: IconProps) {
   return (
     <svg
-      width={size} height={size}
+      width={size}
+      height={size}
       viewBox="0 0 40 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
       {...props}
     >
-      {/* A — left half */}
+      {/* A — peaked cap with open counter */}
       <path
         fill="currentColor"
-        d="M4 32 L13 8 L17 8 L21 22 H17 L15 18 H11 L9 32 Z"
+        d="M5 32 L15 7 L25 32 H21 L18.5 24 H11.5 L9 32 H5 Z M12.5 20 H17.5 L15 13 L12.5 20 Z"
+        fillRule="evenodd"
+        clipRule="evenodd"
       />
-      {/* F — right half, clear gap from A */}
+      {/* F — separated from A by 2px gap */}
       <path
         fill="currentColor"
-        d="M24 8 H38 V12 H28 V18 H36 V22 H28 V32 H24 Z"
+        d="M27 7 H37 V12 H32 V18 H36.5 V23 H32 V32 H27 V7 Z"
+      />
+    </svg>
+  );
+}
+
+// ── Credit token — stacked coins for credits badge (not profile avatar) ───────
+export function CreditToken({ size = 24, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+      {...props}
+    >
+      <ellipse cx="12" cy="15.5" rx="7.5" ry="2.5" fill="currentColor" opacity="0.35" />
+      <ellipse cx="12" cy="11.5" rx="7.5" ry="2.5" fill="currentColor" opacity="0.6" />
+      <ellipse cx="12" cy="7.5" rx="7.5" ry="2.5" fill="currentColor" />
+      <path
+        d="M12 5.5v4M10 7.5h4"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+        opacity="0.85"
       />
     </svg>
   );

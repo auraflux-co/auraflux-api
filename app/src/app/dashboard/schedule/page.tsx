@@ -141,7 +141,7 @@ export default function SchedulePage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold flex items-center gap-2.5">
           <FlowNetwork size={26} className="text-primary shrink-0" />
@@ -330,7 +330,7 @@ export default function SchedulePage() {
                       )}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <a href={`/dashboard/templates`} className="text-xs text-muted-foreground hover:underline">
+                      <a href={`/dashboard/templates?edit=${tpl.id}`} className="text-xs text-muted-foreground hover:underline">
                         Edit cadence
                       </a>
                       <button

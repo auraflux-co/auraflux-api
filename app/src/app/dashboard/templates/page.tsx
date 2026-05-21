@@ -1,25 +1,50 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
-import { listTemplates, deleteTemplate, updateTemplate, type JobTemplate, type RecurrenceType } from '@/lib/api';
+import { useSearchParams } from 'next/navigation';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { PageHeader, PageShell } from '@/components/layout/dashboard-page';
+import {
+  listTemplates,
+  updateTemplate,
+  deleteTemplate,
+  type JobTemplate,
+  type RecurrenceType,
+} from '@/lib/api';
 
-const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-const CONTENT_ICONS: Record<string, string> = {
-  news: '📰', clips: '🎬', sports: '🏆', show_commentary: '🎙️',
-  short: '⚡', custom: '✨',
-};
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function recurrenceLabel(tpl: JobTemplate) {
+  const time = tpl.recurrenceTime || '09:00';
+  if (!tpl.recurrenceType || tpl.recurrenceType === 'once') return 'One-off — run manually';
+  if (tpl.recurrenceType === 'daily') return `Daily at ${time} UTC`;
+  if (tpl.recurrenceType === 'weekly') return `Every ${DAYS[tpl.recurrenceDay ?? 1]} at ${time} UTC`;
+  if (tpl.recurrenceType === 'monthly') return `Monthly on day ${tpl.recurrenceDay ?? 1} at ${time} UTC`;
+  return tpl.recurrenceType;
+}
 
 export default function TemplatesPage() {
+  return (
+    <Suspense fallback={<div className="max-w-3xl space-y-6"><div className="h-8 w-48 bg-muted/40 rounded animate-pulse" /></div>}>
+      <TemplatesPageContent />
+    </Suspense>
+  );
+}
+
+function TemplatesPageContent() {
   const { getToken, isLoaded } = useAuth();
+  const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<JobTemplate[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState<string | null>(null);
-  const [deleting, setDeleting]   = useState<string | null>(null);
-  const [editing, setEditing]     = useState<string | null>(null);
-  const [editName, setEditName]   = useState('');
-  const [editDesc, setEditDesc]   = useState('');
-  const [saving, setSaving]       = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editType, setEditType] = useState<RecurrenceType>('once');
+  const [editDay, setEditDay] = useState(1);
+  const [editTime, setEditTime] = useState('09:00');
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -36,196 +61,218 @@ export default function TemplatesPage() {
     })();
   }, [getToken, isLoaded]);
 
-  async function handleDelete(id: string) {
-    if (!confirm('Delete this template? This cannot be undone.')) return;
-    setDeleting(id);
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId || templates.length === 0) return;
+    const tpl = templates.find((t) => t.id === editId);
+    if (tpl) startEdit(tpl);
+  }, [searchParams, templates]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function startEdit(tpl: JobTemplate) {
+    setEditingId(tpl.id);
+    setEditType((tpl.recurrenceType as RecurrenceType) || 'once');
+    setEditDay(tpl.recurrenceDay ?? 1);
+    setEditTime(tpl.recurrenceTime || '09:00');
+  }
+
+  async function saveRecurrence(tpl: JobTemplate) {
+    setSaving(tpl.id);
     try {
       const token = await getToken();
-      await deleteTemplate(id, token ?? undefined);
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
+      const isRecurring = editType !== 'once';
+      const { template: updated } = await updateTemplate(
+        tpl.id,
+        {
+          recurrenceType: editType,
+          recurrenceDay: editType === 'once' ? null : editDay,
+          recurrenceTime: isRecurring ? editTime : null,
+          recurrenceActive: isRecurring,
+        },
+        token ?? undefined,
+      );
+      setTemplates((prev) => prev.map((t) => (t.id === tpl.id ? updated : t)));
+      setEditingId(null);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Delete failed');
+      setError(e instanceof Error ? e.message : 'Failed to update template');
     } finally {
-      setDeleting(null);
+      setSaving(null);
     }
   }
 
-  async function handleSaveEdit(id: string) {
-    setSaving(true);
+  async function handleDelete(tpl: JobTemplate) {
+    if (!confirm(`Delete template "${tpl.name}"?`)) return;
+    setSaving(tpl.id);
     try {
       const token = await getToken();
-      const updated = await updateTemplate(id, { name: editName, description: editDesc || undefined }, token ?? undefined);
-      setTemplates((prev) => prev.map((t) => t.id === id ? updated.template : t));
-      setEditing(null);
+      await deleteTemplate(tpl.id, token ?? undefined);
+      setTemplates((prev) => prev.filter((t) => t.id !== tpl.id));
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Save failed');
+      setError(e instanceof Error ? e.message : 'Failed to delete template');
     } finally {
-      setSaving(false);
+      setSaving(null);
     }
-  }
-
-  async function toggleRecurrence(tpl: JobTemplate) {
-    try {
-      const token = await getToken();
-      const updated = await updateTemplate(tpl.id, { recurrenceActive: !tpl.recurrenceActive }, token ?? undefined);
-      setTemplates((prev) => prev.map((t) => t.id === tpl.id ? updated.template : t));
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Update failed');
-    }
-  }
-
-  function recurrenceLabel(tpl: JobTemplate) {
-    if (!tpl.recurrenceType || tpl.recurrenceType === 'once') return null;
-    const time = tpl.recurrenceTime || '09:00';
-    if (tpl.recurrenceType === 'daily') return `Daily at ${time} UTC`;
-    if (tpl.recurrenceType === 'weekly') return `Every ${DAYS[tpl.recurrenceDay ?? 1]} at ${time} UTC`;
-    if (tpl.recurrenceType === 'monthly') return `Monthly on the ${tpl.recurrenceDay}th at ${time} UTC`;
-    return tpl.recurrenceType;
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My Templates</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Reusable job configurations. Save from any completed job and schedule recurring runs.
-          </p>
-        </div>
-        <a
-          href="/dashboard/jobs/new"
-          className="text-sm px-3 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          New job
-        </a>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="My Templates"
+        description="Reusable job configurations. Save from any completed job and schedule recurring runs."
+        actions={
+          <Link href="/dashboard/jobs/history" className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}>
+            From job history
+          </Link>
+        }
+      />
 
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
 
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Loading templates…</p>
-      ) : templates.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
-          <p className="text-sm font-medium">No templates yet</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            After a job completes, open it and click <strong>Save as template</strong>.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {templates.map((tpl) => {
-            const icon = CONTENT_ICONS[tpl.contentType ?? ''] ?? '📄';
-            const recLabel = recurrenceLabel(tpl);
-            const isEditing = editing === tpl.id;
-            return (
-              <div key={tpl.id} className="rounded-lg border border-border bg-card p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span className="text-xl mt-0.5 shrink-0">{icon}</span>
-                    <div className="flex-1 min-w-0">
-                      {isEditing ? (
-                        <div className="space-y-2">
-                          <input
-                            className="w-full text-sm border border-border rounded px-2 py-1 bg-background font-medium"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            placeholder="Template name"
-                          />
-                          <input
-                            className="w-full text-xs border border-border rounded px-2 py-1 bg-background text-muted-foreground"
-                            value={editDesc}
-                            onChange={(e) => setEditDesc(e.target.value)}
-                            placeholder="Description (optional)"
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleSaveEdit(tpl.id)}
-                              disabled={saving || !editName.trim()}
-                              className="text-xs text-primary hover:underline disabled:opacity-50"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={() => setEditing(null)}
-                              className="text-xs text-muted-foreground hover:underline"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="text-sm font-medium truncate">{tpl.name}</p>
-                          {tpl.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{tpl.description}</p>
-                          )}
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {tpl.contentType && (
-                              <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{tpl.contentType}</span>
-                            )}
-                            {(tpl.platforms || []).map((p) => (
-                              <span key={p} className="text-xs bg-muted px-2 py-0.5 rounded-full">{p}</span>
-                            ))}
-                          </div>
-                          {recLabel && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className={`inline-block w-1.5 h-1.5 rounded-full ${tpl.recurrenceActive ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-                              <span className="text-xs text-muted-foreground">{recLabel}</span>
-                              {tpl.nextFireAt && tpl.recurrenceActive && (
-                                <span className="text-xs text-muted-foreground">
-                                  — next: {new Date(tpl.nextFireAt).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {!isEditing && (
-                    <div className="flex items-center gap-3 shrink-0">
-                      <a
-                        href={`/dashboard/jobs/new?templateId=${tpl.id}`}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Use
-                      </a>
-                      <button
-                        onClick={() => {
-                          setEditing(tpl.id);
-                          setEditName(tpl.name);
-                          setEditDesc(tpl.description || '');
-                        }}
-                        className="text-xs text-muted-foreground hover:underline"
-                      >
-                        Edit
-                      </button>
-                      {recLabel && (
-                        <button
-                          onClick={() => toggleRecurrence(tpl)}
-                          className={`text-xs hover:underline ${tpl.recurrenceActive ? 'text-amber-600' : 'text-green-600'}`}
-                        >
-                          {tpl.recurrenceActive ? 'Pause' : 'Resume'}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(tpl.id)}
-                        disabled={deleting === tpl.id}
-                        className="text-xs text-destructive hover:underline disabled:opacity-50"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+      {loading && (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-20 rounded-lg bg-muted/40 animate-pulse" />
+          ))}
         </div>
       )}
-    </div>
+
+      {!loading && templates.length === 0 && !error && (
+        <div className="text-center py-16 border border-dashed rounded-lg">
+          <p className="text-sm text-muted-foreground">No templates yet.</p>
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+            Open a completed job and choose Save as template, or finish a job from the history page.
+          </p>
+          <Link href="/dashboard/jobs/history" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-3')}>
+            View job history
+          </Link>
+        </div>
+      )}
+
+      {!loading && templates.length > 0 && (
+        <div className="space-y-3">
+          {templates.map((tpl) => (
+            <div key={tpl.id} className="rounded-lg border border-border px-4 py-3 space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{tpl.name}</p>
+                  {tpl.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{tpl.description}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {tpl.contentType ?? 'custom'}
+                    {tpl.platforms?.length ? ` · ${tpl.platforms.join(', ')}` : ''}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{recurrenceLabel(tpl)}</p>
+                  {tpl.nextFireAt && tpl.recurrenceActive && (
+                    <p className="text-xs text-muted-foreground">
+                      Next run: {new Date(tpl.nextFireAt).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <Link
+                    href={`/dashboard/jobs/new?templateId=${tpl.id}`}
+                    className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), 'text-xs h-8')}
+                  >
+                    Run once
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => (editingId === tpl.id ? setEditingId(null) : startEdit(tpl))}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {editingId === tpl.id ? 'Cancel' : 'Set recurrence'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(tpl)}
+                    disabled={saving === tpl.id}
+                    className="text-xs text-destructive hover:underline disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+
+              {editingId === tpl.id && (
+                <div className="rounded-md border border-border bg-muted/20 p-3 space-y-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Recurrence cadence
+                  </p>
+                  <div className="flex flex-wrap gap-3 items-end">
+                    <label className="text-xs space-y-1">
+                      <span className="text-muted-foreground">Frequency</span>
+                      <select
+                        value={editType}
+                        onChange={(e) => setEditType(e.target.value as RecurrenceType)}
+                        className="block text-sm border border-border rounded px-2 py-1.5 bg-background"
+                      >
+                        <option value="once">One-off (manual runs only)</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </label>
+                    {editType === 'weekly' && (
+                      <label className="text-xs space-y-1">
+                        <span className="text-muted-foreground">Day</span>
+                        <select
+                          value={editDay}
+                          onChange={(e) => setEditDay(Number(e.target.value))}
+                          className="block text-sm border border-border rounded px-2 py-1.5 bg-background"
+                        >
+                          {DAYS.map((d, i) => (
+                            <option key={d} value={i}>{d}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    {editType === 'monthly' && (
+                      <label className="text-xs space-y-1">
+                        <span className="text-muted-foreground">Day of month</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={28}
+                          value={editDay}
+                          onChange={(e) => setEditDay(Number(e.target.value))}
+                          className="block w-16 text-sm border border-border rounded px-2 py-1.5 bg-background"
+                        />
+                      </label>
+                    )}
+                    {editType !== 'once' && (
+                      <label className="text-xs space-y-1">
+                        <span className="text-muted-foreground">Time (UTC)</span>
+                        <input
+                          type="time"
+                          value={editTime}
+                          onChange={(e) => setEditTime(e.target.value)}
+                          className="block text-sm border border-border rounded px-2 py-1.5 bg-background"
+                        />
+                      </label>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => saveRecurrence(tpl)}
+                      disabled={saving === tpl.id}
+                      className={cn(buttonVariants({ size: 'sm' }), 'text-xs h-8')}
+                    >
+                      {saving === tpl.id ? 'Saving…' : 'Save cadence'}
+                    </button>
+                  </div>
+                  {editType !== 'once' && (
+                    <p className="text-xs text-muted-foreground">
+                      Recurring templates appear on Schedule → Recurring and auto-fire when due.
+                      Jobs start in Active immediately at fire time.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </PageShell>
   );
 }

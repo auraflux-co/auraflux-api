@@ -281,10 +281,10 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Support</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-muted-foreground mt-0.5">
           {plan === 'operate' && ageDays <= 30
             ? `Support is available during your first month (${30 - ageDays} days remaining). Upgrade to Guided for ongoing support.`
             : plan === 'operate'

@@ -97,7 +97,7 @@ export default function CreditsPage() {
   const isWarning = usagePct >= 75;
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-semibold">Credits &amp; Usage</h1>
         <p className="text-sm text-muted-foreground mt-0.5 capitalize">

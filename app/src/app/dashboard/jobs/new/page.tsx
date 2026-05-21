@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload } from '@/lib/api';
 import { VideoUpload } from '@/components/upload/video-upload';
 import { SchedulePicker, type ScheduleValue } from '@/components/jobs/schedule-picker';
+import { JobTimingPicker, DEFAULT_JOB_TIMING, type JobTimingValue } from '@/components/jobs/job-timing-picker';
 import { LockedFeature } from '@/components/ui/locked-feature';
 import { SparkAnvil } from '@/components/icons/brand-icons';
 import { useGuide } from '@/contexts/guide-context';
@@ -346,7 +347,7 @@ function NewJobPageInner() {
   }
   const [platforms, setPlatforms]   = useState<string[]>(_initPlatforms);
   const [addOns, setAddOns]         = useState<Set<string>>(new Set());
-  const [schedule, setSchedule]     = useState<ScheduleValue>({ publishMode: 'immediate' });
+  const [jobTiming, setJobTiming]     = useState<JobTimingValue>(DEFAULT_JOB_TIMING);
   // CPD-115: duration + live credit estimate
   const [durationMins, setDurationMins] = useState<number>(_initDur);
 
@@ -436,7 +437,18 @@ function NewJobPageInner() {
         }
       }
     }
-    if (step === 3) { handleSubmit(); return; }
+    if (step === 3) {
+      if (jobTiming.productionStart.mode === 'scheduled' && !jobTiming.productionStart.scheduledStartAt) {
+        setError('Choose a production start date and time, or switch to Start now.');
+        return;
+      }
+      if (jobTiming.recurrence.enabled && !jobTiming.recurrence.templateName.trim()) {
+        setError('Enter a template name for the recurring schedule.');
+        return;
+      }
+      handleSubmit();
+      return;
+    }
     setStep((s) => (s + 1) as Step);
   }
 
@@ -470,7 +482,7 @@ function NewJobPageInner() {
       features:       Array.from(features),
       extensions:     Array.from(addOns),
       durationMins,
-      publishMode:    schedule.publishMode,
+      publishMode:    jobTiming.publish.publishMode,
       topic:          topic.trim() || undefined,
       tone:           tone || undefined,
       featureConfig:  Object.keys(mergedConfig).length ? mergedConfig : undefined,
@@ -497,15 +509,28 @@ function NewJobPageInner() {
       payload.uploadSpec = { fileKeys: fileKeys.split('\n').map((k) => k.trim()).filter(Boolean) };
     }
 
-    if (schedule.publishMode === 'scheduled' && schedule.scheduledPublishAt) {
-      payload.scheduledPublishAt = schedule.scheduledPublishAt;
+    if (jobTiming.publish.publishMode === 'scheduled' && jobTiming.publish.scheduledPublishAt) {
+      payload.scheduledPublishAt = jobTiming.publish.scheduledPublishAt;
+    }
+
+    if (jobTiming.productionStart.mode === 'scheduled' && jobTiming.productionStart.scheduledStartAt) {
+      payload.scheduledStartAt = jobTiming.productionStart.scheduledStartAt;
+    }
+
+    if (jobTiming.recurrence.enabled) {
+      payload.recurringTemplate = {
+        name: jobTiming.recurrence.templateName.trim(),
+        recurrenceType: jobTiming.recurrence.recurrenceType,
+        recurrenceDay: jobTiming.recurrence.recurrenceDay,
+        recurrenceTime: jobTiming.recurrence.recurrenceTime,
+      };
     }
 
     start(async () => {
       try {
         const token = await getToken();
         const res = await createJob(payload, token ?? undefined);
-        console.info('[new-job] created', res.jobId);
+        console.info('[new-job] created', res.jobId ?? res.templateId, res.status);
         router.push('/dashboard/jobs/active');
       } catch (err: unknown) {
         setError("We couldn't create your job. Check your selections and try again.");
@@ -517,7 +542,7 @@ function NewJobPageInner() {
   const effectiveSource    = (sourceMode ?? 'source') as SourceMode;
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">New job</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Configure your content production job</p>
@@ -1086,7 +1111,7 @@ function NewJobPageInner() {
             </div>
           </div>
 
-          <SchedulePicker platforms={platforms} value={schedule} onChange={setSchedule} />
+          <JobTimingPicker platforms={platforms} value={jobTiming} onChange={setJobTiming} />
 
           {/* Add-on extensions (HeyGen, Shoppable) — hidden from UI, wired in code.
                Managed-plan add-ons will be surfaced once onboarding flow is complete. */}
@@ -1129,7 +1154,11 @@ function NewJobPageInner() {
             {step === 0 ? 'Cancel' : '← Back'}
           </button>
           <Button size="sm" disabled={isPending} onClick={advance}>
-            {isPending ? 'Submitting…' : step === 3 ? 'Submit job' : 'Next →'}
+            {isPending
+              ? 'Submitting…'
+              : step === 3
+                ? (jobTiming.productionStart.mode === 'scheduled' ? 'Schedule job' : 'Submit job')
+                : 'Next →'}
           </Button>
         </div>
       )}

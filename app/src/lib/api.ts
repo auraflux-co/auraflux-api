@@ -33,6 +33,8 @@ export interface PortalReport {
 
 export type PublishMode = 'immediate' | 'scheduled';
 
+export type RecurrenceType = 'once' | 'daily' | 'weekly' | 'monthly';
+
 export interface WizardConfig {
   formFactor:     'long' | 'short' | string | null;
   templateId:     string | null;
@@ -65,7 +67,7 @@ export interface Job {
   jobId:               string;
   contentType:         string;
   entryType:           'fetch' | 'upload' | 'create';
-  status:              'queued' | 'running' | 'complete' | 'failed' | 'held' | 'staged' | 'published' | 'cancelled';
+  status:              'queued' | 'running' | 'complete' | 'failed' | 'held' | 'staged' | 'published' | 'cancelled' | 'queued_scheduled';
   customerId:          string;
   planTier:            PlanTier;
   publishMode:         PublishMode;
@@ -97,6 +99,13 @@ export interface CreateJobPayload {
   createSpec?:      { promptText: string };
   publishMode?:     PublishMode;
   scheduledPublishAt?: string;
+  scheduledStartAt?: string;
+  recurringTemplate?: {
+    name?: string;
+    recurrenceType: RecurrenceType;
+    recurrenceDay?: number;
+    recurrenceTime?: string;
+  };
   // CPD-110: wizard fields (platform-agnostic job creation)
   formFactor?:      'long' | 'short' | null;
   productionPath?:  string | null;
@@ -495,7 +504,7 @@ export async function getJob(jobId: string, token?: string): Promise<{ job: Job 
 export async function createJob(
   payload: CreateJobPayload,
   token?: string,
-): Promise<{ jobId: string; job: Job }> {
+): Promise<{ jobId?: string; job?: Job; templateId?: string; templateOnly?: boolean; status: string; scheduledStartAt?: string; message?: string }> {
   return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(payload), token });
 }
 
@@ -531,8 +540,6 @@ export async function saveJobAsTemplate(
 }
 
 // ─── Templates API ────────────────────────────────────────────────────────────
-
-export type RecurrenceType = 'once' | 'daily' | 'weekly' | 'monthly';
 
 export interface JobTemplate {
   id:               string;
