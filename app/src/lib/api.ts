@@ -88,6 +88,7 @@ export interface Job {
   };
   wizardConfig?:   WizardConfig;
   publishResults?: PublishResult[];
+  filledScript?:   string | null;
 }
 
 export interface CreateJobPayload {
