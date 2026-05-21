@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-21 v1.0.583 (Cursor — fix: source library no-results message — detects wide-open filters and says no content exists vs try wider filters)
 **Last Updated:** 2026-05-21 v1.0.581 (Cursor — fix(cpd-315): review queue tile hides CTAs when queue is empty — shows all caught up message instead)
 **Last Updated:** 2026-05-21 v1.0.580 (Cursor — feat(cpd-315): script shown on job detail only when user selected script generation — gated on activeFeatures.includes('script') + filledScript present)
 **Last Updated:** 2026-05-21 v1.0.579 (Cursor — fix(cpd-315): review queue shows only complete+staged — published jobs clear from queue on approve, live in Jobs→History only)
