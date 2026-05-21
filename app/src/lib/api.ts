@@ -376,6 +376,27 @@ export async function listCustomers(token?: string): Promise<{ customers: Custom
   return apiFetch('/admin/crm', { token });
 }
 
+// ─── Admin All Users (Clerk registry) ────────────────────────────────────────
+
+export interface AdminUser {
+  id:           string;
+  email:        string | null;
+  firstName:    string | null;
+  lastName:     string | null;
+  role:         string;
+  planTier:     string;
+  hasAccount:   boolean;
+  jobCount:     number;
+  lastJobAt:    string | null;
+  signedUpAt:   string | null;
+  lastSignInAt: string | null;
+  lastActiveAt: string | null;
+}
+
+export async function listAllUsers(token?: string): Promise<{ total: number; users: AdminUser[] }> {
+  return apiFetch('/admin/users', { token });
+}
+
 // ─── Admin Activity Overview (CPD-177) ───────────────────────────────────────
 
 export interface ActivityStats {
