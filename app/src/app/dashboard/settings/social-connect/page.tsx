@@ -24,19 +24,19 @@ const PLATFORMS: { id: SocialPlatform; label: string; color: string; hint: strin
     id: 'youtube',
     label: 'YouTube',
     color: 'bg-red-500',
-    hint: 'Available on all plans. Direct upload via YouTube Data API v3.',
+    hint: 'Publish directly to YouTube. Available on all plans.',
   },
   {
     id: 'tiktok',
     label: 'TikTok',
     color: 'bg-black',
-    hint: 'Available on all plans. TikTok Content Posting API.',
+    hint: 'Publish directly to TikTok. Available on Managed plan.',
   },
   {
     id: 'instagram',
     label: 'Instagram',
     color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-    hint: 'Available on all plans. Instagram Graph API — Reels.',
+    hint: 'Publish directly to Instagram Reels. Available on all plans.',
   },
 ];
 

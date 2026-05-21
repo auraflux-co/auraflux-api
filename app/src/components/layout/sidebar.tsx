@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
+import { usePlan } from '@/contexts/plan-context';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { HeroMonogram } from '@/components/icons/brand-icons';
@@ -101,19 +102,20 @@ interface NavItem {
   divider?:  string; // section label shown above this item when sidebar is expanded
 }
 
-const CUSTOMER_NAV: NavItem[] = [
+// Base nav — same for all customer tiers
+const CUSTOMER_NAV_BASE: NavItem[] = [
   {
     href: '/dashboard/jobs',
-    label: 'Jobs',
+    label: 'My Jobs',
     children: [
       { href: '/dashboard/jobs/new',     label: 'New job' },
       { href: '/dashboard/jobs/active',  label: 'Active'  },
       { href: '/dashboard/jobs/history', label: 'History' },
     ],
   },
-  { href: '/dashboard/schedule',   label: 'Schedule'      },
-  { href: '/dashboard/templates',  label: 'Templates'     },
   { href: '/dashboard/staging',    label: 'Review Queue'  },
+  { href: '/dashboard/schedule',   label: 'Schedule'      },
+  { href: '/dashboard/templates',  label: 'My Templates'  },
   {
     href:  '/dashboard/billing',
     label: 'Billing',
@@ -125,15 +127,22 @@ const CUSTOMER_NAV: NavItem[] = [
   },
   { href: '/dashboard/support',    label: 'Support'   },
   { href: '/dashboard/profile',    label: 'Profile'   },
-  {
-    href: '/dashboard/settings', label: 'Settings',
-    children: [
-      { href: '/dashboard/settings/api-keys',       label: 'API Keys'       },
-      { href: '/dashboard/settings/social-connect', label: 'Social Connect' },
-      { href: '/dashboard/settings/team',           label: 'Team'           },
-    ],
-  },
 ];
+
+// Settings children differ by plan tier
+function settingsNavItem(planTier: string | null): NavItem {
+  const isOperate = !planTier || planTier === 'operate' || planTier === 'custom';
+  const children: { href: string; label: string }[] = [];
+  if (isOperate) {
+    children.push({ href: '/dashboard/settings/api-keys', label: 'API Keys' });
+  }
+  children.push(
+    { href: '/dashboard/settings/channels',       label: 'My Channels'      },
+    { href: '/dashboard/settings/social-connect', label: 'My Social Accounts' },
+    { href: '/dashboard/settings/team',           label: 'My Team'          },
+  );
+  return { href: '/dashboard/settings', label: 'Settings', children };
+}
 
 const OPERATOR_NAV: NavItem[] = [
   { href: '/dashboard/generate',      label: 'Generate', divider: 'Operator tools' },
@@ -162,18 +171,23 @@ const CONFLUENCE_GUIDE_URL =
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-export function Sidebar({ setupLocked: _setupLocked }: { setupLocked?: boolean } = {}) {
+export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const pathname                               = usePathname();
   const { isOperator, isAdmin }                = useRole();
+  const { planTier }                           = usePlan();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const router                                 = useRouter();
 
-  // Admin (superuser) = platform command centre only — not a job runner.
-  const navItems = isAdmin
-    ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
-    : isOperator
-      ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
-      : CUSTOMER_NAV;
+  const CUSTOMER_NAV = [...CUSTOMER_NAV_BASE, settingsNavItem(planTier)];
+
+  // When setup is incomplete: only the dashboard home is accessible
+  const navItems = setupLocked
+    ? []
+    : isAdmin
+      ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
+      : isOperator
+        ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
+        : CUSTOMER_NAV;
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === href;
@@ -353,17 +367,22 @@ export function MobileSidebarOverlay() {
   );
 }
 
-export function MobileSidebar({ setupLocked: _setupLocked }: { setupLocked?: boolean } = {}) {
+export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const { mobileOpen, closeMobile } = useSidebar();
   const pathname                    = usePathname();
   const { isOperator, isAdmin }     = useRole();
+  const { planTier }                = usePlan();
   const router                      = useRouter();
 
-  const navItems = isAdmin
-    ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
-    : isOperator
-      ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
-      : CUSTOMER_NAV;
+  const CUSTOMER_NAV = [...CUSTOMER_NAV_BASE, settingsNavItem(planTier)];
+
+  const navItems = setupLocked
+    ? []
+    : isAdmin
+      ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
+      : isOperator
+        ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
+        : CUSTOMER_NAV;
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === href;
