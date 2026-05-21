@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
 import { usePlan } from '@/contexts/plan-context';
@@ -60,9 +60,23 @@ function iconFor(href: string) {
 
 // ─── Credits badge ────────────────────────────────────────────────────────────
 
+/** Monthly included credits by tier — mirrors lib/db/postgres.js PLAN_DEFAULTS */
+const TIER_INCLUDED_CREDITS: Record<string, number> = {
+  operate: 50,
+  guided:  200,
+  managed: 1000,
+  custom:  9999,
+  diy:     50,
+  dwy:     200,
+  dfy:     1000,
+};
+
 function CreditsBadge({ collapsed }: { collapsed: boolean }) {
   const { getToken, isLoaded } = useAuth();
+  const { user }               = useUser();
+  const { planTier }           = usePlan();
   const [remaining, setRemaining] = useState<number | null>(null);
+  const tierFallback = planTier ? (TIER_INCLUDED_CREDITS[planTier] ?? 50) : null;
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -73,7 +87,7 @@ function CreditsBadge({ collapsed }: { collapsed: boolean }) {
         if (!token) return;
         const b = await getCreditBalance(token);
         if (!cancelled) setRemaining(b.included_remaining);
-      } catch { /* non-fatal */ }
+      } catch { /* fall back to tier allocation */ }
     }
     load();
     return () => { cancelled = true; };
@@ -81,13 +95,38 @@ function CreditsBadge({ collapsed }: { collapsed: boolean }) {
 
   if (collapsed) return null;
 
+  const display = remaining ?? tierFallback;
+  const avatarUrl = user?.imageUrl;
+  const initials  = user?.firstName?.[0] ?? user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ?? '?';
+
   return (
     <Link
       href="/dashboard/credits"
       title="Credits remaining this period"
-      className="text-xs tabular-nums text-muted-foreground hover:text-foreground transition-colors"
+      className={cn(
+        'flex items-center gap-1.5 px-2 py-1 rounded-md border border-border/70',
+        'bg-card/30 hover:bg-accent/40 hover:border-border transition-colors shrink-0',
+      )}
     >
-      {remaining === null ? '—' : remaining.toLocaleString()} left
+      {avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={avatarUrl}
+          alt=""
+          className="w-5 h-5 rounded-full object-cover ring-1 ring-border/50 shrink-0"
+        />
+      ) : (
+        <span
+          className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-semibold text-muted-foreground ring-1 ring-border/50 shrink-0"
+          aria-hidden
+        >
+          {initials}
+        </span>
+      )}
+      <span className="text-[11px] tabular-nums text-muted-foreground whitespace-nowrap">
+        {display === null ? '—' : display.toLocaleString()}
+        <span className="text-muted-foreground/70"> left</span>
+      </span>
     </Link>
   );
 }
@@ -405,7 +444,10 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
       mobileOpen ? 'translate-x-0' : '-translate-x-full',
     )}>
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <span className="font-semibold text-sm tracking-tight">AuraFlux</span>
+        <Link href="/dashboard" className="flex items-center gap-2" onClick={closeMobile}>
+          <HeroMonogram size={20} className="text-primary shrink-0" />
+          <span className="font-semibold text-sm tracking-tight">AuraFlux</span>
+        </Link>
         <button onClick={closeMobile} className="text-muted-foreground hover:text-foreground p-1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />

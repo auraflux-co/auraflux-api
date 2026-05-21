@@ -15,7 +15,7 @@ import { SVGProps } from 'react';
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
-// ── The Hero — AF Angular Monogram ────────────────────────────────────────────
+// ── The Hero — AF Monogram (separated letters, no overlap) ─────────────────
 export function HeroMonogram({ size = 24, ...props }: IconProps) {
   return (
     <svg
@@ -25,14 +25,16 @@ export function HeroMonogram({ size = 24, ...props }: IconProps) {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      {/* A — triangle with crossbar */}
-      <polygon points="4,34 13,8 17,8 20,18" fill="currentColor" />
-      <polygon points="20,18 23,8 27,8 36,34 31,34 20,18" fill="currentColor" />
-      <rect x="9" y="22" width="14" height="4" rx="1" fill="currentColor" />
-      {/* F — vertical bar + two horizontal arms */}
-      <rect x="23" y="8" width="4" height="26" rx="1" fill="currentColor" />
-      <rect x="27" y="8" width="9" height="4" rx="1" fill="currentColor" />
-      <rect x="27" y="17" width="7" height="4" rx="1" fill="currentColor" />
+      {/* A — left half */}
+      <path
+        fill="currentColor"
+        d="M4 32 L13 8 L17 8 L21 22 H17 L15 18 H11 L9 32 Z"
+      />
+      {/* F — right half, clear gap from A */}
+      <path
+        fill="currentColor"
+        d="M24 8 H38 V12 H28 V18 H36 V22 H28 V32 H24 Z"
+      />
     </svg>
   );
 }
