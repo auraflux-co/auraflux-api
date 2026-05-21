@@ -65,7 +65,7 @@ export interface Job {
   jobId:               string;
   contentType:         string;
   entryType:           'fetch' | 'upload' | 'create';
-  status:              'queued' | 'running' | 'complete' | 'failed' | 'held';
+  status:              'queued' | 'running' | 'complete' | 'failed' | 'held' | 'staged' | 'published' | 'cancelled';
   customerId:          string;
   planTier:            PlanTier;
   publishMode:         PublishMode;
