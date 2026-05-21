@@ -62,7 +62,7 @@ export default function JobsHubPage() {
         const res = await listJobs(token ?? undefined);
         setJobs(res.jobs ?? []);
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Failed to load jobs');
+        setError("Couldn't load your jobs. Refresh to try again.");
       }
     }
     load();
@@ -159,7 +159,7 @@ export default function JobsHubPage() {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium">Not sure what to select?</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            AuraFlux Collab walks you through every step — format, path, features, and add-ons — so your job is configured for maximum accuracy before it enters the pipeline.
+            Get guided help through format, source, features, and publishing — so your job is configured correctly before it starts production.
           </p>
         </div>
         <button

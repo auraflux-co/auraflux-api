@@ -213,7 +213,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">Password</p>
-              <p className="text-xs text-muted-foreground">Managed via Clerk authentication</p>
+              <p className="text-xs text-muted-foreground">Managed through your account security settings</p>
             </div>
             <button
               type="button"
@@ -239,7 +239,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">Active sessions</p>
-              <p className="text-xs text-muted-foreground">Manage active sessions in Clerk security settings</p>
+              <p className="text-xs text-muted-foreground">Manage active sessions in your account security settings</p>
             </div>
             <button
               type="button"

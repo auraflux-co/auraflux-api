@@ -55,7 +55,7 @@ const STEPS: StepDef[] = [
     label: (s) => {
       const ch = s.sourceChannels;
       const handle = ch.twitchLogin || ch.youtubeHandle || ch.kickUsername || ch.tiktokUsername;
-      return handle ? `Source channel saved — ${handle}` : 'Save a source channel';
+      return handle ? `Channel saved — ${handle}` : 'Set up My Channels';
     },
     href: '/dashboard/settings/source-channels',
   },
@@ -168,7 +168,7 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
           <span className="text-primary">✦</span> Complete your setup
         </p>
         <ul className="space-y-2 text-sm">
-          <li><Link href="/dashboard/settings/source-channels" className="text-primary hover:underline">Save a source channel →</Link></li>
+          <li><Link href="/dashboard/settings/source-channels" className="text-primary hover:underline">Set up My Channels →</Link></li>
           <li><Link href="/dashboard/settings/social-connect" className="text-primary hover:underline">Connect a publishing platform →</Link></li>
         </ul>
       </div>
@@ -221,9 +221,9 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
             </p>
             <p className="text-amber-700 dark:text-amber-400">
               You can still reach these settings any time:
-              source channels under <strong>Settings → My Channels</strong>,
-              publishing connections under <strong>Settings → Social Accounts</strong>.
-              The <strong>Collab</strong> guide (top-right of the dashboard) is also available whenever you need help.
+              channels under <strong>Settings → My Channels</strong>,
+              publishing connections under <strong>Settings → My Social Accounts</strong>.
+              The <strong>Help</strong> button (top-right of the dashboard) is also available whenever you need assistance.
             </p>
             <div className="flex gap-2 pt-0.5">
               <Button

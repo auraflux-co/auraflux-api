@@ -1,8 +1,6 @@
 'use client';
 /**
  * /dashboard/plans — Plan selection and Stripe subscription checkout (CPD-100)
- *
- * Test card: 4242 4242 4242 4242 (any future expiry, any CVC)
  */
 
 import { useEffect, useState } from 'react';
@@ -15,9 +13,9 @@ import { cn } from '@/lib/utils';
 import { getPlans, subscribeToPlan, type Plan } from '@/lib/api';
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  operate: ['400 credits/mo', 'Scheduling', 'Full platform access', 'Credit packs', 'AuraFlux Collab'],
+  operate: ['400 credits/mo', 'Scheduling', 'Full platform access', 'Credit packs', 'Guided setup & help'],
   guided: ['1,200 credits/mo', 'Everything in Operate', 'Operator guidance & monitoring', 'SMS + chat support'],
-  managed: ['2,000 credits/mo', 'Everything in Guided', 'HeyGen avatars', 'Imagen 3 thumbnails', 'Dedicated account manager'],
+  managed: ['2,000 credits/mo', 'Everything in Guided', 'AI avatars', 'AI thumbnails', 'Dedicated account manager'],
 };
 
 export default function PlansPage() {
@@ -68,7 +66,7 @@ export default function PlansPage() {
       <div>
         <h1 className="text-2xl font-semibold">Plans</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Choose a plan. Test card: <code className="text-xs bg-muted px-1 rounded">4242 4242 4242 4242</code>
+          Choose the plan that fits how you work.
         </p>
       </div>
 

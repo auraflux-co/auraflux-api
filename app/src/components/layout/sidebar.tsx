@@ -115,7 +115,7 @@ const CUSTOMER_NAV: NavItem[] = [
   },
   { href: '/dashboard/staging',    label: 'Review Queue'  },
   { href: '/dashboard/schedule',   label: 'Schedule'      },
-  { href: '/dashboard/templates',  label: 'Templates'     },
+  { href: '/dashboard/templates',  label: 'My Templates'  },
   {
     href:  '/dashboard/billing',
     label: 'Billing',
