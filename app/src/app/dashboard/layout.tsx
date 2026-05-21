@@ -11,8 +11,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await currentUser();
   const role            = user?.publicMetadata?.role as string | undefined;
   const setupDismissed  = user?.publicMetadata?.setupDismissed as boolean | undefined;
-  // Lock nav for customers who haven't completed or dismissed their setup checklist
-  const setupLocked = role !== 'operator' && role !== 'admin' && !setupDismissed;
+  // Nav lock intentionally disabled — setupDismissed is only set when the user
+  // explicitly clicks Dismiss; many legitimate users never click it. The setup
+  // checklist on the home page provides sufficient onboarding guidance without
+  // blocking navigation entirely.
+  const setupLocked = false;
+  void setupDismissed; // kept in scope for the checklist component below
 
   return (
     <PlanProvider>
