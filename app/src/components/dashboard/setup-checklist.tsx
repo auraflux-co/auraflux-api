@@ -223,7 +223,7 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
               You can still reach these settings any time:
               channels under <strong>Settings → My Channels</strong>,
               publishing connections under <strong>Settings → My Social Accounts</strong>.
-              The <strong>Help</strong> button (top-right of the dashboard) is also available whenever you need assistance.
+              The <strong>Collab</strong> button (top-right of the dashboard) is also available whenever you need assistance.
             </p>
             <div className="flex gap-2 pt-0.5">
               <Button

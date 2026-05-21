@@ -277,7 +277,7 @@ interface Props {
 }
 
 export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilter }: Props) {
-  const { getToken }                    = useAuth();
+  const { getToken, isLoaded }           = useAuth();
   const [platform, setPlatform]         = useState<SourcePlatform | null>(null);
   const [username, setUsername]         = useState('');
   const [savedChannels, setSavedChannels] = useState<SourceChannels>({});
@@ -397,6 +397,9 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
       // If Clerk hasn't established a session yet, don't hit the API — bail silently.
       if (!token) {
         setLoading(false);
+        setError(isLoaded
+          ? 'error:Your session is not ready — please sign in again.'
+          : 'retry:Session is still loading — please try again in a moment.');
         return;
       }
       const preset = DURATION_PRESETS[durationPresetIdx];
@@ -442,7 +445,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, isLoaded]);
 
   const handleBrowse = useCallback(() => {
     if (!platform || !username.trim()) return;

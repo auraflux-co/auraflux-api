@@ -939,7 +939,9 @@ export async function fetchSourceContent(
   filters?: SourceFilters,
 ): Promise<{ ok: boolean; channel: ResolvedChannel; items: SourceItem[] }> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (filters?.dateRange)   params.set('range',       filters.dateRange);
+  if (filters?.dateRange)   params.set('after',       filters.dateRange);
+  if (filters?.minDuration != null) params.set('minDuration', String(filters.minDuration));
+  if (filters?.maxDuration != null) params.set('maxDuration', String(filters.maxDuration));
   if (filters?.type)        params.set('type',        filters.type);
   if (filters?.playlistId)  params.set('playlistId',  filters.playlistId);
   return apiFetch(`/source/${platform}/${encodeURIComponent(handle)}/content?${params}`, { token });
