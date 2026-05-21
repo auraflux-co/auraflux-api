@@ -425,10 +425,10 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
         });
       }
       if (!newItems.length) {
-        const filtersAreWide = filters.dateRange === 'all' && (!filters.type || filters.type === 'all') && durationPresetIdx === 0;
-        const msg = filtersAreWide
-          ? `no-results:No public clips or VODs found for "${targetUsername}" on ${targetPlatform}. This channel may not have posted any yet — try pasting a direct URL instead.`
-          : `no-results:No content found for "${targetUsername}" with these filters. Try setting type and date range to "All".`;
+        const filtersActive = filters.dateRange !== 'all' || (filters.type && filters.type !== 'all') || durationPresetIdx !== 0;
+        const msg = filtersActive
+          ? `no-results:No content found for "${targetUsername}" with these filters. Try setting type and date range to "All".`
+          : `no-results:No clips or VODs found for "${targetUsername}" on ${targetPlatform}. Try pasting a direct URL instead.`;
         setError(msg);
       }
     } catch (e: unknown) {
