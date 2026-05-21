@@ -188,7 +188,8 @@ export function estimateCreditCost({
   if (aiFeatureCost > 0) parts.push(`${aiFeatureCost} ${aiLabel}`);
   if (breakdown.script > 0) parts.push(`${breakdown.script} script`);
   if (breakdown.shoppable > 0) parts.push(`${breakdown.shoppable} shoppable`);
-  const discountNote = discount < 1 ? ` (${Math.round((1 - discount) * 100)}% ${planTier.toUpperCase()} discount applied)` : '';
+  const TIER_DISPLAY: Record<string, string> = { operate: 'Operate', guided: 'Guided', managed: 'Managed', custom: 'Custom' };
+  const discountNote = discount < 1 ? ` (${Math.round((1 - discount) * 100)}% ${TIER_DISPLAY[planTier] ?? planTier} plan discount applied)` : '';
 
   const message = parts.length
     ? `${credits} credits total — ${CREDIT_RATES.base} base + ${parts.join(' + ')}${discountNote}.`

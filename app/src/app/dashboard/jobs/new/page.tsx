@@ -118,7 +118,7 @@ const FEATURES: Feature[] = [
   },
   {
     id: 'tts', label: 'TTS narration',
-    description: 'ElevenLabs voiceover narrates the generated script',
+    description: 'AI voiceover narrates the generated script',
     outputImpact: 'A professional voice reads your script in the video — no separate recording needed.',
     default: false, formFactors: ['long'], requires: ['script'], hasConfig: true,
   },
@@ -131,13 +131,13 @@ const FEATURES: Feature[] = [
   // ── Visual production ──────────────────────────────────────────────────────
   {
     id: 'generation', label: 'Video generation',
-    description: 'WAN text-to-video fills segments where source footage is missing',
+    description: 'AI video generation fills segments where source footage is missing',
     outputImpact: 'Gaps in your footage are filled with generated video clips that match your topic and style.',
     default: false, formFactors: ['long'], hasConfig: true,
   },
   {
     id: 'generation_i2v', label: 'Image-to-video (I2V)',
-    description: 'Animate a still image into a video clip using WAN I2V',
+    description: 'Animate a still image into a video clip using AI image-to-video',
     outputImpact: 'Reference images you provide are animated into video segments instead of being static overlays.',
     default: false, formFactors: ['long'], minPlan: 'managed', hasConfig: true,
   },
@@ -183,7 +183,7 @@ const FEATURE_GROUPS: FeatureGroup[] = [
     formFactors: ['long', 'short'],
   },
   {
-    id: 'assembly', label: 'Assembly & finishing',
+    id: 'assembly', label: 'Editing & finishing',
     description: 'Cut, brand, and animate',
     featureIds: ['scene_select', 'branding', 'dynamic'],
     formFactors: ['long', 'short'],
@@ -209,6 +209,12 @@ const PLATFORMS = [
   { id: 'instagram', label: 'Instagram', minPlan: undefined },
 ];
 
+const PLATFORM_LABEL: Record<string, string> = {
+  youtube: 'YouTube',
+  tiktok: 'TikTok',
+  instagram: 'Instagram',
+};
+
 // ─── Guide content ────────────────────────────────────────────────────────────
 // Inline tip shown beneath step choices + context hint sent to the guide panel.
 
@@ -231,7 +237,7 @@ const STEP_GUIDE: Record<number, GuideContent> = {
     hint: 'Step 3 of 4 — Features. I can explain what each feature does, how they interact, and how they affect credits.',
   },
   3: {
-    tip:  'Schedule at least 30 minutes out to allow production time. Platforms you select here determine which publish portals run.',
+    tip:  'Schedule at least 30 minutes out to allow production time. Platforms you select determine where we publish your video.',
     hint: 'Step 4 of 4 — Publish. Ask me about platform requirements, scheduling, or credit costs.',
   },
 };
@@ -249,7 +255,7 @@ function GuideTip({ step }: { step: number }) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary shrink-0">
           <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
         </svg>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">AuraFlux Collab</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">Tip</span>
         <button
           type="button"
           onClick={() => guide.openWithContext(content.hint)}
@@ -413,7 +419,7 @@ function NewJobPageInner() {
     setError(null);
     if (step === 0 && !formFactor) { setError('Select a format to continue'); return; }
     if (step === 1) {
-      if (!sourceIntent) { setError('Tell us what type of content you\'re working with'); return; }
+      if (!sourceIntent) { setError('Select a content transformation type to continue'); return; }
       // Source is now always 'source' (browse) or 'upload'; 'fetch' (paste URLs) is hidden
       const mode = effectiveSource;
       if (mode === 'fetch') {
@@ -502,7 +508,7 @@ function NewJobPageInner() {
         console.info('[new-job] created', res.jobId);
         router.push('/dashboard/jobs/active');
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Failed to create job');
+        setError("We couldn't create your job. Check your selections and try again.");
       }
     });
   }
@@ -965,7 +971,7 @@ function NewJobPageInner() {
               <SparkAnvil size={20} className="text-primary shrink-0" />
               <div>
                 <p className="text-sm font-semibold leading-tight">Production features</p>
-                <p className="text-[11px] text-muted-foreground">Select and configure what gets applied during assembly</p>
+                <p className="text-[11px] text-muted-foreground">Select and configure finishing options for your video</p>
               </div>
             </div>
 
@@ -1036,7 +1042,7 @@ function NewJobPageInner() {
             <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
-                  AuraFlux Collab — Credit Estimate
+                  Credit estimate
                 </span>
                 <span className="text-sm font-bold text-primary tabular-nums">{estimate.credits} credits</span>
               </div>
@@ -1092,10 +1098,8 @@ function NewJobPageInner() {
               <p><span className="font-medium text-foreground">Source:</span> {sourceIntent === 'longform' ? 'Long-form video / VOD' : 'Short clips'} via {effectiveSource === 'source' ? 'channel browse' : effectiveSource === 'fetch' ? 'URL fetch' : 'file upload'}</p>
               {sourceIntent === 'longform' && formFactor === 'short' && <p className="text-xs text-primary">→ We&apos;ll cut clips from your long video</p>}
               {sourceIntent === 'clips' && formFactor === 'long' && <p className="text-xs text-primary">→ We&apos;ll compile your clips into a long-form video</p>}
-              {topic.trim() && <p><span className="font-medium text-foreground">Topic:</span> {topic.trim()}</p>}
-              {features.has('script') && <p><span className="font-medium text-foreground">Tone:</span> {tone}</p>}
               <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
-              <p><span className="font-medium text-foreground">Platforms:</span> {platforms.join(', ')}</p>
+              <p><span className="font-medium text-foreground">Platforms:</span> {platforms.map((p) => PLATFORM_LABEL[p] ?? p).join(', ')}</p>
               {/* Add-ons summary hidden — add-ons not surfaced in UI yet */}
             </CardContent>
           </Card>

@@ -279,10 +279,10 @@ export default function SchedulePage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary shrink-0">
                   <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
                 </svg>
-                <span className="text-xs font-semibold uppercase tracking-wide text-primary">AuraFlux Collab</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-primary">Schedule Assistant</span>
               </div>
               <p className="text-xs text-foreground/80">
-                Collab can draft a publishing schedule based on your templates and goals.
+                We can draft a publishing schedule based on your templates and goals.
                 {' '}Guided customers get a 30-day proposal table. Managed customers get a full calendar ready to queue.
               </p>
               <div className="flex gap-2">

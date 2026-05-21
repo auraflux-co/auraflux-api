@@ -431,13 +431,12 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
         // out and redirects to /sign-in. Don't show a raw auth error here.
         return;
       } else if (status === 503 && targetPlatform === 'kick') {
-        setError('platform-unavailable:Kick clips cannot be listed from this server — Cloudflare blocks datacenter requests to Kick\'s API. Paste a direct Kick clip URL when submitting a job instead.');
+        setError('platform-unavailable:Kick browsing isn\'t available right now. Paste a Kick clip URL directly when submitting your job instead.');
       } else {
         const raw = e instanceof Error ? e.message : String(e);
-        // "Failed to fetch" = browser-level network error (server restart, offline, etc.)
         const msg = raw === 'Failed to fetch'
           ? 'retry:Could not reach the server — it may be restarting. Please try again.'
-          : raw;
+          : 'error:Couldn\'t load content. Try again or paste a direct URL.';
         setError(msg);
       }
     } finally {
