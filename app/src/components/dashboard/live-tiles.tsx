@@ -200,13 +200,23 @@ function ReviewTileBody({ data }: { data: TileData }) {
   return (
     <>
       <NumStat count={ready} label="to review" loading={loading} />
-      <p className="text-[12px] text-muted-foreground leading-relaxed -mt-1">
-        Watch · Script · Publish copy · Approve · Download · Redo
-      </p>
-      <CtaSection>
-        <CtaRow href="/dashboard/staging" label="Review now" primary={ready > 0} />
-        <CtaRow href="/dashboard/staging" label="Approve & publish to social" dim />
-      </CtaSection>
+      {ready > 0 ? (
+        <>
+          <p className="text-[12px] text-muted-foreground leading-relaxed -mt-1">
+            Watch · Script · Publish copy · Approve · Download · Redo
+          </p>
+          <CtaSection>
+            <CtaRow href="/dashboard/staging" label="Review now" primary />
+            <CtaRow href="/dashboard/staging" label="Approve & publish to social" dim />
+          </CtaSection>
+        </>
+      ) : (
+        <div className="mt-auto pt-3 border-t border-border/40">
+          <p className="text-[12px] text-muted-foreground">
+            {loading ? '' : 'All caught up — new outputs will appear here when ready.'}
+          </p>
+        </div>
+      )}
     </>
   );
 }
