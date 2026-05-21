@@ -366,9 +366,9 @@ export default function SupportPage() {
               {canEsc && !escalated && (
                 <button
                   onClick={() => setShowEsc(true)}
-                  className="text-xs text-muted-foreground hover:text-destructive underline ml-auto"
+                  className="text-xs text-muted-foreground hover:text-foreground underline ml-auto"
                 >
-                  Escalate via email (last resort)
+                  Contact our team
                 </button>
               )}
               {escalated && (
