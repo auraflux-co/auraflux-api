@@ -183,6 +183,8 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
   const [publishing, setPublishing] = useState(false);
   const [publishResult, setPublishResult] = useState<{ error?: string | null } | null>(null);
   const [showScript, setShowScript] = useState(false);
+  const [redoing, setRedoing]   = useState(false);
+  const [redoResult, setRedoResult] = useState<{ ok?: boolean; error?: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -213,13 +215,24 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
         }
       );
       setPublishResult(result);
-    } catch (e: unknown) {
-      const err = e as Error;
+    } catch {
       setPublishResult({ error: 'Publish failed. Please try again.' });
     } finally {
       setPublishing(false);
     }
   }, [assets, jobId, token]);
+
+  const handleRequestRedo = useCallback(async () => {
+    setRedoing(true);
+    try {
+      await apiFetch(`/jobs/${jobId}/retry`, { method: 'POST', token });
+      setRedoResult({ ok: true });
+    } catch {
+      setRedoResult({ error: 'Redo request failed. Please try again.' });
+    } finally {
+      setRedoing(false);
+    }
+  }, [jobId, token]);
 
   if (loading) return <p className="text-xs text-muted-foreground py-4 text-center">Loading review assets…</p>;
   if (error)   return <p className="text-xs text-red-600 py-4">{error}</p>;
@@ -332,36 +345,77 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
 
       <Separator />
 
-      {/* Approve & Publish */}
-      {publishResult ? (
-        <div className="rounded-md border p-3 text-xs">
-          <p className="font-medium mb-1">
-            {publishResult.error ? 'Publish failed' : 'Published successfully'}
-          </p>
-          {publishResult.error && (
-            <p className="text-red-600">{String(publishResult.error)}</p>
+      {/* Actions — Approve, Download, Redo */}
+      <div className="space-y-3">
+        {/* Publish result */}
+        {publishResult && (
+          <div className="rounded-md border p-3 text-xs">
+            <p className="font-medium mb-1">
+              {publishResult.error ? 'Publish failed' : 'Published successfully'}
+            </p>
+            {publishResult.error && <p className="text-red-600">{String(publishResult.error)}</p>}
+            {!publishResult.error && <p className="text-green-600">Your video has been sent to the selected platforms.</p>}
+          </div>
+        )}
+
+        {/* Redo result */}
+        {redoResult && (
+          <div className="rounded-md border p-3 text-xs">
+            {redoResult.error
+              ? <p className="text-red-600">{redoResult.error}</p>
+              : <p className="text-blue-600">Redo requested — job re-queued for processing.</p>}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Approve & Publish */}
+          {!publishResult && (
+            <Button
+              size="sm"
+              disabled={!canPublish || publishing}
+              onClick={handleApprovePublish}
+            >
+              {publishing ? 'Publishing…' : 'Approve & Publish'}
+            </Button>
           )}
-          {!publishResult.error && (
-            <p className="text-green-600">Your video has been sent to the selected platforms.</p>
+
+          {/* Download */}
+          {output.videoUrl && (
+            <a
+              href={output.videoUrl}
+              target="_blank"
+              rel="noreferrer"
+              download
+              className="inline-flex items-center gap-1.5 text-xs font-medium border border-border rounded-md px-3 py-1.5 hover:bg-accent transition-colors"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              Download
+            </a>
           )}
-        </div>
-      ) : (
-        <div className="flex items-center gap-3">
-          <Button
-            size="sm"
-            disabled={!canPublish || publishing}
-            onClick={handleApprovePublish}
-          >
-            {publishing ? 'Publishing…' : 'Approve & Publish to social'}
-          </Button>
+
+          {/* Request Redo */}
+          {!redoResult && assets.status !== 'published' && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={redoing}
+              onClick={handleRequestRedo}
+            >
+              {redoing ? 'Requesting…' : 'Request redo'}
+            </Button>
+          )}
+
+          {/* Status messages */}
           {!hasOutput && (
             <p className="text-xs text-muted-foreground">No output yet — wait for pipeline to complete.</p>
           )}
-          {assets.status === 'published' && (
+          {assets.status === 'published' && !publishResult && (
             <p className="text-xs text-green-600">Already published.</p>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

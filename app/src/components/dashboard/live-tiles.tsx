@@ -2,239 +2,362 @@
 /**
  * LiveTiles — dashboard home 3×2 grid with embedded live data per tile.
  *
- * One jobs fetch + one credits fetch + one templates fetch, distributed
- * across all six tiles so each tile shows real status on login.
+ * Cards are div wrappers (not Link wrappers) so individual CTA rows inside
+ * each card are independently clickable. One parallel fetch per data source.
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
+import { usePlan } from '@/contexts/plan-context';
+import { tierLabel } from '@/lib/tier-labels';
 import {
   listJobs,
   getCreditBalance,
   listTemplates,
+  listConnectedAccounts,
   type Job,
   type CreditBalance,
+  type ConnectedAccount,
 } from '@/lib/api';
 
-// ─── Shared data shape ────────────────────────────────────────────────────────
+// ─── Data shape ───────────────────────────────────────────────────────────────
 
 interface TileData {
   jobs:      Job[];
   balance:   CreditBalance | null;
   templates: number;
-  loaded:    { jobs: boolean; credits: boolean; templates: boolean };
+  accounts:  ConnectedAccount[];
+  loaded:    { jobs: boolean; credits: boolean; templates: boolean; accounts: boolean };
 }
 
 const EMPTY: TileData = {
   jobs:      [],
   balance:   null,
   templates: 0,
-  loaded:    { jobs: false, credits: false, templates: false },
+  accounts:  [],
+  loaded:    { jobs: false, credits: false, templates: false, accounts: false },
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(d: string) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function fmtCredits(n: number) {
-  return n.toLocaleString();
+function Skeleton({ className }: { className?: string }) {
+  return <div className={cn('rounded bg-muted/80 animate-pulse', className)} />;
 }
 
-function Dot({ color, pulse }: { color: string; pulse?: boolean }) {
+// ─── Numeric stat ─────────────────────────────────────────────────────────────
+
+function NumStat({
+  count, label, loading, warn,
+}: { count: number; label: string; loading: boolean; warn?: boolean }) {
+  if (loading) return <Skeleton className="h-8 w-32" />;
   return (
-    <span className={cn('inline-block h-2 w-2 rounded-full shrink-0', color, pulse && 'animate-pulse')} />
+    <div className="flex items-baseline gap-2">
+      <span className={cn(
+        'text-[28px] font-bold tabular-nums leading-none',
+        warn && count > 0 ? 'text-destructive' : count > 0 ? 'text-foreground' : 'text-foreground/40',
+      )}>
+        {count}
+      </span>
+      <span className="text-sm font-medium text-muted-foreground leading-none">{label}</span>
+    </div>
   );
 }
 
-function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('rounded bg-muted animate-pulse', className)} />;
+// ─── CTA row ─────────────────────────────────────────────────────────────────
+
+function CtaRow({
+  href, label, primary, dim,
+}: { href: string; label: string; primary?: boolean; dim?: boolean }) {
+  return (
+    <Link
+      href={href}
+      onClick={(e) => e.stopPropagation()}
+      className={cn(
+        'flex items-center gap-1.5 text-[13px] leading-tight transition-colors',
+        primary
+          ? 'text-primary font-semibold hover:text-primary/75'
+          : dim
+            ? 'text-muted-foreground/50 hover:text-muted-foreground'
+            : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="shrink-0 mt-px">
+        <path d="M1.5 5h7M5.5 1.5 9 5l-3.5 3.5"
+          stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {label}
+    </Link>
+  );
 }
 
-// ─── Per-tile status line ─────────────────────────────────────────────────────
-// Each returns a compact status + a persistent description line below it.
+// ─── CTA divider ─────────────────────────────────────────────────────────────
+
+function CtaSection({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2 mt-auto pt-3 border-t border-border/40">
+      {children}
+    </div>
+  );
+}
+
+// ─── Card shell ───────────────────────────────────────────────────────────────
+
+function TileCard({
+  icon, title, titleHref, children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  titleHref: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn(
+      'group flex flex-col rounded-xl border border-border bg-card',
+      'px-6 pt-6 pb-5 min-h-[230px]',
+      'transition-all duration-150 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5',
+    )}>
+      {/* Icon */}
+      <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+        <span className="text-muted-foreground group-hover:text-primary transition-colors">
+          {icon}
+        </span>
+      </div>
+
+      {/* Title — clickable label above the number */}
+      <Link
+        href={titleHref}
+        className="mt-3 text-[10px] font-bold tracking-[0.12em] uppercase text-muted-foreground/70 hover:text-primary transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {title}
+      </Link>
+
+      {/* Body */}
+      <div className="mt-2 flex flex-col gap-3 flex-1">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── Social platform badges (Settings tile) ───────────────────────────────────
+
+const PLATFORM_LABELS: Record<string, string> = { youtube: 'YT', tiktok: 'TK', instagram: 'IG' };
+const PLATFORM_COLORS: Record<string, string> = {
+  youtube:   'bg-red-500 text-white',
+  tiktok:    'bg-black text-white border border-white/20',
+  instagram: 'bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 text-white',
+};
+
+function PlatformBadge({ platform, connected }: { platform: string; connected: boolean }) {
+  return (
+    <span
+      title={`${platform}${connected ? ' (connected)' : ' (not connected)'}`}
+      className={cn(
+        'inline-flex items-center justify-center w-6 h-6 rounded text-[9px] font-bold',
+        PLATFORM_COLORS[platform] ?? 'bg-muted text-muted-foreground',
+        !connected && 'opacity-20',
+      )}
+    >
+      {PLATFORM_LABELS[platform] ?? platform[0].toUpperCase()}
+    </span>
+  );
+}
+
+// ─── Per-tile bodies ──────────────────────────────────────────────────────────
 
 function JobsTileBody({ data }: { data: TileData }) {
-  const active = data.jobs.filter((j) => j.status === 'running' || j.status === 'queued');
-  const failed = data.jobs.filter((j) => j.status === 'failed');
+  const active  = data.jobs.filter((j) => ['running', 'queued'].includes(j.status)).length;
+  const failed  = data.jobs.filter((j) => j.status === 'failed').length;
+  const loading = !data.loaded.jobs;
 
   return (
-    <div className="flex flex-col gap-3 mt-4 flex-1">
-      {/* Status */}
-      <div className="min-h-[20px]">
-        {!data.loaded.jobs ? (
-          <Skeleton className="h-4 w-36" />
-        ) : active.length > 0 ? (
-          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <Dot color="bg-blue-500" pulse />
-            {active.length} {active.length === 1 ? 'job' : 'jobs'} in progress
-          </span>
-        ) : failed.length > 0 ? (
-          <span className="flex items-center gap-2 text-sm font-medium text-destructive">
-            <Dot color="bg-destructive" />
-            {failed.length} failed — needs attention
-          </span>
-        ) : (
-          <span className="text-sm text-muted-foreground">No active jobs</span>
-        )}
-      </div>
-      {/* Description */}
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Create and track all your video production jobs.
-      </p>
-    </div>
+    <>
+      <NumStat count={active} label="active jobs" loading={loading} warn={false} />
+      {!loading && failed > 0 && (
+        <p className="text-xs text-destructive -mt-1 font-medium">
+          {failed} job{failed !== 1 ? 's' : ''} failed — needs attention
+        </p>
+      )}
+      <CtaSection>
+        <CtaRow href="/dashboard/jobs/active" label="View active jobs" primary />
+        <CtaRow href="/dashboard/jobs/new"    label="Create a new job" />
+      </CtaSection>
+    </>
   );
 }
 
 function ReviewTileBody({ data }: { data: TileData }) {
-  const ready = data.jobs.filter((j) => j.status === 'complete' || j.status === 'staged').length;
+  const ready   = data.jobs.filter((j) => ['complete', 'staged'].includes(j.status)).length;
+  const loading = !data.loaded.jobs;
 
   return (
-    <div className="flex flex-col gap-3 mt-4 flex-1">
-      <div className="min-h-[20px]">
-        {!data.loaded.jobs ? (
-          <Skeleton className="h-4 w-32" />
-        ) : ready > 0 ? (
-          <span className="flex items-center gap-2 text-sm font-medium text-primary">
-            <Dot color="bg-primary" pulse />
-            {ready} {ready === 1 ? 'job' : 'jobs'} ready to review
-          </span>
-        ) : (
-          <span className="text-sm text-muted-foreground">Queue is clear</span>
-        )}
-      </div>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Approve, edit, or publish completed outputs.
+    <>
+      <NumStat count={ready} label="to review" loading={loading} />
+      <p className="text-[12px] text-muted-foreground leading-relaxed -mt-1">
+        Watch · Script · Publish copy · Approve · Download · Redo
       </p>
-    </div>
+      <CtaSection>
+        <CtaRow href="/dashboard/staging" label="Review now" primary={ready > 0} />
+        <CtaRow href="/dashboard/staging" label="Approve & publish to social" dim />
+      </CtaSection>
+    </>
   );
 }
 
-function ScheduleTileBody() {
+function ScheduleTileBody({ data }: { data: TileData }) {
+  const scheduled = data.jobs.filter((j) => j.status === 'queued_scheduled').length;
+  const loading   = !data.loaded.jobs;
+
   return (
-    <div className="flex flex-col gap-3 mt-4 flex-1">
-      <div className="min-h-[20px]">
-        <span className="text-sm text-muted-foreground">Plan ahead</span>
-      </div>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Set up your content publishing calendar and automate recurring posts.
-      </p>
-    </div>
+    <>
+      <NumStat count={scheduled} label="videos scheduled" loading={loading} />
+      <CtaSection>
+        <CtaRow href="/dashboard/schedule" label="Check schedule" primary={scheduled > 0} />
+        <CtaRow href="/dashboard/schedule" label="Save Time — Schedule Your Jobs" dim />
+      </CtaSection>
+    </>
   );
 }
 
 function TemplatesTileBody({ data }: { data: TileData }) {
+  const count   = data.templates;
+  const loading = !data.loaded.templates;
+
   return (
-    <div className="flex flex-col gap-3 mt-4 flex-1">
-      <div className="min-h-[20px]">
-        {!data.loaded.templates ? (
-          <Skeleton className="h-4 w-28" />
-        ) : data.templates > 0 ? (
-          <span className="text-sm text-foreground">
-            {data.templates} {data.templates === 1 ? 'template' : 'templates'} saved
-          </span>
-        ) : (
-          <span className="text-sm text-muted-foreground">No templates yet</span>
-        )}
-      </div>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Save job configurations and automate recurring content.
-      </p>
-    </div>
+    <>
+      <NumStat count={count} label="active templates" loading={loading} />
+      <CtaSection>
+        <CtaRow href="/dashboard/templates" label="Manage templates" primary={count > 0} />
+        <CtaRow href="/dashboard/templates" label="Save Time — Create your first template" dim />
+      </CtaSection>
+    </>
   );
 }
 
 function BillingTileBody({ data }: { data: TileData }) {
-  const balance = data.balance;
-  const pct     = balance && balance.included_total > 0
-    ? Math.min((1 - balance.included_remaining / balance.included_total) * 100, 100)
+  const { planTier } = usePlan();
+  const balance  = data.balance;
+  const loading  = !data.loaded.credits;
+  const used     = balance ? balance.included_total - balance.included_remaining : 0;
+  const pct      = balance && balance.included_total > 0
+    ? Math.min(used / balance.included_total * 100, 100)
     : 0;
-  const warn = pct >= 75;
+  const warn = pct >= 80;
 
   return (
-    <div className="flex flex-col gap-3 mt-4 flex-1">
-      <div className="min-h-[20px]">
-        {!data.loaded.credits ? (
-          <Skeleton className="h-4 w-40" />
-        ) : balance ? (
-          <span className={cn('text-sm font-medium tabular-nums', warn ? 'text-yellow-500' : 'text-foreground')}>
-            {fmtCredits(balance.included_remaining)}
-            <span className="font-normal text-muted-foreground text-xs"> / {fmtCredits(balance.included_total)} credits</span>
+    <>
+      {/* Plan name */}
+      <div>
+        {planTier ? (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-primary/15 text-primary">
+            {tierLabel(planTier)}
           </span>
-        ) : (
-          <span className="text-sm text-muted-foreground">View your credits</span>
-        )}
+        ) : <Skeleton className="h-5 w-16" />}
       </div>
 
-      {balance && (
-        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className={cn('h-full rounded-full transition-all', warn ? 'bg-yellow-500' : 'bg-primary')}
-            style={{ width: `${pct}%` }}
-          />
+      {/* Credits */}
+      {loading ? <Skeleton className="h-7 w-36" /> : balance ? (
+        <div>
+          <div className="flex items-baseline gap-1.5">
+            <span className={cn('text-[28px] font-bold tabular-nums leading-none', warn ? 'text-yellow-400' : 'text-foreground')}>
+              {balance.included_remaining.toLocaleString()}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              / {balance.included_total.toLocaleString()} credits
+            </span>
+          </div>
+          <div className="mt-2 w-full h-1 rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn('h-full rounded-full transition-all', warn ? 'bg-yellow-400' : 'bg-primary')}
+              style={{ width: `${100 - pct}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <CtaSection>
+        {balance && (
+          <p className="text-[12px] text-muted-foreground">Renews {fmt(balance.period_end)}</p>
+        )}
+        <CtaRow href="/dashboard/billing" label="Manage billing" />
+      </CtaSection>
+    </>
+  );
+}
+
+function SettingsTileBody({ data }: { data: TileData }) {
+  const platforms = ['youtube', 'tiktok', 'instagram'] as const;
+  const connectedSet = new Set(data.accounts.map((a) => a.platform));
+  const loading = !data.loaded.accounts;
+
+  return (
+    <>
+      {/* Social platform icons */}
+      {loading ? <Skeleton className="h-6 w-24" /> : (
+        <div className="flex items-center gap-2">
+          {platforms.map((p) => (
+            <PlatformBadge key={p} platform={p} connected={connectedSet.has(p)} />
+          ))}
+          <span className="text-[11px] text-muted-foreground ml-0.5">social accounts</span>
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        {balance ? `Renews ${fmt(balance.period_end)}` : 'Credits, usage, and subscription management.'}
+      <p className="text-[12px] text-muted-foreground leading-relaxed">
+        Channels · Social · Team · Preferences
       </p>
-    </div>
+
+      <CtaSection>
+        <CtaRow href="/dashboard/settings"                label="Update settings"       primary />
+        <CtaRow href="/dashboard/settings/social-connect" label="Connect social accounts" />
+      </CtaSection>
+    </>
   );
 }
 
-function SettingsTileBody() {
-  return (
-    <div className="flex flex-col gap-3 mt-4 flex-1">
-      <div className="min-h-[20px]">
-        <span className="text-sm text-muted-foreground">Configure your account</span>
-      </div>
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        My Channels, Social Accounts, team members, and preferences.
-      </p>
-    </div>
-  );
-}
+// ─── Tile icons ───────────────────────────────────────────────────────────────
 
-// ─── Tile icon + config ───────────────────────────────────────────────────────
-
-const TILE_ICONS = {
+const ICONS = {
   jobs: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18M9 21V9" />
     </svg>
   ),
   review: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>
   ),
   schedule: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
     </svg>
   ),
   templates: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
       <path d="M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" />
     </svg>
   ),
   billing: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <rect width="22" height="16" x="1" y="4" rx="2" /><path d="M1 10h22" />
     </svg>
   ),
   settings: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
@@ -274,69 +397,53 @@ export function LiveTiles() {
     }
   }, []);
 
+  const fetchAccounts = useCallback(async (token: string | null) => {
+    try {
+      const res = await listConnectedAccounts(token ?? undefined);
+      setData((d) => ({ ...d, accounts: res.accounts ?? [], loaded: { ...d.loaded, accounts: true } }));
+    } catch {
+      setData((d) => ({ ...d, loaded: { ...d.loaded, accounts: true } }));
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const token = await getToken();
       if (cancelled) return;
-      // Fire all three in parallel — no cascading waterfalls
       fetchJobs(token);
       fetchCredits(token);
       fetchTemplates(token);
+      fetchAccounts(token);
     })();
-    // Refresh jobs every 15s for active-job awareness
     const interval = setInterval(async () => {
       if (cancelled) return;
       const token = await getToken();
       if (!cancelled) fetchJobs(token);
     }, 15_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [getToken, fetchJobs, fetchCredits, fetchTemplates]);
-
-  const tiles = [
-    { id: 'jobs',      href: '/dashboard/jobs',      title: 'My Jobs',       icon: TILE_ICONS.jobs,      body: <JobsTileBody data={data} />     },
-    { id: 'review',    href: '/dashboard/staging',   title: 'Review Queue',  icon: TILE_ICONS.review,    body: <ReviewTileBody data={data} />   },
-    { id: 'schedule',  href: '/dashboard/schedule',  title: 'Schedule',      icon: TILE_ICONS.schedule,  body: <ScheduleTileBody />             },
-    { id: 'templates', href: '/dashboard/templates', title: 'My Templates',  icon: TILE_ICONS.templates, body: <TemplatesTileBody data={data} />},
-    { id: 'billing',   href: '/dashboard/billing',   title: 'Billing',       icon: TILE_ICONS.billing,   body: <BillingTileBody data={data} />  },
-    { id: 'settings',  href: '/dashboard/settings',  title: 'Settings',      icon: TILE_ICONS.settings,  body: <SettingsTileBody />             },
-  ] as const;
+  }, [getToken, fetchJobs, fetchCredits, fetchTemplates, fetchAccounts]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {tiles.map((tile) => (
-        <Link
-          key={tile.id}
-          href={tile.href}
-          className={cn(
-            'group flex flex-col rounded-xl border border-border bg-card',
-            'p-7 min-h-[220px]',
-            'transition-all duration-150 hover:border-primary/40 hover:bg-card/80 hover:shadow-md',
-          )}
-        >
-          {/* Icon in muted container */}
-          <div className="w-11 h-11 rounded-lg bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-            <span className="text-muted-foreground group-hover:text-primary transition-colors">
-              {tile.icon}
-            </span>
-          </div>
-
-          {/* Title */}
-          <p className="mt-4 font-semibold text-base leading-tight group-hover:text-primary transition-colors">
-            {tile.title}
-          </p>
-
-          {/* Body — status + description */}
-          {tile.body}
-
-          {/* Arrow hint */}
-          <div className="flex justify-end mt-4">
-            <span className="text-xs text-muted-foreground/40 group-hover:text-primary/60 transition-colors">
-              →
-            </span>
-          </div>
-        </Link>
-      ))}
+      <TileCard icon={ICONS.jobs}      title="My Jobs"      titleHref="/dashboard/jobs">
+        <JobsTileBody data={data} />
+      </TileCard>
+      <TileCard icon={ICONS.review}    title="Review Queue" titleHref="/dashboard/staging">
+        <ReviewTileBody data={data} />
+      </TileCard>
+      <TileCard icon={ICONS.schedule}  title="Schedule"     titleHref="/dashboard/schedule">
+        <ScheduleTileBody data={data} />
+      </TileCard>
+      <TileCard icon={ICONS.templates} title="My Templates" titleHref="/dashboard/templates">
+        <TemplatesTileBody data={data} />
+      </TileCard>
+      <TileCard icon={ICONS.billing}   title="Billing"      titleHref="/dashboard/billing">
+        <BillingTileBody data={data} />
+      </TileCard>
+      <TileCard icon={ICONS.settings}  title="Settings"     titleHref="/dashboard/settings">
+        <SettingsTileBody data={data} />
+      </TileCard>
     </div>
   );
 }

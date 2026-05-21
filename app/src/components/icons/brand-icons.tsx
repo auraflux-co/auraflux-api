@@ -15,29 +15,29 @@ import { SVGProps } from 'react';
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
-// ── The Hero — AF Monogram (block letters, clear gap, crisp at 20–28px) ─────
+// ── The Hero — AF Monogram (bold block A + F, crisp at 20–32px) ─────────────
 export function HeroMonogram({ size = 24, ...props }: IconProps) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 40 40"
+      viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
       {...props}
     >
-      {/* A — peaked cap with open counter */}
+      {/* A — thick legs, clear crossbar, open counter via evenodd */}
       <path
         fill="currentColor"
-        d="M5 32 L15 7 L25 32 H21 L18.5 24 H11.5 L9 32 H5 Z M12.5 20 H17.5 L15 13 L12.5 20 Z"
         fillRule="evenodd"
         clipRule="evenodd"
+        d="M0 22 L5.5 1 L11 22 H8 L7 15.5 H4 L3 22 Z M5 12.5 H7 L5.5 7.5 Z"
       />
-      {/* F — separated from A by 2px gap */}
+      {/* F — full top bar, shorter mid bar, clean stem */}
       <path
         fill="currentColor"
-        d="M27 7 H37 V12 H32 V18 H36.5 V23 H32 V32 H27 V7 Z"
+        d="M13 1 H24 V5.5 H17.5 V10.5 H23 V15 H17.5 V23 H13 Z"
       />
     </svg>
   );
