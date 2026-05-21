@@ -3,7 +3,7 @@
  * /dashboard/jobs/active — In-flight jobs (CPD-112)
  *
  * Shows jobs with status: queued | running | held | failed.
- * Auto-refreshes every 15 seconds. Operators see inline actions.
+ * Polls every 15s silently. Operators see inline actions.
  */
 
 import { useEffect, useState, useTransition, useCallback } from 'react';
@@ -40,13 +40,13 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function elapsed(createdAt: string) {
-  const ms = Date.now() - new Date(createdAt).getTime();
-  const m  = Math.floor(ms / 60_000);
-  if (m < 1)  return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  return h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago`;
+function fmtJobTime(iso: string) {
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day:   'numeric',
+    hour:  'numeric',
+    minute: '2-digit',
+  });
 }
 
 export default function ActiveJobsPage() {
@@ -54,7 +54,7 @@ export default function ActiveJobsPage() {
   const { isOperator }         = useRole();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [error, setError]       = useState<string | null>(null);
-  const [lastPoll, setLastPoll] = useState<Date | null>(null);
+
   const [isPending, start]      = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -64,7 +64,6 @@ export default function ActiveJobsPage() {
         const token = await getToken();
         const res = await listJobs(token ?? undefined);
         setJobs((res.jobs ?? []).filter((j) => ACTIVE_STATUSES.has(j.status)));
-        setLastPoll(new Date());
         setError(null);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load jobs');
@@ -98,9 +97,6 @@ export default function ActiveJobsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">My active jobs</h1>
-          {lastPoll && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Auto-refreshes every 15s · last at {lastPoll.toLocaleTimeString()}
             </p>
           )}
         </div>
@@ -209,7 +205,10 @@ function JobRow({
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {job.contentType || 'unknown'} · {job.platforms.join(', ') || 'no platform'} · {elapsed(job.createdAt)}
+              {job.contentType || 'unknown'} · {job.platforms.join(', ') || 'no platform'}
+            </p>
+            <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+              Started {fmtJobTime(job.createdAt)} · Last active {fmtJobTime(job.updatedAt || job.createdAt)}
             </p>
           </div>
 
