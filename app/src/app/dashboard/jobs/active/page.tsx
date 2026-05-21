@@ -97,8 +97,9 @@ export default function ActiveJobsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">My active jobs</h1>
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Queued, running, and jobs that need your attention
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
