@@ -110,6 +110,37 @@ const DATE_RANGES: { value: SourceDateRange; label: string }[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Map wizard intent lock (clip/vod) to the API type param per platform. */
+function resolveFetchType(
+  platform: SourcePlatform,
+  type: SourceType,
+  locked?: 'clip' | 'vod',
+): SourceType {
+  if (locked) {
+    if (platform === 'youtube') return locked === 'clip' ? 'short' : 'video';
+    return locked;
+  }
+  if (platform === 'youtube') {
+    if (type === 'vod') return 'video';
+    if (type === 'clip') return 'short';
+  }
+  return type;
+}
+
+/** Client-side guard — drop items that don't match the locked intent. */
+function itemMatchesIntent(
+  item: SourceItem,
+  platform: SourcePlatform,
+  locked?: 'clip' | 'vod',
+): boolean {
+  if (!locked) return true;
+  const ct = item.contentType || item.type || '';
+  if (locked === 'clip') {
+    return platform === 'youtube' ? ct === 'short' : ct === 'clip';
+  }
+  return platform === 'youtube' ? ct === 'video' : ct === 'vod';
+}
+
 function formatDuration(s: number): string {
   if (!s) return '';
   const h   = Math.floor(s / 3600);
@@ -307,10 +338,14 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
 
   // Keyword filter is applied client-side for responsiveness
   const displayItems = useMemo(() => {
-    if (!keyword.trim()) return items;
+    let list = items;
+    if (contentTypeFilter && platform) {
+      list = list.filter((i) => itemMatchesIntent(i, platform, contentTypeFilter));
+    }
+    if (!keyword.trim()) return list;
     const q = keyword.toLowerCase();
-    return items.filter((i) => i.title.toLowerCase().includes(q));
-  }, [items, keyword]);
+    return list.filter((i) => i.title.toLowerCase().includes(q));
+  }, [items, keyword, contentTypeFilter, platform]);
 
   // Load saved source channel defaults once on mount
   useEffect(() => {
@@ -370,11 +405,11 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
     setPlaylists([]);
     setActivePlaylist(null);
     setDateRange('all');
-    setContentType('all');
+    setContentType(contentTypeFilter ?? 'all');
     setDurationPreset(0);
     setKeyword('');
     playlistLoadedFor.current = null;
-  }, [savedChannels]);
+  }, [savedChannels, contentTypeFilter]);
 
   /**
    * durationPresetIdx is passed explicitly to avoid stale closure
@@ -403,8 +438,14 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
         return;
       }
       const preset = DURATION_PRESETS[durationPresetIdx];
+      const resolvedType = resolveFetchType(
+        targetPlatform,
+        filters.type ?? 'all',
+        contentTypeFilter,
+      );
       const f: SourceFilters = {
         ...filters,
+        type: resolvedType === 'all' ? undefined : resolvedType,
         minDuration: preset.min > 0     ? preset.min    : undefined,
         maxDuration: preset.max < 99999 ? preset.max    : undefined,
       };
@@ -449,7 +490,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
     } finally {
       setLoading(false);
     }
-  }, [getToken, isLoaded]);
+  }, [getToken, isLoaded, contentTypeFilter]);
 
   const handleBrowse = useCallback(() => {
     if (!platform || !username.trim()) return;
