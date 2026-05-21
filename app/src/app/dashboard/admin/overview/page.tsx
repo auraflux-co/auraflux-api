@@ -404,7 +404,8 @@ export default function AdminOverviewPage() {
                 <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Published</th>
                 <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Running</th>
                 <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Failed</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last active</th>
+                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last login</th>
+                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last job</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -439,6 +440,11 @@ export default function AdminOverviewPage() {
                     <td className="px-4 py-3 text-right tabular-nums text-red-600 dark:text-red-400">
                       {acc.failedCount || <span className="text-muted-foreground">—</span>}
                     </td>
+                    <td className="px-4 py-3 text-right text-xs tabular-nums">
+                      <span className={acc.lastSignInAt ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>
+                        {relTime(acc.lastSignInAt)}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums">
                       {relTime(acc.lastJobAt)}
                     </td>
@@ -447,7 +453,7 @@ export default function AdminOverviewPage() {
               })}
               {filteredAccounts.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <td colSpan={9} className="px-4 py-10 text-center text-sm text-muted-foreground">
                     No accounts match the current filter.
                   </td>
                 </tr>

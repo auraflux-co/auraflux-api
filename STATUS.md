@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-21 v1.0.587 (Cursor — feat: admin login tracking — lastSignInAt + lastActiveAt from Clerk added to /admin/crm and /admin/activity-overview; Last login + Last job columns in both admin tables; fixed /admin/crm shape mismatch)
 **Last Updated:** 2026-05-21 v1.0.586 (Cursor — feat(cpd-278): restore ClipEditor as step 1.5 — source-browse path routes to editor before Features; duration auto-calculated from confirmed clips; duration slider removed from Features step)
 **Last Updated:** 2026-05-21 v1.0.585 (Cursor — fix(cpd-274): source library honors wizard content-type lock — clip/vod filter preserved on platform select; Twitch/Kick/YouTube API type normalization + Kick getContent type opt)
 **Last Updated:** 2026-05-21 v1.0.584 (Cursor — fix: Twitch clips returning empty when dateRange=all — frontend sent after=all which Helix rejected as invalid date; fix in api.ts + source.js parseFilters)

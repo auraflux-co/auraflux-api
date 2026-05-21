@@ -358,16 +358,18 @@ export async function listAllJobs(token?: string, customerId?: string): Promise<
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
 export interface CustomerRecord {
-  id:         string;
-  email:      string | null;
-  firstName:  string | null;
-  lastName:   string | null;
-  role:       UserRole;
-  planTier:   PlanTier;
-  credits:    number | null;
-  createdAt:  string | null;
-  jobCount:   number;
-  lastJobAt:  string | null;
+  id:           string;
+  email:        string | null;
+  firstName:    string | null;
+  lastName:     string | null;
+  role:         UserRole;
+  planTier:     PlanTier;
+  credits:      number | null;
+  createdAt:    string | null;
+  jobCount:     number;
+  lastJobAt:    string | null;
+  lastSignInAt: string | null;
+  lastActiveAt: string | null;
 }
 
 export async function listCustomers(token?: string): Promise<{ customers: CustomerRecord[] }> {
@@ -411,6 +413,8 @@ export interface AccountActivity {
   failedCount:    number;
   jobs7d:         number;
   lastJobAt:      string | null;
+  lastSignInAt:   string | null;
+  lastActiveAt:   string | null;
 }
 
 export interface ActivityOverview {

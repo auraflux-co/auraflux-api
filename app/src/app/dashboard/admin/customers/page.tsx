@@ -131,7 +131,8 @@ export default function AdminCustomersPage() {
               <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Plan</th>
               <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Credits</th>
               <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Jobs</th>
-              <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last active</th>
+              <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last login</th>
+              <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last job</th>
               <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Joined</th>
             </tr>
           </thead>
@@ -162,6 +163,11 @@ export default function AdminCustomersPage() {
                   <td className="px-4 py-3 text-right tabular-nums font-medium">
                     {c.jobCount}
                   </td>
+                  <td className="px-4 py-3 text-right text-xs tabular-nums">
+                    <span className={c.lastSignInAt ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>
+                      {relTime(c.lastSignInAt)}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums">
                     {relTime(c.lastJobAt)}
                   </td>
@@ -173,7 +179,7 @@ export default function AdminCustomersPage() {
             })}
             {filtered.length === 0 && !loading && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
                   No customers match the current filter.
                 </td>
               </tr>
