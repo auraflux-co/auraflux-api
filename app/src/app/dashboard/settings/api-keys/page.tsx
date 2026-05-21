@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,16 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { usePlan } from '@/contexts/plan-context';
+
+const TIER_ALIASES: Record<string, string> = { diy: 'operate', dwy: 'guided', dfy: 'managed' };
+function normaliseTier(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  return TIER_ALIASES[raw] ?? raw;
+}
+
+function isOperatePlan(tier: string | null | undefined) {
+  return tier === 'operate' || tier === 'custom';
+}
 
 interface ApiKey {
   id: string;
@@ -31,6 +41,11 @@ interface NewKeyResult {
 
 export default function ApiKeysPage() {
   const { planTier, isLoading: planLoading } = usePlan();
+  const { user } = useUser();
+  const clerkPlanTier = normaliseTier(user?.publicMetadata?.planTier as string | undefined);
+  const effectivePlan = planTier ?? clerkPlanTier;
+  const canUseApiKeys = isOperatePlan(effectivePlan);
+
   const { isLoaded, getToken } = useAuth();
   const [keys, setKeys]               = useState<ApiKey[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -42,7 +57,7 @@ export default function ApiKeysPage() {
   const [error, setError]             = useState('');
 
   const loadKeys = useCallback(async () => {
-    if (!isLoaded) return;
+    if (!isLoaded || !canUseApiKeys) return;
     try {
       const token = await getToken();
       const data = await apiFetch<{ ok: boolean; apiKeys: ApiKey[] }>('/account/api-keys', { token: token ?? undefined });
@@ -52,9 +67,17 @@ export default function ApiKeysPage() {
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, getToken]);
+  }, [isLoaded, getToken, canUseApiKeys]);
 
-  useEffect(() => { loadKeys(); }, [loadKeys]);
+  useEffect(() => {
+    if (!isLoaded || planLoading) return;
+    if (!canUseApiKeys) {
+      setLoading(false);
+      setError('');
+      return;
+    }
+    loadKeys();
+  }, [isLoaded, planLoading, canUseApiKeys, loadKeys]);
 
   async function handleCreate() {
     if (!newKeyName.trim()) { setError('Enter a name for this key'); return; }
@@ -101,10 +124,10 @@ export default function ApiKeysPage() {
   }
 
   if (!isLoaded || loading || planLoading) return (
-    <div className="text-sm text-muted-foreground animate-pulse">Loading API keys…</div>
+    <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
   );
 
-  if (planTier && planTier !== 'operate') return (
+  if (effectivePlan && !canUseApiKeys) return (
     <div className="max-w-2xl space-y-4">
       <h1 className="text-2xl font-semibold">My API Keys</h1>
       <Card className="border-muted">
@@ -112,7 +135,7 @@ export default function ApiKeysPage() {
           <p className="text-sm font-medium">Not available on your plan</p>
           <p className="text-sm text-muted-foreground">
             API key access is available on the <strong>Operate</strong> plan for customers who
-            integrate directly with the AuraFlux API. On {planTier.charAt(0).toUpperCase() + planTier.slice(1)},
+            integrate directly with the AuraFlux API. On {effectivePlan.charAt(0).toUpperCase() + effectivePlan.slice(1)},
             your operator submits and manages jobs on your behalf.
           </p>
           <p className="text-sm text-muted-foreground">
