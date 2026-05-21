@@ -59,6 +59,32 @@ const FEATURE_LABELS: Record<string, string> = {
   burn_images: 'Image overlays',
 };
 
+function ScriptCard({ script }: { script: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm">Generated script</CardTitle>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {open ? 'Hide ▲' : 'Show ▼'}
+          </button>
+        </div>
+      </CardHeader>
+      {open && (
+        <CardContent>
+          <pre className="text-[12px] leading-relaxed whitespace-pre-wrap text-muted-foreground bg-muted/30 rounded-md p-3 max-h-72 overflow-y-auto">
+            {script}
+          </pre>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
 function WizardConfigReview({ wc }: { wc: WizardConfig }) {
   const ff = wc.formFactor === 'short' || wc.templateId === 'short-form' ? 'Short-form (9:16)' : 'Long-form (16:9)';
   const entryLabels: Record<string, string> = { fetch: 'URL fetch', upload: 'File upload', create: 'Generated' };
@@ -380,6 +406,11 @@ export default function JobDetailPage() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Generated script — only shown when user selected script generation for this job */}
+      {job.filledScript && job.wizardConfig?.activeFeatures?.includes('script') && (
+        <ScriptCard script={job.filledScript} />
       )}
 
       {/* Platforms */}
