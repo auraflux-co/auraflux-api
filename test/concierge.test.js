@@ -1,19 +1,21 @@
 'use strict';
 /**
- * test/concierge.test.js — CPD-83: AI Concierge backend unit tests
+ * test/concierge.test.js — CPD-83 / CPD-309: AI Concierge backend unit tests
  *
- * Tests: getPortalContracts, validateJobSpec, buildSystemPrompt, chatWithConcierge (mocked)
+ * Tests: getPortalContracts, validateJobSpec, buildSystemPrompt,
+ *        buildSystemStatus, chatWithConcierge (mocked)
  */
 
 const {
   getPortalContracts,
   validateJobSpec,
   buildSystemPrompt,
+  buildSystemStatus,
   chatWithConcierge,
   PORTAL_CONTRACTS,
 } = require('../lib/services/concierge');
 
-// ─── Mock gemini service ──────────────────────────────────────────────────────
+// ─── Mock dependencies ────────────────────────────────────────────────────────
 
 jest.mock('../lib/services/gemini', () => ({
   callGeminiChat: jest.fn(),
@@ -25,6 +27,14 @@ jest.mock('../lib/services/feature_gate', () => ({
     if (feature === 'concierge') return plan === 'guided' || plan === 'managed' || plan === 'custom';
     return true;
   }),
+}));
+
+// DB mock — used by buildSystemStatus and buildCustomerMemory
+const mockDbQuery = jest.fn();
+jest.mock('../lib/db', () => ({
+  query:              (...args) => mockDbQuery(...args),
+  listJobsByCustomer: jest.fn().mockResolvedValue([]),
+  listTemplates:      jest.fn().mockResolvedValue([]),
 }));
 
 const { callGeminiChat, isConfigured } = require('../lib/services/gemini');
@@ -101,16 +111,16 @@ describe('validateJobSpec', () => {
     expect(portal0.missing.length).toBe(0);
   });
 
-  it('portal0 fails with missing jobId', () => {
+  it('portal0 fails when deliverySpec.platforms is missing', () => {
     const spec = {
       contentType: 'news-long',
       entryType:   'fetch',
       customerId:  'cust-1',
-      deliverySpec: { platforms: ['youtube'] },
+      // deliverySpec missing — portal0 should fail
     };
     const portal0 = validateJobSpec(spec).portals.find((p) => p.portal === 'portal0');
     expect(portal0.ready).toBe(false);
-    expect(portal0.missing.some((m) => m.field === 'jobId')).toBe(true);
+    expect(portal0.missing.some((m) => m.field === 'deliverySpec.platforms')).toBe(true);
   });
 
   it('returns suggestions for missing fields', () => {
@@ -173,18 +183,21 @@ describe('buildSystemPrompt', () => {
     expect(prompt.toLowerCase()).not.toMatch(/i am gemini/);
   });
 
-  it('includes portal labels from contracts', () => {
+  it('includes key platform knowledge sections', () => {
     const prompt = buildSystemPrompt();
-    for (const c of PORTAL_CONTRACTS) {
-      expect(prompt).toContain(c.label);
-    }
+    expect(prompt).toContain('WHAT AURAFLUX IS');
+    expect(prompt).toContain('PLANS');
+    expect(prompt).toContain('CREDITS');
+    expect(prompt).toContain('JOB WIZARD');
+    expect(prompt).toContain('PRODUCTION PIPELINE');
+    expect(prompt).toContain('SYSTEM HEALTH');
   });
 
-  it('mentions entry types', () => {
+  it('covers all three source methods in wizard section', () => {
     const prompt = buildSystemPrompt();
-    expect(prompt).toMatch(/fetch/);
-    expect(prompt).toMatch(/upload/);
-    expect(prompt).toMatch(/create/);
+    expect(prompt).toContain('Browse My Channels');
+    expect(prompt).toContain('Upload files');
+    expect(prompt).toContain('Short clips');
   });
 
   it('guide mode mentions Operate plan', () => {
@@ -298,5 +311,66 @@ describe('chatWithConcierge', () => {
       { planTier: 'guided' }
     );
     expect(result).toBe('');
+  });
+});
+
+// ─── buildSystemStatus ────────────────────────────────────────────────────────
+
+describe('buildSystemStatus', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Reset env vars that affect integration health lines
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.ELEVENLABS_API_KEY;
+  });
+
+  it('returns a formatted status block with job counts and failure rate', async () => {
+    mockDbQuery.mockResolvedValueOnce({
+      rows: [{ total: '10', failed: '2', active: '3', completed: '5' }],
+    });
+    const status = await buildSystemStatus();
+    expect(status).toContain('LIVE SYSTEM STATUS');
+    expect(status).toContain('10 total');
+    expect(status).toContain('2 failed');
+    expect(status).toContain('20% failure rate');
+  });
+
+  it('flags ⚠️ HIGH FAILURE RATE when ≥50% of ≥5 jobs fail', async () => {
+    mockDbQuery.mockResolvedValueOnce({
+      rows: [{ total: '10', failed: '6', active: '0', completed: '4' }],
+    });
+    const status = await buildSystemStatus();
+    expect(status).toContain('HIGH FAILURE RATE');
+  });
+
+  it('flags ⚠️ ELEVATED FAILURE RATE when 25–49% of ≥5 jobs fail', async () => {
+    mockDbQuery.mockResolvedValueOnce({
+      rows: [{ total: '8', failed: '2', active: '1', completed: '5' }],
+    });
+    const status = await buildSystemStatus();
+    expect(status).toContain('ELEVATED FAILURE RATE');
+  });
+
+  it('shows ✅ Normal when failure rate is low', async () => {
+    mockDbQuery.mockResolvedValueOnce({
+      rows: [{ total: '20', failed: '1', active: '5', completed: '14' }],
+    });
+    const status = await buildSystemStatus();
+    expect(status).toContain('Normal');
+  });
+
+  it('reflects integration configured/not-configured based on env vars', async () => {
+    mockDbQuery.mockResolvedValueOnce({
+      rows: [{ total: '5', failed: '0', active: '2', completed: '3' }],
+    });
+    process.env.GEMINI_API_KEY = 'test-key';
+    const status = await buildSystemStatus();
+    expect(status).toMatch(/AI features.*configured/);
+  });
+
+  it('returns empty string when DB throws', async () => {
+    mockDbQuery.mockRejectedValueOnce(new Error('DB unreachable'));
+    const status = await buildSystemStatus();
+    expect(status).toBe('');
   });
 });
