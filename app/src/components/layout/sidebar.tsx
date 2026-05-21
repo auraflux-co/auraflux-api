@@ -162,7 +162,7 @@ const CONFLUENCE_GUIDE_URL =
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-export function Sidebar() {
+export function Sidebar({ setupLocked: _setupLocked }: { setupLocked?: boolean } = {}) {
   const pathname                               = usePathname();
   const { isOperator, isAdmin }                = useRole();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
@@ -353,7 +353,7 @@ export function MobileSidebarOverlay() {
   );
 }
 
-export function MobileSidebar() {
+export function MobileSidebar({ setupLocked: _setupLocked }: { setupLocked?: boolean } = {}) {
   const { mobileOpen, closeMobile } = useSidebar();
   const pathname                    = usePathname();
   const { isOperator, isAdmin }     = useRole();

@@ -181,7 +181,7 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
-  const [publishResult, setPublishResult] = useState<Record<string, unknown> | null>(null);
+  const [publishResult, setPublishResult] = useState<{ error?: string | null } | null>(null);
   const [showScript, setShowScript] = useState(false);
 
   useEffect(() => {
