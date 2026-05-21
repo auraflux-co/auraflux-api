@@ -860,6 +860,51 @@ export async function sendOperatorReply(
   });
 }
 
+// ─── Source channels (My Channels settings) ──────────────────────────────────
+
+export interface SourceChannels {
+  twitchLogin?:   string;
+  kickUsername?:  string;
+  youtubeHandle?: string;
+}
+
+export type SourcePlatform = 'twitch' | 'kick' | 'youtube';
+
+export interface ResolvedChannel {
+  id?:           string;
+  username?:     string;
+  displayName?:  string;
+  title?:        string;
+  avatarUrl?:    string;
+  thumbnailUrl?: string;
+}
+
+export async function getSourceChannels(
+  token?: string,
+): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
+  return apiFetch('/account/source-channels', { token });
+}
+
+export async function saveSourceChannels(
+  channels: SourceChannels,
+  token?: string,
+): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
+  return apiFetch('/account/source-channels', {
+    method: 'PATCH',
+    body:   JSON.stringify(channels),
+    token,
+  });
+}
+
+export async function resolveSourceChannel(
+  platform: SourcePlatform,
+  handle: string,
+  token?: string,
+): Promise<{ ok: boolean; channel: ResolvedChannel }> {
+  const encoded = encodeURIComponent(handle);
+  return apiFetch(`/source/${platform}/${encoded}/resolve`, { token });
+}
+
 // ─── Job validation ───────────────────────────────────────────────────────────
 
 export async function validatePublishCopy(
