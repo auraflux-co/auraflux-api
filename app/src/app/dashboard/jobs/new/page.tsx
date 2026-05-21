@@ -34,6 +34,7 @@ import { SparkAnvil } from '@/components/icons/brand-icons';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
 import { SourceLibraryPicker } from '@/components/jobs/source-library-picker';
+import { ClipEditor, type ClipSpec, type CompactClip, type ExtractClip } from '@/components/jobs/clip-editor';
 import type { SourceItem } from '@/lib/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -137,12 +138,6 @@ const FEATURES: Feature[] = [
     default: false, formFactors: ['long'], hasConfig: true,
   },
   {
-    id: 'generation_i2v', label: 'Image-to-video (I2V)',
-    description: 'Animate a still image into a video clip using AI image-to-video',
-    outputImpact: 'Reference images you provide are animated into video segments instead of being static overlays.',
-    default: false, formFactors: ['long'], minPlan: 'managed', hasConfig: true,
-  },
-  {
     id: 'burn_images', label: 'Burn images',
     description: 'Embed still images as overlay segments in the assembled video',
     outputImpact: 'Your images appear in the video at the position and duration you specify.',
@@ -180,7 +175,7 @@ const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: 'visual', label: 'Visual production',
     description: 'Generate and source footage',
-    featureIds: ['generation', 'generation_i2v', 'burn_images'],
+    featureIds: ['generation', 'burn_images'],
     formFactors: ['long', 'short'],
   },
   {
@@ -348,8 +343,9 @@ function NewJobPageInner() {
   const [platforms, setPlatforms]   = useState<string[]>(_initPlatforms);
   const [addOns, setAddOns]         = useState<Set<string>>(new Set());
   const [jobTiming, setJobTiming]     = useState<JobTimingValue>(DEFAULT_JOB_TIMING);
-  // CPD-115: duration + live credit estimate
+  // CPD-115: duration — auto-calculated from clip editor output, not manually entered
   const [durationMins, setDurationMins] = useState<number>(_initDur);
+  const [clipSpec, setClipSpec]         = useState<ClipSpec | null>(null);
 
   // CPD-125: pre-fill from template if ?templateId= is present
   useEffect(() => {
@@ -431,6 +427,9 @@ function NewJobPageInner() {
         if (!sourceItems.length) {
           setError('Select at least one clip from the Source Library'); return;
         }
+        // Route to clip editor — duration will be calculated from confirmed clips
+        setStep(1.5 as Step);
+        return;
       } else {
         if (!fileKeys.trim()) {
           setError('Please upload a video file before continuing'); return;
@@ -583,8 +582,6 @@ function NewJobPageInner() {
                   setSourceMode(null);
                   // Seed defaults from plan tier — higher tiers get richer pipelines on by default
                   const tier = planTier ?? 'operate';
-                  const defaults = PLAN_DEFAULTS[tier]?.[opt.id] ?? PLAN_DEFAULTS.operate[opt.id];
-                  setFeatures(new Set(defaults));
                 }}
                 className={cn(
                   'text-left p-4 rounded-lg border transition-colors space-y-1',
@@ -725,6 +722,57 @@ function NewJobPageInner() {
           )}
         </div>
       )}
+
+      {/* Step 1.5 — Clip editor (source-browse path only) */}
+      {(step as number) === 1.5 && (() => {
+        const editorMode = sourceIntent === 'longform' ? 'extract' : 'compact';
+
+        function calcDuration(spec: ClipSpec | null): number {
+          if (!spec) {
+            // "Let AuraFlux decide" — estimate from raw source items
+            const totalSec = sourceItems.reduce((sum, i) => sum + (i.duration ?? 0), 0);
+            const factor   = sourceIntent === 'longform' ? 0.15 : 0.70;
+            return Math.max(1, Math.min(15, Math.round((totalSec * factor) / 60)));
+          }
+          let totalSec = 0;
+          if (spec.mode === 'compact') {
+            (spec.clips as CompactClip[]).forEach((c) => {
+              totalSec += (c.trimEnd ?? c.durationHint ?? 0) - c.trimStart;
+            });
+          } else {
+            (spec.clips as ExtractClip[]).forEach((c) => {
+              totalSec += c.endTime - c.startTime;
+            });
+          }
+          return Math.max(1, Math.min(15, Math.round(totalSec / 60)));
+        }
+
+        return (
+          <ClipEditor
+            mode={editorMode}
+            sourceUrl={editorMode === 'extract' ? (sourceItems[0]?.url ?? undefined) : undefined}
+            sourceClips={editorMode === 'compact'
+              ? sourceItems.map((i) => ({
+                  url:          i.url,
+                  title:        i.title,
+                  duration:     i.duration ?? undefined,
+                  thumbnailUrl: i.thumbnailUrl ?? undefined,
+                }))
+              : undefined}
+            availableFeatures={[]}
+            onConfirm={(spec) => {
+              setClipSpec(spec);
+              setDurationMins(calcDuration(spec));
+              setStep(2 as Step);
+            }}
+            onCancel={() => {
+              setClipSpec(null);
+              setDurationMins(calcDuration(null));
+              setStep(2 as Step);
+            }}
+          />
+        );
+      })()}
 
       {/* Step 2 — Features & configuration */}
       {step === 2 && (() => {
@@ -1000,40 +1048,20 @@ function NewJobPageInner() {
               </div>
             </div>
 
-            {/* Plan context banner for guided/managed */}
-            {(tier === 'guided' || tier === 'managed') && (
-              <div className={cn(
-                'rounded-lg border px-3 py-2 text-xs flex items-start gap-2',
-                tier === 'managed'
-                  ? 'border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-300'
-                  : 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300',
-              )}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5">
-                  <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-                </svg>
-                <span>
-                  {tier === 'managed'
-                    ? 'Managed plan — full pipeline enabled by default. Adjust or add to customise your production.'
-                    : 'Guided plan — scripting and narration pipeline enabled. Enable additional capabilities below.'}
-                </span>
-              </div>
-            )}
 
-            {/* Duration slider */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium">Target video duration</Label>
-                <span className="text-sm font-semibold tabular-nums">{durationMins} min</span>
+            {/* Duration — auto-calculated from selected clips/VOD */}
+            <div className="rounded-lg border border-border bg-muted/20 px-3 py-2.5 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium">Estimated output duration</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {clipSpec
+                    ? `Calculated from your ${clipSpec.clips.length} confirmed clip${clipSpec.clips.length !== 1 ? 's' : ''}`
+                    : effectiveSource === 'source'
+                      ? 'Estimated from your selected source — AuraFlux will decide the cut points'
+                      : 'Based on your source material'}
+                </p>
               </div>
-              <input
-                type="range" min={1} max={formFactor === 'short' ? 3 : 15} step={1}
-                value={durationMins}
-                onChange={(e) => setDurationMins(Number(e.target.value))}
-                className="w-full accent-primary"
-              />
-              <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>1 min</span><span>{formFactor === 'short' ? '3 min' : '15 min'}</span>
-              </div>
+              <span className="text-lg font-bold tabular-nums text-primary shrink-0 ml-4">{durationMins} min</span>
             </div>
 
             {/* Feature groups */}
