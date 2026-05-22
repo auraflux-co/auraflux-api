@@ -131,11 +131,15 @@ video_generation_custom_*.csv
 *.pdf
 "Twitch Brand/"
 
-# Scratch/downloaded files
+# Scratch/downloaded files — but allow brand assets in public/
 *.jpeg
 *.jpg
 *.png
 *.gif
+!app/public/brand/*.png
+!app/public/brand/*.jpg
+!app/public/*.png
+!app/public/*.ico
 
 # Debug ingest logs (per-session; do not commit)
 .cursor/debug-*.log
