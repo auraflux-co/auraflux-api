@@ -74,7 +74,7 @@
   --secondary:               oklch(0.935 0.01 265);
   --secondary-foreground:    oklch(0.213 0.035 259.5);
   --muted:                   oklch(0.935 0.01 265);
-  --muted-foreground:        oklch(0.498 0.051 264.6);  /* Text Muted #5D709C — 4.52:1 on light bg */
+  --muted-foreground:        oklch(0.56 0.051 264.6);   /* Text Muted — raised for legibility on light bg */
   --accent:                  oklch(0.756 0.119 95.4);   /* Prod Gold #C7AF4F */
   --accent-foreground:       oklch(0.183 0.031 263.4);
   --destructive:             oklch(0.577 0.245 27.325);
@@ -112,7 +112,7 @@
   --secondary:               oklch(0.269 0.053 266.2);  /* Border Subtle */
   --secondary-foreground:    oklch(0.937 0.008 271.3);
   --muted:                   oklch(0.269 0.053 266.2);
-  --muted-foreground:        oklch(0.612 0.044 264.6);  /* Text Muted #7C8AAB — 5.10:1 on card, 5.67:1 on canvas */
+  --muted-foreground:        oklch(0.72 0.032 264.6);   /* Text Muted — raised for legibility, ~7.5:1 on canvas */
   --accent:                  oklch(0.756 0.119 95.4);   /* Prod Gold #C7AF4F — hover */
   --accent-foreground:       oklch(0.183 0.031 263.4);
   --destructive:             oklch(0.704 0.191 22.216);
@@ -142,8 +142,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: 15px;
   }
   html {
     @apply font-sans;
+    /* Bump from browser default 16px to ensure rem-based sizes read clearly */
+    font-size: 16px;
   }
 }

@@ -1098,10 +1098,10 @@ function NewJobPageInner() {
                     type="button"
                     onClick={() => p.minPlan ? undefined : togglePlatform(p.id)}
                     className={cn(
-                      'px-3 py-1.5 text-xs rounded-md border transition-colors',
+                      'px-3 py-2 text-sm rounded-md border transition-colors font-medium',
                       platforms.includes(p.id)
                         ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border text-muted-foreground hover:text-foreground',
+                        : 'border-border text-foreground/70 hover:text-foreground hover:border-foreground/30',
                     )}
                   >
                     {p.label}

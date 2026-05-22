@@ -1,4 +1,71 @@
 /**
+ * Platform social icons — YouTube, TikTok, Instagram, Twitch, Kick
+ * These use official brand colours and are used in the social connect page
+ * and platform picker. Colors are hardcoded (brand marks, not theme tokens).
+ */
+
+export function YouTubeIcon({ size = 24, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <rect width="24" height="24" rx="5" fill="#FF0000" />
+      <path d="M19.6 8.2a2 2 0 0 0-1.4-1.4C16.9 6.5 12 6.5 12 6.5s-4.9 0-6.2.3A2 2 0 0 0 4.4 8.2C4.1 9.5 4.1 12 4.1 12s0 2.5.3 3.8a2 2 0 0 0 1.4 1.4c1.3.3 6.2.3 6.2.3s4.9 0 6.2-.3a2 2 0 0 0 1.4-1.4c.3-1.3.3-3.8.3-3.8s0-2.5-.3-3.8z" fill="white" />
+      <path d="M10.2 14.6V9.4l4.5 2.6-4.5 2.6z" fill="#FF0000" />
+    </svg>
+  );
+}
+
+export function TikTokIcon({ size = 24, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <rect width="24" height="24" rx="5" fill="#010101" />
+      <path d="M16.6 5h-2.3v9.3a2.3 2.3 0 1 1-2.3-2.3c.2 0 .4 0 .6.1V9.6a4.6 4.6 0 1 0 4.3 4.7V9.1c.8.6 1.8.9 2.8.9V7.8c-1.6 0-3.1-1.3-3.1-2.8z" fill="white" />
+      <path d="M19.4 9.4v2.4c-1 0-2-.3-2.8-.9v4.2a4.6 4.6 0 1 1-4.3-4.7v2.5c-.2-.1-.4-.1-.6-.1a2.3 2.3 0 1 0 2.3 2.3V5h2.3c0 1.5 1.5 2.8 3.1 2.8v1.6z" fill="#EE1D52" />
+      <path d="M13.7 9.5v2.5c-.2-.1-.4-.1-.6-.1a2.3 2.3 0 0 0 0 4.6 2.3 2.3 0 0 0 2.3-2.3V5h2.3c0 1.5 1.5 2.8 3.1 2.8v2.4c-1 0-2-.3-2.8-.9v4.2a4.6 4.6 0 1 1-5-4.6v.6z" fill="#69C9D0" />
+    </svg>
+  );
+}
+
+export function InstagramIcon({ size = 24, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <defs>
+        <radialGradient id="ig-grad" cx="30%" cy="107%" r="150%">
+          <stop offset="0%" stopColor="#fdf497" />
+          <stop offset="5%" stopColor="#fdf497" />
+          <stop offset="45%" stopColor="#fd5949" />
+          <stop offset="60%" stopColor="#d6249f" />
+          <stop offset="90%" stopColor="#285AEB" />
+        </radialGradient>
+      </defs>
+      <rect width="24" height="24" rx="5" fill="url(#ig-grad)" />
+      <rect x="6.5" y="6.5" width="11" height="11" rx="3" stroke="white" strokeWidth="1.5" fill="none" />
+      <circle cx="12" cy="12" r="3" stroke="white" strokeWidth="1.5" fill="none" />
+      <circle cx="16.2" cy="7.8" r="0.8" fill="white" />
+    </svg>
+  );
+}
+
+export function TwitchIcon({ size = 24, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <rect width="24" height="24" rx="5" fill="#9146FF" />
+      <path d="M6 4l-2 3v12h4v3l3-3h3l5-5V4H6zm10.5 9l-2.5 2.5H11l-2 2V15.5H6V5.5h10.5v7.5z" fill="white" />
+      <rect x="14" y="8" width="1.5" height="4" rx="0.5" fill="#9146FF" />
+      <rect x="10.5" y="8" width="1.5" height="4" rx="0.5" fill="#9146FF" />
+    </svg>
+  );
+}
+
+export function KickIcon({ size = 24, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <rect width="24" height="24" rx="5" fill="#53FC18" />
+      <path d="M7 5h3v5.5l3.5-5.5H17l-4.5 6.5L17 19h-3.5L10 13.5V19H7V5z" fill="black" />
+    </svg>
+  );
+}
+
+/**
  * AuraFlux Brand Icon Family
  *
  * Four icons from the logo family brief:
