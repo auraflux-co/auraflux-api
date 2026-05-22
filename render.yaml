@@ -215,9 +215,9 @@ services:
       - key: NEXT_PUBLIC_CLERK_SIGN_UP_URL
         value: /sign-up
       - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
-        value: /dashboard
+        value: /home
       - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
-        value: /dashboard
+        value: /home
       # AuraFlux API — update to custom domain once CPD-93 is complete
       - key: NEXT_PUBLIC_API_URL
         value: https://auraflux-api.onrender.com
