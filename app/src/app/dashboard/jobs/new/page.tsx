@@ -304,17 +304,7 @@ function NewJobPageInner() {
   const { getToken } = useAuth();
   const [isPending, start] = useTransition();
 
-  // ── Hydrate wizard state from URL params so refresh/back preserves progress ──
-  const _initFormat   = (searchParams.get('format') as FormFactor) || null;
-  const _initStep     = Math.min(3, Math.max(0, Number(searchParams.get('step') || 0))) as Step;
-  const _initMode     = (searchParams.get('mode') as SourceMode) || null;
-  const _initIntent   = (searchParams.get('intent') as 'clips' | 'longform') || null;
-  const _initTone     = searchParams.get('tone') || 'professional';
-  const _initFeatures = new Set<string>(searchParams.get('features')?.split(',').filter(Boolean) ?? []);
-  const _initPlatforms = searchParams.get('platforms')?.split(',').filter(Boolean) ?? ['youtube'];
-  const _initDur      = Number(searchParams.get('dur')) || (_initFormat === 'short' ? 1 : 3);
-
-  const [step, setStep] = useState<Step>(_initStep);
+  const [step, setStep] = useState<Step>(0 as Step);
   const [error, setError] = useState<string | null>(null);
   const [templateBanner, setTemplateBanner] = useState<string | null>(null);
 
@@ -322,17 +312,17 @@ function NewJobPageInner() {
   const { planTier } = usePlan();
 
   // Wizard state
-  const [formFactor, setFormFactor] = useState<FormFactor | null>(_initFormat);
-  const [sourceIntent, setSourceIntent] = useState<'clips' | 'longform' | null>(_initIntent);
-  const [sourceMode, setSourceMode]       = useState<SourceMode | null>(_initMode);
+  const [formFactor, setFormFactor] = useState<FormFactor | null>(null);
+  const [sourceIntent, setSourceIntent] = useState<'clips' | 'longform' | null>(null);
+  const [sourceMode, setSourceMode]       = useState<SourceMode | null>(null);
   const [sourceUrls, setSourceUrls]       = useState('');
   const [sourceItems, setSourceItems]     = useState<SourceItem[]>([]);
   const [fileKeys,    setFileKeys]         = useState('');
   const [uploadedKey, setUploadedKey]     = useState<string | null>(null);
   const [uploadedName,setUploadedName]    = useState<string | null>(null);
   const [topic, setTopic]           = useState('');
-  const [tone, setTone]             = useState(_initTone);
-  const [features, setFeatures]     = useState<Set<string>>(_initFeatures);
+  const [tone, setTone]             = useState('professional');
+  const [features, setFeatures]     = useState<Set<string>>(new Set());
   const [featureConfig, setFeatureConfig] = useState<Record<string, Record<string, string>>>({});
   function setFeatureCfg(featureId: string, key: string, value: string) {
     setFeatureConfig((prev) => ({
@@ -340,11 +330,11 @@ function NewJobPageInner() {
       [featureId]: { ...(prev[featureId] ?? {}), [key]: value },
     }));
   }
-  const [platforms, setPlatforms]   = useState<string[]>(_initPlatforms);
+  const [platforms, setPlatforms]   = useState<string[]>(['youtube']);
   const [addOns, setAddOns]         = useState<Set<string>>(new Set());
   const [jobTiming, setJobTiming]     = useState<JobTimingValue>(DEFAULT_JOB_TIMING);
   // CPD-115: duration — auto-calculated from clip editor output, not manually entered
-  const [durationMins, setDurationMins] = useState<number>(_initDur);
+  const [durationMins, setDurationMins] = useState<number>(3);
   const [clipSpec, setClipSpec]         = useState<ClipSpec | null>(null);
 
   // CPD-125: pre-fill from template if ?templateId= is present
@@ -383,24 +373,6 @@ function NewJobPageInner() {
     setContextHint(STEP_GUIDE[step]?.hint ?? null);
   }, [step, setContextHint]);
 
-  // Sync wizard config → URL so refresh/back-button preserves progress.
-  // sourceItems and upload keys are ephemeral (re-fetched on reload) — not included.
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (step > 0)                                   p.set('step',      String(step));
-    if (formFactor)                                  p.set('format',    formFactor);
-    if (sourceIntent)                                p.set('intent',    sourceIntent);
-    if (sourceMode)                                  p.set('mode',      sourceMode);
-    if (tone && tone !== 'professional')             p.set('tone',      tone);
-    if (features.size > 0)                           p.set('features',  Array.from(features).join(','));
-    const pStr = platforms.join(',');
-    if (pStr && pStr !== 'youtube')                  p.set('platforms', pStr);
-    const defaultDur = formFactor === 'short' ? 1 : 3;
-    if (durationMins !== defaultDur)                 p.set('dur',       String(durationMins));
-    const qs = p.toString();
-    router.replace(`/dashboard/jobs/new${qs ? '?' + qs : ''}`, { scroll: false });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, formFactor, sourceIntent, sourceMode, tone, features, platforms, durationMins]);
 
   function toggleFeature(id: string) {
     setFeatures((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });

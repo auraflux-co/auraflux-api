@@ -19,7 +19,12 @@ export default clerkMiddleware(async (auth, request) => {
     const { userId } = await auth();
     if (!userId) {
       const signInUrl = new URL('/sign-in', request.url);
-      signInUrl.searchParams.set('redirect_url', request.url);
+      // Use only the pathname+search (not the full URL with host) so the
+      // redirect works correctly regardless of which host initiated it.
+      // Full-URL redirect_url caused production auth to spin when the user
+      // had previously visited the localhost dev environment.
+      const afterPath = request.nextUrl.pathname + request.nextUrl.search;
+      signInUrl.searchParams.set('redirect_url', afterPath);
       return NextResponse.redirect(signInUrl);
     }
   }
