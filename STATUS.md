@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-22 v1.0.608 (Cursor — feat(cpd-316): Kick browsing via Apify — kick_apify.js calls zhorex/kick-scraper actor (run-sync-get-dataset-items) and normalizes output to AuraFlux shape; kick_client.js uses Apify path when APIFY_API_TOKEN is set, falls back to kick_fetch.py TLS bypass; APIFY_API_TOKEN + APIFY_USER_ID added to Render env and .env.example)
 **Last Updated:** 2026-05-22 v1.0.607 (Cursor — fix: credit estimate accuracy + clip editor blank state — script add-on now defaults to false in credit_calculator (was charging +10 even when not selected); clip-editor useEffect now depends on sourceClips prop so clips populate immediately on mount without requiring a toggle interaction)
 **Last Updated:** 2026-05-22 v1.0.606 (Cursor — fix: sidebar credits counter — replace raw em dash with pulsing skeleton while plan/balance loads; prevents "— credits left" flash on page transitions)
 **Last Updated:** 2026-05-22 v1.0.605 (Cursor — feat: template rename — click template name on /templates to edit inline; blur or Enter saves, Escape cancels; uses existing updateTemplate API)
