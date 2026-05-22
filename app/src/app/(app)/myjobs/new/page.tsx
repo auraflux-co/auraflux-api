@@ -1153,7 +1153,7 @@ function NewJobPageInner() {
           >
             {step === 0 ? 'Cancel' : '← Back'}
           </button>
-          <Button size="sm" disabled={isPending} onClick={advance}>
+          <Button size="sm" disabled={isPending || (step === 1 && !sourceIntent)} onClick={advance}>
             {isPending
               ? 'Submitting…'
               : step === 3
