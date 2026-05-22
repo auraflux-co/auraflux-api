@@ -64,6 +64,7 @@ scripts/managed_e2e_browser.js
 docs/ops/
 # localhost HTML tools → auraflux-dev/templates/
 templates/
+!app/src/app/**/templates/
 # archived backup file → auraflux-dev/lib/
 lib/publish.js.backup
 
