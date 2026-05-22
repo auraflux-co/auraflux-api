@@ -61,7 +61,7 @@ export function JobCard({ job, detailed = false }: JobCardProps) {
   );
 
   return (
-    <Link href={`/dashboard/jobs/${job.jobId}`} className="block">
+    <Link href={`/myjobs/${job.jobId}`} className="block">
     <Card className="hover:border-border/80 transition-colors cursor-pointer">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">

@@ -23,7 +23,7 @@ function TokenSignIn() {
     if (!clerk.loaded) return;
 
     const token    = params.get('token');
-    const redirect = params.get('redirect') || '/dashboard';
+    const redirect = params.get('redirect') || '/home';
 
     if (!token) {
       router.replace('/sign-in');

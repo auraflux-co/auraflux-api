@@ -8,6 +8,9 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/auth/token(.*)',  // token sign-in handler — must be public since it IS the auth step
   '/api/health',
+  // Legacy dashboard redirects are handled by next.config.js — mark as public
+  // so the middleware doesn't intercept before the redirect fires
+  '/dashboard(.*)',
 ]);
 
 // Clerk v7 + Next.js 16: auth.protect() has a known bug where it redirects to

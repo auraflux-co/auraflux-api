@@ -57,7 +57,7 @@ const STEPS: StepDef[] = [
       const handle = ch.twitchLogin || ch.youtubeHandle || ch.kickUsername || ch.tiktokUsername;
       return handle ? `Channel saved — ${handle}` : 'Set up My Channels';
     },
-    href: '/dashboard/settings/source-channels',
+    href: '/settings/channels',
   },
   {
     key:   'platformConnected',
@@ -69,7 +69,7 @@ const STEPS: StepDef[] = [
       }
       return 'Connect a publishing platform';
     },
-    href: '/dashboard/settings/social-connect',
+    href: '/settings/social',
     note: 'Skip if you plan to download and upload manually.',
   },
 ];
@@ -168,8 +168,8 @@ export function SetupChecklist({ setupDismissed, planTier }: Props) {
           <span className="text-primary">✦</span> Complete your setup
         </p>
         <ul className="space-y-2 text-sm">
-          <li><Link href="/dashboard/settings/source-channels" className="text-primary hover:underline">Set up My Channels →</Link></li>
-          <li><Link href="/dashboard/settings/social-connect" className="text-primary hover:underline">Connect a publishing platform →</Link></li>
+          <li><Link href="/settings/channels" className="text-primary hover:underline">Set up My Channels →</Link></li>
+          <li><Link href="/settings/social" className="text-primary hover:underline">Connect a publishing platform →</Link></li>
         </ul>
       </div>
     );

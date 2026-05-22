@@ -79,14 +79,14 @@ export function ReviewQueueWidget() {
       <div className="mt-4">
         {hasReady ? (
           <Link
-            href="/dashboard/staging"
+            href="/review"
             className={cn(buttonVariants({ size: 'sm' }), 'w-full sm:w-auto')}
           >
             Go to review queue →
           </Link>
         ) : (
           <Link
-            href="/dashboard/staging"
+            href="/review"
             className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground text-xs px-0')}
           >
             View review queue →
