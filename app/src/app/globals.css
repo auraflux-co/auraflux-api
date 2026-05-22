@@ -150,3 +150,110 @@
     font-size: 16px;
   }
 }
+
+/* ── AuraFlux Design Tokens ───────────────────────────────────────────────────
+ *
+ *  TEXT SCALE — use these instead of text-xs / text-sm / text-base etc.
+ *
+ *  .af-caption   11px  muted-foreground   — timestamps, helper hints, fine print
+ *  .af-label     13px  muted-foreground   — form labels, table column headers
+ *  .af-body      15px  foreground         — default body copy (matches body {})
+ *  .af-lead      17px  foreground         — intro sentences, card descriptions
+ *  .af-subhead   13px  foreground/semibold — KPI labels above numbers
+ *  .af-metric    28px  foreground/bold    — KPI numbers (e.g. "247 credits")
+ *  .af-h3        18px  foreground/semibold — section headings inside pages
+ *  .af-h2        22px  foreground/bold    — page section headings
+ *  .af-h1        28px  foreground/bold    — page title (used in PageHeader)
+ *
+ *  SURFACE LAYERS — use these instead of custom bg/border combos
+ *
+ *  .af-surface          — standard card surface (bg-card border-border)
+ *  .af-surface-raised   — pop-over / modal surface (card + shadow)
+ *  .af-surface-inset    — muted inset panels (e.g. code blocks, sub-sections)
+ *
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+@utility af-caption {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+
+@utility af-label {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+@utility af-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+@utility af-lead {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+@utility af-subhead {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@utility af-metric {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+@utility af-h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+@utility af-h2 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+@utility af-h1 {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--foreground);
+}
+
+@utility af-surface {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+@utility af-surface-raised {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px oklch(0 0 0 / 0.18);
+}
+
+@utility af-surface-inset {
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
