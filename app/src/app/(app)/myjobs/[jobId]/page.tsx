@@ -193,7 +193,7 @@ function JobStatusBadge({ status }: { status: string }) {
 export default function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const { getToken, isLoaded } = useAuth();
-  const { isOperator }         = useRole();
+  const { isSuperAdmin }         = useRole();
   const [job, setJob]               = useState<Job | null>(null);
   const [error, setError]           = useState<string | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -481,7 +481,7 @@ export default function JobDetailPage() {
       )}
 
       {/* Operator actions (CPD-104) */}
-      {isOperator && (
+      {isSuperAdmin && (
         <Card className="border-dashed">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">Operator actions</CardTitle>

@@ -21,12 +21,12 @@ type GenStatus = 'idle' | 'queued' | 'running' | 'success' | 'error';
 
 export default function GeneratePage() {
   const router = useRouter();
-  const { isOperator, isLoaded } = useRole();
+  const { isSuperAdmin, isLoaded } = useRole();
   const { getToken } = useAuth();
 
   useEffect(() => {
-    if (isLoaded && !isOperator) router.replace('/home');
-  }, [isLoaded, isOperator, router]);
+    if (isLoaded && !isSuperAdmin) router.replace('/home');
+  }, [isLoaded, isSuperAdmin, router]);
 
   const [prompt, setPrompt]         = useState('');
   const [numFrames, setNumFrames]   = useState(25);
@@ -91,7 +91,7 @@ export default function GeneratePage() {
     }
   }
 
-  if (!isLoaded || !isOperator) return null;
+  if (!isLoaded || !isSuperAdmin) return null;
 
   const isGenerating = status === 'queued' || status === 'running';
 

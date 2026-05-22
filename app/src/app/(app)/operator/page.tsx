@@ -34,7 +34,7 @@ function OperatorPageInner() {
   const searchParams = useSearchParams();
   const scopedId     = searchParams.get('customerId') ?? undefined;
 
-  const { role, isOperator, isLoaded } = useRole();
+  const { role, isSuperAdmin, isLoaded } = useRole();
   const { getToken } = useAuth();
 
   const [jobs, setJobs]       = useState<Job[]>([]);
@@ -45,8 +45,8 @@ function OperatorPageInner() {
 
   // Redirect non-operators back to dashboard
   useEffect(() => {
-    if (isLoaded && !isOperator) router.replace('/home');
-  }, [isLoaded, isOperator, router]);
+    if (isLoaded && !isSuperAdmin) router.replace('/home');
+  }, [isLoaded, isSuperAdmin, router]);
 
   async function fetchJobs() {
     start(async () => {
@@ -63,11 +63,11 @@ function OperatorPageInner() {
   }
 
   useEffect(() => {
-    if (isLoaded && isOperator) fetchJobs();
-  }, [isLoaded, isOperator]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (isLoaded && isSuperAdmin) fetchJobs();
+  }, [isLoaded, isSuperAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isLoaded) return null;
-  if (!isOperator) return null;
+  if (!isSuperAdmin) return null;
 
   const STATUSES: Array<Job['status'] | 'all'> = ['all', 'running', 'held', 'failed', 'complete'];
   const filtered = filter === 'all' ? jobs : jobs.filter((j) => j.status === filter);
