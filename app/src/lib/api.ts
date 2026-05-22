@@ -397,6 +397,18 @@ export async function listAllUsers(token?: string): Promise<{ total: number; use
   return apiFetch('/admin/users', { token });
 }
 
+export async function setUserRole(
+  userId: string,
+  role: 'customer' | 'operator' | 'admin',
+  token?: string,
+): Promise<{ ok: boolean; userId: string; role: string; email: string | null }> {
+  return apiFetch(`/admin/users/${encodeURIComponent(userId)}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+    token,
+  });
+}
+
 // ─── Admin Activity Overview (CPD-177) ───────────────────────────────────────
 
 export interface ActivityStats {

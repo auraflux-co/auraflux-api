@@ -11,7 +11,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { useRole } from '@/hooks/use-role';
-import { listAllUsers, type AdminUser } from '@/lib/api';
+import { listAllUsers, setUserRole, type AdminUser } from '@/lib/api';
 import { tierLabel } from '@/lib/tier-labels';
 import { cn } from '@/lib/utils';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
@@ -64,6 +64,8 @@ export default function AdminUsersPage() {
   const [sort, setSort]         = useState<SortKey>('signedUpAt');
   const [sortDir, setSortDir]   = useState<'asc' | 'desc'>('desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [roleUpdating, setRoleUpdating] = useState<string | null>(null);
+  const [roleError, setRoleError]       = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (isLoaded && !isAdmin) router.replace('/home');
@@ -114,6 +116,20 @@ export default function AdminUsersPage() {
     const cmp = av < bv ? -1 : av > bv ? 1 : 0;
     return sortDir === 'desc' ? -cmp : cmp;
   });
+
+  async function handleRoleChange(userId: string, role: 'customer' | 'operator' | 'admin') {
+    setRoleUpdating(userId);
+    setRoleError((prev) => { const n = { ...prev }; delete n[userId]; return n; });
+    try {
+      const token = await getToken();
+      await setUserRole(userId, role, token ?? undefined);
+      setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, role } : u));
+    } catch (e: unknown) {
+      setRoleError((prev) => ({ ...prev, [userId]: e instanceof Error ? e.message : 'Failed to update role' }));
+    } finally {
+      setRoleUpdating(null);
+    }
+  }
 
   function toggleSort(key: SortKey) {
     if (sort === key) setSortDir((d) => d === 'desc' ? 'asc' : 'desc');
@@ -336,7 +352,7 @@ export default function AdminUsersPage() {
                   {isExpanded && (
                     <tr key={`${u.id}-detail`} className="bg-muted/10 border-t-0">
                       <td colSpan={8} className="px-4 pb-3 pt-0">
-                        <div className="flex flex-wrap gap-x-8 gap-y-1 af-caption">
+                        <div className="flex flex-wrap gap-x-8 gap-y-2 af-caption">
                           <span><span className="font-medium text-foreground">Signed up</span> — {absTime(u.signedUpAt)}</span>
                           <span><span className="font-medium text-foreground">Last login</span> — {absTime(u.lastSignInAt)}</span>
                           <span><span className="font-medium text-foreground">Last active</span> — {absTime(u.lastActiveAt)}</span>
@@ -350,6 +366,33 @@ export default function AdminUsersPage() {
                             >
                               View operator account →
                             </button>
+                          )}
+                        </div>
+
+                        {/* Role assignment */}
+                        <div className="mt-2 flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                          <span className="font-medium text-foreground af-caption">Role:</span>
+                          {(['customer', 'operator', 'admin'] as const).map((r) => (
+                            <button
+                              key={r}
+                              disabled={roleUpdating === u.id}
+                              onClick={() => handleRoleChange(u.id, r)}
+                              className={cn(
+                                'px-2.5 py-0.5 rounded af-caption font-medium border transition-colors capitalize',
+                                u.role === r
+                                  ? cn(ROLE_PILL[r], 'border-current opacity-100')
+                                  : 'border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground',
+                                roleUpdating === u.id && 'opacity-40 cursor-not-allowed',
+                              )}
+                            >
+                              {r}
+                            </button>
+                          ))}
+                          {roleUpdating === u.id && (
+                            <span className="af-caption text-muted-foreground">Saving…</span>
+                          )}
+                          {roleError[u.id] && (
+                            <span className="af-caption text-destructive">{roleError[u.id]}</span>
                           )}
                         </div>
                       </td>
