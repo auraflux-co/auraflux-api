@@ -101,7 +101,7 @@ export default function CreditsPage() {
     <PageShell maxWidth="3xl">
       <PageHeader
         title="Credits & Usage"
-        subtitle={<span className="capitalize">Plan: <span className="text-foreground font-medium">{balance.tier}</span> · Period: {balance.period_start} – {balance.period_end}</span>}
+        subtitle={<span className="capitalize">Plan: <span className="text-foreground font-medium">{balance.tier}</span> · Period: {new Date(balance.period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {new Date(balance.period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
       />
 
       {/* Usage summary */}
