@@ -168,7 +168,7 @@ type Tab = 'feed' | 'accounts' | 'system';
 
 export default function AdminOverviewPage() {
   const router                = useRouter();
-  const { isAdmin, isLoaded } = useRole();
+  const { isSuperAdmin, isLoaded } = useRole();
   const { getToken }          = useAuth();
 
   const [data, setData]       = useState<ActivityOverview | null>(null);
@@ -182,8 +182,8 @@ export default function AdminOverviewPage() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    if (isLoaded && !isAdmin) router.replace('/home');
-  }, [isLoaded, isAdmin, router]);
+    if (isLoaded && !isSuperAdmin) router.replace('/home');
+  }, [isLoaded, isSuperAdmin, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -206,10 +206,10 @@ export default function AdminOverviewPage() {
   }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded && isAdmin) load();
-  }, [isLoaded, isAdmin, load]);
+    if (isLoaded && isSuperAdmin) load();
+  }, [isLoaded, isSuperAdmin, load]);
 
-  if (!isLoaded || !isAdmin) return null;
+  if (!isLoaded || !isSuperAdmin) return null;
 
   const s = data?.stats;
 

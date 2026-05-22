@@ -204,7 +204,7 @@ const CONFLUENCE_GUIDE_URL =
 
 export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const pathname                               = usePathname();
-  const { isOperator, isAdmin }                = useRole();
+  const { isOperator, isSuperAdmin }           = useRole();
   const { planTier }                           = usePlan();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const router                                 = useRouter();
@@ -214,7 +214,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   // When setup is incomplete: only the dashboard home is accessible
   const navItems = setupLocked
     ? []
-    : isAdmin
+        : isSuperAdmin
       ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
       : isOperator
         ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
@@ -401,7 +401,7 @@ export function MobileSidebarOverlay() {
 export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const { mobileOpen, closeMobile } = useSidebar();
   const pathname                    = usePathname();
-  const { isOperator, isAdmin }     = useRole();
+  const { isOperator, isSuperAdmin } = useRole();
   const { planTier }                = usePlan();
   const router                      = useRouter();
 
@@ -409,7 +409,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
 
   const navItems = setupLocked
     ? []
-    : isAdmin
+    : isSuperAdmin
       ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
       : isOperator
         ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
