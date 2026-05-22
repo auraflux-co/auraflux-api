@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-22 v1.0.602 (Cursor — fix: team page shows real emails — listMembers enriches @unknown fallbacks from Clerk + backfills DB; fix: profile page 6s timeout instead of infinite skeleton; fix: Kick proxy cleared — BrightData blocked kick.com tunneling, direct TLS fingerprint now used)
 **Last Updated:** 2026-05-22 v1.0.601 (Cursor — feat: admin role assignment — PATCH /admin/users/:userId/role endpoint + inline role picker in /admin/users page; admin can set customer/operator/admin without Clerk dashboard)
 **Last Updated:** 2026-05-22 v1.0.599 (Cursor — fix: credits billing period date overflow guard + human-readable display; fix: Kick curl-cffi/tls-client missing from Dockerfile; fix: post-auth redirect URLs updated to /home)
 **Last Updated:** 2026-05-22 v1.0.591 (Cursor — feat: apply ux tokens batch 2 — templates, plans, admin/customers; old dashboard-page.tsx import replaced; EmptyState + PageShell on all remaining pages)

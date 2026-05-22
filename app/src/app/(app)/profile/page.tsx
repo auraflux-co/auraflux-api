@@ -6,7 +6,7 @@
  * Identity updates via Clerk's useUser hook.
  */
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect, useRef } from 'react';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -33,6 +33,17 @@ export default function ProfilePage() {
   const [isPending, start] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded) {
+      timerRef.current = setTimeout(() => setLoadTimedOut(true), 6000);
+    } else {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [isLoaded]);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName]   = useState('');
@@ -52,18 +63,34 @@ export default function ProfilePage() {
     setTimezone((meta?.timezone as string) ?? 'America/New_York');
   }
 
-  if (!isLoaded || !user) return (
-    <div className="max-w-2xl space-y-6 animate-pulse">
-      <div className="h-8 bg-muted rounded w-40" />
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="rounded-xl border border-border p-6 space-y-4">
-          <div className="h-4 bg-muted rounded w-32" />
-          <div className="h-10 bg-muted rounded" />
-          <div className="h-10 bg-muted rounded" />
+  if (!isLoaded || !user) {
+    if (loadTimedOut) return (
+      <PageShell maxWidth="3xl">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center">
+          <p className="af-label text-destructive font-medium">Profile failed to load</p>
+          <p className="af-caption mt-1">Your session may have expired. Try refreshing the page.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 text-xs text-primary underline underline-offset-2 hover:no-underline"
+          >
+            Reload
+          </button>
         </div>
-      ))}
-    </div>
-  );
+      </PageShell>
+    );
+    return (
+      <div className="max-w-2xl space-y-6 animate-pulse">
+        <div className="h-8 bg-muted rounded w-40" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-xl border border-border p-6 space-y-4">
+            <div className="h-4 bg-muted rounded w-32" />
+            <div className="h-10 bg-muted rounded" />
+            <div className="h-10 bg-muted rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const meta     = user.publicMetadata as Record<string, unknown>;
   const role     = (meta?.role as string) ?? 'customer';
