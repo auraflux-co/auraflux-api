@@ -498,8 +498,8 @@ export default function AdminOverviewPage() {
             {health?.nrMetrics && (() => {
               const m = health.nrMetrics;
               const apps = Array.from(new Set([
-                ...Object.keys(m.errorRate),
-                ...Object.keys(m.throughput),
+                ...Object.keys(m.errorRate   ?? {}),
+                ...Object.keys(m.throughput  ?? {}),
               ])).filter(Boolean);
               return (
                 <div className="space-y-4">
@@ -509,27 +509,27 @@ export default function AdminOverviewPage() {
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                         <MetricBox
                           label="Error rate"
-                          value={m.errorRate[app] != null ? `${m.errorRate[app]!.toFixed(2)}%` : null}
-                          warn={(m.errorRate[app] ?? 0) > 1}
+                          value={(m.errorRate?.[app]) != null ? `${m.errorRate[app]!.toFixed(2)}%` : null}
+                          warn={((m.errorRate?.[app]) ?? 0) > 1}
                         />
                         <MetricBox
                           label="Throughput"
-                          value={m.throughput[app] != null ? `${m.throughput[app]!.toFixed(1)} rpm` : null}
+                          value={(m.throughput?.[app]) != null ? `${m.throughput[app]!.toFixed(1)} rpm` : null}
                         />
                         <MetricBox
                           label="Avg latency"
-                          value={m.latencyMs[app] != null ? `${Math.round(m.latencyMs[app]!)} ms` : null}
-                          warn={(m.latencyMs[app] ?? 0) > 2000}
+                          value={(m.latencyMs?.[app]) != null ? `${Math.round(m.latencyMs[app]!)} ms` : null}
+                          warn={((m.latencyMs?.[app]) ?? 0) > 2000}
                         />
                         <MetricBox
                           label="Apdex"
-                          value={m.apdex[app] != null ? m.apdex[app]!.toFixed(2) : null}
-                          warn={(m.apdex[app] ?? 1) < 0.7}
+                          value={(m.apdex?.[app]) != null ? m.apdex[app]!.toFixed(2) : null}
+                          warn={((m.apdex?.[app]) ?? 1) < 0.7}
                         />
                         <MetricBox
                           label="Errors (24h)"
-                          value={m.errors24h[app] ?? 0}
-                          warn={(m.errors24h[app] ?? 0) > 0}
+                          value={(m.errors24h?.[app]) ?? 0}
+                          warn={((m.errors24h?.[app]) ?? 0) > 0}
                         />
                       </div>
                     </div>
