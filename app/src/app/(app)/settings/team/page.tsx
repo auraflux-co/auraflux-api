@@ -45,7 +45,7 @@ const ROLE_BADGE_VARIANT: Record<MemberRole, 'default' | 'secondary' | 'outline'
 };
 
 export default function TeamPage() {
-  const { getToken }                            = useAuth();
+  const { getToken, isLoaded }                  = useAuth();
   const [members, setMembers]                   = useState<TeamMember[]>([]);
   const [myRole, setMyRole]                     = useState<MemberRole>('owner');
   const [loading, setLoading]                   = useState(true);
@@ -76,7 +76,7 @@ export default function TeamPage() {
     }
   }, [getToken]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (isLoaded) load(); }, [load, isLoaded]);
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();

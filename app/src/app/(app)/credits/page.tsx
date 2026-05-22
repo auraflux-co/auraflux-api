@@ -62,7 +62,7 @@ function LedgerRow({ entry }: { entry: CreditLedgerEntry }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CreditsPage() {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
   const [balance, setBalance]   = useState<CreditBalance | null>(null);
   const [history, setHistory]   = useState<CreditLedgerEntry[]>([]);
   const [packs, setPacks]       = useState<CreditPack[]>([]);
@@ -70,6 +70,7 @@ export default function CreditsPage() {
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
+    if (!isLoaded) return;
     (async () => {
       try {
         const token = await getToken();
@@ -87,7 +88,7 @@ export default function CreditsPage() {
         setLoading(false);
       }
     })();
-  }, [getToken]);
+  }, [getToken, isLoaded]);
 
   if (loading) return <div className="text-sm text-muted-foreground">Loading…</div>;
   if (error)   return <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>;
