@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import {
   getCreditBalance,
   getPlans,
@@ -170,20 +171,17 @@ function BillingPageInner() {
   const currentTier = balance?.tier ?? 'operate';
 
   return (
-    <div className="max-w-3xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Billing</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your plan, credits, and payment</p>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader title="Billing" subtitle="Manage your plan, credits, and payment" />
 
       {stripeSuccess && (
-        <p className="text-sm text-emerald-600 bg-emerald-500/10 rounded px-3 py-2">Payment successful — your credits will appear shortly.</p>
+        <p className="af-body text-success bg-success/10 rounded px-3 py-2">Payment successful — your credits will appear shortly.</p>
       )}
       {stripeCancelled && (
-        <p className="text-sm text-muted-foreground bg-muted rounded px-3 py-2">Checkout cancelled — no charge was made.</p>
+        <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2">Checkout cancelled — no charge was made.</p>
       )}
       {error && (
-        <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
 
           {/* Current plan summary */}
@@ -191,20 +189,20 @@ function BillingPageInner() {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-base">Current plan</CardTitle>
+              <CardTitle className="af-h3">Current plan</CardTitle>
               <Badge className="capitalize">{PLAN_META[currentTier]?.label ?? tierLabel(currentTier)}</Badge>
             </div>
             {PLAN_META[currentTier]?.sub && (
-              <p className="text-xs text-muted-foreground mt-0.5">{PLAN_META[currentTier].sub}</p>
+              <p className="af-label mt-0.5">{PLAN_META[currentTier].sub}</p>
             )}
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold">{PLAN_META[currentTier]?.price ?? '—'}</span>
-              <span className="text-sm text-muted-foreground mb-1">/month</span>
+              <span className="af-metric">{PLAN_META[currentTier]?.price ?? '—'}</span>
+              <span className="af-label mb-1">/month</span>
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between af-body">
                 <span className="text-muted-foreground">Credits used</span>
                 <span className="font-medium tabular-nums">
                   {(balance.included_total - balance.included_remaining).toLocaleString()} / {balance.included_total.toLocaleString()}
@@ -217,7 +215,7 @@ function BillingPageInner() {
                 />
               </div>
               {balance.pack_remaining > 0 && (
-                <p className="text-xs text-muted-foreground">{balance.pack_remaining.toLocaleString()} pack credits also available</p>
+                <p className="af-caption">{balance.pack_remaining.toLocaleString()} pack credits also available</p>
               )}
             </div>
           </CardContent>
@@ -228,7 +226,7 @@ function BillingPageInner() {
 
       {/* Plan cards */}
       <div>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Plans — monthly retainer</h2>
+        <h2 className="af-subhead mb-4">Plans — monthly retainer</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {(['operate', 'guided', 'managed'] as const).map((tier) => {
             const isCurrent = tier === currentTier;
@@ -255,17 +253,17 @@ function BillingPageInner() {
                   </div>
                   <p className="text-[11px] text-muted-foreground">{meta.sub}</p>
                   <div className="flex items-end gap-1 mt-2">
-                    <span className="text-2xl font-bold">{meta.price}</span>
-                    <span className="text-xs text-muted-foreground mb-0.5">/mo</span>
+                    <span className="af-metric">{meta.price}</span>
+                    <span className="af-caption mb-1">/mo</span>
                   </div>
-                  <CardDescription className="text-xs mt-1">
+                  <CardDescription className="af-label mt-1">
                     {plan?.credits?.toLocaleString() ?? '—'} credits/month · no rollover
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col gap-3">
                   <ul className="space-y-1.5 flex-1">
                     {meta.highlights.map((h) => (
-                      <li key={h} className="text-xs text-muted-foreground flex gap-1.5">
+                      <li key={h} className="af-label flex gap-1.5">
                         <span className="text-primary mt-0.5">✓</span>
                         {h}
                       </li>
@@ -285,7 +283,7 @@ function BillingPageInner() {
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground mt-3">
+        <p className="af-caption mt-3">
           All plans are monthly retainers. Contact us to discuss annual pricing or custom enterprise terms.
         </p>
       </div>
@@ -294,16 +292,16 @@ function BillingPageInner() {
 
       {/* Payment method */}
       <div>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Payment method</h2>
+        <h2 className="af-subhead mb-4">Payment method</h2>
         <Card>
           <CardContent className="pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium">Manage your payment method and invoices</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="af-body font-medium">Manage your payment method and invoices</p>
+              <p className="af-label mt-0.5">
                 Opens the secure billing portal — update your card, download invoices, or cancel your subscription.
               </p>
               {portalError && (
-                <p className="text-xs text-destructive mt-1">{portalError}</p>
+                <p className="af-caption text-destructive mt-1">{portalError}</p>
               )}
             </div>
             <Button
@@ -324,43 +322,43 @@ function BillingPageInner() {
       {/* Usage history */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Usage history</h2>
+          <h2 className="af-subhead">Usage history</h2>
           {histTotal > 0 && (
-            <span className="text-xs text-muted-foreground">{histTotal} entries</span>
+            <span className="af-caption">{histTotal} entries</span>
           )}
         </div>
         {history.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No credit usage yet.</p>
+          <p className="af-body text-muted-foreground">No credit usage yet.</p>
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="af-surface overflow-hidden">
+            <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Date</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Type</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden sm:table-cell">Job</th>
-                  <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground">Credits</th>
+                  <th className="text-left px-4 py-2.5 af-subhead">Date</th>
+                  <th className="text-left px-4 py-2.5 af-subhead">Type</th>
+                  <th className="text-left px-4 py-2.5 af-subhead hidden sm:table-cell">Job</th>
+                  <th className="text-right px-4 py-2.5 af-subhead">Credits</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {history.map((entry) => (
                   <tr key={entry.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                    <td className="px-4 py-2.5 af-caption whitespace-nowrap">
                       {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
-                    <td className="px-4 py-2.5 text-xs">{typeLabel(entry.type)}</td>
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell font-mono truncate max-w-[140px]">
+                    <td className="px-4 py-2.5 af-body">{typeLabel(entry.type)}</td>
+                    <td className="px-4 py-2.5 af-caption hidden sm:table-cell font-mono truncate max-w-[140px]">
                       {entry.job_id ? (
                         <a href={`/myjobs/${entry.job_id}`} className="hover:text-foreground transition-colors">
                           {entry.job_id.slice(0, 8)}…
                         </a>
                       ) : '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-right font-medium tabular-nums">
+                    <td className="px-4 py-2.5 af-body text-right font-medium tabular-nums">
                       {entry.credits > 0 ? (
                         <span className="text-foreground">−{entry.credits}</span>
                       ) : (
-                        <span className="text-emerald-500">+{Math.abs(entry.credits)}</span>
+                        <span className="text-success">+{Math.abs(entry.credits)}</span>
                       )}
                     </td>
                   </tr>
@@ -376,10 +374,9 @@ function BillingPageInner() {
       {/* Credit top-up packs */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Credit Top-Up Packs</h2>
-
+          <h2 className="af-subhead">Credit Top-Up Packs</h2>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="af-label mb-4">
           Add capacity for specific features beyond your plan credits. We'll notify you when you're running low.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -392,14 +389,14 @@ function BillingPageInner() {
               <CardContent className="pt-4 space-y-2">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-semibold">{pack.label}</p>
-                    <p className="text-xs text-muted-foreground">{pack.feature}</p>
+                    <p className="af-body font-semibold">{pack.label}</p>
+                    <p className="af-label">{pack.feature}</p>
                   </div>
-                  <Badge variant="secondary" className="text-[10px] shrink-0">{pack.rate}</Badge>
+                  <Badge variant="secondary" className="af-caption shrink-0">{pack.rate}</Badge>
                 </div>
                 <div className="flex items-end gap-1.5">
-                  <span className="text-xl font-bold">{pack.price}</span>
-                  <span className="text-xs text-muted-foreground mb-0.5">{pack.credits.toLocaleString()} cr · {pack.mins} min</span>
+                  <span className="text-xl font-bold tabular-nums">{pack.price}</span>
+                  <span className="af-label mb-0.5">{pack.credits.toLocaleString()} cr · {pack.mins} min</span>
                 </div>
                 <Button
                   size="sm"
@@ -415,7 +412,7 @@ function BillingPageInner() {
           ))}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

@@ -9,7 +9,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -17,10 +16,12 @@ import { listJobs, type Job } from '@/lib/api';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
 import { useRouter } from 'next/navigation';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/ui/empty-state';
 
-const ACTIVE_STATUSES  = new Set(['queued', 'running', 'held', 'failed']);
+const ACTIVE_STATUSES    = new Set(['queued', 'running', 'held', 'failed']);
 const SCHEDULED_STATUSES = new Set(['queued_scheduled']);
-const COMPLETE_STATUSES = new Set(['complete', 'published']);
+const COMPLETE_STATUSES  = new Set(['complete', 'published']);
 
 interface StatCardProps {
   href:    string;
@@ -33,15 +34,17 @@ interface StatCardProps {
 function StatCard({ href, label, count, sub, accent }: StatCardProps) {
   return (
     <Link href={href} className="group block">
-      <Card className={cn('transition-colors group-hover:border-primary/50', accent && count && count > 0 ? 'border-yellow-500/50' : '')}>
-        <CardContent className="pt-5 pb-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-          <p className="text-3xl font-bold mt-1 tabular-nums">
-            {count === null ? '—' : count}
-          </p>
-          {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
-        </CardContent>
-      </Card>
+      <div className={cn(
+        'af-surface px-5 py-4 transition-all',
+        'group-hover:border-primary/40 group-hover:shadow-md group-hover:shadow-primary/5',
+        accent && count && count > 0 ? 'border-yellow-500/50' : '',
+      )}>
+        <p className="af-subhead">{label}</p>
+        <p className={cn('af-metric mt-1.5', count === null ? 'text-foreground/30' : '')}>
+          {count === null ? '—' : count}
+        </p>
+        {sub && <p className="af-caption mt-1">{sub}</p>}
+      </div>
     </Link>
   );
 }
@@ -62,7 +65,7 @@ export default function JobsHubPage() {
         const token = await getToken();
         const res = await listJobs(token ?? undefined);
         setJobs(res.jobs ?? []);
-      } catch (e: unknown) {
+      } catch {
         setError("Couldn't load your jobs. Refresh to try again.");
       }
     }
@@ -74,12 +77,11 @@ export default function JobsHubPage() {
   const complete = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My Jobs</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Create, monitor, and review your production jobs</p>
-        </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="My Jobs"
+        subtitle="Create, monitor, and review your production jobs"
+      >
         {isOperate ? (
           <Link href="/settings/api-keys" className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}>
             API Keys
@@ -89,33 +91,17 @@ export default function JobsHubPage() {
             + New job
           </Link>
         )}
-      </div>
+      </PageHeader>
 
       {error && (
-        <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          href="/myjobs/active"
-          label="Active"
-          count={jobs === null ? null : active.length}
-          sub="queued + running"
-        />
-        <StatCard
-          href="/myjobs/active"
-          label="Needs attention"
-          count={jobs === null ? null : held.length}
-          sub="held or failed"
-          accent
-        />
-        <StatCard
-          href="/myjobs/history"
-          label="Completed"
-          count={jobs === null ? null : complete.length}
-          sub="all time"
-        />
+        <StatCard href="/myjobs/active"  label="Active"           count={jobs === null ? null : active.length}   sub="queued + running" />
+        <StatCard href="/myjobs/active"  label="Needs attention"  count={jobs === null ? null : held.length}     sub="held or failed" accent />
+        <StatCard href="/myjobs/history" label="Completed"        count={jobs === null ? null : complete.length} sub="all time" />
       </div>
 
       {/* Operate plan: API-first banner */}
@@ -128,17 +114,16 @@ export default function JobsHubPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">Submit jobs via API</p>
-              <p className="text-xs text-gray-400 mt-1">
-                Your Operate plan is API-first. Use <code className="text-indigo-400">POST https://api.auraflux.co/v1/jobs</code> to submit jobs
-                programmatically. This page shows real-time status of everything running.
+              <p className="af-body font-semibold text-white">Submit jobs via API</p>
+              <p className="af-caption text-indigo-200/80 mt-1">
+                Your Operate plan is API-first. Use{' '}
+                <code className="text-indigo-300 bg-indigo-900/50 px-1 rounded">POST https://api.auraflux.co/v1/jobs</code>{' '}
+                to submit jobs programmatically. This page shows real-time status of everything running.
               </p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Link href="/settings/api-keys" className={cn(buttonVariants({ size: 'sm' }))}>
-              Get API key
-            </Link>
+            <Link href="/settings/api-keys" className={cn(buttonVariants({ size: 'sm' }))}>Get API key</Link>
             <a
               href="https://robertsworkspace-18914505.atlassian.net/wiki/spaces/CP/pages/8192001"
               target="_blank" rel="noopener noreferrer"
@@ -150,33 +135,35 @@ export default function JobsHubPage() {
         </div>
       )}
 
-      {/* AuraFlux Guide CTA — Guided + Managed only (Operate users use the API) */}
-      {!isOperate && <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 flex items-start gap-4">
-        <div className="mt-0.5 shrink-0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
-            <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-          </svg>
+      {/* AuraFlux Guide CTA — Guided + Managed only */}
+      {!isOperate && (
+        <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 flex items-start gap-4">
+          <div className="mt-0.5 shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
+              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="af-body font-medium">Not sure what to select?</p>
+            <p className="af-caption mt-0.5">
+              Get guided help through format, source, features, and publishing — so your job is configured correctly before it starts production.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              openWithContext('Ready to help you configure your next job. Tell me what type of content you produce and I\'ll walk you through the best setup.');
+              router.push('/myjobs/new');
+            }}
+            className={cn(buttonVariants({ size: 'sm' }), 'shrink-0')}
+          >
+            Get guided help
+          </button>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium">Not sure what to select?</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Get guided help through format, source, features, and publishing — so your job is configured correctly before it starts production.
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            openWithContext('Ready to help you configure your next job. Tell me what type of content you produce and I\'ll walk you through the best setup.');
-            router.push('/myjobs/new');
-          }}
-          className={cn(buttonVariants({ size: 'sm' }), 'shrink-0')}
-        >
-          Get guided help
-        </button>
-      </div>}
+      )}
 
       {/* Quick links */}
       <div>
-        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Quick actions</h2>
+        <p className="af-subhead mb-3">Quick actions</p>
         <div className="flex flex-wrap gap-2">
           <Link href="/myjobs/new"     className={cn(buttonVariants({ size: 'sm' }))}>New job</Link>
           <Link href="/myjobs/active"  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>View active</Link>
@@ -186,17 +173,16 @@ export default function JobsHubPage() {
 
       {/* Empty state */}
       {jobs !== null && jobs.length === 0 && (
-        <div className="text-center py-16 border border-dashed rounded-lg">
-          <p className="text-sm text-muted-foreground">No jobs yet — create your first one.</p>
-          <Link href="/myjobs/new" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-3')}>
-            Create job
-          </Link>
-        </div>
+        <EmptyState
+          title="No jobs yet"
+          description="Create your first production job to get started."
+          action={{ label: 'Create job', href: '/myjobs/new' }}
+        />
       )}
 
       {/* Status legend */}
       {jobs !== null && jobs.length > 0 && (
-        <div className="flex flex-wrap gap-4 text-[10px] text-muted-foreground">
+        <div className="flex flex-wrap gap-4 af-caption">
           {[
             { s: 'running', label: 'Running',  color: 'bg-blue-500' },
             { s: 'queued',  label: 'Queued',   color: 'bg-muted/40' },
@@ -216,6 +202,6 @@ export default function JobsHubPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

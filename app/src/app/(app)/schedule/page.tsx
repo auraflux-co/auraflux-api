@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { FlowNetwork } from '@/components/icons/brand-icons';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   listJobs, updateJobSchedule, listTemplates, updateTemplate,
   getScheduleSuggestion,
@@ -141,18 +143,14 @@ export default function SchedulePage() {
   ];
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold flex items-center gap-2.5">
-          <FlowNetwork size={26} className="text-primary shrink-0" />
-          Schedule
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Upcoming job starts and deferred publishes. Cron checks every 5 minutes.
-        </p>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="Schedule"
+        subtitle="Upcoming job starts and deferred publishes. Cron checks every 5 minutes."
+        badge={<FlowNetwork size={20} className="text-primary shrink-0" />}
+      />
 
-      {error && <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>}
+      {error && <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>}
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
@@ -175,18 +173,17 @@ export default function SchedulePage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="af-body text-muted-foreground">Loading…</p>
       ) : (
         <>
           {/* Upcoming tab */}
           {tab === 'upcoming' && (
             upcoming.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border px-6 py-10 text-center">
-                <p className="text-sm font-medium">No upcoming scheduled items</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use a recurring template or schedule a job start from the job wizard.
-                </p>
-              </div>
+              <EmptyState
+                title="No upcoming scheduled items"
+                description="Use a recurring template or schedule a job start from the job wizard."
+                size="sm"
+              />
             ) : (
               <div className="rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-sm">
@@ -309,21 +306,21 @@ export default function SchedulePage() {
             </div>
 
             {templates.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border px-6 py-10 text-center">
-                <p className="text-sm font-medium">No recurring schedules</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Go to <a href="/templates" className="underline">Templates</a> and set a recurrence cadence on any template.
-                </p>
-              </div>
+              <EmptyState
+                title="No recurring schedules"
+                description="Go to Templates and set a recurrence cadence on any template."
+                action={{ label: 'Go to Templates', href: '/templates' }}
+                size="sm"
+              />
             ) : (
               <div className="space-y-3">
                 {[...recurringActive, ...recurringInactive].map((tpl) => (
                   <div key={tpl.id} className={`rounded-lg border px-4 py-3 flex items-center justify-between gap-4 ${tpl.recurrenceActive ? 'border-border' : 'border-border opacity-60'}`}>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{tpl.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{recurrenceLabel(tpl)}</p>
+                      <p className="af-body font-medium truncate">{tpl.name}</p>
+                      <p className="af-caption mt-0.5">{recurrenceLabel(tpl)}</p>
                       {tpl.nextFireAt && tpl.recurrenceActive && (
-                        <p className="text-xs text-muted-foreground">Next run: {fmtDate(tpl.nextFireAt)}</p>
+                        <p className="af-caption">Next run: {fmtDate(tpl.nextFireAt)}</p>
                       )}
                       {tpl.lastFiredAt && (
                         <p className="text-xs text-muted-foreground">Last fired: {fmtDate(tpl.lastFiredAt)}</p>
@@ -396,6 +393,6 @@ export default function SchedulePage() {
           )}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

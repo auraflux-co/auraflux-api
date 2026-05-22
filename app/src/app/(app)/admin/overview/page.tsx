@@ -17,6 +17,7 @@ import {
 } from '@/lib/api';
 import { tierLabel } from '@/lib/tier-labels';
 import { cn } from '@/lib/utils';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -64,10 +65,10 @@ const TYPE_LABEL: Record<string, string> = {
 
 function StatCard({ label, value, sub, accent }: { label: string; value: number | string; sub?: string; accent?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <p className={cn('text-2xl font-bold tabular-nums', accent)}>{value}</p>
-      <p className="text-xs font-medium text-foreground mt-0.5">{label}</p>
-      {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
+    <div className="af-surface p-4">
+      <p className={cn('af-metric', accent)}>{value}</p>
+      <p className="af-label font-medium text-foreground mt-0.5">{label}</p>
+      {sub && <p className="af-caption mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -133,10 +134,10 @@ function ServiceCard({ svc }: { svc: RenderService }) {
 
 function MetricBox({ label, value, sub, warn }: { label: string; value: string | number | null; sub?: string; warn?: boolean }) {
   return (
-    <div className="rounded-md border border-border bg-card p-3 text-center">
-      <p className={cn('text-lg font-bold tabular-nums', warn ? 'text-red-600 dark:text-red-400' : '')}>{value ?? '—'}</p>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
-      {sub && <p className="text-[10px] text-muted-foreground/70">{sub}</p>}
+    <div className="af-surface p-3 text-center">
+      <p className={cn('text-lg font-bold tabular-nums', warn ? 'text-red-400' : '')}>{value ?? '—'}</p>
+      <p className="af-caption">{label}</p>
+      {sub && <p className="af-caption opacity-70">{sub}</p>}
     </div>
   );
 }
@@ -233,33 +234,24 @@ export default function AdminOverviewPage() {
   });
 
   return (
-    <div className="space-y-6 max-w-7xl">
-
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2.5">
-            <EngineHexagon size={26} className="text-primary shrink-0" />
-            Platform Overview
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {lastFetch
-              ? `Last updated ${lastFetch.toLocaleTimeString()}`
-              : 'Global activity across all customer accounts'}
-          </p>
-        </div>
+    <PageShell maxWidth="7xl">
+      <PageHeader
+        title="Platform Overview"
+        badge={<EngineHexagon size={22} className="text-primary shrink-0" />}
+        subtitle={lastFetch ? `Last updated ${lastFetch.toLocaleTimeString()}` : 'Global activity across all customer accounts'}
+      >
         <button
           onClick={load}
           disabled={loading}
           className={cn(
-            'text-xs px-3 py-1.5 rounded border border-border transition-colors',
-            'hover:bg-muted text-muted-foreground',
+            'af-label px-3 py-1.5 rounded border border-border transition-colors',
+            'hover:bg-muted',
             loading && 'opacity-40 cursor-not-allowed',
           )}
         >
           {loading ? 'Loading…' : 'Refresh'}
         </button>
-      </div>
+      </PageHeader>
 
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded">{error}</p>
@@ -338,11 +330,11 @@ export default function AdminOverviewPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Account</th>
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Type</th>
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Topic</th>
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">When</th>
+                <th className="text-left px-4 py-2.5 af-subhead">Account</th>
+                <th className="text-left px-4 py-2.5 af-subhead">Type</th>
+                <th className="text-left px-4 py-2.5 af-subhead">Topic</th>
+                <th className="text-left px-4 py-2.5 af-subhead">Status</th>
+                <th className="text-right px-4 py-2.5 af-subhead">When</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -397,15 +389,15 @@ export default function AdminOverviewPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Account</th>
-                <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Plan</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Total</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">7d</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Published</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Running</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Failed</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last login</th>
-                <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last job</th>
+                <th className="text-left px-4 py-2.5 af-subhead">Account</th>
+                <th className="text-left px-4 py-2.5 af-subhead">Plan</th>
+                <th className="text-right px-4 py-2.5 af-subhead">Total</th>
+                <th className="text-right px-4 py-2.5 af-subhead">7d</th>
+                <th className="text-right px-4 py-2.5 af-subhead">Published</th>
+                <th className="text-right px-4 py-2.5 af-subhead">Running</th>
+                <th className="text-right px-4 py-2.5 af-subhead">Failed</th>
+                <th className="text-right px-4 py-2.5 af-subhead">Last login</th>
+                <th className="text-right px-4 py-2.5 af-subhead">Last job</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -469,10 +461,10 @@ export default function AdminOverviewPage() {
 
           {/* Open incidents */}
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-foreground">
+            <h2 className="af-h3">
               New Relic Incidents
               {' '}
-              <span className="font-normal text-muted-foreground">
+              <span className="font-normal af-label">
                 {healthLoading ? '(loading…)' : health?.incidents?.length === 0 ? '— all clear' : `— ${health?.incidents?.length} open`}
               </span>
             </h2>
@@ -489,7 +481,7 @@ export default function AdminOverviewPage() {
 
           {/* Render services */}
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-foreground">Render Services</h2>
+            <h2 className="af-h3">Render Services</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {(health?.renderServices ?? RENDER_SERVICES_PLACEHOLDER).map((svc) => (
                 <ServiceCard key={svc.id} svc={svc as RenderService} />
@@ -499,9 +491,9 @@ export default function AdminOverviewPage() {
 
           {/* NR metrics */}
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-foreground">
+            <h2 className="af-h3">
               New Relic Metrics
-              <span className="ml-1 font-normal text-muted-foreground text-xs">last 1 hour</span>
+              <span className="ml-1 font-normal af-caption">last 1 hour</span>
             </h2>
             {health?.nrMetrics && (() => {
               const m = health.nrMetrics;
@@ -558,11 +550,11 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground">
+      <p className="af-caption">
         Click any row to view that account in the operator view. &nbsp;·&nbsp;
         Showing most recent 50 jobs in the activity feed.
       </p>
-    </div>
+    </PageShell>
   );
 }
 
