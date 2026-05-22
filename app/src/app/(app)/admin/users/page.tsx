@@ -14,6 +14,7 @@ import { useRole } from '@/hooks/use-role';
 import { listAllUsers, type AdminUser } from '@/lib/api';
 import { tierLabel } from '@/lib/tier-labels';
 import { cn } from '@/lib/utils';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
 function relTime(iso: string | null): string {
   if (!iso) return '—';
@@ -123,12 +124,12 @@ export default function AdminUsersPage() {
     const active = sort === k;
     return (
       <th
-        className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors"
+        className="text-right px-4 py-2.5 af-subhead cursor-pointer select-none hover:text-foreground transition-colors"
         onClick={() => toggleSort(k)}
       >
         <span className="inline-flex items-center gap-1 justify-end">
           {children}
-          <span className={cn('text-[10px]', active ? 'text-primary' : 'opacity-30')}>
+          <span className={cn('af-caption', active ? 'text-primary' : 'opacity-30')}>
             {active ? (sortDir === 'desc' ? '↓' : '↑') : '↕'}
           </span>
         </span>
@@ -145,41 +146,36 @@ export default function AdminUsersPage() {
   }).length;
 
   return (
-    <div className="space-y-5 max-w-7xl">
-
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">All Users</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {loading ? 'Loading…' : `${sorted.length} of ${users.length} registered accounts`}
-          </p>
-        </div>
+    <PageShell maxWidth="7xl">
+      <PageHeader
+        title="All Users"
+        subtitle={loading ? 'Loading…' : `${sorted.length} of ${users.length} registered accounts`}
+      >
         <button
           onClick={load}
           disabled={loading}
           className={cn(
-            'text-xs px-3 py-1.5 rounded border border-border transition-colors',
+            'af-caption px-3 py-1.5 rounded border border-border transition-colors',
             'hover:bg-muted text-muted-foreground',
             loading && 'opacity-40 cursor-not-allowed',
           )}
         >
           {loading ? 'Loading…' : 'Refresh'}
         </button>
-      </div>
+      </PageHeader>
 
       {/* Summary tiles */}
       {!loading && users.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Total registered',  value: users.length,    accent: '' },
-            { label: 'Active today',      value: activeToday,     accent: 'text-emerald-600 dark:text-emerald-400' },
-            { label: 'No account setup',  value: noAccount,       accent: 'text-amber-600 dark:text-amber-400' },
-            { label: 'Never logged back in', value: neverLoggedIn, accent: 'text-muted-foreground' },
+            { label: 'Total registered',     value: users.length,   accent: '' },
+            { label: 'Active today',         value: activeToday,    accent: 'text-success' },
+            { label: 'No account setup',     value: noAccount,      accent: 'text-amber-600 dark:text-amber-400' },
+            { label: 'Never logged back in', value: neverLoggedIn,  accent: '' },
           ].map((t) => (
-            <div key={t.label} className="rounded-lg border border-border bg-card p-3">
-              <p className={cn('text-xl font-bold tabular-nums', t.accent)}>{t.value}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{t.label}</p>
+            <div key={t.label} className="af-surface p-3">
+              <p className={cn('af-metric tabular-nums', t.accent)}>{t.value}</p>
+              <p className="af-caption mt-0.5">{t.label}</p>
             </div>
           ))}
         </div>
@@ -238,12 +234,12 @@ export default function AdminUsersPage() {
 
       {/* Table */}
       <div className="rounded-lg border border-border overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full af-body">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">User</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Plan / Role</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Setup</th>
+              <th className="text-left px-4 py-2.5 af-subhead">User</th>
+              <th className="text-left px-4 py-2.5 af-subhead">Plan / Role</th>
+              <th className="text-left px-4 py-2.5 af-subhead">Setup</th>
               <SortTh k="jobCount">Jobs</SortTh>
               <SortTh k="signedUpAt">Signed up</SortTh>
               <SortTh k="lastSignInAt">Last login</SortTh>
@@ -268,23 +264,23 @@ export default function AdminUsersPage() {
                   >
                     {/* User */}
                     <td className="px-4 py-3">
-                      <div className="font-medium text-foreground truncate max-w-[220px]">
+                      <div className="af-label font-medium truncate max-w-[220px]">
                         {u.email ?? <span className="text-muted-foreground italic">No email</span>}
                       </div>
-                      {name && <div className="text-xs text-muted-foreground">{name}</div>}
+                      {name && <div className="af-caption">{name}</div>}
                       {isExpanded && (
-                        <div className="text-[10px] text-muted-foreground/60 font-mono mt-0.5 truncate">{u.id}</div>
+                        <div className="af-caption text-muted-foreground/60 font-mono mt-0.5 truncate">{u.id}</div>
                       )}
                     </td>
 
                     {/* Plan / Role */}
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
-                        <span className={cn('inline-block w-fit px-2 py-0.5 rounded text-xs font-medium', TIER_PILL[u.planTier] ?? TIER_PILL.operate)}>
+                        <span className={cn('inline-block w-fit px-2 py-0.5 rounded af-caption font-medium', TIER_PILL[u.planTier] ?? TIER_PILL.operate)}>
                           {tierLabel(u.planTier)}
                         </span>
                         {u.role !== 'customer' && (
-                          <span className={cn('inline-block w-fit px-2 py-0.5 rounded text-[10px] font-medium', ROLE_PILL[u.role] ?? ROLE_PILL.customer)}>
+                          <span className={cn('inline-block w-fit px-2 py-0.5 rounded af-caption font-medium', ROLE_PILL[u.role] ?? ROLE_PILL.customer)}>
                             {u.role}
                           </span>
                         )}
@@ -294,44 +290,44 @@ export default function AdminUsersPage() {
                     {/* Account setup */}
                     <td className="px-4 py-3">
                       {u.hasAccount ? (
-                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">✓ Complete</span>
+                        <span className="af-caption text-success font-medium">✓ Complete</span>
                       ) : (
-                        <span className="text-xs text-amber-600 dark:text-amber-400">Not set up</span>
+                        <span className="af-caption text-amber-600 dark:text-amber-400">Not set up</span>
                       )}
                     </td>
 
                     {/* Jobs */}
-                    <td className="px-4 py-3 text-right tabular-nums font-medium">
+                    <td className="px-4 py-3 text-right tabular-nums af-label font-medium">
                       {u.jobCount || <span className="text-muted-foreground">—</span>}
                     </td>
 
                     {/* Signed up */}
-                    <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums">
+                    <td className="px-4 py-3 text-right af-caption tabular-nums">
                       {isExpanded ? absTime(u.signedUpAt) : relTime(u.signedUpAt)}
                     </td>
 
                     {/* Last login */}
-                    <td className="px-4 py-3 text-right text-xs tabular-nums">
+                    <td className="px-4 py-3 text-right af-caption tabular-nums">
                       {u.lastSignInAt ? (
                         <span className={cn(
                           Date.now() - new Date(u.lastSignInAt).getTime() < 86400000
-                            ? 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-success'
                             : 'text-muted-foreground',
                         )}>
                           {isExpanded ? absTime(u.lastSignInAt) : relTime(u.lastSignInAt)}
                         </span>
                       ) : (
-                        <span className="text-muted-foreground/50 italic text-[10px]">never</span>
+                        <span className="text-muted-foreground/50 italic">never</span>
                       )}
                     </td>
 
                     {/* Last active */}
-                    <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums">
+                    <td className="px-4 py-3 text-right af-caption tabular-nums">
                       {isExpanded ? absTime(u.lastActiveAt) : relTime(u.lastActiveAt)}
                     </td>
 
                     {/* Last job */}
-                    <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums">
+                    <td className="px-4 py-3 text-right af-caption tabular-nums">
                       {isExpanded ? absTime(u.lastJobAt) : relTime(u.lastJobAt)}
                     </td>
                   </tr>
@@ -340,7 +336,7 @@ export default function AdminUsersPage() {
                   {isExpanded && (
                     <tr key={`${u.id}-detail`} className="bg-muted/10 border-t-0">
                       <td colSpan={8} className="px-4 pb-3 pt-0">
-                        <div className="flex flex-wrap gap-x-8 gap-y-1 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap gap-x-8 gap-y-1 af-caption">
                           <span><span className="font-medium text-foreground">Signed up</span> — {absTime(u.signedUpAt)}</span>
                           <span><span className="font-medium text-foreground">Last login</span> — {absTime(u.lastSignInAt)}</span>
                           <span><span className="font-medium text-foreground">Last active</span> — {absTime(u.lastActiveAt)}</span>
@@ -364,7 +360,7 @@ export default function AdminUsersPage() {
             })}
             {sorted.length === 0 && !loading && (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={8} className="px-4 py-10 text-center af-body">
                   No users match the current filter.
                 </td>
               </tr>
@@ -373,10 +369,10 @@ export default function AdminUsersPage() {
         </table>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="af-caption">
         Click any row to expand full timestamps and Clerk ID. &nbsp;·&nbsp;
         Sortable by signed up, last login, last active, last job, and job count.
       </p>
-    </div>
+    </PageShell>
   );
 }

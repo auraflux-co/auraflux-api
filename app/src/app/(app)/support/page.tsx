@@ -13,6 +13,7 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePlan } from '@/contexts/plan-context';
 import { cn } from '@/lib/utils';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import {
   supportChat,
   getSupportSessions,
@@ -53,7 +54,7 @@ function GuidesPanel({ canEsc }: { canEsc: boolean }) {
   return (
     <aside className="w-full lg:w-72 shrink-0 space-y-4">
       <div className="rounded-lg border border-border p-4">
-        <h2 className="text-sm font-semibold mb-3">Guides</h2>
+        <h2 className="af-subhead mb-3">Guides</h2>
         <ul className="space-y-1.5">
           {GUIDE_LINKS.map((g) => (
             <li key={g.label}>
@@ -61,7 +62,7 @@ function GuidesPanel({ canEsc }: { canEsc: boolean }) {
                 href={g.url}
                 target={g.url.startsWith('http') ? '_blank' : undefined}
                 rel="noopener noreferrer"
-                className="flex items-start gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+                className="flex items-start gap-2 af-body hover:text-foreground transition-colors group"
               >
                 <svg className="shrink-0 mt-0.5 text-primary/60 group-hover:text-primary" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -75,10 +76,10 @@ function GuidesPanel({ canEsc }: { canEsc: boolean }) {
       </div>
 
       <div className="rounded-lg border border-border p-4 space-y-2">
-        <h2 className="text-sm font-semibold">Text support</h2>
+        <h2 className="af-subhead">Text support</h2>
         {canEsc ? (
           <>
-            <p className="text-xs text-muted-foreground">Text us directly — your conversation will appear in your support history here.</p>
+            <p className="af-caption">Text us directly — your conversation will appear in your support history here.</p>
             <a
               href={`sms:${SUPPORT_SMS.replace(/\s/g, '')}`}
               className="flex items-center gap-2 mt-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium w-full justify-center hover:bg-primary/90 transition-colors"
@@ -90,7 +91,7 @@ function GuidesPanel({ canEsc }: { canEsc: boolean }) {
             </a>
           </>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="af-caption">
             Text support is included with Guided and Managed plans.{' '}
             <Link href="/billing" className="text-primary underline">Upgrade to unlock</Link>.
           </p>
@@ -129,8 +130,8 @@ function EscalateModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-card border border-border rounded-lg w-full max-w-md p-6 space-y-4 mx-4">
-        <h3 className="text-base font-semibold">Email the AuraFlux team</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="af-subhead">Email the AuraFlux team</h3>
+        <p className="af-body">
           This sends your issue directly to the AuraFlux team. For a faster response, use the text support button instead.
         </p>
         <textarea
@@ -139,7 +140,7 @@ function EscalateModal({
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
         />
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {error && <p className="af-caption text-destructive">{error}</p>}
         <div className="flex gap-2 justify-end">
           <button onClick={onClose} className="px-4 py-2 rounded-md border border-border text-sm hover:bg-accent/50">Cancel</button>
           <button
@@ -163,18 +164,18 @@ function SessionHistory({
   if (!sessions.length) return null;
   return (
     <div className="mt-6">
-      <h2 className="text-sm font-semibold mb-2">Past sessions</h2>
+      <h2 className="af-subhead mb-2">Past sessions</h2>
       <div className="space-y-1">
         {sessions.map((s) => (
           <button
             key={s.id}
             onClick={() => onSelect(s)}
             className={cn(
-              'w-full text-left px-3 py-2 rounded-md text-xs transition-colors flex items-center justify-between gap-2',
+              'w-full text-left px-3 py-2 rounded-md af-caption transition-colors flex items-center justify-between gap-2',
               s.id === activeId ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 text-muted-foreground',
             )}
           >
-            <span>{new Date(s.created_at).toLocaleDateString()} — {s.message_count} message{s.message_count !== 1 ? 's' : ''}</span>
+                <span className="af-caption">{new Date(s.created_at).toLocaleDateString()} — {s.message_count} message{s.message_count !== 1 ? 's' : ''}</span>
             <span className="flex items-center gap-1">
               {s.escalated && <span className="text-amber-500">↑ escalated</span>}
               {s.resolved  && <span className="text-emerald-500">✓ resolved</span>}
@@ -280,18 +281,15 @@ export default function SupportPage() {
     } catch { /* non-fatal */ }
   }
 
+  const supportSubtitle = plan === 'operate' && ageDays <= 30
+    ? `Support is available during your first month (${30 - ageDays} days remaining). Upgrade to Guided for ongoing support.`
+    : plan === 'operate'
+    ? 'Your trial support period has ended. Use the guides below or upgrade to Guided for ongoing support and SMS escalation.'
+    : 'Support + SMS escalation included with your plan.';
+
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Support</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {plan === 'operate' && ageDays <= 30
-            ? `Support is available during your first month (${30 - ageDays} days remaining). Upgrade to Guided for ongoing support.`
-            : plan === 'operate'
-            ? 'Your trial support period has ended. Use the guides below or upgrade to Guided for ongoing support and SMS escalation.'
-            : 'Support + SMS escalation included with your plan.'}
-        </p>
-      </div>
+    <PageShell maxWidth="4xl">
+      <PageHeader title="Support" subtitle={supportSubtitle} />
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* ── Chat panel ── */}
@@ -324,12 +322,12 @@ export default function SupportPage() {
             {/* Input */}
             <div className="border-t border-border p-3">
               {!canChat ? (
-                <div className="text-center text-sm text-muted-foreground py-2">
+                <div className="text-center af-body py-2">
                   Support chat is not available on your current plan.{' '}
                   <Link href="/billing" className="text-primary underline">Upgrade to Guided</Link>
                 </div>
               ) : resolved ? (
-                <div className="text-center text-sm text-muted-foreground py-2">
+                <div className="text-center af-body py-2">
                   This session is resolved.{' '}
                   <button onClick={() => { setMessages([{ role: 'assistant', content: "Hi! I'm AuraFlux Support. What issue are you running into today?" }]); setSessionId(null); setResolved(false); setEscalated(false); }} className="text-primary underline">Start a new session</button>
                 </div>
@@ -359,20 +357,20 @@ export default function SupportPage() {
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <button
                 onClick={handleResolve}
-                className="text-xs text-muted-foreground hover:text-foreground underline"
+                className="af-caption hover:text-foreground underline"
               >
                 Mark as resolved
               </button>
               {canEsc && !escalated && (
                 <button
                   onClick={() => setShowEsc(true)}
-                  className="text-xs text-muted-foreground hover:text-foreground underline ml-auto"
+                  className="af-caption hover:text-foreground underline ml-auto"
                 >
                   Contact our team
                 </button>
               )}
               {escalated && (
-                <span className="text-xs text-amber-500 ml-auto">↑ Escalated to team</span>
+                <span className="af-caption text-amber-500 ml-auto">↑ Escalated to team</span>
               )}
             </div>
           )}
@@ -394,6 +392,6 @@ export default function SupportPage() {
           onDone={() => { setShowEsc(false); setEscalated(true); }}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

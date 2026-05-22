@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { tierLabel } from '@/lib/tier-labels';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
 interface AccountSummary {
   accountId:    string;
@@ -88,21 +89,15 @@ export default function CrmListPage() {
   );
 
   return (
-    <div className="max-w-6xl space-y-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">CRM</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            All customer accounts — {accounts.length} total
-          </p>
-        </div>
+    <PageShell maxWidth="7xl">
+      <PageHeader title="CRM" subtitle={`All customer accounts — ${accounts.length} total`}>
         <button
           onClick={load}
-          className="shrink-0 text-xs text-muted-foreground hover:text-foreground border border-border rounded px-3 py-1.5"
+          className="shrink-0 af-caption text-muted-foreground hover:text-foreground border border-border rounded px-3 py-1.5"
         >
           Refresh
         </button>
-      </div>
+      </PageHeader>
 
       {error && (
         <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 flex items-center justify-between text-sm text-destructive">
@@ -144,14 +139,14 @@ export default function CrmListPage() {
 
       {/* Table */}
       <div className="rounded-lg border border-border overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full af-body">
           <thead className="bg-muted/40 border-b border-border">
             <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Account</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Plan</th>
-              <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Credits left</th>
-              <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Jobs</th>
-              <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Last active</th>
+              <th className="px-4 py-2.5 text-left af-subhead">Account</th>
+              <th className="px-4 py-2.5 text-left af-subhead">Plan</th>
+              <th className="px-4 py-2.5 text-right af-subhead">Credits left</th>
+              <th className="px-4 py-2.5 text-right af-subhead">Jobs</th>
+              <th className="px-4 py-2.5 text-right af-subhead">Last active</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -168,8 +163,8 @@ export default function CrmListPage() {
                 className="hover:bg-accent/30 cursor-pointer transition-colors"
               >
                 <td className="px-4 py-3">
-                  <p className="font-medium truncate max-w-xs">{a.ownerEmail ?? '—'}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{a.accountId.slice(0, 18)}…</p>
+                  <p className="af-label font-medium truncate max-w-xs">{a.ownerEmail ?? '—'}</p>
+                  <p className="af-caption font-mono">{a.accountId.slice(0, 18)}…</p>
                 </td>
                 <td className="px-4 py-3">
                   <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', TIER_BADGE[a.planTier] ?? TIER_BADGE.operate)}>
@@ -187,9 +182,9 @@ export default function CrmListPage() {
         </table>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="af-caption">
         Showing {filtered.length} of {accounts.length} accounts
       </p>
-    </div>
+    </PageShell>
   );
 }

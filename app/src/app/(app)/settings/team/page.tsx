@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
 type MemberRole = 'owner' | 'admin' | 'member' | 'billing';
 type MemberStatus = 'active' | 'pending' | 'revoked';
@@ -153,42 +154,36 @@ export default function TeamPage() {
   const pendingInvites = members.filter(m => m.status === 'pending');
 
   if (loadError) return (
-    <div className="max-w-3xl mx-auto py-10 px-4 space-y-4">
-      <h1 className="text-2xl font-semibold">My Team</h1>
+    <PageShell maxWidth="4xl">
+      <PageHeader title="My Team" />
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 flex items-center justify-between gap-4">
-        <p className="text-sm text-destructive">{loadError}</p>
-        <button
-          onClick={load}
-          className="shrink-0 text-xs text-destructive underline hover:no-underline"
-        >
+        <p className="af-body text-destructive">{loadError}</p>
+        <button onClick={load} className="shrink-0 af-caption text-destructive underline hover:no-underline">
           Retry
         </button>
       </div>
-    </div>
+    </PageShell>
   );
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4 space-y-8">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My Team</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage who has access to your AuraFlux account.
-          </p>
-        </div>
+    <PageShell maxWidth="4xl">
+      <PageHeader
+        title="My Team"
+        subtitle="Manage who has access to your AuraFlux account."
+      >
         {canInvite && (
           <Button size="sm" onClick={() => { setShowInvite(v => !v); setInviteResult(null); }}>
             {showInvite ? 'Cancel' : '+ Invite member'}
           </Button>
         )}
-      </div>
+      </PageHeader>
 
       {/* Invite form */}
       {showInvite && canInvite && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Invite a team member</CardTitle>
-            <CardDescription>They will receive an email with a link to accept.</CardDescription>
+            <CardTitle className="af-subhead">Invite a team member</CardTitle>
+            <CardDescription className="af-body">They will receive an email with a link to accept.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleInvite} className="space-y-4">
@@ -214,7 +209,7 @@ export default function TeamPage() {
                   {inviting ? 'Sending…' : 'Send invite'}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">{ROLE_DESCRIPTIONS[inviteRole]}</p>
+              <p className="af-caption">{ROLE_DESCRIPTIONS[inviteRole]}</p>
               {inviteResult?.url && (
                 <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 p-3 text-xs space-y-1">
                   <p className="font-medium text-emerald-700 dark:text-emerald-400">Invitation sent!</p>
@@ -235,19 +230,19 @@ export default function TeamPage() {
       {/* Active members */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Members ({activeMembers.length})</CardTitle>
+          <CardTitle className="af-subhead">Members ({activeMembers.length})</CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
           {loading ? (
-            <p className="text-sm text-muted-foreground py-4">Loading…</p>
+            <p className="af-body py-4">Loading…</p>
           ) : activeMembers.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No members yet.</p>
+            <p className="af-body py-4">No members yet.</p>
           ) : (
             activeMembers.map(m => (
               <div key={m.id} className="flex items-center justify-between py-3 gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{m.invited_email}</p>
-                  <p className="text-xs text-muted-foreground">{ROLE_DESCRIPTIONS[m.role]}</p>
+                  <p className="af-label font-medium truncate">{m.invited_email}</p>
+                  <p className="af-caption">{ROLE_DESCRIPTIONS[m.role]}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge variant={ROLE_BADGE_VARIANT[m.role]}>{ROLE_LABELS[m.role]}</Badge>
@@ -288,15 +283,15 @@ export default function TeamPage() {
       {/* Pending invitations */}
       {pendingInvites.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Pending invitations ({pendingInvites.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="divide-y">
+        <CardHeader>
+          <CardTitle className="af-subhead">Pending invitations ({pendingInvites.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="divide-y">
             {pendingInvites.map(m => (
               <div key={m.id} className="flex items-center justify-between py-3 gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{m.invited_email}</p>
-                  <p className="text-xs text-muted-foreground">Invited as {ROLE_LABELS[m.role]} — awaiting acceptance</p>
+                  <p className="af-label font-medium truncate">{m.invited_email}</p>
+                  <p className="af-caption">Invited as {ROLE_LABELS[m.role]} — awaiting acceptance</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge variant="outline" className="text-xs">Pending</Badge>
@@ -321,17 +316,17 @@ export default function TeamPage() {
       {/* Role reference */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Role permissions</CardTitle>
+          <CardTitle className="af-subhead">Role permissions</CardTitle>
         </CardHeader>
         <CardContent>
-          <table className="w-full text-xs">
+          <table className="w-full af-caption">
             <thead>
-              <tr className="text-left text-muted-foreground">
-                <th className="pb-2 font-medium">Permission</th>
-                <th className="pb-2 font-medium text-center">Owner</th>
-                <th className="pb-2 font-medium text-center">Admin</th>
-                <th className="pb-2 font-medium text-center">Member</th>
-                <th className="pb-2 font-medium text-center">Billing</th>
+              <tr className="text-left">
+                <th className="pb-2 af-subhead">Permission</th>
+                <th className="pb-2 af-subhead text-center">Owner</th>
+                <th className="pb-2 af-subhead text-center">Admin</th>
+                <th className="pb-2 af-subhead text-center">Member</th>
+                <th className="pb-2 af-subhead text-center">Billing</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -355,6 +350,6 @@ export default function TeamPage() {
           </table>
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }

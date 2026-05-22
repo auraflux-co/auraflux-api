@@ -44,7 +44,7 @@ export function PageShell({ children, maxWidth = '5xl', className }: PageShellPr
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   /** Optional badge/tag rendered next to the title (e.g. plan badge). */
   badge?: React.ReactNode;
   /** Trailing content — typically action buttons. */

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import {
   getSourceChannels,
   saveSourceChannels,
@@ -152,17 +153,14 @@ export default function SourceChannelsPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">My Channels</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Save your default source channels. The source library picker will pre-fill these
-          so you don&apos;t have to type them every time.
-        </p>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="My Channels"
+        subtitle="Save your default source channels. The source library picker will pre-fill these so you don't have to type them every time."
+      />
 
       {saveError && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 af-body text-destructive">
           {saveError}
         </div>
       )}
@@ -195,7 +193,7 @@ export default function SourceChannelsPage() {
                 </div>
 
                 <div className="flex-1 space-y-1.5">
-                  <Label htmlFor={p.key} className="text-sm font-medium">
+                  <Label htmlFor={p.key} className="af-label font-medium">
                     {p.label}
                   </Label>
 
@@ -226,20 +224,16 @@ export default function SourceChannelsPage() {
 
                   {/* Channel name preview when verified */}
                   {v.state === 'ok' && displayName && (
-                    <p className="text-xs text-green-600 dark:text-green-400 font-medium">
-                      {displayName}
-                    </p>
+                    <p className="af-caption text-success font-medium">{displayName}</p>
                   )}
                   {v.state === 'error' && (
-                    <p className="text-xs text-destructive">
-                      {v.error ?? 'Channel not found'}
-                    </p>
+                    <p className="af-caption text-destructive">{v.error ?? 'Channel not found'}</p>
                   )}
                   {v.state === 'idle' && (
-                    <p className="text-xs text-muted-foreground">{p.hint}</p>
+                    <p className="af-caption">{p.hint}</p>
                   )}
                   {v.state === 'loading' && (
-                    <p className="text-xs text-muted-foreground">Verifying…</p>
+                    <p className="af-caption">Verifying…</p>
                   )}
                 </div>
               </CardContent>
@@ -255,15 +249,13 @@ export default function SourceChannelsPage() {
           {isPending ? 'Saving…' : 'Save channels'}
         </Button>
         {saved && (
-          <span className="text-sm text-green-600 dark:text-green-400">
-            Saved
-          </span>
+          <span className="af-label text-success">Saved</span>
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="af-caption">
         These are defaults only. You can still browse a different channel when creating a job.
       </p>
-    </div>
+    </PageShell>
   );
 }
