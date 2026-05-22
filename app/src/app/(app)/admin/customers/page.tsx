@@ -7,6 +7,7 @@ import { useRole } from '@/hooks/use-role';
 import { listCustomers, type CustomerRecord } from '@/lib/api';
 import { tierLabel } from '@/lib/tier-labels';
 import { cn } from '@/lib/utils';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
 function relTime(iso: string | null): string {
   if (!iso) return '—';
@@ -71,30 +72,26 @@ export default function AdminCustomersPage() {
   });
 
   return (
-    <div className="space-y-6 max-w-6xl">
-
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">All Customers</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {loading ? 'Loading…' : `${filtered.length} of ${customers.length} accounts`}
-          </p>
-        </div>
+    <PageShell maxWidth="6xl">
+      <PageHeader
+        title="All Customers"
+        subtitle={loading ? 'Loading…' : `${filtered.length} of ${customers.length} accounts`}
+      >
         <button
           onClick={load}
           disabled={loading}
           className={cn(
-            'text-xs px-3 py-1.5 rounded border border-border transition-colors',
-            'hover:bg-muted text-muted-foreground',
+            'af-label px-3 py-1.5 rounded border border-border transition-colors',
+            'hover:bg-muted',
             loading && 'opacity-40 cursor-not-allowed',
           )}
         >
           {loading ? 'Loading…' : 'Refresh'}
         </button>
-      </div>
+      </PageHeader>
 
       {error && (
-        <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 px-3 py-2 rounded">{error}</p>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
@@ -127,13 +124,13 @@ export default function AdminCustomersPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Account</th>
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Plan</th>
-              <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Credits</th>
-              <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Jobs</th>
-              <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last login</th>
-              <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Last job</th>
-              <th className="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Joined</th>
+              <th className="text-left px-4 py-2.5 af-subhead">Account</th>
+              <th className="text-left px-4 py-2.5 af-subhead">Plan</th>
+              <th className="text-right px-4 py-2.5 af-subhead">Credits</th>
+              <th className="text-right px-4 py-2.5 af-subhead">Jobs</th>
+              <th className="text-right px-4 py-2.5 af-subhead">Last login</th>
+              <th className="text-right px-4 py-2.5 af-subhead">Last job</th>
+              <th className="text-right px-4 py-2.5 af-subhead">Joined</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -179,7 +176,7 @@ export default function AdminCustomersPage() {
             })}
             {filtered.length === 0 && !loading && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={7} className="px-4 py-10 text-center af-body text-muted-foreground">
                   No customers match the current filter.
                 </td>
               </tr>
@@ -187,6 +184,6 @@ export default function AdminCustomersPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -17,6 +17,8 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { listJobs, type Job, type WizardConfig, type PublishResult } from '@/lib/api';
 import { labelForContentType } from '@/lib/content-types';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const COMPLETE_STATUSES = new Set(['complete', 'published']);
 
@@ -153,19 +155,18 @@ export default function HistoryPage() {
   }, [getToken, isLoaded]);
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My job history</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Completed jobs, post-publish links, and selection review</p>
-        </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="My job history"
+        subtitle="Completed jobs, post-publish links, and selection review"
+      >
         <Link href="/myjobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
           + New job
         </Link>
-      </div>
+      </PageHeader>
 
       {error && (
-        <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
 
       {jobs === null && !error && (
@@ -177,12 +178,11 @@ export default function HistoryPage() {
       )}
 
       {jobs !== null && jobs.length === 0 && !error && (
-        <div className="text-center py-16 border border-dashed rounded-lg">
-          <p className="text-sm text-muted-foreground">No completed jobs yet.</p>
-          <Link href="/myjobs/new" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-3')}>
-            Create your first job
-          </Link>
-        </div>
+        <EmptyState
+          title="No completed jobs yet"
+          description="Once a job finishes, it will appear here with download links and publish history."
+          action={{ label: 'Create your first job', href: '/myjobs/new' }}
+        />
       )}
 
       {jobs !== null && jobs.length > 0 && (
@@ -192,7 +192,7 @@ export default function HistoryPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

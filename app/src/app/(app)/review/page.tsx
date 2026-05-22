@@ -26,6 +26,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { apiFetch } from '@/lib/api';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/ui/empty-state';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -151,12 +153,12 @@ function PublishCopySection({ copy }: { copy: Record<string, Record<string, unkn
     <div className="space-y-3">
       {Object.entries(copy).map(([platform, meta]) => (
         <div key={platform} className="rounded-md border p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+          <p className="af-subhead mb-1">
             {PLATFORM_ICONS[platform] ?? '●'} {platform}
           </p>
           {meta.title    != null && <p className="text-sm font-medium">{String(meta.title)}</p>}
           {meta.description != null && (
-            <p className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap line-clamp-4">
+            <p className="mt-1 af-label whitespace-pre-wrap line-clamp-4">
               {String(meta.description)}
             </p>
           )}
@@ -249,7 +251,7 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
 
         {/* LEFT: What was ordered */}
         <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What was ordered</p>
+          <p className="af-subhead">What was ordered</p>
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
             <dt className="text-muted-foreground">Content type</dt>
             <dd>{input.contentType ?? '—'}</dd>
@@ -288,7 +290,7 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
 
         {/* RIGHT: What was produced */}
         <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">What was produced</p>
+          <p className="af-subhead">What was produced</p>
           {output.videoUrl ? (
             <video
               src={output.videoUrl}
@@ -420,7 +422,7 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function StagingPage() {
   const { getToken } = useAuth();
@@ -456,24 +458,21 @@ export default function StagingPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div>
-        <h1 className="text-2xl font-semibold">Review Queue</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Videos ready for your review before publishing to social platforms.
-          Compare the input spec against the output — video, thumbnail, script, and publish copy.
-        </p>
-      </div>
+    <PageShell maxWidth="4xl">
+      <PageHeader
+        title="Review Queue"
+        subtitle="Videos ready for your review before publishing to social platforms."
+      />
 
-      {loading && <p className="text-sm text-muted-foreground">Loading jobs…</p>}
-      {error   && <p className="text-sm text-red-600">{error}</p>}
+      {loading && <p className="af-body text-muted-foreground">Loading jobs…</p>}
+      {error   && <p className="af-body text-destructive">{error}</p>}
 
       {!loading && !error && jobs.length === 0 && (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            No completed jobs yet. Once a job finishes processing, it will appear here for your review before publishing.
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Queue is clear"
+          description="Once a job finishes processing, it will appear here for review before publishing."
+          size="md"
+        />
       )}
 
       {jobs.map((job) => {
@@ -490,7 +489,7 @@ export default function StagingPage() {
                       <Badge variant="outline" className="text-xs">has output</Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="af-caption mt-1">
                     {job.contentType ?? 'unknown'}{' · '}
                     {job.platforms?.length ? job.platforms.map((p) => PLATFORM_ICONS[p] ?? p).join(' ') : 'no platforms'}{' · '}
                     {formatDate(job.createdAt)}
@@ -522,6 +521,6 @@ export default function StagingPage() {
           </Card>
         );
       })}
-    </div>
+    </PageShell>
   );
 }

@@ -15,6 +15,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { listJobs, listTemplates, operatorJobAction, type Job, type JobTemplate, type OperatorAction } from '@/lib/api';
 import { useRole } from '@/hooks/use-role';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const ACTIVE_STATUSES = new Set(['queued', 'running', 'held', 'failed']);
 const SCHEDULED_JOB_STATUSES = new Set(['queued_scheduled']);
@@ -106,38 +108,33 @@ export default function ActiveJobsPage() {
   const inProgress   = jobs.filter((j) => j.status === 'queued' || j.status === 'running');
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My active jobs</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Scheduled, in progress, and jobs that need your attention
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchJobs}
-            disabled={isPending}
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), isPending && 'opacity-50')}
-          >
-            {isPending ? 'Refreshing…' : 'Refresh'}
-          </button>
-          <Link href="/myjobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
-            + New job
-          </Link>
-        </div>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="My active jobs"
+        subtitle="Scheduled, in progress, and jobs that need your attention"
+      >
+        <button
+          onClick={fetchJobs}
+          disabled={isPending}
+          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), isPending && 'opacity-50')}
+        >
+          {isPending ? 'Refreshing…' : 'Refresh'}
+        </button>
+        <Link href="/myjobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
+          + New job
+        </Link>
+      </PageHeader>
 
       {error && (
-        <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
       {actionError && (
-        <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{actionError}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{actionError}</p>
       )}
 
       {(scheduledJobs.length > 0 || upcomingTemplates.length > 0) && (
         <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+          <h2 className="af-subhead mb-2">
             Scheduled ({scheduledJobs.length + upcomingTemplates.length})
           </h2>
           <div className="space-y-2">
@@ -154,9 +151,7 @@ export default function ActiveJobsPage() {
       {/* Needs attention */}
       {heldOrFailed.length > 0 && (
         <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            Needs attention ({heldOrFailed.length})
-          </h2>
+          <h2 className="af-subhead mb-2">Needs attention ({heldOrFailed.length})</h2>
           <div className="space-y-2">
             {heldOrFailed.map((job) => (
               <JobRow key={job.jobId} job={job} isOperator={isOperator} onAction={handleAction} />
@@ -168,9 +163,7 @@ export default function ActiveJobsPage() {
       {/* In progress */}
       {inProgress.length > 0 && (
         <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            In progress ({inProgress.length})
-          </h2>
+          <h2 className="af-subhead mb-2">In progress ({inProgress.length})</h2>
           <div className="space-y-2">
             {inProgress.map((job) => (
               <JobRow key={job.jobId} job={job} isOperator={isOperator} onAction={handleAction} />
@@ -181,14 +174,13 @@ export default function ActiveJobsPage() {
 
       {/* Empty */}
       {!isPending && jobs.length === 0 && scheduledJobs.length === 0 && upcomingTemplates.length === 0 && !error && (
-        <div className="text-center py-16 border border-dashed rounded-lg">
-          <p className="text-sm text-muted-foreground">No active jobs right now.</p>
-          <Link href="/myjobs/new" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-3')}>
-            Create a job
-          </Link>
-        </div>
+        <EmptyState
+          title="No active jobs right now"
+          description="Jobs you create will appear here while they're running."
+          action={{ label: 'Create a job', href: '/myjobs/new' }}
+        />
       )}
-    </div>
+    </PageShell>
   );
 }
 
