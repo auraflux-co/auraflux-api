@@ -174,18 +174,14 @@ function settingsNavItem(planTier: string | null): NavItem {
   return { href: '/settings', label: 'Settings', children };
 }
 
-const OPERATOR_NAV: NavItem[] = [
-  { href: '/generate',      label: 'Generate', divider: 'Operator tools' },
-  { href: '/operator',      label: 'Operator'  },
-];
-
 const ADMIN_NAV: NavItem[] = [
-  { href: '/admin',    label: 'Overview',    divider: 'Admin tools' },
-  { href: '/admin/users',       label: 'All Users'   },
-  { href: '/admin/support',     label: 'Support Inbox' },
-  { href: '/admin/crm',         label: 'CRM'         },
-  { href: '/admin/permissions', label: 'Permissions' },
-  // Customer preview — lets admin test the job wizard and staging queue
+  { href: '/admin',             label: 'Overview',      divider: 'Platform tools' },
+  { href: '/admin/users',       label: 'All Users'      },
+  { href: '/admin/support',     label: 'Support Inbox'  },
+  { href: '/admin/crm',         label: 'CRM'            },
+  { href: '/admin/permissions', label: 'Permissions'    },
+  { href: '/operator',          label: 'All Jobs'       },
+  { href: '/generate',          label: 'Generate'       },
   {
     href: '/myjobs', label: 'Jobs (preview)', divider: 'Customer preview',
     children: [
@@ -204,21 +200,19 @@ const CONFLUENCE_GUIDE_URL =
 
 export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const pathname                               = usePathname();
-  const { isOperator, isSuperAdmin }           = useRole();
+  const { isSuperAdmin }                       = useRole();
   const { planTier }                           = usePlan();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const router                                 = useRouter();
 
   const CUSTOMER_NAV = [...CUSTOMER_NAV_BASE, settingsNavItem(planTier)];
 
-  // When setup is incomplete: only the dashboard home is accessible
+  // Superadmin sees platform tools; everyone else sees customer nav
   const navItems = setupLocked
     ? []
-        : isSuperAdmin
-      ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
-      : isOperator
-        ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
-        : CUSTOMER_NAV;
+    : isSuperAdmin
+      ? ADMIN_NAV
+      : CUSTOMER_NAV;
 
   function isActive(href: string) {
     if (href === '/home') return pathname === href;
@@ -401,7 +395,7 @@ export function MobileSidebarOverlay() {
 export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const { mobileOpen, closeMobile } = useSidebar();
   const pathname                    = usePathname();
-  const { isOperator, isSuperAdmin } = useRole();
+  const { isSuperAdmin }            = useRole();
   const { planTier }                = usePlan();
   const router                      = useRouter();
 
@@ -410,10 +404,8 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const navItems = setupLocked
     ? []
     : isSuperAdmin
-      ? [...OPERATOR_NAV.filter((n) => !n.divider), ...ADMIN_NAV]
-      : isOperator
-        ? [...CUSTOMER_NAV, ...OPERATOR_NAV]
-        : CUSTOMER_NAV;
+      ? ADMIN_NAV
+      : CUSTOMER_NAV;
 
   function isActive(href: string) {
     if (href === '/home') return pathname === href;

@@ -18,7 +18,7 @@ export class ApiError extends Error {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type UserRole = 'customer' | 'operator' | 'admin' | 'superadmin';
+export type UserRole = 'customer' | 'superadmin';
 export type PlanTier = 'operate' | 'guided' | 'managed' | 'custom';
 
 export type PortalStatus = 'pending' | 'running' | 'pass' | 'hold' | 'failed' | 'skipped';
@@ -399,7 +399,7 @@ export async function listAllUsers(token?: string): Promise<{ total: number; use
 
 export async function setUserRole(
   userId: string,
-  role: 'customer' | 'operator' | 'admin' | 'superadmin',
+  role: 'customer' | 'superadmin',
   token?: string,
 ): Promise<{ ok: boolean; userId: string; role: string; email: string | null }> {
   return apiFetch(`/admin/users/${encodeURIComponent(userId)}/role`, {

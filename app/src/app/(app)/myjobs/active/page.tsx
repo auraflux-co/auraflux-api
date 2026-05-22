@@ -54,7 +54,7 @@ function fmtJobTime(iso: string) {
 
 export default function ActiveJobsPage() {
   const { getToken, isLoaded } = useAuth();
-  const { isOperator }         = useRole();
+  const { isSuperAdmin }         = useRole();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [scheduledJobs, setScheduledJobs] = useState<Job[]>([]);
   const [upcomingTemplates, setUpcomingTemplates] = useState<JobTemplate[]>([]);
@@ -154,7 +154,7 @@ export default function ActiveJobsPage() {
           <h2 className="af-subhead mb-2">Needs attention ({heldOrFailed.length})</h2>
           <div className="space-y-2">
             {heldOrFailed.map((job) => (
-              <JobRow key={job.jobId} job={job} isOperator={isOperator} onAction={handleAction} />
+              <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} />
             ))}
           </div>
         </section>
@@ -166,7 +166,7 @@ export default function ActiveJobsPage() {
           <h2 className="af-subhead mb-2">In progress ({inProgress.length})</h2>
           <div className="space-y-2">
             {inProgress.map((job) => (
-              <JobRow key={job.jobId} job={job} isOperator={isOperator} onAction={handleAction} />
+              <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} />
             ))}
           </div>
         </section>
@@ -186,11 +186,11 @@ export default function ActiveJobsPage() {
 
 function JobRow({
   job,
-  isOperator,
+  isSuperAdmin,
   onAction,
 }: {
   job: Job;
-  isOperator: boolean;
+  isSuperAdmin: boolean;
   onAction: (jobId: string, action: OperatorAction) => void;
 }) {
   const currentPortal = job.portalReports?.find((p) => p.status === 'running' || p.status === 'hold' || p.status === 'failed');
@@ -241,7 +241,7 @@ function JobRow({
             >
               Details →
             </Link>
-            {isOperator && (job.status === 'held' || job.status === 'failed') && (
+            {isSuperAdmin && (job.status === 'held' || job.status === 'failed') && (
               <>
                 <Button
                   size="sm"
