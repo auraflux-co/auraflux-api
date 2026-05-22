@@ -28,7 +28,7 @@ const TIER_PILL: Record<string, string> = {
 
 export default function AdminCustomersPage() {
   const router                = useRouter();
-  const { isAdmin, isLoaded } = useRole();
+  const { isSuperAdmin, isLoaded } = useRole();
   const { getToken }          = useAuth();
 
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
@@ -38,8 +38,8 @@ export default function AdminCustomersPage() {
   const [tierFilter, setTierFilter] = useState('all');
 
   useEffect(() => {
-    if (isLoaded && !isAdmin) router.replace('/home');
-  }, [isLoaded, isAdmin, router]);
+    if (isLoaded && !isSuperAdmin) router.replace('/home');
+  }, [isLoaded, isSuperAdmin, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,10 +56,10 @@ export default function AdminCustomersPage() {
   }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded && isAdmin) load();
-  }, [isLoaded, isAdmin, load]);
+    if (isLoaded && isSuperAdmin) load();
+  }, [isLoaded, isSuperAdmin, load]);
 
-  if (!isLoaded || !isAdmin) return null;
+  if (!isLoaded || !isSuperAdmin) return null;
 
   const filtered = customers.filter((c) => {
     const matchTier = tierFilter === 'all' || c.planTier === tierFilter;

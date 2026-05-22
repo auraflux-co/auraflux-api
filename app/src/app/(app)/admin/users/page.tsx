@@ -43,16 +43,17 @@ const TIER_PILL: Record<string, string> = {
 };
 
 const ROLE_PILL: Record<string, string> = {
-  admin:    'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  operator: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
-  customer: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+  superadmin: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  admin:      'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  operator:   'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  customer:   'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
 };
 
 type SortKey = 'signedUpAt' | 'lastSignInAt' | 'lastActiveAt' | 'lastJobAt' | 'jobCount';
 
 export default function AdminUsersPage() {
   const router                = useRouter();
-  const { isAdmin, isLoaded } = useRole();
+  const { isSuperAdmin, isLoaded } = useRole();
   const { getToken }          = useAuth();
 
   const [users, setUsers]       = useState<AdminUser[]>([]);
@@ -68,8 +69,8 @@ export default function AdminUsersPage() {
   const [roleError, setRoleError]       = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (isLoaded && !isAdmin) router.replace('/home');
-  }, [isLoaded, isAdmin, router]);
+    if (isLoaded && !isSuperAdmin) router.replace('/home');
+  }, [isLoaded, isSuperAdmin, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,10 +87,10 @@ export default function AdminUsersPage() {
   }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded && isAdmin) load();
-  }, [isLoaded, isAdmin, load]);
+    if (isLoaded && isSuperAdmin) load();
+  }, [isLoaded, isSuperAdmin, load]);
 
-  if (!isLoaded || !isAdmin) return null;
+  if (!isLoaded || !isSuperAdmin) return null;
 
   // Filter
   const filtered = users.filter((u) => {
@@ -117,7 +118,7 @@ export default function AdminUsersPage() {
     return sortDir === 'desc' ? -cmp : cmp;
   });
 
-  async function handleRoleChange(userId: string, role: 'customer' | 'operator' | 'admin') {
+  async function handleRoleChange(userId: string, role: 'customer' | 'operator' | 'admin' | 'superadmin') {
     setRoleUpdating(userId);
     setRoleError((prev) => { const n = { ...prev }; delete n[userId]; return n; });
     try {
@@ -372,7 +373,7 @@ export default function AdminUsersPage() {
                         {/* Role assignment */}
                         <div className="mt-2 flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                           <span className="font-medium text-foreground af-caption">Role:</span>
-                          {(['customer', 'operator', 'admin'] as const).map((r) => (
+                          {(['customer', 'operator', 'admin', 'superadmin'] as const).map((r) => (
                             <button
                               key={r}
                               disabled={roleUpdating === u.id}
