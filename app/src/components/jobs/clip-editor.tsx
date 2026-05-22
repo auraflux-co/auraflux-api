@@ -616,7 +616,7 @@ function CompactEditor({
 }) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  // Seed clips from sourceClips if clips is empty
+  // Seed clips from sourceClips on mount or when sourceClips first arrives
   useEffect(() => {
     if (clips.length === 0 && sourceClips && sourceClips.length > 0) {
       setClips(
@@ -633,8 +633,9 @@ function CompactEditor({
         })),
       );
     }
+  // sourceClips is the dependency — re-seed if the prop arrives after mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sourceClips]);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
