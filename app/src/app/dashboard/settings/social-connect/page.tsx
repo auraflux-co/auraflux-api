@@ -10,7 +10,8 @@ import { useEffect, useState, useTransition } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';
+import type { ReactNode } from 'react';
 import {
   listConnectedAccounts,
   disconnectPlatform,
@@ -19,23 +20,23 @@ import {
   type SocialPlatform,
 } from '@/lib/api';
 
-const PLATFORMS: { id: SocialPlatform; label: string; color: string; hint: string }[] = [
+const PLATFORMS: { id: SocialPlatform; label: string; icon: ReactNode; hint: string }[] = [
   {
     id: 'youtube',
     label: 'YouTube',
-    color: 'bg-red-500',
+    icon: <YouTubeIcon size={40} />,
     hint: 'Publish directly to YouTube. Available on all plans.',
   },
   {
     id: 'tiktok',
     label: 'TikTok',
-    color: 'bg-black',
-    hint: 'Publish directly to TikTok. Available on Managed plan.',
+    icon: <TikTokIcon size={40} />,
+    hint: 'Publish directly to TikTok. Available on all plans.',
   },
   {
     id: 'instagram',
     label: 'Instagram',
-    color: 'bg-gradient-to-r from-purple-500 to-pink-500',
+    icon: <InstagramIcon size={40} />,
     hint: 'Publish directly to Instagram Reels. Available on all plans.',
   },
 ];
@@ -113,39 +114,46 @@ export default function SocialConnectPage() {
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {PLATFORMS.map((p) => {
           const connected = accountMap[p.id] as ConnectedAccount | undefined;
           const isDisc = disconnecting === p.id;
 
           return (
-            <Card key={p.id}>
-              <CardContent className="flex items-center gap-4 pt-5 pb-5">
-                {/* Platform dot */}
-                <div className={`w-10 h-10 rounded-full ${p.color} flex-shrink-0 flex items-center justify-center text-white text-xs font-bold`}>
-                  {p.label[0]}
+            <Card key={p.id} className={connected ? 'border-success/40 bg-success/5' : ''}>
+              <CardContent className="flex items-center gap-4 py-4 px-5">
+                {/* Platform icon */}
+                <div className="shrink-0 rounded-xl overflow-hidden">
+                  {p.icon}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{p.label}</span>
-                    {connected
-                      ? <Badge variant="default" className="text-xs">Connected</Badge>
-                      : <Badge variant="outline" className="text-xs">Not connected</Badge>}
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-semibold text-base">{p.label}</span>
+                    {connected ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-success/20 text-success border border-success/30">
+                        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
+                        Connected
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-muted-foreground border border-border">
+                        Not connected
+                      </span>
+                    )}
                   </div>
                   {connected ? (
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                       {connected.handle || connected.platformUserId || 'Account linked'}
                       {connected.tokenExpiry && (
                         <span> · expires {new Date(connected.tokenExpiry).toLocaleDateString()}</span>
                       )}
                     </p>
                   ) : (
-                    <p className="text-xs text-muted-foreground mt-0.5">{p.hint}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{p.hint}</p>
                   )}
                 </div>
 
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   {connected ? (
                     <Button
                       variant="outline"

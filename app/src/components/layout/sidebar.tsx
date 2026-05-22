@@ -276,8 +276,8 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
                 className={cn(
                   'flex items-center justify-center w-full p-2 rounded-md transition-colors',
                   groupActive
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/60',
                 )}
               >
                 {icon}
@@ -289,7 +289,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
             return (
               <div key={item.href}>
                 {item.divider && (
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 select-none">
+                  <p className="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 select-none">
                     {item.divider}
                   </p>
                 )}
@@ -298,8 +298,8 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
                   className={cn(
                     'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
                     isActive(item.href)
-                      ? 'bg-accent text-accent-foreground font-medium'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+                      ? 'bg-primary/15 text-primary font-semibold'
+                      : 'text-foreground/80 hover:text-foreground hover:bg-accent/60',
                   )}
                 >
                   {icon}
@@ -316,8 +316,8 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
                 className={cn(
                   'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
                   groupActive
-                    ? 'text-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+                    ? 'text-primary font-semibold'
+                    : 'text-foreground/80 hover:text-foreground hover:bg-accent/60',
                 )}
               >
                 {icon}
@@ -329,10 +329,10 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
                     key={child.href}
                     onClick={() => handleNavClick(child.href)}
                     className={cn(
-                      'flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left',
+                      'flex items-center w-full px-2 py-1.5 rounded-md text-sm transition-colors text-left',
                       isActive(child.href)
-                        ? 'bg-accent text-accent-foreground font-medium'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+                        ? 'bg-primary/15 text-primary font-semibold'
+                        : 'text-foreground/70 hover:text-foreground hover:bg-accent/60',
                     )}
                   >
                     {child.label}
@@ -352,7 +352,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
           target="_blank"
           rel="noopener noreferrer"
           title="Customer guides"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-foreground/70 hover:text-foreground hover:bg-accent/60 transition-colors"
         >
           {ICONS.guide}
           {!collapsed && (
@@ -371,7 +371,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
         <button
           onClick={toggleCollapsed}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm text-foreground/70 hover:text-foreground hover:bg-accent/60 transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={cn('shrink-0 transition-transform', collapsed && 'rotate-180')}>
             <polyline points="15 18 9 12 15 6" />
@@ -455,7 +455,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
             return (
               <button key={item.href} onClick={() => go(item.href)}
                 className={cn('flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
-                  isActive(item.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
+                  isActive(item.href) ? 'bg-primary/15 text-primary font-semibold' : 'text-foreground/80 hover:text-foreground hover:bg-accent/60')}>
                 {icon}{item.label}
               </button>
             );
@@ -465,14 +465,14 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
             <div key={item.href}>
               <button onClick={() => go(item.href)}
                 className={cn('flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
-                  groupActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
+                  groupActive ? 'text-primary font-semibold' : 'text-foreground/80 hover:text-foreground hover:bg-accent/60')}>
                 {icon}{item.label}
               </button>
               <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2">
                 {item.children.map((child) => (
                   <button key={child.href} onClick={() => go(child.href)}
-                    className={cn('flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left',
-                      isActive(child.href) ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
+                    className={cn('flex items-center w-full px-2 py-1.5 rounded-md text-sm transition-colors text-left',
+                      isActive(child.href) ? 'bg-primary/15 text-primary font-semibold' : 'text-foreground/70 hover:text-foreground hover:bg-accent/60')}>
                     {child.label}
                   </button>
                 ))}
@@ -484,7 +484,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
 
       <div className="p-2 border-t border-border">
         <a href={CONFLUENCE_GUIDE_URL} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-foreground/70 hover:text-foreground hover:bg-accent/60 transition-colors">
           {ICONS.guide}Guides
         </a>
       </div>
