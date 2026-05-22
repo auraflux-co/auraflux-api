@@ -82,30 +82,35 @@ import { SVGProps } from 'react';
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
-// ── The Hero — AF Monogram (bold block A + F, crisp at 20–32px) ─────────────
+// ── The Hero — AF Monogram ────────────────────────────────────────────────────
+//
+//  Matches the brand mark: bold italic AF where the A's peak merges with the F.
+//  Structure:
+//    1. Left thick diagonal  — primary stroke of the A
+//    2. F top bar            — full-width horizontal at the A peak
+//    3. A right leg          — short diagonal connecting the two F bars
+//    4. F lower bar          — horizontal bar that also reads as the A crossbar
+//
+//  viewBox 70×44 (1.59:1). Displayed square; excess is clipped/letterboxed.
 export function HeroMonogram({ size = 24, ...props }: IconProps) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0 0 70 44"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
       {...props}
     >
-      {/* A — thick legs, clear crossbar, open counter via evenodd */}
-      <path
-        fill="currentColor"
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M0 22 L5.5 1 L11 22 H8 L7 15.5 H4 L3 22 Z M5 12.5 H7 L5.5 7.5 Z"
-      />
-      {/* F — full top bar, shorter mid bar, clean stem */}
-      <path
-        fill="currentColor"
-        d="M13 1 H24 V5.5 H17.5 V10.5 H23 V15 H17.5 V23 H13 Z"
-      />
+      {/* Left thick diagonal of A */}
+      <path fill="currentColor" d="M0 42 L11 42 L34 2 L23 2 Z" />
+      {/* F top bar — horizontal rectangle from A peak to right edge */}
+      <path fill="currentColor" d="M23 2 L70 2 L70 13 L23 13 Z" />
+      {/* A right leg — short diagonal connecting top bar to crossbar */}
+      <path fill="currentColor" d="M34 2 L45 2 L39 27 L28 27 Z" />
+      {/* F lower bar / A crossbar */}
+      <path fill="currentColor" d="M39 27 L63 27 L63 37 L39 37 Z" />
     </svg>
   );
 }
@@ -136,11 +141,12 @@ export function CreditToken({ size = 24, ...props }: IconProps) {
   );
 }
 
-// ── The Engine — Interlocking Hexagon ─────────────────────────────────────────
+// ── The Engine — Hexagon with teal inner ring ─────────────────────────────────
+//  Outer hex: copper/gold stroke. Inner hex: teal stroke with open centre.
+//  Matches the brand mark (top-right quadrant).
 export function EngineHexagon({ size = 24, ...props }: IconProps) {
-  // Outer hexagon (copper stroke) + inner hexagon rotated 30° (teal fill)
-  const outer = '20,2 34.64,11 34.64,29 20,38 5.36,29 5.36,11';
-  const inner = '20,8 29.85,13.5 29.85,26.5 20,32 10.15,26.5 10.15,13.5';
+  const outer = '20,1.5 34.64,10 34.64,30 20,38.5 5.36,30 5.36,10';
+  const inner = '20,9 30.39,15 30.39,27 20,33 9.61,27 9.61,15';
   return (
     <svg
       width={size} height={size}
@@ -149,11 +155,12 @@ export function EngineHexagon({ size = 24, ...props }: IconProps) {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <polygon points={outer} stroke="currentColor" strokeWidth="2" fill="none" opacity="0.7" />
-      <polygon points={inner} fill="currentColor" opacity="0.3" />
-      <polygon points={inner} stroke="currentColor" strokeWidth="1.5" fill="none" />
-      {/* Centre dot */}
-      <circle cx="20" cy="20" r="3" fill="currentColor" />
+      {/* Outer hexagon — copper/gold stroke */}
+      <polygon points={outer} stroke="currentColor" strokeWidth="2.5" fill="none" />
+      {/* Inner hexagon — teal tint */}
+      <polygon points={inner} stroke="#22D3EE" strokeWidth="2" fill="none" />
+      {/* Centre open circle */}
+      <circle cx="20" cy="20" r="4" stroke="#22D3EE" strokeWidth="2" fill="none" />
     </svg>
   );
 }
