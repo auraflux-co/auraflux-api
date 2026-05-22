@@ -58,7 +58,7 @@ export default function SignInPage() {
         </div>
       )}
       <SignIn
-        forceRedirectUrl="/dashboard"
+        forceRedirectUrl="/home"
         appearance={{
           layout: {
             logoImageUrl: 'https://app.auraflux.co/brand/logo.png',

@@ -60,7 +60,7 @@ export function CreditsSummary() {
 
   return (
     <Link
-      href="/dashboard/credits"
+      href="/credits"
       className="group flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm hover:opacity-80 transition-opacity"
     >
       {/* Remaining label */}

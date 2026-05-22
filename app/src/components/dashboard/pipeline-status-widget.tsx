@@ -98,7 +98,7 @@ export function PipelineStatusWidget() {
         </div>
         <h3 className="text-sm font-semibold text-foreground mb-1">No jobs running</h3>
         <p className="text-xs text-muted-foreground mb-4">Ready when you are</p>
-        <Link href="/dashboard/jobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
+        <Link href="/myjobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
           Create your first job
         </Link>
       </div>
@@ -122,7 +122,7 @@ export function PipelineStatusWidget() {
         return (
           <Link
             key={job.jobId}
-            href={`/dashboard/jobs/${job.jobId}`}
+            href={`/myjobs/${job.jobId}`}
             className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/50"
           >
             <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', cfg.color, cfg.pulse && 'animate-pulse')} />
@@ -143,7 +143,7 @@ export function PipelineStatusWidget() {
           <RefreshIcon />
           <span>Refreshing</span>
         </div>
-        <Link href="/dashboard/jobs" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 gap-1 text-muted-foreground hover:text-foreground')}>
+        <Link href="/myjobs" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 gap-1 text-muted-foreground hover:text-foreground')}>
           View all jobs
           <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </Link>

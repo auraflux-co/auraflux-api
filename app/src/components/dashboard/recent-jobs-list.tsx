@@ -2,10 +2,10 @@
 /**
  * RecentJobsList — shows the last 3 completed, published, staged, or failed
  * jobs on the dashboard home so users have instant visibility into what was
- * recently produced without navigating to /dashboard/jobs.
+ * recently produced without navigating to /myjobs.
  *
  * Fetches once on mount. No polling needed — users who want live updates
- * can navigate to /dashboard/jobs.
+ * can navigate to /myjobs.
  */
 
 import { useEffect, useState } from 'react';
@@ -83,7 +83,7 @@ export function RecentJobsList() {
     return (
       <p className="text-sm text-muted-foreground">
         No completed jobs yet —{' '}
-        <Link href="/dashboard/jobs/new" className="text-primary hover:underline">
+        <Link href="/myjobs/new" className="text-primary hover:underline">
           start one now →
         </Link>
       </p>
@@ -101,7 +101,7 @@ export function RecentJobsList() {
         return (
           <Link
             key={job.jobId}
-            href={`/dashboard/jobs/${job.jobId}`}
+            href={`/myjobs/${job.jobId}`}
             className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/50"
           >
             <p className="flex-1 text-sm text-foreground truncate min-w-0">{label}</p>
@@ -116,7 +116,7 @@ export function RecentJobsList() {
       })}
 
       <div className="flex justify-end pt-1 px-3">
-        <Link href="/dashboard/jobs" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+        <Link href="/myjobs" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
           View all jobs →
         </Link>
       </div>

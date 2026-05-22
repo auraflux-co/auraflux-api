@@ -99,7 +99,7 @@ function CreditsBadge({ collapsed }: { collapsed: boolean }) {
 
   return (
     <Link
-      href="/dashboard/credits"
+      href="/credits"
       title="Credits remaining this period"
       className={cn(
         'flex items-center gap-2 w-full px-2.5 py-2 rounded-lg border border-border',
@@ -135,28 +135,28 @@ interface NavItem {
 // Base nav — same for all customer tiers
 const CUSTOMER_NAV_BASE: NavItem[] = [
   {
-    href: '/dashboard/jobs',
+    href: '/myjobs',
     label: 'My Jobs',
     children: [
-      { href: '/dashboard/jobs/new',     label: 'New job' },
-      { href: '/dashboard/jobs/active',  label: 'Active'  },
-      { href: '/dashboard/jobs/history', label: 'History' },
+      { href: '/myjobs/new',     label: 'New job' },
+      { href: '/myjobs/active',  label: 'Active'  },
+      { href: '/myjobs/history', label: 'History' },
     ],
   },
-  { href: '/dashboard/staging',    label: 'Review Queue'  },
-  { href: '/dashboard/schedule',   label: 'Schedule'      },
-  { href: '/dashboard/templates',  label: 'My Templates'  },
+  { href: '/review',    label: 'Review Queue'  },
+  { href: '/schedule',   label: 'Schedule'      },
+  { href: '/templates',  label: 'My Templates'  },
   {
-    href:  '/dashboard/billing',
+    href:  '/billing',
     label: 'Billing',
     children: [
-      { href: '/dashboard/billing',  label: 'Subscription' },
-      { href: '/dashboard/credits',  label: 'Credits'      },
-      { href: '/dashboard/plans',    label: 'Plans'        },
+      { href: '/billing',  label: 'Subscription' },
+      { href: '/credits',  label: 'Credits'      },
+      { href: '/plans',    label: 'Plans'        },
     ],
   },
-  { href: '/dashboard/support',    label: 'Support'   },
-  { href: '/dashboard/profile',    label: 'Profile'   },
+  { href: '/support',    label: 'Support'   },
+  { href: '/profile',    label: 'Profile'   },
 ];
 
 // Settings children differ by plan tier
@@ -164,37 +164,37 @@ function settingsNavItem(planTier: string | null): NavItem {
   const isOperate = !planTier || planTier === 'operate' || planTier === 'custom';
   const children: { href: string; label: string }[] = [];
   if (isOperate) {
-    children.push({ href: '/dashboard/settings/api-keys', label: 'API Keys' });
+    children.push({ href: '/settings/api-keys', label: 'API Keys' });
   }
   children.push(
-    { href: '/dashboard/settings/source-channels', label: 'My Channels'       },
-    { href: '/dashboard/settings/social-connect',  label: 'My Social Accounts' },
-    { href: '/dashboard/settings/team',            label: 'My Team'           },
+    { href: '/settings/channels', label: 'My Channels'       },
+    { href: '/settings/social',  label: 'My Social Accounts' },
+    { href: '/settings/team',            label: 'My Team'           },
   );
-  return { href: '/dashboard/settings', label: 'Settings', children };
+  return { href: '/settings', label: 'Settings', children };
 }
 
 const OPERATOR_NAV: NavItem[] = [
-  { href: '/dashboard/generate',      label: 'Generate', divider: 'Operator tools' },
-  { href: '/dashboard/operator',      label: 'Operator'  },
+  { href: '/generate',      label: 'Generate', divider: 'Operator tools' },
+  { href: '/operator',      label: 'Operator'  },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { href: '/dashboard/admin/overview',    label: 'Overview',    divider: 'Admin tools' },
-  { href: '/dashboard/admin/users',       label: 'All Users'   },
-  { href: '/dashboard/admin/support',     label: 'Support Inbox' },
-  { href: '/dashboard/admin/crm',         label: 'CRM'         },
-  { href: '/dashboard/admin/permissions', label: 'Permissions' },
+  { href: '/admin',    label: 'Overview',    divider: 'Admin tools' },
+  { href: '/admin/users',       label: 'All Users'   },
+  { href: '/admin/support',     label: 'Support Inbox' },
+  { href: '/admin/crm',         label: 'CRM'         },
+  { href: '/admin/permissions', label: 'Permissions' },
   // Customer preview — lets admin test the job wizard and staging queue
   {
-    href: '/dashboard/jobs', label: 'Jobs (preview)', divider: 'Customer preview',
+    href: '/myjobs', label: 'Jobs (preview)', divider: 'Customer preview',
     children: [
-      { href: '/dashboard/jobs/new',     label: 'New job'  },
-      { href: '/dashboard/jobs/active',  label: 'Active'   },
-      { href: '/dashboard/jobs/history', label: 'History'  },
+      { href: '/myjobs/new',     label: 'New job'  },
+      { href: '/myjobs/active',  label: 'Active'   },
+      { href: '/myjobs/history', label: 'History'  },
     ],
   },
-  { href: '/dashboard/staging', label: 'Review Queue' },
+  { href: '/review', label: 'Review Queue' },
 ];
 
 const CONFLUENCE_GUIDE_URL =
@@ -221,7 +221,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
         : CUSTOMER_NAV;
 
   function isActive(href: string) {
-    if (href === '/dashboard') return pathname === href;
+    if (href === '/home') return pathname === href;
     return pathname === href || pathname.startsWith(href + '/');
   }
 
@@ -248,7 +248,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
       )}>
         {!collapsed && (
           <>
-            <Link href="/dashboard" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
+            <Link href="/home" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
               <Image src="/brand/logo.png" alt="AuraFlux" width={56} height={34} className="shrink-0 object-contain" priority />
               <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">AuraFlux</span>
             </Link>
@@ -256,7 +256,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
           </>
         )}
         {collapsed && (
-          <Link href="/dashboard" title="AuraFlux">
+          <Link href="/home" title="AuraFlux">
             <Image src="/brand/logo.png" alt="AuraFlux" width={36} height={22} className="object-contain" priority />
           </Link>
         )}
@@ -416,7 +416,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
         : CUSTOMER_NAV;
 
   function isActive(href: string) {
-    if (href === '/dashboard') return pathname === href;
+    if (href === '/home') return pathname === href;
     return pathname === href || pathname.startsWith(href + '/');
   }
 
@@ -436,7 +436,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
       mobileOpen ? 'translate-x-0' : '-translate-x-full',
     )}>
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2.5" onClick={closeMobile}>
+        <Link href="/home" className="flex items-center gap-2.5" onClick={closeMobile}>
           <Image src="/brand/logo.png" alt="AuraFlux" width={52} height={32} className="shrink-0 object-contain" priority />
           <span className="font-semibold text-[15px] tracking-tight">AuraFlux</span>
         </Link>

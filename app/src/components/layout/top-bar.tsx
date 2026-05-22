@@ -13,7 +13,7 @@ import { NotificationsBell } from '@/components/notifications/notifications-bell
 import { cn } from '@/lib/utils';
 
 // Collab only surfaces on job creation, job detail, and review queue pages
-const COLLAB_ROUTES = ['/dashboard/jobs', '/dashboard/staging'];
+const COLLAB_ROUTES = ['/myjobs', '/review'];
 function useCollabVisible() {
   const pathname = usePathname();
   return COLLAB_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'));

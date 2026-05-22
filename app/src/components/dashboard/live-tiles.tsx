@@ -186,8 +186,8 @@ function JobsTileBody({ data }: { data: TileData }) {
         </p>
       )}
       <CtaSection>
-        <CtaRow href="/dashboard/jobs/active" label="View active jobs" primary />
-        <CtaRow href="/dashboard/jobs/new"    label="Create a new job" />
+        <CtaRow href="/myjobs/active" label="View active jobs" primary />
+        <CtaRow href="/myjobs/new"    label="Create a new job" />
       </CtaSection>
     </>
   );
@@ -204,8 +204,8 @@ function ReviewTileBody({ data }: { data: TileData }) {
         Watch · Script · Publish copy · Approve · Download · Redo
       </p>
       <CtaSection>
-        <CtaRow href="/dashboard/staging" label="Review now" primary={ready > 0} />
-        <CtaRow href="/dashboard/staging" label="Approve & publish to social" dim />
+        <CtaRow href="/review" label="Review now" primary={ready > 0} />
+        <CtaRow href="/review" label="Approve & publish to social" dim />
       </CtaSection>
     </>
   );
@@ -219,8 +219,8 @@ function ScheduleTileBody({ data }: { data: TileData }) {
     <>
       <NumStat count={scheduled} label="videos scheduled" loading={loading} />
       <CtaSection>
-        <CtaRow href="/dashboard/schedule" label="Check schedule" primary={scheduled > 0} />
-        <CtaRow href="/dashboard/schedule" label="Save Time — Schedule Your Jobs" dim />
+        <CtaRow href="/schedule" label="Check schedule" primary={scheduled > 0} />
+        <CtaRow href="/schedule" label="Save Time — Schedule Your Jobs" dim />
       </CtaSection>
     </>
   );
@@ -234,8 +234,8 @@ function TemplatesTileBody({ data }: { data: TileData }) {
     <>
       <NumStat count={count} label="active templates" loading={loading} />
       <CtaSection>
-        <CtaRow href="/dashboard/templates" label="Manage templates" primary={count > 0} />
-        <CtaRow href="/dashboard/templates" label="Save Time — Create your first template" dim />
+        <CtaRow href="/templates" label="Manage templates" primary={count > 0} />
+        <CtaRow href="/templates" label="Save Time — Create your first template" dim />
       </CtaSection>
     </>
   );
@@ -286,7 +286,7 @@ function BillingTileBody({ data }: { data: TileData }) {
         {balance && (
           <p className="text-[12px] text-muted-foreground">Renews {fmt(balance.period_end)}</p>
         )}
-        <CtaRow href="/dashboard/billing" label="Manage billing" />
+        <CtaRow href="/billing" label="Manage billing" />
       </CtaSection>
     </>
   );
@@ -314,8 +314,8 @@ function SettingsTileBody({ data }: { data: TileData }) {
       </p>
 
       <CtaSection>
-        <CtaRow href="/dashboard/settings"                label="Update settings"       primary />
-        <CtaRow href="/dashboard/settings/social-connect" label="Connect social accounts" />
+        <CtaRow href="/settings"                label="Update settings"       primary />
+        <CtaRow href="/settings/social" label="Connect social accounts" />
       </CtaSection>
     </>
   );
@@ -426,22 +426,22 @@ export function LiveTiles() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <TileCard icon={ICONS.jobs}      title="My Jobs"      titleHref="/dashboard/jobs">
+      <TileCard icon={ICONS.jobs}      title="My Jobs"      titleHref="/myjobs">
         <JobsTileBody data={data} />
       </TileCard>
-      <TileCard icon={ICONS.review}    title="Review Queue" titleHref="/dashboard/staging">
+      <TileCard icon={ICONS.review}    title="Review Queue" titleHref="/review">
         <ReviewTileBody data={data} />
       </TileCard>
-      <TileCard icon={ICONS.schedule}  title="Schedule"     titleHref="/dashboard/schedule">
+      <TileCard icon={ICONS.schedule}  title="Schedule"     titleHref="/schedule">
         <ScheduleTileBody data={data} />
       </TileCard>
-      <TileCard icon={ICONS.templates} title="My Templates" titleHref="/dashboard/templates">
+      <TileCard icon={ICONS.templates} title="My Templates" titleHref="/templates">
         <TemplatesTileBody data={data} />
       </TileCard>
-      <TileCard icon={ICONS.billing}   title="Billing"      titleHref="/dashboard/billing">
+      <TileCard icon={ICONS.billing}   title="Billing"      titleHref="/billing">
         <BillingTileBody data={data} />
       </TileCard>
-      <TileCard icon={ICONS.settings}  title="Settings"     titleHref="/dashboard/settings">
+      <TileCard icon={ICONS.settings}  title="Settings"     titleHref="/settings">
         <SettingsTileBody data={data} />
       </TileCard>
     </div>
