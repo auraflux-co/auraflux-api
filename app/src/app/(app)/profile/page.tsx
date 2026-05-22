@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
 const TIMEZONES = [
   'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
@@ -93,15 +94,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Your Profile</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your identity, security, and preferences</p>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="Your Profile"
+        subtitle="Manage your identity, security, and preferences"
+      />
 
       {/* Avatar + identity */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Identity</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="af-subhead">Identity</CardTitle></CardHeader>
         <CardContent className="space-y-5">
           {/* Avatar */}
           <div className="flex items-center gap-4">
@@ -113,9 +114,9 @@ export default function ProfilePage() {
               </div>
             )}
             <div>
-              <p className="text-sm font-medium">{user.fullName || 'No name set'}</p>
-              <p className="text-xs text-muted-foreground">{email}</p>
-              <Badge variant="outline" className="text-[10px] mt-1 capitalize">{role}</Badge>
+              <p className="af-label font-medium">{user.fullName || 'No name set'}</p>
+              <p className="af-caption">{email}</p>
+              <Badge variant="outline" className="af-caption mt-1 capitalize">{role}</Badge>
             </div>
           </div>
 
@@ -124,17 +125,17 @@ export default function ProfilePage() {
           {/* Name + job title */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs">First name</Label>
+              <Label className="af-caption">First name</Label>
               <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-8 text-sm" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Last name</Label>
+              <Label className="af-caption">Last name</Label>
               <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-8 text-sm" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Job title / role</Label>
+            <Label className="af-caption">Job title / role</Label>
             <Input
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
@@ -144,7 +145,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Bio <span className="text-muted-foreground">(optional)</span></Label>
+            <Label className="af-caption">Bio <span className="text-muted-foreground">(optional)</span></Label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
@@ -155,11 +156,11 @@ export default function ProfilePage() {
                 'resize-none min-h-[72px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
               )}
             />
-            <p className="text-[10px] text-muted-foreground text-right">{bio.length}/280</p>
+            <p className="af-caption text-right">{bio.length}/280</p>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Time zone</Label>
+            <Label className="af-caption">Time zone</Label>
             <select
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
@@ -174,8 +175,8 @@ export default function ProfilePage() {
             </select>
           </div>
 
-          {error  && <p className="text-xs text-destructive">{error}</p>}
-          {saved  && <p className="text-xs text-green-600 dark:text-green-400">Profile saved.</p>}
+          {error  && <p className="af-caption text-destructive">{error}</p>}
+          {saved  && <p className="af-caption text-success">Profile saved.</p>}
 
           <Button size="sm" onClick={handleSave} disabled={isPending}>
             {isPending ? 'Saving…' : 'Save changes'}
@@ -185,7 +186,7 @@ export default function ProfilePage() {
 
       {/* Appearance */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Appearance</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="af-subhead">Appearance</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
             {(['light', 'dark', 'system'] as const).map((t) => (
@@ -193,7 +194,7 @@ export default function ProfilePage() {
                 key={t}
                 onClick={() => setTheme(t)}
                 className={cn(
-                  'px-3 py-1.5 rounded-md border text-xs capitalize transition-colors',
+                  'px-3 py-1.5 rounded-md border af-label capitalize transition-colors',
                   theme === t
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'border-border text-muted-foreground hover:text-foreground',
@@ -208,12 +209,12 @@ export default function ProfilePage() {
 
       {/* Security */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Security</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="af-subhead">Security</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Password</p>
-              <p className="text-xs text-muted-foreground">Managed through your account security settings</p>
+              <p className="af-label font-medium">Password</p>
+              <p className="af-caption">Managed through your account security settings</p>
             </div>
             <button
               type="button"
@@ -226,20 +227,20 @@ export default function ProfilePage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Two-factor authentication</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="af-label font-medium">Two-factor authentication</p>
+              <p className="af-caption">
                 {user.twoFactorEnabled ? 'Enabled' : 'Not enabled — recommended for account security'}
               </p>
             </div>
-            <Badge variant={user.twoFactorEnabled ? 'default' : 'outline'} className="text-[10px]">
+            <Badge variant={user.twoFactorEnabled ? 'default' : 'outline'} className="af-caption">
               {user.twoFactorEnabled ? 'On' : 'Off'}
             </Badge>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Active sessions</p>
-              <p className="text-xs text-muted-foreground">Manage active sessions in your account security settings</p>
+              <p className="af-label font-medium">Active sessions</p>
+              <p className="af-caption">Manage active sessions in your account security settings</p>
             </div>
             <button
               type="button"
@@ -254,9 +255,9 @@ export default function ProfilePage() {
 
       {/* Connected accounts */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Connected platforms</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="af-subhead">Connected platforms</CardTitle></CardHeader>
         <CardContent>
-          <p className="text-xs text-muted-foreground mb-3">Manage social platform connections for direct publishing.</p>
+          <p className="af-caption mb-3">Manage social platform connections for direct publishing.</p>
           <Link href="/settings" className="text-xs text-primary underline underline-offset-2">
             Manage connections in Settings →
           </Link>
@@ -265,11 +266,11 @@ export default function ProfilePage() {
 
       {/* Billing link */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Plan &amp; billing</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="af-subhead">Plan &amp; billing</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">{tierLabel(meta?.planTier as string)} plan</p>
-            <p className="text-xs text-muted-foreground">View usage, upgrade, and manage payment</p>
+            <p className="af-label font-medium">{tierLabel(meta?.planTier as string)} plan</p>
+            <p className="af-caption">View usage, upgrade, and manage payment</p>
           </div>
           <Link href="/billing" className="text-xs text-primary underline underline-offset-2">
             Billing →
@@ -280,13 +281,13 @@ export default function ProfilePage() {
       {/* Danger zone */}
       <Card className="border-destructive/30">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base text-destructive">Danger zone</CardTitle>
+          <CardTitle className="af-subhead text-destructive">Danger zone</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Deactivate account</p>
-              <p className="text-xs text-muted-foreground">Pauses your subscription and hides your data</p>
+              <p className="af-label font-medium">Deactivate account</p>
+              <p className="af-caption">Pauses your subscription and hides your data</p>
             </div>
             <Button size="sm" variant="outline" disabled className="border-destructive/40 text-destructive hover:bg-destructive/10">
               Deactivate
@@ -294,6 +295,6 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }

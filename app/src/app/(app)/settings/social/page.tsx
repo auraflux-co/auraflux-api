@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';
 import type { ReactNode } from 'react';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import {
   listConnectedAccounts,
   disconnectPlatform,
@@ -100,16 +101,14 @@ export default function SocialConnectPage() {
   const accountMap = Object.fromEntries(accounts.map((a) => [a.platform, a]));
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">My Social Accounts</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Connect your publishing channels. AuraFlux will post directly without a third-party proxy.
-        </p>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="My Social Accounts"
+        subtitle="Connect your publishing channels. AuraFlux will post directly without a third-party proxy."
+      />
 
       {error && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 af-body text-destructive">
           {error}
         </div>
       )}
@@ -129,27 +128,27 @@ export default function SocialConnectPage() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5">
-                    <span className="font-semibold text-base">{p.label}</span>
+                    <span className="af-h3">{p.label}</span>
                     {connected ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-success/20 text-success border border-success/30">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full af-caption font-medium bg-success/20 text-success border border-success/30">
                         <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
                         Connected
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-muted-foreground border border-border">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full af-caption font-medium text-muted-foreground border border-border">
                         Not connected
                       </span>
                     )}
                   </div>
                   {connected ? (
-                    <p className="text-sm text-muted-foreground mt-0.5">
+                    <p className="af-label mt-0.5">
                       {connected.handle || connected.platformUserId || 'Account linked'}
                       {connected.tokenExpiry && (
                         <span> · expires {new Date(connected.tokenExpiry).toLocaleDateString()}</span>
                       )}
                     </p>
                   ) : (
-                    <p className="text-sm text-muted-foreground mt-0.5">{p.hint}</p>
+                    <p className="af-label mt-0.5">{p.hint}</p>
                   )}
                 </div>
 
@@ -179,6 +178,6 @@ export default function SocialConnectPage() {
         })}
       </div>
 
-    </div>
+    </PageShell>
   );
 }

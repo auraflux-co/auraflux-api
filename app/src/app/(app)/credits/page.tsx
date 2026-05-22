@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import {
   getCreditBalance,
   getCreditHistory,
@@ -41,17 +42,17 @@ function LedgerRow({ entry }: { entry: CreditLedgerEntry }) {
     <div className="flex items-center gap-3 py-2 border-b border-border last:border-0">
       <Badge
         variant={entry.type === 'overage' ? 'destructive' : entry.type === 'refund' ? 'default' : 'outline'}
-        className="text-[10px] capitalize shrink-0"
+        className="af-caption capitalize shrink-0"
       >
         {entry.type}
       </Badge>
-      <span className="text-xs text-muted-foreground flex-1 truncate">
+      <span className="af-caption flex-1 truncate">
         {entry.description || entry.job_id || '—'}
       </span>
-      <span className={cn('text-xs font-mono shrink-0', isDebit ? 'text-destructive' : 'text-green-500')}>
+      <span className={cn('af-caption font-mono shrink-0', isDebit ? 'text-destructive' : 'text-success')}>
         {isDebit ? '-' : '+'}{Math.abs(entry.credits)}
       </span>
-      <span className="text-[10px] text-muted-foreground shrink-0">
+      <span className="af-caption shrink-0">
         {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       </span>
     </div>
@@ -97,37 +98,34 @@ export default function CreditsPage() {
   const isWarning = usagePct >= 75;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-semibold">Credits &amp; Usage</h1>
-        <p className="text-sm text-muted-foreground mt-0.5 capitalize">
-          Plan: <span className="text-foreground font-medium">{balance.tier}</span> ·
-          Period: {balance.period_start} – {balance.period_end}
-        </p>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="Credits & Usage"
+        subtitle={<span className="capitalize">Plan: <span className="text-foreground font-medium">{balance.tier}</span> · Period: {balance.period_start} – {balance.period_end}</span>}
+      />
 
       {/* Usage summary */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <Card>
-          <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Included remaining</CardTitle></CardHeader>
+          <CardHeader className="pb-1"><CardTitle className="af-caption">Included remaining</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{balance.included_remaining}</p>
-            <p className="text-[10px] text-muted-foreground">of {balance.included_total}</p>
+            <p className="af-metric">{balance.included_remaining}</p>
+            <p className="af-caption">of {balance.included_total}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Pack credits</CardTitle></CardHeader>
+          <CardHeader className="pb-1"><CardTitle className="af-caption">Pack credits</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{balance.pack_remaining}</p>
-            <p className="text-[10px] text-muted-foreground">purchased</p>
+            <p className="af-metric">{balance.pack_remaining}</p>
+            <p className="af-caption">purchased</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Overage used</CardTitle></CardHeader>
+          <CardHeader className="pb-1"><CardTitle className="af-caption">Overage used</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{balance.overage_used}</p>
+            <p className="af-metric">{balance.overage_used}</p>
             {balance.overage_cap != null && (
-              <p className="text-[10px] text-muted-foreground">cap: {balance.overage_cap}</p>
+              <p className="af-caption">cap: {balance.overage_cap}</p>
             )}
           </CardContent>
         </Card>
@@ -137,9 +135,9 @@ export default function CreditsPage() {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">Monthly usage</CardTitle>
+            <CardTitle className="af-label">Monthly usage</CardTitle>
             {isWarning && (
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="af-caption">
                 {usagePct >= 100 ? 'Limit reached' : `${Math.round(usagePct)}% used`}
               </Badge>
             )}
@@ -147,7 +145,7 @@ export default function CreditsPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <UsageBar used={totalUsed} total={balance.included_total} warn={isWarning} />
-          <p className="text-[10px] text-muted-foreground">
+          <p className="af-caption">
             {totalUsed} / {balance.included_total} credits used this period
           </p>
         </CardContent>
@@ -158,14 +156,14 @@ export default function CreditsPage() {
       {/* Credit packs */}
       {packs.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-sm font-medium">Buy credits</h2>
+          <h2 className="af-subhead">Buy credits</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {packs.map((pack) => (
               <Card key={pack.id} className="hover:border-border/80 transition-colors">
                 <CardContent className="pt-4 space-y-1">
-                  <p className="text-sm font-semibold">{pack.label}</p>
-                  <p className="text-xs text-muted-foreground">{pack.credits} credits</p>
-                  <p className="text-xs">${pack.price_usd}</p>
+                  <p className="af-label font-semibold">{pack.label}</p>
+                  <p className="af-caption">{pack.credits} credits</p>
+                  <p className="af-caption">${pack.price_usd}</p>
                   <a
                     href={`/checkout?pack=${pack.id}`}
                     className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), 'w-full mt-2 text-xs')}
@@ -181,17 +179,17 @@ export default function CreditsPage() {
 
       {/* History */}
       <div className="space-y-2">
-        <h2 className="text-sm font-medium">Usage history</h2>
+          <h2 className="af-subhead">Usage history</h2>
         <Card>
           <CardContent className="pt-4 p-0 px-4">
             {history.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4">No usage recorded yet.</p>
+              <p className="af-body py-4">No usage recorded yet.</p>
             ) : (
               history.map((entry) => <LedgerRow key={entry.id} entry={entry} />)
             )}
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageShell>
   );
 }

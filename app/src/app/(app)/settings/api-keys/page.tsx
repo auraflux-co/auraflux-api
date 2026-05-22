@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { usePlan } from '@/contexts/plan-context';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
 const TIER_ALIASES: Record<string, string> = { diy: 'operate', dwy: 'guided', dfy: 'managed' };
 function normaliseTier(raw: string | null | undefined): string | null {
@@ -128,34 +129,28 @@ export default function ApiKeysPage() {
   );
 
   if (effectivePlan && !canUseApiKeys) return (
-    <div className="max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold">My API Keys</h1>
+    <PageShell maxWidth="3xl">
+      <PageHeader title="My API Keys" />
       <Card className="border-muted">
         <CardContent className="pt-6 space-y-2">
-          <p className="text-sm font-medium">Not available on your plan</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="af-label font-medium">Not available on your plan</p>
+          <p className="af-body">
             API key access is available on the <strong>Operate</strong> plan for customers who
             integrate directly with the AuraFlux API. On {effectivePlan.charAt(0).toUpperCase() + effectivePlan.slice(1)},
             your operator submits and manages jobs on your behalf.
           </p>
-          <p className="text-sm text-muted-foreground">
-            Contact your operator if you need programmatic access.
-          </p>
+          <p className="af-body">Contact your operator if you need programmatic access.</p>
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">My API Keys</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Use API keys to authenticate requests to{' '}
-          <code className="text-xs bg-muted px-1 py-0.5 rounded">https://api.auraflux.co/v1/</code>.
-          Keys are shown once at creation — store them securely.
-        </p>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader
+        title="My API Keys"
+        subtitle={<>Use API keys to authenticate requests to <code className="af-caption bg-muted px-1 py-0.5 rounded">https://api.auraflux.co/v1/</code>. Keys are shown once at creation — store them securely.</>}
+      />
 
       {/* New key reveal */}
       {newKeyResult && (
@@ -174,10 +169,10 @@ export default function ApiKeysPage() {
                 {copied ? 'Copied!' : 'Copy'}
               </Button>
             </div>
-            <p className="text-xs text-yellow-600 dark:text-yellow-400">{newKeyResult.warning}</p>
+            <p className="af-caption text-yellow-600 dark:text-yellow-400">{newKeyResult.warning}</p>
             <button
               onClick={() => setNewKeyResult(null)}
-              className="text-xs text-muted-foreground hover:text-foreground"
+              className="af-caption hover:text-foreground"
             >
               Dismiss
             </button>
@@ -187,10 +182,10 @@ export default function ApiKeysPage() {
 
       {/* Create form */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Create new API key</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="af-subhead">Create new API key</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Key name</Label>
+            <Label className="af-caption">Key name</Label>
             <div className="flex gap-2">
               <Input
                 placeholder="e.g. Production bot"
@@ -208,15 +203,15 @@ export default function ApiKeysPage() {
               </Button>
             </div>
           </div>
-          {error && <p className="text-xs text-destructive">{error}</p>}
+          {error && <p className="af-caption text-destructive">{error}</p>}
         </CardContent>
       </Card>
 
       {/* Keys list */}
       <div className="space-y-2">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Active keys</h2>
+        <h2 className="af-subhead">Active keys</h2>
         {keys.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No API keys yet. Create one above to get started.</p>
+          <p className="af-body">No API keys yet. Create one above to get started.</p>
         ) : (
           <Card>
             <CardContent className="p-0">
@@ -226,11 +221,11 @@ export default function ApiKeysPage() {
                   <div className="flex items-center justify-between px-4 py-3">
                     <div className="space-y-0.5 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{k.name || 'Unnamed key'}</span>
-                        <code className="text-[10px] text-muted-foreground font-mono">{k.key_prefix}…</code>
-                        <Badge variant="outline" className="text-[10px] capitalize">{k.plan_tier}</Badge>
+                        <span className="af-label font-medium">{k.name || 'Unnamed key'}</span>
+                        <code className="af-caption font-mono">{k.key_prefix}…</code>
+                        <Badge variant="outline" className="af-caption capitalize">{k.plan_tier}</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="af-caption">
                         Created {new Date(k.created_at).toLocaleDateString()}
                         {k.last_used_at && ` · Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
                       </p>
@@ -254,26 +249,26 @@ export default function ApiKeysPage() {
 
       {/* Docs callout */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4 space-y-1 text-sm">
-          <p className="font-medium">Using the API</p>
-          <p className="text-muted-foreground">
+        <CardContent className="pt-4 space-y-1">
+          <p className="af-label font-medium">Using the API</p>
+          <p className="af-body">
             Authenticate every request with:{' '}
-            <code className="text-xs bg-background border border-border rounded px-1 py-0.5">Authorization: Bearer af_live_…</code>
+            <code className="af-caption bg-background border border-border rounded px-1 py-0.5">Authorization: Bearer af_live_…</code>
           </p>
-          <p className="text-muted-foreground">
+          <p className="af-body">
             Base URL:{' '}
-            <code className="text-xs bg-background border border-border rounded px-1 py-0.5">https://api.auraflux.co/v1/</code>
+            <code className="af-caption bg-background border border-border rounded px-1 py-0.5">https://api.auraflux.co/v1/</code>
           </p>
           <a
             href="https://robertsworkspace-18914505.atlassian.net/wiki/spaces/CP/pages/8192001"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block mt-1 text-sm text-primary hover:underline"
+            className="inline-block mt-1 af-label text-primary hover:underline"
           >
             View full API documentation →
           </a>
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }
