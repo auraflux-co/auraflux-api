@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
@@ -9,7 +10,7 @@ import { useRole } from '@/hooks/use-role';
 import { usePlan } from '@/contexts/plan-context';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
-import { HeroMonogram, CreditToken } from '@/components/icons/brand-icons';
+import { CreditToken } from '@/components/icons/brand-icons';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -248,7 +249,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
         {!collapsed && (
           <>
             <Link href="/dashboard" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
-              <HeroMonogram size={28} className="text-primary shrink-0" />
+              <Image src="/brand/logo.png" alt="AuraFlux" width={56} height={34} className="shrink-0 object-contain" priority />
               <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">AuraFlux</span>
             </Link>
             <CreditsBadge collapsed={collapsed} />
@@ -256,7 +257,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
         )}
         {collapsed && (
           <Link href="/dashboard" title="AuraFlux">
-            <HeroMonogram size={24} className="text-primary" />
+            <Image src="/brand/logo.png" alt="AuraFlux" width={36} height={22} className="object-contain" priority />
           </Link>
         )}
       </div>
@@ -436,7 +437,7 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
     )}>
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2.5" onClick={closeMobile}>
-          <HeroMonogram size={26} className="text-primary shrink-0" />
+          <Image src="/brand/logo.png" alt="AuraFlux" width={52} height={32} className="shrink-0 object-contain" priority />
           <span className="font-semibold text-[15px] tracking-tight">AuraFlux</span>
         </Link>
         <button onClick={closeMobile} className="text-muted-foreground hover:text-foreground p-1">
