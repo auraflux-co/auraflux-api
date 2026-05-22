@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getPlans, subscribeToPlan, type Plan } from '@/lib/api';
+import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
 const PLAN_FEATURES: Record<string, string[]> = {
   operate: ['400 credits/mo', 'Scheduling', 'Full platform access', 'Credit packs', 'Guided setup & help'],
@@ -59,19 +60,14 @@ export default function PlansPage() {
     }
   }
 
-  if (loading) return <div className="text-sm text-muted-foreground">Loading…</div>;
+  if (loading) return <div className="af-body text-muted-foreground p-4">Loading…</div>;
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-semibold">Plans</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Choose the plan that fits how you work.
-        </p>
-      </div>
+    <PageShell maxWidth="3xl">
+      <PageHeader title="Plans" subtitle="Choose the plan that fits how you work." />
 
       {error && (
-        <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -96,26 +92,24 @@ export default function PlansPage() {
               )}
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{plan.label}</CardTitle>
-                  <span className="text-lg font-bold">${plan.price_usd}<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
+                  <CardTitle className="af-h3">{plan.label}</CardTitle>
+                  <span className="af-metric text-xl">${plan.price_usd}<span className="af-label font-normal">/mo</span></span>
                 </div>
-                <p className="text-xs text-muted-foreground">{plan.description}</p>
+                <p className="af-label">{plan.description}</p>
               </CardHeader>
 
               <CardContent className="flex flex-col flex-1 gap-3">
                 <ul className="space-y-1 flex-1">
                   {features.map((f) => (
-                    <li key={f} className="text-xs flex items-center gap-1.5">
-                      <span className="text-green-500">✓</span>
+                    <li key={f} className="af-label flex items-center gap-1.5">
+                      <span className="text-success">✓</span>
                       {f}
                     </li>
                   ))}
                 </ul>
 
                 {isNotConfigured ? (
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    Stripe price not configured
-                  </p>
+                  <p className="af-caption text-center">Stripe price not configured</p>
                 ) : (
                   <button
                     onClick={() => handleSubscribe(plan.id)}
@@ -135,7 +129,7 @@ export default function PlansPage() {
         })}
       </div>
 
-      <p className="text-xs text-muted-foreground text-center">
+      <p className="af-caption text-center">
         Plans auto-renew monthly. Cancel anytime. Stripe handles payment securely.
       </p>
 
@@ -147,6 +141,6 @@ export default function PlansPage() {
           ← Back
         </button>
       </div>
-    </div>
+    </PageShell>
   );
 }
