@@ -114,7 +114,9 @@ function CreditsBadge({ collapsed }: { collapsed: boolean }) {
       </span>
       <span className="min-w-0 leading-tight">
         <span className="block text-sm font-semibold tabular-nums text-foreground">
-          {display === null ? '—' : display.toLocaleString()}
+          {display === null
+            ? <span className="inline-block w-8 h-3.5 rounded bg-muted animate-pulse" aria-hidden />
+            : display.toLocaleString()}
         </span>
         <span className="block text-[11px] text-muted-foreground">credits left</span>
       </span>
