@@ -509,22 +509,22 @@ export default function AdminOverviewPage() {
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                         <MetricBox
                           label="Error rate"
-                          value={(m.errorRate?.[app]) != null ? `${m.errorRate[app]!.toFixed(2)}%` : null}
-                          warn={((m.errorRate?.[app]) ?? 0) > 1}
+                          value={typeof m.errorRate?.[app] === 'number' ? `${m.errorRate[app]!.toFixed(2)}%` : null}
+                          warn={(typeof m.errorRate?.[app] === 'number' ? m.errorRate[app]! : 0) > 1}
                         />
                         <MetricBox
                           label="Throughput"
-                          value={(m.throughput?.[app]) != null ? `${m.throughput[app]!.toFixed(1)} rpm` : null}
+                          value={typeof m.throughput?.[app] === 'number' ? `${m.throughput[app]!.toFixed(1)} rpm` : null}
                         />
                         <MetricBox
                           label="Avg latency"
-                          value={(m.latencyMs?.[app]) != null ? `${Math.round(m.latencyMs[app]!)} ms` : null}
-                          warn={((m.latencyMs?.[app]) ?? 0) > 2000}
+                          value={typeof m.latencyMs?.[app] === 'number' ? `${Math.round(m.latencyMs[app]!)} ms` : null}
+                          warn={(typeof m.latencyMs?.[app] === 'number' ? m.latencyMs[app]! : 0) > 2000}
                         />
                         <MetricBox
                           label="Apdex"
-                          value={(m.apdex?.[app]) != null ? m.apdex[app]!.toFixed(2) : null}
-                          warn={((m.apdex?.[app]) ?? 1) < 0.7}
+                          value={typeof m.apdex?.[app] === 'number' ? m.apdex[app]!.toFixed(2) : null}
+                          warn={(typeof m.apdex?.[app] === 'number' ? m.apdex[app]! : 1) < 0.7}
                         />
                         <MetricBox
                           label="Errors (24h)"
