@@ -234,7 +234,11 @@ export default function TeamPage() {
         </CardHeader>
         <CardContent className="divide-y">
           {loading ? (
-            <p className="af-body py-4">Loading…</p>
+            <div className="space-y-2 py-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-12 rounded-lg bg-muted/40 animate-pulse" />
+              ))}
+            </div>
           ) : activeMembers.length === 0 ? (
             <p className="af-body py-4">No members yet.</p>
           ) : (
