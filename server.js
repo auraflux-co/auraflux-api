@@ -7253,6 +7253,15 @@ const server = app.listen(PORT, () => {
   const { startSchedulingCron } = require('./lib/services/scheduling_cron');
   startSchedulingCron();
 
+  // BullMQ pipeline worker — processes jobs from Redis queue (CPD-324)
+  // Replaces fragile in-process setImmediate; jobs survive restarts/deploys.
+  if (process.env.REDIS_URL) {
+    const { startPipelineWorker } = require('./lib/queue/worker');
+    startPipelineWorker();
+  } else {
+    console.warn('[server] REDIS_URL not set — BullMQ worker disabled, using in-process fallback');
+  }
+
   // Rescue any jobs left in 'running' state by the previous process (CPD-183)
   const { rescueInterruptedJobs, promoteAssembledJobs } = require('./lib/startup');
   rescueInterruptedJobs();
