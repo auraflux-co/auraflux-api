@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-23 v1.0.621 (Cursor — fix(cpd-321): replace 'Loading…' text with animated pulse skeletons on settings/team member list)
 **Last Updated:** 2026-05-23 v1.0.620 (Cursor — feat(cpd-320): post-submit success toast on job wizard — shows "Job submitted" with description before router.push to myjobs/active; gives user immediate visual confirmation before navigation)
 **Last Updated:** 2026-05-23 v1.0.614 (Cursor — fix(cpd-319): sign-in forceRedirectUrl → fallbackRedirectUrl; middleware-set redirect_url param was ignored because forceRedirectUrl always overrode it; fallbackRedirectUrl uses redirect_url when present and falls back to /home when absent)
 **Last Updated:** 2026-05-23 v1.0.613 (Cursor — fix(cpd-318): jobs stuck in 'pending' status — createJobSpec calls saveJob(status:'pending') before returning; upsertJobRow ON CONFLICT now promotes 'pending'→'queued'; migration 016 patches all existing stuck jobs; admin CRM confirmed 2 wizard jobs were invisible due to this)
