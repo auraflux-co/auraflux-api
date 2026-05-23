@@ -18,27 +18,30 @@ import { useRole } from '@/hooks/use-role';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 
-const ACTIVE_STATUSES = new Set(['queued', 'running', 'held', 'failed']);
+const ACTIVE_STATUSES = new Set(['queued', 'running', 'held', 'failed', 'credit_paused']);
 const SCHEDULED_JOB_STATUSES = new Set(['queued_scheduled']);
 const POLL_MS = 15_000;
 
 function statusColor(s: string) {
-  if (s === 'running') return 'bg-blue-500 animate-pulse';
-  if (s === 'queued')  return 'bg-muted/60';
-  if (s === 'held')    return 'bg-yellow-500';
-  if (s === 'failed')  return 'bg-destructive';
+  if (s === 'running')       return 'bg-blue-500 animate-pulse';
+  if (s === 'queued')        return 'bg-muted/60';
+  if (s === 'held')          return 'bg-yellow-500';
+  if (s === 'failed')        return 'bg-destructive';
+  if (s === 'credit_paused') return 'bg-orange-500';
   return 'bg-muted/30';
 }
 
 function StatusBadge({ status }: { status: string }) {
   const variant =
-    status === 'failed' ? 'destructive' :
-    status === 'held'   ? 'secondary'   :
+    status === 'failed'        ? 'destructive' :
+    status === 'held'          ? 'secondary'   :
+    status === 'credit_paused' ? 'secondary'   :
     'outline';
+  const label = status === 'credit_paused' ? 'credits paused' : status;
   return (
     <Badge variant={variant} className="capitalize text-[10px]">
       <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5 inline-block', statusColor(status))} />
-      {status}
+      {label}
     </Badge>
   );
 }
@@ -104,7 +107,7 @@ export default function ActiveJobsPage() {
     }
   }
 
-  const heldOrFailed = jobs.filter((j) => j.status === 'held' || j.status === 'failed');
+  const heldOrFailed = jobs.filter((j) => j.status === 'held' || j.status === 'failed' || j.status === 'credit_paused');
   const inProgress   = jobs.filter((j) => j.status === 'queued' || j.status === 'running');
 
   return (
