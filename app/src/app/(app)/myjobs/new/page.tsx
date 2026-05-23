@@ -17,6 +17,7 @@
 import { useState, useTransition, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -502,6 +503,10 @@ function NewJobPageInner() {
         const token = await getToken();
         const res = await createJob(payload, token ?? undefined);
         console.info('[new-job] created', res.jobId ?? res.templateId, res.status);
+        toast.success('Job submitted', {
+          description: 'Your job is queued and will start processing shortly.',
+          duration: 5000,
+        });
         router.push('/myjobs/active');
       } catch (err: unknown) {
         setError("We couldn't create your job. Check your selections and try again.");
