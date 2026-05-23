@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-23 v1.0.623 (Cursor — feat(cpd-323): social connect opens in popup window instead of full-page redirect; popup posts social_connected message to parent on callback; parent refreshes accounts list without leaving app.auraflux.co)
 **Last Updated:** 2026-05-23 v1.0.622 (Cursor — fix(cpd-322): TikTok/Instagram upload-post redirect URL used old /dashboard/settings/social-connect path; updated to /settings/social and added https://app.auraflux.co fallback when NEXT_PUBLIC_APP_URL is unset)
 **Last Updated:** 2026-05-23 v1.0.621 (Cursor — fix(cpd-321): replace 'Loading…' text with animated pulse skeletons on settings/team member list)
 **Last Updated:** 2026-05-23 v1.0.620 (Cursor — feat(cpd-320): post-submit success toast on job wizard — shows "Job submitted" with description before router.push to myjobs/active; gives user immediate visual confirmation before navigation)

@@ -49,15 +49,20 @@ export default function SocialConnectPage() {
   const [error, setError]         = useState<string | null>(null);
   const [disconnecting, setDisc]  = useState<SocialPlatform | null>(null);
 
-  // Check for callback query params
+  // Check for callback query params (handles both popup and full-page redirect flows)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get('social_connected');
     const errMsg    = params.get('social_error');
     if (errMsg) setError(decodeURIComponent(errMsg));
     if (connected || errMsg) {
-      // Remove query params from URL without reload
       window.history.replaceState({}, '', '/settings/social');
+      // If we're running inside a popup, notify the parent and close
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'social_connected', platform: connected }, window.location.origin);
+        window.close();
+        return; // parent will call fetchAccounts via the message listener
+      }
     }
     fetchAccounts();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -89,13 +94,42 @@ export default function SocialConnectPage() {
   }
 
   async function handleConnect(platform: SocialPlatform) {
-    // The connect route is on the API domain — a plain browser redirect can't
-    // send an Authorization header cross-origin. Pass the Clerk JWT as a query
-    // param so the backend can verify it without a session cookie.
     const token = await getToken();
     const url   = new URL(getSocialConnectUrl(platform));
     if (token) url.searchParams.set('token', token);
-    window.location.href = url.toString();
+
+    // Open in a popup so users never leave app.auraflux.co.
+    // When the popup lands back on /settings/social it posts 'social_connected'
+    // to the opener and closes itself — we then refresh the accounts list.
+    const popup = window.open(
+      url.toString(),
+      'auraflux_social_connect',
+      'width=520,height=680,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no',
+    );
+
+    if (!popup) {
+      // Popups blocked — fall back to full-page redirect
+      window.location.href = url.toString();
+      return;
+    }
+
+    // Listen for the callback page posting back to us
+    function onMessage(e: MessageEvent) {
+      if (e.data?.type === 'social_connected') {
+        window.removeEventListener('message', onMessage);
+        fetchAccounts();
+      }
+    }
+    window.addEventListener('message', onMessage);
+
+    // Also poll for popup close as a fallback (e.g. user closes manually)
+    const poll = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(poll);
+        window.removeEventListener('message', onMessage);
+        fetchAccounts();
+      }
+    }, 800);
   }
 
   const accountMap = Object.fromEntries(accounts.map((a) => [a.platform, a]));
