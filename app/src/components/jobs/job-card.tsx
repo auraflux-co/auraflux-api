@@ -17,7 +17,8 @@ const STATUS_MAP: Record<Job['status'], { label: string; variant: 'default' | 's
   held:      { label: 'On Hold',    variant: 'outline'     },
   staged:    { label: 'In Review',  variant: 'secondary'   },
   published: { label: 'Published',  variant: 'default'     },
-  cancelled: { label: 'Cancelled',  variant: 'outline'     },
+  cancelled:     { label: 'Cancelled',      variant: 'outline'     },
+  credit_paused: { label: 'Credits Paused', variant: 'secondary'   },
 };
 
 const PORTAL_STATUS_COLOR: Record<PortalStatus, string> = {
