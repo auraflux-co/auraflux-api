@@ -54,11 +54,11 @@ export default function CrmListPage() {
     setError(null);
     try {
       const token = await getToken();
-      const res = await apiFetch<{ ok: boolean; accounts: AccountSummary[] }>(
+      const res = await apiFetch<{ ok: boolean; customers: AccountSummary[]; accounts?: AccountSummary[] }>(
         '/admin/crm',
         { token: token ?? undefined },
       );
-      setAccounts(res.accounts || []);
+      setAccounts(res.customers || res.accounts || []);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load');
     } finally {

@@ -183,16 +183,8 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/crm',         label: 'CRM'            },
   { href: '/admin/permissions', label: 'Permissions'    },
   { href: '/operator',          label: 'All Jobs'       },
+  { href: '/review',            label: 'Review Queue'   },
   { href: '/generate',          label: 'Generate'       },
-  {
-    href: '/myjobs', label: 'Jobs (preview)', divider: 'Customer preview',
-    children: [
-      { href: '/myjobs/new',     label: 'New job'  },
-      { href: '/myjobs/active',  label: 'Active'   },
-      { href: '/myjobs/history', label: 'History'  },
-    ],
-  },
-  { href: '/review', label: 'Review Queue' },
 ];
 
 const CONFLUENCE_GUIDE_URL =

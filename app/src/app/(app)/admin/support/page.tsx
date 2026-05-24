@@ -114,9 +114,9 @@ export default function OperatorSupportInbox() {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
-  // Gate: operator/admin only
+  // Gate: superadmin/operator/admin only
   useEffect(() => {
-    if (role && role !== 'operator' && role !== 'admin') {
+    if (role && role !== 'superadmin' && role !== 'operator' && role !== 'admin') {
       router.replace('/home');
     }
   }, [role, router]);
@@ -218,7 +218,7 @@ export default function OperatorSupportInbox() {
   const humanCount  = sessions.filter((s) => s.human_took_over).length;
   const smsCount    = sessions.filter((s) => !!s.phone_number).length;
 
-  if (role && role !== 'operator' && role !== 'admin') return null;
+  if (role && role !== 'superadmin' && role !== 'operator' && role !== 'admin') return null;
 
   return (
     <div className="flex flex-col gap-4 h-full">

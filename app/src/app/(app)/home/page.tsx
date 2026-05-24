@@ -16,6 +16,7 @@ export default async function DashboardPage() {
   const firstName      = user?.firstName ?? 'there';
   const planTier       = (user?.publicMetadata?.planTier as string) ?? 'operate';
   const setupDismissed = !!(user?.publicMetadata?.setupDismissed);
+  const isSuperAdmin   = user?.publicMetadata?.role === 'superadmin';
 
   const tierBadge = (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold tracking-widest uppercase ${TIER_BADGE_COLORS[planTier] ?? TIER_BADGE_COLORS.operate}`}>
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
         title={`Welcome back, ${firstName}`}
         badge={tierBadge}
       />
-      <SetupChecklist setupDismissed={setupDismissed} planTier={planTier} />
+      {!isSuperAdmin && <SetupChecklist setupDismissed={setupDismissed} planTier={planTier} />}
       <LiveTiles />
     </PageShell>
   );
