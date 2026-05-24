@@ -2,13 +2,39 @@
 
 import { SignIn } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+
+const ALLOWED_ORIGIN = 'https://app.auraflux.co';
+
+function isSafeRedirect(url: string): boolean {
+  if (!url) return false;
+  // Relative paths are always safe
+  if (url.startsWith('/') && !url.startsWith('//')) return true;
+  try {
+    const parsed = new URL(url);
+    return parsed.origin === ALLOWED_ORIGIN;
+  } catch {
+    return false;
+  }
+}
 
 export default function SignInPage() {
   const [loadFailed, setLoadFailed] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const sessionExpired = searchParams.get('reason') === 'session_expired';
+
+  // Strip any redirect_url that points outside app.auraflux.co (e.g. localhost leftovers from testing)
+  useEffect(() => {
+    const redirectUrl = searchParams.get('redirect_url');
+    if (redirectUrl && !isSafeRedirect(redirectUrl)) {
+      const clean = new URLSearchParams(searchParams.toString());
+      clean.delete('redirect_url');
+      const qs = clean.toString();
+      router.replace('/sign-in' + (qs ? '?' + qs : ''));
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     // Detect Clerk JS load failure — if the sign-in form hasn't mounted
