@@ -30,6 +30,7 @@ interface Member {
 interface Account {
   accountId: string;
   ownerEmail: string | null;
+  ownerName: string | null;
   planTier: string;
   memberCount: number;
   members: Member[];
@@ -135,7 +136,7 @@ export default function PermissionsPage() {
 
   const filtered = accounts.filter((a) => {
     const q = search.toLowerCase();
-    return !q || a.accountId.toLowerCase().includes(q) || (a.ownerEmail?.toLowerCase() || '').includes(q);
+    return !q || a.accountId.toLowerCase().includes(q) || (a.ownerEmail?.toLowerCase() || '').includes(q) || (a.ownerName?.toLowerCase() || '').includes(q);
   });
 
   if (loading) return (
@@ -192,8 +193,10 @@ export default function PermissionsPage() {
                       <path d="M9 18l6-6-6-6" />
                     </svg>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{account.ownerEmail ?? account.accountId}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{account.accountId}</p>
+                      <p className="text-sm font-medium truncate">
+                        {account.ownerName ?? account.ownerEmail ?? account.accountId}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{account.ownerEmail ?? account.accountId}</p>
                     </div>
                   </button>
 
