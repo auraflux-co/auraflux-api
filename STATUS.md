@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-24 v1.0.626 (Cursor — fix(cpd-326): align CLERK_SECRET_KEY to live instance — API service on Render and local .env were using sk_test_ while frontend runs on sk_live_; role PATCHes were silently updating wrong Clerk instance; updated both to sk_live_; API redeploy triggered)
 **Last Updated:** 2026-05-23 v1.0.625 (Cursor — fix(cpd-325): YOUTUBE_CLIENT_ID + YOUTUBE_CLIENT_SECRET added to Render and local .env; was wiped tonight by destructive PUT when adding REDIS_URL; uncommented in .env.example so guard always tracks them)
 **Last Updated:** 2026-05-23 v1.0.624 (Cursor — feat(cpd-324): BullMQ persistent job queue — jobs stored in Redis survive server restarts/deploys; queue worker starts with server; jobs_c1 enqueues via BullMQ when REDIS_URL set; in-process setImmediate kept as fallback)
 **Last Updated:** 2026-05-23 v1.0.623 (Cursor — feat(cpd-323): social connect opens in popup window instead of full-page redirect; popup posts social_connected message to parent on callback; parent refreshes accounts list without leaving app.auraflux.co)
