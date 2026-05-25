@@ -227,7 +227,7 @@ function BillingPageInner() {
                 <Card key={tier} className="flex flex-col overflow-hidden">
                   {/* Plan visual */}
                   {meta.image && (
-                    <div className="w-full aspect-[4/3] overflow-hidden bg-muted">
+                    <div className="w-full h-36 overflow-hidden bg-muted">
                       <img
                         src={meta.image}
                         alt={`${meta.label} plan`}
