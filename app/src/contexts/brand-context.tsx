@@ -18,6 +18,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
   ReactNode,
@@ -28,19 +29,21 @@ import { getBrands, setActiveBrandId, type Brand } from '@/lib/api';
 const LS_KEY = 'auraflux_active_brand_id';
 
 interface BrandContextValue {
-  brands:        Brand[];
-  activeBrand:   Brand | null;
+  brands:         Brand[];
+  activeBrand:    Brand | null;
   setActiveBrand: (brand: Brand) => void;
-  isLoading:     boolean;
-  refresh:       () => void;
+  isLoading:      boolean;
+  error:          string | null;
+  refresh:        () => Promise<void>;
 }
 
 const BrandContext = createContext<BrandContextValue>({
-  brands:        [],
-  activeBrand:   null,
+  brands:         [],
+  activeBrand:    null,
   setActiveBrand: () => {},
-  isLoading:     true,
-  refresh:       () => {},
+  isLoading:      true,
+  error:          null,
+  refresh:        async () => {},
 });
 
 export function BrandProvider({ children }: { children: ReactNode }) {
@@ -48,25 +51,40 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   const [brands, setBrands]       = useState<Brand[]>([]);
   const [activeBrand, setActive]  = useState<Brand | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError]         = useState<string | null>(null);
+
+  // Track whether the user has manually set a brand so load() won't overwrite it
+  const userSelectedRef = useRef(false);
+
+  // Sync LS → apiFetch header synchronously on mount (before first fetch)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) setActiveBrandId(saved);
+  }, []);
 
   const load = useCallback(async () => {
     if (!isLoaded) return;
+    setError(null);
     try {
       const token = await getToken();
       const list  = await getBrands(token ?? undefined);
       setBrands(list);
 
-      // Restore previously active brand from localStorage
-      const savedId = typeof window !== 'undefined'
-        ? localStorage.getItem(LS_KEY)
-        : null;
-      const match = savedId ? list.find((b) => b.id === savedId) : null;
-      const resolved = match ?? list[0] ?? null;
-
-      setActive(resolved);
-      setActiveBrandId(resolved?.id ?? null);
-    } catch {
-      // Non-fatal — single-brand flows still work via fallback in backend
+      // Only update activeBrand from the list if the user hasn't manually switched
+      if (!userSelectedRef.current) {
+        const savedId  = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
+        const match    = savedId ? list.find((b) => b.id === savedId) : null;
+        const resolved = match ?? list[0] ?? null;
+        setActive(resolved);
+        setActiveBrandId(resolved?.id ?? null);
+      } else {
+        // Refresh the active brand object to pick up updated fields (tier, name)
+        setActive((prev) => list.find((b) => b.id === prev?.id) ?? prev);
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load brands');
+      // Non-fatal — backend falls back to first brand; keep stale state rather than clearing
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +93,7 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   useEffect(() => { load(); }, [load]);
 
   const setActiveBrand = useCallback((brand: Brand) => {
+    userSelectedRef.current = true;
     setActive(brand);
     setActiveBrandId(brand.id);
     if (typeof window !== 'undefined') {
@@ -83,7 +102,7 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <BrandContext.Provider value={{ brands, activeBrand, setActiveBrand, isLoading, refresh: load }}>
+    <BrandContext.Provider value={{ brands, activeBrand, setActiveBrand, isLoading, error, refresh: load }}>
       {children}
     </BrandContext.Provider>
   );

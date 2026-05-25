@@ -7,11 +7,12 @@
  * account. Follows the industry pattern used by Slack, Linear, and Vercel
  * (workspace/org selector in the top-left, colour-coded letter avatar).
  *
- * For single-brand accounts: shows the brand name + "+ Add brand" only.
- * For multi-brand accounts: shows all brands with active state indicator.
+ * The menu is rendered via ReactDOM.createPortal to document.body so it
+ * escapes the sidebar's overflow-hidden clipping boundary.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useBrand } from '@/contexts/brand-context';
@@ -58,24 +59,51 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
-  const { brands, activeBrand, setActiveBrand } = useBrand();
-  const [open, setOpen] = useState(false);
-  const ref             = useRef<HTMLDivElement>(null);
-  const router          = useRouter();
+  const { brands, activeBrand, setActiveBrand, isLoading } = useBrand();
+  const [open, setOpen]       = useState(false);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const triggerRef            = useRef<HTMLButtonElement>(null);
+  const menuRef               = useRef<HTMLDivElement>(null);
+  const router                = useRouter();
 
-  // Close on outside click
+  // Position the portal menu below the trigger button
+  const positionMenu = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setMenuStyle({
+      position: 'fixed',
+      top:      rect.bottom + 4,
+      left:     rect.left,
+      width:    Math.max(rect.width, 200),
+      zIndex:   9999,
+    });
+  }, []);
+
+  const toggleOpen = useCallback(() => {
+    if (!open) positionMenu();
+    setOpen((v) => !v);
+  }, [open, positionMenu]);
+
+  // Close on outside click or Escape
   useEffect(() => {
     if (!open) return;
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+    function handleMouseDown(e: MouseEvent) {
+      if (
+        triggerRef.current?.contains(e.target as Node) ||
+        menuRef.current?.contains(e.target as Node)
+      ) return;
+      setOpen(false);
     }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open]);
-
-  if (!activeBrand) return null;
 
   function handleSelect(brand: Brand) {
     setActiveBrand(brand);
@@ -87,25 +115,108 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
     router.push('/billing/add-brand');
   }
 
-  if (collapsed) {
+  // Loading skeleton
+  if (isLoading) {
     return (
-      <div className="flex justify-center">
-        <button
-          onClick={() => setOpen((v) => !v)}
-          title={activeBrand.name}
-          className="rounded hover:opacity-80 transition-opacity"
-        >
-          <BrandAvatar brand={activeBrand} />
-        </button>
-        {/* Collapsed popout omitted for v1 — switching requires expanding sidebar */}
+      <div className={cn('flex items-center gap-2 px-1 py-1', collapsed && 'justify-center')}>
+        <div className="w-6 h-6 rounded bg-muted/60 animate-pulse shrink-0" />
+        {!collapsed && <div className="flex-1 h-3 rounded bg-muted/60 animate-pulse" />}
       </div>
     );
   }
 
-  return (
-    <div ref={ref} className="relative">
+  // No brands loaded (network error or empty account) — still show Add brand entry
+  if (!activeBrand) {
+    if (collapsed) return null;
+    return (
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleAddBrand}
+        className="w-full flex items-center gap-2 px-1 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-left"
+      >
+        <span className="w-6 h-6 flex items-center justify-center text-base shrink-0">+</span>
+        <span>Add brand</span>
+      </button>
+    );
+  }
+
+  const menu = open && (
+    <div
+      ref={menuRef}
+      style={menuStyle}
+      className="bg-popover border border-border rounded-md shadow-lg py-1"
+      role="menu"
+      aria-label="Switch brand"
+    >
+      {brands.map((brand) => {
+        const isActive = brand.id === activeBrand.id;
+        return (
+          <button
+            key={brand.id}
+            onClick={() => handleSelect(brand)}
+            role="menuitem"
+            className={cn(
+              'w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left',
+              'hover:bg-muted/60',
+              isActive && 'text-primary',
+            )}
+          >
+            <BrandAvatar brand={brand} size="sm" />
+            <span className="flex-1 min-w-0 truncate">{brand.name}</span>
+            {brand.tier && (
+              <span className="text-[10px] text-muted-foreground shrink-0">
+                {TIER_LABELS[brand.tier] ?? brand.tier}
+              </span>
+            )}
+            {isActive && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-primary">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            )}
+          </button>
+        );
+      })}
+
+      <div className="border-t border-border mt-1 pt-1">
+        <button
+          onClick={handleAddBrand}
+          role="menuitem"
+          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-left"
+        >
+          <span className="w-5 h-5 flex items-center justify-center text-base leading-none shrink-0">+</span>
+          <span>Add brand</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  // Collapsed: avatar-only button that expands the sidebar on click
+  if (collapsed) {
+    return (
+      <>
+        <button
+          ref={triggerRef}
+          onClick={toggleOpen}
+          title={activeBrand.name}
+          aria-label={`Switch brand (current: ${activeBrand.name})`}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          className="rounded hover:opacity-80 transition-opacity"
+        >
+          <BrandAvatar brand={activeBrand} />
+        </button>
+        {typeof document !== 'undefined' && menu && createPortal(menu, document.body)}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        onClick={toggleOpen}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`Switch brand (current: ${activeBrand.name})`}
         className={cn(
           'w-full flex items-center gap-2 px-1 py-1 rounded-md transition-colors text-left',
           'hover:bg-muted/60',
@@ -124,48 +235,7 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
           <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
-
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-popover border border-border rounded-md shadow-md py-1 min-w-[180px]">
-          {brands.map((brand) => {
-            const isActive = brand.id === activeBrand.id;
-            return (
-              <button
-                key={brand.id}
-                onClick={() => handleSelect(brand)}
-                className={cn(
-                  'w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left',
-                  'hover:bg-muted/60',
-                  isActive && 'text-primary',
-                )}
-              >
-                <BrandAvatar brand={brand} size="sm" />
-                <span className="flex-1 min-w-0 truncate">{brand.name}</span>
-                {brand.tier && (
-                  <span className="text-[10px] text-muted-foreground shrink-0">
-                    {TIER_LABELS[brand.tier] ?? brand.tier}
-                  </span>
-                )}
-                {isActive && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-primary">
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                )}
-              </button>
-            );
-          })}
-
-          <div className="border-t border-border mt-1 pt-1">
-            <button
-              onClick={handleAddBrand}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-left"
-            >
-              <span className="w-5 h-5 flex items-center justify-center text-base leading-none shrink-0">+</span>
-              <span>Add brand</span>
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      {typeof document !== 'undefined' && menu && createPortal(menu, document.body)}
+    </>
   );
 }

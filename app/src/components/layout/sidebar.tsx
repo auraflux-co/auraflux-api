@@ -427,16 +427,20 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
       'transition-transform duration-200 ease-in-out',
       mobileOpen ? 'translate-x-0' : '-translate-x-full',
     )}>
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <Link href="/home" className="flex items-center gap-2.5" onClick={closeMobile}>
-          <Image src="/brand/logo.png" alt="AuraFlux" width={52} height={32} className="shrink-0 object-contain" priority />
-          <span className="font-semibold text-[15px] tracking-tight">AuraFlux</span>
-        </Link>
-        <button onClick={closeMobile} className="text-muted-foreground hover:text-foreground p-1">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+      <div className="px-4 py-3 border-b border-border space-y-2.5">
+        <div className="flex items-center justify-between">
+          <Link href="/home" className="flex items-center gap-2.5" onClick={closeMobile}>
+            <Image src="/brand/logo.png" alt="AuraFlux" width={52} height={32} className="shrink-0 object-contain" priority />
+            <span className="font-semibold text-[15px] tracking-tight">AuraFlux</span>
+          </Link>
+          <button onClick={closeMobile} className="text-muted-foreground hover:text-foreground p-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        {/* Brand switcher — customer nav only */}
+        {!isSuperAdmin && <BrandSwitcher collapsed={false} />}
       </div>
 
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">

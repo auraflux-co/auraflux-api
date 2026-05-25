@@ -7,14 +7,15 @@
  * Step 3: Confirm → Stripe Checkout
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { createBrandApi, subscribeToPlan } from '@/lib/api';
+import { createBrandApi, subscribeToPlan, type Brand } from '@/lib/api';
 import { useBrand } from '@/contexts/brand-context';
 
 const PLAN_META: Record<string, { label: string; sub: string; price: string; image: string }> = {
@@ -41,16 +42,27 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; ima
 const PLANS = ['operate', 'guided', 'managed'] as const;
 type PlanId = typeof PLANS[number];
 
-export default function AddBrandPage() {
-  const { getToken }         = useAuth();
-  const router               = useRouter();
-  const { refresh }          = useBrand();
+function AddBrandInner() {
+  const { getToken }           = useAuth();
+  const router                 = useRouter();
+  const searchParams           = useSearchParams();
+  const { brands, refresh }    = useBrand();
 
-  const [step, setStep]       = useState<1 | 2>(1);
-  const [name, setName]       = useState('');
-  const [planId, setPlanId]   = useState<PlanId>('guided');
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+  const [step, setStep]         = useState<1 | 2>(1);
+  const [name, setName]         = useState('');
+  const [planId, setPlanId]     = useState<PlanId>('guided');
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const [draftBrand, setDraftBrand] = useState<Brand | null>(null);
+
+  // Show cancelled banner when returning from Stripe without completing
+  const wasCancelled = searchParams.get('cancelled') === '1';
+
+  // Detect existing incomplete brand (has no subscription yet) to avoid duplication on retry
+  useEffect(() => {
+    const incomplete = brands.find((b) => !b.stripe_subscription_id && b.active);
+    if (incomplete) setDraftBrand(incomplete);
+  }, [brands]);
 
   async function handleSubscribe() {
     if (!name.trim()) { setError('Please enter a brand name.'); return; }
@@ -58,9 +70,14 @@ export default function AddBrandPage() {
     setError(null);
     try {
       const token  = await getToken();
-      // 1. Create brand record
-      const brand  = await createBrandApi(name.trim(), token ?? undefined);
-      // 2. Start Stripe checkout for this brand
+
+      // Re-use existing draft brand if name matches (prevents duplication on retry)
+      let brand = draftBrand?.name === name.trim() ? draftBrand : null;
+      if (!brand) {
+        brand = await createBrandApi(name.trim(), token ?? undefined);
+        await refresh();
+      }
+
       const origin = window.location.origin;
       const result = await subscribeToPlan(
         planId,
@@ -69,9 +86,6 @@ export default function AddBrandPage() {
         token ?? undefined,
         brand.id,
       );
-      // Refresh brand list in context (new brand exists, no subscription yet)
-      await refresh();
-      // Navigate to Stripe checkout
       window.location.href = result.url;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
@@ -85,6 +99,16 @@ export default function AddBrandPage() {
         title="Add a brand"
         subtitle="Each brand has its own plan subscription, channels, credits, and job history."
       />
+
+      {/* Cancelled checkout banner */}
+      {wasCancelled && (
+        <div className="max-w-lg rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          Your checkout was cancelled. No charge was made. You can try again below.
+          {draftBrand && (
+            <span className="ml-1">Brand &ldquo;{draftBrand.name}&rdquo; was saved — pick a plan to complete setup.</span>
+          )}
+        </div>
+      )}
 
       {/* Step 1: Name */}
       <Card className="max-w-lg">
@@ -170,5 +194,13 @@ export default function AddBrandPage() {
         </div>
       )}
     </PageShell>
+  );
+}
+
+export default function AddBrandPage() {
+  return (
+    <Suspense>
+      <AddBrandInner />
+    </Suspense>
   );
 }
