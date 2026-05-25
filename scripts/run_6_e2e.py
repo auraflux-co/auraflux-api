@@ -628,7 +628,8 @@ Rules (enforce exactly):
 - entry = "fetch"
 - Pass ALL source clip URLs in "urls"; first URL also in "url"
 - durationMins = {test['durationMins']}
-- publishMode = "immediate"
+- publishMode = "staged"
+- staging = true (skip portal5 publish — E2E review mode)
 
 Return ONLY valid JSON:
 {{
@@ -643,7 +644,8 @@ Return ONLY valid JSON:
   "topic": "<creative topic>",
   "tone": "{test['tone']}",
   "durationMins": {test['durationMins']},
-  "publishMode": "immediate",
+  "publishMode": "staged",
+  "staging": true,
   "brandName": "AuraFlux E2E",
   "brandVoice": "<voice matching the streamer style>",
   "addOns": {{
@@ -674,7 +676,8 @@ Return ONLY valid JSON:
             'topic': test['topic'],
             'tone': test['tone'],
             'durationMins': test['durationMins'],
-            'publishMode': 'immediate',
+            'publishMode': 'staged',
+            'staging': True,
             'brandName': 'AuraFlux E2E',
             'addOns': {
                 'tts':            {'active': has_tts},
@@ -691,13 +694,21 @@ def gemini_qa_score(test, job_result, source_items):
                   or job_result.get('assembledVideoUrl') or '')
     status = job_result.get('status', 'unknown')
 
+    use_clip_spec = test['use_clip_spec']
+    if use_clip_spec:
+        clip_spec_line = '- clipSpec COMPACT assembly honoured (trim points / order respected): 20 pts'
+    else:
+        clip_spec_line = ('- Job reached terminal status (complete or published, NOT running/failed): 20 pts')
+    max_pts = 100
+
     prompt = f"""
 You are a QA engineer scoring an AuraFlux job output against its spec.
+Score ONLY using the observable data provided — do not attempt to access any URLs.
 
 Test ID: {test['id']}
 Tier: {test['tier']} (auth: {test['auth_surface']})
 Platform sourced from: {test['platform_src']} / @{test['account']}
-ClipSpec used: {test['use_clip_spec']} (COMPACT mode — custom order + trim)
+ClipSpec used: {use_clip_spec} (COMPACT mode — custom order + trim)
 Format: {test['format']}
 Content type: {test['content_type']}
 Features: {', '.join(test.get('features', []))}
@@ -708,12 +719,12 @@ Job status: {status}
 Output URL: {output_url or 'NONE'}
 Source clips fetched: {len(source_items)}
 
-Score criteria (0-100):
-- Job completed without error: 30 pts
-- Source clips resolved from {test['platform_src']} (Creator Source Library): 20 pts
-- clipSpec COMPACT assembly honoured (if use_clip_spec=True): 20 pts
-- Correct auth surface used (api vs dashboard): 10 pts
-- Output URL present: 20 pts
+Score criteria (0-{max_pts}):
+- Job completed without error (status is complete or published, not failed): 30 pts
+- Source clips resolved from {test['platform_src']} (Creator Source Library, source_clips_fetched > 0): 20 pts
+- {clip_spec_line}
+- Correct auth surface used (api key for operate, dashboard/clerk for guided/managed): 10 pts
+- Output URL present (not NONE): 20 pts
 
 Return ONLY JSON:
 {{"score": <0-100>, "pass": <true/false>, "notes": "<brief assessment>"}}
@@ -968,7 +979,7 @@ def main():
     print(f'  {"─"*10} {"─"*8} {"─"*8} {"─"*10} {"─"*9} {"─"*12} {"─"*6} {"─"*5} {"─"*12} {"─"*40}')
     for r in results:
         score_s = str(r.get('score', '—'))
-        tpl     = r.get('template_id', '—')[:12]
+        tpl     = (r.get('template_id') or '—')[:12]
         out_url = (r.get('output_url') or '—')[:60]
         print(f'  {r["id"]:<10} {r.get("tier",""):<8} {r.get("platform_src",""):<8} '
               f'{r.get("auth_surface",""):<10} {str(r.get("use_clip_spec","")):<9} '
