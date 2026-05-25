@@ -58,7 +58,7 @@ function SessionItem({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-mono text-muted-foreground truncate">{session.user_id.slice(0, 12)}…</span>
+        <span className="text-xs text-muted-foreground truncate">{session.user_name ?? session.user_id.slice(0, 12) + '…'}</span>
         <div className="flex items-center gap-1.5 shrink-0">
           <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-medium', badge.color)}>{badge.label}</span>
           {session.human_took_over && (
@@ -269,7 +269,7 @@ export default function OperatorSupportInbox() {
               {/* Session meta bar */}
               <div className="border-b border-border px-4 py-3 flex items-center justify-between gap-3 bg-muted/20 flex-wrap">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-xs font-mono text-muted-foreground">{activeSession.user_id}</span>
+                  <span className="text-xs text-muted-foreground">{activeSession.user_name ?? activeSession.user_id}</span>
                   {activeSession.phone_number && (
                     <span className="text-xs text-muted-foreground">📱 {activeSession.phone_number}</span>
                   )}

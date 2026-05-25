@@ -831,6 +831,7 @@ export interface SupportMessage {
 export interface SupportSession {
   id:                 string;
   user_id:            string;
+  user_name:          string | null;
   phone_number:       string | null;
   created_at:         number;
   resolved:           boolean;

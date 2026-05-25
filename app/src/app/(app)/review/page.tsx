@@ -72,7 +72,8 @@ interface JobRow {
   jobId: string;
   status: string;
   contentType: string | null;
-  customerId: string | null;
+  customerId:   string | null;
+  customerName: string | null;
   platforms: string[];
   outputUrl: string | null;
   createdAt: string | number;
@@ -499,8 +500,10 @@ export default function StagingPage() {
                     )}
                   </div>
                   <p className="af-caption mt-1">
-                    {isSuperAdmin && job.customerId && (
-                      <span className="font-mono text-muted-foreground mr-1">[{job.customerId.slice(0, 12)}…]{' · '}</span>
+                    {isSuperAdmin && (job.customerName || job.customerId) && (
+                      <span className="text-muted-foreground mr-1">
+                        {job.customerName ?? job.customerId!.slice(0, 12) + '…'}{' · '}
+                      </span>
                     )}
                     {job.contentType ?? 'unknown'}{' · '}
                     {job.platforms?.length ? job.platforms.map((p) => PLATFORM_ICONS[p] ?? p).join(' ') : 'no platforms'}{' · '}

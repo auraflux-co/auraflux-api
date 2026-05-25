@@ -181,7 +181,8 @@ export default function CrmAccountPage() {
   const support   = data.support   as Record<string, unknown>[];
   const notes     = data.notes     as Record<string, unknown>[];
 
-  const ownerEmail = identity?.email as string || accountId;
+  const ownerEmail = identity?.email as string || null;
+  const ownerName  = [identity?.firstName, identity?.lastName].filter(Boolean).join(' ') || ownerEmail || accountId;
 
   return (
     <div className="max-w-4xl space-y-5">
@@ -194,8 +195,8 @@ export default function CrmAccountPage() {
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-xl font-semibold">{ownerEmail}</h1>
-            <p className="text-xs text-muted-foreground font-mono mt-0.5">{accountId}</p>
+            <h1 className="text-xl font-semibold">{ownerName}</h1>
+            {ownerEmail && <p className="text-xs text-muted-foreground mt-0.5">{ownerEmail}</p>}
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
                 plan?.planTier === 'custom' ? 'bg-amber-100 text-amber-700' :
