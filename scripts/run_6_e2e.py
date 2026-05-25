@@ -538,6 +538,9 @@ def build_compact_clip_spec(source_items):
         clips.append({
             'id':        item.get('id', f'clip-{i}'),
             'url':       item['url'],
+            # CPD-349: Pass cdnUrl (Helix thumbnailToMp4) so portal0 + assembly can
+            # probe/download via public CDN instead of yt-dlp GQL calls.
+            'cdnUrl':    item.get('cdnUrl') or None,
             'title':     item.get('title', f'Clip {i + 1}'),
             'order':     i,
             'trimStart': 5,              # trim 5s off the front — tests trimming path
