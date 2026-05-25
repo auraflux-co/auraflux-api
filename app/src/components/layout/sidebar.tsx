@@ -172,7 +172,8 @@ function settingsNavItem(planTier: string | null): NavItem {
   children.push(
     { href: '/settings/channels', label: 'My Channels'       },
     { href: '/settings/social',  label: 'My Social Accounts' },
-    { href: '/settings/team',            label: 'My Team'           },
+    { href: '/settings/team',    label: 'My Team'            },
+    { href: '/developer',        label: 'API Reference'      },
   );
   return { href: '/settings', label: 'Settings', children };
 }
