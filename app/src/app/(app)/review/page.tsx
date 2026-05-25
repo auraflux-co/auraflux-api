@@ -20,6 +20,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useRole } from '@/hooks/use-role';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -425,7 +426,8 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function StagingPage() {
-  const { getToken } = useAuth();
+  const { getToken }             = useAuth();
+  const { isSuperAdmin }         = useRole();
   const [jobs, setJobs]         = useState<JobRow[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -437,7 +439,9 @@ export default function StagingPage() {
       try {
         const t = await getToken();
         setToken(t);
-        const data = await apiFetch<{ jobs: JobRow[] }>('/jobs', { token: t ?? undefined });
+        // Superadmin sees all accounts' jobs; customers see only their own.
+        const endpoint = isSuperAdmin ? '/jobs?all=true' : '/jobs';
+        const data = await apiFetch<{ jobs: JobRow[] }>(endpoint, { token: t ?? undefined });
         // Review queue = work to do only. Published jobs live in Jobs → History.
         const withOutput = (data.jobs ?? []).filter(
           (j) => ['complete', 'staged'].includes(j.status)
@@ -449,7 +453,7 @@ export default function StagingPage() {
         setLoading(false);
       }
     })();
-  }, [getToken]);
+  }, [getToken, isSuperAdmin]);
 
   function formatDate(ts: string | number) {
     const n = typeof ts === 'string' ? Number(ts) : ts;
@@ -461,7 +465,9 @@ export default function StagingPage() {
     <PageShell maxWidth="4xl">
       <PageHeader
         title="Review Queue"
-        subtitle="Videos ready for your review before publishing to social platforms."
+        subtitle={isSuperAdmin
+          ? `Platform-wide — all accounts. ${jobs.length > 0 ? `${jobs.length} job${jobs.length === 1 ? '' : 's'} awaiting review.` : ''}`
+          : 'Videos ready for your review before publishing to social platforms.'}
       />
 
       {loading && <p className="af-body text-muted-foreground">Loading jobs…</p>}
@@ -470,7 +476,9 @@ export default function StagingPage() {
       {!loading && !error && jobs.length === 0 && (
         <EmptyState
           title="Queue is clear"
-          description="Once a job finishes processing, it will appear here for review before publishing."
+          description={isSuperAdmin
+            ? 'No jobs across any account are awaiting review right now.'
+            : 'Once a job finishes processing, it will appear here for review before publishing.'}
           size="md"
         />
       )}
@@ -490,6 +498,9 @@ export default function StagingPage() {
                     )}
                   </div>
                   <p className="af-caption mt-1">
+                    {isSuperAdmin && job.customerId && (
+                      <span className="font-mono text-muted-foreground mr-1">[{job.customerId.slice(0, 12)}…]{' · '}</span>
+                    )}
                     {job.contentType ?? 'unknown'}{' · '}
                     {job.platforms?.length ? job.platforms.map((p) => PLATFORM_ICONS[p] ?? p).join(' ') : 'no platforms'}{' · '}
                     {formatDate(job.createdAt)}
