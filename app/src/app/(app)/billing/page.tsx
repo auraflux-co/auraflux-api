@@ -25,7 +25,6 @@ import {
   getCreditBalance,
   getPlans,
   subscribeToPlan,
-  getBillingPortalUrl,
   type CreditBalance,
   type Plan,
 } from '@/lib/api';
@@ -78,8 +77,7 @@ function BillingPageInner() {
 
   const [balance, setBalance]     = useState<CreditBalance | null>(null);
   const [plans, setPlans]         = useState<Plan[]>([]);
-  const [error, setError]         = useState<string | null>(null);
-  const [portalError, setPortalError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -97,19 +95,6 @@ function BillingPageInner() {
       }
     })();
   }, [getToken, isLoaded]);
-
-  async function handleManagePayment() {
-    setPortalError(null);
-    start(async () => {
-      try {
-        const token = await getToken();
-        const res = await getBillingPortalUrl(`${window.location.origin}/billing`, token ?? undefined);
-        window.location.href = res.url;
-      } catch {
-        setPortalError("Couldn't open the billing portal. Please try again.");
-      }
-    });
-  }
 
   async function handleUpgrade(planId: string) {
     setError(null);
@@ -257,32 +242,13 @@ function BillingPageInner() {
         </p>
       )}
 
-      {/* ── 3. Payment method & invoices ────────────────────────────────────── */}
-      <div>
-        <h2 className="af-subhead mb-4">Payment method &amp; invoices</h2>
-        <Card>
-          <CardContent className="pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <p className="af-body font-medium">Manage your payment method and invoices</p>
-              <p className="af-label mt-0.5 text-muted-foreground">
-                Opens the secure billing portal — update your card, download invoices, or cancel your subscription.
-              </p>
-              {portalError && (
-                <p className="af-caption text-destructive mt-1">{formatUserError(portalError)}</p>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              disabled={isPending}
-              onClick={handleManagePayment}
-            >
-              Manage billing
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Payment method lives at /billing/payment */}
+      <p className="af-caption text-muted-foreground">
+        To update your card or download invoices, visit{' '}
+        <a href="/billing/payment" className="underline underline-offset-2 hover:text-foreground transition-colors">
+          Payment method &amp; invoices
+        </a>.
+      </p>
     </PageShell>
   );
 }
