@@ -181,7 +181,9 @@ function validateRequiredEnv() {
   const required = [
     'ANTHROPIC_API_KEY',
     'GEMINI_API_KEY',
-    'HEYGEN_API_KEY'
+    'HEYGEN_API_KEY',
+    'CLERK_SECRET_KEY',
+    'CLERK_PUBLISHABLE_KEY',
   ];
   const missing = required.filter(key => !process.env[key]);
   if (missing.length > 0) {

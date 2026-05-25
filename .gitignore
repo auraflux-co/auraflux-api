@@ -21,7 +21,7 @@ scripts/cwn-auth.js
 scripts/aider_plan.sh
 scripts/aider_session_review.sh
 scripts/aider_session_review_local.sh
-scripts/backup_render_env.js
+# scripts/backup_render_env.js  — removed from ignore; script is safe to commit (no secrets stored in it)
 scripts/restore_render_env.js
 scripts/render_env_set.sh
 scripts/canva_oauth_helper.js
