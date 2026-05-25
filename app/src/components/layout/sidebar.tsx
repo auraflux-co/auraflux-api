@@ -11,6 +11,7 @@ import { usePlan } from '@/contexts/plan-context';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { CreditToken } from '@/components/icons/brand-icons';
+import { BrandSwitcher } from '@/components/layout/brand-switcher';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -184,7 +185,8 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/permissions', label: 'Permissions'    },
   { href: '/operator',          label: 'All Jobs'       },
   { href: '/review',            label: 'Review Queue'   },
-  { href: '/generate',          label: 'Generate'       },
+  { href: '/generate',          label: 'Generate Video' },
+  { href: '/generate/canva',    label: 'Canva Images'   },
 ];
 
 const CONFLUENCE_GUIDE_URL =
@@ -232,22 +234,26 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
       {/* Header */}
       <div className={cn(
         'border-b border-border shrink-0',
-        collapsed ? 'px-3 py-3 flex justify-center' : 'px-3 py-3 space-y-2.5',
+        collapsed ? 'px-3 py-3 flex flex-col items-center gap-2' : 'px-3 py-3 space-y-2.5',
       )}>
+        {/* Logo row */}
         {!collapsed && (
-          <>
-            <Link href="/home" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
-              <Image src="/brand/logo.png" alt="AuraFlux" width={56} height={34} className="shrink-0 object-contain" priority />
-              <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">AuraFlux</span>
-            </Link>
-            <CreditsBadge collapsed={collapsed} />
-          </>
+          <Link href="/home" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
+            <Image src="/brand/logo.png" alt="AuraFlux" width={56} height={34} className="shrink-0 object-contain" priority />
+            <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">AuraFlux</span>
+          </Link>
         )}
         {collapsed && (
           <Link href="/home" title="AuraFlux">
             <Image src="/brand/logo.png" alt="AuraFlux" width={36} height={22} className="object-contain" priority />
           </Link>
         )}
+
+        {/* Brand switcher — shown for customer nav only */}
+        {!isSuperAdmin && <BrandSwitcher collapsed={collapsed} />}
+
+        {/* Credits badge */}
+        {!collapsed && <CreditsBadge collapsed={collapsed} />}
       </div>
 
       {/* Nav */}
