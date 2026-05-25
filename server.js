@@ -7194,6 +7194,7 @@ app.use(adminRouter);
 // (no /v1 prefix). All require Clerk auth — must come after clerkInit().
 const planRouter      = require('./lib/routes/plan');
 const creditsRouter        = require('./lib/routes/credits');
+const billingRouter        = require('./lib/routes/billing');
 const notificationsRouter  = require('./lib/routes/notifications');
 const conciergeRouter = require('./lib/routes/concierge');
 const socialRouter    = require('./lib/routes/social_connect');
@@ -7211,6 +7212,7 @@ const heygenRouter        = require('./lib/routes/heygen');
 const jobsC1Router        = require('./lib/routes/jobs_c1');
 app.use(planRouter);
 app.use(creditsRouter);
+app.use(billingRouter);
 app.use(notificationsRouter);
 app.use(conciergeRouter);
 app.use(socialRouter);
