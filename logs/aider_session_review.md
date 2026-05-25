@@ -1,191 +1,160 @@
 ```markdown
-# AuraFlux Platform Health Review
+# AuraFlux Session Review
 
-**Session Date:** 2026-05-18T02:39:14Z  
-**Reviewed Commit:** 510280ae4799cde8d7aec3883b9a15b64e5e2125
+**Date:** 2026-05-25T13:45:03Z  
+**Last Commit:** e3dc512 fix(cpd-319/320/321/326): production-readiness hardening (#586)
 
 ---
 
 ## 1. Session Summary
 
-No commits or file changes occurred this session. The platform has 10 unmerged feature/fix branches with 5 active CI failures blocking deployment. Jira and Confluence APIs returned HTTP 000, preventing cross-system consistency validation. Backend has 12 undocumented environment variables requiring immediate .env.example updates.
+This session focused on production-readiness hardening across the Backend API layer, addressing billing crash fixes, security improvements, disk cleanup, and corrupt upload guards (CPD-319/320/321/326). Environment documentation was updated in `.env.example` via commit 27cbba5. No Frontend Dashboard changes were made this session. Multiple feature branches remain open with CI failures requiring attention.
 
 ---
 
 ## 2. Jira Consistency
 
-**Status:** Unable to assess — Jira API fetch failed with HTTP 000 for all board columns.
+**Status:** Unable to verify — Jira API fetch failed with HTTP 000 for all columns.
 
-**Action Required:**
-- Verify Jira API credentials and network connectivity
-- Re-run session review once Jira access is restored
-- Cannot confirm ticket transitions align with merged PRs or branch work
+**Potential Issues:**
+- Cannot confirm if CPD-319, CPD-320, CPD-321, CPD-326 have been transitioned to Done/Approved
+- Cannot verify alignment between merged PR #586 and Jira ticket states
+- Feature branches CPD-335 through CPD-338 may have stale Jira statuses
+
+**Action Required:** Manually verify Jira board once API access restored.
 
 ---
 
 ## 3. GitHub Consistency
 
-### CI Failures (5 blocking)
-| Branch | Issue |
-|--------|-------|
-| `fix/cpd-266-269-270-e2e-100-scores` | graceful shutdown + E2E fixes failing |
-| `fix/cpd-268-newrelic-types` | newrelic.d.ts stub — build_failed |
-| `fix/cpd-267-staging-ts-unknown` | TS unknown→ReactNode — build_failed 4h |
-| `fix/cpd-265-template-type-inference` | Postgres type-inference failing |
-| `feat/job-spec-card` | job spec card feature failing |
+| Issue | Details |
+|-------|---------|
+| **Open PRs** | None currently open |
+| **CI Failures** | 5 branches failing CI |
+| **Stale Branches** | `origin/fix/cpd-319-320-321-326-production-readiness` unmerged despite commit merged to main |
 
-### Stale Branches (10 unmerged)
-- `origin/chore/split-dev-to-private-repo`
-- `origin/feat/clerk-user-e2e-auth`
-- `origin/feat/cpd-175-e2e-resume-20260516`
-- `origin/feat/cpd-224-247-backlog-work`
-- `origin/feat/cpd-257-252-run2-gap-fixes`
-- `origin/feat/cpd-264-vod-skipcap-60min`
-- `origin/feat/job-spec-card`
-- `origin/feat/run2-gap-fixes-cpd260-263`
-- `origin/fix/cpd-265-template-type-inference`
-- `origin/fix/cpd-267-staging-ts-unknown`
-
-### Open PRs
-None currently open.
+**Failing CI Branches:**
+1. `fix/cpd-319-320-321-326-production-readiness` — production-readiness hardening
+2. `feat/cpd-338-credit-topup-pack` — credit top-up feature
+3. `feat/cpd-337-pack-readiness` — Stripe catalog prep
+4. `feat/cpd-336-native-payment` — payment method management
+5. `feat/cpd-335-payment-page` — Payment & Invoices extraction
 
 ---
 
 ## 4. Confluence Consistency
 
-**Status:** Unable to assess — Confluence API fetch failed with HTTP 000.
+**Status:** Unable to verify — Confluence API fetch failed with HTTP 000.
 
-**Known Gaps (cannot verify):**
-- Cannot confirm HOW docs exist for:
-  - `/dashboard/concierge` (new feature)
-  - `/dashboard/operator` (new feature)
-  - `/dashboard/team/accept` (invite flow)
-  - Job spec card feature (in failing branch)
+**Gaps Identified:**
+- Cannot confirm HOW docs exist for billing crash fix procedures
+- Cannot confirm HOW docs exist for disk cleanup operations
+- Cannot confirm HOW docs exist for corrupt upload handling
+
+**Action Required:** Manually audit Confluence space AF for documentation coverage of CPD-319/320/321/326 changes.
 
 ---
 
 ## 5. Frontend UI Integrity
 
-### Pages on Disk vs Sidebar Nav
+| Check | Result |
+|-------|--------|
+| **Pages on disk** | (none detected) |
+| **Sidebar nav routes** | (none detected) |
+| **Orphaned pages** | Unable to determine — no pages found |
+| **Missing nav entries** | Unable to determine — no nav found |
+| **TypeScript errors** | ✅ None |
 
-**Orphaned Pages (on disk, not in sidebar):**
-| Page | Status |
-|------|--------|
-| `/dashboard` | Landing page — intentional |
-| `/dashboard/admin/crm/[accountId]` | Detail view — accessed via CRM list |
-| `/dashboard/concierge` | **MISSING FROM NAV** |
-| `/dashboard/jobs/[jobId]` | Detail view — accessed via jobs list |
-| `/dashboard/team/accept` | Invite link destination — intentional |
-
-**Missing Nav Entries:**
-- `/dashboard/concierge` — page exists, no nav entry for customers
-
-### TypeScript Errors
-```
-scripts/aider_session_review.sh: line 175: timeout: command not found
-(tsc check failed or timed out)
-```
-TypeScript validation could not complete. CI builds on 3 branches confirm TS errors exist.
+**Note:** Dashboard page detection returned empty. This may indicate a scanning issue or the dashboard lives in an unexpected path structure. Manual verification recommended.
 
 ---
 
 ## 6. API-to-UI Mapping
 
-**Status:** All api.ts paths have matching backend routes.
+**Frontend apiFetch Paths:** 28 endpoints called from `api.ts`
 
-| Frontend Path | Backend Match |
-|---------------|---------------|
-| `/admin/activity-overview` | ✓ |
-| `/admin/crm` | ✓ |
-| `/admin/system-health` | ✓ |
-| `/api/generate-video` | ✓ |
-| `/concierge/chat` | ✓ |
-| `/concierge/portal-contracts` | ✓ |
-| `/concierge/schedule-suggest` | ✓ |
-| `/credits/balance` | ✓ |
-| `/credits/packs` | ✓ |
-| `/credits/purchase-pack` | ✓ |
-| `/jobs` | ✓ |
-| `/plan/features` | ✓ |
-| `/plans` | ✓ |
-| `/plans/billing-portal` | ✓ |
-| `/plans/subscribe` | ✓ |
-| `/social/accounts` | ✓ |
-| `/support/chat` | ✓ |
-| `/support/escalate` | ✓ |
-| `/support/sessions` | ✓ |
-| `/templates` | ✓ |
+**Missing Backend Routes:**
+| Frontend Path | Status |
+|---------------|--------|
+| `/billing/invoices` | ❌ No backend route |
+| `/billing/payment-method` | ❌ No backend route |
+| `/billing/setup-intent` | ❌ No backend route |
 
-No orphaned API calls or missing routes detected.
+**Analysis:** The billing feature branches (CPD-335, CPD-336) appear to contain these routes but are not merged. Frontend is calling endpoints that don't exist in production backend.
 
 ---
 
 ## 7. Codebase Structural Integrity
 
-**Backend Routes:** All routes in lib/ have corresponding server.js registrations (per API mapping above).
+**Files Modified This Session:**
+- `lib/routes/billing.js` — billing crash fix
+- `lib/routes/jobs.js` — job handling updates
+- `lib/routes/upload.js` — corrupt upload guard
+- `lib/services/scheduling_cron.js` — disk cleanup
+- `server.js` — route registration
+- `package.json` — dependency updates
+- `render.yaml` — deployment config
 
-**Circular Dependencies:** Cannot assess without running dependency analysis tool.
-
-**Server.js:** Entry point appears intact; graceful shutdown issues flagged in `fix/cpd-266-269-270-e2e-100-scores` branch.
+**Structural Issues:**
+- Billing routes in `lib/routes/billing.js` do not expose `/invoices`, `/payment-method`, `/setup-intent`
+- No circular dependency issues detected in changed files
 
 ---
 
 ## 8. C0 / C1+ Boundary
 
-**Assessment:** Limited visibility without code diff this session.
+**Leaks Detected:** None in changed files this session
 
-**Known Concerns:**
-- Review `feat/job-spec-card` for hardcoded branding before merge
-- Verify concierge feature uses tenant context, not hardcoded portal references
+**Hardcoded Branding:** Unable to fully audit without complete file scan
+
+**Note:** Session changes focused on infrastructure; no customer-facing branding changes detected.
 
 ---
 
 ## 9. Environment and Secrets
 
-### Backend ENV VARS Missing from .env.example (12 total)
+**Backend vars in code but missing from `.env.example`:**
+| Variable | Risk |
+|----------|------|
+| `AURAFLUX_E` | Undocumented |
+| `C` | Undocumented (likely partial scan artifact) |
+| `CWN_SERVER_URL` | Undocumented |
+| `E` | Undocumented (likely partial scan artifact) |
+| `ENABLE_NVENC` | Undocumented |
+| `GATE` | Undocumented |
+| `GEMINI_GATE` | Undocumented |
+| `JOBS_FILE` | Undocumented |
+| `MAX_POLL_MINUTES` | Undocumented |
+| `POLL_INTERVAL_MS` | Undocumented |
+| `PORTAL` | Undocumented |
+| `R` | Undocumented (likely partial scan artifact) |
+| `RENDER_API_SERVICE_ID` | Undocumented |
+| `YOUTUBE_COOKIES_BASE` | Undocumented |
 
-| Variable | Purpose (inferred) |
-|----------|-------------------|
-| `AURAFLUX_E` | Unknown — partial name |
-| `C` | Unknown — single char |
-| `CWN_SERVER_URL` | CWN integration endpoint |
-| `E` | Unknown — single char |
-| `ENABLE_NVENC` | GPU encoding toggle |
-| `GATE` | Feature gate flag |
-| `GEMINI_GATE` | Gemini AI feature flag |
-| `JOBS_FILE` | Local jobs storage path |
-| `MAX_POLL_MINUTES` | Polling timeout config |
-| `POLL_INTERVAL_MS` | Polling frequency |
-| `PORTAL` | Portal identifier |
-| `R` | Unknown — single char |
-| `RENDER_API_SERVICE_ID` | Render.com deployment ID |
-
-### Frontend NEXT_PUBLIC_* Missing
-None detected.
+**Frontend NEXT_PUBLIC_* vars missing:** None
 
 ---
 
 ## 10. Recommendations
 
 ### [BLOCKING]
-1. **Fix 5 CI failures** — All branches with build_failed status block deployment
-2. **Resolve TypeScript errors** — `fix/cpd-267-staging-ts-unknown` blocking for 4h
-3. **Document 12 missing ENV vars** — Add to `.env.example` with descriptions
-4. **Restore Jira/Confluence API access** — HTTP 000 prevents compliance checks
+1. **Fix missing billing backend routes** — Frontend calls `/billing/invoices`, `/billing/payment-method`, `/billing/setup-intent` which don't exist. Merge CPD-335/336 or stub routes.
+2. **Resolve CI failures on all 5 feature branches** — Blocking further feature delivery.
+3. **Delete stale branch `origin/fix/cpd-319-320-321-326-production-readiness`** — Already merged, causing confusion.
 
 ### [SHOULD FIX]
-5. **Add `/dashboard/concierge` to sidebar nav** — Feature exists but unreachable
-6. **Clean up stale branches** — 10 unmerged branches accumulating
-7. **Install `timeout` command** — Review script failing on line 175
-8. **Create HOW docs** — Concierge, Operator, Team Accept features undocumented
+4. **Document all 14 missing env vars in `.env.example`** — Commit 27cbba5 addressed some but not all.
+5. **Verify Jira ticket transitions** — CPD-319/320/321/326 should be moved to Done post-merge.
+6. **Investigate empty dashboard page scan** — Confirm detection logic or path configuration.
+7. **Restore Jira/Confluence API access** — HTTP 000 indicates network or auth failure.
 
 ### [NICE TO HAVE]
-9. **Audit single-char ENV vars** — `C`, `E`, `R` likely truncated or legacy
-10. **Add circular dependency check** — Include in CI pipeline
-11. **Branch naming convention** — Standardize feat/fix/chore prefixes
+8. **Create Confluence HOW docs for production-readiness changes** — Disk cleanup procedures, corrupt upload handling.
+9. **Audit single-letter env vars (C, E, R)** — Likely scan artifacts; clean up or clarify.
+10. **Add API route coverage tests** — Prevent future frontend/backend drift.
 
 ---
 
-<!-- last-reviewed-commit: 510280ae4799cde8d7aec3883b9a15b64e5e2125 -->
-<!-- reviewed-at: 2026-05-18T02:39:14Z -->
+<!-- last-reviewed-commit: e3dc512b94eeb398d6d275a1f991d352ed487b05 -->
+<!-- reviewed-at: 2026-05-25T13:45:03Z -->
 ```

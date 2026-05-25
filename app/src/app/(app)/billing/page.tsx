@@ -227,7 +227,7 @@ function BillingPageInner() {
                 <Card key={tier} className="flex flex-col overflow-hidden">
                   {/* Plan visual */}
                   {meta.image && (
-                    <div className="w-full aspect-[4/3] overflow-hidden bg-muted">
+                    <div className="w-full h-36 overflow-hidden bg-muted">
                       <img
                         src={meta.image}
                         alt={`${meta.label} plan`}
@@ -301,7 +301,7 @@ function BillingPageInner() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {packs.filter((p) => p.priceConfigured).map((pack) => (
               <Card key={pack.id} className="overflow-hidden">
-                <div className="w-full aspect-[4/3] overflow-hidden bg-muted">
+                <div className="w-full h-36 overflow-hidden bg-muted">
                   <img
                     src="/brand/plans/credits.png"
                     alt="Extra Credits Pack"
