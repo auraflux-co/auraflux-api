@@ -72,6 +72,7 @@ interface JobRow {
   jobId: string;
   status: string;
   contentType: string | null;
+  customerId: string | null;
   platforms: string[];
   outputUrl: string | null;
   createdAt: string | number;
