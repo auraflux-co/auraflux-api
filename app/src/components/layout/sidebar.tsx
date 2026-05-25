@@ -154,7 +154,6 @@ const CUSTOMER_NAV_BASE: NavItem[] = [
     children: [
       { href: '/billing',  label: 'Subscription' },
       { href: '/credits',  label: 'Credits'      },
-      { href: '/plans',    label: 'Plans'        },
     ],
   },
   { href: '/support',    label: 'Support'   },
