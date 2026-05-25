@@ -284,6 +284,7 @@ function withPuppeteerExecutable(opts) {
 const { body, validationResult } = require('express-validator');
 const { logError, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 const { requireFields, validateContentType, validateArrayLength, sanitizeStrings } = require('./lib/validation');
+const { requireAuth } = require('./lib/auth');
 const TwitchClient = require('./lib/clients/twitch_client');
 const { CONFIG } = require('./lib/config');
 const logger = require('./lib/logger');
