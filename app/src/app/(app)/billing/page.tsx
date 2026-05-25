@@ -356,10 +356,10 @@ function BillingPageInner() {
                       ) : '—'}
                     </td>
                     <td className="px-4 py-2.5 af-body text-right font-medium tabular-nums">
-                      {entry.credits > 0 ? (
-                        <span className="text-foreground">−{entry.credits}</span>
+                      {(Number(entry.credits) || 0) > 0 ? (
+                        <span className="text-foreground">−{Number(entry.credits) || 0}</span>
                       ) : (
-                        <span className="text-success">+{Math.abs(entry.credits)}</span>
+                        <span className="text-success">+{Math.abs(Number(entry.credits) || 0)}</span>
                       )}
                     </td>
                   </tr>
