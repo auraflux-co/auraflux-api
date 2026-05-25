@@ -17,6 +17,8 @@ import { listJobs, listTemplates, operatorJobAction, type Job, type JobTemplate,
 import { useRole } from '@/hooks/use-role';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { jobStatusLabel, jobDisplayTitle, platformListLabel, formatUserError } from '@/lib/job-labels';
+import { labelForContentType } from '@/lib/content-types';
 
 const ACTIVE_STATUSES = new Set(['queued', 'running', 'held', 'failed', 'credit_paused']);
 const SCHEDULED_JOB_STATUSES = new Set(['queued_scheduled']);
@@ -37,11 +39,10 @@ function StatusBadge({ status }: { status: string }) {
     status === 'held'          ? 'secondary'   :
     status === 'credit_paused' ? 'secondary'   :
     'outline';
-  const label = status === 'credit_paused' ? 'credits paused' : status;
   return (
-    <Badge variant={variant} className="capitalize text-[10px]">
+    <Badge variant={variant} className="text-[10px]">
       <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5 inline-block', statusColor(status))} />
-      {label}
+      {jobStatusLabel(status)}
     </Badge>
   );
 }
@@ -129,10 +130,10 @@ export default function ActiveJobsPage() {
       </PageHeader>
 
       {error && (
-        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
       )}
       {actionError && (
-        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{actionError}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(actionError)}</p>
       )}
 
       {(scheduledJobs.length > 0 || upcomingTemplates.length > 0) && (
@@ -220,9 +221,9 @@ function JobRow({
             <div className="flex items-center gap-2 flex-wrap">
               <Link
                 href={`/myjobs/${job.jobId}`}
-                className="text-sm font-medium hover:underline truncate max-w-[180px]"
+                className="text-sm font-medium hover:underline truncate max-w-[240px]"
               >
-                {job.jobId.slice(0, 8)}…
+                {jobDisplayTitle(job)}
               </Link>
               <StatusBadge status={job.status} />
               {portalLabel && (
@@ -230,7 +231,7 @@ function JobRow({
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {job.contentType || 'unknown'} · {job.platforms.join(', ') || 'no platform'}
+              {labelForContentType(job.contentType ?? '')} · {platformListLabel(job.platforms)}
             </p>
             <p className="text-[11px] text-muted-foreground/80 mt-0.5">
               Started {fmtJobTime(job.createdAt)} · Last active {fmtJobTime(job.updatedAt || job.createdAt)}
@@ -280,12 +281,12 @@ function ScheduledJobRow({ job }: { job: Job }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Link href={`/myjobs/${job.jobId}`} className="text-sm font-medium hover:underline truncate">
-                {job.jobId.slice(0, 12)}…
+                {jobDisplayTitle(job)}
               </Link>
-              <Badge variant="outline" className="text-[10px] capitalize">scheduled</Badge>
+              <Badge variant="outline" className="text-[10px]">Scheduled</Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {job.contentType || 'unknown'} · {job.platforms.join(', ') || 'no platform'}
+              {labelForContentType(job.contentType ?? '')} · {platformListLabel(job.platforms)}
             </p>
             {startsAt && (
               <p className="text-[11px] text-muted-foreground/80 mt-0.5">

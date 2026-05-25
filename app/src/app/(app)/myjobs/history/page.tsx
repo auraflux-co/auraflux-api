@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { listJobs, type Job, type WizardConfig, type PublishResult } from '@/lib/api';
 import { labelForContentType } from '@/lib/content-types';
+import { jobDisplayTitle, jobStatusLabel, platformLabel, formatUserError } from '@/lib/job-labels';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 
@@ -166,7 +167,7 @@ export default function HistoryPage() {
       </PageHeader>
 
       {error && (
-        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
       )}
 
       {jobs === null && !error && (
@@ -207,12 +208,12 @@ function HistoryCard({ job }: { job: Job }) {
                 href={`/myjobs/${job.jobId}`}
                 className="text-sm font-medium hover:underline"
               >
-                {job.jobId.slice(0, 8)}…
+                {jobDisplayTitle(job)}
               </Link>
-              <Badge variant="default" className="text-[10px]">complete</Badge>
+              <Badge variant="default" className="text-[10px]">{jobStatusLabel(job.status)}</Badge>
               {job.platforms.map((p) => (
-                <Badge key={p} variant="outline" className="text-[10px] capitalize">
-                  {PLATFORM_ICONS[p] ?? '•'} {p}
+                <Badge key={p} variant="outline" className="text-[10px]">
+                  {PLATFORM_ICONS[p] ?? '•'} {platformLabel(p)}
                 </Badge>
               ))}
             </div>

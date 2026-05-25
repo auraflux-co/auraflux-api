@@ -19,6 +19,8 @@ import {
   type CreditLedgerEntry,
   type CreditPack,
 } from '@/lib/api';
+import { creditTypeLabel, formatUserError } from '@/lib/job-labels';
+import { tierLabel } from '@/lib/tier-labels';
 
 // ─── Progress bar ──────────────────────────────────────────────────────────────
 
@@ -42,14 +44,14 @@ function LedgerRow({ entry }: { entry: CreditLedgerEntry }) {
     <div className="flex items-center gap-3 py-2 border-b border-border last:border-0">
       <Badge
         variant={entry.type === 'overage' ? 'destructive' : entry.type === 'refund' ? 'default' : 'outline'}
-        className="af-caption capitalize shrink-0"
+        className="af-caption shrink-0"
       >
-        {entry.type}
+        {creditTypeLabel(entry.type)}
       </Badge>
       <span className="af-caption flex-1 truncate">
-        {entry.description || entry.job_id || '—'}
+        {entry.description || (entry.job_id ? 'Job usage' : '—')}
       </span>
-      <span className={cn('af-caption font-mono shrink-0', isDebit ? 'text-destructive' : 'text-success')}>
+      <span className={cn('af-caption tabular-nums shrink-0', isDebit ? 'text-destructive' : 'text-success')}>
         {isDebit ? '-' : '+'}{Math.abs(entry.credits)}
       </span>
       <span className="af-caption shrink-0">
@@ -91,7 +93,7 @@ export default function CreditsPage() {
   }, [getToken, isLoaded]);
 
   if (loading) return <div className="text-sm text-muted-foreground">Loading…</div>;
-  if (error)   return <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>;
+  if (error)   return <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>;
   if (!balance) return <p className="text-sm text-muted-foreground">No active plan found.</p>;
 
   const totalUsed = balance.included_total - balance.included_remaining;
@@ -102,7 +104,7 @@ export default function CreditsPage() {
     <PageShell maxWidth="3xl">
       <PageHeader
         title="Credits & Usage"
-        subtitle={<span className="capitalize">Plan: <span className="text-foreground font-medium">{balance.tier}</span> · Period: {new Date(balance.period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {new Date(balance.period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+        subtitle={<span>Plan: <span className="text-foreground font-medium">{tierLabel(balance.tier)}</span> · Period: {new Date(balance.period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {new Date(balance.period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
       />
 
       {/* Usage summary */}

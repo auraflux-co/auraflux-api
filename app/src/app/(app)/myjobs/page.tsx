@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { formatUserError } from '@/lib/job-labels';
 import { listJobs, type Job } from '@/lib/api';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
@@ -94,7 +95,7 @@ export default function JobsHubPage() {
       </PageHeader>
 
       {error && (
-        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
       )}
 
       {/* Stat cards */}

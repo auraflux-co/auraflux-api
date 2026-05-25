@@ -13,6 +13,7 @@ import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { listJobs, type Job } from '@/lib/api';
+import { jobDisplayTitle, jobStatusLabel } from '@/lib/job-labels';
 
 const RECENT_STATUSES = new Set(['complete', 'published', 'staged', 'failed']);
 const LIMIT = 3;
@@ -93,10 +94,8 @@ export function RecentJobsList() {
   return (
     <div className="space-y-1">
       {jobs.map((job) => {
-        const s = STATUS_STYLE[job.status] ?? { label: job.status, classes: 'bg-muted text-muted-foreground' };
-        const label = (job as Job & { topic?: string }).topic
-          || fmtContentType(job.contentType)
-          || job.jobId;
+        const s = STATUS_STYLE[job.status] ?? { label: jobStatusLabel(job.status), classes: 'bg-muted text-muted-foreground' };
+        const label = jobDisplayTitle(job);
 
         return (
           <Link

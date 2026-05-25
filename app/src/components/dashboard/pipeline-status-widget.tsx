@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { listJobs, type Job } from '@/lib/api';
+import { jobDisplayTitle } from '@/lib/job-labels';
 
 const STATUS_CONFIG: Record<string, { color: string; label: string; pulse?: boolean }> = {
   running: { color: 'bg-blue-500',     label: 'Running',   pulse: true  },
@@ -116,8 +117,7 @@ export function PipelineStatusWidget() {
     <div className="space-y-1">
       {visibleJobs.map((job) => {
         const cfg  = STATUS_CONFIG[job.status] ?? { color: 'bg-muted', label: job.status };
-        const name = (job as Job & { topic?: string }).topic
-          || (job.jobId.length > 22 ? `${job.jobId.slice(0, 22)}…` : job.jobId);
+        const name = jobDisplayTitle(job);
 
         return (
           <Link

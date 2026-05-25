@@ -1,4 +1,5 @@
 'use client';
+import { formatUserError } from '@/lib/job-labels';
 /**
  * /settings/social — Connect/disconnect YouTube, TikTok, Instagram (CPD-86)
  *

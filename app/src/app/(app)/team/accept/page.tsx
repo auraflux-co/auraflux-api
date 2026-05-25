@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api';
+import { formatUserError } from '@/lib/job-labels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -74,7 +75,7 @@ function AcceptInviteInner() {
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-destructive">{error}</p>
+              <p className="text-sm text-destructive">{formatUserError(error)}</p>
               <Button variant="outline" className="w-full" onClick={() => router.push('/home')}>
                 Go to dashboard
               </Button>

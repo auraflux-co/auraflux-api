@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api';
+import { formatUserError } from '@/lib/job-labels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -157,7 +158,7 @@ export default function TeamPage() {
     <PageShell maxWidth="4xl">
       <PageHeader title="My Team" />
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 flex items-center justify-between gap-4">
-        <p className="af-body text-destructive">{loadError}</p>
+        <p className="af-body text-destructive">{formatUserError(loadError)}</p>
         <button onClick={load} className="shrink-0 af-caption text-destructive underline hover:no-underline">
           Retry
         </button>
@@ -220,7 +221,7 @@ export default function TeamPage() {
                 </div>
               )}
               {inviteResult?.error && (
-                <p className="text-xs text-destructive">{inviteResult.error}</p>
+                <p className="text-xs text-destructive">{formatUserError(inviteResult.error)}</p>
               )}
             </form>
           </CardContent>

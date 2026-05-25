@@ -13,6 +13,7 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePlan } from '@/contexts/plan-context';
 import { cn } from '@/lib/utils';
+import { formatUserError } from '@/lib/job-labels';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import {
   supportChat,
@@ -140,7 +141,7 @@ function EscalateModal({
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
         />
-        {error && <p className="af-caption text-destructive">{error}</p>}
+        {error && <p className="af-caption text-destructive">{formatUserError(error)}</p>}
         <div className="flex gap-2 justify-end">
           <button onClick={onClose} className="px-4 py-2 rounded-md border border-border text-sm hover:bg-accent/50">Cancel</button>
           <button

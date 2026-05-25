@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { formatUserError } from '@/lib/job-labels';
 import { getPlans, subscribeToPlan, type Plan } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
@@ -67,7 +68,7 @@ export default function PlansPage() {
       <PageHeader title="Plans" subtitle="Choose the plan that fits how you work." />
 
       {error && (
-        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

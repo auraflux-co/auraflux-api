@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { formatUserError } from '@/lib/job-labels';
 import { getJobDetail, operatorJobAction, saveJobAsTemplate, type Job, type PortalStatus, type OperatorAction, type WizardConfig, type PublishResult } from '@/lib/api';
 import { SaveTemplateDialog, type SaveTemplateOptions } from '@/components/jobs/save-template-dialog';
 import { labelForContentType } from '@/lib/content-types';
@@ -268,7 +269,7 @@ export default function JobDetailPage() {
   if (error) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
         <Link href="/myjobs" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
           Back to jobs
         </Link>
@@ -511,7 +512,7 @@ export default function JobDetailPage() {
               </Button>
             </div>
             {actionError && (
-              <p className="text-xs text-destructive">{actionError}</p>
+              <p className="text-xs text-destructive">{formatUserError(actionError)}</p>
             )}
             <p className="text-[10px] text-muted-foreground">
               Retry: re-runs full pipeline. Force advance: skips current blocked portal. Rollback: resets to held state.

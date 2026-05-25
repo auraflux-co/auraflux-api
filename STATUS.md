@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-24 v1.0.632 (Cursor — fix(cpd-331): humanize all customer-facing UI — job IDs replaced with content type+date titles; status enums use human labels; platform slugs use display names; credit ledger type labels; tierLabel() on credits page; formatUserError() on ~18 pages)
 **Last Updated:** 2026-05-24 v1.0.631 (Cursor — fix(cpd-330): replace raw Clerk user IDs with first/last name across all admin views — CRM list, CRM detail, All Users, Support Inbox, Review Queue all show names; IDs kept in DB/backend only)
 **Last Updated:** 2026-05-24 v1.0.629 (Cursor — fix(cpd-329): Review Queue shows platform-wide jobs for superadmin — uses GET /jobs?all=true; header copy updated; customer ID shown per card; empty state copy differentiated)
 **Last Updated:** 2026-05-24 v1.0.628 (Cursor — fix(cpd-328): superadmin UX fixes — /admin redirects to /admin/overview; support inbox allows superadmin role; CRM fixed customers/accounts key mismatch; permissions shows owner first/last name; setup checklist hidden for superadmin; Jobs preview removed from admin nav)

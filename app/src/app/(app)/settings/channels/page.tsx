@@ -1,4 +1,5 @@
 'use client';
+import { formatUserError } from '@/lib/job-labels';
 /**
  * /settings/channels — Default source channel handles (CPD-292)
  *
@@ -161,7 +162,7 @@ export default function SourceChannelsPage() {
 
       {saveError && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 af-body text-destructive">
-          {saveError}
+          {formatUserError(saveError)}
         </div>
       )}
 
