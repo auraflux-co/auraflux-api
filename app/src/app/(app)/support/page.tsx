@@ -25,6 +25,17 @@ import {
   getSupportSessionMessages,
 } from '@/lib/api';
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Handles both Unix-ms numbers/strings and ISO date strings from the DB. */
+function fmtSessionDate(raw: number | string | null | undefined): string {
+  if (!raw) return 'Unknown date';
+  const ms = typeof raw === 'number' ? raw : Number(raw);
+  const d  = !isNaN(ms) && ms > 1_000_000_000 ? new Date(ms) : new Date(raw as string);
+  if (isNaN(d.getTime())) return 'Unknown date';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SUPPORT_SMS   = process.env.NEXT_PUBLIC_SUPPORT_SMS_NUMBER || '+1 571 500 1787';
@@ -77,26 +88,10 @@ function GuidesPanel({ canEsc }: { canEsc: boolean }) {
       </div>
 
       <div className="rounded-lg border border-border p-4 space-y-2">
-        <h2 className="af-subhead">Text support</h2>
-        {canEsc ? (
-          <>
-            <p className="af-caption">Text us directly — your conversation will appear in your support history here.</p>
-            <a
-              href={`sms:${SUPPORT_SMS.replace(/\s/g, '')}`}
-              className="flex items-center gap-2 mt-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium w-full justify-center hover:bg-primary/90 transition-colors"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-              </svg>
-              Contact us by text
-            </a>
-          </>
-        ) : (
-          <p className="af-caption">
-            Text support is included with Guided and Managed plans.{' '}
-            <Link href="/billing" className="text-primary underline">Upgrade to unlock</Link>.
-          </p>
-        )}
+        <h2 className="af-subhead">Need more help?</h2>
+        <p className="af-caption text-muted-foreground">
+          Use the chat on the left to describe your issue. Our team monitors all conversations and will respond directly in the thread.
+        </p>
       </div>
     </aside>
   );
@@ -173,10 +168,10 @@ function SessionHistory({
             onClick={() => onSelect(s)}
             className={cn(
               'w-full text-left px-3 py-2 rounded-md af-caption transition-colors flex items-center justify-between gap-2',
-              s.id === activeId ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 text-muted-foreground',
+              s.id === activeId ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50 text-muted-foreground',
             )}
           >
-                <span className="af-caption">{new Date(s.created_at).toLocaleDateString()} — {s.message_count} message{s.message_count !== 1 ? 's' : ''}</span>
+                <span className="af-caption">{fmtSessionDate(s.created_at)} — {s.message_count} message{s.message_count !== 1 ? 's' : ''}</span>
             <span className="flex items-center gap-1">
               {s.escalated && <span className="text-amber-500">↑ escalated</span>}
               {s.resolved  && <span className="text-emerald-500">✓ resolved</span>}
@@ -285,8 +280,8 @@ export default function SupportPage() {
   const supportSubtitle = plan === 'operate' && ageDays <= 30
     ? `Support is available during your first month (${30 - ageDays} days remaining). Upgrade to Guided for ongoing support.`
     : plan === 'operate'
-    ? 'Your trial support period has ended. Use the guides below or upgrade to Guided for ongoing support and SMS escalation.'
-    : 'Support + SMS escalation included with your plan.';
+    ? 'Your trial support period has ended. Use the guides below or upgrade to Guided for ongoing support.'
+    : 'Chat with our team or browse the guides below.';
 
   return (
     <PageShell maxWidth="4xl">
