@@ -261,12 +261,10 @@ export default function ApiKeysPage() {
             <code className="af-caption bg-background border border-border rounded px-1 py-0.5">https://api.auraflux.co/v1/</code>
           </p>
           <a
-            href="https://robertsworkspace-18914505.atlassian.net/wiki/spaces/CP/pages/8192001"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/developer"
             className="inline-block mt-1 af-label text-primary hover:underline"
           >
-            View full API documentation →
+            View full API reference →
           </a>
         </CardContent>
       </Card>

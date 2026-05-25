@@ -248,6 +248,19 @@ export interface ClipCandidate {
   _isStub?:           boolean;
 }
 
+// ─── Brand context (CPD-329) ──────────────────────────────────────────────────
+// Module-level active brand ID injected by BrandContext so all apiFetch calls
+// automatically include X-Brand-Id when a brand is active.
+let _activeBrandId: string | null = null;
+
+export function setActiveBrandId(id: string | null): void {
+  _activeBrandId = id;
+}
+
+export function getActiveBrandId(): string | null {
+  return _activeBrandId;
+}
+
 // ─── Core fetch helper ────────────────────────────────────────────────────────
 
 export async function apiFetch<T>(
@@ -258,6 +271,7 @@ export async function apiFetch<T>(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(_activeBrandId ? { 'X-Brand-Id': _activeBrandId } : {}),
   };
 
   const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
@@ -711,10 +725,11 @@ export async function subscribeToPlan(
   successUrl: string,
   cancelUrl: string,
   token?: string,
+  brandId?: string | null,  // CPD-328: brand context for multi-brand subscriptions
 ): Promise<{ ok: boolean; url: string }> {
   return apiFetch('/plans/subscribe', {
     method: 'POST',
-    body:   JSON.stringify({ planId, successUrl, cancelUrl }),
+    body:   JSON.stringify({ planId, successUrl, cancelUrl, ...(brandId ? { brandId } : {}) }),
     token,
   });
 }
@@ -1135,6 +1150,62 @@ export interface CanvaSaveResult {
   ok:        boolean;
   designId?: string;
   designUrl: string;
+}
+
+// ─── Brand API (CPD-329) ──────────────────────────────────────────────────────
+
+export interface Brand {
+  id:                     string;
+  account_id:             string;
+  name:                   string;
+  slug:                   string | null;
+  created_at:             string;
+  active:                 boolean;
+  tier:                   PlanTier | null;
+  credits_included:       number | null;
+  stripe_subscription_id: string | null;
+}
+
+export interface BrandSubscription {
+  brand_id:               string;
+  brand_name:             string;
+  brand_slug:             string | null;
+  tier:                   PlanTier;
+  stripe_subscription_id: string | null;
+  credits_included:       number;
+  next_billing_date:      string | null;
+}
+
+export async function getBrands(token?: string): Promise<Brand[]> {
+  const res = await apiFetch<{ ok: boolean; brands: Brand[] }>('/brands', { token });
+  return res.brands;
+}
+
+export async function createBrandApi(name: string, token?: string): Promise<Brand> {
+  const res = await apiFetch<{ ok: boolean; brand: Brand }>('/brands', {
+    method: 'POST',
+    body:   JSON.stringify({ name }),
+    token,
+  });
+  return res.brand;
+}
+
+export async function renameBrandApi(id: string, name: string, token?: string): Promise<Brand> {
+  const res = await apiFetch<{ ok: boolean; brand: Brand }>(`/brands/${id}`, {
+    method: 'PATCH',
+    body:   JSON.stringify({ name }),
+    token,
+  });
+  return res.brand;
+}
+
+export async function deleteBrandApi(id: string, token?: string): Promise<void> {
+  await apiFetch(`/brands/${id}`, { method: 'DELETE', token });
+}
+
+export async function getBrandSubscriptions(token?: string): Promise<BrandSubscription[]> {
+  const res = await apiFetch<{ ok: boolean; subscriptions: BrandSubscription[] }>('/billing/subscriptions', { token });
+  return res.subscriptions;
 }
 
 export async function canvaGenerate(

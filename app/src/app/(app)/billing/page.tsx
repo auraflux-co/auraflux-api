@@ -171,11 +171,11 @@ function BillingPageInner() {
       {balance && (
         <Card className="overflow-hidden">
           {PLAN_META[currentTier]?.image && (
-            <div className="w-full h-28 overflow-hidden bg-muted">
+            <div className="w-full h-32 overflow-hidden" style={{ background: '#0d1b2e' }}>
               <img
                 src={PLAN_META[currentTier].image}
                 alt={PLAN_META[currentTier].label}
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full object-cover object-center"
               />
             </div>
           )}
@@ -227,11 +227,11 @@ function BillingPageInner() {
                 <Card key={tier} className="flex flex-col overflow-hidden">
                   {/* Plan visual */}
                   {meta.image && (
-                    <div className="w-full h-36 overflow-hidden bg-muted">
+                    <div className="w-full h-48 overflow-hidden" style={{ background: '#0d1b2e' }}>
                       <img
                         src={meta.image}
                         alt={`${meta.label} plan`}
-                        className="w-full h-full object-cover object-top"
+                        className="w-full h-full object-cover object-center"
                       />
                     </div>
                   )}
@@ -301,11 +301,11 @@ function BillingPageInner() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {packs.filter((p) => p.priceConfigured).map((pack) => (
               <Card key={pack.id} className="overflow-hidden">
-                <div className="w-full h-36 overflow-hidden bg-muted">
+                <div className="w-full h-40 overflow-hidden" style={{ background: '#0d1b2e' }}>
                   <img
                     src="/brand/plans/credits.png"
                     alt="Extra Credits Pack"
-                    className="w-full h-full object-cover object-top"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
                 <CardContent className="pt-4 space-y-3">

@@ -11,6 +11,7 @@ import { usePlan } from '@/contexts/plan-context';
 import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { CreditToken } from '@/components/icons/brand-icons';
+import { BrandSwitcher } from '@/components/layout/brand-switcher';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -171,7 +172,8 @@ function settingsNavItem(planTier: string | null): NavItem {
   children.push(
     { href: '/settings/channels', label: 'My Channels'       },
     { href: '/settings/social',  label: 'My Social Accounts' },
-    { href: '/settings/team',            label: 'My Team'           },
+    { href: '/settings/team',    label: 'My Team'            },
+    { href: '/developer',        label: 'API Reference'      },
   );
   return { href: '/settings', label: 'Settings', children };
 }
@@ -233,22 +235,26 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
       {/* Header */}
       <div className={cn(
         'border-b border-border shrink-0',
-        collapsed ? 'px-3 py-3 flex justify-center' : 'px-3 py-3 space-y-2.5',
+        collapsed ? 'px-3 py-3 flex flex-col items-center gap-2' : 'px-3 py-3 space-y-2.5',
       )}>
+        {/* Logo row */}
         {!collapsed && (
-          <>
-            <Link href="/home" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
-              <Image src="/brand/logo.png" alt="AuraFlux" width={56} height={34} className="shrink-0 object-contain" priority />
-              <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">AuraFlux</span>
-            </Link>
-            <CreditsBadge collapsed={collapsed} />
-          </>
+          <Link href="/home" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0">
+            <Image src="/brand/logo.png" alt="AuraFlux" width={56} height={34} className="shrink-0 object-contain" priority />
+            <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">AuraFlux</span>
+          </Link>
         )}
         {collapsed && (
           <Link href="/home" title="AuraFlux">
             <Image src="/brand/logo.png" alt="AuraFlux" width={36} height={22} className="object-contain" priority />
           </Link>
         )}
+
+        {/* Brand switcher — shown for customer nav only */}
+        {!isSuperAdmin && <BrandSwitcher collapsed={collapsed} />}
+
+        {/* Credits badge */}
+        {!collapsed && <CreditsBadge collapsed={collapsed} />}
       </div>
 
       {/* Nav */}
@@ -422,16 +428,20 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
       'transition-transform duration-200 ease-in-out',
       mobileOpen ? 'translate-x-0' : '-translate-x-full',
     )}>
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <Link href="/home" className="flex items-center gap-2.5" onClick={closeMobile}>
-          <Image src="/brand/logo.png" alt="AuraFlux" width={52} height={32} className="shrink-0 object-contain" priority />
-          <span className="font-semibold text-[15px] tracking-tight">AuraFlux</span>
-        </Link>
-        <button onClick={closeMobile} className="text-muted-foreground hover:text-foreground p-1">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+      <div className="px-4 py-3 border-b border-border space-y-2.5">
+        <div className="flex items-center justify-between">
+          <Link href="/home" className="flex items-center gap-2.5" onClick={closeMobile}>
+            <Image src="/brand/logo.png" alt="AuraFlux" width={52} height={32} className="shrink-0 object-contain" priority />
+            <span className="font-semibold text-[15px] tracking-tight">AuraFlux</span>
+          </Link>
+          <button onClick={closeMobile} className="text-muted-foreground hover:text-foreground p-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        {/* Brand switcher — customer nav only */}
+        {!isSuperAdmin && <BrandSwitcher collapsed={false} />}
       </div>
 
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
