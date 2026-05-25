@@ -2926,6 +2926,131 @@ app.get('/canva-import-status/:id', (req, res) => {
   res.json(job);
 });
 
+// ── POST /admin/canva-generate ────────────────────────────────────
+// Superadmin: generate Canva design candidates from a text prompt.
+// Uses Anthropic API with Canva MCP (mcp_servers) to call generate-design.
+// Returns: { ok, jobId, candidates: [{ candidateId, thumbnailUrl, url }] }
+app.post('/admin/canva-generate', requireAuth, async (req, res) => {
+  const { role } = req.auth || {};
+  if (role !== 'superadmin') return res.status(403).json({ error: 'Superadmin only' });
+
+  const { prompt, designType = 'poster' } = req.body;
+  if (!prompt) return res.status(400).json({ error: 'prompt is required' });
+
+  const token = process.env.CANVA_ACCESS_TOKEN;
+  if (!token) return res.status(503).json({ error: 'CANVA_ACCESS_TOKEN not configured' });
+
+  try {
+    const client = new Anthropic();
+    const mcpServer = {
+      type: 'url',
+      url: 'https://mcp.canva.com/mcp',
+      name: 'canva-mcp',
+      authorization_token: token,
+    };
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      system: `You are a Canva design assistant. When the user provides a prompt, call the generate-design tool with:
+- query: the user's prompt (enhanced with design context)
+- design_type: as specified by the user
+- user_intent: brief description of what the user wants
+
+After calling generate-design, return ONLY a JSON object:
+{
+  "job_id": "<job_id from tool response>",
+  "candidates": [
+    { "candidate_id": "...", "thumbnail_url": "...", "design_url": "..." }
+  ]
+}
+No other text. Extract the actual job_id and all candidates from the tool response.`,
+      messages: [{
+        role: 'user',
+        content: `Generate a ${designType} design with this prompt: "${prompt}"\nReturn JSON with job_id and all candidates.`
+      }],
+      mcp_servers: [mcpServer],
+    });
+
+    const textBlock = response.content.find(b => b.type === 'text');
+    if (!textBlock) throw new Error('No text response from Claude');
+
+    let parsed;
+    try {
+      const clean = textBlock.text.replace(/```json\n?|```/g, '').trim();
+      parsed = JSON.parse(clean);
+    } catch {
+      throw new Error('Could not parse Canva response: ' + textBlock.text.slice(0, 300));
+    }
+
+    console.log(`[canva-generate] ${parsed.candidates?.length ?? 0} candidates for "${prompt.slice(0, 40)}"`);
+    res.json({ ok: true, jobId: parsed.job_id, candidates: parsed.candidates || [] });
+  } catch (err) {
+    console.error('[canva-generate] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /admin/canva-save ─────────────────────────────────────────
+// Superadmin: save a generation candidate to the Canva account.
+// Body: { jobId, candidateId }
+// Returns: { ok, designId, designUrl }
+app.post('/admin/canva-save', requireAuth, async (req, res) => {
+  const { role } = req.auth || {};
+  if (role !== 'superadmin') return res.status(403).json({ error: 'Superadmin only' });
+
+  const { jobId, candidateId } = req.body;
+  if (!jobId || !candidateId) return res.status(400).json({ error: 'jobId and candidateId are required' });
+
+  const token = process.env.CANVA_ACCESS_TOKEN;
+  if (!token) return res.status(503).json({ error: 'CANVA_ACCESS_TOKEN not configured' });
+
+  try {
+    const client = new Anthropic();
+    const mcpServer = {
+      type: 'url',
+      url: 'https://mcp.canva.com/mcp',
+      name: 'canva-mcp',
+      authorization_token: token,
+    };
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 512,
+      system: `You are a Canva assistant. Call create-design-from-candidate with the provided job_id and candidate_id.
+Return ONLY a JSON object: { "design_id": "...", "design_url": "..." }
+No other text.`,
+      messages: [{
+        role: 'user',
+        content: `Save this candidate to my Canva account. job_id: "${jobId}", candidate_id: "${candidateId}". Return JSON with design_id and design_url.`
+      }],
+      mcp_servers: [mcpServer],
+    });
+
+    const textBlock = response.content.find(b => b.type === 'text');
+    if (!textBlock) throw new Error('No text response from Claude');
+
+    let parsed;
+    try {
+      const clean = textBlock.text.replace(/```json\n?|```/g, '').trim();
+      parsed = JSON.parse(clean);
+    } catch {
+      const urlMatch = textBlock.text.match(/https:\/\/www\.canva\.com\/design\/[^\s"']+/);
+      if (urlMatch) {
+        parsed = { design_url: urlMatch[0] };
+      } else {
+        throw new Error('Could not parse save response: ' + textBlock.text.slice(0, 300));
+      }
+    }
+
+    console.log(`[canva-save] Saved candidate ${candidateId} → ${parsed.design_url}`);
+    res.json({ ok: true, designId: parsed.design_id, designUrl: parsed.design_url });
+  } catch (err) {
+    console.error('[canva-save] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── TICKER BAKING ────────────────────────────────────────────────
 // Captures a ticker HTML file (served at localhost:8765) as a looping
 // video using headless Chrome + puppeteer, then caches it per content type.

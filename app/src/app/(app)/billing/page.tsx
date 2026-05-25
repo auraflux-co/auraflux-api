@@ -35,11 +35,14 @@ import {
 /** Tier ordering — lower index = lower tier */
 const TIER_ORDER = ['operate', 'guided', 'managed'];
 
-const PLAN_META: Record<string, { label: string; sub: string; price: string; highlights: string[] }> = {
+const PLAN_META: Record<string, {
+  label: string; sub: string; price: string; highlights: string[]; image: string;
+}> = {
   operate: {
     label:  'AuraFlux Operate',
     sub:    'API access — developer plan',
     price:  '$999',
+    image:  '/brand/plans/operate.png',
     highlights: [
       '400 credits / month',
       'Full API access',
@@ -50,6 +53,7 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
     label:  'AuraFlux Guided',
     sub:    'Done-with-you — full platform',
     price:  '$2,499',
+    image:  '/brand/plans/guided.png',
     highlights: [
       '1,200 credits / month',
       'Full platform — script, AI video, thumbnails, publish',
@@ -61,6 +65,7 @@ const PLAN_META: Record<string, { label: string; sub: string; price: string; hig
     label:  'AuraFlux Managed',
     sub:    'Full done-for-you content operation',
     price:  '$4,499',
+    image:  '/brand/plans/managed.png',
     highlights: [
       '2,000 credits / month',
       'AI avatars (HeyGen)',
@@ -164,7 +169,16 @@ function BillingPageInner() {
 
       {/* ── 1. Current plan summary ─────────────────────────────────────────── */}
       {balance && (
-        <Card>
+        <Card className="overflow-hidden">
+          {PLAN_META[currentTier]?.image && (
+            <div className="w-full h-28 overflow-hidden bg-muted">
+              <img
+                src={PLAN_META[currentTier].image}
+                alt={PLAN_META[currentTier].label}
+                className="w-full h-full object-cover object-top"
+              />
+            </div>
+          )}
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <CardTitle className="af-h3">Current plan</CardTitle>
@@ -210,7 +224,17 @@ function BillingPageInner() {
               const meta = PLAN_META[tier];
               const canCheckout = !!plan?.priceConfigured;
               return (
-                <Card key={tier} className="flex flex-col">
+                <Card key={tier} className="flex flex-col overflow-hidden">
+                  {/* Plan visual */}
+                  {meta.image && (
+                    <div className="w-full aspect-[4/3] overflow-hidden bg-muted">
+                      <img
+                        src={meta.image}
+                        alt={`${meta.label} plan`}
+                        className="w-full h-full object-cover object-top"
+                      />
+                    </div>
+                  )}
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-semibold">{meta.label}</CardTitle>
@@ -276,7 +300,14 @@ function BillingPageInner() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {packs.filter((p) => p.priceConfigured).map((pack) => (
-              <Card key={pack.id}>
+              <Card key={pack.id} className="overflow-hidden">
+                <div className="w-full aspect-[4/3] overflow-hidden bg-muted">
+                  <img
+                    src="/brand/plans/credits.png"
+                    alt="Extra Credits Pack"
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
                 <CardContent className="pt-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
