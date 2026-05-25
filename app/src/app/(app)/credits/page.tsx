@@ -52,7 +52,7 @@ function LedgerRow({ entry }: { entry: CreditLedgerEntry }) {
         {entry.description || (entry.job_id ? 'Job usage' : '—')}
       </span>
       <span className={cn('af-caption tabular-nums shrink-0', isDebit ? 'text-destructive' : 'text-success')}>
-        {isDebit ? '-' : '+'}{Math.abs(entry.credits)}
+        {isDebit ? '-' : '+'}{Math.abs(Number(entry.credits) || 0)}
       </span>
       <span className="af-caption shrink-0">
         {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
