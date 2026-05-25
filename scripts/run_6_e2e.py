@@ -928,6 +928,20 @@ def main():
         print('No tests matched the provided filters.')
         sys.exit(1)
 
+    # Pre-flight: confirm API server uptime > 5 min to avoid deploy-collision false negatives
+    try:
+        health_resp, health_code = api('GET', '/health')
+        uptime_s = health_resp.get('uptime', 0) if isinstance(health_resp, dict) else 0
+        version  = health_resp.get('version', '?') if isinstance(health_resp, dict) else '?'
+        if health_code != 200 or uptime_s < 300:
+            print(f'\n⛔  API server is not ready (HTTP {health_code}, uptime {uptime_s:.0f}s).')
+            print(f'   Wait for uptime > 300s before running tests (avoids deploy-collision failures).')
+            sys.exit(1)
+        print(f'  ✅ API ready  version={version}  uptime={uptime_s:.0f}s')
+    except Exception as e:
+        print(f'\n⛔  API health check failed: {e}')
+        sys.exit(1)
+
     print(f'\n{"═"*60}')
     print(f'  AuraFlux Run 6 E2E — {len(tests)} test(s)')
     print(f'  Base: {BASE}')
