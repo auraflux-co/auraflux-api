@@ -4,6 +4,7 @@ import { GuidePanel } from '@/components/guide/guide-panel';
 import { GuideProvider } from '@/contexts/guide-context';
 import { SidebarProvider } from '@/contexts/sidebar-context';
 import { PlanProvider } from '@/contexts/plan-context';
+import { BrandProvider } from '@/contexts/brand-context';
 import { SessionGuard } from '@/components/auth/session-guard';
 import { currentUser } from '@clerk/nextjs/server';
 
@@ -20,6 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <PlanProvider>
+    <BrandProvider>
     <GuideProvider>
       <SidebarProvider>
         <SessionGuard />
@@ -46,6 +48,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </SidebarProvider>
     </GuideProvider>
+    </BrandProvider>
     </PlanProvider>
   );
 }
