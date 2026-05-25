@@ -38,6 +38,9 @@ services:
         value: UTC
       - key: PUPPETEER_EXECUTABLE_PATH
         value: /usr/bin/chromium
+      # CPD-325: Cap Node heap to 1.5GB, leaving ~500MB for OS + ffmpeg child processes
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=1536
       - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
         value: 'true'
       - key: GATE_TEST_MODE

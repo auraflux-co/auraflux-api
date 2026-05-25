@@ -1514,10 +1514,12 @@ const twitchClient = new TwitchClient({
   token: process.env.TWITCH_TOKEN
 });
 
-// Security headers via helmet
+// Security headers via helmet — CPD-320
+// CSP disabled: this is a JSON API server, not an HTML app. Helmet's other headers
+// (X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy) remain active.
 app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for local dashboard with inline scripts
-  crossOriginEmbedderPolicy: false // Disabled for embedded videos/images
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
 }));
 
 // CORS configuration with origin whitelist
@@ -1547,8 +1549,10 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(require('express').json({ limit: '50mb' }));
-app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
+// CPD-320: JSON API body limit reduced to 1MB to prevent DoS.
+// Upload routes use multer (multipart) so they are unaffected by this limit.
+app.use(require('express').json({ limit: '1mb' }));
+app.use(require('express').urlencoded({ extended: true, limit: '1mb' }));
 
 
 
