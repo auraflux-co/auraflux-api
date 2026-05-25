@@ -737,6 +737,49 @@ export async function getBillingPortalUrl(
   });
 }
 
+// ─── Native billing (CPD-336) ────────────────────────────────────────────────
+
+export interface PaymentMethod {
+  id:       string;
+  brand:    string;
+  last4:    string;
+  expMonth: number;
+  expYear:  number;
+}
+
+export interface Invoice {
+  id:          string;
+  number:      string | null;
+  date:        number;
+  amountDue:   number;
+  amountPaid:  number;
+  currency:    string;
+  status:      string;
+  pdfUrl:      string | null;
+  hostedUrl:   string | null;
+  description: string | null;
+}
+
+export async function getPaymentMethod(token?: string): Promise<{ ok: boolean; paymentMethod: PaymentMethod | null }> {
+  return apiFetch('/billing/payment-method', { token });
+}
+
+export async function createSetupIntent(token?: string): Promise<{ ok: boolean; clientSecret: string }> {
+  return apiFetch('/billing/setup-intent', { method: 'POST', token });
+}
+
+export async function updatePaymentMethod(paymentMethodId: string, token?: string): Promise<{ ok: boolean }> {
+  return apiFetch('/billing/payment-method', {
+    method: 'POST',
+    body:   JSON.stringify({ paymentMethodId }),
+    token,
+  });
+}
+
+export async function getInvoices(token?: string): Promise<{ ok: boolean; invoices: Invoice[] }> {
+  return apiFetch('/billing/invoices', { token });
+}
+
 // ─── Video generation (Wan / RunPod) ─────────────────────────────────────────
 
 export interface GenerateVideoPayload {
