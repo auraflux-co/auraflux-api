@@ -619,11 +619,11 @@ function NewJobPageInner() {
               ))}
             </div>
             {!sourceIntent && (
-              <p className="text-xs text-muted-foreground/60 italic">Select one above to unlock your source options below.</p>
+              <p className="text-xs text-amber-500/80 font-medium">↑ Step 1: choose content type above, then select your source below.</p>
             )}
           </div>
 
-          {/* Source mode tabs — Browse my channels first, Upload files second; Paste URLs hidden */}
+          {/* Source mode tabs — disabled until content type is chosen (CPD-341) */}
           <div className="flex gap-2">
             {(['source', 'upload'] as SourceMode[]).map((s) => {
               const labels: Record<SourceMode, string> = { source: 'Browse my channels', upload: 'Upload files', fetch: 'Paste URLs' };
@@ -631,6 +631,8 @@ function NewJobPageInner() {
                 <button
                   key={s}
                   type="button"
+                  disabled={!sourceIntent}
+                  title={!sourceIntent ? 'Select a content type above first' : undefined}
                   onClick={() => {
                     setSourceMode(s);
                     if (s !== 'source') setSourceItems([]);
@@ -642,6 +644,7 @@ function NewJobPageInner() {
                     effectiveSource === s
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'border-border text-muted-foreground hover:text-foreground',
+                    !sourceIntent && 'opacity-40 cursor-not-allowed',
                   )}
                 >
                   {labels[s]}

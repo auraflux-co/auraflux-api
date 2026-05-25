@@ -246,12 +246,12 @@ function ClipCard({
             : 'opacity-0 group-hover:opacity-100 bg-black/15',
         )} />
 
-        {/* Selection indicator — always top-right, hollow on hover, filled when selected */}
+        {/* CPD-344: selection indicator always visible so users know thumbnails are clickable */}
         <div className={cn(
           'absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shadow-sm',
           selected
             ? 'bg-primary border-primary opacity-100'
-            : 'bg-black/30 border-white/80 opacity-0 group-hover:opacity-100',
+            : 'bg-black/40 border-white/60 opacity-100',
         )}>
           {selected && (
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
@@ -784,8 +784,9 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
         </div>
       )}
 
-      {/* Results grid — shown while loading (skeleton) or once server items exist */}
-      {!confirmed && ((loading && channelName) || items.length > 0) ? (
+      {/* Results grid — shown while loading (skeleton) or once server items exist.
+          CPD-345: show skeleton on first browse too (before channelName resolves). */}
+      {!confirmed && (loading || items.length > 0) ? (
         <div className="space-y-3">
           {/* Scroll container with bottom fade hint */}
           <div className="relative">
