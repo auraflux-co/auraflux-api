@@ -12,6 +12,7 @@ import { useEffect, useState, useTransition, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { tierLabel } from '@/lib/tier-labels';
+import { formatUserError } from '@/lib/job-labels';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -181,7 +182,7 @@ function BillingPageInner() {
         <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2">Checkout cancelled — no charge was made.</p>
       )}
       {error && (
-        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
       )}
 
           {/* Current plan summary */}
@@ -301,7 +302,7 @@ function BillingPageInner() {
                 Opens the secure billing portal — update your card, download invoices, or cancel your subscription.
               </p>
               {portalError && (
-                <p className="af-caption text-destructive mt-1">{portalError}</p>
+                <p className="af-caption text-destructive mt-1">{formatUserError(portalError)}</p>
               )}
             </div>
             <Button

@@ -11,6 +11,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { tierLabel } from '@/lib/tier-labels';
+import { formatUserError } from '@/lib/job-labels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -202,7 +203,7 @@ export default function ProfilePage() {
             </select>
           </div>
 
-          {error  && <p className="af-caption text-destructive">{error}</p>}
+          {error  && <p className="af-caption text-destructive">{formatUserError(error)}</p>}
           {saved  && <p className="af-caption text-success">Profile saved.</p>}
 
           <Button size="sm" onClick={handleSave} disabled={isPending}>

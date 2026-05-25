@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { formatUserError } from '@/lib/job-labels';
 import { PageHeader, PageShell } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -149,7 +150,7 @@ function TemplatesPageContent() {
       </PageHeader>
 
       {error && (
-        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
       )}
 
       {loading && (

@@ -29,6 +29,8 @@ import { Separator } from '@/components/ui/separator';
 import { apiFetch } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { jobDisplayTitle, jobStatusLabel, portalStatusLabel, platformLabel, entryTypeLabel, formatUserError } from '@/lib/job-labels';
+import { labelForContentType } from '@/lib/content-types';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -117,7 +119,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${variants[status] ?? 'bg-gray-100 text-gray-600'}`}>
-      {status}
+      {jobStatusLabel(status)}
     </span>
   );
 }
@@ -135,7 +137,7 @@ function PortalTimeline({ reports }: { reports: PortalReport[] }) {
           <div className="flex-1 min-w-0">
             <span className="font-medium">{PORTAL_LABELS[r.portal] ?? r.portal}</span>
             {r.status !== 'passed' && r.status !== 'pending' && (
-              <span className="ml-1 text-muted-foreground">— {r.status}</span>
+              <span className="ml-1 text-muted-foreground">— {portalStatusLabel(r.status)}</span>
             )}
             {r.violations.length > 0 && (
               <ul className="mt-0.5 ml-2 list-disc text-red-600">
@@ -240,7 +242,7 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
   }, [jobId, token]);
 
   if (loading) return <p className="text-xs text-muted-foreground py-4 text-center">Loading review assets…</p>;
-  if (error)   return <p className="text-xs text-red-600 py-4">{error}</p>;
+  if (error)   return <p className="text-xs text-red-600 py-4">{formatUserError(error)}</p>;
   if (!assets) return null;
 
   const { input, output, portalReports } = assets;
@@ -257,9 +259,9 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
           <p className="af-subhead">What was ordered</p>
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
             <dt className="text-muted-foreground">Content type</dt>
-            <dd>{input.contentType ?? '—'}</dd>
+            <dd>{labelForContentType(input.contentType ?? '')}</dd>
             <dt className="text-muted-foreground">Source</dt>
-            <dd>{input.sourceType ?? '—'}</dd>
+            <dd>{entryTypeLabel(input.sourceType)}</dd>
             <dt className="text-muted-foreground">Duration</dt>
             <dd>{input.duration ?? '—'}</dd>
             <dt className="text-muted-foreground">Platforms</dt>
@@ -276,15 +278,15 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
             return (
               <div className="mt-2 rounded-md border bg-background/60 p-3 space-y-1.5 text-xs">
                 <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">Spec detail</p>
-                {!!wc.entryType    && <p><span className="text-muted-foreground">Source type:</span> {String(wc.entryType)}</p>}
+                {!!wc.entryType    && <p><span className="text-muted-foreground">Source type:</span> {entryTypeLabel(String(wc.entryType))}</p>}
                 {wc.durationMins != null && <p><span className="text-muted-foreground">Duration:</span> {String(wc.durationMins)} min</p>}
                 {wc.creditCost != null && <p><span className="text-muted-foreground">Credit cost:</span> {String(wc.creditCost)}</p>}
                 {!!wc.publishMode  && <p><span className="text-muted-foreground">Publish:</span> <span className="capitalize">{String(wc.publishMode)}{wc.scheduledAt ? ` — ${new Date(String(wc.scheduledAt)).toLocaleDateString()}` : ''}</span></p>}
                 {allFeatures.length > 0 && (
-                  <p><span className="text-muted-foreground">Features:</span> {allFeatures.join(', ')}</p>
+                  <p><span className="text-muted-foreground">Features:</span> {allFeatures.map((f) => f.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())).join(', ')}</p>
                 )}
                 {platforms.length > 0 && (
-                  <p><span className="text-muted-foreground">Platforms:</span> {platforms.join(', ')}</p>
+                  <p><span className="text-muted-foreground">Platforms:</span> {platforms.map(platformLabel).join(', ')}</p>
                 )}
               </div>
             );
@@ -367,7 +369,7 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
         {redoResult && (
           <div className="rounded-md border p-3 text-xs">
             {redoResult.error
-              ? <p className="text-red-600">{redoResult.error}</p>
+              ? <p className="text-red-600">{formatUserError(redoResult.error)}</p>
               : <p className="text-blue-600">Redo requested — job re-queued for processing.</p>}
           </div>
         )}
@@ -473,7 +475,7 @@ export default function StagingPage() {
       />
 
       {loading && <p className="af-body text-muted-foreground">Loading jobs…</p>}
-      {error   && <p className="af-body text-destructive">{error}</p>}
+      {error   && <p className="af-body text-destructive">{formatUserError(error)}</p>}
 
       {!loading && !error && jobs.length === 0 && (
         <EmptyState
@@ -493,10 +495,10 @@ export default function StagingPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <CardTitle className="text-sm font-mono">{job.jobId}</CardTitle>
+                    <CardTitle className="text-sm">{jobDisplayTitle(job)}</CardTitle>
                     <StatusBadge status={job.status} />
                     {job.outputUrl && (
-                      <Badge variant="outline" className="text-xs">has output</Badge>
+                      <Badge variant="outline" className="text-xs">Has output</Badge>
                     )}
                   </div>
                   <p className="af-caption mt-1">
@@ -505,8 +507,8 @@ export default function StagingPage() {
                         {job.customerName ?? job.customerId!.slice(0, 12) + '…'}{' · '}
                       </span>
                     )}
-                    {job.contentType ?? 'unknown'}{' · '}
-                    {job.platforms?.length ? job.platforms.map((p) => PLATFORM_ICONS[p] ?? p).join(' ') : 'no platforms'}{' · '}
+                    {labelForContentType(job.contentType ?? '')}{' · '}
+                    {job.platforms?.length ? job.platforms.map((p) => PLATFORM_ICONS[p] ?? platformLabel(p)).join(' ') : 'No platforms'}{' · '}
                     {formatDate(job.createdAt)}
                   </p>
                 </div>

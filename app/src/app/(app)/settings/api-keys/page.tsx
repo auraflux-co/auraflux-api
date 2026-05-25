@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api';
+import { formatUserError } from '@/lib/job-labels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -203,7 +204,7 @@ export default function ApiKeysPage() {
               </Button>
             </div>
           </div>
-          {error && <p className="af-caption text-destructive">{error}</p>}
+          {error && <p className="af-caption text-destructive">{formatUserError(error)}</p>}
         </CardContent>
       </Card>
 

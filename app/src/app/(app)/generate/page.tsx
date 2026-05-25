@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { generateVideo, pollVideoStatus, type GenerateVideoResult } from '@/lib/api';
+import { formatUserError } from '@/lib/job-labels';
 
 type GenStatus = 'idle' | 'queued' | 'running' | 'success' | 'error';
 
@@ -222,7 +223,7 @@ export default function GeneratePage() {
       {error && (
         <Card className="border-destructive">
           <CardContent className="pt-4">
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-destructive">{formatUserError(error)}</p>
           </CardContent>
         </Card>
       )}

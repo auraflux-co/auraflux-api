@@ -10,6 +10,7 @@ import {
   getScheduleSuggestion,
   type Job, type JobTemplate,
 } from '@/lib/api';
+import { jobDisplayTitle, jobStatusLabel, platformListLabel, formatUserError } from '@/lib/job-labels';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
@@ -150,7 +151,7 @@ export default function SchedulePage() {
         badge={<FlowNetwork size={20} className="text-primary shrink-0" />}
       />
 
-      {error && <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>}
+      {error && <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>}
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
@@ -202,14 +203,9 @@ export default function SchedulePage() {
                       return (
                         <tr key={job.jobId} className="hover:bg-muted/20 transition-colors">
                           <td className="px-4 py-3">
-                            <a href={`/myjobs/${job.jobId}`} className="font-mono text-xs hover:underline">
-                              {job.jobId.slice(0, 8)}…
+                            <a href={`/myjobs/${job.jobId}`} className="text-xs font-medium hover:underline">
+                              {jobDisplayTitle(job)}
                             </a>
-                            {(job as Job & { templateName?: string }).templateName && (
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {(job as Job & { templateName?: string }).templateName}
-                              </p>
-                            )}
                           </td>
                           <td className="px-4 py-3 hidden sm:table-cell">
                             <span className={`text-xs px-2 py-0.5 rounded-full ${isStart ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
@@ -365,12 +361,12 @@ export default function SchedulePage() {
                     {history.slice(0, 20).map((job) => (
                       <tr key={job.jobId} className="hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3">
-                          <a href={`/myjobs/${job.jobId}`} className="font-mono text-xs hover:underline">
-                            {job.jobId.slice(0, 8)}…
+                          <a href={`/myjobs/${job.jobId}`} className="text-xs font-medium hover:underline">
+                            {jobDisplayTitle(job)}
                           </a>
                         </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">
-                          {(job.platforms ?? []).join(', ') || '—'}
+                          {platformListLabel(job.platforms ?? [])}
                         </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
                           {fmtDate((job.scheduledStartAt || job.scheduledPublishAt)!)}
@@ -381,7 +377,7 @@ export default function SchedulePage() {
                             job.status === 'failed'   ? 'bg-red-100 text-red-700' :
                             'bg-muted text-muted-foreground'
                           }`}>
-                            {job.status}
+                            {jobStatusLabel(job.status)}
                           </span>
                         </td>
                       </tr>
