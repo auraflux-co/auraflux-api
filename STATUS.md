@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-24 v1.0.631 (Cursor — fix(cpd-330): replace raw Clerk user IDs with first/last name across all admin views — CRM list, CRM detail, All Users, Support Inbox, Review Queue all show names; IDs kept in DB/backend only)
 **Last Updated:** 2026-05-24 v1.0.629 (Cursor — fix(cpd-329): Review Queue shows platform-wide jobs for superadmin — uses GET /jobs?all=true; header copy updated; customer ID shown per card; empty state copy differentiated)
 **Last Updated:** 2026-05-24 v1.0.628 (Cursor — fix(cpd-328): superadmin UX fixes — /admin redirects to /admin/overview; support inbox allows superadmin role; CRM fixed customers/accounts key mismatch; permissions shows owner first/last name; setup checklist hidden for superadmin; Jobs preview removed from admin nav)
 **Last Updated:** 2026-05-24 v1.0.627 (Cursor — fix(cpd-327): sanitize redirect_url on sign-in page — strip any redirect_url that doesn't point to app.auraflux.co before Clerk reads it; localhost/external URLs from test sessions were causing post-OTP spinner hang and bloated URLs)

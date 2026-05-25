@@ -280,12 +280,9 @@ export default function AdminUsersPage() {
                     {/* User */}
                     <td className="px-4 py-3">
                       <div className="af-label font-medium truncate max-w-[220px]">
-                        {u.email ?? <span className="text-muted-foreground italic">No email</span>}
+                        {name || u.email || <span className="text-muted-foreground italic">No name</span>}
                       </div>
-                      {name && <div className="af-caption">{name}</div>}
-                      {isExpanded && (
-                        <div className="af-caption text-muted-foreground/60 font-mono mt-0.5 truncate">{u.id}</div>
-                      )}
+                      {name && <div className="af-caption text-muted-foreground truncate">{u.email}</div>}
                     </td>
 
                     {/* Plan / Role */}

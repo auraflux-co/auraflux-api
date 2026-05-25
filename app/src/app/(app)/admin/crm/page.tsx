@@ -17,6 +17,8 @@ import { PageShell, PageHeader } from '@/components/ui/page-shell';
 interface AccountSummary {
   accountId:    string;
   ownerEmail:   string | null;
+  firstName:    string | null;
+  lastName:     string | null;
   planTier:     string;
   creditsLeft:  number | null;
   jobCount:     number;
@@ -72,7 +74,8 @@ export default function CrmListPage() {
     .filter((a) => {
       if (tierFilter !== 'all' && a.planTier !== tierFilter) return false;
       const q = search.toLowerCase();
-      return !q || (a.ownerEmail?.toLowerCase() || '').includes(q) || a.accountId.toLowerCase().includes(q);
+      const fullName = [a.firstName, a.lastName].filter(Boolean).join(' ').toLowerCase();
+      return !q || (a.ownerEmail?.toLowerCase() || '').includes(q) || fullName.includes(q) || a.accountId.toLowerCase().includes(q);
     })
     .sort((a, b) => {
       if (sortBy === 'jobCount') return (b.jobCount || 0) - (a.jobCount || 0);
@@ -163,8 +166,10 @@ export default function CrmListPage() {
                 className="hover:bg-accent/30 cursor-pointer transition-colors"
               >
                 <td className="px-4 py-3">
-                  <p className="af-label font-medium truncate max-w-xs">{a.ownerEmail ?? '—'}</p>
-                  <p className="af-caption font-mono">{a.accountId.slice(0, 18)}…</p>
+                  <p className="af-label font-medium truncate max-w-xs">
+                    {[a.firstName, a.lastName].filter(Boolean).join(' ') || a.ownerEmail || '—'}
+                  </p>
+                  <p className="af-caption text-muted-foreground truncate">{a.ownerEmail ?? '—'}</p>
                 </td>
                 <td className="px-4 py-3">
                   <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', TIER_BADGE[a.planTier] ?? TIER_BADGE.operate)}>
