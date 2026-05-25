@@ -184,7 +184,8 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/permissions', label: 'Permissions'    },
   { href: '/operator',          label: 'All Jobs'       },
   { href: '/review',            label: 'Review Queue'   },
-  { href: '/generate',          label: 'Generate'       },
+  { href: '/generate',          label: 'Generate Video' },
+  { href: '/generate/canva',    label: 'Canva Images'   },
 ];
 
 const CONFLUENCE_GUIDE_URL =

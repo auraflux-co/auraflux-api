@@ -1108,3 +1108,55 @@ export async function validatePublishCopy(
     token,
   });
 }
+
+// ─── Canva Image Generation (superadmin) ─────────────────────────────────────
+
+export type CanvaDesignType =
+  | 'business_card' | 'card' | 'desktop_wallpaper' | 'doc' | 'document'
+  | 'email' | 'facebook_cover' | 'facebook_post' | 'flyer' | 'infographic'
+  | 'instagram_post' | 'invitation' | 'logo' | 'phone_wallpaper' | 'photo_collage'
+  | 'pinterest_pin' | 'postcard' | 'poster' | 'presentation' | 'proposal'
+  | 'report' | 'resume' | 'twitter_post' | 'your_story' | 'youtube_banner'
+  | 'youtube_thumbnail';
+
+export interface CanvaCandidate {
+  candidate_id: string;
+  thumbnail_url: string;
+  design_url:   string;
+}
+
+export interface CanvaGenerateResult {
+  ok:         boolean;
+  jobId:      string;
+  candidates: CanvaCandidate[];
+}
+
+export interface CanvaSaveResult {
+  ok:        boolean;
+  designId?: string;
+  designUrl: string;
+}
+
+export async function canvaGenerate(
+  prompt: string,
+  designType: CanvaDesignType,
+  token?: string,
+): Promise<CanvaGenerateResult> {
+  return apiFetch('/admin/canva-generate', {
+    method: 'POST',
+    body:   JSON.stringify({ prompt, designType }),
+    token,
+  });
+}
+
+export async function canvaSave(
+  jobId: string,
+  candidateId: string,
+  token?: string,
+): Promise<CanvaSaveResult> {
+  return apiFetch('/admin/canva-save', {
+    method: 'POST',
+    body:   JSON.stringify({ jobId, candidateId }),
+    token,
+  });
+}
