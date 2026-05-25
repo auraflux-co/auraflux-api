@@ -1,0 +1,95 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/hasanabi"
+    },
+    {
+      "id": "O-Tw2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/hasanabi"
+    },
+    {
+      "id": "O-K1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "O-K2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "O-YT1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/hasanabi"
+    },
+    {
+      "id": "O-YT2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/hasanabi"
+    },
+    {
+      "id": "G-Tw1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/stableronaldo"
+    },
+    {
+      "id": "G-Tw2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/stableronaldo"
+    },
+    {
+      "id": "G-K1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/trainwreckstv"
+    },
+    {
+      "id": "G-K2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/trainwreckstv"
+    },
+    {
+      "id": "G-YT1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/markiplier"
+    },
+    {
+      "id": "G-YT2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/markiplier"
+    },
+    {
+      "id": "M-Tw1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/hasanabi"
+    },
+    {
+      "id": "M-Tw2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/hasanabi"
+    },
+    {
+      "id": "M-K1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "M-K2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "M-YT1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/hasanabi"
+    },
+    {
+      "id": "M-YT2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/hasanabi"
+    }
+  ],
+  "elapsed_s": 3.069995880126953
+}

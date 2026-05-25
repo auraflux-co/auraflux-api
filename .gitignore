@@ -138,6 +138,7 @@ video_generation_custom_*.csv
 *.png
 *.gif
 !app/public/brand/*.png
+!app/public/brand/**/*.png
 !app/public/brand/*.jpg
 !app/public/*.png
 !app/public/*.ico
