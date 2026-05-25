@@ -665,10 +665,16 @@ export interface CreditLedgerEntry {
 }
 
 export interface CreditPack {
-  id:        string;
-  label:     string;
-  credits:   number;
-  price_usd: number;
+  id:              string;
+  label:           string;
+  credits:         number;
+  price_usd:       number;
+  price_cents:     number;
+  description:     string;
+  feature:         string;
+  mins:            number;
+  rate_per_min:    number;
+  priceConfigured: boolean;
 }
 
 export async function getCreditBalance(token?: string): Promise<CreditBalance & { ok: boolean }> {
