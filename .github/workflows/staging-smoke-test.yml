@@ -1,0 +1,101 @@
+name: Staging smoke test on PR to main
+
+# CPD-324 — Runs a smoke test against auraflux-api-staging whenever a PR
+# targets main. The staging service auto-deploys from the `staging` branch via
+# Render; this workflow waits for the deploy and validates it before allowing
+# merge.
+#
+# Required GitHub Secrets (set in repo Settings → Secrets → Actions):
+#   STAGING_API_URL            — https://auraflux-api-staging.onrender.com
+#   STAGING_APP_URL            — https://auraflux-app-staging.onrender.com
+#   RENDER_STAGING_API_HOOK    — Render deploy hook URL for auraflux-api-staging
+#   SMOKE_API_SECRET           — AURAFLUX_API_SECRET value for staging
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  staging-smoke-test:
+    name: Smoke test — staging
+    runs-on: ubuntu-latest
+    # Skip draft PRs and PRs that only touch docs/non-server files
+    if: |
+      github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── Trigger a fresh staging deploy ─────────────────────────────────────
+      # Render deploy hooks redeploy the service with the current `staging`
+      # branch HEAD. If RENDER_STAGING_API_HOOK is not set, this step is skipped
+      # (allows the workflow to run in forks/dependabot without the secret).
+      - name: Trigger staging deploy
+        if: secrets.RENDER_STAGING_API_HOOK != ''
+        run: |
+          echo "Triggering Render staging deploy..."
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.RENDER_STAGING_API_HOOK }}")
+          echo "Deploy hook returned: $HTTP"
+          if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
+            echo "⚠️  Deploy hook returned $HTTP — continuing (deploy may already be in progress)"
+          fi
+
+      # ── Wait for staging /health to return ok: true ──────────────────────────
+      # Polls every 15s for up to 10 minutes. Render cold starts can take ~3–5 min.
+      - name: Wait for staging API to be healthy
+        env:
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          URL="${STAGING_API_URL:-https://auraflux-api-staging.onrender.com}"
+          echo "Waiting for $URL/health ..."
+          for i in $(seq 1 40); do
+            STATUS=$(curl -s -o /tmp/health.json -w "%{http_code}" \
+              --max-time 10 "$URL/health" 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              OK=$(python3 -c "import json; d=json.load(open('/tmp/health.json')); print(d.get('ok',''))" 2>/dev/null)
+              if [ "$OK" = "True" ] || [ "$OK" = "true" ]; then
+                echo "✅ Staging API healthy after ~$((i*15))s"
+                break
+              fi
+            fi
+            echo "  attempt $i/40 — HTTP $STATUS — waiting 15s..."
+            sleep 15
+            if [ "$i" = "40" ]; then
+              echo "❌ Staging API did not become healthy within 10 minutes"
+              exit 1
+            fi
+          done
+
+      # ── Run smoke test ────────────────────────────────────────────────────────
+      - name: Run smoke tests against staging
+        env:
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+          SMOKE_API_SECRET: ${{ secrets.SMOKE_API_SECRET }}
+        run: |
+          URL="${STAGING_API_URL:-https://auraflux-api-staging.onrender.com}"
+          echo "Running smoke test against $URL ..."
+          SMOKE_API_SECRET="$SMOKE_API_SECRET" node scripts/smoke_test_render.js "$URL"
+
+      # ── Post result comment on PR ─────────────────────────────────────────────
+      - name: Post smoke test result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const outcome = '${{ job.status }}';
+            const icon = outcome === 'success' ? '✅' : '❌';
+            const stagingUrl = '${{ secrets.STAGING_API_URL }}' || 'https://auraflux-api-staging.onrender.com';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `${icon} **Staging smoke test ${outcome}**\n\nStaging API: ${stagingUrl}/health\nRan: \`scripts/smoke_test_render.js\`\n\n_This check runs on every PR to main (CPD-324)._`,
+            });
