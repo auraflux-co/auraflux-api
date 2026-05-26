@@ -20,8 +20,8 @@ interface AccountSummary {
   firstName:    string | null;
   lastName:     string | null;
   planTier:     string;
-  creditsLeft:  number | null;
-  jobCount:     number;
+  creditsLeft:  number | null | undefined;
+  jobCount:     number | undefined;
   lastActivity: string | null;
 }
 
@@ -177,9 +177,9 @@ export default function CrmListPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
-                  {a.creditsLeft === null ? '—' : a.creditsLeft.toLocaleString()}
+                  {a.creditsLeft == null ? '—' : a.creditsLeft.toLocaleString()}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">{a.jobCount}</td>
+                <td className="px-4 py-3 text-right tabular-nums">{a.jobCount ?? 0}</td>
                 <td className="px-4 py-3 text-right text-muted-foreground">{relTime(a.lastActivity)}</td>
               </tr>
             ))}
