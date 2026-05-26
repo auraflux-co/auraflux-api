@@ -178,6 +178,12 @@ function stripCodeFences(text) {
 
 // Validate required environment variables on startup
 function validateRequiredEnv() {
+  // CLERK_PUBLISHABLE_KEY and NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY are interchangeable —
+  // clerk.js copies the NEXT_PUBLIC_ variant into CLERK_PUBLISHABLE_KEY if only the
+  // former is set. Accept either so a missing alias never crashes the server.
+  if (!process.env.CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    process.env.CLERK_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  }
   const required = [
     'ANTHROPIC_API_KEY',
     'GEMINI_API_KEY',
