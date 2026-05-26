@@ -159,7 +159,6 @@ const CUSTOMER_NAV_BASE: NavItem[] = [
     ],
   },
   { href: '/support',    label: 'Support'   },
-  { href: '/profile',    label: 'Profile'   },
 ];
 
 // Settings children differ by plan tier
@@ -172,9 +171,12 @@ function settingsNavItem(planTier: string | null): NavItem {
   children.push(
     { href: '/settings/channels', label: 'My Channels'       },
     { href: '/settings/social',  label: 'My Social Accounts' },
+    { href: '/profile',          label: 'My Profile'         },
     { href: '/settings/team',    label: 'My Team'            },
-    { href: '/developer',        label: 'API Reference'      },
   );
+  if (isOperate) {
+    children.push({ href: '/developer', label: 'API Reference' });
+  }
   return { href: '/settings', label: 'Settings', children };
 }
 
