@@ -35,6 +35,9 @@ import {
 /** Tier ordering — lower index = lower tier */
 const TIER_ORDER = ['operate', 'guided', 'managed'];
 
+// C6: credits removed from highlights — the accurate count comes from the API
+// (plan?.credits) and is shown directly on each card, so the hardcoded line
+// created two conflicting numbers on the same card.
 const PLAN_META: Record<string, {
   label: string; sub: string; price: string; highlights: string[];
 }> = {
@@ -43,7 +46,6 @@ const PLAN_META: Record<string, {
     sub:    'API access — developer plan',
     price:  '$999',
     highlights: [
-      '400 credits / month',
       'Full API access',
       'Self-serve knowledge base',
     ],
@@ -53,7 +55,6 @@ const PLAN_META: Record<string, {
     sub:    'Done-with-you — full platform',
     price:  '$2,499',
     highlights: [
-      '1,200 credits / month',
       'Full platform — script, AI video, thumbnails, publish',
       'Guided setup & monitoring',
       'Chat support escalation',
@@ -64,7 +65,6 @@ const PLAN_META: Record<string, {
     sub:    'Full done-for-you content operation',
     price:  '$4,499',
     highlights: [
-      '2,000 credits / month',
       'AI avatars (HeyGen)',
       'Dedicated account manager',
       'Priority support',
@@ -73,19 +73,65 @@ const PLAN_META: Record<string, {
   },
 };
 
+// C1: skeleton while data loads
+function BillingSkeleton() {
+  return (
+    <PageShell maxWidth="3xl">
+      <div className="h-8 w-44 rounded bg-muted animate-pulse mb-1" />
+      <div className="h-4 w-64 rounded bg-muted animate-pulse mb-6" />
+      <div className="h-36 rounded-lg bg-muted animate-pulse mb-4" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="h-52 rounded-lg bg-muted animate-pulse" />
+        <div className="h-52 rounded-lg bg-muted animate-pulse" />
+      </div>
+    </PageShell>
+  );
+}
+
+// C3: reusable dismissible banner
+function DismissibleBanner({
+  variant, children,
+}: {
+  variant: 'success' | 'muted' | 'destructive';
+  children: React.ReactNode;
+}) {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+  const cls = {
+    success:     'border border-success/40 bg-success/10 text-success',
+    muted:       'border border-border bg-muted text-muted-foreground',
+    destructive: 'border border-destructive/40 bg-destructive/10 text-destructive',
+  }[variant];
+  return (
+    <div className={`rounded-lg px-4 py-3 flex items-start justify-between gap-3 ${cls}`}>
+      <div className="text-sm">{children}</div>
+      <button
+        onClick={() => setDismissed(true)}
+        className="shrink-0 opacity-60 hover:opacity-100 transition-opacity text-sm leading-none mt-0.5"
+        aria-label="Dismiss"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 function BillingPageInner() {
   const { getToken, isLoaded } = useAuth();
-  const searchParams   = useSearchParams();
-  const router         = useRouter();
+  const searchParams    = useSearchParams();
+  const router          = useRouter();
+  // C2: distinguish in-place upgrade (?upgraded=1) from new checkout (?success=1)
   const stripeSuccess   = searchParams.get('success')       === '1';
+  const stripeUpgraded  = searchParams.get('upgraded')      === '1';
   const stripeCancelled = searchParams.get('cancelled')     === '1';
-  const packSuccess     = searchParams.get('pack_success')  === '1';  // U1
-  const packCancelled   = searchParams.get('pack_cancelled') === '1'; // U7
+  const packSuccess     = searchParams.get('pack_success')  === '1';
+  const packCancelled   = searchParams.get('pack_cancelled') === '1';
   const [isPending, start] = useTransition();
+  const [redirecting, setRedirecting] = useState(false); // C8
 
   // U6: clear transient query params from URL so banners don't re-appear on refresh
   useEffect(() => {
-    if (stripeSuccess || stripeCancelled || packSuccess || packCancelled) {
+    if (stripeSuccess || stripeUpgraded || stripeCancelled || packSuccess || packCancelled) {
       router.replace('/billing');
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -93,6 +139,7 @@ function BillingPageInner() {
   const [balance, setBalance]     = useState<CreditBalance | null>(null);
   const [plans, setPlans]         = useState<Plan[]>([]);
   const [packs, setPacks]         = useState<CreditPack[]>([]);
+  const [loading, setLoading]     = useState(true); // C1
   const [error, setError]         = useState<string | null>(null);
 
   useEffect(() => {
@@ -110,6 +157,8 @@ function BillingPageInner() {
         setPacks(pk.packs ?? []);
       } catch {
         setError("Couldn't load billing info. Refresh to try again.");
+      } finally {
+        setLoading(false);
       }
     })();
   }, [getToken, isLoaded]);
@@ -126,11 +175,12 @@ function BillingPageInner() {
           `${origin}/billing?cancelled=1`,
           token ?? undefined,
         );
-        // CPD-382: if the server updated the subscription in place (existing subscriber
-        // upgrading), there's no Stripe checkout URL — just reload with the success flag.
+        // C2 / CPD-382: in-place upgrade → ?upgraded=1 (immediate proration copy);
+        // new subscription checkout → Stripe redirects back to ?success=1.
         if ((res as { upgraded?: boolean }).upgraded) {
-          window.location.href = `${origin}/billing?success=1`;
+          window.location.href = `${origin}/billing?upgraded=1`;
         } else {
+          setRedirecting(true); // C8: brief "Redirecting…" state
           window.location.href = res.url;
         }
       } catch {
@@ -158,6 +208,9 @@ function BillingPageInner() {
     });
   }
 
+  // C1: show skeleton while data loads — prevents wrong upgrade cards flashing
+  if (loading) return <BillingSkeleton />;
+
   const currentTier  = balance?.tier ?? 'operate';
   const currentIdx   = TIER_ORDER.indexOf(currentTier);
   const upgradeTiers = TIER_ORDER.slice(currentIdx + 1) as ('operate' | 'guided' | 'managed')[];
@@ -170,27 +223,46 @@ function BillingPageInner() {
     <PageShell maxWidth="3xl">
       <PageHeader title="Subscription" subtitle="Your plan, upgrade options, and payment." />
 
-      {/* U3: correct copy for plan upgrade vs credit pack */}
-      {stripeSuccess && (
-        <p className="af-body text-success bg-success/10 rounded px-3 py-2">
-          Plan updated — your new credit allowance begins with your next billing cycle.
+      {/* C8: pre-redirect state while navigating to Stripe checkout */}
+      {redirecting && (
+        <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2 animate-pulse">
+          Redirecting to Stripe secure checkout…
         </p>
+      )}
+
+      {/* C2: in-place prorated upgrade — immediate effect */}
+      {stripeUpgraded && (
+        <DismissibleBanner variant="success">
+          <span className="font-semibold">Plan upgraded!</span>{' '}
+          Your new credit allowance is active now. Stripe will charge a prorated amount for the remainder of this billing period.
+        </DismissibleBanner>
+      )}
+      {/* C2: new subscription checkout return — tier update via webhook */}
+      {stripeSuccess && (
+        <DismissibleBanner variant="success">
+          <span className="font-semibold">Subscription confirmed!</span>{' '}
+          Your plan will be active within a minute once payment is processed.
+        </DismissibleBanner>
       )}
       {stripeCancelled && (
-        <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2">Checkout cancelled — no charge was made.</p>
+        <DismissibleBanner variant="muted">
+          Checkout cancelled — no charge was made.
+        </DismissibleBanner>
       )}
-      {/* U1: pack_success from pack buy on this page */}
+      {/* C3+C4: dismissible bordered pack banners matching /credits style */}
       {packSuccess && (
-        <p className="af-body text-success bg-success/10 rounded px-3 py-2">
-          Credits purchased! Your balance will update shortly as the payment is confirmed.
-        </p>
+        <DismissibleBanner variant="success">
+          <span className="font-semibold">Credits purchased!</span>{' '}
+          Your balance will update shortly as the payment is confirmed.
+        </DismissibleBanner>
       )}
-      {/* U7: pack_cancelled */}
       {packCancelled && (
-        <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2">Pack checkout cancelled — no charge was made.</p>
+        <DismissibleBanner variant="muted">
+          Pack checkout cancelled — no charge was made.
+        </DismissibleBanner>
       )}
       {error && (
-        <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
+        <DismissibleBanner variant="destructive">{formatUserError(error)}</DismissibleBanner>
       )}
 
       {/* ── 1. Current plan summary ─────────────────────────────────────────── */}
@@ -364,7 +436,8 @@ function BillingPageInner() {
 
 export default function BillingPage() {
   return (
-    <Suspense>
+    // C7: Suspense fallback shows skeleton while useSearchParams resolves
+    <Suspense fallback={<BillingSkeleton />}>
       <BillingPageInner />
     </Suspense>
   );

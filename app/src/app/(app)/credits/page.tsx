@@ -94,6 +94,33 @@ function CreditsSkeleton() {
   );
 }
 
+// ─── C3: reusable dismissible banner for credits page ──────────────────────────
+
+function DismissiblePackBanner({
+  variant, children,
+}: {
+  variant: 'success' | 'muted';
+  children: React.ReactNode;
+}) {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+  const cls = variant === 'success'
+    ? 'border-success/40 bg-success/10 text-success'
+    : 'border-border bg-muted text-muted-foreground';
+  return (
+    <div className={`rounded-lg border px-4 py-3 flex items-start justify-between gap-3 ${cls}`}>
+      <p className="text-sm">{children}</p>
+      <button
+        onClick={() => setDismissed(true)}
+        className="shrink-0 opacity-60 hover:opacity-100 transition-opacity text-sm leading-none mt-0.5"
+        aria-label="Dismiss"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 function CreditsPageInner() {
@@ -204,20 +231,14 @@ function CreditsPageInner() {
         subtitle={<span>Plan: <span className="text-foreground font-medium">{tierLabel(balance.tier)}</span> · Period: {new Date(balance.period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {new Date(balance.period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
       />
 
-      {/* CPD-384 / CPD-386: pack purchase success / cancelled banners */}
-      {packSuccess && (
-        <div className="rounded-lg border border-success/40 bg-success/10 px-4 py-3">
-          <p className="text-sm font-semibold text-success">Credits purchased!</p>
-          <p className="text-xs text-success/80 mt-0.5">
-            Your credit balance will update shortly as the payment is confirmed.
-          </p>
-        </div>
-      )}
-      {packCancelled && (
-        <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2">
-          Pack checkout cancelled — no charge was made.
-        </p>
-      )}
+      {/* C3+C4: dismissible pack banners in consistent bordered card style */}
+      {packSuccess && <DismissiblePackBanner variant="success">
+        <span className="font-semibold">Credits purchased!</span>{' '}
+        Your credit balance will update shortly as the payment is confirmed.
+      </DismissiblePackBanner>}
+      {packCancelled && <DismissiblePackBanner variant="muted">
+        Pack checkout cancelled — no charge was made.
+      </DismissiblePackBanner>}
 
       {/* Jobs paused banner */}
       {isExhausted && (
@@ -365,7 +386,7 @@ function CreditsPageInner() {
                       disabled={isPending || pack.priceConfigured === false}
                       onClick={() => handleBuyPack(pack.id)}
                     >
-                      Buy
+                      {isPending ? 'Processing…' : 'Buy'}
                     </Button>
                   </div>
                 </div>
