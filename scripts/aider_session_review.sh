@@ -85,12 +85,11 @@ JIRA_APPROVED=""
 
 if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
   _jira() {
-    local s="$1"
+    local jql="$1"
     # Atlassian deprecated /rest/api/3/search (HTTP 410) — use /rest/api/3/search/jql instead.
-    # Ref: https://developer.atlassian.com/changelog/#CHANGE-2046
     HTTP_STATUS=$(curl -s --max-time 10 --connect-timeout 5 -o /tmp/auraflux_jira_issues.json -w "%{http_code}" \
       -H "Accept: application/json" -H "Content-Type: application/json" -u "$JIRA_AUTH" \
-      -X POST --data "{\"jql\":\"project=CPD AND status=\\\"${s}\\\" ORDER BY priority DESC\",\"maxResults\":20,\"fields\":[\"summary\",\"priority\"]}" \
+      -X POST --data "{\"jql\":\"${jql}\",\"maxResults\":25,\"fields\":[\"summary\",\"priority\",\"labels\"]}" \
       "${JIRA_BASE}/rest/api/3/search/jql" \
       2>/dev/null) || HTTP_STATUS="000"
     if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
@@ -99,16 +98,22 @@ import json,sys
 d=json.load(open("/tmp/auraflux_jira_issues.json"))
 for i in d.get("issues",[]):
     f=i["fields"]
-    print("  " + i["key"] + ": " + f["summary"][:80] + " [" + f["priority"]["name"] + "]")
+    labels=f.get("labels",[])
+    tag=" [BLOCKED]" if "blocked" in [l.lower() for l in labels] else ""
+    print("  " + i["key"] + ": " + f["summary"][:80] + " [" + f["priority"]["name"] + "]" + tag)
 ' 2>/dev/null || echo "  (python parse failed)"
     else
       echo "  (Jira API fetch failed with HTTP ${HTTP_STATUS})"
     fi
   }
-  JIRA_TODO=$(     _jira "To+Do")
-  JIRA_IN_DEV=$(   _jira "In+Development")
-  JIRA_IN_REVIEW=$(_jira "In+Review")
-  JIRA_APPROVED=$( _jira "Approved")
+  # Non-blocked To Do (app work) — excludes marketing-site label and blocked label
+  JIRA_TODO=$(     _jira 'project=CPD AND status="To Do" AND labels not in ("blocked","marketing-site") ORDER BY priority DESC')
+  # All In Development / Review / Approved (these are active — show regardless of label)
+  JIRA_IN_DEV=$(   _jira 'project=CPD AND status="In Development" ORDER BY priority DESC')
+  JIRA_IN_REVIEW=$(_jira 'project=CPD AND status="In Review" ORDER BY priority DESC')
+  JIRA_APPROVED=$( _jira 'project=CPD AND status="Approved" ORDER BY priority DESC')
+  # Marketing site backlog — separate summary
+  JIRA_MKTG=$(     _jira 'project=CPD AND status="To Do" AND labels = "marketing-site" ORDER BY priority DESC')
 elif [ -n "${JIRA_API_TOKEN:-}" ] && [ -z "$JIRA_BASE" ]; then
   JIRA_TODO="(skipped — set ATLASSIAN_DOMAIN or JIRA_BASE_URL to your-site.atlassian.net; https:// is optional)"
 fi
@@ -226,6 +231,48 @@ if [ -f "$REPO_ROOT/app/tsconfig.json" ] || [ -f "$REPO_ROOT/app/package.json" ]
   fi
 fi
 
+# ── 7b. Marketing site health ─────────────────────────────────────────────────
+echo "🌐 Checking marketing site (auraflux.co) health..."
+MKTG_STATUS=""
+
+_mktg_check() {
+  local label="$1" url="$2" expect="$3"
+  local http body
+  body=$(curl -sL --max-time 8 --connect-timeout 5 -o /tmp/af_mktg_body.txt -w "%{http_code}" "$url" 2>/dev/null) || body="000"
+  local content
+  content=$(cat /tmp/af_mktg_body.txt 2>/dev/null || echo "")
+  if [ "$body" = "000" ]; then
+    MKTG_STATUS="${MKTG_STATUS}  ❌ ${label}: UNREACHABLE\n"
+  elif [ -n "$expect" ] && ! echo "$content" | grep -q "$expect"; then
+    MKTG_STATUS="${MKTG_STATUS}  ⚠️  ${label}: HTTP ${body} but missing expected content: ${expect}\n"
+  else
+    MKTG_STATUS="${MKTG_STATUS}  ✅ ${label}: HTTP ${body}\n"
+  fi
+}
+
+_mktg_check "Homepage"           "https://auraflux.co/"          "AuraFlux"
+_mktg_check "Pricing page"       "https://auraflux.co/pricing"   "Operate"
+_mktg_check "Contact page"       "https://auraflux.co/contact"   "AuraFlux"
+_mktg_check "Privacy page"       "https://auraflux.co/privacy"   "Privacy"
+_mktg_check "Terms page"         "https://auraflux.co/terms"     "Terms"
+_mktg_check "Plans API"          "https://app.auraflux.co/api/public/plans" "operate"
+_mktg_check "Chat API"           "https://app.auraflux.co/api/public/chat" ""
+# Roadmap should redirect (3xx) — check it doesn't 200 a blank page
+ROADMAP_HTTP=$(curl -s --max-time 8 -o /dev/null -w "%{http_code}" "https://auraflux.co/roadmap" 2>/dev/null || echo "000")
+if [[ "$ROADMAP_HTTP" =~ ^3 ]]; then
+  MKTG_STATUS="${MKTG_STATUS}  ✅ Roadmap redirect: HTTP ${ROADMAP_HTTP}\n"
+else
+  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Roadmap page: HTTP ${ROADMAP_HTTP} (expected 3xx redirect)\n"
+fi
+# Chat widget injected on homepage?
+CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -c "af-chat-btn" || echo "0")
+if [ "$CHAT_WIDGET" -gt 0 ]; then
+  MKTG_STATUS="${MKTG_STATUS}  ✅ Chat widget injected on homepage\n"
+else
+  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget NOT found on homepage\n"
+fi
+[ -z "$MKTG_STATUS" ] && MKTG_STATUS="  (no checks run)"
+
 # ── 8. API-to-UI mapping: check apiFetch paths have a backend route ───────────
 API_UNMAPPED=""
 while IFS= read -r path; do
@@ -248,12 +295,12 @@ echo "🤖 Running Aider review..."
 
 cat > "$PROMPT_FILE" <<ENDOFPROMPT
 You are performing an end-of-session health review of the AuraFlux platform.
-This platform has two layers:
+This platform has THREE layers:
   1. Backend API — Express.js in lib/ and server.js
-  2. Frontend Dashboard — Next.js in app/src/app/dashboard/ (THIS IS THE CUSTOMER PRODUCT)
+  2. Frontend Dashboard — Next.js in app/src/app/(app)/ (THE CUSTOMER PRODUCT at app.auraflux.co)
+  3. Marketing Site — auraflux.co (Cloudflare Pages + Framer, proxied via _worker.js)
 
-The UI is what customers see and use every day after sign-up. Jira tickets, Confluence HOW docs,
-GitHub PRs, and deployed code must all align across BOTH layers.
+Jira tickets, Confluence HOW docs, GitHub PRs, and deployed code must all align across ALL three layers.
 
 Write a structured report to logs/aider_session_review.md using the data below.
 
@@ -262,11 +309,14 @@ Commits: ${COMMIT_LOG:-none}
 Files changed: ${CHANGED_FILES:-none}
 Unmerged branches: ${OPEN_BRANCHES:-none}
 
-JIRA BOARD
+JIRA BOARD — APP WORK (non-blocked, non-marketing-site)
 To Do: ${JIRA_TODO:-none}
 In Development: ${JIRA_IN_DEV:-none}
 In Review: ${JIRA_IN_REVIEW:-none}
 Approved: ${JIRA_APPROVED:-none}
+
+JIRA — MARKETING SITE BACKLOG:
+${JIRA_MKTG:-none}
 
 GITHUB
 Open PRs: ${GH_OPEN_PRS:-none}
@@ -277,7 +327,7 @@ CONFLUENCE (recent pages, space AF): ${CONF_RECENT:-none}
 BACKEND ENV VARS in code but missing from .env.example: ${ENV_MISSING:-none}
 FRONTEND NEXT_PUBLIC_* vars missing from .env.example: ${FRONTEND_ENV_MISSING:-none}
 
-FRONTEND UI PAGES (app/src/app/dashboard/*/page.tsx):
+FRONTEND UI PAGES (app/src/app/(app)/*/page.tsx):
 ${UI_PAGES}
 
 SIDEBAR NAV ROUTES (what customers can actually navigate to):
@@ -292,9 +342,12 @@ ${API_UNMAPPED}
 FRONTEND TYPESCRIPT CHECK:
 ${FRONTEND_TS_ERRORS}
 
-Write these 10 sections. Be direct. No padding.
+MARKETING SITE HEALTH (auraflux.co + public API endpoints):
+$(printf '%b' "${MKTG_STATUS}")
 
-1. Session Summary (2-4 sentences covering both API and UI work)
+Write these 11 sections. Be direct. No padding.
+
+1. Session Summary (2-4 sentences covering app, API, and marketing site work)
 2. Jira Consistency (stuck tickets, PR mismatches, un-transitioned merged work)
 3. GitHub Consistency (stale PRs, CI failures, stale branches)
 4. Confluence Consistency — does each changed UI page/feature have a HOW doc? List gaps.
@@ -303,7 +356,9 @@ Write these 10 sections. Be direct. No padding.
 7. Codebase Structural Integrity — backend routes, server.js, circular deps
 8. C0 / C1+ Boundary (leaks, hardcoded branding)
 9. Environment and Secrets (undocumented vars — both backend process.env.* and NEXT_PUBLIC_*)
-10. Recommendations — mark each: [BLOCKING] [SHOULD FIX] [NICE TO HAVE]
+10. Marketing Site Health — summarise check results; flag any endpoint down or content issues
+11. Recommendations — mark each: [BLOCKING] [SHOULD FIX] [NICE TO HAVE]
+    Separate sub-sections: App Recommendations | Marketing Site Recommendations
 
 End the file with exactly these two lines:
 <!-- last-reviewed-commit: ${HEAD_SHA} -->
