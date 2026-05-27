@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779745846561",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1779745846561/1779745976210_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1779745846561_final.mp4",
+      "score": 100,
+      "pass": true,
+      "notes": "All specified criteria for the AuraFlux job were successfully met, resulting in a perfect score.",
+      "source_count": 1,
+      "template_id": null
+    },
+    {
+      "id": "O-Tw2",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": true,
+      "job_id": "e2e-operate-test_COMPACT_FETCH_clips_1779746024914",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed, resulting in no output URL and preventing clipSpec assembly. Source clips were successfully fetched, and the correct API authentication method was used for the 'operate' tier.",
+      "source_count": 3
+    }
+  ],
+  "elapsed_s": 265.35729694366455
+}

@@ -1,0 +1,35 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779738278218",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete, resulting in no output URL. While it successfully fetched source clips and used the correct API authentication for the 'operate' tier, the overall job status prevented a successful outcome.",
+      "source_count": 1
+    },
+    {
+      "id": "O-Tw2",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": true,
+      "job_id": "e2e-operate-test_COMPACT_FETCH_clips_1779739095116",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed, resulting in no output URL and no honoring of the ClipSpec assembly. However, source clips were successfully fetched, and the correct API authentication method was used for the 'operate' tier.",
+      "source_count": 3
+    }
+  ],
+  "elapsed_s": 856.9877681732178
+}

@@ -12,18 +12,20 @@ import { useSidebar } from '@/contexts/sidebar-context';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';
 import { cn } from '@/lib/utils';
 
-// Collab only surfaces on job creation, job detail, and review queue pages
-const COLLAB_ROUTES = ['/myjobs', '/review'];
-function useCollabVisible() {
+// Collab label is dynamic based on the current page context
+function useCollabLabel() {
   const pathname = usePathname();
-  return COLLAB_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'));
+  if (pathname === '/myjobs/new' || pathname.startsWith('/myjobs/new/')) return 'Collab';
+  if (pathname.startsWith('/myjobs/') && pathname !== '/myjobs/history') return 'Collab';
+  if (pathname.startsWith('/review')) return 'Collab';
+  return 'Collab';
 }
 
 export function TopBar() {
   const { toggle, isOpen } = useGuide();
   const { openMobile }     = useSidebar();
   const { actor }          = useAuth();
-  const showCollab         = useCollabVisible();
+  const collabLabel        = useCollabLabel();
 
   return (
     <header className={cn('shrink-0 border-b border-border bg-card/50 backdrop-blur-sm flex flex-col px-4', actor ? 'h-auto' : 'h-12')}>
@@ -57,22 +59,21 @@ export function TopBar() {
       <div className="flex items-center gap-3">
         <NotificationsBell />
 
-        {showCollab && (
-          <button
-            onClick={toggle}
-            className={cn(
-              'flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
-              isOpen
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent/50',
-            )}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            Collab
-          </button>
-        )}
+        <button
+          onClick={toggle}
+          className={cn(
+            'flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
+            isOpen
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent/50',
+          )}
+          aria-label={isOpen ? 'Close Collab' : 'Open Collab'}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          {collabLabel}
+        </button>
 
         {!actor && <UserButton />}
       </div>

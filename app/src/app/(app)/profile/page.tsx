@@ -1,16 +1,14 @@
 'use client';
 /**
- * /profile — User profile page (CPD-111).
+ * /profile — User profile page (CPD-111, CPD-373).
  *
- * Sections: identity, security, appearance, account.
- * Identity updates via Clerk's useUser hook.
+ * Sections: identity (name, email, timezone), appearance, security.
+ * Bio, job title, connected platforms, plan & billing, and danger zone removed.
  */
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
-import Link from 'next/link';
-import { tierLabel } from '@/lib/tier-labels';
 import { formatUserError } from '@/lib/job-labels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,19 +46,14 @@ export default function ProfilePage() {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName]   = useState('');
-  const [jobTitle, setJobTitle]   = useState('');
-  const [bio, setBio]             = useState('');
   const [timezone, setTimezone]   = useState('');
 
-  // Populate once user loads
   const [didInit, setDidInit] = useState(false);
   if (isLoaded && user && !didInit) {
     setDidInit(true);
     setFirstName(user.firstName ?? '');
     setLastName(user.lastName ?? '');
     const meta = user.unsafeMetadata as Record<string, unknown>;
-    setJobTitle((meta?.jobTitle as string) ?? '');
-    setBio((meta?.bio as string) ?? '');
     setTimezone((meta?.timezone as string) ?? 'America/New_York');
   }
 
@@ -98,6 +91,11 @@ export default function ProfilePage() {
   const email    = user.primaryEmailAddress?.emailAddress ?? '—';
   const initials = `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || '?';
 
+  // Detect if user signed in with Google (no password management needed)
+  const isGoogleUser = user.externalAccounts?.some(
+    (a) => a.provider === 'google',
+  );
+
   async function handleSave() {
     setError(null);
     setSaved(false);
@@ -108,8 +106,6 @@ export default function ProfilePage() {
           lastName:  lastName.trim()  || undefined,
           unsafeMetadata: {
             ...user!.unsafeMetadata,
-            jobTitle: jobTitle.trim(),
-            bio:      bio.trim(),
             timezone: timezone,
           },
         });
@@ -124,11 +120,11 @@ export default function ProfilePage() {
   return (
     <PageShell maxWidth="3xl">
       <PageHeader
-        title="Your Profile"
-        subtitle="Manage your identity, security, and preferences"
+        title="My Profile"
+        subtitle="Manage your name, email, and preferences"
       />
 
-      {/* Avatar + identity */}
+      {/* Identity */}
       <Card>
         <CardHeader className="pb-2"><CardTitle className="af-subhead">Identity</CardTitle></CardHeader>
         <CardContent className="space-y-5">
@@ -143,14 +139,14 @@ export default function ProfilePage() {
             )}
             <div>
               <p className="af-label font-medium">{user.fullName || 'No name set'}</p>
-              <p className="af-caption">{email}</p>
+              <p className="af-caption text-muted-foreground">{email}</p>
               <Badge variant="outline" className="af-caption mt-1 capitalize">{role}</Badge>
             </div>
           </div>
 
           <Separator />
 
-          {/* Name + job title */}
+          {/* Name */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="af-caption">First name</Label>
@@ -162,30 +158,27 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="af-caption">Job title / role</Label>
-            <Input
-              value={jobTitle}
-              onChange={(e) => setJobTitle(e.target.value)}
-              placeholder="e.g. Content Director"
-              className="h-8 text-sm"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="af-caption">Bio <span className="text-muted-foreground">(optional)</span></Label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="A short description about you or your brand"
-              maxLength={280}
-              className={cn(
-                'w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                'resize-none min-h-[72px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-              )}
-            />
-            <p className="af-caption text-right">{bio.length}/280</p>
-          </div>
+          {/* Email — read-only for Google users, editable for email/password users */}
+          {!isGoogleUser && (
+            <div className="space-y-1.5">
+              <Label className="af-caption">Email address</Label>
+              <Input
+                value={email === '—' ? '' : email}
+                readOnly
+                className="h-8 text-sm bg-muted cursor-default"
+              />
+              <p className="af-caption text-muted-foreground">
+                To change your email address,{' '}
+                <button
+                  type="button"
+                  onClick={() => openUserProfile()}
+                  className="text-primary underline underline-offset-2 hover:no-underline"
+                >
+                  manage in account settings
+                </button>.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label className="af-caption">Time zone</Label>
@@ -198,7 +191,7 @@ export default function ProfilePage() {
               )}
             >
               {TIMEZONES.map((tz) => (
-                <option key={tz} value={tz}>{tz.replace('_', ' ')}</option>
+                <option key={tz} value={tz}>{tz.replace(/_/g, ' ')}</option>
               ))}
             </select>
           </div>
@@ -215,7 +208,7 @@ export default function ProfilePage() {
       {/* Appearance */}
       <Card>
         <CardHeader className="pb-2"><CardTitle className="af-subhead">Appearance</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <div className="flex items-center gap-3">
             {(['light', 'dark', 'system'] as const).map((t) => (
               <button
@@ -225,13 +218,18 @@ export default function ProfilePage() {
                   'px-3 py-1.5 rounded-md border af-label capitalize transition-colors',
                   theme === t
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'border-border text-muted-foreground hover:text-foreground',
+                    : 'border-border text-foreground bg-card hover:bg-muted',
                 )}
               >
                 {t}
               </button>
             ))}
           </div>
+          <p className="af-caption text-muted-foreground">
+            {theme === 'light' ? 'Light mode — bright backgrounds and dark text.'
+              : theme === 'dark' ? 'Dark mode — dark backgrounds and light text.'
+              : 'Follows your system setting.'}
+          </p>
         </CardContent>
       </Card>
 
@@ -239,88 +237,49 @@ export default function ProfilePage() {
       <Card>
         <CardHeader className="pb-2"><CardTitle className="af-subhead">Security</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="af-label font-medium">Password</p>
-              <p className="af-caption">Managed through your account security settings</p>
+          {isGoogleUser ? (
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="af-label font-medium">Sign-in method</p>
+                <p className="af-caption text-muted-foreground">
+                  You sign in with Google. Password and 2FA are managed by your Google account.
+                </p>
+              </div>
+              <Badge variant="outline" className="af-caption shrink-0">Google</Badge>
             </div>
-            <button
-              type="button"
-              onClick={() => openUserProfile()}
-              className="text-xs text-primary underline underline-offset-2 hover:no-underline"
-            >
-              Change password →
-            </button>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="af-label font-medium">Two-factor authentication</p>
-              <p className="af-caption">
-                {user.twoFactorEnabled ? 'Enabled' : 'Not enabled — recommended for account security'}
-              </p>
-            </div>
-            <Badge variant={user.twoFactorEnabled ? 'default' : 'outline'} className="af-caption">
-              {user.twoFactorEnabled ? 'On' : 'Off'}
-            </Badge>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="af-label font-medium">Active sessions</p>
-              <p className="af-caption">Manage active sessions in your account security settings</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => openUserProfile()}
-              className="text-xs text-primary underline underline-offset-2 hover:no-underline"
-            >
-              Manage →
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Connected accounts */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="af-subhead">Connected platforms</CardTitle></CardHeader>
-        <CardContent>
-          <p className="af-caption mb-3">Manage social platform connections for direct publishing.</p>
-          <Link href="/settings" className="text-xs text-primary underline underline-offset-2">
-            Manage connections in Settings →
-          </Link>
-        </CardContent>
-      </Card>
-
-      {/* Billing link */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="af-subhead">Plan &amp; billing</CardTitle></CardHeader>
-        <CardContent className="flex items-center justify-between">
-          <div>
-            <p className="af-label font-medium">{tierLabel(meta?.planTier as string)} plan</p>
-            <p className="af-caption">View usage, upgrade, and manage payment</p>
-          </div>
-          <Link href="/billing" className="text-xs text-primary underline underline-offset-2">
-            Billing →
-          </Link>
-        </CardContent>
-      </Card>
-
-      {/* Danger zone */}
-      <Card className="border-destructive/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="af-subhead text-destructive">Danger zone</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="af-label font-medium">Deactivate account</p>
-              <p className="af-caption">Pauses your subscription and hides your data</p>
-            </div>
-            <Button size="sm" variant="outline" disabled className="border-destructive/40 text-destructive hover:bg-destructive/10">
-              Deactivate
-            </Button>
-          </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="af-label font-medium">Password</p>
+                  <p className="af-caption text-muted-foreground">Change or reset your password</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openUserProfile()}
+                  className="text-xs text-primary underline underline-offset-2 hover:no-underline"
+                >
+                  Change password →
+                </button>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="af-label font-medium">Two-factor authentication</p>
+                  <p className="af-caption text-muted-foreground">
+                    {user.twoFactorEnabled ? 'Enabled — your account is protected.' : 'Not enabled — recommended for added security.'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openUserProfile()}
+                  className="text-xs text-primary underline underline-offset-2 hover:no-underline"
+                >
+                  {user.twoFactorEnabled ? 'Manage →' : 'Enable →'}
+                </button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </PageShell>

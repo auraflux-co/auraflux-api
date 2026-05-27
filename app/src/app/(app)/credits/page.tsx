@@ -175,7 +175,9 @@ export default function CreditsPage() {
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 space-y-1">
           <p className="text-sm font-semibold text-destructive">Jobs paused — no credits remaining</p>
           <p className="text-xs text-destructive/80">
-            Your monthly allowance and any top-up packs are exhausted. Buy a Credit Top-Up pack below or enable auto top-up to resume automatically.
+            Your monthly allowance and any top-up packs are exhausted.{' '}
+            <a href="#buy-credits" className="underline font-medium">Buy a Credit Top-Up pack</a>{' '}
+            or enable auto top-up below to resume automatically.
           </p>
         </div>
       )}
@@ -187,7 +189,8 @@ export default function CreditsPage() {
             Credits running low — {balance.included_remaining} of {balance.included_total} remaining
           </p>
           <p className="text-xs text-yellow-400/80">
-            Consider buying a top-up pack or enabling auto top-up so your jobs don&apos;t pause.
+            <a href="#buy-credits" className="underline font-medium">Buy a Credit Top-Up pack</a>{' '}
+            or enable auto top-up so your jobs don&apos;t pause.
           </p>
         </div>
       )}
@@ -276,49 +279,47 @@ export default function CreditsPage() {
         </Card>
       )}
 
-      {/* Credit packs */}
-      {packs.length > 0 && (
-        <div className="space-y-2">
+      {/* Credit top-up pack */}
+      {packs.some((p) => p.id === 'credit_topup') && (
+        <div className="space-y-2" id="buy-credits">
           <h2 className="af-subhead">Buy credits</h2>
           {packError && (
             <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{packError}</p>
           )}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {packs.map((pack) => (
-              <Card key={pack.id} className={cn('hover:border-border/80 transition-colors', pack.id === 'credit_topup' && isExhausted ? 'border-primary/40 ring-1 ring-primary/20' : '')}>
-                <CardContent className="pt-4 space-y-1">
-                  <p className="af-label font-semibold">{pack.label}</p>
-                  <p className="af-caption">{pack.credits} credits</p>
-                  <p className="af-caption font-medium">
-                    {pack.price_cents
-                      ? formatCurrency(pack.price_cents)
-                      : pack.price_usd != null ? `$${pack.price_usd}` : '—'}
-                    {pack.id === 'credit_topup' && <span className="text-muted-foreground"> / pack</span>}
-                  </p>
-                  {pack.priceConfigured !== false ? (
-                    <div className="pt-2">
-                      <Button
-                        size="sm"
-                        variant={pack.id === 'credit_topup' && isExhausted ? 'default' : 'outline'}
-                        className="w-full text-xs"
-                        disabled={isPending}
-                        onClick={() => handleBuyPack(pack.id)}
-                      >
-                        Buy
-                      </Button>
-                      {pack.id === 'credit_topup' && (
-                        <p className="af-caption text-muted-foreground mt-1 text-center">
-                          choose qty at checkout
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground mt-2">Contact us</p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {packs.filter((p) => p.id === 'credit_topup').map((pack) => (
+            <Card key={pack.id} className={cn(
+              'hover:border-border/80 transition-colors',
+              isExhausted ? 'border-primary/40 ring-1 ring-primary/20' : '',
+            )}>
+              <CardContent className="pt-4 space-y-1">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="af-label font-semibold">{pack.label}</p>
+                    <p className="af-caption text-muted-foreground">{pack.credits} credits / pack</p>
+                    <p className="af-caption font-medium mt-1">
+                      {pack.price_cents
+                        ? formatCurrency(pack.price_cents)
+                        : pack.price_usd != null ? `$${pack.price_usd}` : '—'}
+                      <span className="text-muted-foreground"> / pack</span>
+                    </p>
+                  </div>
+                  <div className="pt-1">
+                    <Button
+                      size="sm"
+                      variant={isExhausted ? 'default' : 'outline'}
+                      disabled={isPending || pack.priceConfigured === false}
+                      onClick={() => handleBuyPack(pack.id)}
+                    >
+                      Buy
+                    </Button>
+                    <p className="af-caption text-muted-foreground mt-1 text-center text-[10px]">
+                      choose qty at checkout
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 

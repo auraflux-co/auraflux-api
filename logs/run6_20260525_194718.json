@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779738232400",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1779738232400/1779738265261_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1779738232400.mp4",
+      "score": 100,
+      "pass": true,
+      "notes": "All criteria met: Job completed successfully, source clips fetched, correct API authentication used for operate tier, and output URL is present.",
+      "source_count": 1,
+      "template_id": null
+    }
+  ],
+  "elapsed_s": 210.4361526966095
+}

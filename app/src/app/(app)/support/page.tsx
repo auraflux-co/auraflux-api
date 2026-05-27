@@ -159,24 +159,42 @@ function SessionHistory({
 }) {
   if (!sessions.length) return null;
   return (
-    <div className="mt-6">
-      <h2 className="af-subhead mb-2">Past sessions</h2>
-      <div className="space-y-1">
+    <div>
+      <h2 className="af-subhead mb-3">Past sessions</h2>
+      <div className="space-y-2">
         {sessions.map((s) => (
           <button
             key={s.id}
             onClick={() => onSelect(s)}
             className={cn(
-              'w-full text-left px-3 py-2 rounded-md af-caption transition-colors flex items-center justify-between gap-2',
-              s.id === activeId ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50 text-muted-foreground',
+              'w-full text-left rounded-lg border transition-colors p-4',
+              s.id === activeId
+                ? 'border-primary/40 bg-primary/5'
+                : 'border-border hover:border-border/80 hover:bg-muted/30',
             )}
           >
-                <span className="af-caption">{fmtSessionDate(s.created_at)} — {s.message_count} message{s.message_count !== 1 ? 's' : ''}</span>
-            <span className="flex items-center gap-1">
-              {s.escalated && <span className="text-amber-500">↑ escalated</span>}
-              {s.resolved  && <span className="text-emerald-500">✓ resolved</span>}
-              {s.phone_number && <span title="SMS thread">📱</span>}
-            </span>
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-0.5">
+                <p className="af-label font-medium">{fmtSessionDate(s.created_at)}</p>
+                <p className="af-caption text-muted-foreground">
+                  {s.message_count} message{s.message_count !== 1 ? 's' : ''}
+                  {s.resolved ? ' · Resolved' : ' · Open'}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {s.escalated && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 font-medium">Escalated</span>
+                )}
+                {s.resolved ? (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-500 font-medium">Resolved</span>
+                ) : (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">Open</span>
+                )}
+              </div>
+            </div>
+            <p className="af-caption text-primary mt-2">
+              {s.resolved ? 'View thread →' : 'Continue or reopen →'}
+            </p>
           </button>
         ))}
       </div>
@@ -287,11 +305,16 @@ export default function SupportPage() {
     <PageShell maxWidth="4xl">
       <PageHeader title="Support" subtitle={supportSubtitle} />
 
+      {/* ── Past sessions (above chat) ── */}
+      {sessions.length > 0 && (
+        <SessionHistory sessions={sessions} onSelect={handleSessionSelect} activeId={sessionId} />
+      )}
+
       <div className="flex flex-col lg:flex-row gap-6">
         {/* ── Chat panel ── */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="rounded-lg border border-border flex flex-col" style={{ height: 520 }}>
-            {/* Messages */}
+          <div className="rounded-lg border border-border flex flex-col" style={{ height: 360 }}>
+            {/* Messages — scrollable */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((m, i) => (
                 <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
@@ -351,18 +374,21 @@ export default function SupportPage() {
           {/* Action row */}
           {canChat && !resolved && (
             <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <button
-                onClick={handleResolve}
-                className="af-caption hover:text-foreground underline"
-              >
-                Mark as resolved
-              </button>
+              {sessionId && (
+                <button
+                  onClick={handleResolve}
+                  className="af-caption hover:text-foreground underline"
+                >
+                  Mark as resolved
+                </button>
+              )}
               {canEsc && !escalated && (
                 <button
                   onClick={() => setShowEsc(true)}
                   className="af-caption hover:text-foreground underline ml-auto"
                 >
-                  Contact our team
+                  In a hurry or can it wait?{' '}
+                  <span className="text-primary">Email us</span>
                 </button>
               )}
               {escalated && (
@@ -370,8 +396,6 @@ export default function SupportPage() {
               )}
             </div>
           )}
-
-          <SessionHistory sessions={sessions} onSelect={handleSessionSelect} activeId={sessionId} />
         </div>
 
         {/* ── Guides + SMS panel ── */}

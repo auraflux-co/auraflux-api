@@ -1,0 +1,67 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779759005296",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1779759005296/1779759161947_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1779759005296_final.mp4",
+      "score": 100,
+      "pass": true,
+      "notes": "All criteria met: Job completed successfully, source clips fetched from Twitch, correct API auth used, and output URL is present.",
+      "source_count": 1,
+      "template_id": null
+    },
+    {
+      "id": "O-Tw2",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": true,
+      "job_id": "e2e-operate-test_COMPACT_FETCH_clips_1779759200898",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1779759200898/1779759512846_assembled_e2e-operate-test_COMPACT_FETCH_clips_1779759200898_final.mp4",
+      "score": 80,
+      "pass": true,
+      "notes": "The job completed successfully, and all directly verifiable criteria from the provided data were met. The adherence to the COMPACT clipSpec's trim points and order could not be verified, as this would require inspection of the output video which is outside the scope of the provided data.",
+      "source_count": 3,
+      "template_id": null
+    },
+    {
+      "id": "O-K1",
+      "tier": "operate",
+      "platform_src": "kick",
+      "account": "xqc",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779759587386",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete and thus produced no output URL. It successfully resolved source clips from Kick and used the correct API key for the 'operate' tier.",
+      "source_count": 1
+    },
+    {
+      "id": "O-YT1",
+      "tier": "operate",
+      "platform_src": "youtube",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779759628105",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete, resulting in no output URL. It successfully resolved source clips and used the correct API authentication method for an 'operate' tier job.",
+      "source_count": 1
+    }
+  ],
+  "elapsed_s": 645.9622888565063
+}

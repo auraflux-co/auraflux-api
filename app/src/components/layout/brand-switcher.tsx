@@ -125,17 +125,19 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
     );
   }
 
-  // No brands loaded (network error or empty account) — still show Add brand entry
-  if (!activeBrand) {
-    if (collapsed) return null;
+  // No brands loaded (network error or empty account) — hide entirely
+  if (!activeBrand) return null;
+
+  // Only one brand — show as plain label, no dropdown
+  if (brands.length <= 1) {
+    if (collapsed) return <BrandAvatar brand={activeBrand} />;
     return (
-      <button
-        onClick={handleAddBrand}
-        className="w-full flex items-center gap-2 px-1 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-left"
-      >
-        <span className="w-6 h-6 flex items-center justify-center text-base shrink-0">+</span>
-        <span>Add brand</span>
-      </button>
+      <div className="flex items-center gap-2 px-1 py-1">
+        <BrandAvatar brand={activeBrand} />
+        <span className="flex-1 min-w-0 truncate text-sm font-medium text-foreground">
+          {activeBrand.name}
+        </span>
+      </div>
     );
   }
 
