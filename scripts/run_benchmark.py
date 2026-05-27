@@ -196,7 +196,7 @@ def poll_job(job_id: str) -> tuple:
             time.sleep(POLL_INTERVAL)
             continue
         status = resp.get('status', '')
-        if status in ('complete', 'published', 'failed', 'cancelled', 'sendback'):
+        if status in ('complete', 'published', 'passed', 'failed', 'cancelled', 'sendback'):
             return status, resp.get('outputUrl') or resp.get('output_url'), resp
         time.sleep(POLL_INTERVAL)
     return 'timeout', None, {}
@@ -321,7 +321,7 @@ Job result:
 Score all 5 criteria:
 
 Standard pipeline (60 pts):
-1. Job reached terminal success (status = complete or published): 20 pts
+1. Job reached terminal success (status = complete, published, or passed): 20 pts
 2. Source clips fetched from Source Library (clips_fetched > 0): 20 pts
 3. Output URL present and not NONE: 20 pts
 
@@ -338,7 +338,7 @@ Return ONLY JSON:
         return result.get('score', 0), result.get('pass', False), result.get('archive_ready', False), result.get('notes', '')
     except Exception as e:
         score = 0
-        if status in ('complete', 'published'): score += 20
+        if status in ('complete', 'published', 'passed'): score += 20
         if clips_fetched > 0: score += 20
         if output_url: score += 20
         return score, score >= 60, False, f'Gemini QA failed: {e}'
@@ -506,7 +506,7 @@ def run_benchmark(args):
         # 4. Poll
         print(f'  4. Polling (up to {POLL_TIMEOUT}s)…')
         status, output_url, full_resp = poll_job(server_jid)
-        icon = '✓' if status in ('complete', 'published') else '✗'
+        icon = '✓' if status in ('complete', 'published', 'passed') else '✗'
         print(f'  {icon}  status={status}  output_url={output_url or "NONE"}')
 
         # 5. Score
