@@ -804,7 +804,13 @@ def run_test(test, args):
     # ── 3. Build job spec via Gemini ─────────────────────────────────────────
     print(f'  3. Building job spec via Gemini…')
     spec = build_job_spec_with_gemini(test, source_items, collab_context)
-    print(f'     ✓ spec built  topic="{spec.get("topic","?")[:50]}"')
+    # CPD-348: Force-set source URLs from the already-fetched source_items.
+    # Gemini sometimes omits the 'urls' field or includes hallucinated URLs — the actual
+    # clip URLs must always reach developer_api so sourceConfig is populated and
+    # _hasSourceClips is true, preventing assembly from being silently skipped.
+    spec['url']  = source_items[0]['url']
+    spec['urls'] = [item['url'] for item in source_items]
+    print(f'     ✓ spec built  topic="{spec.get("topic","?")[:50]}"  urls={len(spec["urls"])}')
 
     # ── 4. Attach clipSpec (Test *2 only) ────────────────────────────────────
     if use_spec:
