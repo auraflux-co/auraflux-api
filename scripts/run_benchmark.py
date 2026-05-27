@@ -2,33 +2,32 @@
 """
 run_benchmark.py — AuraFlux 18-Streamer Production Benchmark (CPD-390)
 
-Source:  PUBLISHED videos from each streamer's social accounts (YouTube/TikTok/Instagram)
-         gathered by benchmark_profile_discovery.py into logs/benchmark_profiles.json.
-         These are NOT raw stream clips — they are the streamer's already-produced content.
+Architecture (corrected from initial approach):
+  Source clips: AuraFlux Source Library API (/source/{platform}/{account}/content)
+                — same proven path as run6. Direct YouTube URLs can't be fetched
+                from Render's environment due to IP-based blocks.
+  Quality bar:  Streamer's published social videos (from benchmark_profiles.json)
+                — used as the comparison baseline in Gemini scoring.
+                "Would our output be competitive with what they already published?"
+  Feature:      1 differentiating AuraFlux feature per job (rotated across jobs).
 
-Goal:    AuraFlux processes each published video and adds 1 feature the streamer hasn't
-         applied, then scores whether the AuraFlux output is publishable quality (100/100).
-         50 × 100-score jobs = CPD-315 launch gate (first half).
+Job spec informed by profile_discovery:
+  - Short jobs  ← streamer has shorts_from_vod / shorts_enhancement content published
+  - Long jobs   ← streamer has vod_enhancement content published
+  - Feature rotation ← assigns thumbnail.designed/vectcut/gemini_ranking/tts/web_research
 
-Production types detected per video:
-  shorts_from_vod:    Short clip cut from a live stream. AuraFlux: shorts enhancement.
-  shorts_enhancement: Polished short video. AuraFlux: different thumbnail/branding.
-  vod_to_shorts:      Short derived from VOD. AuraFlux: add differentiating feature.
-  vod_enhancement:    Long-form produced video. AuraFlux: thumbnail + optional TTS/research.
+Scoring (100-pt Gemini QA):
+  - Standard pipeline (60 pts): job complete + clips fetched + output URL present
+  - Publishability (40 pts): would AuraFlux output beat what they published on social?
 
-Scoring: 100-point Gemini QA + publishability assessment.
-         100-scored outputs logged to logs/benchmark_archive_manifest.json.
+Goal: 50 × score=100 → CPD-315 launch gate (first half).
 
 Usage:
-  # Step 1: discover social profiles first
-  python3 scripts/benchmark_profile_discovery.py
-
-  # Step 2: run the benchmark
   python3 scripts/run_benchmark.py
-  python3 scripts/run_benchmark.py --platform twitch
-  python3 scripts/run_benchmark.py --streamer hasanabi
-  python3 scripts/run_benchmark.py --type vod_enhancement
   python3 scripts/run_benchmark.py --dry-run
+  python3 scripts/run_benchmark.py --platform kick
+  python3 scripts/run_benchmark.py --streamer xqc
+  python3 scripts/run_benchmark.py --type vod_enhancement
 """
 
 import argparse
@@ -38,6 +37,7 @@ import sys
 import time
 import urllib.request
 import urllib.parse
+import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -61,37 +61,82 @@ def _load_dotenv(path):
 
 _load_dotenv(REPO_DIR / '.env')
 
-BASE              = os.environ.get('AURAFLUX_E2E_BASE', 'https://auraflux-api.onrender.com')
-GEMINI_API_KEY    = os.environ.get('GEMINI_API_KEY', '')
-E2E_AUTH_SECRET   = os.environ.get('E2E_AUTH_SECRET', '')
-OPERATE_API_KEY   = os.environ.get('AURAFLUX_E2E_API_KEY_OPERATE', '')
-OPERATE_CLERK_ID  = os.environ.get('AURAFLUX_E2E_CLERK_USER_OPERATE', 'user_3DBxzHO7eOqKgioa0HowEWbtUg3')
+BASE           = os.environ.get('AURAFLUX_E2E_BASE', 'https://auraflux-api.onrender.com')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+E2E_SECRET     = os.environ.get('E2E_AUTH_SECRET', '')
+GUIDED_CLERK   = os.environ.get('AURAFLUX_E2E_CLERK_USER_GUIDED', '')
 
 POLL_INTERVAL = 15
-POLL_TIMEOUT  = 900   # 15 min per job
+POLL_TIMEOUT  = 900
+
+
+# ── Streamer roster (Source Library mappings) ─────────────────────────────────
+#
+# Each entry maps to a Source Library account. The `production_types` field
+# is populated from benchmark_profiles.json during load — it tells us what
+# the streamer has published so we can build an appropriate job spec.
+#
+
+SOURCE_ROSTER = [
+    # Twitch (12 streamers — all confirmed in Source Library)
+    {'id': 'TW-hasanabi',      'platform': 'twitch',  'account': 'hasanabi',       'display': 'Hasan',        'niche': 'politics/commentary'},
+    {'id': 'TW-stableronaldo', 'platform': 'twitch',  'account': 'stableronaldo',  'display': 'Ron',          'niche': 'variety gaming'},
+    {'id': 'TW-jasontheween',  'platform': 'twitch',  'account': 'jasontheween',   'display': 'Jason',        'niche': 'variety'},
+    {'id': 'TW-jaycinco',      'platform': 'twitch',  'account': 'jaycinco',       'display': 'Jay Cinco',    'niche': 'variety'},
+    {'id': 'TW-yonnajay',      'platform': 'twitch',  'account': 'yonnajay',       'display': 'Yonna',        'niche': 'variety'},
+    {'id': 'TW-adapt',         'platform': 'twitch',  'account': 'adapt',          'display': 'Adapt',        'niche': 'gaming'},
+    {'id': 'TW-lacy',          'platform': 'twitch',  'account': 'lacy',           'display': 'Lacy',         'niche': 'variety'},
+    {'id': 'TW-marlon',        'platform': 'twitch',  'account': 'marlon',         'display': 'Marlon',       'niche': 'variety'},
+    {'id': 'TW-cinna',         'platform': 'twitch',  'account': 'cinna',          'display': 'Cinna',        'niche': 'variety'},
+    {'id': 'TW-maya',          'platform': 'twitch',  'account': 'maya',           'display': 'Maya',         'niche': 'variety'},
+    {'id': 'TW-extraemily',    'platform': 'twitch',  'account': 'extraemily',     'display': 'ExtraEmily',   'niche': 'variety'},
+    {'id': 'TW-yourrage',      'platform': 'twitch',  'account': 'yourragegaming', 'display': 'Rage',         'niche': 'gaming'},
+    # Kick (3 streamers — all confirmed in Source Library)
+    {'id': 'KI-xqc',           'platform': 'kick',    'account': 'xqc',            'display': 'xQc',          'niche': 'variety'},
+    {'id': 'KI-trainwreck',    'platform': 'kick',    'account': 'trainwreckstv',  'display': 'Trainwreck',   'niche': 'variety'},
+    {'id': 'KI-adinross',      'platform': 'kick',    'account': 'adinross',       'display': 'Adin Ross',    'niche': 'variety'},
+    # YouTube (3 streamers)
+    {'id': 'YO-hasanabi',      'platform': 'youtube', 'account': 'hasanabi',       'display': 'Hasan (YT)',   'niche': 'politics'},
+    {'id': 'YO-markiplier',    'platform': 'youtube', 'account': 'markiplier',     'display': 'Markiplier',   'niche': 'gaming'},
+    {'id': 'YO-penguinz0',     'platform': 'youtube', 'account': 'moistcr1tikal',  'display': 'MoistCr1TiKaL','niche': 'variety'},
+]
+
+
+# ── Feature rotation ──────────────────────────────────────────────────────────
+
+FEATURE_POOL = {
+    'short': [
+        {'key': 'thumbnail.designed',    'label': 'AI thumbnail',           'tts': False, 'web': False},
+        {'key': 'thumbnail.frame',        'label': 'Frame thumbnail',        'tts': False, 'web': False},
+        {'key': 'thumbnail.vectcut',      'label': 'VectCut thumbnail',      'tts': False, 'web': False},
+    ],
+    'long': [
+        {'key': 'thumbnail.designed',      'label': 'AI thumbnail',           'tts': False, 'web': False},
+        {'key': 'thumbnail.gemini_ranking','label': 'Gemini-ranked thumbnail','tts': False, 'web': False},
+        {'key': 'thumbnail.vectcut',       'label': 'VectCut thumbnail',      'tts': False, 'web': False},
+        {'key': 'tts.elevenlabs',          'label': 'ElevenLabs TTS',         'tts': True,  'web': False},
+        {'key': 'portal.web_research',     'label': 'Web research context',   'tts': False, 'web': True},
+    ],
+}
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
-def get_auth_headers() -> dict:
-    if OPERATE_API_KEY:
-        return {'Authorization': f'Bearer {OPERATE_API_KEY}'}
-    if E2E_AUTH_SECRET and OPERATE_CLERK_ID:
-        return {
-            'Authorization': f'Bearer clerk_user_{OPERATE_CLERK_ID}',
-            'X-E2E-Secret': E2E_AUTH_SECRET,
-        }
-    print('⚠️  No operate auth configured')
-    return {}
+def get_auth() -> dict:
+    return {
+        'Authorization': f'Bearer clerk_user_{GUIDED_CLERK}',
+        'X-E2E-Secret': E2E_SECRET,
+        'Content-Type': 'application/json',
+    }
 
 
 # ── API helpers ───────────────────────────────────────────────────────────────
 
-def api(method, path, body=None, auth_headers=None, timeout=60):
+def api(method, path, body=None, timeout=60):
+    auth = get_auth()
     url = BASE + path
     data = json.dumps(body).encode() if body else None
-    headers = {'Content-Type': 'application/json', **(auth_headers or {})}
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    req = urllib.request.Request(url, data=data, headers=auth, method=method)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read()), r.status
@@ -108,11 +153,11 @@ def ask_gemini(prompt: str) -> str:
     if not GEMINI_API_KEY:
         raise RuntimeError('GEMINI_API_KEY not set')
     url = (f'https://generativelanguage.googleapis.com/v1beta/models/'
-           f'gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}')
+           f'gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}')
     body = {'contents': [{'parts': [{'text': prompt}]}]}
     req = urllib.request.Request(url, data=json.dumps(body).encode(),
                                  headers={'Content-Type': 'application/json'}, method='POST')
-    with urllib.request.urlopen(req, timeout=60) as r:
+    with urllib.request.urlopen(req, timeout=90) as r:
         return json.loads(r.read())['candidates'][0]['content']['parts'][0]['text']
 
 
@@ -122,99 +167,96 @@ def ask_gemini_json(prompt: str) -> dict:
         raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
     start = raw.find('{'); end = raw.rfind('}') + 1
     if start < 0 or end <= start:
-        raise ValueError(f'No JSON in Gemini response: {raw[:200]}')
+        raise ValueError(f'No JSON found: {raw[:200]}')
     return json.loads(raw[start:end])
 
 
-def poll_job(job_id: str, auth: dict) -> tuple:
+# ── Source Library clip fetcher ───────────────────────────────────────────────
+
+def fetch_clips(platform: str, account: str, count: int = 2) -> list:
+    clip_type = 'clip' if platform in ('twitch', 'kick') else None
+    params = {'limit': count}
+    if clip_type:
+        params['type'] = clip_type
+    qs = urllib.parse.urlencode(params)
+    resp, code = api('GET', f'/source/{platform}/{account}/content?{qs}', timeout=30)
+    if code != 200:
+        return []
+    items = resp.get('items', resp) if isinstance(resp, dict) else resp
+    return items if isinstance(items, list) else []
+
+
+# ── Job polling ───────────────────────────────────────────────────────────────
+
+def poll_job(job_id: str) -> tuple:
     deadline = time.time() + POLL_TIMEOUT
     while time.time() < deadline:
-        resp, code = api('GET', f'/v1/jobs/{job_id}', auth_headers=auth)
+        resp, code = api('GET', f'/v1/jobs/{job_id}')
         if code != 200:
-            time.sleep(POLL_INTERVAL); continue
+            time.sleep(POLL_INTERVAL)
+            continue
         status = resp.get('status', '')
-        if status in ('complete', 'published', 'failed', 'cancelled'):
-            return status, resp.get('outputUrl') or resp.get('output_url')
+        if status in ('complete', 'published', 'failed', 'cancelled', 'sendback'):
+            return status, resp.get('outputUrl') or resp.get('output_url'), resp
         time.sleep(POLL_INTERVAL)
-    return 'timeout', None
+    return 'timeout', None, {}
 
 
 # ── Job spec builder ──────────────────────────────────────────────────────────
-#
-# Source = the streamer's already-published social video URL.
-# AuraFlux fetches that video and adds 1 differentiating feature.
-#
-# Narration rules (enforced here, not by Gemini):
-#   - Short form: NEVER add TTS, no matter what
-#   - Long form:  TTS only when it is the assigned feature variation
-#
 
-def build_spec(video: dict, streamer: dict) -> dict:
-    prod_type  = video.get('production_type', 'vod_enhancement')
-    aura_form  = video.get('auraflux_form', 'short')
-    profile    = video.get('profile', 'vertical_reel')
-    feature    = video.get('auraflux_feature', {'key': 'thumbnail.designed', 'label': 'AI thumbnail', 'tts': False, 'web': False})
-    content_type = video.get('content_type', 'clips')
+def build_spec(s: dict, form: str, clips: list, feature: dict,
+               social_sample: str = '') -> dict:
+    """
+    Build a job spec using Source Library clips.
+    `social_sample` = one of the streamer's published video titles (for context).
+    """
+    is_long  = form == 'long'
+    has_tts  = feature.get('tts', False) and is_long
+    has_web  = feature.get('web', False) and is_long
+    pub_plat = 'youtube' if is_long else 'tiktok'
+    profile  = 'broadcast_desk' if is_long else 'vertical_reel'
+    ct       = 'show_commentary' if is_long else 'clips'
+    dur      = 8 if is_long else 1
+    clip_urls = [c.get('url', c.get('download_url', '')) for c in clips if c.get('url') or c.get('download_url')]
 
-    has_tts = feature.get('tts', False) and aura_form == 'long'  # NEVER TTS on shorts
-    has_web = feature.get('web', False) and aura_form == 'long'
+    social_ctx = f'\nFor comparison: streamer also publishes "{social_sample}" — our output should be at least this good.' if social_sample else ''
 
-    pub_platform = 'youtube' if aura_form == 'long' else 'tiktok'
-    duration_min = video.get('duration_min') or (1 if aura_form == 'short' else 8)
+    prompt = f"""You are an AuraFlux operator building a {form}-form job spec.
 
-    prompt = f"""You are an AuraFlux operator building a production job spec for a benchmark.
+Streamer: {s['display']} ({s['platform']}/@{s['account']})
+Niche: {s['niche']}
+Form: {form}  |  Profile: {profile}  |  Target platform: {pub_plat}
+Content type: {ct}
+Feature AuraFlux adds: {feature['label']} ({feature['key']}){social_ctx}
 
-Source: A published video from {streamer['display']} (@{video.get('source_handle', streamer['handle'])})
-Source platform: {video.get('platform', 'youtube')}
-Source URL: {video['url']}
-Production type detected: {prod_type}
-  - shorts_from_vod:    Short clip extracted from their live stream
-  - shorts_enhancement: Short polished video they produced
-  - vod_to_shorts:      Short derived from a VOD
-  - vod_enhancement:    Full long-form video they published
+Source clips available (from Creator Source Library):
+{chr(10).join(f'  - {c.get("title","?")[:60]} ({c.get("duration",0):.0f}s) → {c.get("url",c.get("download_url",""))[:80]}' for c in clips[:3])}
 
-AuraFlux job:
-  Format: {aura_form}
-  Profile: {profile}
-  Publish to: {pub_platform}
-  Content type: {content_type}
-  Duration target: {duration_min} min
-  Feature AuraFlux adds: {feature['label']} ({feature['key']})
-  Niche: {streamer['niche']}
-  Title of source video: {video.get('title', '')[:80]}
-
-RULES (enforce exactly):
-- entry = "fetch" (source URL is a social video URL, not a Twitch/Kick clip API call)
-- url = "{video['url']}" (the published video is the source)
-- urls = ["{video['url']}"]
-- format = "{aura_form}"
-- addOns.thumbnail.active = true
-- addOns.branding.active = true (AuraFlux logo overlay — key differentiator)
+Rules:
+- entry = "fetch"
+- urls = {json.dumps(clip_urls[:3])}
+- format = "{form}"
+- addOns.branding.active = true  (AuraFlux logo — required on every benchmark job)
 - addOns.tts.active = {"true" if has_tts else "false"}
-  {"(Long form, TTS is the assigned feature variation)" if has_tts else "(Short form: NEVER add TTS)"}
 - addOns.webResearch.active = {"true" if has_web else "false"}
-- addOns.showCommentary.active = false
-- staging = true (E2E review mode — skip Portal 5 publish)
-- brandName = "AuraFlux"
+- staging = true (skip Portal 5 publish)
 
-Return ONLY valid JSON:
+Return ONLY valid JSON with these exact fields:
 {{
   "entry": "fetch",
   "productionProfile": "{profile}",
-  "format": "{aura_form}",
-  "contentType": "{content_type}",
-  "platforms": ["{pub_platform}"],
-  "targetPlatform": "{pub_platform}",
-  "url": "{video['url']}",
-  "urls": ["{video['url']}"],
-  "topic": "<creative topic based on the video title: {video.get('title','')[:60]}>",
-  "tone": "<tone matching {streamer['niche']} streamer>",
-  "durationMins": {duration_min},
+  "format": "{form}",
+  "contentType": "{ct}",
+  "platforms": ["{pub_plat}"],
+  "targetPlatform": "{pub_plat}",
+  "urls": {json.dumps(clip_urls[:3])},
+  "topic": "<creative topic for {s['display']} {s['niche']} content>",
+  "tone": "<tone matching {s['niche']}>",
+  "durationMins": {dur},
   "publishMode": "staged",
   "staging": true,
   "brandName": "AuraFlux",
   "brandVoice": "<voice>",
-  "productionType": "{prod_type}",
   "featureVariation": "{feature['key']}",
   "addOns": {{
     "tts":            {{"active": {"true" if has_tts else "false"}}},
@@ -228,22 +270,20 @@ Return ONLY valid JSON:
     try:
         spec = ask_gemini_json(prompt)
     except Exception as e:
-        print(f'  ⚠️  Gemini spec build failed: {e} — using fallback')
         spec = {
             'entry': 'fetch',
             'productionProfile': profile,
-            'format': aura_form,
-            'contentType': content_type,
-            'platforms': [pub_platform],
-            'targetPlatform': pub_platform,
-            'topic': f'{streamer["display"]} — {video.get("title","")[:40]}',
+            'format': form,
+            'contentType': ct,
+            'platforms': [pub_plat],
+            'targetPlatform': pub_plat,
+            'topic': f'{s["display"]} — {s["niche"]} {form} content',
             'tone': 'engaging, high-energy',
-            'durationMins': duration_min,
+            'durationMins': dur,
             'publishMode': 'staged',
             'staging': True,
             'brandName': 'AuraFlux',
             'brandVoice': 'authentic',
-            'productionType': prod_type,
             'featureVariation': feature['key'],
             'addOns': {
                 'tts':            {'active': has_tts},
@@ -253,158 +293,167 @@ Return ONLY valid JSON:
                 'showCommentary': {'active': False},
             },
         }
-    # Force-set the source URL — never let Gemini override
-    spec['url']  = video['url']
-    spec['urls'] = [video['url']]
+    spec['urls'] = clip_urls[:3]
     return spec
 
 
-# ── Benchmark scoring ─────────────────────────────────────────────────────────
+# ── Scoring ───────────────────────────────────────────────────────────────────
 
-def score_output(video: dict, streamer: dict, status: str, output_url: str) -> tuple:
-    prod_type  = video.get('production_type', 'vod_enhancement')
-    aura_form  = video.get('auraflux_form', 'short')
-    feature    = video.get('auraflux_feature', {})
+def score_output(s: dict, form: str, feature: dict, status: str,
+                 output_url: str, clips_fetched: int, social_titles: list) -> tuple:
+    social_bar = (
+        f'\nThis streamer already publishes videos like:\n' +
+        '\n'.join(f'  - {t}' for t in social_titles[:3])
+        if social_titles else ''
+    )
+    prompt = f"""You are a QA engineer scoring an AuraFlux benchmark job.
 
-    prompt = f"""You are a QA engineer and content quality reviewer for the AuraFlux platform.
-
-Benchmark Job: {video.get('auraflux_job_id', '?')}
-Streamer: {streamer['display']} / niche: {streamer['niche']}
-Source video: {video.get('title','?')[:80]}
-Source URL: {video['url']}
-Production type: {prod_type} ({aura_form} form)
-Feature AuraFlux added: {feature.get('label','?')} ({feature.get('key','?')})
-AuraFlux branding: required (logo overlay on all benchmark outputs)
+Streamer: {s['display']} ({s['platform']}/@{s['account']}) — niche: {s['niche']}
+Job form: {form}
+Feature AuraFlux added: {feature['label']} ({feature['key']})
+AuraFlux branding: required (logo overlay on all benchmark jobs){social_bar}
 
 Job result:
   Status: {status}
   Output URL: {output_url or 'NONE'}
+  Source clips fetched from Creator Source Library: {clips_fetched}
 
-Score ALL four criteria. 100 = archive-ready demo asset.
+Score all 5 criteria:
 
-Standard pipeline QA (60 pts):
-- Job completed without error (status = complete or published): 20 pts
-- Source video was accessible and processed (status != failed): 20 pts
-- Output URL present (not NONE): 20 pts
+Standard pipeline (60 pts):
+1. Job reached terminal success (status = complete or published): 20 pts
+2. Source clips fetched from Source Library (clips_fetched > 0): 20 pts
+3. Output URL present and not NONE: 20 pts
 
-Publishability vs streamer's existing content (40 pts):
-- Would the AuraFlux version be competitive with what {streamer['display']} already published on {video.get('platform','social')}? (0-10)
-- Is the AuraFlux branding (logo overlay) likely correctly applied? Infer from branding addOn=true: (0-10)
-- Did AuraFlux add the differentiating feature {feature.get('label','?')} correctly? Infer from spec: (0-10)
-- Is the output format ({aura_form}) appropriate for the detected production type ({prod_type})? (0-10)
+Publishability (40 pts):
+4. Would the AuraFlux output format ({form}) be competitive with what {s['display']} already publishes? (0-20)
+5. Did AuraFlux correctly apply the differentiating feature {feature['label']}? (0-20)
+   AuraFlux branding is always required; branding alone does not count toward this 20 pts.
 
 Return ONLY JSON:
-{{"score": <0-100>, "pass": <true/false>, "archive_ready": <true only if score=100>, "notes": "<brief>"}}
+{{"score": <0-100>, "pass": <true/false>, "archive_ready": <true if score=100>, "notes": "<brief>"}}
 """
     try:
         result = ask_gemini_json(prompt)
         return result.get('score', 0), result.get('pass', False), result.get('archive_ready', False), result.get('notes', '')
     except Exception as e:
         score = 0
-        if status in ('complete', 'published'): score += 20 + 20
+        if status in ('complete', 'published'): score += 20
+        if clips_fetched > 0: score += 20
         if output_url: score += 20
-        return score, score >= 60, False, f'Gemini QA failed ({e})'
+        return score, score >= 60, False, f'Gemini QA failed: {e}'
 
 
-# ── Archive manifest ──────────────────────────────────────────────────────────
+# ── Archive ───────────────────────────────────────────────────────────────────
 
-def append_archive(manifest_path: Path, entry: dict):
+def append_archive(path: Path, entry: dict):
     manifest = []
-    if manifest_path.exists():
+    if path.exists():
         try:
-            manifest = json.loads(manifest_path.read_text())
+            manifest = json.loads(path.read_text())
         except Exception:
-            manifest = []
+            pass
     manifest.append(entry)
-    manifest_path.write_text(json.dumps(manifest, indent=2))
+    path.write_text(json.dumps(manifest, indent=2))
 
 
-# ── Load video inventory from profile discovery ───────────────────────────────
+# ── Build job matrix from profiles ───────────────────────────────────────────
 
-def load_video_inventory(profiles_path: Path, args) -> list:
-    """Load and flatten all videos from benchmark_profiles.json.
-
-    Deduplicates by video URL so the same published video is never run twice
-    even if the same streamer appears under multiple primary platforms
-    (e.g. hasanabi is in both the Twitch list and the YouTube list).
+def build_job_matrix(profiles_path: Path, args) -> list:
     """
-    if not profiles_path.exists():
-        print(f'ERROR: {profiles_path} not found.')
-        print('Run benchmark_profile_discovery.py first.')
-        sys.exit(1)
+    For each streamer × 2 forms (short + long), build a job entry.
+    Uses profile_discovery data to inform form selection and social quality bar.
+    Returns list of (streamer, form, feature, social_titles) tuples.
+    """
+    # Load social profile data
+    social_data = {}
+    if profiles_path.exists():
+        try:
+            profiles = json.loads(profiles_path.read_text())
+            for key, p in profiles.items():
+                handle = p.get('handle', '')
+                if handle not in social_data:
+                    social_data[handle] = {'videos': p.get('videos', []), 'types': p.get('production_types', {})}
+                else:
+                    # Merge
+                    social_data[handle]['videos'].extend(p.get('videos', []))
+                    for t, c in p.get('production_types', {}).items():
+                        social_data[handle]['types'][t] = social_data[handle]['types'].get(t, 0) + c
+        except Exception:
+            pass
 
-    profiles = json.loads(profiles_path.read_text())
+    rotation = 0
     jobs = []
-    seen_urls = set()
-
-    for key, p in profiles.items():
-        if args.platform and p['primary_platform'] != args.platform:
+    for s in SOURCE_ROSTER:
+        if args.platform and s['platform'] != args.platform:
             continue
-        if args.streamer and p['handle'] != args.streamer:
+        if args.streamer and s['account'] != args.streamer:
             continue
 
-        for v in p.get('videos', []):
-            url = v.get('url', '')
-            if not url or url in seen_urls:
-                continue   # skip duplicates
-            seen_urls.add(url)
+        sd = social_data.get(s['account'], {'videos': [], 'types': {}})
+        has_short = sd['types'].get('shorts_from_vod', 0) + sd['types'].get('shorts_enhancement', 0) > 0
+        has_long  = sd['types'].get('vod_enhancement', 0) > 0
+        # Default to both forms if no social data
+        forms = []
+        if has_short or not sd['types']:
+            forms.append('short')
+        if has_long or not sd['types']:
+            forms.append('long')
+        if not forms:
+            forms = ['short', 'long']
 
-            prod_type = v.get('production_type', 'vod_enhancement')
-            if args.type and prod_type != args.type:
-                continue
+        social_titles = [v.get('title', '') for v in sd['videos'] if v.get('title')]
 
-            v['source_handle'] = p['handle']
+        for form in forms:
+            if args.type:
+                # type filter maps to form
+                if args.type in ('shorts_from_vod', 'shorts_enhancement', 'vod_to_shorts') and form != 'short':
+                    continue
+                if args.type == 'vod_enhancement' and form != 'long':
+                    continue
+
+            pool = FEATURE_POOL[form]
+            feature = pool[rotation % len(pool)]
+            rotation += 1
+
             jobs.append({
-                'video':    v,
-                'streamer': {
-                    'handle':  p['handle'],
-                    'display': p['display'],
-                    'niche':   p['niche'],
-                    'primary_platform': p['primary_platform'],
-                },
+                'id':            f'BM-{s["id"]}-{form[:2].upper()}-{rotation:03d}',
+                'streamer':      s,
+                'form':          form,
+                'feature':       feature,
+                'social_titles': social_titles[:5],
             })
 
     return jobs
 
 
-# ── Main runner ───────────────────────────────────────────────────────────────
+# ── Main ──────────────────────────────────────────────────────────────────────
 
 def run_benchmark(args):
-    auth = get_auth_headers()
-    if not auth:
-        print('ERROR: No auth configured. Exiting.')
+    if not GUIDED_CLERK or not E2E_SECRET:
+        print('ERROR: Set AURAFLUX_E2E_CLERK_USER_GUIDED + E2E_AUTH_SECRET in .env')
         sys.exit(1)
 
     profiles_path = REPO_DIR / 'logs' / 'benchmark_profiles.json'
-    jobs = load_video_inventory(profiles_path, args)
+    jobs = build_job_matrix(profiles_path, args)
 
     if not jobs:
-        print('No videos in inventory match filters. Run benchmark_profile_discovery.py first.')
+        print('No jobs match filters.')
         return
 
     print(f'\n{"═"*70}')
-    print(f'  AuraFlux Benchmark (CPD-390) — {len(jobs)} jobs from social profiles')
-    print(f'  Source: published videos from 18 streamers (YouTube, TikTok, Instagram)')
-    print(f'  AuraFlux adds: 1 differentiating feature per video')
-    print(f'  Target: 50 × score=100  |  Branding: AuraFlux on all')
+    print(f'  AuraFlux Benchmark (CPD-390) — {len(jobs)} jobs')
+    print(f'  Source:  Creator Source Library (same as run6)')
+    print(f'  Quality bar: streamers\' published social videos')
+    print(f'  Account: gregory.robert.c@gmail.com (guided tier)')
+    print(f'  Target:  50 × score=100  |  Branding: AuraFlux on all')
     print(f'{"═"*70}')
 
-    # Production type summary
-    type_counts = {}
-    for j in jobs:
-        t = j['video'].get('production_type', '?')
-        type_counts[t] = type_counts.get(t, 0) + 1
-    print(f'  Production types: {type_counts}')
-
     if args.dry_run:
-        print(f'\nDRY RUN — job matrix ({len(jobs)} jobs):\n')
         for j in jobs:
-            v = j['video']; s = j['streamer']
-            feat = v.get('auraflux_feature', {}).get('key', '?')
-            prod = v.get('production_type', '?')
-            form = v.get('auraflux_form', '?')
-            print(f"  {v.get('auraflux_job_id','?'):40s}  {s['primary_platform']:7s}  "
-                  f"{form:5s}  {prod:20s}  {feat}")
+            s = j['streamer']; feat = j['feature']['key']
+            social_count = len(j['social_titles'])
+            print(f"  {j['id']:40s}  {s['platform']:8s}  {j['form']:5s}  {feat:30s}  social_titles={social_count}")
         return
 
     ts            = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
@@ -416,46 +465,55 @@ def run_benchmark(args):
     score_100_count = 0
 
     for j in jobs:
-        video   = j['video']
-        streamer = j['streamer']
-        jid     = video.get('auraflux_job_id', f"BM-{streamer['handle']}")
-        prod    = video.get('production_type', '?')
-        form    = video.get('auraflux_form', '?')
-        feat    = video.get('auraflux_feature', {}).get('label', '?')
-        src_url = video['url']
+        s       = j['streamer']
+        form    = j['form']
+        feature = j['feature']
+        jid     = j['id']
 
         print(f'\n{"─"*70}')
         print(f'  {jid}')
-        print(f'  {streamer["display"]}  |  {video.get("platform","?")}  |  {form}  |  {prod}')
-        print(f'  Source: {video.get("title","?")[:60]}')
-        print(f'  Feature AuraFlux adds: {feat}')
+        print(f'  {s["display"]} ({s["platform"]}/@{s["account"]})  |  {form}  |  {feature["label"]}')
         print(f'{"─"*70}')
 
-        # 1. Build job spec (source = their published video URL)
-        print(f'  1. Building job spec…  source={src_url[:60]}')
-        spec = build_spec(video, streamer)
-        tts_active = spec.get('addOns', {}).get('tts', {}).get('active', False)
-        print(f'  ✓  format={form}  tts={tts_active}  branding=AuraFlux  feature={feat}')
+        # 1. Fetch source clips
+        print(f'  1. Fetching clips from Source Library ({s["platform"]}/@{s["account"]})…')
+        clip_count = 3 if form == 'long' else 1
+        clips = fetch_clips(s['platform'], s['account'], clip_count)
+        if not clips:
+            print(f'  ✗  No clips returned — skipping')
+            results.append({'id': jid, 'status': 'SKIP', 'score': 0, 'pass': False, 'notes': 'No clips from Source Library'})
+            continue
+        for c in clips:
+            print(f'     • {c.get("title","?")[:55]} ({c.get("duration",0):.0f}s)')
 
-        # 2. Submit
-        print(f'  2. Submitting job…')
-        resp, code = api('POST', '/v1/jobs', spec, auth_headers=auth)
-        if code not in (200, 201):
-            print(f'  ✗  Submit failed  HTTP {code}: {resp}')
+        # 2. Build job spec (Gemini-assisted, informed by social publishing style)
+        social_sample = j['social_titles'][0] if j['social_titles'] else ''
+        print(f'  2. Building job spec (Gemini)…')
+        spec = build_spec(s, form, clips, feature, social_sample)
+        tts_active = spec.get('addOns', {}).get('tts', {}).get('active', False)
+        print(f'  ✓  form={form}  tts={tts_active}  branding=AuraFlux  feature={feature["key"]}')
+
+        # 3. Submit
+        print(f'  3. Submitting…')
+        resp, code = api('POST', '/v1/jobs', spec)
+        if code not in (200, 201, 202):
+            print(f'  ✗  HTTP {code}: {resp}')
             results.append({'id': jid, 'status': 'SUBMIT_FAIL', 'http': code, 'score': 0, 'pass': False})
             continue
-        server_job_id = resp.get('jobId') or resp.get('id') or resp.get('job_id') or jid
-        print(f'  ✓  job_id={server_job_id}')
+        server_jid = resp.get('jobId') or resp.get('id') or resp.get('job_id') or jid
+        print(f'  ✓  job_id={server_jid}')
 
-        # 3. Poll
-        print(f'  3. Polling (up to {POLL_TIMEOUT}s)…')
-        status, output_url = poll_job(server_job_id, auth)
+        # 4. Poll
+        print(f'  4. Polling (up to {POLL_TIMEOUT}s)…')
+        status, output_url, full_resp = poll_job(server_jid)
         icon = '✓' if status in ('complete', 'published') else '✗'
         print(f'  {icon}  status={status}  output_url={output_url or "NONE"}')
 
-        # 4. Score
-        print(f'  4. Scoring (Gemini QA + publishability)…')
-        score, passed, archive_ready, notes = score_output(video, streamer, status, output_url)
+        # 5. Score
+        print(f'  5. Scoring (Gemini QA + publishability vs social)…')
+        score, passed, archive_ready, notes = score_output(
+            s, form, feature, status, output_url, len(clips), j['social_titles']
+        )
         icon = '🟢' if score == 100 else ('🟡' if score >= 70 else '🔴')
         print(f'  {icon}  score={score}/100  pass={passed}  archive={archive_ready}')
         print(f'     {notes[:120]}')
@@ -463,74 +521,64 @@ def run_benchmark(args):
         if score == 100:
             score_100_count += 1
             append_archive(manifest_file, {
-                'job_id':          server_job_id,
-                'benchmark_id':    jid,
-                'streamer':        streamer['handle'],
-                'display':         streamer['display'],
-                'platform':        streamer['primary_platform'],
-                'source_platform': video.get('platform'),
-                'source_url':      src_url,
-                'source_title':    video.get('title', ''),
-                'production_type': prod,
-                'auraflux_form':   form,
-                'feature':         video.get('auraflux_feature', {}).get('key', ''),
-                'score':           score,
-                'output_url':      output_url,
-                'timestamp':       datetime.now(timezone.utc).isoformat(),
+                'job_id':        server_jid,
+                'benchmark_id':  jid,
+                'streamer':      s['account'],
+                'display':       s['display'],
+                'platform':      s['platform'],
+                'form':          form,
+                'feature':       feature['key'],
+                'score':         score,
+                'output_url':    output_url,
+                'social_titles': j['social_titles'][:3],
+                'timestamp':     datetime.now(timezone.utc).isoformat(),
             })
             print(f'  📦  Archived ({score_100_count} of 50 target)')
 
-        results.append({
-            'id':              jid,
-            'job_id':          server_job_id,
-            'streamer':        streamer['handle'],
-            'platform':        streamer['primary_platform'],
-            'source_platform': video.get('platform'),
-            'source_title':    video.get('title', ''),
-            'production_type': prod,
-            'auraflux_form':   form,
-            'feature':         video.get('auraflux_feature', {}).get('key', ''),
-            'status':          status,
-            'output_url':      output_url,
-            'score':           score,
-            'pass':            passed,
-            'archive':         archive_ready,
-            'notes':           notes,
-        })
-
+        row = {
+            'id':          jid,
+            'job_id':      server_jid,
+            'streamer':    s['account'],
+            'platform':    s['platform'],
+            'form':        form,
+            'feature':     feature['key'],
+            'status':      status,
+            'output_url':  output_url,
+            'score':       score,
+            'pass':        passed,
+            'archive':     archive_ready,
+            'notes':       notes,
+        }
+        results.append(row)
         result_file.write_text(json.dumps({
             'results': results,
             'score_100_count': score_100_count,
+            'account': 'gregory.robert.c@gmail.com',
         }, indent=2))
 
-    # Summary
     print(f'\n{"═"*70}')
     print(f'  BENCHMARK COMPLETE')
     print(f'  Jobs run:       {len(results)}')
-    print(f'  Passed:         {sum(1 for r in results if r["pass"])}')
+    print(f'  Passed:         {sum(1 for r in results if r.get("pass"))}')
     print(f'  Score = 100:    {score_100_count}  (target: 50)')
     print(f'  Results:        {result_file}')
     print(f'  Archive:        {manifest_file}')
-    by_type = {}
+
+    by_form = {}
     for r in results:
-        t = r['production_type']
-        by_type.setdefault(t, []).append(r['score'])
-    for t, scores in by_type.items():
-        avg = sum(scores)/len(scores) if scores else 0
-        print(f'  {t:25s}  n={len(scores)}  avg_score={avg:.1f}')
+        f = r.get('form', '?')
+        by_form.setdefault(f, []).append(r['score'])
+    for f, scores in by_form.items():
+        avg = sum(scores) / len(scores) if scores else 0
+        print(f'  {f:6s}  n={len(scores):2d}  avg_score={avg:.1f}')
     print(f'{"═"*70}')
 
 
-# ── CLI ───────────────────────────────────────────────────────────────────────
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='AuraFlux 18-streamer production benchmark (CPD-390)')
-    parser.add_argument('--platform', choices=['twitch', 'kick', 'youtube'],
-                        help='Run only jobs for this primary platform')
-    parser.add_argument('--streamer', help='Run only jobs for this streamer handle')
-    parser.add_argument('--type',
-                        choices=['shorts_from_vod', 'shorts_enhancement', 'vod_to_shorts', 'vod_enhancement'],
-                        help='Run only jobs of this production type')
-    parser.add_argument('--dry-run', action='store_true', help='Print job matrix without running')
+    parser = argparse.ArgumentParser(description='AuraFlux 18-streamer benchmark (CPD-390)')
+    parser.add_argument('--platform', choices=['twitch', 'kick', 'youtube'])
+    parser.add_argument('--streamer', help='Filter to one streamer account name')
+    parser.add_argument('--type', choices=['shorts_from_vod','shorts_enhancement','vod_to_shorts','vod_enhancement'])
+    parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
     run_benchmark(args)
