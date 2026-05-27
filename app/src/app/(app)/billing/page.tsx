@@ -39,39 +39,68 @@ const TIER_ORDER = ['operate', 'guided', 'managed'];
 // (plan?.credits) and is shown directly on each card, so the hardcoded line
 // created two conflicting numbers on the same card.
 const PLAN_META: Record<string, {
-  label: string; sub: string; price: string; highlights: string[];
+  label: string; sub: string; valueMetric: string; price: string; highlights: string[];
+  cta: string; contactSales: boolean;
 }> = {
   operate: {
-    label:  'AuraFlux Operate',
-    sub:    'API access — developer plan',
-    price:  '$999',
+    label:       'AuraFlux Operate',
+    sub:         'Total Control & Custom Integration',
+    valueMetric: '100% Internal Execution',
+    price:       '$999',
     highlights: [
-      'Full API access',
-      'Self-serve knowledge base',
+      'Full API access & raw endpoints',
+      'Comprehensive developer documentation',
+      'Self-hosted integration control',
+      'Community & standard support channels',
     ],
+    cta:          'Get API Access',
+    contactSales: false,
   },
   guided: {
-    label:  'AuraFlux Guided',
-    sub:    'Done-with-you — full platform',
-    price:  '$2,499',
+    label:       'AuraFlux Guided',
+    sub:         'Build & Optimize with Collab Guidance',
+    valueMetric: 'Shared Execution + Tooling',
+    price:       '$2,499',
     highlights: [
-      'Full platform — script, AI video, thumbnails, publish',
-      'Guided setup & monitoring',
-      'Chat support escalation',
+      'Interactive in-app flows',
+      'Collab-powered live visual guidance',
+      'Visual drag-and-drop workflow builders',
+      'Automated operational threshold alerts',
     ],
+    cta:          'Start Guided Setup',
+    contactSales: false,
   },
   managed: {
-    label:  'AuraFlux Managed',
-    sub:    'Full done-for-you content operation',
-    price:  '$4,499',
+    label:       'AuraFlux Managed',
+    sub:         'Fully Managed Workflows by Experts',
+    valueMetric: '100% Outsourced Operations',
+    price:       '$4,499',
     highlights: [
-      'AI avatars (HeyGen)',
-      'Dedicated account manager',
-      'Priority support',
-      'Operator runs everything',
+      'Everything in Guided, plus:',
+      'Dedicated Account Managers',
+      'Custom end-to-end workflow builds',
+      'Priority support with custom SLAs',
     ],
+    cta:          'Request Managed Plan',
+    contactSales: true,
   },
 };
+
+const FEATURE_COMPARISON: Array<{
+  feature: string;
+  operate: boolean | string;
+  guided:  boolean | string;
+  managed: boolean | string;
+}> = [
+  { feature: 'Core Infrastructure & API Access',    operate: true,       guided: true,       managed: true             },
+  { feature: 'Developer Documentation & SDKs',      operate: true,       guided: true,       managed: true             },
+  { feature: 'In-App Visual Flow Builders',         operate: false,      guided: true,       managed: true             },
+  { feature: 'Collab (Branded Guide Assistance)',   operate: false,      guided: true,       managed: true             },
+  { feature: 'Automated Threshold Notifications',  operate: false,      guided: true,       managed: true             },
+  { feature: 'Custom Flow Construction by Experts', operate: false,     guided: false,      managed: true             },
+  { feature: 'Dedicated Account Management',        operate: false,      guided: false,      managed: true             },
+  { feature: 'Support SLA',                         operate: 'Standard', guided: 'Standard', managed: 'Priority 24/7' },
+];
 
 // C1: skeleton while data loads
 function BillingSkeleton() {
@@ -221,7 +250,10 @@ function BillingPageInner() {
 
   return (
     <PageShell maxWidth="3xl">
-      <PageHeader title="Subscription" subtitle="Your plan, upgrade options, and payment." />
+      <PageHeader
+        title="Match Your Team's Capability"
+        subtitle="Choose the implementation path that fits your current operational setup. Plans represent a progression of control and support — from self-serve execution to fully managed expert operations."
+      />
 
       {/* C8: pre-redirect state while navigating to Stripe checkout */}
       {redirecting && (
@@ -317,7 +349,8 @@ function BillingPageInner() {
       {/* ── 2. Upgrade options ──────────────────────────────────────────────── */}
       {upgradeTiers.length > 0 && (
         <div>
-          <h2 className="af-subhead mb-4">Plans — monthly subscription</h2>
+          <h2 className="af-subhead mb-1">The Capability Ladder</h2>
+          <p className="af-label mb-4 text-muted-foreground">Upgrade your plan to unlock more support and tooling.</p>
           <div className={cn('grid grid-cols-1 gap-4', upgradeTiers.length > 1 && 'sm:grid-cols-2')}>
             {upgradeTiers.map((tier) => {
               const plan = plans.find((p) => p.id === tier);
@@ -333,6 +366,7 @@ function BillingPageInner() {
                       )}
                     </div>
                     <p className="af-caption text-muted-foreground">{meta.sub}</p>
+                    <p className="af-caption font-medium text-primary/70 mt-0.5">{meta.valueMetric}</p>
                     <div className="flex items-end gap-1 mt-2">
                       <span className="af-metric">{meta.price}</span>
                       <span className="af-caption mb-1">/mo</span>
@@ -351,7 +385,14 @@ function BillingPageInner() {
                         </li>
                       ))}
                     </ul>
-                    {canCheckout ? (
+                    {meta.contactSales ? (
+                      <a
+                        href="/support"
+                        className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'w-full mt-2 text-center')}
+                      >
+                        {meta.cta}
+                      </a>
+                    ) : canCheckout ? (
                       <Button
                         size="sm"
                         variant={tier === 'managed' ? 'default' : 'outline'}
@@ -359,14 +400,14 @@ function BillingPageInner() {
                         disabled={isPending}
                         onClick={() => handleUpgrade(tier)}
                       >
-                        {isPending ? 'Processing…' : `Upgrade to ${meta.label}`}
+                        {isPending ? 'Processing…' : meta.cta}
                       </Button>
                     ) : (
                       <a
                         href="/support"
                         className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full mt-2 text-center')}
                       >
-                        Contact us to upgrade
+                        {meta.cta}
                       </a>
                     )}
                   </CardContent>
@@ -377,6 +418,41 @@ function BillingPageInner() {
           <p className="af-caption mt-3 text-muted-foreground">
             Monthly subscriptions. To change or cancel your plan, <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">contact us</a>.
           </p>
+
+          {/* Feature comparison table */}
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full af-caption border-collapse">
+              <thead>
+                <tr>
+                  <th className="text-left py-2 pr-4 font-semibold text-foreground w-1/2">Feature / Resource</th>
+                  {(['operate', 'guided', 'managed'] as const).map((t) => (
+                    <th key={t} className="text-center py-2 px-3 font-semibold text-foreground">{PLAN_META[t].label.replace('AuraFlux ', '')}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURE_COMPARISON.map((row, i) => (
+                  <tr key={row.feature} className={cn('border-t border-border', i % 2 === 0 && 'bg-muted/30')}>
+                    <td className="py-2 pr-4 text-muted-foreground">{row.feature}</td>
+                    {(['operate', 'guided', 'managed'] as const).map((t) => {
+                      const val = row[t];
+                      return (
+                        <td key={t} className="text-center py-2 px-3">
+                          {typeof val === 'string' ? (
+                            <span className="text-foreground font-medium">{val}</span>
+                          ) : val ? (
+                            <span className="text-green-600 dark:text-green-400" aria-label="Included">✓</span>
+                          ) : (
+                            <span className="text-muted-foreground/50" aria-label="Not included">—</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
