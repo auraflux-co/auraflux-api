@@ -172,7 +172,7 @@ export default function RefundPolicyPage() {
       <address className="not-italic">
         <strong>AuraFlux Billing Support</strong><br />
         Email: <a href="mailto:support@auraflux.co">support@auraflux.co</a><br />
-        Website: <a href="https://app.auraflux.co">app.auraflux.co</a>
+        Website: <a href="https://auraflux.co">auraflux.co</a>
       </address>
       <p>
         Please allow up to 3 business days for a response. If you initiate a chargeback with your bank before

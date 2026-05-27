@@ -35,6 +35,7 @@ export default function LandingPage() {
         </div>
       </main>
       <footer className="py-4 text-center text-xs text-muted-foreground space-x-4">
+        <a href="https://auraflux.co" className="hover:text-foreground transition-colors">auraflux.co</a>
         <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
         <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
         <Link href="/cookies" className="hover:text-foreground transition-colors">Cookie Policy</Link>

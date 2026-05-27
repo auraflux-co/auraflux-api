@@ -160,7 +160,7 @@ export default function AcceptableUsePolicyPage() {
       <address className="not-italic">
         <strong>AuraFlux</strong><br />
         Email: <a href="mailto:support@auraflux.co">support@auraflux.co</a><br />
-        Website: <a href="https://app.auraflux.co">app.auraflux.co</a>
+        Website: <a href="https://auraflux.co">auraflux.co</a>
       </address>
     </article>
   );
