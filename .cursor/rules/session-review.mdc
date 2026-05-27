@@ -22,6 +22,7 @@ If work touched both repos, run both.
 3. Check whether `last-reviewed-commit` matches `git rev-parse HEAD` in that repo
 4. **If stale**, tell the user which script to run before starting
 5. Once current: check for `[BLOCKING]` items (fix first) and `[SHOULD FIX]` items (fold into plan)
+6. **Warm the Render MCP** — call `user-render list_workspaces` to auto-select the workspace (only one exists, auto-selects on list). This must happen before any `list_deploys`, `list_logs`, or `list_services` calls. Use `user-render` not `plugin-render-render`.
 
 ## End of every session
 
