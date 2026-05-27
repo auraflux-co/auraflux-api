@@ -92,6 +92,7 @@ export default function CreditsPage() {
   const [isPending, start]            = useTransition();
   const [packError, setPackError]     = useState<string | null>(null);
   const [topupMsg, setTopupMsg]       = useState<string | null>(null);
+  const [packQty, setPackQty]         = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -118,6 +119,7 @@ export default function CreditsPage() {
 
   async function handleBuyPack(packId: string) {
     setPackError(null);
+    const qty = packQty[packId] ?? 1;
     start(async () => {
       try {
         const token = await getToken();
@@ -127,6 +129,7 @@ export default function CreditsPage() {
           `${origin}/credits?pack_success=1`,
           `${origin}/credits?pack_cancelled=1`,
           token ?? undefined,
+          qty,
         );
         window.location.href = res.checkoutUrl;
       } catch {
@@ -288,22 +291,48 @@ export default function CreditsPage() {
               <Card key={pack.id} className={cn('hover:border-border/80 transition-colors', pack.id === 'credit_topup' && isExhausted ? 'border-primary/40 ring-1 ring-primary/20' : '')}>
                 <CardContent className="pt-4 space-y-1">
                   <p className="af-label font-semibold">{pack.label}</p>
-                  <p className="af-caption">{pack.credits} credits</p>
+                  <p className="af-caption">{pack.credits} credits / pack</p>
                   <p className="af-caption font-medium">
                     {pack.price_cents
                       ? formatCurrency(pack.price_cents)
-                      : pack.price_usd != null ? `$${pack.price_usd}` : '—'}
+                      : pack.price_usd != null ? `$${pack.price_usd}` : '—'}{' '}
+                    <span className="text-muted-foreground">each</span>
                   </p>
                   {pack.priceConfigured !== false ? (
-                    <Button
-                      size="sm"
-                      variant={pack.id === 'credit_topup' && isExhausted ? 'default' : 'outline'}
-                      className="w-full mt-2 text-xs"
-                      disabled={isPending}
-                      onClick={() => handleBuyPack(pack.id)}
-                    >
-                      Buy
-                    </Button>
+                    <div className="pt-2 space-y-2">
+                      {/* Quantity picker */}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          className="h-6 w-6 rounded border border-border text-sm leading-none hover:bg-muted transition-colors disabled:opacity-40"
+                          disabled={isPending || (packQty[pack.id] ?? 1) <= 1}
+                          onClick={() => setPackQty((q) => ({ ...q, [pack.id]: Math.max(1, (q[pack.id] ?? 1) - 1) }))}
+                        >−</button>
+                        <span className="af-caption tabular-nums w-6 text-center">
+                          {packQty[pack.id] ?? 1}
+                        </span>
+                        <button
+                          type="button"
+                          className="h-6 w-6 rounded border border-border text-sm leading-none hover:bg-muted transition-colors disabled:opacity-40"
+                          disabled={isPending || (packQty[pack.id] ?? 1) >= 99}
+                          onClick={() => setPackQty((q) => ({ ...q, [pack.id]: Math.min(99, (q[pack.id] ?? 1) + 1) }))}
+                        >+</button>
+                        {(packQty[pack.id] ?? 1) > 1 && pack.price_cents && (
+                          <span className="af-caption text-muted-foreground ml-1">
+                            = {formatCurrency(pack.price_cents * (packQty[pack.id] ?? 1))}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={pack.id === 'credit_topup' && isExhausted ? 'default' : 'outline'}
+                        className="w-full text-xs"
+                        disabled={isPending}
+                        onClick={() => handleBuyPack(pack.id)}
+                      >
+                        Buy {(packQty[pack.id] ?? 1) > 1 ? `× ${packQty[pack.id]}` : ''}
+                      </Button>
+                    </div>
                   ) : (
                     <p className="text-xs text-muted-foreground mt-2">Contact us</p>
                   )}

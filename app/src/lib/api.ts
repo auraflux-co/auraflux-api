@@ -739,10 +739,11 @@ export async function purchasePack(
   successUrl: string,
   cancelUrl: string,
   token?: string,
+  quantity = 1,
 ): Promise<{ ok: boolean; checkoutUrl: string; sessionId: string }> {
   return apiFetch('/credits/purchase-pack', {
     method: 'POST',
-    body:   JSON.stringify({ packId, successUrl, cancelUrl }),
+    body:   JSON.stringify({ packId, successUrl, cancelUrl, quantity }),
     token,
   });
 }
