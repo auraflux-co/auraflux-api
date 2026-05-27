@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useState, useTransition, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { tierLabel } from '@/lib/tier-labels';
 import { formatUserError } from '@/lib/job-labels';
@@ -75,10 +75,20 @@ const PLAN_META: Record<string, {
 
 function BillingPageInner() {
   const { getToken, isLoaded } = useAuth();
-  const searchParams = useSearchParams();
-  const stripeSuccess  = searchParams.get('success') === '1';
-  const stripeCancelled = searchParams.get('cancelled') === '1';
+  const searchParams   = useSearchParams();
+  const router         = useRouter();
+  const stripeSuccess   = searchParams.get('success')       === '1';
+  const stripeCancelled = searchParams.get('cancelled')     === '1';
+  const packSuccess     = searchParams.get('pack_success')  === '1';  // U1
+  const packCancelled   = searchParams.get('pack_cancelled') === '1'; // U7
   const [isPending, start] = useTransition();
+
+  // U6: clear transient query params from URL so banners don't re-appear on refresh
+  useEffect(() => {
+    if (stripeSuccess || stripeCancelled || packSuccess || packCancelled) {
+      router.replace('/billing');
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [balance, setBalance]     = useState<CreditBalance | null>(null);
   const [plans, setPlans]         = useState<Plan[]>([]);
@@ -160,11 +170,24 @@ function BillingPageInner() {
     <PageShell maxWidth="3xl">
       <PageHeader title="Subscription" subtitle="Your plan, upgrade options, and payment." />
 
+      {/* U3: correct copy for plan upgrade vs credit pack */}
       {stripeSuccess && (
-        <p className="af-body text-success bg-success/10 rounded px-3 py-2">Payment successful — your credits will appear shortly.</p>
+        <p className="af-body text-success bg-success/10 rounded px-3 py-2">
+          Plan updated — your new credit allowance begins with your next billing cycle.
+        </p>
       )}
       {stripeCancelled && (
         <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2">Checkout cancelled — no charge was made.</p>
+      )}
+      {/* U1: pack_success from pack buy on this page */}
+      {packSuccess && (
+        <p className="af-body text-success bg-success/10 rounded px-3 py-2">
+          Credits purchased! Your balance will update shortly as the payment is confirmed.
+        </p>
+      )}
+      {/* U7: pack_cancelled */}
+      {packCancelled && (
+        <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2">Pack checkout cancelled — no charge was made.</p>
       )}
       {error && (
         <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
@@ -264,7 +287,7 @@ function BillingPageInner() {
                         disabled={isPending}
                         onClick={() => handleUpgrade(tier)}
                       >
-                        Upgrade to {meta.label}
+                        {isPending ? 'Processing…' : `Upgrade to ${meta.label}`}
                       </Button>
                     ) : (
                       <a
@@ -318,7 +341,7 @@ function BillingPageInner() {
                     disabled={isPending}
                     onClick={() => handleBuyPack(pack.id)}
                   >
-                    Buy — ${((pack.price_cents ?? 0) / 100).toFixed(0)}
+                    {isPending ? 'Processing…' : `Buy — $${((pack.price_cents ?? 0) / 100).toFixed(0)}`}
                   </Button>
                   <p className="af-caption text-muted-foreground text-center">Choose quantity at checkout</p>
                 </CardContent>

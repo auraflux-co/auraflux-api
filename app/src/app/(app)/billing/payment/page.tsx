@@ -54,8 +54,6 @@ function getCardElementOptions() {
   };
 }
 
-const CARD_ELEMENT_OPTIONS = getCardElementOptions();
-
 // ─── Card brand icon (text fallback) ─────────────────────────────────────────
 
 function brandLabel(brand: string) {
@@ -77,10 +75,12 @@ function UpdateCardForm({
   clientSecret,
   cardOptions,
   onSuccess,
+  onCancel,
 }: {
   clientSecret: string;
   cardOptions:  ReturnType<typeof getCardElementOptions>;
   onSuccess: () => void;
+  onCancel:  () => void;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -130,6 +130,9 @@ function UpdateCardForm({
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={saving || !stripe}>
           {saving ? 'Saving…' : 'Save card'}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" disabled={saving} onClick={onCancel}>
+          Cancel
         </Button>
       </div>
     </form>
@@ -186,12 +189,17 @@ export default function PaymentPage() {
     }
   }
 
-  function handleCardSaved() {
+  async function handleCardSaved() {
     setShowUpdate(false);
     setClientSecret(null);
     setCardSaved(true);
-    setLoading(true);
-    load();
+    // U8: refetch payment method in place — don't set loading:true which
+    // triggers the full-page skeleton and creates a jarring flash.
+    try {
+      const token = await getToken();
+      const pmRes = await getPaymentMethod(token ?? undefined);
+      setPaymentMethod(pmRes.paymentMethod);
+    } catch { /* non-fatal — stale card display is acceptable */ }
     setTimeout(() => setCardSaved(false), 4000);
   }
 
@@ -291,6 +299,7 @@ export default function PaymentPage() {
                   clientSecret={clientSecret}
                   cardOptions={getCardElementOptions()}
                   onSuccess={handleCardSaved}
+                  onCancel={() => { setShowUpdate(false); setClientSecret(null); }}
                 />
               </Elements>
             </div>

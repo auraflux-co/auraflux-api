@@ -8,9 +8,9 @@
  * CPD-369: auto top-up toggle
  */
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, Suspense } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -80,12 +80,28 @@ function formatCurrency(cents: number) {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 }
 
+// ─── Loading skeleton ──────────────────────────────────────────────────────────
+
+function CreditsSkeleton() {
+  return (
+    <PageShell maxWidth="3xl">
+      <div className="h-8 w-48 rounded bg-muted animate-pulse mb-1" />
+      <div className="h-4 w-72 rounded bg-muted animate-pulse mb-6" />
+      <div className="h-32 rounded-lg bg-muted animate-pulse mb-4" />
+      <div className="h-24 rounded-lg bg-muted animate-pulse mb-4" />
+      <div className="h-48 rounded-lg bg-muted animate-pulse" />
+    </PageShell>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function CreditsPage() {
+function CreditsPageInner() {
   const { getToken, isLoaded } = useAuth();
-  const searchParams = useSearchParams();
-  const packSuccess  = searchParams.get('pack_success') === '1';
+  const searchParams   = useSearchParams();
+  const router         = useRouter();
+  const packSuccess    = searchParams.get('pack_success')   === '1';
+  const packCancelled  = searchParams.get('pack_cancelled') === '1'; // U7
   const [balance, setBalance]         = useState<CreditBalance | null>(null);
   const [history, setHistory]         = useState<CreditLedgerEntry[]>([]);
   const [packs, setPacks]             = useState<CreditPack[]>([]);
@@ -95,6 +111,13 @@ export default function CreditsPage() {
   const [isPending, start]            = useTransition();
   const [packError, setPackError]     = useState<string | null>(null);
   const [topupMsg, setTopupMsg]       = useState<string | null>(null);
+
+  // U6: clear transient query params so banners don't reappear on refresh
+  useEffect(() => {
+    if (packSuccess || packCancelled) {
+      router.replace('/credits');
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -154,9 +177,17 @@ export default function CreditsPage() {
     });
   }
 
-  if (loading) return <div className="text-sm text-muted-foreground">Loading…</div>;
-  if (error)   return <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>;
-  if (!balance) return <p className="text-sm text-muted-foreground">No active plan found.</p>;
+  if (loading) return <CreditsSkeleton />;
+  if (error)   return (
+    <PageShell maxWidth="3xl">
+      <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
+    </PageShell>
+  );
+  if (!balance) return (
+    <PageShell maxWidth="3xl">
+      <p className="text-sm text-muted-foreground">No active plan found.</p>
+    </PageShell>
+  );
 
   const totalUsed      = balance.included_total - balance.included_remaining;
   const usagePct       = balance.included_total > 0 ? (totalUsed / balance.included_total) * 100 : 0;
@@ -173,7 +204,7 @@ export default function CreditsPage() {
         subtitle={<span>Plan: <span className="text-foreground font-medium">{tierLabel(balance.tier)}</span> · Period: {new Date(balance.period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {new Date(balance.period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
       />
 
-      {/* CPD-384: pack purchase success banner */}
+      {/* CPD-384 / CPD-386: pack purchase success / cancelled banners */}
       {packSuccess && (
         <div className="rounded-lg border border-success/40 bg-success/10 px-4 py-3">
           <p className="text-sm font-semibold text-success">Credits purchased!</p>
@@ -181,6 +212,11 @@ export default function CreditsPage() {
             Your credit balance will update shortly as the payment is confirmed.
           </p>
         </div>
+      )}
+      {packCancelled && (
+        <p className="af-body text-muted-foreground bg-muted rounded px-3 py-2">
+          Pack checkout cancelled — no charge was made.
+        </p>
       )}
 
       {/* Jobs paused banner */}
@@ -354,5 +390,14 @@ export default function CreditsPage() {
         </Card>
       </div>
     </PageShell>
+  );
+}
+
+// U4: useSearchParams requires a Suspense boundary in Next.js 13+ app router
+export default function CreditsPage() {
+  return (
+    <Suspense fallback={<CreditsSkeleton />}>
+      <CreditsPageInner />
+    </Suspense>
   );
 }
