@@ -33,17 +33,28 @@ import {
 const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null;
 
-const CARD_ELEMENT_OPTIONS = {
-  style: {
-    base: {
-      fontSize:        '14px',
-      color:           '#09090b',
-      fontFamily:      'inherit',
-      '::placeholder': { color: '#71717a' },
+// CPD-383: detect dark mode so the Stripe CardElement iframe matches the app theme.
+// Stripe's CardElement renders inside an iframe — it cannot inherit CSS variables,
+// so we resolve the actual colour at mount time using the document class list.
+function getCardElementOptions() {
+  const isDark =
+    typeof document !== 'undefined' &&
+    document.documentElement.classList.contains('dark');
+  return {
+    style: {
+      base: {
+        fontSize:        '14px',
+        color:           isDark ? '#fafafa' : '#09090b',
+        fontFamily:      'inherit',
+        backgroundColor: isDark ? 'transparent' : 'transparent',
+        '::placeholder': { color: isDark ? '#71717a' : '#a1a1aa' },
+      },
+      invalid: { color: '#ef4444' },
     },
-    invalid: { color: '#ef4444' },
-  },
-};
+  };
+}
+
+const CARD_ELEMENT_OPTIONS = getCardElementOptions();
 
 // ─── Card brand icon (text fallback) ─────────────────────────────────────────
 
@@ -64,9 +75,11 @@ function brandLabel(brand: string) {
 
 function UpdateCardForm({
   clientSecret,
+  cardOptions,
   onSuccess,
 }: {
   clientSecret: string;
+  cardOptions:  ReturnType<typeof getCardElementOptions>;
   onSuccess: () => void;
 }) {
   const stripe   = useStripe();
@@ -109,7 +122,7 @@ function UpdateCardForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-md border border-border bg-background px-3 py-3">
-        <CardElement options={CARD_ELEMENT_OPTIONS} />
+        <CardElement options={cardOptions} />
       </div>
       {error && (
         <p className="af-caption text-destructive">{error}</p>
@@ -136,6 +149,7 @@ export default function PaymentPage() {
   const [showUpdate,    setShowUpdate]    = useState(false);
   const [clientSecret,  setClientSecret]  = useState<string | null>(null);
   const [setupLoading,  setSetupLoading]  = useState(false);
+  const [cardSaved,     setCardSaved]     = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -175,8 +189,10 @@ export default function PaymentPage() {
   function handleCardSaved() {
     setShowUpdate(false);
     setClientSecret(null);
+    setCardSaved(true);
     setLoading(true);
     load();
+    setTimeout(() => setCardSaved(false), 4000);
   }
 
   function fmtAmount(cents: number, currency: string) {
@@ -214,6 +230,11 @@ export default function PaymentPage() {
 
       {error && (
         <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{error}</p>
+      )}
+      {cardSaved && (
+        <p className="af-body text-success bg-success/10 rounded px-3 py-2">
+          ✓ Card saved — your new payment method is now active.
+        </p>
       )}
 
       {/* ── Current card ──────────────────────────────────────────────────── */}
@@ -263,11 +284,12 @@ export default function PaymentPage() {
           {showUpdate && clientSecret && stripePromise && (
             <div className="pt-2 border-t border-border">
               <p className="af-label mb-3 text-muted-foreground">
-                Enter your new card details below. We use Stripe to securely process payments — your card number never touches our servers.
+                Enter your card details below. Your card number is processed securely by Stripe — it never touches our servers.
               </p>
               <Elements stripe={stripePromise} options={{ clientSecret }}>
                 <UpdateCardForm
                   clientSecret={clientSecret}
+                  cardOptions={getCardElementOptions()}
                   onSuccess={handleCardSaved}
                 />
               </Elements>

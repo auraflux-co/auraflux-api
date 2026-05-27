@@ -10,6 +10,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -83,6 +84,8 @@ function formatCurrency(cents: number) {
 
 export default function CreditsPage() {
   const { getToken, isLoaded } = useAuth();
+  const searchParams = useSearchParams();
+  const packSuccess  = searchParams.get('pack_success') === '1';
   const [balance, setBalance]         = useState<CreditBalance | null>(null);
   const [history, setHistory]         = useState<CreditLedgerEntry[]>([]);
   const [packs, setPacks]             = useState<CreditPack[]>([]);
@@ -169,6 +172,16 @@ export default function CreditsPage() {
         title="Credits & Usage"
         subtitle={<span>Plan: <span className="text-foreground font-medium">{tierLabel(balance.tier)}</span> · Period: {new Date(balance.period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {new Date(balance.period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
       />
+
+      {/* CPD-384: pack purchase success banner */}
+      {packSuccess && (
+        <div className="rounded-lg border border-success/40 bg-success/10 px-4 py-3">
+          <p className="text-sm font-semibold text-success">Credits purchased!</p>
+          <p className="text-xs text-success/80 mt-0.5">
+            Your credit balance will update shortly as the payment is confirmed.
+          </p>
+        </div>
+      )}
 
       {/* Jobs paused banner */}
       {isExhausted && (

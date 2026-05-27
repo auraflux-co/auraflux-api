@@ -116,7 +116,13 @@ function BillingPageInner() {
           `${origin}/billing?cancelled=1`,
           token ?? undefined,
         );
-        window.location.href = res.url;
+        // CPD-382: if the server updated the subscription in place (existing subscriber
+        // upgrading), there's no Stripe checkout URL — just reload with the success flag.
+        if ((res as { upgraded?: boolean }).upgraded) {
+          window.location.href = `${origin}/billing?success=1`;
+        } else {
+          window.location.href = res.url;
+        }
       } catch {
         setError("Couldn't start checkout. Please try again.");
       }
