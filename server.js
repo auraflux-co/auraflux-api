@@ -1560,7 +1560,13 @@ app.use(cors({
 }));
 // CPD-320: JSON API body limit reduced to 1MB to prevent DoS.
 // Upload routes use multer (multipart) so they are unaffected by this limit.
-app.use(require('express').json({ limit: '1mb' }));
+app.use(require('express').json({
+  limit: '1mb',
+  // CPD-362: save raw Buffer on every request so the Stripe webhook handler can
+  // verify the signature. express.raw() on that route alone cannot capture it
+  // once express.json() has already consumed the stream.
+  verify: (req, _res, buf) => { req.rawBody = buf; },
+}));
 app.use(require('express').urlencoded({ extended: true, limit: '1mb' }));
 
 
@@ -7433,6 +7439,26 @@ const server = app.listen(PORT, () => {
     console.log('   ✅ Nightly R2 backup cron scheduled (03:00 UTC)');
   } catch (cronErr) {
     console.warn('   ⚠️  node-cron not available — nightly backup disabled:', cronErr.message);
+  }
+
+  // CPD-366: Nightly overage billing — runs at 03:30 UTC so it fires after the
+  // R2 backup and avoids contention. Only reports overage if Stripe metered item
+  // IDs are configured; logs a warning otherwise (safe no-op).
+  try {
+    const cron = require('node-cron');
+    const { runOverageBillingCycle } = require('./lib/services/billing_cron');
+    cron.schedule('30 3 * * *', async () => {
+      console.log('[overage-cron] Starting nightly overage billing cycle...');
+      try {
+        const result = await runOverageBillingCycle();
+        console.log('[overage-cron] Completed:', JSON.stringify(result));
+      } catch (overageErr) {
+        console.error('[overage-cron] Failed:', overageErr.message);
+      }
+    }, { timezone: 'UTC' });
+    console.log('   ✅ Nightly overage billing cron scheduled (03:30 UTC)');
+  } catch (cronErr) {
+    console.warn('   ⚠️  node-cron not available — overage billing cron disabled:', cronErr.message);
   }
 });
 
