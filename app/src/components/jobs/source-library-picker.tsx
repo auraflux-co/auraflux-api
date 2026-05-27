@@ -305,9 +305,11 @@ interface Props {
   maxSelect?:          number;
   /** Lock the TYPE filter to a specific content type. Hides the tab for the other type. */
   contentTypeFilter?:  'clip' | 'vod';
+  /** Called when user presses X or Escape. Parent may hide or reset the picker. */
+  onClose?:            () => void;
 }
 
-export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilter }: Props) {
+export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilter, onClose }: Props) {
   const { getToken, isLoaded }           = useAuth();
   const [platform, setPlatform]         = useState<SourcePlatform | null>(null);
   const [username, setUsername]         = useState('');
@@ -335,6 +337,25 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
   const playlistLoadedFor = useRef<string | null>(null);
 
   const cfg = PLATFORMS.find((p) => p.id === platform);
+
+  // CPD-342: Reset internal state and call parent onClose
+  const handleClose = useCallback(() => {
+    setPlatform(null);
+    setUsername('');
+    setItems([]);
+    setSelected(new Set());
+    setConfirmed(false);
+    setError(null);
+    onClose?.();
+  }, [onClose]);
+
+  // CPD-342: Escape key dismisses the picker
+  useEffect(() => {
+    if (!onClose) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleClose, onClose]);
 
   // Keyword filter is applied client-side for responsiveness
   const displayItems = useMemo(() => {
@@ -546,6 +567,23 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
 
   return (
     <div className="space-y-4">
+
+      {/* CPD-342: Header row with optional X close button */}
+      {onClose && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground">Browse channels</span>
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="Close source library picker"
+            className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Platform tiles */}
       <div className="grid grid-cols-3 gap-2">

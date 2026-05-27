@@ -673,6 +673,10 @@ function NewJobPageInner() {
                 onSelect={(items) => {
                   setSourceItems(items);
                 }}
+                onClose={() => {
+                  setSourceItems([]);
+                  setSourceMode('fetch');
+                }}
               />
               {sourceItems.length > 0 && (
                 <p className="text-xs text-primary font-medium">
