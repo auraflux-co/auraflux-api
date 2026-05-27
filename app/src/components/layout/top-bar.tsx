@@ -6,26 +6,18 @@
  */
 
 import { UserButton, useAuth } from '@clerk/nextjs';
-import { usePathname } from 'next/navigation';
 import { useGuide } from '@/contexts/guide-context';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';
 import { cn } from '@/lib/utils';
 
-// Collab label is dynamic based on the current page context
-function useCollabLabel() {
-  const pathname = usePathname();
-  if (pathname === '/myjobs/new' || pathname.startsWith('/myjobs/new/')) return 'Collab';
-  if (pathname.startsWith('/myjobs/') && pathname !== '/myjobs/history') return 'Collab';
-  if (pathname.startsWith('/review')) return 'Collab';
-  return 'Collab';
-}
+const COLLAB_LABEL = 'Collab';
 
 export function TopBar() {
   const { toggle, isOpen } = useGuide();
   const { openMobile }     = useSidebar();
   const { actor }          = useAuth();
-  const collabLabel        = useCollabLabel();
+  const collabLabel        = COLLAB_LABEL;
 
   return (
     <header className={cn('shrink-0 border-b border-border bg-card/50 backdrop-blur-sm flex flex-col px-4', actor ? 'h-auto' : 'h-12')}>

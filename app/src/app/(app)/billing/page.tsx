@@ -202,6 +202,17 @@ function BillingPageInner() {
         </Card>
       )}
 
+      {/* Downgrade link — visible for non-entry-tier customers */}
+      {balance && currentTier !== 'operate' && (
+        <p className="af-caption text-muted-foreground">
+          Looking to downgrade?{' '}
+          <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">
+            Contact us
+          </a>{' '}
+          and we&apos;ll take care of it.
+        </p>
+      )}
+
       {/* ── 2. Upgrade options ──────────────────────────────────────────────── */}
       {upgradeTiers.length > 0 && (
         <div>
@@ -212,19 +223,23 @@ function BillingPageInner() {
               const meta = PLAN_META[tier];
               const canCheckout = !!plan?.priceConfigured;
               return (
-                <Card key={tier} className="flex flex-col">
+                <Card key={tier} className={cn('flex flex-col', tier === 'managed' && 'ring-1 ring-primary/30')}>
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-sm font-semibold">{meta.label}</CardTitle>
+                      {tier === 'managed' && (
+                        <Badge variant="secondary" className="af-caption shrink-0">Most powerful</Badge>
+                      )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground">{meta.sub}</p>
+                    <p className="af-caption text-muted-foreground">{meta.sub}</p>
                     <div className="flex items-end gap-1 mt-2">
                       <span className="af-metric">{meta.price}</span>
                       <span className="af-caption mb-1">/mo</span>
                     </div>
-                    <CardDescription className="af-label mt-1">
-                      {plan?.credits?.toLocaleString() ?? '—'} credits/month · no rollover
-                    </CardDescription>
+                    <p className="af-caption mt-1 flex items-center gap-1">
+                      <span className="text-muted-foreground">{plan?.credits?.toLocaleString() ?? '—'} credits/month</span>
+                      <span className="text-amber-500/80">· no rollover</span>
+                    </p>
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col gap-3">
                     <ul className="space-y-1.5 flex-1">
@@ -238,6 +253,7 @@ function BillingPageInner() {
                     {canCheckout ? (
                       <Button
                         size="sm"
+                        variant={tier === 'managed' ? 'default' : 'outline'}
                         className="w-full mt-2"
                         disabled={isPending}
                         onClick={() => handleUpgrade(tier)}

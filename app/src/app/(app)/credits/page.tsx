@@ -237,7 +237,7 @@ export default function CreditsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          <UsageBar used={totalUsed} total={balance.included_total} warn={isWarning} critical={isCritical} />
+          <UsageBar used={totalUsed} total={balance.included_total} warn={isLow} critical={isCritical} />
           <p className="af-caption">
             {totalUsed} / {balance.included_total} credits used this period
           </p>
@@ -279,10 +279,16 @@ export default function CreditsPage() {
         </Card>
       )}
 
-      {/* Credit top-up pack */}
-      {packs.some((p) => p.id === 'credit_topup') && (
-        <div className="space-y-2" id="buy-credits">
-          <h2 className="af-subhead">Buy credits</h2>
+      {/* Credit top-up pack — always render the anchor so warning banner links don't break */}
+      <div className="space-y-2" id="buy-credits">
+        <h2 className="af-subhead">Buy credits</h2>
+        {!packs.some((p) => p.id === 'credit_topup') ? (
+          <p className="af-body text-muted-foreground">
+            Credit top-up packs are not currently available.{' '}
+            <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">Contact us</a>.
+          </p>
+        ) : (
+          <>
           {packError && (
             <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{packError}</p>
           )}
@@ -300,7 +306,7 @@ export default function CreditsPage() {
                       {pack.price_cents
                         ? formatCurrency(pack.price_cents)
                         : pack.price_usd != null ? `$${pack.price_usd}` : '—'}
-                      <span className="text-muted-foreground"> / pack</span>
+                      <span className="text-muted-foreground"> / pack · choose qty at checkout</span>
                     </p>
                   </div>
                   <div className="pt-1">
@@ -312,16 +318,14 @@ export default function CreditsPage() {
                     >
                       Buy
                     </Button>
-                    <p className="af-caption text-muted-foreground mt-1 text-center text-[10px]">
-                      choose qty at checkout
-                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
       {/* History */}
       <div className="space-y-2">

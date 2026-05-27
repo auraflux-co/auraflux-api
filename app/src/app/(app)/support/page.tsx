@@ -62,7 +62,7 @@ function getAccountAgeDays(user: ReturnType<typeof useUser>['user']): number {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function GuidesPanel({ canEsc }: { canEsc: boolean }) {
+function GuidesPanel() {
   return (
     <aside className="w-full lg:w-72 shrink-0 space-y-4">
       <div className="rounded-lg border border-border p-4">
@@ -144,7 +144,7 @@ function EscalateModal({
             disabled={sending || !summary.trim()}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
           >
-            {sending ? 'Sending…' : 'Send to robert@auraflux.co'}
+            {sending ? 'Sending…' : 'Send to AuraFlux team'}
           </button>
         </div>
       </div>
@@ -157,12 +157,14 @@ function SessionHistory({
 }: {
   sessions: SupportSession[]; onSelect: (s: SupportSession) => void; activeId: string | null;
 }) {
+  const [showAll, setShowAll] = useState(false);
   if (!sessions.length) return null;
+  const displayed = showAll ? sessions : sessions.slice(0, 5);
   return (
     <div>
       <h2 className="af-subhead mb-3">Past sessions</h2>
       <div className="space-y-2">
-        {sessions.map((s) => (
+        {displayed.map((s) => (
           <button
             key={s.id}
             onClick={() => onSelect(s)}
@@ -198,6 +200,14 @@ function SessionHistory({
           </button>
         ))}
       </div>
+      {sessions.length > 5 && (
+        <button
+          onClick={() => setShowAll((v) => !v)}
+          className="af-caption text-primary underline underline-offset-2 mt-2 hover:no-underline"
+        >
+          {showAll ? 'Show fewer' : `Show all ${sessions.length} sessions`}
+        </button>
+      )}
     </div>
   );
 }
@@ -313,7 +323,7 @@ export default function SupportPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* ── Chat panel ── */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="rounded-lg border border-border flex flex-col" style={{ height: 360 }}>
+          <div className="rounded-lg border border-border flex flex-col min-h-[300px] h-[50vh] max-h-[480px]">
             {/* Messages — scrollable */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((m, i) => (
@@ -330,8 +340,10 @@ export default function SupportPage() {
               ))}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-muted-foreground">
-                    Thinking…
+                  <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:0ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:150ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:300ms]" />
                   </div>
                 </div>
               )}
@@ -387,8 +399,8 @@ export default function SupportPage() {
                   onClick={() => setShowEsc(true)}
                   className="af-caption hover:text-foreground underline ml-auto"
                 >
-                  In a hurry or can it wait?{' '}
-                  <span className="text-primary">Email us</span>
+                  Need human support?{' '}
+                  <span className="text-primary">Email us →</span>
                 </button>
               )}
               {escalated && (
@@ -399,7 +411,7 @@ export default function SupportPage() {
         </div>
 
         {/* ── Guides + SMS panel ── */}
-        <GuidesPanel canEsc={canEsc} />
+        <GuidesPanel />
       </div>
 
       {showEsc && (

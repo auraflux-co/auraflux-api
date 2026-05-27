@@ -35,17 +35,17 @@ function brandColour(name: string): string {
   return PALETTE[idx];
 }
 
-function BrandAvatar({ brand, size = 'md' }: { brand: Brand; size?: 'sm' | 'md' }) {
+function BrandAvatar({ brand, size = 'md' }: { brand: Brand; size?: 'sm' | 'md' | 'lg' }) {
   const colour  = brandColour(brand.name);
   const initial = brand.name.charAt(0).toUpperCase();
-  const dim     = size === 'sm' ? 'w-5 h-5' : 'w-6 h-6';
+  const dim     = size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-7 h-7' : 'w-6 h-6';
 
   if (brand.image_url) {
     return (
       <img
         src={brand.image_url}
         alt={brand.name}
-        className={cn('rounded object-cover shrink-0', dim)}
+        className={cn('rounded object-contain bg-muted shrink-0', dim)}
       />
     );
   }
@@ -55,7 +55,7 @@ function BrandAvatar({ brand, size = 'md' }: { brand: Brand; size?: 'sm' | 'md' 
       className={cn(
         'flex items-center justify-center rounded font-semibold text-white shrink-0',
         colour,
-        size === 'sm' ? 'w-5 h-5 text-[10px]' : 'w-6 h-6 text-xs',
+        size === 'sm' ? 'w-5 h-5 text-[10px]' : size === 'lg' ? 'w-7 h-7 text-sm' : 'w-6 h-6 text-xs',
       )}
     >
       {initial}
@@ -174,7 +174,7 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
               isActive && 'text-primary',
             )}
           >
-            <BrandAvatar brand={brand} size="sm" />
+            <BrandAvatar brand={brand} size="lg" />
             <span className="flex-1 min-w-0 truncate">{brand.name}</span>
             {brand.tier && (
               <span className="text-[10px] text-muted-foreground shrink-0">

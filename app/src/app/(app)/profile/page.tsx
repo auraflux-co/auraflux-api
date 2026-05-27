@@ -198,7 +198,7 @@ export default function ProfilePage() {
           <Separator />
 
           {/* Name */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="af-caption">First name</Label>
               <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-8 text-sm" />
@@ -318,12 +318,15 @@ export default function ProfilePage() {
                 Must be a public https:// URL. Displayed in the brand switcher.
               </p>
               {brandImageUrl && (
-                <img
-                  src={brandImageUrl}
-                  alt="Logo preview"
-                  className="mt-1 w-10 h-10 rounded object-cover border border-border"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
+                <div className="flex items-center gap-3 mt-2">
+                  <img
+                    src={brandImageUrl}
+                    alt="Logo preview"
+                    className="w-14 h-14 rounded object-contain border border-border bg-muted"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <p className="af-caption text-muted-foreground">Logo preview</p>
+                </div>
               )}
             </div>
             {brandError  && <p className="af-caption text-destructive">{brandError}</p>}
