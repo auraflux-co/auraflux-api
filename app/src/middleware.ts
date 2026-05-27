@@ -11,6 +11,12 @@ const isPublicRoute = createRouteMatcher([
   // Legacy dashboard redirects are handled by next.config.js — mark as public
   // so the middleware doesn't intercept before the redirect fires
   '/dashboard(.*)',
+  // Legal pages — must be publicly crawlable (Google OAuth verification requires it)
+  '/privacy',
+  '/terms',
+  '/aup',
+  '/cookies',
+  '/refunds',
 ]);
 
 // Clerk v7 + Next.js 16: auth.protect() has a known bug where it redirects to
