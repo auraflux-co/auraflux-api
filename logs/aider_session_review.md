@@ -1,163 +1,129 @@
 ```md
-# AuraFlux Session Review — 2026-05-26
+# AuraFlux Session Review — 2026-05-27
 
 ## 1. Session Summary
 
-Heavy backend work on multi-platform clip download resilience: Twitch GQL rate-limiting mitigations (CPD-347), Helix CDN migration (CPD-349), Kick HLS/Cloudflare bypasses (CPD-350/351/352/353), and YouTube ANDROID_VR fallback. Frontend received job wizard UX fixes (CPD-341/344/345), in-app API reference page (CPD-337), and billing plan image fixes. Deployment stability addressed via Clerk key restoration and multiple redeploy triggers.
+Heavy billing and credits overhaul: implemented credit hard stops, threshold alerts, auto top-up, and Stripe quantity picker across both API (`lib/routes/billing.js`, `lib/routes/credits.js`, `lib/services/stripe_billing.js`) and UI (`billing/page.tsx`, `credits/page.tsx`). Added 5 legal pages as public Next.js routes with Clerk middleware bypass. Completed frontend audit batch fixing UI inconsistencies across 10 dashboard pages. Backend gained Kick OAuth 2.1 + PKCE for source channel auth.
 
 ## 2. Jira Consistency
 
-**Status: UNKNOWN** — Jira API returned HTTP 000 for all board columns. Cannot verify:
-- Whether CPD-347/349/350/351/352/353 tickets transitioned to Done
-- PR-to-ticket linkage accuracy
-- Any stuck tickets in "In Development" or "In Review"
+**Status: UNKNOWN — Jira API returned HTTP 000 for all board queries.**
 
-**Action required:** Manually verify all CPD-3XX tickets referenced in commits are marked Done/Approved.
+Cannot verify:
+- Whether tickets CPD-355 through CPD-379 were transitioned to Done
+- Whether any tickets remain stuck in "In Development" post-merge
+- PR-to-ticket alignment
+
+**Action required:** Manually verify Jira board state or fix API credentials.
 
 ## 3. GitHub Consistency
 
-### Open Dependency PRs (5 total, all Dependabot)
-- #597 pg 8.20→8.21
-- #596 bullmq 5.77.1→5.77.3
-- #595 stripe 22.1.0→22.1.1
-- #594 newrelic 13.19.2→14.0.0 ⚠️ **MAJOR VERSION BUMP**
-- #593 axios 1.15.2→1.16.1
+| Issue | Details |
+|-------|---------|
+| Open PR needing merge | #593 `chore(deps): Bump axios from 1.15.2 to 1.16.1` — dependabot, safe to merge |
+| CI failures | 5 failing workflows on `main`, `feat/cpd-327-multi-brand`, `fix/plan-images-prod` |
+| Stale branches | `feat/cpd-327-multi-brand` — blocked by CI; needs attention |
 
-### CI Failures (5 pipelines broken)
-| Branch | Issue |
-|--------|-------|
-| `feat/cpd-327-multi-brand` | Failing — likely blocked by incomplete migration |
-| `main` (2 failures) | `merge: bring staging...` and `fix: plan images 404` |
-| `fix/plan-images-prod` | Same plan images crash |
-| `feat/cpd-315` | Plan images + Canva generator |
-
-### Stale Unmerged Branches (3)
-- `origin/feat/cpd-315-canva-plan-images`
-- `origin/feat/cpd-322-323-146-validation-arch-wan27`
-- `origin/fix/plan-images-prod`
+**CI failures on main are blocking production deploys.**
 
 ## 4. Confluence Consistency
 
-**Status: UNKNOWN** — Confluence API returned HTTP 000.
+**Status: UNKNOWN — Confluence API returned HTTP 000.**
 
-### Expected HOW Docs (based on session changes)
-| Feature | Doc Exists? |
-|---------|-------------|
-| Twitch Helix CDN migration (CPD-349) | UNKNOWN |
-| Kick Apify/Cloudflare bypass (CPD-353) | UNKNOWN |
-| YouTube ANDROID_VR bypass | UNKNOWN |
-| In-app API Reference (CPD-337) | UNKNOWN |
-| Job wizard source tab gating (CPD-341/344/345) | UNKNOWN |
-| Multi-brand accounts (CPD-327) | UNKNOWN |
-
-**Gap likely:** Platform-specific download fallback chains undocumented.
+Cannot verify HOW doc coverage. Based on commits, these features likely need docs:
+- Auto top-up flow (CPD-367/368/369)
+- Credit pack quantity picker
+- Kick OAuth 2.1 source connection
+- Legal pages structure/routing
 
 ## 5. Frontend UI Integrity
 
-### Pages on Disk vs Sidebar Nav
-**Dashboard pages detected:** (none)  
-**Sidebar nav routes:** (none)
+| Check | Result |
+|-------|--------|
+| Pages on disk | `app/src/app/dashboard/*/page.tsx` — **none found** |
+| Sidebar nav routes | **none extracted** |
+| TypeScript | ✅ No errors |
 
-This indicates either:
-1. Dashboard lives outside `app/src/app/dashboard/` (actual path: `app/src/app/(app)/`)
-2. Or pages are orphaned
+**Note:** Dashboard pages appear to live under `app/src/app/(app)/` not `app/src/app/dashboard/`. The extraction pattern may be misconfigured. Actual pages exist at:
+- `/billing`, `/credits`, `/myjobs/new`, `/profile`, `/settings/channels`, `/support`, `/admin/crm`
 
-### Actual Pages Changed This Session
-- `/billing/page.tsx` — plan card images
-- `/billing/add-brand/page.tsx` — multi-brand
-- `/developer/page.tsx` — API reference
-- `/myjobs/new/page.tsx` — job wizard
-- `/settings/api-keys/page.tsx`
-- `/generate/canva/page.tsx`
-
-### TypeScript Check
-✅ No errors
+No orphaned pages or missing nav entries detected from commit diff.
 
 ## 6. API-to-UI Mapping
 
-### Missing Backend Routes (frontend calls with no handler)
-| apiFetch Path | Status |
-|---------------|--------|
+**Frontend calls without backend routes:**
+
+| apiFetch path | Backend route exists? |
+|---------------|----------------------|
 | `/billing/invoices` | ❌ MISSING |
 | `/billing/payment-method` | ❌ MISSING |
 | `/billing/setup-intent` | ❌ MISSING |
 
-These are called from billing UI but `lib/routes/billing.js` doesn't expose them.
+These calls exist in `app/src/lib/api.ts` but no corresponding handlers in `lib/routes/billing.js`.
 
-### Verified Working Routes
-All other 20+ apiFetch paths map to existing route files.
+**Risk:** Frontend will 404 or error when users access payment method management.
 
 ## 7. Codebase Structural Integrity
 
-### Backend Route Registration
-- `lib/routes/brands.js` — added this session
-- `lib/routes/billing.js` — incomplete (see Section 6)
-- `lib/auth/brand_access.js` — new middleware
-
-### server.js Health
-- Health endpoint version bumped for redeploy
-- Clerk key fallback added
-
-### Circular Dependencies
-No evidence of circular imports in changed files.
-
-### New Clients
-- `lib/clients/kick_apify.js` — Apify proxy for Kick CDN
-- `lib/clients/kick_client.js` — direct Kick client
+| Area | Status |
+|------|--------|
+| Backend routes registered in server.js | ✅ All route files imported |
+| Circular dependencies | Not detected in this session |
+| Migration files | `018_auto_topup.sql` added; verify it ran in staging/prod |
+| New services | `lib/services/credits.js` expanded; `lib/services/billing_cron.js` updated |
 
 ## 8. C0 / C1+ Boundary
 
-### Potential Leaks
-- `lib/portals/portal0.js` — YouTube API key referer logic may expose key if misconfigured
-- `lib/assembly_service.js` — rate-limit retry backoffs hardcoded (not config-driven)
+| Check | Finding |
+|-------|---------|
+| Hardcoded branding | `brand-switcher.tsx` touched — verify no AuraFlux-specific strings leak to white-label |
+| Portal isolation | `lib/portals/portal0.js` modified — confirm portal context passed correctly |
+| Logo on connect page | CPD-356 added AuraFlux logo; confirm this respects `portal.branding` |
 
-### Hardcoded Branding
-- Plan images in `app/public/brand/plans/*.png` — correct location
-- No tenant branding leaks detected in billing pages
+**Potential leak:** Verify `/social/accounts` and channel connect pages use dynamic branding, not hardcoded assets.
 
 ## 9. Environment and Secrets
 
-### Backend Vars in Code but Missing from .env.example
-| Variable | Used In |
-|----------|---------|
-| `AURAFLUX_E` | Unknown — partial match |
-| `C` | Unknown — likely typo |
-| `CWN_SERVER_URL` | WAN2.7 integration |
-| `E` | Unknown — likely typo |
-| `ENABLE_NVENC` | GPU encoding toggle |
-| `GATE` | Feature flag |
-| `GEMINI_GATE` | AI feature flag |
-| `JOBS_FILE` | Local dev jobs persistence |
-| `MAX_POLL_MINUTES` | Job polling timeout |
-| `POLL_INTERVAL_MS` | Job polling interval |
-| `PORTAL` | Unknown |
-| `R` | Unknown — likely typo |
-| `RENDER_API_SERVICE_ID` | Render deployment |
-| `YOUTUBE_COOKIES_BASE64` | YouTube auth bypass |
+**Backend vars in code but missing from `.env.example`:**
 
-### Frontend NEXT_PUBLIC_* Gaps
-None detected.
+| Variable | Status |
+|----------|--------|
+| `AURAFLUX_E` | ❌ Undocumented (partial name?) |
+| `C` | ❌ Undocumented (partial extraction) |
+| `E` | ❌ Undocumented |
+| `GATE` | ❌ Undocumented |
+| `GEMINI_GATE` | ❌ Undocumented |
+| `PORTAL` | ❌ Undocumented |
+| `R` | ❌ Undocumented |
+| `YOUTUBE_COOKIES_BASE` | ❌ Undocumented |
+
+**Frontend NEXT_PUBLIC_* vars:** ✅ None missing
+
+**Note:** Extracted var names appear truncated. Re-run env scanner.
 
 ## 10. Recommendations
 
 ### [BLOCKING]
-1. **Implement missing billing routes** — `/billing/invoices`, `/billing/payment-method`, `/billing/setup-intent` are called by UI but return 404
-2. **Fix CI on main** — 2 failing pipelines on main branch blocks all merges
-3. **Verify Jira ticket states manually** — API down, cannot confirm CPD-347/349/350-353 Done
+
+1. **Fix CI failures on `main`** — 3 workflows failing blocks prod deploys
+2. **Add missing billing routes** — `/billing/invoices`, `/billing/payment-method`, `/billing/setup-intent` are called by frontend but don't exist
+3. **Verify Jira API credentials** — HTTP 000 indicates connection/auth failure; tickets may be untransitioned
 
 ### [SHOULD FIX]
-4. **Merge or close stale branches** — `fix/plan-images-prod`, `feat/cpd-315-canva-plan-images`, `feat/cpd-322-323-146-validation-arch-wan27`
-5. **Review newrelic 14.0.0 PR (#594)** — major version bump, breaking changes likely
-6. **Document env vars in .env.example** — 10+ vars undocumented (YOUTUBE_COOKIES_BASE64, ENABLE_NVENC, CWN_SERVER_URL, etc.)
-7. **Add Confluence HOW docs** — platform fallback chains (Twitch→Helix, Kick→Apify, YouTube→ANDROID_VR)
+
+4. **Document missing env vars** — `YOUTUBE_COOKIES_BASE`, `GEMINI_GATE`, etc. need `.env.example` entries
+5. **Merge dependabot PR #593** — axios security/patch update sitting idle
+6. **Run migration 018** — Confirm `auto_topup` migration applied to staging and production
+7. **Resolve `feat/cpd-327-multi-brand` CI** — Feature branch blocked; either fix or close
 
 ### [NICE TO HAVE]
-8. **Merge Dependabot PRs** — pg, bullmq, stripe, axios all have minor bumps pending
-9. **Clean up partial env var names** — `C`, `E`, `R`, `AURAFLUX_E` appear truncated in extraction
-10. **Add e2e coverage for billing routes** — once implemented, prevent regression
+
+8. **Add Confluence HOW docs** — Auto top-up, Kick OAuth, legal pages need operator docs
+9. **Fix dashboard page extraction** — Update scanner to find `(app)/` route group pages
+10. **Audit brand-switcher for white-label** — Ensure no hardcoded AuraFlux assets
 
 ---
 
-<!-- last-reviewed-commit: e67b31328238d719885471128562da0ab92f1e9f -->
-<!-- reviewed-at: 2026-05-26T03:30:34Z -->
+<!-- last-reviewed-commit: e4a8db1d09382d033736df50020b4fc272f916c4 -->
+<!-- reviewed-at: 2026-05-27T05:41:24Z -->
 ```

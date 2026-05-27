@@ -1165,6 +1165,8 @@ export interface Brand {
   tier:                   PlanTier | null;
   credits_included:       number | null;
   stripe_subscription_id: string | null;
+  image_url:              string | null;
+  description:            string | null;
 }
 
 export interface BrandSubscription {
@@ -1195,6 +1197,19 @@ export async function renameBrandApi(id: string, name: string, token?: string): 
   const res = await apiFetch<{ ok: boolean; brand: Brand }>(`/brands/${id}`, {
     method: 'PATCH',
     body:   JSON.stringify({ name }),
+    token,
+  });
+  return res.brand;
+}
+
+export async function updateBrandApi(
+  id: string,
+  fields: { name?: string; image_url?: string | null; description?: string | null },
+  token?: string,
+): Promise<Brand> {
+  const res = await apiFetch<{ ok: boolean; brand: Brand }>(`/brands/${id}`, {
+    method: 'PATCH',
+    body:   JSON.stringify(fields),
     token,
   });
   return res.brand;

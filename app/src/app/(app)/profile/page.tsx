@@ -1,13 +1,14 @@
 'use client';
 /**
- * /profile — User profile page (CPD-111, CPD-373).
+ * /profile — User profile page (CPD-111, CPD-373, CPD-380).
  *
- * Sections: identity (name, email, timezone), appearance, security.
- * Bio, job title, connected platforms, plan & billing, and danger zone removed.
+ * Sections: identity (name, email, timezone), appearance, security,
+ *           brand profile (shown for all brands — edit name + logo URL).
  */
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import { useUser, useClerk } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
 import { formatUserError } from '@/lib/job-labels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { useBrand } from '@/contexts/brand-context';
+import { updateBrandApi } from '@/lib/api';
 
 const TIMEZONES = [
   'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
@@ -27,13 +30,61 @@ const TIMEZONES = [
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const { openUserProfile } = useClerk();
   const { theme, setTheme } = useTheme();
+  const { activeBrand, refresh: refreshBrands } = useBrand();
   const [isPending, start] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadTimedOut, setLoadTimedOut] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Brand profile editing state
+  const [brandName, setBrandName]       = useState('');
+  const [brandImageUrl, setBrandImageUrl] = useState('');
+  const [brandSaved, setBrandSaved]     = useState(false);
+  const [brandError, setBrandError]     = useState<string | null>(null);
+  const [brandPending, startBrand]      = useTransition();
+
+  // Initialise brand fields when active brand loads
+  const [brandInitDone, setBrandInitDone] = useState(false);
+  if (activeBrand && !brandInitDone) {
+    setBrandInitDone(true);
+    setBrandName(activeBrand.name);
+    setBrandImageUrl(activeBrand.image_url ?? '');
+  }
+
+  // Reset init flag when brand changes
+  const prevBrandId = useRef<string | null>(null);
+  if (activeBrand && activeBrand.id !== prevBrandId.current) {
+    prevBrandId.current = activeBrand.id;
+    setBrandInitDone(false);
+  }
+
+  async function handleBrandSave() {
+    if (!activeBrand) return;
+    setBrandError(null);
+    setBrandSaved(false);
+    startBrand(async () => {
+      try {
+        const token = await getToken();
+        const trimmedName = brandName.trim();
+        const trimmedUrl  = brandImageUrl.trim() || null;
+        if (!trimmedName) { setBrandError('Brand name cannot be empty.'); return; }
+        await updateBrandApi(
+          activeBrand.id,
+          { name: trimmedName, image_url: trimmedUrl },
+          token ?? undefined,
+        );
+        await refreshBrands();
+        setBrandSaved(true);
+        setTimeout(() => setBrandSaved(false), 3000);
+      } catch (e: unknown) {
+        setBrandError(e instanceof Error ? e.message : 'Failed to save brand.');
+      }
+    });
+  }
 
   useEffect(() => {
     if (!isLoaded) {
@@ -232,6 +283,57 @@ export default function ProfilePage() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Brand profile — shown when an active brand is loaded */}
+      {activeBrand && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="af-subhead">Brand profile</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="af-caption text-muted-foreground">
+              Customize the display name and logo for your active brand:{' '}
+              <span className="font-medium text-foreground">{activeBrand.name}</span>
+            </p>
+            <div className="space-y-1.5">
+              <Label className="af-caption">Brand name</Label>
+              <Input
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+                placeholder="e.g. AuraFlux Gaming"
+                className="h-8 text-sm"
+                maxLength={80}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="af-caption">Logo image URL</Label>
+              <Input
+                value={brandImageUrl}
+                onChange={(e) => setBrandImageUrl(e.target.value)}
+                placeholder="https://your-cdn.com/logo.png"
+                className="h-8 text-sm font-mono"
+                type="url"
+              />
+              <p className="af-caption text-muted-foreground">
+                Must be a public https:// URL. Displayed in the brand switcher.
+              </p>
+              {brandImageUrl && (
+                <img
+                  src={brandImageUrl}
+                  alt="Logo preview"
+                  className="mt-1 w-10 h-10 rounded object-cover border border-border"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              )}
+            </div>
+            {brandError  && <p className="af-caption text-destructive">{brandError}</p>}
+            {brandSaved  && <p className="af-caption text-success">Brand profile saved.</p>}
+            <Button size="sm" onClick={handleBrandSave} disabled={brandPending}>
+              {brandPending ? 'Saving…' : 'Save brand'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Security */}
       <Card>

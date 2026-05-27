@@ -38,6 +38,18 @@ function brandColour(name: string): string {
 function BrandAvatar({ brand, size = 'md' }: { brand: Brand; size?: 'sm' | 'md' }) {
   const colour  = brandColour(brand.name);
   const initial = brand.name.charAt(0).toUpperCase();
+  const dim     = size === 'sm' ? 'w-5 h-5' : 'w-6 h-6';
+
+  if (brand.image_url) {
+    return (
+      <img
+        src={brand.image_url}
+        alt={brand.name}
+        className={cn('rounded object-cover shrink-0', dim)}
+      />
+    );
+  }
+
   return (
     <span
       className={cn(
