@@ -7306,6 +7306,10 @@ app.get('/errors', (req, res) => {
 const developerApiRouter = require('./lib/routes/developer_api');
 app.use('/v1', developerApiRouter);
 
+// ── Public API — unauthenticated, used by marketing site (CPD-397, CPD-396) ──
+const publicRouter = require('./lib/routes/public');
+app.use(publicRouter);
+
 // ── Admin CRM + Permissions (CPD-150 / CPD-154) ───────────────────
 // Clerk middleware — must run before any route that calls requireAuth.
 // Initialises session context so getAuth(req) can verify JWTs.
