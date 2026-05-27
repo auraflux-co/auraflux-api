@@ -1231,3 +1231,20 @@ export async function canvaSave(
     token,
   });
 }
+
+export interface AutoTopupSettings {
+  enabled: boolean;
+  pack: { id: string; label: string; credits: number };
+}
+
+export async function getAutoTopup(token?: string): Promise<AutoTopupSettings & { ok: boolean }> {
+  return apiFetch("/credits/auto-topup", { token });
+}
+
+export async function setAutoTopup(enabled: boolean, token?: string): Promise<{ ok: boolean; enabled: boolean }> {
+  return apiFetch("/credits/auto-topup", {
+    method: "POST",
+    body:   JSON.stringify({ enabled }),
+    token,
+  });
+}
