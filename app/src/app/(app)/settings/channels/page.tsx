@@ -1,15 +1,15 @@
 'use client';
-import { formatUserError } from '@/lib/job-labels';
 /**
- * /settings/channels — Default source channel handles (CPD-292)
+ * /settings/channels — Source channel setup (CPD-292, CPD-353)
  *
- * Saves Twitch, Kick, and YouTube channel usernames per customer so the
- * source library picker can pre-fill them. Verifies each channel as the
- * user types (500ms debounce) and shows the channel avatar + display name.
+ * Two connection modes per platform:
+ *   1. OAuth (preferred) — one-click, auto-fills username, uses Kick public API directly.
+ *   2. Username entry   — manual fallback.
  */
 
 import { useEffect, useRef, useState, useTransition, useCallback } from 'react';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { formatUserError } from '@/lib/job-labels';
 import {
   getSourceChannels,
   saveSourceChannels,
@@ -26,25 +27,39 @@ import {
   type ResolvedChannel,
 } from '@/lib/api';
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface SourceConnection {
+  platform: string;
+  handle: string | null;
+  platformUserId: string | null;
+  connectedAt: string | null;
+}
+
+// ── Platform config ──────────────────────────────────────────────────────────
+
 const PLATFORMS: {
-  key:    keyof SourceChannels;
-  platform: SourcePlatform;
-  label:  string;
+  key:         keyof SourceChannels;
+  platform:    SourcePlatform;
+  label:       string;
   placeholder: string;
-  hint:   string;
-  color:  string;
+  hint:        string;
+  color:       string;
+  oauthPlatform?: string; // backend platform key for /channels/connect/:platform
 }[] = [
   {
     key: 'twitchLogin', platform: 'twitch',
     label: 'Twitch', placeholder: 'hasanabi',
     hint: 'Channel login name (lowercase, no @)',
     color: 'bg-purple-600',
+    // oauthPlatform: 'twitch', // CPD-353b — enable once TWITCH_CLIENT_SECRET is set
   },
   {
     key: 'kickUsername', platform: 'kick',
     label: 'Kick', placeholder: 'n3on',
     hint: 'Channel username (lowercase)',
     color: 'bg-green-500',
+    oauthPlatform: 'kick',
   },
   {
     key: 'youtubeHandle', platform: 'youtube',
@@ -63,13 +78,20 @@ interface ChannelVerification {
 }
 
 const DEBOUNCE_MS = 500;
+const API_BASE    = process.env.NEXT_PUBLIC_API_URL || 'https://api.auraflux.co';
 
 export default function SourceChannelsPage() {
-  const { getToken } = useAuth();
+  const { getToken }  = useAuth();
+  const searchParams  = useSearchParams();
+
   const [channels, setChannels]   = useState<SourceChannels>({});
   const [saved, setSaved]         = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isPending, start]        = useTransition();
+
+  const [connections, setConnections] = useState<Record<string, SourceConnection>>({});
+  const [oauthError, setOauthError]   = useState<string | null>(null);
+  const [oauthSuccess, setOauthSuccess] = useState<string | null>(null);
 
   const [verify, setVerify] = useState<Record<string, ChannelVerification>>({
     twitchLogin:   { state: 'idle', channel: null, error: null },
@@ -79,17 +101,43 @@ export default function SourceChannelsPage() {
 
   const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
+  // Handle OAuth callback query params
+  useEffect(() => {
+    const connected = searchParams.get('channel_connected');
+    const handle    = searchParams.get('handle');
+    const errMsg    = searchParams.get('channel_error');
+    if (connected) setOauthSuccess(`${connected.charAt(0).toUpperCase() + connected.slice(1)} connected${handle ? ` as @${handle}` : ''} successfully.`);
+    if (errMsg)    setOauthError(decodeURIComponent(errMsg));
+  }, [searchParams]);
+
+  // Load connected OAuth source channels
+  const loadConnections = useCallback(async () => {
+    try {
+      const token = await getToken();
+      const res   = await fetch(`${API_BASE}/channels/connections`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const map: Record<string, SourceConnection> = {};
+      for (const c of data.connections ?? []) map[c.platform] = c;
+      setConnections(map);
+    } catch { /* non-blocking */ }
+  }, [getToken]);
+
   // Load saved channels on mount
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const token = await getToken();
-        const res   = await getSourceChannels(token ?? undefined);
+        const [res] = await Promise.all([
+          getSourceChannels(token ?? undefined),
+          loadConnections(),
+        ]);
         if (cancelled) return;
         const sc = res.sourceChannels ?? {};
         setChannels(sc);
-        // Pre-verify any already-saved values
         for (const p of PLATFORMS) {
           const val = sc[p.key];
           if (val) scheduleVerify(p.key, p.platform, val, token ?? undefined);
@@ -98,6 +146,33 @@ export default function SourceChannelsPage() {
     })();
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleConnect(oauthPlatform: string) {
+    try {
+      const token = await getToken();
+      window.location.href = `${API_BASE}/channels/connect/${oauthPlatform}?token=${token}`;
+    } catch (e) {
+      setOauthError(e instanceof Error ? e.message : 'Failed to start OAuth');
+    }
+  }
+
+  async function handleDisconnect(oauthPlatform: string) {
+    try {
+      const token = await getToken();
+      await fetch(`${API_BASE}/channels/connections/${oauthPlatform}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setConnections((prev) => {
+        const next = { ...prev };
+        delete next[oauthPlatform];
+        return next;
+      });
+      setOauthSuccess(`${oauthPlatform} disconnected.`);
+    } catch (e) {
+      setOauthError(e instanceof Error ? e.message : 'Failed to disconnect');
+    }
+  }
 
   const scheduleVerify = useCallback((
     key: string,
@@ -157,9 +232,19 @@ export default function SourceChannelsPage() {
     <PageShell maxWidth="3xl">
       <PageHeader
         title="My Channels"
-        subtitle="Save your default source channels. The source library picker will pre-fill these so you don't have to type them every time."
+        subtitle="Connect your source channels. The source library picker will pre-fill these so you don't have to type them every time."
       />
 
+      {oauthError && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 af-body text-destructive">
+          {oauthError}
+        </div>
+      )}
+      {oauthSuccess && (
+        <div className="rounded-md border border-green-500/50 bg-green-500/10 px-4 py-3 af-body text-green-700 dark:text-green-400">
+          {oauthSuccess}
+        </div>
+      )}
       {saveError && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 af-body text-destructive">
           {formatUserError(saveError)}
@@ -171,6 +256,8 @@ export default function SourceChannelsPage() {
           const v = verify[p.key];
           const avatar = v.channel?.avatarUrl ?? v.channel?.thumbnailUrl ?? null;
           const displayName = v.channel?.displayName ?? v.channel?.title ?? null;
+          const oauthConn = p.oauthPlatform ? connections[p.oauthPlatform] : null;
+          const isOauthConnected = !!oauthConn;
 
           return (
             <Card key={p.key}>
@@ -193,48 +280,86 @@ export default function SourceChannelsPage() {
                   )}
                 </div>
 
-                <div className="flex-1 space-y-1.5">
-                  <Label htmlFor={p.key} className="af-label font-medium">
-                    {p.label}
-                  </Label>
-
-                  <div className="relative">
-                    <Input
-                      id={p.key}
-                      placeholder={p.placeholder}
-                      value={channels[p.key] ?? ''}
-                      onChange={(e) => handleChange(p.key, p.platform, e.target.value)}
-                      className={[
-                        'h-9 pr-8',
-                        v.state === 'ok'    ? 'border-green-500 focus-visible:ring-green-500' : '',
-                        v.state === 'error' ? 'border-destructive focus-visible:ring-destructive' : '',
-                      ].join(' ')}
-                      disabled={isPending}
-                    />
-                    {/* Inline status indicator */}
-                    {v.state === 'loading' && (
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin text-xs">⟳</span>
-                    )}
-                    {v.state === 'ok' && (
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-green-500 text-xs font-bold">✓</span>
-                    )}
-                    {v.state === 'error' && (
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-destructive text-xs font-bold">✗</span>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={p.key} className="af-label font-medium">
+                      {p.label}
+                    </Label>
+                    {/* OAuth connect/disconnect button (Kick only for now) */}
+                    {p.oauthPlatform && (
+                      isOauthConnected ? (
+                        <div className="flex items-center gap-2">
+                          <span className="af-caption text-green-600 dark:text-green-400 font-medium">
+                            ✓ Connected{oauthConn.handle ? ` as @${oauthConn.handle}` : ''}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDisconnect(p.oauthPlatform!)}
+                          >
+                            Disconnect
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleConnect(p.oauthPlatform!)}
+                        >
+                          Connect with {p.label}
+                        </Button>
+                      )
                     )}
                   </div>
 
-                  {/* Channel name preview when verified */}
-                  {v.state === 'ok' && displayName && (
-                    <p className="af-caption text-success font-medium">{displayName}</p>
+                  {/* Username input — hidden when OAuth is connected (auto-filled) */}
+                  {!isOauthConnected && (
+                    <>
+                      <div className="relative">
+                        <Input
+                          id={p.key}
+                          placeholder={p.placeholder}
+                          value={channels[p.key] ?? ''}
+                          onChange={(e) => handleChange(p.key, p.platform, e.target.value)}
+                          className={[
+                            'h-9 pr-8',
+                            v.state === 'ok'    ? 'border-green-500 focus-visible:ring-green-500' : '',
+                            v.state === 'error' ? 'border-destructive focus-visible:ring-destructive' : '',
+                          ].join(' ')}
+                          disabled={isPending}
+                        />
+                        {v.state === 'loading' && (
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin text-xs">⟳</span>
+                        )}
+                        {v.state === 'ok' && (
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-green-500 text-xs font-bold">✓</span>
+                        )}
+                        {v.state === 'error' && (
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-destructive text-xs font-bold">✗</span>
+                        )}
+                      </div>
+
+                      {v.state === 'ok' && displayName && (
+                        <p className="af-caption text-success font-medium">{displayName}</p>
+                      )}
+                      {v.state === 'error' && (
+                        <p className="af-caption text-destructive">{v.error ?? 'Channel not found'}</p>
+                      )}
+                      {v.state === 'idle' && (
+                        <p className="af-caption">{p.hint}{p.oauthPlatform ? ' — or use Connect above for a better experience.' : ''}</p>
+                      )}
+                      {v.state === 'loading' && (
+                        <p className="af-caption">Verifying…</p>
+                      )}
+                    </>
                   )}
-                  {v.state === 'error' && (
-                    <p className="af-caption text-destructive">{v.error ?? 'Channel not found'}</p>
-                  )}
-                  {v.state === 'idle' && (
-                    <p className="af-caption">{p.hint}</p>
-                  )}
-                  {v.state === 'loading' && (
-                    <p className="af-caption">Verifying…</p>
+
+                  {isOauthConnected && (
+                    <p className="af-caption text-muted-foreground">
+                      Connected via OAuth — source library will use your account directly.
+                    </p>
                   )}
                 </div>
               </CardContent>
