@@ -107,7 +107,7 @@ KNOWN_YOUTUBE_HANDLES = {
     'trainwreckstv':  '@TrainwrecksTV',
     'adinross':       '@AdinRoss',
     'markiplier':     '@markiplier',
-    'moistcr1tikal':  '@moistcr1tikal',
+    'moistcr1tikal':  '@penguinz0',    # Charlie's channel is penguinz0
 }
 
 KNOWN_TIKTOK_HANDLES = {
