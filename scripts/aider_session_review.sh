@@ -18,10 +18,21 @@ LOG_FILE=$(mktemp)
 trap 'rm -f "$PROMPT_FILE" "$LOG_FILE"' EXIT
 
 # ── Load .env (KEY=VALUE lines only) ───────────────────────────────────────────
-if [ -z "${JIRA_API_TOKEN:-}" ] && [ -f "$REPO_ROOT/.env" ]; then
+# Always re-load so ATLASSIAN_* vars are available even if JIRA_* are already set.
+# Strips surrounding single and double quotes from values so DOMAIN="foo.atlassian.net"
+# doesn't produce a value with literal quote characters.
+if [ -f "$REPO_ROOT/.env" ]; then
   while IFS= read -r line || [ -n "$line" ]; do
     [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-    [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && export "$line" 2>/dev/null || true
+    [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] || continue
+    _key="${line%%=*}"
+    _val="${line#*=}"
+    # Strip CR, surrounding quotes, and trailing whitespace (trailing spaces
+    # in .env values cause HTTP 000 from curl when used in auth strings).
+    _val=$(printf '%s' "$_val" | sed $'s/\r//g; s/[[:space:]]*$//')
+    _val="${_val#\"}"; _val="${_val%\"}"
+    _val="${_val#\'}"; _val="${_val%\'}"
+    export "${_key}=${_val}" 2>/dev/null || true
   done < "$REPO_ROOT/.env"
 fi
 
@@ -34,6 +45,9 @@ if [ -n "$JIRA_BASE_URL" ] && [[ ! "$JIRA_BASE_URL" =~ ^https?:// ]]; then
   JIRA_BASE_URL="https://${JIRA_BASE_URL}"
 fi
 JIRA_BASE="${JIRA_BASE_URL%/}"
+# Guard: skip API calls if JIRA_BASE doesn't look like a valid Atlassian URL.
+# A bad/empty domain causes curl to fail immediately with HTTP 000.
+[[ "$JIRA_BASE" =~ ^https://[a-zA-Z0-9] ]] || JIRA_BASE=""
 JIRA_AUTH="${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}"
 # Confluence REST v1 uses the same site URL; space key must match your docs space (AuraFlux product space is usually AF).
 CONF_SPACE="${CONFLUENCE_SPACE_KEY:-AF}"
@@ -144,13 +158,15 @@ fi
 
 # ── 5. Env consistency — backend ──────────────────────────────────────────────
 echo "🔑 Checking environment consistency..."
+# Use [A-Z][A-Z0-9_]* so digit-prefixed names (C0_*, R2_*, E2E_*) are captured
+# in full instead of being truncated to a single letter by [A-Z_]+.
 ENV_IN_CODE=$(grep -rh 'process\.env\.' \
   "$REPO_ROOT/lib" "$REPO_ROOT/server.js" "$REPO_ROOT/scripts" "$REPO_ROOT/test" "$REPO_ROOT/bin" \
-  2>/dev/null | grep -oE 'process\.env\.[A-Z_]+' | sort -u | sed 's/process\.env\.//' || true)
+  2>/dev/null | grep -oE 'process\.env\.[A-Z][A-Z0-9_]*' | sort -u | sed 's/process\.env\.//' || true)
 
 # ── 6. Env consistency — frontend (NEXT_PUBLIC_* vars) ────────────────────────
 FRONTEND_ENV_IN_CODE=$(grep -rh 'process\.env\.' "$REPO_ROOT/app/src" 2>/dev/null \
-  | grep -oE 'process\.env\.NEXT_PUBLIC_[A-Z_]+' | sort -u \
+  | grep -oE 'process\.env\.NEXT_PUBLIC_[A-Z][A-Z0-9_]*' | sort -u \
   | sed 's/process\.env\.//' || true)
 
 ENV_IN_EXAMPLE=$(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)=' "$REPO_ROOT/.env.example" 2>/dev/null | sed -E 's/^[# ]*//;s/=.*//' | sort -u || true)
