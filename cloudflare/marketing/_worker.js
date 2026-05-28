@@ -13,8 +13,9 @@
  *   Framer tokens WRONG:    Blue #0B50EA (→ gold), Orange-red #F55A42 (→ gold)
  */
 
-// Framer publishes to this origin — update if Framer project URL changes
-const FRAMER_ORIGIN = 'https://auraflux-site.framer.website';
+// Cloudflare Pages static assets binding — serves files uploaded alongside this worker
+// Falls back to external Framer origin if not available
+const FRAMER_FALLBACK = 'https://27a16986.auraflux-marketing.pages.dev';
 
 // AuraFlux backend for form submissions
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
@@ -85,24 +86,25 @@ export default {
       return handleContactForm(request, env);
     }
 
-    // ── Proxy all other requests to Framer ────────────────────────────────
-    const framerUrl = new URL(url.pathname + url.search, FRAMER_ORIGIN);
-
-    let framerReq = new Request(framerUrl.toString(), {
-      method:  request.method,
-      headers: {
-        'User-Agent':      'Mozilla/5.0 (compatible; AuraFlux-Worker/1.0)',
-        'Accept':          request.headers.get('Accept') || '*/*',
-        'Accept-Language': request.headers.get('Accept-Language') || 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-      },
-    });
-
+    // ── Serve from Pages static assets (env.ASSETS), fall back to snapshot ──
     let response;
     try {
-      response = await fetch(framerReq);
-    } catch (e) {
-      return new Response('Service temporarily unavailable', { status: 503 });
+      // env.ASSETS serves files uploaded alongside this worker
+      if (env.ASSETS) {
+        response = await env.ASSETS.fetch(request);
+      } else {
+        throw new Error('no ASSETS binding');
+      }
+    } catch (_) {
+      // Fallback: last known-good Framer snapshot on pages.dev
+      try {
+        const fallbackUrl = new URL(url.pathname + url.search, FRAMER_FALLBACK);
+        response = await fetch(fallbackUrl.toString(), {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AuraFlux-Worker/1.0)' },
+        });
+      } catch (e) {
+        return new Response('Service temporarily unavailable', { status: 503 });
+      }
     }
 
     const contentType = response.headers.get('Content-Type') || '';
