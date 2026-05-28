@@ -21,13 +21,13 @@
 // Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
 // recent deployment that has real Framer content (>100KB homepage).
 // Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://b45d883f.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://d5b416c4.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // Paths served directly by the worker — Framer's SPA router must not intercept these.
 // Injected into every Framer HTML page so client-side nav forces a full reload.
-const WORKER_OWNED_PATHS = ['/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds'];
+const WORKER_OWNED_PATHS = ['/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -521,6 +521,35 @@ fetch('https://auraflux-api.onrender.com/api/public/plans')
 <p>Purchases made through the Apple App Store or Google Play are subject to their respective refund policies. Contact Apple or Google directly for those refunds.</p>`
   ),
 
+  '/roadmap': LEGAL_SHELL(
+    'Roadmap',
+    'See what\'s coming to AuraFlux — upcoming features, platform improvements, and new publishing destinations.',
+    'https://auraflux.co/roadmap',
+    `<h1 data-editable="hero_headline">What's Coming to AuraFlux</h1>
+<p class="meta" data-editable="hero_subtext">We ship fast. Here's what we're building next — features in active development and on the near-term roadmap.</p>
+
+<h2>Publishing &amp; Distribution</h2>
+<ul>
+  <li data-editable="roadmap_subscriptions"><strong>Subscription Platform Publishing</strong> — Direct publish to OnlyFans, Fansly, and Patreon for lifestyle and creator content. Same OAuth flow as YouTube and TikTok.</li>
+</ul>
+
+<h2>Content &amp; Production</h2>
+<ul>
+  <li data-editable="roadmap_compilation"><strong>Compilation Carousel</strong> — Auto-generate side-by-side clip grids, batch stitched compilations, and image carousels from your existing short-form library.</li>
+  <li data-editable="roadmap_showfilm"><strong>Show &amp; Film Content Type</strong> — Narrated video production using TV show and movie scene clips, with fair-use sourcing from your uploaded footage library.</li>
+  <li data-editable="roadmap_avatar"><strong>AI Avatar Video</strong> — On-camera presenter videos generated from your script, with full control over voice, appearance, and background.</li>
+</ul>
+
+<h2>Monetisation</h2>
+<ul>
+  <li data-editable="roadmap_shoppable"><strong>Shoppable Video</strong> — Embed product tags and tappable CTAs directly into your short-form videos for social commerce on TikTok and Instagram.</li>
+  <li data-editable="roadmap_paidads"><strong>Paid Ad Creative</strong> — Short-form video ad production optimised for Meta, TikTok, and Google — aspect ratios, copy overlays, and CTA formatting included.</li>
+</ul>
+
+<h2>Have a feature request?</h2>
+<p><a href="/contact">Contact us</a> — we read every message and the best ideas go straight to the board.</p>`
+  ),
+
 };
 
 // ── Request handler ───────────────────────────────────────────────────────────
@@ -533,11 +562,6 @@ export default {
     // ── Contact form POST ──────────────────────────────────────────────────
     if (request.method === 'POST' && path === '/api/contact') {
       return handleContactForm(request);
-    }
-
-    // ── Roadmap: redirect to home until post-launch content is ready (CPD-398) ──
-    if (path === '/roadmap') {
-      return Response.redirect('https://auraflux.co/', 302);
     }
 
     // ── Pages served directly from worker (no Framer dependency) ──────────

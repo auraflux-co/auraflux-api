@@ -54,6 +54,20 @@ const PAGE_SCHEMA: { page: string; label: string; sections: { key: string; label
       { key: 'faq_4_a',   label: 'FAQ 4 — Answer',   multiline: true },
     ],
   },
+  {
+    page: 'roadmap',
+    label: 'Roadmap',
+    sections: [
+      { key: 'hero_headline',         label: 'Hero Headline' },
+      { key: 'hero_subtext',          label: 'Hero Subtext',                    multiline: true },
+      { key: 'roadmap_subscriptions', label: 'Subscription Platform Publishing', multiline: true },
+      { key: 'roadmap_compilation',   label: 'Compilation Carousel',            multiline: true },
+      { key: 'roadmap_showfilm',      label: 'Show & Film Content Type',        multiline: true },
+      { key: 'roadmap_avatar',        label: 'AI Avatar Video',                 multiline: true },
+      { key: 'roadmap_shoppable',     label: 'Shoppable Video',                 multiline: true },
+      { key: 'roadmap_paidads',       label: 'Paid Ad Creative',                multiline: true },
+    ],
+  },
 ];
 
 type PageContent = Record<string, Record<string, string>>;
