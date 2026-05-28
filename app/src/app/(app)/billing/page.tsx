@@ -38,15 +38,16 @@ const TIER_ORDER = ['operate', 'guided', 'managed'];
 // C6: credits removed from highlights — the accurate count comes from the API
 // (plan?.credits) and is shown directly on each card, so the hardcoded line
 // created two conflicting numbers on the same card.
+// Price is intentionally NOT hardcoded here — it comes from plan.price_usd (live Stripe).
+// Changing price in Stripe → invalidates cache → next /plans fetch → reflected here.
 const PLAN_META: Record<string, {
-  label: string; sub: string; valueMetric: string; price: string; highlights: string[];
+  label: string; sub: string; valueMetric: string; highlights: string[];
   cta: string; contactSales: boolean;
 }> = {
   operate: {
     label:       'AuraFlux Operate',
     sub:         'Total Control & Custom Integration',
     valueMetric: '100% Internal Execution',
-    price:       '$999',
     highlights: [
       'Full API access & raw endpoints',
       'Comprehensive developer documentation',
@@ -60,7 +61,6 @@ const PLAN_META: Record<string, {
     label:       'AuraFlux Guided',
     sub:         'Build & Optimize with Collab Guidance',
     valueMetric: 'Shared Execution + Tooling',
-    price:       '$2,499',
     highlights: [
       'Interactive in-app flows',
       'Collab-powered live visual guidance',
@@ -74,7 +74,6 @@ const PLAN_META: Record<string, {
     label:       'AuraFlux Managed',
     sub:         'Fully Managed Workflows by Experts',
     valueMetric: '100% Outsourced Operations',
-    price:       '$4,499',
     highlights: [
       'Everything in Guided, plus:',
       'Dedicated Account Managers',
@@ -317,7 +316,11 @@ function BillingPageInner() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-end gap-2">
-              <span className="af-metric">{PLAN_META[currentTier]?.price ?? '—'}</span>
+              <span className="af-metric">
+                {plans.find(p => p.id === currentTier)?.price_usd
+                  ? `$${plans.find(p => p.id === currentTier)!.price_usd.toLocaleString()}`
+                  : '—'}
+              </span>
               <span className="af-label mb-1 text-muted-foreground">/month</span>
             </div>
             <div className="space-y-1.5">
@@ -374,7 +377,9 @@ function BillingPageInner() {
                     <p className="af-caption text-muted-foreground">{meta.sub}</p>
                     <p className="af-caption font-medium text-primary/70 mt-0.5">{meta.valueMetric}</p>
                     <div className="flex items-end gap-1 mt-2">
-                      <span className="af-metric">{meta.price}</span>
+                      <span className="af-metric">
+                        {plan?.price_usd ? `$${plan.price_usd.toLocaleString()}` : '—'}
+                      </span>
                       <span className="af-caption mb-1">/mo</span>
                     </div>
                     <p className="af-caption mt-1 flex items-center gap-1">

@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-28 v1.0.723 (Cursor — fix: prices now live from Stripe on both marketing site and app billing page — removed PLAN_META.price hardcodes in billing/page.tsx, marketing pricing fetches /api/public/plans on load, app uses plan.price_usd from /plans API)
 **Last Updated:** 2026-05-28 v1.0.722 (Cursor — feat: marketing→Stripe→Clerk flow (CPD-403) — GET /api/public/checkout?plan= endpoint, pricing CTAs wired to checkout, SPA router intercept injected into Framer pages so /pricing never hijacked by client-side router, cache-control: no-store on worker-owned pages)
 **Last Updated:** 2026-05-28 v1.0.721 (Cursor — fix(marketing): pricing page served directly from worker — Capability Ladder table, correct plan CTAs: Operate→sign-up?plan=operate, Guided→sign-up?plan=guided, Managed→/contact; no longer from Framer snapshot)
 **Last Updated:** 2026-05-28 v1.0.720 (Cursor — feat(marketing): worker overhaul — Framer badge removed, all legal pages + roadmap served directly from worker, deploy.sh auto-detects latest Framer content snapshot to avoid circular proxy loop, FRAMER_ORIGIN stamped at deploy time)

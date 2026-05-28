@@ -21,7 +21,7 @@
 // Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
 // recent deployment that has real Framer content (>100KB homepage).
 // Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://928888da.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://b45d883f.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -224,7 +224,7 @@ footer a{color:#f5c542;margin:0 8px}
     <div class="plan-name">Operate</div>
     <div class="plan-title">DIY / API</div>
     <div class="plan-sub">Total Control &amp; Custom Integration</div>
-    <div class="price">$49<span>/mo</span></div>
+    <div class="price" id="price-operate"><span class="price-val">—</span><span>/mo</span></div>
     <div class="credits">50 credits/month · Self-serve instant checkout</div>
     <ul class="features">
       <li>Full API access &amp; raw endpoints</li>
@@ -243,7 +243,7 @@ footer a{color:#f5c542;margin:0 8px}
     <div class="plan-name">Guided</div>
     <div class="plan-title">Collab Assist</div>
     <div class="plan-sub">Build &amp; Optimize with Collab Guidance</div>
-    <div class="price">$149<span>/mo</span></div>
+    <div class="price" id="price-guided"><span class="price-val">—</span><span>/mo</span></div>
     <div class="credits">200 credits/month · Self-serve subscription upgrade</div>
     <ul class="features">
       <li>Everything in Operate</li>
@@ -261,7 +261,7 @@ footer a{color:#f5c542;margin:0 8px}
     <div class="plan-name">Managed</div>
     <div class="plan-title">Done-For-You</div>
     <div class="plan-sub">Fully Managed Workflows by Experts</div>
-    <div class="price">Custom</div>
+    <div class="price" id="price-managed">Custom</div>
     <div class="credits">1000+ credits/month · Custom onboarding &amp; sales intake</div>
     <ul class="features">
       <li>Everything in Guided</li>
@@ -306,6 +306,21 @@ footer a{color:#f5c542;margin:0 8px}
   © 2026 AuraFlux. All rights reserved. &nbsp;
   <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a>
 </footer>
+<script>
+// Load live prices from Stripe via /api/public/plans — no hardcoded values
+fetch('https://auraflux-api.onrender.com/api/public/plans')
+  .then(r => r.json())
+  .then(plans => {
+    var map = { operate: '#price-operate', guided: '#price-guided' };
+    Object.entries(map).forEach(function([plan, sel]) {
+      var el = document.querySelector(sel + ' .price-val');
+      if (el && plans[plan]) el.textContent = plans[plan].replace('/mo','');
+    });
+  })
+  .catch(function() {
+    // Stripe unreachable — leave as "—" so user knows to contact us
+  });
+</script>
 </body>
 </html>`,
   '/privacy': LEGAL_SHELL(
