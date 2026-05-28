@@ -314,7 +314,7 @@ export default function DeveloperPage() {
                   ['publishMode', '"immediate" | "scheduled" | "manual"', 'No (default: immediate)', 'When to publish after production'],
                   ['staging', 'boolean', 'No', 'If true, job stops before publish for your review. Use GET /jobs/:id/staging-assets + POST /jobs/:id/approve-publish.'],
                   ['fromTemplateId', 'string', 'No', 'Start from a saved template. Body fields override template values.'],
-                  ['addOns', 'object', 'No', 'Enable optional add-ons: { heygen: { active: true }, shoppable: { active: true } }'],
+                  ['addOns', 'object', 'No', 'Enable optional add-ons: { avatar: { active: true }, shoppable: { active: true } }'],
                 ].map(([field, type, required, desc]) => (
                   <tr key={field as string}>
                     <td className="py-2 pr-4 font-mono text-foreground/90">{field}</td>
@@ -348,7 +348,7 @@ export default function DeveloperPage() {
                   <li>Short-form, single clip — <strong>1 credit</strong></li>
                   <li>Long-form or multi-clip — <strong>2 credits</strong></li>
                   <li>AI video generation (WAN) — <strong>3 credits</strong></li>
-                  <li>HeyGen avatar — <strong>+2 credits</strong></li>
+                  <li>AI avatar video — <strong>+2 credits</strong></li>
                 </ul>
               </div>
             </div>

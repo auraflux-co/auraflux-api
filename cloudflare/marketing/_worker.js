@@ -268,7 +268,7 @@ footer a{color:#f5c542;margin:0 8px}
       <li>Dedicated Account Manager</li>
       <li>Custom end-to-end workflow builds</li>
       <li>Priority support with custom SLAs</li>
-      <li>HeyGen avatar video integration</li>
+      <li>AI avatar video production</li>
       <li>Imagen 3 AI thumbnail generation</li>
       <li>Unlimited credits</li>
     </ul>
@@ -296,7 +296,7 @@ footer a{color:#f5c542;margin:0 8px}
       <tr><td class="label">Custom Flow Construction by Experts</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
       <tr><td class="label">Dedicated Account Management</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
       <tr><td class="label">Support SLA</td><td>Standard</td><td>Standard</td><td>Priority 24/7</td></tr>
-      <tr><td class="label">HeyGen Avatar Video</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">AI Avatar Video</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
       <tr><td class="label">Imagen 3 AI Thumbnails</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
     </tbody>
   </table>

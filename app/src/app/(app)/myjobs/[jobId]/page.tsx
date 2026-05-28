@@ -29,7 +29,7 @@ const PLATFORM_ICONS: Record<string, string> = {
 
 const ADDON_LABELS: Record<string, string> = {
   tts:            'ElevenLabs TTS',
-  heygen:         'HeyGen avatar',
+  heygen:         'AI Avatar',
   shoppable:      'Shoppable tagging',
   wan:            'Video generation',
   clipSourcing:   'Scene selection',
