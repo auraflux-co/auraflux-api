@@ -657,16 +657,17 @@ export async function getPlanFeatures(token?: string): Promise<{ features: PlanF
 // ─── Credits API ──────────────────────────────────────────────────────────────
 
 export interface CreditBalance {
-  clientId:            string;
-  included_remaining:  number;
-  included_total:      number;
-  pack_remaining:      number;
-  overage_used:        number;
-  overage_cap:         number | null;
-  overage_price_cents: number;
-  tier:                PlanTier;
-  period_start:        string;
-  period_end:          string;
+  clientId:               string;
+  included_remaining:     number;
+  included_total:         number;
+  pack_remaining:         number;
+  overage_used:           number;
+  overage_cap:            number | null;
+  overage_price_cents:    number;
+  tier:                   PlanTier;
+  period_start:           string;
+  period_end:             string;
+  stripe_subscription_id: string | null;
 }
 
 export interface CreditLedgerEntry {
