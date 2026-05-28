@@ -146,9 +146,11 @@ PYEOF
 
 # ── Step 2b: Inject page HTML files ──────────────────────────────────────────
 # cloudflare/marketing/pages/*.html → worker placeholders:
-#   __PAGE_PRICING__          → pages/pricing.html          (full page)
-#   __PAGE_CONTACT_CONTENT__  → pages/contact-content.html  (LEGAL_SHELL inner body)
-#   __PAGE_ROADMAP_CONTENT__  → pages/roadmap-content.html  (LEGAL_SHELL inner body)
+#   __PAGE_HOME__             → pages/home.html              (full homepage)
+#   __PAGE_BLOG__             → pages/blog.html              (full blog page)
+#   __PAGE_PRICING__          → pages/pricing.html           (full page)
+#   __PAGE_CONTACT_CONTENT__  → pages/contact-content.html   (LEGAL_SHELL inner body)
+#   __PAGE_ROADMAP_CONTENT__  → pages/roadmap-content.html   (LEGAL_SHELL inner body)
 
 python3 - <<PYEOF
 import os, re
@@ -169,16 +171,18 @@ def read_page(name, default=''):
 # Escape for embedding inside a JS template literal
 def js_escape(s):
     return s.replace('\\\\', '\\\\\\\\').replace('\`', '\\\`')
-    # Note: \${...} expressions in page files are INTENTIONAL (e.g. \${FRAMER_FONTS || ''})
-    # and must NOT be escaped so JS evaluates them at runtime
 
+home             = js_escape(read_page('home.html'))
+blog             = js_escape(read_page('blog.html'))
 pricing          = js_escape(read_page('pricing.html'))
 contact_content  = js_escape(read_page('contact-content.html'))
 roadmap_content  = js_escape(read_page('roadmap-content.html'))
 
+build = build.replace('__PAGE_HOME__',            home)
+build = build.replace('__PAGE_BLOG__',            blog)
 build = build.replace('__PAGE_PRICING__',         pricing)
-build = build.replace('__PAGE_CONTACT_CONTENT__',  contact_content)
-build = build.replace('__PAGE_ROADMAP_CONTENT__',  roadmap_content)
+build = build.replace('__PAGE_CONTACT_CONTENT__', contact_content)
+build = build.replace('__PAGE_ROADMAP_CONTENT__', roadmap_content)
 
 with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)

@@ -1,33 +1,23 @@
 /**
  * AuraFlux Marketing Site — Cloudflare Pages Worker
  *
- * Proxies the Framer-published site (auraflux-marketing.pages.dev canonical URL,
- * which auto-serves the latest Framer publish) and:
- *   1. Serves custom pages directly (legal, roadmap) — no Framer dependency
- *   2. Injects brand color corrections (blue → gold, orange-red → gold)
- *   3. Removes Framer badge (#__framer-badge-container)
- *   4. Rewrites Framer CDN URLs → auraflux.co
- *   5. Handles contact form POST → backend API
+ * Fully self-contained — no Framer proxy dependency.
+ * Every page is served directly from static HTML baked into the worker at deploy time.
  *
- * Migration path:
- *   Phase 1 (now)  — Worker custom pages + Framer for homepage/design assets
- *   Phase 2        — Superadmin marketing editor (CPD-402) replaces Framer editing
- *   Phase 3        — Full HTML in worker, no Framer dependency
- *
- * Framer sync: FRAMER_ORIGIN is the canonical Pages URL — it automatically
- * serves whatever Framer last published without any manual snapshot update.
+ *   1. Worker-owned pages (home, blog, pricing, legal, roadmap, contact)
+ *   2. Injects brand overrides + chat widget via INJECTED_CSS
+ *   3. Handles contact form POST → backend API
+ *   4. /sign-in and /sign-up redirect to app.auraflux.co
  */
 
-// Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
-// recent deployment that has real Framer content (>100KB homepage).
-// Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://25c2f9e6.auraflux-marketing.pages.dev';
+// Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
+// Not used at runtime — all pages are served statically.
+const FRAMER_ORIGIN = 'https://4a98e8ea.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
-// Paths served directly by the worker — Framer's SPA router must not intercept these.
-// Injected into every Framer HTML page so client-side nav forces a full reload.
-const WORKER_OWNED_PATHS = ['/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
+// All paths owned by the worker — no Framer proxy, no SPA router interception needed.
+const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -236,6 +226,8 @@ ${FRAMER_FOOTER || FALLBACK_FOOTER}
 </html>`;
 
 const PAGES = {
+  '/':        `__PAGE_HOME__`,
+  '/blog':    `__PAGE_BLOG__`,
   '/pricing': `__PAGE_PRICING__`,
   '/privacy': LEGAL_SHELL(
     'Privacy Policy',
@@ -503,62 +495,22 @@ export default {
       });
     }
 
-    // ── All other routes: proxy from latest Framer publish ────────────────
-    let response;
-    try {
-      const origin = new URL(url.pathname + url.search, FRAMER_ORIGIN);
-      response = await fetch(origin.toString(), {
-        headers: {
-          'User-Agent':      request.headers.get('User-Agent') || 'Mozilla/5.0',
-          'Accept':          request.headers.get('Accept') || '*/*',
-          'Accept-Language': request.headers.get('Accept-Language') || 'en-US,en;q=0.9',
-        },
-      });
-    } catch {
-      return new Response('Service temporarily unavailable', { status: 503 });
+    // ── App redirects ──────────────────────────────────────────────────────
+    if (path === '/sign-in' || path === '/sign-up' || path === '/login') {
+      return Response.redirect(`https://app.auraflux.co${path}`, 302);
     }
 
-    const contentType = response.headers.get('Content-Type') || '';
-
-    if (contentType.includes('text/html')) {
-      const rewriter = new HTMLRewriter()
-        .on('head', {
-          element(el) {
-            el.append(INJECTED_CSS, { html: true });
-            el.append(ROUTER_INTERCEPT_JS, { html: true });
-          },
-        })
-        // Remove Framer badge container entirely
-        .on('#__framer-badge-container', {
-          element(el) { el.remove(); },
-        })
-        .on('[data-framer-generated]', {
-          element(el) { el.remove(); },
-        })
-        // Rewrite Framer site URLs → auraflux.co
-        .on('a[href]', {
-          element(el) {
-            const href = el.getAttribute('href') || '';
-            if (href.includes('framer.website') || href.includes('auraflux-marketing.pages.dev')) {
-              el.setAttribute('href', href.replace(/https?:\/\/[^/]*(framer\.website|pages\.dev)[^"']*/g, 'https://auraflux.co'));
-            }
-          },
-        });
-
-      const transformed = rewriter.transform(response);
-      const headers = new Headers(transformed.headers);
-      headers.set('X-Frame-Options', 'SAMEORIGIN');
-      headers.set('X-Content-Type-Options', 'nosniff');
-      headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-      headers.delete('X-Powered-By');
-
-      return new Response(transformed.body, { status: transformed.status, headers });
-    }
-
-    // Non-HTML assets — pass through
-    return new Response(response.body, {
-      status: response.status,
-      headers: response.headers,
+    // ── Unknown path — 404 ────────────────────────────────────────────────
+    return new Response(LEGAL_SHELL(
+      'Page Not Found',
+      'The page you were looking for does not exist.',
+      'https://auraflux.co/',
+      `<h1>Page not found</h1>
+<p class="meta">Error 404</p>
+<p>The page you were looking for doesn't exist. <a href="/">Return home →</a></p>`
+    ), {
+      status: 404,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
   },
 };
