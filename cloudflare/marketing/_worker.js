@@ -27,7 +27,7 @@ const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // Paths served directly by the worker — Framer's SPA router must not intercept these.
 // Injected into every Framer HTML page so client-side nav forces a full reload.
-const WORKER_OWNED_PATHS = ['/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap'];
+const WORKER_OWNED_PATHS = ['/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -523,16 +523,6 @@ fetch('https://auraflux-api.onrender.com/api/public/plans')
 <p>Purchases made through the Apple App Store or Google Play are subject to their respective refund policies. Contact Apple or Google directly for those refunds.</p>`
   ),
 
-  '/roadmap': LEGAL_SHELL(
-    'Roadmap',
-    'What\'s coming to AuraFlux — features and capabilities in development.',
-    'https://auraflux.co/roadmap',
-    `<h1>Roadmap</h1>
-<p class="meta">We publish our roadmap from the sprint board post-launch.</p>
-<p>AuraFlux is actively shipping. Our public roadmap will be available here once we launch to new customers — content will be drawn directly from our sprint board so you always see what's actually in progress.</p>
-<p>In the meantime, if you have a feature request or want to know about a specific capability, <a href="/contact">contact us</a> or email <a href="mailto:support@auraflux.co">support@auraflux.co</a>.</p>
-<p style="margin-top:32px"><a href="https://app.auraflux.co" style="display:inline-block;background:#f5c542;color:#0b1220;padding:12px 28px;border-radius:8px;font-weight:600">Get early access →</a></p>`
-  ),
 };
 
 // ── Request handler ───────────────────────────────────────────────────────────

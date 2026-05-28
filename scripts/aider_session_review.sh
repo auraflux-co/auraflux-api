@@ -255,8 +255,8 @@ _mktg_check "Pricing page"       "https://auraflux.co/pricing"   "Operate"
 _mktg_check "Contact page"       "https://auraflux.co/contact"   "AuraFlux"
 _mktg_check "Privacy page"       "https://auraflux.co/privacy"   "Privacy"
 _mktg_check "Terms page"         "https://auraflux.co/terms"     "Terms"
-_mktg_check "Plans API"          "https://app.auraflux.co/api/public/plans" "operate"
-_mktg_check "Chat API"           "https://app.auraflux.co/api/public/chat" ""
+_mktg_check "Plans API"          "https://auraflux-api.onrender.com/api/public/plans" "operate"
+_mktg_check "Chat API"           "https://auraflux-api.onrender.com/api/public/chat" ""
 # Roadmap should redirect (3xx) — check it doesn't 200 a blank page
 ROADMAP_HTTP=$(curl -s --max-time 8 -o /dev/null -w "%{http_code}" "https://auraflux.co/roadmap" 2>/dev/null || echo "000")
 if [[ "$ROADMAP_HTTP" =~ ^3 ]]; then
