@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-27 v1.0.712 (Cursor — feat(cpd-401): post-checkout welcome email + /home?checkout=success redirect + welcome banner; feat(cpd-400): test_signup_funnel.py Layer 4 scaffold)
 **Last Updated:** 2026-05-27 v1.0.711 (Cursor — perf(cpd-390): parallel job submission+polling; 8 submit workers + 10 poll workers; benchmark runtime 8h→45min)
 **Last Updated:** 2026-05-27 v1.0.710 (Cursor — fix(cpd-390): long-form benchmark jobs use contentType=clips + COMPACT clipSpec (run6 proven path); show_commentary failed at portal2; POLL_TIMEOUT 900→1800s; 2/50 archived so far)
 **Last Updated:** 2026-05-27 v1.0.709 (Cursor — fix(cpd-390): poll loop recognises staging 'passed' status as success; first benchmark job score=100 archived — hasanabi short/thumbnail.designed; 1/50 CPD-315 launch gate; 33 jobs still running in background)

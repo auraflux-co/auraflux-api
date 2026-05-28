@@ -198,18 +198,24 @@ function BillingPageInner() {
       try {
         const token = await getToken();
         const origin = window.location.origin;
+        // CPD-401: first-time subscribers (no current subscription) land on /home
+        // with a welcome banner. Existing subscribers upgrading stay on /billing.
+        const isFirstSubscription = currentTier === 'operate' && !balance?.stripe_subscription_id;
+        const successUrl = isFirstSubscription
+          ? `${origin}/home?checkout=success`
+          : `${origin}/billing?success=1`;
         const res = await subscribeToPlan(
           planId,
-          `${origin}/billing?success=1`,
+          successUrl,
           `${origin}/billing?cancelled=1`,
           token ?? undefined,
         );
-        // C2 / CPD-382: in-place upgrade → ?upgraded=1 (immediate proration copy);
-        // new subscription checkout → Stripe redirects back to ?success=1.
+        // CPD-382: in-place upgrade → ?upgraded=1 (immediate proration copy);
+        // new subscription checkout → Stripe redirects back to success URL.
         if ((res as { upgraded?: boolean }).upgraded) {
           window.location.href = `${origin}/billing?upgraded=1`;
         } else {
-          setRedirecting(true); // C8: brief "Redirecting…" state
+          setRedirecting(true);
           window.location.href = res.url;
         }
       } catch {

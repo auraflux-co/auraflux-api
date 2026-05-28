@@ -1,6 +1,8 @@
 import { currentUser } from '@clerk/nextjs/server';
+import { Suspense } from 'react';
 import { SetupChecklist } from '@/components/dashboard/setup-checklist';
 import { LiveTiles } from '@/components/dashboard/live-tiles';
+import { CheckoutWelcomeBanner } from '@/components/dashboard/checkout-welcome-banner';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { tierLabel } from '@/lib/tier-labels';
 
@@ -30,6 +32,10 @@ export default async function DashboardPage() {
         title={`Welcome back, ${firstName}`}
         badge={tierBadge}
       />
+      {/* CPD-401: welcome banner shown once after first subscription checkout */}
+      <Suspense>
+        <CheckoutWelcomeBanner firstName={firstName} />
+      </Suspense>
       {!isSuperAdmin && <SetupChecklist setupDismissed={setupDismissed} planTier={planTier} />}
       <LiveTiles />
     </PageShell>
