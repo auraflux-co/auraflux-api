@@ -220,7 +220,13 @@ def build_spec(s: dict, form: str, clips: list, feature: dict,
     # show_commentary fails at portal2 when clips are short. 'clips' routes correctly.
     ct        = 'clips'
     dur       = 8 if is_long else 1
-    clip_urls = [c.get('url', c.get('download_url', '')) for c in clips if c.get('url') or c.get('download_url')]
+    # Source Library returns signedUrl (CloudFront CDN) and cdnUrl — prefer those
+    # over url (Twitch/Kick page URL which Render cannot download from).
+    def _cdn_url(c):
+        return (c.get('signedUrl') or c.get('cdnUrl') or
+                c.get('signed_url') or c.get('cdn_url') or
+                c.get('download_url') or c.get('url') or '')
+    clip_urls = [u for u in (_cdn_url(c) for c in clips) if u]
 
     social_ctx = f'\nFor context: streamer publishes "{social_sample}" — our output quality bar.' if social_sample else ''
 
@@ -481,7 +487,7 @@ def run_benchmark(args):
     score_100_count = 0
 
     # ── Phase 1: Submit all jobs in parallel (fetch clips + build spec + submit) ──
-    SUBMIT_WORKERS = 8   # concurrent submissions — safe for Render queue
+    SUBMIT_WORKERS = 4   # concurrent submissions — keep queue manageable (≤6 active at once)
     submitted = []       # list of (j, server_jid) or (j, None) for failures
 
     def submit_one(j):

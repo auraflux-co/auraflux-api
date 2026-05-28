@@ -1,5 +1,6 @@
 # AuraFlux — Status & Task Tracker
 **Last Updated:** 2026-05-27 v1.0.713 (Cursor — fix(cpd-390): benchmark spec missing url (singular) field + featureVariation non-standard; all 26 parallel jobs had portals:[] — never started portal0)
+**Last Updated:** 2026-05-27 v1.0.713 (Cursor — fix(cpd-390): use signedUrl/cdnUrl from Source Library — all 26 jobs had urls:[] because Twitch page URLs were used instead of CloudFront CDN URLs; reduce submit workers 8→4)
 **Last Updated:** 2026-05-27 v1.0.712 (Cursor — feat(cpd-401): post-checkout welcome email + /home?checkout=success redirect + welcome banner; feat(cpd-400): test_signup_funnel.py Layer 4 scaffold)
 **Last Updated:** 2026-05-27 v1.0.711 (Cursor — perf(cpd-390): parallel job submission+polling; 8 submit workers + 10 poll workers; benchmark runtime 8h→45min)
 **Last Updated:** 2026-05-27 v1.0.710 (Cursor — fix(cpd-390): long-form benchmark jobs use contentType=clips + COMPACT clipSpec (run6 proven path); show_commentary failed at portal2; POLL_TIMEOUT 900→1800s; 2/50 archived so far)
