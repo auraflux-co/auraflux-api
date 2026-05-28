@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-27 v1.0.711 (Cursor — perf(cpd-390): parallel job submission+polling; 8 submit workers + 10 poll workers; benchmark runtime 8h→45min)
 **Last Updated:** 2026-05-27 v1.0.710 (Cursor — fix(cpd-390): long-form benchmark jobs use contentType=clips + COMPACT clipSpec (run6 proven path); show_commentary failed at portal2; POLL_TIMEOUT 900→1800s; 2/50 archived so far)
 **Last Updated:** 2026-05-27 v1.0.709 (Cursor — fix(cpd-390): poll loop recognises staging 'passed' status as success; first benchmark job score=100 archived — hasanabi short/thumbnail.designed; 1/50 CPD-315 launch gate; 33 jobs still running in background)
 **Last Updated:** 2026-05-27 v1.0.708 (Cursor — fix(cpd-390): benchmark uses Source Library for clips (proven run6 path); social profile videos become quality bar in Gemini scoring prompt not source input — YouTube URLs can't be fetched from Render; 34 jobs queued, 18 streamers × short+long, guided auth, gregory.robert.c@gmail.com)

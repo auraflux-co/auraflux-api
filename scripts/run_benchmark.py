@@ -38,6 +38,7 @@ import time
 import urllib.request
 import urllib.parse
 import urllib.error
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -466,99 +467,112 @@ def run_benchmark(args):
     manifest_file = log_dir / 'benchmark_archive_manifest.json'
 
     results = []
+    results_lock = __import__('threading').Lock()
     score_100_count = 0
 
-    for j in jobs:
+    # ── Phase 1: Submit all jobs in parallel (fetch clips + build spec + submit) ──
+    SUBMIT_WORKERS = 8   # concurrent submissions — safe for Render queue
+    submitted = []       # list of (j, server_jid) or (j, None) for failures
+
+    def submit_one(j):
+        s       = j['streamer']
+        form    = j['form']
+        feature = j['feature']
+        jid     = j['id']
+        print(f'  [submit] {jid}  {s["display"]} {form} | {feature["key"]}')
+
+        clip_count = 3 if form == 'long' else 1
+        clips = fetch_clips(s['platform'], s['account'], clip_count)
+        if not clips:
+            print(f'  ✗  {jid}  No clips — skipping')
+            return j, None, None, 'SKIP'
+
+        social_sample = j['social_titles'][0] if j['social_titles'] else ''
+        spec = build_spec(s, form, clips, feature, social_sample)
+
+        resp, code = api('POST', '/v1/jobs', spec)
+        if code not in (200, 201, 202):
+            print(f'  ✗  {jid}  HTTP {code}')
+            return j, None, clips, 'SUBMIT_FAIL'
+
+        server_jid = resp.get('jobId') or resp.get('id') or resp.get('job_id') or jid
+        print(f'  ✓  {jid}  submitted → {server_jid}')
+        return j, server_jid, clips, 'OK'
+
+    print(f'\n  ── Phase 1: Submitting {len(jobs)} jobs in parallel (up to {SUBMIT_WORKERS} at once) ──')
+    with ThreadPoolExecutor(max_workers=SUBMIT_WORKERS) as ex:
+        futures = {ex.submit(submit_one, j): j for j in jobs}
+        for fut in as_completed(futures):
+            j, server_jid, clips, submit_status = fut.result()
+            submitted.append((j, server_jid, clips, submit_status))
+
+    ok_count = sum(1 for _, sjid, _, s in submitted if s == 'OK')
+    print(f'\n  ── Phase 1 complete: {ok_count}/{len(jobs)} submitted ──')
+
+    # ── Phase 2: Poll all jobs concurrently ──────────────────────────────────────
+    POLL_WORKERS = 10
+
+    def poll_and_score(entry):
+        j, server_jid, clips, submit_status = entry
         s       = j['streamer']
         form    = j['form']
         feature = j['feature']
         jid     = j['id']
 
-        print(f'\n{"─"*70}')
-        print(f'  {jid}')
-        print(f'  {s["display"]} ({s["platform"]}/@{s["account"]})  |  {form}  |  {feature["label"]}')
-        print(f'{"─"*70}')
+        if submit_status != 'OK' or not server_jid:
+            score, passed, archive_ready, notes = 0, False, False, f'Submit failed: {submit_status}'
+            return {
+                'id': jid, 'job_id': server_jid or jid, 'streamer': s['account'],
+                'platform': s['platform'], 'form': form, 'feature': feature['key'],
+                'status': submit_status, 'output_url': None, 'score': score,
+                'pass': passed, 'archive': archive_ready, 'notes': notes,
+            }
 
-        # 1. Fetch source clips
-        print(f'  1. Fetching clips from Source Library ({s["platform"]}/@{s["account"]})…')
-        clip_count = 3 if form == 'long' else 1
-        clips = fetch_clips(s['platform'], s['account'], clip_count)
-        if not clips:
-            print(f'  ✗  No clips returned — skipping')
-            results.append({'id': jid, 'status': 'SKIP', 'score': 0, 'pass': False, 'notes': 'No clips from Source Library'})
-            continue
-        for c in clips:
-            print(f'     • {c.get("title","?")[:55]} ({c.get("duration",0):.0f}s)')
-
-        # 2. Build job spec (Gemini-assisted, informed by social publishing style)
-        social_sample = j['social_titles'][0] if j['social_titles'] else ''
-        print(f'  2. Building job spec (Gemini)…')
-        spec = build_spec(s, form, clips, feature, social_sample)
-        tts_active = spec.get('addOns', {}).get('tts', {}).get('active', False)
-        print(f'  ✓  form={form}  tts={tts_active}  branding=AuraFlux  feature={feature["key"]}')
-
-        # 3. Submit
-        print(f'  3. Submitting…')
-        resp, code = api('POST', '/v1/jobs', spec)
-        if code not in (200, 201, 202):
-            print(f'  ✗  HTTP {code}: {resp}')
-            results.append({'id': jid, 'status': 'SUBMIT_FAIL', 'http': code, 'score': 0, 'pass': False})
-            continue
-        server_jid = resp.get('jobId') or resp.get('id') or resp.get('job_id') or jid
-        print(f'  ✓  job_id={server_jid}')
-
-        # 4. Poll
-        print(f'  4. Polling (up to {POLL_TIMEOUT}s)…')
-        status, output_url, full_resp = poll_job(server_jid)
-        icon = '✓' if status in ('complete', 'published', 'passed') else '✗'
-        print(f'  {icon}  status={status}  output_url={output_url or "NONE"}')
-
-        # 5. Score
-        print(f'  5. Scoring (Gemini QA + publishability vs social)…')
+        status, output_url, _ = poll_job(server_jid)
         score, passed, archive_ready, notes = score_output(
-            s, form, feature, status, output_url, len(clips), j['social_titles']
+            s, form, feature, status, output_url, len(clips) if clips else 0, j['social_titles']
         )
         icon = '🟢' if score == 100 else ('🟡' if score >= 70 else '🔴')
-        print(f'  {icon}  score={score}/100  pass={passed}  archive={archive_ready}')
-        print(f'     {notes[:120]}')
+        status_icon = '✓' if status in ('complete', 'published', 'passed') else '✗'
+        print(f'  {icon} {jid:35s}  {status_icon} {status:12s}  score={score}/100')
 
-        if score == 100:
-            score_100_count += 1
-            append_archive(manifest_file, {
-                'job_id':        server_jid,
-                'benchmark_id':  jid,
-                'streamer':      s['account'],
-                'display':       s['display'],
-                'platform':      s['platform'],
-                'form':          form,
-                'feature':       feature['key'],
-                'score':         score,
-                'output_url':    output_url,
-                'social_titles': j['social_titles'][:3],
-                'timestamp':     datetime.now(timezone.utc).isoformat(),
-            })
-            print(f'  📦  Archived ({score_100_count} of 50 target)')
-
-        row = {
-            'id':          jid,
-            'job_id':      server_jid,
-            'streamer':    s['account'],
-            'platform':    s['platform'],
-            'form':        form,
-            'feature':     feature['key'],
-            'status':      status,
-            'output_url':  output_url,
-            'score':       score,
-            'pass':        passed,
-            'archive':     archive_ready,
-            'notes':       notes,
+        return {
+            'id': jid, 'job_id': server_jid, 'streamer': s['account'],
+            'platform': s['platform'], 'form': form, 'feature': feature['key'],
+            'status': status, 'output_url': output_url, 'score': score,
+            'pass': passed, 'archive': archive_ready, 'notes': notes,
         }
-        results.append(row)
-        result_file.write_text(json.dumps({
-            'results': results,
-            'score_100_count': score_100_count,
-            'account': 'gregory.robert.c@gmail.com',
-        }, indent=2))
+
+    print(f'\n  ── Phase 2: Polling & scoring all jobs in parallel ──')
+    print(f'  (up to {POLL_TIMEOUT}s per job, {POLL_WORKERS} concurrent)\n')
+
+    with ThreadPoolExecutor(max_workers=POLL_WORKERS) as ex:
+        futures = {ex.submit(poll_and_score, entry): entry for entry in submitted}
+        for fut in as_completed(futures):
+            row = fut.result()
+            with results_lock:
+                results.append(row)
+                if row['score'] == 100:
+                    score_100_count += 1
+                    append_archive(manifest_file, {
+                        'job_id':        row['job_id'],
+                        'benchmark_id':  row['id'],
+                        'streamer':      row['streamer'],
+                        'display':       futures[fut][0]['streamer']['display'],
+                        'platform':      row['platform'],
+                        'form':          row['form'],
+                        'feature':       row['feature'],
+                        'score':         row['score'],
+                        'output_url':    row['output_url'],
+                        'social_titles': futures[fut][0]['social_titles'][:3],
+                        'timestamp':     datetime.now(timezone.utc).isoformat(),
+                    })
+                    print(f'  📦  Archived ({score_100_count} of 50 target)')
+                result_file.write_text(json.dumps({
+                    'results': results,
+                    'score_100_count': score_100_count,
+                    'account': 'gregory.robert.c@gmail.com',
+                }, indent=2))
 
     print(f'\n{"═"*70}')
     print(f'  BENCHMARK COMPLETE')
