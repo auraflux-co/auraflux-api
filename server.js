@@ -1,7 +1,12 @@
 // Load repo-root .env regardless of PM2/cwd (folder_id and keys live here).
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
-try { require('newrelic'); } catch (e) { console.warn('[newrelic] agent failed to load:', e.message); }
+// Only load New Relic when a license key is explicitly configured.
+// Skipping require entirely prevents New Relic v14 from calling process.exit(1)
+// on missing app_name — a fatal bootstrap error that a try/catch cannot intercept.
+if (process.env.NEW_RELIC_LICENSE_KEY) {
+  try { require('newrelic'); } catch (e) { console.warn('[newrelic] agent failed to load:', e.message); }
+}
 
 // ── Build identity — set once at startup, never changes during runtime ────────
 const BUILD_INFO = (() => {
