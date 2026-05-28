@@ -89,6 +89,8 @@ type HtmlPatch = {
   html: string;
 };
 
+type HtmlPatches = HtmlPatch[];
+
 export default function MarketingEditorPage() {
   const router           = useRouter();
   const { getToken }     = useAuth();
@@ -103,6 +105,7 @@ export default function MarketingEditorPage() {
   const [chatLoading, setChatLoading]       = useState(false);
   const [pendingChanges, setPendingChanges] = useState<InterpretedChange[] | null>(null);
   const [pendingPatch, setPendingPatch]     = useState<HtmlPatch | null>(null);
+  const [pendingPatches, setPendingPatches] = useState<HtmlPatches | null>(null);
   const [applyingAll, setApplyingAll]       = useState(false);
   const [applyingPatch, setApplyingPatch]   = useState(false);
   const [chatHistory, setChatHistory]       = useState<ChatMessage[]>([]);
@@ -227,7 +230,11 @@ export default function MarketingEditorPage() {
         }
       } else if (body.type === 'html_patch') {
         setPendingPatch({ page: body.page, description: body.description, html: body.html });
-        setChatHistory(h => [...h, { role: 'assistant', text: `Ready to rewrite **${body.page}** — ${body.description}. Review the HTML below and confirm to deploy.` }]);
+        setChatHistory(h => [...h, { role: 'assistant', text: `Ready to patch **${body.page}**: ${body.description}` }]);
+      } else if (body.type === 'html_patches') {
+        setPendingPatches(body.patches);
+        const pages = body.patches.map((p: HtmlPatch) => `**${p.page}**`).join(', ');
+        setChatHistory(h => [...h, { role: 'assistant', text: `Ready to patch ${pages} — review below and deploy all at once.` }]);
       }
     } catch (e) {
       setChatHistory(h => [...h, { role: 'assistant', text: `Something went wrong: ${e instanceof Error ? e.message : e}` }]);
@@ -271,6 +278,30 @@ export default function MarketingEditorPage() {
       setMsg({ text: `Apply failed: ${e instanceof Error ? e.message : e}`, ok: false });
     } finally {
       setApplyingAll(false);
+    }
+  }
+
+  async function applyPatches() {
+    if (!pendingPatches?.length) return;
+    setApplyingPatch(true);
+    setMsg(null);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/api/admin/marketing/html-patches`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ patches: pendingPatches.map(p => ({ page: p.page, html: p.html })) }),
+      });
+      const body = await res.json();
+      if (!body.ok) throw new Error(body.error);
+      const pages = pendingPatches.map(p => p.page).join(', ');
+      setPendingPatches(null);
+      setChatHistory(h => [...h, { role: 'assistant', text: `✅ Deployed — ${pages} live on auraflux.co` }]);
+      setMsg({ text: `${pages} deployed — live within ~60 seconds`, ok: true });
+    } catch (e) {
+      setMsg({ text: `Deploy failed: ${e instanceof Error ? e.message : e}`, ok: false });
+    } finally {
+      setApplyingPatch(false);
     }
   }
 
@@ -382,7 +413,38 @@ export default function MarketingEditorPage() {
           </div>
         )}
 
-        {/* Pending HTML patch */}
+        {/* Pending multi-page HTML patches */}
+        {pendingPatches && pendingPatches.length > 0 && (
+          <div className="px-4 pb-3 space-y-2">
+            {pendingPatches.map((p, i) => (
+              <div key={i} className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wide">Patch {i + 1}/{pendingPatches.length}</span>
+                  <span className="text-[11px] text-muted-foreground font-mono">{p.page}</span>
+                </div>
+                <p className="text-sm text-foreground">{p.description}</p>
+                <details>
+                  <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    View HTML ({p.html.length.toLocaleString()} chars)
+                  </summary>
+                  <pre className="mt-2 text-[11px] text-muted-foreground bg-background rounded p-2 overflow-auto max-h-40 border border-border whitespace-pre-wrap break-all">
+                    {p.html.slice(0, 2000)}{p.html.length > 2000 ? '\n… (truncated)' : ''}
+                  </pre>
+                </details>
+              </div>
+            ))}
+            <div className="flex gap-2 pt-1">
+              <button onClick={applyPatches} disabled={applyingPatch} className="px-4 py-2 rounded-md bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400 disabled:opacity-40 transition-colors">
+                {applyingPatch ? 'Deploying…' : `Deploy all ${pendingPatches.length} pages`}
+              </button>
+              <button onClick={() => setPendingPatches(null)} className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Pending single HTML patch */}
         {pendingPatch && (
           <div className="px-4 pb-3 space-y-2">
             <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 space-y-2">
