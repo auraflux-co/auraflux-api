@@ -21,3 +21,5 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@anthropic-ai/sdk'
         update-types: ['version-update:semver-major']
+      - dependency-name: 'newrelic'
+        update-types: ['version-update:semver-major']
