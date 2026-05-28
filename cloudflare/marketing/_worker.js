@@ -21,7 +21,7 @@
 // Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
 // recent deployment that has real Framer content (>100KB homepage).
 // Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://dc1a098b.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://9aebbf2e.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -126,7 +126,7 @@ const FALLBACK_NAV = `<nav style="display:flex;align-items:center;justify-conten
     <a href="/pricing" style="font-size:.9rem;color:#9999b8;text-decoration:none">Pricing</a>
     <a href="/roadmap" style="font-size:.9rem;color:#9999b8;text-decoration:none">Roadmap</a>
     <a href="/contact" style="font-size:.9rem;color:#9999b8;text-decoration:none">Contact</a>
-    <a href="https://app.auraflux.co" style="font-size:.9rem;background:#f5c542;color:#0b1220;padding:8px 18px;border-radius:6px;font-weight:600;text-decoration:none">Launch App →</a>
+    <a href="https://app.auraflux.co/sign-up" style="font-size:.9rem;background:#f5c542;color:#0b1220;padding:8px 18px;border-radius:6px;font-weight:600;text-decoration:none">Get Started</a>
   </div>
 </nav>`;
 
@@ -629,6 +629,7 @@ fetch('https://auraflux-api.onrender.com/api/public/plans')
     <h2 style="margin-bottom:20px">Other ways to reach us</h2>
     <div class="contact-channels">
       <div class="channel">📧 <span>Email: <a href="mailto:support@auraflux.co">support@auraflux.co</a></span></div>
+      <div class="channel">📞 <span>Phone / SMS: <a href="tel:+15716002835">+1 (571) 600-2835</a></span></div>
       <div class="channel">💬 <span>In-app chat via the <a href="https://app.auraflux.co">Collab assistant</a></span></div>
     </div>
 
