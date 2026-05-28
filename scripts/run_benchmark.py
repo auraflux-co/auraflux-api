@@ -483,90 +483,77 @@ def run_benchmark(args):
     manifest_file = log_dir / 'benchmark_archive_manifest.json'
 
     results = []
-    results_lock = __import__('threading').Lock()
     score_100_count = 0
 
-    # ── Phase 1: Submit all jobs in parallel (fetch clips + build spec + submit) ──
-    SUBMIT_WORKERS = 4   # concurrent submissions — keep queue manageable (≤6 active at once)
-    submitted = []       # list of (j, server_jid) or (j, None) for failures
+    # ── Sliding window execution ─────────────────────────────────────────────────
+    # Root cause of cascade failures: submitting 26 jobs simultaneously saturated
+    # the cwn-c0 worker pool. Fix: run jobs in windows of WINDOW_SIZE — within
+    # each window, all WINDOW_SIZE jobs run in parallel; backend never sees more
+    # than WINDOW_SIZE concurrent jobs at once.
+    WINDOW_SIZE = 4
 
-    def submit_one(j):
+    def run_one_job(j):
         s       = j['streamer']
         form    = j['form']
         feature = j['feature']
         jid     = j['id']
-        print(f'  [submit] {jid}  {s["display"]} {form} | {feature["key"]}')
 
+        # Fetch clips
         clip_count = 3 if form == 'long' else 1
         clips = fetch_clips(s['platform'], s['account'], clip_count)
         if not clips:
             print(f'  ✗  {jid}  No clips — skipping')
-            return j, None, None, 'SKIP'
+            return {'id': jid, 'job_id': jid, 'streamer': s['account'], 'platform': s['platform'],
+                    'form': form, 'feature': feature['key'], 'status': 'SKIP',
+                    'output_url': None, 'score': 0, 'pass': False, 'archive': False,
+                    'notes': 'No clips in Source Library', '_display': s['display'], '_social_titles': j['social_titles']}
 
+        # Build spec
         social_sample = j['social_titles'][0] if j['social_titles'] else ''
         spec = build_spec(s, form, clips, feature, social_sample)
 
+        # Submit
         resp, code = api('POST', '/v1/jobs', spec)
         if code not in (200, 201, 202):
             print(f'  ✗  {jid}  HTTP {code}')
-            return j, None, clips, 'SUBMIT_FAIL'
-
+            return {'id': jid, 'job_id': jid, 'streamer': s['account'], 'platform': s['platform'],
+                    'form': form, 'feature': feature['key'], 'status': 'SUBMIT_FAIL',
+                    'output_url': None, 'score': 0, 'pass': False, 'archive': False,
+                    'notes': f'HTTP {code}', '_display': s['display'], '_social_titles': j['social_titles']}
         server_jid = resp.get('jobId') or resp.get('id') or resp.get('job_id') or jid
-        print(f'  ✓  {jid}  submitted → {server_jid}')
-        return j, server_jid, clips, 'OK'
+        print(f'  ↑  {jid:35s}  submitted → {server_jid[-20:]}')
 
-    print(f'\n  ── Phase 1: Submitting {len(jobs)} jobs in parallel (up to {SUBMIT_WORKERS} at once) ──')
-    with ThreadPoolExecutor(max_workers=SUBMIT_WORKERS) as ex:
-        futures = {ex.submit(submit_one, j): j for j in jobs}
-        for fut in as_completed(futures):
-            j, server_jid, clips, submit_status = fut.result()
-            submitted.append((j, server_jid, clips, submit_status))
-
-    ok_count = sum(1 for _, sjid, _, s in submitted if s == 'OK')
-    print(f'\n  ── Phase 1 complete: {ok_count}/{len(jobs)} submitted ──')
-
-    # ── Phase 2: Poll all jobs concurrently ──────────────────────────────────────
-    POLL_WORKERS = 10
-
-    def poll_and_score(entry):
-        j, server_jid, clips, submit_status = entry
-        s       = j['streamer']
-        form    = j['form']
-        feature = j['feature']
-        jid     = j['id']
-
-        if submit_status != 'OK' or not server_jid:
-            score, passed, archive_ready, notes = 0, False, False, f'Submit failed: {submit_status}'
-            return {
-                'id': jid, 'job_id': server_jid or jid, 'streamer': s['account'],
-                'platform': s['platform'], 'form': form, 'feature': feature['key'],
-                'status': submit_status, 'output_url': None, 'score': score,
-                'pass': passed, 'archive': archive_ready, 'notes': notes,
-            }
-
+        # Poll
         status, output_url, _ = poll_job(server_jid)
+
+        # Score
         score, passed, archive_ready, notes = score_output(
-            s, form, feature, status, output_url, len(clips) if clips else 0, j['social_titles']
+            s, form, feature, status, output_url, len(clips), j['social_titles']
         )
         icon = '🟢' if score == 100 else ('🟡' if score >= 70 else '🔴')
         status_icon = '✓' if status in ('complete', 'published', 'passed') else '✗'
         print(f'  {icon} {jid:35s}  {status_icon} {status:12s}  score={score}/100')
 
-        return {
-            'id': jid, 'job_id': server_jid, 'streamer': s['account'],
-            'platform': s['platform'], 'form': form, 'feature': feature['key'],
-            'status': status, 'output_url': output_url, 'score': score,
-            'pass': passed, 'archive': archive_ready, 'notes': notes,
-        }
+        return {'id': jid, 'job_id': server_jid, 'streamer': s['account'],
+                'platform': s['platform'], 'form': form, 'feature': feature['key'],
+                'status': status, 'output_url': output_url, 'score': score,
+                'pass': passed, 'archive': archive_ready, 'notes': notes,
+                '_display': s['display'], '_social_titles': j['social_titles']}
 
-    print(f'\n  ── Phase 2: Polling & scoring all jobs in parallel ──')
-    print(f'  (up to {POLL_TIMEOUT}s per job, {POLL_WORKERS} concurrent)\n')
+    total_batches = (len(jobs) + WINDOW_SIZE - 1) // WINDOW_SIZE
+    print(f'\n  Running {len(jobs)} jobs in {total_batches} batches of ≤{WINDOW_SIZE}')
+    print(f'  Max {WINDOW_SIZE} concurrent backend jobs (prevents worker pool saturation)\n')
 
-    with ThreadPoolExecutor(max_workers=POLL_WORKERS) as ex:
-        futures = {ex.submit(poll_and_score, entry): entry for entry in submitted}
-        for fut in as_completed(futures):
-            row = fut.result()
-            with results_lock:
+    for batch_idx in range(0, len(jobs), WINDOW_SIZE):
+        batch = jobs[batch_idx:batch_idx + WINDOW_SIZE]
+        batch_num = batch_idx // WINDOW_SIZE + 1
+        ids = ', '.join(j['id'].split('-')[1] for j in batch)
+        print(f'\n  ── Batch {batch_num}/{total_batches} ({ids}) ──')
+
+        with ThreadPoolExecutor(max_workers=WINDOW_SIZE) as ex:
+            futures = {ex.submit(run_one_job, j): j for j in batch}
+            for fut in as_completed(futures):
+                row = fut.result()
                 results.append(row)
                 if row['score'] == 100:
                     score_100_count += 1
@@ -574,18 +561,18 @@ def run_benchmark(args):
                         'job_id':        row['job_id'],
                         'benchmark_id':  row['id'],
                         'streamer':      row['streamer'],
-                        'display':       futures[fut][0]['streamer']['display'],
+                        'display':       row.get('_display', row['streamer']),
                         'platform':      row['platform'],
                         'form':          row['form'],
                         'feature':       row['feature'],
                         'score':         row['score'],
                         'output_url':    row['output_url'],
-                        'social_titles': futures[fut][0]['social_titles'][:3],
+                        'social_titles': row.get('_social_titles', [])[:3],
                         'timestamp':     datetime.now(timezone.utc).isoformat(),
                     })
                     print(f'  📦  Archived ({score_100_count} of 50 target)')
                 result_file.write_text(json.dumps({
-                    'results': results,
+                    'results': [{k: v for k, v in r.items() if not k.startswith('_')} for r in results],
                     'score_100_count': score_100_count,
                     'account': 'gregory.robert.c@gmail.com',
                 }, indent=2))
