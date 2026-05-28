@@ -1,7 +1,7 @@
 // Load repo-root .env regardless of PM2/cwd (folder_id and keys live here).
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
-require('newrelic');
+try { require('newrelic'); } catch (e) { console.warn('[newrelic] agent failed to load:', e.message); }
 
 // ── Build identity — set once at startup, never changes during runtime ────────
 const BUILD_INFO = (() => {

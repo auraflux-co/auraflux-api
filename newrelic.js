@@ -1,9 +1,16 @@
 'use strict';
 
+// Resolve app name defensively — New Relic v14 throws if the resolved name is
+// an empty string, even when the config file provides a fallback, because its
+// internal env-var reader can override the config with a blank value.
+const _appName =
+  (process.env.NEW_RELIC_APP_NAME || '').trim() || 'AuraFlux API';
+const _licenseKey = (process.env.NEW_RELIC_LICENSE_KEY || '').trim();
+
 exports.config = {
-  app_name: [process.env.NEW_RELIC_APP_NAME || 'AuraFlux'],
-  license_key: process.env.NEW_RELIC_LICENSE_KEY,
-  agent_enabled: !!process.env.NEW_RELIC_LICENSE_KEY,
+  app_name: [_appName],
+  license_key: _licenseKey,
+  agent_enabled: !!_licenseKey,
   distributed_tracing: { enabled: true },
   host: 'collector.newrelic.com',
   port: 443,
