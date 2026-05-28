@@ -554,7 +554,32 @@ export default {
 
     // ── Pages served directly from worker (no Framer dependency) ──────────
     if (PAGES[path]) {
-      return new Response(PAGES[path], {
+      // CPD-402: attempt to hydrate with DB-backed dynamic content (5-min cache)
+      let dynamicContent = {};
+      try {
+        const pageKey = path.replace(/^\//, '') || 'homepage';
+        const dynResp = await fetch(
+          `${API_ORIGIN}/api/admin/marketing/content`,
+          { headers: { 'Cache-Control': 'max-age=300' }, signal: AbortSignal.timeout(3000) },
+        );
+        if (dynResp.ok) {
+          const all = await dynResp.json();
+          dynamicContent = all[pageKey] || {};
+        }
+      } catch { /* fall through to hardcoded */ }
+
+      // Apply dynamic content overrides onto the static HTML via simple replacement
+      let html = PAGES[path];
+      for (const [sectionKey, value] of Object.entries(dynamicContent)) {
+        const placeholder = `data-editable="${sectionKey}"`;
+        // Replace the innerText of the first element that carries the data attribute
+        html = html.replace(
+          new RegExp(`(${placeholder}[^>]*>)[^<]*`, 'g'),
+          `$1${String(value).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] || c))}`,
+        );
+      }
+
+      return new Response(html, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
           // No CDN caching — always serve fresh so content updates are instant

@@ -181,15 +181,16 @@ function settingsNavItem(planTier: string | null): NavItem {
 }
 
 const ADMIN_NAV: NavItem[] = [
-  { href: '/admin',             label: 'Overview',      divider: 'Platform tools' },
-  { href: '/admin/users',       label: 'All Users'      },
-  { href: '/admin/support',     label: 'Support Inbox'  },
-  { href: '/admin/crm',         label: 'CRM'            },
-  { href: '/admin/permissions', label: 'Permissions'    },
-  { href: '/operator',          label: 'All Jobs'       },
-  { href: '/review',            label: 'Review Queue'   },
-  { href: '/generate',          label: 'Generate Video' },
-  { href: '/generate/canva',    label: 'Canva Images'   },
+  { href: '/admin',              label: 'Overview',       divider: 'Platform tools' },
+  { href: '/admin/users',        label: 'All Users'       },
+  { href: '/admin/support',      label: 'Support Inbox'   },
+  { href: '/admin/crm',          label: 'CRM'             },
+  { href: '/admin/permissions',  label: 'Permissions'     },
+  { href: '/admin/marketing',    label: 'Site Editor'     },
+  { href: '/operator',           label: 'All Jobs'        },
+  { href: '/review',             label: 'Review Queue'    },
+  { href: '/generate',           label: 'Generate Video'  },
+  { href: '/generate/canva',     label: 'Canva Images'    },
 ];
 
 const CONFLUENCE_GUIDE_URL =
