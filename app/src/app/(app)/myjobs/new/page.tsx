@@ -197,7 +197,6 @@ const PLAN_DEFAULTS: Record<string, Record<FormFactor, string[]>> = {
 };
 
 const ADD_ONS = [
-  { id: 'heygen',    label: 'AI Avatar',          description: 'Avatar presenter rendered for each video',  badge: 'Managed', minPlan: 'managed' as const },
   { id: 'shoppable', label: 'Shoppable tagging', description: 'Product tags embedded for social commerce', badge: 'Managed', minPlan: 'managed' as const },
 ];
 

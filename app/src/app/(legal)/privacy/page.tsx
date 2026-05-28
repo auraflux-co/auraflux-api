@@ -79,7 +79,6 @@ export default function PrivacyPolicyPage() {
         <li><strong>New Relic</strong> — application performance monitoring</li>
         <li><strong>Google / Gemini</strong> — AI content analysis and generation</li>
         <li><strong>ElevenLabs</strong> — AI text-to-speech generation</li>
-        <li><strong>HeyGen</strong> — AI avatar video generation (Managed plan)</li>
       </ul>
 
       <h3>3.2 Third-party platforms you connect</h3>
