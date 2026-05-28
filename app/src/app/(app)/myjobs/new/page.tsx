@@ -875,7 +875,7 @@ function NewJobPageInner() {
                 </>
               )}
 
-              {(feat.id === 'generation' || feat.id === 'generation_i2v') && (
+              {feat.id === 'generation' && (
                 <>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
