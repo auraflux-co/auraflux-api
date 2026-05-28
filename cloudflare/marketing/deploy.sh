@@ -185,15 +185,62 @@ with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
 PYEOF
 
 echo ""
-# ── Step 3: Deploy via curl (same approach that's proven to work) ─────────────
+# ── Step 3: Deploy via Python urllib (curl not available in all environments) ──
 echo ""
 echo "🚀  Deploying to Cloudflare Pages [$PROJECT_NAME]..."
 
-RESPONSE=$(curl -sS -X POST \
-  "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects/$PROJECT_NAME/deployments" \
-  -H "Authorization: Bearer $CF_API_TOKEN" \
-  -F "manifest={}" \
-  -F "_worker.js=@$WORKER_BUILD;type=application/javascript")
+RESPONSE=$(python3 - <<PYEOF
+import urllib.request, os, json
+
+account_id   = "$ACCOUNT_ID"
+project_name = "$PROJECT_NAME"
+token        = "$CF_API_TOKEN"
+worker_file  = "$WORKER_BUILD"
+
+with open(worker_file, 'rb') as f:
+    worker_data = f.read()
+
+boundary = b'----FormBoundary' + os.urandom(8).hex().encode()
+
+def part_field(name, value):
+    return (
+        b'--' + boundary + b'\r\n'
+        b'Content-Disposition: form-data; name="' + name.encode() + b'"\r\n\r\n'
+        + value.encode() + b'\r\n'
+    )
+
+def part_file(name, filename, content_type, data):
+    return (
+        b'--' + boundary + b'\r\n'
+        b'Content-Disposition: form-data; name="' + name.encode() + b'"; filename="' + filename.encode() + b'"\r\n'
+        b'Content-Type: ' + content_type.encode() + b'\r\n\r\n'
+        + data + b'\r\n'
+    )
+
+body = (
+    part_field('manifest', '{}')
+    + part_file('_worker.js', '_worker.js', 'application/javascript', worker_data)
+    + b'--' + boundary + b'--\r\n'
+)
+
+url = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/pages/projects/{project_name}/deployments'
+req = urllib.request.Request(
+    url,
+    data=body,
+    headers={
+        'Authorization': f'Bearer {token}',
+        'Content-Type': f'multipart/form-data; boundary={boundary.decode()}',
+    },
+    method='POST'
+)
+
+try:
+    with urllib.request.urlopen(req, timeout=60) as r:
+        print(r.read().decode())
+except urllib.error.HTTPError as e:
+    print(e.read().decode())
+PYEOF
+)
 
 SUCCESS=$(echo "$RESPONSE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('success','false'))" 2>/dev/null)
 PREVIEW_URL=$(echo "$RESPONSE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('result',{}).get('url',''))" 2>/dev/null)
