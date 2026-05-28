@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-27 v1.0.714 (Cursor — feat: cloudflare/marketing/_worker.js — brand color fix (blue #0B50EA→gold, orange-red removed via CSS token override + HTMLRewriter injection), contact form relay, security headers; deploy.sh for Pages upload)
 **Last Updated:** 2026-05-27 v1.0.713 (Cursor — fix(cpd-390): benchmark spec missing url (singular) field + featureVariation non-standard; all 26 parallel jobs had portals:[] — never started portal0)
 **Last Updated:** 2026-05-27 v1.0.713 (Cursor — fix(cpd-390): use signedUrl/cdnUrl from Source Library — all 26 jobs had urls:[] because Twitch page URLs were used instead of CloudFront CDN URLs; reduce submit workers 8→4)
 **Last Updated:** 2026-05-27 v1.0.713 (Cursor — fix(cpd-390): sliding window 4 concurrent jobs; 26-job parallel saturated backend worker pool causing cascade failures)
