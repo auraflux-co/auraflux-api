@@ -2,7 +2,7 @@
 
 - **Epic**: <!-- CPD-X: Epic name -->
 - **Story / Task / Bug**: <!-- CPD-Y: Story title -->
-- **Jira link**: <!-- https://robertsworkspace-18914505.atlassian.net/browse/CPD-Y -->
+- **Jira link**: <!-- https://aurafluxco.atlassian.net/browse/CPD-Y -->
 
 ## Summary
 
@@ -27,7 +27,7 @@
 
 <!-- Link to any docs created or updated as part of this work. Leave blank if no docs changed. -->
 
-- <!-- https://robertsworkspace-18914505.atlassian.net/wiki/... -->
+- <!-- https://aurafluxco.atlassian.net/wiki/... -->
 
 ## Notes
 

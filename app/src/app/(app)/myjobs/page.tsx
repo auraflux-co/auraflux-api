@@ -126,7 +126,7 @@ export default function JobsHubPage() {
           <div className="flex gap-2">
             <Link href="/settings/api-keys" className={cn(buttonVariants({ size: 'sm' }))}>Get API key</Link>
             <a
-              href="https://robertsworkspace-18914505.atlassian.net/wiki/spaces/CP/pages/8192001"
+              href="https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/8192001"
               target="_blank" rel="noopener noreferrer"
               className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}
             >

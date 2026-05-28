@@ -193,7 +193,7 @@ const ADMIN_NAV: NavItem[] = [
 ];
 
 const CONFLUENCE_GUIDE_URL =
-  'https://robertsworkspace-18914505.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
+  'https://aurafluxco.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 

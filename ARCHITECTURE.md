@@ -2,7 +2,7 @@
 
 > **Single source of truth for system design.** Decisions live in Confluence (linked below). This file covers the runtime topology, key data flows, and extension points. Update it when the topology changes.
 >
-> Confluence CTO Architecture Diagram: [Page 5931010](https://robertsworkspace-18914505.atlassian.net/wiki/spaces/CP/pages/5931010)
+> Confluence CTO Architecture Diagram: [Page 5931010](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/5931010)
 
 ---
 

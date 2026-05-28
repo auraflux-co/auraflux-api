@@ -39,7 +39,7 @@ function fmtSessionDate(raw: number | string | null | undefined): string {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SUPPORT_SMS   = process.env.NEXT_PUBLIC_SUPPORT_SMS_NUMBER || '+1 571 500 1787';
-const GUIDE_URL     = 'https://robertsworkspace-18914505.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
+const GUIDE_URL     = 'https://aurafluxco.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
 
 const GUIDE_LINKS = [
   { label: 'Getting started with AuraFlux',         url: GUIDE_URL },
