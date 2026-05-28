@@ -36,7 +36,11 @@ for arg in "$@"; do
 done
 
 if [[ -z "$FRAMER_ORIGIN" ]]; then
-  FRAMER_ORIGIN=$(grep -oP "const FRAMER_ORIGIN = '\K[^']+" "$MARKETING_DIR/_worker.js" || true)
+  FRAMER_ORIGIN=$(python3 -c "
+import re, sys
+m = re.search(r\"const FRAMER_ORIGIN = '([^']+)'\", open('$MARKETING_DIR/_worker.js').read())
+print(m.group(1) if m else '')
+" 2>/dev/null || true)
 fi
 
 if [[ -z "$FRAMER_ORIGIN" ]]; then
@@ -49,23 +53,24 @@ echo "📸  Snapshotting from: $FRAMER_ORIGIN"
 echo ""
 
 # ── Pages to snapshot ─────────────────────────────────────────────────────────
-# Add new Framer pages here as the site grows.
-declare -A PAGES=(
-  ["homepage"]="/"
-  ["about"]="/about"
-  ["features"]="/features"
-  ["blog"]="/blog"
+# FORMAT: "name:path" — add new Framer pages here as the site grows.
+PAGES=(
+  "homepage:/"
+  "about:/about"
+  "features:/features"
+  "blog:/blog"
 )
 
 FETCHED=0
 SKIPPED=0
 
-for NAME in "${!PAGES[@]}"; do
-  PATH_SEGMENT="${PAGES[$NAME]}"
+for ENTRY in "${PAGES[@]}"; do
+  NAME="${ENTRY%%:*}"
+  PATH_SEGMENT="${ENTRY#*:}"
   URL="${FRAMER_ORIGIN}${PATH_SEGMENT}"
   OUT="$SNAPSHOTS_DIR/${NAME}.html"
 
-  echo -n "  Fetching /${NAME} … "
+  echo -n "  Fetching ${PATH_SEGMENT} … "
 
   HTTP_CODE=$(curl -sS -o "$OUT" -w "%{http_code}" \
     -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" \
