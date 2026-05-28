@@ -237,16 +237,18 @@ Form: {form}  |  Profile: {profile}  |  Target: {pub_plat}
 Content type: {ct} (clips — proven path; long-form uses COMPACT clipSpec){social_ctx}
 
 Source clips from Creator Source Library:
-{chr(10).join(f'  - {c.get("title","?")[:60]} ({c.get("duration",0):.0f}s)' for c in clips[:3])}
+{chr(10).join(f'  - {c.get("title","?")[:60]} ({c.get("duration",0):.0f}s) → {clip_urls[i]}' for i, c in enumerate(clips[:3]))}
 
-Rules (exact):
-- entry = "fetch"
+CRITICAL — include BOTH url (singular, first clip) AND urls (array, all clips):
+- url  = "{clip_urls[0] if clip_urls else ''}"
 - urls = {json.dumps(clip_urls[:3])}
+- entry = "fetch"
 - contentType = "clips"
 - format = "{form}"
 - addOns.branding.active = true
 - addOns.tts.active = {"true" if has_tts else "false"}
 - staging = true
+- DO NOT include featureVariation or any non-standard top-level fields
 
 Return ONLY valid JSON:
 {{
@@ -256,6 +258,7 @@ Return ONLY valid JSON:
   "contentType": "clips",
   "platforms": ["{pub_plat}"],
   "targetPlatform": "{pub_plat}",
+  "url": "{clip_urls[0] if clip_urls else ''}",
   "urls": {json.dumps(clip_urls[:3])},{clip_spec_block}
   "topic": "<creative topic for {s['display']} content>",
   "tone": "<tone>",
@@ -263,12 +266,13 @@ Return ONLY valid JSON:
   "publishMode": "staged",
   "staging": true,
   "brandName": "AuraFlux",
-  "featureVariation": "{feature['key']}",
+  "brandVoice": "<voice matching {s['niche']} content style>",
   "addOns": {{
-    "tts":         {{"active": {"true" if has_tts else "false"}}},
-    "thumbnail":   {{"active": true}},
-    "branding":    {{"active": true}},
-    "webResearch": {{"active": {"true" if has_web else "false"}}}
+    "tts":            {{"active": {"true" if has_tts else "false"}}},
+    "thumbnail":      {{"active": true}},
+    "showCommentary": {{"active": false}},
+    "branding":       {{"active": true}},
+    "webResearch":    {{"active": {"true" if has_web else "false"}}}
   }}
 }}
 """
@@ -288,17 +292,23 @@ Return ONLY valid JSON:
             'publishMode': 'staged',
             'staging': True,
             'brandName': 'AuraFlux',
-            'featureVariation': feature['key'],
+            'brandVoice': 'authentic, engaging',
             'addOns': {
-                'tts':         {'active': has_tts},
-                'thumbnail':   {'active': True},
-                'branding':    {'active': True},
-                'webResearch': {'active': has_web},
+                'tts':            {'active': has_tts},
+                'thumbnail':      {'active': True},
+                'showCommentary': {'active': False},
+                'branding':       {'active': True},
+                'webResearch':    {'active': has_web},
             },
         }
         if is_long and len(clip_urls) >= 2:
             spec['clipSpec'] = {'mode': 'compact', 'uniformFeatures': True}
-    spec['urls'] = clip_urls[:3]
+
+    # Always enforce critical fields after Gemini — same pattern as run6
+    # (Gemini may return spec without url singular; run6 sets it explicitly post-call)
+    spec['url']   = clip_urls[0] if clip_urls else spec.get('url', '')
+    spec['urls']  = clip_urls[:3]
+    spec.pop('featureVariation', None)   # remove non-standard field if Gemini added it
     return spec
 
 
