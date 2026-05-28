@@ -21,9 +21,47 @@
 // Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
 // recent deployment that has real Framer content (>100KB homepage).
 // Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://2cc88ada.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://928888da.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
+
+// Paths served directly by the worker — Framer's SPA router must not intercept these.
+// Injected into every Framer HTML page so client-side nav forces a full reload.
+const WORKER_OWNED_PATHS = ['/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap'];
+
+const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
+(function() {
+  var owned = ${JSON.stringify(WORKER_OWNED_PATHS)};
+  function normalize(p) { return (p || '/').split('?')[0].replace(/\\/+$/, '') || '/'; }
+  function shouldIntercept(url) {
+    try {
+      var p = normalize(new URL(url, location.href).pathname);
+      return owned.indexOf(p) !== -1;
+    } catch(e) { return false; }
+  }
+  function go(url) { window.location.href = url; }
+
+  // Override history API used by Framer's router
+  ['pushState','replaceState'].forEach(function(fn) {
+    var orig = history[fn].bind(history);
+    history[fn] = function(state, title, url) {
+      if (url && shouldIntercept(url)) return go(url);
+      return orig(state, title, url);
+    };
+  });
+
+  // Intercept <a> clicks before Framer can handle them
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && shouldIntercept(href)) {
+      e.preventDefault(); e.stopPropagation();
+      go(href);
+    }
+  }, true);
+})();
+</script>`;
 
 // ── CSS injected into every HTML page ────────────────────────────────────────
 const INJECTED_CSS = `
@@ -111,6 +149,165 @@ ${content}
 </html>`;
 
 const PAGES = {
+  '/pricing': `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pricing — AuraFlux</title>
+<meta name="description" content="Choose the implementation path that fits your team. Operate, Guided, or Managed — all plans include the full AuraFlux platform.">
+<link rel="canonical" href="https://auraflux.co/pricing">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#e4e4f0;line-height:1.6}
+a{color:#f5c542;text-decoration:none}
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo{font-size:1.2rem;font-weight:700;color:#f5c542;letter-spacing:.03em}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-link{font-size:.9rem;color:#9999b8}
+.nav-cta{background:#f5c542;color:#0b1220;padding:8px 20px;border-radius:8px;font-size:.9rem;font-weight:600}
+.hero{text-align:center;padding:72px 24px 48px}
+.hero h1{font-size:2.6rem;font-weight:800;margin-bottom:16px;color:#fff}
+.hero p{font-size:1.1rem;color:#9999b8;max-width:560px;margin:0 auto}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto;padding:0 24px 72px}
+@media(max-width:768px){.plans{grid-template-columns:1fr}}
+.plan{background:#0e1a2e;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:36px 32px;display:flex;flex-direction:column}
+.plan.featured{border-color:#f5c542;position:relative}
+.badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#f5c542;color:#0b1220;font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:.05em}
+.plan-name{font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#f5c542;margin-bottom:8px}
+.plan-title{font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:4px}
+.plan-sub{font-size:.9rem;color:#6666a0;margin-bottom:24px}
+.price{font-size:2.4rem;font-weight:800;color:#fff;margin-bottom:4px}
+.price span{font-size:1rem;font-weight:400;color:#6666a0}
+.credits{font-size:.85rem;color:#9999b8;margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid rgba(255,255,255,.08)}
+.features{list-style:none;flex:1;margin-bottom:32px}
+.features li{font-size:.9rem;color:#b0b0cc;padding:6px 0;display:flex;gap:10px}
+.features li::before{content:"✓";color:#f5c542;font-weight:700;flex-shrink:0}
+.features li.no::before{content:"—";color:#444466}
+.features li.no{color:#555580}
+.cta{display:block;text-align:center;padding:14px;border-radius:10px;font-weight:600;font-size:.95rem;transition:opacity .2s}
+.cta-primary{background:#f5c542;color:#0b1220}
+.cta-secondary{border:1px solid rgba(245,197,66,.4);color:#f5c542}
+.cta:hover{opacity:.85}
+.ladder{max-width:1100px;margin:0 auto;padding:0 24px 80px}
+.ladder h2{font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:32px;text-align:center}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;padding:14px 20px;color:#f5c542;font-weight:600;border-bottom:1px solid rgba(255,255,255,.1)}
+th:not(:first-child){text-align:center}
+td{padding:12px 20px;color:#b0b0cc;border-bottom:1px solid rgba(255,255,255,.05)}
+td:not(:first-child){text-align:center}
+tr:hover td{background:rgba(255,255,255,.02)}
+.yes{color:#10b981;font-weight:600}
+.no-val{color:#444466}
+.label{color:#e4e4f0;font-weight:500}
+footer{text-align:center;padding:40px 24px;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:#555580}
+footer a{color:#f5c542;margin:0 8px}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">AuraFlux</a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/pricing" class="nav-link">Pricing</a>
+    <a href="/contact" class="nav-link">Contact</a>
+    <a href="https://app.auraflux.co/sign-up" class="nav-cta">Get started</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Match Your Team's Capability</h1>
+  <p>Choose the implementation path that fits your current operational setup. All plans include the full AuraFlux platform.</p>
+</div>
+
+<div class="plans">
+  <div class="plan">
+    <div class="plan-name">Operate</div>
+    <div class="plan-title">DIY / API</div>
+    <div class="plan-sub">Total Control &amp; Custom Integration</div>
+    <div class="price">$49<span>/mo</span></div>
+    <div class="credits">50 credits/month · Self-serve instant checkout</div>
+    <ul class="features">
+      <li>Full API access &amp; raw endpoints</li>
+      <li>Comprehensive developer documentation</li>
+      <li>Self-hosted integration control</li>
+      <li>Community &amp; standard support</li>
+      <li class="no">In-app visual flow builders</li>
+      <li class="no">Collab-powered guidance</li>
+      <li class="no">Dedicated account manager</li>
+    </ul>
+    <a href="https://auraflux-api.onrender.com/api/public/checkout?plan=operate" class="cta cta-secondary" onclick="this.textContent='Loading…'">Get API Access</a>
+  </div>
+
+  <div class="plan featured">
+    <div class="badge">MOST POPULAR</div>
+    <div class="plan-name">Guided</div>
+    <div class="plan-title">Collab Assist</div>
+    <div class="plan-sub">Build &amp; Optimize with Collab Guidance</div>
+    <div class="price">$149<span>/mo</span></div>
+    <div class="credits">200 credits/month · Self-serve subscription upgrade</div>
+    <ul class="features">
+      <li>Everything in Operate</li>
+      <li>Interactive in-app flows</li>
+      <li>Collab-powered live visual guidance</li>
+      <li>Visual drag-and-drop workflow builders</li>
+      <li>Automated operational threshold alerts</li>
+      <li class="no">Custom end-to-end workflow builds</li>
+      <li class="no">Dedicated account manager</li>
+    </ul>
+    <a href="https://auraflux-api.onrender.com/api/public/checkout?plan=guided" class="cta cta-primary" onclick="this.textContent='Loading…'">Start Guided Setup</a>
+  </div>
+
+  <div class="plan">
+    <div class="plan-name">Managed</div>
+    <div class="plan-title">Done-For-You</div>
+    <div class="plan-sub">Fully Managed Workflows by Experts</div>
+    <div class="price">Custom</div>
+    <div class="credits">1000+ credits/month · Custom onboarding &amp; sales intake</div>
+    <ul class="features">
+      <li>Everything in Guided</li>
+      <li>Dedicated Account Manager</li>
+      <li>Custom end-to-end workflow builds</li>
+      <li>Priority support with custom SLAs</li>
+      <li>HeyGen avatar video integration</li>
+      <li>Imagen 3 AI thumbnail generation</li>
+      <li>Unlimited credits</li>
+    </ul>
+    <a href="/contact" class="cta cta-secondary">Request Managed Plan</a>
+  </div>
+</div>
+
+<div class="ladder">
+  <h2>Implementation &amp; Feature Comparison</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Feature / Resource</th>
+        <th>Operate</th>
+        <th>Guided</th>
+        <th>Managed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="label">Core Infrastructure &amp; API Access</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">Developer Documentation &amp; SDKs</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">In-App Visual Flow Builders</td><td class="no-val">—</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">Collab (Branded Guide Assistance)</td><td class="no-val">—</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">Automated Threshold Notifications</td><td class="no-val">—</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">Custom Flow Construction by Experts</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">Dedicated Account Management</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">Support SLA</td><td>Standard</td><td>Standard</td><td>Priority 24/7</td></tr>
+      <tr><td class="label">HeyGen Avatar Video</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
+      <tr><td class="label">Imagen 3 AI Thumbnails</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">Yes</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>
+  © 2026 AuraFlux. All rights reserved. &nbsp;
+  <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a>
+</footer>
+</body>
+</html>`,
   '/privacy': LEGAL_SHELL(
     'Privacy Policy',
     'How AuraFlux collects, uses, and protects your personal information.',
@@ -340,8 +537,10 @@ export default {
       return new Response(PAGES[path], {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600',
+          // No CDN caching — always serve fresh so content updates are instant
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'X-Frame-Options': 'SAMEORIGIN',
+          'X-Content-Type-Options': 'nosniff',
         },
       });
     }
@@ -366,7 +565,10 @@ export default {
     if (contentType.includes('text/html')) {
       const rewriter = new HTMLRewriter()
         .on('head', {
-          element(el) { el.append(INJECTED_CSS, { html: true }); },
+          element(el) {
+            el.append(INJECTED_CSS, { html: true });
+            el.append(ROUTER_INTERCEPT_JS, { html: true });
+          },
         })
         // Remove Framer badge container entirely
         .on('#__framer-badge-container', {
