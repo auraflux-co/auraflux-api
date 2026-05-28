@@ -21,7 +21,7 @@
 // Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
 // recent deployment that has real Framer content (>100KB homepage).
 // Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://19a1b46f.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://25c2f9e6.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
