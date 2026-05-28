@@ -245,6 +245,9 @@ export default function MarketingEditorPage() {
         setPendingPatches(body.patches);
         const pages = body.patches.map((p: HtmlPatch) => `**${p.page}**`).join(', ');
         setChatHistory(h => [...h, { role: 'assistant', text: `Ready to patch ${pages} — review below and deploy all at once.` }]);
+      } else {
+        // Catch-all: unknown type — show raw so nothing ever disappears silently
+        setChatHistory(h => [...h, { role: 'assistant', text: `⚠️ Unhandled response type "${body.type}" — raw: ${JSON.stringify(body).slice(0, 400)}` }]);
       }
     } catch (e) {
       setChatHistory(h => [...h, { role: 'assistant', text: `Something went wrong: ${e instanceof Error ? e.message : e}` }]);
@@ -419,7 +422,14 @@ export default function MarketingEditorPage() {
             ))}
             {chatLoading && (
               <div className="flex justify-start">
-                <div className="bg-muted text-muted-foreground rounded-xl rounded-bl-sm px-3 py-2 text-sm animate-pulse">Thinking…</div>
+                <div className="bg-muted text-muted-foreground rounded-xl rounded-bl-sm px-3 py-2 text-sm flex items-center gap-2">
+                  <span className="inline-flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
+                  </span>
+                  <span>Working…</span>
+                </div>
               </div>
             )}
           </div>
