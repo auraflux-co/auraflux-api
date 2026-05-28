@@ -59,6 +59,14 @@ const PAGE_SCHEMA: { page: string; label: string; sections: { key: string; label
 type PageContent = Record<string, Record<string, string>>;
 type Msg = { text: string; ok: boolean } | null;
 
+type InterpretedChange = {
+  page_key: string;
+  section_key: string;
+  page_label: string;
+  section_label: string;
+  value: string;
+};
+
 export default function MarketingEditorPage() {
   const router           = useRouter();
   const { getToken }     = useAuth();
@@ -68,7 +76,11 @@ export default function MarketingEditorPage() {
   const [loading, setLoading]     = useState(true);
   const [saving,  setSaving]      = useState<string | null>(null);
   const [msg,     setMsg]         = useState<Msg>(null);
-  const [activeTab, setActiveTab] = useState(PAGE_SCHEMA[0].page);
+  const [activeTab, setActiveTab]         = useState(PAGE_SCHEMA[0].page);
+  const [chatInput, setChatInput]         = useState('');
+  const [chatLoading, setChatLoading]     = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<InterpretedChange[] | null>(null);
+  const [applyingAll, setApplyingAll]     = useState(false);
 
   useEffect(() => {
     if (isSuperAdmin === false) { router.replace('/admin'); }
@@ -161,6 +173,70 @@ export default function MarketingEditorPage() {
     }
   }
 
+  async function interpret() {
+    if (!chatInput.trim()) return;
+    setChatLoading(true);
+    setMsg(null);
+    setPendingChanges(null);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/api/admin/marketing/interpret`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ instruction: chatInput, currentContent: content }),
+      });
+      const body = await res.json();
+      if (!body.ok) throw new Error(body.error);
+      if (!body.changes.length) {
+        setMsg({ text: 'No matching fields found — try being more specific (e.g. "change the pricing hero headline to…")', ok: false });
+      } else {
+        setPendingChanges(body.changes);
+      }
+    } catch (e) {
+      setMsg({ text: `Interpret failed: ${e instanceof Error ? e.message : e}`, ok: false });
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  async function applyAll() {
+    if (!pendingChanges?.length) return;
+    setApplyingAll(true);
+    setMsg(null);
+    try {
+      const token = await getToken();
+      await Promise.all(pendingChanges.map(c =>
+        fetch(`${API_BASE}/api/admin/marketing/pages`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body:    JSON.stringify({ page_key: c.page_key, section_key: c.section_key, content: c.value }),
+        }),
+      ));
+      // Merge into local content state
+      setContent(prev => {
+        const next = { ...prev };
+        for (const c of pendingChanges) {
+          next[c.page_key] = { ...(next[c.page_key] ?? {}), [c.section_key]: c.value };
+        }
+        return next;
+      });
+      setDraft(prev => {
+        const next = { ...prev };
+        for (const c of pendingChanges) {
+          next[c.page_key] = { ...(next[c.page_key] ?? {}), [c.section_key]: c.value };
+        }
+        return next;
+      });
+      setPendingChanges(null);
+      setChatInput('');
+      setMsg({ text: `${pendingChanges.length} change${pendingChanges.length > 1 ? 's' : ''} applied — live on auraflux.co now`, ok: true });
+    } catch (e) {
+      setMsg({ text: `Apply failed: ${e instanceof Error ? e.message : e}`, ok: false });
+    } finally {
+      setApplyingAll(false);
+    }
+  }
+
   function isDirty(pageKey: string, sectionKey: string) {
     return (draft[pageKey]?.[sectionKey] ?? '') !== (content[pageKey]?.[sectionKey] ?? '');
   }
@@ -190,6 +266,64 @@ export default function MarketingEditorPage() {
           <button className="ml-3 opacity-60 hover:opacity-100" onClick={() => setMsg(null)}>✕</button>
         </div>
       )}
+
+      {/* ── Natural language editor ─────────────────────────────────────── */}
+      <div className="rounded-lg border border-border bg-card p-4 mb-6 space-y-3">
+        <p className="text-sm font-medium text-foreground">Tell the site what to change</p>
+        <p className="text-xs text-muted-foreground">
+          Describe any change in plain English — e.g. <em>"change the pricing hero headline to 'Publish smarter, not harder'"</em> or <em>"update the Operate plan body to highlight 50 credits per month"</em>.
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={e => { setChatInput(e.target.value); setPendingChanges(null); }}
+            onKeyDown={e => e.key === 'Enter' && !chatLoading && interpret()}
+            placeholder="Describe your change…"
+            disabled={chatLoading}
+            className="flex-1 px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+          />
+          <button
+            onClick={interpret}
+            disabled={!chatInput.trim() || chatLoading}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {chatLoading ? 'Thinking…' : 'Preview'}
+          </button>
+        </div>
+
+        {/* Pending changes preview */}
+        {pendingChanges && pendingChanges.length > 0 && (
+          <div className="space-y-2 pt-1">
+            <p className="text-xs font-medium text-foreground">
+              {pendingChanges.length} change{pendingChanges.length > 1 ? 's' : ''} proposed — review and confirm:
+            </p>
+            {pendingChanges.map((c, i) => (
+              <div key={i} className="rounded-md border border-border bg-muted/30 p-3 space-y-1">
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">
+                  {c.page_label} → {c.section_label}
+                </p>
+                <p className="text-sm text-foreground">{c.value}</p>
+              </div>
+            ))}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={applyAll}
+                disabled={applyingAll}
+                className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-40 transition-colors"
+              >
+                {applyingAll ? 'Applying…' : `Apply ${pendingChanges.length > 1 ? 'all' : 'change'}`}
+              </button>
+              <button
+                onClick={() => setPendingChanges(null)}
+                className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Tab bar */}
       <div className="flex gap-1 mb-6 border-b border-border">
