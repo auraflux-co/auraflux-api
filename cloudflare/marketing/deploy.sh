@@ -24,6 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKER_SRC="$SCRIPT_DIR/_worker.js"
 WORKER_BUILD="/tmp/_worker_build.js"
 SHELL_DIR="$SCRIPT_DIR/framer-shell"
+PAGES_DIR="$SCRIPT_DIR/pages"
 
 # ── Load CF_API_TOKEN from .env if not set ────────────────────────────────────
 if [[ -z "${CF_API_TOKEN:-}" ]]; then
@@ -138,6 +139,46 @@ replacements = {
 for placeholder, value in replacements.items():
     if placeholder in build:
         build = build.replace(placeholder, value)
+
+with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
+    f.write(build)
+PYEOF
+
+# ── Step 2b: Inject page HTML files ──────────────────────────────────────────
+# cloudflare/marketing/pages/*.html → worker placeholders:
+#   __PAGE_PRICING__          → pages/pricing.html          (full page)
+#   __PAGE_CONTACT_CONTENT__  → pages/contact-content.html  (LEGAL_SHELL inner body)
+#   __PAGE_ROADMAP_CONTENT__  → pages/roadmap-content.html  (LEGAL_SHELL inner body)
+
+python3 - <<PYEOF
+import os, re
+
+build    = open("$WORKER_BUILD", encoding='utf-8').read()
+pages    = "$PAGES_DIR"
+
+def read_page(name, default=''):
+    p = os.path.join(pages, name)
+    if os.path.isfile(p):
+        val = open(p, encoding='utf-8', errors='replace').read().strip()
+        if val:
+            print(f"  ✓ Injected pages/{name} ({len(val):,} chars)")
+            return val
+    print(f"  – pages/{name} not found — placeholder left as-is")
+    return default
+
+# Escape for embedding inside a JS template literal
+def js_escape(s):
+    return s.replace('\\\\', '\\\\\\\\').replace('\`', '\\\`')
+    # Note: \${...} expressions in page files are INTENTIONAL (e.g. \${FRAMER_FONTS || ''})
+    # and must NOT be escaped so JS evaluates them at runtime
+
+pricing          = js_escape(read_page('pricing.html'))
+contact_content  = js_escape(read_page('contact-content.html'))
+roadmap_content  = js_escape(read_page('roadmap-content.html'))
+
+build = build.replace('__PAGE_PRICING__',         pricing)
+build = build.replace('__PAGE_CONTACT_CONTENT__',  contact_content)
+build = build.replace('__PAGE_ROADMAP_CONTENT__',  roadmap_content)
 
 with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)

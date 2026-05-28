@@ -83,6 +83,12 @@ type InterpretedChange = {
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string };
 
+type HtmlPatch = {
+  page: string;
+  description: string;
+  html: string;
+};
+
 export default function MarketingEditorPage() {
   const router           = useRouter();
   const { getToken }     = useAuth();
@@ -96,7 +102,9 @@ export default function MarketingEditorPage() {
   const [chatInput, setChatInput]           = useState('');
   const [chatLoading, setChatLoading]       = useState(false);
   const [pendingChanges, setPendingChanges] = useState<InterpretedChange[] | null>(null);
+  const [pendingPatch, setPendingPatch]     = useState<HtmlPatch | null>(null);
   const [applyingAll, setApplyingAll]       = useState(false);
+  const [applyingPatch, setApplyingPatch]   = useState(false);
   const [chatHistory, setChatHistory]       = useState<ChatMessage[]>([]);
 
   useEffect(() => {
@@ -217,6 +225,9 @@ export default function MarketingEditorPage() {
           setPendingChanges(body.changes);
           setChatHistory(h => [...h, { role: 'assistant', text: `I found ${body.changes.length} field${body.changes.length > 1 ? 's' : ''} to update. Review the changes below and confirm.` }]);
         }
+      } else if (body.type === 'html_patch') {
+        setPendingPatch({ page: body.page, description: body.description, html: body.html });
+        setChatHistory(h => [...h, { role: 'assistant', text: `Ready to rewrite **${body.page}** — ${body.description}. Review the HTML below and confirm to deploy.` }]);
       }
     } catch (e) {
       setChatHistory(h => [...h, { role: 'assistant', text: `Something went wrong: ${e instanceof Error ? e.message : e}` }]);
@@ -260,6 +271,29 @@ export default function MarketingEditorPage() {
       setMsg({ text: `Apply failed: ${e instanceof Error ? e.message : e}`, ok: false });
     } finally {
       setApplyingAll(false);
+    }
+  }
+
+  async function applyPatch() {
+    if (!pendingPatch) return;
+    setApplyingPatch(true);
+    setMsg(null);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/api/admin/marketing/html-patch`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ page: pendingPatch.page, html: pendingPatch.html }),
+      });
+      const body = await res.json();
+      if (!body.ok) throw new Error(body.error);
+      setPendingPatch(null);
+      setChatHistory(h => [...h, { role: 'assistant', text: `✅ Deployed — **${pendingPatch.page}** is live on auraflux.co` }]);
+      setMsg({ text: `${pendingPatch.page} deployed — live within ~60 seconds`, ok: true });
+    } catch (e) {
+      setMsg({ text: `Deploy failed: ${e instanceof Error ? e.message : e}`, ok: false });
+    } finally {
+      setApplyingPatch(false);
     }
   }
 
@@ -326,7 +360,7 @@ export default function MarketingEditorPage() {
           </div>
         )}
 
-        {/* Pending changes */}
+        {/* Pending field changes */}
         {pendingChanges && pendingChanges.length > 0 && (
           <div className="px-4 pb-3 space-y-2">
             {pendingChanges.map((c, i) => (
@@ -342,6 +376,35 @@ export default function MarketingEditorPage() {
                 {applyingAll ? 'Applying…' : `Apply ${pendingChanges.length > 1 ? 'all changes' : 'change'}`}
               </button>
               <button onClick={() => setPendingChanges(null)} className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Pending HTML patch */}
+        {pendingPatch && (
+          <div className="px-4 pb-3 space-y-2">
+            <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wide">HTML Patch</span>
+                <span className="text-[11px] text-muted-foreground font-mono">{pendingPatch.page}</span>
+              </div>
+              <p className="text-sm text-foreground">{pendingPatch.description}</p>
+              <details className="group">
+                <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  View HTML ({pendingPatch.html.length.toLocaleString()} chars)
+                </summary>
+                <pre className="mt-2 text-[11px] text-muted-foreground bg-background rounded p-2 overflow-auto max-h-48 border border-border whitespace-pre-wrap break-all">
+                  {pendingPatch.html.slice(0, 3000)}{pendingPatch.html.length > 3000 ? '\n… (truncated)' : ''}
+                </pre>
+              </details>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button onClick={applyPatch} disabled={applyingPatch} className="px-4 py-2 rounded-md bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400 disabled:opacity-40 transition-colors">
+                {applyingPatch ? 'Deploying…' : 'Deploy to auraflux.co'}
+              </button>
+              <button onClick={() => setPendingPatch(null)} className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Discard
               </button>
             </div>
