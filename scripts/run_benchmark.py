@@ -48,6 +48,12 @@ from pathlib import Path
 REPO_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO_DIR))
 
+# CPD-392: screenshot capture + R2 upload + Confluence embed for score=100 jobs
+try:
+    from scripts.benchmark_screenshot import process_score_100_job as _screenshot_job
+except ImportError:
+    _screenshot_job = None
+
 
 def _load_dotenv(path):
     try:
@@ -736,6 +742,18 @@ def run_benchmark(args):
                         'timestamp':     datetime.now(timezone.utc).isoformat(),
                     })
                     print(f'  📦  Archived ({score_100_count} of 50 target)')
+                    # CPD-392: capture frame, upload to R2, embed in Confluence
+                    if _screenshot_job and row.get('output_url'):
+                        feature_label = row.get('feature', {}).get('label', row.get('feature', '')) if isinstance(row.get('feature'), dict) else str(row.get('feature', ''))
+                        _screenshot_job(
+                            job_id=row['job_id'],
+                            output_url=row['output_url'],
+                            streamer=row.get('_display', row.get('streamer', '')),
+                            form=row.get('form', ''),
+                            feature_label=feature_label,
+                            score=row['score'],
+                            notes=row.get('notes', ''),
+                        )
                 result_file.write_text(json.dumps({
                     'results': [{k: v for k, v in r.items() if not k.startswith('_')} for r in results],
                     'score_100_count': score_100_count,
