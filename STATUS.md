@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-29 v1.0.762 (Cursor — feat(ui/cpd-315): UI streamlining from content analysis — advanced flag on tts/commentary/generation/burn_images; Advanced features collapsed by default; tts removed from guided plan defaults; 73-video Gemini analysis complete; 13 E2E jobs submitted to gregory.robert.c@gmail.com staged; CPD-414 created for lower_thirds gap)
 **Last Updated:** 2026-05-28 v1.0.759 (Cursor — fix(app): remove generation_i2v dead branch from new job page — WAN i2v exists in codebase only, not customer-facing)
 **Last Updated:** 2026-05-28 v1.0.758 (Cursor — fix(marketing): remove Imagen 3 and AI avatar blog card from public pages — pricing.html plan list + comparison table row removed; blog.html avatar card removed; roadmap mention preserved)
 **Last Updated:** 2026-05-28 v1.0.756 (Cursor — fix(newrelic): harden config against empty app_name + try/catch require in server.js; install newrelic@14.0.0 to sync lockfile)

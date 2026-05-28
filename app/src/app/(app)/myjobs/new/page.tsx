@@ -63,6 +63,7 @@ interface Feature {
   requires?:   string[];
   minPlan?:    PlanTier;
   hasConfig:   boolean;
+  advanced?:   boolean;
 }
 
 interface FeatureGroup {
@@ -124,26 +125,26 @@ const FEATURES: Feature[] = [
     id: 'tts', label: 'TTS narration',
     description: 'AI voiceover narrates the generated script',
     outputImpact: 'A professional voice reads your script in the video — no separate recording needed.',
-    default: false, formFactors: ['long'], requires: ['script'], hasConfig: true,
+    default: false, formFactors: ['long'], requires: ['script'], hasConfig: true, advanced: true,
   },
   {
     id: 'commentary', label: 'Text narration',
     description: 'Narrative commentary layered over your footage at the assembly stage',
     outputImpact: 'Commentary text appears timed to key moments — styled as captions or lower thirds.',
-    default: false, formFactors: ['long'], hasConfig: true,
+    default: false, formFactors: ['long'], hasConfig: true, advanced: true,
   },
   // ── Visual production ──────────────────────────────────────────────────────
   {
     id: 'generation', label: 'Video generation',
     description: 'AI video generation fills segments where source footage is missing',
     outputImpact: 'Gaps in your footage are filled with generated video clips that match your topic and style.',
-    default: false, formFactors: ['long'], hasConfig: true,
+    default: false, formFactors: ['long'], hasConfig: true, advanced: true,
   },
   {
     id: 'burn_images', label: 'Burn images',
     description: 'Embed still images as overlay segments in the assembled video',
     outputImpact: 'Your images appear in the video at the position and duration you specify.',
-    default: false, formFactors: ['long', 'short'], hasConfig: true,
+    default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true,
   },
   // ── Assembly & finishing ───────────────────────────────────────────────────
   {
@@ -190,10 +191,10 @@ const FEATURE_GROUPS: FeatureGroup[] = [
 
 // Plan-based feature defaults — higher tiers get richer pipelines on by default
 const PLAN_DEFAULTS: Record<string, Record<FormFactor, string[]>> = {
-  operate:  { long: ['script', 'scene_select', 'branding'],                                               short: ['scene_select', 'branding'] },
-  guided:   { long: ['script', 'tts', 'scene_select', 'branding'],                                        short: ['scene_select', 'branding', 'dynamic'] },
-  managed:  { long: ['script', 'tts', 'commentary', 'generation', 'scene_select', 'branding', 'dynamic'], short: ['scene_select', 'branding', 'dynamic'] },
-  custom:   { long: ['script', 'tts', 'commentary', 'generation', 'scene_select', 'branding', 'dynamic'], short: ['scene_select', 'branding', 'dynamic'] },
+  operate:  { long: ['script', 'scene_select', 'branding'],                                          short: ['scene_select', 'branding'] },
+  guided:   { long: ['script', 'scene_select', 'branding'],                                          short: ['scene_select', 'branding', 'dynamic'] },
+  managed:  { long: ['script', 'commentary', 'generation', 'scene_select', 'branding', 'dynamic'],  short: ['scene_select', 'branding', 'dynamic'] },
+  custom:   { long: ['script', 'commentary', 'generation', 'scene_select', 'branding', 'dynamic'],  short: ['scene_select', 'branding', 'dynamic'] },
 };
 
 const ADD_ONS = [
@@ -325,6 +326,7 @@ function NewJobPageInner() {
   const [tone, setTone]             = useState('professional');
   const [features, setFeatures]     = useState<Set<string>>(new Set());
   const [featureConfig, setFeatureConfig] = useState<Record<string, Record<string, string>>>({});
+  const [showAdvanced, setShowAdvanced] = useState(false);
   function setFeatureCfg(featureId: string, key: string, value: string) {
     setFeatureConfig((prev) => ({
       ...prev,
@@ -1048,10 +1050,10 @@ function NewJobPageInner() {
               <span className="text-lg font-bold tabular-nums text-primary shrink-0 ml-4">{durationMins} min</span>
             </div>
 
-            {/* Feature groups */}
+            {/* Feature groups — core (non-advanced) features only */}
             {FEATURE_GROUPS.filter((g) => formFactor && g.formFactors.includes(formFactor)).map((group) => {
               const groupFeats = FEATURES.filter(
-                (f) => group.featureIds.includes(f.id) && formFactor && f.formFactors.includes(formFactor)
+                (f) => group.featureIds.includes(f.id) && formFactor && f.formFactors.includes(formFactor) && !f.advanced
               );
               if (!groupFeats.length) return null;
               const activeCount = groupFeats.filter((f) => features.has(f.id)).length;
@@ -1074,6 +1076,43 @@ function NewJobPageInner() {
                 </div>
               );
             })}
+
+            {/* Advanced features toggle */}
+            {(() => {
+              const advancedFeats = FEATURES.filter(
+                (f) => f.advanced && formFactor && f.formFactors.includes(formFactor)
+              );
+              const advancedActive = advancedFeats.filter((f) => features.has(f.id)).length;
+              if (!advancedFeats.length) return null;
+              return (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced((v) => !v)}
+                    className="w-full flex items-center justify-between py-1.5 text-left group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50 group-hover:text-foreground/70 transition-colors">
+                        Advanced features
+                      </p>
+                      {advancedActive > 0 && (
+                        <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
+                          {advancedActive} active
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-muted-foreground group-hover:text-foreground/70 transition-colors">
+                      {showAdvanced ? '↑ hide' : '↓ show'}
+                    </span>
+                  </button>
+                  {showAdvanced && (
+                    <div className="space-y-1.5">
+                      {advancedFeats.map((feat) => <FeatureRow key={feat.id} feat={feat} />)}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Live credit estimate */}
             <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1.5">
