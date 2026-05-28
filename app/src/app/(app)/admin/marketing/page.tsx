@@ -91,6 +91,11 @@ type HtmlPatch = {
 
 type HtmlPatches = HtmlPatch[];
 
+type WorkerEdit = {
+  description: string;
+  edits: { constant: string; value: string }[];
+};
+
 export default function MarketingEditorPage() {
   const router           = useRouter();
   const { getToken }     = useAuth();
@@ -105,7 +110,8 @@ export default function MarketingEditorPage() {
   const [chatLoading, setChatLoading]       = useState(false);
   const [pendingChanges, setPendingChanges] = useState<InterpretedChange[] | null>(null);
   const [pendingPatch, setPendingPatch]     = useState<HtmlPatch | null>(null);
-  const [pendingPatches, setPendingPatches] = useState<HtmlPatches | null>(null);
+  const [pendingPatches, setPendingPatches]     = useState<HtmlPatches | null>(null);
+  const [pendingWorkerEdit, setPendingWorkerEdit] = useState<WorkerEdit | null>(null);
   const [applyingAll, setApplyingAll]       = useState(false);
   const [applyingPatch, setApplyingPatch]   = useState(false);
   const [chatHistory, setChatHistory]       = useState<ChatMessage[]>([]);
@@ -228,6 +234,10 @@ export default function MarketingEditorPage() {
           setPendingChanges(body.changes);
           setChatHistory(h => [...h, { role: 'assistant', text: `I found ${body.changes.length} field${body.changes.length > 1 ? 's' : ''} to update. Review the changes below and confirm.` }]);
         }
+      } else if (body.type === 'worker_edit') {
+        setPendingWorkerEdit({ description: body.description, edits: body.edits });
+        const names = body.edits.map((e: { constant: string }) => `**${e.constant}**`).join(', ');
+        setChatHistory(h => [...h, { role: 'assistant', text: `Updating ${names} → ${body.description}` }]);
       } else if (body.type === 'html_patch') {
         setPendingPatch({ page: body.page, description: body.description, html: body.html });
         setChatHistory(h => [...h, { role: 'assistant', text: `Ready to patch **${body.page}**: ${body.description}` }]);
@@ -278,6 +288,30 @@ export default function MarketingEditorPage() {
       setMsg({ text: `Apply failed: ${e instanceof Error ? e.message : e}`, ok: false });
     } finally {
       setApplyingAll(false);
+    }
+  }
+
+  async function applyWorkerEdit() {
+    if (!pendingWorkerEdit) return;
+    setApplyingPatch(true);
+    setMsg(null);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/api/admin/marketing/worker-edit`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ edits: pendingWorkerEdit.edits }),
+      });
+      const body = await res.json();
+      if (!body.ok) throw new Error(body.error);
+      const names = pendingWorkerEdit.edits.map(e => e.constant).join(', ');
+      setPendingWorkerEdit(null);
+      setChatHistory(h => [...h, { role: 'assistant', text: `✅ Deployed — ${names} updated on auraflux.co` }]);
+      setMsg({ text: `${names} deployed — live within ~60 seconds`, ok: true });
+    } catch (e) {
+      setMsg({ text: `Deploy failed: ${e instanceof Error ? e.message : e}`, ok: false });
+    } finally {
+      setApplyingPatch(false);
     }
   }
 
@@ -407,6 +441,37 @@ export default function MarketingEditorPage() {
                 {applyingAll ? 'Applying…' : `Apply ${pendingChanges.length > 1 ? 'all changes' : 'change'}`}
               </button>
               <button onClick={() => setPendingChanges(null)} className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Pending worker constant edit */}
+        {pendingWorkerEdit && (
+          <div className="px-4 pb-3 space-y-2">
+            <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wide">Worker Edit</span>
+                <span className="text-xs text-muted-foreground">affects all pages</span>
+              </div>
+              <p className="text-sm text-foreground">{pendingWorkerEdit.description}</p>
+              {pendingWorkerEdit.edits.map((e, i) => (
+                <details key={i}>
+                  <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {e.constant} ({e.value.length.toLocaleString()} chars)
+                  </summary>
+                  <pre className="mt-2 text-[11px] text-muted-foreground bg-background rounded p-2 overflow-auto max-h-40 border border-border whitespace-pre-wrap break-all">
+                    {e.value.slice(0, 1500)}{e.value.length > 1500 ? '\n… (truncated)' : ''}
+                  </pre>
+                </details>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button onClick={applyWorkerEdit} disabled={applyingPatch} className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 disabled:opacity-40 transition-colors">
+                {applyingPatch ? 'Deploying…' : 'Deploy to auraflux.co'}
+              </button>
+              <button onClick={() => setPendingWorkerEdit(null)} className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Discard
               </button>
             </div>
