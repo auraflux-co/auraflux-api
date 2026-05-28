@@ -67,7 +67,7 @@ E2E_SECRET     = os.environ.get('E2E_AUTH_SECRET', '')
 GUIDED_CLERK   = os.environ.get('AURAFLUX_E2E_CLERK_USER_GUIDED', '')
 
 POLL_INTERVAL = 15
-POLL_TIMEOUT  = 900
+POLL_TIMEOUT  = 1800   # 30 min — long-form jobs can take 15-25 min on Render
 
 
 # ── Streamer roster (Source Library mappings) ─────────────────────────────────
@@ -210,60 +210,64 @@ def build_spec(s: dict, form: str, clips: list, feature: dict,
     Build a job spec using Source Library clips.
     `social_sample` = one of the streamer's published video titles (for context).
     """
-    is_long  = form == 'long'
-    has_tts  = feature.get('tts', False) and is_long
-    has_web  = feature.get('web', False) and is_long
-    pub_plat = 'youtube' if is_long else 'tiktok'
-    profile  = 'broadcast_desk' if is_long else 'vertical_reel'
-    ct       = 'show_commentary' if is_long else 'clips'
-    dur      = 8 if is_long else 1
+    is_long   = form == 'long'
+    has_tts   = feature.get('tts', False) and is_long
+    has_web   = feature.get('web', False) and is_long
+    pub_plat  = 'youtube' if is_long else 'tiktok'
+    profile   = 'broadcast_desk' if is_long else 'vertical_reel'
+    # Long-form uses contentType='clips' with COMPACT clipSpec — same proven path as run6.
+    # show_commentary fails at portal2 when clips are short. 'clips' routes correctly.
+    ct        = 'clips'
+    dur       = 8 if is_long else 1
     clip_urls = [c.get('url', c.get('download_url', '')) for c in clips if c.get('url') or c.get('download_url')]
 
-    social_ctx = f'\nFor comparison: streamer also publishes "{social_sample}" — our output should be at least this good.' if social_sample else ''
+    social_ctx = f'\nFor context: streamer publishes "{social_sample}" — our output quality bar.' if social_sample else ''
+
+    # Long-form needs COMPACT clipSpec for ClipEditor assembly (same as run6 O-Tw2)
+    clip_spec_block = ''
+    if is_long and len(clip_urls) >= 2:
+        clip_spec_block = '\n  "clipSpec": {"mode": "compact", "uniformFeatures": true},'
 
     prompt = f"""You are an AuraFlux operator building a {form}-form job spec.
 
 Streamer: {s['display']} ({s['platform']}/@{s['account']})
 Niche: {s['niche']}
-Form: {form}  |  Profile: {profile}  |  Target platform: {pub_plat}
-Content type: {ct}
-Feature AuraFlux adds: {feature['label']} ({feature['key']}){social_ctx}
+Form: {form}  |  Profile: {profile}  |  Target: {pub_plat}
+Content type: {ct} (clips — proven path; long-form uses COMPACT clipSpec){social_ctx}
 
-Source clips available (from Creator Source Library):
-{chr(10).join(f'  - {c.get("title","?")[:60]} ({c.get("duration",0):.0f}s) → {c.get("url",c.get("download_url",""))[:80]}' for c in clips[:3])}
+Source clips from Creator Source Library:
+{chr(10).join(f'  - {c.get("title","?")[:60]} ({c.get("duration",0):.0f}s)' for c in clips[:3])}
 
-Rules:
+Rules (exact):
 - entry = "fetch"
 - urls = {json.dumps(clip_urls[:3])}
+- contentType = "clips"
 - format = "{form}"
-- addOns.branding.active = true  (AuraFlux logo — required on every benchmark job)
+- addOns.branding.active = true
 - addOns.tts.active = {"true" if has_tts else "false"}
-- addOns.webResearch.active = {"true" if has_web else "false"}
-- staging = true (skip Portal 5 publish)
+- staging = true
 
-Return ONLY valid JSON with these exact fields:
+Return ONLY valid JSON:
 {{
   "entry": "fetch",
   "productionProfile": "{profile}",
   "format": "{form}",
-  "contentType": "{ct}",
+  "contentType": "clips",
   "platforms": ["{pub_plat}"],
   "targetPlatform": "{pub_plat}",
-  "urls": {json.dumps(clip_urls[:3])},
-  "topic": "<creative topic for {s['display']} {s['niche']} content>",
-  "tone": "<tone matching {s['niche']}>",
+  "urls": {json.dumps(clip_urls[:3])},{clip_spec_block}
+  "topic": "<creative topic for {s['display']} content>",
+  "tone": "<tone>",
   "durationMins": {dur},
   "publishMode": "staged",
   "staging": true,
   "brandName": "AuraFlux",
-  "brandVoice": "<voice>",
   "featureVariation": "{feature['key']}",
   "addOns": {{
-    "tts":            {{"active": {"true" if has_tts else "false"}}},
-    "thumbnail":      {{"active": true}},
-    "branding":       {{"active": true}},
-    "webResearch":    {{"active": {"true" if has_web else "false"}}},
-    "showCommentary": {{"active": false}}
+    "tts":         {{"active": {"true" if has_tts else "false"}}},
+    "thumbnail":   {{"active": true}},
+    "branding":    {{"active": true}},
+    "webResearch": {{"active": {"true" if has_web else "false"}}}
   }}
 }}
 """
@@ -274,7 +278,7 @@ Return ONLY valid JSON with these exact fields:
             'entry': 'fetch',
             'productionProfile': profile,
             'format': form,
-            'contentType': ct,
+            'contentType': 'clips',
             'platforms': [pub_plat],
             'targetPlatform': pub_plat,
             'topic': f'{s["display"]} — {s["niche"]} {form} content',
@@ -283,16 +287,16 @@ Return ONLY valid JSON with these exact fields:
             'publishMode': 'staged',
             'staging': True,
             'brandName': 'AuraFlux',
-            'brandVoice': 'authentic',
             'featureVariation': feature['key'],
             'addOns': {
-                'tts':            {'active': has_tts},
-                'thumbnail':      {'active': True},
-                'branding':       {'active': True},
-                'webResearch':    {'active': has_web},
-                'showCommentary': {'active': False},
+                'tts':         {'active': has_tts},
+                'thumbnail':   {'active': True},
+                'branding':    {'active': True},
+                'webResearch': {'active': has_web},
             },
         }
+        if is_long and len(clip_urls) >= 2:
+            spec['clipSpec'] = {'mode': 'compact', 'uniformFeatures': True}
     spec['urls'] = clip_urls[:3]
     return spec
 
