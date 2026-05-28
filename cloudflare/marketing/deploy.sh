@@ -2,20 +2,28 @@
 # deploy.sh — Build + deploy _worker.js to Cloudflare Pages (auraflux-marketing)
 #
 # What it does:
-#   1. Detects the latest Framer-content deployment (≥100KB homepage — not a pure worker)
+#   1. Detects the latest Framer-content deployment (≥100KB homepage)
 #   2. Stamps that hash URL into FRAMER_ORIGIN in the worker before uploading
-#   3. Uploads _worker.js via CF Direct Upload API
+#   3. Injects Framer design components (fonts, CSS, nav, footer) from
+#      cloudflare/marketing/framer-shell/ into the worker build so that
+#      worker-owned pages (pricing, contact, roadmap, legal) match the Framer design
+#   4. Uploads the built _worker.js via CF Direct Upload API
 #
 # Usage:
 #   CF_API_TOKEN=<token> bash cloudflare/marketing/deploy.sh
 #   OR: set CF_API_TOKEN in repo .env
+#
+# To refresh Framer snapshots first:
+#   bash cloudflare/marketing/scripts/snapshot.sh && bash cloudflare/marketing/deploy.sh
 
 set -euo pipefail
 
 ACCOUNT_ID="${CF_ACCOUNT_ID:-df04bc264530390035c77664f1b403d9}"
 PROJECT_NAME="${CF_PAGES_PROJECT:-auraflux-marketing}"
-WORKER_SRC="$(dirname "$0")/_worker.js"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKER_SRC="$SCRIPT_DIR/_worker.js"
 WORKER_BUILD="/tmp/_worker_build.js"
+SHELL_DIR="$SCRIPT_DIR/framer-shell"
 
 # ── Load CF_API_TOKEN from .env if not set ────────────────────────────────────
 if [[ -z "${CF_API_TOKEN:-}" ]]; then
@@ -87,7 +95,56 @@ print('  Stamped FRAMER_ORIGIN = $FRAMER_HASH')
 "
 fi
 
-# ── Step 2: Deploy via curl (same approach that's proven to work) ─────────────
+# ── Step 2: Inject Framer shell components ───────────────────────────────────
+# Read extracted Framer design files and embed them into the worker build.
+# Placeholders in _worker.js:
+#   __FRAMER_FONTS__    → framer-shell/fonts.html  (font <link> tags)
+#   __FRAMER_CSS__      → framer-shell/styles.css  (Framer global CSS)
+#   __FRAMER_NAV__      → framer-shell/nav.html    (navigation HTML)
+#   __FRAMER_FOOTER__   → framer-shell/footer.html (footer HTML)
+
+python3 - <<PYEOF
+import os, re
+
+build   = open("$WORKER_BUILD", encoding='utf-8').read()
+shell   = "$SHELL_DIR"
+
+def read(name, default=''):
+    p = os.path.join(shell, name)
+    if os.path.isfile(p):
+        val = open(p, encoding='utf-8', errors='replace').read().strip()
+        if val:
+            print(f"  ✓ Injected {name} ({len(val):,} chars)")
+            return val
+    print(f"  – {name} not found — using worker default")
+    return default
+
+fonts  = read('fonts.html')
+css    = read('styles.css')
+nav    = read('nav.html')
+footer = read('footer.html')
+
+# Escape for JS string replacement (backticks in CSS/HTML need escaping)
+def js_escape(s):
+    return s.replace('\\\\', '\\\\\\\\').replace('\`', '\\\`').replace('\${', '\\\${')
+
+replacements = {
+    '__FRAMER_FONTS__':  js_escape(fonts),
+    '__FRAMER_CSS__':    js_escape(css),
+    '__FRAMER_NAV__':    js_escape(nav),
+    '__FRAMER_FOOTER__': js_escape(footer),
+}
+
+for placeholder, value in replacements.items():
+    if placeholder in build:
+        build = build.replace(placeholder, value)
+
+with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
+    f.write(build)
+PYEOF
+
+echo ""
+# ── Step 3: Deploy via curl (same approach that's proven to work) ─────────────
 echo ""
 echo "🚀  Deploying to Cloudflare Pages [$PROJECT_NAME]..."
 

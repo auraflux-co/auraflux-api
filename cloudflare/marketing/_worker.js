@@ -21,7 +21,7 @@
 // Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
 // recent deployment that has real Framer content (>100KB homepage).
 // Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://8f761fce.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://dc1a098b.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -107,7 +107,39 @@ const INJECTED_CSS = `
 </style>
 `;
 
+// ── Framer design components (injected by deploy.sh from framer-shell/) ───────
+// Placeholders are replaced at deploy time. If a snapshot hasn't been taken yet,
+// deploy.sh leaves the placeholder and the fallback below is used instead.
+//
+// To refresh: bash cloudflare/marketing/scripts/snapshot.sh
+//             bash cloudflare/marketing/deploy.sh
+
+const FRAMER_FONTS  = `__FRAMER_FONTS__`;
+const FRAMER_CSS    = `__FRAMER_CSS__`;
+const FRAMER_NAV    = `__FRAMER_NAV__`;
+const FRAMER_FOOTER = `__FRAMER_FOOTER__`;
+
+// Fallback nav + footer used when no Framer snapshot has been taken yet.
+const FALLBACK_NAV = `<nav style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08)">
+  <a href="/" style="font-size:1.2rem;font-weight:700;color:#f5c542;letter-spacing:.03em;text-decoration:none">AuraFlux</a>
+  <div style="display:flex;gap:24px;align-items:center">
+    <a href="/pricing" style="font-size:.9rem;color:#9999b8;text-decoration:none">Pricing</a>
+    <a href="/roadmap" style="font-size:.9rem;color:#9999b8;text-decoration:none">Roadmap</a>
+    <a href="/contact" style="font-size:.9rem;color:#9999b8;text-decoration:none">Contact</a>
+    <a href="https://app.auraflux.co" style="font-size:.9rem;background:#f5c542;color:#0b1220;padding:8px 18px;border-radius:6px;font-weight:600;text-decoration:none">Launch App →</a>
+  </div>
+</nav>`;
+
+const FALLBACK_FOOTER = `<footer style="text-align:center;padding:40px 24px;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:#555580">
+  © 2026 AuraFlux. All rights reserved. &nbsp;
+  <a href="/privacy" style="color:#f5c542;margin:0 8px">Privacy</a>
+  <a href="/terms" style="color:#f5c542;margin:0 8px">Terms</a>
+  <a href="/refunds" style="color:#f5c542;margin:0 8px">Refunds</a>
+  <a href="/contact" style="color:#f5c542;margin:0 8px">Contact</a>
+</footer>`;
+
 // ── Static HTML for pages we own (not from Framer) ───────────────────────────
+// Uses injected Framer components when available, falls back to minimal shell.
 
 const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 <html lang="en">
@@ -116,35 +148,26 @@ const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 <title>${title} — AuraFlux</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
+${FRAMER_FONTS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#e4e4f0;line-height:1.7}
 a{color:#f5c542;text-decoration:none}a:hover{text-decoration:underline}
 .wrap{max-width:780px;margin:0 auto;padding:60px 24px 80px}
-nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08)}
-.logo{font-size:1.2rem;font-weight:700;color:#f5c542;letter-spacing:.03em}
-.nav-link{font-size:.9rem;color:#9999b8}
 h1{font-size:2rem;font-weight:700;margin-bottom:8px;color:#fff}
 .meta{font-size:.85rem;color:#6666a0;margin-bottom:40px}
 h2{font-size:1.2rem;font-weight:600;margin:36px 0 12px;color:#e4e4f0}
 p,li{font-size:.95rem;color:#b0b0cc;margin-bottom:12px}
 ul,ol{padding-left:24px;margin-bottom:16px}
-footer{text-align:center;padding:40px 24px;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:#555580}
-footer a{color:#f5c542;margin:0 8px}
 </style>
+${FRAMER_CSS ? `<style id="af-framer-tokens">${FRAMER_CSS}</style>` : ''}
 </head>
 <body>
-<nav>
-  <a href="/" class="logo">AuraFlux</a>
-  <a href="https://app.auraflux.co" class="nav-link">Launch App →</a>
-</nav>
+${FRAMER_NAV || FALLBACK_NAV}
 <div class="wrap">
 ${content}
 </div>
-<footer>
-  © 2026 AuraFlux. All rights reserved. &nbsp;
-  <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/aup">AUP</a><a href="/cookies">Cookies</a><a href="/refunds">Refunds</a>
-</footer>
+${FRAMER_FOOTER || FALLBACK_FOOTER}
 </body>
 </html>`;
 
@@ -156,6 +179,7 @@ const PAGES = {
 <title>Pricing — AuraFlux</title>
 <meta name="description" content="Choose the implementation path that fits your team. Operate, Guided, or Managed — all plans include the full AuraFlux platform.">
 <link rel="canonical" href="https://auraflux.co/pricing">
+${FRAMER_FONTS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#e4e4f0;line-height:1.6}
@@ -204,15 +228,7 @@ footer a{color:#f5c542;margin:0 8px}
 </style>
 </head>
 <body>
-<nav>
-  <a href="/" class="logo">AuraFlux</a>
-  <div class="nav-links">
-    <a href="/" class="nav-link">Home</a>
-    <a href="/pricing" class="nav-link">Pricing</a>
-    <a href="/contact" class="nav-link">Contact</a>
-    <a href="https://app.auraflux.co/sign-up" class="nav-cta">Get started</a>
-  </div>
-</nav>
+${FRAMER_NAV || FALLBACK_NAV}
 
 <div class="hero">
   <h1>Match Your Team's Capability</h1>
@@ -300,10 +316,7 @@ footer a{color:#f5c542;margin:0 8px}
   </table>
 </div>
 
-<footer>
-  © 2026 AuraFlux. All rights reserved. &nbsp;
-  <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a>
-</footer>
+${FRAMER_FOOTER || FALLBACK_FOOTER}
 <script>
 // Load live prices from Stripe via /api/public/plans — no hardcoded values
 fetch('https://auraflux-api.onrender.com/api/public/plans')
