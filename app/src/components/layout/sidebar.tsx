@@ -195,6 +195,20 @@ const ADMIN_NAV: NavItem[] = [
 const CONFLUENCE_GUIDE_URL =
   'https://aurafluxco.atlassian.net/wiki/spaces/AF/pages/6684693/Customer+Guide+Using+AuraFlux';
 
+// CPD-389: per-section contextual help links
+// Keys match the top-level nav href; values are the specific Confluence help article.
+const HELP_URLS: Record<string, string> = {
+  '/myjobs':         'https://aurafluxco.atlassian.net/wiki/spaces/AF/pages/19365889/My+Jobs+Creating+a+New+Video+Job',
+  '/review':         'https://aurafluxco.atlassian.net/wiki/spaces/AF/pages/19267587/Review+Queue+Approving+Your+Videos',
+  '/schedule':       CONFLUENCE_GUIDE_URL,
+  '/templates':      CONFLUENCE_GUIDE_URL,
+  '/billing':        'https://aurafluxco.atlassian.net/wiki/spaces/AF/pages/19398657/Subscription+Understanding+Your+Plan',
+  '/credits':        'https://aurafluxco.atlassian.net/wiki/spaces/AF/pages/19333121/Credits+How+Credits+Work+and+Buying+More',
+  '/support':        CONFLUENCE_GUIDE_URL,
+  '/settings':       CONFLUENCE_GUIDE_URL,
+  '/home':           'https://aurafluxco.atlassian.net/wiki/spaces/AF/pages/6717445/Getting+Started+Your+First+10+Minutes',
+};
+
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
@@ -284,6 +298,7 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
           }
 
           if (!item.children) {
+            const helpUrl = HELP_URLS[item.href];
             return (
               <div key={item.href}>
                 {item.divider && (
@@ -291,28 +306,41 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
                     {item.divider}
                   </p>
                 )}
-                <button
-                  onClick={() => handleNavClick(item.href)}
-                  className={cn(
-                    'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
-                    isActive(item.href)
-                      ? 'bg-primary/15 text-primary font-semibold'
-                      : 'text-foreground/80 hover:text-foreground hover:bg-accent/60',
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleNavClick(item.href)}
+                    className={cn(
+                      'flex items-center gap-2.5 flex-1 px-3 py-2 rounded-md text-sm transition-colors text-left',
+                      isActive(item.href)
+                        ? 'bg-primary/15 text-primary font-semibold'
+                        : 'text-foreground/80 hover:text-foreground hover:bg-accent/60',
+                    )}
+                  >
+                    {icon}
+                    {item.label}
+                  </button>
+                  {isActive(item.href) && helpUrl && !collapsed && (
+                    <a href={helpUrl} target="_blank" rel="noopener noreferrer"
+                       title="Open help article"
+                       className="shrink-0 mr-1 p-1 rounded text-muted-foreground/50 hover:text-primary transition-colors">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+                      </svg>
+                    </a>
                   )}
-                >
-                  {icon}
-                  {item.label}
-                </button>
+                </div>
               </div>
             );
           }
 
+          const groupHelpUrl = HELP_URLS[item.href];
           return (
             <div key={item.href}>
+              <div className="flex items-center gap-1">
               <button
                 onClick={() => handleNavClick(item.href)}
                 className={cn(
-                  'flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm transition-colors text-left',
+                  'flex items-center gap-2.5 flex-1 px-3 py-2 rounded-md text-sm transition-colors text-left',
                   groupActive
                     ? 'text-primary font-semibold'
                     : 'text-foreground/80 hover:text-foreground hover:bg-accent/60',
@@ -321,6 +349,16 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
                 {icon}
                 {item.label}
               </button>
+              {groupActive && groupHelpUrl && !collapsed && (
+                <a href={groupHelpUrl} target="_blank" rel="noopener noreferrer"
+                   title="Open help article"
+                   className="shrink-0 mr-1 p-1 rounded text-muted-foreground/50 hover:text-primary transition-colors">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+                  </svg>
+                </a>
+              )}
+              </div>
               <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2">
                 {item.children.map((child) => (
                   <button

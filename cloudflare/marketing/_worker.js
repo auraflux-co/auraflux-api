@@ -547,6 +547,11 @@ export default {
       return handleContactForm(request);
     }
 
+    // ── Roadmap: redirect to home until post-launch content is ready (CPD-398) ──
+    if (path === '/roadmap') {
+      return Response.redirect('https://auraflux.co/', 302);
+    }
+
     // ── Pages served directly from worker (no Framer dependency) ──────────
     if (PAGES[path]) {
       return new Response(PAGES[path], {
