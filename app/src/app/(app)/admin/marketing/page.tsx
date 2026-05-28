@@ -81,6 +81,8 @@ type InterpretedChange = {
   value: string;
 };
 
+type ChatMessage = { role: 'user' | 'assistant'; text: string };
+
 export default function MarketingEditorPage() {
   const router           = useRouter();
   const { getToken }     = useAuth();
@@ -91,10 +93,11 @@ export default function MarketingEditorPage() {
   const [saving,  setSaving]      = useState<string | null>(null);
   const [msg,     setMsg]         = useState<Msg>(null);
   const [activeTab, setActiveTab]         = useState(PAGE_SCHEMA[0].page);
-  const [chatInput, setChatInput]         = useState('');
-  const [chatLoading, setChatLoading]     = useState(false);
+  const [chatInput, setChatInput]           = useState('');
+  const [chatLoading, setChatLoading]       = useState(false);
   const [pendingChanges, setPendingChanges] = useState<InterpretedChange[] | null>(null);
-  const [applyingAll, setApplyingAll]     = useState(false);
+  const [applyingAll, setApplyingAll]       = useState(false);
+  const [chatHistory, setChatHistory]       = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     if (isSuperAdmin === false) { router.replace('/admin'); }
@@ -189,6 +192,9 @@ export default function MarketingEditorPage() {
 
   async function interpret() {
     if (!chatInput.trim()) return;
+    const userText = chatInput.trim();
+    setChatHistory(h => [...h, { role: 'user', text: userText }]);
+    setChatInput('');
     setChatLoading(true);
     setMsg(null);
     setPendingChanges(null);
@@ -197,17 +203,23 @@ export default function MarketingEditorPage() {
       const res = await fetch(`${API_BASE}/api/admin/marketing/interpret`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body:    JSON.stringify({ instruction: chatInput, currentContent: content }),
+        body:    JSON.stringify({ instruction: userText, currentContent: content }),
       });
       const body = await res.json();
       if (!body.ok) throw new Error(body.error);
-      if (!body.changes.length) {
-        setMsg({ text: 'No matching fields found — try being more specific (e.g. "change the pricing hero headline to…")', ok: false });
-      } else {
-        setPendingChanges(body.changes);
+
+      if (body.type === 'message') {
+        setChatHistory(h => [...h, { role: 'assistant', text: body.message }]);
+      } else if (body.type === 'changes') {
+        if (!body.changes.length) {
+          setChatHistory(h => [...h, { role: 'assistant', text: 'I couldn\'t find a matching field for that. Try being more specific — e.g. "change the pricing hero headline to…"' }]);
+        } else {
+          setPendingChanges(body.changes);
+          setChatHistory(h => [...h, { role: 'assistant', text: `I found ${body.changes.length} field${body.changes.length > 1 ? 's' : ''} to update. Review the changes below and confirm.` }]);
+        }
       }
     } catch (e) {
-      setMsg({ text: `Interpret failed: ${e instanceof Error ? e.message : e}`, ok: false });
+      setChatHistory(h => [...h, { role: 'assistant', text: `Something went wrong: ${e instanceof Error ? e.message : e}` }]);
     } finally {
       setChatLoading(false);
     }
@@ -281,19 +293,69 @@ export default function MarketingEditorPage() {
         </div>
       )}
 
-      {/* ── Natural language editor ─────────────────────────────────────── */}
-      <div className="rounded-lg border border-border bg-card p-4 mb-6 space-y-3">
-        <p className="text-sm font-medium text-foreground">Tell the site what to change</p>
-        <p className="text-xs text-muted-foreground">
-          Describe any change in plain English — e.g. <em>"change the pricing hero headline to 'Publish smarter, not harder'"</em> or <em>"update the Operate plan body to highlight 50 credits per month"</em>.
-        </p>
-        <div className="flex gap-2">
+      {/* ── Natural language chat editor ────────────────────────────────── */}
+      <div className="rounded-lg border border-border bg-card mb-6 overflow-hidden">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+          <p className="text-sm font-medium text-foreground">Marketing Assistant</p>
+          {chatHistory.length > 0 && (
+            <button onClick={() => { setChatHistory([]); setPendingChanges(null); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Chat history */}
+        {chatHistory.length > 0 && (
+          <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
+            {chatHistory.map((m, i) => (
+              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap ${
+                  m.role === 'user'
+                    ? 'bg-primary text-primary-foreground rounded-br-sm'
+                    : 'bg-muted text-foreground rounded-bl-sm'
+                }`}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {chatLoading && (
+              <div className="flex justify-start">
+                <div className="bg-muted text-muted-foreground rounded-xl rounded-bl-sm px-3 py-2 text-sm animate-pulse">Thinking…</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Pending changes */}
+        {pendingChanges && pendingChanges.length > 0 && (
+          <div className="px-4 pb-3 space-y-2">
+            {pendingChanges.map((c, i) => (
+              <div key={i} className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-1">
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">
+                  {c.page_label} → {c.section_label}
+                </p>
+                <p className="text-sm text-foreground">{c.value}</p>
+              </div>
+            ))}
+            <div className="flex gap-2 pt-1">
+              <button onClick={applyAll} disabled={applyingAll} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-40 transition-colors">
+                {applyingAll ? 'Applying…' : `Apply ${pendingChanges.length > 1 ? 'all changes' : 'change'}`}
+              </button>
+              <button onClick={() => setPendingChanges(null)} className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Input */}
+        <div className={`flex gap-2 p-3 ${chatHistory.length > 0 ? 'border-t border-border' : ''}`}>
           <input
             type="text"
             value={chatInput}
-            onChange={e => { setChatInput(e.target.value); setPendingChanges(null); }}
+            onChange={e => setChatInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !chatLoading && interpret()}
-            placeholder="Describe your change…"
+            placeholder={chatHistory.length === 0 ? 'Ask anything — "read the design brief", "change the pricing headline to…", "what pages do we own?"' : 'Reply…'}
             disabled={chatLoading}
             className="flex-1 px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
           />
@@ -302,41 +364,9 @@ export default function MarketingEditorPage() {
             disabled={!chatInput.trim() || chatLoading}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            {chatLoading ? 'Thinking…' : 'Preview'}
+            Send
           </button>
         </div>
-
-        {/* Pending changes preview */}
-        {pendingChanges && pendingChanges.length > 0 && (
-          <div className="space-y-2 pt-1">
-            <p className="text-xs font-medium text-foreground">
-              {pendingChanges.length} change{pendingChanges.length > 1 ? 's' : ''} proposed — review and confirm:
-            </p>
-            {pendingChanges.map((c, i) => (
-              <div key={i} className="rounded-md border border-border bg-muted/30 p-3 space-y-1">
-                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">
-                  {c.page_label} → {c.section_label}
-                </p>
-                <p className="text-sm text-foreground">{c.value}</p>
-              </div>
-            ))}
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={applyAll}
-                disabled={applyingAll}
-                className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-40 transition-colors"
-              >
-                {applyingAll ? 'Applying…' : `Apply ${pendingChanges.length > 1 ? 'all' : 'change'}`}
-              </button>
-              <button
-                onClick={() => setPendingChanges(null)}
-                className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Tab bar */}
