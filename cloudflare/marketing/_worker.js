@@ -21,13 +21,13 @@
 // Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
 // recent deployment that has real Framer content (>100KB homepage).
 // Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://d5b416c4.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://8f761fce.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // Paths served directly by the worker — Framer's SPA router must not intercept these.
 // Injected into every Framer HTML page so client-side nav forces a full reload.
-const WORKER_OWNED_PATHS = ['/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap'];
+const WORKER_OWNED_PATHS = ['/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -519,6 +519,127 @@ fetch('https://auraflux-api.onrender.com/api/public/plans')
 
 <h2>App Store Purchases</h2>
 <p>Purchases made through the Apple App Store or Google Play are subject to their respective refund policies. Contact Apple or Google directly for those refunds.</p>`
+  ),
+
+  '/contact': LEGAL_SHELL(
+    'Contact',
+    'Get in touch with the AuraFlux team — sales, support, or partnership enquiries.',
+    'https://auraflux.co/contact',
+    `<h1 data-editable="hero_headline">Get in Touch</h1>
+<p class="meta" data-editable="hero_subtext">Sales, support, partnerships, or feedback — we read every message.</p>
+
+<style>
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:40px 0}
+@media(max-width:640px){.contact-grid{grid-template-columns:1fr}}
+.contact-form{display:flex;flex-direction:column;gap:14px}
+.contact-form label{font-size:.85rem;color:#9999b8;margin-bottom:2px;display:block}
+.contact-form input,.contact-form textarea,.contact-form select{width:100%;padding:10px 14px;background:#111827;border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#e4e4f0;font-size:.95rem;font-family:inherit;outline:none;transition:border .15s}
+.contact-form input:focus,.contact-form textarea:focus,.contact-form select:focus{border-color:#f5c542}
+.contact-form textarea{min-height:130px;resize:vertical}
+.contact-form button{padding:12px 28px;background:#f5c542;color:#0b1220;font-weight:700;font-size:.95rem;border:none;border-radius:8px;cursor:pointer;transition:opacity .15s;align-self:flex-start}
+.contact-form button:hover{opacity:.88}
+.contact-form button:disabled{opacity:.5;cursor:not-allowed}
+.form-msg{padding:10px 14px;border-radius:8px;font-size:.88rem;margin-top:4px}
+.form-msg.ok{background:rgba(245,197,66,.12);color:#f5c542;border:1px solid rgba(245,197,66,.3)}
+.form-msg.err{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+.faq-list{display:flex;flex-direction:column;gap:24px}
+.faq-item dt{font-size:1rem;font-weight:600;color:#e4e4f0;margin-bottom:6px}
+.faq-item dd{font-size:.92rem;color:#b0b0cc;margin:0}
+.contact-channels{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+.channel{display:flex;align-items:center;gap:10px;font-size:.92rem;color:#b0b0cc}
+.channel a{color:#f5c542}
+</style>
+
+<div class="contact-grid">
+  <div>
+    <h2 style="margin-bottom:20px">Send a message</h2>
+    <form class="contact-form" id="contact-form">
+      <div>
+        <label for="cf-name">Name</label>
+        <input id="cf-name" name="name" type="text" placeholder="Your name" autocomplete="name">
+      </div>
+      <div>
+        <label for="cf-email">Email <span style="color:#f55a42">*</span></label>
+        <input id="cf-email" name="email" type="email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div>
+        <label for="cf-topic">Topic</label>
+        <select id="cf-topic" name="topic">
+          <option value="">— Select a topic —</option>
+          <option value="sales">Sales &amp; pricing</option>
+          <option value="support">Technical support</option>
+          <option value="partnership">Partnership or integration</option>
+          <option value="feedback">Product feedback</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label for="cf-message">Message <span style="color:#f55a42">*</span></label>
+        <textarea id="cf-message" name="message" placeholder="Tell us what's on your mind…" required></textarea>
+      </div>
+      <button type="submit" id="cf-submit">Send message</button>
+      <div id="cf-msg" style="display:none"></div>
+    </form>
+    <script>
+    document.getElementById('contact-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('cf-submit');
+      var msg = document.getElementById('cf-msg');
+      btn.disabled = true; btn.textContent = 'Sending…';
+      msg.style.display = 'none';
+      try {
+        var res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            name:    document.getElementById('cf-name').value,
+            email:   document.getElementById('cf-email').value,
+            message: (document.getElementById('cf-topic').value ? '[' + document.getElementById('cf-topic').value + '] ' : '') + document.getElementById('cf-message').value,
+          })
+        });
+        var data = await res.json();
+        if (data.ok) {
+          msg.className = 'form-msg ok'; msg.textContent = "Thanks — we'll be in touch shortly."; msg.style.display = 'block';
+          e.target.reset();
+        } else {
+          throw new Error(data.error || 'Submission failed');
+        }
+      } catch(err) {
+        msg.className = 'form-msg err'; msg.textContent = err.message || 'Something went wrong — email support@auraflux.co'; msg.style.display = 'block';
+      }
+      btn.disabled = false; btn.textContent = 'Send message';
+    });
+    </script>
+  </div>
+
+  <div>
+    <h2 style="margin-bottom:20px">Other ways to reach us</h2>
+    <div class="contact-channels">
+      <div class="channel">📧 <span>Email: <a href="mailto:support@auraflux.co">support@auraflux.co</a></span></div>
+      <div class="channel">💬 <span>In-app chat via the <a href="https://app.auraflux.co">Collab assistant</a></span></div>
+    </div>
+
+    <h2 style="margin-bottom:16px">Frequently asked questions</h2>
+    <dl class="faq-list">
+      <div class="faq-item">
+        <dt data-editable="faq_1_q">What's the difference between Operate and Guided?</dt>
+        <dd data-editable="faq_1_a">Both plans include the full AuraFlux platform. Operate is self-serve — you run everything yourself via API or the dashboard. Guided includes Collab-powered monitoring and guidance from the AuraFlux team.</dd>
+      </div>
+      <div class="faq-item">
+        <dt data-editable="faq_2_q">How do credits work?</dt>
+        <dd data-editable="faq_2_a">Each plan includes a monthly credit allowance. One credit = one short-form job. Long-form and multi-clip jobs use 2 credits. Unused credits roll over and additional packs are available any time.</dd>
+      </div>
+      <div class="faq-item">
+        <dt data-editable="faq_3_q">Can I connect multiple social accounts?</dt>
+        <dd data-editable="faq_3_a">Yes — you can connect YouTube, TikTok, Instagram, Twitch, and Kick. Each job can be targeted to one or more platforms simultaneously.</dd>
+      </div>
+      <div class="faq-item">
+        <dt data-editable="faq_4_q">Do I need technical knowledge to use AuraFlux?</dt>
+        <dd data-editable="faq_4_a">No. The dashboard guides you through every step. If you prefer direct API access, full developer documentation is available at app.auraflux.co/developer.</dd>
+      </div>
+    </dl>
+  </div>
+</div>`
   ),
 
   '/roadmap': LEGAL_SHELL(
