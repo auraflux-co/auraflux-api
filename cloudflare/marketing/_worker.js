@@ -21,7 +21,7 @@
 // Last known-good Framer static snapshot. deploy.sh auto-updates this to the most
 // recent deployment that has real Framer content (>100KB homepage).
 // Never point this at the canonical pages.dev URL — that runs the same worker → loop.
-const FRAMER_ORIGIN = 'https://9aebbf2e.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://a00bad24.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -104,7 +104,68 @@ const INJECTED_CSS = `
     visibility: hidden !important;
     pointer-events: none !important;
   }
+
+  /* ── Chat widget ─────────────────────────────────────────────────────────── */
+  #af-chat-bubble{position:fixed;bottom:24px;right:24px;z-index:9999;width:52px;height:52px;background:#f5c542;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s}
+  #af-chat-bubble:hover{transform:scale(1.08)}
+  #af-chat-bubble svg{width:24px;height:24px;fill:#0b1220}
+  #af-chat-panel{position:fixed;bottom:88px;right:24px;z-index:9998;width:340px;max-width:calc(100vw - 48px);background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden}
+  #af-chat-panel.open{display:flex}
+  #af-chat-header{padding:14px 16px;background:#0e1a2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between}
+  #af-chat-header span{font-size:.9rem;font-weight:600;color:#fff;font-family:-apple-system,sans-serif}
+  #af-chat-header button{background:none;border:none;color:#9999b8;cursor:pointer;font-size:1.1rem;line-height:1;padding:0}
+  #af-chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:180px;max-height:320px}
+  .af-msg{max-width:85%;padding:8px 12px;border-radius:12px;font-size:.85rem;line-height:1.5;font-family:-apple-system,sans-serif}
+  .af-msg.bot{background:#1e2d47;color:#e4e4f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .af-msg.user{background:#f5c542;color:#0b1220;align-self:flex-end;border-bottom-right-radius:4px;font-weight:500}
+  #af-chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
+  #af-chat-input{flex:1;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;color:#e4e4f0;font-size:.85rem;font-family:-apple-system,sans-serif;outline:none}
+  #af-chat-input:focus{border-color:#f5c542}
+  #af-chat-send{background:#f5c542;color:#0b1220;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
+  #af-chat-send:disabled{opacity:.5;cursor:not-allowed}
 </style>
+<div id="af-chat-bubble" onclick="document.getElementById('af-chat-panel').classList.toggle('open')" title="Chat with us">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+</div>
+<div id="af-chat-panel">
+  <div id="af-chat-header">
+    <span>💬 AuraFlux Chat</span>
+    <button onclick="document.getElementById('af-chat-panel').classList.remove('open')" aria-label="Close">✕</button>
+  </div>
+  <div id="af-chat-messages">
+    <div class="af-msg bot">Hi! I'm the AuraFlux assistant. Ask me anything about the platform, pricing, or how it works.</div>
+  </div>
+  <div id="af-chat-input-row">
+    <input id="af-chat-input" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')afSend()">
+    <button id="af-chat-send" onclick="afSend()">Send</button>
+  </div>
+</div>
+<script>
+var afHistory=[];
+async function afSend(){
+  var input=document.getElementById('af-chat-input');
+  var msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  var msgs=document.getElementById('af-chat-messages');
+  var send=document.getElementById('af-chat-send');
+  msgs.innerHTML+=('<div class="af-msg user">'+msg.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
+  msgs.scrollTop=msgs.scrollHeight;
+  send.disabled=true;
+  afHistory.push({role:'user',content:msg});
+  try{
+    var res=await fetch('https://auraflux-api.onrender.com/api/public/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,history:afHistory})});
+    var data=await res.json();
+    var reply=data.reply||'Sorry, something went wrong.';
+    afHistory.push({role:'assistant',content:reply});
+    msgs.innerHTML+=('<div class="af-msg bot">'+reply.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
+  }catch(e){
+    msgs.innerHTML+=('<div class="af-msg bot">Something went wrong. Call or text us at <a href="tel:+15716002835" style="color:#f5c542">+1 (571) 600-2835</a></div>');
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+  send.disabled=false;
+}
+</script>
 `;
 
 // ── Framer design components (injected by deploy.sh from framer-shell/) ───────
@@ -126,11 +187,14 @@ const FALLBACK_NAV = `<nav style="display:flex;align-items:center;justify-conten
     <a href="/pricing" style="font-size:.9rem;color:#9999b8;text-decoration:none">Pricing</a>
     <a href="/roadmap" style="font-size:.9rem;color:#9999b8;text-decoration:none">Roadmap</a>
     <a href="/contact" style="font-size:.9rem;color:#9999b8;text-decoration:none">Contact</a>
-    <a href="https://app.auraflux.co/sign-up" style="font-size:.9rem;background:#f5c542;color:#0b1220;padding:8px 18px;border-radius:6px;font-weight:600;text-decoration:none">Get Started</a>
   </div>
 </nav>`;
 
 const FALLBACK_FOOTER = `<footer style="text-align:center;padding:40px 24px;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:#555580">
+  <div style="margin-bottom:12px">
+    <a href="mailto:support@auraflux.co" style="color:#9999b8;margin:0 12px;text-decoration:none">support@auraflux.co</a>
+    <a href="tel:+15716002835" style="color:#9999b8;margin:0 12px;text-decoration:none">+1 (571) 600-2835</a>
+  </div>
   © 2026 AuraFlux. All rights reserved. &nbsp;
   <a href="/privacy" style="color:#f5c542;margin:0 8px">Privacy</a>
   <a href="/terms" style="color:#f5c542;margin:0 8px">Terms</a>
@@ -630,7 +694,6 @@ fetch('https://auraflux-api.onrender.com/api/public/plans')
     <div class="contact-channels">
       <div class="channel">📧 <span>Email: <a href="mailto:support@auraflux.co">support@auraflux.co</a></span></div>
       <div class="channel">📞 <span>Phone / SMS: <a href="tel:+15716002835">+1 (571) 600-2835</a></span></div>
-      <div class="channel">💬 <span>In-app chat via the <a href="https://app.auraflux.co">Collab assistant</a></span></div>
     </div>
 
     <h2 style="margin-bottom:16px">Frequently asked questions</h2>
