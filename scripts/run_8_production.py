@@ -25,9 +25,10 @@ from datetime import datetime, timezone
 # ── Config ────────────────────────────────────────────────────────────────────
 
 API_BASE      = os.environ.get('AURAFLUX_API_URL', 'https://auraflux-api.onrender.com')
-API_KEY       = os.environ.get('AURAFLUX_E2E_API_KEY_OPERATE',
-                               open('.env').read().split('AURAFLUX_E2E_API_KEY_OPERATE=')[1].split('\n')[0].strip()
-                               if os.path.exists('.env') else '')
+# Use Rob's guided account (gregory.robert.c@gmail.com) so videos appear in his review queue
+_env_raw      = open('.env').read() if os.path.exists('.env') else ''
+def _env(key): return next((l.split('=',1)[1].strip() for l in _env_raw.splitlines() if l.startswith(key+'=')), '')
+API_KEY       = os.environ.get('AURAFLUX_E2E_API_KEY_GUIDED', _env('AURAFLUX_E2E_API_KEY_GUIDED'))
 POLL_INTERVAL = 30    # seconds between status polls
 POLL_TIMEOUT  = 1200  # 20 min max per job
 TS            = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -93,7 +94,7 @@ def submit_job(clip, dry_run=False):
     payload = {
         'jobId':          job_id,
         'contentType':    'clips',
-        'planTier':       'operate',
+        'planTier':       'guided',
         'entry':          'fetch',
         'url':            clip['url'],
         'platforms':      ['youtube'],
