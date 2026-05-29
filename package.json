@@ -73,7 +73,7 @@
     "@aws-sdk/client-s3": "^3.1049.0",
     "@aws-sdk/s3-request-presigner": "^3.1041.0",
     "@clerk/express": "^2.1.10",
-    "@elevenlabs/elevenlabs-js": "^2.45.0",
+    "@elevenlabs/elevenlabs-js": "^2.49.1",
     "axios": "^1.16.1",
     "bullmq": "^5.77.3",
     "canvas": "^3.2.3",
