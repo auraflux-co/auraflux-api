@@ -29,7 +29,7 @@ POLL_INTERVAL = 30   # seconds between status polls
 POLL_TIMEOUT  = 900  # 15 min max per job
 TS            = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-HEADERS = {'x-api-key': API_KEY, 'Content-Type': 'application/json'}
+HEADERS = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
 
 # ── Feature set templates (the 20-feature set across 4 categories) ───────────
 # Keyed by form-factor. Each template activates the features that make sense
@@ -99,7 +99,7 @@ def submit_job(video, form_factor, dry_run=False):
     job_id = f"run8_{video['streamer'].lower()}_{TS}_{int(time.time()*1000) % 100000}"
     payload = {
         'jobId':       job_id,
-        'contentType': 'short_highlight' if form_factor == 'short' else 'long_highlight',
+        'contentType': 'clips' if form_factor == 'short' else 'news',
         'planTier':    'operate',
         'sourceType':  'url',
         'url':         video['url'],
@@ -140,9 +140,11 @@ def poll_job(job_id, timeout=POLL_TIMEOUT):
             status = data.get('status', 'unknown')
             if status in ('staged', 'complete', 'published', 'failed', 'held'):
                 return data
-            portals = data.get('portalReports', {})
-            done = sum(1 for p in portals.values() if p.get('passed') is not None)
-            print(f"    [{job_id[:30]}] status={status} portals_done={done}", end='\r')
+            portals = data.get('portals', [])
+            done = sum(1 for p in portals if p.get('status') not in ('pending', 'skipped'))
+            asm_err = data.get('assemblyFailReason', '')
+            suffix = f" — asm: {asm_err[:60]}" if asm_err else ''
+            print(f"    [{job_id[:30]}] status={status} portals_done={done}{suffix}", end='\r')
         except Exception as e:
             print(f"    Poll error for {job_id}: {e}")
         time.sleep(POLL_INTERVAL)
@@ -164,11 +166,11 @@ def local_grade(job_data):
     """Basic local grading when backend grader endpoint isn't available."""
     status = job_data.get('status', '')
     output = job_data.get('outputUrl', '')
-    portals = job_data.get('portalReports', [])
-    if isinstance(portals, list):
-        scores = [p.get('score') for p in portals if isinstance(p.get('score'), (int, float))]
-    else:
-        scores = [v.get('score') for v in portals.values() if isinstance(v.get('score'), (int, float))]
+    portals = job_data.get('portals', [])
+    scores = [p.get('score') for p in portals if isinstance(p.get('score'), (int, float))]
+    asm_err = job_data.get('assemblyFailReason')
+    if asm_err and 'status_complete' not in [g.get('checkId') for g in []]:
+        pass  # assemblyFailReason visible in gap report via status check
 
     grade = 0
     gaps = []
@@ -198,11 +200,14 @@ def local_grade(job_data):
 
 # ── Gap → Jira ────────────────────────────────────────────────────────────────
 
-def report_gaps(job_id, gaps, video):
+def report_gaps(job_id, gaps, video, job_data=None):
     """Print gap report. Jira ticket creation wired separately (CPD-422)."""
-    if not gaps:
+    asm_err = (job_data or {}).get('assemblyFailReason')
+    if not gaps and not asm_err:
         return
     print(f"\n  ⚠️  Gaps for {job_id} ({video.get('streamer','?')} — {video.get('title','')[:40]}):")
+    if asm_err:
+        print(f"     🔴 assembly_failed: {asm_err[:150]}")
     for g in gaps:
         print(f"     ❌ {g.get('checkId','?')}: {g.get('reason','')}")
 
@@ -288,7 +293,7 @@ def main():
         grade_result['outputUrl'] = final.get('outputUrl', '')
 
         grades.append(grade_result)
-        report_gaps(job_id, grade_result.get('gaps', []), video)
+        report_gaps(job_id, grade_result.get('gaps', []), video, job_data=final)
 
         passed_sym = '✅' if grade_result.get('passed') else '❌'
         print(f"  {passed_sym} Grade: {grade_result.get('grade', '?')}/100 — {grade_result.get('summary','')[:60]}")
