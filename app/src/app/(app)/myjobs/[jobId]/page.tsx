@@ -28,15 +28,16 @@ const PLATFORM_ICONS: Record<string, string> = {
 };
 
 const ADDON_LABELS: Record<string, string> = {
-  tts:            'ElevenLabs TTS',
-  heygen:         'AI Avatar',
-  shoppable:      'Shoppable tagging',
-  wan:            'Video generation',
-  clipSourcing:   'Scene selection',
-  showCommentary: 'Narrative narration',
-  branding:       'Brand overlay',
-  imageBurn:      'Image burn',
-  dynamicOverlays:'Dynamic overlays',
+  tts:              'ElevenLabs TTS',
+  heygen:           'AI Avatar',
+  shoppable:        'Shoppable tagging',
+  wan:              'Video generation',
+  clipSourcing:     'Scene selection',
+  showCommentary:   'Narrative narration',
+  branding:         'Brand overlay',
+  imageBurn:        'Image burn',
+  dynamicOverlays:  'Dynamic overlays',
+  thumbnailApproval:'Thumbnail',
 };
 
 const PORTAL_LABELS: Record<string, string> = {
@@ -87,7 +88,11 @@ function ScriptCard({ script }: { script: string }) {
 }
 
 function WizardConfigReview({ wc }: { wc: WizardConfig }) {
-  const ff = wc.formFactor === 'short' || wc.templateId === 'short-form' ? 'Short-form (9:16)' : 'Long-form (16:9)';
+  const ff = !wc.formFactor
+    ? null
+    : wc.formFactor === 'short' || wc.templateId === 'short-form'
+      ? 'Short-form (9:16)'
+      : 'Long-form (16:9)';
   const entryLabels: Record<string, string> = { fetch: 'URL fetch', upload: 'File upload', create: 'Generated' };
   const allBadges = [
     ...(wc.addOns ?? []).map((a) => ADDON_LABELS[a] ?? a),
@@ -96,8 +101,12 @@ function WizardConfigReview({ wc }: { wc: WizardConfig }) {
   return (
     <div className="space-y-3 text-sm">
       <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-        <span className="text-muted-foreground">Format</span>
-        <span>{ff}</span>
+        {ff != null && (
+          <>
+            <span className="text-muted-foreground">Format</span>
+            <span>{ff}</span>
+          </>
+        )}
         {wc.entryType && (
           <>
             <span className="text-muted-foreground">Source</span>
@@ -122,7 +131,7 @@ function WizardConfigReview({ wc }: { wc: WizardConfig }) {
             <span className="capitalize">{wc.tone}</span>
           </>
         )}
-        {wc.durationMins != null && (
+        {wc.durationMins != null && wc.contentType !== 'clips' && (
           <>
             <span className="text-muted-foreground">Duration</span>
             <span>{wc.durationMins} min</span>
