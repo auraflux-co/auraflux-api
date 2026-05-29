@@ -882,6 +882,20 @@ export async function operatorJobAction(
   return apiFetch(`/jobs/${jobId}/${action}`, { method: 'POST', token });
 }
 
+// ─── Customer approve-publish (staged → published) ───────────────────────────
+
+export async function approveAndPublish(
+  jobId: string,
+  platforms?: string[],
+  token?: string,
+): Promise<{ ok: boolean; jobId: string; approved: boolean; platforms: Record<string, unknown> }> {
+  return apiFetch(`/jobs/${jobId}/approve-publish`, {
+    method: 'POST',
+    token,
+    body: platforms ? JSON.stringify({ platforms }) : undefined,
+  });
+}
+
 // ─── Support (CPD-115) ───────────────────────────────────────────────────────
 
 export interface SupportMessage {

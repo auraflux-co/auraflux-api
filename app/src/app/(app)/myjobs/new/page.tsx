@@ -432,6 +432,16 @@ function NewJobPageInner() {
     openWithContext(STEP_GUIDE[0].hint);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Credit estimate — computed at component level so both Step 2 and Step 3 checkout can read it.
+  // Uses sourceMode directly to avoid forward-reference to effectiveSource.
+  const estimate = estimateCreditCost({
+    durationMins,
+    features: Array.from(features),
+    extensions: Array.from(addOns),
+    sourceMode: (sourceMode ?? 'source') as string,
+    planTier: planTier ?? 'operate',
+  });
+
   // CPD-113: Update guide context hint whenever the step changes
   useEffect(() => {
     setContextHint(STEP_GUIDE[step]?.hint ?? null);
@@ -566,11 +576,15 @@ function NewJobPageInner() {
         const token = await getToken();
         const res = await createJob(payload, token ?? undefined);
         console.info('[new-job] created', res.jobId ?? res.templateId, res.status);
-        toast.success('Job submitted', {
-          description: 'Your job is queued and will start processing shortly.',
+        toast.success('Production started', {
+          description: 'Your video is now building. Track progress on the job page.',
           duration: 5000,
         });
-        router.push('/myjobs/active');
+        if (res.jobId) {
+          router.push(`/myjobs/${res.jobId}`);
+        } else {
+          router.push('/myjobs/active');
+        }
       } catch (err: unknown) {
         setError("We couldn't create your job. Check your selections and try again.");
       }
@@ -824,13 +838,6 @@ function NewJobPageInner() {
       {/* Step 2 — Features & configuration */}
       {step === 2 && (() => {
         const tier = planTier ?? 'operate';
-        const estimate = estimateCreditCost({
-          durationMins,
-          features: Array.from(features),
-          extensions: Array.from(addOns),
-          sourceMode: effectiveSource ?? '',
-          planTier: tier,
-        });
 
         // Helper: render inline config panel for a feature
         function FeatureConfigPanel({ feat, cfg }: { feat: Feature; cfg: Record<string, string> }) {
@@ -1168,6 +1175,30 @@ function NewJobPageInner() {
                 );
               })}
 
+            {/* Selection summary — live cart-style summary of active features */}
+            {features.size > 0 && (
+              <div className="rounded-lg border border-border bg-muted/20 px-3 py-2.5 space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Your selections</p>
+                <div className="space-y-1">
+                  {CATEGORY_BOXES.filter((box) => formFactor && box.formFactors.includes(formFactor)).map((box) => {
+                    const sel = FEATURES.filter((f) => f.category === box.id && features.has(f.id));
+                    if (!sel.length) return null;
+                    return (
+                      <div key={box.id} className="flex items-start gap-2 text-[11px]">
+                        <span className="text-sm leading-none mt-0.5 shrink-0">{box.icon}</span>
+                        <div className="flex items-start gap-1.5 flex-wrap">
+                          <span className="text-muted-foreground shrink-0 font-medium">{box.label}:</span>
+                          {sel.map((f) => (
+                            <span key={f.id} className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[10px] font-medium">{f.label}</span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Live credit estimate */}
             <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1.5">
               <div className="flex items-center justify-between">
@@ -1185,11 +1216,86 @@ function NewJobPageInner() {
         );
       })()}
 
-      {/* Step 3 — Platform, Publish, Add-ons */}
+      {/* Step 3 — Checkout: order review + delivery settings */}
       {step === 3 && (
         <div className="space-y-5">
+
+          {/* Order review header */}
+          <div>
+            <h2 className="text-base font-semibold">Review your order</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Confirm everything looks right before starting production</p>
+          </div>
+
+          {/* Order line items */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Platforms</Label>
+
+            {/* Format */}
+            <div className="flex items-center justify-between rounded-lg border px-3 py-3">
+              <div className="flex items-center gap-3">
+                <span className="text-lg leading-none">📐</span>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-none mb-0.5">Format</p>
+                  <p className="text-sm font-medium">{formFactor === 'long' ? 'Long-form (16:9)' : 'Short-form (9:16)'}</p>
+                  <p className="text-[11px] text-muted-foreground">{formFactor === 'long' ? 'YouTube, compilations, full episodes' : 'TikTok, Reels, YouTube Shorts'}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setStep(0 as Step)} className="text-[10px] text-primary hover:underline shrink-0 ml-3">Edit</button>
+            </div>
+
+            {/* Source */}
+            <div className="flex items-center justify-between rounded-lg border px-3 py-3">
+              <div className="flex items-center gap-3">
+                <span className="text-lg leading-none">🎬</span>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-none mb-0.5">Source</p>
+                  <p className="text-sm font-medium">
+                    {sourceIntent === 'longform' ? 'Long-form video / VOD' : 'Short clips'}
+                    <span className="font-normal text-muted-foreground"> · {effectiveSource === 'source' ? 'channel browse' : effectiveSource === 'fetch' ? 'URL fetch' : 'file upload'}</span>
+                  </p>
+                  {sourceIntent === 'longform' && formFactor === 'short' && (
+                    <p className="text-[11px] text-primary">→ We&apos;ll cut short clips from your long video</p>
+                  )}
+                  {sourceIntent === 'clips' && formFactor === 'long' && (
+                    <p className="text-[11px] text-primary">→ We&apos;ll compile your clips into a long-form video</p>
+                  )}
+                </div>
+              </div>
+              <button type="button" onClick={() => setStep(1 as Step)} className="text-[10px] text-primary hover:underline shrink-0 ml-3">Edit</button>
+            </div>
+
+            {/* Features */}
+            <div className="flex items-start justify-between rounded-lg border px-3 py-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <span className="text-lg leading-none mt-0.5 shrink-0">⚙️</span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-none mb-1">Production features</p>
+                  {features.size === 0 ? (
+                    <p className="text-sm text-muted-foreground">None selected — default pipeline</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {CATEGORY_BOXES.map((box) => {
+                        const sel = FEATURES.filter((f) => f.category === box.id && features.has(f.id));
+                        if (!sel.length) return null;
+                        return (
+                          <div key={box.id} className="flex items-start gap-1.5 text-[11px]">
+                            <span className="shrink-0">{box.icon}</span>
+                            <span className="text-muted-foreground shrink-0 font-medium">{box.label}:</span>
+                            <span className="text-foreground/80">{sel.map((f) => f.label).join(', ')}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button type="button" onClick={() => setStep(2 as Step)} className="text-[10px] text-primary hover:underline shrink-0 ml-3">Edit</button>
+            </div>
+
+          </div>
+
+          {/* Delivery settings */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Delivery</p>
             <div className="flex flex-wrap gap-2">
               {PLATFORMS.map((p) => (
                 <LockedFeature
@@ -1214,26 +1320,26 @@ function NewJobPageInner() {
                 </LockedFeature>
               ))}
             </div>
+
+            <JobTimingPicker platforms={platforms} value={jobTiming} onChange={setJobTiming} />
           </div>
 
-          <JobTimingPicker platforms={platforms} value={jobTiming} onChange={setJobTiming} />
+          {/* Credit total */}
+          <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Total cost</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{estimate.message}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-bold text-primary tabular-nums">{estimate.credits}</p>
+                <p className="text-[10px] text-muted-foreground">credits</p>
+              </div>
+            </div>
+          </div>
 
           {/* Add-on extensions (HeyGen, Shoppable) — hidden from UI, wired in code.
                Managed-plan add-ons will be surfaced once onboarding flow is complete. */}
-
-          {/* Review summary */}
-          <Card className="bg-muted/30 border-dashed">
-            <CardContent className="pt-4 space-y-2 text-xs text-muted-foreground">
-              <p><span className="font-medium text-foreground">Output:</span> {formFactor === 'long' ? 'Long-form video (16:9)' : 'Short-form clips (9:16)'}</p>
-              <p><span className="font-medium text-foreground">Source:</span> {sourceIntent === 'longform' ? 'Long-form video / VOD' : 'Short clips'} via {effectiveSource === 'source' ? 'channel browse' : effectiveSource === 'fetch' ? 'URL fetch' : 'file upload'}</p>
-              {sourceIntent === 'longform' && formFactor === 'short' && <p className="text-xs text-primary">→ We&apos;ll cut clips from your long video</p>}
-              {sourceIntent === 'clips' && formFactor === 'long' && <p className="text-xs text-primary">→ We&apos;ll compile your clips into a long-form video</p>}
-              <p><span className="font-medium text-foreground">Features:</span> {Array.from(features).map((id) => FEATURES.find((f) => f.id === id)?.label).filter(Boolean).join(', ') || 'None'}</p>
-              <p><span className="font-medium text-foreground">Platforms:</span> {platforms.map((p) => PLATFORM_LABEL[p] ?? p).join(', ')}</p>
-              {/* Add-ons summary hidden — add-ons not surfaced in UI yet */}
-            </CardContent>
-          </Card>
-
         </div>
       )}
 
@@ -1260,9 +1366,9 @@ function NewJobPageInner() {
           </button>
           <Button size="sm" disabled={isPending || (step === 1 && !sourceIntent)} onClick={advance}>
             {isPending
-              ? 'Submitting…'
+              ? 'Starting production…'
               : step === 3
-                ? (jobTiming.productionStart.mode === 'scheduled' ? 'Schedule job' : 'Submit job')
+                ? (jobTiming.productionStart.mode === 'scheduled' ? 'Schedule production' : 'Confirm & start production →')
                 : 'Next →'}
           </Button>
         </div>

@@ -1,16 +1,18 @@
 'use client';
 /**
- * /myjobs/history — Completed jobs (CPD-112)
+ * /myjobs/history — Review queue + completed jobs (CPD-112)
  *
- * Shows complete/published jobs with:
- *  - Post-publish links (YouTube, TikTok, Instagram platform URLs)
- *  - "What you selected" selection review card — foundation for saved templates
+ * Tab 1 — "Review queue":  staged jobs awaiting customer approval
+ * Tab 2 — "Completed":     complete + published jobs
+ *
+ * Deep-link: ?tab=review   opens directly to the review tab
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { buttonVariants } from '@/components/ui/button';
+import { buttonVariants, Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -21,6 +23,7 @@ import { jobDisplayTitle, jobStatusLabel, platformLabel, formatUserError } from 
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 
+const STAGED_STATUSES   = new Set(['staged']);
 const COMPLETE_STATUSES = new Set(['complete', 'published']);
 
 const PLATFORM_ICONS: Record<string, string> = {
@@ -137,9 +140,21 @@ function PublishLinks({ results }: { results: PublishResult[] }) {
 }
 
 export default function HistoryPage() {
+  return (
+    <Suspense fallback={<div className="max-w-3xl space-y-6"><div className="h-8 w-48 bg-muted/40 rounded animate-pulse" /></div>}>
+      <HistoryPageContent />
+    </Suspense>
+  );
+}
+
+function HistoryPageContent() {
   const { getToken, isLoaded } = useAuth();
+  const searchParams           = useSearchParams();
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
+  const [tab, setTab]          = useState<'review' | 'completed'>(
+    searchParams.get('tab') === 'review' ? 'review' : 'completed'
+  );
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -147,7 +162,7 @@ export default function HistoryPage() {
       try {
         const token = await getToken();
         const res = await listJobs(token ?? undefined);
-        setJobs((res.jobs ?? []).filter((j) => COMPLETE_STATUSES.has(j.status)));
+        setJobs((res.jobs ?? []).filter((j) => STAGED_STATUSES.has(j.status) || COMPLETE_STATUSES.has(j.status)));
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load jobs');
       }
@@ -155,11 +170,14 @@ export default function HistoryPage() {
     load();
   }, [getToken, isLoaded]);
 
+  const reviewJobs    = jobs?.filter((j) => STAGED_STATUSES.has(j.status)) ?? [];
+  const completedJobs = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
+
   return (
     <PageShell maxWidth="3xl">
       <PageHeader
-        title="My job history"
-        subtitle="Completed jobs, post-publish links, and selection review"
+        title="Jobs"
+        subtitle="Review staged outputs and view completed job history"
       >
         <Link href="/myjobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
           + New job
@@ -170,6 +188,34 @@ export default function HistoryPage() {
         <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
       )}
 
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-border">
+        {([
+          { id: 'review' as const,    label: 'Ready to review', count: reviewJobs.length },
+          { id: 'completed' as const, label: 'Completed',       count: completedJobs.length },
+        ] as { id: 'review' | 'completed'; label: string; count: number }[]).map(({ id, label, count }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+              tab === id ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {label}
+            {count > 0 && (
+              <span className={cn(
+                'ml-1.5 text-xs rounded-full px-1.5 py-0.5',
+                id === 'review' && count > 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-muted',
+              )}>
+                {count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Loading skeleton */}
       {jobs === null && !error && (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
@@ -178,22 +224,96 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {jobs !== null && jobs.length === 0 && !error && (
-        <EmptyState
-          title="No completed jobs yet"
-          description="Once a job finishes, it will appear here with download links and publish history."
-          action={{ label: 'Create your first job', href: '/myjobs/new' }}
-        />
+      {/* Review tab */}
+      {tab === 'review' && jobs !== null && (
+        reviewJobs.length === 0 ? (
+          <EmptyState
+            title="No videos waiting for review"
+            description="Staged jobs appear here when production finishes. Approve to publish directly to your connected platforms."
+            action={{ label: 'Create a new job', href: '/myjobs/new' }}
+          />
+        ) : (
+          <div className="space-y-3">
+            {reviewJobs.map((job) => (
+              <ReviewCard key={job.jobId} job={job} />
+            ))}
+          </div>
+        )
       )}
 
-      {jobs !== null && jobs.length > 0 && (
-        <div className="space-y-3">
-          {jobs.map((job) => (
-            <HistoryCard key={job.jobId} job={job} />
-          ))}
-        </div>
+      {/* Completed tab */}
+      {tab === 'completed' && jobs !== null && (
+        completedJobs.length === 0 ? (
+          <EmptyState
+            title="No completed jobs yet"
+            description="Once a job finishes and is published, it will appear here with platform links and download options."
+            action={{ label: 'Create your first job', href: '/myjobs/new' }}
+          />
+        ) : (
+          <div className="space-y-3">
+            {completedJobs.map((job) => (
+              <HistoryCard key={job.jobId} job={job} />
+            ))}
+          </div>
+        )
       )}
     </PageShell>
+  );
+}
+
+function ReviewCard({ job }: { job: Job }) {
+  return (
+    <Card className="border-green-200 dark:border-green-800">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+              <Link
+                href={`/myjobs/${job.jobId}`}
+                className="text-sm font-medium hover:underline"
+              >
+                {jobDisplayTitle(job)}
+              </Link>
+              <Badge variant="outline" className="text-[10px] border-green-300 text-green-700 dark:text-green-400">
+                Ready to review
+              </Badge>
+              {job.platforms.map((p) => (
+                <Badge key={p} variant="outline" className="text-[10px]">
+                  {PLATFORM_ICONS[p] ?? '•'} {platformLabel(p)}
+                </Badge>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {labelForContentType(job.contentType)} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </p>
+          </div>
+          <Link
+            href={`/myjobs/${job.jobId}`}
+            className={cn(buttonVariants({ size: 'sm' }), 'bg-green-600 hover:bg-green-700 text-white shrink-0 text-xs')}
+          >
+            Review →
+          </Link>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pb-4 px-4 space-y-2">
+        {job.publishCopy?.youtube?.title && (
+          <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1.5 line-clamp-1">
+            "{job.publishCopy.youtube.title}"
+          </div>
+        )}
+        {job.outputUrl && (
+          <a
+            href={job.outputUrl}
+            download
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-xs h-7 px-2')}
+          >
+            ↓ Download video
+          </a>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

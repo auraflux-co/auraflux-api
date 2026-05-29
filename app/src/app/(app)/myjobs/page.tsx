@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 
 const ACTIVE_STATUSES    = new Set(['queued', 'running', 'held', 'failed']);
 const SCHEDULED_STATUSES = new Set(['queued_scheduled']);
+const STAGED_STATUSES    = new Set(['staged']);
 const COMPLETE_STATUSES  = new Set(['complete', 'published']);
 
 interface StatCardProps {
@@ -73,9 +74,10 @@ export default function JobsHubPage() {
     load();
   }, [getToken, isLoaded]);
 
-  const active   = jobs?.filter((j) => ACTIVE_STATUSES.has(j.status)) ?? [];
-  const held     = jobs?.filter((j) => j.status === 'held' || j.status === 'failed') ?? [];
-  const complete = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
+  const active    = jobs?.filter((j) => ACTIVE_STATUSES.has(j.status)) ?? [];
+  const held      = jobs?.filter((j) => j.status === 'held' || j.status === 'failed') ?? [];
+  const staged    = jobs?.filter((j) => STAGED_STATUSES.has(j.status)) ?? [];
+  const complete  = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
 
   return (
     <PageShell maxWidth="3xl">
@@ -99,9 +101,10 @@ export default function JobsHubPage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard href="/myjobs/active"  label="Active"           count={jobs === null ? null : active.length}   sub="queued + running" />
         <StatCard href="/myjobs/active"  label="Needs attention"  count={jobs === null ? null : held.length}     sub="held or failed" accent />
+        <StatCard href="/myjobs/history?tab=review" label="Ready to review" count={jobs === null ? null : staged.length} sub="awaiting approval" accent={staged.length > 0} />
         <StatCard href="/myjobs/history" label="Completed"        count={jobs === null ? null : complete.length} sub="all time" />
       </div>
 
@@ -185,11 +188,13 @@ export default function JobsHubPage() {
       {jobs !== null && jobs.length > 0 && (
         <div className="flex flex-wrap gap-4 af-caption">
           {[
-            { s: 'running', label: 'Running',  color: 'bg-blue-500' },
-            { s: 'queued',  label: 'Queued',   color: 'bg-muted/40' },
-            { s: 'held',    label: 'Held',     color: 'bg-yellow-500' },
-            { s: 'failed',  label: 'Failed',   color: 'bg-destructive' },
-            { s: 'complete',label: 'Complete', color: 'bg-green-500' },
+            { s: 'running',  label: 'Running',        color: 'bg-blue-500' },
+            { s: 'queued',   label: 'Queued',         color: 'bg-muted/40' },
+            { s: 'held',     label: 'Held',           color: 'bg-yellow-500' },
+            { s: 'failed',   label: 'Failed',         color: 'bg-destructive' },
+            { s: 'staged',   label: 'Ready to review', color: 'bg-green-500 animate-pulse' },
+            { s: 'complete', label: 'Complete',       color: 'bg-green-500' },
+            { s: 'published',label: 'Published',      color: 'bg-emerald-600' },
           ].map(({ s, label, color }) => (
             <span key={s} className="flex items-center gap-1">
               <span className={cn('w-2 h-2 rounded-full', color)} />
