@@ -511,11 +511,11 @@ export default function JobDetailPage() {
 
       <Separator />
 
-      {/* Portal pipeline — shown collapsed when complete, full when active */}
-      {!isActive && (
-        <Card>
+      {/* Portal pipeline — superadmin only (customers see pipeline progress while active only) */}
+      {!isActive && isSuperAdmin && (
+        <Card className="border-dashed">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Portal pipeline</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Portal pipeline</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {(job.portalReports ?? []).map((report) => (

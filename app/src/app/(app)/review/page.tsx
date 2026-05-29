@@ -183,7 +183,7 @@ function PublishCopySection({ copy }: { copy: Record<string, Record<string, unkn
 
 // ── Staging review panel ──────────────────────────────────────────────────────
 
-function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
+function StagingPanel({ jobId, token, isSuperAdmin }: { jobId: string; token: string; isSuperAdmin: boolean }) {
   const [assets, setAssets]     = useState<StagingAssets | null>(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -344,11 +344,13 @@ function StagingPanel({ jobId, token }: { jobId: string; token: string }) {
         </div>
       )}
 
-      {/* Production steps */}
-      <div>
-        <p className="text-xs font-semibold mb-2">Production steps</p>
-        <PortalTimeline reports={portalReports} />
-      </div>
+      {/* Production steps — superadmin only */}
+      {isSuperAdmin && (
+        <div>
+          <p className="text-xs font-semibold mb-2 text-muted-foreground">Production pipeline</p>
+          <PortalTimeline reports={portalReports} />
+        </div>
+      )}
 
       <Separator />
 
@@ -532,7 +534,7 @@ export default function StagingPage() {
             {isOpen && token && (
               <CardContent className="pt-0">
                 <Separator className="mb-4" />
-                <StagingPanel jobId={job.jobId} token={token} />
+                <StagingPanel jobId={job.jobId} token={token} isSuperAdmin={isSuperAdmin} />
               </CardContent>
             )}
           </Card>
