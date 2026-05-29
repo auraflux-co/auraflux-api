@@ -213,6 +213,7 @@ def main():
     parser = argparse.ArgumentParser(description='Phase 3 production run — Twitch clips')
     parser.add_argument('--dry-run',  action='store_true', help='Print without submitting')
     parser.add_argument('--limit',    type=int,   default=None,  help='Max clips to process')
+    parser.add_argument('--offset',   type=int,   default=0,     help='Skip first N clips (0-indexed)')
     parser.add_argument('--streamer', default=None, help='Filter to one streamer')
     parser.add_argument('--no-poll',  action='store_true', help='Submit only, skip polling')
     args = parser.parse_args()
@@ -220,6 +221,8 @@ def main():
     inventory = CLIP_INVENTORY
     if args.streamer:
         inventory = [c for c in inventory if c['streamer'].lower() == args.streamer.lower()]
+    if args.offset:
+        inventory = inventory[args.offset:]
     if args.limit:
         inventory = inventory[:args.limit]
 
@@ -238,7 +241,7 @@ def main():
         result = submit_job(clip, dry_run=args.dry_run)
         submitted.append(result)
         if not args.dry_run and i < len(inventory):
-            time.sleep(2)  # space submissions slightly
+            time.sleep(90)  # 90s between submissions — Twitch GQL rate-limits concurrent yt-dlp downloads from datacenter IPs
 
     live = [r for r in submitted if r.get('submitted', False)]
     skipped = len(submitted) - len(live)

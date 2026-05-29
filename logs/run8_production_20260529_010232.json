@@ -1,0 +1,78 @@
+{
+  "ts": "20260529_010232",
+  "submitted": 4,
+  "total": 4,
+  "at_100": 3,
+  "avg_grade": 82.5,
+  "grades": [
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780030953049",
+      "status": "published",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP",
+        "title": "xqc makes the wrong choice",
+        "duration_s": 45
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780030953049/1780030967663_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780030953049.mp4"
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        }
+      ],
+      "summary": "Grade: 30/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780031043513",
+      "status": "failed",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/NimbleProductiveAsparagusHeyGuys-s77ZvN10Yr-O2sfo",
+        "title": "wow",
+        "duration_s": 26
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780031134296",
+      "status": "published",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/ConsiderateColdbloodedBeaverRickroll-NHbTiYQlzwHVvvVf",
+        "title": "xqc kisses nyyxxii",
+        "duration_s": 42
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780031134296/1780031152159_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780031134296.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780031224726",
+      "status": "published",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/EntertainingTsunderePicklesSaltBae-_znCL0KuMwXadfP1",
+        "title": "xQc DRAMA NEWS STORIES",
+        "duration_s": 60
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780031224726/1780031275335_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780031224726.mp4"
+    }
+  ]
+}
