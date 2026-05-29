@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-29 v1.0.785 (Cursor — fix(cpd-423/phase3): serial job execution in run_8_production.py — batch submit + 90s delay caused concurrent Twitch GQL rate limiting (~25% fail); now submits 1 job, waits for complete, then submits next; removed 4 sub-15s clips that fail portal0; Phase 3 run started: 26 clips, serial, guided account)
 **Last Updated:** 2026-05-29 v1.0.784 (Cursor — fix(ui/cpd-315): job spec card accuracy for clips — hide portal pipeline from customer view (superadmin only); thumbnailApproval label fix; clips jobs no longer show misleading durationMins/formFactor from creation-time defaults)
 **Last Updated:** 2026-05-29 v1.0.782 (Cursor — fix(phase3): switch run_8_production.py to guided account (gregory.robert.c@gmail.com); API key created for user_3DeZEr79TWcmvEvCMlu8lmM1FdU; 13 Phase 3 videos migrated to staged review queue; next runs go directly to guided account)
 **Last Updated:** 2026-05-29 v1.0.780 (Cursor — fix(phase3/run8): 90s sequential delay between Twitch clip submissions; add --offset N param; first batch: 3/4 grade 100/100)
