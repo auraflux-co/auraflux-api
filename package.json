@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.768",
+  "version": "1.0.769",
   "description": "AuraFlux — AI-powered video content production platform",
   "main": "server.js",
   "scripts": {
@@ -132,6 +132,6 @@
     }
   },
   "overrides": {
-    "uuid": ">=14.0.0"
+    "uuid": "^9.0.0"
   }
 }
