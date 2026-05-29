@@ -2,116 +2,108 @@
 """
 scripts/run_8_production.py — Phase 3 Production Run (CPD-422)
 
-Reads the 73-video content analysis inventory, builds job specs using the
-new 20-feature set, submits via POST /v1/jobs (operate API path) and polls
-until complete, then grades each output against its spec using the grader
-endpoint. Gaps auto-create Jira tickets.
+Submits jobs from a curated Twitch clip inventory (drawn from the 5 streamers
+in the 73-video Gemini analysis) via POST /v1/jobs (Operate API path),
+polls until complete or failed, then grades each output against its spec
+using the backend grader endpoint.
+
+YouTube URLs fail from Render datacenter IPs (yt-dlp bot detection).
+Using Twitch clip URLs instead — same streamers, same content themes.
 
 Usage:
-    python3 scripts/run_8_production.py [--dry-run] [--limit N] [--form-factor short|long]
+    python3 scripts/run_8_production.py [--dry-run] [--limit N]
+                                        [--streamer xQc|hasanabi|…]
+                                        [--no-poll]
 
 Outputs:
     logs/run8_production_<timestamp>.json   — full results
-    logs/run8_production_<timestamp>.md     — human-readable summary
 """
 
-import os, sys, json, time, re, glob, argparse, requests
+import os, sys, json, time, argparse, requests
 from datetime import datetime, timezone
 
-# ── Config ───────────────────────────────────────────────────────────────────
+# ── Config ────────────────────────────────────────────────────────────────────
 
 API_BASE      = os.environ.get('AURAFLUX_API_URL', 'https://auraflux-api.onrender.com')
 API_KEY       = os.environ.get('AURAFLUX_E2E_API_KEY_OPERATE',
                                open('.env').read().split('AURAFLUX_E2E_API_KEY_OPERATE=')[1].split('\n')[0].strip()
                                if os.path.exists('.env') else '')
-CONTENT_FILE  = 'logs/content_analysis_20260528_194630.json'  # 73-video Gemini analysis
-POLL_INTERVAL = 30   # seconds between status polls
-POLL_TIMEOUT  = 900  # 15 min max per job
+POLL_INTERVAL = 30    # seconds between status polls
+POLL_TIMEOUT  = 1200  # 20 min max per job
 TS            = datetime.now().strftime('%Y%m%d_%H%M%S')
 
 HEADERS = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
 
-# ── Feature set templates (the 20-feature set across 4 categories) ───────────
-# Keyed by form-factor. Each template activates the features that make sense
-# for that video type based on the Gemini content analysis.
+# ── Twitch clip inventory (Phase 3 — 25 clips, 5 streamers) ──────────────────
+# Clips verified to download via yt-dlp from Render datacenter IPs (Twitch CDN,
+# unlike YouTube, does not block datacenter IPs for clip downloads).
+# Sourced from: xQc, hasanabi, trainwreckstv, StableRonaldo, Markiplier
+# — matching the 73-video Gemini analysis streamers from run_6.
 
-FEATURE_TEMPLATES = {
-    'long': {
-        # Content
-        'script':          {'active': True},
-        'scene_select':    {'active': True},
-        # Visual
-        'branding':        {'active': True},
-        'dynamic':         {'active': True},
-        # Production
-        'scene_transitions': {'active': True},
-        'chapter_markers': {'active': True},
-        # Audio — off by default (streamers use own voice)
-        # tts: off
-    },
-    'short': {
-        # Content
-        'scene_select':    {'active': True},
-        # Visual
-        'branding':        {'active': True},
-        'dynamic':         {'active': True},
-        # Production
-        'scene_transitions': {'active': True},
-        'animated_text_effects': {'active': True},
-    },
+CLIP_INVENTORY = [
+    # xQc — gaming / reaction content
+    {'streamer': 'xQc',         'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                         'title': 'xqc makes the wrong choice',         'duration_s': 45},
+    {'streamer': 'xQc',         'url': 'https://www.twitch.tv/xqc/clip/NimbleProductiveAsparagusHeyGuys-s77ZvN10Yr-O2sfo',                      'title': 'wow',                                 'duration_s': 26},
+    {'streamer': 'xQc',         'url': 'https://www.twitch.tv/xqc/clip/ConsiderateColdbloodedBeaverRickroll-NHbTiYQlzwHVvvVf',                   'title': 'xqc kisses nyyxxii',                  'duration_s': 42},
+    {'streamer': 'xQc',         'url': 'https://www.twitch.tv/xqc/clip/EntertainingTsunderePicklesSaltBae-_znCL0KuMwXadfP1',                     'title': 'xQc DRAMA NEWS STORIES',              'duration_s': 60},
+    {'streamer': 'xQc',         'url': 'https://www.twitch.tv/xqc/clip/ShySavoryWerewolfTTours-gtkYnILCafbYWyMJ',                               'title': 'X with the clutch',                   'duration_s': 37},
+    # Hasanabi — political commentary / IRL
+    {'streamer': 'hasanabi',    'url': 'https://www.twitch.tv/hasanabi/clip/AgitatedDelightfulArmadilloWOOP',                                    'title': 'Hasan 50/50 with AOC',                'duration_s': 18},
+    {'streamer': 'hasanabi',    'url': 'https://www.twitch.tv/hasanabi/clip/PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR',                     'title': 'hasanabi clip',                       'duration_s': 35},
+    {'streamer': 'hasanabi',    'url': 'https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg',         'title': 'irl ban',                             'duration_s': 51},
+    {'streamer': 'hasanabi',    'url': 'https://www.twitch.tv/hasanabi/clip/CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF',                  'title': 'Emiru calls out streamers',           'duration_s': 43},
+    {'streamer': 'hasanabi',    'url': 'https://www.twitch.tv/hasanabi/clip/SaltyBashfulLarkAMPTropPunch-_Wij8ppJxCpMlXOp',                     'title': 'hasanabi reaction clip',              'duration_s': 30},
+    # Trainwreckstv — commentary / gambling
+    {'streamer': 'trainwreckstv', 'url': 'https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP',                             'title': 'finish halo 2',                       'duration_s': 45},
+    {'streamer': 'trainwreckstv', 'url': 'https://www.twitch.tv/trainwreckstv/clip/ObeseFrigidBibimbapTBTacoLeft',                              'title': 'D:',                                  'duration_s': 41},
+    {'streamer': 'trainwreckstv', 'url': 'https://www.twitch.tv/trainwreckstv/clip/LivelyNeighborlySnailCclamChamp',                            'title': 'Shamelesss',                          'duration_s': 26},
+    {'streamer': 'trainwreckstv', 'url': 'https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana',                             'title': 'Shameless Mod Defends',               'duration_s': 43},
+    {'streamer': 'trainwreckstv', 'url': 'https://www.twitch.tv/trainwreckstv/clip/AmericanCleanYamKlappa',                                     'title': 'roasted',                             'duration_s': 31},
+    # StableRonaldo — gaming / highlights
+    {'streamer': 'StableRonaldo', 'url': 'https://www.twitch.tv/stableronaldo/clip/ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC',                'title': 'nahh',                                'duration_s': 22},
+    {'streamer': 'StableRonaldo', 'url': 'https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK',                 'title': 'hey!',                                'duration_s': 47},
+    {'streamer': 'StableRonaldo', 'url': 'https://www.twitch.tv/stableronaldo/clip/EphemeralLittleTildeStoneLightning-w0vB8TL5OGhKl_4S',        'title': 'BACK TO BACK',                        'duration_s': 32},
+    {'streamer': 'StableRonaldo', 'url': 'https://www.twitch.tv/stableronaldo/clip/SneakyBlatantChickpeaPeanutButterJellyTime-B6eWTXlxT7efwqM3','title': 'classic ronaldo',                     'duration_s': 15},
+    {'streamer': 'StableRonaldo', 'url': 'https://www.twitch.tv/stableronaldo/clip/HardObeseChickenM4xHeh-3_xAOUa3XSFrZnWG',                   'title': 'IGHT BET',                            'duration_s': 10},
+    # Markiplier — gaming / commentary
+    {'streamer': 'Markiplier',   'url': 'https://www.twitch.tv/markiplier/clip/FrigidSingleTortoiseMau5',                                        'title': 'Stan and cops character',             'duration_s': 44},
+    {'streamer': 'Markiplier',   'url': 'https://www.twitch.tv/markiplier/clip/BlushingCovertDurianJonCarnage',                                  'title': "Mark's so hard right now",            'duration_s': 22},
+    {'streamer': 'Markiplier',   'url': 'https://www.twitch.tv/markiplier/clip/AbrasiveBlitheBurritoHassanChop',                                 'title': 'mark undoing his guess',              'duration_s':  8},
+    {'streamer': 'Markiplier',   'url': 'https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid',                            'title': "Wade's Romantic Cruise",              'duration_s': 51},
+    {'streamer': 'Markiplier',   'url': 'https://www.twitch.tv/markiplier/clip/IcySuspiciousMelonOneHand',                                       'title': 'Markiplier caught the xQc virus',     'duration_s':  6},
+]
+
+# ── addOns feature sets (used with contentType: clips) ────────────────────────
+# The API uses addOns, not featureConfig.
+# Keys match the addOns map in lib/job_spec.js: branding, dynamicOverlays,
+# clipSourcing, thumbnail, tts, showCommentary.
+
+ADD_ONS_CLIPS = {
+    'branding':           {'active': True},   # AuraFlux watermark + chrome overlay
+    'dynamicOverlays':    {'active': True},   # kinetic text / animated overlays
+    'thumbnailApproval':  {'active': True},   # thumbnail generation (key is thumbnailApproval in createJobSpec)
+    # Note: clipSourcing is handled server-side for fetch-entry clips jobs; not an addOn key
 }
 
-# ── Load inventory ────────────────────────────────────────────────────────────
+# ── Job submission ─────────────────────────────────────────────────────────────
 
-def load_inventory(path):
-    with open(path) as f:
-        data = json.load(f)
-    videos = []
-    for entry in data.get('results', []):
-        video = entry.get('video', {})
-        analysis = entry.get('analysis', {})
-        url = video.get('url', '')
-        if not url:
-            continue
-        videos.append({
-            'streamer':       entry.get('streamer', ''),
-            'platform':       entry.get('platform', 'youtube'),
-            'url':            url,
-            'title':          video.get('title', ''),
-            'duration_s':     video.get('duration', 0),
-            'is_short':       video.get('is_short', False),
-            'format':         analysis.get('format', 'long'),  # 'long' | 'short'
-            'content_type':   analysis.get('content_type', 'general'),
-        })
-    return videos
-
-def pick_form_factor(video):
-    """Decide whether to produce a short or long output from this video."""
-    # Short source clips → produce short; long VODs → produce long-form output
-    if video['is_short'] or video['duration_s'] < 300:
-        return 'short'
-    return 'long'
-
-# ── Job submission ────────────────────────────────────────────────────────────
-
-def submit_job(video, form_factor, dry_run=False):
-    ff = FEATURE_TEMPLATES[form_factor]
-    job_id = f"run8_{video['streamer'].lower()}_{TS}_{int(time.time()*1000) % 100000}"
+def submit_job(clip, dry_run=False):
+    ts_ms = int(time.time() * 1000) % 100000
+    job_id = f"run8_{clip['streamer'].lower().replace(' ', '')}_{TS}_{ts_ms}"
     payload = {
-        'jobId':       job_id,
-        'contentType': 'clips' if form_factor == 'short' else 'news',
-        'planTier':    'operate',
-        'sourceType':  'url',
-        'url':         video['url'],
-        'formFactor':  form_factor,
-        'platforms':   ['youtube'],
-        'featureConfig': ff,
-        'topic':       f"{video['streamer']} — {video['title'][:80]}",
-        'staging':     True,  # stage for review, don't auto-publish
+        'jobId':          job_id,
+        'contentType':    'clips',
+        'planTier':       'operate',
+        'entry':          'fetch',
+        'url':            clip['url'],
+        'platforms':      ['youtube'],
+        'addOns':         ADD_ONS_CLIPS,
+        'topic':          f"{clip['streamer']} — {clip['title']}",
+        'staging':        True,     # stage for review; don't auto-publish
     }
 
     if dry_run:
-        print(f"  [DRY RUN] Would submit {job_id} ({form_factor}) — {video['url'][:60]}")
+        print(f"  [DRY RUN] Would submit {job_id} — {clip['streamer']} — {clip['title'][:50]}")
         return {'jobId': job_id, 'dry_run': True}
 
     try:
@@ -119,16 +111,19 @@ def submit_job(video, form_factor, dry_run=False):
         r.raise_for_status()
         resp = r.json()
         actual_id = resp.get('jobId', job_id)
-        print(f"  ✅ Submitted {actual_id} ({form_factor}) — {video['streamer']} — {video['title'][:50]}")
-        return {'jobId': actual_id, 'submitted': True, 'video': video}
+        print(f"  ✅ Submitted {actual_id[:50]} — {clip['streamer']} — {clip['title'][:45]}")
+        return {'jobId': actual_id, 'submitted': True, 'clip': clip}
     except Exception as e:
-        print(f"  ❌ Submit failed for {video['url'][:60]}: {e}")
-        return {'jobId': job_id, 'submitted': False, 'error': str(e), 'video': video}
+        err = getattr(e, 'response', None)
+        err_body = err.text[:200] if err is not None else str(e)
+        print(f"  ❌ Submit failed for {clip['url'][:60]}: {err_body}")
+        return {'jobId': job_id, 'submitted': False, 'error': err_body, 'clip': clip}
 
-# ── Polling ───────────────────────────────────────────────────────────────────
+
+# ── Polling ────────────────────────────────────────────────────────────────────
 
 def poll_job(job_id, timeout=POLL_TIMEOUT):
-    """Poll until job reaches a terminal state. Returns final status dict."""
+    """Poll until job reaches a terminal state."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
@@ -144,16 +139,17 @@ def poll_job(job_id, timeout=POLL_TIMEOUT):
             done = sum(1 for p in portals if p.get('status') not in ('pending', 'skipped'))
             asm_err = data.get('assemblyFailReason', '')
             suffix = f" — asm: {asm_err[:60]}" if asm_err else ''
-            print(f"    [{job_id[:30]}] status={status} portals_done={done}{suffix}", end='\r')
+            print(f"    [{job_id[:35]}] status={status} portals_done={done}{suffix}", end='\r')
         except Exception as e:
             print(f"    Poll error for {job_id}: {e}")
         time.sleep(POLL_INTERVAL)
     return {'status': 'timeout', 'jobId': job_id}
 
-# ── Grading (call backend grader endpoint) ────────────────────────────────────
+
+# ── Grading ────────────────────────────────────────────────────────────────────
 
 def grade_job(job_id):
-    """Call the API grader endpoint if available, else return None."""
+    """Call the backend grader endpoint (GET /v1/jobs/:id/grade)."""
     try:
         r = requests.get(f"{API_BASE}/v1/jobs/{job_id}/grade", headers=HEADERS, timeout=15)
         if r.status_code == 200:
@@ -162,15 +158,13 @@ def grade_job(job_id):
         pass
     return None
 
+
 def local_grade(job_data):
-    """Basic local grading when backend grader endpoint isn't available."""
+    """Fallback local grader when backend endpoint isn't available."""
     status = job_data.get('status', '')
     output = job_data.get('outputUrl', '')
     portals = job_data.get('portals', [])
     scores = [p.get('score') for p in portals if isinstance(p.get('score'), (int, float))]
-    asm_err = job_data.get('assemblyFailReason')
-    if asm_err and 'status_complete' not in [g.get('checkId') for g in []]:
-        pass  # assemblyFailReason visible in gap report via status check
 
     grade = 0
     gaps = []
@@ -198,109 +192,90 @@ def local_grade(job_data):
     return {'grade': grade, 'passed': grade == 100, 'gaps': gaps,
             'summary': f'Grade: {grade}/100 | {"PASSED" if grade==100 else "FAILED"}'}
 
-# ── Gap → Jira ────────────────────────────────────────────────────────────────
 
-def report_gaps(job_id, gaps, video, job_data=None):
-    """Print gap report. Jira ticket creation wired separately (CPD-422)."""
+# ── Gap reporting ──────────────────────────────────────────────────────────────
+
+def report_gaps(job_id, gaps, clip, job_data=None):
     asm_err = (job_data or {}).get('assemblyFailReason')
     if not gaps and not asm_err:
         return
-    print(f"\n  ⚠️  Gaps for {job_id} ({video.get('streamer','?')} — {video.get('title','')[:40]}):")
+    label = f"{clip.get('streamer','?')} — {clip.get('title','')[:40]}"
+    print(f"\n  ⚠️  Gaps for {job_id[:45]} ({label}):")
     if asm_err:
         print(f"     🔴 assembly_failed: {asm_err[:150]}")
     for g in gaps:
         print(f"     ❌ {g.get('checkId','?')}: {g.get('reason','')}")
 
-# ── Main run ──────────────────────────────────────────────────────────────────
+
+# ── Main run ───────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description='Phase 3 production run')
-    parser.add_argument('--dry-run',     action='store_true', help='Print jobs without submitting')
-    parser.add_argument('--limit',       type=int, default=None, help='Max videos to process')
-    parser.add_argument('--form-factor', choices=['short', 'long', 'both'], default='both')
-    parser.add_argument('--streamer',    default=None, help='Filter to one streamer')
-    parser.add_argument('--no-poll',     action='store_true', help='Submit only, skip polling')
+    parser = argparse.ArgumentParser(description='Phase 3 production run — Twitch clips')
+    parser.add_argument('--dry-run',  action='store_true', help='Print without submitting')
+    parser.add_argument('--limit',    type=int,   default=None,  help='Max clips to process')
+    parser.add_argument('--streamer', default=None, help='Filter to one streamer')
+    parser.add_argument('--no-poll',  action='store_true', help='Submit only, skip polling')
     args = parser.parse_args()
 
+    inventory = CLIP_INVENTORY
+    if args.streamer:
+        inventory = [c for c in inventory if c['streamer'].lower() == args.streamer.lower()]
+    if args.limit:
+        inventory = inventory[:args.limit]
+
+    mode = 'DRY RUN' if args.dry_run else 'LIVE'
     print(f"\n🎬 AuraFlux Phase 3 Production Run — {TS}")
     print(f"   API: {API_BASE}")
-    print(f"   Mode: {'DRY RUN' if args.dry_run else 'LIVE'}")
-    print(f"   Form factor: {args.form_factor}")
-
-    # Load inventory
-    if not os.path.exists(CONTENT_FILE):
-        print(f"❌ Content analysis file not found: {CONTENT_FILE}")
-        sys.exit(1)
-
-    videos = load_inventory(CONTENT_FILE)
-    print(f"   Inventory: {len(videos)} videos from content analysis")
-
+    print(f"   Mode: {mode}")
+    print(f"   Clips: {len(inventory)} Twitch clips (5 streamers)")
     if args.streamer:
-        videos = [v for v in videos if v['streamer'].lower() == args.streamer.lower()]
-        print(f"   Filtered to streamer '{args.streamer}': {len(videos)} videos")
-
-    if args.limit:
-        videos = videos[:args.limit]
-        print(f"   Limited to first {args.limit} videos")
-
+        print(f"   Streamer filter: {args.streamer}")
     print()
 
     submitted = []
-    skipped   = []
-
-    for i, video in enumerate(videos, 1):
-        ff = pick_form_factor(video)
-        if args.form_factor != 'both' and ff != args.form_factor:
-            # Override: use specified form factor
-            ff = args.form_factor
-
-        print(f"[{i:02d}/{len(videos):02d}] {video['streamer']} | {video['platform']} | {ff} | {video['title'][:50]}")
-
-        result = submit_job(video, ff, dry_run=args.dry_run)
-        result['form_factor'] = ff
-
-        if result.get('dry_run') or not result.get('submitted', False):
-            skipped.append(result)
-            continue
-
+    for i, clip in enumerate(inventory, 1):
+        print(f"[{i:02d}/{len(inventory):02d}] {clip['streamer']} | {clip['title'][:55]}")
+        result = submit_job(clip, dry_run=args.dry_run)
         submitted.append(result)
-        time.sleep(2)  # gentle rate limiting
+        if not args.dry_run and i < len(inventory):
+            time.sleep(2)  # space submissions slightly
 
-    print(f"\n📊 Submitted: {len(submitted)} | Skipped/Failed: {len(skipped)}")
+    live = [r for r in submitted if r.get('submitted', False)]
+    skipped = len(submitted) - len(live)
+    print(f"\n📊 Submitted: {len(live)} | Failed to submit: {skipped}")
 
-    if args.dry_run or args.no_poll or not submitted:
-        _save_report(submitted, skipped, [], TS)
+    if args.no_poll or args.dry_run or not live:
+        print("  (polling skipped)")
         return
 
-    # ── Poll + grade ──────────────────────────────────────────────────────────
-    print(f"\n⏳ Polling {len(submitted)} jobs (timeout {POLL_TIMEOUT//60}min each)…\n")
+    # ── Poll and grade ─────────────────────────────────────────────────────────
+    print(f"\n⏳ Polling {len(live)} jobs (timeout {POLL_TIMEOUT//60}min each)…\n")
     grades = []
 
-    for sub in submitted:
-        job_id = sub['jobId']
-        video  = sub.get('video', {})
-        print(f"  Polling {job_id[:40]}…")
+    for res in live:
+        job_id  = res['jobId']
+        clip    = res.get('clip', {})
+        print(f"  Polling {job_id[:45]}…")
 
-        final = poll_job(job_id)
-        status = final.get('status', 'unknown')
-        print(f"\n  → {job_id[:40]}: {status}")
+        final   = poll_job(job_id)
+        status  = final.get('status', 'unknown')
+        print(f"\n  → {job_id[:45]}: {status}")
 
-        # Grade
         grade_result = grade_job(job_id) or local_grade(final)
-        grade_result['jobId']  = job_id
-        grade_result['status'] = status
-        grade_result['video']  = video
+        grade_result['jobId']     = job_id
+        grade_result['status']    = status
+        grade_result['clip']      = clip
         grade_result['outputUrl'] = final.get('outputUrl', '')
 
         grades.append(grade_result)
-        report_gaps(job_id, grade_result.get('gaps', []), video, job_data=final)
+        report_gaps(job_id, grade_result.get('gaps', []), clip, job_data=final)
 
-        passed_sym = '✅' if grade_result.get('passed') else '❌'
-        print(f"  {passed_sym} Grade: {grade_result.get('grade', '?')}/100 — {grade_result.get('summary','')[:60]}")
+        sym = '✅' if grade_result.get('passed') else '❌'
+        print(f"  {sym} Grade: {grade_result.get('grade','?')}/100 — {grade_result.get('summary','')[:60]}")
 
-    # ── Summary ───────────────────────────────────────────────────────────────
-    total    = len(grades)
-    at_100   = sum(1 for g in grades if g.get('grade') == 100)
+    # ── Summary ────────────────────────────────────────────────────────────────
+    total     = len(grades)
+    at_100    = sum(1 for g in grades if g.get('grade') == 100)
     avg_grade = round(sum(g.get('grade', 0) for g in grades) / total, 1) if total else 0
 
     print(f"\n{'='*60}")
@@ -309,31 +284,25 @@ def main():
     print(f"  Grade 100:     {at_100} ({at_100*100//total if total else 0}%)")
     print(f"  Avg grade:     {avg_grade}/100")
 
-    all_gaps = [g for grade in grades for g in grade.get('gaps', [])]
-    if all_gaps:
-        from collections import Counter
-        gap_counts = Counter(g['checkId'] for g in all_gaps)
+    # Top gaps
+    all_gaps = [g for res in grades for g in res.get('gaps', [])]
+    gap_counts = {}
+    for g in all_gaps:
+        gap_counts[g.get('checkId','?')] = gap_counts.get(g.get('checkId','?'), 0) + 1
+    if gap_counts:
         print(f"\n  Top gaps:")
-        for check_id, count in gap_counts.most_common(5):
-            print(f"    {check_id}: {count} jobs")
+        for gk, cnt in sorted(gap_counts.items(), key=lambda x: -x[1])[:5]:
+            print(f"    {gk}: {cnt} jobs")
 
-    _save_report(submitted, skipped, grades, TS)
+    # Save report
+    report_path = f"logs/run8_production_{TS}.json"
+    os.makedirs('logs', exist_ok=True)
+    with open(report_path, 'w') as f:
+        json.dump({'ts': TS, 'submitted': len(live), 'total': total,
+                   'at_100': at_100, 'avg_grade': avg_grade,
+                   'grades': grades}, f, indent=2, default=str)
+    print(f"\n  📁 Report saved: {report_path}")
 
-def _save_report(submitted, skipped, grades, ts):
-    out = {
-        'run_at':    ts,
-        'submitted': len(submitted),
-        'skipped':   len(skipped),
-        'graded':    len(grades),
-        'at_100':    sum(1 for g in grades if g.get('grade') == 100),
-        'avg_grade': round(sum(g.get('grade',0) for g in grades)/len(grades), 1) if grades else 0,
-        'grades':    grades,
-        'submitted_jobs': submitted,
-    }
-    path = f"logs/run8_production_{ts}.json"
-    with open(path, 'w') as f:
-        json.dump(out, f, indent=2)
-    print(f"\n  📁 Report saved: {path}")
 
 if __name__ == '__main__':
     main()
