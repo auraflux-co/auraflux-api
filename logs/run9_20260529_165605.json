@@ -1,0 +1,273 @@
+{
+  "run": "run9_feature_matrix",
+  "ts": "20260529_165605",
+  "submitted": 8,
+  "total": 8,
+  "at_100": 5,
+  "avg_grade": 96.5,
+  "grades": [
+    {
+      "grade": 91,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "portal_scores",
+          "reason": "avg 72/100 < 75"
+        }
+      ],
+      "summary": "Grade: 91/100 | GAPS: 1",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088165568",
+      "status": "complete",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP",
+        "title": "xqc makes the wrong choice",
+        "duration_s": 45
+      },
+      "featureCombo": "TTS + Branding",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "branding": {
+          "active": true
+        },
+        "dynamicOverlays": {
+          "active": false
+        },
+        "thumbnailApproval": {
+          "active": false
+        }
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088165568/1780088592234_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088165568_final.mp4",
+      "cleanVideoUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088165568/1780088204287_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088165568.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088742817",
+      "status": "complete",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg",
+        "title": "irl ban",
+        "duration_s": 51
+      },
+      "featureCombo": "Branding + Transitions",
+      "addOns": {
+        "tts": {
+          "active": false
+        },
+        "branding": {
+          "active": true
+        },
+        "dynamicOverlays": {
+          "active": true
+        },
+        "thumbnailApproval": {
+          "active": false
+        }
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088742817/1780089142720_1780089142719_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088742817_final.mp4",
+      "cleanVideoUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088742817/1780088767973_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780088742817.mp4"
+    },
+    {
+      "grade": 90,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "portal_scores",
+          "reason": "avg 68/100 < 75"
+        }
+      ],
+      "summary": "Grade: 90/100 | GAPS: 1",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089230047",
+      "status": "complete",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP",
+        "title": "finish halo 2",
+        "duration_s": 45
+      },
+      "featureCombo": "TTS + Transitions + ThumbApproval",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "branding": {
+          "active": false
+        },
+        "dynamicOverlays": {
+          "active": true
+        },
+        "thumbnailApproval": {
+          "active": true
+        }
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089230047/1780089376894_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089230047_tts.mp4",
+      "cleanVideoUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089230047/1780089248065_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089230047.mp4"
+    },
+    {
+      "grade": 91,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "portal_scores",
+          "reason": "avg 71/100 < 75"
+        }
+      ],
+      "summary": "Grade: 91/100 | GAPS: 1",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089534108",
+      "status": "complete",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/EntertainingTsunderePicklesSaltBae-_znCL0KuMwXadfP1",
+        "title": "xQc DRAMA NEWS STORIES",
+        "duration_s": 60
+      },
+      "featureCombo": "Branding + ThumbApproval",
+      "addOns": {
+        "tts": {
+          "active": false
+        },
+        "branding": {
+          "active": true
+        },
+        "dynamicOverlays": {
+          "active": false
+        },
+        "thumbnailApproval": {
+          "active": true
+        }
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089534108/1780089919702_1780089919701_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089534108_final.mp4",
+      "cleanVideoUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089534108/1780089548464_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780089534108.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090021738",
+      "status": "complete",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid",
+        "title": "Wade's Romantic Cruise",
+        "duration_s": 51
+      },
+      "featureCombo": "TTS + Branding + Transitions",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "branding": {
+          "active": true
+        },
+        "dynamicOverlays": {
+          "active": true
+        },
+        "thumbnailApproval": {
+          "active": false
+        }
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090021738/1780090426140_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090021738_final.mp4",
+      "cleanVideoUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090021738/1780090040852_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090021738.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090573514",
+      "status": "complete",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF",
+        "title": "Emiru calls out streamers",
+        "duration_s": 43
+      },
+      "featureCombo": "Transitions only",
+      "addOns": {
+        "tts": {
+          "active": false
+        },
+        "branding": {
+          "active": false
+        },
+        "dynamicOverlays": {
+          "active": true
+        },
+        "thumbnailApproval": {
+          "active": false
+        }
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090573514/1780090718725_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090573514_9x16.mp4",
+      "cleanVideoUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090573514/1780090589117_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090573514.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090816638",
+      "status": "complete",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK",
+        "title": "hey!",
+        "duration_s": 47
+      },
+      "featureCombo": "TTS + ThumbApproval",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "branding": {
+          "active": false
+        },
+        "dynamicOverlays": {
+          "active": false
+        },
+        "thumbnailApproval": {
+          "active": true
+        }
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090816638/1780090985992_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090816638_tts.mp4",
+      "cleanVideoUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090816638/1780090831706_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780090816638.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780091119771",
+      "status": "complete",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana",
+        "title": "Shameless Mod Defends",
+        "duration_s": 43
+      },
+      "featureCombo": "ALL features",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "branding": {
+          "active": true
+        },
+        "dynamicOverlays": {
+          "active": true
+        },
+        "thumbnailApproval": {
+          "active": true
+        }
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780091119771/1780091567994_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780091119771_final.mp4",
+      "cleanVideoUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780091119771/1780091148987_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780091119771.mp4"
+    }
+  ]
+}
