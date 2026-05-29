@@ -203,3 +203,7 @@ logs/e2e_*.json
 logs/e2e_results_*.json
 logs/e2e_gemini_*.txt
 logs/e2e_full_*.txt
+logs/content_analysis_*.json
+logs/content_analysis_*.md
+logs/benchmark_*.json
+logs/run7_*.json

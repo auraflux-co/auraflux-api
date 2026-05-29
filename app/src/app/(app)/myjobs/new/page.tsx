@@ -57,6 +57,7 @@ interface Feature {
   id:          string;
   label:       string;
   description: string;
+  tooltip:     string;
   outputImpact: string;
   default:     boolean;
   formFactors: ('long' | 'short')[];
@@ -64,6 +65,8 @@ interface Feature {
   minPlan?:    PlanTier;
   hasConfig:   boolean;
   advanced?:   boolean;
+  category:    'content' | 'editing' | 'effects' | 'brand';
+  status:      'live' | 'sprint7' | 'sprint8';
 }
 
 interface FeatureGroup {
@@ -71,6 +74,14 @@ interface FeatureGroup {
   label:       string;
   description: string;
   featureIds:  string[];
+  formFactors: ('long' | 'short')[];
+}
+
+interface CategoryBox {
+  id:          'content' | 'editing' | 'effects' | 'brand';
+  label:       string;
+  description: string;
+  icon:        string;
   formFactors: ('long' | 'short')[];
 }
 
@@ -114,60 +125,109 @@ const PRODUCTION_PATHS: Record<FormFactor, { id: ProductionPath; label: string; 
 };
 
 const FEATURES: Feature[] = [
-  // ── Scripting & narration ──────────────────────────────────────────────────
+  // ── Content & Script ──────────────────────────────────────────────────────
   {
-    id: 'script', label: 'Script generation',
-    description: 'Writes the video script from your source material',
+    id: 'script', label: 'Write my script',
+    description: 'AI writes the video script from your source material',
+    tooltip: 'Gemini analyses your source and writes a structured script — intro, key segments, and a close — matched to your tone.',
     outputImpact: 'Your video gets a structured script — intro, key segments, and a close — written to your tone.',
     default: true, formFactors: ['long'], hasConfig: true,
+    category: 'content', status: 'live',
   },
   {
-    id: 'tts', label: 'TTS narration',
-    description: 'AI voiceover narrates the generated script',
+    id: 'tts', label: 'AI voiceover',
+    description: 'AI voice narrates the generated script',
+    tooltip: 'A professional AI voice reads your script in the video — no recording studio needed.',
     outputImpact: 'A professional voice reads your script in the video — no separate recording needed.',
     default: false, formFactors: ['long'], requires: ['script'], hasConfig: true, advanced: true,
+    category: 'content', status: 'live',
   },
   {
-    id: 'commentary', label: 'Text narration',
-    description: 'Narrative commentary layered over your footage at the assembly stage',
+    id: 'commentary', label: 'Commentary style',
+    description: 'Narrative text commentary timed to footage',
+    tooltip: 'Choose a commentary style and tone — dry, hype, educational. Text overlays appear timed to key moments.',
     outputImpact: 'Commentary text appears timed to key moments — styled as captions or lower thirds.',
     default: false, formFactors: ['long'], hasConfig: true, advanced: true,
+    category: 'content', status: 'live',
   },
-  // ── Visual production ──────────────────────────────────────────────────────
   {
     id: 'generation', label: 'Video generation',
-    description: 'AI video generation fills segments where source footage is missing',
+    description: 'AI-generated clips fill missing footage',
+    tooltip: 'Where source footage is missing, AI generates clips matching your topic and style.',
     outputImpact: 'Gaps in your footage are filled with generated video clips that match your topic and style.',
     default: false, formFactors: ['long'], hasConfig: true, advanced: true,
+    category: 'content', status: 'live',
   },
+  // ── Editing & Pacing ──────────────────────────────────────────────────────
   {
-    id: 'burn_images', label: 'Burn images',
-    description: 'Embed still images as overlay segments in the assembled video',
-    outputImpact: 'Your images appear in the video at the position and duration you specify.',
-    default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true,
-  },
-  // ── Assembly & finishing ───────────────────────────────────────────────────
-  {
-    id: 'scene_select', label: 'Scene selection',
-    description: 'Selects the best clips and scenes from your source material',
+    id: 'scene_select', label: 'Smart clip selection',
+    description: 'AI picks the best clips from your source',
+    tooltip: 'Only the most relevant and energetic segments from your source are used — weak clips are cut automatically.',
     outputImpact: 'Only the most relevant segments from your source are used — weak clips are cut automatically.',
     default: true, formFactors: ['long', 'short'], hasConfig: false,
+    category: 'editing', status: 'live',
   },
   {
-    id: 'branding', label: 'Logo & branding',
-    description: 'Applies your brand config — colours, logo, lower thirds',
-    outputImpact: 'Your brand logo, colour palette, and lower-third templates are applied across the assembled video.',
-    default: true, formFactors: ['long', 'short'], hasConfig: false,
+    id: 'burn_images', label: 'Image segments',
+    description: 'Embed still images as overlay segments',
+    tooltip: 'Embed your images as timed segments in the assembled video — useful for cover art, infographics, or intro slides.',
+    outputImpact: 'Your images appear in the video at the position and duration you specify.',
+    default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true,
+    category: 'editing', status: 'live',
   },
+  // ── Effects & Audio ────────────────────────────────────────────────────────
   {
-    id: 'dynamic', label: 'Dynamic overlays',
+    id: 'dynamic', label: 'Animated overlays',
     description: 'Animated text, scoreboards, and motion graphics',
+    tooltip: 'Live data overlays — scores, stats, headlines — animated in your brand style at key moments.',
     outputImpact: 'Live data overlays (scores, stats, headlines) are animated into the video using your brand style.',
     default: false, formFactors: ['long', 'short'], hasConfig: false,
+    category: 'effects', status: 'live',
+  },
+  // ── Design & Brand ─────────────────────────────────────────────────────────
+  {
+    id: 'branding', label: 'Branded intro/outro',
+    description: 'Apply your brand config across the video',
+    tooltip: 'Your logo, colour palette, and branded intro/outro are applied consistently across the assembled video.',
+    outputImpact: 'Your brand logo, colour palette, and lower-third templates are applied across the assembled video.',
+    default: true, formFactors: ['long', 'short'], hasConfig: false,
+    category: 'brand', status: 'live',
   },
 ];
 
-// Feature groups — drives UI layout in step 3
+// 4 category boxes for Step 2 feature selection (CPD-420)
+const CATEGORY_BOXES: CategoryBox[] = [
+  {
+    id: 'content',
+    label: 'Content & Script',
+    description: 'Write, voice, and narrate your video',
+    icon: '✍️',
+    formFactors: ['long'],
+  },
+  {
+    id: 'editing',
+    label: 'Editing & Pacing',
+    description: 'Smart cuts, clip selection, and timing',
+    icon: '✂️',
+    formFactors: ['long', 'short'],
+  },
+  {
+    id: 'effects',
+    label: 'Effects & Audio',
+    description: 'Overlays, animations, and sound',
+    icon: '✨',
+    formFactors: ['long', 'short'],
+  },
+  {
+    id: 'brand',
+    label: 'Design & Brand',
+    description: 'Thumbnails, intros, and brand identity',
+    icon: '🎨',
+    formFactors: ['long', 'short'],
+  },
+];
+
+// Feature groups — legacy, kept for backward compat with any code that reads FEATURE_GROUPS
 const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: 'scripting', label: 'Scripting & narration',
@@ -327,6 +387,7 @@ function NewJobPageInner() {
   const [features, setFeatures]     = useState<Set<string>>(new Set());
   const [featureConfig, setFeatureConfig] = useState<Record<string, Record<string, string>>>({});
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [expandedBoxes, setExpandedBoxes] = useState<Set<string>>(new Set(['content', 'editing', 'brand']));
   function setFeatureCfg(featureId: string, key: string, value: string) {
     setFeatureConfig((prev) => ({
       ...prev,
@@ -1050,69 +1111,62 @@ function NewJobPageInner() {
               <span className="text-lg font-bold tabular-nums text-primary shrink-0 ml-4">{durationMins} min</span>
             </div>
 
-            {/* Feature groups — core (non-advanced) features only */}
-            {FEATURE_GROUPS.filter((g) => formFactor && g.formFactors.includes(formFactor)).map((group) => {
-              const groupFeats = FEATURES.filter(
-                (f) => group.featureIds.includes(f.id) && formFactor && f.formFactors.includes(formFactor) && !f.advanced
-              );
-              if (!groupFeats.length) return null;
-              const activeCount = groupFeats.filter((f) => features.has(f.id)).length;
-              return (
-                <div key={group.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{group.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{group.description}</p>
-                    </div>
-                    {activeCount > 0 && (
-                      <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5 shrink-0">
-                        {activeCount} active
-                      </span>
+            {/* 4 category boxes — CPD-420 Phase 2 feature set UI */}
+            {CATEGORY_BOXES
+              .filter((box) => formFactor && box.formFactors.includes(formFactor))
+              .map((box) => {
+                const boxFeats = FEATURES.filter(
+                  (f) =>
+                    f.category === box.id &&
+                    f.status === 'live' &&
+                    formFactor &&
+                    f.formFactors.includes(formFactor)
+                );
+                if (boxFeats.length === 0) return null;
+                const activeCount = boxFeats.filter((f) => features.has(f.id)).length;
+                const isExpanded = expandedBoxes.has(box.id);
+                return (
+                  <div key={box.id} className="rounded-lg border border-border overflow-hidden">
+                    {/* Box header — click to expand/collapse */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedBoxes((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(box.id)) next.delete(box.id);
+                        else next.add(box.id);
+                        return next;
+                      })}
+                      className="w-full flex items-center justify-between px-3 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base leading-none">{box.icon}</span>
+                        <div>
+                          <p className="text-xs font-semibold text-foreground leading-tight">{box.label}</p>
+                          <p className="text-[10px] text-muted-foreground">{box.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {activeCount > 0 && (
+                          <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
+                            {activeCount} on
+                          </span>
+                        )}
+                        <span className="text-[11px] text-muted-foreground">{isExpanded ? '↑' : '↓'}</span>
+                      </div>
+                    </button>
+                    {/* Box items */}
+                    {isExpanded && (
+                      <div className="px-3 py-2 space-y-1.5 border-t border-border">
+                        {boxFeats.map((feat) => (
+                          <div key={feat.id} title={feat.tooltip}>
+                            <FeatureRow feat={feat} />
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <div className="space-y-1.5">
-                    {groupFeats.map((feat) => <FeatureRow key={feat.id} feat={feat} />)}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Advanced features toggle */}
-            {(() => {
-              const advancedFeats = FEATURES.filter(
-                (f) => f.advanced && formFactor && f.formFactors.includes(formFactor)
-              );
-              const advancedActive = advancedFeats.filter((f) => features.has(f.id)).length;
-              if (!advancedFeats.length) return null;
-              return (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvanced((v) => !v)}
-                    className="w-full flex items-center justify-between py-1.5 text-left group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50 group-hover:text-foreground/70 transition-colors">
-                        Advanced features
-                      </p>
-                      {advancedActive > 0 && (
-                        <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
-                          {advancedActive} active
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[11px] text-muted-foreground group-hover:text-foreground/70 transition-colors">
-                      {showAdvanced ? '↑ hide' : '↓ show'}
-                    </span>
-                  </button>
-                  {showAdvanced && (
-                    <div className="space-y-1.5">
-                      {advancedFeats.map((feat) => <FeatureRow key={feat.id} feat={feat} />)}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+                );
+              })}
 
             {/* Live credit estimate */}
             <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1.5">
