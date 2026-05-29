@@ -27,7 +27,7 @@ _env_raw      = open('.env').read() if os.path.exists('.env') else ''
 def _env(key): return next((l.split('=',1)[1].strip() for l in _env_raw.splitlines() if l.startswith(key+'=')), '')
 API_KEY       = os.environ.get('AURAFLUX_E2E_API_KEY_GUIDED', _env('AURAFLUX_E2E_API_KEY_GUIDED'))
 POLL_INTERVAL = 30    # seconds between status polls
-POLL_TIMEOUT  = 1200  # 20 min max per job
+POLL_TIMEOUT  = 1800  # 30 min max per job (assembly + 5 portals can take 15-25 min)
 COOLDOWN      = 30    # seconds between jobs (let Render/Twitch settle)
 TS            = datetime.now().strftime('%Y%m%d_%H%M%S')
 
