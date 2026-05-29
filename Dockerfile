@@ -88,8 +88,7 @@ USER node
 EXPOSE 10000
 
 ENV NODE_ENV=production \
-    PORT=10000 \
-    NEW_RELIC_NO_CONFIG_FILE=true
+    PORT=10000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 10000) + '/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"

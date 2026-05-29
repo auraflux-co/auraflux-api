@@ -45,10 +45,7 @@ services:
         value: 'true'
       - key: GATE_TEST_MODE
         value: 'false'
-      - key: NEW_RELIC_APP_NAME
-        value: auraflux-api-prod
-      - key: NEW_RELIC_NO_CONFIG_FILE
-        value: 'true'
+      # New Relic removed — not installed; AGENT_ENABLED=false set in Render panel as safety guard
       - key: SHORT_FORM_LOGO_SIZE
         value: '80'
       - key: SHORT_FORM_AUDIO_MIX
@@ -111,9 +108,7 @@ services:
       - key: UPLOADPOST_PROFILE
         sync: false
 
-      # New Relic
-      - key: NEW_RELIC_LICENSE_KEY
-        sync: false
+      # New Relic license key kept in panel only (not installed; panel guard vars prevent init crash)
 
       # Canva (optional — thumbnail generation)
       - key: CANVA_CLIENT_ID
