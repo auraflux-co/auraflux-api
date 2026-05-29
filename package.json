@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.770",
+  "version": "1.0.771",
   "description": "AuraFlux — AI-powered video content production platform",
   "main": "server.js",
   "scripts": {
@@ -99,7 +99,8 @@
     "stripe": "^22.1.1",
     "svix": "^1.93.0",
     "telnyx": "^6.66.2",
-    "twilio": "^6.0.0"
+    "twilio": "^6.0.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "autocannon": "^8.0.0",
@@ -131,7 +132,5 @@
       }
     }
   },
-  "overrides": {
-    "uuid": "^9.0.0"
-  }
+  "overrides": {}
 }
