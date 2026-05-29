@@ -85,15 +85,16 @@ export default function JobsHubPage() {
         title="My Jobs"
         subtitle="Create, monitor, and review your production jobs"
       >
-        {isOperate ? (
-          <Link href="/settings/api-keys" className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}>
-            API Keys
-          </Link>
-        ) : (
+        <div className="flex items-center gap-2">
+          {isOperate && (
+            <Link href="/settings/api-keys" className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}>
+              API Keys
+            </Link>
+          )}
           <Link href="/myjobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
             + New job
           </Link>
-        )}
+        </div>
       </PageHeader>
 
       {error && (
@@ -104,11 +105,11 @@ export default function JobsHubPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard href="/myjobs/active"  label="Active"           count={jobs === null ? null : active.length}   sub="queued + running" />
         <StatCard href="/myjobs/active"  label="Needs attention"  count={jobs === null ? null : held.length}     sub="held or failed" accent />
-        <StatCard href="/myjobs/history?tab=review" label="Ready to review" count={jobs === null ? null : staged.length} sub="awaiting approval" accent={staged.length > 0} />
+        <StatCard href="/review" label="Ready to review" count={jobs === null ? null : staged.length} sub="awaiting approval" accent={staged.length > 0} />
         <StatCard href="/myjobs/history" label="Completed"        count={jobs === null ? null : complete.length} sub="all time" />
       </div>
 
-      {/* Operate plan: API-first banner */}
+      {/* Operate plan: API access info */}
       {isOperate && (
         <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/20 p-5 space-y-3">
           <div className="flex items-start gap-3">
@@ -118,11 +119,11 @@ export default function JobsHubPage() {
               </svg>
             </div>
             <div>
-              <p className="af-body font-semibold text-white">Submit jobs via API</p>
+              <p className="af-body font-semibold text-white">API access included</p>
               <p className="af-caption text-indigo-200/80 mt-1">
-                Your Operate plan is API-first. Use{' '}
-                <code className="text-indigo-300 bg-indigo-900/50 px-1 rounded">POST https://api.auraflux.co/v1/jobs</code>{' '}
-                to submit jobs programmatically. This page shows real-time status of everything running.
+                Submit jobs via the dashboard wizard above or programmatically via{' '}
+                <code className="text-indigo-300 bg-indigo-900/50 px-1 rounded">POST https://api.auraflux.co/v1/jobs</code>.
+                {' '}All jobs appear here with real-time status regardless of how they were submitted.
               </p>
             </div>
           </div>

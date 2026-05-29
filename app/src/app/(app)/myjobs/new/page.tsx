@@ -263,7 +263,7 @@ const ADD_ONS = [
 
 const PLATFORMS = [
   { id: 'youtube',   label: 'YouTube',   minPlan: undefined },
-  { id: 'tiktok',    label: 'TikTok',    minPlan: 'managed' as const },
+  { id: 'tiktok',    label: 'TikTok',    minPlan: undefined },
   { id: 'instagram', label: 'Instagram', minPlan: undefined },
 ];
 
@@ -1298,26 +1298,19 @@ function NewJobPageInner() {
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Delivery</p>
             <div className="flex flex-wrap gap-2">
               {PLATFORMS.map((p) => (
-                <LockedFeature
+                <button
                   key={p.id}
-                  minPlan={p.minPlan ?? 'operate'}
-                  currentPlan={planTier ?? 'operate'}
-                  label={p.label}
-                  upgradeMsg={`TikTok direct publishing is included in the Managed plan`}
+                  type="button"
+                  onClick={() => togglePlatform(p.id)}
+                  className={cn(
+                    'px-3 py-2 text-sm rounded-md border transition-colors font-medium',
+                    platforms.includes(p.id)
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-border text-foreground/70 hover:text-foreground hover:border-foreground/30',
+                  )}
                 >
-                  <button
-                    type="button"
-                    onClick={() => p.minPlan ? undefined : togglePlatform(p.id)}
-                    className={cn(
-                      'px-3 py-2 text-sm rounded-md border transition-colors font-medium',
-                      platforms.includes(p.id)
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border text-foreground/70 hover:text-foreground hover:border-foreground/30',
-                    )}
-                  >
-                    {p.label}
-                  </button>
-                </LockedFeature>
+                  {p.label}
+                </button>
               ))}
             </div>
 
