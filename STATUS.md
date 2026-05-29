@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-29 v1.0.794 (Cursor — feat(cpd-431): FFmpeg full feature wiring — 108 feature keys in feature_gate.js (was 30); new lib/assembly_effects.js with buildAudioFilterChain/buildVideoFilterChain/getActiveEffects covering all 70+ CPD-431 candidates; 24 new grader checks added as not_implemented=false ready to flip live as each feature ships; Jira epic CPD-431 + 8 sub-tasks CPD-432 through CPD-439 created)
 **Last Updated:** 2026-05-29 v1.0.792 (Cursor — chore: OPENAI_API_KEY + TWELVE_LABS_API_KEY added to Render env, cwn-production/.env, cwn-c0/.env, and .env.example; GPT-4o QA extension now active on deploy)
 
 
