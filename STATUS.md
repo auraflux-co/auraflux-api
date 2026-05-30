@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-30 v1.0.817 (Cursor — fix(cpd-444): gpt4o_qa_ext now gated on addOns.gpt4o_qa_ext.ordered (spec-driven routing violation); run_10 uses fallback inventory only
 **Last Updated:** 2026-05-30 v1.0.816 (Cursor — feat(cpd-444): branding hard gate — auto-disable + warning when brand.image_url is null; frontend toast.warning on BRANDING_NO_LOGO
 **Last Updated:** 2026-05-30 v1.0.815 (Cursor — feat: run_10 v2 full feature coverage — all 103 operate features across 14 jobs; brand assets uploaded to R2, branding enabled; template capture phase; fix: r9/r8 branding disabled
 **Last Updated:** 2026-05-30 v1.0.814 (Cursor — feat: run_10 test matrix — FFmpeg effects + GPT-4o QA gates + guided tier + template capture; fix: branding disabled in all test scripts (no asset uploaded)
