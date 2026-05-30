@@ -125,9 +125,14 @@ css    = read('styles.css')
 nav    = read('nav.html')
 footer = read('footer.html')
 
-# Escape for JS string replacement (backticks in CSS/HTML need escaping)
+# Escape for embedding inside a JS template literal (backtick string)
+# Uses chr() to avoid bash heredoc interpreting backslash and dollar-brace sequences
 def js_escape(s):
-    return s.replace('\\\\', '\\\\\\\\').replace('\`', '\\\`').replace('\${', '\\\${')
+    BS, BT, DOPEN = chr(92), chr(96), chr(36)+chr(123)
+    s = s.replace(BS, BS+BS)
+    s = s.replace(BT, BS+BT)
+    s = s.replace(DOPEN, BS+DOPEN)
+    return s
 
 replacements = {
     '__FRAMER_FONTS__':  js_escape(fonts),
@@ -157,6 +162,7 @@ import os, re
 
 build    = open("$WORKER_BUILD", encoding='utf-8').read()
 pages    = "$PAGES_DIR"
+shell    = "$SHELL_DIR"
 
 def read_page(name, default=''):
     p = os.path.join(pages, name)
@@ -168,9 +174,39 @@ def read_page(name, default=''):
     print(f"  – pages/{name} not found — placeholder left as-is")
     return default
 
-# Escape for embedding inside a JS template literal
+def read_shell(name, default=''):
+    p = os.path.join(shell, name)
+    if os.path.isfile(p):
+        val = open(p, encoding='utf-8', errors='replace').read().strip()
+        if val:
+            return val
+    return default
+
+# Escape for embedding inside a JS template literal (backtick string)
+# Uses chr() to avoid bash heredoc interpreting backslash and dollar-brace sequences
 def js_escape(s):
-    return s.replace('\\\\', '\\\\\\\\').replace('\`', '\\\`')
+    BS, BT, DOPEN = chr(92), chr(96), chr(36)+chr(123)
+    s = s.replace(BS, BS+BS)
+    s = s.replace(BT, BS+BT)
+    s = s.replace(DOPEN, BS+DOPEN)
+    return s
+
+# Load Framer shell components for page-level substitution
+framer_fonts  = read_shell('fonts.html')
+framer_nav    = read_shell('nav.html')
+framer_footer = read_shell('footer.html')
+framer_css    = read_shell('styles.css')
+
+FALLBACK_NAV = '<nav style="padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08)"><a href="/" style="color:#f5c542;font-weight:700">AuraFlux</a></nav>'
+FALLBACK_FOOTER = '<footer style="text-align:center;padding:40px;color:#555580;font-size:.8rem"><a href="https://auraflux.co" style="color:#f5c542">AuraFlux</a></footer>'
+
+def inject_framer(html):
+    D = chr(36)
+    html = html.replace(D + "{FRAMER_FONTS || ''}",         framer_fonts)
+    html = html.replace(D + '{FRAMER_NAV || FALLBACK_NAV}', framer_nav or FALLBACK_NAV)
+    html = html.replace(D + '{FRAMER_FOOTER || FALLBACK_FOOTER}', framer_footer or FALLBACK_FOOTER)
+    html = html.replace(D + "{FRAMER_CSS || ''}",           framer_css)
+    return html
 
 # ── home.html: patch Framer dev-domain artifacts before embedding ─────────────
 home_raw = read_page('home.html')
@@ -191,9 +227,9 @@ home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
 home             = js_escape(home_raw)
 
 blog             = js_escape(read_page('blog.html'))
-pricing          = js_escape(read_page('pricing.html'))
-about            = js_escape(read_page('about.html'))
-system           = js_escape(read_page('system.html'))
+pricing          = js_escape(inject_framer(read_page('pricing.html')))
+about            = js_escape(inject_framer(read_page('about.html')))
+system           = js_escape(inject_framer(read_page('system.html')))
 contact_content  = js_escape(read_page('contact-content.html'))
 roadmap_content  = js_escape(read_page('roadmap-content.html'))
 
@@ -252,6 +288,7 @@ def part_file(name, filename, content_type, data):
 
 body = (
     part_field('manifest', '{}')
+    + part_field('branch', 'main')
     + part_file('_worker.js', '_worker.js', 'application/javascript', worker_data)
     + b'--' + boundary + b'--\r\n'
 )
