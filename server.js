@@ -1855,15 +1855,13 @@ app.get('/health', async (req, res) => {
     health.errors.push('FFmpeg not available');
   }
 
-  // Check API keys
-  const requiredKeys = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'];
-  requiredKeys.forEach(key => {
+  // Check API keys — missing keys degrade features but don't prevent the service from running.
+  // Report as warnings only; do not fail the health check (which would block Render deploys).
+  const featureKeys = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'];
+  featureKeys.forEach(key => {
     const exists = !!process.env[key];
     health.dependencies[key] = { status: exists ? 'ok' : 'missing' };
-    if (!exists) {
-      health.ok = false;
-      health.errors.push(`${key} not configured`);
-    }
+    if (!exists) health.warnings = [...(health.warnings || []), `${key} not configured — related features disabled`];
   });
 
   // Check directories
