@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-30 v1.0.834 (Cursor — chore(ci): jira-track.yml — real-time Jira tracking on every push; tickets transition to In Development on commit, untracked commits auto-create tasks immediately; session_close.py becomes safety net only)
 **Last Updated:** 2026-05-30 v1.0.833 (Cursor — chore(process): session_close.py — end-of-session Jira+Confluence audit; auto-creates tasks for untracked commits; flags missing HOW pages; session-review.mdc updated with end-of-session steps; 11 backfill tickets CPD-449–CPD-459 created)
 **Last Updated:** 2026-05-30 v1.0.832 (Cursor — fix(marketing): nav cleanup + all broken image URLs — remove Online now, Sign In; add phone placeholder + chat button; fix .jpg/.webp malformed URLs in home.html; logo moved to assets.auraflux.co)
 **Last Updated:** 2026-05-30 v1.0.831 (Cursor — fix(marketing): nav + homepage images — add Our System/About to Framer nav; fix 115 malformed image URLs in home.html where ?scale-down-to regex left amp;width glued to .png extension; all images now 200 from assets.auraflux.co)

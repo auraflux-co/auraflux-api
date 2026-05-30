@@ -1,0 +1,145 @@
+name: Jira — track every push
+
+# Fires on every push to main (not just PR merges).
+# For each new commit:
+#   - If it references a CPD ticket → transition to In Development
+#   - If it has no ticket reference → create a Jira task immediately
+# This means Jira is always current; session_close.sh becomes a safety net only.
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  track:
+    name: Track commits → Jira
+    runs-on: ubuntu-latest
+    # Skip [skip ci] pushes from the in-app marketing editor (content-only)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - name: Checkout (with full history for this push)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Process commits
+        env:
+          JIRA_BASE_URL:   ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN:  ${{ secrets.JIRA_API_TOKEN }}
+          BEFORE_SHA:      ${{ github.event.before }}
+          AFTER_SHA:       ${{ github.event.after }}
+        run: |
+          python3 - <<'PYEOF'
+          import os, re, json, urllib.request, urllib.parse, base64, subprocess
+
+          jira_base  = os.environ["JIRA_BASE_URL"].rstrip("/")
+          jira_email = os.environ["JIRA_USER_EMAIL"]
+          jira_token = os.environ["JIRA_API_TOKEN"]
+          before_sha = os.environ["BEFORE_SHA"]
+          after_sha  = os.environ["AFTER_SHA"]
+
+          if not all([jira_base, jira_email, jira_token]):
+              print("Missing Jira credentials — skipping")
+              raise SystemExit(0)
+
+          auth = base64.b64encode(f"{jira_email}:{jira_token}".encode()).decode()
+          headers_json = {
+              "Authorization": f"Basic {auth}",
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+          }
+
+          def jira(method, path, body=None):
+              url = f"{jira_base}/rest/api/3/{path}"
+              data = json.dumps(body).encode() if body else None
+              req = urllib.request.Request(url, data=data, headers=headers_json, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=10) as r:
+                      return json.loads(r.read())
+              except urllib.error.HTTPError as e:
+                  print(f"  Jira {method} {path}: HTTP {e.code} — {e.read().decode()[:200]}")
+                  return {}
+              except Exception as e:
+                  print(f"  Jira {method} {path}: {e}")
+                  return {}
+
+          # ── Get commits in this push ─────────────────────────────────────────
+          # github.event.before is 000...000 on a new branch — fall back to HEAD~1
+          zero = "0" * 40
+          if before_sha == zero:
+              range_spec = f"{after_sha}~1..{after_sha}"
+          else:
+              range_spec = f"{before_sha}..{after_sha}"
+
+          raw = subprocess.check_output(
+              ["git", "log", range_spec, "--format=%H|||%s", "--no-merges"],
+              text=True
+          ).strip().splitlines()
+
+          if not raw:
+              print("No commits to process.")
+              raise SystemExit(0)
+
+          print(f"Processing {len(raw)} commit(s)")
+
+          # Transition IDs in this project: In Development = 5
+          TRANSITION_IN_DEV = "5"
+          SKIP_PREFIXES = ("chore", "docs", "style", "test", "refactor", "ci")
+
+          for line in raw:
+              parts = line.split("|||", 1)
+              if len(parts) != 2:
+                  continue
+              sha, msg = parts[0][:8], parts[1]
+
+              # Skip [skip ci] commits
+              if "[skip ci]" in msg:
+                  print(f"  {sha} — skipping [skip ci]")
+                  continue
+
+              ticket_ids = list(dict.fromkeys(
+                  t.upper() for t in re.findall(r"CPD-\d+", msg, re.IGNORECASE)
+              ))
+
+              if ticket_ids:
+                  for tid in ticket_ids:
+                      print(f"  {sha} → {tid}: transitioning to In Development…", end=" ")
+                      res = jira("POST", f"issue/{tid}/transitions",
+                                 {"transition": {"id": TRANSITION_IN_DEV}})
+                      # HTTP 204 = success (no body), empty dict from our helper = ok too
+                      print("✅" if res is not None else "⚠️")
+              else:
+                  # No ticket — create one (skip trivial commit types)
+                  first_word = re.split(r"[(:\ ]", msg)[0].lower()
+                  if first_word in SKIP_PREFIXES:
+                      print(f"  {sha} — no ticket, skipping ({first_word} commit)")
+                      continue
+
+                  summary = f"[Untracked] {msg[:100]}"
+                  print(f"  {sha} — no ticket, creating task: {summary[:60]}…", end=" ")
+                  body = {
+                      "fields": {
+                          "project":     {"key": "CPD"},
+                          "summary":     summary,
+                          "description": {
+                              "type": "doc", "version": 1,
+                              "content": [{"type": "paragraph", "content": [{"type": "text",
+                                  "text": (
+                                      f"Auto-created on push — no Jira ticket in commit message.\n\n"
+                                      f"Commit: {sha}\n"
+                                      f"Full SHA: {parts[0]}\n"
+                                      f"Repo: https://github.com/${{{{ github.repository }}}}/commit/{parts[0]}"
+                                  )
+                              }]}],
+                          },
+                          "issuetype": {"name": "Task"},
+                          "labels":    ["auto-created", "on-push"],
+                      }
+                  }
+                  res = jira("POST", "issue", body)
+                  key = res.get("key", "")
+                  print(f"→ {key}" if key else "⚠️ failed")
+
+          print("Done.")
+          PYEOF
