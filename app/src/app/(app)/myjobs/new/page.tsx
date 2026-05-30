@@ -45,6 +45,7 @@ import {
   FramePreview,
   TemplateGrid,
   PRESET_TEMPLATES,
+  FeatureCategoryBox,
   type JobTemplate,
 } from '@/components/jobs/job-builder';
 
@@ -200,6 +201,27 @@ const FEATURES: Feature[] = [
     outputImpact: 'Your brand logo, colour palette, and lower-third templates are applied.',
     default: true, formFactors: ['long', 'short'], hasConfig: false, category: 'brand', status: 'live',
   },
+  {
+    id: 'lower_thirds', label: 'Lower thirds',
+    description: 'Auto speaker name plates on each clip segment',
+    tooltip: 'Auto speaker name plates on each clip segment',
+    outputImpact: 'Speaker name plates appear on each clip segment.',
+    default: false, formFactors: ['long', 'short'], hasConfig: false, category: 'effects', status: 'live', requires: [],
+  },
+  {
+    id: 'chapter_markers', label: 'YouTube chapters',
+    description: 'Auto timestamp chapters in YouTube description',
+    tooltip: 'Auto timestamp chapters in YouTube description',
+    outputImpact: 'Auto-generated timestamp chapters are added to the YouTube description.',
+    default: false, formFactors: ['long'], hasConfig: false, category: 'brand', status: 'live', requires: [],
+  },
+  {
+    id: 'scene_transitions', label: 'Scene transitions',
+    description: 'Smooth crossfade between clips',
+    tooltip: 'Smooth crossfade between clips',
+    outputImpact: 'Smooth crossfades are applied between every clip.',
+    default: false, formFactors: ['long', 'short'], hasConfig: false, category: 'editing', status: 'live', requires: [],
+  },
 ];
 
 const CATEGORY_BOXES: CategoryBox[] = [
@@ -271,7 +293,6 @@ function JobBuilderPageInner() {
   const [audioOpts,      setAudioOpts]      = useState<string[]>(['loudnorm']);
   const [features,       setFeatures]       = useState<Set<string>>(new Set());
   const [featureConfig,  setFeatureConfig]  = useState<Record<string, Record<string, string>>>({});
-  const [expandedBoxes,  setExpandedBoxes]  = useState<Set<string>>(new Set(['content', 'editing', 'brand']));
   const [scheduledStart, setScheduledStart] = useState<'now' | 'scheduled'>('now');
   const [scheduledAt,    setScheduledAt]    = useState('');
   const [tone,           setTone]           = useState('professional');
@@ -969,51 +990,27 @@ function JobBuilderPageInner() {
                       onToggle={(id) => setAudioOpts((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
                   </div>
 
-                  {/* Production features (existing) */}
+                  {/* Production features — 4 expandable category boxes (CPD-420) */}
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">AI production tools</p>
-                    {CATEGORY_BOXES
-                      .filter((box) => formFactor && box.formFactors.includes(formFactor))
-                      .map((box) => {
-                        const boxFeats = FEATURES.filter(
-                          (f) => f.category === box.id && f.status === 'live' && formFactor && f.formFactors.includes(formFactor),
-                        );
-                        if (!boxFeats.length) return null;
-                        const activeCount = boxFeats.filter((f) => features.has(f.id)).length;
-                        const expanded    = expandedBoxes.has(box.id);
-                        return (
-                          <div key={box.id} className="rounded-lg border border-border overflow-hidden">
-                            <button type="button"
-                              onClick={() => setExpandedBoxes((prev) => {
-                                const next = new Set(prev);
-                                if (next.has(box.id)) next.delete(box.id); else next.add(box.id);
-                                return next;
-                              })}
-                              className="w-full flex items-center justify-between px-3 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left">
-                              <div className="flex items-center gap-2">
-                                <span className="text-base leading-none">{box.icon}</span>
-                                <div>
-                                  <p className="text-xs font-semibold">{box.label}</p>
-                                  <p className="text-[10px] text-muted-foreground">{box.description}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                {activeCount > 0 && (
-                                  <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
-                                    {activeCount} on
-                                  </span>
-                                )}
-                                <span className="text-[11px] text-muted-foreground">{expanded ? '↑' : '↓'}</span>
-                              </div>
-                            </button>
-                            {expanded && (
-                              <div className="px-3 py-2 space-y-1.5 border-t border-border">
-                                {boxFeats.map((feat) => <FeatureRow key={feat.id} feat={feat} />)}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {CATEGORY_BOXES.map((cat) => (
+                        <FeatureCategoryBox
+                          key={cat.id}
+                          category={cat}
+                          features={FEATURES.filter(
+                            (f) => f.category === cat.id && f.status === 'live' && !!formFactor && f.formFactors.includes(formFactor),
+                          )}
+                          selected={features}
+                          onToggle={toggleFeature}
+                        />
+                      ))}
+                    </div>
+                    {/* Config panels for enabled features that have configuration */}
+                    {Array.from(features)
+                      .map((fid) => FEATURES.find((f) => f.id === fid))
+                      .filter((f): f is Feature => !!f && f.hasConfig)
+                      .map((feat) => <FeatureRow key={feat.id} feat={feat} />)}
                   </div>
 
                   {/* Credit estimate */}
