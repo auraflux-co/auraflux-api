@@ -131,7 +131,7 @@ export function TemplateGrid({ selectedId, onApply, onBuildMyOwn, className }: P
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold">Build My Own</p>
-          <p className="text-xs text-muted-foreground">Not using a template — configure every option yourself</p>
+          <p className="text-xs text-muted-foreground">Not using a template — choose every option yourself</p>
         </div>
         <button
           type="button"

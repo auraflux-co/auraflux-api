@@ -34,7 +34,6 @@ import { formatUserError } from '@/lib/job-labels';
 import { createJob, estimateCreditCost, getTemplateById, type CreateJobPayload } from '@/lib/api';
 import { VideoUpload } from '@/components/upload/video-upload';
 import { LockedFeature } from '@/components/ui/locked-feature';
-import { SparkAnvil } from '@/components/icons/brand-icons';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
 import { SourceLibraryPicker } from '@/components/jobs/source-library-picker';
@@ -87,6 +86,11 @@ interface CategoryBox {
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
+
+const DUR_TO_MINS: Record<string, number> = {
+  '15s': 0.25, '30s': 0.5, '60s': 1, '90s': 1.5,
+  '5min': 5, '10min': 10, '15min': 15, '30min': 30,
+};
 
 const FORMATS = [
   { id: 'portrait',  label: '9:16 Portrait',  sub: 'Shorts · TikTok · Reels' },
@@ -175,8 +179,8 @@ const FEATURES: Feature[] = [
     default: true, formFactors: ['long', 'short'], hasConfig: false, category: 'editing', status: 'live',
   },
   {
-    id: 'burn_images', label: 'Image segments',
-    description: 'Embed still images as overlay segments',
+    id: 'burn_images', label: 'Add images',
+    description: 'Place images into your video',
     tooltip: 'Embed images as timed segments in the assembled video.',
     outputImpact: 'Your images appear in the video at the position and duration you specify.',
     default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true,
@@ -191,7 +195,7 @@ const FEATURES: Feature[] = [
   },
   {
     id: 'branding', label: 'Branded intro/outro',
-    description: 'Apply your brand config across the video',
+    description: 'Add your brand style across the video',
     tooltip: 'Your logo, colour palette, and branded intro/outro are applied consistently.',
     outputImpact: 'Your brand logo, colour palette, and lower-third templates are applied.',
     default: true, formFactors: ['long', 'short'], hasConfig: false, category: 'brand', status: 'live',
@@ -360,6 +364,10 @@ function JobBuilderPageInner() {
         const spec     = template.jobSpec as Record<string, unknown>;
         const ff       = (spec.formFactor as FormFactor) || null;
         if (ff) setFormFactor(ff);
+        const si = spec.sourceIntent as 'clips' | 'longform' | undefined;
+        if (si) setSourceIntent(si);
+        const fmt = spec.format as string | undefined;
+        if (fmt) setFormat(fmt);
         const feats    = spec.features as string[] | undefined;
         if (feats?.length) setFeatures(new Set(feats));
         if (template.platforms?.length) setPlatforms(template.platforms);
@@ -441,18 +449,24 @@ function JobBuilderPageInner() {
     };
 
     if (sourceMode === 'source') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (payload as any).fetchSpec = {
+      payload.fetchSpec = {
         sourceUrls:    sourceItems.map((i) => i.url),
         stitchMode:    inferredMultiClip && sourceItems.length > 1,
         sourceLibrary: sourceItems.map((i) => ({
           url:          i.url,
           title:        i.title,
           duration:     i.duration,
-          thumbnailUrl: i.thumbnailUrl,
+          thumbnailUrl: i.thumbnailUrl ?? undefined,
           platform:     i.platform,
           contentType:  i.contentType || i.type,
         })),
+        // ClipEditor output: trim/extract timestamps, clip order, per-clip overrides
+        ...(clipSpec ? { clipSpec: {
+          mode:             clipSpec.mode,
+          clips:            clipSpec.clips,
+          uniformFeatures:  clipSpec.uniformFeatures,
+          featureOverrides: clipSpec.featureOverrides,
+        } } : {}),
       };
     } else {
       payload.uploadSpec = { fileKeys: fileKeys.split('\n').map((k) => k.trim()).filter(Boolean) };
@@ -494,7 +508,7 @@ function JobBuilderPageInner() {
       ? `${FORMATS.find((f) => f.id === format)?.label ?? format}${!isLongForm ? ` · ${durLabel(duration)}` : ''}`
       : '',
     platform: platforms.map((p) => PLATFORMS.find((x) => x.id === p)?.label ?? p).join(' · '),
-    production: features.size === 0 ? 'Default pipeline'
+    production: features.size === 0 ? 'Default'
       : Array.from(features).map((f) => FEATURES.find((x) => x.id === f)?.label ?? f).join(' · '),
     schedule: scheduledStart === 'now' ? 'Start now' : scheduledAt ? `Scheduled: ${scheduledAt}` : '',
   };
@@ -693,7 +707,7 @@ function JobBuilderPageInner() {
             Cancel
           </button>
           <Button size="sm" disabled={!canSubmit || isPending} onClick={handleSubmit}>
-            {isPending ? 'Starting…' : canSubmit ? 'Send to assembly →' : 'Fill required sections'}
+            {isPending ? 'Starting…' : canSubmit ? 'Start production →' : 'Complete required steps'}
           </Button>
         </div>
       </div>
@@ -727,8 +741,8 @@ function JobBuilderPageInner() {
                   </>
               }
               <button type="button" onClick={changeTemplate}
-                className="ml-auto text-[11px] text-primary hover:underline">
-                ← Pick a different template
+                      className="ml-auto text-[11px] text-primary hover:underline">
+                Change template
               </button>
             </div>
           )}
@@ -737,15 +751,15 @@ function JobBuilderPageInner() {
             <div className="space-y-1">
 
               {/* TYPE */}
-              <CollapsibleSection id="type" label="Type" required
+              <CollapsibleSection id="type" label="What are you making?" required
                 summary={summaries.type} open={isOpen('type')} onToggle={() => toggle('type')}>
                 <div className="space-y-3">
                   <ChipGroup
                     options={[
-                      { id: 'short_clips',  label: 'Short clips',        sub: 'Enhance and assemble short-form clips' },
-                      { id: 'long_compile', label: 'Compile long-form',  sub: 'Stitch short clips into a long video' },
-                      { id: 'from_vod',     label: 'Cut from VOD',       sub: 'Extract clips from a long-form source' },
-                      { id: 'produce_vod',  label: 'Produce from VOD',   sub: 'Script and narrate a long-form video' },
+                      { id: 'short_clips',  label: 'Polish short clips',  sub: 'Turn clips into finished Shorts/Reels' },
+                      { id: 'long_compile', label: 'Make a longer video', sub: 'Combine clips into one YouTube video' },
+                      { id: 'from_vod',     label: 'Find highlights',     sub: 'Pull standout moments from long footage' },
+                      { id: 'produce_vod',  label: 'Create a full video', sub: 'Add script, narration, and structure' },
                     ]}
                     selected={[
                       sourceIntent === 'clips' && formFactor === 'short' ? 'short_clips' :
@@ -765,6 +779,11 @@ function JobBuilderPageInner() {
                       setSourceIntent(si);
                       if (ff === 'long') { setFormat('longform'); setDuration('10min'); setDurationMins(10); }
                       else               { setFormat('portrait'); setDuration('60s');   setDurationMins(3); }
+                      // Prune features that don't apply to the new formFactor
+                      setFeatures((prev) => new Set([...prev].filter((fid) => {
+                        const feat = FEATURES.find((f) => f.id === fid);
+                        return feat ? feat.formFactors.includes(ff) : true;
+                      })));
                       setSourceItems([]); setClipSpec(null); setShowClipEditor(false);
                     }}
                     singleSelect
@@ -775,13 +794,13 @@ function JobBuilderPageInner() {
               <div className="h-px bg-border/50 my-0.5" />
 
               {/* SOURCE */}
-              <CollapsibleSection id="source" label="Source clips" required
+              <CollapsibleSection id="source" label="Footage" required
                 summary={summaries.source} open={isOpen('source')} onToggle={() => toggle('source')}>
                 <div className="space-y-4">
                   {/* Tab bar */}
                   <div className="flex gap-2">
                     {(['source', 'upload'] as SourceMode[]).map((s) => {
-                      const labels: Record<SourceMode, string> = { source: 'Browse channels', upload: 'Upload file' };
+                      const labels: Record<SourceMode, string> = { source: 'Choose from library', upload: 'Upload file' };
                       return (
                         <button key={s} type="button" onClick={() => setSourceMode(s)}
                           className={cn('px-3 py-1.5 text-xs rounded-md border transition-colors',
@@ -831,7 +850,7 @@ function JobBuilderPageInner() {
                         <p className="text-xs font-semibold text-primary">Clip editor</p>
                         <button type="button" onClick={() => setShowClipEditor(false)}
                           className="text-[10px] text-muted-foreground hover:underline">
-                          Skip — let AuraFlux decide
+                          Let AuraFlux choose
                         </button>
                       </div>
                       <ClipEditor
@@ -841,8 +860,19 @@ function JobBuilderPageInner() {
                           ? sourceItems.map((i) => ({ url: i.url, title: i.title, duration: i.duration ?? undefined, thumbnailUrl: i.thumbnailUrl ?? undefined }))
                           : undefined}
                         availableFeatures={Array.from(features)}
-                        onConfirm={(spec) => { setClipSpec(spec); setDurationMins(calcDuration(spec)); setShowClipEditor(false); }}
-                        onCancel={() => { setClipSpec(null); setDurationMins(calcDuration(null)); setShowClipEditor(false); }}
+                        onConfirm={(spec) => {
+                          setClipSpec(spec);
+                          setDurationMins(calcDuration(spec));
+                          setShowClipEditor(false);
+                          // Auto-collapse Source section — clips are confirmed
+                          setOpenSections((prev) => prev.filter((s) => s !== 'source'));
+                        }}
+                        onCancel={() => {
+                          setClipSpec(null);
+                          setDurationMins(calcDuration(null));
+                          setShowClipEditor(false);
+                          setOpenSections((prev) => prev.filter((s) => s !== 'source'));
+                        }}
                       />
                     </div>
                   )}
@@ -868,7 +898,7 @@ function JobBuilderPageInner() {
                     <div className="space-y-2">
                       <p className="text-xs font-medium">Duration</p>
                       <ChipGroup options={DUR_SHORT} selected={[duration]} singleSelect
-                        onToggle={(id) => { setDuration(id); setDurationMins(parseInt(id) / 60 || 1); }} />
+                        onToggle={(id) => { setDuration(id); setDurationMins(DUR_TO_MINS[id] ?? 1); }} />
                     </div>
                   )}
                 </div>
@@ -877,7 +907,7 @@ function JobBuilderPageInner() {
               <div className="h-px bg-border/50 my-0.5" />
 
               {/* PLATFORM */}
-              <CollapsibleSection id="platform" label="Platform" required
+              <CollapsibleSection id="platform" label="Where to publish" required
                 summary={summaries.platform} open={isOpen('platform')} onToggle={() => toggle('platform')}>
                 <ChipGroup options={PLATFORMS} selected={platforms}
                   onToggle={(id) => setPlatforms((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
@@ -886,7 +916,7 @@ function JobBuilderPageInner() {
               <div className="h-px bg-border/50 my-0.5" />
 
               {/* PRODUCTION FEATURES */}
-              <CollapsibleSection id="production" label="Production features"
+              <CollapsibleSection id="production" label="Production add-ons"
                 summary={summaries.production} open={isOpen('production')} onToggle={() => toggle('production')}>
                 <div className="space-y-4">
 
@@ -895,7 +925,7 @@ function JobBuilderPageInner() {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Output options</p>
                     <div className="flex flex-wrap gap-2">
                       {[
-                        { id: 'captions',  label: 'Captions',   sub: 'Burned in from audio',    on: captions,  set: setCaptions },
+                        { id: 'captions',  label: 'Captions',   sub: 'Added directly to the video', on: captions,  set: setCaptions },
                         { id: 'voiceover', label: 'Voice-over', sub: 'Script narration',         on: voiceover, set: setVoiceover },
                       ].map((opt) => (
                         <button key={opt.id} type="button" onClick={() => opt.set(!opt.on)}
@@ -933,7 +963,7 @@ function JobBuilderPageInner() {
 
                   {/* Production features (existing) */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Production pipeline</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">AI production tools</p>
                     {CATEGORY_BOXES
                       .filter((box) => formFactor && box.formFactors.includes(formFactor))
                       .map((box) => {
@@ -992,7 +1022,7 @@ function JobBuilderPageInner() {
               <div className="h-px bg-border/50 my-0.5" />
 
               {/* SCHEDULE */}
-              <CollapsibleSection id="schedule" label="Scheduling"
+              <CollapsibleSection id="schedule" label="When to start"
                 summary={summaries.schedule} open={isOpen('schedule')} onToggle={() => toggle('schedule')}>
                 <div className="space-y-3">
                   <ChipGroup
@@ -1062,7 +1092,7 @@ function JobBuilderPageInner() {
             )}
 
             <Button size="sm" className="w-full" disabled={!canSubmit || isPending} onClick={handleSubmit}>
-              {isPending ? 'Starting…' : 'Send to assembly →'}
+              {isPending ? 'Starting…' : 'Start production →'}
             </Button>
           </div>
         )}

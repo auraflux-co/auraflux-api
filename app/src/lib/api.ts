@@ -95,7 +95,21 @@ export interface CreateJobPayload {
   contentType:      string;
   entryType:        'fetch' | 'upload' | 'create';
   platforms:        string[];
-  fetchSpec?:       { sourceUrls: string[] };
+  fetchSpec?: {
+    sourceUrls:     string[];
+    stitchMode?:    boolean;
+    sourceLibrary?: Array<{
+      url: string; title?: string; duration?: number;
+      thumbnailUrl?: string; platform?: string; contentType?: string;
+    }>;
+    /** ClipEditor output — trim/extract timestamps, clip order, per-clip overrides */
+    clipSpec?: {
+      mode:             'extract' | 'compact';
+      clips:            unknown[];
+      uniformFeatures:  boolean;
+      featureOverrides: Record<string, Record<string, boolean>>;
+    };
+  };
   uploadSpec?:      { fileKeys: string[] };
   createSpec?:      { promptText: string };
   publishMode?:     PublishMode;
