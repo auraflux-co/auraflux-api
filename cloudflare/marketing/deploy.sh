@@ -253,7 +253,7 @@ else:
 
 home             = js_escape(home_raw)
 
-blog             = js_escape(read_page('blog.html'))
+blog             = js_escape(inject_framer(read_page('blog.html')))
 pricing          = js_escape(inject_framer(read_page('pricing.html')))
 about            = js_escape(inject_framer(read_page('about.html')))
 system           = js_escape(inject_framer(read_page('system.html')))
