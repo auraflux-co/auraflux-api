@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 type MemberRole = 'owner' | 'admin' | 'member' | 'billing';
 type MemberStatus = 'active' | 'pending' | 'revoked';
@@ -59,6 +60,9 @@ export default function TeamPage() {
   const [changingRole, setChangingRole]         = useState<string | null>(null);
 
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string; description: string; confirmLabel?: string; destructive?: boolean; onConfirm: () => void;
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -116,8 +120,17 @@ export default function TeamPage() {
     }
   }
 
-  async function handleRemove(memberId: string) {
-    if (!confirm('Remove this member from the account?')) return;
+  function handleRemove(memberId: string) {
+    setConfirmDialog({
+      title: 'Remove team member',
+      description: 'This member will lose access to the account immediately.',
+      confirmLabel: 'Remove member',
+      destructive: true,
+      onConfirm: () => { setConfirmDialog(null); void doRemove(memberId); },
+    });
+  }
+
+  async function doRemove(memberId: string) {
     setRemovingId(memberId);
     try {
       const token = await getToken();
@@ -355,6 +368,18 @@ export default function TeamPage() {
           </table>
         </CardContent>
       </Card>
+
+      {confirmDialog && (
+        <ConfirmDialog
+          open={true}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmLabel={confirmDialog.confirmLabel}
+          destructive={confirmDialog.destructive}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
+      )}
     </PageShell>
   );
 }

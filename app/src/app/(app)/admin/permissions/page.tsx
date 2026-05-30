@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { tierLabel } from '@/lib/tier-labels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface Member {
   id: string;
@@ -62,6 +63,10 @@ export default function PermissionsPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch]     = useState('');
   const [working, setWorking]   = useState<string | null>(null);
+  const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string; description: string; confirmLabel?: string; destructive?: boolean; onConfirm: () => void;
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,7 +99,7 @@ export default function PermissionsPage() {
       });
       await load();
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Failed to update role');
+      setError(e instanceof Error ? e.message : 'Failed to update role');
     } finally {
       setWorking(null);
     }
@@ -108,30 +113,39 @@ export default function PermissionsPage() {
         `/admin/permissions/${accountId}/sync`,
         { method: 'POST', token: token ?? undefined },
       );
-      alert(`Synced ${res.synced} member(s) to Clerk. ${res.failed} failed.`);
+      setActionMsg(`Synced ${res.synced} member(s) to Clerk. ${res.failed} failed.`);
       await load();
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Sync failed');
+      setError(e instanceof Error ? e.message : 'Sync failed');
     } finally {
       setWorking(null);
     }
   }
 
-  async function warpInto(userId: string, email: string) {
-    if (!confirm(`Enter session as ${email}? You will be signed in as them.`)) return;
-    setWorking(`warp-${userId}`);
-    try {
-      const token = await getToken();
-      const res = await apiFetch<{ ok: boolean; url: string }>(
-        `/admin/warp/${userId}`,
-        { method: 'POST', token: token ?? undefined },
-      );
-      if (res.url) window.location.href = res.url;
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Warp failed');
-    } finally {
-      setWorking(null);
-    }
+  function warpInto(userId: string, email: string) {
+    setConfirmDialog({
+      title: 'Enter as customer',
+      description: `You will be signed in as ${email}. This is an admin action.`,
+      confirmLabel: 'Enter session',
+      onConfirm: () => {
+        setConfirmDialog(null);
+        void (async () => {
+          setWorking(`warp-${userId}`);
+          try {
+            const token = await getToken();
+            const res = await apiFetch<{ ok: boolean; url: string }>(
+              `/admin/warp/${userId}`,
+              { method: 'POST', token: token ?? undefined },
+            );
+            if (res.url) window.location.href = res.url;
+          } catch (e: unknown) {
+            setError(e instanceof Error ? e.message : 'Warp failed');
+          } finally {
+            setWorking(null);
+          }
+        })();
+      },
+    });
   }
 
   const filtered = accounts.filter((a) => {
@@ -159,6 +173,13 @@ export default function PermissionsPage() {
         <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 flex items-center justify-between text-sm text-destructive">
           {error}
           <button onClick={load} className="underline text-xs">Retry</button>
+        </div>
+      )}
+
+      {actionMsg && (
+        <div className="rounded-md border border-green-500/30 bg-green-50 dark:bg-green-950/20 px-4 py-3 text-sm text-green-700 dark:text-green-400 flex items-center justify-between">
+          {actionMsg}
+          <button onClick={() => setActionMsg(null)} className="ml-4 text-xs underline">Dismiss</button>
         </div>
       )}
 
@@ -282,6 +303,18 @@ export default function PermissionsPage() {
           );
         })}
       </div>
+
+      {confirmDialog && (
+        <ConfirmDialog
+          open={true}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmLabel={confirmDialog.confirmLabel}
+          destructive={confirmDialog.destructive}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
+      )}
     </div>
   );
 }

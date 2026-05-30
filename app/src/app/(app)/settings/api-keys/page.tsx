@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { usePlan } from '@/contexts/plan-context';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 const TIER_ALIASES: Record<string, string> = { diy: 'operate', dwy: 'guided', dfy: 'managed' };
 function normaliseTier(raw: string | null | undefined): string | null {
@@ -57,6 +58,9 @@ export default function ApiKeysPage() {
   const [copied, setCopied]           = useState(false);
   const [revoking, setRevoking]       = useState<string | null>(null);
   const [error, setError]             = useState('');
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string; description: string; confirmLabel?: string; destructive?: boolean; onConfirm: () => void;
+  } | null>(null);
 
   const loadKeys = useCallback(async () => {
     if (!isLoaded || !canUseApiKeys) return;
@@ -102,8 +106,17 @@ export default function ApiKeysPage() {
     }
   }
 
-  async function handleRevoke(keyId: string) {
-    if (!confirm('Revoke this API key? Any integrations using it will stop working immediately.')) return;
+  function handleRevoke(keyId: string) {
+    setConfirmDialog({
+      title: 'Revoke API key',
+      description: 'Any integrations using this key will stop working immediately.',
+      confirmLabel: 'Revoke key',
+      destructive: true,
+      onConfirm: () => { setConfirmDialog(null); void doRevoke(keyId); },
+    });
+  }
+
+  async function doRevoke(keyId: string) {
     setRevoking(keyId);
     try {
       const token = await getToken();
@@ -268,6 +281,18 @@ export default function ApiKeysPage() {
           </a>
         </CardContent>
       </Card>
+
+      {confirmDialog && (
+        <ConfirmDialog
+          open={true}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmLabel={confirmDialog.confirmLabel}
+          destructive={confirmDialog.destructive}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
+      )}
     </PageShell>
   );
 }

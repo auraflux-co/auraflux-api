@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { tierLabel } from '@/lib/tier-labels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 type Tab = 'overview' | 'jobs' | 'templates' | 'publish' | 'team' | 'billing' | 'support' | 'notes';
 const TABS: { id: Tab; label: string }[] = [
@@ -57,6 +58,10 @@ export default function CrmAccountPage() {
   const [noteBody, setNoteBody] = useState('');
   const [planInput, setPlanInput] = useState('');
   const [creditAmount, setCreditAmount] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string; description: string; confirmLabel?: string; destructive?: boolean; onConfirm: () => void;
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -74,64 +79,91 @@ export default function CrmAccountPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function handleWarp() {
+  function handleWarp() {
     const identity = data?.identity as Record<string, unknown> | null;
     const email = identity?.email as string || accountId;
-    if (!confirm(`Enter session as ${email}?`)) return;
-    setWorking(true);
-    try {
-      const token = await getToken();
-      const res = await apiFetch<{ ok: boolean; url: string }>(
-        `/admin/warp/${accountId}`,
-        { method: 'POST', token: token ?? undefined },
-      );
-      if (res.url) window.location.href = res.url;
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Warp failed');
-    } finally {
-      setWorking(false);
-    }
+    setConfirmDialog({
+      title: 'Enter as customer',
+      description: `You will be signed in as ${email}. This is an admin action.`,
+      confirmLabel: 'Enter session',
+      onConfirm: () => {
+        setConfirmDialog(null);
+        void (async () => {
+          setWorking(true);
+          try {
+            const token = await getToken();
+            const res = await apiFetch<{ ok: boolean; url: string }>(
+              `/admin/warp/${accountId}`,
+              { method: 'POST', token: token ?? undefined },
+            );
+            if (res.url) window.location.href = res.url;
+          } catch (e: unknown) {
+            setActionError(e instanceof Error ? e.message : 'Warp failed');
+          } finally {
+            setWorking(false);
+          }
+        })();
+      },
+    });
   }
 
-  async function handlePlanChange() {
+  function handlePlanChange() {
     if (!planInput) return;
-    if (!confirm(`Change plan to ${planInput}?`)) return;
-    setWorking(true);
-    try {
-      const token = await getToken();
-      await apiFetch(`/admin/crm/${accountId}/plan`, {
-        method: 'PATCH',
-        token: token ?? undefined,
-        body: JSON.stringify({ tier: planInput }),
-      });
-      await load();
-      setPlanInput('');
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Plan change failed');
-    } finally {
-      setWorking(false);
-    }
+    setConfirmDialog({
+      title: 'Change plan',
+      description: `Change this account's plan to ${planInput}?`,
+      confirmLabel: 'Apply plan',
+      onConfirm: () => {
+        setConfirmDialog(null);
+        void (async () => {
+          setWorking(true);
+          try {
+            const token = await getToken();
+            await apiFetch(`/admin/crm/${accountId}/plan`, {
+              method: 'PATCH',
+              token: token ?? undefined,
+              body: JSON.stringify({ tier: planInput }),
+            });
+            await load();
+            setPlanInput('');
+          } catch (e: unknown) {
+            setActionError(e instanceof Error ? e.message : 'Plan change failed');
+          } finally {
+            setWorking(false);
+          }
+        })();
+      },
+    });
   }
 
-  async function handleCreditAdjust() {
+  function handleCreditAdjust() {
     const amount = Number(creditAmount);
     if (!amount) return;
-    if (!confirm(`${amount > 0 ? 'Grant' : 'Deduct'} ${Math.abs(amount)} credits?`)) return;
-    setWorking(true);
-    try {
-      const token = await getToken();
-      await apiFetch(`/admin/crm/${accountId}/credits`, {
-        method: 'POST',
-        token: token ?? undefined,
-        body: JSON.stringify({ amount }),
-      });
-      await load();
-      setCreditAmount('');
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Credit adjust failed');
-    } finally {
-      setWorking(false);
-    }
+    setConfirmDialog({
+      title: `${amount > 0 ? 'Grant' : 'Deduct'} credits`,
+      description: `${amount > 0 ? 'Grant' : 'Deduct'} ${Math.abs(amount)} credits ${amount > 0 ? 'to' : 'from'} this account?`,
+      confirmLabel: amount > 0 ? 'Grant credits' : 'Deduct credits',
+      onConfirm: () => {
+        setConfirmDialog(null);
+        void (async () => {
+          setWorking(true);
+          try {
+            const token = await getToken();
+            await apiFetch(`/admin/crm/${accountId}/credits`, {
+              method: 'POST',
+              token: token ?? undefined,
+              body: JSON.stringify({ amount }),
+            });
+            await load();
+            setCreditAmount('');
+          } catch (e: unknown) {
+            setActionError(e instanceof Error ? e.message : 'Credit adjust failed');
+          } finally {
+            setWorking(false);
+          }
+        })();
+      },
+    });
   }
 
   async function handleAddNote() {
@@ -147,7 +179,7 @@ export default function CrmAccountPage() {
       setNoteBody('');
       await load();
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Failed to add note');
+      setActionError(e instanceof Error ? e.message : 'Failed to add note');
     } finally {
       setWorking(false);
     }
@@ -190,6 +222,13 @@ export default function CrmAccountPage() {
       <button onClick={() => router.push('/admin/crm')} className="text-xs text-muted-foreground hover:text-foreground">
         ← CRM
       </button>
+
+      {actionError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive flex items-center justify-between">
+          {actionError}
+          <button onClick={() => setActionError(null)} className="ml-4 text-xs underline">Dismiss</button>
+        </div>
+      )}
 
       {/* Account header */}
       <div className="rounded-xl border border-border bg-card p-5">
@@ -498,6 +537,18 @@ export default function CrmAccountPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {confirmDialog && (
+        <ConfirmDialog
+          open={true}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmLabel={confirmDialog.confirmLabel}
+          destructive={confirmDialog.destructive}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
       )}
     </div>
   );
