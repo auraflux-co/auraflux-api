@@ -30,6 +30,7 @@ const ICONS: Record<string, React.ReactNode> = {
   templates: <Icon d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" />,
   billing:  <Icon d="M2 9h20M2 15h20M1 5h22a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />,
   support:  <Icon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+  chat:     <Icon d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12c0 1.8.48 3.49 1.32 4.95L2 22l5.05-1.32A9.95 9.95 0 0 0 12 22z" />,
   profile:  <Icon d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />,
   settings: <Icon d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />,
   generate:  <Icon d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
@@ -47,6 +48,7 @@ function iconFor(href: string) {
   if (href.includes('/templates')) return ICONS.templates;
   if (href.includes('/billing'))  return ICONS.billing;
   if (href.includes('/support'))  return ICONS.support;
+  if (href.includes('/chat'))     return ICONS.chat;
   if (href.includes('/profile'))  return ICONS.profile;
   if (href.includes('/settings')) return ICONS.settings;
   if (href.includes('/generate'))  return ICONS.generate;
@@ -184,6 +186,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin',              label: 'Overview',       divider: 'Platform tools' },
   { href: '/admin/users',        label: 'All Users'       },
   { href: '/admin/support',      label: 'Support Inbox'   },
+  { href: '/admin/chat',         label: 'Chat Inbox'      },
   { href: '/admin/crm',          label: 'CRM'             },
   { href: '/admin/permissions',  label: 'Permissions'     },
   { href: '/admin/marketing',    label: 'Site Editor'     },

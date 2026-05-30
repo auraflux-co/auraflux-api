@@ -1338,6 +1338,7 @@
 </div>
 <script>
 var afHistory=[];
+var afSessionId=null;
 async function afSend(){
   var input=document.getElementById('af-chat-input');
   var msg=input.value.trim();
@@ -1350,8 +1351,11 @@ async function afSend(){
   send.disabled=true;
   afHistory.push({role:'user',content:msg});
   try{
-    var res=await fetch('https://auraflux-api.onrender.com/api/public/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,history:afHistory})});
+    var body={message:msg,history:afHistory,origin:'marketing'};
+    if(afSessionId)body.session_id=afSessionId;
+    var res=await fetch('https://auraflux-api.onrender.com/api/public/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var data=await res.json();
+    if(data.session_id)afSessionId=data.session_id;
     var reply=data.reply||'Sorry, something went wrong.';
     afHistory.push({role:'assistant',content:reply});
     msgs.innerHTML+=('<div class="af-msg bot">'+reply.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
@@ -1472,6 +1476,7 @@ async function afSend(){
 </div>
 <script>
 var afHistory=[];
+var afSessionId=null;
 async function afSend(){
   var input=document.getElementById('af-chat-input');
   var msg=input.value.trim();
@@ -1484,8 +1489,11 @@ async function afSend(){
   send.disabled=true;
   afHistory.push({role:'user',content:msg});
   try{
-    var res=await fetch('https://auraflux-api.onrender.com/api/public/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,history:afHistory})});
+    var body={message:msg,history:afHistory,origin:'marketing'};
+    if(afSessionId)body.session_id=afSessionId;
+    var res=await fetch('https://auraflux-api.onrender.com/api/public/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var data=await res.json();
+    if(data.session_id)afSessionId=data.session_id;
     var reply=data.reply||'Sorry, something went wrong.';
     afHistory.push({role:'assistant',content:reply});
     msgs.innerHTML+=('<div class="af-msg bot">'+reply.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');

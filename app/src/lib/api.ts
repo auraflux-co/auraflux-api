@@ -1302,3 +1302,51 @@ export async function setAutoTopup(enabled: boolean, token?: string): Promise<{ 
     token,
   });
 }
+
+// ─── Public chat inbox (superadmin) ──────────────────────────────────────────
+
+export interface PublicChatSession {
+  id:              string;
+  origin:          'marketing' | 'app' | string;
+  visitor_ip:      string | null;
+  started_at:      string;
+  last_message_at: string;
+  message_count:   number;
+  escalated:       boolean;
+  resolved:        boolean;
+  last_preview:    string | null;
+}
+
+export interface PublicChatMessage {
+  id:         number;
+  role:       'user' | 'assistant';
+  content:    string;
+  created_at: string;
+}
+
+export async function listPublicChatSessions(
+  opts: { origin?: string; resolved?: boolean; escalated?: boolean; limit?: number; offset?: number } = {},
+  token?: string,
+): Promise<{ ok: boolean; sessions: PublicChatSession[]; total: number }> {
+  const p = new URLSearchParams();
+  if (opts.origin !== undefined)   p.set('origin',    opts.origin);
+  if (opts.resolved !== undefined) p.set('resolved',  opts.resolved ? '1' : '0');
+  if (opts.escalated)              p.set('escalated', '1');
+  if (opts.limit)                  p.set('limit',     String(opts.limit));
+  if (opts.offset)                 p.set('offset',    String(opts.offset));
+  return apiFetch(`/api/admin/chat/sessions?${p}`, { token });
+}
+
+export async function getPublicChatSession(
+  sessionId: string,
+  token?: string,
+): Promise<{ ok: boolean; session: PublicChatSession; messages: PublicChatMessage[] }> {
+  return apiFetch(`/api/admin/chat/sessions/${sessionId}`, { token });
+}
+
+export async function resolvePublicChatSession(
+  sessionId: string,
+  token?: string,
+): Promise<{ ok: boolean }> {
+  return apiFetch(`/api/admin/chat/sessions/${sessionId}/resolve`, { method: 'POST', token });
+}
