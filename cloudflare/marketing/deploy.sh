@@ -175,12 +175,16 @@ def js_escape(s):
 home             = js_escape(read_page('home.html'))
 blog             = js_escape(read_page('blog.html'))
 pricing          = js_escape(read_page('pricing.html'))
+about            = js_escape(read_page('about.html'))
+system           = js_escape(read_page('system.html'))
 contact_content  = js_escape(read_page('contact-content.html'))
 roadmap_content  = js_escape(read_page('roadmap-content.html'))
 
 build = build.replace('__PAGE_HOME__',            home)
 build = build.replace('__PAGE_BLOG__',            blog)
 build = build.replace('__PAGE_PRICING__',         pricing)
+build = build.replace('__PAGE_ABOUT__',           about)
+build = build.replace('__PAGE_SYSTEM__',          system)
 build = build.replace('__PAGE_CONTACT_CONTENT__', contact_content)
 build = build.replace('__PAGE_ROADMAP_CONTENT__', roadmap_content)
 

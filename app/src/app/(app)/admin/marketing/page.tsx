@@ -19,9 +19,9 @@ const SUGGESTED_PROMPTS = [
   { label: 'New blog post', prompt: 'Add a new blog post card to the blog page about how AuraFlux publishes directly to TikTok and YouTube via OAuth.' },
   { label: 'Pricing headline', prompt: 'Update the pricing page hero headline to be more compelling and action-oriented.' },
   { label: 'Contact FAQ', prompt: 'Add a new FAQ to the contact page: "How long does it take to get started?" with a concise answer.' },
+  { label: 'About — founder bio', prompt: 'Update the founder bio on the About page to be more personal and compelling.' },
+  { label: 'System — portal descriptions', prompt: 'Review the portal descriptions on the Our System page and make them more customer-friendly.' },
   { label: 'What pages do we own?', prompt: 'What pages does the worker currently own and what can you edit on each?' },
-  { label: 'Homepage hero', prompt: 'What does the current homepage hero say and how could we improve it?' },
-  { label: 'Nav links', prompt: 'Update the nav to add a Blog link between Roadmap and Contact.' },
 ];
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string };
