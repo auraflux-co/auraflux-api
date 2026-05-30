@@ -224,6 +224,29 @@ home_raw = re.sub(
 )
 # Fix malformed meta tags — Framer snapshot produces ">>" closing brackets
 home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
+
+# Replace the baked-in nav with the canonical nav from framer-shell/nav.html.
+# home.html has its own nav element from the original design export — we must
+# swap it with the canonical nav so edits to nav.html propagate to the homepage.
+if framer_nav:
+    def replace_nav_element(html, new_nav):
+        start = html.find('<nav ')
+        if start == -1:
+            return html
+        depth, pos = 0, start
+        while pos < len(html):
+            if html[pos:pos+4] == '<nav':
+                depth += 1; pos += 4
+            elif html[pos:pos+6] == '</nav>':
+                depth -= 1
+                if depth == 0:
+                    return html[:start] + new_nav + html[pos+6:]
+                pos += 6
+            else:
+                pos += 1
+        return html
+    home_raw = replace_nav_element(home_raw, framer_nav)
+
 home             = js_escape(home_raw)
 
 blog             = js_escape(read_page('blog.html'))
