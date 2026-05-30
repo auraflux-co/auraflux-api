@@ -307,9 +307,11 @@ interface Props {
   contentTypeFilter?:  'clip' | 'vod';
   /** Called when user presses X or Escape. Parent may hide or reset the picker. */
   onClose?:            () => void;
+  /** Enable multi-clip selection mode with a clip-order tray (CPD-405). */
+  multiClipMode?:      boolean;
 }
 
-export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilter, onClose }: Props) {
+export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilter, onClose, multiClipMode = false }: Props) {
   const { getToken, isLoaded }           = useAuth();
   const [platform, setPlatform]         = useState<SourcePlatform | null>(null);
   const [username, setUsername]         = useState('');
