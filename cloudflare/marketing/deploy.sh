@@ -245,7 +245,11 @@ if framer_nav:
             else:
                 pos += 1
         return html
+    before = len(home_raw)
     home_raw = replace_nav_element(home_raw, framer_nav)
+    print(f"  ✓ Replaced home.html nav: {before} → {len(home_raw)} chars")
+else:
+    print("  – nav.html not loaded — home.html nav not replaced")
 
 home             = js_escape(home_raw)
 
