@@ -78,7 +78,7 @@ interface ChannelVerification {
 }
 
 const DEBOUNCE_MS = 500;
-const API_BASE    = process.env.NEXT_PUBLIC_API_URL || 'https://api.auraflux.co';
+const API_BASE    = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
 
 export default function SourceChannelsPage() {
   const { getToken }  = useAuth();

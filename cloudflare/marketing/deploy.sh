@@ -172,7 +172,24 @@ def read_page(name, default=''):
 def js_escape(s):
     return s.replace('\\\\', '\\\\\\\\').replace('\`', '\\\`')
 
-home             = js_escape(read_page('home.html'))
+# ── home.html: patch Framer dev-domain artifacts before embedding ─────────────
+home_raw = read_page('home.html')
+# Fix canonical URL — Framer snapshot points to dev domain; patch to production
+home_raw = re.sub(
+    r'<link rel="canonical" href="https://[a-z0-9]+\.auraflux-marketing\.pages\.dev[^"]*"',
+    '<link rel="canonical" href="https://auraflux.co/"',
+    home_raw
+)
+# Fix og:url for the same reason
+home_raw = re.sub(
+    r'<meta property="og:url" content="https://[a-z0-9]+\.auraflux-marketing\.pages\.dev[^"]*"',
+    '<meta property="og:url" content="https://auraflux.co/"',
+    home_raw
+)
+# Fix malformed meta tags — Framer snapshot produces ">>" closing brackets
+home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
+home             = js_escape(home_raw)
+
 blog             = js_escape(read_page('blog.html'))
 pricing          = js_escape(read_page('pricing.html'))
 about            = js_escape(read_page('about.html'))
@@ -180,13 +197,21 @@ system           = js_escape(read_page('system.html'))
 contact_content  = js_escape(read_page('contact-content.html'))
 roadmap_content  = js_escape(read_page('roadmap-content.html'))
 
-build = build.replace('__PAGE_HOME__',            home)
-build = build.replace('__PAGE_BLOG__',            blog)
-build = build.replace('__PAGE_PRICING__',         pricing)
-build = build.replace('__PAGE_ABOUT__',           about)
-build = build.replace('__PAGE_SYSTEM__',          system)
-build = build.replace('__PAGE_CONTACT_CONTENT__', contact_content)
-build = build.replace('__PAGE_ROADMAP_CONTENT__', roadmap_content)
+# Idempotency guards: only replace if the placeholder still exists in the build
+if '__PAGE_HOME__' in build:
+    build = build.replace('__PAGE_HOME__',            home)
+if '__PAGE_BLOG__' in build:
+    build = build.replace('__PAGE_BLOG__',            blog)
+if '__PAGE_PRICING__' in build:
+    build = build.replace('__PAGE_PRICING__',         pricing)
+if '__PAGE_ABOUT__' in build:
+    build = build.replace('__PAGE_ABOUT__',           about)
+if '__PAGE_SYSTEM__' in build:
+    build = build.replace('__PAGE_SYSTEM__',          system)
+if '__PAGE_CONTACT_CONTENT__' in build:
+    build = build.replace('__PAGE_CONTACT_CONTENT__', contact_content)
+if '__PAGE_ROADMAP_CONTENT__' in build:
+    build = build.replace('__PAGE_ROADMAP_CONTENT__', roadmap_content)
 
 with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)

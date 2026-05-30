@@ -183,7 +183,7 @@ function PublishCopySection({ copy }: { copy: Record<string, Record<string, unkn
 
 // ── Staging review panel ──────────────────────────────────────────────────────
 
-function StagingPanel({ jobId, token, isSuperAdmin }: { jobId: string; token: string; isSuperAdmin: boolean }) {
+function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getToken: () => Promise<string | null>; isSuperAdmin: boolean }) {
   const [assets, setAssets]     = useState<StagingAssets | null>(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -196,9 +196,10 @@ function StagingPanel({ jobId, token, isSuperAdmin }: { jobId: string; token: st
   useEffect(() => {
     (async () => {
       try {
+        const token = await getToken();
         const data = await apiFetch<StagingAssets & { ok?: boolean }>(
           `/jobs/${jobId}/staging-assets`,
-          { token }
+          { token: token ?? undefined }
         );
         setAssets(data);
       } catch (e: unknown) {
@@ -207,18 +208,19 @@ function StagingPanel({ jobId, token, isSuperAdmin }: { jobId: string; token: st
         setLoading(false);
       }
     })();
-  }, [jobId, token]);
+  }, [jobId, getToken]);
 
   const handleApprovePublish = useCallback(async () => {
     if (!assets) return;
     setPublishing(true);
     try {
+      const token = await getToken();
       const result = await apiFetch<Record<string, unknown>>(
         `/jobs/${jobId}/approve-publish`,
         {
           method: 'POST',
           body: JSON.stringify({ platforms: assets.input.platforms }),
-          token,
+          token: token ?? undefined,
         }
       );
       setPublishResult(result);
@@ -227,19 +229,20 @@ function StagingPanel({ jobId, token, isSuperAdmin }: { jobId: string; token: st
     } finally {
       setPublishing(false);
     }
-  }, [assets, jobId, token]);
+  }, [assets, jobId, getToken]);
 
   const handleRequestRedo = useCallback(async () => {
     setRedoing(true);
     try {
-      await apiFetch(`/jobs/${jobId}/retry`, { method: 'POST', token });
+      const token = await getToken();
+      await apiFetch(`/jobs/${jobId}/retry`, { method: 'POST', token: token ?? undefined });
       setRedoResult({ ok: true });
     } catch {
       setRedoResult({ error: 'Redo request failed. Please try again.' });
     } finally {
       setRedoing(false);
     }
-  }, [jobId, token]);
+  }, [jobId, getToken]);
 
   if (loading) return <p className="text-xs text-muted-foreground py-4 text-center">Loading review assets…</p>;
   if (error)   return <p className="text-xs text-red-600 py-4">{formatUserError(error)}</p>;
@@ -438,16 +441,14 @@ export default function StagingPage() {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [token, setToken]       = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const t = await getToken();
-        setToken(t);
+        const token = await getToken();
         // Superadmin sees all accounts' jobs; customers see only their own.
         const endpoint = isSuperAdmin ? '/jobs?all=true' : '/jobs';
-        const data = await apiFetch<{ jobs: JobRow[] }>(endpoint, { token: t ?? undefined });
+        const data = await apiFetch<{ jobs: JobRow[] }>(endpoint, { token: token ?? undefined });
         // Review queue = work to do only. Published jobs live in Jobs → History.
         const withOutput = (data.jobs ?? []).filter(
           (j) => ['complete', 'staged'].includes(j.status)
@@ -531,10 +532,10 @@ export default function StagingPage() {
               </div>
             </CardHeader>
 
-            {isOpen && token && (
+            {isOpen && (
               <CardContent className="pt-0">
                 <Separator className="mb-4" />
-                <StagingPanel jobId={job.jobId} token={token} isSuperAdmin={isSuperAdmin} />
+                <StagingPanel jobId={job.jobId} getToken={getToken} isSuperAdmin={isSuperAdmin} />
               </CardContent>
             )}
           </Card>

@@ -254,6 +254,199 @@ function pathToContentType(path: ProductionPath): string {
   }
 }
 
+// ─── FeatureConfigPanel (module scope — prevents remount on every state change) ─
+
+interface FeatureConfigPanelProps {
+  feat:          Feature;
+  cfg:           Record<string, string>;
+  tone:          string;
+  setTone:       (v: string) => void;
+  setFeatureCfg: (fid: string, key: string, value: string) => void;
+}
+
+function FeatureConfigPanel({ feat, cfg, tone, setTone, setFeatureCfg }: FeatureConfigPanelProps) {
+  if (!feat.hasConfig) return null;
+  return (
+    <div className="px-3 pb-3 pt-2 border-t border-primary/10 bg-primary/[0.04] space-y-3">
+      <p className="text-[11px] text-foreground/70 leading-relaxed italic border-l-2 border-primary/30 pl-2">
+        {feat.outputImpact}
+      </p>
+      {feat.id === 'script' && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Script tone</Label>
+            <select value={tone} onChange={(e) => setTone(e.target.value)}
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="professional">Professional — clear, authoritative, on-brand</option>
+              <option value="conversational">Conversational — natural, friendly, accessible</option>
+              <option value="energetic">Energetic — fast-paced, punchy, high-impact</option>
+              <option value="educational">Educational — structured, informative, step-by-step</option>
+              <option value="dramatic">Dramatic — cinematic, emotional, story-driven</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+              Content brief <span className="normal-case font-normal text-muted-foreground/70">optional</span>
+            </Label>
+            <textarea value={cfg.brief ?? ''} onChange={(e) => setFeatureCfg('script', 'brief', e.target.value)}
+              placeholder="e.g. Focus on the comeback story in Q4." rows={3}
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
+          </div>
+        </>
+      )}
+      {feat.id === 'tts' && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Voice</Label>
+            <select value={cfg.voiceId ?? 'JBFqnCBsd6RMkjVDRZzb'} onChange={(e) => setFeatureCfg('tts', 'voiceId', e.target.value)}
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="JBFqnCBsd6RMkjVDRZzb">George — deep, authoritative (default)</option>
+              <option value="EXAVITQu4vr4xnSDxMaL">Bella — warm, professional female</option>
+              <option value="ErXwobaYiN019PkySvjV">Antoni — natural, friendly male</option>
+              <option value="MF3mGyEYCl7XYWbV9V6O">Elli — energetic, bright female</option>
+              <option value="AZnzlk1XvdvUeBnXmlld">Domi — strong, clear male</option>
+              <option value="pNInz6obpgDQGcFmaJgB">Adam — conversational, relatable</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Speaking speed</Label>
+            <div className="flex items-center gap-3">
+              <input type="range" min={0.7} max={1.3} step={0.1}
+                value={cfg.speed ?? '1.0'} onChange={(e) => setFeatureCfg('tts', 'speed', e.target.value)}
+                className="flex-1 accent-primary" />
+              <span className="text-xs font-semibold tabular-nums w-10 text-right">{cfg.speed ?? '1.0'}×</span>
+            </div>
+          </div>
+        </>
+      )}
+      {feat.id === 'commentary' && (
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Narration style</Label>
+          <select value={cfg.style ?? 'commentary'} onChange={(e) => setFeatureCfg('commentary', 'style', e.target.value)}
+            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+            <option value="commentary">Commentary — live, reactive, play-by-play</option>
+            <option value="documentary">Documentary — reflective, contextual, narrated</option>
+            <option value="explainer">Explainer — clear, educational, structured</option>
+            <option value="promotional">Promotional — persuasive, benefit-focused</option>
+          </select>
+        </div>
+      )}
+      {feat.id === 'generation' && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+              Visual prompt <span className="normal-case font-normal text-muted-foreground/70">optional</span>
+            </Label>
+            <textarea value={cfg.prompt ?? ''} onChange={(e) => setFeatureCfg('generation', 'prompt', e.target.value)}
+              placeholder="e.g. Wide establishing shot of a packed stadium at sunset" rows={2}
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Visual style</Label>
+            <select value={cfg.visualStyle ?? 'cinematic'} onChange={(e) => setFeatureCfg('generation', 'visualStyle', e.target.value)}
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="cinematic">Cinematic — film-grade, dramatic lighting</option>
+              <option value="documentary">Documentary — natural, handheld feel</option>
+              <option value="clean">Clean — bright, modern, commercial</option>
+              <option value="dynamic">Dynamic — fast cuts, high energy, sports</option>
+            </select>
+          </div>
+        </>
+      )}
+      {feat.id === 'burn_images' && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Image URLs</Label>
+            <textarea value={cfg.imageUrls ?? ''} onChange={(e) => setFeatureCfg('burn_images', 'imageUrls', e.target.value)}
+              placeholder="https://cdn.example.com/image.jpg" rows={2}
+              className="w-full text-sm font-mono border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Position</Label>
+              <select value={cfg.position ?? 'lower-third'} onChange={(e) => setFeatureCfg('burn_images', 'position', e.target.value)}
+                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+                <option value="lower-third">Lower third</option>
+                <option value="full-frame">Full frame</option>
+                <option value="corner">Corner</option>
+                <option value="center">Center (title card)</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Duration (s)</Label>
+              <input type="number" min={1} max={10} step={0.5}
+                value={cfg.durationSec ?? '3'} onChange={(e) => setFeatureCfg('burn_images', 'durationSec', e.target.value)}
+                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── FeatureRow (module scope — prevents remount on every state change) ────────
+
+interface FeatureRowProps {
+  feat:          Feature;
+  features:      Set<string>;
+  featureConfig: Record<string, Record<string, string>>;
+  toggleFeature: (id: string) => void;
+  tier:          PlanTier;
+  tone:          string;
+  setTone:       (v: string) => void;
+  setFeatureCfg: (fid: string, key: string, value: string) => void;
+}
+
+function FeatureRow({ feat, features, featureConfig, toggleFeature, tier, tone, setTone, setFeatureCfg }: FeatureRowProps) {
+  const on       = features.has(feat.id);
+  const cfg      = featureConfig[feat.id] ?? {};
+  const depUnmet = feat.requires?.some((dep) => !features.has(dep)) ?? false;
+
+  if (feat.minPlan && feat.minPlan !== 'operate' && feat.minPlan !== 'guided' && tier !== 'managed' && tier !== 'custom') {
+    return (
+      <LockedFeature minPlan={feat.minPlan} currentPlan={tier} label={feat.label}
+        upgradeMsg={`${feat.label} is available on the Managed plan`}>
+        <div className="rounded-lg border border-dashed border-border/60 opacity-50 p-3 flex items-center gap-3">
+          <span className="w-4 h-4 rounded border border-muted-foreground/20 shrink-0" />
+          <div>
+            <p className="text-sm font-medium">{feat.label}</p>
+            <p className="text-xs text-muted-foreground">{feat.description}</p>
+          </div>
+        </div>
+      </LockedFeature>
+    );
+  }
+
+  return (
+    <div className={cn('rounded-lg border transition-all', on ? 'border-primary' : 'border-border')}>
+      <button type="button" onClick={() => { if (depUnmet && !on) return; toggleFeature(feat.id); }}
+        disabled={depUnmet && !on}
+        className={cn('w-full flex items-center gap-3 p-3 text-left transition-colors',
+          on ? 'bg-primary/5 rounded-t-lg' : 'hover:bg-muted/40 rounded-lg',
+          depUnmet && !on && 'opacity-40 cursor-not-allowed')}>
+        <span className={cn('w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold transition-colors',
+          on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30')}>
+          {on ? '✓' : ''}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-medium leading-tight">{feat.label}</p>
+            {depUnmet && !on && feat.requires && (
+              <span className="text-[10px] text-muted-foreground border border-dashed border-muted-foreground/40 rounded px-1.5 py-0.5">
+                requires {feat.requires.map((r) => FEATURES.find((f) => f.id === r)?.label ?? r).join(' + ')}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
+        </div>
+        {on && feat.hasConfig && <span className="text-[10px] text-primary font-medium shrink-0 opacity-60">configured ↓</span>}
+      </button>
+      {on && <FeatureConfigPanel feat={feat} cfg={cfg} tone={tone} setTone={setTone} setFeatureCfg={setFeatureCfg} />}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 function JobBuilderPageInner() {
@@ -553,178 +746,6 @@ function JobBuilderPageInner() {
       : Array.from(features).map((f) => FEATURES.find((x) => x.id === f)?.label ?? f).join(' · '),
     schedule: scheduledStart === 'now' ? 'Start now' : scheduledAt ? `Scheduled: ${scheduledAt}` : '',
   };
-
-  // ─── Feature config panel ──────────────────────────────────────────────────
-
-  function FeatureConfigPanel({ feat, cfg }: { feat: Feature; cfg: Record<string, string> }) {
-    if (!feat.hasConfig) return null;
-    return (
-      <div className="px-3 pb-3 pt-2 border-t border-primary/10 bg-primary/[0.04] space-y-3">
-        <p className="text-[11px] text-foreground/70 leading-relaxed italic border-l-2 border-primary/30 pl-2">
-          {feat.outputImpact}
-        </p>
-        {feat.id === 'script' && (
-          <>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Script tone</Label>
-              <select value={tone} onChange={(e) => setTone(e.target.value)}
-                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
-                <option value="professional">Professional — clear, authoritative, on-brand</option>
-                <option value="conversational">Conversational — natural, friendly, accessible</option>
-                <option value="energetic">Energetic — fast-paced, punchy, high-impact</option>
-                <option value="educational">Educational — structured, informative, step-by-step</option>
-                <option value="dramatic">Dramatic — cinematic, emotional, story-driven</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                Content brief <span className="normal-case font-normal text-muted-foreground/70">optional</span>
-              </Label>
-              <textarea value={cfg.brief ?? ''} onChange={(e) => setFeatureCfg('script', 'brief', e.target.value)}
-                placeholder="e.g. Focus on the comeback story in Q4." rows={3}
-                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
-            </div>
-          </>
-        )}
-        {feat.id === 'tts' && (
-          <>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Voice</Label>
-              <select value={cfg.voiceId ?? 'JBFqnCBsd6RMkjVDRZzb'} onChange={(e) => setFeatureCfg('tts', 'voiceId', e.target.value)}
-                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
-                <option value="JBFqnCBsd6RMkjVDRZzb">George — deep, authoritative (default)</option>
-                <option value="EXAVITQu4vr4xnSDxMaL">Bella — warm, professional female</option>
-                <option value="ErXwobaYiN019PkySvjV">Antoni — natural, friendly male</option>
-                <option value="MF3mGyEYCl7XYWbV9V6O">Elli — energetic, bright female</option>
-                <option value="AZnzlk1XvdvUeBnXmlld">Domi — strong, clear male</option>
-                <option value="pNInz6obpgDQGcFmaJgB">Adam — conversational, relatable</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Speaking speed</Label>
-              <div className="flex items-center gap-3">
-                <input type="range" min={0.7} max={1.3} step={0.1}
-                  value={cfg.speed ?? '1.0'} onChange={(e) => setFeatureCfg('tts', 'speed', e.target.value)}
-                  className="flex-1 accent-primary" />
-                <span className="text-xs font-semibold tabular-nums w-10 text-right">{cfg.speed ?? '1.0'}×</span>
-              </div>
-            </div>
-          </>
-        )}
-        {feat.id === 'commentary' && (
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Narration style</Label>
-            <select value={cfg.style ?? 'commentary'} onChange={(e) => setFeatureCfg('commentary', 'style', e.target.value)}
-              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
-              <option value="commentary">Commentary — live, reactive, play-by-play</option>
-              <option value="documentary">Documentary — reflective, contextual, narrated</option>
-              <option value="explainer">Explainer — clear, educational, structured</option>
-              <option value="promotional">Promotional — persuasive, benefit-focused</option>
-            </select>
-          </div>
-        )}
-        {feat.id === 'generation' && (
-          <>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                Visual prompt <span className="normal-case font-normal text-muted-foreground/70">optional</span>
-              </Label>
-              <textarea value={cfg.prompt ?? ''} onChange={(e) => setFeatureCfg('generation', 'prompt', e.target.value)}
-                placeholder="e.g. Wide establishing shot of a packed stadium at sunset" rows={2}
-                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Visual style</Label>
-              <select value={cfg.visualStyle ?? 'cinematic'} onChange={(e) => setFeatureCfg('generation', 'visualStyle', e.target.value)}
-                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
-                <option value="cinematic">Cinematic — film-grade, dramatic lighting</option>
-                <option value="documentary">Documentary — natural, handheld feel</option>
-                <option value="clean">Clean — bright, modern, commercial</option>
-                <option value="dynamic">Dynamic — fast cuts, high energy, sports</option>
-              </select>
-            </div>
-          </>
-        )}
-        {feat.id === 'burn_images' && (
-          <>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Image URLs</Label>
-              <textarea value={cfg.imageUrls ?? ''} onChange={(e) => setFeatureCfg('burn_images', 'imageUrls', e.target.value)}
-                placeholder="https://cdn.example.com/image.jpg" rows={2}
-                className="w-full text-sm font-mono border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Position</Label>
-                <select value={cfg.position ?? 'lower-third'} onChange={(e) => setFeatureCfg('burn_images', 'position', e.target.value)}
-                  className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
-                  <option value="lower-third">Lower third</option>
-                  <option value="full-frame">Full frame</option>
-                  <option value="corner">Corner</option>
-                  <option value="center">Center (title card)</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Duration (s)</Label>
-                <input type="number" min={1} max={10} step={0.5}
-                  value={cfg.durationSec ?? '3'} onChange={(e) => setFeatureCfg('burn_images', 'durationSec', e.target.value)}
-                  className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  function FeatureRow({ feat }: { feat: Feature }) {
-    const on       = features.has(feat.id);
-    const cfg      = featureConfig[feat.id] ?? {};
-    const depUnmet = feat.requires?.some((dep) => !features.has(dep)) ?? false;
-
-    if (feat.minPlan && feat.minPlan !== 'operate' && feat.minPlan !== 'guided' && tier !== 'managed' && tier !== 'custom') {
-      return (
-        <LockedFeature minPlan={feat.minPlan} currentPlan={tier} label={feat.label}
-          upgradeMsg={`${feat.label} is available on the Managed plan`}>
-          <div className="rounded-lg border border-dashed border-border/60 opacity-50 p-3 flex items-center gap-3">
-            <span className="w-4 h-4 rounded border border-muted-foreground/20 shrink-0" />
-            <div>
-              <p className="text-sm font-medium">{feat.label}</p>
-              <p className="text-xs text-muted-foreground">{feat.description}</p>
-            </div>
-          </div>
-        </LockedFeature>
-      );
-    }
-
-    return (
-      <div className={cn('rounded-lg border transition-all', on ? 'border-primary' : 'border-border')}>
-        <button type="button" onClick={() => { if (depUnmet && !on) return; toggleFeature(feat.id); }}
-          disabled={depUnmet && !on}
-          className={cn('w-full flex items-center gap-3 p-3 text-left transition-colors',
-            on ? 'bg-primary/5 rounded-t-lg' : 'hover:bg-muted/40 rounded-lg',
-            depUnmet && !on && 'opacity-40 cursor-not-allowed')}>
-          <span className={cn('w-4 h-4 rounded border shrink-0 flex items-center justify-center text-[10px] font-bold transition-colors',
-            on ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/30')}>
-            {on ? '✓' : ''}
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-medium leading-tight">{feat.label}</p>
-              {depUnmet && !on && feat.requires && (
-                <span className="text-[10px] text-muted-foreground border border-dashed border-muted-foreground/40 rounded px-1.5 py-0.5">
-                  requires {feat.requires.map((r) => FEATURES.find((f) => f.id === r)?.label ?? r).join(' + ')}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">{feat.description}</p>
-          </div>
-          {on && feat.hasConfig && <span className="text-[10px] text-primary font-medium shrink-0 opacity-60">configured ↓</span>}
-        </button>
-        {on && <FeatureConfigPanel feat={feat} cfg={cfg} />}
-      </div>
-    );
-  }
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -1027,7 +1048,19 @@ function JobBuilderPageInner() {
                     {Array.from(features)
                       .map((fid) => FEATURES.find((f) => f.id === fid))
                       .filter((f): f is Feature => !!f && f.hasConfig)
-                      .map((feat) => <FeatureRow key={feat.id} feat={feat} />)}
+                      .map((feat) => (
+                        <FeatureRow
+                          key={feat.id}
+                          feat={feat}
+                          features={features}
+                          featureConfig={featureConfig}
+                          toggleFeature={toggleFeature}
+                          tier={tier}
+                          tone={tone}
+                          setTone={setTone}
+                          setFeatureCfg={setFeatureCfg}
+                        />
+                      ))}
                   </div>
 
                   {/* Credit estimate */}
