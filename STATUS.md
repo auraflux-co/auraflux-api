@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-30 v1.0.837 (Cursor — fix(marketing): giant logo on sub-pages — nav.html now has inline width:133px/height:89px on logo anchor + fallback CSS block for pages without Framer CSS; href="./" fixed to href="/" absolute; deployed and verified on /about /system /pricing)
 **Last Updated:** 2026-05-30 v1.0.836 (Cursor — fix(marketing): homepage nav now live — all today's nav changes visible on auraflux.co; home.html baked-in nav replaced with canonical nav.html on every deploy; both preview and live confirmed ✅ Our System, About, phone, chat, no Online now, no Sign In)
 **Last Updated:** 2026-05-30 v1.0.835 (Cursor — fix(marketing): home.html nav was baked-in from design export and never replaced; deploy.sh now replaces the nav element in home.html with canonical framer-shell/nav.html so all nav edits propagate to homepage)
 **Last Updated:** 2026-05-30 v1.0.834 (Cursor — chore(ci): jira-track.yml — real-time Jira tracking on every push; tickets transition to In Development on commit, untracked commits auto-create tasks immediately; session_close.py becomes safety net only)
