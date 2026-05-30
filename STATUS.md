@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-30 v1.0.829 (Cursor — chore(marketing): refresh Framer snapshot — updated nav.html, footer.html, styles.css, tokens.css from latest Framer publish; site now fully Cloudflare Pages)
 **Last Updated:** 2026-05-30 v1.0.828 (Cursor — fix: replace window.confirm/alert with ConfirmDialog across 5 pages — api-keys, team, templates, crm, permissions; new shared confirm-dialog.tsx component)
 **Last Updated:** 2026-05-30 v1.0.827 (Cursor — fix: critical tech — hoist FeatureRow to module scope; fix generate interval cleanup; fix review auth token stale; consolidate API base env var)
 **Last Updated:** 2026-05-30 v1.0.826 (Cursor — fix: copy/branding/UX — billing title → 'Subscription & Plans', 'The Capability Ladder' → 'Plan Comparison'; &amp; entity fix in payment page; 'AuraFlux Support' → 'Collab' in support chat; schedule subtitle human-readable; ElevenLabs → 'AI Voiceover' label; job detail loading skeleton; portal customer-facing display names; credits exhausted banner redesign; social token expiry warning badge)
