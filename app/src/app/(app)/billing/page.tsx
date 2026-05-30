@@ -256,7 +256,7 @@ function BillingPageInner() {
   return (
     <PageShell maxWidth="3xl">
       <PageHeader
-        title="Match Your Team's Capability"
+        title="Subscription & Plans"
         subtitle="Choose the implementation path that fits your current operational setup. Plans represent a progression of control and support — from self-serve execution to fully managed expert operations."
       />
 
@@ -358,7 +358,7 @@ function BillingPageInner() {
       {/* ── 2. Upgrade options ──────────────────────────────────────────────── */}
       {upgradeTiers.length > 0 && (
         <div>
-          <h2 className="af-subhead mb-1">The Capability Ladder</h2>
+          <h2 className="af-subhead mb-1">Plan Comparison</h2>
           <p className="af-label mb-4 text-muted-foreground">Upgrade your plan to unlock more support and tooling.</p>
           <div className={cn('grid grid-cols-1 gap-4', upgradeTiers.length > 1 && 'sm:grid-cols-2')}>
             {upgradeTiers.map((tier) => {

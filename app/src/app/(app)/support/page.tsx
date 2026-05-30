@@ -225,7 +225,7 @@ export default function SupportPage() {
   const canEsc  = plan === 'guided' || plan === 'managed';
 
   const [messages,   setMessages]   = useState<ChatMsg[]>([
-    { role: 'assistant', content: "Hi! I'm AuraFlux Support. What issue are you running into today?" },
+    { role: 'assistant', content: "Hi! I'm Collab. What issue are you running into today?" },
   ]);
   const [input,      setInput]      = useState('');
   const [loading,    setLoading]    = useState(false);
@@ -360,7 +360,7 @@ export default function SupportPage() {
               ) : resolved ? (
                 <div className="text-center af-body py-2">
                   This session is resolved.{' '}
-                  <button onClick={() => { setMessages([{ role: 'assistant', content: "Hi! I'm AuraFlux Support. What issue are you running into today?" }]); setSessionId(null); setResolved(false); setEscalated(false); }} className="text-primary underline">Start a new session</button>
+                  <button onClick={() => { setMessages([{ role: 'assistant', content: "Hi! I'm Collab. What issue are you running into today?" }]); setSessionId(null); setResolved(false); setEscalated(false); }} className="text-primary underline">Start a new session</button>
                 </div>
               ) : (
                 <div className="flex gap-2">

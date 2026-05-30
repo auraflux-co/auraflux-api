@@ -179,7 +179,12 @@ export default function SocialConnectPage() {
                     <p className="af-label mt-0.5">
                       {connected.handle || connected.platformUserId || 'Account linked'}
                       {connected.tokenExpiry && (
-                        <span> · expires {new Date(connected.tokenExpiry).toLocaleDateString()}</span>
+                        <span>
+                          {' '}· expires {new Date(connected.tokenExpiry).toLocaleDateString()}
+                          {new Date(connected.tokenExpiry).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 && (
+                            <span className="ml-2 text-xs text-amber-500 font-medium">Reconnect soon</span>
+                          )}
+                        </span>
                       )}
                     </p>
                   ) : (

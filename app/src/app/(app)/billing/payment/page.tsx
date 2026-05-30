@@ -220,7 +220,7 @@ export default function PaymentPage() {
 
   if (loading) return (
     <PageShell maxWidth="3xl">
-      <PageHeader title="Payment method &amp; invoices" subtitle="Manage your card and download invoices." />
+      <PageHeader title="Payment method & invoices" subtitle="Manage your card and download invoices." />
       <div className="space-y-3">
         {[1, 2].map((i) => (
           <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
@@ -232,7 +232,7 @@ export default function PaymentPage() {
   return (
     <PageShell maxWidth="3xl">
       <PageHeader
-        title="Payment method &amp; invoices"
+        title="Payment method & invoices"
         subtitle="Manage your card and download invoices."
       />
 

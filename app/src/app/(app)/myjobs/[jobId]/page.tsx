@@ -28,7 +28,7 @@ const PLATFORM_ICONS: Record<string, string> = {
 };
 
 const ADDON_LABELS: Record<string, string> = {
-  tts:              'ElevenLabs TTS',
+  tts:              'AI Voiceover',
   heygen:           'AI Avatar',
   shoppable:        'Shoppable tagging',
   wan:              'Video generation',
@@ -49,6 +49,17 @@ const PORTAL_LABELS: Record<string, string> = {
   portal3b: 'P3b — Commitment check',
   portal4:  'P4 — Broadcast QA',
   portal5:  'P5 — Delivery',
+};
+
+const PORTAL_DISPLAY_NAMES: Record<string, string> = {
+  portal0:  'Checking your content',
+  portal1:  'Writing your script',
+  portal1b: 'Generating video',
+  portal2:  'Assembling your video',
+  portal3a: 'Quality check',
+  portal3b: 'Creative review',
+  portal4:  'Applying brand & effects',
+  portal5:  'Publishing',
 };
 
 const ACTIVE_STATUSES = new Set(['queued', 'running']);
@@ -290,7 +301,16 @@ export default function JobDetailPage() {
   }, [job, fetchJob]);
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="max-w-2xl mx-auto space-y-4 animate-pulse p-6">
+        <div className="h-8 w-48 bg-muted rounded" />
+        <div className="h-4 w-full bg-muted rounded" />
+        <div className="h-4 w-3/4 bg-muted rounded" />
+        <div className="h-32 w-full bg-muted rounded-xl" />
+        <div className="h-4 w-full bg-muted rounded" />
+        <div className="h-4 w-2/3 bg-muted rounded" />
+      </div>
+    );
   }
 
   if (error) {
@@ -338,7 +358,7 @@ export default function JobDetailPage() {
                 {job.status === 'queued'
                   ? 'Your job is in the queue and will start shortly.'
                   : runningPortal
-                    ? `Running ${PORTAL_LABELS[runningPortal.portal] ?? runningPortal.portal}`
+                    ? `Running ${(isSuperAdmin ? PORTAL_LABELS : PORTAL_DISPLAY_NAMES)[runningPortal.portal] ?? runningPortal.portal}`
                     : 'Processing through the production pipeline.'}
               </p>
             </div>
@@ -384,7 +404,7 @@ export default function JobDetailPage() {
                       'text-sm flex-1',
                       report.status === 'running' ? 'font-medium' : 'text-muted-foreground',
                     )}>
-                      {PORTAL_LABELS[report.portal] ?? report.portal}
+                      {(isSuperAdmin ? PORTAL_LABELS : PORTAL_DISPLAY_NAMES)[report.portal] ?? report.portal}
                     </span>
                     {report.score != null && (
                       <span className={cn(
