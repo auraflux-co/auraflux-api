@@ -15,6 +15,7 @@ on:
     paths:
       - 'cloudflare/marketing/**'
   workflow_dispatch:
+    # Also handles manual triggers and repository_dispatch from the in-app editor
     inputs:
       reason:
         description: 'Reason for manual redeploy'
@@ -25,6 +26,8 @@ jobs:
   deploy:
     name: Build & Deploy Worker
     runs-on: ubuntu-latest
+    # Skip commits made by the in-app editor's git commit-back (avoids redundant redeploy)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
     steps:
       - name: Checkout
