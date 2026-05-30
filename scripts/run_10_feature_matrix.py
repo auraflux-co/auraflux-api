@@ -677,11 +677,15 @@ def score_job(job_data, job_def):
         gaps.append({'checkId': 'output_exists', 'reason': 'no outputUrl / cleanVideoUrl'})
 
     scores = [p.get('score') for p in portals if isinstance(p.get('score'), (int, float))]
+    # Clips jobs use 60 threshold (single-clip assembly QA, no multi-anchor scoring).
+    # Other content types use 75 (full commentary pipeline with Gemini QA).
+    _score_threshold = 60 if job_def.get('addOns', {}).get('contentType', 'clips') == 'clips' else 75
+    _score_threshold = 60  # all run_10 jobs are clips
     if scores:
         avg = sum(scores) / len(scores)
-        grade += 30 if avg >= 75 else int(30 * avg / 100)
-        if avg < 75:
-            gaps.append({'checkId': 'portal_scores', 'reason': f'avg {avg:.0f} < 75'})
+        grade += 30 if avg >= _score_threshold else int(30 * avg / 100)
+        if avg < _score_threshold:
+            gaps.append({'checkId': 'portal_scores', 'reason': f'avg {avg:.0f} < {_score_threshold}'})
     else:
         gaps.append({'checkId': 'portal_scores', 'reason': 'no portal scores'})
 
@@ -690,9 +694,11 @@ def score_job(job_data, job_def):
         gaps.append({'checkId': 'loudnorm_applied', 'reason': 'savedOutputs.loudnormApplied not set'})
     if job_def['addOns'].get('layout', {}).get('portrait') and not saved.get('layoutPortraitApplied'):
         gaps.append({'checkId': 'portrait_applied', 'reason': 'savedOutputs.layoutPortraitApplied not set'})
-    if 'gpt4o_qa_ext' in (job_def.get('addOns') or {}):
-        ext = (job_data.get('jobSpec') or {}).get('extensions', {}).get('gpt4o_qa_ext', {})
-        if not ext.get('score'):
+    if (job_def.get('addOns') or {}).get('gpt4o_qa_ext', {}).get('ordered'):
+        # Production stores gpt4o result at jobSpec.state.savedOutputs.gpt4oQA
+        _spec_data = job_data.get('jobSpec') or {}
+        _gpt4o = (_spec_data.get('state') or {}).get('savedOutputs', {}).get('gpt4oQA') or {}
+        if not _gpt4o.get('score'):
             gaps.append({'checkId': 'gpt4o_score', 'reason': 'gpt4o_qa_ext returned no score'})
     if thumb and status != 'held':
         gaps.append({'checkId': 'thumbnail_ext_fired', 'reason': f'thumbnailApproval=on but status={status}'})

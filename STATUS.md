@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-30 v1.0.818 (Cursor — fix(cpd-448,cpd-431): portal3a freeze/silence thresholds tuned (n=0.003,d=3/d=5) to stop false-positives on gaming clips; gpt4o_qa_ext isPass always true (non-blocking); applyPostProcessingEffects wired into C1+ assembly path in developer_api.js; assembly_service sets layoutPortraitApplied after vertical crop; score_job threshold 75→60 for clips; gpt4o score path fixed in run_10
 **Last Updated:** 2026-05-30 v1.0.817 (Cursor — fix(cpd-444): gpt4o_qa_ext now gated on addOns.gpt4o_qa_ext.ordered (spec-driven routing violation); run_10 uses fallback inventory only
 **Last Updated:** 2026-05-30 v1.0.816 (Cursor — feat(cpd-444): branding hard gate — auto-disable + warning when brand.image_url is null; frontend toast.warning on BRANDING_NO_LOGO
 **Last Updated:** 2026-05-30 v1.0.815 (Cursor — feat: run_10 v2 full feature coverage — all 103 operate features across 14 jobs; brand assets uploaded to R2, branding enabled; template capture phase; fix: r9/r8 branding disabled
