@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About — AuraFlux</title>
+<meta name="description" content="AuraFlux automates content production from source to publish — no editors, no team required. Learn who we are and why we built it.">
+<link rel="canonical" href="https://auraflux.co/about">
+${FRAMER_FONTS || ''}
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#e4e4f0;line-height:1.6}
+a{color:#f5c542;text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Hero */
+.hero{text-align:center;padding:80px 24px 56px}
+.hero-eyebrow{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#f5c542;margin-bottom:20px;border:1px solid rgba(245,197,66,.25);padding:5px 14px;border-radius:20px}
+.hero h1{font-size:2.8rem;font-weight:800;color:#fff;margin-bottom:20px;line-height:1.15}
+.hero h1 em{font-style:normal;color:#f5c542}
+.hero p{font-size:1.15rem;color:#9999b8;max-width:580px;margin:0 auto 36px}
+.hero-cta{display:inline-flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.btn-primary{background:#f5c542;color:#0b1220;padding:12px 28px;border-radius:10px;font-size:.95rem;font-weight:700;transition:opacity .2s}
+.btn-primary:hover{opacity:.85;text-decoration:none}
+.btn-secondary{border:1px solid rgba(245,197,66,.4);color:#f5c542;padding:12px 28px;border-radius:10px;font-size:.95rem;font-weight:600;transition:opacity .2s}
+.btn-secondary:hover{opacity:.75;text-decoration:none}
+
+/* Divider */
+.divider{width:64px;height:3px;background:rgba(245,197,66,.4);margin:0 auto 56px;border-radius:2px}
+
+/* Mission section */
+.mission{max-width:820px;margin:0 auto;padding:0 24px 80px}
+.mission h2{font-size:1.9rem;font-weight:700;color:#fff;margin-bottom:24px}
+.mission p{font-size:1rem;color:#b0b0cc;margin-bottom:20px}
+.mission blockquote{border-left:3px solid #f5c542;padding:16px 24px;background:rgba(245,197,66,.05);border-radius:0 12px 12px 0;margin:32px 0;font-size:1.1rem;color:#e4e4f0;font-style:italic}
+
+/* Stats bar */
+.stats{background:#0e1a2e;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);padding:48px 24px;margin-bottom:80px}
+.stats-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}
+@media(max-width:600px){.stats-inner{grid-template-columns:repeat(2,1fr)}}
+.stat-num{font-size:2.2rem;font-weight:800;color:#f5c542;margin-bottom:6px}
+.stat-label{font-size:.85rem;color:#6666a0}
+
+/* How we're different */
+.diff{max-width:1100px;margin:0 auto;padding:0 24px 80px}
+.diff h2{font-size:1.9rem;font-weight:700;color:#fff;margin-bottom:12px;text-align:center}
+.diff-sub{font-size:1rem;color:#9999b8;text-align:center;margin-bottom:48px}
+.diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media(max-width:768px){.diff-grid{grid-template-columns:1fr}}
+.diff-card{background:#0e1a2e;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:32px 28px}
+.diff-icon{font-size:2rem;margin-bottom:16px}
+.diff-card h3{font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:10px}
+.diff-card p{font-size:.9rem;color:#9999b8;line-height:1.6}
+
+/* The technology */
+.tech{max-width:820px;margin:0 auto;padding:0 24px 80px}
+.tech h2{font-size:1.9rem;font-weight:700;color:#fff;margin-bottom:12px}
+.tech-sub{font-size:1rem;color:#9999b8;margin-bottom:40px}
+.pipeline{display:flex;flex-direction:column;gap:0}
+.step{display:flex;gap:24px;align-items:flex-start;padding:24px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.step:last-child{border-bottom:none}
+.step-num{background:#f5c542;color:#0b1220;font-size:.8rem;font-weight:800;min-width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-body h4{font-size:.95rem;font-weight:700;color:#fff;margin-bottom:4px}
+.step-body p{font-size:.85rem;color:#9999b8}
+
+/* Team */
+.team{max-width:900px;margin:0 auto;padding:0 24px 80px;text-align:center}
+.team h2{font-size:1.9rem;font-weight:700;color:#fff;margin-bottom:12px}
+.team-sub{font-size:1rem;color:#9999b8;margin-bottom:48px}
+.team-cards{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+.team-card{background:#0e1a2e;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:36px 28px;width:280px;text-align:center}
+.team-avatar{width:72px;height:72px;border-radius:50%;background:rgba(245,197,66,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem}
+.team-name{font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:4px}
+.team-role{font-size:.8rem;color:#f5c542;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.team-bio{font-size:.88rem;color:#9999b8;line-height:1.6}
+
+/* CTA section */
+.cta-section{background:#0e1a2e;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);padding:72px 24px;text-align:center;margin-bottom:0}
+.cta-section h2{font-size:2rem;font-weight:700;color:#fff;margin-bottom:16px}
+.cta-section p{font-size:1rem;color:#9999b8;max-width:480px;margin:0 auto 32px}
+</style>
+</head>
+<body>
+${FRAMER_NAV || FALLBACK_NAV}
+
+<div class="hero">
+  <span class="hero-eyebrow">Our Story</span>
+  <h1>Content Production,<br><em>Without the Team</em></h1>
+  <p>AuraFlux is the production infrastructure for creators who can't afford to stop streaming to edit. We automate everything from clip selection to final publish.</p>
+  <div class="hero-cta">
+    <a href="https://app.auraflux.co/sign-up" class="btn-primary">Start Free</a>
+    <a href="/system" class="btn-secondary">See How It Works</a>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="mission">
+  <h2>Why We Built This</h2>
+  <p>Most streamers and creators produce hours of content every week — and then lose most of it. Editing takes longer than the stream itself. Hiring an editor costs more than the content earns. So the clips sit on a hard drive, and the channel doesn't grow.</p>
+  <p>We built AuraFlux to close that gap. Not by making editing faster, but by eliminating the need for it entirely. Our platform takes your raw stream or uploaded video, runs it through an AI-powered production pipeline, and delivers polished, platform-ready content — automatically.</p>
+  <blockquote>"Every creator should be able to produce like a media company. That's not a staffing problem — it's a software problem."</blockquote>
+  <p>AuraFlux is the software answer to that problem. The same pipeline that a five-person content team would run — clip selection, scripting, voiceover, assembly, quality checks, brand application, and direct publish — happens automatically, for every piece of content you produce.</p>
+</div>
+
+<div class="stats">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-num">6</div>
+      <div class="stat-label">Production portals in the pipeline</div>
+    </div>
+    <div>
+      <div class="stat-num">5</div>
+      <div class="stat-label">Publishing platforms supported</div>
+    </div>
+    <div>
+      <div class="stat-num">3</div>
+      <div class="stat-label">Plan tiers — one for every team size</div>
+    </div>
+    <div>
+      <div class="stat-num">0</div>
+      <div class="stat-label">Editors required</div>
+    </div>
+  </div>
+</div>
+
+<div class="diff">
+  <h2>What Makes AuraFlux Different</h2>
+  <p class="diff-sub">Not a tool. An automated production environment.</p>
+  <div class="diff-grid">
+    <div class="diff-card">
+      <div class="diff-icon">⚙</div>
+      <h3>A full pipeline, not a feature</h3>
+      <p>Other tools do one thing — trim clips, generate captions, schedule posts. AuraFlux does all of it, in sequence, automatically. One job submission runs the entire production process end to end.</p>
+    </div>
+    <div class="diff-card">
+      <div class="diff-icon">🎯</div>
+      <h3>Platform-aware by default</h3>
+      <p>Every job knows its destination. Vertical crop for TikTok. Chapter markers for YouTube. Captions calibrated for each platform's viewer behavior. No manual reformatting.</p>
+    </div>
+    <div class="diff-card">
+      <div class="diff-icon">🔍</div>
+      <h3>AI quality checks at every stage</h3>
+      <p>Each portal runs QA before passing to the next. Frozen frames, silence gaps, assembly defects, and creative quality are all checked before your content goes live.</p>
+    </div>
+    <div class="diff-card">
+      <div class="diff-icon">📡</div>
+      <h3>Direct publish, no manual export</h3>
+      <p>Connect your YouTube and TikTok accounts once. AuraFlux publishes directly via OAuth — with your title, description, tags, thumbnail, and chapter markers already applied.</p>
+    </div>
+    <div class="diff-card">
+      <div class="diff-icon">💬</div>
+      <h3>Collab guides you through it</h3>
+      <p>Every plan includes Collab, the in-app AI assistant. Ask it anything — what features are available, how credits work, what to do next. It knows the full platform and responds in plain English.</p>
+    </div>
+    <div class="diff-card">
+      <div class="diff-icon">🔌</div>
+      <h3>API-first for technical operators</h3>
+      <p>The entire platform is accessible via REST API. Integrate AuraFlux directly into your own tooling, dashboard, or workflow automation. Full developer documentation included.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tech">
+  <h2>The Technology Behind the Platform</h2>
+  <p class="tech-sub">Six production portals. One automated pipeline.</p>
+  <div class="pipeline">
+    <div class="step">
+      <div class="step-num">0</div>
+      <div class="step-body">
+        <h4>Content Intelligence</h4>
+        <p>Source video analysis — segment detection, clip scoring, content type classification. The pipeline decides which moments are worth producing before any editing begins.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Script &amp; Voice</h4>
+        <p>AI script generation tailored to your content type and format. ElevenLabs TTS voiceover production in your brand voice. Optional — skip it if you want your own audio.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Edit &amp; Assembly</h4>
+        <p>Auto-cut, clip merging, vertical crop and reframe for mobile formats, audio normalization. This is where raw content becomes a watchable video.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Quality Assurance</h4>
+        <p>FFmpeg defect detection (freeze frames, silence gaps, encoding issues) followed by creative QA scoring. Jobs that don't meet the quality bar are flagged for review before they proceed.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Brand &amp; Effects</h4>
+        <p>Lower thirds, AI-generated thumbnails, scene transitions, chapter markers, captions. Your brand applied consistently to every piece of content, at scale.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Publish</h4>
+        <p>Direct publish to YouTube and TikTok via OAuth. Title, description, tags, thumbnails, and chapter markers all applied automatically. One job. Done.</p>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:32px;text-align:center">
+    <a href="/system" style="color:#f5c542;font-size:.95rem;font-weight:600">Full system breakdown →</a>
+  </div>
+</div>
+
+<div class="team">
+  <h2>The People Behind AuraFlux</h2>
+  <p class="team-sub">Built by operators, for operators.</p>
+  <div class="team-cards">
+    <div class="team-card">
+      <div class="team-avatar">RG</div>
+      <div class="team-name">Rob Gregory</div>
+      <div class="team-role">Founder &amp; CEO</div>
+      <div class="team-bio">Former operations and technology leader. Built AuraFlux to solve the content production bottleneck he saw firsthand — talented creators losing audience share because they couldn't produce fast enough.</div>
+    </div>
+  </div>
+</div>
+
+<div class="cta-section">
+  <h2>Ready to automate your production?</h2>
+  <p>Start with 50 free credits. No editor required.</p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+    <a href="https://app.auraflux.co/sign-up" class="btn-primary">Get Started Free</a>
+    <a href="/pricing" class="btn-secondary">View Pricing</a>
+  </div>
+</div>
+
+${FRAMER_FOOTER || FALLBACK_FOOTER}
+</body>
+</html>

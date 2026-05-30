@@ -968,6 +968,700 @@
     }
   }, true);
 })();
+</script>
+<style id="af-site-overrides">
+  /* ── Brand color corrections ──────────────────────────────────────────────
+   * Framer published with blue (#0B50EA) CTAs and orange-red (#F55A42) accents.
+   * Override to match app: Gold #F5C542 on Dark Navy #0B1220.
+   * ──────────────────────────────────────────────────────────────────────── */
+  :root {
+    --token-ac5df8f7-9a2e-4e31-acfd-df1fcb1cda97: #f5c542 !important;
+    --token-e54c8a02-e002-406e-be22-6ac7ad69bc80: rgba(245,197,66,0.25) !important;
+    --21h8s6: #f5c542 !important;
+    --framer-link-text-color: #f5c542 !important;
+  }
+  [style*="background: rgb(11, 80, 234)"],
+  [style*="background-color: rgb(11, 80, 234)"],
+  [style*="background: #0b50ea"],
+  [style*="background-color: #0b50ea"] {
+    background: #f5c542 !important; background-color: #f5c542 !important; color: #0b1220 !important;
+  }
+  [style*="color: rgb(11, 80, 234)"],
+  [style*="color: #0b50ea"],
+  [style*="color: #09f"],
+  [style*="color: rgb(0, 153, 255)"] { color: #f5c542 !important; }
+  [style*="color: rgb(245, 90, 66)"],
+  [style*="color: #f55a42"],
+  [style*="background: rgb(245, 90, 66)"],
+  [style*="background-color: #f55a42"] {
+    color: #f5c542 !important; background-color: #f5c542 !important;
+  }
+  [style*="background: #f5c542"],
+  [style*="background-color: #f5c542"] { color: #0b1220 !important; }
+
+  /* ── Remove Framer badge ────────────────────────────────────────────────── */
+  #__framer-badge-container,
+  [data-framer-generated],
+  a[href*="framer.com"][style*="fixed"],
+  a[href*="framer.com"][style*="position:fixed"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+</style>
+<script id="af-router-intercept">
+(function() {
+  var owned = ["/pricing","/privacy","/terms","/aup","/cookies","/refunds","/roadmap","/contact"];
+  function normalize(p) { return (p || '/').split('?')[0].replace(/\/+$/, '') || '/'; }
+  function shouldIntercept(url) {
+    try {
+      var p = normalize(new URL(url, location.href).pathname);
+      return owned.indexOf(p) !== -1;
+    } catch(e) { return false; }
+  }
+  function go(url) { window.location.href = url; }
+
+  // Override history API used by Framer's router
+  ['pushState','replaceState'].forEach(function(fn) {
+    var orig = history[fn].bind(history);
+    history[fn] = function(state, title, url) {
+      if (url && shouldIntercept(url)) return go(url);
+      return orig(state, title, url);
+    };
+  });
+
+  // Intercept <a> clicks before Framer can handle them
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && shouldIntercept(href)) {
+      e.preventDefault(); e.stopPropagation();
+      go(href);
+    }
+  }, true);
+})();
+</script>
+<style id="af-site-overrides">
+  /* ── Brand color corrections ──────────────────────────────────────────────
+   * Framer published with blue (#0B50EA) CTAs and orange-red (#F55A42) accents.
+   * Override to match app: Gold #F5C542 on Dark Navy #0B1220.
+   * ──────────────────────────────────────────────────────────────────────── */
+  :root {
+    --token-ac5df8f7-9a2e-4e31-acfd-df1fcb1cda97: #f5c542 !important;
+    --token-e54c8a02-e002-406e-be22-6ac7ad69bc80: rgba(245,197,66,0.25) !important;
+    --21h8s6: #f5c542 !important;
+    --framer-link-text-color: #f5c542 !important;
+  }
+  [style*="background: rgb(11, 80, 234)"],
+  [style*="background-color: rgb(11, 80, 234)"],
+  [style*="background: #0b50ea"],
+  [style*="background-color: #0b50ea"] {
+    background: #f5c542 !important; background-color: #f5c542 !important; color: #0b1220 !important;
+  }
+  [style*="color: rgb(11, 80, 234)"],
+  [style*="color: #0b50ea"],
+  [style*="color: #09f"],
+  [style*="color: rgb(0, 153, 255)"] { color: #f5c542 !important; }
+  [style*="color: rgb(245, 90, 66)"],
+  [style*="color: #f55a42"],
+  [style*="background: rgb(245, 90, 66)"],
+  [style*="background-color: #f55a42"] {
+    color: #f5c542 !important; background-color: #f5c542 !important;
+  }
+  [style*="background: #f5c542"],
+  [style*="background-color: #f5c542"] { color: #0b1220 !important; }
+
+  /* ── Remove Framer badge ────────────────────────────────────────────────── */
+  #__framer-badge-container,
+  [data-framer-generated],
+  a[href*="framer.com"][style*="fixed"],
+  a[href*="framer.com"][style*="position:fixed"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+</style>
+<script id="af-router-intercept">
+(function() {
+  var owned = ["/pricing","/privacy","/terms","/aup","/cookies","/refunds","/roadmap","/contact"];
+  function normalize(p) { return (p || '/').split('?')[0].replace(/\/+$/, '') || '/'; }
+  function shouldIntercept(url) {
+    try {
+      var p = normalize(new URL(url, location.href).pathname);
+      return owned.indexOf(p) !== -1;
+    } catch(e) { return false; }
+  }
+  function go(url) { window.location.href = url; }
+
+  // Override history API used by Framer's router
+  ['pushState','replaceState'].forEach(function(fn) {
+    var orig = history[fn].bind(history);
+    history[fn] = function(state, title, url) {
+      if (url && shouldIntercept(url)) return go(url);
+      return orig(state, title, url);
+    };
+  });
+
+  // Intercept <a> clicks before Framer can handle them
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && shouldIntercept(href)) {
+      e.preventDefault(); e.stopPropagation();
+      go(href);
+    }
+  }, true);
+})();
+</script>
+<style id="af-site-overrides">
+  /* ── Brand color corrections ──────────────────────────────────────────────
+   * Framer published with blue (#0B50EA) CTAs and orange-red (#F55A42) accents.
+   * Override to match app: Gold #F5C542 on Dark Navy #0B1220.
+   * ──────────────────────────────────────────────────────────────────────── */
+  :root {
+    --token-ac5df8f7-9a2e-4e31-acfd-df1fcb1cda97: #f5c542 !important;
+    --token-e54c8a02-e002-406e-be22-6ac7ad69bc80: rgba(245,197,66,0.25) !important;
+    --21h8s6: #f5c542 !important;
+    --framer-link-text-color: #f5c542 !important;
+  }
+  [style*="background: rgb(11, 80, 234)"],
+  [style*="background-color: rgb(11, 80, 234)"],
+  [style*="background: #0b50ea"],
+  [style*="background-color: #0b50ea"] {
+    background: #f5c542 !important; background-color: #f5c542 !important; color: #0b1220 !important;
+  }
+  [style*="color: rgb(11, 80, 234)"],
+  [style*="color: #0b50ea"],
+  [style*="color: #09f"],
+  [style*="color: rgb(0, 153, 255)"] { color: #f5c542 !important; }
+  [style*="color: rgb(245, 90, 66)"],
+  [style*="color: #f55a42"],
+  [style*="background: rgb(245, 90, 66)"],
+  [style*="background-color: #f55a42"] {
+    color: #f5c542 !important; background-color: #f5c542 !important;
+  }
+  [style*="background: #f5c542"],
+  [style*="background-color: #f5c542"] { color: #0b1220 !important; }
+
+  /* ── Remove Framer badge ────────────────────────────────────────────────── */
+  #__framer-badge-container,
+  [data-framer-generated],
+  a[href*="framer.com"][style*="fixed"],
+  a[href*="framer.com"][style*="position:fixed"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+</style>
+<script id="af-router-intercept">
+(function() {
+  var owned = ["/pricing","/privacy","/terms","/aup","/cookies","/refunds","/roadmap","/contact"];
+  function normalize(p) { return (p || '/').split('?')[0].replace(/\/+$/, '') || '/'; }
+  function shouldIntercept(url) {
+    try {
+      var p = normalize(new URL(url, location.href).pathname);
+      return owned.indexOf(p) !== -1;
+    } catch(e) { return false; }
+  }
+  function go(url) { window.location.href = url; }
+
+  // Override history API used by Framer's router
+  ['pushState','replaceState'].forEach(function(fn) {
+    var orig = history[fn].bind(history);
+    history[fn] = function(state, title, url) {
+      if (url && shouldIntercept(url)) return go(url);
+      return orig(state, title, url);
+    };
+  });
+
+  // Intercept <a> clicks before Framer can handle them
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && shouldIntercept(href)) {
+      e.preventDefault(); e.stopPropagation();
+      go(href);
+    }
+  }, true);
+})();
+</script>
+<style id="af-site-overrides">
+  /* ── Brand color corrections ──────────────────────────────────────────────
+   * Framer published with blue (#0B50EA) CTAs and orange-red (#F55A42) accents.
+   * Override to match app: Gold #F5C542 on Dark Navy #0B1220.
+   * ──────────────────────────────────────────────────────────────────────── */
+  :root {
+    --token-ac5df8f7-9a2e-4e31-acfd-df1fcb1cda97: #f5c542 !important;
+    --token-e54c8a02-e002-406e-be22-6ac7ad69bc80: rgba(245,197,66,0.25) !important;
+    --21h8s6: #f5c542 !important;
+    --framer-link-text-color: #f5c542 !important;
+  }
+  [style*="background: rgb(11, 80, 234)"],
+  [style*="background-color: rgb(11, 80, 234)"],
+  [style*="background: #0b50ea"],
+  [style*="background-color: #0b50ea"] {
+    background: #f5c542 !important; background-color: #f5c542 !important; color: #0b1220 !important;
+  }
+  [style*="color: rgb(11, 80, 234)"],
+  [style*="color: #0b50ea"],
+  [style*="color: #09f"],
+  [style*="color: rgb(0, 153, 255)"] { color: #f5c542 !important; }
+  [style*="color: rgb(245, 90, 66)"],
+  [style*="color: #f55a42"],
+  [style*="background: rgb(245, 90, 66)"],
+  [style*="background-color: #f55a42"] {
+    color: #f5c542 !important; background-color: #f5c542 !important;
+  }
+  [style*="background: #f5c542"],
+  [style*="background-color: #f5c542"] { color: #0b1220 !important; }
+
+  /* ── Remove Framer badge ────────────────────────────────────────────────── */
+  #__framer-badge-container,
+  [data-framer-generated],
+  a[href*="framer.com"][style*="fixed"],
+  a[href*="framer.com"][style*="position:fixed"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+</style>
+<script id="af-router-intercept">
+(function() {
+  var owned = ["/pricing","/privacy","/terms","/aup","/cookies","/refunds","/roadmap","/contact"];
+  function normalize(p) { return (p || '/').split('?')[0].replace(/\/+$/, '') || '/'; }
+  function shouldIntercept(url) {
+    try {
+      var p = normalize(new URL(url, location.href).pathname);
+      return owned.indexOf(p) !== -1;
+    } catch(e) { return false; }
+  }
+  function go(url) { window.location.href = url; }
+
+  // Override history API used by Framer's router
+  ['pushState','replaceState'].forEach(function(fn) {
+    var orig = history[fn].bind(history);
+    history[fn] = function(state, title, url) {
+      if (url && shouldIntercept(url)) return go(url);
+      return orig(state, title, url);
+    };
+  });
+
+  // Intercept <a> clicks before Framer can handle them
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && shouldIntercept(href)) {
+      e.preventDefault(); e.stopPropagation();
+      go(href);
+    }
+  }, true);
+})();
+</script>
+<style id="af-site-overrides">
+  /* ── Brand color corrections ──────────────────────────────────────────────
+   * Framer published with blue (#0B50EA) CTAs and orange-red (#F55A42) accents.
+   * Override to match app: Gold #F5C542 on Dark Navy #0B1220.
+   * ──────────────────────────────────────────────────────────────────────── */
+  :root {
+    --token-ac5df8f7-9a2e-4e31-acfd-df1fcb1cda97: #f5c542 !important;
+    --token-e54c8a02-e002-406e-be22-6ac7ad69bc80: rgba(245,197,66,0.25) !important;
+    --21h8s6: #f5c542 !important;
+    --framer-link-text-color: #f5c542 !important;
+  }
+  [style*="background: rgb(11, 80, 234)"],
+  [style*="background-color: rgb(11, 80, 234)"],
+  [style*="background: #0b50ea"],
+  [style*="background-color: #0b50ea"] {
+    background: #f5c542 !important; background-color: #f5c542 !important; color: #0b1220 !important;
+  }
+  [style*="color: rgb(11, 80, 234)"],
+  [style*="color: #0b50ea"],
+  [style*="color: #09f"],
+  [style*="color: rgb(0, 153, 255)"] { color: #f5c542 !important; }
+  [style*="color: rgb(245, 90, 66)"],
+  [style*="color: #f55a42"],
+  [style*="background: rgb(245, 90, 66)"],
+  [style*="background-color: #f55a42"] {
+    color: #f5c542 !important; background-color: #f5c542 !important;
+  }
+  [style*="background: #f5c542"],
+  [style*="background-color: #f5c542"] { color: #0b1220 !important; }
+
+  /* ── Remove Framer badge ────────────────────────────────────────────────── */
+  #__framer-badge-container,
+  [data-framer-generated],
+  a[href*="framer.com"][style*="fixed"],
+  a[href*="framer.com"][style*="position:fixed"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* ── Chat widget ─────────────────────────────────────────────────────────── */
+  #af-chat-bubble{position:fixed;bottom:24px;right:24px;z-index:9999;width:52px;height:52px;background:#f5c542;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s}
+  #af-chat-bubble:hover{transform:scale(1.08)}
+  #af-chat-bubble svg{width:24px;height:24px;fill:#0b1220}
+  #af-chat-panel{position:fixed;bottom:88px;right:24px;z-index:9998;width:340px;max-width:calc(100vw - 48px);background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden}
+  #af-chat-panel.open{display:flex}
+  #af-chat-header{padding:14px 16px;background:#0e1a2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between}
+  #af-chat-header span{font-size:.9rem;font-weight:600;color:#fff;font-family:-apple-system,sans-serif}
+  #af-chat-header button{background:none;border:none;color:#9999b8;cursor:pointer;font-size:1.1rem;line-height:1;padding:0}
+  #af-chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:180px;max-height:320px}
+  .af-msg{max-width:85%;padding:8px 12px;border-radius:12px;font-size:.85rem;line-height:1.5;font-family:-apple-system,sans-serif}
+  .af-msg.bot{background:#1e2d47;color:#e4e4f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .af-msg.user{background:#f5c542;color:#0b1220;align-self:flex-end;border-bottom-right-radius:4px;font-weight:500}
+  #af-chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
+  #af-chat-input{flex:1;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;color:#e4e4f0;font-size:.85rem;font-family:-apple-system,sans-serif;outline:none}
+  #af-chat-input:focus{border-color:#f5c542}
+  #af-chat-send{background:#f5c542;color:#0b1220;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
+  #af-chat-send:disabled{opacity:.5;cursor:not-allowed}
+</style>
+<div id="af-chat-bubble" onclick="document.getElementById('af-chat-panel').classList.toggle('open')" title="Chat with us">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+</div>
+<div id="af-chat-panel">
+  <div id="af-chat-header">
+    <span>💬 AuraFlux Chat</span>
+    <button onclick="document.getElementById('af-chat-panel').classList.remove('open')" aria-label="Close">✕</button>
+  </div>
+  <div id="af-chat-messages">
+    <div class="af-msg bot">Hi! I'm the AuraFlux assistant. Ask me anything about the platform, pricing, or how it works.</div>
+  </div>
+  <div id="af-chat-input-row">
+    <input id="af-chat-input" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')afSend()">
+    <button id="af-chat-send" onclick="afSend()">Send</button>
+  </div>
+</div>
+<script>
+var afHistory=[];
+async function afSend(){
+  var input=document.getElementById('af-chat-input');
+  var msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  var msgs=document.getElementById('af-chat-messages');
+  var send=document.getElementById('af-chat-send');
+  msgs.innerHTML+=('<div class="af-msg user">'+msg.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
+  msgs.scrollTop=msgs.scrollHeight;
+  send.disabled=true;
+  afHistory.push({role:'user',content:msg});
+  try{
+    var res=await fetch('https://auraflux-api.onrender.com/api/public/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,history:afHistory})});
+    var data=await res.json();
+    var reply=data.reply||'Sorry, something went wrong.';
+    afHistory.push({role:'assistant',content:reply});
+    msgs.innerHTML+=('<div class="af-msg bot">'+reply.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
+  }catch(e){
+    msgs.innerHTML+=('<div class="af-msg bot">Something went wrong. Call or text us at <a href="tel:+15716002835" style="color:#f5c542">+1 (571) 600-2835</a></div>');
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+  send.disabled=false;
+}
+</script>
+<script id="af-router-intercept">
+(function() {
+  var owned = ["/pricing","/privacy","/terms","/aup","/cookies","/refunds","/roadmap","/contact"];
+  function normalize(p) { return (p || '/').split('?')[0].replace(/\/+$/, '') || '/'; }
+  function shouldIntercept(url) {
+    try {
+      var p = normalize(new URL(url, location.href).pathname);
+      return owned.indexOf(p) !== -1;
+    } catch(e) { return false; }
+  }
+  function go(url) { window.location.href = url; }
+
+  // Override history API used by Framer's router
+  ['pushState','replaceState'].forEach(function(fn) {
+    var orig = history[fn].bind(history);
+    history[fn] = function(state, title, url) {
+      if (url && shouldIntercept(url)) return go(url);
+      return orig(state, title, url);
+    };
+  });
+
+  // Intercept <a> clicks before Framer can handle them
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && shouldIntercept(href)) {
+      e.preventDefault(); e.stopPropagation();
+      go(href);
+    }
+  }, true);
+})();
+</script>
+<style id="af-site-overrides">
+  /* ── Brand color corrections ──────────────────────────────────────────────
+   * Framer published with blue (#0B50EA) CTAs and orange-red (#F55A42) accents.
+   * Override to match app: Gold #F5C542 on Dark Navy #0B1220.
+   * ──────────────────────────────────────────────────────────────────────── */
+  :root {
+    --token-ac5df8f7-9a2e-4e31-acfd-df1fcb1cda97: #f5c542 !important;
+    --token-e54c8a02-e002-406e-be22-6ac7ad69bc80: rgba(245,197,66,0.25) !important;
+    --21h8s6: #f5c542 !important;
+    --framer-link-text-color: #f5c542 !important;
+  }
+  [style*="background: rgb(11, 80, 234)"],
+  [style*="background-color: rgb(11, 80, 234)"],
+  [style*="background: #0b50ea"],
+  [style*="background-color: #0b50ea"] {
+    background: #f5c542 !important; background-color: #f5c542 !important; color: #0b1220 !important;
+  }
+  [style*="color: rgb(11, 80, 234)"],
+  [style*="color: #0b50ea"],
+  [style*="color: #09f"],
+  [style*="color: rgb(0, 153, 255)"] { color: #f5c542 !important; }
+  [style*="color: rgb(245, 90, 66)"],
+  [style*="color: #f55a42"],
+  [style*="background: rgb(245, 90, 66)"],
+  [style*="background-color: #f55a42"] {
+    color: #f5c542 !important; background-color: #f5c542 !important;
+  }
+  [style*="background: #f5c542"],
+  [style*="background-color: #f5c542"] { color: #0b1220 !important; }
+
+  /* ── Remove Framer badge ────────────────────────────────────────────────── */
+  #__framer-badge-container,
+  [data-framer-generated],
+  a[href*="framer.com"][style*="fixed"],
+  a[href*="framer.com"][style*="position:fixed"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* ── Chat widget ─────────────────────────────────────────────────────────── */
+  #af-chat-bubble{position:fixed;bottom:24px;right:24px;z-index:9999;width:52px;height:52px;background:#f5c542;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s}
+  #af-chat-bubble:hover{transform:scale(1.08)}
+  #af-chat-bubble svg{width:24px;height:24px;fill:#0b1220}
+  #af-chat-panel{position:fixed;bottom:88px;right:24px;z-index:9998;width:340px;max-width:calc(100vw - 48px);background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden}
+  #af-chat-panel.open{display:flex}
+  #af-chat-header{padding:14px 16px;background:#0e1a2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between}
+  #af-chat-header span{font-size:.9rem;font-weight:600;color:#fff;font-family:-apple-system,sans-serif}
+  #af-chat-header button{background:none;border:none;color:#9999b8;cursor:pointer;font-size:1.1rem;line-height:1;padding:0}
+  #af-chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:180px;max-height:320px}
+  .af-msg{max-width:85%;padding:8px 12px;border-radius:12px;font-size:.85rem;line-height:1.5;font-family:-apple-system,sans-serif}
+  .af-msg.bot{background:#1e2d47;color:#e4e4f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .af-msg.user{background:#f5c542;color:#0b1220;align-self:flex-end;border-bottom-right-radius:4px;font-weight:500}
+  #af-chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
+  #af-chat-input{flex:1;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;color:#e4e4f0;font-size:.85rem;font-family:-apple-system,sans-serif;outline:none}
+  #af-chat-input:focus{border-color:#f5c542}
+  #af-chat-send{background:#f5c542;color:#0b1220;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
+  #af-chat-send:disabled{opacity:.5;cursor:not-allowed}
+</style>
+<div id="af-chat-bubble" onclick="document.getElementById('af-chat-panel').classList.toggle('open')" title="Chat with us">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+</div>
+<div id="af-chat-panel">
+  <div id="af-chat-header">
+    <span>💬 AuraFlux Chat</span>
+    <button onclick="document.getElementById('af-chat-panel').classList.remove('open')" aria-label="Close">✕</button>
+  </div>
+  <div id="af-chat-messages">
+    <div class="af-msg bot">Hi! I'm the AuraFlux assistant. Ask me anything about the platform, pricing, or how it works.</div>
+  </div>
+  <div id="af-chat-input-row">
+    <input id="af-chat-input" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')afSend()">
+    <button id="af-chat-send" onclick="afSend()">Send</button>
+  </div>
+</div>
+<script>
+var afHistory=[];
+async function afSend(){
+  var input=document.getElementById('af-chat-input');
+  var msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  var msgs=document.getElementById('af-chat-messages');
+  var send=document.getElementById('af-chat-send');
+  msgs.innerHTML+=('<div class="af-msg user">'+msg.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
+  msgs.scrollTop=msgs.scrollHeight;
+  send.disabled=true;
+  afHistory.push({role:'user',content:msg});
+  try{
+    var res=await fetch('https://auraflux-api.onrender.com/api/public/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,history:afHistory})});
+    var data=await res.json();
+    var reply=data.reply||'Sorry, something went wrong.';
+    afHistory.push({role:'assistant',content:reply});
+    msgs.innerHTML+=('<div class="af-msg bot">'+reply.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
+  }catch(e){
+    msgs.innerHTML+=('<div class="af-msg bot">Something went wrong. Call or text us at <a href="tel:+15716002835" style="color:#f5c542">+1 (571) 600-2835</a></div>');
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+  send.disabled=false;
+}
+</script>
+<script id="af-router-intercept">
+(function() {
+  var owned = ["/pricing","/privacy","/terms","/aup","/cookies","/refunds","/roadmap","/contact"];
+  function normalize(p) { return (p || '/').split('?')[0].replace(/\/+$/, '') || '/'; }
+  function shouldIntercept(url) {
+    try {
+      var p = normalize(new URL(url, location.href).pathname);
+      return owned.indexOf(p) !== -1;
+    } catch(e) { return false; }
+  }
+  function go(url) { window.location.href = url; }
+
+  // Override history API used by Framer's router
+  ['pushState','replaceState'].forEach(function(fn) {
+    var orig = history[fn].bind(history);
+    history[fn] = function(state, title, url) {
+      if (url && shouldIntercept(url)) return go(url);
+      return orig(state, title, url);
+    };
+  });
+
+  // Intercept <a> clicks before Framer can handle them
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && shouldIntercept(href)) {
+      e.preventDefault(); e.stopPropagation();
+      go(href);
+    }
+  }, true);
+})();
+</script>
+<style id="af-site-overrides">
+  /* ── Brand color corrections ──────────────────────────────────────────────
+   * Framer published with blue (#0B50EA) CTAs and orange-red (#F55A42) accents.
+   * Override to match app: Gold #F5C542 on Dark Navy #0B1220.
+   * ──────────────────────────────────────────────────────────────────────── */
+  :root {
+    --token-ac5df8f7-9a2e-4e31-acfd-df1fcb1cda97: #f5c542 !important;
+    --token-e54c8a02-e002-406e-be22-6ac7ad69bc80: rgba(245,197,66,0.25) !important;
+    --21h8s6: #f5c542 !important;
+    --framer-link-text-color: #f5c542 !important;
+  }
+  [style*="background: rgb(11, 80, 234)"],
+  [style*="background-color: rgb(11, 80, 234)"],
+  [style*="background: #0b50ea"],
+  [style*="background-color: #0b50ea"] {
+    background: #f5c542 !important; background-color: #f5c542 !important; color: #0b1220 !important;
+  }
+  [style*="color: rgb(11, 80, 234)"],
+  [style*="color: #0b50ea"],
+  [style*="color: #09f"],
+  [style*="color: rgb(0, 153, 255)"] { color: #f5c542 !important; }
+  [style*="color: rgb(245, 90, 66)"],
+  [style*="color: #f55a42"],
+  [style*="background: rgb(245, 90, 66)"],
+  [style*="background-color: #f55a42"] {
+    color: #f5c542 !important; background-color: #f5c542 !important;
+  }
+  [style*="background: #f5c542"],
+  [style*="background-color: #f5c542"] { color: #0b1220 !important; }
+
+  /* ── Remove Framer badge ────────────────────────────────────────────────── */
+  #__framer-badge-container,
+  [data-framer-generated],
+  a[href*="framer.com"][style*="fixed"],
+  a[href*="framer.com"][style*="position:fixed"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* ── Chat widget ─────────────────────────────────────────────────────────── */
+  #af-chat-bubble{position:fixed;bottom:24px;right:24px;z-index:9999;width:52px;height:52px;background:#f5c542;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s}
+  #af-chat-bubble:hover{transform:scale(1.08)}
+  #af-chat-bubble svg{width:24px;height:24px;fill:#0b1220}
+  #af-chat-panel{position:fixed;bottom:88px;right:24px;z-index:9998;width:340px;max-width:calc(100vw - 48px);background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden}
+  #af-chat-panel.open{display:flex}
+  #af-chat-header{padding:14px 16px;background:#0e1a2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between}
+  #af-chat-header span{font-size:.9rem;font-weight:600;color:#fff;font-family:-apple-system,sans-serif}
+  #af-chat-header button{background:none;border:none;color:#9999b8;cursor:pointer;font-size:1.1rem;line-height:1;padding:0}
+  #af-chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:180px;max-height:320px}
+  .af-msg{max-width:85%;padding:8px 12px;border-radius:12px;font-size:.85rem;line-height:1.5;font-family:-apple-system,sans-serif}
+  .af-msg.bot{background:#1e2d47;color:#e4e4f0;align-self:flex-start;border-bottom-left-radius:4px}
+  .af-msg.user{background:#f5c542;color:#0b1220;align-self:flex-end;border-bottom-right-radius:4px;font-weight:500}
+  #af-chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
+  #af-chat-input{flex:1;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;color:#e4e4f0;font-size:.85rem;font-family:-apple-system,sans-serif;outline:none}
+  #af-chat-input:focus{border-color:#f5c542}
+  #af-chat-send{background:#f5c542;color:#0b1220;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
+  #af-chat-send:disabled{opacity:.5;cursor:not-allowed}
+</style>
+<div id="af-chat-bubble" onclick="document.getElementById('af-chat-panel').classList.toggle('open')" title="Chat with us">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+</div>
+<div id="af-chat-panel">
+  <div id="af-chat-header">
+    <span>💬 AuraFlux Chat</span>
+    <button onclick="document.getElementById('af-chat-panel').classList.remove('open')" aria-label="Close">✕</button>
+  </div>
+  <div id="af-chat-messages">
+    <div class="af-msg bot">Hi! I'm the AuraFlux assistant. Ask me anything about the platform, pricing, or how it works.</div>
+  </div>
+  <div id="af-chat-input-row">
+    <input id="af-chat-input" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')afSend()">
+    <button id="af-chat-send" onclick="afSend()">Send</button>
+  </div>
+</div>
+<script>
+var afHistory=[];
+async function afSend(){
+  var input=document.getElementById('af-chat-input');
+  var msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  var msgs=document.getElementById('af-chat-messages');
+  var send=document.getElementById('af-chat-send');
+  msgs.innerHTML+=('<div class="af-msg user">'+msg.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
+  msgs.scrollTop=msgs.scrollHeight;
+  send.disabled=true;
+  afHistory.push({role:'user',content:msg});
+  try{
+    var res=await fetch('https://auraflux-api.onrender.com/api/public/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,history:afHistory})});
+    var data=await res.json();
+    var reply=data.reply||'Sorry, something went wrong.';
+    afHistory.push({role:'assistant',content:reply});
+    msgs.innerHTML+=('<div class="af-msg bot">'+reply.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</div>');
+  }catch(e){
+    msgs.innerHTML+=('<div class="af-msg bot">Something went wrong. Call or text us at <a href="tel:+15716002835" style="color:#f5c542">+1 (571) 600-2835</a></div>');
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+  send.disabled=false;
+}
+</script>
+<script id="af-router-intercept">
+(function() {
+  var owned = ["/pricing","/privacy","/terms","/aup","/cookies","/refunds","/roadmap","/contact"];
+  function normalize(p) { return (p || '/').split('?')[0].replace(/\/+$/, '') || '/'; }
+  function shouldIntercept(url) {
+    try {
+      var p = normalize(new URL(url, location.href).pathname);
+      return owned.indexOf(p) !== -1;
+    } catch(e) { return false; }
+  }
+  function go(url) { window.location.href = url; }
+
+  // Override history API used by Framer's router
+  ['pushState','replaceState'].forEach(function(fn) {
+    var orig = history[fn].bind(history);
+    history[fn] = function(state, title, url) {
+      if (url && shouldIntercept(url)) return go(url);
+      return orig(state, title, url);
+    };
+  });
+
+  // Intercept <a> clicks before Framer can handle them
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && shouldIntercept(href)) {
+      e.preventDefault(); e.stopPropagation();
+      go(href);
+    }
+  }, true);
+})();
 </script></head>
 <body>
 	<script async src="https://events.framer.com/script?v=2" data-fid="f32315104dfd4a00425c88d837ae8fbde013a4bac40e8822845a0dc56b2f1269" data-no-nt></script>

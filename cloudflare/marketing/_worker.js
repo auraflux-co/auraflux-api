@@ -17,7 +17,7 @@ const FRAMER_ORIGIN = 'https://4a98e8ea.auraflux-marketing.pages.dev';
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // All paths owned by the worker — no Framer proxy, no SPA router interception needed.
-const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
+const WORKER_OWNED_PATHS = ['/', '/pricing', '/about', '/system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -174,9 +174,11 @@ const FRAMER_FOOTER = `__FRAMER_FOOTER__`;
 const FALLBACK_NAV = `<nav style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08)">
   <a href="/" style="font-size:1.2rem;font-weight:700;color:#f5c542;letter-spacing:.03em;text-decoration:none">AuraFlux</a>
   <div style="display:flex;gap:24px;align-items:center">
+    <a href="/system" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our System</a>
     <a href="/pricing" style="font-size:.9rem;color:#9999b8;text-decoration:none">Pricing</a>
-    <a href="/roadmap" style="font-size:.9rem;color:#9999b8;text-decoration:none">Roadmap</a>
+    <a href="/about" style="font-size:.9rem;color:#9999b8;text-decoration:none">About</a>
     <a href="/contact" style="font-size:.9rem;color:#9999b8;text-decoration:none">Contact</a>
+    <a href="https://app.auraflux.co/sign-up" style="background:#f5c542;color:#0b1220;padding:8px 20px;border-radius:8px;font-size:.9rem;font-weight:600;text-decoration:none">Get Started</a>
   </div>
 </nav>`;
 
@@ -229,6 +231,8 @@ const PAGES = {
   '/':        `__PAGE_HOME__`,
   '/blog':    `__PAGE_BLOG__`,
   '/pricing': `__PAGE_PRICING__`,
+  '/about':   `__PAGE_ABOUT__`,
+  '/system':  `__PAGE_SYSTEM__`,
   '/privacy': LEGAL_SHELL(
     'Privacy Policy',
     'How AuraFlux collects, uses, and protects your personal information.',
@@ -445,6 +449,17 @@ const PAGES = {
 
 };
 
+// ── Security headers ──────────────────────────────────────────────────────────
+
+function addSecurityHeaders(headers) {
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('X-Frame-Options', 'DENY');
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  headers.set('X-XSS-Protection', '1; mode=block');
+  return headers;
+}
+
 // ── Request handler ───────────────────────────────────────────────────────────
 
 export default {
@@ -455,6 +470,11 @@ export default {
     // ── Contact form POST ──────────────────────────────────────────────────
     if (request.method === 'POST' && path === '/api/contact') {
       return handleContactForm(request);
+    }
+
+    // ── /blog redirect — no blog content yet ──────────────────────────────
+    if (path === '/blog') {
+      return Response.redirect('https://auraflux.co/', 301);
     }
 
     // ── Pages served directly from worker (no Framer dependency) ──────────
@@ -484,15 +504,12 @@ export default {
         );
       }
 
-      return new Response(html, {
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          // No CDN caching — always serve fresh so content updates are instant
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'X-Frame-Options': 'SAMEORIGIN',
-          'X-Content-Type-Options': 'nosniff',
-        },
-      });
+      const headers = addSecurityHeaders(new Headers({
+        'Content-Type': 'text/html; charset=utf-8',
+        // No CDN caching — always serve fresh so content updates are instant
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      }));
+      return new Response(html, { headers });
     }
 
     // ── App redirects ──────────────────────────────────────────────────────
@@ -510,7 +527,7 @@ export default {
 <p>The page you were looking for doesn't exist. <a href="/">Return home →</a></p>`
     ), {
       status: 404,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      headers: addSecurityHeaders(new Headers({ 'Content-Type': 'text/html; charset=utf-8' })),
     });
   },
 };
@@ -530,10 +547,11 @@ async function handleContactForm(request) {
       return json({ ok: false, error: 'email and message are required' }, 400);
     }
 
-    const resp = await fetch(`${API_ORIGIN}/public/contact`, {
+    const resp = await fetch(`${API_ORIGIN}/api/public/contact`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, message, source: 'auraflux.co' }),
+      signal: AbortSignal.timeout(8000),
     });
 
     const result = await resp.json().catch(() => ({ ok: resp.ok }));

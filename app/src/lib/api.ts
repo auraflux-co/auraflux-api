@@ -3,7 +3,7 @@
  * Uses the user's Clerk session token for auth on all requests.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
 
 export class ApiError extends Error {
   constructor(
@@ -889,7 +889,7 @@ export async function disconnectPlatform(platform: SocialPlatform, token?: strin
 
 /** Returns the OAuth redirect URL to connect a platform. Opens in same window. */
 export function getSocialConnectUrl(platform: SocialPlatform): string {
-  const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const base = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
   return `${base}/social/connect/${platform}`;
 }
 

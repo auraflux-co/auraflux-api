@@ -242,13 +242,9 @@ function CreditsPageInner() {
 
       {/* Jobs paused banner */}
       {isExhausted && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 space-y-1">
-          <p className="text-sm font-semibold text-destructive">Jobs paused — no credits remaining</p>
-          <p className="text-xs text-destructive/80">
-            Your monthly allowance and any top-up packs are exhausted.{' '}
-            <a href="#buy-credits" className="underline font-medium">Buy a Credit Top-Up pack</a>{' '}
-            or enable auto top-up below to resume automatically.
-          </p>
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 text-destructive px-4 py-3 flex items-center justify-between mb-4">
+          <span className="text-sm font-medium">Your credits are exhausted — production is paused.</span>
+          <a href="#buy-credits" className="text-sm font-semibold underline ml-4">Buy credits →</a>
         </div>
       )}
 

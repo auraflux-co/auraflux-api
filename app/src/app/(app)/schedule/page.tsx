@@ -147,7 +147,7 @@ export default function SchedulePage() {
     <PageShell maxWidth="3xl">
       <PageHeader
         title="Schedule"
-        subtitle="Upcoming job starts and deferred publishes. Cron checks every 5 minutes."
+        subtitle="Upcoming job starts and deferred publishes. Jobs start within a few minutes of their scheduled time."
         badge={<FlowNetwork size={20} className="text-primary shrink-0" />}
       />
 

@@ -8,7 +8,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 
-const API_BASE       = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE       = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
 const ACCEPTED_TYPES = '.mp4,.mov,.avi,.webm,.mkv,.m4v';
 const MAX_GB         = 2;
 

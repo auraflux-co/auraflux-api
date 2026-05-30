@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { formatUserError } from '@/lib/job-labels';
 import { PageHeader, PageShell } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   listTemplates,
   updateTemplate,
@@ -49,6 +50,9 @@ function TemplatesPageContent() {
   const [editTime, setEditTime] = useState('09:00');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string; description: string; confirmLabel?: string; destructive?: boolean; onConfirm: () => void;
+  } | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -124,8 +128,17 @@ function TemplatesPageContent() {
     }
   }
 
-  async function handleDelete(tpl: JobTemplate) {
-    if (!confirm(`Delete template "${tpl.name}"?`)) return;
+  function handleDelete(tpl: JobTemplate) {
+    setConfirmDialog({
+      title: 'Delete template',
+      description: `"${tpl.name}" will be permanently deleted and cannot be recovered.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: () => { setConfirmDialog(null); void doDelete(tpl); },
+    });
+  }
+
+  async function doDelete(tpl: JobTemplate) {
     setSaving(tpl.id);
     try {
       const token = await getToken();
@@ -315,6 +328,18 @@ function TemplatesPageContent() {
             </div>
           ))}
         </div>
+      )}
+
+      {confirmDialog && (
+        <ConfirmDialog
+          open={true}
+          title={confirmDialog.title}
+          description={confirmDialog.description}
+          confirmLabel={confirmDialog.confirmLabel}
+          destructive={confirmDialog.destructive}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
       )}
     </PageShell>
   );

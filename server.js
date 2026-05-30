@@ -7336,6 +7336,10 @@ const createAdminRouter = require('./lib/routes/admin');
 const adminRouter = createAdminRouter({ _healthCache: _adminHealthCacheStub, BUILD_INFO });
 app.use(adminRouter);
 
+// ── Admin Assistant (CPD-411) ─────────────────────────────────────────────────
+const adminAssistantRoutes = require('./lib/routes/admin_assistant');
+app.use('/api/admin', adminAssistantRoutes);
+
 // ── Dashboard API routes (CPD-177 / frontend api.ts surface) ─────
 // These route files define the paths the Next.js dashboard calls directly
 // (no /v1 prefix). All require Clerk auth — must come after clerkInit().

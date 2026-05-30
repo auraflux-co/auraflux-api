@@ -33,7 +33,7 @@ const PLATFORM_ICONS: Record<string, string> = {
 };
 
 const ADDON_LABELS: Record<string, string> = {
-  tts:            'ElevenLabs TTS',
+  tts:            'AI Voiceover',
   heygen:         'AI Avatar',
   shoppable:      'Shoppable tagging',
   wan:            'Video generation',

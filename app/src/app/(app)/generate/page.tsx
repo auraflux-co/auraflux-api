@@ -39,6 +39,10 @@ export default function GeneratePage() {
   const [error, setError]           = useState<string | null>(null);
   const pollTimer                   = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  useEffect(() => {
+    return () => stopPolling();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   function stopPolling() {
     if (pollTimer.current) {
       clearInterval(pollTimer.current);
