@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-30 v1.0.814 (Cursor — feat: run_10 test matrix — FFmpeg effects + GPT-4o QA gates + guided tier + template capture; fix: branding disabled in all test scripts (no asset uploaded)
 **Last Updated:** 2026-05-30 v1.0.812 (Cursor — fix: health check returns 503 for missing API keys — blocks Render deploy; keys now report as warnings only, service health is independent of feature key presence
 **Last Updated:** 2026-05-30 v1.0.810 (Cursor — fix: SourceLibraryPicker missing multiClipMode prop — Next.js build was exiting with status 1 on Render; prop added to Props interface
 **Last Updated:** 2026-05-30 v1.0.808 (Cursor — fix: commit 4 missing files never pushed to git — smart_crop.js (CPD-440), highlight_detector.js (CPD-441), clip-order-tray.tsx (CPD-405), 023_brand_intro_outro_cards.sql (CPD-442); these were local-only and causing Render deploy failures

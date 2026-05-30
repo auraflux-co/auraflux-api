@@ -57,14 +57,14 @@ HEADERS = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/js
 
 FEATURE_MATRIX = [
     {
-        'label':    'TTS + Branding',
-        'addOns':   {'tts': {'active': True}, 'branding': {'active': True},
+        'label':    'TTS only',
+        'addOns':   {'tts': {'active': True}, 'branding': {'active': False},
                      'dynamicOverlays': {'active': False}, 'thumbnailApproval': {'active': False}},
         'thumb_approval': False,
     },
     {
-        'label':    'Branding + Transitions',
-        'addOns':   {'tts': {'active': False}, 'branding': {'active': True},
+        'label':    'Transitions only',
+        'addOns':   {'tts': {'active': False}, 'branding': {'active': False},
                      'dynamicOverlays': {'active': True}, 'thumbnailApproval': {'active': False}},
         'thumb_approval': False,
     },
@@ -76,13 +76,13 @@ FEATURE_MATRIX = [
     },
     {
         'label':    'Branding + ThumbApproval',
-        'addOns':   {'tts': {'active': False}, 'branding': {'active': True},
+        'addOns':   {'tts': {'active': False}, 'branding': {'active': False},
                      'dynamicOverlays': {'active': False}, 'thumbnailApproval': {'active': True}},
         'thumb_approval': True,
     },
     {
         'label':    'TTS + Branding + Transitions',
-        'addOns':   {'tts': {'active': True}, 'branding': {'active': True},
+        'addOns':   {'tts': {'active': True}, 'branding': {'active': False},
                      'dynamicOverlays': {'active': True}, 'thumbnailApproval': {'active': False}},
         'thumb_approval': False,
     },
@@ -100,7 +100,7 @@ FEATURE_MATRIX = [
     },
     {
         'label':    'ALL features',
-        'addOns':   {'tts': {'active': True}, 'branding': {'active': True},
+        'addOns':   {'tts': {'active': True}, 'branding': {'active': False},
                      'dynamicOverlays': {'active': True}, 'thumbnailApproval': {'active': True}},
         'thumb_approval': True,
     },

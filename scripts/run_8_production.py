@@ -79,7 +79,7 @@ CLIP_INVENTORY = [
 # ── addOns (clips jobs) ───────────────────────────────────────────────────────
 
 ADD_ONS_CLIPS = {
-    'branding':           {'active': True},
+    'branding':           {'active': False},  # no brand asset uploaded — disabled until customer uploads logo
     'dynamicOverlays':    {'active': True},
     'thumbnailApproval':  {'active': True},
 }
