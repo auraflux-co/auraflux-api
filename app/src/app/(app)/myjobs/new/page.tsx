@@ -149,86 +149,86 @@ const FEATURES: Feature[] = [
     default: true, formFactors: ['long'], hasConfig: true, category: 'content', status: 'live',
   },
   {
-    id: 'tts', label: 'AI voiceover',
+    id: 'tts', label: 'Add AI voiceover',
     description: 'AI voice narrates the generated script',
-    tooltip: 'A professional AI voice reads your script in the video.',
+    tooltip: 'A professional AI voice reads your script — no recording needed.',
     outputImpact: 'A professional voice reads your script — no recording needed.',
     default: false, formFactors: ['long'], requires: ['script'], hasConfig: true, advanced: true,
     category: 'content', status: 'live',
   },
   {
-    id: 'commentary', label: 'Commentary style',
+    id: 'commentary', label: 'Add commentary overlay',
     description: 'Narrative text commentary timed to footage',
-    tooltip: 'Text overlays appear timed to key moments.',
+    tooltip: 'Structured text commentary appears on screen, timed to the footage — like a sports broadcast overlay.',
     outputImpact: 'Commentary text appears timed to key moments.',
     default: false, formFactors: ['long'], hasConfig: true, advanced: true,
     category: 'content', status: 'live',
   },
   {
-    id: 'generation', label: 'Video generation',
+    id: 'generation', label: 'Generate missing footage',
     description: 'AI-generated clips fill missing footage',
-    tooltip: 'Where source footage is missing, AI generates matching clips.',
+    tooltip: 'Where your source footage has gaps, AI generates matching video clips to fill them.',
     outputImpact: 'Gaps in footage are filled with generated clips.',
     default: false, formFactors: ['long'], hasConfig: true, advanced: true,
     category: 'content', status: 'live',
   },
   {
-    id: 'scene_select', label: 'Smart clip selection',
+    id: 'scene_select', label: 'Auto-select clips',
     description: 'AI picks the best clips from your source',
-    tooltip: 'Only the most relevant and energetic segments are used.',
+    tooltip: 'AI scores every clip for energy and relevance, then picks only the best segments — no manual trimming needed.',
     outputImpact: 'Only the most relevant segments are used — weak clips are cut.',
     default: true, formFactors: ['long', 'short'], hasConfig: false, category: 'editing', status: 'live',
   },
   {
     id: 'burn_images', label: 'Add images',
     description: 'Place images into your video',
-    tooltip: 'Embed images as timed segments in the assembled video.',
+    tooltip: 'Embed images as timed segments in the assembled video at any position.',
     outputImpact: 'Your images appear in the video at the position and duration you specify.',
     default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true,
     category: 'editing', status: 'live',
   },
   {
-    id: 'dynamic', label: 'Animated overlays',
+    id: 'dynamic', label: 'Add animated overlays',
     description: 'Animated text, scoreboards, and motion graphics',
     tooltip: 'Live data overlays — scores, stats, headlines — animated in your brand style.',
     outputImpact: 'Live data overlays are animated into the video using your brand style.',
     default: false, formFactors: ['long', 'short'], hasConfig: false, category: 'effects', status: 'live',
   },
   {
-    id: 'branding', label: 'Branded intro/outro',
+    id: 'branding', label: 'Add branded intro/outro',
     description: 'Add your brand style across the video',
-    tooltip: 'Your logo, colour palette, and branded intro/outro are applied consistently.',
+    tooltip: 'Opens and closes your video with a branded sequence — your logo, colours, and any custom stinger you\'ve set up.',
     outputImpact: 'Your brand logo, colour palette, and lower-third templates are applied.',
     default: true, formFactors: ['long', 'short'], hasConfig: false, category: 'brand', status: 'live',
   },
   {
-    id: 'lower_thirds', label: 'Lower thirds',
-    description: 'Auto speaker name plates on each clip segment',
-    tooltip: 'Auto speaker name plates on each clip segment',
+    id: 'lower_thirds', label: 'Add speaker captions',
+    description: 'Name plates on screen when a speaker appears',
+    tooltip: 'Adds a name caption to the bottom of the screen for each clip segment — like a news broadcast lower third.',
     outputImpact: 'Speaker name plates appear on each clip segment.',
     default: false, formFactors: ['long', 'short'], hasConfig: false, category: 'effects', status: 'live', requires: [],
   },
   {
-    id: 'chapter_markers', label: 'YouTube chapters',
+    id: 'chapter_markers', label: 'Add chapter markers',
     description: 'Auto timestamp chapters in YouTube description',
-    tooltip: 'Auto timestamp chapters in YouTube description',
+    tooltip: 'When you publish to YouTube, chapter markers are added automatically so viewers can skip to any section.',
     outputImpact: 'Auto-generated timestamp chapters are added to the YouTube description.',
     default: false, formFactors: ['long'], hasConfig: false, category: 'brand', status: 'live', requires: [],
   },
   {
-    id: 'scene_transitions', label: 'Scene transitions',
-    description: 'Smooth crossfade between clips',
-    tooltip: 'Smooth crossfade between clips',
+    id: 'scene_transitions', label: 'Add scene transitions',
+    description: 'Smooth visual blend between clips',
+    tooltip: 'Adds a smooth visual blend between each clip so the video doesn\'t jump-cut.',
     outputImpact: 'Smooth crossfades are applied between every clip.',
     default: false, formFactors: ['long', 'short'], hasConfig: false, category: 'editing', status: 'live', requires: [],
   },
 ];
 
 const CATEGORY_BOXES: CategoryBox[] = [
-  { id: 'content',  label: 'Content & Script',  description: 'Write, voice, and narrate your video', icon: '✍️', formFactors: ['long'] },
-  { id: 'editing',  label: 'Editing & Pacing',  description: 'Smart cuts, clip selection, and timing', icon: '✂️', formFactors: ['long', 'short'] },
-  { id: 'effects',  label: 'Effects & Audio',   description: 'Overlays, animations, and sound',       icon: '✨', formFactors: ['long', 'short'] },
-  { id: 'brand',    label: 'Design & Brand',    description: 'Thumbnails, intros, and brand identity', icon: '🎨', formFactors: ['long', 'short'] },
+  { id: 'content',  label: 'Content & Script',  description: 'Script writing, AI voiceover, and commentary', icon: '✍️', formFactors: ['long'] },
+  { id: 'editing',  label: 'Editing & Pacing',  description: 'Smart cuts, clip selection, and timing',       icon: '✂️', formFactors: ['long', 'short'] },
+  { id: 'effects',  label: 'Effects & Captions', description: 'Overlays, animations, and on-screen text',    icon: '✨', formFactors: ['long', 'short'] },
+  { id: 'brand',    label: 'Design & Brand',    description: 'Thumbnails, intros, and brand identity',       icon: '🎨', formFactors: ['long', 'short'] },
 ];
 
 const ALL_SECTIONS = ['type', 'source', 'format', 'platform', 'production', 'schedule'];
@@ -412,7 +412,19 @@ function JobBuilderPageInner() {
   // ─── Feature helpers ───────────────────────────────────────────────────────
 
   function toggleFeature(id: string) {
-    setFeatures((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setFeatures((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) {
+        n.delete(id);
+        // Cascade: deselect anything that required this feature
+        for (const f of FEATURES) {
+          if (f.requires?.includes(id) && n.has(f.id)) n.delete(f.id);
+        }
+      } else {
+        n.add(id);
+      }
+      return n;
+    });
   }
   function setFeatureCfg(fid: string, key: string, value: string) {
     setFeatureConfig((prev) => ({ ...prev, [fid]: { ...(prev[fid] ?? {}), [key]: value } }));
@@ -993,13 +1005,16 @@ function JobBuilderPageInner() {
                   {/* Production features — 4 expandable category boxes (CPD-420) */}
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">AI production tools</p>
+                    {!formFactor ? (
+                      <p className="text-sm text-muted-foreground">Select a format above to see available tools.</p>
+                    ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {CATEGORY_BOXES.map((cat) => (
                         <FeatureCategoryBox
                           key={cat.id}
                           category={cat}
                           features={FEATURES.filter(
-                            (f) => f.category === cat.id && f.status === 'live' && !!formFactor && f.formFactors.includes(formFactor),
+                            (f) => f.category === cat.id && f.status === 'live' && f.formFactors.includes(formFactor),
                           )}
                           allFeatures={FEATURES}
                           selected={features}
@@ -1007,6 +1022,7 @@ function JobBuilderPageInner() {
                         />
                       ))}
                     </div>
+                    )}
                     {/* Config panels for enabled features that have configuration */}
                     {Array.from(features)
                       .map((fid) => FEATURES.find((f) => f.id === fid))

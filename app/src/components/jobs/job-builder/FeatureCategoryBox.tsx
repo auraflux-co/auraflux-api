@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 // Minimal shape the box needs — structural compatibility with page.tsx Feature
@@ -36,7 +36,7 @@ interface FeatureCategoryBoxProps {
  * Collapsed state shows a summary of selected features.
  * CPD-420
  */
-export function FeatureCategoryBox({
+function FeatureCategoryBoxInner({
   category,
   features,
   allFeatures,
@@ -44,26 +44,39 @@ export function FeatureCategoryBox({
   onToggle,
   defaultExpanded = true,
 }: FeatureCategoryBoxProps) {
-  const labelFor = (id: string) =>
-    allFeatures.find((f) => f.id === id)?.label ?? id;
   const [expanded, setExpanded] = useState(defaultExpanded);
 
-  const selectedInCategory = features.filter((f) => selected.has(f.id));
-  const selectedCount      = selectedInCategory.length;
-  const collapsedSummary   = selectedCount === 0
-    ? 'None selected'
-    : selectedInCategory.map((f) => f.label).join(', ');
+  const labelFor = (id: string) =>
+    allFeatures.find((f) => f.id === id)?.label ?? id;
+
+  const selectedInCategory = useMemo(
+    () => features.filter((f) => selected.has(f.id)),
+    [features, selected],
+  );
+  const selectedCount = selectedInCategory.length;
+
+  const collapsedSummary = useMemo(
+    () => selectedCount === 0
+      ? 'No tools selected yet'
+      : selectedInCategory.map((f) => f.label).join(', '),
+    [selectedCount, selectedInCategory],
+  );
+
+  const panelId = `features-panel-${category.id}`;
 
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       {/* Header row — click to expand/collapse */}
       <button
         type="button"
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        aria-label={`Toggle ${category.label} features`}
         onClick={() => setExpanded((prev) => !prev)}
         className="w-full flex items-center justify-between px-3 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-base leading-none shrink-0">{category.icon}</span>
+          <span className="text-base leading-none shrink-0" aria-hidden="true">{category.icon}</span>
           <div className="min-w-0">
             <p className="text-xs font-semibold">{category.label}</p>
             <p className="text-[10px] text-muted-foreground">{category.description}</p>
@@ -77,19 +90,21 @@ export function FeatureCategoryBox({
           )}
           {selectedCount > 0 && (
             <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
-              {selectedCount} on
+              {selectedCount} active
             </span>
           )}
-          <span className="text-[11px] text-muted-foreground">{expanded ? '↑' : '↓'}</span>
+          <span className="text-[11px] text-muted-foreground" aria-hidden="true">
+            {expanded ? '↑' : '↓'}
+          </span>
         </div>
       </button>
 
       {/* Feature chip list */}
-      {expanded && (
+      <div id={panelId} hidden={!expanded}>
         <div className="px-3 py-2.5 border-t border-border">
           {features.length === 0 ? (
             <p className="text-[11px] text-muted-foreground italic">
-              No features available for this format
+              No tools available for this format
             </p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
@@ -98,13 +113,17 @@ export function FeatureCategoryBox({
                 const depUnmet = (feat.requires?.length ?? 0) > 0
                   && feat.requires!.some((dep) => !selected.has(dep));
 
+                const chipTooltip = depUnmet && !on && feat.requires?.length
+                  ? `Enable "${feat.requires.map(labelFor).join(' + ')}" first`
+                  : feat.tooltip;
+
                 return (
                   <button
                     key={feat.id}
                     type="button"
-                    title={depUnmet && !on && feat.requires?.length
-                      ? `Enable "${feat.requires.map(labelFor).join(' + ')}" first`
-                      : feat.tooltip}
+                    title={chipTooltip}
+                    aria-pressed={on}
+                    aria-describedby={`tooltip-${feat.id}`}
                     onClick={() => {
                       if (depUnmet && !on) return;
                       onToggle(feat.id);
@@ -120,7 +139,7 @@ export function FeatureCategoryBox({
                   >
                     {feat.label}
                     {feat.hasConfig && on && (
-                      <span className="opacity-60 text-[9px]">⚙</span>
+                      <span className="opacity-60 text-[9px]" aria-label="has settings" title="This feature has settings you can configure">⚙</span>
                     )}
                     {depUnmet && !on && feat.requires && feat.requires.length > 0 && (
                       <span className="text-[9px] opacity-60 ml-0.5">
@@ -133,7 +152,28 @@ export function FeatureCategoryBox({
             </div>
           )}
         </div>
-      )}
+      </div>
+
+      {/* SR-only tooltip text for each chip */}
+      <div className="sr-only" aria-hidden="true">
+        {features.map((feat) => (
+          <span key={feat.id} id={`tooltip-${feat.id}`}>{feat.tooltip}</span>
+        ))}
+      </div>
     </div>
   );
 }
+
+// Custom memo comparator — only re-render if a feature in THIS box changed selection state
+export const FeatureCategoryBox = memo(FeatureCategoryBoxInner, (prev, next) => {
+  if (
+    prev.category !== next.category ||
+    prev.features !== next.features ||
+    prev.allFeatures !== next.allFeatures ||
+    prev.onToggle !== next.onToggle
+  ) return false;
+  for (const feature of next.features) {
+    if (prev.selected.has(feature.id) !== next.selected.has(feature.id)) return false;
+  }
+  return true;
+});
