@@ -1,344 +1,355 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-05-29 v1.0.789 (Cursor — fix(cpd-427/cpd-428): wire remaining blockers for Run 9 — dynamicOverlays.active now enables scene_transitions xfade in assembly.js; thumbnail_ext intercept moved from portal4→portal3b so thumbnailApproval fires for clips jobs where portal4 is skipped)
-**Last Updated:** 2026-05-29 v1.0.788 (Cursor — feat(cpd-426/cpd-315): branding addOn now gates chrome overlay — addOns.branding.active=false skips logo burn in both TTS and non-TTS paths; cleanVideoUrl persisted to state.savedOutputs in all 3 assembly paths (standard/WAN/COMPACT) for feature re-processing without re-fetch; _formatJob exposes addOns, grade, gradeResult, cleanVideoUrl; test plan revised: feature rotation matrix, dashboard upload as source, CPD-426/427/428/429 created)
-**Last Updated:** 2026-05-29 v1.0.786 (Cursor — fix(phase3/startup): promoteAssembledJobs → staged not published, run grader on promotion; poll timeout 20→30 min; job 1 timed out because v1.0.786 deploy restarted Render mid-job)
-**Last Updated:** 2026-05-29 v1.0.785 (Cursor — fix(cpd-423/phase3): serial job execution in run_8_production.py — batch submit + 90s delay caused concurrent Twitch GQL rate limiting (~25% fail); now submits 1 job, waits for complete, then submits next; removed 4 sub-15s clips that fail portal0; Phase 3 run started: 26 clips, serial, guided account)
-**Last Updated:** 2026-05-29 v1.0.784 (Cursor — fix(ui/cpd-315): job spec card accuracy for clips — hide portal pipeline from customer view (superadmin only); thumbnailApproval label fix; clips jobs no longer show misleading durationMins/formFactor from creation-time defaults)
-**Last Updated:** 2026-05-29 v1.0.782 (Cursor — fix(phase3): switch run_8_production.py to guided account (gregory.robert.c@gmail.com); API key created for user_3DeZEr79TWcmvEvCMlu8lmM1FdU; 13 Phase 3 videos migrated to staged review queue; next runs go directly to guided account)
-**Last Updated:** 2026-05-29 v1.0.780 (Cursor — fix(phase3/run8): 90s sequential delay between Twitch clip submissions; add --offset N param; first batch: 3/4 grade 100/100)
-**Last Updated:** 2026-05-29 v1.0.782 (Cursor — fix(phase3): switch run_8_production.py to guided account key (gregory.robert.c@gmail.com); auto-create API key for user_3DeZEr79TWcmvEvCMlu8lmM1FdU; 13 Phase 3 videos migrated to staged review queue; next runs go directly to guided account)
-**Last Updated:** 2026-05-29 v1.0.776 (Cursor — fix(cpd-422/phase3): grade gaps → 100 — (1) chrome/branding now applied for ALL addOns.branding.active jobs not just TTS path; non-TTS jobs previously got assembled video without AuraFlux watermark; (2) gradeJob() now auto-called in developer_api.js onJobComplete, grade persisted to spec; (3) publishCopy auto-generated in onJobComplete from job topic when platforms declared but copy is missing; (4) run_8_production.py addOns keys corrected: clipSourcing→removed (server-side), thumbnail→thumbnailApproval; smoke test grade 67/100 root-cause: server restart via Render deploy promoted assembled job to published before portals 3a/3b/4 ran)
-**Last Updated:** 2026-05-29 v1.0.774 (Cursor — fix(cpd-315): surface assembly failure reason in pipeline — onPortalPass assembly errors were swallowed by portal_policy_runner.js non-fatal catch, causing portal3a to fail with misleading "No assembledPath" instead of the real error; fix: stamp assemblyFailReason on spec and _persist, expose in GET /v1/jobs/:id response and portal3a readiness message; fix run_8 to use correct portals field and pass job_data to report_gaps)
-**Last Updated:** 2026-05-29 v1.0.773 (Cursor — fix(deploy): kill newrelic crash on restart — Render's "new primary port detected" restart was using a cached old image that had newrelic installed; old image crashed because NEW_RELIC_APP_NAME was missing from the panel (only in render.yaml, which isn't re-read on a bare restart); fix: set NEW_RELIC_APP_NAME + NEW_RELIC_AGENT_ENABLED in panel via API so even old images don't crash; remove NEW_RELIC_APP_NAME/NO_CONFIG_FILE from render.yaml; remove NEW_RELIC_NO_CONFIG_FILE from Dockerfile ENV — old newrelic vars now only live in panel as a safety guard, never trigger a require)
-**Last Updated:** 2026-05-29 v1.0.772 (Cursor — fix(cpd-422): Serena QA items — remove redundant require('../db') in grade endpoint (use db already in closure); add test/job_grader.test.js with 17 unit tests covering all 16 checks, addOns legacy path, gradeJobs aggregation, and null-spec guard)
-**Last Updated:** 2026-05-29 v1.0.771 (Cursor — fix(deploy): uuid MODULE_NOT_FOUND — uuid was only a transitive dep via overrides block, not a direct dependency, so npm ci --omit=dev hoisted it inconsistently in Docker; fix: add uuid@^9.0.0 to dependencies directly and clear the now-redundant overrides block; package-lock.json regenerated)
-**Last Updated:** 2026-05-29 v1.0.770 (Cursor — feat(grade/cpd-422): job spec compliance grader — lib/services/job_grader.js scores 0-100 per feature check (output_exists, portals_passed, script, branding, chapter_markers, scene_transitions, etc.); not-yet-built features (zoom_punch, animated_text, lower_thirds, sound_effects) are flagged as not_implemented without deducting points; gradeJob() auto-runs in onJobComplete() and persists as spec.specGrade; GET /jobs/:jobId/grade endpoint returns cached or live grade; scripts/run_8_production.py inventory-driven bulk submit + poll + grade loop for Phase 3 production run)
-**Last Updated:** 2026-05-29 v1.0.769 (Cursor — fix(deploy): two root causes found and fixed — (1) uuid version corrupted to >=14.0.0 (no such version) causing npm ci to fail in Docker build; fixed to ^9.0.0; (2) predeploy_env_guard pushed local-only vars PORT=3000/PUPPETEER_EXECUTABLE_PATH=/Users/.../USE_LOCAL_FFMPEG=true to Render, overriding render.yaml correct production values; removed those 3 bad overrides from Render and added PORT/PUPPETEER_EXECUTABLE_PATH/USE_LOCAL_FFMPEG/NODE_ENV/TZ/NODE_OPTIONS to LOCAL_SKIP_KEYS so guard never pushes them again)
-**Last Updated:** 2026-05-29 v1.0.768 (Cursor — fix(api): SyntaxError in lib/routes/marketing.js:374 crashing server on startup — orphan ) before .join() removed; server.js now loads cleanly)
-**Last Updated:** 2026-05-29 v1.0.767 (Cursor — fix(deploy): pre-commit hook now syncs package-lock.json after every version bump — npm install --package-lock-only + git add package-lock.json added to AUTO VERSION BUMP step; eliminates recurring Docker npm ci lockfile mismatch deploy failures)
-**Last Updated:** 2026-05-29 v1.0.766 (Cursor — fix(plans/cpd-109): operate/guided/managed parity — operate gets "+ New job" CTA alongside API Keys (wizard access for all tiers); API banner reframed from "API-first" to "API access included — use API or dashboard wizard"; "Ready to review" stat card links to /review (full staging page); TikTok platform unlocked for all tiers in wizard (was incorrectly managed-only; feature_gate says min_plan=operate); removed LockedFeature wrapper from platforms section)
-**Last Updated:** 2026-05-29 v1.0.765 (Cursor — fix(review-queue): staged jobs now visible + approve-publish wired — history page split into "Ready to review" (staged) + "Completed" tabs; jobs hub gains "Ready to review" stat card; STAGED_STATUSES filter added to hub + history; api.ts adds approveAndPublish() calling POST /jobs/:jobId/approve-publish; job detail "Approve & publish" CTA calls real endpoint for staged jobs, shows success/error feedback)
-**Last Updated:** 2026-05-29 v1.0.764 (Cursor — feat(ux/cpd-315): checkout-style job creation flow — Step 2 live selection summary bar shows chosen features by category as chips; Step 3 rebuilt as order review with Format/Source/Features edit-back links + delivery settings + credit total; post-submit redirects to /myjobs/[jobId] instead of active list; job detail page has distinct building state (animated pipeline progress bar + step list with running portal highlighted) and ready-for-review state (green hero, inline video player, Approve/Download/Save-as-template CTAs))
-**Last Updated:** 2026-05-29 v1.0.763 (Cursor — feat(sprint7/cpd-415,418,419,420,421): Sprint 7 foundation — 8 Jira tickets created (CPD-414—421); chapter_markers (CPD-419) wired: assembly.js stores segmentLabelsAndDurations after clip probe, injected into g45JobSpec.savedOutputs, portal5 buildTimestampBlock appends CHAPTERS block to YouTube description; scene_transitions (CPD-418) wired: xfade filter chain with real group durations at final stitch step (≤30 groups, crossfade by default, falls back to concat copy); feature_gate.js adds scene_transitions/zoom_punch/sound_effects/animated_text_effects/lower_thirds/chapter_markers (all operate min_plan); collab roadmap context (CPD-421) wired: PLATFORM_KNOWLEDGE updated with Sprint 7 and roadmap feature list so Collab never says "no" to coming-soon features)
-**Last Updated:** 2026-05-29 v1.0.762 (Cursor — feat(ui/cpd-315): UI streamlining from content analysis — advanced flag on tts/commentary/generation/burn_images; Advanced features collapsed by default; tts removed from guided plan defaults; 73-video Gemini analysis complete; 13 E2E jobs submitted to gregory.robert.c@gmail.com staged; CPD-414 created for lower_thirds gap)
-**Last Updated:** 2026-05-28 v1.0.759 (Cursor — fix(app): remove generation_i2v dead branch from new job page — WAN i2v exists in codebase only, not customer-facing)
-**Last Updated:** 2026-05-28 v1.0.758 (Cursor — fix(marketing): remove Imagen 3 and AI avatar blog card from public pages — pricing.html plan list + comparison table row removed; blog.html avatar card removed; roadmap mention preserved)
-**Last Updated:** 2026-05-28 v1.0.756 (Cursor — fix(newrelic): harden config against empty app_name + try/catch require in server.js; install newrelic@14.0.0 to sync lockfile)
-**Last Updated:** 2026-05-28 v1.0.755 (Cursor — feat(marketing-editor): worker_edit response type — Gemini now edits FALLBACK_FOOTER/FALLBACK_NAV/INJECTED_CSS directly in _worker.js for universal changes; output is tiny (~200 tokens) vs html_patches (~8000); no timeout possible; POST /api/admin/marketing/worker-edit patches constants + runs deploy.sh; frontend shows green card "affects all pages"; builds on architectural insight: global=worker_edit, page-specific=html_patch)
-**Last Updated:** 2026-05-28 v1.0.747 (Cursor — fix(marketing-editor): maxOutputTokens 1500→16384 — html_patch for a full page is 2000-3000+ tokens; 1500 caused truncated JSON that fell back to raw text in the chat bubble; also added robust JSON extraction (find first { to last }) to handle any leading/trailing prose)
-**Last Updated:** 2026-05-28 v1.0.746 (Cursor — fix(marketing-editor): enforce multi-page patches — CRITICAL MULTI-PAGE RULE added: "all pages" = html_patches with all 3 in patches array; Option D now explicitly shows all 3 page entries; Option C clarified as single-page only; also deploy frontend)
-**Last Updated:** 2026-05-28 v1.0.745 (Cursor — fix(marketing-editor): action-biased Gemini prompt + multi-patch support — buildPrompt() now leads with BIAS TOWARD ACTION rule (no restating, no asking permission, execute by default); added html_patches (plural) response type so Gemini can patch all 3 pages in one shot; POST /api/admin/marketing/html-patches writes all files + single deploy; frontend shows stacked amber patch cards with "Deploy all N pages" button)
-**Last Updated:** 2026-05-28 v1.0.744 (Cursor — fix(marketing-editor): ReferenceError crash causing "Failed to fetch" — ${FRAMER_FONTS} etc in prompt template literal were evaluated as JS vars (undefined) and threw; extracted buildPrompt() as a plain function using array join, wrapped in try/catch; prompt construction can no longer silently drop the connection)
-**Last Updated:** 2026-05-28 v1.0.743 (Cursor — feat(marketing-editor): html_patch — page HTML extracted to cloudflare/marketing/pages/*.html; deploy.sh injects them via __PAGE_*__ placeholders; interpret endpoint returns type:html_patch when Gemini proposes structural/layout changes; POST /api/admin/marketing/html-patch writes file + runs deploy.sh; frontend shows amber HTML patch preview card with Deploy button; Gemini now sees full page source files so it can merge Framer elements into worker pages)
-**Last Updated:** 2026-05-28 v1.0.742 (Cursor — feat(marketing-editor): Gemini sees Framer + worker HTML — loadFramerSnapshots() strips snapshots/*.html to text; loadWorkerPages() strips PAGES{} from _worker.js; both injected into interpret prompt so Gemini can compare Framer copy vs worker copy, spot gaps, and suggest reconciliation)
-**Last Updated:** 2026-05-28 v1.0.741 (Cursor — feat(marketing-editor): open dialogue mode — Gemini now handles conversational questions (reads design brief, discusses strategy, suggests copy) AND field changes in the same chat; responds with type:message for discussion, type:changes for edits; frontend renders bubble chat history with pending change cards; no more "no matching fields" dead-end)
-**Last Updated:** 2026-05-28 v1.0.740 (Cursor — feat: floating chat widget on every marketing page + nav/contact cleanup — chat bubble bottom-right injects on all pages (Framer + worker-owned) calling /api/public/chat; nav CTA removed entirely; contact page Collab link removed; phone +1(571)600-2835 in contact channels + footer)
-**Last Updated:** 2026-05-28 v1.0.739 (Cursor — fix: contact page + nav — phone/SMS +1(571)600-2835 added to contact channels + marketing editor schema; nav CTA changed from "Launch App" to "Get Started" → /sign-up across all worker-owned pages)
-**Last Updated:** 2026-05-28 v1.0.738 (Cursor — fix: replace plan images with correct Canva exports \u2014 operate.png (292KB), guided.png (592KB), managed.png (637KB) exported at 800x1000 pro quality from Canva designs DAHKr65N6OA/DAHKr2gadqY/DAHKr-ey8Ms)
-**Last Updated:** 2026-05-28 v1.0.737 (Cursor — chore: design session context \u2014 DESIGN_MIGRATION_BRIEF.md documents page ownership, pending design decisions, how the marketing editor works, and quick file reference; Serena memory 'marketing-site-design-migration' written for next session auto-load)
-**Last Updated:** 2026-05-28 v1.0.736 (Cursor — chore: first Framer snapshot taken — snapshots/homepage.html 390KB; framer-shell/ populated: fonts.html (22 tags), styles.css (195KB, 12 blocks), nav.html (5KB), footer.html (11KB), tokens.css (13 :root blocks), manifest.json; snapshot.sh bash-compat fix for macOS grep/associative arrays)
-**Last Updated:** 2026-05-28 v1.0.735 (Cursor — feat: Framer snapshot + component injection pipeline — snapshot.sh fetches all Framer pages to snapshots/, extracts fonts/CSS/nav/footer/tokens to framer-shell/; deploy.sh injects those components into worker build via __FRAMER_*__ placeholders; LEGAL_SHELL + pricing page now use injected Framer nav/footer/fonts with fallback minimal shell when no snapshot taken yet)
-**Last Updated:** 2026-05-28 v1.0.734 (Cursor — feat: /contact as worker-served page — contact form (name/email/topic/message) posts to /api/contact, topic prepended to message; FAQ section with data-editable keys (faq_1_q/a through faq_4_q/a); /contact added to WORKER_OWNED_PATHS; contact editor tab now functional)
-**Last Updated:** 2026-05-28 v1.0.733 (Cursor — feat(cpd-398): restore /roadmap as real worker-served page — removed 302 redirect, added LEGAL_SHELL page with 6 roadmap items (subscriptions, compilation, show/film, avatar, shoppable, paid ads) each with data-editable keys; added to WORKER_OWNED_PATHS; roadmap tab added to marketing editor PAGE_SCHEMA in frontend + backend interpret endpoint)
-**Last Updated:** 2026-05-28 v1.0.732 (Cursor — feat(cpd-402): natural language marketing editor — POST /api/admin/marketing/interpret calls Gemini-2.5-flash with PAGE_SCHEMA context, returns validated array of {page_key, section_key, value} changes; frontend adds chat input + preview cards + confirm/cancel flow; existing form editor unchanged)
-**Last Updated:** 2026-05-28 v1.0.731 (Cursor — fix(cpd-409): remove AI avatar feature from all customer-facing surfaces — pricing page Managed feature list + comparison table row removed; developer API docs: avatar credit line + addOns avatar key removed; new job form: heygen entry removed from ADD_ONS; privacy policy: HeyGen removed (not offering feature at launch, no data processing occurs); feature kept in codebase behind feature gate for roadmap)
-**Last Updated:** 2026-05-28 v1.0.729 (Cursor — fix: session review blockers — add NEXT_PUBLIC_API_BASE to app/.env.local.example; remove dead /roadmap PAGES entry + WORKER_OWNED_PATHS from worker (302 redirect always fires first anyway); fix aider_session_review.sh Plans+Chat API health checks to target auraflux-api.onrender.com not app.auraflux.co; sprint restructured: CPD-390+400 linked as children of CPD-315, CPD-400+336+318 linked as blocked-by chain)
-**Last Updated:** 2026-05-28 v1.0.728 (Cursor — feat(cpd-402): marketing site content editor — migration 022_marketing_pages.sql, GET/POST/DELETE /api/admin/marketing/pages (superadmin), GET /api/admin/marketing/content (public 5-min cache), /admin/marketing Next.js page with tabbed page editor per section, worker fetches dynamic content with 3s timeout fallback, Site Editor added to admin sidebar)
-**Last Updated:** 2026-05-28 v1.0.727 (Cursor — feat(cpd-392): benchmark screenshot pipeline — benchmark_screenshot.py captures frame via ffmpeg, uploads JPEG to R2 (auraflux-video-output/benchmark/screenshots/{job_id}.jpg), appends collapsible image block to Confluence page 19529729 after each score=100 job; run_benchmark.py calls process_score_100_job() immediately after append_archive())
-**Last Updated:** 2026-05-28 v1.0.726 (Cursor — feat(cpd-403,cpd-398,cpd-389): CPD-403 pay-first flow — migration 021_pending_subscriptions.sql, webhook stores pending sub when source=marketing_site+no clientId, new POST /credits/claim-checkout endpoint activates plan after Clerk sign-up, checkout-welcome-banner auto-claims session_id on /home; CPD-398 /roadmap redirects 302 to /; CPD-389 contextual help ?-icons per active sidebar section with per-page Confluence links; all form routing confirmed to support@auraflux.co (CPD-394))
-**Last Updated:** 2026-05-28 v1.0.725 (Cursor — feat(cpd-404): 3-script benchmark intelligence pipeline — benchmark_social_analyzer.py pulls 30d of YouTube/TikTok per streamer, Gemini analyzes thumbnails+metadata for feature gap profiles; benchmark_template_builder.py generates probe job specs from gaps; run_benchmark.py gains --mode probe/full, template-aware job building, enriched scoring with feature profiles + publish lag; portal0 duration fix also in this release; CPD-404 created and linked to CPD-390)
-**Last Updated:** 2026-05-28 v1.0.724 (Cursor — fix(portal0): enforce minDuration on yt-dlp success path — 5s/12s Twitch clips were bypassing the 10s/30s duration gate because the isTwitchClipUrl success branch used continue before reaching the check; LO jobs with short clips now fail at portal0 with clear reason instead of producing garbage output scored 35/100)
-**Last Updated:** 2026-05-28 v1.0.723 (Cursor — fix: prices now live from Stripe on both marketing site and app billing page — removed PLAN_META.price hardcodes in billing/page.tsx, marketing pricing fetches /api/public/plans on load, app uses plan.price_usd from /plans API)
-**Last Updated:** 2026-05-28 v1.0.722 (Cursor — feat: marketing→Stripe→Clerk flow (CPD-403) — GET /api/public/checkout?plan= endpoint, pricing CTAs wired to checkout, SPA router intercept injected into Framer pages so /pricing never hijacked by client-side router, cache-control: no-store on worker-owned pages)
-**Last Updated:** 2026-05-28 v1.0.721 (Cursor — fix(marketing): pricing page served directly from worker — Capability Ladder table, correct plan CTAs: Operate→sign-up?plan=operate, Guided→sign-up?plan=guided, Managed→/contact; no longer from Framer snapshot)
-**Last Updated:** 2026-05-28 v1.0.720 (Cursor — feat(marketing): worker overhaul — Framer badge removed, all legal pages + roadmap served directly from worker, deploy.sh auto-detects latest Framer content snapshot to avoid circular proxy loop, FRAMER_ORIGIN stamped at deploy time)
-**Last Updated:** 2026-05-28 v1.0.717 (Cursor — chore: update Atlassian domain robertsworkspace-18914505.atlassian.net → aurafluxco.atlassian.net across all files; updated ATLASSIAN_DOMAIN in .env + .env.example, support.js, admin.js, sidebar.tsx, myjobs/page.tsx, support/page.tsx, ARCHITECTURE.md, PR template, Serena memory)
-**Last Updated:** 2026-05-28 v1.0.716 (Cursor — fix(marketing): restore auraflux.co to correct content — worker fallback changed from 27a16986 (template/small) to 3f42170e (368KB, chat+signup CTAs); brand-fix CSS injected on top; auraflux.co: 369KB, title correct, brand-fix+chat+sign-up all ✓)
-**Last Updated:** 2026-05-28 v1.0.715 (Cursor — fix(marketing): Cloudflare Worker brand-fix now live on auraflux.co — env.ASSETS binding + fallback to 27a16986 snapshot; af-brand-fix CSS injected converting #0B50EA/#F55A42→gold #F5C542; CF token saved to .env; auraflux.co returns 200 with Framer content ✓)
-**Last Updated:** 2026-05-27 v1.0.714 (Cursor — feat: cloudflare/marketing/_worker.js — brand color fix (blue #0B50EA→gold, orange-red removed via CSS token override + HTMLRewriter injection), contact form relay, security headers; deploy.sh for Pages upload)
-**Last Updated:** 2026-05-27 v1.0.713 (Cursor — fix(cpd-390): benchmark spec missing url (singular) field + featureVariation non-standard; all 26 parallel jobs had portals:[] — never started portal0)
-**Last Updated:** 2026-05-27 v1.0.713 (Cursor — fix(cpd-390): use signedUrl/cdnUrl from Source Library — all 26 jobs had urls:[] because Twitch page URLs were used instead of CloudFront CDN URLs; reduce submit workers 8→4)
-**Last Updated:** 2026-05-27 v1.0.713 (Cursor — fix(cpd-390): sliding window 4 concurrent jobs; 26-job parallel saturated backend worker pool causing cascade failures)
-**Last Updated:** 2026-05-27 v1.0.712 (Cursor — feat(cpd-401): post-checkout welcome email + /home?checkout=success redirect + welcome banner; feat(cpd-400): test_signup_funnel.py Layer 4 scaffold)
-**Last Updated:** 2026-05-27 v1.0.711 (Cursor — perf(cpd-390): parallel job submission+polling; 8 submit workers + 10 poll workers; benchmark runtime 8h→45min)
-**Last Updated:** 2026-05-27 v1.0.710 (Cursor — fix(cpd-390): long-form benchmark jobs use contentType=clips + COMPACT clipSpec (run6 proven path); show_commentary failed at portal2; POLL_TIMEOUT 900→1800s; 2/50 archived so far)
-**Last Updated:** 2026-05-27 v1.0.709 (Cursor — fix(cpd-390): poll loop recognises staging 'passed' status as success; first benchmark job score=100 archived — hasanabi short/thumbnail.designed; 1/50 CPD-315 launch gate; 33 jobs still running in background)
-**Last Updated:** 2026-05-27 v1.0.708 (Cursor — fix(cpd-390): benchmark uses Source Library for clips (proven run6 path); social profile videos become quality bar in Gemini scoring prompt not source input — YouTube URLs can't be fetched from Render; 34 jobs queued, 18 streamers × short+long, guided auth, gregory.robert.c@gmail.com)
-**Last Updated:** 2026-05-27 v1.0.707 (Cursor — fix(cpd-390): fix moistcr1tikal YouTube handle to @penguinz0; final inventory 83 unique jobs from 13 streamers (5 have no retrievable YouTube channel))
-**Last Updated:** 2026-05-27 v1.0.706 (Cursor — fix(cpd-390): benchmark scripts use published social videos as source not Source Library clips — profile_discovery fetches streamer YouTube/TikTok videos via yt-dlp; classifies each as shorts_from_vod/vod_enhancement/shorts_enhancement/vod_to_shorts; assigns 1 differentiating AuraFlux feature per video; run_benchmark loads inventory from benchmark_profiles.json and submits each published video URL as AuraFlux job source; URL dedup prevents same video running twice; dry-run projects 70-90 unique jobs across 18 streamers)
-**Last Updated:** 2026-05-27 v1.0.705 (Cursor — feat(cpd-390): 18-streamer production benchmark scripts — run_benchmark.py: 36-job matrix (12 Twitch + 3 Kick + 3 YouTube × short+long), operate-tier, AuraFlux branding, 6 feature variations rotated, 100-score publishability scoring, R2 archive manifest; benchmark_profile_discovery.py: cross-platform social profile scraper (Twitch Helix API, Kick public API, YouTube Data API) writes logs/benchmark_profiles.json; CPD-390 linked as child of CPD-315; HOW page at Confluence 19529729; CPD-335 labelled post-launch)
-**Last Updated:** 2026-05-27 v1.0.704 (Cursor — fix(public.js): replace @google/generative-ai SDK with axios direct call to Gemini REST API — package not installed in repo; matches existing gemini_client.js pattern)
-**Last Updated:** 2026-05-27 v1.0.703 (Cursor — fix(cpd-396,cpd-397): correct public API CORS + endpoint URLs — ALLOWED_ORIGINS now includes https://auraflux.co so browser-based chat widget can POST to auraflux-api.onrender.com; setCors() now reflects actual request Origin header; Worker updated to call auraflux-api.onrender.com not app.auraflux.co for /api/public/plans, /chat, /contact)
-**Last Updated:** 2026-05-27 v1.0.702 (Cursor — feat(aider-review): expand session review script to cover marketing site — adds section 7b with 8 live health checks (homepage, pricing, contact, privacy, terms, /api/public/plans, /api/public/chat, roadmap redirect, chat widget injection); Jira query now filters non-blocked/non-marketing-site app tickets for To Do; separate JIRA_MKTG query for marketing backlog; prompt updated to 11 sections with split App/Marketing Recommendations)
-**Last Updated:** 2026-05-27 v1.0.701 (Cursor — feat(cpd-396,cpd-397): public API routes + marketing site chat widget — CPD-397: GET /api/public/plans returns live Stripe plan prices (with hardcoded fallback); Worker injects Capability Ladder copy + live prices on /pricing via JS (patchCopy + injectPrices after Framer hydration). CPD-396: POST /api/public/chat pre-sales Gemini AI chat (rate-limited 20/min/IP, history-aware, AuraFlux system prompt); POST /api/public/contact escalation to support@auraflux.co via SMTP; floating chat widget injected via Worker on all marketing pages with typing indicator, 3-exchange human escalation offer, name+email escalation form. lib/routes/public.js mounted before Clerk auth middleware)
-**Last Updated:** 2026-05-27 v1.0.700 (Cursor — feat(cpd-89): auraflux.co marketing site wired to app — Worker HTML rewrites: CTAs→sign-up, plan names/prices corrected, footer branding, title; plan-specific pricing CTAs via JS injection (Operate→sign-up?plan=operate, Guided→sign-up?plan=guided, Managed→/support); Sign In link injected into nav; legal slug redirects (/privacy-policy, /terms-and-conditions); blank page redirects (/blog, /roadmap); app landing page + sign-up page add back-link to auraflux.co; legal pages website field updated to auraflux.co)
-**Last Updated:** 2026-05-27 v1.0.699 (Cursor — feat(cpd-391): billing page 'Match Your Team's Capability' — new Capability Ladder positioning: updated PLAN_META with valueMetric + cta + contactSales fields; Operate→'Get API Access', Guided→'Start Guided Setup', Managed→'Request Managed Plan' (routes to /support); feature comparison table (8 rows × 3 plans) below upgrade cards; Managed always routes to /support not Stripe; PageHeader updated to new marketing copy)
-**Last Updated:** 2026-05-27 v1.0.698 (Cursor — fix(session-review+env): fix .env parser stripping CR/trailing-spaces (was causing HTTP 000 on Jira/Confluence curl calls); fix env var regex [A-Z_]+ → [A-Z][A-Z0-9_]* so digit-prefixed names C0_*/R2_*/E2E_* capture in full instead of truncating to single letter; document C0_MANUAL_* vars in .env.example)
-**Last Updated:** 2026-05-27 v1.0.697 (Cursor — fix(session-review): remove three false-positive sources from aider_session_review.sh — (1) CI failures: add --branch main + 24hr recency filter (removes old feature-branch / historical main failures from [BLOCKING]); (2) backend route mapping: grep lib/routes/ directly for path strings instead of app.use() calls (fixes prefix-less mounts like billingRouter + multi-line router.get declarations); (3) frontend page inventory: find app/(app) not app/dashboard to match actual Next.js route group structure)
-**Last Updated:** 2026-05-27 v1.0.697 (Cursor — fix(cpd-387,388): Stripe + billing UX final fixes — CPD-387: upgradeExistingSubscription single-item→take it directly; multi-item→find by knownPlanPriceIds; no match→return null (removes broken OR condition that always matched data[0]). CPD-388 C1: billing skeleton + loading guard prevents wrong upgrade cards from flashing; C2: in-place upgrade redirects to ?upgraded=1 with immediate proration copy; checkout returns ?success=1 with processing copy; C3+C4: all pack/upgrade banners now dismissible with X button + consistent bordered card style on both /billing and /credits; C5: credits Buy button shows Processing… during isPending; C6: removed hardcoded credits from PLAN_META highlights — API-sourced credits line is the single source of truth; C7: billing Suspense gets fallback={<BillingSkeleton/>}; C8: setRedirecting(true) shows "Redirecting to Stripe..." pulse before navigation)
-**Last Updated:** 2026-05-27 v1.0.696 (Cursor — fix(cpd-385,386): Stripe code bugs + billing UX polish — G1: remove try/catch in checkout functions so customer errors propagate; G2: upgradeExistingSubscription finds plan item by price ID not index 0; G3: setStripeCustomerId uses COALESCE(existing,new) for first-writer-wins; U1: /billing pack_success banner; U2: Processing… pending label; U3: plan upgrade success copy fix; U4: credits Suspense wrapper; U5: CreditsSkeleton replaces bare Loading…; U6: router.replace clears transient params; U7: pack_cancelled banners; U8: handleCardSaved refetches in-place; U9: Cancel button on card form; U10: remove dead CARD_ELEMENT_OPTIONS)
-**Last Updated:** 2026-05-27 v1.0.694 (Cursor — fix(cpd-381,382,383,384): Stripe flow fixes — CPD-381: add getStripeCustomerId/setStripeCustomerId to postgres.js; add getOrCreateStripeCustomer to stripe_billing.js (DB cache → Stripe lookup); update createCheckoutSession + createSubscriptionCheckoutSession to accept email and pass customer param; billing.js resolveStripeCustomer now stores stripe_customer_id back to DB; credits.js purchase-pack resolves email and passes to checkout; migration 020 adds unique index on stripe_customer_id. CPD-382: POST /plans/subscribe tries direct stripe.subscriptions.update() for existing subscribers (proration) before falling back to new checkout session; frontend handles upgraded:true by reloading to /billing?success=1. CPD-383: CardElement dark theme — getCardElementOptions() detects dark class on documentElement at mount time; card-saved feedback banner shown for 4s after successful save. CPD-384: credits/page.tsx detects ?pack_success=1 and shows success banner; both checkout session creators switch from payment_method_types:['card'] to automatic_payment_methods:{enabled:true})
-**Last Updated:** 2026-05-27 v1.0.692 (Cursor — fix(ux-review): 20-issue UX audit fixes — Credits: qty hint moved inline with price (was invisible 10px); bar/banner warning thresholds aligned (bar now yellow at 75% = same as banner); #buy-credits anchor always rendered with fallback when pack unconfigured. Billing: plan cards get visual tier differentiator (ring + badge + filled button for Managed); no-rollover shown with amber highlight; visible downgrade link under current plan card; af-caption consistency fix. Support: escalation copy changed to "Need human support? Email us →"; personal email removed from modal button → "Send to AuraFlux team"; past sessions limited to 5 with show-all toggle; chat height responsive (min 300px / 50vh / max 480px); canEsc dead prop removed from GuidesPanel; animated bouncing dot typing indicator. Profile: name grid adds sm breakpoint; brand logo preview label + larger (w-14) + object-contain. Brand switcher: dropdown logos use new lg size (w-7); object-contain so wide logos don't crop. Top bar: useCollabLabel dead code removed, replaced with COLLAB_LABEL constant)
-**Last Updated:** 2026-05-27 v1.0.691 (Cursor — fix(cpd-375,cpd-380): YouTube/channel OAuth 401 fix — add clockSkewInMs:60000 to requireAuthOrQueryToken in social_connect.js + channel_connect.js so freshly-expired JWT tokens still work (popup latency); better error logging for token verify failures. CPD-380: brand profile editing — migration 019_brand_image adds image_url + description to brands table; PATCH /brands/:id now accepts name/image_url/description; Brand type updated; profile page shows brand profile card with name + logo URL input; BrandAvatar uses image_url when set)
-**Last Updated:** 2026-05-27 v1.0.690 (Cursor — fix(cpd-370-379): frontend audit batch — CPD-370: credits page only shows credit_topup pack; low-credit warnings link to buy section; CPD-371: billing page removes hero images from plan cards; CPD-372: billing/payment route resolves email via Clerk API when JWT omits it (fixes No email on session); CPD-373: profile page removes bio/jobtitle/dangerous sections; adds email field; fixes light mode button contrast; CPD-374: support page compact chat (360px), past sessions as clickable cards above chat, mark-as-resolved only shows when session exists, contact copy updated to email prompt; CPD-375: social accounts — tiktok/instagram publish gate changed from managed → operate so all 3 plans can connect; social callback URL fixed from /dashboard/settings/social-connect → /settings/social; req.auth?.userId → req.user?.id in list/delete accounts; CPD-376: Collab button always visible on all pages (was only on /myjobs + /review); CPD-377: brand switcher shows dropdown only when 2+ brands — single brand shows as plain label; CPD-378: team permissions table verified matches backend PERMISSIONS object; CPD-379: 5/25 jobs not visible because they were run under a different Clerk user ID — visible in /admin/crm)
-**Last Updated:** 2026-05-26 v1.0.689 (Cursor — fix: use Stripe adjustable_quantity on credit_topup checkout; webhook reads actual line_item qty)
-**Last Updated:** 2026-05-26 v1.0.688 (Cursor — feat: pack quantity picker — customer selects qty in app, checkout passes qty × credits to Stripe)
-**Last Updated:** 2026-05-26 v1.0.687 (Cursor — feat(cpd-367,368,369): credits hard stop, threshold alerts, auto top-up)
-**Last Updated:** 2026-05-26 v1.0.686 (Cursor — fix(cpd-362,363,364,365,366): billing audit fixes — (1) CPD-362: express.json verify callback saves req.rawBody so Stripe webhook signature verification works; await resolveSubscriptionTier in webhook handler; (2) CPD-363: subscription_data.metadata added to Stripe checkout so clientId/brandId propagates to subscription object; updateClientPlanTier + updateBrandPlanTier now update credits_included + overage_price_cents from PLAN_DEFAULTS on tier change; (3) CPD-364: credits page replaces dead /checkout links with purchasePack() buttons; fixes $undefined price → price_cents; (4) CPD-365: GET /plans adds priceConfigured field so upgrade buttons show instead of 'Contact us'; billing page already has contact-support cancel copy; (5) CPD-366: nightly overage billing cron at 03:30 UTC; billing_cron.js OVERAGE_PRICE_CENTS_BY_TIER rekeyed to operate/guided/managed; credits page shows overage cost warning banner with estimated charge)
-**Last Updated:** 2026-05-26 v1.0.685 (Cursor — fix(cpd-356): Upload-Post connect page now shows AuraFlux logo — add logo_image: app.auraflux.co/icons/icon-192.png to generate-jwt body in uploadpost_users.js; no dashboard change needed, parameter is API-driven per Upload-Post white-label docs)
-**Last Updated:** 2026-05-26 v1.0.684 (Cursor — fix(cpd-355): legal pages blocked by Clerk middleware — add /privacy|terms|aup|cookies|refunds to isPublicRoute so Google crawler can read them without auth redirect; add privacy/terms/cookies footer links to root landing page so Google OAuth consent screen passes homepage link check)
-**Last Updated:** 2026-05-26 v1.0.683 (Cursor — feat(cpd-357-361): generate all 5 legal pages as Next.js RSC routes under app/(legal) — Privacy Policy, Terms of Service, AUP, Cookie Policy, Refund & Subscription Policy — publicly accessible at app.auraflux.co/privacy|terms|aup|cookies|refunds; shared layout with header nav and footer; YouTube API Services disclosure; Delaware governing law; support@auraflux.co contact; no auth required)
-**Last Updated:** 2026-05-26 v1.0.682 (Cursor — fix(cpd-342,cpd-346): source library picker X close + Escape key (CPD-342: onClose prop + useEffect Escape handler + X button in picker header; new job page wires onClose → setSourceMode fetch); POST /v1/templates 500 fix (CPD-346: explicit ::TEXT[] + ::JSONB type casts in createTemplate + updateTemplate to fix pg 8.21+ empty-array type inference; console.error logging + detail in 500 response; E2E tpl_spec top-level platforms now resolved in route); CPD-339 closed (Twitch yt-dlp fix confirmed live); CPD-343 closed (API Keys already in Settings); CPD-355 + CPD-356 created (Google OAuth branding + Upload-Post logo))
-**Last Updated:** 2026-05-26 v1.0.681 (Cursor — feat(cpd-353): Kick OAuth 2.1 + PKCE source auth — lib/publish/adapters/kick_oauth.js: buildAuthUrl/exchangeCode/refreshAccessToken/getUserInfo using id.kick.com + api.kick.com/public/v1; lib/clients/kick_user_api.js: OAuth bearer client for /channels/{slug}/clips+videos with auto-refresh; lib/routes/channel_connect.js: GET /channels/connect/kick + /channels/callback/kick + /channels/connections + DELETE /channels/connections/:platform (PKCE state in-memory store, auto-populates kickUsername in source_channels); source.js Kick route: loadTokens → KickUserApiClient (no Cloudflare/Apify needed) with Apify/TLS fallback; My Channels UI: Connect with Kick button, connected state with handle + Disconnect; KICK_CLIENT_ID + KICK_CLIENT_SECRET pushed to Render)
-**Last Updated:** 2026-05-26 v1.0.680 (Cursor — fix(cpd-348): Kick + YouTube source URL resolution — e2e script now force-sets spec.url/spec.urls from source_items after Gemini build so clip URLs always reach developer_api (Gemini was omitting urls field → sourceConfig null → _hasSourceClips false → assembly silently skipped for Kick); portal0 adds YouTube watch URL trusted fallback after probeWithYouTubeApi — accepts youtube.com/watch?v= URLs when YouTube Data API key is absent/blocked from Render IPs, delegates download to assembly_service yt-dlp ANDROID_VR client)
-**Last Updated:** 2026-05-26 v1.0.679 (Cursor — fix(nav): Profile moved under Settings as My Profile above My Team; API Reference hidden for guided/managed plans (operate/custom only); removes top-level Profile nav item)
-**Last Updated:** 2026-05-26 v1.0.678 (Cursor — fix(cpd-343-crm): /admin/crm crash — creditsLeft undefined caused toLocaleString() TypeError; changed === null to == null guard; tightened AccountSummary interface to include undefined; jobCount ?? 0 prevents blank cells)
-**Last Updated:** 2026-05-26 v1.0.677 (Cursor — chore: post-session housekeeping — CPD-347/349/350/351/352/353 all transitioned to Done in Jira; stale remote branches pruned (cpd-315, fix/plan-images-prod, cpd-322); newrelic v14 + pg + bullmq + stripe Dependabot PRs merged (Node 22 confirmed safe); axios PR #593 rebase triggered; .env.example updated with RENDER_API_SERVICE_ID, MAX_POLL_MINUTES, POLL_INTERVAL_MS, JOBS_FILE, ENABLE_NVENC, CWN_SERVER_URL; Confluence HOW page created for platform fallback chains (Twitch/Kick/YouTube); billing routes confirmed implemented in CPD-336; CI confirmed all green on main)
-**Last Updated:** 2026-05-26 v1.0.676 (Cursor — fix: CLERK_PUBLISHABLE_KEY missing from Render — added to .env; server.js validateRequiredEnv now accepts NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY as fallback so alias mismatch never crashes server)
-**Last Updated:** 2026-05-26 v1.0.675 (Cursor — fix(cpd-353): Kick assembly re-fetches CDN URL via Apify at download time instead of yt-dlp (Cloudflare-blocked on Render); _downloadKickClip extracts channel+clipId from page URL, calls fetchKickContent, downloads from CDN directly with _downloadFile; falls back to yt-dlp if Apify lookup fails. YouTube _downloadWithYtdlp now adds --extractor-args youtube:player_client=ANDROID_VR,ANDROID,tv_embedded as bot-detection bypass when no proxy configured — same strategy as extractVodClips)
-**Last Updated:** 2026-05-26 v1.0.673 (Cursor — fix(cpd-351/352): Kick yt-dlp URL format + YouTube API key referer — kick_apify.js now passes channelSlug to _normalise and constructs kick.com/{channel}/clips/{clipId} URL (yt-dlp kick:clips extractor requires this; kick.com/clip/{uuid} routes to kick:live and fails); _isKickPageUrl and portal0 isKickClipUrl regexes updated to match channel-based format; kick.com/{channel}/clips/* yt-dlp confirmed working locally; YouTube probeWithYouTubeApi now uses YOUTUBE_SERVER_API_KEY or YOUTUBE_API_KEY+Referer header; Kick portal0 skips checkUrlReachable and trusts source library duration)
-**Last Updated:** 2026-05-26 v1.0.670 (Cursor — fix(cpd-351): Kick page URL + YouTube graceful fallback — kick_apify.js and kick_client.js now store stable kick.com/clip/{id} page URLs as primary url (CDN URL moved to cdnUrl field); assembly_service _downloadClips and _assembleCompactClipSpec route kick.com/clip/ + youtube.com/watch URLs through yt-dlp instead of _downloadFile; portal0 allows kick.com/clip/ page URLs through reachability check (same pattern as Twitch); developer_api.js YouTube VOD extract failure is now non-fatal — falls through to portal0+assembly path instead of killing the job; O-K1 should now pass; O-YT1 requires YOUTUBE_COOKIES_BASE64 on Render (CPD-352))
-**Last Updated:** 2026-05-25 v1.0.668 (Cursor — feat(cpd-349): Helix CDN URLs for Twitch clip downloads — source.js adds cdnUrl (thumbnailToMp4 of Helix thumbnail_url) to each Twitch clip item; portal0 tries probeSource(cdnUrl) before probeWithYtdlp (no GQL call needed); assembly_service _assembleCompactClipSpec tries _downloadFile(clip.cdnUrl) before yt-dlp GQL path — eliminates Twitch GQL rate-limiting for multi-clip COMPACT jobs; run_6_e2e.py propagates cdnUrl in clipSpec clips; O-K1/O-K2/O-YT1/O-YT2 already defined in TESTS array — ready to run)
-**Last Updated:** 2026-05-25 v1.0.666 (Cursor — fix(cpd-347): two-part fix — (1) developer_api.js: clipSpec from API body was never forwarded to jobSpec, so every COMPACT job fell through to _downloadClips bypassing _assembleCompactClipSpec entirely; (2) assembly_service: Twitch GQL rate-limit window is >31s — increase inter-clip delay from 2s→60s and retry backoff from 8s→30s in both _downloadClips and _assembleCompactClipSpec; Twitch clips now use _downloadWithYtdlp+ffmpegtrim (not extractVodClips) so trim still applied)
-**Last Updated:** 2026-05-25 v1.0.660 (Cursor — fix(cpd-347): assembly_service multi-clip Twitch throttle — add 2s delay between sequential yt-dlp clip downloads to prevent GQL rate-limiting on COMPACT 3-clip jobs; same throttle pattern as portal0 probe fix in v1.0.659)
-**Last Updated:** 2026-05-25 v1.0.662 (Cursor — fix(cpd-347): portal0 yt-dlp probe timeout 45s→20s + clipSpec durationHint fallback — when yt-dlp times out on Twitch clips 2+ (GQL rate-limit from datacenter IP), use the duration from clipSpec.durationHint sourced from Helix API instead of failing portal0; assembly_service downloads with enough elapsed time for rate limits to reset)
-**Last Updated:** 2026-05-25 v1.0.664 (Cursor — fix(cpd-347): assembly_service yt-dlp retry — 3 attempts with 8s backoff for Twitch clip downloads in _downloadClips; same GQL rate-limiting issue as portal0 was silently failing assembly for clips 2+ in multi-clip COMPACT jobs)
-**Last Updated:** 2026-05-25 v1.0.664 (Cursor — fix(cpd-347): portal3a failReason propagation + portal summary exposes failReason/score for diagnose-ability)
-**Last Updated:** 2026-05-25 v1.0.662 (Cursor — fix(cpd-347): portal0 Twitch fallback — when yt-dlp is rate-limited for multi-clip COMPACT jobs, bypass PORTAL0_PAGE_URL and use checkUrlReachable as fallback for Twitch clip page URLs; if page exists (200 OK) accept without ffprobe, letting assembly_service handle yt-dlp at job time)
-**Last Updated:** 2026-05-25 v1.0.660 (Cursor — fix(cpd-347): portal0 yt-dlp retry — when first yt-dlp probe fails for a Twitch URL (GQL rate-limit), retry once after 6-second backoff before falling through to PORTAL0_PAGE_URL; combined with the 2s pre-call throttle this handles 3-clip COMPACT jobs where clips 2-3 would otherwise be GQL rate-limited)
-**Last Updated:** 2026-05-25 v1.0.659 (Cursor — fix(cpd-347): Twitch URL chain — cloudfront.net/nauth/ CDN URLs are IP-blocked from Render even when signed; revert source.js to return page URL as primary url (signedUrl preserved as field); portal0 probeWithYtdlp now handles CDN URLs by extracting clip slug from GQL token param to construct page URL for yt-dlp; add 2s throttle delay between sequential yt-dlp probes to prevent GQL rate-limiting on multi-clip COMPACT jobs)
-**Last Updated:** 2026-05-25 v1.0.658 (Cursor — fix(cpd-346): source URL chain — Twitch source library now returns signed GQL CDN URL (resolveClipMp4) as primary url instead of page URL; portal0 probeWithYtdlp only triggers for Twitch page URLs (clips.twitch.tv, twitch.tv/channel/clip) not CDN URLs; CDN URLs go through ffprobe directly; portal1b contentTypeNeedsVideoReview gate removed — video review runs for all content types when portal is active; Kick CDN domains added to TRUSTED_DOMAINS in downloader.js)
-**Last Updated:** 2026-05-25 v1.0.657 (Cursor — fix(e2e): pre-flight uptime check in run_6_e2e.py — blocks test run if API server uptime < 300s; prevents deploy-collision false negatives that caused ramp-3/3b failures)
-**Last Updated:** 2026-05-25 v1.0.656 (Cursor — fix(e2e): run_6_e2e.py scoring rubric + staging mode + template_id crash — rubric replaces unverifiable video quality criterion with terminal status check; E2E specs use staging=True to skip portal5 publish; template_id None crash fixed)
-**Last Updated:** 2026-05-25 v1.0.655 (Cursor — fix(cpd-341/344/345): job wizard UX — Step 2 source tabs disabled with tooltip until content type chosen (CPD-341); hint text updated to amber directive copy; source library picker skeleton shows on first browse before channelName resolves (CPD-345); selection indicator always visible on thumbnails not just on hover (CPD-344))
-**Last Updated:** 2026-05-25 v1.0.654 (Cursor — fix(cpd-339 pt2): assembly_service.js — Twitch clip page URLs (clips.twitch.tv/*, twitch.tv/*/clip/*) now downloaded via yt-dlp instead of plain axios; Render's datacenter IPs are blocked by CloudFront for unsigned nauth CDN URLs; yt-dlp authenticates with Twitch GQL API and obtains a signed download URL that IS accessible from Render)
-**Last Updated:** 2026-05-25 v1.0.653 (Cursor — fix(cpd-338): portal0.js ReferenceError — */ in JSDoc comment (twitch.tv/*/clip/*) terminated block comment early; clip appeared as bare code; every job failed with CPD126_PORTAL_START_FAIL; fixed by replacing */ URL pattern with :channel/clip/:slug notation)
-**Last Updated:** 2026-05-25 v1.0.648 (Cursor — fix: plan images not showing on billing page — .gitignore excluded app/public/brand/plans/*.png (subdirectory not covered by brand/*.png rule); added !app/public/brand/**/*.png exception; committed 4 plan PNGs (600x750); fixed upgrade card container from aspect-[4/3] to h-36 to suit portrait images)
-**Last Updated:** 2026-05-25 v1.0.647 (Cursor — fix: server.js requireAuth ReferenceError — /admin/canva-generate and /admin/canva-save used requireAuth middleware before it was imported; caused staging startup crash on every deploy since v1.0.645)
-**Last Updated:** 2026-05-25 v1.0.646 (Cursor — fix(cpd-332): UX review fixes — brand-switcher: portal-rendered dropdown escapes sidebar overflow-hidden (ReactDOM.createPortal to document.body); collapsed mode now functional with portal menu; loading skeleton in switcher slot; no-brands state shows Add brand; aria-expanded/haspopup/role=menu/Escape added; MobileSidebar now includes BrandSwitcher; add-brand: cancelled=1 banner; orphan/duplicate brand prevention on retry (reuses draft brand with matching name); brand-context: race condition fixed via userSelectedRef (load() won't overwrite user selection); sync LS→apiFetch on mount; error field exposed; success page: invalid brand_id shows error state; retry-with-spinner for slow webhook (up to 4 polls × 2s); Brand interface adds stripe_subscription_id)
-**Last Updated:** 2026-05-25 v1.0.645 (Cursor — feat(cpd-327/328/329/330/331/332/333): multi-brand accounts — Phase 1-6 implementation: db/migrations/017_brands.sql adds brands table + brand_id FK on client_plans/jobs/platform_oauth_tokens with backfill; lib/db/postgres.js: getBrandsForAccount, getBrand, createBrand, renameBrand, deactivateBrand, getClientPlanByBrand, updateBrandPlanTier helpers; lib/routes/brands.js: GET/POST/PATCH/DELETE /brands; lib/auth/brand_access.js: resolveBrandContext middleware (X-Brand-Id header → req.brandId); account.js source-channels routes now brand-scoped; upsertJobRow + createJobSpec accept brandId; stripe_billing.js checkout session includes brandId in metadata; credits.js webhook routes subscription.updated/deleted by brandId first, clientId fallback; GET /billing/subscriptions: all brand subs for account; api.ts: setActiveBrandId, brand API client functions; brand-context.tsx: BrandProvider + useBrand; brand-switcher.tsx: colour-coded letter avatar dropdown top-left sidebar; layout.tsx: BrandProvider wraps app; /billing/add-brand: multi-step brand+plan+checkout flow; /billing/add-brand/success: post-checkout brand activation)
-**Last Updated:** 2026-05-25 v1.0.644 (Cursor — feat(cpd-315): plan images on billing page + Canva image generator — Operate/Guided/Managed/credits PNGs exported from Canva saved to public/brand/plans/; billing page renders plan card visuals + credit pack visual; /generate/canva page for superadmin with all 26 design types, prompt input, candidates grid, save-to-Canva; POST /admin/canva-generate + /admin/canva-save via Anthropic+Canva MCP; ADMIN_NAV now lists Generate Video and Canva Images; CPD-315 testing strategy: Gemini owns visual UI tests, Cursor owns fixes/deploy/Jira/Confluence; HOW doc created in Confluence page 17203201)
-**Last Updated:** 2026-05-25 v1.0.643 (Cursor — fix: R2 env var backup/restore — scripts/backup_render_env.js now exists (was required by backup_to_r2.js but missing); nightly backup snapshots all Render env vars to R2 as envvars/<serviceId>/latest.json.gz; restore: node scripts/backup_render_env.js --restore; CLERK_SECRET_KEY + CLERK_PUBLISHABLE_KEY added to startup required vars check so wipes surface immediately)
-**Last Updated:** 2026-05-25 v1.0.642 (Cursor — feat(cpd-324/325): staging env + performance hardening — auraflux-api-staging + auraflux-app-staging services added to render.yaml (branch: staging, starter plan); GHA smoke test workflow on every PR to main; BullMQ memory circuit breaker pauses worker at 1200MB heap, resumes at 900MB; uploadToR2 now streams file via createReadStream (was readFileSync — OOM risk on large videos); NODE_OPTIONS added to auraflux-app in render.yaml; WORKER_MEM_PAUSE_MB / WORKER_MEM_RESUME_MB documented in .env.example)
-**Last Updated:** 2026-05-25 v1.0.641 (Cursor — feat(cpd-322/323/146): input validation + architecture doc + WAN 2.7 activation — POST /jobs now validates title≤200, topic≤500, tone≤100, durationMins 1-120, publishMode enum, platforms array, prompt≤2000, query≤2000 via express-validator; ARCHITECTURE.md written; generateWanVideo now reads WAN_MODEL_VERSION env var (or featureConfig.generation.modelVersion) and passes correct 2.7 params (resolution/ratio/durationSecs) to _generateWan27)
-**Last Updated:** 2026-05-25 v1.0.640 (Cursor — fix(cpd-319/320/321/326): production-readiness audit — billing.js broken require paths fixed (MODULE_NOT_FOUND crash on startup); JSON body limit reduced 50MB→1MB (DoS hardening); /content-type-status now requireAuth protected; upload route validates file via ffprobe post-receive to catch corrupt/HEVC/misnamed files; scheduling cron cleans upload temp files older than 48h; NODE_OPTIONS=--max-old-space-size=1536 added to render.yaml)
-**Last Updated:** 2026-05-25 v1.0.639 (Cursor — feat(cpd-338): credit_topup pack — 50 credits/$100 generic top-up when monthly allowance runs out; STRIPE_PACK_PRICE_CREDIT_TOPUP set on Render auraflux-api; Stripe product metadata pack_id=credit_topup set; pack auto-appears on billing page)
-**Last Updated:** 2026-05-24 v1.0.638 (Cursor — feat(cpd-337): credit pack readiness — packs section auto-shows on billing page when STRIPE_PACK_PRICE_<ID> env var is set or Stripe product has metadata.pack_id; createCheckoutSession prefers catalog price ID over inline price_data; GET /credits/packs returns priceConfigured flag; .env.example documents 4 pack price ID stubs)
-**Last Updated:** 2026-05-24 v1.0.637 (Cursor — feat(cpd-336): native payment management — /billing/payment now uses Stripe Elements inline; card update form embedded in page (no Stripe portal redirect); invoice list fetched from Stripe API; 4 new backend endpoints: GET/POST /billing/payment-method, POST /billing/setup-intent, GET /billing/invoices; @stripe/react-stripe-js installed; NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY required in auraflux-app Render env)
-**Last Updated:** 2026-05-24 v1.0.636 (Cursor — feat(cpd-335): extract payment method & invoices to own page at /billing/payment; added to sidebar under Billing; removed payment section from subscription page; Stripe portal return URL updated)
-**Last Updated:** 2026-05-24 v1.0.635 (Cursor — fix(cpd-334): billing page restructure — removed /plans sidebar nav (redirects to /billing); removed usage history section (lives on /credits); hidden credit top-up packs; plan cards show upgrade-only paths (no downgrade); removed Most Popular badge; fixed plan highlights (no "Up to 3 brands", no "Everything in Operate"); upgrade button falls back to Contact us when Stripe price not configured; renamed "monthly retainer" to "monthly subscription"; payment method section cleaned up)
-**Last Updated:** 2026-05-24 v1.0.634 (Cursor — fix(cpd-333): credits ledger showed -NaN — SQL SELECT was returning credits_used column but frontend CreditLedgerEntry interface expected credits; added AS credits alias in GET /credits/history query; added Number() guards in credits/page.tsx and billing/page.tsx as defence against future schema drift)
-**Last Updated:** 2026-05-24 v1.0.633 (Cursor — fix(cpd-332): support page UX — invalid date fixed (Unix ms timestamp handling); "Contact us by text" SMS panel removed (in-app chat is primary); selected session uses muted not accent highlight; subtitle copy cleaned of SMS references)
-**Last Updated:** 2026-05-24 v1.0.632 (Cursor — fix(cpd-331): humanize all customer-facing UI — job IDs replaced with content type+date titles; status enums use human labels; platform slugs use display names; credit ledger type labels; tierLabel() on credits page; formatUserError() on ~18 pages)
-**Last Updated:** 2026-05-24 v1.0.631 (Cursor — fix(cpd-330): replace raw Clerk user IDs with first/last name across all admin views — CRM list, CRM detail, All Users, Support Inbox, Review Queue all show names; IDs kept in DB/backend only)
-**Last Updated:** 2026-05-24 v1.0.629 (Cursor — fix(cpd-329): Review Queue shows platform-wide jobs for superadmin — uses GET /jobs?all=true; header copy updated; customer ID shown per card; empty state copy differentiated)
-**Last Updated:** 2026-05-24 v1.0.628 (Cursor — fix(cpd-328): superadmin UX fixes — /admin redirects to /admin/overview; support inbox allows superadmin role; CRM fixed customers/accounts key mismatch; permissions shows owner first/last name; setup checklist hidden for superadmin; Jobs preview removed from admin nav)
-**Last Updated:** 2026-05-24 v1.0.627 (Cursor — fix(cpd-327): sanitize redirect_url on sign-in page — strip any redirect_url that doesn't point to app.auraflux.co before Clerk reads it; localhost/external URLs from test sessions were causing post-OTP spinner hang and bloated URLs)
-**Last Updated:** 2026-05-24 v1.0.626 (Cursor — fix(cpd-326): align CLERK_SECRET_KEY to live instance — API service on Render and local .env were using sk_test_ while frontend runs on sk_live_; role PATCHes were silently updating wrong Clerk instance; updated both to sk_live_; API redeploy triggered)
-**Last Updated:** 2026-05-23 v1.0.625 (Cursor — fix(cpd-325): YOUTUBE_CLIENT_ID + YOUTUBE_CLIENT_SECRET added to Render and local .env; was wiped tonight by destructive PUT when adding REDIS_URL; uncommented in .env.example so guard always tracks them)
-**Last Updated:** 2026-05-23 v1.0.624 (Cursor — feat(cpd-324): BullMQ persistent job queue — jobs stored in Redis survive server restarts/deploys; queue worker starts with server; jobs_c1 enqueues via BullMQ when REDIS_URL set; in-process setImmediate kept as fallback)
-**Last Updated:** 2026-05-23 v1.0.623 (Cursor — feat(cpd-323): social connect opens in popup window instead of full-page redirect; popup posts social_connected message to parent on callback; parent refreshes accounts list without leaving app.auraflux.co)
-**Last Updated:** 2026-05-23 v1.0.622 (Cursor — fix(cpd-322): TikTok/Instagram upload-post redirect URL used old /dashboard/settings/social-connect path; updated to /settings/social and added https://app.auraflux.co fallback when NEXT_PUBLIC_APP_URL is unset)
-**Last Updated:** 2026-05-23 v1.0.621 (Cursor — fix(cpd-321): replace 'Loading…' text with animated pulse skeletons on settings/team member list)
-**Last Updated:** 2026-05-23 v1.0.620 (Cursor — feat(cpd-320): post-submit success toast on job wizard — shows "Job submitted" with description before router.push to myjobs/active; gives user immediate visual confirmation before navigation)
-**Last Updated:** 2026-05-23 v1.0.614 (Cursor — fix(cpd-319): sign-in forceRedirectUrl → fallbackRedirectUrl; middleware-set redirect_url param was ignored because forceRedirectUrl always overrode it; fallbackRedirectUrl uses redirect_url when present and falls back to /home when absent)
-**Last Updated:** 2026-05-23 v1.0.613 (Cursor — fix(cpd-318): jobs stuck in 'pending' status — createJobSpec calls saveJob(status:'pending') before returning; upsertJobRow ON CONFLICT now promotes 'pending'→'queued'; migration 016 patches all existing stuck jobs; admin CRM confirmed 2 wizard jobs were invisible due to this)
-**Last Updated:** 2026-05-23 v1.0.612 (Cursor — fix: credit_paused jobs now visible on myjobs/active — ACTIVE_STATUSES set extended to include credit_paused; shows in "Needs attention" group with orange indicator and "credits paused" label; Job type updated; previously credit_paused jobs were invisible on all pages)
-**Last Updated:** 2026-05-23 v1.0.611 (Cursor — fix(cpd-317): jobs_c1 multi-clip wizard submission — normaliseDashboardPayload now maps all fetchSpec.sourceUrls → b.urls (not just first); sourceConfig built from full URL array; sourceLibrary clip metadata wired into jobSpec.order.inputs; previously only the first selected clip was sent to the pipeline)
-**Last Updated:** 2026-05-22 v1.0.610 (Cursor — fix(cpd-316): Kick VOD duration — Apify returns ms not seconds; heuristic: duration > 86400 converted from ms to seconds; also: gregory.robert.c@gmail.com promoted to superadmin in Clerk for full test coverage of admin pages)
-**Last Updated:** 2026-05-22 v1.0.609 (Cursor — fix(cpd-316): Kick content route now skips getChannel() Kick API call when APIFY_API_TOKEN is set — channel stub derived from first Apify result; avoids Cloudflare block on channel resolution before content fetch)
-**Last Updated:** 2026-05-22 v1.0.608 (Cursor — feat(cpd-316): Kick browsing via Apify — kick_apify.js calls zhorex/kick-scraper actor (run-sync-get-dataset-items) and normalizes output to AuraFlux shape; kick_client.js uses Apify path when APIFY_API_TOKEN is set, falls back to kick_fetch.py TLS bypass; APIFY_API_TOKEN + APIFY_USER_ID added to Render env and .env.example)
-**Last Updated:** 2026-05-22 v1.0.607 (Cursor — fix: credit estimate accuracy + clip editor blank state — script add-on now defaults to false in credit_calculator (was charging +10 even when not selected); clip-editor useEffect now depends on sourceClips prop so clips populate immediately on mount without requiring a toggle interaction)
-**Last Updated:** 2026-05-22 v1.0.606 (Cursor — fix: sidebar credits counter — replace raw em dash with pulsing skeleton while plan/balance loads; prevents "— credits left" flash on page transitions)
-**Last Updated:** 2026-05-22 v1.0.605 (Cursor — feat: template rename — click template name on /templates to edit inline; blur or Enter saves, Escape cancels; uses existing updateTemplate API)
-**Last Updated:** 2026-05-22 v1.0.604 (Cursor — refactor: simplify platform roles to 2 — superadmin (platform-wide) vs customer (default); removed operator+admin Clerk metadata roles entirely; account-level Owner/Admin/Member/Billing in account_members unchanged; /operator page folded into superadmin ADMIN_NAV as "All Jobs"; all backend requireRole guards collapse to ROLES.SUPERADMIN; useRole returns only isSuperAdmin)
-**Last Updated:** 2026-05-22 v1.0.603 (Cursor — feat: superadmin role — added superadmin tier (platform-wide) above admin (per-account); ROLES.SUPERADMIN in clerk.js, ROLE_LEVEL hierarchy updated; all /admin/* routes require superadmin; useRole gains isSuperAdmin; sidebar/admin pages gate on isSuperAdmin; UserRole type updated; Clerk: robert@auraflux.co set to superadmin/custom, gregory set to operator/guided; 3 test accounts created: rgreggs78/operate, clipzworld/managed, businessrocket/operate)
-**Last Updated:** 2026-05-22 v1.0.602 (Cursor — fix: team page shows real emails — listMembers enriches @unknown fallbacks from Clerk + backfills DB; fix: profile page 6s timeout instead of infinite skeleton; fix: Kick proxy cleared — BrightData blocked kick.com tunneling, direct TLS fingerprint now used)
-**Last Updated:** 2026-05-22 v1.0.601 (Cursor — feat: admin role assignment — PATCH /admin/users/:userId/role endpoint + inline role picker in /admin/users page; admin can set customer/operator/admin without Clerk dashboard)
-**Last Updated:** 2026-05-22 v1.0.599 (Cursor — fix: credits billing period date overflow guard + human-readable display; fix: Kick curl-cffi/tls-client missing from Dockerfile; fix: post-auth redirect URLs updated to /home)
-**Last Updated:** 2026-05-22 v1.0.591 (Cursor — feat: apply ux tokens batch 2 — templates, plans, admin/customers; old dashboard-page.tsx import replaced; EmptyState + PageShell on all remaining pages)
-**Last Updated:** 2026-05-22 v1.0.590 (Cursor — feat: apply ux tokens to all major pages — PageShell+PageHeader on myjobs, active, history, review, schedule, settings, billing, admin/overview; af-* tokens replace raw text-xs/text-sm/text-2xl throughout; EmptyState replaces inline empty state divs; StatCards use af-metric/af-subhead)
-**Last Updated:** 2026-05-22 v1.0.589 (Cursor — feat: design system foundation — semantic text tokens (af-caption/label/body/lead/subhead/metric/h1-h3), surface layers, PageShell+PageHeader+PageSection layout components, StatCard+StatRow KPI tiles, DataTable with loading skeletons+empty states, EmptyState, AreaChart (recharts); home page updated to PageShell; Tremor incompatible with Tailwind v4 — native token system replaces it)
-**Last Updated:** 2026-05-21 v1.0.588 (Cursor — feat: /admin/users — full Clerk user registry with all timestamps; paginated Clerk pull cross-referenced with DB job counts + account setup; sortable/filterable table with expandable rows; sidebar entry added)
-**Last Updated:** 2026-05-21 v1.0.587 (Cursor — feat: admin login tracking — lastSignInAt + lastActiveAt from Clerk added to /admin/crm and /admin/activity-overview; Last login + Last job columns in both admin tables; fixed /admin/crm shape mismatch)
-**Last Updated:** 2026-05-21 v1.0.586 (Cursor — feat(cpd-278): restore ClipEditor as step 1.5 — source-browse path routes to editor before Features; duration auto-calculated from confirmed clips; duration slider removed from Features step)
-**Last Updated:** 2026-05-21 v1.0.585 (Cursor — fix(cpd-274): source library honors wizard content-type lock — clip/vod filter preserved on platform select; Twitch/Kick/YouTube API type normalization + Kick getContent type opt)
-**Last Updated:** 2026-05-21 v1.0.584 (Cursor — fix: Twitch clips returning empty when dateRange=all — frontend sent after=all which Helix rejected as invalid date; fix in api.ts + source.js parseFilters)
-**Last Updated:** 2026-05-21 v1.0.583 (Cursor — fix: source library no-results message — detects wide-open filters and says no content exists vs try wider filters)
-**Last Updated:** 2026-05-21 v1.0.581 (Cursor — fix(cpd-315): review queue tile hides CTAs when queue is empty — shows all caught up message instead)
-**Last Updated:** 2026-05-21 v1.0.580 (Cursor — feat(cpd-315): script shown on job detail only when user selected script generation — gated on activeFeatures.includes('script') + filledScript present)
-**Last Updated:** 2026-05-21 v1.0.579 (Cursor — fix(cpd-315): review queue shows only complete+staged — published jobs clear from queue on approve, live in Jobs→History only)
-**Last Updated:** 2026-05-21 v1.0.578 (Cursor — feat(cpd-315): dashboard home redesign — numbered tile stats, CTA rows, social badges on Settings, gold bell, HeroMonogram v2, Download+Redo in Review Queue)
-**Last Updated:** 2026-05-21 v1.0.577 (Cursor — feat(cpd-314): dashboard UX ship — sidebar AF logo + CreditToken credits pill, templates/recurrence UI, job wizard timing, active scheduled queue, jobs_c1 mount + scheduling cron)
-**Last Updated:** 2026-05-21 v1.0.576 (Cursor — fix(cpd-313): repair broken JSX in active jobs page blocking Render build)
-**Last Updated:** 2026-05-21 v1.0.574 (Cursor — fix(cpd-312): sidebar credits pill shows tier fallback + avatar + border; HeroMonogram AF letters separated)
-**Last Updated:** 2026-05-21 v1.0.573 (Cursor — fix(cpd-311): Browse + Collab auth — Clerk kid mismatch detection, verifyToken publishableKey, source fetch after param fix, Collab panel rebrand)
-**Last Updated:** 2026-05-21 v1.0.572 (Cursor — fix(auth): Bearer token fallback in requireAuth when getAuth throws; PlanContext no longer defaults to operate on API failure; API Keys page uses Clerk metadata and skips fetch for Guided/Managed)
-**Last Updated:** 2026-05-21 v1.0.571 (Cursor — fix(auth): disable nav setupLocked — was locking out all users without setupDismissed flag; setupDismissed only set on explicit dismiss click, not on setup completion, causing empty nav for legitimate users)
-**Last Updated:** 2026-05-21 v1.0.570 (Cursor — fix(dashboard): bigger tiles — min-h-[220px] p-7; icon in 44px muted container; title text-base; each tile has status line + persistent description; renamed tile body components)
-**Last Updated:** 2026-05-21 v1.0.569 (Cursor — fix(blockers): sidebar /settings/channels dead link → /settings/source-channels; add CLERK_WEBHOOK_SECRET, YTDLP_PROXY, YOUTUBE_COOKIES_BASE64, KICK_API_BASE_URL to .env.example)
-**Last Updated:** 2026-05-21 v1.0.568 (Cursor — fix(security+ux): API key gate, TikTok gate, sidebar plan-aware nav, copy cleanup — (1) requireOperatePlan middleware on all /account/api-keys routes; (2) publish.direct_tiktok min_plan operate→managed; (3) sidebar: My Jobs label, Review Queue before Schedule, plan-aware Settings submenu (API Keys only for operate/custom), setup lock hides nav; (4) Social connect hints de-jargoned, HeyGen label→AI Avatar, escalation CTA→Contact our team)
-**Last Updated:** 2026-05-21 v1.0.567 (Cursor — feat(dashboard): live tiles — each home grid tile shows real-time data (active jobs + failed, review queue count, template count, credits bar + renewal date); tiles enlarged to min-h-[160px] p-6 on desktop; single parallel fetch (jobs+credits+templates) shared across tiles; Job.status union extended to include staged/published/cancelled; job-card STATUS_MAP updated to match)
-**Last Updated:** 2026-05-21 v1.0.566 (Cursor — fix(auraflux-app): fix all TypeScript errors blocking build — WizardConfig missing topic/tone/durationMins/planTier/creditCost, PublishResult missing error field, SourceItem duration non-nullable + contentType + viewCount, SourceType missing video, ResolvedChannel missing name, Sidebar/MobileSidebar accept setupLocked prop, staging publishResult typed properly; tsc --noEmit clean)
-**Last Updated:** 2026-05-21 v1.0.565 (Cursor — fix(auraflux-app): add all missing api.ts exports — notifications (AppNotification, listNotifications, markNotificationRead, markAllNotificationsRead), source library (SourceItem, SourceType, SourceFilters, SourceDateRange, SourcePlaylist, fetchSourceContent, fetchYouTubePlaylists) + source channels (SourceChannels, SourcePlatform, ResolvedChannel, getSourceChannels, saveSourceChannels, resolveSourceChannel); comprehensive audit of all @/lib/api imports across 39 files)
-**Last Updated:** 2026-05-21 v1.0.563 (Cursor — test(cpd-310): add test/support.test.js (15 tests — listAllSupportSessions, markOperatorTookOver, listOperatorUserIds, admin sessions route, operator reply web+SMS, AI suspension); SUPPORT_FROM read at request time; .env.example phone placeholders; Confluence HOW page 15663106)
-**Last Updated:** 2026-05-18 v1.0.496 (Cursor — fix(cpd-278): 6 UX/QA issues in ClipEditor — P0-1: wizard footer hidden at step 2.5 (double action bar eliminated); P0-2: StepHeader Math.floor(step)===i so Source stays highlighted during step 2.5; P1-1: isUnembeddableUrl() detects Twitch/Kick/YouTube watch URLs, shows platform-specific guidance instead of silent broken player; P1-2: assembly summary strip shows real title slice not first word; P1-3: markOut() shows error state/text on Out<=In failure; P1-4: Back at step 2.5 explicitly returns to step 2; minor: fmtTime seconds always 2-digit)
-**Last Updated:** 2026-05-14 v1.0.452 (Cursor — fix: migrate aider_session_review.sh Jira search to POST /rest/api/3/search/jql — old GET /rest/api/3/search returns HTTP 410 GONE per Atlassian deprecation; fix CONFLUENCE_SPACE_KEY default in .env.example CP not AF)
-**Last Updated:** 2026-05-14 v1.0.451 (Cursor — feat(cpd-217): portal_highlight_trim_ext.js — Gemini estimates highlight window from clip title+duration for ENHANCE single-clip jobs, trims dead time before TTS/chrome; feat(cpd-220): clip fetch game filter fallback — when primary_game_id yields <count clips, relax to any broadcaster clip; feat(cpd-211): POST /v1/jobs response includes suggestedDefaults for EXTRACT jobs)
-**Last Updated:** 2026-05-14 v1.0.450 (Cursor — feat(cpd-208): burn_images stat card overlay extension — portal_burn_image_ext.js uses Gemini to derive 2 stat labels then burns ffmpeg drawtext overlays after chrome; fix(cpd-218): promoteAssembledJobs() scans assembled jobs with outputUrl and promotes to published on startup + every 5min; Jira triage: 10 tickets closed Done, 4 moved In Development)
-**Last Updated:** 2026-05-14 v1.0.436 (Cursor — fix(cpd-175): rescueInterruptedJobs marks assembled jobs as 'assembled' not 'failed' when outputUrl exists; E2E runner short-job poll_max 900→1200s for Render queue headroom)
-**Last Updated:** 2026-05-14 v1.0.449 (Cursor — fix(cpd-221): always fetch 100 Twitch clips when primary_game_id filter active; O-T6 only got 1 Valorant clip from stableronaldo because fetch_count=30 didn't have enough Valorant clips to choose from after game filter)
-**Last Updated:** 2026-05-14 v1.0.437 (Cursor — fix(cpd-175): TTS debug logging + E2E threshold 50→35 (ElevenLabs 401 from Render known issue))
-**Last Updated:** 2026-05-14 v1.0.435 (Cursor — chore: Aider session review findings — add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY + YTDLP_PATH to .env.example; delete legacy cwn_production.html; prune 20 stale remote branches)
-**Last Updated:** 2026-05-14 v1.0.434 (Cursor — feat(brand): place AuraFlux logo family icons — HeroMonogram in sidebar header (desktop + collapsed), SparkAnvil in features step heading, FlowNetwork in schedule page heading, EngineHexagon in admin platform overview heading)
-**Last Updated:** 2026-05-14 v1.0.433 (Cursor — feat(cpd-204): apply AuraFlux brand color strategy — Dark Navy sidebar #0B1220, Workspace Canvas #070C15, Gold CTA #F5C542, Prod Gold hover #C7AF4F, Emerald success #10B981; add --success token; fix sidebar to use bg-sidebar not bg-card; update theme inline to expose success token)
-**Last Updated:** 2026-05-14 v1.0.432 (Cursor — fix: normalise legacy tier keys dfy/dwy/diy in backend+frontend so all users see correct plan-based features; bump SW cache to auraflux-v3 to bust static asset cache after deploys; add Jobs+Staging to admin nav for customer preview; add tier label aliases)
-**Last Updated:** 2026-05-14 v1.0.431 (Cursor — fix: hide add-ons (HeyGen/Shoppable) from job wizard step 4 and billing credit packs — wiring kept intact; fix dashboard home fallback to job-focused links instead of Operate API dev links when planTier unset)
-**Last Updated:** 2026-05-14 v1.0.430 (Cursor — feat(cpd-204): features step grouped by category (Scripting/Visual/Assembly); plan-based defaults (Guided→script+TTS on, Managed→full pipeline); dependency hints (TTS requires Script); wan_i2v locked to Managed; output impact copy; plan context banner; burn_images adds duration field)
-**Last Updated:** 2026-05-14 v1.0.429 (Cursor — feat: mount voice/video/thumbnail/clip_sourcing/heygen routes; features wizard inline config panels — TTS voice+speed, script tone+brief, commentary style+notes, WAN prompt+visual style, burn_images URL+position; featureConfig wired into job spec via jobs_c1.js)
-**Last Updated:** 2026-05-14 v1.0.428 (Cursor — fix: mount team/upload/account routes in server.js (all three were defined but never app.use'd — caused 404 on /team/*, /upload/video, /account/api-keys); upload.js now falls back to /tmp/auraflux-uploads if /app/data/uploads is unavailable)
-**Last Updated:** 2026-05-14 v1.0.427 (Cursor — fix(auth): pass secretKey+publishableKey explicitly to clerkMiddleware() — silent env-var discovery failure was causing getAuth() to throw on every request; also add CLERK_PUBLISHABLE_KEY to auraflux-api Render env)
-**Last Updated:** 2026-05-14 v1.0.426 (Cursor — fix: sign-out spinning — add afterSignOutUrl="/sign-in" to ClerkProvider so sign-out has a clear destination instead of looping)
-**Last Updated:** 2026-05-14 v1.0.425 (Cursor — fix(cpd-204): post-auth redirect lands directly on /dashboard (forceRedirectUrl + Render env vars); requireAuth wraps getAuth() in try/catch to prevent EXPRESS_UNHANDLED 500s; admin_crm ensureAdminTables() now idempotently creates account_members for fresh PG instances; all "AI" stripped from user-visible dashboard copy across 8 files)
-**Last Updated:** 2026-05-14 v1.0.424 (Cursor — feat(cpd-204): v0 UI redesign — dashboard home (gradient name, inline badge, icon buttons, left-border card hover, separator + pipeline section) + pipeline widget (skeleton loading, rich empty state with film icon, topic display, larger dots, refresh indicator))
-**Last Updated:** 2026-05-14 v1.0.423 (Cursor — fix(sw): skip cross-origin requests in service worker + catch fetch error; fixes TypeError at sw.js:47 and New Relic preload warnings on app.auraflux.co/dashboard)
-**Last Updated:** 2026-05-14 v1.0.422 (Cursor — fix(dashboard): update stale tier keys diy/dwy/dfy → operate/guided/managed in TIER_QUICK_LINKS; CPD-176 renamed keys but missed dashboard/page.tsx causing dashboard home crash for all users)
-**Last Updated:** 2026-05-14 v1.0.421 (Cursor — fix: render-env-safety — scripts/render_env_set.sh safe single-var setter (fetch→merge→PUT) + .cursor/rules/render-env-safety.mdc blocking bare PUT; fixes 29+ production env var wipes; Jira batch-closed 22 tickets CPD-177 through CPD-198)
-**Last Updated:** 2026-05-14 v1.0.420 (Cursor — fix(cpd-204): mount admin.js router in server.js (adds /api/generate-test-key, /api/admin/migrate-pg, /api/jira-webhook, /internal/alert, and other admin routes); add DATABASE_URL to auraflux-api Render env (was missing — caused api_key validateApiKey to throw on every /v1 request); add error detail to api_key.js catch block for diagnosis; bump to 1.0.420)
-**Last Updated:** 2026-05-14 v1.0.419 (Cursor — fix(sidebar): remove duplicate CRM entry — was in both OPERATOR_NAV and ADMIN_NAV; also removed stale Customers link pointing to non-existent /admin/customers route)
-**Last Updated:** 2026-05-14 v1.0.418 (Cursor — debug(auth): add temporary hasBearer/authKeys log on 401 to distinguish missing-token vs rejected-token)
-**Last Updated:** 2026-05-14 v1.0.417 (Cursor — fix(dashboard): add CLERK_PUBLISHABLE_KEY to auraflux-api Render env (was missing — clerkMiddleware crash caused 500 on all auth routes); mount credits/plan/concierge/social/support/templates route files in server.js (were defined but never mounted — caused 404 on /credits/balance, /plan/features, etc.))
-**Last Updated:** 2026-05-14 v1.0.414 (Cursor — chore: add logs/e2e_*/ to .gitignore; npm install in app to restore tsc; Confluence HOW page created for CPD-177 Activity Overview + System Health)
-**Last Updated:** 2026-05-14 v1.0.413 (Cursor — fix(review-script): curl timeout guards + Confluence orderby 400 fix; script now completes without hanging)
-**Last Updated:** 2026-05-14 v1.0.416 (Cursor — fix(admin-routes): add clerkInit() to server.js so getAuth(req) works on admin routes; fix listCustomers calling /admin/customers which doesnt exist — changed to /admin/crm; add NEXT_PUBLIC_API_URL to auraflux-app Render env)
-**Last Updated:** 2026-05-14 v1.0.415 (Cursor — fix(cpd-signin): sign-in page now shows actionable error message after 10s if Clerk JS fails to load instead of black screen; root cause: clerk.auraflux.co returns 403 because only 1 of 5 required Clerk CNAMEs is set in Cloudflare — must add accounts/clkmail/dkim1/dkim2 records and trigger domain re-verification in Clerk dashboard)
-**Last Updated:** 2026-05-13 v1.0.414 (Cursor — fix(cpd-199/200/201/202/203): 5 E2E quality fixes — CPD-199: TTS retry with exponential backoff (3 attempts, 5s/10s/20s + jitter) for ElevenLabs 429 rate limits during parallel job runs; hard_fail on no-script changed to skip; ELEVENLABS_API_KEY + ELEVENLABS_DEFAULT_VOICE_ID added to Render env; CPD-200: yt-dlp format selector simplified to best[height<=720] (Twitch HLS native — was failing on DASH ext=mp4 selector); poll timeout 900→1800s for COMPACT/EXTRACT jobs; CPD-201: extractVodClips now accepts isVertical flag — vertical_reel EXTRACT clips are cropped 9:16 during extraction instead of post-process; CPD-202: run_all_18_twitch main loop wrapped in try/except — unhandled exception in one test no longer stops entire suite; CPD-203: Gemini video size limit raised 50MB→200MB (COMPACT long-form outputs exceed 50MB); upload + analysis timeouts raised to 3min; file polling extended to 150s)
-**Last Updated:** 2026-05-13 v1.0.413 (Cursor — fix(pwa): service worker now excludes /sign-in and /sign-up from fetch interception — SW navigate handler was swallowing Clerk JS load errors and returning undefined fallback causing FetchEvent network error; also fixed undefined fallback → Response.error(); cache bumped to auraflux-v2; DNS root cause: clerk.auraflux.co CNAME was missing from Cloudflare — re-added pointing to frontend-api.clerk.services)
-**Last Updated:** 2026-05-13 v1.0.412 (Cursor — fix(cpd-200): portal_tts_ext.js replace ElevenLabs SDK with direct axios HTTP call — SDK returned 401 despite valid key (SDK uses different auth path than REST API); direct POST /v1/text-to-speech/:voiceId with xi-api-key header confirmed working 200; also created CPD-197 (duration metric) and CPD-198 (QA self-healing sendback) stories)
-**Last Updated:** 2026-05-13 v1.0.411 (Cursor — fix(cpd-197/198/199): assembly_service._downloadClips now uses local paths directly for file:// and /tmp/ VOD clips (no HTTP download); portal_tts_ext.js all hard_fail returns changed to skip so CPD-191 skip handler fires on 401/API errors; chrome overlay now applies when tts_ext skips (condition was checking ordered flag, not whether chrome was already applied — tts_ext skip meant no chrome at all))
-**Last Updated:** 2026-05-13 v1.0.410 (Cursor — fix(cpd-194/195/196): extension workers now receive jobSpec via _adaptExtensionWorker closure (tts_ext was always getting undefined jobSpec and unconditionally skipping); rescueInterruptedJobs STALE_SECS increased 90→600 + 30s heartbeat during assembly (false failure mid-pipeline); portal0 handles file:// VOD clip URLs with fs.existsSync + ffprobe instead of axios HTTP probe)
-**Last Updated:** 2026-05-13 v1.0.409 (Cursor — fix(cpd-191/192/193): tts_ext skip now non-fatal (extension skip degrades gracefully, job continues without TTS); VOD URL path bug fixed (was reading spec.sourceConfig?.urls but urls live at order.inputs.sourceConfig.urls — extractVodClips never ran); platforms[] now wired from top-level b.platforms into order.publish.platforms; ELEVENLABS_API_KEY added to Render env via MCP)
-**Last Updated:** 2026-05-13 v1.0.408 (Cursor — fix(cpd-184/185/186): R2 output URL re-upload after vertical crop + TTS mix (CPD-184); FFmpeg drawtext chrome overlay — top bar + AuraFlux watermark — burned into every assembled video (CPD-185); EXTRACT VOD flow rewritten to use yt-dlp --get-url + ffmpeg HLS-seek instead of full download (CPD-186))
-**Last Updated:** 2026-05-13 v1.0.407 (Cursor — fix(cpd-182/183): assembly OOM — multi-clip concat now tries stream copy first (no re-encode, avoids OOM on Render); falls back to 720p re-encode only if stream copy fails; yt-dlp added to Dockerfile for EXTRACT flow; startup rescue + 5-min periodic rescue wired into server.js listen callback)
-**Last Updated:** 2026-05-13 v1.0.406 (Cursor — fix(cpd-178/179/180/181): 4 pipeline gap fixes — CPD-180: fetch entry now uses b.urls (multi-clip array) for COMPACT stitch; CPD-178: assembly_service applies 9:16 vertical crop for vertical_reel/short+social; CPD-179: onPortalPass tts_ext now calls mixTtsIntoVideo() to duck+mix narration post-assembly; CPD-181: EXTRACT flow detects Twitch VOD URLs, downloads via yt-dlp, splits into 3 clips, feeds local paths to portal sequence)
-**Last Updated:** 2026-05-13 v1.0.405 (Cursor — fix(cpd-175): final — all 18 E2E tests run with real Gemini video QA; 4/18 pass (G-T6 95/100 best); 4 follow-up tickets created CPD-178/179/180/181; canvas updated with actual scores + video URLs + UX audit + pipeline issue table)
-**Last Updated:** 2026-05-13 v1.0.404 (Cursor — fix(cpd-175): Gemini video analysis — poll file state until ACTIVE before calling generateContent; without polling, 404 returned on immediate use of freshly-uploaded file)
-**Last Updated:** 2026-05-13 v1.0.403 (Cursor — fix(cpd-175): Gemini Files API upload fix — add uploadType=multipart query param; resolves RuntimeError causing metadata fallback scoring at 76/100 instead of true video QA score)
-**Last Updated:** 2026-05-13 v1.0.402 (Cursor — feat(cpd-175): VOD CDN access confirmed + 18 E2E tests redesigned (3S+3L per tier, 9 ENHANCE/6 COMPACT/3 EXTRACT); twitch_client.js adds extractVideoId/getVideos/resolveVideoHls via usher.ttvnw.net; test runner adds get_vod_for_streamer/get_live_vod_url/source_type branching; Jira+Confluence updated; tests running)
-**Last Updated:** 2026-05-13 v1.0.401 (Cursor — chore: session cleanup — @types/newrelic installed (fixes TS blocking error in instrumentation.ts); tier-rename stragglers committed (api_key.js, postgres.js, health_cache.js, credit_calculator.js, stripe_billing.js, 6 frontend pages, tier-labels, canvas); RENDER_API_KEY + RENDER_SERVICE_ID + NEW_RELIC_USER_KEY documented in .env.example; review script Jira/Confluence error handling improved + sidebar nav parser fixed; 6 stale PRs closed + all stale remote branches pruned)
-**Last Updated:** 2026-05-13 v1.0.400 (Cursor — fix: e2e readiness — TIER_RANK in feature_gate.js now includes operate/guided/managed aliases (plan tier rename left TIER_RANK stale causing all feature checks to pass for any tier — live production bug); concierge error messages updated to new names; stale test assertions updated: feature_gate/concierge/runpod/heygen_ext tests now use operate/guided/managed; script_gen_service test updated for topic-only mode; 433 tests passing 0 failing)
-**Last Updated:** 2026-05-13 v1.0.399 (Cursor — feat(cpd-177): superuser system health — GET /admin/system-health (NR incidents/metrics + Render service/deploy status); System Health tab on overview page with incident alerts, Render service cards, NR metric panels per app; fix auraflux-app build by removing dropped instrumentationHook from next.config.ts)
-**Last Updated:** 2026-05-13 v1.0.398 (Cursor — feat(cpd-177): admin platform overview — GET /admin/activity-overview backend; /dashboard/admin/overview page with stats, activity feed, and account table; sidebar admin nav now shows Overview/CRM/Customers/Permissions only — no customer job nav for superuser)
-**Last Updated:** 2026-05-13 v1.0.397 (Cursor — feat(cpd-177): NR pipeline events — JobCreated/JobComplete/JobFailed/PortalStart/PortalPass/PortalFail custom events wired into jobs_c1.js and developer_api.js; queryable via NRQL on each event type)
-**Last Updated:** 2026-05-13 v1.0.396 (Cursor — feat(cpd-177): New Relic browser agent added to layout.tsx — AuraFlux-Browser app created in NR (ID 641920051), 64KB agent served from /public/newrelic-browser.js, loaded beforeInteractive; user key updated to NRAK-YPX91JO0Y59PYT8UVU42MX9CWCA; full environment now monitored: API APM + App APM + Browser RUM)
-**Last Updated:** 2026-05-13 v1.0.395 (Cursor — feat(cpd-177): New Relic APM for auraflux-app — @newrelic/next installed, instrumentation.ts, newrelic.js config, next.config instrumentationHook; NR vars pushed to auraflux-app Render service; API license key confirmed valid)
-**Last Updated:** 2026-05-13 v1.0.394 (Cursor — feat(cpd-176): rename internal plan tier keys diy/dwy/dfy → operate/guided/managed; 28 backend + 13 frontend files updated; DB migration 012; .env.example updated; feature-gating.mdc rule updated; all 10 production Clerk users patched to new keys; STRIPE_PRICE_DIY/DWY/DFY → STRIPE_PRICE_OPERATE/GUIDED/MANAGED)
-**Last Updated:** 2026-05-13 v1.0.393 (Cursor — fix: stray closing brace in jobs_c1.js and developer_api.js caused SyntaxError crashing all 3 recent Render deploys; removed duplicate } from _resolveExtensionWorkers in both files; service now deploys with CPD-166-175 changes live)
-**Last Updated:** 2026-05-13 v1.0.391 (Cursor — feat(cpd-175): redesign 18 E2E tests — each test now carries explicit topic/tone/durationMins/publishMode; features array covers branding, scene_select, burn_images, dynamic_overlays, scheduled, commentary across all 18; spec builder enforces all addOns post-Gemini; Confluence HOW page created)
-**Last Updated:** 2026-05-13 v1.0.389 (Cursor — fix(cpd-167): assembly.js now mixes TTS narration into source-clip-only jobs using ffmpeg amix; duck original clip audio 12%, boost narration 2.2x, apad to match video duration; non-fatal on mix error)
-**Last Updated:** 2026-05-13 v1.0.387 (Cursor — feat(cpd-166-174): pipeline gap fixes — register tts_ext in both route files; merge topic/tone/durationMins/publishMode in jobs_c1; call generateJobScript before runPortalSequence; persist platforms[] on job completion; gate C0-era HeyGen routes/bus subscriber behind !DATABASE_URL; WAN dashboard toggle now sets entry=generate; clip sourcing auto-triggers when addOns.clipSourcing.active; branding/imageBurn/dynamicOverlays flags propagated through createJobSpec; Confluence HOW pages created for all 9 tickets CPD-166 to CPD-174)
-**Last Updated:** 2026-05-12 v1.0.385 (Cursor — feat(e2e): complete runner rewrite — live Twitch clip fetching (no static corpus), smart clip count (1 for short, 3-5 for long-form), Gemini builds creative specs per-test, platforms[] always wired, TTS always active, terminal-state polling, Gemini Files API video upload for scoring, metadata fallback scorer; DATABASE_URL restored to Render API service; 18/18 tests passing)
-**Last Updated:** 2026-05-12 v1.0.383 (Cursor — cleanup: remove all SQLite references from server.js; deduplicate double init+inferJobStage blocks; saveJob now uses .catch() not sync try/catch)
-**Last Updated:** 2026-05-12 v1.0.381 (Cursor — fix: API crash root cause — db.loadAllJobs() is async; calling without await in sync try/catch left rejection unhandled, crashing server post-bind; both SQLite init blocks converted to .then().catch() chains)
-**Last Updated:** 2026-05-12 v1.0.379 (Cursor — fix: 5 remaining build/startup errors — 4x unknown→ReactNode in CRM account page (Boolean() guard); afterSignOutUrl prop removed from UserButton (Clerk v6); second db.initDb() unhandled rejection in server.js now caught)
-**Last Updated:** 2026-05-12 v1.0.377 (Cursor — fix: app build failure — useSearchParams on /dashboard/operator wrapped in Suspense (Next.js 16 requirement); API startup crash — db.initDb() unhandled rejection now caught, prevents port-bind failure on missing DATABASE_URL)
-**Last Updated:** 2026-05-06 v1.0.375 (Cursor — fix: admin CRM + permissions routes were 404 — was mounted at /v1/admin/* but frontend calls /admin/*; now mounted at root to match existing route pattern)
-**Last Updated:** 2026-05-06 v1.0.373 (Cursor — feat(cpd-150/154): Permission management panel + Internal CRM; lib/routes/admin_crm.js; /admin/permissions, /admin/crm, /admin/crm/[accountId] pages; actor banner in top bar; Clerk warp via actor tokens; operator notes table; admin_audit_log table; CRM + Permissions in sidebar)
-**Last Updated:** 2026-05-06 v1.0.371 (Cursor — feat(cpd-156): Collab scoped to job creation + staging only; /concierge redirect to support; Gemini customer memory — last 20 jobs + templates injected into system prompt per session; portal outcome summaries included; internal tier IDs removed from Collab prompt)
-**Last Updated:** 2026-05-06 v1.0.369 (Cursor — feat(cpd-155/157-165): UX polish batch — Staging→Review Queue, Operator section divider in nav, Credits badge shows remaining, Home plan badge+quick links, Support SMS gated by plan, Profile skeleton loader, Team error+retry state, tierLabel on billing/profile, GuidesPanel accepts canEsc prop)
-**Last Updated:** 2026-05-06 v1.0.367 (Cursor — feat(cpd-152): wire LockedFeature for HeyGen/Shoppable add-ons and TikTok platform in New Job wizard; Managed-only options now show lock overlay + upgrade tooltip on Operate/Guided plans)
-**Last Updated:** 2026-05-06 v1.0.365 (Cursor — fix(cpd-153): support page reads planTier from usePlan() not Clerk direct; GuidePanel passes planTier to ConciergeChat; dead usePlan import removed from team page)
-**Last Updated:** 2026-05-06 v1.0.363 (Cursor — fix(cpd-151): operator page reads ?customerId from search params; backend /jobs?all=true&customerId= scoped filter; customer drill-in banner + back link)
-**Last Updated:** 2026-05-12 v1.0.362 (Cursor — feat(cpd-320): E2E suite: Gemini video understanding via Files API; Claude UX observer lib_claude.py; inline per-test scoring; 18/18 tests passing; Jira CPD-149—154 created; Confluence HOW page for org RBAC)
-**Last Updated:** 2026-05-12 v1.0.361 (Cursor — feat(sms): migrate from Twilio to Telnyx; adapter pattern lib/sms/; SMS_PROVIDER=telnyx; +15716002835 active; rollback via SMS_PROVIDER=twilio)
-**Last Updated:** 2026-05-12 v1.0.358 (Cursor — fix(portal0): partial-probe fallback — re-probe full URL when 8MB range download returns ≤12s duration; fixes high-bitrate E2E clips being incorrectly rejected; O-T6 confirmed passing; G-T3 fix deploying)
-**Last Updated:** 2026-05-10 (Cursor — feat: wire gate5_forced to auto-trigger server-side Gate 5; remove dashboard /publish bypass — advance endpoint fires Gate 5 async; approveAndUpload removed; _pollForPublished polls for published stage)
-**Last Updated:** 2026-05-06 v1.0.339 (Cursor — fix(cpd-142): revert steps 30→20 timeout; extend poll timeout 300s→600s; scheduler stays simple)
-**Last Updated:** 2026-05-06 v1.0.335 (Cursor — fix(cpd-142): export _runWanPreGeneration from jobs_c1; restore ensurePodRunning; developer_api could not import function)
-**Last Updated:** 2026-05-06 v1.0.333 (Cursor — fix(cpd-142): jobs_c1.js numFrames fallback 25→97; was overriding runpod.js default)
-**Last Updated:** 2026-05-06 v1.0.331 (Cursor — fix(cpd-142): runpod.js numFrames default 25→97; workflow JSON was overridden by hardcoded param)
-**Last Updated:** 2026-05-06 v1.0.329 (Cursor — fix(cpd-142): WAN workflow length 25→97 frames (6s) to clear portal3a 5s minimum)
-**Last Updated:** 2026-05-06 v1.0.327 (Cursor — fix(cpd-142): switch ComfyUI output SaveAnimatedWEBP→SaveAnimatedPNG; FFmpeg apng demuxer handles animation natively unlike webp_pipe)
-**Last Updated:** 2026-05-06 v1.0.325 (Cursor — fix(cpd-142): _encodeWanToMp4 uses libx264 transcode instead of stream copy for WAN animated WebP files)
-**Last Updated:** 2026-05-06 v1.0.323 (Cursor — fix(cpd-142): assembly_service uses WAN gen localPath directly, skipping URL download step)
-**Last Updated:** 2026-05-06 v1.0.321 (Cursor — fix(cpd-142): portal0 WAN gen item handling — items with localPath+sourceType=wan_gen now probe the local file and pass through without URL checks)
-**Last Updated:** 2026-05-06 v1.0.319 (Cursor — fix(cpd-142): null seed → KSampler crash; ANTHROPIC_API_KEY removed from env guard skip list — both blocked all Operate E2E tests from producing video)
-**Last Updated:** 2026-05-06 v1.0.317 (Cursor — fix(cpd-142): createJobSpec now preserves WAN gen fields (prompt, genType, imageId, width, height, numFrames, seed) in sourceConfig — previously these were silently dropped, causing _runWanPreGeneration to find an empty prompt and immediately return false; all 6 Operate E2E tests were failing in ~10s for this reason)
-**Last Updated:** 2026-05-04 (Cursor — feat(cpd-141): Operate /v1/jobs — productionProfile + entry compose; tier_api_e2e_test.py six scenarios use ingress (compose/fetch) and profiles (broadcast_desk/vertical_reel/live_event), not legacy editorial contentType labels; legacy contentType still accepted and mapped)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-141): add filledScript to _formatJob in developer_api.js — GET /v1/jobs/:id now exposes filledScript in response; was stored at spec.filledScript by script_gen_service but not surfaced in API)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-141): expose filledScript in GET /v1/jobs/:id response; E2E test only requires outputUrl for URL-sourced jobs — news without source URL correctly skips assembly)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-132): video output + portal status + C0 cleanup — assembly_service writes R2 URL to state.savedOutputs; _buildPortalReports reads spec.portalReports not state.gateResults; E2E test validates outputUrl non-null; speakerName fallback 'Bobby G'→'Host'; chrome_overlay_ffmpeg 'CLIPZWORLD NEWS'→'AuraFlux', C0 category labels updated)
-**Last Updated:** 2026-05-04 (Cursor — chore(cpd-126): remove portal5 diagnostic logs — bug confirmed fixed; cleanup after v1.0.282 verification test passed — clip URL job completes in ~2min)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): conditional updateJobSpec — guard prevents non-terminal writes from overwriting 'complete'/'failed' in DB; fixes race where fire-and-forget _persist calls with stale status='running' commit after the awaited 'complete' write)
-**Last Updated:** 2026-05-04 (Cursor — debug(cpd-126): portal5 diagnostic logs to trace why jobs hang in 'running' after portal4 completes — adding console.log at run() entry, uploadSignal check, and canProduce skip path)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): R2 forcePathStyle + correct secret key — S3Client now uses forcePathStyle:true for Cloudflare R2; improved R2 error logging; corrected truncated R2_SECRET_ACCESS_KEY and R2_ACCOUNT_ID on auraflux-api)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal5 gate4 report fallback + store uploadSignal — portal5 reads gate4.uploadSignal from portalReports; _storeReport now persists uploadSignal)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal5 graceful skip when no platforms configured — pass_with_notes instead of hard-failing API jobs with no publish destination)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal3b + portal4 suggestive mode — mismatch_escalate→fixable in 3b; hard_fail→pass_with_notes in 4; uploadSignal=true in suggestive mode)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): portal3b gate3a fallback + chrome-committed guard + mismatch_fixable passes — C1 API clips jobs no longer blocked by portal3b chrome mismatch)
-**Last Updated:** 2026-05-04 (Cursor — fix(cpd-126): chrome defaults false in job_spec.js + portal3a prompt — C1 API jobs no longer inherit hasTopBar=true; chromeBlocker root cause eliminated)
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal3a diagnostic logging — qaMode/outcome/canProduce at run() entry and suggestive-mode check)
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal3a suggestive mode — score/content hard-fails become pass_with_notes; bake qaMode into jobSpec at creation)
-**Last Updated:** 2026-05-03 (Cursor — feat(cpd-131): topic + tone fields in jobs/new dashboard form — Step 2 adds Video topic input + Tone dropdown; wired into CreateJobPayload and normaliseDashboardPayload → order.topic/tone for script_gen_service pickup; review summary shows topic+tone before submit)
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal1 hasAvatarWorkflow v2 — speakerName always 'Bobby G' (createJobSpec fallback L803); only addOns.heygen.active is reliable avatar signal; C1 API jobs no longer blocked by lockedOutro/sceneHeaders checks)
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): portal1 canProduce fix — hasAvatarWorkflow now checks speakerName/heygen.active (not templateId); sceneHeaders not required for C1 API url_list jobs; failReason surfaced in not-ready return; _storeReport captures outcome+score+fixDirective)
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): staging-assets response improvements — add failReason to portal summary, expose filledScript in script output field for C1 API jobs)
-**Last Updated:** 2026-05-03 (Cursor — feat(cpd-126): C1 assembly service — lib/assembly_service.js downloads source clips and FFmpeg-concats them after portal1 passes; wired into developer_api.js onPortalPass('portal1') callback (awaited by runner); sets assembledPath + assembledVideoUrl on jobSpec so portal3a can review; R2 upload included with fallback)
-**Last Updated:** 2026-05-03 (Cursor — feat(cpd-126): C1 script generation service — lib/script_gen_service.js generates filledScript from job spec URLs via Gemini analysis before portal sequence starts; wired into developer_api.js setImmediate block so portal1 QA has a script to validate; fixes all 18 E2E test jobs failing at portal1 with "no script available")
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): use db.updateJobSpec for initial job persist in developer_api.js — createJobSpec writes job_spec column before order fields are set; updateJobSpec call after order wiring ensures topic/tone/platforms are visible to portals and staging-assets)
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): consolidated developer_api.js fixes — persistJobSpec→saveJob + getJobRow→loadJobRow (squash-merge regression); ensures all /v1/ endpoints work end-to-end) — createJobSpec was missing templateId, sourceType mapping, and all order fields; jobs were queued but pipeline had no topic/tone/platforms to work with)
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): db.getJobRow→db.loadJobRow in developer_api.js (getJobRow never existed); fixes GET /v1/jobs/:id, /result, /staging-assets, and /approve-publish all returning get_job_failed 500)
-**Last Updated:** 2026-05-03 (Cursor — fix(cpd-126): wire portal workers into runPortalSequence in developer_api.js — without portalWorkers all v1 jobs stayed queued indefinitely; adds _resolvePortalWorkers/_resolveExtensionWorkers helpers + persistJobStatus callback matching jobs_c1.js pattern)
-**Last Updated:** 2026-05-02 (Cursor — fix: admin POST /api/generate-test-key for QA/CI — creates API key for any Clerk userId via X-Admin-Secret; unblocks E2E automated testing without browser-based key copy)
-**Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-008 credits page returns 404 for new users — getOrCreateClientPlan() auto-provisions client_plans row from Clerk planTier on first /credits/balance access; also added /auth/token page for Clerk sign-in token auth (bypasses new-device 2FA), fixed Clerk v7 API compatibility (useClerk vs useSignIn), added /auth/token to public middleware routes)
-**Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-005 job submission fails for new users — loadCustomerConfig now falls back to c1_default.json when no customer-specific config exists at config/customers/{userId}.json; all new Clerk signups can now submit jobs without manual config provisioning)
-**Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-003 api_keys query-is-not-a-function — added query() export to lib/db/postgres.js; both api_keys.js service and api_key.js auth middleware were importing a non-existent export causing all /account/api-keys requests to 500)
-**Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): BUG-004 concierge ROLES.customer→ROLES.CUSTOMER (all users got 403 on /concierge/chat); fix migration 011 remove job_metadata seed (table missing, crashed startup silently); add schema_migrations to 007/008/009 to stop re-running on every deploy)
-**Last Updated:** 2026-05-02 (Cursor — fix: QA gap fixes — wizard step3 formFactors filter regression, Feature interface + FEATURES array restored, default seeding on form factor select, settings hub page, support trial fallback 999→0, planTier in req.user from Clerk claims)
-**Last Updated:** 2026-05-02 (Cursor — fix(cpd-131): dashboard gap fixes — Clerk-auth API key mgmt route, PlanProvider token, OAuth social redirect, profile metadata bucket, wizard planTier for discounts, save-as-template UI, stale coming-soon badges, API Keys in sidebar nav)
-**Last Updated:** 2026-05-02 (Cursor — feat(cpd-127+129): plan-specific dashboard + LockedFeature upsell — PlanProvider/usePlan context, Jobs hub Operate API-first banner + API Keys CTA, LockedFeature component (lock overlay + upgrade tooltip + LockedBadge), plan-context.tsx, dashboard layout wraps PlanProvider)
-**Last Updated:** 2026-05-02 (Cursor — feat(cpd-128): credit differential pricing — TIER_DISCOUNT map (diy=1.0, dwy=0.9, dfy=0.75, custom=0.7), planTier flows through calculateCreditCost + job_spec + estimateCreditCost frontend; discount note in Copilot message)
-**Last Updated:** 2026-05-02 (Cursor — fix: remove logs/aider_session_review.md from .gitignore so report can be written and committed; Serena memories updated to Sprint 5)
-**Last Updated:** 2026-05-01 (Cursor — fix: aider_session_review.sh --no-gitignore so report writes correctly)
-**Last Updated:** 2026-05-01 (Cursor — chore: nav orphan pages wired, .env.example audited, stale branches pruned)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-116→125): job templates + scheduled starts + recurring + Copilot schedule suggestions — all three phases)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-73/cpd-48): clip sourcing + scheduler UI — autoSourceClipManifest in clip_sourcing/index.js wires Gemini footage analysis into portal3a commentary path; schedule page rebuilt with upcoming/past tables, reschedule datetime picker, cancel-schedule action)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-120): hard gap fixes — credit deduction wired to pipeline (consumeCredits before runPortalSequence, PAUSED=abort), HeyGen video_id destructure fix, shoppable extension worker (FFmpeg CTA overlay, fires after portal4), Copilot guide-mode for Operate / full for Guided+Managed)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-116c): Avatar IV only — removed heygen_std from rate card, Stripe packs, billing UI, and wizard; all heygen paths collapse to heygen_per_min:120 / $45/min)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-116b): add Shoppable Pack — 2 cr/min, $4/min, 10-min pack = 20 cr / $40; credit_calculator shoppable moved from flat 10 cr to 2 cr/min per-duration; api.ts CREDIT_RATES + estimateCreditCost updated to match)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-116): finalize plan + pack pricing — Operate $999/400cr, Guided $2,499/1200cr, Managed $4,499/2000cr; 4 feature packs (Narration $20, T2V $120, Avatar $300, Avatar IV $450); stripe_billing.js PLANS+PACKS, billing/page.tsx plan cards + pack section, pricing canvas updated with margins)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-115): duration-based credit estimation — credit_calculator.js (rate card: 10 base, 1/6/30/120 cr/min per tier ×10 multiplier), durationMins+creditCost baked into createJobSpec, refundCredits for hard failure auto-refund, POST /credits/refund route, wizard duration slider + live Copilot estimate, estimateCreditCost in api.ts)
-**Last Updated:** 2026-05-01 (Cursor — chore: rebrand CWN→AuraFlux in package.json, lib headers, STATUS.md; real AF lettermark icons for PWA (192+512)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-118): PWA setup — manifest.json, sw.js (cache-first shell, push notification ready), PWARegister component, icons 192/512, Next.js metadata updated; native app (CPD-113) on roadmap)
+**Last Updated:** 2026-05-30 v1.0.806 (Cursor — fix(cpd-443): post-review fixes — clipSpec wired into fetchSpec payload (critical: EXTRACT mode cut points no longer dropped); long-only features pruned on formFactor switch; durationMins uses DUR_TO_MINS lookup not parseInt/60; ?templateId= pre-fill now sets format+sourceIntent; fetchSpec type extended in api.ts (drops as any); Source section auto-collapses after ClipEditor confirm; SparkAnvil unused import removed; 20 copy changes: assembly→production, Source clips→Footage, VOD options→plain English, Pipeline→AI production tools, Send to assembly→Start production)
+**Last Updated:** 2026-05-30 v1.0.804 (Cursor — feat(cpd-443): single-page job builder — replaces 4-step wizard at /myjobs/new with template-first collapsible-section layout; new job-builder/ component folder: CollapsibleSection (expand/collapse with summary), ChipGroup (multi/single select), FramePreview (live aspect-ratio frame with thumbnail+grade+captions), TemplateGrid (6 presets + Build My Own CTA); JobBuilderPage wires SourceLibraryPicker + VideoUpload tabs + ClipEditor sub-panel (compact+extract) inside Source section; Production features section merges existing FEATURES (script/TTS/commentary/generation/burn_images) with new FFmpeg chips (grade, effects, audio); sticky right panel shows live frame preview + credit estimate + summary bullets; scheduling simplified to start-now vs scheduled-datetime; publish timing + recurring templates removed from job creation flow; TypeScript clean; CPD-443 in Sprint 6)
+**Last Updated:** 2026-05-29 v1.0.802 (Cursor — feat: multi-clip carousel + stitch wiring — new ClipOrderTray component (horizontal reorder strip with ← → arrows, total duration, platform colour thumbnails); SourceLibraryPicker gains carousel/grid view toggle and multiClipMode prop; wizard infers stitch mode when formFactor=long + sourceIntent=clips; fetchSpec.stitchMode propagated through jobs_c1.js → sourceConfig.stitchMode on jobSpec; assembly already handles ordered concat correctly)
+**Last Updated:** 2026-05-29 v1.0.800 (Cursor — feat: SRT caption burn-in live + intro/outro card pipeline wired — Whisper now uses verbose_json to generate timestamped SRT; _segmentsToSrt/_writeSrt/_burnCaptions added to portal_gpt4o_qa.js; captions burned into assembled video and re-uploaded to R2 when captions.burnin enabled; intro/outro card upload via PATCH /brands/:id/branding-cards/:slot → R2 → postgres brands table (migration 023); assembly_service._downloadSingleClip + card prepend/append before _concatClips; brandId resolution in developer_api injects card URLs; grader checks captions_burnin + overlay_intro_outro flipped to implemented:true; CPD-442 created for PiP backlog)
+**Last Updated:** 2026-05-29 v1.0.798 (Cursor — feat(cpd-440,cpd-441): AI smart crop + smart highlights — new lib/services/smart_crop.js (Gemini Vision subject bounding box → portrait blur-pad overlay offset); new lib/services/highlight_detector.js (FFmpeg silencedetect inversion → high-energy window array); both wired into assembly_postprocess.js and assembly_service.js; grader checks ai_beat_sync and video_cropdetect added; Jira CPD-440 + CPD-441 created as backlog stories; timelapse/motion_trails/glitch effects registered in feature_gate.js + assembly_effects.js)
+**Last Updated:** 2026-05-29 v1.0.796 (Cursor — feat(cpd-431): All FFmpeg effects live — assembly_postprocess.js hooks into assembly.js before R2 upload; portal3a FFmpeg scan extended with blackdetect + ebur128 loudness; grader flips 20 checks to implemented:true; 3 remaining as not_implemented pending asset infra: intro_outro, pip, captions_burnin)
+**Last Updated:** 2026-05-29 v1.0.794 (Cursor — feat(cpd-431): FFmpeg full feature wiring — 108 feature keys in feature_gate.js (was 30); new lib/assembly_effects.js with buildAudioFilterChain/buildVideoFilterChain/getActiveEffects covering all 70+ CPD-431 candidates; 24 new grader checks added as not_implemented=false ready to flip live as each feature ships; Jira epic CPD-431 + 8 sub-tasks CPD-432 through CPD-439 created)
+**Last Updated:** 2026-05-29 v1.0.792 (Cursor — chore: OPENAI_API_KEY + TWELVE_LABS_API_KEY added to Render env, cwn-production/.env, cwn-c0/.env, and .env.example; GPT-4o QA extension now active on deploy)
 
-**Last Updated:** 2026-05-01 (Cursor — fix: sidebar nav order — Jobs, Schedule, Billing, Support, Profile, Settings; removed Credits (redundant with sidebar header)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-117): collapsible sidebar, mobile slide-in, notifications bell (held/failed/complete), SidebarContext
-**Last Updated:** 2026-05-01 (Cursor — feat: usage history table on Billing page — date, type, job link, credits per entry; isLoaded guard added
-**Last Updated:** 2026-05-01 (Cursor — chore: aider review script extended to cover frontend UI layer — NEXT_PUBLIC_* env vars, TS check, page inventory, sidebar nav audit, api.ts-to-backend route mapping, Confluence space corrected to AF
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-116): drag-and-drop video upload, credits moved to sidebar header, AuraFlux Copilot restored in top bar
-**Last Updated:** 2026-05-01 (Cursor — fix: auth errors on dashboard load — isLoaded guard on all API fetches; top-bar AI button icon-only (no "Copilot" text)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-115): Support system — Gemini support AI, SMS via Twilio +15715001787, email escalation last resort, support history per user, tier-gated (DIY 30d / DWY/DFY full), /dashboard/support page, sidebar link, DB migration 008
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-114): AuraFlux Guide→Copilot rename; top-bar credits static (load-once, no poll); Guides link in sidebar footer → Confluence customer guide; Render API redeploy triggered for consecutive update_failed)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-113): AuraFlux Guide as job co-pilot — guide auto-opens on /jobs/new with step-0 context; context hint banner updates per step; inline GuideTip card on every wizard step with "Ask a question" link; jobs hub CTA "Get guided help" opens guide + navigates to wizard)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-112b): guide UX — inline right panel (not fixed overlay, content shifts not covered), credit counter simplified to numeric value only, "AI Concierge" → "AuraFlux Guide" in chat widget + concierge page)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-112): Jobs section restructure — sidebar sub-menu (New/Active/History), hub page, Active page (auto-poll 15s + operator actions), History page (post-publish links + selection review + template stub), job detail enhanced (published links card, "what you selected" card); backend: getPublishResults + wizardConfig in GET /jobs and GET /jobs/:jobId)
-**Last Updated:** 2026-05-01 (Cursor — feat(cpd-111b): Stripe Customer Portal wired — POST /plans/billing-portal, createBillingPortalSession (lookup by email), getBillingPortalUrl client call, "Manage payment" section on billing page; completes CPD-111 billing gap)
-**Last Updated:** 2026-05-01 (Cursor — feat(CPD-111): dashboard UX overhaul — AuraFlux Guide slide-out panel (right side, any page), top bar credit counter → billing, sidebar cleanup (hide Overview, rename Concierge→Guide, add Billing+Profile), Job Status simplified, Billing page (plan cards + credit packs), Profile page (identity/security/appearance/billing); 418 pass)
-**Last Updated:** 2026-05-01 (Cursor — feat(CPD-110): platform-agnostic job wizard — 5-step: form factor → production path → source → features → platform/publish/add-ons; content type derived internally; 418 pass)
-**Last Updated:** 2026-05-01 (Cursor — feat(CPD-103/104/105/106/107/108): UI gap fixes — content type display labels + show_commentary added, /generate gated operator+, job detail full publish copy, dashboard pipeline status live widget, operator retry/advance/rollback actions; 418 pass)
-**Last Updated:** 2026-05-01 (Cursor — feat(CPD-109): DIY/DWY feature parity — all features previously gated at dwy now open to diy; tier distinction is service level only; DFY-only: Imagen 3, HeyGen avatar, WAN i2v, TikTok direct; 416 pass)
-**Last Updated:** 2026-05-01 (Cursor — fix(jobs-c1): normaliseDashboardPayload now maps scheduledPublishAt→scheduledAt so UI-submitted scheduled jobs no longer silently drop their publish time; 416 pass)
-**Last Updated:** 2026-05-01 (Cursor — docs: .env.example patched — 9 undocumented env vars added (HEYGEN_AVATAR_SHORT_{NBA,NEWS,TWITCH}_ID, NEXT_PUBLIC_APP_URL, CAPCUT_URL, C0_LEGACY_OVERLAY_ONLY, C0_FORCE_SIDEBAR_VISIBLE, SMOKE_API_SECRET); stale remote branches pruned via git fetch --prune)
-**Last Updated:** 2026-04-30 (Cursor — fix: stageMap active=false respected in buildPortalMap — active:false on any stage now suppresses the corresponding portal regardless of customer config provider; 416 pass)
-**Last Updated:** 2026-04-30 (Cursor — fix: stageMap passthrough — request body stageMap now merged into stageMapOverride in jobs_c1 so callers can disable individual stages e.g. script for own-script fetch jobs; 416 pass)
-**Last Updated:** 2026-04-30 (Cursor — fix: url_list items pre-populate — createJobSpec now seeds order.inputs.items from sourceConfig.urls when sourceType is url_list so portal0 canProduce check passes; 416 pass)
-**Last Updated:** 2026-04-30 (Cursor — fix: portal adapter closure — jobSpec now passed to _resolvePortalWorkers so each runWorker call closes over live jobSpec; 416 pass)
-**Last Updated:** 2026-04-30 (Cursor — fix: _adaptLegacyPortal wrapper in jobs_c1 — legacy portals (run/canProduce/commit) now adapt to runWorker/isPass interface expected by portal_policy_runner; 416 pass)
-**Last Updated:** 2026-04-30 (Cursor — fix: jobs_c1 planTier passthrough — bodyPlanTier now forwarded to createJobSpec so E2E test callers can set dwy+ without c1_default customer config; 416 pass)
-**Last Updated:** 2026-04-30 (Cursor — fix: admin bypass middleware now runs before Clerk in server.js — prevents getAuth throw on x-admin-token E2E test requests; 416 pass)
-**Last Updated:** 2026-04-30 (Cursor — CPD-86/33/34: direct publish layer — token_store (AES-256-GCM, PG), youtube/tiktok/instagram adapters, publish/index.js (platform adapter pattern), social_connect OAuth routes, /dashboard/settings/social-connect UI; CPD-12: smoke_render.test.js (SMOKE_API_URL-gated); CPD-4: lib/ai/video_transforms.js longToShort+shortToLong scaffold; CPD-3: C0 UI audit clean; 416 pass / 9 skip)
-**Last Updated:** 2026-04-30 (Cursor — CPD-5: /dashboard/generate page with PromptInput/StatusPoller/VideoPreview + frame presets; CPD-6: test script + MORNING_BRIEFING.md; pod EXITED, live run pending)
-**Last Updated:** 2026-04-30 (Cursor — feat: C1+ decoupling — customerConfig fallback c0→c1_default, portal0/thumbnail/QA checklists purged of c0 defaults, geminiScriptQA delegates to checklist modules (expectedScenesCount/deductionMap), groupSegmentsByLabel itemIdx fix; 406 pass)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 **Previous:** 2026-04-30 (Cursor — feat: Portal 5 C1+ — per-customer uploadPostProfile (resolveUploadPostProfile reads publishConfig > deliverySpec > env), platformOutcome field (all_success|partial_success|all_failed|no_platforms); 9 new tests)
 **Previous:** 2026-04-30 (Cursor — feat(POST_RENDER_TASKS 2.4): Gate 1 clip diagnostic — clipMismatches field in QA prompt schema, buildClipDiagnostic helper enriches fix directive with actual clip analysis text; 9 new tests pass)
 **Previous:** 2026-04-30 (Cursor — fix: test suite green after Postgres-only migration — archived SQLite canonical-job-id test, added Postgres mock to heygen_ext test, fixed duplicate delete handler in jobs.js; 388 pass / 1 skip)
