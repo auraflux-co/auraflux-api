@@ -25,6 +25,7 @@ interface Category {
 interface FeatureCategoryBoxProps {
   category:        Category;
   features:        Feature[];
+  allFeatures:     Feature[];   // full list — used to resolve dependency labels
   selected:        Set<string>;
   onToggle:        (id: string) => void;
   defaultExpanded?: boolean;
@@ -38,10 +39,13 @@ interface FeatureCategoryBoxProps {
 export function FeatureCategoryBox({
   category,
   features,
+  allFeatures,
   selected,
   onToggle,
   defaultExpanded = true,
 }: FeatureCategoryBoxProps) {
+  const labelFor = (id: string) =>
+    allFeatures.find((f) => f.id === id)?.label ?? id;
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const selectedInCategory = features.filter((f) => selected.has(f.id));
@@ -98,14 +102,16 @@ export function FeatureCategoryBox({
                   <button
                     key={feat.id}
                     type="button"
-                    title={feat.tooltip}
+                    title={depUnmet && !on && feat.requires?.length
+                      ? `Enable "${feat.requires.map(labelFor).join(' + ')}" first`
+                      : feat.tooltip}
                     onClick={() => {
                       if (depUnmet && !on) return;
                       onToggle(feat.id);
                     }}
                     disabled={depUnmet && !on}
                     className={cn(
-                      'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                      'inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors min-h-[32px]',
                       on
                         ? 'bg-primary text-primary-foreground border-primary'
                         : 'border-border text-foreground hover:border-primary/50 hover:bg-muted/40',
@@ -118,7 +124,7 @@ export function FeatureCategoryBox({
                     )}
                     {depUnmet && !on && feat.requires && feat.requires.length > 0 && (
                       <span className="text-[9px] opacity-60 ml-0.5">
-                        · needs {feat.requires.join('+')}
+                        · needs {feat.requires.map(labelFor).join(' + ')}
                       </span>
                     )}
                   </button>

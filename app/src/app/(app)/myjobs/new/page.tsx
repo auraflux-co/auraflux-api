@@ -1001,6 +1001,7 @@ function JobBuilderPageInner() {
                           features={FEATURES.filter(
                             (f) => f.category === cat.id && f.status === 'live' && !!formFactor && f.formFactors.includes(formFactor),
                           )}
+                          allFeatures={FEATURES}
                           selected={features}
                           onToggle={toggleFeature}
                         />
