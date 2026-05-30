@@ -570,7 +570,16 @@ export async function getJob(jobId: string, token?: string): Promise<{ job: Job 
 export async function createJob(
   payload: CreateJobPayload,
   token?: string,
-): Promise<{ jobId?: string; job?: Job; templateId?: string; templateOnly?: boolean; status: string; scheduledStartAt?: string; message?: string }> {
+): Promise<{
+  jobId?: string;
+  job?: Job;
+  templateId?: string;
+  templateOnly?: boolean;
+  status: string;
+  scheduledStartAt?: string;
+  message?: string;
+  warnings?: Array<{ code: string; message: string }>;
+}> {
   return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(payload), token });
 }
 

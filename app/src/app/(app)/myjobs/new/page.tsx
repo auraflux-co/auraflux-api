@@ -480,10 +480,18 @@ function JobBuilderPageInner() {
       try {
         const token = await getToken();
         const res   = await createJob(payload, token ?? undefined);
-        toast.success('Production started', {
-          description: 'Your video is now building. Track progress on the job page.',
-          duration: 5000,
-        });
+        const brandingDisabled = res.warnings?.some((w) => w.code === 'BRANDING_NO_LOGO');
+        if (brandingDisabled) {
+          toast.warning('Branding skipped', {
+            description: 'Upload a logo to enable branding. Your video will be produced without brand overlays.',
+            duration: 8000,
+          });
+        } else {
+          toast.success('Production started', {
+            description: 'Your video is now building. Track progress on the job page.',
+            duration: 5000,
+          });
+        }
         if (res.jobId) router.push(`/myjobs/${res.jobId}`);
         else           router.push('/myjobs/active');
       } catch {
