@@ -566,6 +566,7 @@ You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+|| Cursor | **fix(marketing): add GitHub Actions auto-deploy workflow; document deployment pipeline; replace nanoid with crypto.randomBytes** | .github/workflows/marketing-deploy.yml, docs/architecture/MARKETING_SITE_DEPLOYMENT.md, lib/routes/public.js, .env.example | main | 2026-05-30 |
 || Cursor | **feat(CPD-421): public chat inbox — DB persistence, superadmin /admin/chat review page, session tracking, escalation SMS** | db/migrations/024_public_chat.sql, lib/routes/public.js, lib/routes/admin_chat.js, server.js, app/src/app/(app)/admin/chat/page.tsx, app/src/lib/api.ts, app/src/components/layout/sidebar.tsx, cloudflare/marketing/pages/home.html | main | 2026-05-30 |
 || Cursor | **feat(marketing): real phone +1(571)600-2835 in nav; Chat button opens #af-chat-panel; /api/public/chat SMS-notifies SUPERADMIN_PHONE on human escalation** | cloudflare/marketing/framer-shell/nav.html, lib/routes/public.js, .env.example | main | 2026-05-30 |
 || Cursor | **fix(newrelic): remove newrelic package + config entirely — no license key on Render** — npm uninstall newrelic; removed newrelic.js; replaced server.js require with a comment. Eliminates the process.exit(1) deploy crash at root. | package.json, package-lock.json, newrelic.js (deleted), server.js, STATUS.md | main | 2026-05-28 |

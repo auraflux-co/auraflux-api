@@ -1,0 +1,53 @@
+name: Deploy Marketing Site (Cloudflare Pages)
+
+# Triggers whenever a push to main touches anything under cloudflare/marketing/.
+# Also runs on workflow_dispatch so you can force a redeploy without a code change.
+#
+# Required GitHub Actions secrets (Settings → Secrets → Actions):
+#   CF_API_TOKEN  — Cloudflare Pages Edit token (CF_API_TOKEN in .env.example)
+#
+# CF_ACCOUNT_ID and CF_PAGES_PROJECT are hardcoded in deploy.sh defaults
+# (df04bc264530390035c77664f1b403d9 / auraflux-marketing) so no extra secrets needed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare/marketing/**'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual redeploy'
+        required: false
+        default: 'manual trigger'
+
+jobs:
+  deploy:
+    name: Build & Deploy Worker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (for wrangler)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install wrangler
+        run: npm install -g wrangler
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: bash cloudflare/marketing/deploy.sh
+
+      - name: Post deploy summary
+        if: success()
+        run: |
+          echo "### ✅ Marketing site deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Live:** https://auraflux.co" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** \`${{ github.event_name }}\` — \`${{ github.actor }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
