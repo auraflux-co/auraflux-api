@@ -136,6 +136,10 @@ services:
       - key: COMFYUI_API_KEY
         sync: false
 
+      # Twelve Labs — video understanding + QA gate (CPD-431)
+      - key: TWELVE_LABS_API_KEY
+        sync: false
+
       # ElevenLabs TTS (CPD-77 — voice matching)
       - key: ELEVENLABS_API_KEY
         sync: false
