@@ -380,7 +380,10 @@ def submit_job(clip, job_def, tier='operate', dry_run=False):
 
 # ── Polling ───────────────────────────────────────────────────────────────────
 
-TERMINAL_STATUSES = {'staged', 'complete', 'published', 'failed', 'hard_stop', 'non-compliant', 'operator_review'}
+# 'processing' = customer-facing alias for 'operator_review' (CPD-431).
+# When status transitions from 'running' → 'processing' it means the pipeline
+# completed but grade < 100 — the API exposes grade directly (CPD-486).
+TERMINAL_STATUSES = {'staged', 'complete', 'published', 'failed', 'hard_stop', 'non-compliant', 'operator_review', 'processing'}
 
 def poll_job(job_id, tier):
     """Poll until terminal status. Returns final job dict or None on timeout."""
@@ -424,6 +427,16 @@ def score_job(job_data, job_def):
     portals = job_data.get('portals', [])
     expect  = job_def.get('expect_status', ('staged', 'complete', 'published'))
     gaps    = []
+
+    # CPD-486: 'processing' = operator_review (pipeline completed, grade < 100).
+    # The server-side grade is now exposed directly on the job — use it if present.
+    server_grade = job_data.get('grade')
+    if server_grade is not None and status == 'processing':
+        return {
+            'grade':  server_grade,
+            'gaps':   [],  # gaps are tracked server-side via gradeResult
+            'source': 'server_grade_operator_review',
+        }
 
     grade = 40 if status in expect else 0
     if grade == 0:
