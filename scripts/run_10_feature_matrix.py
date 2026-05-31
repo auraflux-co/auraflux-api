@@ -49,6 +49,10 @@ API_BASE = os.environ.get('AURAFLUX_API_URL', 'https://auraflux-api.onrender.com
 _env_raw = open('.env').read() if os.path.exists('.env') else ''
 def _env(k): return next((l.split('=',1)[1].strip() for l in _env_raw.splitlines() if l.startswith(k+'=')), '')
 
+# Both keys resolve to gregory.robert.c@gmail.com (user_3DeZEr79TWcmvEvCMlu8lmM1FdU).
+# All test jobs — operate and guided phases alike — must land in Rob's review queue
+# so they can be reviewed and shared to AuraFlux social accounts when ready.
+# Never use a synthetic/fake customer ID (e.g. e2e-operate-test) for these tests.
 API_KEY_OPERATE  = os.environ.get('AURAFLUX_E2E_API_KEY_OPERATE', _env('AURAFLUX_E2E_API_KEY_OPERATE'))
 API_KEY_GUIDED   = os.environ.get('AURAFLUX_E2E_API_KEY_GUIDED',  _env('AURAFLUX_E2E_API_KEY_GUIDED'))
 TWITCH_CLIENT_ID = _env('TWITCH_CLIENT_ID')
