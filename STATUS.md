@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.863 (Claude Code — fix(marketing): fonts — Satoshi was never loading (framerusercontent.com CORS blocked); fonts.html now loads Satoshi via Fontshare CDN + Instrument Serif + Playfair via Google Fonts)
 **Last Updated:** 2026-05-31 v1.0.862 (Claude Code — fix(marketing): h1 cut off on roadmap+contact — wrap padding-top 48px → 104px to clear fixed 84px nav)
 **Last Updated:** 2026-05-31 v1.0.861 (Claude Code — fix(marketing): white bg on roadmap+contact (conflict marker in LEGAL_SHELL), logo 72x48px)
 **Last Updated:** 2026-05-31 v1.0.860 (Claude Code — fix(marketing): homepage nav/footer not rendering — deploy.sh was skipping inject_framer() for home.html; now runs same injection as all other pages)
