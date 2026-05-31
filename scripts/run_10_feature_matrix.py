@@ -117,20 +117,23 @@ KICK_CURATED = [
 ]
 
 CLIP_FALLBACK = [
+    # Slots 0-4: proven-passing operate clips (used for jobs 1-5)
     {'platform': 'twitch', 'streamer': 'xQc',           'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                      'title': 'xQc wrong choice',          'duration_s': 45, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'hasanabi',       'url': 'https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg',     'title': 'IRL ban',                   'duration_s': 51, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'Markiplier',     'url': 'https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid',                         'title': "Wade's Romantic Cruise",    'duration_s': 51, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'trainwreckstv',  'url': 'https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP',                           'title': 'Finish Halo 2',             'duration_s': 45, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'StableRonaldo',  'url': 'https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK',               'title': 'hey!',                      'duration_s': 47, 'source': 'inventory'},
+    # Slots 5-9: operate clips for jobs 6-10 (Twitch only — YouTube blocked on Render IPs)
     {'platform': 'twitch', 'streamer': 'hasanabi',       'url': 'https://www.twitch.tv/hasanabi/clip/CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF',              'title': 'Emiru calls out streamers', 'duration_s': 43, 'source': 'inventory'},
-    {'platform': 'youtube','streamer': 'ESPN',            'url': 'https://www.youtube.com/watch?v=L_jWHffIx5E',                                                        'title': 'ESPN highlight',            'duration_s': 60, 'source': 'inventory'},
-    {'platform': 'youtube','streamer': 'Bleacher Report', 'url': 'https://www.youtube.com/watch?v=eB-3EFmBbKw',                                                        'title': 'BR moment',                 'duration_s': 55, 'source': 'inventory'},
+    {'platform': 'twitch', 'streamer': 'trainwreckstv',  'url': 'https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP',                           'title': 'Train Halo 2 v2',           'duration_s': 45, 'source': 'inventory'},
+    {'platform': 'twitch', 'streamer': 'xQc',            'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                      'title': 'xQc wrong v2',              'duration_s': 45, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'xQc',            'url': 'https://www.twitch.tv/xqc/clip/EntertainingTsunderePicklesSaltBae-_znCL0KuMwXadfP1',                 'title': 'xQc DRAMA NEWS',            'duration_s': 60, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'trainwreckstv',  'url': 'https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana',                           'title': 'Shameless Mod Defends',     'duration_s': 43, 'source': 'inventory'},
-    {'platform': 'twitch', 'streamer': 'Markiplier',     'url': 'https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid',                         'title': "Wade's Cruise (guided)",    'duration_s': 51, 'source': 'inventory'},
+    # Slots 10-13: guided clips — use proven-passing URLs with guided/tpl titles
+    {'platform': 'twitch', 'streamer': 'xQc',            'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                      'title': 'xQc wrong (guided)',        'duration_s': 45, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'hasanabi',       'url': 'https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg',     'title': 'IRL ban (guided)',          'duration_s': 51, 'source': 'inventory'},
-    {'platform': 'twitch', 'streamer': 'xQc',            'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                      'title': 'xQc wrong (tpl seed)',      'duration_s': 45, 'source': 'inventory'},
-    {'platform': 'twitch', 'streamer': 'StableRonaldo',  'url': 'https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK',               'title': 'hey (tpl replay)',          'duration_s': 47, 'source': 'inventory'},
+    {'platform': 'twitch', 'streamer': 'trainwreckstv',  'url': 'https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP',                           'title': 'Halo 2 (tpl seed)',         'duration_s': 45, 'source': 'inventory'},
+    {'platform': 'twitch', 'streamer': 'Markiplier',     'url': 'https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid',                         'title': "Wade's Cruise (tpl replay)",'duration_s': 51, 'source': 'inventory'},
 ]
 
 

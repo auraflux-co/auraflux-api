@@ -1657,7 +1657,8 @@ class VectCutClient {
       const response = await axios.get(`${this.baseUrl}/`);
       return { healthy: true, status: response.status };
     } catch (error) {
-      console.error(`[VectCut] Health check failed: ${error.message}`);
+      // VectCut is optional — use debug only; error floods logs since /health is polled every 5s
+      console.debug(`[VectCut] offline: ${error.message}`);
       return { healthy: false, error: error.message };
     }
   }
