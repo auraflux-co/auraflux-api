@@ -46,17 +46,17 @@
   transition:background .15s;
 }
 #af-nav-phone:hover{background:rgba(255,255,255,0.1);text-decoration:none;color:#fff;}
-#af-nav-chat{
-  display:flex;align-items:center;gap:6px;
-  padding:9px 18px;
+#af-nav-cta{
+  display:inline-block;
+  padding:9px 20px;
   background:#f5c542;
-  border:none;border-radius:10px;
+  border-radius:10px;
   color:#0b1220;
-  font-size:14px;font-weight:700;letter-spacing:0.01em;white-space:nowrap;
-  cursor:pointer;transition:opacity .15s;
+  font-size:14px;font-weight:700;letter-spacing:-0.01em;white-space:nowrap;
+  text-decoration:none;transition:opacity .15s;
   font-family:inherit;
 }
-#af-nav-chat:hover{opacity:.88;}
+#af-nav-cta:hover{opacity:.88;text-decoration:none;}
 @media(max-width:900px){
   #af-nav-links{gap:18px;}
   #af-nav-links a{font-size:14px;}
@@ -88,10 +88,7 @@
     </div>
 
     <div id="af-nav-right">
-      <button id="af-nav-chat" onclick="var p=document.getElementById('af-chat-panel');if(p){p.classList.add('open');var i=document.getElementById('af-chat-input');if(i)i.focus();}">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Chat
-      </button>
+      <a id="af-nav-cta" href="/pricing">Get Started</a>
     </div>
 
   </div>

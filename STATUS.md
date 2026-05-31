@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.868 (Claude Code — fix(marketing): nav Chat→Get Started→/pricing with correct anchor CSS)
 **Last Updated:** 2026-05-31 v1.0.866 (Claude Code — feat(marketing): full typography overhaul — Satoshi 800 h1/h2, phone removed from nav, em→span.gold, line-heights, FAQ contrast, roadmap constraints)
 **Last Updated:** 2026-05-31 v1.0.863 (Claude Code — fix(marketing): rebuild nav + footer from scratch — nav: Home/Our Story/Our System/Pricing/Roadmap/Contact + phone+Chat far right, fixed 84px, Framer visual design; footer: page links/legal links/LinkedIn/Instagram/TikTok/YouTube with Framer bg image; body padding-top:84px replaces per-hero overrides)
 **Last Updated:** 2026-05-31 v1.0.866 (Cursor — fix(run11): revert Post Everywhere back to portrait format now that CPD-472 720p cap is deployed)
