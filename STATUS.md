@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.878 (Claude Code — sync UX fixes pass 2 to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.876 (Claude Code — sync founder photo to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.874 (Claude Code — sync UX polish to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.872 (Claude Code — sync spec polish to marketing deploy branch)
