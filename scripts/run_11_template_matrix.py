@@ -100,8 +100,8 @@ def _hdr(tier): return HDR_GU if tier == 'guided' else HDR_OP
 # ── Clip inventory (known-good Twitch clips) ──────────────────────────────────
 
 CLIP_INVENTORY = [
-    {'platform': 'twitch', 'streamer': 'hasanabi',      'title': 'Emiru calls out streamers',
-     'url': 'https://www.twitch.tv/hasanabi/clip/CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF',
+    {'platform': 'twitch', 'streamer': 'xQc',            'title': 'xQc wrong choice',
+     'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',
      'duration_s': 43},
     {'platform': 'twitch', 'streamer': 'trainwreckstv', 'title': 'Train Halo 2',
      'url': 'https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP',
@@ -532,18 +532,22 @@ def create_jira_ticket(job_id, job_def, grade_result, tier, phase_label):
     token = base64.b64encode(f"{JIRA_EMAIL}:{JIRA_TOKEN}".encode()).decode()
     gaps  = grade_result.get('gaps', [])
     summary = f"[Run11 {phase_label}] Grade<100: {job_def.get('label','?')} ({tier}) — job {job_id}"
-    desc_lines = [
-        f"*Phase:* {phase_label}",
-        f"*Job ID:* {job_id}",
-        f"*Tier:* {tier}",
-        f"*Grade:* {grade_result.get('grade', '?')}/100",
-        f"*Gaps:*",
-    ] + [f"  - [{g['checkId']}] {g['reason']}" for g in gaps]
+    # Jira API v3 requires Atlassian Document Format (ADF) for description
+    def _adf_para(text):
+        return {'type': 'paragraph', 'content': [{'type': 'text', 'text': text}]}
+    adf_content = [
+        _adf_para(f"Phase: {phase_label}"),
+        _adf_para(f"Job ID: {job_id}"),
+        _adf_para(f"Tier: {tier}"),
+        _adf_para(f"Grade: {grade_result.get('grade', '?')}/100"),
+        _adf_para("Gaps:"),
+    ] + [_adf_para(f"  [{g['checkId']}] {g['reason']}") for g in gaps]
+    adf_description = {'version': 1, 'type': 'doc', 'content': adf_content}
     body = json.dumps({
         'fields': {
             'project':     {'key': JIRA_PROJECT},
             'summary':     summary,
-            'description': '\n'.join(desc_lines),
+            'description': adf_description,
             'issuetype':   {'name': 'Bug'},
             'priority':    {'name': 'High'},
         }
