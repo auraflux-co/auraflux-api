@@ -223,11 +223,12 @@ PRESET_TEMPLATES = [
             'captions':      {'active': True, 'style': 'animated', 'position': 'center'},
             'audio':         {'loudnorm': True, 'duck': True},
             'branding':      {'active': True, 'brandId': ROB_BRAND_ID},
-            'colorGrade':    {'active': True, 'preset': 'warm'},
-            'effects':       {'transitions': True, 'zoom': True},
             'contentType':   'clips',
         },
-        'format': 'portrait',
+        # CPD-471: portrait format (_applyVerticalCrop 1080x1920) OOM-kills Render 512MB
+        # starter tier. Use landscape for multi-platform publish validation until
+        # instance is upgraded to standard (2GB+).
+        'format': 'landscape',
         'expect_status': ('staged', 'complete', 'published'),
     },
     {
