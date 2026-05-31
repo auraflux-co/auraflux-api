@@ -17,7 +17,7 @@ const FRAMER_ORIGIN = 'https://f6aff8ec.auraflux-marketing.pages.dev';
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // All paths owned by the worker — no Framer proxy, no SPA router interception needed.
-const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/our-system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
+const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/our-system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact', '/contact-us', '/plans'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -209,7 +209,7 @@ ${FRAMER_FONTS || ''}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Satoshi','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#ffffff;line-height:1.7}
 a{color:#f5c542;text-decoration:none}a:hover{text-decoration:underline}
-.wrap{max-width:780px;margin:0 auto;padding:48px 24px 120px}
+.wrap{max-width:780px;margin:0 auto;padding:104px 24px 120px}
 h1{font-size:2.5rem;font-weight:700;margin-bottom:8px;color:#fff}
 .meta{font-size:.85rem;color:#a0a0b8;margin-bottom:40px}
 h2{font-size:1.6rem;font-weight:600;margin:36px 0 12px;color:#fff}
@@ -231,6 +231,7 @@ const PAGES = {
   '/':        `__PAGE_HOME__`,
   '/blog':    `__PAGE_BLOG__`,
   '/pricing': `__PAGE_PRICING__`,
+  '/plans':   `__PAGE_PRICING__`,
   '/about':   `__PAGE_ABOUT__`,
   '/our-story': `__PAGE_ABOUT__`,
   '/system':  `__PAGE_SYSTEM__`,
@@ -433,6 +434,13 @@ const PAGES = {
 
 <h2>App Store Purchases</h2>
 <p>Purchases made through the Apple App Store or Google Play are subject to their respective refund policies. Contact Apple or Google directly for those refunds.</p>`
+  ),
+
+  '/contact-us': LEGAL_SHELL(
+    'Contact Us',
+    'Get in touch with the AuraFlux team.',
+    'https://auraflux.co/contact-us',
+    `__PAGE_CONTACT_CONTENT__`
   ),
 
   '/contact': LEGAL_SHELL(

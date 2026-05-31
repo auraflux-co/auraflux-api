@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.877 (Claude Code — fix(marketing): brand social icons always colored, /contact-us route, /plans slug, legal h1 padding, pricing 2.6rem uniform, system single CTA, Every Feature In App, remove credit copy, checkout→app.auraflux.co)
 **Last Updated:** 2026-05-31 v1.0.877 (Cursor — fix(portal3a): include ffmpegScan in final return so grader qa_loudness/qa_black_frames get scan data — CPD-486)
 **Last Updated:** 2026-05-31 v1.0.876 (Cursor — fix(grader): expose grade in v1 API, thumbnail skip guard, ffmpegScan preserved, outputSizeBytes tracked — CPD-486)
 **Last Updated:** 2026-05-31 v1.0.875 (Claude Code — feat(marketing): founder photo base64 embedded in our-story team card)
