@@ -197,6 +197,14 @@ framer_nav    = read_shell('nav.html')
 framer_footer = read_shell('footer.html')
 framer_css    = read_shell('styles.css')
 
+# Rewrite assets.auraflux.co → /cf-assets/ in the injected CSS so fonts are
+# requested same-origin through the worker proxy, bypassing CORS restrictions.
+ASSETS_ORIGIN = 'https://assets.auraflux.co'
+ASSETS_PROXY  = '/cf-assets'
+if ASSETS_ORIGIN in framer_css:
+    framer_css = framer_css.replace(ASSETS_ORIGIN, ASSETS_PROXY)
+    print(f"  ✓ Rewrote assets.auraflux.co → /cf-assets/ in styles.css ({framer_css.count(ASSETS_PROXY)} occurrences)")
+
 FALLBACK_NAV = '<nav style="padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08)"><a href="/" style="color:#f5c542;font-weight:700">AuraFlux</a></nav>'
 FALLBACK_FOOTER = '<footer style="text-align:center;padding:40px;color:#555580;font-size:.8rem"><a href="https://auraflux.co" style="color:#f5c542">AuraFlux</a></footer>'
 
@@ -224,6 +232,12 @@ home_raw = re.sub(
 )
 # Fix malformed meta tags — Framer snapshot produces ">>" closing brackets
 home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
+
+# Rewrite assets.auraflux.co → /cf-assets/ in home.html so fonts and Framer
+# JS modules are fetched same-origin through the worker proxy (no CORS needed).
+if ASSETS_ORIGIN in home_raw:
+    home_raw = home_raw.replace(ASSETS_ORIGIN, ASSETS_PROXY)
+    print(f"  ✓ Rewrote assets.auraflux.co → /cf-assets/ in home.html")
 
 # Replace the baked-in nav with the canonical nav from framer-shell/nav.html.
 # home.html has its own nav element from the original design export — we must

@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://a26ce3f4.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://ad75e531.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -517,6 +517,40 @@ export default {
     // ── App redirects ──────────────────────────────────────────────────────
     if (path === '/sign-in' || path === '/sign-up' || path === '/login') {
       return Response.redirect(`https://app.auraflux.co${path}`, 302);
+    }
+
+    // ── Asset proxy — serve fonts/JS from assets.auraflux.co with CORS ────
+    // Fonts loaded via @font-face and Framer .mjs modules are served from
+    // assets.auraflux.co which has no CORS headers. Proxying them same-origin
+    // through /cf-assets/* avoids the cross-origin block entirely.
+    if (path.startsWith('/cf-assets/')) {
+      const assetPath = path.slice('/cf-assets'.length); // keep leading slash
+      const assetUrl = `https://assets.auraflux.co${assetPath}${url.search}`;
+      try {
+        const upstream = await fetch(assetUrl, { signal: AbortSignal.timeout(10000) });
+        const headers = new Headers(upstream.headers);
+        headers.set('Access-Control-Allow-Origin', '*');
+        headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        // Preserve upstream cache-control for fonts (immutable, 1yr)
+        if (!headers.has('Cache-Control')) {
+          headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+        return new Response(upstream.body, { status: upstream.status, headers });
+      } catch {
+        return new Response('Asset not found', { status: 404 });
+      }
+    }
+
+    // Handle OPTIONS preflight for the asset proxy
+    if (request.method === 'OPTIONS' && path.startsWith('/cf-assets/')) {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
     }
 
     // ── Unknown path — 404 ────────────────────────────────────────────────
