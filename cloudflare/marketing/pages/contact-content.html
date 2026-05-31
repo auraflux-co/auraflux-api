@@ -6,7 +6,7 @@
 /* ── Contact page layout ─────────────────────────────────────────────── */
 .ct-hero{margin-bottom:48px;}
 .ct-hero h1{letter-spacing:-.03em;}
-.ct-hero p{color:#8f9bb7;margin-top:8px;line-height:1.6;}
+.ct-hero p{color:#8f9bb7;margin-top:8px;line-height:1.6;max-width:32rem;}
 
 /* Top section: form + channels side by side */
 .ct-top{
@@ -211,7 +211,10 @@
       </div>
     </div>
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);">
-      <a href="/plans" style="display:block;text-align:center;padding:12px;background:rgba(245,197,66,.08);border:1px solid rgba(245,197,66,.2);border-radius:10px;color:#f5c542;font-size:.88rem;font-weight:700;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(245,197,66,.14)'" onmouseout="this.style.background='rgba(245,197,66,.08)'">View Plans &amp; Pricing →</a>
+      <button onclick="(function(){var p=document.getElementById('af-chat-panel');if(p){p.classList.add('open');var i=document.getElementById('af-chat-input');if(i)i.focus();}})()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s;font-family:inherit;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;animation:rdm-pulse 2s ease-in-out infinite;"></span>
+        Chat with Us
+      </button>
     </div>
   </div>
 

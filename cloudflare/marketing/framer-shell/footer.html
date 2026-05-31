@@ -24,15 +24,20 @@
   margin-bottom:48px;
   align-items:start;
 }
-/* Left — page links */
+/* Left — two-column nav grid */
 #af-footer-links{
-  display:flex;flex-direction:column;gap:12px;
+  display:grid;grid-template-columns:1fr 1fr;gap:0 32px;
+}
+.af-footer-col{display:flex;flex-direction:column;gap:10px;}
+.af-footer-col-label{
+  font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:#8f9bb7;font-family:'Satoshi','Inter',monospace;margin-bottom:4px;
 }
 #af-footer-links a{
-  font-size:14px;font-weight:400;color:rgba(255,255,255,0.65);
+  font-size:13px;font-weight:500;color:rgba(255,255,255,0.65);
   text-decoration:none;transition:color .15s;
 }
-#af-footer-links a:hover{color:#fff;text-decoration:none;}
+#af-footer-links a:hover{color:#f5c542;text-decoration:none;}
 /* Centre — logo + tagline + legal */
 #af-footer-center{
   display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
@@ -106,15 +111,20 @@
 
     <div id="af-footer-top">
 
-      <!-- Left: page links -->
+      <!-- Left: two-column nav -->
       <nav id="af-footer-links" aria-label="Footer navigation">
-        <a href="/">Home</a>
-        <a href="/our-story">Our Story</a>
-        <a href="/our-system">Our System</a>
-        <a href="/pricing">Plans</a>
-        <a href="/roadmap">Roadmap</a>
-        <a href="/blog">Blog</a>
-        <a href="/contact-us">Contact Us</a>
+        <div class="af-footer-col">
+          <span class="af-footer-col-label">Platform</span>
+          <a href="/our-story">Our Story</a>
+          <a href="/our-system">Our System</a>
+          <a href="/roadmap">Roadmap</a>
+        </div>
+        <div class="af-footer-col">
+          <span class="af-footer-col-label">Resources</span>
+          <a href="/pricing">Plans</a>
+          <a href="/blog">Blog</a>
+          <a href="/contact-us">Contact Us</a>
+        </div>
       </nav>
 
       <!-- Centre: logo + tagline + legal -->
