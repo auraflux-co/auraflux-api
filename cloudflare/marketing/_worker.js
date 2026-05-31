@@ -207,13 +207,13 @@ const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 ${FRAMER_FONTS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#e4e4f0;line-height:1.7}
+body{font-family:'Satoshi','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#ffffff;line-height:1.7}
 a{color:#f5c542;text-decoration:none}a:hover{text-decoration:underline}
-.wrap{max-width:780px;margin:0 auto;padding:60px 24px 80px}
-h1{font-size:2rem;font-weight:700;margin-bottom:8px;color:#fff}
-.meta{font-size:.85rem;color:#6666a0;margin-bottom:40px}
-h2{font-size:1.2rem;font-weight:600;margin:36px 0 12px;color:#e4e4f0}
-p,li{font-size:.95rem;color:#b0b0cc;margin-bottom:12px}
+.wrap{max-width:780px;margin:0 auto;padding:100px 24px 120px}
+h1{font-size:2.5rem;font-weight:700;margin-bottom:8px;color:#fff}
+.meta{font-size:.85rem;color:#a0a0b8;margin-bottom:40px}
+h2{font-size:1.6rem;font-weight:600;margin:36px 0 12px;color:#fff}
+p,li{font-size:.95rem;color:#8f9bb7;margin-bottom:12px}
 ul,ol{padding-left:24px;margin-bottom:16px}
 </style>
 ${FRAMER_CSS ? `<style id="af-framer-tokens">${FRAMER_CSS}</style>` : ''}
