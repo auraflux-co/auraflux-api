@@ -241,37 +241,25 @@ home_raw = re.sub(
 # Fix malformed meta tags — Framer snapshot produces ">>" closing brackets
 home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
 
-# Rewrite assets.auraflux.co → /cf-assets/ in home.html so fonts and Framer
-# JS modules are fetched same-origin through the worker proxy (no CORS needed).
-if ASSETS_ORIGIN in home_raw:
-    home_raw = home_raw.replace(ASSETS_ORIGIN, ASSETS_PROXY)
-    print(f"  ✓ Rewrote assets.auraflux.co → /cf-assets/ in home.html")
+# Rewrite assets.auraflux.co URLs ONLY inside <style> blocks in home.html.
+# A blanket replace would rewrite component data inside data-framer-hydrate-v2,
+# causing React hydration error #405 (VDOM vs DOM mismatch). CSS is NOT part
+# of the React VDOM so style-block-only rewrites are safe.
+# The nav element is also left untouched for the same reason: replacing the DOM
+# nav with our custom nav breaks hydrateRoot since React expects the Framer nav.
+def rewrite_style_block_urls(html, origin, proxy):
+    out, pos = [], 0
+    for m in re.finditer(r'<style(?:[^>]*)>(.*?)</style>', html, re.DOTALL):
+        out.append(html[pos:m.start()])
+        out.append(m.group(0).replace(origin, proxy))
+        pos = m.end()
+    out.append(html[pos:])
+    return ''.join(out)
 
-# Replace the baked-in nav with the canonical nav from framer-shell/nav.html.
-# home.html has its own nav element from the original design export — we must
-# swap it with the canonical nav so edits to nav.html propagate to the homepage.
-if framer_nav:
-    def replace_nav_element(html, new_nav):
-        start = html.find('<nav ')
-        if start == -1:
-            return html
-        depth, pos = 0, start
-        while pos < len(html):
-            if html[pos:pos+4] == '<nav':
-                depth += 1; pos += 4
-            elif html[pos:pos+6] == '</nav>':
-                depth -= 1
-                if depth == 0:
-                    return html[:start] + new_nav + html[pos+6:]
-                pos += 6
-            else:
-                pos += 1
-        return html
-    before = len(home_raw)
-    home_raw = replace_nav_element(home_raw, framer_nav)
-    print(f"  ✓ Replaced home.html nav: {before} → {len(home_raw)} chars")
-else:
-    print("  – nav.html not loaded — home.html nav not replaced")
+home_raw = rewrite_style_block_urls(home_raw, ASSETS_ORIGIN, ASSETS_PROXY)
+n_rewrites = home_raw.count(ASSETS_PROXY)
+if n_rewrites:
+    print(f"  ✓ Rewrote {n_rewrites} font URLs inside <style> blocks in home.html")
 
 home             = js_escape(home_raw)
 
