@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.858 (Claude Code — fix(marketing): sync rebuilt nav+footer to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.857 (Claude Code — fix(marketing): rebuild nav+footer — Home/Our Story/Our System/Pricing/Roadmap/Contact + phone+Chat far right; footer: LinkedIn/Instagram/TikTok/YouTube + all legal links; body padding-top:84px for nav offset)
 **Last Updated:** 2026-05-31 v1.0.856 (Claude Code — fix(marketing): CSS audit pass 2 — h1 3.5rem, h2 2.25rem, card bg #0f172a, muted #8f9bb7, btn radius 8px, LEGAL_SHELL Satoshi+sizes)
 **Last Updated:** 2026-05-31 v1.0.855 (Claude Code — fix(marketing): nav.html fallback CSS was overriding page-base.css with !important — updated to match homepage: height 84px, transparent bg, no backdrop-filter, logo 84×126px)
