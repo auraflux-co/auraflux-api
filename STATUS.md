@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.883 (Claude Code — fix(marketing): nav Get Started→app sign-up; feat: /developer-api public page with full API reference from in-app page)
 **Last Updated:** 2026-05-31 v1.0.881 (Claude Code — feat(marketing): footer 2-col Platform/Resources nav, contact hero subtext max-w, chat button with pulse dot replaces View Plans)
 **Last Updated:** 2026-05-31 v1.0.882 (Cursor — fix(grader): skip qa_loudness for clips content type — platforms auto-normalize source audio; check only applies to TTS/avatar — CPD-486)
 **Last Updated:** 2026-05-31 v1.0.879 (Claude Code — feat(marketing): contact-us full redesign — wider wrap, form card + channels top, FAQ grid below with card design)

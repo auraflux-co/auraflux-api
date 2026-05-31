@@ -17,7 +17,7 @@ const FRAMER_ORIGIN = 'https://f6aff8ec.auraflux-marketing.pages.dev';
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // All paths owned by the worker — no Framer proxy, no SPA router interception needed.
-const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/our-system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact', '/contact-us', '/plans'];
+const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/our-system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact', '/contact-us', '/plans', '/developer-api'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -232,6 +232,7 @@ const PAGES = {
   '/blog':    `__PAGE_BLOG__`,
   '/pricing': `__PAGE_PRICING__`,
   '/plans':   `__PAGE_PRICING__`,
+  '/developer-api': `__PAGE_DEVELOPER_API__`,
   '/about':   `__PAGE_ABOUT__`,
   '/our-story': `__PAGE_ABOUT__`,
   '/system':  `__PAGE_SYSTEM__`,

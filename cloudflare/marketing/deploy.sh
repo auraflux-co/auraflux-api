@@ -308,6 +308,7 @@ about            = js_escape(inject_framer(read_page('about.html')))
 system           = js_escape(inject_framer(read_page('system.html')))
 contact_content  = js_escape(read_page('contact-content.html'))
 roadmap_content  = js_escape(read_page('roadmap-content.html'))
+developer_api    = js_escape(inject_framer(read_page('developer-api.html')))
 
 # Idempotency guards: only replace if the placeholder still exists in the build
 if '__PAGE_HOME__' in build:
@@ -324,6 +325,8 @@ if '__PAGE_CONTACT_CONTENT__' in build:
     build = build.replace('__PAGE_CONTACT_CONTENT__', contact_content)
 if '__PAGE_ROADMAP_CONTENT__' in build:
     build = build.replace('__PAGE_ROADMAP_CONTENT__', roadmap_content)
+if '__PAGE_DEVELOPER_API__' in build:
+    build = build.replace('__PAGE_DEVELOPER_API__', developer_api)
 
 with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)
