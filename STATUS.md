@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.855 (Claude Code — fix(marketing): nav.html fallback CSS was overriding page-base.css with !important — updated to match homepage: height 84px, transparent bg, no backdrop-filter, logo 84×126px)
 **Last Updated:** 2026-05-31 v1.0.854 (Claude Code — fix(marketing): page-base.css from live homepage getComputedStyle — body #0b1220, nav transparent/84px/no-blur, logo 84px cap)
 **Last Updated:** 2026-05-31 v1.0.853 (Claude Code — fix(marketing): align sub-pages to Framer design — bg #01010f (exact Framer token), Satoshi font, logo height capped at 72px to fit nav, nav backdrop-filter matches Framer, legal page bg + padding updated; nav content stays A: Our System/Pricing/About/Roadmap/Contact/Phone/Chat)
 **Last Updated:** 2026-05-31 v1.0.852 (Claude Code — fix(marketing): homepage title — Framer React hydration overwrites document.title from component data; window.load listener reasserts correct title)
