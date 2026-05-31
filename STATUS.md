@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.861 (Claude Code — fix(marketing): white bg on roadmap+contact (conflict marker in LEGAL_SHELL), logo 72x48px)
 **Last Updated:** 2026-05-31 v1.0.860 (Claude Code — fix(marketing): homepage nav/footer not rendering — deploy.sh was skipping inject_framer() for home.html; now runs same injection as all other pages)
 **Last Updated:** 2026-05-31 v1.0.859 (Claude Code — feat(marketing): replace Framer homepage with clean worker-built HTML — same nav/footer as all other pages, all 8 Framer sections rebuilt: hero, logo bar, value prop, 4-step process, formats, comparison, audience stats, final CTA)
 **Last Updated:** 2026-05-31 v1.0.858 (Claude Code — fix(marketing): sync rebuilt nav+footer to marketing deploy branch)
