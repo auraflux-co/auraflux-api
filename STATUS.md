@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.877 (Cursor — fix(portal3a): include ffmpegScan in final return so grader qa_loudness/qa_black_frames get scan data — CPD-486)
 **Last Updated:** 2026-05-31 v1.0.876 (Cursor — fix(grader): expose grade in v1 API, thumbnail skip guard, ffmpegScan preserved, outputSizeBytes tracked — CPD-486)
 **Last Updated:** 2026-05-31 v1.0.875 (Claude Code — feat(marketing): founder photo base64 embedded in our-story team card)
 **Last Updated:** 2026-05-31 v1.0.873 (Claude Code — feat(marketing): /system→/our-system route, footer remove Refunds, brand social icons, home badge removed+single CTA+brand SVG icons+centered steps, pricing Custom uniform, roadmap auto-fit grid)
