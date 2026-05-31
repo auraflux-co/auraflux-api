@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://ad75e531.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://f6aff8ec.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -517,6 +517,21 @@ export default {
     // ── App redirects ──────────────────────────────────────────────────────
     if (path === '/sign-in' || path === '/sign-up' || path === '/login') {
       return Response.redirect(`https://app.auraflux.co${path}`, 302);
+    }
+
+    // ── Service worker eviction ─────────────────────────────────────────────
+    // Framer's exported HTML registers a service worker that caches .mjs modules
+    // directly from assets.auraflux.co. When those cached modules load alongside
+    // our /cf-assets/ proxied versions, React tries to hydrate twice → error #405.
+    // Serving a new /sw.js that does nothing evicts the old Framer SW on next visit.
+    if (path === '/sw.js') {
+      return new Response(
+        `// AuraFlux replacement SW — evicts stale Framer service worker
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+// No fetch handler — all requests go directly to the network.`,
+        { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-store' } }
+      );
     }
 
     // ── Asset proxy — serve fonts/JS from assets.auraflux.co with CORS ────

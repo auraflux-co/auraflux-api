@@ -241,6 +241,21 @@ home_raw = re.sub(
 # Fix malformed meta tags — Framer snapshot produces ">>" closing brackets
 home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
 
+# Inject service-worker unregistration script into <head>.
+# Framer's SW caches .mjs modules from assets.auraflux.co. On repeat visits the
+# stale SW serves cached modules while our page also loads them via /cf-assets/,
+# causing two React instances that both call hydrateRoot → error #405.
+# Unregistering immediately on page load clears the stale SW. The replacement
+# /sw.js (served by _worker.js) then installs a no-op SW that doesn't interfere.
+SW_UNREGISTER = (
+    '<script>(function(){if("serviceWorker"in navigator){'
+    'navigator.serviceWorker.getRegistrations()'
+    '.then(function(r){r.forEach(function(sw){sw.unregister();});});}})();</script>'
+)
+if '</head>' in home_raw:
+    home_raw = home_raw.replace('</head>', SW_UNREGISTER + '\n</head>', 1)
+    print(f"  ✓ Injected SW unregistration script into home.html")
+
 # Targeted URL rewrites for home.html — preserving React hydration.
 #
 # React's hydrateRoot compares the virtual DOM (from data-framer-hydrate-v2
