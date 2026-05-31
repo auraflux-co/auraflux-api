@@ -1,116 +1,78 @@
 /* ── AuraFlux Sub-page Base Styles ─────────────────────────────────────────
- * Injected into all worker-owned HTML pages (about, system, pricing, etc.)
- * Matches Framer homepage exactly — colors/fonts sourced from framer-shell/styles.css tokens.
+ * Values extracted via getComputedStyle on live auraflux.co homepage:
+ *   body bg       → rgb(11,18,32) = #0b1220
+ *   nav height    → 84px
+ *   nav bg        → rgba(0,0,0,0) transparent
+ *   nav backdrop  → none
+ *   logo          → 133×89px (cap to 84px height to fit nav)
  * ──────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Exact values from Framer's compiled token block in styles.css */
-  --af-bg:        #01010f;   /* token-8c2d9801 — homepage body bg */
-  --af-bg-deep:   #03031e;   /* token-6367c6fb — section deep bg */
-  --af-bg-card:   #0b1220;   /* token-99a3d67d — card bg */
-  --af-bg-nav:    rgba(10,12,30,0.92); /* nav bg matches Framer framer-frJN9 */
-  --af-gold:      #f5c542;   /* token-17958cff */
-  --af-gold-dim:  #c7af4f40; /* token-9f2c9390 */
-  --af-text:      #ffffff;   /* token-271fcd53 */
-  --af-muted:     #8f9bb7;   /* token-3ac276f6 */
-  --af-faint:     #a0a0b8;   /* token-0b29becd */
+  --af-bg:        #0b1220;
+  --af-bg-card:   #0e1a2e;
+  --af-gold:      #f5c542;
+  --af-text:      #ffffff;
+  --af-muted:     #8f9bb7;
+  --af-faint:     #a0a0b8;
   --af-border:    rgba(255,255,255,.08);
   --af-border-hi: rgba(255,255,255,.14);
 }
 
-/* ── Body & base typography ─────────────────────────────────────────────── */
-html, body {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+html, body { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  background: var(--af-bg) !important;
+  background: #0b1220 !important;
   color: var(--af-text) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Display headings use Instrument Serif — matches homepage hero */
 h1, .hero h1, .hero-title {
   font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif !important;
   letter-spacing: -0.02em;
 }
 
-/* ── Nav: match Framer exactly ──────────────────────────────────────────── */
+/* Nav: transparent bg + 84px height — matches homepage computed values */
 :where(.framer-frJN9) {
-  background: var(--af-bg-nav) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border-bottom: 1px solid rgba(255,255,255,.08) !important;
-  height: 72px !important;
+  background: rgba(0,0,0,0) !important;
+  background-color: rgba(0,0,0,0) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  height: 84px !important;
+  border-bottom: none !important;
 }
 
-/* Fix: logo anchor is 133×89px but nav is 72px tall — cap it so it doesn't overflow */
+/* Logo capped at 84px to fit inside the 84px nav */
 :where(.framer-1k32ijd) {
-  height: 72px !important;
-  width: 108px !important; /* maintain ~3:2 aspect ratio at 72px height */
+  height: 84px !important;
+  width: 126px !important;
 }
 
-/* Ensure body content starts below the fixed 72px nav */
+/* Content clears fixed 84px nav */
 body > *:not(nav):first-of-type,
 .hero:first-of-type,
 main > *:first-child {
-  padding-top: 88px !important;
+  padding-top: 100px !important;
 }
 
-/* ── Section backgrounds ────────────────────────────────────────────────── */
-.stats, .cta-section {
-  background-color: var(--af-bg-card) !important;
-}
-.diff-card, .team-card, .step, .post-card, .plan {
+.stats, .cta-section, .diff-card, .team-card, .step, .post-card, .plan {
   background-color: var(--af-bg-card) !important;
 }
 
-/* ── Links and accent ───────────────────────────────────────────────────── */
 a { color: var(--af-gold); text-decoration: none; }
 a:hover { text-decoration: underline; opacity: .85; }
 
 .btn-primary, .cta-primary, .nav-cta {
   background: var(--af-gold) !important;
-  color: var(--af-bg-card) !important;
-  font-family: 'Satoshi', 'Inter', sans-serif !important;
+  color: #0b1220 !important;
   font-weight: 700 !important;
 }
-.btn-secondary {
-  border-color: rgba(245,197,66,.35) !important;
-  color: var(--af-gold) !important;
-  font-family: 'Satoshi', 'Inter', sans-serif !important;
-}
-
-/* ── Eyebrow labels ─────────────────────────────────────────────────────── */
-.hero-eyebrow {
-  font-family: 'Satoshi', 'Inter', sans-serif !important;
-  font-size: .7rem !important;
-  letter-spacing: .14em !important;
-}
-
-/* ── Muted text ─────────────────────────────────────────────────────────── */
+.btn-secondary { border-color: rgba(245,197,66,.35) !important; color: var(--af-gold) !important; }
+.hero-eyebrow  { font-size: .7rem !important; letter-spacing: .14em !important; }
 .hero p, .diff-sub, .tech-sub, .team-sub, .mission p,
-.diff-card p, .step-body p, .team-bio {
-  color: var(--af-muted) !important;
-}
-
-/* ── Stat numbers ───────────────────────────────────────────────────────── */
-.stat-num { color: var(--af-gold) !important; }
+.diff-card p, .step-body p, .team-bio { color: var(--af-muted) !important; }
+.stat-num  { color: var(--af-gold) !important; }
 .stat-label { color: var(--af-faint) !important; }
-
-/* ── Step badges ────────────────────────────────────────────────────────── */
-.step-num {
-  background: var(--af-gold) !important;
-  color: var(--af-bg-card) !important;
-}
-
-/* ── Team roles ─────────────────────────────────────────────────────────── */
+.step-num  { background: var(--af-gold) !important; color: #0b1220 !important; }
 .team-role { color: var(--af-gold) !important; }
-
-/* ── Card borders ───────────────────────────────────────────────────────── */
-.diff-card, .team-card {
-  border-color: var(--af-border-hi) !important;
-}
+.diff-card, .team-card { border-color: var(--af-border-hi) !important; }
