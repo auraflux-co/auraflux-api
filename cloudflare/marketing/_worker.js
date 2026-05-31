@@ -509,8 +509,11 @@ export default {
 
       const headers = addSecurityHeaders(new Headers({
         'Content-Type': 'text/html; charset=utf-8',
-        // No CDN caching — always serve fresh so content updates are instant
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Surrogate-Control': 'no-store',
+        'CDN-Cache-Control': 'no-store',
+        'Cloudflare-CDN-Cache-Control': 'no-store',
       }));
       return new Response(html, { headers });
     }
