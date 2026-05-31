@@ -36,7 +36,7 @@ jobs:
             "https://api.render.com/v1/services/srv-d7nsd77avr4c73frifcg/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"clearCache": false}')
+            -d '{"clearCache":"do_not_clear"}')
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           BODY=$(echo "$RESPONSE" | head -1)
           echo "auraflux-api: HTTP $HTTP_CODE — $BODY"
@@ -51,7 +51,7 @@ jobs:
             "https://api.render.com/v1/services/srv-d7pnalhj2pic73btevl0/deploys" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"clearCache": false}')
+            -d '{"clearCache":"do_not_clear"}')
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           BODY=$(echo "$RESPONSE" | head -1)
           echo "auraflux-app: HTTP $HTTP_CODE — $BODY"
