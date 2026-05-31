@@ -1886,15 +1886,19 @@ app.get('/health', async (req, res) => {
     }
   }
 
-  // Check VectCut API (optional)
-  try {
-    const vectCutHealth = await vectCutClient.healthCheck();
-    health.dependencies.vectcut = vectCutHealth.healthy
-      ? { status: 'ok' }
-      : { status: 'offline', error: vectCutHealth.error };
-  } catch (err) {
-    health.dependencies.vectcut = { status: 'offline', error: err.message };
-    // VectCut is optional, don't fail health check
+  // Check VectCut API (optional — skip entirely when VECTCUT_API_URL not configured,
+  // otherwise GET /health polls this every 5s and floods logs with "offline" entries)
+  if (process.env.VECTCUT_API_URL) {
+    try {
+      const vectCutHealth = await vectCutClient.healthCheck();
+      health.dependencies.vectcut = vectCutHealth.healthy
+        ? { status: 'ok' }
+        : { status: 'offline', error: vectCutHealth.error };
+    } catch (err) {
+      health.dependencies.vectcut = { status: 'offline', error: err.message };
+    }
+  } else {
+    health.dependencies.vectcut = { status: 'not_configured' };
   }
 
   // Check disk space

@@ -77,7 +77,10 @@ API_KEY_GUIDED   = os.environ.get('AURAFLUX_E2E_API_KEY_GUIDED',  '')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 JIRA_EMAIL       = os.environ.get('ATLASSIAN_EMAIL', '')
 JIRA_TOKEN       = os.environ.get('ATLASSIAN_API_TOKEN', '')
-JIRA_DOMAIN      = os.environ.get('ATLASSIAN_DOMAIN', 'aurafluxco')
+# ATLASSIAN_DOMAIN may be the full domain (e.g. aurafluxco.atlassian.net) or
+# just the subdomain (e.g. aurafluxco) — normalise to subdomain only.
+_jira_raw        = os.environ.get('ATLASSIAN_DOMAIN', 'aurafluxco')
+JIRA_DOMAIN      = _jira_raw.replace('.atlassian.net', '')
 JIRA_PROJECT     = 'CPD'
 
 ROB_BRAND_ID   = '038bf603-4268-493c-9fea-b03972a6f1d1'
@@ -363,7 +366,7 @@ def submit_job(clip, job_def, tier='operate', dry_run=False):
     try:
         r = requests.post(f"{API_BASE}/v1/jobs", headers=_hdr(tier), json=body, timeout=30)
         resp = r.json()
-        if r.status_code in (200, 201) and (resp.get('jobId') or resp.get('id')):
+        if r.status_code in (200, 201, 202) and (resp.get('jobId') or resp.get('id')):
             job_id = resp.get('jobId') or resp.get('id')
             print(f"  ✅ Submitted: {job_id}")
             return job_id, body
