@@ -192,10 +192,11 @@ def js_escape(s):
     return s
 
 # Load Framer shell components for page-level substitution
-framer_fonts  = read_shell('fonts.html')
-framer_nav    = read_shell('nav.html')
-framer_footer = read_shell('footer.html')
-framer_css    = read_shell('styles.css')
+framer_fonts    = read_shell('fonts.html')
+framer_nav      = read_shell('nav.html')
+framer_footer   = read_shell('footer.html')
+framer_css      = read_shell('styles.css')
+page_base_css   = read_shell('page-base.css')
 
 # Rewrite assets.auraflux.co → /cf-assets/ in the injected CSS so fonts are
 # requested same-origin through the worker proxy, bypassing CORS restrictions.
@@ -217,6 +218,10 @@ def inject_framer(html):
     # visible page content because browsers foster-parent raw head text to body.
     css_block = f'<style>{framer_css}</style>' if framer_css else ''
     html = html.replace(D + "{FRAMER_CSS || ''}",           css_block)
+    # Inject shared base CSS (fonts, colours, nav seam fix) before </head>
+    # Applied to all sub-pages without needing a placeholder in each file.
+    if page_base_css and '</head>' in html:
+        html = html.replace('</head>', f'<style>{page_base_css}</style>\n</head>', 1)
     return html
 
 # ── home.html: patch Framer dev-domain artifacts before embedding ─────────────

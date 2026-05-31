@@ -1,0 +1,112 @@
+/* ── AuraFlux Sub-page Base Styles ─────────────────────────────────────────
+ * Injected into all worker-owned HTML pages (about, system, pricing, etc.)
+ * Fonts sourced from FRAMER_CSS @font-face declarations already on the page.
+ * Colors matched precisely to the homepage Framer design.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --af-bg:        #0b1220;
+  --af-bg-deep:   #080e1a;
+  --af-bg-card:   #0e1a2e;
+  --af-bg-nav:    #0a0c1e;
+  --af-gold:      #f5c542;
+  --af-gold-dim:  rgba(245,197,66,.15);
+  --af-text:      #e4e4f0;
+  --af-muted:     #9999b8;
+  --af-faint:     #6666a0;
+  --af-border:    rgba(255,255,255,.08);
+  --af-border-hi: rgba(255,255,255,.14);
+}
+
+/* ── Body & base typography ─────────────────────────────────────────────── */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  background: var(--af-bg) !important;
+  color: var(--af-text) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display headings use Instrument Serif — matches homepage hero */
+h1,
+.hero h1,
+.hero-title {
+  font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif !important;
+  letter-spacing: -0.02em;
+}
+
+/* ── Nav: solid colour matching page bg — removes seam ─────────────────── */
+:where(.framer-frJN9) {
+  background: var(--af-bg-nav) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom-color: var(--af-border) !important;
+}
+
+/* ── Section backgrounds: consistent card colour ───────────────────────── */
+.stats,
+.cta-section,
+.diff-card,
+.team-card,
+.step {
+  background-color: var(--af-bg-card) !important;
+}
+
+/* ── Link and accent colour ─────────────────────────────────────────────── */
+a { color: var(--af-gold); text-decoration: none; }
+a:hover { text-decoration: underline; opacity: .85; }
+
+.btn-primary {
+  background: var(--af-gold) !important;
+  color: var(--af-bg) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+}
+.btn-secondary {
+  border-color: rgba(245,197,66,.35) !important;
+  color: var(--af-gold) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ── Eyebrow labels ─────────────────────────────────────────────────────── */
+.hero-eyebrow {
+  font-family: 'Inter', sans-serif !important;
+  font-size: .7rem !important;
+  letter-spacing: .14em !important;
+}
+
+/* ── Muted text tones ───────────────────────────────────────────────────── */
+.hero p,
+.diff-sub,
+.tech-sub,
+.team-sub,
+.mission p,
+.diff-card p,
+.step-body p,
+.team-bio {
+  color: var(--af-muted) !important;
+}
+
+/* ── Hero padding below fixed nav ───────────────────────────────────────── */
+body > .hero:first-of-type,
+main > .hero:first-of-type {
+  padding-top: 110px !important;
+}
+
+/* ── Stat numbers ───────────────────────────────────────────────────────── */
+.stat-num { color: var(--af-gold) !important; }
+.stat-label { color: var(--af-faint) !important; }
+
+/* ── Numbered step badges ───────────────────────────────────────────────── */
+.step-num {
+  background: var(--af-gold) !important;
+  color: var(--af-bg) !important;
+}
+
+/* ── Role labels ────────────────────────────────────────────────────────── */
+.team-role { color: var(--af-gold) !important; }
+
+/* ── Border consistency ─────────────────────────────────────────────────── */
+.diff-card,
+.team-card {
+  border-color: var(--af-border-hi) !important;
+}
