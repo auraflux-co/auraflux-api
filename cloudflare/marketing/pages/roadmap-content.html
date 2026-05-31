@@ -7,9 +7,10 @@
 .rdm-board{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:20px;
-  max-width:1200px;
+  gap:24px;
+  max-width:1400px;
   margin:0 auto;
+  padding:0 16px;
 }
 @media(max-width:860px){.rdm-board{grid-template-columns:1fr;}}
 
@@ -68,7 +69,7 @@
   transition:border-color .2s,transform .15s;
   cursor:default;
 }
-.rdm-card:hover{border-color:rgba(245,197,66,.3);transform:translateY(-1px);}
+.rdm-card:hover{border-color:#c7af4f;transform:translateY(-2px);box-shadow:0 0 20px rgba(199,175,79,.12);}
 .rdm-col-next .rdm-card,
 .rdm-col-future .rdm-card{opacity:.75;border-color:rgba(255,255,255,.04);}
 .rdm-col-next:hover .rdm-card,
@@ -96,6 +97,10 @@
 }
 
 /* Request block */
+.rdm-progress{height:3px;background:rgba(245,197,66,.12);border-radius:2px;margin:10px 0 4px;overflow:hidden;}
+.rdm-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#c7af4f,#f5c542);animation:rdm-scan 2.5s ease-in-out infinite;}
+@keyframes rdm-scan{0%{width:60%;opacity:.8;}50%{width:78%;opacity:1;}100%{width:60%;opacity:.8;}}
+.rdm-progress-label{font-size:.6rem;font-family:'Satoshi','Inter',monospace;letter-spacing:.08em;text-transform:uppercase;color:#c7af4f;margin-bottom:8px;}
 .rdm-request{
   max-width:1200px;margin:32px auto 0;
   padding:20px 24px;
@@ -133,11 +138,15 @@
       <div class="rdm-card">
         <span class="rdm-tag rdm-tag-publish">Publishing</span>
         <h3>Subscription Platforms</h3>
-        <p>Direct publish to OnlyFans, Fansly, and Patreon using secure OAuth flows — same pipeline as YouTube and TikTok.</p>
+        <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>
+        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>
+        <p>Direct publish to <strong style="color:#fff;">OnlyFans</strong>, <strong style="color:#fff;">Fansly</strong>, and <strong style="color:#fff;">Patreon</strong> — same pipeline as <span style="color:#ff4444;font-weight:700;">YouTube</span> and <span style="color:#5dade2;font-weight:700;">TikTok</span>.</p>
       </div>
       <div class="rdm-card">
         <span class="rdm-tag rdm-tag-prod">Production</span>
         <h3>Compilation Carousel</h3>
+        <div class="rdm-progress"><div class="rdm-progress-fill" style="animation-delay:-.8s;"></div></div>
+        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>
         <p>Auto-generate side-by-side clip grids, batch compilations, and image carousels from your short-form library.</p>
       </div>
     </div>
@@ -165,7 +174,7 @@
       <div class="rdm-card">
         <span class="rdm-tag rdm-tag-mono">Monetisation</span>
         <h3>Shoppable Video</h3>
-        <p>Embed product tags and tappable CTAs into short-form videos for social commerce on TikTok and Instagram.</p>
+        <p>Embed product tags and tappable CTAs into short-form videos for social commerce on <span style="color:#5dade2;font-weight:700;">TikTok</span> and <span style="color:#c678dd;font-weight:700;">Instagram</span>.</p>
       </div>
     </div>
   </div>

@@ -17,7 +17,7 @@ const FRAMER_ORIGIN = 'https://f6aff8ec.auraflux-marketing.pages.dev';
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // All paths owned by the worker — no Framer proxy, no SPA router interception needed.
-const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
+const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -176,7 +176,7 @@ const FALLBACK_NAV = `<nav style="display:flex;align-items:center;justify-conten
   <div style="display:flex;gap:24px;align-items:center">
     <a href="/system" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our System</a>
     <a href="/pricing" style="font-size:.9rem;color:#9999b8;text-decoration:none">Pricing</a>
-    <a href="/about" style="font-size:.9rem;color:#9999b8;text-decoration:none">About</a>
+    <a href="/our-story" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our Story</a>
     <a href="/contact" style="font-size:.9rem;color:#9999b8;text-decoration:none">Contact</a>
     <a href="https://app.auraflux.co/sign-up" style="background:#f5c542;color:#0b1220;padding:8px 20px;border-radius:8px;font-size:.9rem;font-weight:600;text-decoration:none">Get Started</a>
   </div>
@@ -207,10 +207,9 @@ const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 ${FRAMER_FONTS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{background:#0b1220}
 body{font-family:'Satoshi','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#ffffff;line-height:1.7}
 a{color:#f5c542;text-decoration:none}a:hover{text-decoration:underline}
-.wrap{max-width:780px;margin:0 auto;padding:104px 24px 120px}
+.wrap{max-width:780px;margin:0 auto;padding:48px 24px 120px}
 h1{font-size:2.5rem;font-weight:700;margin-bottom:8px;color:#fff}
 .meta{font-size:.85rem;color:#a0a0b8;margin-bottom:40px}
 h2{font-size:1.6rem;font-weight:600;margin:36px 0 12px;color:#fff}
@@ -233,6 +232,7 @@ const PAGES = {
   '/blog':    `__PAGE_BLOG__`,
   '/pricing': `__PAGE_PRICING__`,
   '/about':   `__PAGE_ABOUT__`,
+  '/our-story': `__PAGE_ABOUT__`,
   '/system':  `__PAGE_SYSTEM__`,
   '/privacy': LEGAL_SHELL(
     'Privacy Policy',
@@ -387,7 +387,7 @@ const PAGES = {
 </ul>
 <h2>Third-Party</h2>
 <ul>
-  <li><strong>Cloudflare</strong> — our hosting provider may set performance and security cookies on auraflux.co pages per their <a href="https://www.cloudflare.com/privacypolicy/">privacy policy</a>.</li>
+  <li><strong>Framer</strong> — the marketing site is built with Framer which may set analytics cookies on auraflux.co pages.</li>
 </ul>
 
 <h2>Managing Cookies</h2>
@@ -445,7 +445,7 @@ const PAGES = {
     'Roadmap',
     'See what\'s coming to AuraFlux — upcoming features, platform improvements, and new publishing destinations.',
     'https://auraflux.co/roadmap',
-    `<style>.wrap{padding-bottom:120px}</style>__PAGE_ROADMAP_CONTENT__`
+    `__PAGE_ROADMAP_CONTENT__`
   ),
 
 };
@@ -509,11 +509,8 @@ export default {
 
       const headers = addSecurityHeaders(new Headers({
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Surrogate-Control': 'no-store',
-        'CDN-Cache-Control': 'no-store',
-        'Cloudflare-CDN-Cache-Control': 'no-store',
+        // No CDN caching — always serve fresh so content updates are instant
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
       }));
       return new Response(html, { headers });
     }
