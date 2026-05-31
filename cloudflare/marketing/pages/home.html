@@ -1725,5 +1725,12 @@ async function afSend(){
     addMsg('Got it, ' + name + '! We’ll email you at ' + email + ' shortly.', 'bot');
   };
 })();
+</script>
+<script>
+// Framer's React hydration overwrites document.title from its component data.
+// Reassert the correct title once the page is fully loaded.
+window.addEventListener('load', function() {
+  document.title = 'AuraFlux — Automated Content Production';
+});
 </script></body>
 </html>
