@@ -386,7 +386,7 @@ const PAGES = {
 </ul>
 <h2>Third-Party</h2>
 <ul>
-  <li><strong>Framer</strong> — the marketing site is built with Framer which may set analytics cookies on auraflux.co pages.</li>
+  <li><strong>Cloudflare</strong> — our hosting provider may set performance and security cookies on auraflux.co pages per their <a href="https://www.cloudflare.com/privacypolicy/">privacy policy</a>.</li>
 </ul>
 
 <h2>Managing Cookies</h2>
@@ -444,7 +444,7 @@ const PAGES = {
     'Roadmap',
     'See what\'s coming to AuraFlux — upcoming features, platform improvements, and new publishing destinations.',
     'https://auraflux.co/roadmap',
-    `__PAGE_ROADMAP_CONTENT__`
+    `<style>.wrap{padding-bottom:120px}</style>__PAGE_ROADMAP_CONTENT__`
   ),
 
 };

@@ -238,6 +238,14 @@ home_raw = re.sub(
     '<meta property="og:url" content="https://auraflux.co/"',
     home_raw
 )
+# Fix page title — Framer template name leaks through if snapshot was taken before title was set
+home_raw = re.sub(
+    r'<title>[^<]*Equinox[^<]*</title>',
+    '<title>AuraFlux — Automated Content Production</title>',
+    home_raw
+)
+# Fix Framer generator meta — remove to avoid template fingerprinting
+home_raw = re.sub(r'<meta name="generator" content="Framer[^"]*">', '', home_raw)
 # Fix malformed meta tags — Framer snapshot produces ">>" closing brackets
 home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
 
