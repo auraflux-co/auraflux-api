@@ -241,13 +241,24 @@ home_raw = re.sub(
 # Fix malformed meta tags — Framer snapshot produces ">>" closing brackets
 home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
 
-# Rewrite assets.auraflux.co URLs ONLY inside <style> blocks in home.html.
-# A blanket replace would rewrite component data inside data-framer-hydrate-v2,
-# causing React hydration error #405 (VDOM vs DOM mismatch). CSS is NOT part
-# of the React VDOM so style-block-only rewrites are safe.
-# The nav element is also left untouched for the same reason: replacing the DOM
-# nav with our custom nav breaks hydrateRoot since React expects the Framer nav.
+# Targeted URL rewrites for home.html — preserving React hydration.
+#
+# React's hydrateRoot compares the virtual DOM (from data-framer-hydrate-v2
+# component data) against the real DOM. Only DOM elements rendered by the
+# React component tree must stay identical to what component data says.
+#
+# Safe to rewrite (NOT in React VDOM):
+#   <style> blocks — CSS @font-face, url() patterns
+#   <script src="..."> — module loaders, never React-rendered
+#   <link href="..."> — modulepreload/stylesheet hints, never React-rendered
+#
+# NEVER rewrite (IN React VDOM — would cause error #405):
+#   <img src>, <img srcset> — React renders these from component data
+#   data-framer-hydrate-v2 JSON — component data; React must match this exactly
+#   <nav> replacement — React renders the nav from component data
+
 def rewrite_style_block_urls(html, origin, proxy):
+    """Rewrite origin URLs only inside <style>...</style> blocks."""
     out, pos = [], 0
     for m in re.finditer(r'<style(?:[^>]*)>(.*?)</style>', html, re.DOTALL):
         out.append(html[pos:m.start()])
@@ -256,10 +267,23 @@ def rewrite_style_block_urls(html, origin, proxy):
     out.append(html[pos:])
     return ''.join(out)
 
+def rewrite_script_link_urls(html, origin, proxy):
+    """Rewrite origin URLs only inside <script> and <link> tags (src/href attrs).
+    These tags are never rendered by React so rewriting never causes hydration errors.
+    Routes Framer module scripts and modulepreload hints through the CORS proxy."""
+    out, pos = [], 0
+    for m in re.finditer(r'<(script|link)\b([^>]*)>', html, re.DOTALL):
+        out.append(html[pos:m.start()])
+        out.append(f'<{m.group(1)}{m.group(2).replace(origin, proxy)}>')
+        pos = m.end()
+    out.append(html[pos:])
+    return ''.join(out)
+
 home_raw = rewrite_style_block_urls(home_raw, ASSETS_ORIGIN, ASSETS_PROXY)
+home_raw = rewrite_script_link_urls(home_raw, ASSETS_ORIGIN, ASSETS_PROXY)
 n_rewrites = home_raw.count(ASSETS_PROXY)
 if n_rewrites:
-    print(f"  ✓ Rewrote {n_rewrites} font URLs inside <style> blocks in home.html")
+    print(f"  ✓ Rewrote {n_rewrites} URLs via /cf-assets/ in home.html (<style>, <script>, <link> only)")
 
 home             = js_escape(home_raw)
 
