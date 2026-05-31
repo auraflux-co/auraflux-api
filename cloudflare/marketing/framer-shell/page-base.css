@@ -27,11 +27,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Display headings — Instrument Serif matches homepage hero ──────────── */
-h1, .hero h1, .hero-title {
-  font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif !important;
-  letter-spacing: -0.02em;
+/* ── Display headings — heavy sans per spec ─────────────────────────────── */
+h1, h2 {
+  font-family: 'Satoshi', 'Inter', -apple-system, sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.1 !important;
 }
+
+/* ── Body line-height ───────────────────────────────────────────────────── */
+p { line-height: 1.7 !important; }
 
 /* Nav is now #af-nav — fixed 84px, handled entirely in nav.html.
    Keep Framer class overrides only for homepage compatibility. */

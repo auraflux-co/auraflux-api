@@ -1,23 +1,79 @@
-<h1 data-editable="hero_headline">What's Coming to AuraFlux</h1>
-<p class="meta" data-editable="hero_subtext">We ship fast. Here's what we're building next — features in active development and on the near-term roadmap.</p>
+<style>
+.roadmap-wrap{max-width:760px;margin:0 auto;}
+.roadmap-milestone{margin-bottom:56px;}
+.roadmap-milestone-label{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  font-family:'Satoshi','Inter',sans-serif;
+  color:#f5c542;border:1px solid rgba(245,197,66,.25);
+  padding:4px 14px;border-radius:100px;margin-bottom:24px;
+}
+.roadmap-divider{height:1px;background:rgba(255,255,255,.07);margin-bottom:56px;}
+.roadmap-item{padding:20px 0;border-bottom:1px solid rgba(255,255,255,.05);max-width:42rem;}
+.roadmap-item:last-child{border-bottom:none;}
+.roadmap-item h3{font-size:1rem;font-weight:600;color:#fff;margin-bottom:6px;}
+.roadmap-item p{font-size:.9rem;color:#8f9bb7;line-height:1.75;letter-spacing:.01em;max-width:42rem;}
+.roadmap-tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 10px;border-radius:100px;margin-bottom:8px;}
+.tag-publishing{background:rgba(16,185,129,.12);color:#10b981;}
+.tag-production{background:rgba(245,197,66,.12);color:#f5c542;}
+.tag-monetization{background:rgba(99,102,241,.12);color:#818cf8;}
+.roadmap-request{margin-top:48px;padding-top:32px;border-top:1px solid rgba(255,255,255,.07);}
+</style>
 
-<h2>Publishing &amp; Distribution</h2>
-<ul>
-  <li data-editable="roadmap_subscriptions"><strong>Subscription Platform Publishing</strong> — Direct publish to OnlyFans, Fansly, and Patreon for lifestyle and creator content. Same OAuth flow as YouTube and TikTok.</li>
-</ul>
+<div class="roadmap-wrap">
+  <h1 data-editable="hero_headline" style="letter-spacing:-.03em;">What's Coming to AuraFlux</h1>
+  <p class="meta" data-editable="hero_subtext" style="margin-bottom:48px;">We ship fast. Here's what we're building next — features in active development and on the near-term roadmap.</p>
 
-<h2>Content &amp; Production</h2>
-<ul>
-  <li data-editable="roadmap_compilation"><strong>Compilation Carousel</strong> — Auto-generate side-by-side clip grids, batch stitched compilations, and image carousels from your existing short-form library.</li>
-  <li data-editable="roadmap_showfilm"><strong>Show &amp; Film Content Type</strong> — Narrated video production using TV show and movie scene clips, with fair-use sourcing from your uploaded footage library.</li>
-  <li data-editable="roadmap_avatar"><strong>AI Avatar Video</strong> — On-camera presenter videos generated from your script, with full control over voice, appearance, and background.</li>
-</ul>
+  <!-- NOW -->
+  <div class="roadmap-milestone">
+    <div class="roadmap-milestone-label">🟢 Now — In Development</div>
+    <div class="roadmap-item">
+      <span class="roadmap-tag tag-publishing">Publishing</span>
+      <h3>Subscription Platform Publishing</h3>
+      <p>Direct publish to OnlyFans, Fansly, and Patreon for lifestyle and creator content. Same OAuth flow as YouTube and TikTok.</p>
+    </div>
+    <div class="roadmap-item">
+      <span class="roadmap-tag tag-production">Production</span>
+      <h3>Compilation Carousel</h3>
+      <p>Auto-generate side-by-side clip grids, batch stitched compilations, and image carousels from your existing short-form library.</p>
+    </div>
+  </div>
 
-<h2>Monetisation</h2>
-<ul>
-  <li data-editable="roadmap_shoppable"><strong>Shoppable Video</strong> — Embed product tags and tappable CTAs directly into your short-form videos for social commerce on TikTok and Instagram.</li>
-  <li data-editable="roadmap_paidads"><strong>Paid Ad Creative</strong> — Short-form video ad production optimised for Meta, TikTok, and Google — aspect ratios, copy overlays, and CTA formatting included.</li>
-</ul>
+  <div class="roadmap-divider"></div>
 
-<h2>Have a feature request?</h2>
-<p><a href="/contact">Contact us</a> — we read every message and the best ideas go straight to the board.</p>
+  <!-- NEXT -->
+  <div class="roadmap-milestone">
+    <div class="roadmap-milestone-label">🔵 Next — Planned</div>
+    <div class="roadmap-item">
+      <span class="roadmap-tag tag-production">Production</span>
+      <h3>Show &amp; Film Content Type</h3>
+      <p>Narrated video production using TV show and movie scene clips, with fair-use sourcing from your uploaded footage library.</p>
+    </div>
+    <div class="roadmap-item">
+      <span class="roadmap-tag tag-production">Production</span>
+      <h3>AI Avatar Video</h3>
+      <p>On-camera presenter videos generated from your script, with full control over voice, appearance, and background.</p>
+    </div>
+    <div class="roadmap-item">
+      <span class="roadmap-tag tag-monetization">Monetisation</span>
+      <h3>Shoppable Video</h3>
+      <p>Embed product tags and tappable CTAs directly into your short-form videos for social commerce on TikTok and Instagram.</p>
+    </div>
+  </div>
+
+  <div class="roadmap-divider"></div>
+
+  <!-- FUTURE -->
+  <div class="roadmap-milestone">
+    <div class="roadmap-milestone-label">⚪ Future — Exploring</div>
+    <div class="roadmap-item">
+      <span class="roadmap-tag tag-monetization">Monetisation</span>
+      <h3>Paid Ad Creative</h3>
+      <p>Short-form video ad production optimised for Meta, TikTok, and Google — aspect ratios, copy overlays, and CTA formatting included.</p>
+    </div>
+  </div>
+
+  <div class="roadmap-request">
+    <p>Have a feature request? <a href="/contact">Contact us</a> — we read every message and the best ideas go straight to the board.</p>
+  </div>
+</div>
