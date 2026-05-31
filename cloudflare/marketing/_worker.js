@@ -210,7 +210,7 @@ ${FRAMER_FONTS || ''}
 html,body{background:#0b1220}
 body{font-family:'Satoshi','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#ffffff;line-height:1.7}
 a{color:#f5c542;text-decoration:none}a:hover{text-decoration:underline}
-.wrap{max-width:780px;margin:0 auto;padding:48px 24px 120px}
+.wrap{max-width:780px;margin:0 auto;padding:104px 24px 120px}
 h1{font-size:2.5rem;font-weight:700;margin-bottom:8px;color:#fff}
 .meta{font-size:.85rem;color:#a0a0b8;margin-bottom:40px}
 h2{font-size:1.6rem;font-weight:600;margin:36px 0 12px;color:#fff}
