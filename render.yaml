@@ -19,6 +19,16 @@ services:
     region: oregon
     healthCheckPath: /health
 
+    # Marketing site lives in cloudflare/ and deploys only via GitHub Actions → Cloudflare Pages.
+    # Commits that touch ONLY cloudflare/** must NOT restart the API — that orphans running jobs.
+    # Render's buildFilter.ignoredPaths suppresses auto-deploy when the diff is entirely in these paths.
+    buildFilter:
+      ignoredPaths:
+        - cloudflare/**
+        - docs/**
+        - logs/**
+        - scripts/run_*.py
+
     # Persistent disk — keeps SQLite job pipeline data (data/cwn.db) and JSON
     # state files across deploys. Billing/credits/voice use Postgres (see DATABASE_URL).
     # Full pipeline migration to Postgres (job_spec.js async refactor) is CPD-51 phase 2.
@@ -200,6 +210,15 @@ services:
     plan: standard
     region: oregon
     healthCheckPath: /api/health
+
+    # Same marketing isolation as auraflux-api — cloudflare/ changes must not restart the app.
+    buildFilter:
+      ignoredPaths:
+        - cloudflare/**
+        - docs/**
+        - logs/**
+        - scripts/run_*.py
+
     envVars:
       - key: NODE_ENV
         value: production
