@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.873 (Claude Code — feat(marketing): /system→/our-system route, footer remove Refunds, brand social icons, home badge removed+single CTA+brand SVG icons+centered steps, pricing Custom uniform, roadmap auto-fit grid)
 **Last Updated:** 2026-05-31 v1.0.871 (Claude Code — feat(marketing): /about to /our-story, Plans nav, stat engineering panels, platform icons, progress bars, contact badges, founder gold frame)
 **Last Updated:** 2026-05-31 v1.0.868 (Claude Code — fix(marketing): nav Chat→Get Started→/pricing with correct anchor CSS)
 **Last Updated:** 2026-05-31 v1.0.866 (Claude Code — feat(marketing): full typography overhaul — Satoshi 800 h1/h2, phone removed from nav, em→span.gold, line-heights, FAQ contrast, roadmap constraints)

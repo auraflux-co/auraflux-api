@@ -17,7 +17,7 @@ const FRAMER_ORIGIN = 'https://f6aff8ec.auraflux-marketing.pages.dev';
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // All paths owned by the worker — no Framer proxy, no SPA router interception needed.
-const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
+const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/our-system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -174,7 +174,7 @@ const FRAMER_FOOTER = `__FRAMER_FOOTER__`;
 const FALLBACK_NAV = `<nav style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08)">
   <a href="/" style="font-size:1.2rem;font-weight:700;color:#f5c542;letter-spacing:.03em;text-decoration:none">AuraFlux</a>
   <div style="display:flex;gap:24px;align-items:center">
-    <a href="/system" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our System</a>
+    <a href="/our-system" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our System</a>
     <a href="/pricing" style="font-size:.9rem;color:#9999b8;text-decoration:none">Pricing</a>
     <a href="/our-story" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our Story</a>
     <a href="/contact" style="font-size:.9rem;color:#9999b8;text-decoration:none">Contact</a>
@@ -234,6 +234,7 @@ const PAGES = {
   '/about':   `__PAGE_ABOUT__`,
   '/our-story': `__PAGE_ABOUT__`,
   '/system':  `__PAGE_SYSTEM__`,
+  '/our-system': `__PAGE_SYSTEM__`,
   '/privacy': LEGAL_SHELL(
     'Privacy Policy',
     'How AuraFlux collects, uses, and protects your personal information.',
