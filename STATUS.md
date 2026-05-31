@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.869 (Claude Code — sync nav fix to marketing branch)
 **Last Updated:** 2026-05-31 v1.0.867 (Claude Code — sync typography overhaul to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.865 (Claude Code — fix(marketing): CDN cache headers — add Pragma, Surrogate-Control, CDN-Cache-Control, Cloudflare-CDN-Cache-Control:no-store to prevent edge caching)
 **Last Updated:** 2026-05-31 v1.0.864 (Claude Code — feat(marketing): full spec implementation — nav Get Started→/pricing, all CTAs→/pricing, home em white, social proof block, pricing 1.5px #C7AF4F border+descriptions+credit footnote, system mid-CTA, roadmap Now/Next/Future, contact focus+FAQ, h1 weight 400, body line-height 1.7)
