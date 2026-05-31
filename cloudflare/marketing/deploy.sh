@@ -213,7 +213,10 @@ def inject_framer(html):
     html = html.replace(D + "{FRAMER_FONTS || ''}",         framer_fonts)
     html = html.replace(D + '{FRAMER_NAV || FALLBACK_NAV}', framer_nav or FALLBACK_NAV)
     html = html.replace(D + '{FRAMER_FOOTER || FALLBACK_FOOTER}', framer_footer or FALLBACK_FOOTER)
-    html = html.replace(D + "{FRAMER_CSS || ''}",           framer_css)
+    # Wrap raw CSS in <style> tags — without this, the CSS text renders as
+    # visible page content because browsers foster-parent raw head text to body.
+    css_block = f'<style>{framer_css}</style>' if framer_css else ''
+    html = html.replace(D + "{FRAMER_CSS || ''}",           css_block)
     return html
 
 # ── home.html: patch Framer dev-domain artifacts before embedding ─────────────
