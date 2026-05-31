@@ -33,28 +33,22 @@ h1, .hero h1, .hero-title {
   letter-spacing: -0.02em;
 }
 
-/* ── Nav: match homepage exactly (transparent bg, 84px tall, no blur) ──── */
+/* Nav is now #af-nav — fixed 84px, handled entirely in nav.html.
+   Keep Framer class overrides only for homepage compatibility. */
 :where(.framer-frJN9) {
   background: rgba(0,0,0,0) !important;
-  background-color: rgba(0,0,0,0) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   height: 84px !important;
   border-bottom: none !important;
 }
-
-/* Logo fits inside 84px nav — cap at 84px, preserve aspect ratio */
 :where(.framer-1k32ijd) {
   height: 84px !important;
   width: 126px !important;
 }
 
-/* Ensure page content starts below fixed 84px nav */
-body > *:not(nav):first-of-type,
-.hero:first-of-type,
-main > *:first-child {
-  padding-top: 100px !important;
-}
+/* Push page content below the fixed 84px nav */
+body { padding-top: 84px; }
 
 /* ── Section/card backgrounds ───────────────────────────────────────────── */
 .stats, .cta-section, .diff-card, .team-card, .step, .post-card, .plan {
