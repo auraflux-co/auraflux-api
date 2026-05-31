@@ -238,14 +238,6 @@ home_raw = re.sub(
     '<meta property="og:url" content="https://auraflux.co/"',
     home_raw
 )
-# Fix page title — Framer template name leaks through if snapshot was taken before title was set
-home_raw = re.sub(
-    r'<title>[^<]*Equinox[^<]*</title>',
-    '<title>AuraFlux — Automated Content Production</title>',
-    home_raw
-)
-# Fix Framer generator meta — remove to avoid template fingerprinting
-home_raw = re.sub(r'<meta name="generator" content="Framer[^"]*">', '', home_raw)
 # Fix malformed meta tags — Framer snapshot produces ">>" closing brackets
 home_raw = re.sub(r'>>(\s*\n)', r'>\1', home_raw)
 
@@ -308,7 +300,7 @@ n_rewrites = home_raw.count(ASSETS_PROXY)
 if n_rewrites:
     print(f"  ✓ Rewrote {n_rewrites} URLs via /cf-assets/ in home.html (<style>, <script>, <link> only)")
 
-home             = js_escape(inject_framer(home_raw))
+home             = js_escape(home_raw)
 
 blog             = js_escape(inject_framer(read_page('blog.html')))
 pricing          = js_escape(inject_framer(read_page('pricing.html')))
@@ -316,6 +308,7 @@ about            = js_escape(inject_framer(read_page('about.html')))
 system           = js_escape(inject_framer(read_page('system.html')))
 contact_content  = js_escape(read_page('contact-content.html'))
 roadmap_content  = js_escape(read_page('roadmap-content.html'))
+developer_api    = js_escape(inject_framer(read_page('developer-api.html')))
 
 # Idempotency guards: only replace if the placeholder still exists in the build
 if '__PAGE_HOME__' in build:
@@ -332,6 +325,8 @@ if '__PAGE_CONTACT_CONTENT__' in build:
     build = build.replace('__PAGE_CONTACT_CONTENT__', contact_content)
 if '__PAGE_ROADMAP_CONTENT__' in build:
     build = build.replace('__PAGE_ROADMAP_CONTENT__', roadmap_content)
+if '__PAGE_DEVELOPER_API__' in build:
+    build = build.replace('__PAGE_DEVELOPER_API__', developer_api)
 
 with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API Reference — AuraFlux</title>
+<meta name="description" content="Full reference for the AuraFlux REST API. Submit jobs, track production status, manage templates, and publish directly to platforms.">
+<link rel="canonical" href="https://auraflux.co/developer-api">
+<link href="/favicon.png" rel="icon" type="image/png">
+${FRAMER_FONTS || ''}
+${FRAMER_CSS || ''}
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{line-height:1.6}
+
+.dev-wrap{max-width:900px;margin:0 auto;padding:0 24px 120px;}
+.dev-hero{margin-bottom:48px;}
+.dev-hero h1{letter-spacing:-.03em;margin-bottom:10px;}
+.dev-hero p{color:#8f9bb7;font-size:1rem;line-height:1.65;max-width:600px;}
+.dev-base{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#0f172a;border:1px solid rgba(199,175,79,.25);
+  border-radius:8px;padding:10px 16px;margin-bottom:48px;
+  font-size:.88rem;font-family:'Satoshi','Inter',monospace;
+}
+.dev-base-label{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8f9bb7;}
+.dev-base code{color:#f5c542;font-weight:700;}
+
+/* Auth notice */
+.dev-auth-card{
+  background:rgba(245,197,66,.06);border:1px solid rgba(245,197,66,.2);
+  border-radius:12px;padding:20px 24px;margin-bottom:40px;
+  display:flex;gap:16px;align-items:flex-start;
+}
+.dev-auth-card p{font-size:.88rem;color:#a0a0b8;line-height:1.6;}
+.dev-auth-card strong{color:#fff;}
+
+/* Section headers */
+.dev-section{margin-bottom:40px;}
+.dev-section-title{
+  font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  color:#8f9bb7;font-family:'Satoshi','Inter',monospace;
+  padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07);
+  margin-bottom:16px;
+}
+
+/* Endpoint rows */
+.dev-endpoint{
+  background:#0f172a;border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;overflow:hidden;margin-bottom:10px;
+}
+.dev-endpoint-header{
+  display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;
+  transition:background .15s;
+}
+.dev-endpoint-header:hover{background:rgba(255,255,255,.03);}
+.dev-method{
+  font-size:.65rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 8px;border-radius:4px;font-family:'Satoshi','Inter',monospace;flex-shrink:0;
+}
+.m-get{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25);}
+.m-post{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.25);}
+.m-delete{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);}
+.m-patch{background:rgba(245,197,66,.12);color:#f5c542;border:1px solid rgba(245,197,66,.25);}
+.dev-path{font-size:.88rem;font-family:'Satoshi','Inter',monospace;color:#e4e4f0;flex:1;}
+.dev-endpoint-title{font-size:.85rem;color:#8f9bb7;}
+.dev-credits-badge{
+  font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:4px;
+  background:rgba(245,197,66,.1);color:#f5c542;border:1px solid rgba(245,197,66,.2);
+  font-family:'Satoshi','Inter',monospace;flex-shrink:0;
+}
+.dev-endpoint-body{
+  display:none;border-top:1px solid rgba(255,255,255,.06);
+  padding:20px;
+}
+.dev-endpoint-body.open{display:block;}
+.dev-desc{font-size:.88rem;color:#8f9bb7;line-height:1.65;margin-bottom:20px;}
+.dev-code-label{
+  font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:#555580;font-family:'Satoshi','Inter',monospace;margin-bottom:6px;
+}
+.dev-code{
+  background:#060b14;border:1px solid rgba(255,255,255,.07);
+  border-radius:8px;padding:16px;overflow-x:auto;
+  font-size:.8rem;font-family:'Satoshi','Inter',monospace;
+  color:#a0a0b8;line-height:1.7;position:relative;margin-bottom:16px;
+}
+.dev-code-copy{
+  position:absolute;top:8px;right:8px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
+  color:#8f9bb7;font-size:.65rem;font-weight:700;
+  padding:3px 10px;border-radius:6px;cursor:pointer;
+  font-family:inherit;transition:background .15s;
+}
+.dev-code-copy:hover{background:rgba(255,255,255,.15);}
+.dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:600px){.dev-grid{grid-template-columns:1fr;}}
+
+/* Field table */
+.dev-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px;}
+.dev-table th{text-align:left;padding:8px 12px;color:#555580;font-weight:700;
+  font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;
+  border-bottom:1px solid rgba(255,255,255,.07);}
+.dev-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);
+  color:#a0a0b8;vertical-align:top;}
+.dev-table td:first-child{font-family:'Satoshi','Inter',monospace;color:#e4e4f0;font-weight:500;}
+.dev-table td:nth-child(2){color:#60a5fa;font-family:'Satoshi','Inter',monospace;font-size:.75rem;}
+.dev-table tr:last-child td{border-bottom:none;}
+
+/* Get started CTA */
+.dev-cta{
+  background:#0f172a;border:1px solid rgba(199,175,79,.2);
+  border-radius:16px;padding:32px;display:flex;
+  align-items:center;justify-content:space-between;gap:24px;
+  margin-top:56px;flex-wrap:wrap;
+}
+.dev-cta-text h3{font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:6px;}
+.dev-cta-text p{font-size:.88rem;color:#8f9bb7;}
+.dev-cta a{
+  background:#f5c542;color:#0b1220;padding:11px 24px;
+  border-radius:8px;font-size:.9rem;font-weight:700;
+  text-decoration:none;white-space:nowrap;transition:opacity .15s;
+}
+.dev-cta a:hover{opacity:.88;text-decoration:none;}
+</style>
+</head>
+<body>
+${FRAMER_NAV || FALLBACK_NAV}
+
+<div class="dev-wrap">
+
+  <div class="dev-hero">
+    <h1>API Reference</h1>
+    <p>Full reference for the AuraFlux REST API. Submit jobs, track production, manage templates, and publish to any platform — all programmable.</p>
+  </div>
+
+  <div class="dev-base">
+    <span class="dev-base-label">Base URL</span>
+    <code>https://api.auraflux.co/v1</code>
+  </div>
+
+  <div class="dev-auth-card">
+    <div style="font-size:1.2rem;flex-shrink:0;">🔑</div>
+    <p><strong>Authentication:</strong> Pass your API key as a Bearer token on every request — <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;color:#f5c542;">Authorization: Bearer af_live_YOUR_KEY</code>. Get or create API keys inside your account at <a href="https://app.auraflux.co/settings/api-keys" style="color:#f5c542;">Settings → API Keys</a>. The Operate and Guided plans include full API access.</p>
+  </div>
+
+  <!-- JOBS -->
+  <div class="dev-section">
+    <div class="dev-section-title">Jobs</div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-post">POST</span>
+        <code class="dev-path">/jobs</code>
+        <span class="dev-endpoint-title">Submit a job</span>
+        <span class="dev-credits-badge">1–3 credits</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Submit a new video production job. Returns immediately with a <code>jobId</code> — poll <code>GET /jobs/:id</code> to track progress. Credits are deducted at submission.</p>
+        <div class="dev-grid">
+          <div>
+            <div class="dev-code-label">Request body</div>
+            <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>{
+  "entry": "fetch",
+  "url": "https://clips.twitch.tv/your-clip",
+  "topic": "Best CS2 plays this week",
+  "tone": "hype",
+  "format": "short",
+  "durationMins": 1,
+  "platforms": ["tiktok"],
+  "publishMode": "immediate"
+}</div>
+          </div>
+          <div>
+            <div class="dev-code-label">Response</div>
+            <div class="dev-code">{
+  "jobId": "job_abc123",
+  "status": "queued",
+  "creditCost": 1,
+  "balance": 46
+}</div>
+          </div>
+        </div>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X POST https://api.auraflux.co/v1/jobs \
+  -H "Authorization: Bearer af_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"entry":"fetch","url":"https://clips.twitch.tv/clip","topic":"Best plays","format":"short","platforms":["tiktok"]}'</div>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/jobs/:id</code>
+        <span class="dev-endpoint-title">Get job status</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Poll after submitting a job. Status progresses: <code>queued → running → complete</code> (or <code>failed</code>). A complete job includes an <code>outputUrl</code>.</p>
+        <div class="dev-code-label">Response</div>
+        <div class="dev-code">{
+  "jobId": "job_abc123",
+  "status": "complete",
+  "outputUrl": "https://r2.auraflux.co/…/output.mp4",
+  "score": 94,
+  "platforms": ["tiktok"],
+  "createdAt": "2026-05-25T12:00:00Z"
+}</div>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl https://api.auraflux.co/v1/jobs/job_abc123 \
+  -H "Authorization: Bearer af_live_YOUR_KEY"</div>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/jobs/:id/result</code>
+        <span class="dev-endpoint-title">Get full job result</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Returns the full output for a completed job: video URL, thumbnail, publish copy, and per-platform publish results. Returns <code>202</code> if not yet complete.</p>
+        <div class="dev-code-label">Response</div>
+        <div class="dev-code">{
+  "jobId": "job_abc123",
+  "status": "complete",
+  "videoUrl": "https://r2.auraflux.co/…/output.mp4",
+  "thumbnailUrl": "https://r2.auraflux.co/…/thumb.jpg",
+  "publishCopy": { "title": "…", "description": "…", "hashtags": ["#cs2"] },
+  "completedAt": "2026-05-25T12:05:00Z"
+}</div>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/jobs</code>
+        <span class="dev-endpoint-title">List jobs</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Returns your job history. Supports pagination via <code>?limit=20&offset=0</code> and optional <code>?status=complete</code> filter.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl "https://api.auraflux.co/v1/jobs?limit=20&status=complete" \
+  -H "Authorization: Bearer af_live_YOUR_KEY"</div>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-delete">DELETE</span>
+        <code class="dev-path">/jobs/:id</code>
+        <span class="dev-endpoint-title">Cancel a job</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Cancels a queued or running job. Cannot cancel jobs that are already complete, published, or failed.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X DELETE https://api.auraflux.co/v1/jobs/job_abc123 \
+  -H "Authorization: Bearer af_live_YOUR_KEY"</div>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-post">POST</span>
+        <code class="dev-path">/jobs/:id/approve-publish</code>
+        <span class="dev-endpoint-title">Approve staged job</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">When a job is submitted with <code>"staging": true</code>, it stops before Portal 5 (publish) for your review. Call this endpoint to approve and publish.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X POST https://api.auraflux.co/v1/jobs/job_abc123/approve-publish \
+  -H "Authorization: Bearer af_live_YOUR_KEY"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="dev-section">
+    <div class="dev-section-title">Upload</div>
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-post">POST</span>
+        <code class="dev-path">/upload</code>
+        <span class="dev-endpoint-title">Upload a video file</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Upload a video file (MP4/MOV, max 500MB). Returns a <code>fileId</code> — pass it to <code>POST /jobs</code> as <code>"entry": "upload", "fileId": "…"</code>.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X POST https://api.auraflux.co/v1/upload \
+  -H "Authorization: Bearer af_live_YOUR_KEY" \
+  -F "file=@/path/to/myclip.mp4"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEMPLATES -->
+  <div class="dev-section">
+    <div class="dev-section-title">Templates</div>
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/templates</code>
+        <span class="dev-endpoint-title">List templates</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Returns all saved templates. Use a template's <code>id</code> in <code>POST /jobs</code> as <code>fromTemplateId</code> to submit a job with pre-set options.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl https://api.auraflux.co/v1/templates \
+  -H "Authorization: Bearer af_live_YOUR_KEY"</div>
+      </div>
+    </div>
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-post">POST</span>
+        <code class="dev-path">/templates</code>
+        <span class="dev-endpoint-title">Create a template</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Save a job configuration as a reusable template.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X POST https://api.auraflux.co/v1/templates \
+  -H "Authorization: Bearer af_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Weekly highlights","format":"short","platforms":["tiktok"],"tone":"hype"}'</div>
+      </div>
+    </div>
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-delete">DELETE</span>
+        <code class="dev-path">/templates/:id</code>
+        <span class="dev-endpoint-title">Delete a template</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Permanently deletes a saved template. Jobs previously submitted from this template are unaffected.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X DELETE https://api.auraflux.co/v1/templates/tpl_abc \
+  -H "Authorization: Bearer af_live_YOUR_KEY"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEDULING -->
+  <div class="dev-section">
+    <div class="dev-section-title">Scheduling</div>
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-patch">PATCH</span>
+        <code class="dev-path">/jobs/:id/schedule</code>
+        <span class="dev-endpoint-title">Schedule a job</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Set or update the publish time for an existing job. Pass <code>null</code> to unschedule.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X PATCH https://api.auraflux.co/v1/jobs/job_abc123/schedule \
+  -H "Authorization: Bearer af_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"scheduledAt":"2026-05-26T09:00:00Z"}'</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATION -->
+  <div class="dev-section">
+    <div class="dev-section-title">Account</div>
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/account</code>
+        <span class="dev-endpoint-title">Get account info</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Returns your account ID, plan tier, credit balance, and rate limit info. Use this to verify your key is working.</p>
+        <div class="dev-code-label">Response</div>
+        <div class="dev-code">{
+  "accountId": "user_xxx",
+  "planTier": "operate",
+  "credits": { "balance": 47, "included": 50, "used": 3 }
+}</div>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl https://api.auraflux.co/v1/account \
+  -H "Authorization: Bearer af_live_YOUR_KEY"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIELD REFERENCE -->
+  <div class="dev-section">
+    <div class="dev-section-title">POST /jobs — Field Reference</div>
+    <div style="background:#0f172a;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;">
+      <table class="dev-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>entry</td><td>"fetch"|"upload"|"compose"|"generate"</td><td>No (default: fetch)</td><td>How the source is provided. fetch=URL, upload=file, compose=script-only, generate=AI video</td></tr>
+          <tr><td>url</td><td>string</td><td>If entry=fetch</td><td>Source video URL (Twitch clip, YouTube, direct MP4)</td></tr>
+          <tr><td>urls</td><td>string[]</td><td>No</td><td>Multiple source URLs for multi-clip jobs</td></tr>
+          <tr><td>fileId</td><td>string</td><td>If entry=upload</td><td>File ID from POST /upload</td></tr>
+          <tr><td>topic</td><td>string</td><td>No</td><td>Topic for the video (max 500 chars). Used for script generation and metadata.</td></tr>
+          <tr><td>tone</td><td>string</td><td>No</td><td>Voiceover tone e.g. "hype", "calm", "educational"</td></tr>
+          <tr><td>format</td><td>"short"|"long"</td><td>No (default: short)</td><td>Short-form (≤60s) or long-form video</td></tr>
+          <tr><td>durationMins</td><td>number</td><td>No (default: 1)</td><td>Target duration in minutes (1–120)</td></tr>
+          <tr><td>platforms</td><td>string[]</td><td>No</td><td>"tiktok", "youtube", "instagram" — platforms to publish to</td></tr>
+          <tr><td>publishMode</td><td>"immediate"|"scheduled"|"manual"</td><td>No (default: immediate)</td><td>When to publish after production</td></tr>
+          <tr><td>staging</td><td>boolean</td><td>No</td><td>If true, job stops before publish for your review</td></tr>
+          <tr><td>fromTemplateId</td><td>string</td><td>No</td><td>Start from a saved template. Body fields override template values.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RATE LIMITS -->
+  <div class="dev-section">
+    <div class="dev-section-title">Rate Limits &amp; Credit Costs</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="background:#0f172a;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:24px;">
+        <div class="dev-code-label" style="margin-bottom:12px;">Rate limits</div>
+        <ul style="display:flex;flex-direction:column;gap:8px;list-style:none;">
+          <li style="font-size:.88rem;color:#a0a0b8;">60 API requests / minute</li>
+          <li style="font-size:.88rem;color:#a0a0b8;">10 concurrent job submissions</li>
+          <li style="font-size:.88rem;color:#a0a0b8;">500MB max upload size</li>
+        </ul>
+      </div>
+      <div style="background:#0f172a;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:24px;">
+        <div class="dev-code-label" style="margin-bottom:12px;">Credit costs per job</div>
+        <ul style="display:flex;flex-direction:column;gap:8px;list-style:none;">
+          <li style="font-size:.88rem;color:#a0a0b8;">Short-form, single clip — <strong style="color:#f5c542;">1 credit</strong></li>
+          <li style="font-size:.88rem;color:#a0a0b8;">Long-form or multi-clip — <strong style="color:#f5c542;">2 credits</strong></li>
+          <li style="font-size:.88rem;color:#a0a0b8;">AI video generation — <strong style="color:#f5c542;">3 credits</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="dev-cta">
+    <div class="dev-cta-text">
+      <h3>Ready to start building?</h3>
+      <p>Get your API key and start submitting jobs in minutes on the Operate plan.</p>
+    </div>
+    <a href="https://app.auraflux.co/sign-up">Get API Access</a>
+  </div>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var code = btn.parentElement.textContent.replace('Copy','').replace('Copied!','').trim();
+  navigator.clipboard.writeText(code).then(function(){
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+  });
+}
+</script>
+
+${FRAMER_FOOTER || FALLBACK_FOOTER}
+</body>
+</html>
