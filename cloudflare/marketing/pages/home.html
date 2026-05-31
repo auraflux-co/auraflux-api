@@ -44,7 +44,7 @@ body{line-height:1.6}
   color:#fff;line-height:1.08;letter-spacing:-.02em;
   max-width:900px;margin:0 auto 24px;
 }
-.hero h1 em{font-style:italic;color:#f5c542;}
+.hero h1 em{font-style:italic;color:#ffffff;}
 .hero-sub{
   font-size:1.15rem;color:#a0a0b8;max-width:560px;margin:0 auto 40px;line-height:1.65;
 }
@@ -94,9 +94,16 @@ body{line-height:1.6}
   display:flex;gap:40px;justify-content:center;align-items:center;flex-wrap:wrap;
 }
 .logo-bar-item{
-  font-size:.95rem;font-weight:600;color:rgba(255,255,255,.25);letter-spacing:.02em;
-  font-family:'Satoshi','Inter',sans-serif;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
 }
+.logo-bar-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;font-weight:700;color:#f5c542;
+}
+.logo-bar-handle{font-size:.8rem;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.02em;}
+.logo-bar-quote{font-size:.75rem;color:rgba(255,255,255,.3);max-width:120px;text-align:center;line-height:1.4;}
 
 /* ── Section base ──────────────────────────────────────────────────────────── */
 .section{max-width:1100px;margin:0 auto;padding:96px 24px;}
@@ -263,7 +270,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <h1>Run Your Content<br>Without a <em>Team.</em></h1>
   <p class="hero-sub">AuraFlux runs your content production from start to finish — transforming raw clips, videos, and ideas into polished, published content automatically.</p>
   <div class="hero-cta">
-    <a href="https://app.auraflux.co/sign-up" class="btn-primary">
+    <a href="/pricing" class="btn-primary">
       Start Producing
     </a>
     <a href="/system" class="btn-ghost">
@@ -296,11 +303,31 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="logo-bar">
   <p class="logo-bar-label">Trusted by creators on</p>
   <div class="logo-bar-items">
-    <span class="logo-bar-item">YouTube</span>
-    <span class="logo-bar-item">TikTok</span>
-    <span class="logo-bar-item">Twitch</span>
-    <span class="logo-bar-item">Kick</span>
-    <span class="logo-bar-item">Instagram</span>
+    <div class="logo-bar-item">
+      <div class="logo-bar-avatar">YT</div>
+      <span class="logo-bar-handle">YouTube Creators</span>
+      <span class="logo-bar-quote">Daily uploads, zero editing time</span>
+    </div>
+    <div class="logo-bar-item">
+      <div class="logo-bar-avatar">TT</div>
+      <span class="logo-bar-handle">TikTok Streamers</span>
+      <span class="logo-bar-quote">Clips published while they sleep</span>
+    </div>
+    <div class="logo-bar-item">
+      <div class="logo-bar-avatar">TW</div>
+      <span class="logo-bar-handle">Twitch Partners</span>
+      <span class="logo-bar-quote">VOD highlights on autopilot</span>
+    </div>
+    <div class="logo-bar-item">
+      <div class="logo-bar-avatar">KK</div>
+      <span class="logo-bar-handle">Kick Streamers</span>
+      <span class="logo-bar-quote">Multi-platform from one stream</span>
+    </div>
+    <div class="logo-bar-item">
+      <div class="logo-bar-avatar">IG</div>
+      <span class="logo-bar-handle">Instagram Creators</span>
+      <span class="logo-bar-quote">Reels generated automatically</span>
+    </div>
   </div>
 </div>
 
@@ -495,7 +522,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="final-cta">
   <h2>Stop Managing Content.<br><em>Start Producing It.</em></h2>
   <p>No team, no editors, no upload queues. AuraFlux handles the entire pipeline from source to publish.</p>
-  <a href="https://app.auraflux.co/sign-up" class="btn-primary">Start Producing Free</a>
+  <a href="/pricing" class="btn-primary">Start Producing Free</a>
 </div>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}

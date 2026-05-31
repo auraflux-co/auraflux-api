@@ -16,7 +16,7 @@ body{line-height:1.6}
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto;padding:0 24px 72px}
 @media(max-width:768px){.plans{grid-template-columns:1fr}}
 .plan{background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:36px 32px;display:flex;flex-direction:column}
-.plan.featured{border-color:rgba(245,197,66,.5);position:relative}
+.plan.featured{border:1.5px solid #c7af4f;position:relative}
 .badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#f5c542;color:#0b1220;font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:.05em}
 .plan-name{font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#f5c542;margin-bottom:8px}
 .plan-title{font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:4px}
@@ -64,7 +64,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <div class="plan">
     <div class="plan-name">Operate</div>
     <div class="plan-title">DIY / API</div>
-    <div class="plan-sub">Total Control &amp; Custom Integration</div>
+    <div class="plan-sub">Automated processing via self-serve dashboard &amp; API access only.</div>
     <div class="price" id="price-operate"><span class="price-val">—</span><span>/mo</span></div>
     <div class="credits">50 credits/month · Self-serve instant checkout</div>
     <ul class="features">
@@ -83,7 +83,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <div class="badge">MOST POPULAR</div>
     <div class="plan-name">Guided</div>
     <div class="plan-title">Collab Assist</div>
-    <div class="plan-sub">Build &amp; Optimize with Collab Guidance</div>
+    <div class="plan-sub">Complete platform toolkit plus Gemini-backed Collab AI workspace assistance.</div>
     <div class="price" id="price-guided"><span class="price-val">—</span><span>/mo</span></div>
     <div class="credits">200 credits/month · Self-serve subscription upgrade</div>
     <ul class="features">
@@ -101,7 +101,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <div class="plan">
     <div class="plan-name">Managed</div>
     <div class="plan-title">Done-For-You</div>
-    <div class="plan-sub">Fully Managed Workflows by Experts</div>
+    <div class="plan-sub">Full Collab AI platform plus a dedicated human account manager.</div>
     <div class="price" id="price-managed">Custom</div>
     <div class="credits">1000+ credits/month · Custom onboarding &amp; sales intake</div>
     <ul class="features">
@@ -113,6 +113,12 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <li>Unlimited credits</li>
     </ul>
     <a href="/contact" class="cta cta-secondary">Request Managed Plan</a>
+  </div>
+</div>
+
+<div style="max-width:1100px;margin:0 auto 56px;padding:0 24px;">
+  <div style="border:1px solid #c7af4f;border-radius:12px;padding:20px 28px;text-align:center;background:rgba(199,175,79,0.04);">
+    <p style="font-size:.9rem;color:#a0a0b8;line-height:1.6;">Running low mid-month? <strong style="color:#fff;">Extra Credit Packs</strong> are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.</p>
   </div>
 </div>
 
