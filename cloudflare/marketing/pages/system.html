@@ -32,11 +32,11 @@ a:hover{text-decoration:underline}
 /* Pipeline visual */
 .pipeline{display:flex;flex-direction:column;gap:2px;max-width:800px;margin:0 auto 64px}
 .portal{background:#0f172a;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:28px 32px;display:grid;grid-template-columns:64px 1fr auto;gap:20px;align-items:center;transition:border-color .2s}
-.portal:hover{border-color:rgba(245,197,66,.35)}
+.portal:hover{border-color:rgba(199,175,79,.5);box-shadow:0 0 20px rgba(199,175,79,.06);background:rgba(10,14,30,.9);}
 .portal-badge{background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);color:#f5c542;font-size:.8rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .portal-body h3{font-size:1.05rem;font-weight:700;letter-spacing:-.01em;color:#fff;margin-bottom:4px}
 .portal-body p{font-size:.88rem;color:#8f9bb7;line-height:1.5}
-.portal-tag{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0b1220;background:#f5c542;padding:3px 10px;border-radius:20px;white-space:nowrap;align-self:flex-start;margin-top:4px}
+.portal-tag{font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#0b1220;background:#f5c542;padding:3px 10px;border-radius:20px;white-space:nowrap;align-self:flex-start;margin-top:4px;font-family:'Satoshi','Inter',monospace;}
 .portal-tag.qa{background:#10b981;color:#fff}
 .portal-tag.opt{background:#6366f1;color:#fff}
 .arrow{text-align:center;color:rgba(255,255,255,.15);font-size:1.2rem;padding:6px 0;line-height:1}
@@ -85,7 +85,8 @@ a:hover{text-decoration:underline}
 .publish h2{font-size:2.25rem;font-weight:700;color:#fff;margin-bottom:12px;text-align:center}
 .publish-sub{font-size:1rem;color:#8f9bb7;text-align:center;margin-bottom:48px}
 .platform-grid{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
-.platform{background:#0f172a;border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:20px 28px;text-align:center;min-width:160px}
+.platform{background:#0f172a;border:1px solid rgba(199,175,79,.15);border-radius:12px;padding:20px 28px;text-align:center;min-width:160px;transition:border-color .2s;}
+.platform:hover{border-color:rgba(199,175,79,.4);}
 .platform-name{font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px}
 .platform-note{font-size:.8rem;color:#a0a0b8}
 
@@ -118,12 +119,12 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="portal-badge">P0</div>
       <div class="portal-body">
         <h3>Content Intelligence</h3>
-        <p>Source video analysis, segment detection, and clip scoring. The system identifies which moments are worth producing before any editing begins. Supports YouTube URLs, Twitch VODs, Kick replays, and direct uploads.</p>
+        <p>Source video analysis, segment detection, and clip scoring. The system identifies which moments are worth producing before any editing begins. Supports <span style="color:#ff4444;font-weight:700;">YouTube</span>, <span style="color:#9b59b6;font-weight:700;">Twitch</span>, <span style="color:#2ecc71;font-weight:700;">Kick</span> replays, and direct uploads.</p>
       </div>
       <div class="portal-tag">Always On</div>
     </div>
 
-    <div class="arrow">↓</div>
+    <div class="arrow" style="display:flex;align-items:center;justify-content:center;padding:4px 0;"><div style="width:1px;height:24px;background:linear-gradient(180deg,rgba(245,197,66,.4),rgba(245,197,66,.1));margin:0 auto;"></div></div>
 
     <div class="portal">
       <div class="portal-badge">P1</div>
@@ -134,7 +135,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="portal-tag opt">Optional</div>
     </div>
 
-    <div class="arrow">↓</div>
+    <div class="arrow" style="display:flex;align-items:center;justify-content:center;padding:4px 0;"><div style="width:1px;height:24px;background:linear-gradient(180deg,rgba(245,197,66,.4),rgba(245,197,66,.1));margin:0 auto;"></div></div>
 
     <div class="portal">
       <div class="portal-badge">P2</div>
@@ -145,7 +146,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="portal-tag">Always On</div>
     </div>
 
-    <div class="arrow">↓</div>
+    <div class="arrow" style="display:flex;align-items:center;justify-content:center;padding:4px 0;"><div style="width:1px;height:24px;background:linear-gradient(180deg,rgba(245,197,66,.4),rgba(245,197,66,.1));margin:0 auto;"></div></div>
 
     <div class="portal">
       <div class="portal-badge">P3</div>
@@ -156,7 +157,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="portal-tag qa">QA Gate</div>
     </div>
 
-    <div class="arrow">↓</div>
+    <div class="arrow" style="display:flex;align-items:center;justify-content:center;padding:4px 0;"><div style="width:1px;height:24px;background:linear-gradient(180deg,rgba(245,197,66,.4),rgba(245,197,66,.1));margin:0 auto;"></div></div>
 
     <div class="portal">
       <div class="portal-badge">P4</div>
@@ -167,7 +168,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="portal-tag opt">Configurable</div>
     </div>
 
-    <div class="arrow">↓</div>
+    <div class="arrow" style="display:flex;align-items:center;justify-content:center;padding:4px 0;"><div style="width:1px;height:24px;background:linear-gradient(180deg,rgba(245,197,66,.4),rgba(245,197,66,.1));margin:0 auto;"></div></div>
 
     <div class="portal">
       <div class="portal-badge">P5</div>

@@ -58,7 +58,7 @@
       e.preventDefault();
       var btn = document.getElementById('cf-submit');
       var msg = document.getElementById('cf-msg');
-      btn.disabled = true; btn.textContent = 'Sending…';
+      btn.disabled = true; btn.textContent = '⬛ PROCESSING...'; btn.style.letterSpacing='0.05em';
       msg.style.display = 'none';
       try {
         var res = await fetch('/api/contact', {
@@ -72,7 +72,7 @@
         });
         var data = await res.json();
         if (data.ok) {
-          msg.className = 'form-msg ok'; msg.textContent = "Thanks — we'll be in touch shortly."; msg.style.display = 'block';
+          btn.textContent = '✓ TRANSMITTED'; msg.className = 'form-msg ok'; msg.textContent = "Thanks — we'll be in touch shortly."; msg.style.display = 'block';
           e.target.reset();
         } else {
           throw new Error(data.error || 'Submission failed');
@@ -104,7 +104,13 @@
       </div>
       <div class="faq-item">
         <dt data-editable="faq_3_q">Can I connect multiple social accounts?</dt>
-        <dd data-editable="faq_3_a">Yes — you can connect YouTube, TikTok, Instagram, Twitch, and Kick. Each job can be targeted to one or more platforms simultaneously.</dd>
+        <dd data-editable="faq_3_a">Yes — you can connect all major platforms. Each job can be targeted to one or more simultaneously.<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+<span style="display:inline-flex;align-items:center;gap:4px;font-size:.75rem;font-weight:700;background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.2);color:#ff4444;padding:3px 10px;border-radius:6px;">▶ YouTube</span>
+<span style="display:inline-flex;align-items:center;gap:4px;font-size:.75rem;font-weight:700;background:rgba(0,240,255,.07);border:1px solid rgba(0,240,255,.2);color:#5dade2;padding:3px 10px;border-radius:6px;">♪ TikTok</span>
+<span style="display:inline-flex;align-items:center;gap:4px;font-size:.75rem;font-weight:700;background:rgba(200,100,255,.08);border:1px solid rgba(200,100,255,.2);color:#c678dd;padding:3px 10px;border-radius:6px;">◈ Instagram</span>
+<span style="display:inline-flex;align-items:center;gap:4px;font-size:.75rem;font-weight:700;background:rgba(145,70,255,.1);border:1px solid rgba(145,70,255,.2);color:#9b59b6;padding:3px 10px;border-radius:6px;">▣ Twitch</span>
+<span style="display:inline-flex;align-items:center;gap:4px;font-size:.75rem;font-weight:700;background:rgba(0,240,0,.07);border:1px solid rgba(0,240,0,.2);color:#2ecc71;padding:3px 10px;border-radius:6px;">◉ Kick</span>
+</div></dd>
       </div>
       <div class="faq-item">
         <dt data-editable="faq_4_q">Do I need technical knowledge to use AuraFlux?</dt>

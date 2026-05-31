@@ -17,7 +17,7 @@ const FRAMER_ORIGIN = 'https://f6aff8ec.auraflux-marketing.pages.dev';
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // All paths owned by the worker — no Framer proxy, no SPA router interception needed.
-const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
+const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -176,7 +176,7 @@ const FALLBACK_NAV = `<nav style="display:flex;align-items:center;justify-conten
   <div style="display:flex;gap:24px;align-items:center">
     <a href="/system" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our System</a>
     <a href="/pricing" style="font-size:.9rem;color:#9999b8;text-decoration:none">Pricing</a>
-    <a href="/about" style="font-size:.9rem;color:#9999b8;text-decoration:none">About</a>
+    <a href="/our-story" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our Story</a>
     <a href="/contact" style="font-size:.9rem;color:#9999b8;text-decoration:none">Contact</a>
     <a href="https://app.auraflux.co/sign-up" style="background:#f5c542;color:#0b1220;padding:8px 20px;border-radius:8px;font-size:.9rem;font-weight:600;text-decoration:none">Get Started</a>
   </div>
@@ -232,6 +232,7 @@ const PAGES = {
   '/blog':    `__PAGE_BLOG__`,
   '/pricing': `__PAGE_PRICING__`,
   '/about':   `__PAGE_ABOUT__`,
+  '/our-story': `__PAGE_ABOUT__`,
   '/system':  `__PAGE_SYSTEM__`,
   '/privacy': LEGAL_SHELL(
     'Privacy Policy',
