@@ -49,6 +49,10 @@ API_BASE = os.environ.get('AURAFLUX_API_URL', 'https://auraflux-api.onrender.com
 _env_raw = open('.env').read() if os.path.exists('.env') else ''
 def _env(k): return next((l.split('=',1)[1].strip() for l in _env_raw.splitlines() if l.startswith(k+'=')), '')
 
+# Both keys resolve to gregory.robert.c@gmail.com (user_3DeZEr79TWcmvEvCMlu8lmM1FdU).
+# All test jobs — operate and guided phases alike — must land in Rob's review queue
+# so they can be reviewed and shared to AuraFlux social accounts when ready.
+# Never use a synthetic/fake customer ID (e.g. e2e-operate-test) for these tests.
 API_KEY_OPERATE  = os.environ.get('AURAFLUX_E2E_API_KEY_OPERATE', _env('AURAFLUX_E2E_API_KEY_OPERATE'))
 API_KEY_GUIDED   = os.environ.get('AURAFLUX_E2E_API_KEY_GUIDED',  _env('AURAFLUX_E2E_API_KEY_GUIDED'))
 TWITCH_CLIENT_ID = _env('TWITCH_CLIENT_ID')
@@ -117,20 +121,23 @@ KICK_CURATED = [
 ]
 
 CLIP_FALLBACK = [
+    # Slots 0-4: proven-passing operate clips (used for jobs 1-5)
     {'platform': 'twitch', 'streamer': 'xQc',           'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                      'title': 'xQc wrong choice',          'duration_s': 45, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'hasanabi',       'url': 'https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg',     'title': 'IRL ban',                   'duration_s': 51, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'Markiplier',     'url': 'https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid',                         'title': "Wade's Romantic Cruise",    'duration_s': 51, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'trainwreckstv',  'url': 'https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP',                           'title': 'Finish Halo 2',             'duration_s': 45, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'StableRonaldo',  'url': 'https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK',               'title': 'hey!',                      'duration_s': 47, 'source': 'inventory'},
+    # Slots 5-9: operate clips for jobs 6-10 (Twitch only — YouTube blocked on Render IPs)
     {'platform': 'twitch', 'streamer': 'hasanabi',       'url': 'https://www.twitch.tv/hasanabi/clip/CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF',              'title': 'Emiru calls out streamers', 'duration_s': 43, 'source': 'inventory'},
-    {'platform': 'youtube','streamer': 'ESPN',            'url': 'https://www.youtube.com/watch?v=L_jWHffIx5E',                                                        'title': 'ESPN highlight',            'duration_s': 60, 'source': 'inventory'},
-    {'platform': 'youtube','streamer': 'Bleacher Report', 'url': 'https://www.youtube.com/watch?v=eB-3EFmBbKw',                                                        'title': 'BR moment',                 'duration_s': 55, 'source': 'inventory'},
+    {'platform': 'twitch', 'streamer': 'trainwreckstv',  'url': 'https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP',                           'title': 'Train Halo 2 v2',           'duration_s': 45, 'source': 'inventory'},
+    {'platform': 'twitch', 'streamer': 'xQc',            'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                      'title': 'xQc wrong v2',              'duration_s': 45, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'xQc',            'url': 'https://www.twitch.tv/xqc/clip/EntertainingTsunderePicklesSaltBae-_znCL0KuMwXadfP1',                 'title': 'xQc DRAMA NEWS',            'duration_s': 60, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'trainwreckstv',  'url': 'https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana',                           'title': 'Shameless Mod Defends',     'duration_s': 43, 'source': 'inventory'},
-    {'platform': 'twitch', 'streamer': 'Markiplier',     'url': 'https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid',                         'title': "Wade's Cruise (guided)",    'duration_s': 51, 'source': 'inventory'},
+    # Slots 10-13: guided clips — use proven-passing URLs with guided/tpl titles
+    {'platform': 'twitch', 'streamer': 'xQc',            'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                      'title': 'xQc wrong (guided)',        'duration_s': 45, 'source': 'inventory'},
     {'platform': 'twitch', 'streamer': 'hasanabi',       'url': 'https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg',     'title': 'IRL ban (guided)',          'duration_s': 51, 'source': 'inventory'},
-    {'platform': 'twitch', 'streamer': 'xQc',            'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',                                      'title': 'xQc wrong (tpl seed)',      'duration_s': 45, 'source': 'inventory'},
-    {'platform': 'twitch', 'streamer': 'StableRonaldo',  'url': 'https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK',               'title': 'hey (tpl replay)',          'duration_s': 47, 'source': 'inventory'},
+    {'platform': 'twitch', 'streamer': 'trainwreckstv',  'url': 'https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP',                           'title': 'Halo 2 (tpl seed)',         'duration_s': 45, 'source': 'inventory'},
+    {'platform': 'twitch', 'streamer': 'Markiplier',     'url': 'https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid',                         'title': "Wade's Cruise (tpl replay)",'duration_s': 51, 'source': 'inventory'},
 ]
 
 

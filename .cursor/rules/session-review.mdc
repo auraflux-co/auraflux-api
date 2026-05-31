@@ -26,7 +26,7 @@ If work touched both repos, run both.
 
 ## End of every session
 
-Remind the user to run the appropriate script (or both if work spanned both repos):
+Remind the user to run **both** scripts — the aider review (code quality) and the session close (Jira + Confluence audit):
 
 ```bash
 # cwn-c0 localhost work:
@@ -34,7 +34,18 @@ bash scripts/aider_session_review_local.sh
 
 # cwn-production / Render work:
 bash scripts/aider_session_review.sh
+
+# ALWAYS — Jira + Confluence audit (catches work from ALL sources: Cursor, Aider, in-app edits):
+bash scripts/session_close.sh
 ```
+
+`session_close.sh` must run at the end of every session regardless of which repo was touched. It:
+- Finds every commit since the last close marker
+- Auto-creates Jira tasks for any commits without a ticket ID
+- Flags tickets that are missing a Confluence HOW page
+- Updates `logs/last-session-close-commit` so the next run only covers new work
+
+Use `--dry-run` to preview without creating tickets.
 
 ## What each script checks
 

@@ -12,12 +12,12 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://4a98e8ea.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://f6aff8ec.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
 // All paths owned by the worker — no Framer proxy, no SPA router interception needed.
-const WORKER_OWNED_PATHS = ['/', '/pricing', '/about', '/system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
+const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact'];
 
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
@@ -472,11 +472,6 @@ export default {
       return handleContactForm(request);
     }
 
-    // ── /blog redirect — no blog content yet ──────────────────────────────
-    if (path === '/blog') {
-      return Response.redirect('https://auraflux.co/', 301);
-    }
-
     // ── Pages served directly from worker (no Framer dependency) ──────────
     if (PAGES[path]) {
       // CPD-402: attempt to hydrate with DB-backed dynamic content (5-min cache)
@@ -504,6 +499,13 @@ export default {
         );
       }
 
+      // Inject chat widget + brand overrides before </body> on non-Framer pages.
+      // The homepage (Framer SSR) already includes its own interactive shell;
+      // all other worker-owned pages need INJECTED_CSS for the chat panel to work.
+      if (path !== '/') {
+        html = html.replace('</body>', INJECTED_CSS + '\n</body>');
+      }
+
       const headers = addSecurityHeaders(new Headers({
         'Content-Type': 'text/html; charset=utf-8',
         // No CDN caching — always serve fresh so content updates are instant
@@ -515,6 +517,55 @@ export default {
     // ── App redirects ──────────────────────────────────────────────────────
     if (path === '/sign-in' || path === '/sign-up' || path === '/login') {
       return Response.redirect(`https://app.auraflux.co${path}`, 302);
+    }
+
+    // ── Service worker eviction ─────────────────────────────────────────────
+    // Framer's exported HTML registers a service worker that caches .mjs modules
+    // directly from assets.auraflux.co. When those cached modules load alongside
+    // our /cf-assets/ proxied versions, React tries to hydrate twice → error #405.
+    // Serving a new /sw.js that does nothing evicts the old Framer SW on next visit.
+    if (path === '/sw.js') {
+      return new Response(
+        `// AuraFlux replacement SW — evicts stale Framer service worker
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+// No fetch handler — all requests go directly to the network.`,
+        { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-store' } }
+      );
+    }
+
+    // ── Asset proxy — serve fonts/JS from assets.auraflux.co with CORS ────
+    // Fonts loaded via @font-face and Framer .mjs modules are served from
+    // assets.auraflux.co which has no CORS headers. Proxying them same-origin
+    // through /cf-assets/* avoids the cross-origin block entirely.
+    if (path.startsWith('/cf-assets/')) {
+      const assetPath = path.slice('/cf-assets'.length); // keep leading slash
+      const assetUrl = `https://assets.auraflux.co${assetPath}${url.search}`;
+      try {
+        const upstream = await fetch(assetUrl, { signal: AbortSignal.timeout(10000) });
+        const headers = new Headers(upstream.headers);
+        headers.set('Access-Control-Allow-Origin', '*');
+        headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        // Preserve upstream cache-control for fonts (immutable, 1yr)
+        if (!headers.has('Cache-Control')) {
+          headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+        return new Response(upstream.body, { status: upstream.status, headers });
+      } catch {
+        return new Response('Asset not found', { status: 404 });
+      }
+    }
+
+    // Handle OPTIONS preflight for the asset proxy
+    if (request.method === 'OPTIONS' && path.startsWith('/cf-assets/')) {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
     }
 
     // ── Unknown path — 404 ────────────────────────────────────────────────

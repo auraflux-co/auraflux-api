@@ -5,82 +5,75 @@
 <title>Blog — AuraFlux</title>
 <meta name="description" content="Insights, guides, and updates from the AuraFlux team on AI video production, content automation, and creator monetization.">
 <link rel="canonical" href="https://auraflux.co/blog">
-<link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="/favicon.png" rel="icon" type="image/png">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Blog — AuraFlux">
+<meta property="og:description" content="Insights on AI video production, content automation, and building a streaming-to-revenue pipeline.">
+<meta property="og:image" content="https://auraflux.co/favicon.png">
+${FRAMER_FONTS || ''}
+${FRAMER_CSS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:#0b1220;color:#e4e4f0;line-height:1.7}
-a{color:#f5c542;text-decoration:none}a:hover{text-decoration:underline}
+body{line-height:1.6}
+/* Fallback nav styles — overridden by Framer CSS when available */
 nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08)}
-.nav-logo{font-size:1.2rem;font-weight:700;color:#f5c542;letter-spacing:.03em}
-.nav-links{display:flex;gap:24px;align-items:center}
-.nav-links a{font-size:.9rem;color:#9999b8;text-decoration:none}
-.nav-links a:hover{color:#e4e4f0}
-.hero{max-width:800px;margin:0 auto;padding:80px 24px 48px;text-align:center}
-.hero h1{font-size:2.8rem;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:16px}
-.hero p{font-size:1.1rem;color:#9999b8;max-width:520px;margin:0 auto}
-.posts{max-width:800px;margin:0 auto;padding:0 24px 80px;display:grid;gap:24px}
-.post-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:28px 32px;transition:border-color .2s}
-.post-card:hover{border-color:rgba(245,197,66,.3)}
-.post-tag{display:inline-block;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#f5c542;background:rgba(245,197,66,.1);border-radius:4px;padding:3px 8px;margin-bottom:12px}
-.post-card h2{font-size:1.25rem;font-weight:600;color:#fff;margin-bottom:8px;line-height:1.4}
-.post-card p{font-size:.9rem;color:#8888a8;margin-bottom:16px}
-.post-meta{font-size:.8rem;color:#55558c}
-.coming-soon{text-align:center;padding:40px 24px;color:#55558c;font-size:.9rem}
 footer{text-align:center;padding:40px 24px;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:#555580}
 footer a{color:#f5c542;margin:0 8px}
+/* Blog content */
+.blog-wrap{max-width:860px;margin:0 auto;padding:60px 24px 80px}
+.blog-hero{text-align:center;margin-bottom:56px}
+.blog-hero h1{font-size:2.6rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:16px}
+.blog-hero p{font-size:1.05rem;color:#9999b8;max-width:520px;margin:0 auto}
+.posts{display:grid;gap:24px}
+.post-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:28px 32px;transition:border-color .2s}
+.post-card:hover{border-color:rgba(245,197,66,.3)}
+.post-tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f5c542;background:rgba(245,197,66,.1);border-radius:4px;padding:3px 8px;margin-bottom:12px}
+.post-card h2{font-size:1.2rem;font-weight:600;color:#fff;margin-bottom:8px;line-height:1.4}
+.post-card p{font-size:.9rem;color:#8888a8;margin-bottom:16px;line-height:1.6}
+.post-meta{font-size:.8rem;color:#55558c}
 </style>
 </head>
 <body>
-<nav>
-  <a href="/" class="nav-logo">AuraFlux</a>
-  <div class="nav-links">
-    <a href="/pricing">Pricing</a>
-    <a href="/roadmap">Roadmap</a>
-    <a href="/contact">Contact</a>
-    <a href="https://app.auraflux.co/sign-in" style="color:rgba(255,255,255,0.75)">Sign In</a>
-  </div>
-</nav>
+${FRAMER_NAV || FALLBACK_NAV}
 
-<div class="hero">
-  <h1>Blog</h1>
-  <p>Insights on AI video production, content automation, and building a streaming-to-revenue pipeline.</p>
+<div class="blog-wrap">
+  <div class="blog-hero">
+    <h1>Blog</h1>
+    <p>Insights on AI video production, content automation, and building a streaming-to-revenue pipeline.</p>
+  </div>
+
+  <div class="posts">
+    <div class="post-card">
+      <span class="post-tag">Guide</span>
+      <h2>From Twitch Clip to Published Video in Under 5 Minutes</h2>
+      <p>How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing — automatically.</p>
+      <div class="post-meta">Coming soon</div>
+    </div>
+
+    <div class="post-card">
+      <span class="post-tag">Monetization</span>
+      <h2>The Multi-Platform Content Strategy for Streamers</h2>
+      <p>How top streamers on Twitch and Kick maximise revenue by cross-posting to YouTube, TikTok, and subscription platforms.</p>
+      <div class="post-meta">Coming soon</div>
+    </div>
+
+    <div class="post-card">
+      <span class="post-tag">Platform</span>
+      <h2>Direct Publishing to TikTok and YouTube — A Deep Dive</h2>
+      <p>OAuth-based direct publish means no manual uploads. Here's how the AuraFlux publish portal handles both platforms.</p>
+      <div class="post-meta">Coming soon</div>
+    </div>
+
+    <div class="post-card">
+      <span class="post-tag">AI</span>
+      <h2>Inside AuraFlux's Portal Pipeline: How 8 Portals Turn a Clip Into a Published Video</h2>
+      <p>A detailed walkthrough of each production stage — from Portal 0 (intake) through Portal 5 (publish) — and how the system adapts to each job spec.</p>
+      <div class="post-meta">Coming soon</div>
+    </div>
+  </div>
 </div>
 
-<div class="posts">
-  <div class="post-card">
-    <span class="post-tag">Guide</span>
-    <h2>From Twitch Clip to Published Video in Under 5 Minutes</h2>
-    <p>How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing — automatically.</p>
-    <div class="post-meta">Coming soon</div>
-  </div>
-
-
-  <div class="post-card">
-    <span class="post-tag">Monetization</span>
-    <h2>The Multi-Platform Content Strategy for Streamers</h2>
-    <p>How top streamers on Twitch and Kick maximise revenue by cross-posting to YouTube, TikTok, and subscription platforms.</p>
-    <div class="post-meta">Coming soon</div>
-  </div>
-
-  <div class="post-card">
-    <span class="post-tag">Platform</span>
-    <h2>Direct Publishing to TikTok and YouTube — A Deep Dive</h2>
-    <p>OAuth-based direct publish means no manual uploads. Here's how the AuraFlux publish portal handles both platforms.</p>
-    <div class="post-meta">Coming soon</div>
-  </div>
-</div>
-
-<footer>
-  <div style="margin-bottom:12px">
-    <a href="mailto:support@auraflux.co">support@auraflux.co</a>
-    <a href="tel:+15716002835">+1 (571) 600-2835</a>
-  </div>
-  © 2026 AuraFlux. All rights reserved. &nbsp;
-  <a href="/privacy">Privacy</a>
-  <a href="/terms">Terms</a>
-  <a href="/refunds">Refunds</a>
-  <a href="/contact">Contact</a>
-</footer>
+${FRAMER_FOOTER || FALLBACK_FOOTER}
 </body>
 </html>
