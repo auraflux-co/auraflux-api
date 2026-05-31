@@ -39,12 +39,12 @@ body{line-height:1.6}
   padding:2px 10px;border-radius:100px;letter-spacing:.04em;
 }
 .hero h1{
-  font-family:'Instrument Serif','Playfair Display',Georgia,serif;
-  font-size:clamp(2.8rem,6vw,4.8rem);font-weight:400;
-  color:#fff;line-height:1.08;letter-spacing:-.02em;
+  font-family:'Satoshi','Inter',-apple-system,sans-serif;
+  font-size:clamp(2.8rem,6vw,4.8rem);font-weight:800;
+  color:#fff;line-height:1.08;letter-spacing:-.04em;
   max-width:900px;margin:0 auto 24px;
 }
-.hero h1 em{font-style:italic;color:#ffffff;}
+.hero h1 .gold{font-style:normal;color:#f5c542;font-weight:800;}
 .hero-sub{
   font-size:1.15rem;color:#a0a0b8;max-width:560px;margin:0 auto 40px;line-height:1.65;
 }
@@ -113,11 +113,11 @@ body{line-height:1.6}
   border:1px solid rgba(245,197,66,.25);padding:4px 14px;border-radius:100px;
 }
 .section-title{
-  font-family:'Instrument Serif','Playfair Display',Georgia,serif;
-  font-size:clamp(2rem,4vw,3rem);font-weight:400;color:#fff;
-  line-height:1.15;letter-spacing:-.02em;margin-bottom:16px;
+  font-family:'Satoshi','Inter',-apple-system,sans-serif;
+  font-size:clamp(2rem,4vw,3rem);font-weight:800;color:#fff;
+  line-height:1.1;letter-spacing:-.03em;margin-bottom:16px;
 }
-.section-title em{font-style:italic;color:#f5c542;}
+.section-title .gold{font-style:normal;color:#f5c542;font-weight:800;}
 .section-sub{font-size:1rem;color:#a0a0b8;max-width:560px;line-height:1.65;margin-bottom:56px;}
 .section-center{text-align:center;}
 .section-center .section-sub{margin-left:auto;margin-right:auto;}
@@ -136,8 +136,8 @@ body{line-height:1.6}
   font-size:.72rem;font-weight:700;letter-spacing:.12em;color:rgba(245,197,66,.5);
   margin-bottom:16px;
 }
-.value-card h3{font-size:1.3rem;font-weight:600;color:#fff;margin-bottom:10px;}
-.value-card p{font-size:.9rem;color:#8f9bb7;line-height:1.6;}
+.value-card h3{font-size:1.3rem;font-weight:700;letter-spacing:-.01em;color:#fff;margin-bottom:10px;}
+.value-card p{font-size:.9rem;color:#8f9bb7;line-height:1.6;letter-spacing:.01em;}
 
 /* ── 4-step process ────────────────────────────────────────────────────────── */
 .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:48px;}
@@ -179,10 +179,10 @@ body{line-height:1.6}
   padding:40px 32px;text-align:center;
 }
 .format-visual-title{
-  font-family:'Instrument Serif',Georgia,serif;
-  font-size:2rem;color:#fff;margin-bottom:8px;line-height:1.2;
+  font-family:'Satoshi','Inter',sans-serif;
+  font-size:2rem;font-weight:800;color:#fff;margin-bottom:8px;line-height:1.1;letter-spacing:-.03em;
 }
-.format-visual-title em{font-style:italic;color:#f5c542;}
+.format-visual-title .gold{font-style:normal;color:#f5c542;}
 .format-stat{font-size:.85rem;color:#a0a0b8;margin-bottom:32px;}
 .format-pills{display:flex;flex-direction:column;gap:10px;text-align:left;}
 .format-pill{
@@ -249,11 +249,11 @@ body{line-height:1.6}
   background:radial-gradient(ellipse 70% 50% at 50% 100%,rgba(245,197,66,0.06) 0%,transparent 70%);
 }
 .final-cta h2{
-  font-family:'Instrument Serif','Playfair Display',Georgia,serif;
-  font-size:clamp(2rem,5vw,3.8rem);font-weight:400;
-  color:#fff;line-height:1.1;letter-spacing:-.02em;margin-bottom:20px;
+  font-family:'Satoshi','Inter',-apple-system,sans-serif;
+  font-size:clamp(2rem,5vw,3.8rem);font-weight:800;
+  color:#fff;line-height:1.1;letter-spacing:-.04em;margin-bottom:20px;
 }
-.final-cta h2 em{font-style:italic;color:#f5c542;}
+.final-cta h2 .gold{font-style:normal;color:#f5c542;}
 .final-cta p{font-size:1rem;color:#a0a0b8;max-width:480px;margin:0 auto 40px;}
 </style>
 </head>
@@ -267,7 +267,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <span class="hero-badge-pill">New</span>
     Fully automated content workflows →
   </div>
-  <h1>Run Your Content<br>Without a <em>Team.</em></h1>
+  <h1>Run Your Content<br><span class="gold">Without a Team.</span></h1>
   <p class="hero-sub">AuraFlux runs your content production from start to finish — transforming raw clips, videos, and ideas into polished, published content automatically.</p>
   <div class="hero-cta">
     <a href="/pricing" class="btn-primary">
@@ -334,7 +334,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <!-- ── Value prop ─────────────────────────────────────────────────────────── -->
 <div class="section section-center">
   <span class="section-eyebrow">The Problem</span>
-  <h2 class="section-title">Creating Content Isn't The Hard Part.<br><em>Running It Is.</em></h2>
+  <h2 class="section-title">Creating Content Isn't The Hard Part.<br><span class="gold">Running It Is.</span></h2>
   <p class="section-sub">You have the ideas, the clips, the audience. What you don't have is the time to turn raw footage into polished, published content every single day.</p>
   <div class="value-grid">
     <div class="value-card">
@@ -363,7 +363,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <!-- ── 4-step process ─────────────────────────────────────────────────────── -->
 <div class="section section-center">
   <span class="section-eyebrow">How It Works</span>
-  <h2 class="section-title">From Idea to Published Content <em>Automatically.</em></h2>
+  <h2 class="section-title">From Idea to Published Content <span class="gold">Automatically.</span></h2>
   <p class="section-sub">Four steps. No editors, no coordinators, no upload queues.</p>
   <div class="steps">
     <div class="step-card">
@@ -394,7 +394,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <div class="formats">
     <div>
       <span class="section-eyebrow">Content Types</span>
-      <h2 class="section-title">From Shorts To <em>Full Productions.</em></h2>
+      <h2 class="section-title">From Shorts To <span class="gold">Full Productions.</span></h2>
       <p class="section-sub" style="margin-bottom:32px;">Your content format, your content type — AuraFlux handles every combination.</p>
       <div class="format-list">
         <div class="format-item">
@@ -428,7 +428,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       </div>
     </div>
     <div class="format-visual">
-      <div class="format-visual-title">From Shorts To<br><em>Full Productions.</em></div>
+      <div class="format-visual-title">From Shorts To<br><span class="gold">Full Productions.</span></div>
       <p class="format-stat">Every format. Every platform. One pipeline.</p>
       <div class="format-pills">
         <div class="format-pill"><div class="format-pill-dot"></div>Short-form vertical (9:16)</div>
@@ -444,7 +444,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <!-- ── Comparison ─────────────────────────────────────────────────────────── -->
 <div class="section section-center">
   <span class="section-eyebrow">The Difference</span>
-  <h2 class="section-title">Work Smarter. <em>Not Harder.</em></h2>
+  <h2 class="section-title">Work Smarter. <span class="gold">Not Harder.</span></h2>
   <p class="section-sub">Stop spending 80% of your time on production. Start spending it on what actually matters.</p>
   <div class="compare">
     <div class="compare-card bad">
@@ -489,7 +489,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <div class="audience-inner">
     <div>
       <span class="section-eyebrow">Who It's For</span>
-      <h2 class="section-title">Built for Creators and Teams Who Are <em>Serious About Growth.</em></h2>
+      <h2 class="section-title">Built for Creators and Teams Who Are <span class="gold">Serious About Growth.</span></h2>
       <div class="audience-list">
         <div class="audience-item"><div class="audience-dot"></div>Streamers posting daily to YouTube and TikTok</div>
         <div class="audience-item"><div class="audience-dot"></div>Sports and news channels on tight deadlines</div>
@@ -520,7 +520,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <!-- ── Final CTA ──────────────────────────────────────────────────────────── -->
 <div class="final-cta">
-  <h2>Stop Managing Content.<br><em>Start Producing It.</em></h2>
+  <h2>Stop Managing Content.<br><span class="gold">Start Producing It.</span></h2>
   <p>No team, no editors, no upload queues. AuraFlux handles the entire pipeline from source to publish.</p>
   <a href="/pricing" class="btn-primary">Start Producing Free</a>
 </div>
