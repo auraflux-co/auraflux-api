@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.858 (Claude Code — fix(marketing): page-base.css rebuilt from live homepage computed values — body #0b1220, nav transparent rgba(0,0,0,0), nav height 84px, no backdrop-filter, logo capped 84px; all values from getComputedStyle on live homepage)
 **Last Updated:** 2026-05-31 v1.0.857 (Cursor — fix(run11): swap frozen-end hasanabi clip for xQc clip; Jira create_jira_ticket uses ADF description format (API v3 requires doc object, not plain string))
 **Last Updated:** 2026-05-31 v1.0.856 (Cursor — fix(CPD-466): portal_policy_runner: short-circuit on hard_fail — skip 5 wasted retries when FFmpeg defect scan returns hard_fail; portal3a: skip frozen frames in last 4s of clip — Twitch/YouTube clips end on a static frame (not a production defect) [deploy])
 **Last Updated:** 2026-05-31 v1.0.855 (Cursor — fix(render-deploy.yml): clearCache value must be string "do_not_clear" not boolean false — Render API was returning HTTP 400 "invalid JSON" on every [deploy] commit, no deploys were firing [deploy])
