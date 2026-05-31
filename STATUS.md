@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.886 (Claude Code — fix(marketing): favicon served directly from worker as base64 icon-512.png — AF lettermark gold on dark, 512x512)
 **Last Updated:** 2026-05-31 v1.0.885 (Claude Code — fix(marketing): Get Started → /plans not sign-up, customers must choose a plan first)
 **Last Updated:** 2026-05-31 v1.0.884 (Claude Code — sync nav fix + developer-api to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.882 (Claude Code — sync footer 2-col nav + contact chat button to marketing deploy)
