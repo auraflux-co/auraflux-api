@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.885 (Claude Code — fix(marketing): Get Started → /plans not sign-up, customers must choose a plan first)
 **Last Updated:** 2026-05-31 v1.0.884 (Claude Code — sync nav fix + developer-api to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.882 (Claude Code — sync footer 2-col nav + contact chat button to marketing deploy)
 **Last Updated:** 2026-05-31 v1.0.881 (Cursor — fix(grader): skip qa_loudness for clips content type — platforms auto-normalize source audio; check only applies to TTS/avatar — CPD-486)
