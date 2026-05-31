@@ -1,7 +1,8 @@
 name: Deploy Marketing Site (Cloudflare Pages)
 
-# Triggers whenever a push to main touches anything under cloudflare/marketing/.
-# Also runs on workflow_dispatch so you can force a redeploy without a code change.
+# Triggers whenever a push to the `marketing` branch touches cloudflare/marketing/.
+# marketing branch is the dedicated home for all auraflux.co work — changes there
+# go directly to Cloudflare Pages without touching main or restarting Render services.
 #
 # Required GitHub Actions secrets (Settings → Secrets → Actions):
 #   CF_API_TOKEN  — Cloudflare Pages Edit token (CF_API_TOKEN in .env.example)
@@ -11,7 +12,7 @@ name: Deploy Marketing Site (Cloudflare Pages)
 
 on:
   push:
-    branches: [main]
+    branches: [marketing]
     paths:
       - 'cloudflare/marketing/**'
   workflow_dispatch:
