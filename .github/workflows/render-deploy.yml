@@ -1,0 +1,66 @@
+name: Deploy to Render
+
+# Triggers a Render deploy for auraflux-api and auraflux-app ONLY when the
+# merged commit message contains [deploy].
+#
+# Usage — add [deploy] anywhere in your commit message or PR title:
+#   git commit -m "fix(portal4): fix assembly gap [deploy]"
+#   git commit -m "[deploy] hotfix: credit calculation"
+#
+# Without [deploy]: the commit lands on main, Render is NOT restarted.
+# This prevents marketing commits, log updates, doc fixes, and test script
+# changes from bouncing the API and orphaning running pipeline jobs.
+#
+# Required GitHub Secret: RENDER_API_KEY
+# Service IDs are hardcoded (stable Render service identifiers):
+#   auraflux-api: srv-d7nsd77avr4c73frifcg
+#   auraflux-app: srv-d7pnalhj2pic73btevl0
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Trigger Render deploy
+    runs-on: ubuntu-latest
+    # Only run when [deploy] appears anywhere in the commit message
+    if: contains(github.event.head_commit.message, '[deploy]')
+
+    steps:
+      - name: Deploy auraflux-api
+        run: |
+          echo "Triggering auraflux-api deploy..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.render.com/v1/services/srv-d7nsd77avr4c73frifcg/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}')
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "auraflux-api: HTTP $HTTP_CODE — $BODY"
+          if [ "$HTTP_CODE" != "201" ]; then
+            echo "::warning::auraflux-api deploy trigger returned $HTTP_CODE"
+          fi
+
+      - name: Deploy auraflux-app
+        run: |
+          echo "Triggering auraflux-app deploy..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.render.com/v1/services/srv-d7pnalhj2pic73btevl0/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}')
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "auraflux-app: HTTP $HTTP_CODE — $BODY"
+          if [ "$HTTP_CODE" != "201" ]; then
+            echo "::warning::auraflux-app deploy trigger returned $HTTP_CODE"
+          fi
+
+      - name: Summary
+        run: |
+          echo "✅ Render deploys triggered for commit: ${{ github.event.head_commit.message }}"
+          echo "   auraflux-api → https://dashboard.render.com/web/srv-d7nsd77avr4c73frifcg"
+          echo "   auraflux-app → https://dashboard.render.com/web/srv-d7pnalhj2pic73btevl0"
