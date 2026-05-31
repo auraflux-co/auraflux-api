@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-31 v1.0.870 (Claude Code — feat(marketing): kanban roadmap board Now/Next/Future, cinematic scanline+glow on hero+global, C7AF4F panel borders on value grid)
 **Last Updated:** 2026-05-31 v1.0.869 (Claude Code — sync nav fix to marketing branch)
 **Last Updated:** 2026-05-31 v1.0.867 (Claude Code — sync typography overhaul to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.865 (Claude Code — fix(marketing): CDN cache headers — add Pragma, Surrogate-Control, CDN-Cache-Control, Cloudflare-CDN-Cache-Control:no-store to prevent edge caching)

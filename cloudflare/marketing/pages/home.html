@@ -25,8 +25,33 @@ body{line-height:1.6}
 }
 .hero-glow{
   position:absolute;inset:0;
-  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(245,197,66,0.08) 0%,transparent 70%);
+  background:
+    radial-gradient(ellipse 100% 70% at 50% -5%, rgba(245,197,66,0.11) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 60%, rgba(199,175,79,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(199,175,79,0.04) 0%, transparent 50%);
   pointer-events:none;
+  animation:hero-breathe 8s ease-in-out infinite;
+}
+@keyframes hero-breathe{
+  0%,100%{opacity:1;}
+  50%{opacity:.7;}
+}
+/* Scanline texture — subtle video engine feel */
+.hero::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,.012) 2px,
+    rgba(255,255,255,.012) 4px
+  );
+  pointer-events:none;z-index:0;
+  animation:scanlines 12s linear infinite;
+}
+@keyframes scanlines{
+  0%{background-position:0 0;}
+  100%{background-position:0 200px;}
 }
 .hero-badge{
   display:inline-flex;align-items:center;gap:8px;
@@ -127,10 +152,13 @@ body{line-height:1.6}
 @media(max-width:640px){.value-grid{grid-template-columns:1fr;}}
 .value-card{
   background:#0f172a;padding:40px 36px;position:relative;overflow:hidden;
+  border:1px solid rgba(199,175,79,.15);
+  transition:border-color .25s;
 }
+.value-card:hover{ border-color:rgba(199,175,79,.4); }
 .value-card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(245,197,66,.3),transparent);
+  background:linear-gradient(90deg,transparent,rgba(245,197,66,.5),transparent);
 }
 .value-card-num{
   font-size:.72rem;font-weight:700;letter-spacing:.12em;color:rgba(245,197,66,.5);
