@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.890 (Claude Code — sync /pricing redirect + image fix to marketing)
 **Last Updated:** 2026-06-01 v1.0.889 (Cursor — fix(qa): source_fit pre-flight guard + branding_config grader check + claude_ux_observe overhaul — catches wrong-duration source and unset chrome name)
 **Last Updated:** 2026-06-01 v1.0.888 (Claude Code — sync plans page redesign to marketing deploy branch)
 **Last Updated:** 2026-05-31 v1.0.886 (Claude Code — fix(marketing): favicon served directly from worker as base64 icon-512.png — AF lettermark gold on dark, 512x512)
