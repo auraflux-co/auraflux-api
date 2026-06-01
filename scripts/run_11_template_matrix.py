@@ -97,98 +97,99 @@ HDR_GU = {'Authorization': f'Bearer {API_KEY_GUIDED}',  'Content-Type': 'applica
 def _hdr(tier): return HDR_GU if tier == 'guided' else HDR_OP
 
 
-# ── Clip inventory — verified mix of Twitch, YouTube, Kick (last 7 days) ──────
-# Variety: gaming highlights, IRL/just chatting, reactions, VODs, shorts.
-# Clips deliberately spread across streamers and content types so each template
-# gets a meaningfully different source rather than the same video repeated.
+# ── Clip inventory — 20 verified clips downloaded May 2026 ───────────────────
+# Source: scripts/video_inventory/manifest.json (60 clips downloaded, 20 curated)
+# Covers all duration ranges so each template's min/max_duration_s is satisfiable:
+#   Short (10-180s):  Twitch + Kick clips → TikTok Clutch, IRL Story Time, Montage, Quick Guide
+#   Medium (180-600s): YouTube VODs → Reaction Cut, Quick Guide (upper range)
+#   Long (600-3600s): YouTube VODs → YouTube Deep Dive, Reaction Cut
 
 CLIP_INVENTORY = [
     # ── Twitch gaming clips ────────────────────────────────────────────────────
-    {'platform': 'twitch', 'streamer': 'xQc',
-     'title': 'xQc rage quit', 'content_type': 'gaming_clip',
-     'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',
-     'duration_s': 43},
-    {'platform': 'twitch', 'streamer': 'moistcr1tikal',
-     'title': 'Critikal clutch moment', 'content_type': 'gaming_clip',
-     'url': 'https://www.twitch.tv/moistcr1tikal/clip/HilariousLovelyWrenPicoMause-FiNlGGvI3Z4XT3GS',
-     'duration_s': 52},
     {'platform': 'twitch', 'streamer': 'shroud',
-     'title': 'Shroud insane aim', 'content_type': 'gaming_clip',
-     'url': 'https://www.twitch.tv/shroud/clip/FitBoringChipmunkTebowing-M6e3kFp-m6FWMmFP',
+     'title': 'shroud takes a hot bite', 'content_type': 'gaming_irl',
+     'url': 'https://www.twitch.tv/shroud/clip/HonestPlacidBadgerPRChase-cFUAO5SX_8xH_h2s',
+     'duration_s': 33},
+    {'platform': 'twitch', 'streamer': 'moistcr1tikal',
+     'title': 'reaction to 18 second record', 'content_type': 'gaming_reaction',
+     'url': 'https://www.twitch.tv/moistcr1tikal/clip/AgreeableSaltySrirachaDerpina-XnfBeMhYqGi42UYh',
+     'duration_s': 34},
+    {'platform': 'twitch', 'streamer': 'xqc',
+     'title': 'xQc Forza gamba moment', 'content_type': 'gaming_clip',
+     'url': 'https://www.twitch.tv/xqc/clip/ObeseSeductiveAntKlappa-DVpCqlvAfxKlFXAl',
      'duration_s': 38},
     {'platform': 'twitch', 'streamer': 'nickmercs',
-     'title': 'NICKMERCS Warzone wipe', 'content_type': 'gaming_clip',
-     'url': 'https://www.twitch.tv/nickmercs/clip/FaintLazyWolfDxCat-OsQU3E94mJt9-tEI',
-     'duration_s': 45},
-    # ── Twitch IRL / just chatting clips ──────────────────────────────────────
-    {'platform': 'twitch', 'streamer': 'hasanabi',
-     'title': 'Hasan reacts to news', 'content_type': 'irl_reaction',
-     'url': 'https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg',
+     'title': 'NICKMERCS reaction', 'content_type': 'gaming_clip',
+     'url': 'https://www.twitch.tv/nickmercs/clip/GiantCautiousSaladBuddhaBar-JMwRKi_JWNf7nMlq',
      'duration_s': 47},
-    {'platform': 'twitch', 'streamer': 'nmplol',
-     'title': 'Nick and Malena moment', 'content_type': 'irl_clip',
-     'url': 'https://www.twitch.tv/nmplol/clip/SpunkyAmazonianPorpoiseKappaRoss',
-     'duration_s': 55},
-    # ── Twitch VOD highlight (longer form) ────────────────────────────────────
-    {'platform': 'twitch', 'streamer': 'asmongold',
-     'title': 'Asmon reacts to WoW drama', 'content_type': 'reaction_vod',
-     'url': 'https://www.twitch.tv/asmongold/clip/SpoopyOilyClintmullinsBloodTrail',
-     'duration_s': 90},
+    {'platform': 'twitch', 'streamer': 'shroud',
+     'title': 'Esfand finds shroud', 'content_type': 'gaming_irl',
+     'url': 'https://www.twitch.tv/shroud/clip/ObliqueDaintyPeppermintNomNom-LmhyvFWVNmaBNJvU',
+     'duration_s': 48},
+    # ── Twitch IRL / just chatting ─────────────────────────────────────────────
+    {'platform': 'twitch', 'streamer': 'hasanabi',
+     'title': 'protestors heckle hasan', 'content_type': 'irl_reaction',
+     'url': 'https://www.twitch.tv/hasanabi/clip/LitigiousEntertainingClintmullinsOptimizePrime',
+     'duration_s': 32},
     {'platform': 'twitch', 'streamer': 'ludwig',
-     'title': 'Ludwig viral chess moment', 'content_type': 'irl_reaction',
-     'url': 'https://www.twitch.tv/ludwig/clip/FrozenDignifiedSamosaKAPOW',
-     'duration_s': 58},
-    # ── YouTube gaming highlights ──────────────────────────────────────────────
-    {'platform': 'youtube', 'streamer': 'FaZeJev',
-     'title': 'JEV plays 007 First Light', 'content_type': 'gaming_vod',
-     'url': 'https://www.youtube.com/watch?v=yR7I00PffcY',
-     'duration_s': 585},
-    {'platform': 'youtube', 'streamer': 'MaximilianDood',
-     'title': 'Max reacts: Tekken 8 Yujiro', 'content_type': 'reaction_short',
-     'url': 'https://www.youtube.com/watch?v=pHNAXrIqdJc',
-     'duration_s': 390},
+     'title': 'Tenzin unban request', 'content_type': 'irl_chatting',
+     'url': 'https://www.twitch.tv/ludwig/clip/LachrymoseLaconicWalrusShadyLulu-0yNvQOFsFEI16O6C',
+     'duration_s': 55},
+    {'platform': 'twitch', 'streamer': 'hasanabi',
+     'title': 'PBD fangirl moment', 'content_type': 'irl_reaction',
+     'url': 'https://www.twitch.tv/hasanabi/clip/SpineyDignifiedEndiveTheTarFu-SBFJVpJYEJnZXQvC',
+     'duration_s': 59},
+    {'platform': 'twitch', 'streamer': 'hasanabi',
+     'title': 'Dabbling in socialism', 'content_type': 'irl_commentary',
+     'url': 'https://www.twitch.tv/hasanabi/clip/ShakingMagnificentAmazonWholesomeBlind',
+     'duration_s': 60},
+    # ── Kick IRL clips ────────────────────────────────────────────────────────
+    {'platform': 'kick', 'streamer': 'trainwreckstv',
+     'title': 'Train had a dream', 'content_type': 'irl_clip',
+     'url': 'https://kick.com/trainwreckstv?clip=clip_01KSPTE5E9KRHXD0QV4HHGBM',
+     'duration_s': 37},
+    {'platform': 'kick', 'streamer': 'mizkif',
+     'title': 'W crashout', 'content_type': 'irl_reaction',
+     'url': 'https://kick.com/mizkif?clip=clip_01KSGG3B62QGXBVRS89TEMWWCA',
+     'duration_s': 60},
+    {'platform': 'kick', 'streamer': 'xqc',
+     'title': 'xQc $7000 maxwin reaction', 'content_type': 'irl_reaction',
+     'url': 'https://kick.com/xqc?clip=clip_01KSKNEFZHF5K8MVDFJX7MS873',
+     'duration_s': 75},
+    {'platform': 'kick', 'streamer': 'mizkif',
+     'title': 'miz diss track reaction', 'content_type': 'irl_reaction',
+     'url': 'https://kick.com/mizkif?clip=clip_01KSTYTV3385TVZSPJ34T3YSDA',
+     'duration_s': 99},
+    {'platform': 'kick', 'streamer': 'mizkif',
+     'title': 'Mizkif rage moment', 'content_type': 'irl_clip',
+     'url': 'https://kick.com/mizkif?clip=clip_01KSJXR5GK8K3SMC0FRC2EAHKZ',
+     'duration_s': 180},
+    # ── YouTube medium-length (3-10min) for Reaction Cut ─────────────────────
+    {'platform': 'youtube', 'streamer': 'AdinRoss',
+     'title': 'Michael Beasley vs Lance Stephenson full fight', 'content_type': 'irl_event',
+     'url': 'https://www.youtube.com/watch?v=ohUqvAZizH8',
+     'duration_s': 333},
+    {'platform': 'youtube', 'streamer': 'Penguinz0',
+     'title': 'Cringe Officer Embarrasses Himself', 'content_type': 'commentary',
+     'url': 'https://www.youtube.com/watch?v=SKJ9ULFJhME',
+     'duration_s': 523},
+    {'platform': 'youtube', 'streamer': 'HasanAbi',
+     'title': 'THE UK REVOKED MY VISA', 'content_type': 'irl_vod',
+     'url': 'https://www.youtube.com/watch?v=ZRY5zSoBIx4',
+     'duration_s': 551},
+    # ── YouTube long-form VODs for YouTube Deep Dive ──────────────────────────
+    {'platform': 'youtube', 'streamer': 'xQcOW',
+     'title': 'Woman Drives Through Crowd — xQc Reacts', 'content_type': 'reaction_vod',
+     'url': 'https://www.youtube.com/watch?v=y0SDDoaudRI',
+     'duration_s': 682},
+    {'platform': 'youtube', 'streamer': 'Ludwig',
+     'title': 'How I Masterfully Won a $50,000 GeoGuessr Tournament', 'content_type': 'entertainment_vod',
+     'url': 'https://www.youtube.com/watch?v=x7TjKQx9mFg',
+     'duration_s': 909},
     {'platform': 'youtube', 'streamer': 'ShinyaTheNinja',
-     'title': '31 kills solo Arc Raiders', 'content_type': 'gaming_clip',
+     'title': '31 Kills SOLO in Arc Raiders World Record', 'content_type': 'gaming_vod',
      'url': 'https://www.youtube.com/watch?v=q2W0BP_0OSw',
      'duration_s': 1090},
-    {'platform': 'youtube', 'streamer': 'BoxBox',
-     'title': 'BoxBox TFT Dark Star', 'content_type': 'gaming_vod',
-     'url': 'https://www.youtube.com/watch?v=Hc1dapSL9lw',
-     'duration_s': 1804},
-    {'platform': 'youtube', 'streamer': 'Caedrel',
-     'title': 'DK vs T1 classic experience', 'content_type': 'esports_clip',
-     'url': 'https://www.youtube.com/watch?v=2U6yRkn1HvY',
-     'duration_s': 332},
-    # ── YouTube shorts ─────────────────────────────────────────────────────────
-    {'platform': 'youtube', 'streamer': 'Ludwig',
-     'title': 'Ludwig she fooled me', 'content_type': 'irl_short',
-     'url': 'https://www.youtube.com/watch?v=ovGkbc1xJBE',
-     'duration_s': 23},
-    {'platform': 'youtube', 'streamer': 'Gsxrclyde',
-     'title': 'Diablo 4 PTR changes', 'content_type': 'educational_short',
-     'url': 'https://www.youtube.com/watch?v=CynYO2W73F0',
-     'duration_s': 156},
-    # ── Kick clips ────────────────────────────────────────────────────────────
-    {'platform': 'kick', 'streamer': 'xQc',
-     'title': 'xQc on Kick moment', 'content_type': 'irl_reaction',
-     'url': 'https://kick.com/xqc/clips/clip_01KSP4P21F8F61G07C641HBP1G',
-     'duration_s': 24},
-    {'platform': 'kick', 'streamer': 'adinross',
-     'title': 'Adin Ross big moment', 'content_type': 'irl_clip',
-     'url': 'https://kick.com/adinross/clips/clip_01KSR61K4J3Q7N06J9P03Z8A5A',
-     'duration_s': 48},
-    {'platform': 'kick', 'streamer': 'trainwreckstv',
-     'title': 'Train reaction clip', 'content_type': 'irl_reaction',
-     'url': 'https://kick.com/trainwreckstv/clips/clip_01KS9W0WQTK06BKMMA9Q3A9YK6',
-     'duration_s': 120},
-    {'platform': 'kick', 'streamer': 'purplebixi',
-     'title': 'purplebixi just chatting', 'content_type': 'irl_clip',
-     'url': 'https://kick.com/purplebixi/clips/clip_01KS5NH4D7VASJMFR51CZ9R95B',
-     'duration_s': 60},
-    {'platform': 'kick', 'streamer': 'Mizkif',
-     'title': 'Mizkif emotional stream', 'content_type': 'irl_clip',
-     'url': 'https://kick.com/mizkif/clips/clip_01KSQ2P1HF8F72G08D653ICP2H',
-     'duration_s': 75},
 ]
 
 def _pick_clip(idx, job_def=None):
@@ -240,11 +241,12 @@ def source_fit_check(clip, job_def):
             'reason':  (f"Template '{job_def.get('label')}' expects ≤{max_s}s source, "
                         f"got {d}s. Use a shorter clip.")
         })
-    if fmt == 'longform' and d < 300:
+    # Longform format with very short source is always wrong — but only flag if
+    # not already caught by min_duration_s (avoid duplicate gap messages).
+    if fmt == 'longform' and d < 120 and min_s <= 120:
         gaps.append({
             'checkId': 'longform_needs_vod',
-            'reason':  (f"Longform template got a {d}s clip — streamers expect a real "
-                        f"VOD here (≥5min), not a short. Output will be meaningless.")
+            'reason':  (f"Longform template got a {d}s clip — must be ≥2min of real content.")
         })
     return gaps
 

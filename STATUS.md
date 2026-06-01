@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.891 (Cursor — refactor(run11): 20 verified clips from 60-clip manifest; fix longform guard; all 6 templates route to correct duration range)
 **Last Updated:** 2026-06-01 v1.0.890 (Claude Code — sync /pricing redirect + image fix to marketing)
 **Last Updated:** 2026-06-01 v1.0.889 (Cursor — fix(qa): source_fit pre-flight guard + branding_config grader check + claude_ux_observe overhaul — catches wrong-duration source and unset chrome name)
 **Last Updated:** 2026-06-01 v1.0.888 (Claude Code — sync plans page redesign to marketing deploy branch)
