@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.912 (Claude Code — revert: rolled back workflow CMS editability pass — structural patches broke site layout, reset to 124482d)
 **Last Updated:** 2026-06-01 v1.0.910 (Claude Code — feat(cms): CTA button color/style editable — primary=gold filled, secondary=gold outline, ghost=text; select dropdown in CMS per button)
 **Last Updated:** 2026-06-01 v1.0.909 (Claude Code — fix(cms): force redeploy config — Navigation/Footer/Blog Posts collections visible in CMS sidebar)
 **Last Updated:** 2026-06-01 v1.0.908 (Claude Code — fix(marketing): add _routes.json to force all CF Pages routes through worker, fixing robots.txt being intercepted by CF edge)
