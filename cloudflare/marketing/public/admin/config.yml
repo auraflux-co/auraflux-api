@@ -38,8 +38,6 @@ collections:
             fields:
               - { label: Headline, name: headline, widget: string }
               - { label: Body, name: body, widget: text }
-          - { label: "Final CTA Headline", name: final_cta_headline, widget: string }
-          - { label: "Final CTA Subtext", name: final_cta_sub, widget: string }
           - { label: "Trusted By Label", name: trusted_by_label, widget: string, default: "Trusted by creators on" }
           - { label: "Value Prop Eyebrow", name: value_eyebrow, widget: string, default: "The Problem" }
           - { label: "Value Prop Title", name: value_title, widget: string }
@@ -99,8 +97,6 @@ collections:
           - { label: "Team Subtitle", name: team_sub, widget: string }
           - { label: "CTA Headline", name: cta_headline, widget: string }
           - { label: "CTA Subtext", name: cta_sub, widget: string }
-          - { label: "Hero Headline", name: hero_headline, widget: string }
-          - { label: "Hero Subtext", name: hero_sub, widget: text }
 
   # ── Our System (/our-system) ───────────────────────────────────────────
   - name: our_system

@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.917 (Claude Code — sync config.yml fix to marketing)
 **Last Updated:** 2026-06-01 v1.0.915 (Claude Code — sync all pages editability to marketing deploy branch)
 **Last Updated:** 2026-06-01 v1.0.913 (Claude Code — feat(cms): home page fully wired — 17 data-editable markers, home.json seeded, PAGES map restored, config.yml updated)
 **Last Updated:** 2026-06-01 v1.0.912 (Claude Code — revert: rolled back workflow CMS editability pass — structural patches broke site layout, reset to 124482d)
