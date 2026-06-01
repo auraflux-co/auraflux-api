@@ -51,5 +51,18 @@
   "final_cta_headline": "Stop Managing Content. Start Producing It.",
   "final_cta_sub": "No team, no editors, no upload queues. AuraFlux handles the entire pipeline from source to publish.",
   "final_cta_label": "Start Producing",
-  "og_image": "https://auraflux.co/favicon.png"
+  "og_image": "https://auraflux.co/favicon.png",
+  "trusted_by_label": "Trusted by creators on",
+  "value_eyebrow": "The Problem",
+  "value_title": "Creating Content Isn't The Hard Part.<br><span class=\"gold\">Running It Is.</span>",
+  "value_sub": "You have the ideas, the clips, the audience. What you don't have is the time to turn raw footage into polished, published content every single day.",
+  "steps_eyebrow": "How It Works",
+  "steps_title": "From Idea to Published Content <span class=\"gold\">Automatically.</span>",
+  "steps_sub": "Four steps. No editors, no coordinators, no upload queues.",
+  "formats_eyebrow": "Content Types",
+  "formats_title": "From Shorts To <span class=\"gold\">Full Productions.</span>",
+  "formats_sub": "Your content format, your content type \u2014 AuraFlux handles every combination.",
+  "compare_eyebrow": "The Difference",
+  "compare_title": "Work Smarter. <span class=\"gold\">Not Harder.</span>",
+  "compare_sub": "Stop spending 80% of your time on production. Start spending it on what actually matters."
 }

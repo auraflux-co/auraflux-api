@@ -112,6 +112,7 @@ def patch_seo(html, meta):
 # ── Page → content mapping ────────────────────────────────────────────────────
 PAGES = {
     'home.html':              ('home',       None),
+    'home.html':              ('home',       None),
     'about.html':             ('our-story',  None),
     'system.html':            ('our-system', None),
     'pricing.html':           ('plans',      None),

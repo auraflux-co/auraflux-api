@@ -40,6 +40,21 @@ collections:
               - { label: Body, name: body, widget: text }
           - { label: "Final CTA Headline", name: final_cta_headline, widget: string }
           - { label: "Final CTA Subtext", name: final_cta_sub, widget: string }
+          - { label: "Trusted By Label", name: trusted_by_label, widget: string, default: "Trusted by creators on" }
+          - { label: "Value Prop Eyebrow", name: value_eyebrow, widget: string, default: "The Problem" }
+          - { label: "Value Prop Title", name: value_title, widget: string }
+          - { label: "Value Prop Subtext", name: value_sub, widget: text }
+          - { label: "How It Works Eyebrow", name: steps_eyebrow, widget: string, default: "How It Works" }
+          - { label: "How It Works Title", name: steps_title, widget: string }
+          - { label: "How It Works Subtext", name: steps_sub, widget: text }
+          - { label: "Content Types Eyebrow", name: formats_eyebrow, widget: string, default: "Content Types" }
+          - { label: "Content Types Title", name: formats_title, widget: string }
+          - { label: "Content Types Subtext", name: formats_sub, widget: text }
+          - { label: "Comparison Eyebrow", name: compare_eyebrow, widget: string, default: "The Difference" }
+          - { label: "Comparison Title", name: compare_title, widget: string }
+          - { label: "Comparison Subtext", name: compare_sub, widget: text }
+          - { label: "Final CTA Headline", name: final_cta_headline, widget: string }
+          - { label: "Final CTA Subtext", name: final_cta_sub, widget: text }
           - { label: "Final CTA Button", name: final_cta_label, widget: string, default: "Start Producing" }
           - { label: "OG / Share Image", name: og_image, widget: image, required: false, hint: "Image shown when shared on social media" }
 
