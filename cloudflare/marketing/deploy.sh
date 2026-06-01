@@ -313,7 +313,7 @@ n_rewrites = home_raw.count(ASSETS_PROXY)
 if n_rewrites:
     print(f"  ✓ Rewrote {n_rewrites} URLs via /cf-assets/ in home.html (<style>, <script>, <link> only)")
 
-home             = js_escape(home_raw)
+home             = js_escape(inject_framer(home_raw))
 
 blog             = js_escape(inject_framer(read_page('blog.html')))
 pricing          = js_escape(inject_framer(read_page('pricing.html')))

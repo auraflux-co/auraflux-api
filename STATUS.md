@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.901 (Claude Code — fix(marketing): home.html not running inject_framer() — ${FRAMER_FONTS} showed as raw text)
 **Last Updated:** 2026-06-01 v1.0.900 (Claude Code — fix(marketing): inject_content.py was corrupting home.html — skip home (no data-editable markers), tighten regex to prevent greedy cross-element match)
 **Last Updated:** 2026-06-01 v1.0.899 (Claude Code — sync CMS image fields to marketing branch)
 **Last Updated:** 2026-06-01 v1.0.898 (Cursor — feat(CPD-475): app TemplateGrid replaced with 6 Gemini templates; vivid grade added to GRADES + FramePreview)
