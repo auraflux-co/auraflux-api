@@ -90,7 +90,7 @@
     "multer": "^2.1.1",
     "newrelic": "^13.20.0",
     "node-cron": "^4.2.1",
-    "nodemailer": "^8.0.7",
+    "nodemailer": "^8.0.10",
     "openai": "^6.39.1",
     "pg": "^8.21.0",
     "pino": "^10.3.1",
