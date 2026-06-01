@@ -55,7 +55,7 @@ function iconFor(href: string) {
   if (href.includes('/operator'))  return ICONS.operator;
   if (href.includes('/admin'))     return ICONS.customers;
   if (href.includes('/staging'))   return ICONS.schedule;
-  if (href.includes('/concierge')) return ICONS.collab;
+  if (href.includes('/collab'))    return ICONS.collab;
   if (href.includes('/credits'))   return ICONS.credits;
   if (href.includes('/plans'))     return ICONS.billing;
   if (href.includes('/team'))      return ICONS.team;

@@ -306,14 +306,14 @@ export async function apiFetch<T>(
 // ─── Concierge API ────────────────────────────────────────────────────────────
 
 export async function getPortalContracts(token?: string): Promise<{ contracts: PortalContract[] }> {
-  return apiFetch('/concierge/portal-contracts', { token });
+  return apiFetch('/collab/portal-contracts', { token });
 }
 
 export async function validateJobSpec(
   spec: Record<string, unknown>,
   token?: string,
 ): Promise<ValidationResult> {
-  const res = await apiFetch<{ ok: boolean } & ValidationResult>('/concierge/validate', {
+  const res = await apiFetch<{ ok: boolean } & ValidationResult>('/collab/validate', {
     method: 'POST',
     body:   JSON.stringify({ spec }),
     token,
@@ -321,13 +321,13 @@ export async function validateJobSpec(
   return res;
 }
 
-export async function chatWithConcierge(
+export async function chatWithCollab(
   messages: ChatMessage[],
   spec?: Record<string, unknown>,
   planTier?: string,
   token?: string,
 ): Promise<{ response: string }> {
-  return apiFetch('/concierge/chat', {
+  return apiFetch('/collab/chat', {
     method: 'POST',
     body:   JSON.stringify({ messages, spec, planTier }),
     token,
@@ -338,7 +338,7 @@ export async function getScheduleSuggestion(
   opts: { templates?: { name: string; contentType?: string | null }[]; platforms?: string[]; goals?: string; days?: number },
   token?: string,
 ): Promise<{ ok: boolean; suggestion: string }> {
-  return apiFetch('/concierge/schedule-suggest', {
+  return apiFetch('/collab/schedule-suggest', {
     method: 'POST',
     body:   JSON.stringify(opts),
     token,
