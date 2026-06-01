@@ -342,19 +342,19 @@ export default function JobDetailPage() {
 
       {/* ── Building state hero ── */}
       {isActive && (
-        <div className="rounded-xl border bg-gradient-to-b from-muted/40 to-background px-5 py-6 space-y-4">
+        <div className="rounded-xl border border-blue-800/40 bg-gradient-to-b from-blue-950/20 to-transparent px-5 py-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                <span className="text-xs font-bold uppercase tracking-widest text-blue-400">
                   {job.status === 'queued' ? 'Queued' : 'In production'}
                 </span>
               </div>
               <h1 className="text-xl font-semibold">
                 {job.status === 'queued' ? 'Getting ready…' : 'Building your video'}
               </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-sm text-muted-foreground mt-1">
                 {job.status === 'queued'
                   ? 'Your job is in the queue and will start shortly.'
                   : runningPortal
@@ -369,30 +369,36 @@ export default function JobDetailPage() {
 
           {/* Pipeline progress steps */}
           {totalPortals > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* Progress bar */}
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-blue-500 transition-all duration-700"
-                  style={{ width: `${totalPortals > 0 ? Math.round((passedCount / totalPortals) * 100) : 0}%` }}
-                />
+              <div className="space-y-1">
+                <div className="h-1.5 rounded-full bg-muted/60 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-blue-500 transition-all duration-700"
+                    style={{ width: `${totalPortals > 0 ? Math.round((passedCount / totalPortals) * 100) : 0}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground text-right tabular-nums">{passedCount} of {totalPortals} stages complete</p>
               </div>
-              <p className="text-[10px] text-muted-foreground text-right">{passedCount} of {totalPortals} stages complete</p>
 
               {/* Step list */}
-              <div className="space-y-1.5 pt-1">
+              <div className="space-y-1">
                 {job.portalReports!.map((report, i) => (
                   <div key={report.portal} className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
-                    report.status === 'running' ? 'bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800' : '',
+                    report.status === 'running'
+                      ? 'bg-blue-950/40 border border-blue-800/60'
+                      : report.status === 'pass'
+                      ? 'opacity-70'
+                      : '',
                   )}>
                     <div className={cn(
                       'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0',
-                      report.status === 'pass'    ? 'bg-green-500 text-white' :
+                      report.status === 'pass'    ? 'bg-emerald-600 text-white' :
                       report.status === 'running' ? 'bg-blue-500 text-white animate-pulse' :
                       report.status === 'failed'  ? 'bg-destructive text-white' :
-                      report.status === 'skipped' ? 'bg-muted text-muted-foreground' :
-                      'bg-muted/60 text-muted-foreground',
+                      report.status === 'skipped' ? 'bg-muted/60 text-muted-foreground' :
+                      'bg-muted/30 text-muted-foreground/50',
                     )}>
                       {report.status === 'pass'    ? '✓' :
                        report.status === 'failed'  ? '✕' :
@@ -402,14 +408,16 @@ export default function JobDetailPage() {
                     </div>
                     <span className={cn(
                       'text-sm flex-1',
-                      report.status === 'running' ? 'font-medium' : 'text-muted-foreground',
+                      report.status === 'running' ? 'font-semibold text-foreground' :
+                      report.status === 'pass'    ? 'text-muted-foreground/70' :
+                      'text-muted-foreground/50',
                     )}>
                       {(isSuperAdmin ? PORTAL_LABELS : PORTAL_DISPLAY_NAMES)[report.portal] ?? report.portal}
                     </span>
                     {report.score != null && (
                       <span className={cn(
                         'text-xs font-semibold tabular-nums',
-                        report.score >= 80 ? 'text-green-600' : report.score >= 60 ? 'text-yellow-600' : 'text-destructive',
+                        report.score >= 80 ? 'text-emerald-400' : report.score >= 60 ? 'text-yellow-400' : 'text-destructive',
                       )}>
                         {report.score}/100
                       </span>
@@ -431,25 +439,25 @@ export default function JobDetailPage() {
 
       {/* ── Ready for review hero ── */}
       {isReadyForReview && (
-        <div className="rounded-xl border-2 border-green-200 dark:border-green-800 bg-gradient-to-b from-green-50/50 to-background dark:from-green-950/20 px-5 py-6 space-y-4">
+        <div className="rounded-xl border border-emerald-800/50 bg-gradient-to-b from-emerald-950/20 to-transparent px-5 py-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">Ready for review</span>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Ready for review</span>
                 {avgScore != null && (
                   <span className={cn(
-                    'text-xs font-bold px-2 py-0.5 rounded-full',
-                    avgScore >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
-                    avgScore >= 60 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
-                    'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+                    'text-xs font-bold px-2 py-0.5 rounded border',
+                    avgScore >= 80 ? 'bg-emerald-900/60 text-emerald-400 border-emerald-800/60' :
+                    avgScore >= 60 ? 'bg-yellow-900/60 text-yellow-400 border-yellow-800/60' :
+                    'bg-red-900/60 text-red-400 border-red-800/60',
                   )}>
                     {avgScore}/100
                   </span>
                 )}
               </div>
               <h1 className="text-xl font-semibold">Your video is ready</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-sm text-muted-foreground mt-1">
                 Review the output below, then approve and publish when ready.
               </p>
             </div>
@@ -466,7 +474,7 @@ export default function JobDetailPage() {
                 controls
                 preload="metadata"
                 poster={job.thumbnailUrl ?? undefined}
-                className="w-full rounded-lg border bg-black aspect-video object-contain"
+                className="w-full rounded-lg border border-emerald-800/30 bg-black aspect-video object-contain"
               />
             </div>
           )}
@@ -476,7 +484,7 @@ export default function JobDetailPage() {
             {job.status === 'staged' ? (
               <Button
                 size="sm"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-700"
                 onClick={handleApprovePublish}
                 disabled={approving}
               >
@@ -487,7 +495,7 @@ export default function JobDetailPage() {
                 href={job.outputUrl!}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(buttonVariants({ size: 'sm' }), 'flex-1 text-center bg-green-600 hover:bg-green-700 text-white border-green-600')}
+                className={cn(buttonVariants({ size: 'sm' }), 'flex-1 text-center bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-700')}
               >
                 ✓ Open video
               </a>
@@ -512,7 +520,7 @@ export default function JobDetailPage() {
             <p className="text-xs text-destructive bg-destructive/10 rounded px-3 py-2">{approveError}</p>
           )}
           {approveResult && (
-            <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 px-3 py-2 text-xs text-green-700 dark:text-green-300">
+            <div className="rounded-lg border border-emerald-800/50 bg-emerald-950/20 px-3 py-2 text-xs text-emerald-400">
               ✓ Published. Check your platforms for live links.
             </div>
           )}
@@ -522,9 +530,9 @@ export default function JobDetailPage() {
       {/* ── Standard (non-active, non-staged) header ── */}
       {!isActive && !isReadyForReview && (
         <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold font-mono">{job.jobId}</h1>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg font-semibold font-mono text-muted-foreground">{job.jobId.slice(0, 12)}…</h1>
               <JobStatusBadge status={job.status} />
             </div>
             <p className="text-sm text-muted-foreground">

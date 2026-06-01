@@ -33,17 +33,26 @@ function statusColor(s: string) {
   return 'bg-muted/30';
 }
 
+function statusCardStyle(s: string): string {
+  if (s === 'failed')        return 'border-l-[3px] border-l-red-500/80 bg-red-950/10';
+  if (s === 'held')          return 'border-l-[3px] border-l-yellow-500/80 bg-yellow-950/10';
+  if (s === 'credit_paused') return 'border-l-[3px] border-l-orange-500/80 bg-orange-950/10';
+  if (s === 'running')       return 'border-l-[3px] border-l-blue-500/60';
+  return '';
+}
+
 function StatusBadge({ status }: { status: string }) {
-  const variant =
-    status === 'failed'        ? 'destructive' :
-    status === 'held'          ? 'secondary'   :
-    status === 'credit_paused' ? 'secondary'   :
-    'outline';
+  const cls =
+    status === 'failed'        ? 'bg-red-950/60 text-red-400 border border-red-800/60'   :
+    status === 'held'          ? 'bg-yellow-950/60 text-yellow-400 border border-yellow-800/60' :
+    status === 'credit_paused' ? 'bg-orange-950/60 text-orange-400 border border-orange-800/60' :
+    status === 'running'       ? 'bg-blue-950/60 text-blue-400 border border-blue-800/60' :
+    'bg-muted/60 text-muted-foreground border border-border';
   return (
-    <Badge variant={variant} className="text-[10px]">
-      <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5 inline-block', statusColor(status))} />
+    <span className={cn('inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded', cls)}>
+      <span className={cn('w-1.5 h-1.5 rounded-full inline-block', statusColor(status))} />
       {jobStatusLabel(status)}
-    </Badge>
+    </span>
   );
 }
 
@@ -112,9 +121,9 @@ export default function ActiveJobsPage() {
   const inProgress   = jobs.filter((j) => j.status === 'queued' || j.status === 'running');
 
   return (
-    <PageShell maxWidth="3xl">
+    <PageShell maxWidth="4xl">
       <PageHeader
-        title="My active jobs"
+        title="Active Jobs"
         subtitle="Scheduled, in progress, and jobs that need your attention"
       >
         <button
@@ -137,10 +146,13 @@ export default function ActiveJobsPage() {
       )}
 
       {(scheduledJobs.length > 0 || upcomingTemplates.length > 0) && (
-        <section>
-          <h2 className="af-subhead mb-2">
-            Scheduled ({scheduledJobs.length + upcomingTemplates.length})
-          </h2>
+        <section className="space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="af-subhead">Scheduled</h2>
+            <span className="text-xs bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded font-medium">
+              {scheduledJobs.length + upcomingTemplates.length}
+            </span>
+          </div>
           <div className="space-y-2">
             {scheduledJobs.map((job) => (
               <ScheduledJobRow key={job.jobId} job={job} />
@@ -154,8 +166,13 @@ export default function ActiveJobsPage() {
 
       {/* Needs attention */}
       {heldOrFailed.length > 0 && (
-        <section>
-          <h2 className="af-subhead mb-2">Needs attention ({heldOrFailed.length})</h2>
+        <section className="space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="af-subhead text-yellow-400">Needs attention</h2>
+            <span className="text-xs bg-yellow-950/60 text-yellow-400 border border-yellow-800/60 px-1.5 py-0.5 rounded font-medium">
+              {heldOrFailed.length}
+            </span>
+          </div>
           <div className="space-y-2">
             {heldOrFailed.map((job) => (
               <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} />
@@ -166,8 +183,13 @@ export default function ActiveJobsPage() {
 
       {/* In progress */}
       {inProgress.length > 0 && (
-        <section>
-          <h2 className="af-subhead mb-2">In progress ({inProgress.length})</h2>
+        <section className="space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="af-subhead">In progress</h2>
+            <span className="text-xs bg-blue-950/60 text-blue-400 border border-blue-800/60 px-1.5 py-0.5 rounded font-medium">
+              {inProgress.length}
+            </span>
+          </div>
           <div className="space-y-2">
             {inProgress.map((job) => (
               <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} />
@@ -199,142 +221,158 @@ function JobRow({
 }) {
   const currentPortal = job.portalReports?.find((p) => p.status === 'running' || p.status === 'hold' || p.status === 'failed');
   const portalLabel = currentPortal
-    ? currentPortal.portal.replace('portal', 'P').replace('b', 'b')
+    ? currentPortal.portal.replace('portal', 'P')
     : null;
+  const passedCount = job.portalReports?.filter((p) => p.status === 'pass').length ?? 0;
+  const totalPortals = job.portalReports?.length ?? 0;
 
   return (
-    <Card>
-      <CardContent className="py-3 px-4">
-        <div className="flex items-start gap-3">
-          {/* Portal strip */}
-          <div className="flex gap-0.5 mt-1 shrink-0">
+    <div className={cn(
+      'rounded-xl border bg-card px-4 py-3.5 transition-all',
+      'hover:border-primary/20 hover:shadow-sm',
+      statusCardStyle(job.status),
+    )}>
+      <div className="flex items-start gap-3">
+        {/* Portal progress strip */}
+        {(job.portalReports ?? []).length > 0 && (
+          <div className="flex flex-col gap-0.5 mt-0.5 shrink-0">
             {(job.portalReports ?? []).map((p) => (
               <span
                 key={p.portal}
                 title={p.portal}
-                className={cn('w-1.5 h-5 rounded-sm', statusColor(p.status))}
+                className={cn('w-1.5 h-3 rounded-[2px]', statusColor(p.status))}
               />
             ))}
           </div>
+        )}
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Link
-                href={`/myjobs/${job.jobId}`}
-                className="text-sm font-medium hover:underline truncate max-w-[240px]"
-              >
-                {jobDisplayTitle(job)}
-              </Link>
-              <StatusBadge status={job.status} />
-              {portalLabel && (
-                <span className="text-[10px] text-muted-foreground">@ {portalLabel}</span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {labelForContentType(job.contentType ?? '')} · {platformListLabel(job.platforms)}
-            </p>
-            <p className="text-[11px] text-muted-foreground/80 mt-0.5">
-              Started {fmtJobTime(job.createdAt)} · Last active {fmtJobTime(job.updatedAt || job.createdAt)}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
             <Link
               href={`/myjobs/${job.jobId}`}
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 px-2')}
+              className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate max-w-[280px]"
             >
-              Details →
+              {jobDisplayTitle(job)}
             </Link>
-            {isSuperAdmin && (job.status === 'held' || job.status === 'failed') && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs h-7 px-2"
-                  onClick={() => onAction(job.jobId, 'retry')}
-                >
-                  Retry
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs h-7 px-2"
-                  onClick={() => onAction(job.jobId, 'advance')}
-                >
-                  Advance
-                </Button>
-              </>
+            <StatusBadge status={job.status} />
+            {portalLabel && job.status === 'running' && (
+              <span className="text-[10px] text-blue-400/80 font-medium">{portalLabel}</span>
             )}
           </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-muted-foreground">
+              {labelForContentType(job.contentType ?? '')}
+            </span>
+            {job.platforms.length > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {platformListLabel(job.platforms)}
+              </span>
+            )}
+            {totalPortals > 0 && (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {passedCount}/{totalPortals} stages
+              </span>
+            )}
+          </div>
+
+          <p className="text-[11px] text-muted-foreground/60">
+            Started {fmtJobTime(job.createdAt)}
+          </p>
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Link
+            href={`/myjobs/${job.jobId}`}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-xs h-7 px-2.5')}
+          >
+            Details →
+          </Link>
+          {isSuperAdmin && (job.status === 'held' || job.status === 'failed') && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs h-7 px-2"
+                onClick={() => onAction(job.jobId, 'retry')}
+              >
+                Retry
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs h-7 px-2"
+                onClick={() => onAction(job.jobId, 'advance')}
+              >
+                Advance
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
 function ScheduledJobRow({ job }: { job: Job }) {
   const startsAt = job.scheduledStartAt;
   return (
-    <Card className="border-dashed">
-      <CardContent className="py-3 px-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Link href={`/myjobs/${job.jobId}`} className="text-sm font-medium hover:underline truncate">
-                {jobDisplayTitle(job)}
-              </Link>
-              <Badge variant="outline" className="text-[10px]">Scheduled</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {labelForContentType(job.contentType ?? '')} · {platformListLabel(job.platforms)}
-            </p>
-            {startsAt && (
-              <p className="text-[11px] text-muted-foreground/80 mt-0.5">
-                Production starts {fmtJobTime(startsAt)} · credits charge at start
-              </p>
-            )}
-          </div>
-          <Link
-            href={`/myjobs/${job.jobId}`}
-            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 px-2 shrink-0')}
-          >
-            Details →
+    <div className="rounded-xl border border-dashed border-border/60 bg-card/60 px-4 py-3 flex items-start justify-between gap-3">
+      <div className="min-w-0 space-y-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link href={`/myjobs/${job.jobId}`} className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate">
+            {jobDisplayTitle(job)}
           </Link>
+          <span className="text-[10px] font-medium border border-border/60 text-muted-foreground px-1.5 py-0.5 rounded">
+            Scheduled
+          </span>
         </div>
-      </CardContent>
-    </Card>
+        <p className="text-xs text-muted-foreground">
+          {labelForContentType(job.contentType ?? '')} · {platformListLabel(job.platforms)}
+        </p>
+        {startsAt && (
+          <p className="text-[11px] text-muted-foreground/60">
+            Starts {fmtJobTime(startsAt)}
+          </p>
+        )}
+      </div>
+      <Link
+        href={`/myjobs/${job.jobId}`}
+        className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 px-2.5 shrink-0')}
+      >
+        Details →
+      </Link>
+    </div>
   );
 }
 
 function ScheduledTemplateRow({ template }: { template: JobTemplate }) {
   return (
-    <Card className="border-dashed">
-      <CardContent className="py-3 px-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Link href="/templates" className="text-sm font-medium hover:underline truncate">
-                {template.name}
-              </Link>
-              <Badge variant="outline" className="text-[10px]">recurring</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {template.contentType ?? 'custom'} · {template.platforms?.join(', ') || 'no platform'}
-            </p>
-            {template.nextFireAt && (
-              <p className="text-[11px] text-muted-foreground/80 mt-0.5">
-                Next run {fmtJobTime(template.nextFireAt)} · moves to In progress when due
-              </p>
-            )}
-          </div>
-          <Link
-            href={`/templates?edit=${template.id}`}
-            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 px-2 shrink-0')}
-          >
-            Edit →
+    <div className="rounded-xl border border-dashed border-border/60 bg-card/60 px-4 py-3 flex items-start justify-between gap-3">
+      <div className="min-w-0 space-y-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link href="/templates" className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate">
+            {template.name}
           </Link>
+          <span className="text-[10px] font-medium border border-border/60 text-muted-foreground px-1.5 py-0.5 rounded">
+            Recurring
+          </span>
         </div>
-      </CardContent>
-    </Card>
+        <p className="text-xs text-muted-foreground">
+          {template.contentType ?? 'custom'} · {template.platforms?.join(', ') || 'no platform'}
+        </p>
+        {template.nextFireAt && (
+          <p className="text-[11px] text-muted-foreground/60">
+            Next run {fmtJobTime(template.nextFireAt)}
+          </p>
+        )}
+      </div>
+      <Link
+        href={`/templates?edit=${template.id}`}
+        className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 px-2.5 shrink-0')}
+      >
+        Edit →
+      </Link>
+    </div>
   );
 }

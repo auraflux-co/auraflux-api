@@ -12,10 +12,8 @@ import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { buttonVariants, Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { listJobs, type Job, type WizardConfig, type PublishResult } from '@/lib/api';
 import { labelForContentType } from '@/lib/content-types';
@@ -189,7 +187,7 @@ function HistoryPageContent() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
+      <div className="flex gap-1 border-b border-border/60 pb-0">
         {([
           { id: 'review' as const,    label: 'Ready to review', count: reviewJobs.length },
           { id: 'completed' as const, label: 'Completed',       count: completedJobs.length },
@@ -198,15 +196,17 @@ function HistoryPageContent() {
             key={id}
             onClick={() => setTab(id)}
             className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
               tab === id ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >
             {label}
             {count > 0 && (
               <span className={cn(
-                'ml-1.5 text-xs rounded-full px-1.5 py-0.5',
-                id === 'review' && count > 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-muted',
+                'ml-1.5 text-xs rounded-full px-1.5 py-0.5 font-semibold',
+                id === 'review' && count > 0
+                  ? 'bg-emerald-900/60 text-emerald-400 border border-emerald-800/60'
+                  : 'bg-muted text-muted-foreground',
               )}>
                 {count}
               </span>
@@ -263,47 +263,46 @@ function HistoryPageContent() {
 
 function ReviewCard({ job }: { job: Job }) {
   return (
-    <Card className="border-green-200 dark:border-green-800">
-      <CardHeader className="pb-2 pt-4 px-4">
+    <div className="rounded-xl border border-emerald-800/50 bg-emerald-950/10 overflow-hidden">
+      <div className="px-4 pt-4 pb-3">
         <div className="flex items-start justify-between gap-3">
-          <div>
+          <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
               <Link
                 href={`/myjobs/${job.jobId}`}
-                className="text-sm font-medium hover:underline"
+                className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
               >
                 {jobDisplayTitle(job)}
               </Link>
-              <Badge variant="outline" className="text-[10px] border-green-300 text-green-700 dark:text-green-400">
+              <span className="text-[10px] font-medium bg-emerald-900/60 text-emerald-400 border border-emerald-800/60 px-1.5 py-0.5 rounded">
                 Ready to review
-              </Badge>
+              </span>
               {job.platforms.map((p) => (
-                <Badge key={p} variant="outline" className="text-[10px]">
+                <span key={p} className="text-[10px] bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded border border-border/60">
                   {PLATFORM_ICONS[p] ?? '•'} {platformLabel(p)}
-                </Badge>
+                </span>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground">
               {labelForContentType(job.contentType)} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
+            {job.publishCopy?.youtube?.title && (
+              <p className="text-xs text-muted-foreground/70 italic line-clamp-1">
+                &ldquo;{job.publishCopy.youtube.title}&rdquo;
+              </p>
+            )}
           </div>
           <Link
             href={`/myjobs/${job.jobId}`}
-            className={cn(buttonVariants({ size: 'sm' }), 'bg-green-600 hover:bg-green-700 text-white shrink-0 text-xs')}
+            className={cn(buttonVariants({ size: 'sm' }), 'bg-emerald-700 hover:bg-emerald-600 text-white shrink-0 text-xs border-emerald-700')}
           >
             Review →
           </Link>
         </div>
-      </CardHeader>
-
-      <CardContent className="pb-4 px-4 space-y-2">
-        {job.publishCopy?.youtube?.title && (
-          <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1.5 line-clamp-1">
-            "{job.publishCopy.youtube.title}"
-          </div>
-        )}
-        {job.outputUrl && (
+      </div>
+      {job.outputUrl && (
+        <div className="px-4 pb-3 border-t border-emerald-800/30 pt-2.5">
           <a
             href={job.outputUrl}
             download
@@ -311,79 +310,83 @@ function ReviewCard({ job }: { job: Job }) {
           >
             ↓ Download video
           </a>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 }
 
 function HistoryCard({ job }: { job: Job }) {
+  const isPublished = job.status === 'published';
   return (
-    <Card>
-      <CardHeader className="pb-2 pt-4 px-4">
+    <div className={cn(
+      'rounded-xl border bg-card overflow-hidden',
+      isPublished ? 'border-violet-800/40' : 'border-border',
+    )}>
+      <div className="px-4 pt-4 pb-3">
         <div className="flex items-start justify-between gap-3">
-          <div>
+          <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Link
                 href={`/myjobs/${job.jobId}`}
-                className="text-sm font-medium hover:underline"
+                className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
               >
                 {jobDisplayTitle(job)}
               </Link>
-              <Badge variant="default" className="text-[10px]">{jobStatusLabel(job.status)}</Badge>
+              <span className={cn(
+                'text-[10px] font-medium px-1.5 py-0.5 rounded border',
+                isPublished
+                  ? 'bg-violet-900/60 text-violet-400 border-violet-800/60'
+                  : 'bg-muted/60 text-muted-foreground border-border/60',
+              )}>
+                {jobStatusLabel(job.status)}
+              </span>
               {job.platforms.map((p) => (
-                <Badge key={p} variant="outline" className="text-[10px]">
+                <span key={p} className="text-[10px] bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded border border-border/60">
                   {PLATFORM_ICONS[p] ?? '•'} {platformLabel(p)}
-                </Badge>
+                </span>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground">
               {labelForContentType(job.contentType)} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
+            {job.publishCopy?.youtube?.title && (
+              <p className="text-xs text-muted-foreground/70 italic line-clamp-1">
+                &ldquo;{job.publishCopy.youtube.title}&rdquo;
+              </p>
+            )}
           </div>
           <Link
             href={`/myjobs/${job.jobId}`}
-            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 px-2 shrink-0')}
+            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs h-7 px-2.5 shrink-0')}
           >
             Details →
           </Link>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="pb-4 px-4 space-y-3">
-        {/* Post-publish links */}
-        {job.publishResults && job.publishResults.length > 0 && (
-          <PublishLinks results={job.publishResults} />
-        )}
-
-        {/* Output video link */}
-        {job.outputUrl && (
-          <a
-            href={job.outputUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-xs h-7 px-2')}
-          >
-            ↓ Download video
-          </a>
-        )}
-
-        {/* Publish copy preview */}
-        {job.publishCopy?.youtube?.title && (
-          <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1.5 line-clamp-1">
-            "{job.publishCopy.youtube.title}"
-          </div>
-        )}
-
-        <Separator className="my-1" />
-
-        {/* Selection review */}
-        {job.wizardConfig ? (
-          <SelectionReview wc={job.wizardConfig} />
-        ) : (
-          <p className="text-xs text-muted-foreground">Selection review not available for this job.</p>
-        )}
-      </CardContent>
-    </Card>
+      {((job.publishResults ?? []).filter((r) => r.status === 'published').length > 0 || job.outputUrl || job.wizardConfig) && (
+        <div className="px-4 pb-3 border-t border-border/50 pt-2.5 space-y-2">
+          {job.publishResults && job.publishResults.length > 0 && (
+            <PublishLinks results={job.publishResults} />
+          )}
+          {job.outputUrl && (
+            <a
+              href={job.outputUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-xs h-7 px-2')}
+            >
+              ↓ Download video
+            </a>
+          )}
+          {job.wizardConfig ? (
+            <SelectionReview wc={job.wizardConfig} />
+          ) : (
+            <p className="text-xs text-muted-foreground/60">Selection review not available.</p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
