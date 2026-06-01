@@ -1,25 +1,28 @@
 version: 2
 updates:
-  - package-ecosystem: 'npm'
-    directory: '/'
+  # Root package (Node/Express API)
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '09:00'
-      timezone: 'America/New_York'
+      interval: "weekly"
+      day: "monday"
     open-pull-requests-limit: 5
     labels:
-      - 'dependencies'
-    commit-message:
-      prefix: 'chore(deps)'
+      - "dependencies"
     ignore:
-      # Only auto-update patch versions for these high-risk packages.
-      # Minor/major changes to ffmpeg wrappers or AI SDKs need manual review.
-      - dependency-name: 'fluent-ffmpeg'
-        update-types: ['version-update:semver-minor', 'version-update:semver-major']
-      - dependency-name: '@google/generative-ai'
-        update-types: ['version-update:semver-major']
-      - dependency-name: '@anthropic-ai/sdk'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'newrelic'
-        update-types: ['version-update:semver-major']
+      # Major version bumps reviewed manually
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Next.js frontend app
+  - package-ecosystem: "npm"
+    directory: "/app"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

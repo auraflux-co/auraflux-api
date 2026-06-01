@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.924 (Cursor — security: npm audit fix root (0 vulns), Next.js 16.2.4→16.2.7, shadcn moved to devDeps, worker CSP+HSTS headers, Render IP allowlist locked to Cloudflare IPs, dependabot.yml, R2 marketing snapshot in backup cron; DNS fixes via browser)
 **Last Updated:** 2026-06-01 v1.0.923 (Claude Code — fix(responsive): nav button overlap at 375px, plans comparison table replaced with card layout on mobile <600px)
 **Deploy Mode:** `dev` <!-- set to `dev` (deploy after push) or `testing` (hold deploys) -->
 **Last Updated:** 2026-06-01 v1.0.922 (Cursor — feat(cpd-488): job detail full redesign — 4-stage stepper, compact spec strip, status heroes per state, conditional sections, post-submit overlay; fix TS: chatWithConcierge alias + apiFetch body JSON.stringify)
