@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.899 (Claude Code — sync CMS image fields to marketing branch)
 **Last Updated:** 2026-06-01 v1.0.898 (Cursor — feat(CPD-475): app TemplateGrid replaced with 6 Gemini templates; vivid grade added to GRADES + FramePreview)
 **Last Updated:** 2026-06-01 v1.0.897 (Claude Code — sync CMS injection to marketing branch)
 **Last Updated:** 2026-06-01 v1.0.895 (Claude Code — sync Sveltia CMS to marketing deploy branch)

@@ -41,6 +41,7 @@ collections:
           - { label: "Final CTA Headline", name: final_cta_headline, widget: string }
           - { label: "Final CTA Subtext", name: final_cta_sub, widget: string }
           - { label: "Final CTA Button", name: final_cta_label, widget: string, default: "Start Producing" }
+          - { label: "OG / Share Image", name: og_image, widget: image, required: false, hint: "Image shown when shared on social media" }
 
   # ── Our Story (/our-story) ─────────────────────────────────────────────
   - name: our_story
@@ -67,6 +68,14 @@ collections:
               - { label: Icon, name: icon, widget: string, hint: "Emoji or symbol" }
               - { label: Headline, name: headline, widget: string }
               - { label: Body, name: body, widget: text }
+          - label: "Founder"
+            name: founder_photo
+            widget: image
+            required: false
+            hint: "Profile photo shown in The People Behind AuraFlux section"
+          - { label: "Founder Name", name: founder_name, widget: string }
+          - { label: "Founder Role", name: founder_role, widget: string }
+          - { label: "Founder Bio", name: founder_bio, widget: text }
           - { label: "CTA Headline", name: cta_headline, widget: string }
           - { label: "CTA Subtext", name: cta_sub, widget: string }
 
@@ -114,6 +123,7 @@ collections:
               - { label: Subtitle, name: subtitle, widget: string }
               - { label: Price, name: price, widget: string, hint: "e.g. $499" }
               - { label: Credits line, name: credits, widget: string }
+              - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
           - label: "Guided Plan"
@@ -124,6 +134,7 @@ collections:
               - { label: Subtitle, name: subtitle, widget: string }
               - { label: Price, name: price, widget: string }
               - { label: Credits line, name: credits, widget: string }
+              - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
           - label: "Managed Plan"
@@ -133,6 +144,7 @@ collections:
               - { label: Title, name: title, widget: string }
               - { label: Subtitle, name: subtitle, widget: string }
               - { label: Credits line, name: credits, widget: string }
+              - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
           - { label: "Credit Pack Footnote", name: credit_note, widget: text }

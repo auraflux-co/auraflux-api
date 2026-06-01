@@ -135,7 +135,46 @@ for filename, (content_key, extra_patch) in PAGES.items():
     # 1. Patch data-editable fields
     html = patch_editables(html, data)
 
-    # 2. Page-specific structural patches
+    # 2. Image URL patches
+    if content_key == 'plans' and data:
+        for plan, img_id in [('operate', 'plan-operate'), ('guided', 'plan-guided'), ('managed', 'plan-managed')]:
+            p = data.get(plan, {})
+            img_url = p.get('image_url', '')
+            if img_url:
+                # Normalize CMS-uploaded paths (relative /assets/ → /cf-assets/marketing/images/)
+                if img_url.startswith('/assets/'):
+                    img_url = '/cf-assets/marketing/images/' + img_url.split('/')[-1]
+                html = re.sub(
+                    rf'(<img class="plan-img" src=")[^"]*(" alt="{plan.capitalize()} plan")',
+                    rf'\g<1>{img_url}\g<2>',
+                    html
+                )
+
+    if content_key == 'our-story' and data:
+        photo = data.get('founder_photo', '')
+        if photo:
+            if photo.startswith('/assets/'):
+                photo = '/cf-assets/marketing/images/' + photo.split('/')[-1]
+            html = re.sub(
+                r'(<img src=")[^"]*(" alt="Rob Gregory"[^>]*id="founder-photo")',
+                rf'\g<1>{photo}\g<2>',
+                html
+            )
+        # Update founder name, role, bio if provided
+        for field, selector in [
+            ('founder_name', 'team-name'),
+            ('founder_role', 'team-role'),
+            ('founder_bio',  'team-bio'),
+        ]:
+            val = data.get(field)
+            if val:
+                html = re.sub(
+                    rf'(<div class="{selector}">)[^<]*(</div>)',
+                    rf'\g<1>{val}\g<2>',
+                    html
+                )
+
+    # 3. Page-specific structural patches
     if extra_patch:
         html = extra_patch(html, data)
 
