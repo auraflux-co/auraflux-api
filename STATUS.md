@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.887 (Claude Code — feat(marketing): plans page redesign — plan images from R2, prices restored 2.8rem matching proportional typography, all CTAs → /contact-us)
 **Last Updated:** 2026-05-31 v1.0.884 (Cursor — refactor(run11): replace weak Phase 0 templates with 6 Gemini-designed templates; refresh clip inventory with 20 cross-platform clips last 7 days; fix ROB_BRAND_ID + populate brand record with AuraFlux assets)
 **Last Updated:** 2026-05-31 v1.0.883 (Claude Code — fix(marketing): nav Get Started→app sign-up; feat: /developer-api public page with full API reference from in-app page)
 **Last Updated:** 2026-05-31 v1.0.881 (Claude Code — feat(marketing): footer 2-col Platform/Resources nav, contact hero subtext max-w, chat button with pulse dot replaces View Plans)

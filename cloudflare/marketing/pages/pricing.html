@@ -2,54 +2,138 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pricing — AuraFlux</title>
-<meta name="description" content="Choose the implementation path that fits your team. Operate, Guided, or Managed — all plans include the full AuraFlux platform.">
-<link rel="canonical" href="https://auraflux.co/pricing">
+<title>Plans — AuraFlux</title>
+<meta name="description" content="Choose the plan that fits your team. Operate, Guided, or Managed — all include the full AuraFlux automated content pipeline.">
+<link rel="canonical" href="https://auraflux.co/plans">
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{line-height:1.6}
+
+/* ── Hero ─────────────────────────────────────────────────────────── */
 .hero{text-align:center;padding:60px 24px 48px}
-.hero h1{font-size:3.5rem;font-weight:800;margin-bottom:16px;color:#fff;line-height:1.1;letter-spacing:-.04em;}
-.hero p{font-size:1.1rem;color:#8f9bb7;max-width:560px;margin:0 auto}
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto;padding:0 24px 72px}
+.hero h1{
+  font-size:3.5rem;font-weight:800;margin-bottom:16px;
+  color:#fff;line-height:1.1;letter-spacing:-.04em;
+}
+.hero p{font-size:1.05rem;color:#8f9bb7;max-width:560px;margin:0 auto;line-height:1.65;}
+
+/* ── Plan cards ───────────────────────────────────────────────────── */
+.plans{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:24px;max-width:1100px;margin:0 auto;padding:0 24px 56px;
+}
 @media(max-width:768px){.plans{grid-template-columns:1fr}}
-.plan{background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:36px 32px;display:flex;flex-direction:column;transition:border-color .25s,box-shadow .25s;}
-.plan:hover{border-color:rgba(199,175,79,.5);box-shadow:0 0 24px rgba(199,175,79,.08);}
-.plan.featured{border-color:rgba(245,197,66,.5);position:relative}
-.badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#f5c542;color:#0b1220;font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:.05em}
-.plan-name{font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#f5c542;margin-bottom:8px;}
-.plan-title{font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:4px}
-.plan-sub{font-size:.9rem;color:#a0a0b8;margin-bottom:24px}
-.price{font-size:2.6rem;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.03em;font-family:'Satoshi','Inter',sans-serif;line-height:1;}
-.price span{font-size:1rem;font-weight:400;color:#a0a0b8}
-.credits{font-size:.85rem;color:#8f9bb7;margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid rgba(255,255,255,.08)}
-.features{list-style:none;flex:1;margin-bottom:32px}
-.features li{font-size:.9rem;color:#8f9bb7;padding:6px 0;display:flex;gap:10px;line-height:1.6;margin-bottom:4px;}
-.features li::before{content:"✓";color:#f5c542;font-weight:700;flex-shrink:0}
-.features li.no::before{content:"—";color:#444466}
-.features li.no{color:#555580}
-.cta{display:block;text-align:center;padding:14px;border-radius:10px;font-weight:600;font-size:.95rem;transition:opacity .2s}
-.cta-primary{background:#f5c542;color:#0b1220}
-.cta-secondary{border:1px solid rgba(245,197,66,.4);color:#f5c542}
-.cta:hover{opacity:.85}
-.ladder{max-width:1100px;margin:0 auto;padding:0 24px 80px}
-.ladder h2{font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:32px;text-align:center}
-table{width:100%;border-collapse:collapse;font-size:.9rem}
-th{text-align:left;padding:14px 20px;color:#f5c542;font-weight:700;font-style:normal;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);}
-th:not(:first-child){text-align:center}
-td{padding:12px 20px;color:#8f9bb7;border-bottom:1px solid rgba(255,255,255,.05)}
-td:not(:first-child){text-align:center}
-tr:hover td{background:rgba(255,255,255,.02)}
-.yes{color:#10b981;font-weight:600}
-.no-val{color:#444466}
-.label{color:#e4e4f0;font-weight:500}
-footer{text-align:center;padding:40px 24px;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:#8f9bb7}
-footer a{color:#f5c542;margin:0 8px}
-.price-val{transition:opacity .3s}
-.price-loading .price-val{opacity:.4;animation:price-pulse 1.2s ease-in-out infinite}
-@keyframes price-pulse{0%,100%{opacity:.2}50%{opacity:.6}}
+
+.plan{
+  background:#0f172a;border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:border-color .25s,box-shadow .25s;position:relative;
+}
+.plan:hover{border-color:rgba(199,175,79,.45);box-shadow:0 0 28px rgba(199,175,79,.08);}
+.plan.featured{border:1.5px solid #c7af4f;}
+
+.badge{
+  position:absolute;top:16px;right:16px;z-index:10;
+  background:#f5c542;color:#0b1220;
+  font-size:.65rem;font-weight:800;padding:4px 12px;
+  border-radius:100px;letter-spacing:.06em;
+  display:flex;align-items:center;gap:5px;
+}
+.badge-dot{
+  width:6px;height:6px;border-radius:50%;background:#0b1220;
+  animation:planpulse 2s ease-in-out infinite;
+}
+@keyframes planpulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Plan image header */
+.plan-img{
+  width:100%;aspect-ratio:4/3;object-fit:cover;
+  display:block;border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.plan-body{padding:28px 28px 24px;display:flex;flex-direction:column;flex:1;}
+
+.plan-name{
+  font-size:.68rem;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:#f5c542;margin-bottom:6px;
+  font-family:'Satoshi','Inter',monospace;
+}
+.plan-title{
+  font-size:1.5rem;font-weight:700;color:#fff;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.plan-sub{font-size:.85rem;color:#8f9bb7;margin-bottom:20px;line-height:1.5;}
+
+/* Price — proportional to headings: same font, sized between h2 and h1 */
+.price{
+  font-size:2.8rem;font-weight:800;color:#fff;
+  letter-spacing:-.04em;line-height:1;margin-bottom:4px;
+  font-family:'Satoshi','Inter',sans-serif;
+}
+.price .period{font-size:1rem;font-weight:400;color:#8f9bb7;letter-spacing:0;}
+.credits{
+  font-size:.8rem;color:#8f9bb7;
+  margin-bottom:24px;padding-bottom:20px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  line-height:1.5;
+}
+.features{list-style:none;flex:1;margin-bottom:28px;display:flex;flex-direction:column;gap:4px;}
+.features li{
+  font-size:.88rem;color:#8f9bb7;padding:5px 0;
+  display:flex;gap:10px;line-height:1.55;
+}
+.features li::before{content:"✓";color:#f5c542;font-weight:700;flex-shrink:0;}
+.features li.no::before{content:"—";color:#333355;}
+.features li.no{color:#3d3d5c;}
+
+.cta{
+  display:block;text-align:center;padding:13px;
+  border-radius:10px;font-weight:700;font-size:.9rem;
+  transition:opacity .2s;text-decoration:none;
+  letter-spacing:-.01em;
+}
+.cta-primary{background:#f5c542;color:#0b1220;}
+.cta-secondary{border:1px solid rgba(245,197,66,.4);color:#f5c542;}
+.cta:hover{opacity:.85;text-decoration:none;}
+
+/* Credit pack footnote */
+.credit-note{
+  max-width:1100px;margin:0 auto 56px;padding:0 24px;
+}
+.credit-note-inner{
+  border:1px solid #c7af4f;border-radius:12px;
+  padding:18px 24px;text-align:center;
+  background:rgba(199,175,79,.04);
+}
+.credit-note-inner p{font-size:.88rem;color:#a0a0b8;line-height:1.65;}
+.credit-note-inner strong{color:#fff;}
+
+/* ── Comparison table ─────────────────────────────────────────────── */
+.ladder{max-width:1100px;margin:0 auto;padding:0 24px 80px;}
+.ladder-title{
+  font-size:1.6rem;font-weight:800;color:#fff;
+  letter-spacing:-.03em;margin-bottom:32px;text-align:center;
+}
+table{width:100%;border-collapse:collapse;font-size:.88rem;}
+th{
+  text-align:left;padding:14px 20px;color:#f5c542;
+  font-weight:700;border-bottom:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.02);letter-spacing:-.01em;
+}
+th:not(:first-child){text-align:center;}
+td{padding:12px 20px;color:#8f9bb7;border-bottom:1px solid rgba(255,255,255,.04);}
+td:not(:first-child){text-align:center;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.yes{color:#f5c542;font-weight:700;font-size:1rem;}
+.no-val{color:#333355;}
+.label{color:#e4e4f0;font-weight:500;}
+
+/* Price loading pulse */
+.price-loading .price-val{opacity:.3;animation:ppulse 1.2s ease-in-out infinite;}
+@keyframes ppulse{0%,100%{opacity:.15}50%{opacity:.5}}
 </style>
 </head>
 <body>
@@ -57,67 +141,88 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <div class="hero">
   <h1>Match Your Team's Capability</h1>
-  <p>Choose the implementation path that fits your current operational setup. All plans include the full AuraFlux platform.</p>
+  <p>Choose the path that fits your current operational setup. All plans include the full AuraFlux automated production pipeline.</p>
 </div>
 
 <div class="plans">
+
+  <!-- OPERATE -->
   <div class="plan">
-    <div class="plan-name">Operate</div>
-    <div class="plan-title">DIY / API</div>
-    <div class="plan-sub">Total Control &amp; Custom Integration</div>
-    <div class="price" id="price-operate"><span class="price-val">—</span><span>/mo</span></div>
-    <div class="credits">50 credits/month · Self-serve instant checkout</div>
-    <ul class="features">
-      <li>Full API access &amp; raw endpoints</li>
-      <li>Comprehensive developer documentation</li>
-      <li>Self-hosted integration control</li>
-      <li>Community &amp; standard support</li>
-      <li class="no">In-app visual flow builders</li>
-      <li class="no">Collab-powered guidance</li>
-      <li class="no">Dedicated account manager</li>
-    </ul>
-    <a href="https://app.auraflux.co/sign-up?plan=operate" class="cta cta-secondary">Get API Access</a>
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-operate.png" alt="Operate plan">
+    <div class="plan-body">
+      <div class="plan-name">Operate</div>
+      <div class="plan-title">DIY / API</div>
+      <div class="plan-sub">Automated processing via self-serve dashboard &amp; API access only.</div>
+      <div class="price price-loading" id="price-operate"><span class="price-val">$499</span><span class="period">/mo</span></div>
+      <div class="credits">50 credits/month · Self-serve instant checkout</div>
+      <ul class="features">
+        <li>Full API access &amp; raw endpoints</li>
+        <li>Comprehensive developer documentation</li>
+        <li>Self-hosted integration control</li>
+        <li>Community &amp; standard support</li>
+        <li class="no">In-app visual flow builders</li>
+        <li class="no">Collab-powered guidance</li>
+        <li class="no">Dedicated account manager</li>
+      </ul>
+      <a href="/contact-us" class="cta cta-secondary">Get API Access</a>
+    </div>
   </div>
 
+  <!-- GUIDED -->
   <div class="plan featured">
-    <div class="badge"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#0b1220;margin-right:6px;animation:rdm-pulse 2s ease-in-out infinite;vertical-align:middle;"></span>MOST POPULAR</div>
-    <div class="plan-name">Guided</div>
-    <div class="plan-title">Collab Assist</div>
-    <div class="plan-sub">Build &amp; Optimize with Collab Guidance</div>
-    <div class="price" id="price-guided"><span class="price-val">—</span><span>/mo</span></div>
-    <div class="credits">200 credits/month · Self-serve subscription upgrade</div>
-    <ul class="features">
-      <li>Everything in Operate</li>
-      <li>Interactive in-app flows</li>
-      <li>Collab-powered live visual guidance</li>
-      <li>Visual drag-and-drop workflow builders</li>
-      <li>Automated operational threshold alerts</li>
-      <li class="no">Custom end-to-end workflow builds</li>
-      <li class="no">Dedicated account manager</li>
-    </ul>
-    <a href="https://app.auraflux.co/sign-up?plan=guided" class="cta cta-primary">Start Guided Setup</a>
+    <div class="badge"><span class="badge-dot"></span>MOST POPULAR</div>
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-guided.png" alt="Guided plan">
+    <div class="plan-body">
+      <div class="plan-name">Guided</div>
+      <div class="plan-title">Collab Assist</div>
+      <div class="plan-sub">Complete platform toolkit plus Gemini-backed Collab AI workspace assistance.</div>
+      <div class="price price-loading" id="price-guided"><span class="price-val">$999</span><span class="period">/mo</span></div>
+      <div class="credits">200 credits/month · Self-serve subscription upgrade</div>
+      <ul class="features">
+        <li>Everything in Operate</li>
+        <li>Interactive in-app flows</li>
+        <li>Collab-powered live visual guidance</li>
+        <li>Visual drag-and-drop workflow builders</li>
+        <li>Automated operational threshold alerts</li>
+        <li class="no">Custom end-to-end workflow builds</li>
+        <li class="no">Dedicated account manager</li>
+      </ul>
+      <a href="/contact-us" class="cta cta-primary">Start Guided Setup</a>
+    </div>
   </div>
 
+  <!-- MANAGED -->
   <div class="plan">
-    <div class="plan-name">Managed</div>
-    <div class="plan-title">Done-For-You</div>
-    <div class="plan-sub">Fully Managed Workflows by Experts</div>
-    <div class="price" id="price-managed" style="font-size:2.6rem;letter-spacing:-.03em;">Custom</div>
-    <div class="credits">1000+ credits/month · Custom onboarding &amp; sales intake</div>
-    <ul class="features">
-      <li>Everything in Guided</li>
-      <li>Dedicated Account Manager</li>
-      <li>Custom end-to-end workflow builds</li>
-      <li>Priority support with custom SLAs</li>
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan">
+    <div class="plan-body">
+      <div class="plan-name">Managed</div>
+      <div class="plan-title">Done-For-You</div>
+      <div class="plan-sub">Full Collab AI platform plus a dedicated human account manager.</div>
+      <div class="price">Custom</div>
+      <div class="credits">1000+ credits/month · Custom onboarding &amp; sales intake</div>
+      <ul class="features">
+        <li>Everything in Guided</li>
+        <li>Dedicated Account Manager</li>
+        <li>Custom end-to-end workflow builds</li>
+        <li>Priority support with custom SLAs</li>
+        <li>Unlimited credits</li>
+      </ul>
+      <a href="/contact-us" class="cta cta-secondary">Request Managed Plan</a>
+    </div>
+  </div>
 
-      <li>Unlimited credits</li>
-    </ul>
-    <a href="/contact-us" class="cta cta-secondary">Request Managed Plan</a>
+</div>
+
+<!-- Credit pack footnote -->
+<div class="credit-note">
+  <div class="credit-note-inner">
+    <p>Running low mid-month? <strong>Extra Credit Packs</strong> are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.</p>
   </div>
 </div>
 
+<!-- Comparison table -->
 <div class="ladder">
-  <h2>Implementation &amp; Feature Comparison</h2>
+  <div class="ladder-title">Implementation &amp; Feature Comparison</div>
   <table>
     <thead>
       <tr>
@@ -131,36 +236,39 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <tr><td class="label">Core Infrastructure &amp; API Access</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">Developer Documentation &amp; SDKs</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">In-App Visual Flow Builders</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Collab (Branded Guide Assistance)</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Collab AI Guidance</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">Automated Threshold Notifications</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Custom Flow Construction by Experts</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Dedicated Account Management</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Custom Workflow Construction by Experts</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Dedicated Account Manager</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
       <tr><td class="label">Support SLA</td><td>Standard</td><td>Standard</td><td>Priority 24/7</td></tr>
-
     </tbody>
   </table>
 </div>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
 <script>
-// Load live prices from Stripe via /api/public/plans — no hardcoded values
-document.querySelectorAll('[id^="price-"]').forEach(function(el) { el.classList.add('price-loading'); });
-fetch('/api/public/plans')
-  .then(r => r.json())
-  .then(plans => {
-    var map = { operate: '#price-operate', guided: '#price-guided' };
-    Object.entries(map).forEach(function([plan, sel]) {
-      var el = document.querySelector(sel + ' .price-val');
-      if (el && plans[plan]) {
-        el.textContent = plans[plan].replace('/mo','');
-        el.closest('[id^="price-"]').classList.remove('price-loading');
-      }
+// Try to load live prices; fall back gracefully to hardcoded values
+(function() {
+  var fallback = { operate: '$499', guided: '$999' };
+  fetch('/api/public/plans')
+    .then(function(r) { return r.json(); })
+    .then(function(plans) {
+      ['operate','guided'].forEach(function(plan) {
+        var el = document.querySelector('#price-' + plan + ' .price-val');
+        if (el && plans[plan]) {
+          el.textContent = plans[plan].replace('/mo','').trim();
+        }
+        var container = document.getElementById('price-' + plan);
+        if (container) container.classList.remove('price-loading');
+      });
+    })
+    .catch(function() {
+      // API unreachable — hardcoded values already shown, just stop pulse
+      document.querySelectorAll('.price-loading').forEach(function(el) {
+        el.classList.remove('price-loading');
+      });
     });
-  })
-  .catch(function() {
-    // Stripe unreachable — leave as "—" and stop the pulse
-    document.querySelectorAll('[id^="price-"]').forEach(function(el) { el.classList.remove('price-loading'); });
-  });
+})();
 </script>
 </body>
 </html>
