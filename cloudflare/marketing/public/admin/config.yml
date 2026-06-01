@@ -1,3 +1,4 @@
+# CMS config v2 — Navigation, Footer, Blog Posts included
 backend:
   name: github
   repo: auraflux-co/auraflux-api
