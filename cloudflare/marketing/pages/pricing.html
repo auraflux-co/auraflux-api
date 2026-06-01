@@ -131,6 +131,29 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .no-val{color:#333355;}
 .label{color:#e4e4f0;font-weight:500;}
 
+/* Mobile: hide table, show card-style summary */
+.compare-mobile{display:none;}
+.compare-mobile-card{
+  background:#0f172a;border:1px solid rgba(255,255,255,.07);
+  border-radius:14px;padding:20px;margin-bottom:16px;
+}
+.compare-mobile-card h3{
+  font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:#f5c542;margin-bottom:14px;font-family:'Satoshi','Inter',monospace;
+}
+.compare-mobile-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.85rem;
+}
+.compare-mobile-row:last-child{border-bottom:none;}
+.compare-mobile-row span:first-child{color:#a0a0b8;flex:1;}
+.compare-mobile-row .yes-m{color:#f5c542;font-weight:700;font-size:.9rem;}
+.compare-mobile-row .no-m{color:#333355;}
+@media(max-width:600px){
+  table,.ladder-title+table{display:none;}
+  .compare-mobile{display:block;}
+}
+
 /* Price loading pulse */
 .price-loading .price-val{opacity:.3;animation:ppulse 1.2s ease-in-out infinite;}
 @keyframes ppulse{0%,100%{opacity:.15}50%{opacity:.5}}
@@ -243,6 +266,43 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <tr><td class="label">Support SLA</td><td>Standard</td><td>Standard</td><td>Priority 24/7</td></tr>
     </tbody>
   </table>
+
+  <!-- Mobile comparison cards (shown instead of table on small screens) -->
+  <div class="compare-mobile">
+    <div class="compare-mobile-card">
+      <h3>Operate</h3>
+      <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Custom Workflows</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Account Manager</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Support SLA</span><span>Standard</span></div>
+    </div>
+    <div class="compare-mobile-card" style="border-color:rgba(199,175,79,.3);">
+      <h3>Guided</h3>
+      <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Custom Workflows</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Account Manager</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Support SLA</span><span>Standard</span></div>
+    </div>
+    <div class="compare-mobile-card">
+      <h3>Managed</h3>
+      <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Custom Workflows</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Account Manager</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Support SLA</span><span style="color:#f5c542;">Priority 24/7</span></div>
+    </div>
+  </div>
 </div>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}

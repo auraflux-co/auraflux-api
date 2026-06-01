@@ -1,4 +1,6 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.923 (Claude Code — fix(responsive): nav button overlap at 375px, plans comparison table replaced with card layout on mobile <600px)
+**Deploy Mode:** `dev` <!-- set to `dev` (deploy after push) or `testing` (hold deploys) -->
 **Last Updated:** 2026-06-01 v1.0.922 (Cursor — feat(cpd-488): job detail full redesign — 4-stage stepper, compact spec strip, status heroes per state, conditional sections, post-submit overlay; fix TS: chatWithConcierge alias + apiFetch body JSON.stringify)
 **Last Updated:** 2026-06-01 v1.0.921 (Claude Code — feat(cms): all CTA buttons wired on all pages — home/system/pricing; label+URL+style editable in CMS)
 **Last Updated:** 2026-06-01 v1.0.919 (Claude Code — fix(cms): Our Story hero+bottom CTAs wired — data-cta markers, JSON seeded, inject patched, config updated; fix duplicate home.html in PAGES)
