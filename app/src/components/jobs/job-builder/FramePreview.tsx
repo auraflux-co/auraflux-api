@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils';
 import type { SourceItem } from '@/lib/api';
 
-type Grade = 'none' | 'warm' | 'cool' | 'neut';
+type Grade = 'none' | 'warm' | 'cool' | 'neut' | 'vivid';
 
 interface Props {
   clips:     SourceItem[];
@@ -47,8 +47,9 @@ export function FramePreview({ clips, format, captions, grade, effects, classNam
         )}
 
         {/* Grade overlay */}
-        {grade === 'warm' && <div className="absolute inset-0 bg-orange-500/10 mix-blend-multiply pointer-events-none" />}
-        {grade === 'cool' && <div className="absolute inset-0 bg-blue-500/12 mix-blend-multiply pointer-events-none" />}
+        {grade === 'warm'  && <div className="absolute inset-0 bg-orange-500/10 mix-blend-multiply pointer-events-none" />}
+        {grade === 'cool'  && <div className="absolute inset-0 bg-blue-500/12 mix-blend-multiply pointer-events-none" />}
+        {grade === 'vivid' && <div className="absolute inset-0 bg-purple-500/10 mix-blend-color pointer-events-none" />}
 
         {/* Effects badge */}
         {effects.length > 0 && (
