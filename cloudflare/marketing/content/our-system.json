@@ -1,6 +1,6 @@
 {
   "hero_headline": "From Raw Content to Published Video",
-  "hero_sub": "AuraFlux is a six-stage automated production pipeline. You submit a job. The pipeline handles clip selection, scripting, editing, QA, brand application, and direct publish — without a single manual step.",
+  "hero_sub": "AuraFlux is a six-stage automated production pipeline. You submit a job. The pipeline handles clip selection, scripting, editing, QA, brand application, and direct publish \u2014 without a single manual step.",
   "portals": [
     {
       "badge": "P0",
@@ -41,24 +41,28 @@
   ],
   "content_types": [
     {
-      "icon": "🎮",
+      "icon": "\ud83c\udfae",
       "name": "Highlight Clips",
-      "description": "Best moments from streams and VODs — auto-cut, captioned, and formatted for short-form."
+      "description": "Best moments from streams and VODs \u2014 auto-cut, captioned, and formatted for short-form."
     },
     {
-      "icon": "🎙️",
+      "icon": "\ud83c\udf99\ufe0f",
       "name": "Gameplay Commentary",
-      "description": "AI-generated narration over gameplay clips — personalised to your style and audience."
+      "description": "AI-generated narration over gameplay clips \u2014 personalised to your style and audience."
     },
     {
-      "icon": "🎬",
+      "icon": "\ud83c\udfac",
       "name": "Show & Film Analysis",
-      "description": "Narrated breakdowns from TV and movie clips — fair-use formatted and ready to publish."
+      "description": "Narrated breakdowns from TV and movie clips \u2014 fair-use formatted and ready to publish."
     },
     {
-      "icon": "📡",
+      "icon": "\ud83d\udce1",
       "name": "Live Event Recap",
       "description": "Sports, news, and live events turned into structured recap videos within minutes of the event."
     }
-  ]
+  ],
+  "hero_cta_label": "View Plans",
+  "hero_cta_url": "/plans",
+  "bottom_cta_label": "Compare Plans",
+  "bottom_cta_url": "/plans"
 }

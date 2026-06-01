@@ -39,6 +39,36 @@ def patch_editables(html, data):
     )
 
 
+def patch_ctas(html, data, cta_map):
+    """
+    Patch CTA buttons using data-cta attributes.
+    cta_map: dict of { 'data_cta_value': ('label_key', 'url_key') }
+    e.g. { 'hero_cta': ('hero_cta_label', 'hero_cta_url') }
+    """
+    for cta_id, (label_key, url_key) in cta_map.items():
+        label = data.get(label_key)
+        url   = data.get(url_key)
+        if label:
+            html = re.sub(
+                rf'(data-cta="{re.escape(cta_id)}"[^>]*>)[^<]*(</a>)',
+                rf'\g<1>{label}\g<2>',
+                html
+            )
+        if url:
+            html = re.sub(
+                rf'(<a\b[^>]*\bhref=")[^"]*("[^>]*data-cta="{re.escape(cta_id)}")',
+                rf'\g<1>{url}\g<2>',
+                html
+            )
+            # Also handle href after data-cta
+            html = re.sub(
+                rf'(<a\b[^>]*data-cta="{re.escape(cta_id)}"[^>]*\bhref=")[^"]*(")',
+                rf'\g<1>{url}\g<2>',
+                html
+            )
+    return html
+
+
 def patch_blog(html, data):
     posts = data.get('posts', [])
     if not posts:
@@ -175,7 +205,34 @@ for filename, (content_key, extra_patch) in PAGES.items():
                     html
                 )
 
-    # 3. Page-specific structural patches
+    # 3. CTA patches
+    cta_maps = {
+        'our-story': {
+            'hero_cta':             ('hero_cta_label',   'hero_cta_url'),
+            'bottom_cta_secondary': ('cta_btn_label',    'cta_btn_url'),
+        },
+        'our-system': {
+            'hero_cta':   ('hero_cta_label',   'hero_cta_url'),
+            'bottom_cta': ('bottom_cta_label', 'bottom_cta_url'),
+        },
+        'plans': {
+            'operate_cta': ('operate.cta_label', 'operate.cta_url'),
+            'guided_cta':  ('guided.cta_label',  'guided.cta_url'),
+            'managed_cta': ('managed.cta_label', 'managed.cta_url'),
+        },
+    }
+    if content_key in cta_maps:
+        # Flatten nested keys for plans (operate.cta_label → data['operate']['cta_label'])
+        flat_data = {}
+        for k, v in data.items():
+            if isinstance(v, dict):
+                for sk, sv in v.items():
+                    flat_data[f'{k}.{sk}'] = sv
+            else:
+                flat_data[k] = v
+        html = patch_ctas(html, flat_data, cta_maps[content_key])
+
+    # 4. Page-specific structural patches
     if extra_patch:
         html = extra_patch(html, data)
 

@@ -58,5 +58,9 @@
   "founder_photo": "/cf-assets/marketing/images/founder-rob-gregory.jpg",
   "founder_name": "Rob Gregory",
   "founder_role": "Founder & CEO",
-  "founder_bio": "Started AuraFlux after spending years watching creators lose hours to manual editing. Built the platform he wished existed."
+  "founder_bio": "Started AuraFlux after spending years watching creators lose hours to manual editing. Built the platform he wished existed.",
+  "hero_cta_label": "See Plans",
+  "hero_cta_url": "/plans",
+  "cta_btn_label": "Get Started",
+  "cta_btn_url": "/plans"
 }

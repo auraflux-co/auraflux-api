@@ -23,8 +23,10 @@ collections:
         fields:
           - { label: "Hero Headline", name: hero_headline, widget: string, hint: "Main heading — keep under 8 words" }
           - { label: "Hero Subtext", name: hero_sub, widget: text, hint: "Subtitle below the headline" }
-          - { label: "Primary CTA Label", name: cta_primary_label, widget: string, default: "See How It Works" }
-          - { label: "Primary CTA URL", name: cta_primary_url, widget: string, default: "/our-system" }
+          - { label: "Hero CTA Label", name: cta_primary_label, widget: string, default: "See How It Works" }
+          - { label: "Hero CTA URL", name: cta_primary_url, widget: string, default: "/our-system", hint: "Where the main button links" }
+          - { label: "Final CTA Label", name: final_cta_label, widget: string, default: "Start Producing" }
+          - { label: "Final CTA URL", name: final_cta_url, widget: string, default: "/plans", hint: "Where the bottom CTA button links" }
           - label: "Trusted By — Platform Quotes"
             name: trusted_by
             widget: list
@@ -40,7 +42,6 @@ collections:
               - { label: Body, name: body, widget: text }
           - { label: "Final CTA Headline", name: final_cta_headline, widget: string }
           - { label: "Final CTA Subtext", name: final_cta_sub, widget: string }
-          - { label: "Final CTA Button", name: final_cta_label, widget: string, default: "Start Producing" }
           - { label: "OG / Share Image", name: og_image, widget: image, required: false, hint: "Image shown when shared on social media" }
 
   # ── Our Story (/our-story) ─────────────────────────────────────────────
@@ -78,6 +79,10 @@ collections:
           - { label: "Founder Bio", name: founder_bio, widget: text }
           - { label: "CTA Headline", name: cta_headline, widget: string }
           - { label: "CTA Subtext", name: cta_sub, widget: string }
+          - { label: "Hero Button Label", name: hero_cta_label, widget: string, default: "See Plans" }
+          - { label: "Hero Button URL", name: hero_cta_url, widget: string, default: "/plans" }
+          - { label: "Bottom CTA Button Label", name: cta_btn_label, widget: string, default: "Get Started" }
+          - { label: "Bottom CTA Button URL", name: cta_btn_url, widget: string, default: "/plans" }
 
   # ── Our System (/our-system) ───────────────────────────────────────────
   - name: our_system
@@ -104,6 +109,10 @@ collections:
               - { label: Icon, name: icon, widget: string }
               - { label: Name, name: name, widget: string }
               - { label: Description, name: description, widget: text }
+          - { label: "Hero Button Label", name: hero_cta_label, widget: string, default: "View Plans" }
+          - { label: "Hero Button URL", name: hero_cta_url, widget: string, default: "/plans" }
+          - { label: "Bottom CTA Button Label", name: bottom_cta_label, widget: string, default: "Compare Plans" }
+          - { label: "Bottom CTA Button URL", name: bottom_cta_url, widget: string, default: "/plans" }
 
   # ── Plans (/plans) ─────────────────────────────────────────────────────
   - name: plans
@@ -126,6 +135,7 @@ collections:
               - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
+              - { label: CTA URL, name: cta_url, widget: string, default: "/contact-us" }
           - label: "Guided Plan"
             name: guided
             widget: object
@@ -137,6 +147,7 @@ collections:
               - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
+              - { label: CTA URL, name: cta_url, widget: string, default: "/contact-us" }
           - label: "Managed Plan"
             name: managed
             widget: object
@@ -147,6 +158,7 @@ collections:
               - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
+              - { label: CTA URL, name: cta_url, widget: string, default: "/contact-us" }
           - { label: "Credit Pack Footnote", name: credit_note, widget: text }
 
   # ── Roadmap (/roadmap) ─────────────────────────────────────────────────

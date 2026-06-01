@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.902 (Claude Code — feat(marketing): CTA buttons editable via CMS — label + URL fields in config.yml, data-cta markers in HTML, patch_ctas() injection)
 **Last Updated:** 2026-06-01 v1.0.901 (Claude Code — fix(marketing): home.html not running inject_framer() — ${FRAMER_FONTS} showed as raw text)
 **Last Updated:** 2026-06-01 v1.0.900 (Claude Code — fix(marketing): inject_content.py was corrupting home.html — skip home (no data-editable markers), tighten regex to prevent greedy cross-element match)
 **Last Updated:** 2026-06-01 v1.0.899 (Claude Code — sync CMS image fields to marketing branch)
