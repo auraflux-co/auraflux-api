@@ -190,6 +190,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/crm',          label: 'CRM'             },
   { href: '/admin/permissions',  label: 'Permissions'     },
   { href: '/admin/marketing',    label: 'Site Editor'     },
+  { href: '/admin/content',      label: 'App Content'     },
   { href: '/operator',           label: 'All Jobs'        },
   { href: '/review',             label: 'Review Queue'    },
   { href: '/generate',           label: 'Generate Video'  },

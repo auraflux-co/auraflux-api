@@ -1350,3 +1350,27 @@ export async function resolvePublicChatSession(
 ): Promise<{ ok: boolean }> {
   return apiFetch(`/api/admin/chat/sessions/${sessionId}/resolve`, { method: 'POST', token });
 }
+
+// ── App Content CMS — CPD-490 ─────────────────────────────────────────────────
+
+export async function getAppContentOverrides(
+  pageKey: string,
+  token?: string,
+): Promise<{ ok: boolean; page: string; overrides: Array<{ key: string; value: string; updated_by: string; updated_at: string }> }> {
+  return apiFetch(`/api/admin/app-content/${pageKey}`, { token });
+}
+
+export async function upsertAppContent(
+  payload: { page_key: string; key: string; value: string },
+  token?: string,
+): Promise<{ ok: boolean; page_key: string; key: string; value: string }> {
+  return apiFetch('/api/admin/app-content', { method: 'POST', body: payload, token });
+}
+
+export async function deleteAppContent(
+  pageKey: string,
+  key: string,
+  token?: string,
+): Promise<{ ok: boolean; reset: boolean }> {
+  return apiFetch(`/api/admin/app-content/${pageKey}/${encodeURIComponent(key)}`, { method: 'DELETE', token });
+}

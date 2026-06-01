@@ -7415,6 +7415,7 @@ app.use(adminChatRoutes);
 const planRouter      = require('./lib/routes/plan');
 const creditsRouter        = require('./lib/routes/credits');
 const marketingRouter      = require('./lib/routes/marketing'); // CPD-402
+const appContentRouter     = require('./lib/routes/app_content'); // CPD-490
 const billingRouter        = require('./lib/routes/billing');
 const notificationsRouter  = require('./lib/routes/notifications');
 const collabRouter    = require('./lib/routes/collab');
@@ -7436,6 +7437,7 @@ const jobsC1Router        = require('./lib/routes/jobs_c1');
 app.use(planRouter);
 app.use(creditsRouter);
 app.use(marketingRouter);
+app.use(appContentRouter);
 app.use(billingRouter);
 app.use(notificationsRouter);
 // Backward-compat: /concierge/* → /collab/* (CPD-489)
