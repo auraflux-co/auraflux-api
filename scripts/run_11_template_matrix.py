@@ -515,9 +515,10 @@ def submit_job(clip, job_def, tier='operate', dry_run=False):
     body = {
         'entry':        'fetch',
         'contentType':  add_ons.get('contentType', 'clips'),
+        'format':       format_,           # CPD-486: tells API longform→broadcast_desk, portrait→vertical_reel
         'platform':     clip['platform'],
         'url':          clip['url'],
-        'streamer':     clip['streamer'],
+        'streamer':     clip['streamer'],  # wired by API into order.inputs.streamer for chrome overlay
         'planTier':     tier,
         'platforms':    platforms,
         'addOns':       {k: v for k, v in add_ons.items() if k != 'contentType'},

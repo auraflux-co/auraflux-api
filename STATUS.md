@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.894 (Cursor — fix(CPD-486): portal workers now spec-accurate before E2E run — format:longform no longer forces vertical_reel; streamer field wired to order.inputs.streamer; chrome.showName added to fallback chain; portal3a Gemini prompt distinguishes clip-only vs broadcast; submit_job sends format field)
 **Last Updated:** 2026-06-01 v1.0.893 (Claude Code — fix(marketing-editor): PAGE_FILES now includes about/system/developer-api pages; suggested prompts updated for current routes)
 **Last Updated:** 2026-06-01 v1.0.892 (Cursor — refactor(run11): 20 verified clips from manifest; all 6 templates route to correct duration range)
 **Last Updated:** 2026-06-01 v1.0.889 (Claude Code — fix(marketing): /pricing 301 redirect to /plans; operate image object-position crops text)
