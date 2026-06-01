@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.898 (Claude Code — feat(marketing): CMS image fields — plan card images, founder photo, OG image all editable via admin; founder photo moved from base64 to R2 URL)
 **Last Updated:** 2026-06-01 v1.0.896 (Claude Code — feat(marketing): CMS content injection — inject_content.py patches HTML from content/*.json at deploy time; CMS edits now go live)
 **Last Updated:** 2026-06-01 v1.0.896 (Cursor — test(CPD-475): 24-case Jest suite for pipeline_routing.js; Jira CPD-475 created+Done; Portal Pipeline Confluence updated to v14 with clip-only model; HOW: Pipeline Routing & Clean Path Registry page created)
 **Last Updated:** 2026-06-01 v1.0.895 (Cursor — feat(CPD-486): clean path registry — lib/pipeline_routing.js single source of truth; 19-case validator blocks commits on routing breaks; run_11 routing pre-flight + save_clean_path on grade=100; pre-commit hook wired)

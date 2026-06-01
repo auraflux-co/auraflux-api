@@ -1,8 +1,8 @@
 {
   "hero_headline": "Content Production, Without the Team",
   "hero_sub": "AuraFlux is the production infrastructure for creators who can't afford to stop streaming to edit.",
-  "mission_body": "Most streamers and creators produce hours of content every week — and then lose most of it. Editing takes longer than the stream itself. Hiring an editor costs more than the content earns. So the clips sit on a hard drive, and the channel doesn't grow.\n\nWe built AuraFlux to close that gap. Not by making editing faster, but by eliminating the need for it entirely.",
-  "blockquote": "Every creator should be able to produce like a media company. That's not a staffing problem — it's a software problem.",
+  "mission_body": "Most streamers and creators produce hours of content every week \u2014 and then lose most of it. Editing takes longer than the stream itself. Hiring an editor costs more than the content earns. So the clips sit on a hard drive, and the channel doesn't grow.\n\nWe built AuraFlux to close that gap. Not by making editing faster, but by eliminating the need for it entirely.",
+  "blockquote": "Every creator should be able to produce like a media company. That's not a staffing problem \u2014 it's a software problem.",
   "stats": [
     {
       "number": "06",
@@ -23,36 +23,40 @@
   ],
   "diff_cards": [
     {
-      "icon": "⚡",
+      "icon": "\u26a1",
       "headline": "A full pipeline, not a feature",
       "body": "Connect your YouTube and Kick channels once and the platform identifies, selects, assembles, quality-checks, and publishes for you."
     },
     {
-      "icon": "🎯",
+      "icon": "\ud83c\udfaf",
       "headline": "Platform-aware by default",
       "body": "Every output is sized, captioned, and formatted for the destination platform. TikTok gets 9:16. YouTube gets 16:9. No manual reformatting."
     },
     {
-      "icon": "🤖",
+      "icon": "\ud83e\udd16",
       "headline": "AI quality checks at every stage",
       "body": "Before your content ever reaches a platform, our AI quality gates check it against your brand spec and technical requirements."
     },
     {
-      "icon": "📤",
+      "icon": "\ud83d\udce4",
       "headline": "Direct publish, no manual export",
-      "body": "OAuth connections to every major platform mean your content publishes directly — no downloading, uploading, or scheduling tools needed."
+      "body": "OAuth connections to every major platform mean your content publishes directly \u2014 no downloading, uploading, or scheduling tools needed."
     },
     {
-      "icon": "💬",
+      "icon": "\ud83d\udcac",
       "headline": "Collab guides you through it",
       "body": "Your plan includes Collab, the AuraFlux AI assistant. It monitors your pipeline, flags issues, and guides you to better outputs."
     },
     {
-      "icon": "🔌",
+      "icon": "\ud83d\udd0c",
       "headline": "API-first for technical operators",
       "body": "The entire platform is accessible via REST API. Integrate AuraFlux directly into your own tooling, dashboard, or workflow automation."
     }
   ],
   "cta_headline": "Ready to automate your production?",
-  "cta_sub": "No salary required."
+  "cta_sub": "No salary required.",
+  "founder_photo": "/cf-assets/marketing/images/founder-rob-gregory.jpg",
+  "founder_name": "Rob Gregory",
+  "founder_role": "Founder & CEO",
+  "founder_bio": "Started AuraFlux after spending years watching creators lose hours to manual editing. Built the platform he wished existed."
 }
