@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
-import { ConciergeChat } from '@/components/concierge/concierge-chat';
+import { CollabChat } from '@/components/collab/collab-chat';
 
 export function GuidePanel() {
   const { isOpen, close, contextHint } = useGuide();
@@ -62,7 +62,7 @@ export function GuidePanel() {
 
           {/* Chat */}
           <div className="flex-1 min-h-0">
-            <ConciergeChat
+            <CollabChat
               embedded
               currentSpec={{}}
               planTier={planTier ?? undefined}

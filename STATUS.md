@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.913 (Cursor — feat(cpd-489): rename concierge → collab; new lib/routes/collab.js + lib/services/collab.js; /concierge/* 301 redirects to /collab/*; app/collab page; CollabChat + portal-status components; api.ts chatWithCollab; sidebar iconFor /collab; feature_gate collab key; backward-compat concierge feature key kept)
 **Last Updated:** 2026-06-01 v1.0.912 (Cursor — fix(cpd-324): jobs_c1.js was importing lib/queue.js (queue name auraflux:pipeline — colon banned by BullMQ v5) instead of lib/queue/index.js (queue name pipeline — no colon); enqueue silently failed so jobs were created in DB but never ran)
 **Last Updated:** 2026-06-01 v1.0.911 (Cursor — fix(marketing): GITHUB_API_TOKEN added to .env.example; commitToGit() now throws + Sentry alert on missing token instead of silent warn+return)
 **Last Updated:** 2026-06-01 v1.0.910 (Cursor — fix(ffmpeg): ffmpeg_utils.js Docker wrapper is macOS-only — use system ffmpeg on Linux/Render; darwin check guards wrapper; health check was returning 503 blocking all deploys since CPD-479)
