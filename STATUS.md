@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.919 (Cursor — fix(review): aider_session_review.sh broken pipe + integer bugs — grep -qF here-string replaces echo|grep; chat widget grep -c fallback separated from $() capture)
 **Last Updated:** 2026-06-01 v1.0.916 (Claude Code — fix(cms): remove duplicate field names in config.yml — final_cta_headline/sub and hero_headline/sub)
 **Last Updated:** 2026-06-01 v1.0.914 (Claude Code — feat(cms): all pages wired with data-editable markers — about/system/pricing/blog/contact; config.yml updated)
 **Last Updated:** 2026-06-01 v1.0.913 (Claude Code — feat(cms): home page fully wired — 17 data-editable markers, home.json seeded, PAGES map restored, config.yml updated)

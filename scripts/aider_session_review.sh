@@ -243,7 +243,7 @@ _mktg_check() {
   content=$(cat /tmp/af_mktg_body.txt 2>/dev/null || echo "")
   if [ "$body" = "000" ]; then
     MKTG_STATUS="${MKTG_STATUS}  ❌ ${label}: UNREACHABLE\n"
-  elif [ -n "$expect" ] && ! echo "$content" | grep -q "$expect"; then
+  elif [ -n "$expect" ] && ! grep -qF "$expect" <<< "$content"; then
     MKTG_STATUS="${MKTG_STATUS}  ⚠️  ${label}: HTTP ${body} but missing expected content: ${expect}\n"
   else
     MKTG_STATUS="${MKTG_STATUS}  ✅ ${label}: HTTP ${body}\n"
@@ -265,8 +265,10 @@ else
   MKTG_STATUS="${MKTG_STATUS}  ⚠️  Roadmap page: HTTP ${ROADMAP_HTTP} (expected 3xx redirect)\n"
 fi
 # Chat widget injected on homepage?
-CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -c "af-chat-btn" || echo "0")
-if [ "$CHAT_WIDGET" -gt 0 ]; then
+# grep -c exits 1 when count=0; separate the fallback so we don't capture both outputs
+CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -c "af-chat-btn" 2>/dev/null) || true
+CHAT_WIDGET="${CHAT_WIDGET:-0}"
+if [ "${CHAT_WIDGET}" -gt 0 ] 2>/dev/null; then
   MKTG_STATUS="${MKTG_STATUS}  ✅ Chat widget injected on homepage\n"
 else
   MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget NOT found on homepage\n"
