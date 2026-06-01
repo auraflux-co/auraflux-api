@@ -1,5 +1,6 @@
 # AuraFlux — Status & Task Tracker
 **Last Updated:** 2026-06-01 v1.0.919 (Claude Code — fix(cms): Our Story hero+bottom CTAs wired — data-cta markers, JSON seeded, inject patched, config updated; fix duplicate home.html in PAGES)
+**Last Updated:** 2026-06-01 v1.0.920 (Cursor — fix(review): chat widget check string af-chat-btn→af-chat-bubble; roadmap 200 is now pass not warn; deleted merged branch feat/cpd-327-multi-brand)
 **Last Updated:** 2026-06-01 v1.0.919 (Cursor — fix(review): aider_session_review.sh broken pipe + integer bugs — grep -qF here-string replaces echo|grep; chat widget grep -c fallback separated from $() capture)
 **Last Updated:** 2026-06-01 v1.0.916 (Claude Code — fix(cms): remove duplicate field names in config.yml — final_cta_headline/sub and hero_headline/sub)
 **Last Updated:** 2026-06-01 v1.0.914 (Claude Code — feat(cms): all pages wired with data-editable markers — about/system/pricing/blog/contact; config.yml updated)

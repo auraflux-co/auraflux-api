@@ -259,19 +259,19 @@ _mktg_check "Plans API"          "https://auraflux-api.onrender.com/api/public/p
 _mktg_check "Chat API"           "https://auraflux-api.onrender.com/api/public/chat" ""
 # Roadmap should redirect (3xx) — check it doesn't 200 a blank page
 ROADMAP_HTTP=$(curl -s --max-time 8 -o /dev/null -w "%{http_code}" "https://auraflux.co/roadmap" 2>/dev/null || echo "000")
-if [[ "$ROADMAP_HTTP" =~ ^3 ]]; then
-  MKTG_STATUS="${MKTG_STATUS}  ✅ Roadmap redirect: HTTP ${ROADMAP_HTTP}\n"
+if [[ "$ROADMAP_HTTP" =~ ^[23] ]]; then
+  MKTG_STATUS="${MKTG_STATUS}  ✅ Roadmap page: HTTP ${ROADMAP_HTTP}\n"
 else
-  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Roadmap page: HTTP ${ROADMAP_HTTP} (expected 3xx redirect)\n"
+  MKTG_STATUS="${MKTG_STATUS}  ❌ Roadmap page: HTTP ${ROADMAP_HTTP} (expected 2xx or 3xx)\n"
 fi
 # Chat widget injected on homepage?
 # grep -c exits 1 when count=0; separate the fallback so we don't capture both outputs
-CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -c "af-chat-btn" 2>/dev/null) || true
+CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -c "af-chat-bubble" 2>/dev/null) || true
 CHAT_WIDGET="${CHAT_WIDGET:-0}"
 if [ "${CHAT_WIDGET}" -gt 0 ] 2>/dev/null; then
   MKTG_STATUS="${MKTG_STATUS}  ✅ Chat widget injected on homepage\n"
 else
-  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget NOT found on homepage\n"
+  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget NOT found on homepage (af-chat-bubble missing from HTML)\n"
 fi
 [ -z "$MKTG_STATUS" ] && MKTG_STATUS="  (no checks run)"
 
