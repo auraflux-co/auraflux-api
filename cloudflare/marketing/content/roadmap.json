@@ -1,0 +1,40 @@
+{
+  "hero_headline": "What's Coming to AuraFlux",
+  "hero_sub": "We ship fast. Features move from Future → Next → Now as engineering capacity opens. This is a live view of our product pipeline.",
+  "now": [
+    {
+      "tag": "Publishing",
+      "headline": "Subscription Platforms",
+      "description": "Direct publish to OnlyFans, Fansly, and Patreon using secure OAuth — same pipeline as YouTube and TikTok."
+    },
+    {
+      "tag": "Production",
+      "headline": "Compilation Carousel",
+      "description": "Auto-generate side-by-side clip grids, batch compilations, and image carousels from your short-form library."
+    }
+  ],
+  "next": [
+    {
+      "tag": "Production",
+      "headline": "Show & Film Engine",
+      "description": "Fair-use sourcing algorithm generating narrated video from TV and movie scene libraries."
+    },
+    {
+      "tag": "AI",
+      "headline": "AI Avatar Video",
+      "description": "On-camera presenter videos generated from your script — full control over voice, appearance, and background."
+    },
+    {
+      "tag": "Monetisation",
+      "headline": "Shoppable Video",
+      "description": "Embed product tags and tappable CTAs into short-form videos for social commerce on TikTok and Instagram."
+    }
+  ],
+  "future": [
+    {
+      "tag": "Monetisation",
+      "headline": "Paid Ad Creative",
+      "description": "Aspect ratio and copy overlay optimization for Meta, TikTok, and Google — production-ready ad formats built in."
+    }
+  ]
+}

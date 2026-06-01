@@ -535,6 +535,58 @@ export default {
       return Response.redirect(`https://app.auraflux.co${path}`, 302);
     }
 
+    // ── Sveltia CMS admin UI ────────────────────────────────────────────────
+    if (path === '/admin' || path === '/admin/') {
+      return new Response(`__ADMIN_INDEX__`, {
+        headers: addSecurityHeaders(new Headers({
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store',
+          // Relax CSP for CMS — needs to load unpkg scripts and connect to GitHub
+          'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;",
+        })),
+      });
+    }
+    if (path === '/admin/config.yml') {
+      return new Response(`__ADMIN_CONFIG__`, {
+        headers: { 'Content-Type': 'text/yaml; charset=utf-8', 'Cache-Control': 'no-store' },
+      });
+    }
+
+    // ── GitHub OAuth for Sveltia CMS ────────────────────────────────────────
+    if (path === '/oauth/authorize') {
+      const params = new URLSearchParams({
+        client_id:    'Ov23li5Z7PWAVPxBeKKv',
+        redirect_uri: 'https://auraflux.co/oauth/callback',
+        scope:        'repo,user',
+        state:        url.searchParams.get('state') || '',
+      });
+      return Response.redirect(`https://github.com/login/oauth/authorize?${params}`, 302);
+    }
+    if (path === '/oauth/callback') {
+      const code = url.searchParams.get('code');
+      if (!code) return new Response('Missing code', { status: 400 });
+      const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          client_id:     'Ov23li5Z7PWAVPxBeKKv',
+          client_secret: '1ce2e2eeb6385915ef68baf190944b31040fd81f',
+          code,
+          redirect_uri: 'https://auraflux.co/oauth/callback',
+        }),
+      });
+      const td = await tokenRes.json();
+      if (td.error) {
+        return new Response(`<script>window.opener&&window.opener.postMessage(JSON.stringify({error:"${td.error_description}"}),"https://auraflux.co");window.close();</script>`,
+          { headers: { 'Content-Type': 'text/html' } });
+      }
+      const token = td.access_token;
+      return new Response(
+        `<!doctype html><html><body><script>(function(){function r(e){window.opener.postMessage('authorization:github:success:{"token":"${token}","provider":"github"}',e.origin);}window.addEventListener("message",r,false);window.opener.postMessage("authorizing:github","https://auraflux.co");})()</script></body></html>`,
+        { headers: { 'Content-Type': 'text/html' } }
+      );
+    }
+
     // ── Service worker eviction ─────────────────────────────────────────────
     // Framer's exported HTML registers a service worker that caches .mjs modules
     // directly from assets.auraflux.co. When those cached modules load alongside
