@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.896 (Cursor — test(CPD-475): 24-case Jest suite for pipeline_routing.js; Jira CPD-475 created+Done; Portal Pipeline Confluence updated to v14 with clip-only model; HOW: Pipeline Routing & Clean Path Registry page created)
 **Last Updated:** 2026-06-01 v1.0.895 (Cursor — feat(CPD-486): clean path registry — lib/pipeline_routing.js single source of truth; 19-case validator blocks commits on routing breaks; run_11 routing pre-flight + save_clean_path on grade=100; pre-commit hook wired)
 **Last Updated:** 2026-06-01 v1.0.894 (Claude Code — feat(marketing): Sveltia CMS setup — /admin editor, GitHub OAuth, config.yml for all pages, content JSON files)
 **Last Updated:** 2026-06-01 v1.0.894 (Cursor — fix(CPD-486): portal workers now spec-accurate before E2E run — format:longform no longer forces vertical_reel; streamer field wired to order.inputs.streamer; chrome.showName added to fallback chain; portal3a Gemini prompt distinguishes clip-only vs broadcast; submit_job sends format field)
