@@ -44,5 +44,6 @@
     "cta_label": "Request Managed Plan",
     "image_url": "/cf-assets/marketing/images/plan-managed.png"
   },
-  "credit_note": "Running low mid-month? Extra Credit Packs are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades."
+  "credit_note": "Running low mid-month? Extra Credit Packs are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.",
+  "comparison_title": "Implementation &amp; Feature Comparison"
 }

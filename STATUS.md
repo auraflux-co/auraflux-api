@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.914 (Claude Code — feat(cms): all pages wired with data-editable markers — about/system/pricing/blog/contact; config.yml updated)
 **Last Updated:** 2026-06-01 v1.0.913 (Claude Code — feat(cms): home page fully wired — 17 data-editable markers, home.json seeded, PAGES map restored, config.yml updated)
 **Last Updated:** 2026-06-01 v1.0.916 (Cursor — feat(cpd-490): App CMS hybrid editor — 025_app_content.sql migration, lib/routes/app_content.js CRUD API, app/src/app/(app)/admin/content/page.tsx superadmin editor UI, app/src/lib/app-content.ts resolver helper, app/src/lib/api.ts helpers, sidebar nav link, test/app_content.test.js; CPD-488 UI/UX redesign agent running in parallel; Post Everywhere OOM verification job agent running)
 

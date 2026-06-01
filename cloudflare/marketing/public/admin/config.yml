@@ -91,8 +91,16 @@ collections:
           - { label: "Founder Name", name: founder_name, widget: string }
           - { label: "Founder Role", name: founder_role, widget: string }
           - { label: "Founder Bio", name: founder_bio, widget: text }
+          - { label: "Hero Eyebrow", name: hero_eyebrow, widget: string, default: "Our Story" }
+          - { label: "Mission Title", name: mission_title, widget: string }
+          - { label: "Diff Section Title", name: diff_title, widget: string }
+          - { label: "Diff Section Subtitle", name: diff_sub, widget: string }
+          - { label: "Team Title", name: team_title, widget: string }
+          - { label: "Team Subtitle", name: team_sub, widget: string }
           - { label: "CTA Headline", name: cta_headline, widget: string }
           - { label: "CTA Subtext", name: cta_sub, widget: string }
+          - { label: "Hero Headline", name: hero_headline, widget: string }
+          - { label: "Hero Subtext", name: hero_sub, widget: text }
 
   # ── Our System (/our-system) ───────────────────────────────────────────
   - name: our_system
@@ -104,6 +112,16 @@ collections:
         fields:
           - { label: "Hero Headline", name: hero_headline, widget: string }
           - { label: "Hero Subtext", name: hero_sub, widget: text }
+          - { label: "Pipeline Title", name: pipeline_title, widget: string }
+          - { label: "Pipeline Subtitle", name: pipeline_sub, widget: string }
+          - { label: "Content Types Title", name: content_types_title, widget: string }
+          - { label: "Content Types Subtitle", name: content_types_sub, widget: string }
+          - { label: "Features Title", name: features_title, widget: string }
+          - { label: "Features Subtitle", name: features_sub, widget: string }
+          - { label: "Credits Title", name: credits_title, widget: string }
+          - { label: "Credits Body", name: credits_body, widget: text }
+          - { label: "Publishing Title", name: publish_title, widget: string }
+          - { label: "Publishing Subtitle", name: publish_sub, widget: string }
           - label: "Pipeline Portals"
             name: portals
             widget: list
@@ -130,6 +148,7 @@ collections:
         fields:
           - { label: "Hero Headline", name: hero_headline, widget: string }
           - { label: "Hero Subtext", name: hero_sub, widget: text }
+          - { label: "Comparison Table Title", name: comparison_title, widget: string }
           - label: "Operate Plan"
             name: operate
             widget: object
@@ -206,6 +225,10 @@ collections:
         fields:
           - { label: "Hero Headline", name: hero_headline, widget: string }
           - { label: "Hero Subtext", name: hero_sub, widget: text }
+          - { label: "Form Title", name: form_title, widget: string, default: "Send a message" }
+          - { label: "Channels Title", name: channels_title, widget: string, default: "Other ways to reach us" }
+          - { label: "FAQ Eyebrow", name: faq_eyebrow, widget: string, default: "FAQ" }
+          - { label: "FAQ Title", name: faq_title, widget: string, default: "Common Questions" }
           - label: "FAQ"
             name: faq
             widget: list
@@ -223,6 +246,7 @@ collections:
         fields:
           - { label: "Page Headline", name: hero_headline, widget: string }
           - { label: "Page Subtext", name: hero_sub, widget: text }
+          # hero_headline and hero_sub are now wired to data-editable markers
           - label: "Posts"
             name: posts
             widget: list
