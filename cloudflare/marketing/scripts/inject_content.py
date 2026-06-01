@@ -31,8 +31,9 @@ def patch_editables(html, data):
             return m.group(0)
         return before + str(val) + after
 
+    # Only match content up to 2000 chars to avoid greedy cross-element matches
     return re.sub(
-        r'data-editable="([^"]+)"([^>]*>)([\s\S]*?)(</[a-z0-9]+>)',
+        r'data-editable="([^"]+)"([^>]*>)([^<]{0,2000})(</[a-z0-9]+>)',
         replacer,
         html
     )
@@ -110,8 +111,8 @@ def patch_seo(html, meta):
 
 
 # ── Page → content mapping ────────────────────────────────────────────────────
+# NOTE: home.html has no data-editable markers — skip it to avoid regex corruption
 PAGES = {
-    'home.html':              ('home',       None),
     'about.html':             ('our-story',  None),
     'system.html':            ('our-system', None),
     'pricing.html':           ('plans',      None),
