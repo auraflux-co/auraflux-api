@@ -112,7 +112,6 @@ def patch_seo(html, meta):
 # ── Page → content mapping ────────────────────────────────────────────────────
 PAGES = {
     'home.html':              ('home',       None),
-    'home.html':              ('home',       None),
     'about.html':             ('our-story',  None),
     'system.html':            ('our-system', None),
     'pricing.html':           ('plans',      None),
@@ -175,7 +174,40 @@ for filename, (content_key, extra_patch) in PAGES.items():
                     html
                 )
 
-    # 3. Page-specific structural patches
+    # 3. CTA patches
+    if content_key == 'our-story':
+        html = patch_ctas(html, data, {
+            'hero_cta':             ('hero_cta_label',           'hero_cta_url',           'hero_cta_style'),
+            'hero_cta_secondary':   ('hero_cta_secondary_label', 'hero_cta_secondary_url', 'hero_cta_secondary_style'),
+            'bottom_cta':           ('bottom_cta_label',         'bottom_cta_url',         'bottom_cta_style'),
+            'bottom_cta_secondary': ('bottom_cta_secondary_label','bottom_cta_secondary_url','bottom_cta_secondary_style'),
+        })
+    if content_key in ('our-system', 'plans', 'home'):
+        flat = {}
+        for k, v in data.items():
+            if isinstance(v, dict):
+                for sk, sv in v.items():
+                    flat[f'{k}.{sk}'] = sv
+            else:
+                flat[k] = v
+        if content_key == 'our-system':
+            html = patch_ctas(html, flat, {
+                'hero_cta':   ('hero_cta_label',   'hero_cta_url',   'hero_cta_style'),
+                'bottom_cta': ('bottom_cta_label', 'bottom_cta_url', 'bottom_cta_style'),
+            })
+        if content_key == 'plans':
+            html = patch_ctas(html, flat, {
+                'operate_cta': ('operate.cta_label', 'operate.cta_url', 'operate.cta_style'),
+                'guided_cta':  ('guided.cta_label',  'guided.cta_url',  'guided.cta_style'),
+                'managed_cta': ('managed.cta_label', 'managed.cta_url', 'managed.cta_style'),
+            })
+        if content_key == 'home':
+            html = patch_ctas(html, data, {
+                'hero_cta':   ('cta_primary_label', 'cta_primary_url', 'cta_primary_style'),
+                'final_cta':  ('final_cta_label',   'final_cta_url',   'final_cta_style'),
+            })
+
+    # 4. Page-specific structural patches
     if extra_patch:
         html = extra_patch(html, data)
 
