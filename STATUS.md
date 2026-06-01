@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.912 (Cursor — fix(cpd-324): jobs_c1.js was importing lib/queue.js (queue name auraflux:pipeline — colon banned by BullMQ v5) instead of lib/queue/index.js (queue name pipeline — no colon); enqueue silently failed so jobs were created in DB but never ran)
 **Last Updated:** 2026-06-01 v1.0.911 (Cursor — fix(marketing): GITHUB_API_TOKEN added to .env.example; commitToGit() now throws + Sentry alert on missing token instead of silent warn+return)
 **Last Updated:** 2026-06-01 v1.0.910 (Cursor — fix(ffmpeg): ffmpeg_utils.js Docker wrapper is macOS-only — use system ffmpeg on Linux/Render; darwin check guards wrapper; health check was returning 503 blocking all deploys since CPD-479)
 **Last Updated:** 2026-06-01 v1.0.909 (Cursor — chore: upload 60 test clips (20 Twitch/YouTube/Kick) to R2 video_inventory/ folder; manifest.json updated with r2_url per clip; scripts/upload_video_inventory.js added; Confluence Portal Pipeline v16 + CPD-487 comment document inventory location at https://assets.auraflux.co/video_inventory/)
