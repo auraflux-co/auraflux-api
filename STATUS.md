@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.907 (Claude Code — feat(marketing): Cloudflare Web Analytics token set — 10041c40a8b64f7d9818e992e773ea6d)
 **Last Updated:** 2026-06-01 v1.0.907 (Cursor — feat(CPD-479): FFmpeg single-pass portrait+chrome, -threads 2 on all FFmpeg calls, assembly semaphore (one job at a time on 512MB Render))
 **Last Updated:** 2026-06-01 v1.0.906 (Claude Code — fix(marketing): robots.txt + sitemap.xml as static files in CF Pages deploy — worker route was being intercepted by CF edge)
 **Last Updated:** 2026-06-01 v1.0.905 (Claude Code — fix(marketing): move blog post build to separate script to fix deploy.sh heredoc syntax error)
