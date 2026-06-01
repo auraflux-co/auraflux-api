@@ -476,12 +476,15 @@ SITEMAP_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
   <url><loc>https://auraflux.co/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>"""
 
+ROUTES_JSON = b'{"version":1,"include":["/*"],"exclude":[]}'
+
 body = (
-    part_field('manifest', '{"robots.txt":{"type":"text/plain"},"sitemap.xml":{"type":"application/xml"}}')
+    part_field('manifest', '{"robots.txt":{"type":"text/plain"},"sitemap.xml":{"type":"application/xml"},"_routes.json":{"type":"application/json"}}')
     + part_field('branch', 'main')
     + part_file('_worker.js', '_worker.js', 'application/javascript', worker_data)
     + part_file('robots.txt', 'robots.txt', 'text/plain', ROBOTS_TXT)
     + part_file('sitemap.xml', 'sitemap.xml', 'application/xml', SITEMAP_XML)
+    + part_file('_routes.json', '_routes.json', 'application/json', ROUTES_JSON)
     + b'--' + boundary + b'--\r\n'
 )
 
