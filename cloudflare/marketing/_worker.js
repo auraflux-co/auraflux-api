@@ -483,6 +483,11 @@ export default {
       return handleContactForm(request);
     }
 
+    // ── /pricing → /plans canonical redirect ──────────────────────────────
+    if (path === '/pricing') {
+      return Response.redirect('https://auraflux.co/plans', 301);
+    }
+
     // ── Pages served directly from worker (no Framer dependency) ──────────
     if (PAGES[path]) {
       // CPD-402: attempt to hydrate with DB-backed dynamic content (5-min cache)

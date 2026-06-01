@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.889 (Claude Code — fix(marketing): /pricing 301 redirect to /plans; operate image object-position crops text)
 **Last Updated:** 2026-06-01 v1.0.890 (Cursor — fix(qa): source_fit pre-flight + branding_config grader check + claude_ux_observe overhaul; Gemini templates + 20-clip inventory in run_11)
 **Last Updated:** 2026-06-01 v1.0.887 (Claude Code — feat(marketing): plans page redesign — plan images from R2, prices restored 2.8rem matching proportional typography, all CTAs → /contact-us)
 **Last Updated:** 2026-05-31 v1.0.884 (Cursor — refactor(run11): replace weak Phase 0 templates with 6 Gemini-designed templates; refresh clip inventory with 20 cross-platform clips last 7 days; fix ROB_BRAND_ID + populate brand record with AuraFlux assets)
