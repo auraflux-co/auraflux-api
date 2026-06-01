@@ -1,0 +1,224 @@
+backend:
+  name: github
+  repo: auraflux-co/auraflux-api
+  branch: marketing
+  base_url: https://auraflux.co
+  auth_endpoint: /oauth/authorize
+
+media_folder: cloudflare/marketing/assets
+public_folder: /assets
+
+site_url: https://auraflux.co
+display_url: https://auraflux.co
+
+collections:
+
+  # ── Home page ──────────────────────────────────────────────────────────
+  - name: home
+    label: Home Page
+    files:
+      - name: home
+        label: Home Page Content
+        file: cloudflare/marketing/content/home.json
+        fields:
+          - { label: "Hero Headline", name: hero_headline, widget: string, hint: "Main heading — keep under 8 words" }
+          - { label: "Hero Subtext", name: hero_sub, widget: text, hint: "Subtitle below the headline" }
+          - { label: "Primary CTA Label", name: cta_primary_label, widget: string, default: "See How It Works" }
+          - { label: "Primary CTA URL", name: cta_primary_url, widget: string, default: "/our-system" }
+          - label: "Trusted By — Platform Quotes"
+            name: trusted_by
+            widget: list
+            fields:
+              - { label: Platform, name: platform, widget: string }
+              - { label: Handle, name: handle, widget: string }
+              - { label: Quote, name: quote, widget: string }
+          - label: "How It Works Steps"
+            name: steps
+            widget: list
+            fields:
+              - { label: Headline, name: headline, widget: string }
+              - { label: Body, name: body, widget: text }
+          - { label: "Final CTA Headline", name: final_cta_headline, widget: string }
+          - { label: "Final CTA Subtext", name: final_cta_sub, widget: string }
+          - { label: "Final CTA Button", name: final_cta_label, widget: string, default: "Start Producing" }
+
+  # ── Our Story (/our-story) ─────────────────────────────────────────────
+  - name: our_story
+    label: Our Story Page
+    files:
+      - name: our_story
+        label: Our Story Content
+        file: cloudflare/marketing/content/our-story.json
+        fields:
+          - { label: "Hero Headline", name: hero_headline, widget: string }
+          - { label: "Hero Subtext", name: hero_sub, widget: text }
+          - { label: "Mission — Why We Built This", name: mission_body, widget: markdown, hint: "The main narrative under Why We Built This" }
+          - { label: "Blockquote", name: blockquote, widget: string, hint: "The pull quote in the mission section" }
+          - label: "Stats"
+            name: stats
+            widget: list
+            fields:
+              - { label: Number, name: number, widget: string }
+              - { label: Label, name: label, widget: string }
+          - label: "What Makes AuraFlux Different — Cards"
+            name: diff_cards
+            widget: list
+            fields:
+              - { label: Icon, name: icon, widget: string, hint: "Emoji or symbol" }
+              - { label: Headline, name: headline, widget: string }
+              - { label: Body, name: body, widget: text }
+          - { label: "CTA Headline", name: cta_headline, widget: string }
+          - { label: "CTA Subtext", name: cta_sub, widget: string }
+
+  # ── Our System (/our-system) ───────────────────────────────────────────
+  - name: our_system
+    label: Our System Page
+    files:
+      - name: our_system
+        label: Our System Content
+        file: cloudflare/marketing/content/our-system.json
+        fields:
+          - { label: "Hero Headline", name: hero_headline, widget: string }
+          - { label: "Hero Subtext", name: hero_sub, widget: text }
+          - label: "Pipeline Portals"
+            name: portals
+            widget: list
+            fields:
+              - { label: Badge, name: badge, widget: string, hint: "e.g. P0" }
+              - { label: Name, name: name, widget: string }
+              - { label: Description, name: description, widget: text }
+              - { label: Tag, name: tag, widget: string, hint: "e.g. ALWAYS ON, OPTIONAL, QA GATE" }
+          - label: "Content Types"
+            name: content_types
+            widget: list
+            fields:
+              - { label: Icon, name: icon, widget: string }
+              - { label: Name, name: name, widget: string }
+              - { label: Description, name: description, widget: text }
+
+  # ── Plans (/plans) ─────────────────────────────────────────────────────
+  - name: plans
+    label: Plans Page
+    files:
+      - name: plans
+        label: Plans Content
+        file: cloudflare/marketing/content/plans.json
+        fields:
+          - { label: "Hero Headline", name: hero_headline, widget: string }
+          - { label: "Hero Subtext", name: hero_sub, widget: text }
+          - label: "Operate Plan"
+            name: operate
+            widget: object
+            fields:
+              - { label: Title, name: title, widget: string }
+              - { label: Subtitle, name: subtitle, widget: string }
+              - { label: Price, name: price, widget: string, hint: "e.g. $499" }
+              - { label: Credits line, name: credits, widget: string }
+              - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
+              - { label: CTA Label, name: cta_label, widget: string }
+          - label: "Guided Plan"
+            name: guided
+            widget: object
+            fields:
+              - { label: Title, name: title, widget: string }
+              - { label: Subtitle, name: subtitle, widget: string }
+              - { label: Price, name: price, widget: string }
+              - { label: Credits line, name: credits, widget: string }
+              - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
+              - { label: CTA Label, name: cta_label, widget: string }
+          - label: "Managed Plan"
+            name: managed
+            widget: object
+            fields:
+              - { label: Title, name: title, widget: string }
+              - { label: Subtitle, name: subtitle, widget: string }
+              - { label: Credits line, name: credits, widget: string }
+              - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
+              - { label: CTA Label, name: cta_label, widget: string }
+          - { label: "Credit Pack Footnote", name: credit_note, widget: text }
+
+  # ── Roadmap (/roadmap) ─────────────────────────────────────────────────
+  - name: roadmap
+    label: Roadmap Page
+    files:
+      - name: roadmap
+        label: Roadmap Content
+        file: cloudflare/marketing/content/roadmap.json
+        fields:
+          - { label: "Hero Headline", name: hero_headline, widget: string }
+          - { label: "Hero Subtext", name: hero_sub, widget: text }
+          - label: "Now — In Active Development"
+            name: now
+            widget: list
+            fields:
+              - { label: Tag, name: tag, widget: string, hint: "e.g. Publishing, Production" }
+              - { label: Headline, name: headline, widget: string }
+              - { label: Description, name: description, widget: text }
+          - label: "Next — Planned"
+            name: next
+            widget: list
+            fields:
+              - { label: Tag, name: tag, widget: string }
+              - { label: Headline, name: headline, widget: string }
+              - { label: Description, name: description, widget: text }
+          - label: "Future — Exploring"
+            name: future
+            widget: list
+            fields:
+              - { label: Tag, name: tag, widget: string }
+              - { label: Headline, name: headline, widget: string }
+              - { label: Description, name: description, widget: text }
+
+  # ── Contact Us (/contact-us) ───────────────────────────────────────────
+  - name: contact
+    label: Contact Page
+    files:
+      - name: contact
+        label: Contact Content
+        file: cloudflare/marketing/content/contact.json
+        fields:
+          - { label: "Hero Headline", name: hero_headline, widget: string }
+          - { label: "Hero Subtext", name: hero_sub, widget: text }
+          - label: "FAQ"
+            name: faq
+            widget: list
+            fields:
+              - { label: Question, name: question, widget: string }
+              - { label: Answer, name: answer, widget: text }
+
+  # ── Blog (/blog) ───────────────────────────────────────────────────────
+  - name: blog
+    label: Blog Page
+    files:
+      - name: blog
+        label: Blog Posts
+        file: cloudflare/marketing/content/blog.json
+        fields:
+          - { label: "Page Headline", name: hero_headline, widget: string }
+          - { label: "Page Subtext", name: hero_sub, widget: text }
+          - label: "Posts"
+            name: posts
+            widget: list
+            fields:
+              - { label: Tag, name: tag, widget: string, hint: "e.g. Guide, Platform, AI" }
+              - { label: Title, name: title, widget: string }
+              - { label: Description, name: description, widget: text }
+              - { label: Status, name: status, widget: string, default: "Coming soon" }
+              - { label: URL, name: url, widget: string, required: false, hint: "Leave blank if not published yet" }
+
+  # ── SEO — Global meta ──────────────────────────────────────────────────
+  - name: seo
+    label: SEO & Meta
+    files:
+      - name: seo
+        label: Page Meta Tags
+        file: cloudflare/marketing/content/seo.json
+        fields:
+          - label: Pages
+            name: pages
+            widget: list
+            fields:
+              - { label: Page, name: page, widget: string, hint: "e.g. home, plans, our-story" }
+              - { label: Title Tag, name: title, widget: string, hint: "Shown in browser tab and Google" }
+              - { label: Meta Description, name: description, widget: text, hint: "150-160 chars. Shown in Google search results." }
+              - { label: OG Image URL, name: og_image, widget: string, required: false }

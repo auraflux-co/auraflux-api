@@ -328,6 +328,25 @@ if '__PAGE_ROADMAP_CONTENT__' in build:
 if '__PAGE_DEVELOPER_API__' in build:
     build = build.replace('__PAGE_DEVELOPER_API__', developer_api)
 
+# ── Inject admin UI and config ────────────────────────────────────────────────
+admin_index = read_shell('../public/admin/index.html') if os.path.isfile(os.path.join(shell, '../public/admin/index.html')) else ''
+if not admin_index:
+    admin_index_path = os.path.join(os.path.dirname(shell), 'public/admin/index.html')
+    if os.path.isfile(admin_index_path):
+        admin_index = open(admin_index_path, encoding='utf-8').read().strip()
+        print(f"  ✓ Injected admin/index.html ({len(admin_index):,} chars)")
+
+admin_config = ''
+admin_config_path = os.path.join(os.path.dirname(shell), 'public/admin/config.yml')
+if os.path.isfile(admin_config_path):
+    admin_config = open(admin_config_path, encoding='utf-8').read().strip()
+    print(f"  ✓ Injected admin/config.yml ({len(admin_config):,} chars)")
+
+if '__ADMIN_INDEX__' in build and admin_index:
+    build = build.replace('__ADMIN_INDEX__', js_escape(admin_index))
+if '__ADMIN_CONFIG__' in build and admin_config:
+    build = build.replace('__ADMIN_CONFIG__', js_escape(admin_config))
+
 with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)
 PYEOF

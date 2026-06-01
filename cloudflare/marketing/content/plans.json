@@ -1,0 +1,45 @@
+{
+  "hero_headline": "Match Your Team's Capability",
+  "hero_sub": "Choose the path that fits your current operational setup. All plans include the full AuraFlux automated production pipeline.",
+  "operate": {
+    "title": "DIY / API",
+    "subtitle": "Automated processing via self-serve dashboard & API access only.",
+    "price": "$499",
+    "credits": "50 credits/month · Self-serve instant checkout",
+    "features": [
+      "Full API access & raw endpoints",
+      "Comprehensive developer documentation",
+      "Self-hosted integration control",
+      "Community & standard support"
+    ],
+    "cta_label": "Get API Access"
+  },
+  "guided": {
+    "title": "Collab Assist",
+    "subtitle": "Complete platform toolkit plus Gemini-backed Collab AI workspace assistance.",
+    "price": "$999",
+    "credits": "200 credits/month · Self-serve subscription upgrade",
+    "features": [
+      "Everything in Operate",
+      "Interactive in-app flows",
+      "Collab-powered live visual guidance",
+      "Visual drag-and-drop workflow builders",
+      "Automated operational threshold alerts"
+    ],
+    "cta_label": "Start Guided Setup"
+  },
+  "managed": {
+    "title": "Done-For-You",
+    "subtitle": "Full Collab AI platform plus a dedicated human account manager.",
+    "credits": "1000+ credits/month · Custom onboarding & sales intake",
+    "features": [
+      "Everything in Guided",
+      "Dedicated Account Manager",
+      "Custom end-to-end workflow builds",
+      "Priority support with custom SLAs",
+      "Unlimited credits"
+    ],
+    "cta_label": "Request Managed Plan"
+  },
+  "credit_note": "Running low mid-month? Extra Credit Packs are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades."
+}
