@@ -1,9 +1,10 @@
 'use client';
 /**
- * /myjobs/[jobId] — Job detail + portal pipeline progress (CPD-98)
+ * /myjobs/[jobId] — Job detail (CPD-98, CPD-488)
  *
- * Polls GET /jobs/:jobId every 5s while the job is active.
- * Renders a portal timeline with per-portal pass/fail/pending status.
+ * Full redesign: friendly 4-stage stepper, compact spec strip, status heroes
+ * for every state, collapsed admin pipeline detail, horizontal platform cards.
+ * Every section conditionally renders — only visible if data exists.
  */
 
 import { useEffect, useState, useCallback, useTransition } from 'react';
@@ -13,31 +14,22 @@ import Link from 'next/link';
 import { buttonVariants, Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { formatUserError } from '@/lib/job-labels';
-import { getJobDetail, operatorJobAction, saveJobAsTemplate, approveAndPublish, type Job, type PortalStatus, type OperatorAction, type WizardConfig, type PublishResult } from '@/lib/api';
+import {
+  getJobDetail, operatorJobAction, saveJobAsTemplate, approveAndPublish,
+  type Job, type OperatorAction,
+} from '@/lib/api';
 import { SaveTemplateDialog, type SaveTemplateOptions } from '@/components/jobs/save-template-dialog';
 import { labelForContentType } from '@/lib/content-types';
 import { useRole } from '@/hooks/use-role';
+
+// ── Constants ──────────────────────────────────────────────────────────────────
 
 const PLATFORM_ICONS: Record<string, string> = {
   youtube:   '▶',
   tiktok:    '♪',
   instagram: '◎',
-};
-
-const ADDON_LABELS: Record<string, string> = {
-  tts:              'AI Voiceover',
-  heygen:           'AI Avatar',
-  shoppable:        'Shoppable tagging',
-  wan:              'Video generation',
-  clipSourcing:     'Scene selection',
-  showCommentary:   'Narrative narration',
-  branding:         'Brand overlay',
-  imageBurn:        'Image burn',
-  dynamicOverlays:  'Dynamic overlays',
-  thumbnailApproval:'Thumbnail',
 };
 
 const PORTAL_LABELS: Record<string, string> = {
@@ -51,26 +43,47 @@ const PORTAL_LABELS: Record<string, string> = {
   portal5:  'P5 — Delivery',
 };
 
-const PORTAL_DISPLAY_NAMES: Record<string, string> = {
-  portal0:  'Checking your content',
-  portal1:  'Writing your script',
-  portal1b: 'Generating video',
-  portal2:  'Assembling your video',
-  portal3a: 'Quality check',
-  portal3b: 'Creative review',
-  portal4:  'Applying brand & effects',
-  portal5:  'Publishing',
-};
-
 const ACTIVE_STATUSES = new Set(['queued', 'running']);
 
-const FEATURE_LABELS: Record<string, string> = {
-  script:      'Script generation',
-  tts:         'TTS narration',
-  commentary:  'Show commentary',
-  generation:  'Video generation',
-  burn_images: 'Image overlays',
-};
+const FRIENDLY_STAGES: ReadonlyArray<{ id: string; label: string; portals: readonly string[] }> = [
+  { id: 'source',  label: 'Sourcing content',   portals: ['portal0'] },
+  { id: 'script',  label: 'Writing the script',  portals: ['portal1', 'portal1b'] },
+  { id: 'build',   label: 'Building the video',  portals: ['portal2', 'portal3a', 'portal3b', 'portal4'] },
+  { id: 'publish', label: 'Publishing',           portals: ['portal5'] },
+];
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+type StageStatus = 'pass' | 'running' | 'failed' | 'hold' | 'pending';
+
+function getStageStatus(stagePortals: readonly string[], portalReports: Job['portalReports']): StageStatus {
+  if (!portalReports || portalReports.length === 0) return 'pending';
+  const reports = portalReports.filter((r) => stagePortals.includes(r.portal));
+  if (reports.length === 0) return 'pending';
+  if (reports.some((r) => r.status === 'running')) return 'running';
+  if (reports.some((r) => r.status === 'failed'))  return 'failed';
+  if (reports.some((r) => r.status === 'hold'))    return 'hold';
+  if (reports.every((r) => r.status === 'pass' || r.status === 'skipped')) return 'pass';
+  return 'pending';
+}
+
+function stageCircle(status: StageStatus, index: number) {
+  const base = 'relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 shrink-0';
+  const style =
+    status === 'pass'    ? 'bg-emerald-500 border-emerald-500 text-white' :
+    status === 'running' ? 'bg-blue-500 border-blue-500 text-white animate-pulse' :
+    status === 'failed'  ? 'bg-red-500 border-red-500 text-white' :
+    status === 'hold'    ? 'bg-amber-500 border-amber-500 text-white' :
+    'bg-background border-muted/60 text-muted-foreground';
+  const icon =
+    status === 'pass'    ? '✓' :
+    status === 'failed'  ? '✕' :
+    status === 'running' ? '…' :
+    String(index + 1);
+  return { className: cn(base, style), icon };
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function ScriptCard({ script }: { script: string }) {
   const [open, setOpen] = useState(false);
@@ -98,118 +111,74 @@ function ScriptCard({ script }: { script: string }) {
   );
 }
 
-function WizardConfigReview({ wc }: { wc: WizardConfig }) {
-  const ff = !wc.formFactor
-    ? null
-    : wc.formFactor === 'short' || wc.templateId === 'short-form'
-      ? 'Short-form (9:16)'
-      : 'Long-form (16:9)';
-  const entryLabels: Record<string, string> = { fetch: 'URL fetch', upload: 'File upload', create: 'Generated' };
-  const allBadges = [
-    ...(wc.addOns ?? []).map((a) => ADDON_LABELS[a] ?? a),
-    ...(wc.activeFeatures ?? []).map((f) => FEATURE_LABELS[f] ?? f),
-  ];
+function SpecStrip({ job }: { job: Job }) {
+  const wc  = job.wizardConfig;
+  const ff  = !wc?.formFactor ? null : wc.formFactor === 'short' ? 'Short-form' : 'Long-form';
+  const parts = [
+    wc?.contentType ? labelForContentType(wc.contentType) : null,
+    ff,
+    job.platforms.length > 0
+      ? job.platforms.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')
+      : null,
+    new Date(job.createdAt).toLocaleDateString(),
+  ].filter(Boolean) as string[];
+
+  const topic = wc?.topic
+    ? (wc.topic.length > 50 ? wc.topic.slice(0, 50) + '…' : wc.topic)
+    : null;
+
+  const all = topic ? [topic, ...parts] : parts;
+  if (all.length === 0) return null;
+
   return (
-    <div className="space-y-3 text-sm">
-      <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-        {ff != null && (
-          <>
-            <span className="text-muted-foreground">Format</span>
-            <span>{ff}</span>
-          </>
-        )}
-        {wc.entryType && (
-          <>
-            <span className="text-muted-foreground">Source</span>
-            <span>{entryLabels[wc.entryType] ?? wc.entryType}</span>
-          </>
-        )}
-        {wc.contentType && (
-          <>
-            <span className="text-muted-foreground">Content type</span>
-            <span>{labelForContentType(wc.contentType)}</span>
-          </>
-        )}
-        {wc.topic && (
-          <>
-            <span className="text-muted-foreground">Topic</span>
-            <span className="truncate" title={wc.topic}>{wc.topic}</span>
-          </>
-        )}
-        {wc.tone && (
-          <>
-            <span className="text-muted-foreground">Tone</span>
-            <span className="capitalize">{wc.tone}</span>
-          </>
-        )}
-        {wc.durationMins != null && wc.contentType !== 'clips' && (
-          <>
-            <span className="text-muted-foreground">Duration</span>
-            <span>{wc.durationMins} min</span>
-          </>
-        )}
-        {wc.planTier && (
-          <>
-            <span className="text-muted-foreground">Plan tier</span>
-            <span className="capitalize">{wc.planTier}</span>
-          </>
-        )}
-        {wc.creditCost != null && (
-          <>
-            <span className="text-muted-foreground">Credit cost</span>
-            <span>{wc.creditCost} credits</span>
-          </>
-        )}
-        <span className="text-muted-foreground">Publish</span>
-        <span className="capitalize">
-          {wc.publishMode}{wc.scheduledAt ? ` — ${new Date(wc.scheduledAt).toLocaleDateString()}` : ''}
-        </span>
+    <p className="text-xs text-muted-foreground/70 mt-1.5 truncate">
+      {all.join(' · ')}
+    </p>
+  );
+}
+
+function FriendlyStepper({ portalReports }: { portalReports: Job['portalReports'] }) {
+  const activeLabel = FRIENDLY_STAGES.find((s) => {
+    const st = getStageStatus(s.portals, portalReports);
+    return st === 'running' || st === 'hold';
+  })?.label ?? null;
+
+  return (
+    <div className="space-y-2.5">
+      <div className="relative">
+        <div className="absolute top-4 left-[12.5%] right-[12.5%] h-0.5 bg-muted/40 rounded-full" />
+        <div className="relative grid grid-cols-4 text-center gap-1">
+          {FRIENDLY_STAGES.map((stage, i) => {
+            const status = getStageStatus(stage.portals, portalReports);
+            const { className, icon } = stageCircle(status, i);
+            return (
+              <div key={stage.id} className="flex flex-col items-center gap-1.5">
+                <div className={className}>{icon}</div>
+                <p className={cn(
+                  'text-[10px] leading-tight font-medium',
+                  status === 'running' ? 'text-blue-500 dark:text-blue-400' :
+                  status === 'pass'    ? 'text-emerald-600 dark:text-emerald-400' :
+                  status === 'failed'  ? 'text-red-600 dark:text-red-400' :
+                  status === 'hold'    ? 'text-amber-600 dark:text-amber-400' :
+                  'text-muted-foreground',
+                )}>
+                  {stage.label}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      {allBadges.length > 0 && (
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Production features</p>
-          <div className="flex flex-wrap gap-1">
-            {allBadges.map((label) => (
-              <Badge key={label} variant="outline" className="text-[10px] px-1.5">
-                {label}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-      {wc.platforms.length > 0 && (
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Platforms</p>
-          <div className="flex gap-1">
-            {wc.platforms.map((p) => (
-              <Badge key={p} variant="secondary" className="text-[10px] capitalize px-1.5">
-                {PLATFORM_ICONS[p] ?? '•'} {p}
-              </Badge>
-            ))}
-          </div>
-        </div>
+      {activeLabel && (
+        <p className="text-xs text-center text-muted-foreground">
+          Working on: <span className="font-medium text-foreground">{activeLabel}</span>
+        </p>
       )}
     </div>
   );
 }
 
-function statusColor(s: PortalStatus) {
-  if (s === 'pass')    return 'bg-green-500';
-  if (s === 'running') return 'bg-blue-500 animate-pulse';
-  if (s === 'hold')    return 'bg-yellow-500';
-  if (s === 'failed')  return 'bg-destructive';
-  if (s === 'skipped') return 'bg-muted/20';
-  return 'bg-muted/40'; // pending
-}
-
-function JobStatusBadge({ status }: { status: string }) {
-  const variant =
-    status === 'complete' ? 'default' :
-    status === 'failed'   ? 'destructive' :
-    status === 'held'     ? 'secondary' :
-    'outline';
-  return <Badge variant={variant} className="capitalize">{status}</Badge>;
-}
+// ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -293,7 +262,6 @@ export default function JobDetailPage() {
     fetchJob();
   }, [fetchJob, isLoaded]);
 
-  // Poll every 5s while job is active
   useEffect(() => {
     if (!job || !ACTIVE_STATUSES.has(job.status)) return;
     const timer = setInterval(fetchJob, 5000);
@@ -326,27 +294,86 @@ export default function JobDetailPage() {
 
   if (!job) return null;
 
-  const isActive    = ACTIVE_STATUSES.has(job.status);
-  const isComplete  = job.status === 'complete';
-  const isStaged    = job.status === 'staged';
+  const isActive         = ACTIVE_STATUSES.has(job.status);
+  const isComplete       = job.status === 'complete';
+  const isStaged         = job.status === 'staged';
   const isReadyForReview = (isComplete || isStaged) && !!job.outputUrl;
-  const runningPortal = job.portalReports?.find((r) => r.status === 'running');
-  const passedCount   = job.portalReports?.filter((r) => r.status === 'pass').length ?? 0;
-  const totalPortals  = job.portalReports?.length ?? 0;
-  const avgScore      = job.portalReports && job.portalReports.filter((r) => r.score != null).length > 0
-    ? Math.round(job.portalReports.filter((r) => r.score != null).reduce((s, r) => s + (r.score ?? 0), 0) / job.portalReports.filter((r) => r.score != null).length)
+  const hasPortals       = (job.portalReports?.length ?? 0) > 0;
+  const avgScore         = job.portalReports && job.portalReports.filter((r) => r.score != null).length > 0
+    ? Math.round(
+        job.portalReports.filter((r) => r.score != null).reduce((s, r) => s + (r.score ?? 0), 0) /
+        job.portalReports.filter((r) => r.score != null).length,
+      )
     : null;
+  const publishedResults = (job.publishResults ?? []).filter((r) => r.status === 'published');
+  const jobHeading       = job.wizardConfig?.topic
+    ? job.wizardConfig.topic
+    : job.wizardConfig?.contentType
+      ? labelForContentType(job.wizardConfig.contentType)
+      : 'Video job';
+
+  // Pre-compute terminal state config outside JSX to avoid IIFE
+  type TerminalCfg = { border: string; from: string; dot: string; labelColor: string; label: string; desc: string };
+  const terminalCfg: TerminalCfg | null = (!isActive && !isReadyForReview) ? (() => {
+    const configs: Record<string, TerminalCfg> = {
+      published: {
+        border: 'border-violet-200 dark:border-violet-800',
+        from:   'from-violet-50/50 dark:from-violet-950/20',
+        dot:    'bg-violet-500',
+        labelColor: 'text-violet-700 dark:text-violet-400',
+        label: 'Published',
+        desc:  'Your video has been published to your connected platforms.',
+      },
+      failed: {
+        border: 'border-red-200 dark:border-red-800',
+        from:   'from-red-50/50 dark:from-red-950/20',
+        dot:    'bg-red-500',
+        labelColor: 'text-red-700 dark:text-red-400',
+        label: 'Failed',
+        desc:  isSuperAdmin
+          ? 'This job failed during production. Use operator actions below to retry or investigate.'
+          : 'Something went wrong during production. Please contact support if this persists.',
+      },
+      held: {
+        border: 'border-amber-200 dark:border-amber-800',
+        from:   'from-amber-50/40 dark:from-amber-950/15',
+        dot:    'bg-amber-400',
+        labelColor: 'text-amber-600 dark:text-amber-400',
+        label: 'On hold',
+        desc:  'This job is paused and waiting for operator action.',
+      },
+    };
+    return configs[job.status] ?? {
+      border: 'border-border',
+      from:   'from-muted/30',
+      dot:    'bg-muted-foreground',
+      labelColor: 'text-muted-foreground',
+      label: job.status,
+      desc:  '',
+    };
+  })() : null;
+
+  const scoreBadge = avgScore != null ? (
+    <span className={cn(
+      'text-xs font-bold px-2 py-0.5 rounded-full',
+      avgScore >= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' :
+      avgScore >= 60 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' :
+      'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+    )}>
+      {avgScore}/100
+    </span>
+  ) : null;
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-4 max-w-2xl">
 
-      {/* ── Building state hero ── */}
+      {/* ── Active / Building hero ── */}
       {isActive && (
-        <div className="rounded-xl border bg-gradient-to-b from-muted/40 to-background px-5 py-6 space-y-4">
+        <div className="rounded-xl border bg-gradient-to-b from-blue-50/50 to-background dark:from-blue-950/20 px-5 py-6 space-y-5">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse shrink-0" />
                 <span className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
                   {job.status === 'queued' ? 'Queued' : 'In production'}
                 </span>
@@ -354,140 +381,70 @@ export default function JobDetailPage() {
               <h1 className="text-xl font-semibold">
                 {job.status === 'queued' ? 'Getting ready…' : 'Building your video'}
               </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {job.status === 'queued'
-                  ? 'Your job is in the queue and will start shortly.'
-                  : runningPortal
-                    ? `Running ${(isSuperAdmin ? PORTAL_LABELS : PORTAL_DISPLAY_NAMES)[runningPortal.portal] ?? runningPortal.portal}`
-                    : 'Processing through the production pipeline.'}
-              </p>
+              <SpecStrip job={job} />
             </div>
             <Link href="/myjobs/active" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0')}>
               ← All jobs
             </Link>
           </div>
 
-          {/* Pipeline progress steps */}
-          {totalPortals > 0 && (
-            <div className="space-y-2">
-              {/* Progress bar */}
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-blue-500 transition-all duration-700"
-                  style={{ width: `${totalPortals > 0 ? Math.round((passedCount / totalPortals) * 100) : 0}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground text-right">{passedCount} of {totalPortals} stages complete</p>
-
-              {/* Step list */}
-              <div className="space-y-1.5 pt-1">
-                {job.portalReports!.map((report, i) => (
-                  <div key={report.portal} className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
-                    report.status === 'running' ? 'bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800' : '',
-                  )}>
-                    <div className={cn(
-                      'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0',
-                      report.status === 'pass'    ? 'bg-green-500 text-white' :
-                      report.status === 'running' ? 'bg-blue-500 text-white animate-pulse' :
-                      report.status === 'failed'  ? 'bg-destructive text-white' :
-                      report.status === 'skipped' ? 'bg-muted text-muted-foreground' :
-                      'bg-muted/60 text-muted-foreground',
-                    )}>
-                      {report.status === 'pass'    ? '✓' :
-                       report.status === 'failed'  ? '✕' :
-                       report.status === 'running' ? '…' :
-                       report.status === 'skipped' ? '—' :
-                       String(i + 1)}
-                    </div>
-                    <span className={cn(
-                      'text-sm flex-1',
-                      report.status === 'running' ? 'font-medium' : 'text-muted-foreground',
-                    )}>
-                      {(isSuperAdmin ? PORTAL_LABELS : PORTAL_DISPLAY_NAMES)[report.portal] ?? report.portal}
-                    </span>
-                    {report.score != null && (
-                      <span className={cn(
-                        'text-xs font-semibold tabular-nums',
-                        report.score >= 80 ? 'text-green-600' : report.score >= 60 ? 'text-yellow-600' : 'text-destructive',
-                      )}>
-                        {report.score}/100
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {totalPortals === 0 && (
+          {job.status === 'queued' ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground/40 animate-pulse" />
-              Pipeline initialising…
+              <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground/40 animate-pulse shrink-0" />
+              Your job is in the queue and will start shortly.
             </div>
+          ) : (
+            <FriendlyStepper portalReports={job.portalReports} />
           )}
         </div>
       )}
 
       {/* ── Ready for review hero ── */}
       {isReadyForReview && (
-        <div className="rounded-xl border-2 border-green-200 dark:border-green-800 bg-gradient-to-b from-green-50/50 to-background dark:from-green-950/20 px-5 py-6 space-y-4">
+        <div className="rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-b from-emerald-50/50 to-background dark:from-emerald-950/20 px-5 py-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">Ready for review</span>
-                {avgScore != null && (
-                  <span className={cn(
-                    'text-xs font-bold px-2 py-0.5 rounded-full',
-                    avgScore >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
-                    avgScore >= 60 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
-                    'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
-                  )}>
-                    {avgScore}/100
-                  </span>
-                )}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                  Ready for review
+                </span>
+                {scoreBadge}
               </div>
-              <h1 className="text-xl font-semibold">Your video is ready</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Review the output below, then approve and publish when ready.
-              </p>
+              <h1 className="text-xl font-semibold">{jobHeading}</h1>
+              <SpecStrip job={job} />
             </div>
             <Link href="/myjobs/history" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0')}>
               ← History
             </Link>
           </div>
 
-          {/* Video preview */}
-          {job.outputUrl && (
-            <div className="space-y-3">
-              <video
-                src={job.outputUrl}
-                controls
-                preload="metadata"
-                poster={job.thumbnailUrl ?? undefined}
-                className="w-full rounded-lg border bg-black aspect-video object-contain"
-              />
-            </div>
-          )}
+          <video
+            src={job.outputUrl!}
+            controls
+            preload="metadata"
+            poster={job.thumbnailUrl ?? undefined}
+            className="w-full rounded-lg border bg-black aspect-video object-contain"
+          />
 
-          {/* Review CTAs */}
           <div className="flex flex-col sm:flex-row gap-2">
             {job.status === 'staged' ? (
               <Button
                 size="sm"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={handleApprovePublish}
                 disabled={approving}
               >
-                {approving ? 'Publishing…' : `✓ Approve & publish to ${job.platforms.join(', ')}`}
+                {approving
+                  ? 'Publishing…'
+                  : `✓ Approve & publish${job.platforms.length > 0 ? ` to ${job.platforms.join(', ')}` : ''}`}
               </Button>
             ) : (
               <a
                 href={job.outputUrl!}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(buttonVariants({ size: 'sm' }), 'flex-1 text-center bg-green-600 hover:bg-green-700 text-white border-green-600')}
+                className={cn(buttonVariants({ size: 'sm' }), 'flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600')}
               >
                 ✓ Open video
               </a>
@@ -512,84 +469,154 @@ export default function JobDetailPage() {
             <p className="text-xs text-destructive bg-destructive/10 rounded px-3 py-2">{approveError}</p>
           )}
           {approveResult && (
-            <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 px-3 py-2 text-xs text-green-700 dark:text-green-300">
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
               ✓ Published. Check your platforms for live links.
             </div>
           )}
         </div>
       )}
 
-      {/* ── Standard (non-active, non-staged) header ── */}
-      {!isActive && !isReadyForReview && (
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold font-mono">{job.jobId}</h1>
-              <JobStatusBadge status={job.status} />
+      {/* ── Terminal state heroes (operator_review / published / failed / held) ── */}
+      {terminalCfg && (
+        <div className={cn('rounded-xl border-2 bg-gradient-to-b to-background px-5 py-6 space-y-4', terminalCfg.border, terminalCfg.from)}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className={cn('inline-block w-2 h-2 rounded-full shrink-0', terminalCfg.dot)} />
+                <span className={cn('text-xs font-semibold uppercase tracking-wide', terminalCfg.labelColor)}>
+                  {terminalCfg.label}
+                </span>
+                {scoreBadge}
+              </div>
+              <h1 className="text-xl font-semibold">{jobHeading}</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">{terminalCfg.desc}</p>
+              <SpecStrip job={job} />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {labelForContentType(job.contentType)} · {job.entryType} ·{' '}
-              {new Date(job.createdAt).toLocaleString()}
-            </p>
+            <Link href="/myjobs" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0')}>
+              ← Jobs
+            </Link>
           </div>
-          <Link href="/myjobs" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
-            ← Jobs
-          </Link>
+
+          {/* Customer CTA for failed */}
+          {job.status === 'failed' && !isSuperAdmin && (
+            <a
+              href="mailto:support@clipzworld.com"
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'border-red-200 text-red-700 dark:border-red-800 dark:text-red-400')}
+            >
+              Contact support →
+            </a>
+          )}
         </div>
       )}
 
-      <Separator />
-
-      {/* Portal pipeline — superadmin only (customers see pipeline progress while active only) */}
-      {!isActive && isSuperAdmin && (
-        <Card className="border-dashed">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Portal pipeline</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {(job.portalReports ?? []).map((report) => (
-              <div key={report.portal} className="flex items-center gap-3">
-                <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', statusColor(report.status))} />
-                <span className="text-sm flex-1">{PORTAL_LABELS[report.portal] ?? report.portal}</span>
+      {/* ── Admin pipeline detail — collapsed by default ── */}
+      {isSuperAdmin && hasPortals && (
+        <details className="rounded-xl border overflow-hidden group">
+          <summary className="flex items-center justify-between px-4 py-3 cursor-pointer select-none text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted/20 transition-colors list-none">
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+              Pipeline detail (admin)
+            </div>
+            {scoreBadge}
+          </summary>
+          <div className="px-4 py-3 border-t border-border/50 space-y-1.5 bg-muted/5">
+            {(job.portalReports ?? []).map((report, i) => (
+              <div key={report.portal} className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2',
+                report.status === 'pass'    ? 'bg-emerald-950/15 border border-emerald-900/20' :
+                report.status === 'failed'  ? 'bg-red-950/15 border border-red-900/20' :
+                report.status === 'hold'    ? 'bg-amber-950/15 border border-amber-900/20' :
+                'bg-muted/10',
+              )}>
+                <div className={cn(
+                  'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0',
+                  report.status === 'pass'    ? 'bg-emerald-500 text-white' :
+                  report.status === 'running' ? 'bg-blue-500 text-white animate-pulse' :
+                  report.status === 'failed'  ? 'bg-red-500 text-white' :
+                  report.status === 'hold'    ? 'bg-amber-500 text-white' :
+                  report.status === 'skipped' ? 'bg-muted text-muted-foreground' :
+                  'bg-muted/60 text-muted-foreground',
+                )}>
+                  {report.status === 'pass'    ? '✓' :
+                   report.status === 'failed'  ? '✕' :
+                   report.status === 'running' ? '…' :
+                   report.status === 'skipped' ? '—' :
+                   report.status === 'hold'    ? '!' :
+                   String(i + 1)}
+                </div>
+                <span className="text-xs font-mono flex-1 text-muted-foreground">
+                  {PORTAL_LABELS[report.portal] ?? report.portal}
+                </span>
                 {report.score != null && (
-                  <span className="text-xs text-muted-foreground">{report.score}/100</span>
+                  <span className={cn(
+                    'text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full',
+                    report.score >= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' :
+                    report.score >= 60 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' :
+                    'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+                  )}>
+                    {report.score}/100
+                  </span>
                 )}
                 <Badge
                   variant={report.status === 'pass' ? 'default' : report.status === 'failed' ? 'destructive' : 'outline'}
-                  className="text-[10px] capitalize px-1.5"
+                  className={cn('text-[10px] capitalize px-1.5', report.status === 'pass' ? 'bg-emerald-500 border-emerald-500' : '')}
                 >
                   {report.status}
                 </Badge>
               </div>
             ))}
-            {(!job.portalReports || job.portalReports.length === 0) && (
-              <p className="text-sm text-muted-foreground">Pipeline not yet started.</p>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+        </details>
       )}
 
-      {/* Thumbnail (non-review path, e.g. published) */}
+      {/* ── Output — thumbnail-first, non-review path ── */}
       {!isReadyForReview && job.outputUrl && (
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Output</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            <a
-              href={job.outputUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full')}
-            >
-              Download video
-            </a>
-            {job.thumbnailUrl && (
-              <img src={job.thumbnailUrl} alt="Thumbnail" className="w-full rounded-md border mt-2 max-h-48 object-cover" />
-            )}
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border overflow-hidden">
+          {job.thumbnailUrl ? (
+            <div className="relative">
+              <img src={job.thumbnailUrl} alt="Video thumbnail" className="w-full max-h-64 object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 flex gap-2">
+                <a
+                  href={job.outputUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(buttonVariants({ size: 'sm' }), 'flex-1 text-center bg-white text-black hover:bg-white/90 border-0')}
+                >
+                  ▶ Watch video
+                </a>
+                <a
+                  href={job.outputUrl}
+                  download
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'bg-black/40 border-white/30 text-white hover:bg-black/60 hover:text-white')}
+                >
+                  ↓
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="px-4 py-4 flex gap-2">
+              <a
+                href={job.outputUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ size: 'sm' }), 'flex-1 text-center')}
+              >
+                ▶ Watch video
+              </a>
+              <a
+                href={job.outputUrl}
+                download
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'flex-1 text-center')}
+              >
+                ↓ Download
+              </a>
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Publish copy */}
+      {/* ── Publish copy ── */}
       {job.publishCopy && Object.keys(job.publishCopy).length > 0 && (
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Publish copy</CardTitle></CardHeader>
@@ -646,90 +673,70 @@ export default function JobDetailPage() {
         </Card>
       )}
 
-      {/* Generated script — only shown when user selected script generation for this job */}
+      {/* ── Generated script ── */}
       {job.filledScript && job.wizardConfig?.activeFeatures?.includes('script') && (
         <ScriptCard script={job.filledScript} />
       )}
 
-      {/* Platforms */}
-      {job.platforms.length > 0 && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Platforms:</span>
-          {job.platforms.map((p) => (
-            <Badge key={p} variant="outline" className="capitalize text-xs">{p}</Badge>
-          ))}
+      {/* ── Published links — horizontal platform grid ── */}
+      {publishedResults.length > 0 && (
+        <div className="rounded-xl border-2 border-violet-200 dark:border-violet-800 bg-gradient-to-b from-violet-50/30 to-background dark:from-violet-950/15 overflow-hidden">
+          <div className="px-4 py-3 border-b border-violet-200/60 dark:border-violet-800/60 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-violet-500 shrink-0" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-400">
+              Published
+            </span>
+          </div>
+          <div className={cn(
+            'p-3 grid gap-2',
+            publishedResults.length === 1 ? 'grid-cols-1' :
+            publishedResults.length === 2 ? 'grid-cols-2' :
+            'grid-cols-3',
+          )}>
+            {publishedResults.map((r) => (
+              <div
+                key={r.platform}
+                className="flex flex-col gap-2.5 rounded-lg bg-violet-50/60 dark:bg-violet-950/25 border border-violet-100 dark:border-violet-900/40 px-3 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xl leading-none">{PLATFORM_ICONS[r.platform] ?? '•'}</span>
+                  <div>
+                    <p className="text-sm font-semibold capitalize">{r.platform}</p>
+                    {r.publishedAt && (
+                      <p className="text-[10px] text-muted-foreground">{new Date(r.publishedAt).toLocaleDateString()}</p>
+                    )}
+                  </div>
+                </div>
+                {r.driveUrl && (
+                  <a
+                    href={r.driveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(buttonVariants({ size: 'sm' }), 'w-full text-center bg-violet-600 hover:bg-violet-700 text-white border-0 text-xs')}
+                  >
+                    View live →
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Published links (CPD-112) */}
-      {job.publishResults && job.publishResults.filter((r) => r.status === 'published').length > 0 && (
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Published</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {job.publishResults.filter((r) => r.status === 'published').map((r) => (
-              <div key={r.platform} className="flex items-center justify-between">
-                <span className="text-sm capitalize">{PLATFORM_ICONS[r.platform] ?? '•'} {r.platform}</span>
-                <div className="flex items-center gap-2">
-                  {r.publishedAt && (
-                    <span className="text-xs text-muted-foreground">{new Date(r.publishedAt).toLocaleDateString()}</span>
-                  )}
-                  {r.driveUrl && (
-                    <a
-                      href={r.driveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-xs h-7 px-2')}
-                    >
-                      View ↗
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Job spec card — visible for all statuses so customer can see what is locked in (CPD-112) */}
-      {job.wizardConfig && (
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-sm">Job spec</CardTitle>
-                <p className="text-[10px] text-muted-foreground mt-0.5">What is locked in for this job</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {job.status === 'complete' && (
-                  savedAsTemplate ? (
-                    <Badge variant="default" className="text-[10px]">Saved as template</Badge>
-                  ) : (
-                    <Button size="sm" variant="outline" className="text-[10px] h-6 px-2" onClick={() => setShowSaveTemplate(true)} disabled={savingTemplate}>
-                      Save as template
-                    </Button>
-                  )
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <WizardConfigReview wc={job.wizardConfig} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Operator actions (CPD-104) */}
+      {/* ── Operator actions ── */}
       {isSuperAdmin && (
-        <Card className="border-dashed">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Operator actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <div className="rounded-xl bg-zinc-950 dark:bg-zinc-900/80 border border-zinc-800 overflow-hidden">
+          <div className="px-4 py-3 border-b border-zinc-800 flex items-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-orange-400">Operator actions</span>
+          </div>
+          <div className="px-4 py-4 space-y-3">
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm" variant="outline"
                 disabled={isPending || !['failed', 'held', 'complete'].includes(job.status)}
                 onClick={() => handleOperatorAction('retry')}
+                className="border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 disabled:opacity-40"
               >
                 Retry (full re-run)
               </Button>
@@ -737,6 +744,7 @@ export default function JobDetailPage() {
                 size="sm" variant="outline"
                 disabled={isPending || !['failed', 'held', 'running'].includes(job.status)}
                 onClick={() => handleOperatorAction('advance')}
+                className="border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 disabled:opacity-40"
               >
                 Force advance
               </Button>
@@ -749,13 +757,13 @@ export default function JobDetailPage() {
               </Button>
             </div>
             {actionError && (
-              <p className="text-xs text-destructive">{formatUserError(actionError)}</p>
+              <p className="text-xs text-red-400">{formatUserError(actionError)}</p>
             )}
-            <p className="text-[10px] text-muted-foreground">
-              Retry: re-runs full pipeline. Force advance: skips current blocked portal. Rollback: resets to held state.
+            <p className="text-[10px] text-zinc-500">
+              Retry: re-runs full pipeline · Force advance: skips blocked portal · Rollback: resets to held state
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       <SaveTemplateDialog
