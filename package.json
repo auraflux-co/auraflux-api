@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.892",
+  "version": "1.0.893",
   "description": "AuraFlux — AI-powered video content production platform",
   "main": "server.js",
   "scripts": {
@@ -74,6 +74,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1056.0",
     "@clerk/express": "^2.1.10",
     "@elevenlabs/elevenlabs-js": "^2.49.1",
+    "@sentry/node": "^10.55.0",
     "axios": "^1.16.1",
     "bullmq": "^5.77.3",
     "canvas": "^3.2.3",

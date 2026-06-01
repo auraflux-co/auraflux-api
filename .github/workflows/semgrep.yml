@@ -1,0 +1,87 @@
+name: Semgrep SAST
+
+# Runs on every PR to main and every push to main.
+# Catches security issues, bad Node.js patterns, and hardcoded secrets
+# before they reach the Render environment.
+#
+# Rulesets used:
+#   p/nodejs          — Node.js-specific anti-patterns (exec injection, unsafe deserialization)
+#   p/javascript      — General JS quality (prototype pollution, eval, etc.)
+#   p/secrets         — Hardcoded API keys, tokens, passwords
+#   p/owasp-top-ten   — OWASP Top 10 (injection, broken access control, etc.)
+#
+# No SEMGREP_APP_TOKEN required for the free OSS scanner.
+# To enable the Semgrep Cloud dashboard and PRcomments, add SEMGREP_APP_TOKEN
+# as a GitHub secret: Settings → Secrets → Actions.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'logs/**'
+      - '*.md'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'logs/**'
+      - '*.md'
+
+jobs:
+  semgrep:
+    name: Semgrep SAST scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        # If SEMGREP_APP_TOKEN is set, results are also sent to Semgrep Cloud
+        # for PR inline comments and dashboard tracking.
+        # Without it, the scan still runs and fails the step on findings.
+        run: |
+          semgrep ci \
+            --config=p/nodejs \
+            --config=p/javascript \
+            --config=p/secrets \
+            --config=p/owasp-top-ten \
+            --sarif --output=semgrep.sarif \
+            --error \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=logs \
+            --exclude=docs \
+            --exclude='scripts/run_*.py'
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        continue-on-error: true
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+        continue-on-error: true
+
+      - name: Fail if high-severity findings
+        # Re-run without --error to get the exit code separately so we can
+        # annotate findings before failing the job.
+        run: |
+          semgrep ci \
+            --config=p/nodejs \
+            --config=p/secrets \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=logs \
+            --exclude=docs \
+            --severity=ERROR
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}

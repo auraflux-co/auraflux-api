@@ -26,13 +26,67 @@ const BUILD_INFO = (() => {
   }
 })();
 
+// ── Sentry — runtime error aggregation ───────────────────────────────────────
+// Sentry replaces New Relic for error tracking (NR license key was never
+// provisioned). Captures unhandled rejections, pipeline-level portal errors,
+// and assembly failures with full job context so alerts fire at 2am not at
+// 9am when a customer complains.
+//
+// SENTRY_DSN is optional — if absent Sentry is silently disabled.
+// Set on Render env: Settings → Environment → SENTRY_DSN
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'production',
+    release: `auraflux-api@${BUILD_INFO?.version || 'unknown'}+${BUILD_INFO?.gitHash || 'unknown'}`,
+    tracesSampleRate: 0.05,   // 5% of requests traced — low enough to avoid perf impact
+    // Capture portal-level errors with job context set via Sentry.setContext below
+  });
+  Sentry.setTag('service', 'auraflux-api');
+  Sentry.setTag('git_hash', BUILD_INFO?.gitHash || 'unknown');
+}
+
+// ── Sentry portal helper ──────────────────────────────────────────────────────
+// Wraps a portal async function. On error, enriches the Sentry capture with
+// portal stage, jobId, and templateId before re-throwing so the job handler
+// can still decide whether to retry.
+function withSentryPortal(stage, jobSpec, fn) {
+  return fn().catch((err) => {
+    if (process.env.SENTRY_DSN) {
+      Sentry.withScope((scope) => {
+        scope.setTag('portal', String(stage));
+        scope.setContext('job', {
+          jobId:      jobSpec?.jobId,
+          templateId: jobSpec?.templateId,
+          customerId: jobSpec?.customerId,
+          contentType: jobSpec?.contentType,
+        });
+        Sentry.captureException(err);
+      });
+    }
+    throw err;
+  });
+}
+
 // ── New Relic custom event helpers ───────────────────────────────────────────
 // All events are fire-and-forget — never block the pipeline.
-// Queryable via NRQL on each custom event type name.
+// nrPipelineEvent is a no-op when NR license is absent (which it always is now).
+// Sentry breadcrumbs are added alongside for portal-level tracing.
 const { nrPipelineEvent } = require('./lib/nr_pipeline');
 
 function nrEvent(eventType, attributes) {
   nrPipelineEvent(eventType, attributes);
+  // Also add as a Sentry breadcrumb so every portal transition is visible
+  // in the event trail when an error occurs later in the same job.
+  if (process.env.SENTRY_DSN) {
+    Sentry.addBreadcrumb({
+      category: 'pipeline',
+      message: eventType,
+      data: attributes,
+      level: 'info',
+    });
+  }
 }
 
 // Keep old helper for backwards compat
