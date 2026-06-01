@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.902 (Cursor — feat(CPD-482): drawtext textfile= for streamer names (special char fix); -preset medium + KEYFRAME_WEB (-g 60 -keyint_min 30) on chrome delivery; accurate -ss seek for local trim pass)
 **Last Updated:** 2026-06-01 v1.0.901 (Cursor — fix(CPD-481): chrome overlay dynamic timeout (4× video duration, min 10min); ffprobe HDR probe + bt709 tags on SDR outputs; portal3a black frame skip window 1s→15s + 0.3s min duration filter)
 **Last Updated:** 2026-06-01 v1.0.900 (Cursor — feat(CPD-480): -pix_fmt yuv420p on all libx264 encodes, audio 44100→48000 Hz on all encode paths, lib/ffmpeg_builder.js constants module)
 **Last Updated:** 2026-06-01 v1.0.899 (Cursor — feat(CPD-479): FFmpeg single-pass portrait+chrome, -threads 2 on all FFmpeg calls, assembly semaphore (one job at a time on 512MB Render))
