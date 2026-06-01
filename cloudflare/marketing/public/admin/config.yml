@@ -1,4 +1,3 @@
-# CMS config v2 — Navigation, Footer, Blog Posts included
 backend:
   name: github
   repo: auraflux-co/auraflux-api
@@ -24,10 +23,8 @@ collections:
         fields:
           - { label: "Hero Headline", name: hero_headline, widget: string, hint: "Main heading — keep under 8 words" }
           - { label: "Hero Subtext", name: hero_sub, widget: text, hint: "Subtitle below the headline" }
-          - { label: "Hero CTA Label", name: cta_primary_label, widget: string, default: "See How It Works" }
-          - { label: "Hero CTA URL", name: cta_primary_url, widget: string, default: "/our-system", hint: "Where the main button links" }
-          - { label: "Final CTA Label", name: final_cta_label, widget: string, default: "Start Producing" }
-          - { label: "Final CTA URL", name: final_cta_url, widget: string, default: "/plans", hint: "Where the bottom CTA button links" }
+          - { label: "Primary CTA Label", name: cta_primary_label, widget: string, default: "See How It Works" }
+          - { label: "Primary CTA URL", name: cta_primary_url, widget: string, default: "/our-system" }
           - label: "Trusted By — Platform Quotes"
             name: trusted_by
             widget: list
@@ -43,6 +40,22 @@ collections:
               - { label: Body, name: body, widget: text }
           - { label: "Final CTA Headline", name: final_cta_headline, widget: string }
           - { label: "Final CTA Subtext", name: final_cta_sub, widget: string }
+          - { label: "Trusted By Label", name: trusted_by_label, widget: string, default: "Trusted by creators on" }
+          - { label: "Value Prop Eyebrow", name: value_eyebrow, widget: string, default: "The Problem" }
+          - { label: "Value Prop Title", name: value_title, widget: string }
+          - { label: "Value Prop Subtext", name: value_sub, widget: text }
+          - { label: "How It Works Eyebrow", name: steps_eyebrow, widget: string, default: "How It Works" }
+          - { label: "How It Works Title", name: steps_title, widget: string }
+          - { label: "How It Works Subtext", name: steps_sub, widget: text }
+          - { label: "Content Types Eyebrow", name: formats_eyebrow, widget: string, default: "Content Types" }
+          - { label: "Content Types Title", name: formats_title, widget: string }
+          - { label: "Content Types Subtext", name: formats_sub, widget: text }
+          - { label: "Comparison Eyebrow", name: compare_eyebrow, widget: string, default: "The Difference" }
+          - { label: "Comparison Title", name: compare_title, widget: string }
+          - { label: "Comparison Subtext", name: compare_sub, widget: text }
+          - { label: "Final CTA Headline", name: final_cta_headline, widget: string }
+          - { label: "Final CTA Subtext", name: final_cta_sub, widget: text }
+          - { label: "Final CTA Button", name: final_cta_label, widget: string, default: "Start Producing" }
           - { label: "OG / Share Image", name: og_image, widget: image, required: false, hint: "Image shown when shared on social media" }
 
   # ── Our Story (/our-story) ─────────────────────────────────────────────
@@ -80,12 +93,6 @@ collections:
           - { label: "Founder Bio", name: founder_bio, widget: text }
           - { label: "CTA Headline", name: cta_headline, widget: string }
           - { label: "CTA Subtext", name: cta_sub, widget: string }
-          - { label: "Hero Button Label", name: hero_cta_label, widget: string, default: "See Plans" }
-          - { label: "Hero Button Style", name: hero_cta_style, widget: select, options: [{label: 'Gold (filled)', value: 'primary'}, {label: 'Gold (outline)', value: 'secondary'}, {label: 'Ghost (text only)', value: 'ghost'}], default: 'primary' }
-          - { label: "Hero Button URL", name: hero_cta_url, widget: string, default: "/plans" }
-          - { label: "Bottom CTA Button Label", name: cta_btn_label, widget: string, default: "Get Started" }
-          - { label: "Bottom CTA Button Style", name: cta_btn_style, widget: select, options: [{label: 'Gold (filled)', value: 'primary'}, {label: 'Gold (outline)', value: 'secondary'}, {label: 'Ghost (text only)', value: 'ghost'}], default: 'secondary' }
-          - { label: "Bottom CTA Button URL", name: cta_btn_url, widget: string, default: "/plans" }
 
   # ── Our System (/our-system) ───────────────────────────────────────────
   - name: our_system
@@ -112,12 +119,6 @@ collections:
               - { label: Icon, name: icon, widget: string }
               - { label: Name, name: name, widget: string }
               - { label: Description, name: description, widget: text }
-          - { label: "Hero Button Label", name: hero_cta_label, widget: string, default: "View Plans" }
-          - { label: "Hero Button Style", name: hero_cta_style, widget: select, options: [{label: 'Gold (filled)', value: 'primary'}, {label: 'Gold (outline)', value: 'secondary'}, {label: 'Ghost (text only)', value: 'ghost'}], default: 'primary' }
-          - { label: "Hero Button URL", name: hero_cta_url, widget: string, default: "/plans" }
-          - { label: "Bottom CTA Button Label", name: bottom_cta_label, widget: string, default: "Compare Plans" }
-          - { label: "Bottom CTA Button Style", name: bottom_cta_style, widget: select, options: [{label: 'Gold (filled)', value: 'primary'}, {label: 'Gold (outline)', value: 'secondary'}, {label: 'Ghost (text only)', value: 'ghost'}], default: 'primary' }
-          - { label: "Bottom CTA Button URL", name: bottom_cta_url, widget: string, default: "/plans" }
 
   # ── Plans (/plans) ─────────────────────────────────────────────────────
   - name: plans
@@ -140,8 +141,6 @@ collections:
               - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
-              - { label: CTA Style, name: cta_style, widget: select, options: [{label: 'Gold (filled)', value: 'primary'}, {label: 'Gold (outline)', value: 'secondary'}], default: 'secondary' }
-              - { label: CTA URL, name: cta_url, widget: string, default: "/contact-us" }
           - label: "Guided Plan"
             name: guided
             widget: object
@@ -153,8 +152,6 @@ collections:
               - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
-              - { label: CTA Style, name: cta_style, widget: select, options: [{label: 'Gold (filled)', value: 'primary'}, {label: 'Gold (outline)', value: 'secondary'}], default: 'primary' }
-              - { label: CTA URL, name: cta_url, widget: string, default: "/contact-us" }
           - label: "Managed Plan"
             name: managed
             widget: object
@@ -165,8 +162,6 @@ collections:
               - { label: Card Image, name: image_url, widget: image, required: false, hint: "Header image shown on the plan card" }
               - { label: Features, name: features, widget: list, field: { label: Feature, name: feature, widget: string } }
               - { label: CTA Label, name: cta_label, widget: string }
-              - { label: CTA Style, name: cta_style, widget: select, options: [{label: 'Gold (filled)', value: 'primary'}, {label: 'Gold (outline)', value: 'secondary'}], default: 'secondary' }
-              - { label: CTA URL, name: cta_url, widget: string, default: "/contact-us" }
           - { label: "Credit Pack Footnote", name: credit_note, widget: text }
 
   # ── Roadmap (/roadmap) ─────────────────────────────────────────────────
@@ -254,69 +249,3 @@ collections:
               - { label: Title Tag, name: title, widget: string, hint: "Shown in browser tab and Google" }
               - { label: Meta Description, name: description, widget: text, hint: "150-160 chars. Shown in Google search results." }
               - { label: OG Image URL, name: og_image, widget: string, required: false }
-
-  # ── Navigation (/admin → Header) ──────────────────────────────────────────
-  - name: navigation
-    label: Navigation
-    files:
-      - name: nav
-        label: Top Navigation
-        file: cloudflare/marketing/content/nav.json
-        fields:
-          - { label: "CTA Button Label", name: cta_label, widget: string, default: "Get Started", hint: "The gold button top-right" }
-          - { label: "CTA Button URL", name: cta_url, widget: string, default: "/plans" }
-          - label: "Nav Links"
-            name: links
-            widget: list
-            hint: "Order matters — left to right in the menu"
-            fields:
-              - { label: Label, name: label, widget: string }
-              - { label: URL, name: url, widget: string }
-
-  # ── Footer ─────────────────────────────────────────────────────────────────
-  - name: footer_content
-    label: Footer
-    files:
-      - name: footer
-        label: Footer Content
-        file: cloudflare/marketing/content/footer.json
-        fields:
-          - { label: "Tagline", name: tagline, widget: string, hint: "Text shown below the logo" }
-          - { label: "Copyright", name: copyright, widget: string }
-          - label: "Platform Column Links"
-            name: platform_links
-            widget: list
-            hint: "Left column — Platform section"
-            fields:
-              - { label: Label, name: label, widget: string }
-              - { label: URL, name: url, widget: string }
-          - label: "Resources Column Links"
-            name: resource_links
-            widget: list
-            hint: "Right column — Resources section"
-            fields:
-              - { label: Label, name: label, widget: string }
-              - { label: URL, name: url, widget: string }
-          - label: "Social Media Links"
-            name: social_links
-            widget: list
-            fields:
-              - { label: Platform, name: platform, widget: select, options: [LinkedIn, Instagram, TikTok, YouTube, Twitter, Facebook] }
-              - { label: URL, name: url, widget: string }
-
-  # ── Blog Posts (full articles) ─────────────────────────────────────────────
-  - name: blog_posts
-    label: Blog
-    folder: cloudflare/marketing/content/blog-posts
-    create: true
-    slug: "{{slug}}"
-    identifier_field: title
-    fields:
-      - { label: "Title", name: title, widget: string }
-      - { label: "Publish Date", name: date, widget: datetime, required: false }
-      - { label: "Author", name: author, widget: string, default: "Rob Gregory" }
-      - { label: "Tag / Category", name: tag, widget: string, hint: "e.g. Guide, Platform, AI, Monetization" }
-      - { label: "Description", name: description, widget: text, hint: "1–2 sentence summary shown in the blog list" }
-      - { label: "Cover Image", name: cover_image, widget: image, required: false }
-      - { label: "Published", name: published, widget: boolean, default: false, hint: "Toggle on to show this post on the site" }
-      - { label: "Body", name: body, widget: markdown, hint: "Full article content. Supports headers, bold, lists, links, images." }
