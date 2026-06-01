@@ -61,10 +61,14 @@
       "description": "Sports, news, and live events turned into structured recap videos within minutes of the event."
     }
   ],
-  "hero_cta_label": "View Plans",
-  "hero_cta_url": "/plans",
-  "bottom_cta_label": "Compare Plans",
-  "bottom_cta_url": "/plans",
-  "hero_cta_style": "primary",
-  "bottom_cta_style": "primary"
+  "pipeline_title": "The Production Pipeline",
+  "pipeline_sub": "Six portals. Each one checks the work before the next begins.",
+  "content_types_title": "What You Can Produce",
+  "content_types_sub": "Four content formats, each with its own production logic.",
+  "features_title": "Every Feature, Explained In App",
+  "features_sub": "Every capability available inside the AuraFlux platform.",
+  "credits_title": "How Credits Work",
+  "credits_body": "One credit = one complete production job. Credits are consumed when a job starts and refund automatically if the job fails.",
+  "publish_title": "Where AuraFlux Publishes",
+  "publish_sub": "Connect your accounts once. AuraFlux handles the rest via OAuth."
 }

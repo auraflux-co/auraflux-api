@@ -1,6 +1,6 @@
 {
   "hero_headline": "Get in Touch",
-  "hero_sub": "Sales, support, partnerships, or feedback — we read every message.",
+  "hero_sub": "Sales, support, partnerships, or feedback \u2014 we read every message.",
   "faq": [
     {
       "question": "What's the difference between our plans?",
@@ -12,11 +12,15 @@
     },
     {
       "question": "Can I connect multiple social accounts?",
-      "answer": "Yes — connect all major platforms and target any job to one or more simultaneously. YouTube, TikTok, Instagram, Twitch, and Kick are all supported."
+      "answer": "Yes \u2014 connect all major platforms and target any job to one or more simultaneously. YouTube, TikTok, Instagram, Twitch, and Kick are all supported."
     },
     {
       "question": "Do I need technical knowledge?",
       "answer": "No. The dashboard guides you through every step. For teams that prefer raw API access, full developer documentation is available at auraflux.co/developer-api."
     }
-  ]
+  ],
+  "form_title": "Send a message",
+  "channels_title": "Other ways to reach us",
+  "faq_eyebrow": "FAQ",
+  "faq_title": "Common Questions"
 }

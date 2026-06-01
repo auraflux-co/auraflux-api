@@ -7,48 +7,28 @@
       "title": "From Twitch Clip to Published Video in Under 5 Minutes",
       "description": "How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing \u2014 automatically.",
       "status": "Coming soon",
-      "url": "",
-      "body": "",
-      "published": false,
-      "date": "",
-      "author": "Rob Gregory",
-      "slug": "from-twitch-clip-to-published-video-in-under-5-min"
+      "url": ""
     },
     {
       "tag": "Monetization",
       "title": "The Multi-Platform Content Strategy for Streamers",
       "description": "How top streamers on Twitch and Kick maximise revenue by cross-posting to YouTube, TikTok, and subscription platforms.",
       "status": "Coming soon",
-      "url": "",
-      "body": "",
-      "published": false,
-      "date": "",
-      "author": "Rob Gregory",
-      "slug": "the-multi-platform-content-strategy-for-streamers"
+      "url": ""
     },
     {
       "tag": "Platform",
       "title": "Direct Publishing to TikTok and YouTube \u2014 A Deep Dive",
       "description": "OAuth-based direct publish means no manual uploads. Here's how the AuraFlux publish portal handles both platforms.",
       "status": "Coming soon",
-      "url": "",
-      "body": "",
-      "published": false,
-      "date": "",
-      "author": "Rob Gregory",
-      "slug": "direct-publishing-to-tiktok-and-youtube-\u2014-a-deep-d"
+      "url": ""
     },
     {
       "tag": "AI",
       "title": "Inside AuraFlux's Portal Pipeline: How 6 Portals Turn a Clip Into a Published Video",
       "description": "A detailed walkthrough of each production stage \u2014 from Portal 0 (intake) through Portal 5 (publish).",
       "status": "Coming soon",
-      "url": "",
-      "body": "",
-      "published": false,
-      "date": "",
-      "author": "Rob Gregory",
-      "slug": "inside-auraflux's-portal-pipeline:-how-6-portals-t"
+      "url": ""
     }
   ]
 }
