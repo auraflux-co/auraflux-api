@@ -255,6 +255,9 @@ _mktg_check "Pricing page"       "https://auraflux.co/pricing"   "Operate"
 _mktg_check "Contact page"       "https://auraflux.co/contact"   "AuraFlux"
 _mktg_check "Privacy page"       "https://auraflux.co/privacy"   "Privacy"
 _mktg_check "Terms page"         "https://auraflux.co/terms"     "Terms"
+_mktg_check "Our System page"    "https://auraflux.co/our-system" "AuraFlux"
+_mktg_check "Our Story page"     "https://auraflux.co/our-story"  "AuraFlux"
+_mktg_check "Blog page"          "https://auraflux.co/blog"       "AuraFlux"
 _mktg_check "Plans API"          "https://auraflux-api.onrender.com/api/public/plans" "operate"
 _mktg_check "Chat API"           "https://auraflux-api.onrender.com/api/public/chat" ""
 # Roadmap should redirect (3xx) — check it doesn't 200 a blank page
@@ -271,6 +274,36 @@ if [ "$CHAT_WIDGET" -gt 0 ]; then
 else
   MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget NOT found on homepage\n"
 fi
+
+# Content-size guard — a page < 5 KB that returns 200 is likely corrupted/truncated
+# (the 2026-06-01 incident: Gemini html_patch produced a fragment; homepage returned 200 but was ~200 bytes)
+_mktg_size_check() {
+  local label="$1" url="$2" min_bytes="${3:-5000}"
+  local body size
+  body=$(curl -sL --max-time 8 --connect-timeout 5 "$url" 2>/dev/null || echo "")
+  size=${#body}
+  if [ "$size" -lt "$min_bytes" ]; then
+    MKTG_STATUS="${MKTG_STATUS}  ❌ ${label}: content suspiciously small (${size} bytes < ${min_bytes} threshold) — possible corruption\n"
+  else
+    MKTG_STATUS="${MKTG_STATUS}  ✅ ${label}: content size OK (${size} bytes)\n"
+  fi
+}
+_mktg_size_check "Homepage size"     "https://auraflux.co/"              10000
+_mktg_size_check "Pricing size"      "https://auraflux.co/pricing"        5000
+_mktg_size_check "Our System size"   "https://auraflux.co/our-system"     5000
+
+# git↔Cloudflare sync: check GITHUB_API_TOKEN is present (required by commitToGit())
+# If missing, in-app marketing edits deploy to Cloudflare but do NOT commit back to git → divergence
+GITHUB_API_TOKEN_SET="${GITHUB_API_TOKEN:-}"
+if [ -z "$GITHUB_API_TOKEN_SET" ] && [ -f "$REPO_ROOT/.env" ]; then
+  GITHUB_API_TOKEN_SET=$(grep '^GITHUB_API_TOKEN=' "$REPO_ROOT/.env" 2>/dev/null | head -1 | cut -d'=' -f2- | tr -d '"'"'" )
+fi
+if [ -n "$GITHUB_API_TOKEN_SET" ]; then
+  MKTG_STATUS="${MKTG_STATUS}  ✅ GITHUB_API_TOKEN present — commitToGit() operational\n"
+else
+  MKTG_STATUS="${MKTG_STATUS}  ❌ GITHUB_API_TOKEN missing — commitToGit() will SILENTLY FAIL; git and Cloudflare will diverge on any in-app edit\n"
+fi
+
 [ -z "$MKTG_STATUS" ] && MKTG_STATUS="  (no checks run)"
 
 # ── 8. API-to-UI mapping: check apiFetch paths have a backend route ───────────
