@@ -391,97 +391,6 @@ if os.path.isfile(seo_path):
 
     print("  ✓ SEO meta injection complete")
 
-# ── Blog post pages from content/blog-posts/*.json ───────────────────────────
-import glob as _glob
-blog_posts_dir = os.path.join(os.path.dirname(pages), 'content', 'blog-posts')
-post_template_raw = read_page('blog-post-template.html')
-
-if post_template_raw and os.path.isdir(blog_posts_dir):
-    import json as _json2, html as _html_lib
-
-    def md_to_html(md):
-        """Minimal markdown → HTML converter for blog posts."""
-        lines = md.split('\n')
-        out, in_list, in_ol = [], False, False
-        for line in lines:
-            s = line.rstrip()
-            if s.startswith('### '):
-                if in_list: out.append('</ul>'); in_list = False
-                out.append(f'<h3>{s[4:]}</h3>')
-            elif s.startswith('## '):
-                if in_list: out.append('</ul>'); in_list = False
-                out.append(f'<h2>{s[3:]}</h2>')
-            elif s.startswith('# '):
-                if in_list: out.append('</ul>'); in_list = False
-                out.append(f'<h2>{s[2:]}</h2>')
-            elif s.startswith('> '):
-                out.append(f'<blockquote>{s[2:]}</blockquote>')
-            elif s.startswith('- ') or s.startswith('* '):
-                if not in_list: out.append('<ul>'); in_list = True
-                out.append(f'<li>{s[2:]}</li>')
-            elif re.match(r'^\d+\. ', s):
-                out.append(f'<li>{re.sub(r"^\d+\. ", "", s)}</li>')
-            elif s.strip() == '':
-                if in_list: out.append('</ul>'); in_list = False
-                out.append('')
-            else:
-                if in_list: out.append('</ul>'); in_list = False
-                # Inline: **bold**, *italic*, `code`, [text](url)
-                s = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', s)
-                s = re.sub(r'\*(.+?)\*', r'<em>\1</em>', s)
-                s = re.sub(r'`([^`]+)`', r'<code>\1</code>', s)
-                s = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', s)
-                out.append(f'<p>{s}</p>')
-        if in_list: out.append('</ul>')
-        return '\n'.join(out)
-
-    blog_posts_built = {}
-    post_count = 0
-    for fpath in sorted(_glob.glob(os.path.join(blog_posts_dir, '*.json'))):
-        try:
-            p = _json2.loads(open(fpath).read())
-            if not p.get('published'):
-                continue
-            slug    = p.get('slug', os.path.basename(fpath).replace('.json',''))
-            title   = p.get('title', 'Untitled')
-            desc    = p.get('description', '')
-            tag     = p.get('tag', '')
-            author  = p.get('author', 'AuraFlux')
-            date    = p.get('date', '')[:10] if p.get('date') else ''
-            body_md = p.get('body', '')
-            og_img  = p.get('cover_image', 'https://auraflux.co/favicon.png')
-            cover   = f'<img class="post-cover" src="{og_img}" alt="{title}">' if p.get('cover_image') else ''
-
-            body_html = md_to_html(body_md) if body_md else '<p>Coming soon.</p>'
-
-            post_html = post_template_raw
-            post_html = post_html.replace('__POST_TITLE__',  title)
-            post_html = post_html.replace('__POST_DESC__',   desc)
-            post_html = post_html.replace('__POST_SLUG__',   slug)
-            post_html = post_html.replace('__POST_TAG__',    tag)
-            post_html = post_html.replace('__POST_AUTHOR__', author)
-            post_html = post_html.replace('__POST_DATE__',   date)
-            post_html = post_html.replace('__POST_COVER__',  cover)
-            post_html = post_html.replace('__POST_BODY__',   body_html)
-            post_html = post_html.replace('__POST_OG_IMAGE__', og_img)
-
-            blog_posts_built[slug] = js_escape(inject_framer(post_html))
-            post_count += 1
-        except Exception as e:
-            print(f'  ⚠  blog post error {fpath}: {e}')
-
-    if blog_posts_built:
-        # Inject into BLOG_POSTS constant in worker
-        posts_js = ','.join(f'"{k}":`{v}`' for k, v in blog_posts_built.items())
-        build = build.replace(
-            'const BLOG_POSTS = {}; // populated by deploy.sh',
-            f'const BLOG_POSTS = {{{posts_js}}};'
-        )
-        print(f"  ✓ {post_count} blog post(s) compiled")
-
-# ── Mobile nav hamburger ──────────────────────────────────────────────────────
-# (injected via framer-shell/nav.html update below — handled by inject_content.py)
-
 # ── Inject admin UI and config ────────────────────────────────────────────────
 admin_index = read_shell('../public/admin/index.html') if os.path.isfile(os.path.join(shell, '../public/admin/index.html')) else ''
 if not admin_index:
@@ -504,6 +413,12 @@ if '__ADMIN_CONFIG__' in build and admin_config:
 with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)
 PYEOF
+
+# ── Blog post compilation (separate script to avoid heredoc conflicts) ────────
+echo "📝  Compiling blog posts..."
+python3 "$SCRIPT_DIR/scripts/build_blog_posts.py" \
+  "$WORKER_BUILD" "$PAGES_DIR" "$SCRIPT_DIR/content" || \
+  echo "  – Blog post compilation failed (non-fatal)"
 
 echo ""
 # ── Step 3: Deploy via Python urllib (curl not available in all environments) ──
