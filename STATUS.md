@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.922 (Claude Code — sync all CTA wiring to marketing)
 **Last Updated:** 2026-06-01 v1.0.920 (Claude Code — sync Our Story CTA fixes to marketing)
 **Last Updated:** 2026-06-01 v1.0.918 (Claude Code — fix(cms): re-add Navigation/Footer/Blog Posts collections to config.yml — were lost in revert)
 **Last Updated:** 2026-06-01 v1.0.918 (Cursor — fix(review): aider_session_review.sh — add our-system/our-story/blog page checks, content-size guard <5KB=corrupted, GITHUB_API_TOKEN presence check for commitToGit() sync health)

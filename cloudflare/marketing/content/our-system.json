@@ -70,5 +70,11 @@
   "credits_title": "How Credits Work",
   "credits_body": "One credit = one complete production job. Credits are consumed when a job starts and refund automatically if the job fails.",
   "publish_title": "Where AuraFlux Publishes",
-  "publish_sub": "Connect your accounts once. AuraFlux handles the rest via OAuth."
+  "publish_sub": "Connect your accounts once. AuraFlux handles the rest via OAuth.",
+  "hero_cta_label": "View Plans",
+  "hero_cta_url": "/plans",
+  "hero_cta_style": "primary",
+  "bottom_cta_label": "Compare Plans",
+  "bottom_cta_url": "/plans",
+  "bottom_cta_style": "primary"
 }

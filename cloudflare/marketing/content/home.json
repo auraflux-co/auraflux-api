@@ -64,5 +64,8 @@
   "formats_sub": "Your content format, your content type \u2014 AuraFlux handles every combination.",
   "compare_eyebrow": "The Difference",
   "compare_title": "Work Smarter. <span class=\"gold\">Not Harder.</span>",
-  "compare_sub": "Stop spending 80% of your time on production. Start spending it on what actually matters."
+  "compare_sub": "Stop spending 80% of your time on production. Start spending it on what actually matters.",
+  "cta_primary_style": "primary",
+  "final_cta_url": "/plans",
+  "final_cta_style": "primary"
 }
