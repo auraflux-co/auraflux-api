@@ -121,10 +121,11 @@ const PLATFORMS = [
 ];
 
 const GRADES = [
-  { id: 'none', label: 'None'    },
-  { id: 'warm', label: 'Warm'    },
-  { id: 'cool', label: 'Cool'    },
-  { id: 'neut', label: 'Neutral' },
+  { id: 'none',    label: 'None'    },
+  { id: 'warm',    label: 'Warm'    },
+  { id: 'cool',    label: 'Cool'    },
+  { id: 'neut',    label: 'Neutral' },
+  { id: 'vivid',   label: 'Vivid'   },
 ];
 
 const EFFECTS_OPTS = [
@@ -1119,7 +1120,7 @@ function JobBuilderPageInner() {
               clips={sourceItems}
               format={format}
               captions={captions}
-              grade={grade as 'none' | 'warm' | 'cool' | 'neut'}
+              grade={grade as 'none' | 'warm' | 'cool' | 'neut' | 'vivid'}
               effects={effects}
             />
 
