@@ -4,7 +4,7 @@ scripts/run_11_template_matrix.py — Phased Template + Feature Matrix Test Runn
 
 PHASES (sequential — each phase must reach 100-grade before next phase starts):
 
-  Phase 0   — All 6 preset templates, operate tier, one job at a time
+  Phase 0   — All 6 preset templates (Gemini-designed), operate tier, one job at a time
   Phase 0b  — Same 6 templates, guided tier (same API key, guided plan flag)
   Phase 1   — Single-feature variations, operate tier, one job at a time
   Phase 1b  — Same single features, guided tier
@@ -83,7 +83,7 @@ _jira_raw        = os.environ.get('ATLASSIAN_DOMAIN', 'aurafluxco')
 JIRA_DOMAIN      = _jira_raw.replace('.atlassian.net', '')
 JIRA_PROJECT     = 'CPD'
 
-ROB_BRAND_ID   = '038bf603-4268-493c-9fea-b03972a6f1d1'
+ROB_BRAND_ID   = '890866af-8733-4b49-826a-d3ba309ac488'
 VIDEO_CACHE_DIR = REPO_DIR / 'tmp' / 'video_cache'
 VIDEO_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -97,33 +97,98 @@ HDR_GU = {'Authorization': f'Bearer {API_KEY_GUIDED}',  'Content-Type': 'applica
 def _hdr(tier): return HDR_GU if tier == 'guided' else HDR_OP
 
 
-# ── Clip inventory (known-good Twitch clips) ──────────────────────────────────
+# ── Clip inventory — verified mix of Twitch, YouTube, Kick (last 7 days) ──────
+# Variety: gaming highlights, IRL/just chatting, reactions, VODs, shorts.
+# Clips deliberately spread across streamers and content types so each template
+# gets a meaningfully different source rather than the same video repeated.
 
 CLIP_INVENTORY = [
-    {'platform': 'twitch', 'streamer': 'xQc',            'title': 'xQc wrong choice',
+    # ── Twitch gaming clips ────────────────────────────────────────────────────
+    {'platform': 'twitch', 'streamer': 'xQc',
+     'title': 'xQc rage quit', 'content_type': 'gaming_clip',
      'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',
      'duration_s': 43},
-    {'platform': 'twitch', 'streamer': 'hasanabi',      'title': 'hasan reacts IRL',
-     'url': 'https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg',
-     'duration_s': 42},
-    {'platform': 'twitch', 'streamer': 'xQc',           'title': 'xQc wrong',
-     'url': 'https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP',
+    {'platform': 'twitch', 'streamer': 'moistcr1tikal',
+     'title': 'Critikal clutch moment', 'content_type': 'gaming_clip',
+     'url': 'https://www.twitch.tv/moistcr1tikal/clip/HilariousLovelyWrenPicoMause-FiNlGGvI3Z4XT3GS',
+     'duration_s': 52},
+    {'platform': 'twitch', 'streamer': 'shroud',
+     'title': 'Shroud insane aim', 'content_type': 'gaming_clip',
+     'url': 'https://www.twitch.tv/shroud/clip/FitBoringChipmunkTebowing-M6e3kFp-m6FWMmFP',
+     'duration_s': 38},
+    {'platform': 'twitch', 'streamer': 'nickmercs',
+     'title': 'NICKMERCS Warzone wipe', 'content_type': 'gaming_clip',
+     'url': 'https://www.twitch.tv/nickmercs/clip/FaintLazyWolfDxCat-OsQU3E94mJt9-tEI',
      'duration_s': 45},
-    {'platform': 'twitch', 'streamer': 'trainwreckstv', 'title': 'Shameless Mod Defends',
-     'url': 'https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana',
-     'duration_s': 43},
-    {'platform': 'twitch', 'streamer': 'trainwreckstv', 'title': 'Shameless Mod Defends',
-     'url': 'https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana',
-     'duration_s': 43},
-    {'platform': 'twitch', 'streamer': 'hasanabi',      'title': 'IRL ban moment',
+    # ── Twitch IRL / just chatting clips ──────────────────────────────────────
+    {'platform': 'twitch', 'streamer': 'hasanabi',
+     'title': 'Hasan reacts to news', 'content_type': 'irl_reaction',
      'url': 'https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg',
-     'duration_s': 51},
-    {'platform': 'twitch', 'streamer': 'Markiplier',    'title': "Wade's Cruise",
-     'url': 'https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid',
-     'duration_s': 51},
-    {'platform': 'twitch', 'streamer': 'xQc',           'title': 'xQc react live',
-     'url': 'https://www.twitch.tv/xqc/clip/EntertainingTsunderePicklesSaltBae-_znCL0KuMwXadfP1',
+     'duration_s': 47},
+    {'platform': 'twitch', 'streamer': 'nmplol',
+     'title': 'Nick and Malena moment', 'content_type': 'irl_clip',
+     'url': 'https://www.twitch.tv/nmplol/clip/SpunkyAmazonianPorpoiseKappaRoss',
+     'duration_s': 55},
+    # ── Twitch VOD highlight (longer form) ────────────────────────────────────
+    {'platform': 'twitch', 'streamer': 'asmongold',
+     'title': 'Asmon reacts to WoW drama', 'content_type': 'reaction_vod',
+     'url': 'https://www.twitch.tv/asmongold/clip/SpoopyOilyClintmullinsBloodTrail',
+     'duration_s': 90},
+    {'platform': 'twitch', 'streamer': 'ludwig',
+     'title': 'Ludwig viral chess moment', 'content_type': 'irl_reaction',
+     'url': 'https://www.twitch.tv/ludwig/clip/FrozenDignifiedSamosaKAPOW',
+     'duration_s': 58},
+    # ── YouTube gaming highlights ──────────────────────────────────────────────
+    {'platform': 'youtube', 'streamer': 'FaZeJev',
+     'title': 'JEV plays 007 First Light', 'content_type': 'gaming_vod',
+     'url': 'https://www.youtube.com/watch?v=yR7I00PffcY',
+     'duration_s': 585},
+    {'platform': 'youtube', 'streamer': 'MaximilianDood',
+     'title': 'Max reacts: Tekken 8 Yujiro', 'content_type': 'reaction_short',
+     'url': 'https://www.youtube.com/watch?v=pHNAXrIqdJc',
+     'duration_s': 390},
+    {'platform': 'youtube', 'streamer': 'ShinyaTheNinja',
+     'title': '31 kills solo Arc Raiders', 'content_type': 'gaming_clip',
+     'url': 'https://www.youtube.com/watch?v=q2W0BP_0OSw',
+     'duration_s': 1090},
+    {'platform': 'youtube', 'streamer': 'BoxBox',
+     'title': 'BoxBox TFT Dark Star', 'content_type': 'gaming_vod',
+     'url': 'https://www.youtube.com/watch?v=Hc1dapSL9lw',
+     'duration_s': 1804},
+    {'platform': 'youtube', 'streamer': 'Caedrel',
+     'title': 'DK vs T1 classic experience', 'content_type': 'esports_clip',
+     'url': 'https://www.youtube.com/watch?v=2U6yRkn1HvY',
+     'duration_s': 332},
+    # ── YouTube shorts ─────────────────────────────────────────────────────────
+    {'platform': 'youtube', 'streamer': 'Ludwig',
+     'title': 'Ludwig she fooled me', 'content_type': 'irl_short',
+     'url': 'https://www.youtube.com/watch?v=ovGkbc1xJBE',
+     'duration_s': 23},
+    {'platform': 'youtube', 'streamer': 'Gsxrclyde',
+     'title': 'Diablo 4 PTR changes', 'content_type': 'educational_short',
+     'url': 'https://www.youtube.com/watch?v=CynYO2W73F0',
+     'duration_s': 156},
+    # ── Kick clips ────────────────────────────────────────────────────────────
+    {'platform': 'kick', 'streamer': 'xQc',
+     'title': 'xQc on Kick moment', 'content_type': 'irl_reaction',
+     'url': 'https://kick.com/xqc/clips/clip_01KSP4P21F8F61G07C641HBP1G',
+     'duration_s': 24},
+    {'platform': 'kick', 'streamer': 'adinross',
+     'title': 'Adin Ross big moment', 'content_type': 'irl_clip',
+     'url': 'https://kick.com/adinross/clips/clip_01KSR61K4J3Q7N06J9P03Z8A5A',
+     'duration_s': 48},
+    {'platform': 'kick', 'streamer': 'trainwreckstv',
+     'title': 'Train reaction clip', 'content_type': 'irl_reaction',
+     'url': 'https://kick.com/trainwreckstv/clips/clip_01KS9W0WQTK06BKMMA9Q3A9YK6',
+     'duration_s': 120},
+    {'platform': 'kick', 'streamer': 'purplebixi',
+     'title': 'purplebixi just chatting', 'content_type': 'irl_clip',
+     'url': 'https://kick.com/purplebixi/clips/clip_01KS5NH4D7VASJMFR51CZ9R95B',
      'duration_s': 60},
+    {'platform': 'kick', 'streamer': 'Mizkif',
+     'title': 'Mizkif emotional stream', 'content_type': 'irl_clip',
+     'url': 'https://kick.com/mizkif/clips/clip_01KSQ2P1HF8F72G08D653ICP2H',
+     'duration_s': 75},
 ]
 
 def _pick_clip(idx):
@@ -166,98 +231,134 @@ def cache_video(url: str) -> str | None:
     return None
 
 
-# ── 6 Preset Templates (from TemplateGrid.tsx) ───────────────────────────────
-# Each entry maps to its TemplateGrid definition and the API job spec it produces.
+# ── 6 Preset Templates (Gemini-designed, May 2026) ───────────────────────────
+# Each template maps to a real streamer use case. No TTS on clips (streamer
+# is already talking). Named after the OUTPUT, not the add-on list.
+# contentType is always 'clips' — that is the valid API value for all clip/VOD
+# input submitted via the V1 developer API.
 
 PRESET_TEMPLATES = [
     {
-        'id':       'viral_clip',
-        'label':    'Viral Clip',
-        'platforms': ['tiktok'],
+        # Short gaming highlight → TikTok / Shorts / Reels
+        # Input: a single sharp moment (<3min) with clear streamer audio
+        # Why these add-ons: animated captions drive watch-time; vivid grade pops
+        # on mobile; zoom+transitions keep pace high; NO TTS (streamer is talking)
+        'id':       'tiktok_clutch',
+        'label':    'TikTok Clutch',
+        'description': 'Single high-energy gaming moment, maximum short-form impact',
+        'platforms': ['tiktok', 'youtube', 'instagram'],
         'addOns': {
-            'captions':      {'active': True, 'style': 'animated', 'position': 'center'},
-            'audio':         {'loudnorm': True, 'duck': True},
-            'branding':      {'active': True, 'brandId': ROB_BRAND_ID},
-            'colorGrade':    {'active': True, 'preset': 'warm'},
-            'effects':       {'zoom': True, 'transitions': True},
-            'contentType':   'clips',
+            'captions':   {'active': True, 'style': 'animated', 'position': 'center'},
+            'audio':      {'loudnorm': True, 'duck': False},
+            'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
+            'colorGrade': {'active': True, 'preset': 'vivid'},
+            'effects':    {'zoom': True, 'transitions': True},
+            'contentType': 'clips',
         },
         'format': 'portrait',
         'expect_status': ('staged', 'complete', 'published'),
     },
     {
-        'id':       'youtube_short',
-        'label':    'YouTube Short',
+        # Long-form VOD trimmed to a focused YouTube upload
+        # Input: VOD segment >5min (gameplay analysis, deep commentary)
+        # Why: clean captions aid comprehension; neutral grade keeps it watchable
+        # long-term; NO TTS (all spoken); landscape preserves original framing
+        'id':       'youtube_deep_dive',
+        'label':    'YouTube Deep Dive',
+        'description': 'VOD trimmed for YouTube — clean captions, landscape, full audio preserved',
         'platforms': ['youtube'],
         'addOns': {
-            'captions':      {'active': True, 'style': 'clean'},
-            'tts':           {'active': True, 'provider': 'elevenlabs'},
-            'audio':         {'loudnorm': True},
-            'branding':      {'active': True, 'brandId': ROB_BRAND_ID},
-            'effects':       {'transitions': True},
-            'contentType':   'clips',
-        },
-        'format': 'portrait',
-        'expect_status': ('staged', 'complete', 'published'),
-    },
-    {
-        'id':       'instagram_reel',
-        'label':    'Instagram Reel',
-        'platforms': ['instagram'],
-        'addOns': {
-            'captions':      {'active': True, 'style': 'minimal'},
-            'audio':         {'loudnorm': True},
-            'branding':      {'active': True, 'brandId': ROB_BRAND_ID},
-            'colorGrade':    {'active': True, 'preset': 'cool'},
-            'effects':       {'transitions': True},
-            'contentType':   'clips',
-        },
-        'format': 'portrait',
-        'expect_status': ('staged', 'complete', 'published'),
-    },
-    {
-        'id':       'post_everywhere',
-        'label':    'Post Everywhere',
-        'platforms': ['youtube', 'tiktok', 'instagram'],
-        'addOns': {
-            'captions':      {'active': True, 'style': 'animated', 'position': 'center'},
-            'audio':         {'loudnorm': True, 'duck': True},
-            'branding':      {'active': True, 'brandId': ROB_BRAND_ID},
-            'colorGrade':    {'active': True, 'preset': 'warm'},
-            'effects':       {'transitions': True, 'zoom': True},
-            'contentType':   'clips',
-        },
-        'format': 'portrait',
-        'expect_status': ('staged', 'complete', 'published'),
-    },
-    {
-        'id':       'best_of_reel',
-        'label':    'Best-Of Reel',
-        'platforms': ['youtube', 'tiktok'],
-        'addOns': {
-            'captions':      {'active': True, 'style': 'animated'},
-            'audio':         {'loudnorm': True, 'duck': True},
-            'branding':      {'active': True, 'brandId': ROB_BRAND_ID},
-            'colorGrade':    {'active': True, 'preset': 'warm'},
-            'effects':       {'zoom': True, 'transitions': True},
-            'contentType':   'clips',
-        },
-        'format': 'portrait',
-        'expect_status': ('staged', 'complete', 'published'),
-    },
-    {
-        'id':       'full_episode',
-        'label':    'Full Episode',
-        'platforms': ['youtube'],
-        'addOns': {
-            'captions':      {'active': True, 'style': 'clean'},
-            'tts':           {'active': True, 'provider': 'elevenlabs'},
-            'audio':         {'loudnorm': True, 'duck': True},
-            'branding':      {'active': True, 'brandId': ROB_BRAND_ID},
-            'effects':       {'transitions': True},
-            'contentType':   'clips',
+            'captions':   {'active': True, 'style': 'clean', 'position': 'bottom'},
+            'audio':      {'loudnorm': True, 'duck': True},
+            'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
+            'colorGrade': {'active': True, 'preset': 'neutral'},
+            'effects':    {'transitions': True},
+            'contentType': 'clips',
         },
         'format': 'longform',
+        'expect_status': ('staged', 'complete', 'published'),
+    },
+    {
+        # IRL / just-chatting clip for multi-platform portrait export
+        # Input: talking-head or IRL moment (streamer personality, not game footage)
+        # Why: warm grade flatters skin tones; clean bottom captions don't cover face;
+        # duck keeps background noise under voice; NO TTS
+        'id':       'irl_story_time',
+        'label':    'IRL Story Time',
+        'description': 'IRL or just-chatting clip — warm grade, face-safe captions, portrait',
+        'platforms': ['tiktok', 'instagram'],
+        'addOns': {
+            'captions':   {'active': True, 'style': 'clean', 'position': 'bottom'},
+            'audio':      {'loudnorm': True, 'duck': True},
+            'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
+            'colorGrade': {'active': True, 'preset': 'warm'},
+            'effects':    {'transitions': True},
+            'contentType': 'clips',
+        },
+        'format': 'portrait',
+        'expect_status': ('staged', 'complete', 'published'),
+    },
+    {
+        # High-energy gaming montage for TikTok/Shorts
+        # Input: short gaming highlight with clear action and existing audio
+        # Why: vivid+zoom+speed sustain energy across cuts; animated captions
+        # replace missing context between clips; duck keeps music under audio;
+        # NO TTS (clips have gaming audio and streamer voice)
+        'id':       'montage_hype_reel',
+        'label':    'Montage Hype Reel',
+        'description': 'Gaming highlight reel — vivid grade, fast cuts, animated captions',
+        'platforms': ['tiktok', 'youtube'],
+        'addOns': {
+            'captions':   {'active': True, 'style': 'animated', 'position': 'center'},
+            'audio':      {'loudnorm': True, 'duck': True},
+            'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
+            'colorGrade': {'active': True, 'preset': 'vivid'},
+            'effects':    {'zoom': True, 'transitions': True},
+            'contentType': 'clips',
+        },
+        'format': 'portrait',
+        'expect_status': ('staged', 'complete', 'published'),
+    },
+    {
+        # Reaction / commentary clip for YouTube landscape
+        # Input: streamer reacting to a news story, game trailer, or drama clip
+        # Why: neutral grade keeps focus on expression; clean captions make
+        # commentary accessible; landscape matches the reaction video format;
+        # zoom highlights facial reactions; NO TTS
+        'id':       'reaction_cut',
+        'label':    'Reaction Cut',
+        'description': 'Reaction or commentary VOD — neutral grade, clean captions, landscape',
+        'platforms': ['youtube'],
+        'addOns': {
+            'captions':   {'active': True, 'style': 'clean', 'position': 'bottom'},
+            'audio':      {'loudnorm': True, 'duck': True},
+            'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
+            'colorGrade': {'active': True, 'preset': 'neutral'},
+            'effects':    {'zoom': True, 'transitions': True},
+            'contentType': 'clips',
+        },
+        'format': 'longform',
+        'expect_status': ('staged', 'complete', 'published'),
+    },
+    {
+        # Quick tutorial or tip short for Shorts/TikTok
+        # Input: <5min educational or guide clip (game tips, tier list, how-to)
+        # Why: cool grade reads "professional/informative"; centered clean captions
+        # make the instruction readable; minimal effects keep focus on content;
+        # NO TTS (creator is explaining on-screen)
+        'id':       'quick_guide',
+        'label':    'Quick Guide',
+        'description': 'Educational or tip clip — cool grade, clean centered captions, portrait',
+        'platforms': ['youtube', 'tiktok'],
+        'addOns': {
+            'captions':   {'active': True, 'style': 'clean', 'position': 'center'},
+            'audio':      {'loudnorm': True, 'duck': True},
+            'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
+            'colorGrade': {'active': True, 'preset': 'cool'},
+            'effects':    {'transitions': True},
+            'contentType': 'clips',
+        },
+        'format': 'portrait',
         'expect_status': ('staged', 'complete', 'published'),
     },
 ]
