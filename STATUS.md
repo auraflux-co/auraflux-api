@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.904 (Cursor — fix: restore New Relic — newrelic npm reinstalled, newrelic.js config created, require('newrelic') added as first line of server.js; NR was removed from package.json with wrong comment "no license key" — key was always present)
 **Last Updated:** 2026-06-01 v1.0.903 (Cursor — feat(CPD-483): Sentry SDK wired to server.js with portal context helpers; Semgrep SAST GitHub Action (p/nodejs, p/secrets, p/owasp); lib/portal_contract.js strict manifest checker on portals 2/3a/5; portal3a Gemini rubric upgraded with brandingRubric+artifactChecks structured checklist)
 **Last Updated:** 2026-06-01 v1.0.902 (Cursor — feat(CPD-482): drawtext textfile= for streamer names (special char fix); -preset medium + KEYFRAME_WEB (-g 60 -keyint_min 30) on chrome delivery; accurate -ss seek for local trim pass)
 **Last Updated:** 2026-06-01 v1.0.901 (Cursor — fix(CPD-481): chrome overlay dynamic timeout (4× video duration, min 10min); ffprobe HDR probe + bt709 tags on SDR outputs; portal3a black frame skip window 1s→15s + 0.3s min duration filter)

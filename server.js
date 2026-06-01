@@ -1,8 +1,15 @@
+// ── New Relic APM — MUST be the first require in the entire process ──────────
+// NR patches the Node.js module loader at startup. If any other require runs
+// first, NR cannot instrument those modules (Express, pg, axios, etc.).
+// The agent reads NEW_RELIC_LICENSE_KEY + NEW_RELIC_APP_NAME from env.
+// If the license key is absent, NR starts in disabled mode — no errors thrown.
+if (process.env.NEW_RELIC_LICENSE_KEY) {
+  require('newrelic');
+}
+
 // Load repo-root .env regardless of PM2/cwd (folder_id and keys live here).
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
-// New Relic removed from dependencies (no license key configured).
-// Re-add with: npm install newrelic && set NEW_RELIC_LICENSE_KEY + NEW_RELIC_APP_NAME on Render.
 
 // ── Build identity — set once at startup, never changes during runtime ────────
 const BUILD_INFO = (() => {
@@ -70,9 +77,9 @@ function withSentryPortal(stage, jobSpec, fn) {
 }
 
 // ── New Relic custom event helpers ───────────────────────────────────────────
-// All events are fire-and-forget — never block the pipeline.
-// nrPipelineEvent is a no-op when NR license is absent (which it always is now).
-// Sentry breadcrumbs are added alongside for portal-level tracing.
+// Fire-and-forget pipeline events — queryable via NRQL in New Relic.
+// nrPipelineEvent() is a safe no-op when the NR agent is not loaded.
+// Sentry breadcrumbs are added alongside every event for dual-path tracing.
 const { nrPipelineEvent } = require('./lib/nr_pipeline');
 
 function nrEvent(eventType, attributes) {
