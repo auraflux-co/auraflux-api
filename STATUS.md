@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.904 (Claude Code — feat(marketing): robots.txt, sitemap.xml, CF analytics, blog post pages, on-brand 404, mobile hamburger nav, Framer CSS stripped 208KB→27KB, SEO meta injection)
 **Last Updated:** 2026-06-01 v1.0.903 (Claude Code — feat(marketing): nav+footer editable in CMS, full blog post editor with markdown body, blog-posts/ folder collection)
 **Last Updated:** 2026-06-01 v1.0.902 (Claude Code — feat(marketing): CTA buttons editable via CMS — label + URL fields in config.yml, data-cta markers in HTML, patch_ctas() injection)
 **Last Updated:** 2026-06-01 v1.0.901 (Claude Code — fix(marketing): home.html not running inject_framer() — ${FRAMER_FONTS} showed as raw text)

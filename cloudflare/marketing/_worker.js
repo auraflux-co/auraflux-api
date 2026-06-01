@@ -19,6 +19,8 @@ const API_ORIGIN = 'https://auraflux-api.onrender.com';
 // All paths owned by the worker — no Framer proxy, no SPA router interception needed.
 const WORKER_OWNED_PATHS = ['/', '/blog', '/pricing', '/about', '/our-story', '/system', '/our-system', '/privacy', '/terms', '/aup', '/cookies', '/refunds', '/roadmap', '/contact', '/contact-us', '/plans', '/developer-api'];
 
+const BLOG_POSTS = {}; // populated by deploy.sh
+
 const ROUTER_INTERCEPT_JS = `<script id="af-router-intercept">
 (function() {
   var owned = ${JSON.stringify(WORKER_OWNED_PATHS)};
@@ -156,6 +158,7 @@ async function afSend(){
   send.disabled=false;
 }
 </script>
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "REPLACE_WITH_CF_ANALYTICS_TOKEN"}'></script>
 `;
 
 // ── Framer design components (injected by deploy.sh from framer-shell/) ───────
@@ -488,6 +491,23 @@ export default {
       return Response.redirect('https://auraflux.co/plans', 301);
     }
 
+
+    // ── Blog post pages (/blog/:slug) ──────────────────────────────────────────
+    if (path.startsWith('/blog/') && path.length > 6) {
+      const slug = path.slice(6);
+      const postHtml = BLOG_POSTS[slug];
+      if (postHtml) {
+        const html2 = postHtml.replace('</body>', INJECTED_CSS + '\n</body>');
+        const headers2 = addSecurityHeaders(new Headers({
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'CDN-Cache-Control': 'no-store',
+        }));
+        return new Response(html2, { headers: headers2 });
+      }
+    }
+
     // ── Pages served directly from worker (no Framer dependency) ──────────
     if (PAGES[path]) {
       // CPD-402: attempt to hydrate with DB-backed dynamic content (5-min cache)
@@ -533,6 +553,38 @@ export default {
     // ── App redirects ──────────────────────────────────────────────────────
     if (path === '/sign-in' || path === '/sign-up' || path === '/login') {
       return Response.redirect(`https://app.auraflux.co${path}`, 302);
+    }
+
+
+    // ── robots.txt ─────────────────────────────────────────────────────────────
+    if (path === '/robots.txt') {
+      return new Response(`User-agent: *
+Allow: /
+
+Sitemap: https://auraflux.co/sitemap.xml
+
+# Block admin
+Disallow: /admin
+Disallow: /oauth/`,
+        { headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'public, max-age=86400' } });
+    }
+
+    // ── sitemap.xml ────────────────────────────────────────────────────────────
+    if (path === '/sitemap.xml') {
+      return new Response(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://auraflux.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://auraflux.co/our-story</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://auraflux.co/our-system</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://auraflux.co/plans</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://auraflux.co/roadmap</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://auraflux.co/blog</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://auraflux.co/contact-us</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://auraflux.co/developer-api</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://auraflux.co/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://auraflux.co/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>`,
+        { headers: { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' } });
     }
 
     // ── Sveltia CMS admin UI ────────────────────────────────────────────────
@@ -637,16 +689,12 @@ self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
     }
 
     // ── Unknown path — 404 ────────────────────────────────────────────────
-    return new Response(LEGAL_SHELL(
-      'Page Not Found',
-      'The page you were looking for does not exist.',
-      'https://auraflux.co/',
-      `<h1>Page not found</h1>
-<p class="meta">Error 404</p>
-<p>The page you were looking for doesn't exist. <a href="/">Return home →</a></p>`
-    ), {
+    return new Response(`__PAGE_404__`, {
       status: 404,
-      headers: addSecurityHeaders(new Headers({ 'Content-Type': 'text/html; charset=utf-8' })),
+      headers: addSecurityHeaders(new Headers({
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      })),
     });
   },
 };
