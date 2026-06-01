@@ -149,6 +149,19 @@ with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)
 PYEOF
 
+# ── Step 2b-pre: Inject CMS content JSON into page HTML files ────────────────
+# Reads content/*.json (edited via auraflux.co/admin) and patches the pages
+# before they get bundled into the worker. This is what makes CMS edits live.
+
+CONTENT_DIR="$SCRIPT_DIR/content"
+if [[ -d "$CONTENT_DIR" ]]; then
+  echo "📝  Injecting CMS content from content/*.json..."
+  python3 "$SCRIPT_DIR/scripts/inject_content.py" "$PAGES_DIR" "$CONTENT_DIR" || \
+    echo "  ⚠  Content injection failed (non-fatal — using hardcoded HTML)"
+else
+  echo "  – No content/ directory found — skipping CMS injection"
+fi
+
 # ── Step 2b: Inject page HTML files ──────────────────────────────────────────
 # cloudflare/marketing/pages/*.html → worker placeholders:
 #   __PAGE_HOME__             → pages/home.html              (full homepage)

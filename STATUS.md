@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.897 (Claude Code — sync CMS injection to marketing branch)
 **Last Updated:** 2026-06-01 v1.0.895 (Claude Code — sync Sveltia CMS to marketing deploy branch)
 **Last Updated:** 2026-06-01 v1.0.891 (Cursor — refactor(run11): 20 verified clips from 60-clip manifest; fix longform guard; all 6 templates route to correct duration range)
 **Last Updated:** 2026-06-01 v1.0.890 (Claude Code — sync /pricing redirect + image fix to marketing)
