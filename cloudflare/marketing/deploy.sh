@@ -453,10 +453,35 @@ def part_file(name, filename, content_type, data):
         + data + b'\r\n'
     )
 
+ROBOTS_TXT = b"""User-agent: *
+Allow: /
+
+Sitemap: https://auraflux.co/sitemap.xml
+
+Disallow: /admin
+Disallow: /oauth/
+"""
+
+SITEMAP_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://auraflux.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://auraflux.co/our-story</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://auraflux.co/our-system</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://auraflux.co/plans</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://auraflux.co/roadmap</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://auraflux.co/blog</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://auraflux.co/contact-us</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://auraflux.co/developer-api</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://auraflux.co/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://auraflux.co/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>"""
+
 body = (
-    part_field('manifest', '{}')
+    part_field('manifest', '{"robots.txt":{"type":"text/plain"},"sitemap.xml":{"type":"application/xml"}}')
     + part_field('branch', 'main')
     + part_file('_worker.js', '_worker.js', 'application/javascript', worker_data)
+    + part_file('robots.txt', 'robots.txt', 'text/plain', ROBOTS_TXT)
+    + part_file('sitemap.xml', 'sitemap.xml', 'application/xml', SITEMAP_XML)
     + b'--' + boundary + b'--\r\n'
 )
 
