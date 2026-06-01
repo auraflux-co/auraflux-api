@@ -94,7 +94,17 @@ TS            = datetime.now().strftime('%Y%m%d_%H%M%S')
 HDR_OP = {'Authorization': f'Bearer {API_KEY_OPERATE}', 'Content-Type': 'application/json'}
 HDR_GU = {'Authorization': f'Bearer {API_KEY_GUIDED}',  'Content-Type': 'application/json'}
 
+# CPD-487: dashboard path smoke test — set CLERK_SESSION_TOKEN to a valid Clerk JWT
+# to hit POST /jobs (jobs_c1.js) instead of POST /v1/jobs (developer_api.js).
+# This exercises the BullMQ dispatch path and catches assembly/TTS/chrome divergence.
+CLERK_SESSION_TOKEN = os.environ.get('CLERK_SESSION_TOKEN', '')
+USE_DASHBOARD_PATH  = bool(CLERK_SESSION_TOKEN)
+
 def _hdr(tier): return HDR_GU if tier == 'guided' else HDR_OP
+
+def _dashboard_hdr():
+    """Auth header for POST /jobs (Clerk JWT). Only valid when CLERK_SESSION_TOKEN is set."""
+    return {'Authorization': f'Bearer {CLERK_SESSION_TOKEN}', 'Content-Type': 'application/json'}
 
 
 # ── Clip inventory — 20 verified clips downloaded May 2026 ───────────────────
@@ -529,12 +539,31 @@ def submit_job(clip, job_def, tier='operate', dry_run=False):
             body['addOns']['layout']['portrait'] = True
 
     if dry_run:
-        print(f"  [dry-run] would POST to {API_BASE}/v1/jobs")
+        path_label = 'POST /jobs (dashboard)' if USE_DASHBOARD_PATH else 'POST /v1/jobs (api)'
+        print(f"  [dry-run] would {path_label}")
         print(f"  [dry-run] body: {json.dumps(body, indent=2)[:300]}")
         return 'dry-run-job-id', body
 
     try:
-        r = requests.post(f"{API_BASE}/v1/jobs", headers=_hdr(tier), json=body, timeout=30)
+        # CPD-487: USE_DASHBOARD_PATH hits jobs_c1.js (BullMQ/inline path) via Clerk JWT.
+        # Default hits developer_api.js via API key. Run both periodically to catch divergence.
+        if USE_DASHBOARD_PATH:
+            # Dashboard payload shape: uses entryType, fetchSpec, productionPath
+            dashboard_body = {
+                'entryType':      'fetch',
+                'contentType':    add_ons.get('contentType', 'clips'),
+                'format':         format_,
+                'fetchSpec':      { 'sourceUrls': [clip['url']], 'sourceLibrary': [{ 'url': clip['url'], 'platform': clip['platform'], 'streamer': clip['streamer'] }] },
+                'productionPath': 'true',
+                'features':       [],
+                'platforms':      platforms,
+                'streamer':       clip['streamer'],
+                'addOns':         {k: v for k, v in add_ons.items() if k != 'contentType'},
+            }
+            r = requests.post(f"{API_BASE}/jobs", headers=_dashboard_hdr(), json=dashboard_body, timeout=30)
+            print(f"  [dashboard-path] POST /jobs")
+        else:
+            r = requests.post(f"{API_BASE}/v1/jobs", headers=_hdr(tier), json=body, timeout=30)
         resp = r.json()
         if r.status_code in (200, 201, 202) and (resp.get('jobId') or resp.get('id')):
             job_id = resp.get('jobId') or resp.get('id')
