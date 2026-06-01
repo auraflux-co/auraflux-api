@@ -64,5 +64,17 @@
   "diff_title": "What Makes AuraFlux Different",
   "diff_sub": "Not a tool. An automated production environment.",
   "team_title": "The People Behind AuraFlux",
-  "team_sub": "Built by operators, for operators."
+  "team_sub": "Built by operators, for operators.",
+  "hero_cta_label": "Get Started",
+  "hero_cta_url": "/plans",
+  "hero_cta_style": "primary",
+  "hero_cta_secondary_label": "See How It Works",
+  "hero_cta_secondary_url": "/our-system",
+  "hero_cta_secondary_style": "secondary",
+  "bottom_cta_label": "Get Started",
+  "bottom_cta_url": "/plans",
+  "bottom_cta_style": "primary",
+  "bottom_cta_secondary_label": "View Pricing",
+  "bottom_cta_secondary_url": "/plans",
+  "bottom_cta_secondary_style": "secondary"
 }
