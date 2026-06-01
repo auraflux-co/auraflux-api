@@ -43,7 +43,7 @@ Outputs:
     logs/run11_<timestamp>.json
 """
 
-import os, sys, json, time, argparse, hashlib, re, urllib.request, urllib.error
+import os, sys, json, time, argparse, hashlib, re, subprocess, urllib.request, urllib.error
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -830,6 +830,82 @@ def save_template(job_id, job_data, job_def, tier, saved_templates):
 
 # ── Core run-one-job function ─────────────────────────────────────────────────
 
+# ── Clean Path Registry ────────────────────────────────────────────────────────
+CLEAN_PATHS_DIR = REPO_DIR / 'scripts' / 'clean_paths'
+
+def _routing_preflight(job_def):
+    """
+    Validate that this job_def's submission body would route to the expected
+    productionProfile and templateId. Mirrors lib/pipeline_routing.js logic.
+    Returns list of error strings (empty = OK).
+    """
+    template_id  = job_def.get('id', '')
+    format_      = job_def.get('format', 'portrait')
+    content_type = job_def.get('addOns', {}).get('contentType', 'clips')
+    EXPECTED = {
+        'tiktok_clutch':     {'productionProfile': 'vertical_reel',  'templateId': 'short-form'},
+        'youtube_deep_dive': {'productionProfile': 'broadcast_desk', 'templateId': 'long-form'},
+        'irl_story_time':    {'productionProfile': 'vertical_reel',  'templateId': 'short-form'},
+        'montage_hype_reel': {'productionProfile': 'vertical_reel',  'templateId': 'short-form'},
+        'reaction_cut':      {'productionProfile': 'broadcast_desk', 'templateId': 'long-form'},
+        'quick_guide':       {'productionProfile': 'vertical_reel',  'templateId': 'short-form'},
+    }
+    expected = EXPECTED.get(template_id)
+    if not expected:
+        return []  # unnamed/Phase 1+ jobs — no registered path
+    is_longform = format_ in ('longform', 'long')
+    derived_profile = 'broadcast_desk' if (content_type == 'clips' and is_longform) else (
+        'vertical_reel' if content_type == 'clips' else 'broadcast_desk'
+    )
+    derived_tid = 'long-form' if is_longform else 'short-form'
+    errors = []
+    if derived_profile != expected['productionProfile']:
+        errors.append(
+            f"[routing] productionProfile mismatch for '{template_id}': "
+            f"would get '{derived_profile}', expected '{expected['productionProfile']}'. "
+            f"format='{format_}' contentType='{content_type}'"
+        )
+    if derived_tid != expected['templateId']:
+        errors.append(
+            f"[routing] templateId mismatch for '{template_id}': "
+            f"would get '{derived_tid}', expected '{expected['templateId']}'. format='{format_}'"
+        )
+    return errors
+
+
+def save_clean_path(job_def, job_id, grade):
+    """Record this template's 100/100 run in scripts/clean_paths/<templateId>.json."""
+    template_id = job_def.get('id', '')
+    if not template_id:
+        return
+    CLEAN_PATHS_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        git_hash = subprocess.check_output(
+            ['git', 'rev-parse', '--short', 'HEAD'], cwd=str(REPO_DIR), text=True
+        ).strip()
+    except Exception:
+        git_hash = 'unknown'
+    path_file = CLEAN_PATHS_DIR / f'{template_id}.json'
+    existing = {}
+    if path_file.exists():
+        try:
+            existing = json.loads(path_file.read_text())
+        except Exception:
+            pass
+    record = {
+        **existing,
+        'templateId':     template_id,
+        'label':          job_def.get('label', template_id),
+        'format':         job_def.get('format', 'portrait'),
+        'platforms':      job_def.get('platforms', []),
+        'lastCleanRun':   {'jobId': job_id, 'grade': grade, 'gitHash': git_hash,
+                           'runDate': datetime.now(timezone.utc).isoformat()},
+        'cleanRunCount':  existing.get('cleanRunCount', 0) + 1,
+    }
+    path_file.write_text(json.dumps(record, indent=2))
+    print(f"  💾 Clean path saved → scripts/clean_paths/{template_id}.json (run #{record['cleanRunCount']})")
+
+
 def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates, dry_run=False):
     """
     Submit, poll, grade, QA-gate, and gate-check one job.
@@ -840,6 +916,18 @@ def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates
     print(f"  Phase: {phase_label} | Job: {label} | Tier: {tier.upper()}")
     print(f"  Clip:  {clip['streamer']} — {clip['title'][:50]} ({clip['url'][:60]}...)")
     print(f"{'='*64}")
+
+    # ── Pre-submission: routing pre-flight ────────────────────────────────────
+    routing_errors = _routing_preflight(job_def)
+    if routing_errors:
+        print(f"\n  ❌ ROUTING PRE-FLIGHT FAIL — submission would produce wrong output shape:")
+        for e in routing_errors:
+            print(f"     {e}")
+        print(f"\n  Fix lib/pipeline_routing.js or the template definition, then re-run.")
+        results.append({'phase': phase_label, 'job_id': 'routing_preflight_fail',
+                        'label': label, 'tier': tier, 'status': 'routing_preflight_fail',
+                        'grade': 0})
+        return False
 
     # ── Pre-submission: source fit guard ──────────────────────────────────────
     fit_gaps = source_fit_check(clip, job_def)
@@ -930,10 +1018,11 @@ def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates
         print(f"  To resume: --phase {phase_label} --from-job {clip_idx}")
         return False
 
-    # Grade == 100 → save template
+    # Grade == 100 → save template + record clean path
     print(f"  ✅ GRADE 100 — saving template")
     tpl_id = save_template(job_id, final or {}, job_def, tier, saved_templates)
     result['template_id'] = tpl_id
+    save_clean_path(job_def, job_id, grade_value)
     return True
 
 
