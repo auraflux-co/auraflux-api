@@ -191,8 +191,62 @@ CLIP_INVENTORY = [
      'duration_s': 75},
 ]
 
-def _pick_clip(idx):
-    return CLIP_INVENTORY[idx % len(CLIP_INVENTORY)]
+def _pick_clip(idx, job_def=None):
+    """
+    Pick a clip from CLIP_INVENTORY by index.
+    If job_def specifies min/max duration, scan forward from idx to find a fit.
+    Falls back to idx % len if no fit found within a full rotation.
+    """
+    min_s = (job_def or {}).get('min_duration_s', 0)
+    max_s = (job_def or {}).get('max_duration_s', 999999)
+    n = len(CLIP_INVENTORY)
+    for offset in range(n):
+        clip = CLIP_INVENTORY[(idx + offset) % n]
+        d = clip.get('duration_s', 0)
+        if min_s <= d <= max_s:
+            if offset > 0:
+                print(f"  ⚙  Clip rotated +{offset} to match duration constraint "
+                      f"({min_s}–{max_s}s): {clip['streamer']} {d}s")
+            return clip
+    # No matching clip found — fall back and surface a warning
+    clip = CLIP_INVENTORY[idx % n]
+    print(f"  ⚠  No clip in inventory matched duration constraint "
+          f"({min_s}–{max_s}s) — using {clip['streamer']} {clip.get('duration_s',0)}s anyway. "
+          f"Add a clip of the right length to CLIP_INVENTORY.")
+    return clip
+
+
+def source_fit_check(clip, job_def):
+    """
+    Pre-submission guard: verify the clip's duration and content type are
+    appropriate for the template. Returns list of QA gap dicts (empty = OK).
+    """
+    gaps = []
+    d    = clip.get('duration_s', 0)
+    min_s = job_def.get('min_duration_s', 0)
+    max_s = job_def.get('max_duration_s', 999999)
+    fmt  = job_def.get('format', 'portrait')
+
+    if d < min_s:
+        gaps.append({
+            'checkId': 'source_too_short',
+            'reason':  (f"Template '{job_def.get('label')}' expects ≥{min_s}s source "
+                        f"({fmt}), got {d}s clip from {clip['streamer']}. "
+                        f"Submit a VOD or longer segment instead.")
+        })
+    if d > max_s:
+        gaps.append({
+            'checkId': 'source_too_long',
+            'reason':  (f"Template '{job_def.get('label')}' expects ≤{max_s}s source, "
+                        f"got {d}s. Use a shorter clip.")
+        })
+    if fmt == 'longform' and d < 300:
+        gaps.append({
+            'checkId': 'longform_needs_vod',
+            'reason':  (f"Longform template got a {d}s clip — streamers expect a real "
+                        f"VOD here (≥5min), not a short. Output will be meaningless.")
+        })
+    return gaps
 
 
 # ── Video cache ───────────────────────────────────────────────────────────────
@@ -257,6 +311,8 @@ PRESET_TEMPLATES = [
         },
         'format': 'portrait',
         'expect_status': ('staged', 'complete', 'published'),
+        'min_duration_s': 10,
+        'max_duration_s': 180,  # short clip only — not a VOD
     },
     {
         # Long-form VOD trimmed to a focused YouTube upload
@@ -277,6 +333,8 @@ PRESET_TEMPLATES = [
         },
         'format': 'longform',
         'expect_status': ('staged', 'complete', 'published'),
+        'min_duration_s': 300,  # must be a real VOD — at least 5 minutes
+        'max_duration_s': 3600,
     },
     {
         # IRL / just-chatting clip for multi-platform portrait export
@@ -297,6 +355,8 @@ PRESET_TEMPLATES = [
         },
         'format': 'portrait',
         'expect_status': ('staged', 'complete', 'published'),
+        'min_duration_s': 15,
+        'max_duration_s': 300,
     },
     {
         # High-energy gaming montage for TikTok/Shorts
@@ -318,6 +378,8 @@ PRESET_TEMPLATES = [
         },
         'format': 'portrait',
         'expect_status': ('staged', 'complete', 'published'),
+        'min_duration_s': 10,
+        'max_duration_s': 180,
     },
     {
         # Reaction / commentary clip for YouTube landscape
@@ -339,6 +401,8 @@ PRESET_TEMPLATES = [
         },
         'format': 'longform',
         'expect_status': ('staged', 'complete', 'published'),
+        'min_duration_s': 180,  # reaction clips need substance — 3min minimum
+        'max_duration_s': 3600,
     },
     {
         # Quick tutorial or tip short for Shorts/TikTok
@@ -360,6 +424,8 @@ PRESET_TEMPLATES = [
         },
         'format': 'portrait',
         'expect_status': ('staged', 'complete', 'published'),
+        'min_duration_s': 30,
+        'max_duration_s': 300,
     },
 ]
 
@@ -593,46 +659,97 @@ try:
 except ImportError:
     _ANTHROPIC_OK = False
 
-def claude_ux_observe(job_def, job_spec_sent, output_url, final_job, tier):
-    """Run Claude Opus UX review. Returns list of observation dicts."""
+def claude_ux_observe(job_def, job_spec_sent, output_url, final_job, tier, clip=None):
+    """
+    Claude UX review. Checks:
+      - Branding quality (was a real name/logo configured, or did it fall back to 'AuraFlux' 4×?)
+      - Source fit (was the clip duration appropriate for the template?)
+      - Output value (would a real streamer post this?)
+      - Pipeline health (any warning signs in the job state?)
+    Returns list of observation dicts.
+    """
     if not _ANTHROPIC_OK:
         return [{'area': 'setup', 'severity': 'info',
                  'observation': 'anthropic package not installed or ANTHROPIC_API_KEY missing',
                  'suggested_change': 'pip install anthropic && set ANTHROPIC_API_KEY'}]
     try:
-        client = _anthropic_lib.Anthropic(api_key=ANTHROPIC_API_KEY)
-        tl_qa  = twelve_labs_check(final_job) if final_job else {}
-        tl_info = f"Twelve Labs QA score: {tl_qa.get('score', 'N/A')} — issues: {tl_qa.get('issues', [])}" if tl_qa.get('score') else 'Twelve Labs QA: no result'
+        client  = _anthropic_lib.Anthropic(api_key=ANTHROPIC_API_KEY)
+        tl_qa   = twelve_labs_check(final_job) if final_job else {}
+        tl_info = (f"Twelve Labs QA: score={tl_qa.get('score')} pass={tl_qa.get('pass')} "
+                   f"issues={tl_qa.get('issues', [])[:3]}"
+                   if tl_qa.get('score') is not None else 'Twelve Labs QA: no result (extension did not run)')
 
-        prompt = f"""You are a UX and product quality reviewer for AuraFlux, an AI content production platform.
+        # Extract the actual chrome config from the job spec to check branding
+        spec     = (final_job or {}).get('jobSpec') or {}
+        chrome   = (spec.get('designSpec') or {}).get('chrome') or {}
+        chrome_name    = chrome.get('name', '')
+        chrome_streamer = chrome.get('streamer', '')
+        brand_active   = (job_spec_sent.get('addOns') or {}).get('branding', {}).get('active', False)
 
-Job: {job_def.get('id','?')} — {job_def.get('label','?')} | Tier: {tier.upper()}
-Add-ons activated: {json.dumps(list(job_spec_sent.get('addOns', {}).keys()), indent=2)[:300]}
+        # Source metadata
+        clip_dur  = (clip or {}).get('duration_s', '?')
+        clip_type = (clip or {}).get('content_type', '?')
+        tpl_min   = job_def.get('min_duration_s', 0)
+        tpl_max   = job_def.get('max_duration_s', 999999)
+        tpl_fmt   = job_def.get('format', 'portrait')
+
+        prompt = f"""You are a strict QA reviewer for AuraFlux — an AI production platform for streamers.
+Your job is to catch issues that would embarrass a streamer if they posted this output.
+Be direct. Flag issues Rob (the operator) should have caught automatically.
+
+=== JOB ===
+Template: {job_def.get('label','?')} ({job_def.get('id','?')})
+Description: {job_def.get('description', 'N/A')}
+Format: {tpl_fmt} | Platforms: {job_def.get('platforms', [])}
+Tier: {tier.upper()} | Status: {(final_job or {}).get('status', 'timeout')}
 Output URL: {output_url or 'NONE — video not produced'}
-Job final status: {final_job.get('status', '?') if final_job else 'timeout'}
+
+=== SOURCE ===
+Clip: {(clip or {}).get('streamer','?')} — {(clip or {}).get('title','?')}
+Duration: {clip_dur}s | Content type: {clip_type}
+Template requires: {tpl_min}–{tpl_max}s source
+
+=== BRANDING ===
+Branding add-on active: {brand_active}
+Chrome show name set: '{chrome_name}' (empty = fell back to platform default 'AuraFlux')
+Chrome streamer name set: '{chrome_streamer}' (empty = no streamer handle in lower-third)
+Issue to check: if branding is active but chrome_name is empty, the overlay shows 'AuraFlux'
+in BOTH the top bar AND the lower-third simultaneously — looks like platform spam, not a branded video.
+
+=== QA RESULTS ===
 {tl_info}
+Add-ons ordered: {json.dumps(list((job_spec_sent.get('addOns') or {}).keys()))}
 
-Evaluate:
-1. Was the right add-on combination activated for the template goal?
-2. Does the output URL exist? If not, what does that indicate about the pipeline?
-3. Any patterns in the Twelve Labs QA issues that suggest a systemic fix?
-4. Rate the overall production quality experience for this tier: {tier}
+=== YOUR CHECKS (evaluate each explicitly) ===
+1. BRANDING: If branding is active, was a real show name/streamer configured?
+   If chrome_name is empty, flag CRITICAL — the output has 'AuraFlux' stamped 4 times with no
+   actual streamer identity. A real customer with their own brand name would see their name
+   repeated instead, but the test must validate this works correctly.
+2. SOURCE FIT: Does {clip_dur}s of '{clip_type}' content make sense for the '{job_def.get('label')}' template?
+   Is a {tpl_fmt} format appropriate for this source?
+3. OUTPUT VALUE: Would a real streamer actually post this output? What's missing or wrong?
+4. PIPELINE: Any gaps in the portal reports, missing QA results, or warning signs?
+5. ADD-ON LOGIC: Were the activated add-ons appropriate for this content type, or were
+   incompatible add-ons stacked (e.g. TTS on a clip that already has voice)?
 
-Return a JSON array of observations (max 5):
-[{{"area": "output|pipeline|add_ons|quality|flow", "severity": "critical|high|medium|low|info",
-   "observation": "...", "suggested_change": "..."}}]
-Only real issues or meaningful positives. Be specific and actionable."""
+Return ONLY a JSON array (max 6 items):
+[{{"area": "branding|source_fit|output_value|pipeline|add_ons",
+   "severity": "critical|high|medium|low|info",
+   "observation": "specific factual statement about what is wrong or right",
+   "suggested_change": "concrete fix — not generic advice"}}]
+Flag every real issue, even if the grade is 100. Grade measures pipeline health, not output quality."""
 
         msg = client.messages.create(
             model='claude-opus-4-5',
-            max_tokens=1024,
+            max_tokens=1200,
             messages=[{'role': 'user', 'content': prompt}],
         )
         text = msg.content[0].text
         m    = re.search(r'\[[\s\S]+\]', text)
         return json.loads(m.group(0)) if m else []
     except Exception as e:
-        return [{'area': 'setup', 'severity': 'info', 'observation': f'Claude UX error: {e}', 'suggested_change': ''}]
+        return [{'area': 'setup', 'severity': 'info',
+                 'observation': f'Claude UX error: {e}', 'suggested_change': ''}]
 
 
 # ── Jira ticket for failures ──────────────────────────────────────────────────
@@ -721,6 +838,19 @@ def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates
     print(f"  Clip:  {clip['streamer']} — {clip['title'][:50]} ({clip['url'][:60]}...)")
     print(f"{'='*64}")
 
+    # ── Pre-submission: source fit guard ──────────────────────────────────────
+    fit_gaps = source_fit_check(clip, job_def)
+    if fit_gaps:
+        print(f"\n  ❌ PRE-FLIGHT FAIL — source does not match template requirements:")
+        for g in fit_gaps:
+            print(f"     [{g['checkId']}] {g['reason']}")
+        print(f"\n  Fix: add a clip with the right duration to CLIP_INVENTORY, "
+              f"then re-run with --from-job {clip_idx}")
+        results.append({'phase': phase_label, 'job_id': 'preflight_fail',
+                        'label': label, 'tier': tier, 'status': 'preflight_fail',
+                        'grade': 0, 'grade_detail': {'gaps': fit_gaps}})
+        return False
+
     # Optional: pre-cache the clip locally (best-effort)
     cache_video(clip['url'])
 
@@ -760,7 +890,7 @@ def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates
 
     # ── Claude UX observer ────────────────────────────────────────────────
     print(f"  🔍 Running Claude UX observer...")
-    ux_obs = claude_ux_observe(job_def, job_spec_sent or {}, output_url, final, tier)
+    ux_obs = claude_ux_observe(job_def, job_spec_sent or {}, output_url, final, tier, clip=clip)
     critical_ux = [o for o in ux_obs if o.get('severity') in ('critical', 'high')]
     print(f"  🗣  Claude UX: {len(ux_obs)} observations ({len(critical_ux)} critical/high)")
     for o in critical_ux[:3]:
@@ -814,7 +944,7 @@ def run_phase(phase_label, jobs, tier, results, saved_templates, dry_run=False, 
         if i < from_job:
             print(f"  ⏭  Skipping job {i} ({job_def.get('label','?')}) — from-job={from_job}")
             continue
-        clip = _pick_clip(i)
+        clip = _pick_clip(i, job_def)
         ok   = run_job(clip, job_def, tier, phase_label, i, results, saved_templates, dry_run)
         if not ok:
             return False
