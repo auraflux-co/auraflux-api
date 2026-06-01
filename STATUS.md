@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.893 (Claude Code — fix(marketing-editor): PAGE_FILES now includes about/system/developer-api pages; suggested prompts updated for current routes)
 **Last Updated:** 2026-06-01 v1.0.892 (Cursor — refactor(run11): 20 verified clips from manifest; all 6 templates route to correct duration range)
 **Last Updated:** 2026-06-01 v1.0.889 (Claude Code — fix(marketing): /pricing 301 redirect to /plans; operate image object-position crops text)
 **Last Updated:** 2026-06-01 v1.0.890 (Cursor — fix(qa): source_fit pre-flight + branding_config grader check + claude_ux_observe overhaul; Gemini templates + 20-clip inventory in run_11)
