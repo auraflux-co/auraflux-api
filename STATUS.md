@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.910 (Claude Code — feat(cms): CTA button color/style editable — primary=gold filled, secondary=gold outline, ghost=text; select dropdown in CMS per button)
 **Last Updated:** 2026-06-01 v1.0.909 (Claude Code — fix(cms): force redeploy config — Navigation/Footer/Blog Posts collections visible in CMS sidebar)
 **Last Updated:** 2026-06-01 v1.0.908 (Claude Code — fix(marketing): add _routes.json to force all CF Pages routes through worker, fixing robots.txt being intercepted by CF edge)
 **Last Updated:** 2026-06-01 v1.0.907 (Claude Code — feat(marketing): Cloudflare Web Analytics token set — 10041c40a8b64f7d9818e992e773ea6d)

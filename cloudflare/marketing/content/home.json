@@ -52,5 +52,7 @@
   "final_cta_sub": "No team, no editors, no upload queues. AuraFlux handles the entire pipeline from source to publish.",
   "final_cta_label": "Start Producing",
   "og_image": "https://auraflux.co/favicon.png",
-  "final_cta_url": "/plans"
+  "final_cta_url": "/plans",
+  "cta_primary_style": "primary",
+  "final_cta_style": "primary"
 }

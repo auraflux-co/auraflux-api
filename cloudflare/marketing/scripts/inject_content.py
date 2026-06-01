@@ -39,28 +39,65 @@ def patch_editables(html, data):
     )
 
 
+STYLE_CLASSES = {
+    'primary':   ('btn-primary',   'cta-primary'),
+    'secondary': ('btn-secondary', 'cta-secondary'),
+    'ghost':     ('btn-ghost',     'btn-ghost'),
+}
+
 def patch_ctas(html, data, cta_map):
     """
     Patch CTA buttons using data-cta attributes.
-    cta_map: dict of { 'data_cta_value': ('label_key', 'url_key') }
-    e.g. { 'hero_cta': ('hero_cta_label', 'hero_cta_url') }
+    cta_map: dict of { 'data_cta_value': ('label_key', 'url_key', 'style_key') }
+    style_key is optional — if provided, swaps the btn-* class.
     """
-    for cta_id, (label_key, url_key) in cta_map.items():
+    for cta_id, keys in cta_map.items():
+        label_key = keys[0]
+        url_key   = keys[1]
+        style_key = keys[2] if len(keys) > 2 else None
+
         label = data.get(label_key)
         url   = data.get(url_key)
+        style = data.get(style_key) if style_key else None
+
+        # Swap button style class
+        if style and style in STYLE_CLASSES:
+            new_btn, new_cta = STYLE_CLASSES[style]
+            # Replace btn-primary/btn-secondary/btn-ghost on the data-cta element
+            html = re.sub(
+                rf'(<a\b[^>]*data-cta="{re.escape(cta_id)}"[^>]*class=")([^"]*?)(")',
+                lambda m: m.group(1) + re.sub(
+                    r'\b(btn-primary|btn-secondary|btn-ghost|cta-primary|cta-secondary)\b',
+                    lambda c: new_btn if 'btn-' in c.group(0) else new_cta,
+                    m.group(2)
+                ) + m.group(3),
+                html
+            )
+            html = re.sub(
+                rf'(<a\b[^>]*class=")([^"]*?)("[^>]*data-cta="{re.escape(cta_id)}")',
+                lambda m: m.group(1) + re.sub(
+                    r'\b(btn-primary|btn-secondary|btn-ghost|cta-primary|cta-secondary)\b',
+                    lambda c: new_btn if 'btn-' in c.group(0) else new_cta,
+                    m.group(2)
+                ) + m.group(3),
+                html
+            )
+
+        # Patch label
         if label:
             html = re.sub(
                 rf'(data-cta="{re.escape(cta_id)}"[^>]*>)[^<]*(</a>)',
                 rf'\g<1>{label}\g<2>',
                 html
             )
+
+        # Patch URL
         if url:
             html = re.sub(
                 rf'(<a\b[^>]*\bhref=")[^"]*("[^>]*data-cta="{re.escape(cta_id)}")',
                 rf'\g<1>{url}\g<2>',
                 html
             )
-            # Also handle href after data-cta
             html = re.sub(
                 rf'(<a\b[^>]*data-cta="{re.escape(cta_id)}"[^>]*\bhref=")[^"]*(")',
                 rf'\g<1>{url}\g<2>',
@@ -205,20 +242,20 @@ for filename, (content_key, extra_patch) in PAGES.items():
                     html
                 )
 
-    # 3. CTA patches
+    # 3. CTA patches — tuples are (label_key, url_key, style_key)
     cta_maps = {
         'our-story': {
-            'hero_cta':             ('hero_cta_label',   'hero_cta_url'),
-            'bottom_cta_secondary': ('cta_btn_label',    'cta_btn_url'),
+            'hero_cta':             ('hero_cta_label',   'hero_cta_url',    'hero_cta_style'),
+            'bottom_cta_secondary': ('cta_btn_label',    'cta_btn_url',     'cta_btn_style'),
         },
         'our-system': {
-            'hero_cta':   ('hero_cta_label',   'hero_cta_url'),
-            'bottom_cta': ('bottom_cta_label', 'bottom_cta_url'),
+            'hero_cta':   ('hero_cta_label',   'hero_cta_url',    'hero_cta_style'),
+            'bottom_cta': ('bottom_cta_label', 'bottom_cta_url',  'bottom_cta_style'),
         },
         'plans': {
-            'operate_cta': ('operate.cta_label', 'operate.cta_url'),
-            'guided_cta':  ('guided.cta_label',  'guided.cta_url'),
-            'managed_cta': ('managed.cta_label', 'managed.cta_url'),
+            'operate_cta': ('operate.cta_label', 'operate.cta_url', 'operate.cta_style'),
+            'guided_cta':  ('guided.cta_label',  'guided.cta_url',  'guided.cta_style'),
+            'managed_cta': ('managed.cta_label', 'managed.cta_url', 'managed.cta_style'),
         },
     }
     if content_key in cta_maps:

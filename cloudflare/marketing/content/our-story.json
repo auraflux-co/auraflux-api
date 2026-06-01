@@ -62,5 +62,7 @@
   "hero_cta_label": "See Plans",
   "hero_cta_url": "/plans",
   "cta_btn_label": "Get Started",
-  "cta_btn_url": "/plans"
+  "cta_btn_url": "/plans",
+  "hero_cta_style": "primary",
+  "cta_btn_style": "secondary"
 }

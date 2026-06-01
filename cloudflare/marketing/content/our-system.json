@@ -64,5 +64,7 @@
   "hero_cta_label": "View Plans",
   "hero_cta_url": "/plans",
   "bottom_cta_label": "Compare Plans",
-  "bottom_cta_url": "/plans"
+  "bottom_cta_url": "/plans",
+  "hero_cta_style": "primary",
+  "bottom_cta_style": "primary"
 }
