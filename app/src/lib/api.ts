@@ -1364,7 +1364,7 @@ export async function upsertAppContent(
   payload: { page_key: string; key: string; value: string },
   token?: string,
 ): Promise<{ ok: boolean; page_key: string; key: string; value: string }> {
-  return apiFetch('/api/admin/app-content', { method: 'POST', body: payload, token });
+  return apiFetch('/api/admin/app-content', { method: 'POST', body: JSON.stringify(payload), token });
 }
 
 export async function deleteAppContent(

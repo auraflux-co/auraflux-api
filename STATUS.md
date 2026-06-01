@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.922 (Cursor — feat(cpd-488): job detail full redesign — 4-stage stepper, compact spec strip, status heroes per state, conditional sections, post-submit overlay; fix TS: chatWithConcierge alias + apiFetch body JSON.stringify)
 **Last Updated:** 2026-06-01 v1.0.921 (Claude Code — feat(cms): all CTA buttons wired on all pages — home/system/pricing; label+URL+style editable in CMS)
 **Last Updated:** 2026-06-01 v1.0.919 (Claude Code — fix(cms): Our Story hero+bottom CTAs wired — data-cta markers, JSON seeded, inject patched, config updated; fix duplicate home.html in PAGES)
 **Last Updated:** 2026-06-01 v1.0.920 (Cursor — fix(review): chat widget check string af-chat-btn→af-chat-bubble; roadmap 200 is now pass not warn; deleted merged branch feat/cpd-327-multi-brand)

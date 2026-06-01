@@ -753,6 +753,17 @@ function JobBuilderPageInner() {
   return (
     <div className="max-w-5xl space-y-0">
 
+      {/* Submitting overlay */}
+      {isPending && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm font-medium">Starting production…</p>
+            <p className="text-xs text-muted-foreground">You'll be taken to your job page in a moment.</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4 pb-4">
         <div>
