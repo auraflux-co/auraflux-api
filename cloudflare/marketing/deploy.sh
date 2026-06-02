@@ -364,6 +364,18 @@ with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)
 PYEOF
 
+# ── Step 2c: Validate — abort if any placeholder survived the build ───────────
+echo ""
+echo "🔍  Validating build (checking for unresolved placeholders)..."
+LEFTOVER=$(grep -oE '__[A-Z_]{3,}__' "$WORKER_BUILD" | sort -u || true)
+if [[ -n "$LEFTOVER" ]]; then
+  echo "❌  Deploy ABORTED — unresolved placeholders found in built worker:"
+  echo "$LEFTOVER" | sed 's/^/    /'
+  echo "    Fix the placeholder injection step and redeploy."
+  exit 1
+fi
+echo "    ✓ No unresolved placeholders — build is clean"
+
 echo ""
 # ── Step 3: Deploy via Python urllib (curl not available in all environments) ──
 echo ""
