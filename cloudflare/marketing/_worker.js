@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://f6aff8ec.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://9885fb2a.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -558,7 +558,7 @@ export default {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-store',
       }));
-      adminHeaders.set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://api.github.com https://github.com https://raw.githubusercontent.com data: blob:;");
+      adminHeaders.set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://api.github.com https://github.com https://raw.githubusercontent.com https://fonts.googleapis.com https://fonts.gstatic.com data: blob:;");
       return new Response(`__ADMIN_INDEX__`, { headers: adminHeaders });
     }
     if (path === '/admin/config.yml') {
