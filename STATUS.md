@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-30 v1.0.928 (Cursor — fix(cpd-491/492/493/495/496/497): _resolveExtensionWorkers injects jobSpec; onPortalPass propagates; operator retry/advance add assembly+completion hooks; burn_image/shoppable/thumbnail_ext feature gates; review script false positives fixed)
 **Last Updated:** 2026-05-30 v1.0.927 (Cursor — feat: 3-layer pipeline_parity_review.js; nightly cron at 07:00 UTC posts Jira pipeline-health-report; session-review rule reads it at session start)
 **Last Updated:** 2026-06-01 v1.0.924 (Cursor — security: npm audit fix root (0 vulns), Next.js 16.2.4→16.2.7, shadcn moved to devDeps, worker CSP+HSTS headers, Render IP allowlist locked to Cloudflare IPs, dependabot.yml, R2 marketing snapshot in backup cron; DNS fixes via browser)
 **Last Updated:** 2026-06-01 v1.0.923 (Claude Code — fix(responsive): nav button overlap at 375px, plans comparison table replaced with card layout on mobile <600px)

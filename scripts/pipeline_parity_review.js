@@ -60,10 +60,11 @@ function checkExtensionAdapterPassesJobSpec() {
 function checkAssemblyFailureAborts() {
   const src = readFile('lib/portal_policy_runner.js');
   if (!src) return [warn('portal_policy_runner.js not found')];
-  const swallows = src.includes("catch (_e) { /* non-fatal */") || src.match(/onPortalPass[\s\S]{0,200}catch.*non-fatal/);
+  // Look for onPortalPass wrapped in try/catch with non-fatal comment within ~5 lines
+  const swallows = !!(src.match(/await onPortalPass[\s\S]{0,150}catch\s*\(_e\)\s*\{\s*\/\* non-fatal \*\//));
   return [swallows
     ? fail('portal_policy_runner.js: onPortalPass exceptions swallowed — assembly failure continues to portal3a (CPD-492)')
-    : pass('portal_policy_runner.js: assembly failure correctly aborts portal sequence')];
+    : pass('portal_policy_runner.js: assembly failure correctly aborts portal sequence (onPortalPass propagates)')];
 }
 
 function checkOperatorRetryHooks() {
@@ -127,12 +128,25 @@ function checkFeatureGates() {
   });
 }
 
+// Routes that are intentionally not mounted on C1+ Render (C0-only or pending refactor)
+const ROUTE_MOUNT_EXCLUSIONS = new Set([
+  'c0_capcut',       // C0-only: CapCut progressive assembly (localhost only)
+  'c0_gate_tools',   // C0-only: gate debugging tools (localhost only)
+  'c0_sources',      // C0-only: local source file management (localhost only)
+  'assembly_routes', // C0-only: Google Drive / Canva / ticker routes (not on Render)
+  'concierge',       // Renamed to collab; /concierge* redirect is inline in server.js
+  'publish',         // Inline in server.js; lib/routes/publish.js is a pending refactor
+]);
+
 function checkRouteMounting() {
   const routeDir = path.join(ROOT, 'lib', 'routes');
   const serverSrc = readFile('server.js');
   if (!serverSrc || !fs.existsSync(routeDir)) return [warn('server.js or lib/routes/ not found')];
   return fs.readdirSync(routeDir).filter(f => f.endsWith('.js')).map(f => {
     const name = f.replace('.js', '');
+    if (ROUTE_MOUNT_EXCLUSIONS.has(name)) {
+      return pass(`lib/routes/${f}: excluded (C0-only or pending refactor — not required on Render)`);
+    }
     return serverSrc.includes(`routes/${name}`) || serverSrc.includes(`'${name}'`) || serverSrc.includes(`"${name}"`)
       ? pass(`lib/routes/${f}: mounted in server.js`)
       : warn(`lib/routes/${f}: not found in server.js — may be unmounted`);
@@ -173,17 +187,25 @@ function checkPipelineDependencyEnvVars() {
     { key: 'KICK_CLIENT_ID',         label: 'Kick clip sourcing' },
     // Publish
     { key: 'UPLOADPOST_API_KEY',     label: 'UploadPost (multi-platform publish)' },
-    // Observability
-    { key: 'SENTRY_DSN',             label: 'Sentry error tracking' },
+    // Observability — warn_only: Sentry DSN is set on Render but not required in local .env
+    { key: 'SENTRY_DSN',             label: 'Sentry error tracking', warn_only: true },
   ];
 
-  for (const { key, label } of required) {
-    const inEnv     = env.includes(`${key}=`) && !env.match(new RegExp(`${key}=\\s*$`, 'm'));
+  for (const { key, label, warn_only } of required) {
+    // Consider a var "set" if the line exists AND has a non-empty value after '='
+    const valueMatch = env.match(new RegExp(`^${key}=(.+)$`, 'm'));
+    const inEnv = !!(valueMatch && valueMatch[1]?.trim());
     const inExample = example.includes(key);
     if (inEnv) {
       results.push(pass(`${key}: set in .env (${label})`));
+    } else if (warn_only) {
+      // Observability/optional vars — likely set on Render but not in local .env
+      results.push(warn(`${key}: not in local .env (may be set on Render) — verify in Render env panel (${label})`));
+    } else if (inExample && env.includes(`${key}=`)) {
+      // In .env but blank — may be set on Render but not locally
+      results.push(warn(`${key}: present in .env but blank (may be set on Render) — verify (${label})`));
     } else if (inExample) {
-      results.push(fail(`${key}: in .env.example but NOT in .env — pipeline dependency missing (${label})`));
+      results.push(fail(`${key}: in .env.example but missing from .env — pipeline dependency missing (${label})`));
     } else {
       results.push(warn(`${key}: not found in .env or .env.example — verify manually (${label})`));
     }
@@ -358,9 +380,10 @@ function checkSentryOnHardFail() {
   return ['lib/services/pipeline_assembly.js', 'lib/routes/jobs_c1.js', 'lib/queue/worker.js'].map(f => {
     const src = readFile(f);
     if (!src) return warn(`${f}: not found`);
-    return (src.includes('Sentry') || src.includes('captureException') || src.includes('captureMessage'))
-      ? pass(`${f}: Sentry alert on failure`)
-      : warn(`${f}: no Sentry call detected — failures may be silent`);
+    // logError() is the project's Sentry wrapper (error_logger.js → Sentry.captureException)
+    return (src.includes('Sentry') || src.includes('captureException') || src.includes('captureMessage') || src.includes('logError'))
+      ? pass(`${f}: error reporting on failure (Sentry/logError)`)
+      : warn(`${f}: no Sentry/logError call detected — failures may be silent`);
   });
 }
 
