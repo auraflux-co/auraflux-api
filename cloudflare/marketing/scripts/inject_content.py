@@ -91,6 +91,35 @@ def patch_roadmap(html, data):
     return html
 
 
+def patch_ctas(html, data, cta_map):
+    """Update <a data-cta="key"> elements with label, url, and optional style from data."""
+    for cta_name, (label_key, url_key, style_key) in cta_map.items():
+        label = data.get(label_key)
+        url   = data.get(url_key)
+        style = data.get(style_key)
+
+        def replacer(m, label=label, url=url, style=style):
+            tag_open = m.group(1)   # everything from < up to >
+            text     = m.group(2)   # inner text
+            tag_close = m.group(3)  # </a>
+            if url:
+                tag_open = re.sub(r'href="[^"]*"', f'href="{url}"', tag_open)
+            if style:
+                # Replace class attribute, or add one
+                if re.search(r'class="[^"]*"', tag_open):
+                    tag_open = re.sub(r'class="[^"]*"', f'class="{style}"', tag_open)
+                else:
+                    tag_open = tag_open.rstrip('>') + f' class="{style}">'
+            return tag_open + (str(label) if label else text) + tag_close
+
+        html = re.sub(
+            rf'(<a\b[^>]*\bdata-cta="{re.escape(cta_name)}"[^>]*>)([\s\S]*?)(</a>)',
+            replacer,
+            html
+        )
+    return html
+
+
 def patch_seo(html, meta):
     if meta.get('title'):
         html = re.sub(r'<title>[^<]*</title>', f'<title>{meta["title"]}</title>', html)

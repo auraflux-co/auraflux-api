@@ -551,14 +551,14 @@ export default {
 
     // ── Sveltia CMS admin UI ────────────────────────────────────────────────
     if (path === '/admin' || path === '/admin/') {
-      return new Response(`__ADMIN_INDEX__`, {
-        headers: addSecurityHeaders(new Headers({
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-store',
-          // Relax CSP for CMS — needs to load unpkg scripts and connect to GitHub
-          'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;",
-        })),
-      });
+      // Apply security headers then override CSP last — addSecurityHeaders sets the
+      // strict site-wide CSP which blocks unpkg/CDN scripts that Sveltia CMS needs.
+      const adminHeaders = addSecurityHeaders(new Headers({
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      }));
+      adminHeaders.set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;");
+      return new Response(`__ADMIN_INDEX__`, { headers: adminHeaders });
     }
     if (path === '/admin/config.yml') {
       return new Response(`__ADMIN_CONFIG__`, {
