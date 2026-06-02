@@ -207,3 +207,20 @@ logs/content_analysis_*.json
 logs/content_analysis_*.md
 logs/benchmark_*.json
 logs/run7_*.json
+logs/run8_*.json
+logs/run9_*.json
+logs/run10_*.json
+logs/run11_*.json
+logs/run12_*.json
+logs/session_close_report.md
+logs/last-session-close-commit
+logs/pipeline_parity_review_*.md
+
+# Video inventory (large binary/data files, not source code)
+scripts/video_inventory/
+
+# Nested git repos in docs/
+docs/lumi/live-site-velo/
+
+# Playwright MCP artifacts
+.playwright-mcp/
