@@ -63,44 +63,14 @@
   #af-nav-phone span{display:none;}
   #af-nav-divider{margin:0 16px 0 14px;}
 }
-
-/* ── Mobile hamburger ──────────────────────────────────────────────── */
-#af-nav-hamburger{
-  display:none;flex-direction:column;gap:5px;cursor:pointer;
-  padding:8px;background:none;border:none;
-}
-#af-nav-hamburger span{
-  display:block;width:22px;height:2px;
-  background:rgba(255,255,255,.85);border-radius:2px;
-  transition:transform .2s,opacity .2s;
-}
-#af-mobile-menu{
-  display:none;position:fixed;top:84px;left:0;right:0;
-  background:rgba(11,18,32,.97);backdrop-filter:blur(12px);
-  border-bottom:1px solid rgba(255,255,255,.08);
-  padding:16px 24px 24px;z-index:999;
-  flex-direction:column;gap:4px;
-}
-#af-mobile-menu.open{display:flex;}
-#af-mobile-menu a{
-  font-size:1rem;font-weight:500;color:rgba(255,255,255,.8);
-  text-decoration:none;padding:12px 0;
-  border-bottom:1px solid rgba(255,255,255,.06);
-  transition:color .15s;
-}
-#af-mobile-menu a:last-child{border-bottom:none;}
-#af-mobile-menu a:hover{color:#f5c542;text-decoration:none;}
-#af-mobile-cta{
-  margin-top:12px;display:block;text-align:center;
-  background:#f5c542;color:#0b1220;padding:12px;
-  border-radius:8px;font-weight:700;font-size:.95rem;text-decoration:none;
-}
 @media(max-width:680px){
-  #af-nav-links{display:none !important;}
-  #af-nav-divider{display:none !important;}
-  #af-nav-hamburger{display:flex;}
+  #af-nav-links{display:none;}
+  #af-nav-divider{display:none;}
+  #af-nav-cta{padding:7px 14px;font-size:13px;}
 }
-
+@media(max-width:400px){
+  #af-nav-cta{display:none;}
+}
 </style>
 
 <nav id="af-nav">
@@ -122,33 +92,8 @@
     </div>
 
     <div id="af-nav-right">
-      <button id="af-nav-hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-      <a id="af-nav-cta" href="/plans">Get Started</a>
+      <a id="af-nav-cta" href="https://app.auraflux.co/sign-up">Get Started</a>
     </div>
 
   </div>
 </nav>
-  <!-- Mobile menu -->
-  <div id="af-mobile-menu">
-    <a href="/">Home</a>
-    <a href="/our-story">Our Story</a>
-    <a href="/our-system">Our System</a>
-    <a href="/pricing">Plans</a>
-    <a href="/roadmap">Roadmap</a>
-    <a href="/contact-us">Contact Us</a>
-    <a href="/plans" id="af-mobile-cta">Get Started</a>
-  </div>
-  <script>
-  (function(){
-    var btn = document.getElementById('af-nav-hamburger');
-    var menu = document.getElementById('af-mobile-menu');
-    if(btn && menu){
-      btn.addEventListener('click', function(){
-        menu.classList.toggle('open');
-      });
-    }
-  })();
-  </script>
-

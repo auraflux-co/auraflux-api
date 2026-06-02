@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-01 v1.0.924 (Claude Code — sync responsive fixes to marketing)
 **Last Updated:** 2026-06-01 v1.0.922 (Claude Code — sync all CTA wiring to marketing)
 **Last Updated:** 2026-06-01 v1.0.920 (Claude Code — sync Our Story CTA fixes to marketing)
 **Last Updated:** 2026-06-01 v1.0.918 (Claude Code — fix(cms): re-add Navigation/Footer/Blog Posts collections to config.yml — were lost in revert)
