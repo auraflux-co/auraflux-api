@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-05-30 v1.0.926 (Cursor — feat: pipeline_parity_review.js expanded to 3-layer ecosystem check; PIPELINE_PARITY_DEEP_REVIEW.md updated with full LLM prompt)
 **Last Updated:** 2026-06-02 v1.0.925 (Cursor — feat: pipeline_parity_review.js — repeatable 10-point codebase health check script)
 **Last Updated:** 2026-06-01 v1.0.924 (Claude Code — sync responsive fixes to marketing)
 **Last Updated:** 2026-06-01 v1.0.922 (Claude Code — sync all CTA wiring to marketing)
