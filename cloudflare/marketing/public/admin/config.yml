@@ -101,7 +101,8 @@ collections:
           - { label: "CTA Headline", name: cta_headline, widget: string }
           - { label: "CTA Subtext", name: cta_sub, widget: string }
           - { label: "Hero Button Label", name: hero_cta_label, widget: string, default: "Get Started" }
-          - { label: "Hero Button URL", name: hero_cta_url, widget: string, default: "/plans" }          - { label: "Hero Button 2 Label", name: hero_cta_secondary_label, widget: string, default: "See How It Works" }
+          - { label: "Hero Button URL", name: hero_cta_url, widget: string, default: "/plans" }
+          - { label: "Hero Button 2 Label", name: hero_cta_secondary_label, widget: string, default: "See How It Works" }
           - { label: "Hero Button 2 URL", name: hero_cta_secondary_url, widget: string, default: "/our-system" }
           - { label: "Hero Button 2 Style", name: hero_cta_secondary_style, widget: select, options: [{label: "Gold (filled)", value: "primary"}, {label: "Gold (outline)", value: "secondary"}, {label: "Ghost", value: "ghost"}], default: "secondary" }
           - { label: "Bottom CTA Button Label", name: bottom_cta_label, widget: string, default: "Get Started" }
