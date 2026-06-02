@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-02 v1.0.932 (Cursor — fix(admin): config.yml YAML parse error — two list entries merged onto one line; /admin now loads Sveltia CMS correctly)
 **Last Updated:** 2026-06-02 v1.0.931 (Cursor — fix(marketing): admin CSP overwrote permissive CMS headers; add missing patch_ctas() to inject_content.py; redeploy auraflux.co)
 **Last Updated:** 2026-06-02 v1.0.930 (Cursor — fix(review): 4 false positives in aider_session_review.sh — NEXT_PUBLIC_API_BASE wrong env file, marketing/staging unmerged branch noise, chat widget static HTML vs JS, /concierge stale page context)
 **Last Updated:** 2026-05-30 v1.0.929 (Cursor — fix: queue/worker.js _resolveExtensionWorkers(jobSpec) BullMQ path; review script false positives eliminated — 0 RED 1 AMBER (SENTRY_DSN local-only intentional))
