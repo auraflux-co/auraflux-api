@@ -1,0 +1,168 @@
+{
+  "run": "run10_feature_matrix",
+  "ts": "20260530_200952",
+  "total": 4,
+  "at_100": 2,
+  "avg_grade": 72.5,
+  "templates_saved": 0,
+  "results": [
+    {
+      "grade": 100,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        },
+        {
+          "checkId": "portrait_applied",
+          "reason": "savedOutputs.layoutPortraitApplied not set"
+        },
+        {
+          "checkId": "gpt4o_score",
+          "reason": "gpt4o_qa_ext returned no score"
+        }
+      ],
+      "summary": "Grade: 100/100 | GAPS:3",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780186192456",
+      "status": "staged",
+      "tier": "guided",
+      "label": "Guided: audio clean + portrait + GPT-4o QA",
+      "qa_gate": "guided_audio_portrait_gpt4o",
+      "features_covered": [
+        "layout.portrait",
+        "audio.loudnorm",
+        "gpt4o_qa_ext"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP",
+        "title": "xQc wrong (guided)",
+        "duration_s": 45,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780186192456/1780186207743_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780186192456.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 100,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        }
+      ],
+      "summary": "Grade: 100/100 | GAPS:1",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780187212333",
+      "status": "staged",
+      "tier": "guided",
+      "label": "Guided: captions + colour grade + defect scan",
+      "qa_gate": "guided_captions_color_defect",
+      "features_covered": [
+        "captions.whisper",
+        "color.lut",
+        "color.film_grain"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg",
+        "title": "IRL ban (guided)",
+        "duration_s": 51,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780187212333/1780187269004_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780187212333.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 60,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status",
+          "reason": "expected ('held',), got staged"
+        },
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        },
+        {
+          "checkId": "gpt4o_score",
+          "reason": "gpt4o_qa_ext returned no score"
+        },
+        {
+          "checkId": "thumbnail_ext_fired",
+          "reason": "thumbnailApproval=on but status=staged"
+        }
+      ],
+      "summary": "Grade: 60/100 | GAPS:4",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780188231275",
+      "status": "staged",
+      "tier": "guided",
+      "label": "Guided: TTS + full stack + thumbnailApproval (\u2192 held)",
+      "qa_gate": "guided_full_thumbapproval",
+      "features_covered": [
+        "thumbnailApproval",
+        "tts.elevenlabs",
+        "gpt4o_qa_ext"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP",
+        "title": "Halo 2 (tpl seed)",
+        "duration_s": 45,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780188231275/1780188279043_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780188231275.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status",
+          "reason": "expected ('staged', 'complete', 'published'), got failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl / cleanVideoUrl"
+        },
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        },
+        {
+          "checkId": "gpt4o_score",
+          "reason": "gpt4o_qa_ext returned no score"
+        }
+      ],
+      "summary": "Grade: 30/100 | GAPS:4",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780189250320",
+      "status": "failed",
+      "tier": "guided",
+      "label": "Guided: dynamicOverlays + transitions + GPT-4o QA",
+      "qa_gate": "guided_transitions_gpt4o",
+      "features_covered": [
+        "dynamicOverlays",
+        "transitions.wipe",
+        "transitions.creative",
+        "gpt4o_qa_ext"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid",
+        "title": "Wade's Cruise (tpl replay)",
+        "duration_s": 51,
+        "source": "inventory"
+      },
+      "outputUrl": null,
+      "cleanVideoUrl": ""
+    }
+  ],
+  "templates": []
+}

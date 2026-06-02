@@ -25,6 +25,36 @@ Serena in memory = less work for Aider overnight. Aider should focus on environm
 
 Exception: non-code files (markdown, yaml, JSON config, shell scripts) may use StrReplace/Write.
 
+## After EVERY `git push origin main`
+
+**Check `STATUS.md` line 2 for `Deploy Mode` before triggering anything.**
+
+```
+Deploy Mode: dev      → trigger deploys immediately after push
+Deploy Mode: testing  → DO NOT deploy — a test run is in progress on the current build
+```
+
+Both `auraflux-app` and `auraflux-api` have `autoDeploy: off`. Pushing to GitHub does NOT deploy automatically.
+
+**When `Deploy Mode: dev`**, run after every push (skip `auraflux-api` if only `app/` files changed):
+```bash
+RENDER_API_KEY=$(grep "RENDER_API_KEY" .env | head -1 | cut -d= -f2)
+# auraflux-app (Next.js frontend — always deploy when app/ files changed)
+curl -s -X POST "https://api.render.com/v1/services/srv-d7pnalhj2pic73btevl0/deploys" \
+  -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" | python3 -m json.tool
+# auraflux-api (Node/Docker backend — only if lib/, server.js, Dockerfile changed)
+curl -s -X POST "https://api.render.com/v1/services/srv-d7nsd77avr4c73frifcg/deploys" \
+  -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" | python3 -m json.tool
+```
+
+Confirm the response shows `"status": "build_in_progress"` and the correct commit message before moving on.
+
+**When `Deploy Mode: testing`**, skip the deploy and note it in the response: "Deploy held — testing mode active."
+
+**Switching modes:** Rob sets the mode. When Rob says "run a job / let's test / testing now" → update STATUS.md to `testing`. When Rob says "done testing / back to dev / ship it" → update STATUS.md to `dev`.
+
+---
+
 ## Commit review (after EVERY `git commit`)
 
 Serena reviews every commit — no exceptions. This is not optional and does not require a PR.

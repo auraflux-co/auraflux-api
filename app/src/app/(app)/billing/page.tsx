@@ -16,7 +16,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { tierLabel } from '@/lib/tier-labels';
 import { formatUserError } from '@/lib/job-labels';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -304,44 +303,50 @@ function BillingPageInner() {
 
       {/* ── 1. Current plan summary ─────────────────────────────────────────── */}
       {balance && (
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <CardTitle className="af-h3">Current plan</CardTitle>
-              <Badge>{PLAN_META[currentTier]?.label ?? tierLabel(currentTier)}</Badge>
-            </div>
-            {PLAN_META[currentTier]?.sub && (
-              <p className="af-label mt-0.5 text-muted-foreground">{PLAN_META[currentTier].sub}</p>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-end gap-2">
-              <span className="af-metric">
-                {plans.find(p => p.id === currentTier)?.price_usd
-                  ? `$${plans.find(p => p.id === currentTier)!.price_usd.toLocaleString()}`
-                  : '—'}
-              </span>
-              <span className="af-label mb-1 text-muted-foreground">/month</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between af-body">
-                <span className="text-muted-foreground">Credits used this period</span>
-                <span className="font-medium tabular-nums">
-                  {creditUsed.toLocaleString()} / {creditTotal.toLocaleString()}
+        <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5 space-y-4">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <span className="af-subhead text-muted-foreground">Current plan</span>
+                <span className="text-[11px] font-bold uppercase tracking-wide bg-primary/15 text-primary border border-primary/30 px-2 py-0.5 rounded">
+                  {PLAN_META[currentTier]?.label ?? tierLabel(currentTier)}
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-all"
-                  style={{ width: `${usagePct}%` }}
-                />
+              <div className="flex items-baseline gap-1.5">
+                <span className="af-metric text-primary">
+                  {plans.find(p => p.id === currentTier)?.price_usd
+                    ? `$${plans.find(p => p.id === currentTier)!.price_usd.toLocaleString()}`
+                    : '—'}
+                </span>
+                <span className="af-label text-muted-foreground">/month</span>
               </div>
-              {balance.pack_remaining > 0 && (
-                <p className="af-caption">{balance.pack_remaining.toLocaleString()} pack credits also available</p>
+              {PLAN_META[currentTier]?.sub && (
+                <p className="af-caption text-muted-foreground mt-0.5">{PLAN_META[currentTier].sub}</p>
               )}
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-right">
+              <p className="af-caption text-muted-foreground">Credits this period</p>
+              <p className="text-lg font-bold tabular-nums">
+                <span className={usagePct > 80 ? 'text-yellow-400' : 'text-foreground'}>{creditUsed.toLocaleString()}</span>
+                <span className="text-muted-foreground font-normal text-sm"> / {creditTotal.toLocaleString()}</span>
+              </p>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <div className="w-full h-2 bg-muted/60 rounded-full overflow-hidden">
+              <div
+                className={cn('h-full rounded-full transition-all', usagePct > 80 ? 'bg-yellow-500' : 'bg-primary')}
+                style={{ width: `${usagePct}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="af-caption text-muted-foreground">{Math.round(usagePct)}% used</span>
+              {balance.pack_remaining > 0 && (
+                <span className="af-caption text-primary/70">+{balance.pack_remaining.toLocaleString()} pack credits</span>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Downgrade link — visible for non-entry-tier customers */}
@@ -365,49 +370,55 @@ function BillingPageInner() {
               const plan = plans.find((p) => p.id === tier);
               const meta = PLAN_META[tier];
               const canCheckout = !!plan?.priceConfigured;
+              const isFeatured = tier === 'managed';
               return (
-                <Card key={tier} className={cn('flex flex-col', tier === 'managed' && 'ring-1 ring-primary/30')}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="text-sm font-semibold">{meta.label}</CardTitle>
-                      {tier === 'managed' && (
-                        <Badge variant="secondary" className="af-caption shrink-0">Most powerful</Badge>
-                      )}
+                <div key={tier} className={cn(
+                  'rounded-xl border flex flex-col overflow-hidden',
+                  isFeatured
+                    ? 'border-primary/40 bg-gradient-to-b from-primary/5 to-card'
+                    : 'border-border bg-card',
+                )}>
+                  {isFeatured && (
+                    <div className="bg-primary/10 border-b border-primary/20 px-4 py-1.5 flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Most powerful</span>
                     </div>
-                    <p className="af-caption text-muted-foreground">{meta.sub}</p>
-                    <p className="af-caption font-medium text-primary/70 mt-0.5">{meta.valueMetric}</p>
-                    <div className="flex items-end gap-1 mt-2">
-                      <span className="af-metric">
+                  )}
+                  <div className="p-4 flex-1 flex flex-col gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{meta.label}</p>
+                      <p className="af-caption text-muted-foreground mt-0.5">{meta.sub}</p>
+                      <p className="af-caption font-medium text-primary/80 mt-1">{meta.valueMetric}</p>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className={cn('af-metric', isFeatured ? 'text-primary' : '')}>
                         {plan?.price_usd ? `$${plan.price_usd.toLocaleString()}` : '—'}
                       </span>
-                      <span className="af-caption mb-1">/mo</span>
+                      <span className="af-caption text-muted-foreground">/mo</span>
                     </div>
-                    <p className="af-caption mt-1 flex items-center gap-1">
-                      <span className="text-muted-foreground">{plan?.credits?.toLocaleString() ?? '—'} credits/month</span>
-                      <span className="text-amber-500/80">· no rollover</span>
+                    <p className="af-caption text-muted-foreground">
+                      {plan?.credits?.toLocaleString() ?? '—'} credits/month
+                      <span className="text-primary/60 ml-1">· no rollover</span>
                     </p>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col gap-3">
                     <ul className="space-y-1.5 flex-1">
                       {meta.highlights.map((h) => (
-                        <li key={h} className="af-label flex gap-1.5">
-                          <span className="text-primary mt-0.5">✓</span>
-                          {h}
+                        <li key={h} className="af-label flex gap-2">
+                          <span className="text-primary shrink-0 mt-0.5">✓</span>
+                          <span>{h}</span>
                         </li>
                       ))}
                     </ul>
                     {meta.contactSales ? (
                       <a
                         href="/support"
-                        className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'w-full mt-2 text-center')}
+                        className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'w-full text-center mt-1')}
                       >
                         {meta.cta}
                       </a>
                     ) : canCheckout ? (
                       <Button
                         size="sm"
-                        variant={tier === 'managed' ? 'default' : 'outline'}
-                        className="w-full mt-2"
+                        variant={isFeatured ? 'default' : 'outline'}
+                        className="w-full mt-1"
                         disabled={isPending}
                         onClick={() => handleUpgrade(tier)}
                       >
@@ -416,13 +427,13 @@ function BillingPageInner() {
                     ) : (
                       <a
                         href="/support"
-                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full mt-2 text-center')}
+                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full text-center mt-1')}
                       >
                         {meta.cta}
                       </a>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -431,30 +442,35 @@ function BillingPageInner() {
           </p>
 
           {/* Feature comparison table */}
-          <div className="mt-6 overflow-x-auto">
+          <div className="mt-6 overflow-x-auto rounded-xl border border-border overflow-hidden">
             <table className="w-full af-caption border-collapse">
               <thead>
-                <tr>
-                  <th className="text-left py-2 pr-4 font-semibold text-foreground w-1/2">Feature / Resource</th>
+                <tr className="bg-muted/40 border-b border-border">
+                  <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">Feature</th>
                   {(['operate', 'guided', 'managed'] as const).map((t) => (
-                    <th key={t} className="text-center py-2 px-3 font-semibold text-foreground">{PLAN_META[t].label.replace('AuraFlux ', '')}</th>
+                    <th key={t} className={cn(
+                      'text-center py-3 px-3 font-semibold',
+                      t === 'managed' ? 'text-primary' : 'text-foreground',
+                    )}>
+                      {PLAN_META[t].label.replace('AuraFlux ', '')}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {FEATURE_COMPARISON.map((row, i) => (
-                  <tr key={row.feature} className={cn('border-t border-border', i % 2 === 0 && 'bg-muted/30')}>
-                    <td className="py-2 pr-4 text-muted-foreground">{row.feature}</td>
+                  <tr key={row.feature} className={cn('border-t border-border/50', i % 2 === 0 ? '' : 'bg-muted/20')}>
+                    <td className="py-2.5 px-4 text-muted-foreground">{row.feature}</td>
                     {(['operate', 'guided', 'managed'] as const).map((t) => {
                       const val = row[t];
                       return (
-                        <td key={t} className="text-center py-2 px-3">
+                        <td key={t} className="text-center py-2.5 px-3">
                           {typeof val === 'string' ? (
                             <span className="text-foreground font-medium">{val}</span>
                           ) : val ? (
-                            <span className="text-green-600 dark:text-green-400" aria-label="Included">✓</span>
+                            <span className="text-emerald-400 font-bold" aria-label="Included">✓</span>
                           ) : (
-                            <span className="text-muted-foreground/50" aria-label="Not included">—</span>
+                            <span className="text-muted-foreground/30" aria-label="Not included">—</span>
                           )}
                         </td>
                       );
@@ -482,29 +498,27 @@ function BillingPageInner() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {packs.filter((p) => p.priceConfigured && p.id === 'credit_topup').map((pack) => (
-              <Card key={pack.id}>
-                <CardContent className="pt-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="af-body font-semibold">{pack.label}</p>
-                      <p className="af-label text-muted-foreground">{pack.description}</p>
-                    </div>
-                    <Badge variant="secondary" className="af-caption shrink-0">
-                      {pack.credits} cr
-                    </Badge>
+              <div key={pack.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="af-body font-semibold">{pack.label}</p>
+                    <p className="af-label text-muted-foreground">{pack.description}</p>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full"
-                    disabled={isPending}
-                    onClick={() => handleBuyPack(pack.id)}
-                  >
-                    {isPending ? 'Processing…' : `Buy — $${((pack.price_cents ?? 0) / 100).toFixed(0)}`}
-                  </Button>
-                  <p className="af-caption text-muted-foreground text-center">Choose quantity at checkout</p>
-                </CardContent>
-              </Card>
+                  <span className="text-[11px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded shrink-0">
+                    {pack.credits} cr
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  disabled={isPending}
+                  onClick={() => handleBuyPack(pack.id)}
+                >
+                  {isPending ? 'Processing…' : `Buy — $${((pack.price_cents ?? 0) / 100).toFixed(0)}`}
+                </Button>
+                <p className="af-caption text-muted-foreground/70 text-center">Choose quantity at checkout</p>
+              </div>
             ))}
           </div>
         </div>

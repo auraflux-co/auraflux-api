@@ -1,0 +1,195 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "AuraFlux home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "AuraFlux" [ref=e5]
+      - generic [ref=e7]:
+        - link "Home" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - link "Our Story" [ref=e9] [cursor=pointer]:
+          - /url: /about
+        - link "Our System" [ref=e10] [cursor=pointer]:
+          - /url: /system
+        - link "Pricing" [ref=e11] [cursor=pointer]:
+          - /url: /pricing
+        - link "Roadmap" [ref=e12] [cursor=pointer]:
+          - /url: /roadmap
+        - link "Contact" [ref=e13] [cursor=pointer]:
+          - /url: /contact
+      - generic [ref=e14]:
+        - link "+1 (571) 600-2835" [ref=e15] [cursor=pointer]:
+          - /url: tel:+15716002835
+          - img [ref=e16]
+          - generic [ref=e18]: +1 (571) 600-2835
+        - button "Chat" [ref=e19] [cursor=pointer]:
+          - img [ref=e20]
+          - text: Chat
+  - generic [ref=e22]:
+    - generic [ref=e23]: Our Story
+    - heading "Content Production, Without the Team" [level=1] [ref=e24]:
+      - text: Content Production,
+      - emphasis [ref=e25]: Without the Team
+    - paragraph [ref=e26]: AuraFlux is the production infrastructure for creators who can't afford to stop streaming to edit. We automate everything from clip selection to final publish.
+    - generic [ref=e27]:
+      - link "Get Started" [ref=e28] [cursor=pointer]:
+        - /url: https://app.auraflux.co/sign-up
+      - link "See How It Works" [ref=e29] [cursor=pointer]:
+        - /url: /system
+  - generic [ref=e31]:
+    - heading "Why We Built This" [level=2] [ref=e32]
+    - paragraph [ref=e33]: Most streamers and creators produce hours of content every week — and then lose most of it. Editing takes longer than the stream itself. Hiring an editor costs more than the content earns. So the clips sit on a hard drive, and the channel doesn't grow.
+    - paragraph [ref=e34]: We built AuraFlux to close that gap. Not by making editing faster, but by eliminating the need for it entirely. Our platform takes your raw stream or uploaded video, runs it through an AI-powered production pipeline, and delivers polished, platform-ready content — automatically.
+    - blockquote [ref=e35]: "\"Every creator should be able to produce like a media company. That's not a staffing problem — it's a software problem.\""
+    - paragraph [ref=e36]: AuraFlux is the software answer to that problem. The same pipeline that a five-person content team would run — clip selection, scripting, voiceover, assembly, quality checks, brand application, and direct publish — happens automatically, for every piece of content you produce.
+  - generic [ref=e38]:
+    - generic [ref=e39]:
+      - generic [ref=e40]: "6"
+      - generic [ref=e41]: Production portals in the pipeline
+    - generic [ref=e42]:
+      - generic [ref=e43]: "5"
+      - generic [ref=e44]: Publishing platforms supported
+    - generic [ref=e45]:
+      - generic [ref=e46]: "3"
+      - generic [ref=e47]: Plan tiers — one for every team size
+    - generic [ref=e48]:
+      - generic [ref=e49]: "0"
+      - generic [ref=e50]: Editors required
+  - generic [ref=e51]:
+    - heading "What Makes AuraFlux Different" [level=2] [ref=e52]
+    - paragraph [ref=e53]: Not a tool. An automated production environment.
+    - generic [ref=e54]:
+      - generic [ref=e55]:
+        - generic [ref=e56]: ⚙
+        - heading "A full pipeline, not a feature" [level=3] [ref=e57]
+        - paragraph [ref=e58]: Other tools do one thing — trim clips, generate captions, schedule posts. AuraFlux does all of it, in sequence, automatically. One job submission runs the entire production process end to end.
+      - generic [ref=e59]:
+        - generic [ref=e60]: 🎯
+        - heading "Platform-aware by default" [level=3] [ref=e61]
+        - paragraph [ref=e62]: Every job knows its destination. Vertical crop for TikTok. Chapter markers for YouTube. Captions calibrated for each platform's viewer behavior. No manual reformatting.
+      - generic [ref=e63]:
+        - generic [ref=e64]: 🔍
+        - heading "AI quality checks at every stage" [level=3] [ref=e65]
+        - paragraph [ref=e66]: Each portal runs QA before passing to the next. Frozen frames, silence gaps, assembly defects, and creative quality are all checked before your content goes live.
+      - generic [ref=e67]:
+        - generic [ref=e68]: 📡
+        - heading "Direct publish, no manual export" [level=3] [ref=e69]
+        - paragraph [ref=e70]: Connect your YouTube and TikTok accounts once. AuraFlux publishes directly via OAuth — with your title, description, tags, thumbnail, and chapter markers already applied.
+      - generic [ref=e71]:
+        - generic [ref=e72]: 💬
+        - heading "Collab guides you through it" [level=3] [ref=e73]
+        - paragraph [ref=e74]: Every plan includes Collab, the in-app AI assistant. Ask it anything — what features are available, how credits work, what to do next. It knows the full platform and responds in plain English.
+      - generic [ref=e75]:
+        - generic [ref=e76]: 🔌
+        - heading "API-first for technical operators" [level=3] [ref=e77]
+        - paragraph [ref=e78]: The entire platform is accessible via REST API. Integrate AuraFlux directly into your own tooling, dashboard, or workflow automation. Full developer documentation included.
+  - generic [ref=e79]:
+    - heading "The Technology Behind the Platform" [level=2] [ref=e80]
+    - paragraph [ref=e81]: Six production portals. One automated pipeline.
+    - generic [ref=e82]:
+      - generic [ref=e83]:
+        - generic [ref=e84]: "0"
+        - generic [ref=e85]:
+          - heading "Content Intelligence" [level=4] [ref=e86]
+          - paragraph [ref=e87]: Source video analysis — segment detection, clip scoring, content type classification. The pipeline decides which moments are worth producing before any editing begins.
+      - generic [ref=e88]:
+        - generic [ref=e89]: "1"
+        - generic [ref=e90]:
+          - heading "Script & Voice" [level=4] [ref=e91]
+          - paragraph [ref=e92]: AI script generation tailored to your content type and format. ElevenLabs TTS voiceover production in your brand voice. Optional — skip it if you want your own audio.
+      - generic [ref=e93]:
+        - generic [ref=e94]: "2"
+        - generic [ref=e95]:
+          - heading "Edit & Assembly" [level=4] [ref=e96]
+          - paragraph [ref=e97]: Auto-cut, clip merging, vertical crop and reframe for mobile formats, audio normalization. This is where raw content becomes a watchable video.
+      - generic [ref=e98]:
+        - generic [ref=e99]: "3"
+        - generic [ref=e100]:
+          - heading "Quality Assurance" [level=4] [ref=e101]
+          - paragraph [ref=e102]: FFmpeg defect detection (freeze frames, silence gaps, encoding issues) followed by creative QA scoring. Jobs that don't meet the quality bar are flagged for review before they proceed.
+      - generic [ref=e103]:
+        - generic [ref=e104]: "4"
+        - generic [ref=e105]:
+          - heading "Brand & Effects" [level=4] [ref=e106]
+          - paragraph [ref=e107]: Lower thirds, AI-generated thumbnails, scene transitions, chapter markers, captions. Your brand applied consistently to every piece of content, at scale.
+      - generic [ref=e108]:
+        - generic [ref=e109]: "5"
+        - generic [ref=e110]:
+          - heading "Publish" [level=4] [ref=e111]
+          - paragraph [ref=e112]: Direct publish to YouTube and TikTok via OAuth. Title, description, tags, thumbnails, and chapter markers all applied automatically. One job. Done.
+    - link "Full system breakdown →" [ref=e114] [cursor=pointer]:
+      - /url: /system
+  - generic [ref=e115]:
+    - heading "The People Behind AuraFlux" [level=2] [ref=e116]
+    - paragraph [ref=e117]: Built by operators, for operators.
+    - generic [ref=e119]:
+      - generic [ref=e120]: RG
+      - generic [ref=e121]: Rob Gregory
+      - generic [ref=e122]: Founder & CEO
+      - generic [ref=e123]: Former operations and technology leader. Built AuraFlux to solve the content production bottleneck he saw firsthand — talented creators losing audience share because they couldn't produce fast enough.
+  - generic [ref=e124]:
+    - heading "Ready to automate your production?" [level=2] [ref=e125]
+    - paragraph [ref=e126]: No editors required.
+    - generic [ref=e127]:
+      - link "Get Started" [ref=e128] [cursor=pointer]:
+        - /url: https://app.auraflux.co/sign-up
+      - link "View Pricing" [ref=e129] [cursor=pointer]:
+        - /url: /pricing
+  - contentinfo [ref=e130]:
+    - generic [ref=e131]:
+      - generic [ref=e132]:
+        - navigation "Footer navigation" [ref=e133]:
+          - link "Home" [ref=e134] [cursor=pointer]:
+            - /url: /
+          - link "Our Story" [ref=e135] [cursor=pointer]:
+            - /url: /about
+          - link "Our System" [ref=e136] [cursor=pointer]:
+            - /url: /system
+          - link "Pricing" [ref=e137] [cursor=pointer]:
+            - /url: /pricing
+          - link "Roadmap" [ref=e138] [cursor=pointer]:
+            - /url: /roadmap
+          - link "Blog" [ref=e139] [cursor=pointer]:
+            - /url: /blog
+          - link "Contact" [ref=e140] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e141]:
+          - link "AuraFlux home" [ref=e142] [cursor=pointer]:
+            - /url: /
+            - img "AuraFlux" [ref=e143]
+          - paragraph [ref=e144]: Automated content production from source to publish. No team required.
+          - generic [ref=e145]:
+            - link "Privacy Policy" [ref=e146] [cursor=pointer]:
+              - /url: /privacy
+            - generic [ref=e147]: ·
+            - link "Terms" [ref=e148] [cursor=pointer]:
+              - /url: /terms
+            - generic [ref=e149]: ·
+            - link "AUP" [ref=e150] [cursor=pointer]:
+              - /url: /aup
+            - generic [ref=e151]: ·
+            - link "Cookies" [ref=e152] [cursor=pointer]:
+              - /url: /cookies
+            - generic [ref=e153]: ·
+            - link "Refunds" [ref=e154] [cursor=pointer]:
+              - /url: /refunds
+        - generic [ref=e155]:
+          - link "LinkedIn" [ref=e156] [cursor=pointer]:
+            - /url: https://linkedin.com/company/auraflux
+            - generic [ref=e157]: LinkedIn
+            - img [ref=e159]
+          - link "Instagram" [ref=e161] [cursor=pointer]:
+            - /url: https://instagram.com/auraflux
+            - generic [ref=e162]: Instagram
+            - img [ref=e164]
+          - link "TikTok" [ref=e166] [cursor=pointer]:
+            - /url: https://tiktok.com/@auraflux
+            - generic [ref=e167]: TikTok
+            - img [ref=e169]
+          - link "YouTube" [ref=e171] [cursor=pointer]:
+            - /url: https://youtube.com/@auraflux
+            - generic [ref=e172]: YouTube
+            - img [ref=e174]
+      - paragraph [ref=e177]: © 2026 AuraFlux. All rights reserved.
+  - generic "Chat with us" [ref=e178] [cursor=pointer]:
+    - img [ref=e179]

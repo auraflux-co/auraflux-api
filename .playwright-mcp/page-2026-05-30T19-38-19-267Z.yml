@@ -1,0 +1,114 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/blank
+                    - generic [ref=e55]: Contact Us
+      - main:
+        - generic [ref=e57]:
+          - group:
+            - heading "Privacy Policy" [level=1] [ref=e61]
+            - 'heading "Effective Date: April 15, 2026" [level=5] [ref=e63]'
+            - heading "Introduction" [level=4] [ref=e65]:
+              - strong [ref=e66]: Introduction
+            - paragraph [ref=e68]: At Lumi Education, we value the privacy and safety of our students, families, staff, and website visitors. This policy explains how we collect, use, store, and protect information across our educational programs, programs, tutoring, and website interactions.
+            - heading "1. Information We Collect" [level=4] [ref=e70]:
+              - strong [ref=e71]: 1. Information We Collect
+            - paragraph [ref=e73]: We collect parent/guardian and student names, ages, grade level and school details, contact information (email, phone, address), emergency contacts, medical and allergy information provided for safety purposes, academic information, billing and transaction records processed through secure third-party payment providers, and website data including IP addresses, browser type, device information, usage data, cookies, and analytics.
+            - heading "2. How We Use Information" [level=4] [ref=e75]:
+              - strong [ref=e76]: 2. How We Use Information
+            - paragraph [ref=e78]: Data supports student enrollment and registration, program administration, family communication, emergency management, educational support, staffing, payment processing, newsletters, service improvements, and marketing and promotional activities subject to applicable permissions.
+            - heading "3. Children's Privacy" [level=4] [ref=e80]:
+              - strong [ref=e81]: 3. Children's Privacy
+            - paragraph [ref=e83]: Lumi Education provides services for children and students under the age of 18. Information is collected only with parent or guardian involvement or consent and limited to what is reasonably necessary for educational, operational, or safety purposes.
+            - heading "4. Photos, Videos & Media" [level=4] [ref=e85]:
+              - strong [ref=e86]: 4. Photos, Videos & Media
+            - paragraph [ref=e88]: Images may be captured during activities for promotional and educational use across social media, marketing materials, websites, newsletters, and brochures. Parents may request written exemptions from photography.
+            - heading "5. Information Sharing" [level=4] [ref=e90]:
+              - strong [ref=e91]: 5. Information Sharing
+            - paragraph [ref=e93]: Lumi Education does not sell personal information. Sharing occurs only with authorized staff, contractors, service providers, payment processors, technology platforms, emergency personnel, and legal authorities when required by law.
+            - heading "6. Third-Party Services" [level=4] [ref=e95]:
+              - strong [ref=e96]: 6. Third-Party Services
+            - paragraph [ref=e98]: We use third-party payment processors, scheduling systems, video conferencing platforms, email services, and analytics providers. We are not responsible for their separate privacy policies.
+            - heading "7. Data Security" [level=4] [ref=e100]:
+              - strong [ref=e101]: 7. Data Security
+            - paragraph [ref=e103]: We take reasonable administrative and technical measures including password protection, restricted access, and secure payment platforms. No method of electronic storage or transmission is completely secure.
+            - heading "8. Cookies & Analytics" [level=4] [ref=e105]:
+              - strong [ref=e106]: 8. Cookies & Analytics
+            - paragraph [ref=e108]: Our website uses cookies for experience improvement and traffic analysis. Users may disable cookies through browser settings.
+            - heading "9. Parent & User Rights" [level=4] [ref=e110]:
+              - strong [ref=e111]: 9. Parent & User Rights
+            - paragraph [ref=e113]: Parents and users may request access to personal information, seek corrections, request removal, and opt out of marketing communications.
+            - heading "10. Policy Updates" [level=4] [ref=e115]:
+              - strong [ref=e116]: 10. Policy Updates
+            - paragraph [ref=e118]: Lumi Education may update this Privacy Policy periodically. Updated versions post to the website and become effective immediately upon posting.
+            - heading "Contact" [level=4] [ref=e120]:
+              - strong [ref=e121]: Contact
+            - paragraph [ref=e123]: "Email: contact.us@learningwithlumi.com · Phone: (571) 207-8373 · Website: www.learningwithlumi.com"
+      - contentinfo:
+        - generic [ref=e125]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e129] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e131]
+            - heading "Quick Links" [level=3] [ref=e133]
+            - paragraph [ref=e135]:
+              - link "About Us" [ref=e137] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e139]:
+              - link "Summer Programs" [ref=e141] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e143]:
+              - link "Tutoring" [ref=e145] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e147]:
+              - link "Join Our Team" [ref=e149] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e151]:
+              - link "Contact Us" [ref=e153] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/blank
+            - heading "Contact Info" [level=3] [ref=e155]
+            - paragraph [ref=e157]:
+              - link "(571) 207-8373" [ref=e159] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e161]:
+              - link "contact.us@learningwithlumi.com" [ref=e163] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e165]: © 2026 Lumi Education
+            - paragraph [ref=e167]:
+              - link "Privacy Policy" [ref=e169] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/blank-7
+  - region "bottom of page"

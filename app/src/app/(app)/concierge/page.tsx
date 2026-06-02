@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation';
 
 /**
- * /concierge — CPD-156
+ * /concierge — backward-compat redirect (CPD-489)
  *
- * Collab is now a contextual job-creation co-pilot accessed via the top bar
- * toggle on /myjobs and /review. It is not a standalone
- * destination. This route redirects to Support for general questions.
+ * "Concierge" was renamed to "Collab". Any bookmarked /concierge links
+ * are forwarded to the new /collab route permanently.
  */
 export default function ConciergePage() {
-  redirect('/support');
+  redirect('/collab');
 }

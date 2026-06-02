@@ -1,0 +1,215 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "AuraFlux home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "AuraFlux" [ref=e5]
+      - generic [ref=e6]:
+        - button "Menu" [ref=e7] [cursor=pointer]
+        - link "Get Started" [ref=e11] [cursor=pointer]:
+          - /url: /plans
+  - generic [ref=e12]:
+    - generic [ref=e13]: Our System
+    - heading "From Raw Content to Published Video" [level=1] [ref=e14]:
+      - text: From Raw Content
+      - text: to Published Video
+    - paragraph [ref=e15]: AuraFlux is a six-stage automated production pipeline. You submit a job. The pipeline handles clip selection, scripting, editing, QA, brand application, and direct publish — without a single manual step.
+    - link "View Plans" [ref=e17] [cursor=pointer]:
+      - /url: /plans
+  - generic [ref=e18]:
+    - heading "The Production Pipeline" [level=2] [ref=e19]
+    - paragraph [ref=e20]: Six portals. Each one checks the work before the next begins.
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e23]: P0
+        - generic [ref=e24]:
+          - heading "Content Intelligence" [level=3] [ref=e25]
+          - paragraph [ref=e26]: Source video analysis, segment detection, and clip scoring. The system identifies which moments are worth producing before any editing begins. Supports YouTube, Twitch, Kick replays, and direct uploads.
+      - generic [ref=e29]:
+        - generic [ref=e30]: P1
+        - generic [ref=e31]:
+          - heading "Script & Voice" [level=3] [ref=e32]
+          - paragraph [ref=e33]: AI-generated script tailored to your content type and platform format. ElevenLabs TTS voiceover produced at broadcast quality. Skip this portal entirely if you want to use your own audio.
+      - generic [ref=e36]:
+        - generic [ref=e37]: P2
+        - generic [ref=e38]:
+          - heading "Edit & Assembly" [level=3] [ref=e39]
+          - paragraph [ref=e40]: Auto-cut, clip merging, vertical crop and reframe for mobile formats, audio loudness normalization. This is where the raw source becomes a finished video — paced, structured, and platform-ready.
+      - generic [ref=e43]:
+        - generic [ref=e44]: P3
+        - generic [ref=e45]:
+          - heading "Quality Assurance" [level=3] [ref=e46]
+          - paragraph [ref=e47]: "Two-layer QA: FFmpeg defect detection checks for frozen frames, silence gaps, and encoding issues. Creative QA scores the output for watchability. Jobs that don't meet the quality threshold are flagged before proceeding."
+      - generic [ref=e50]:
+        - generic [ref=e51]: P4
+        - generic [ref=e52]:
+          - heading "Brand & Effects" [level=3] [ref=e53]
+          - paragraph [ref=e54]: Lower thirds with segment labels, AI-generated thumbnails, scene transitions, YouTube chapter markers, and speaker captions. Every feature is opt-in — select exactly what your content needs when you create the job.
+      - generic [ref=e57]:
+        - generic [ref=e58]: P5
+        - generic [ref=e59]:
+          - heading "Publish" [level=3] [ref=e60]
+          - paragraph [ref=e61]: Direct publish to YouTube and TikTok via OAuth. Title, description, tags, thumbnail, chapter markers, and scheduling all applied automatically. No manual export. No upload queue. Done.
+  - generic [ref=e62]:
+    - heading "What You Can Produce" [level=2] [ref=e63]
+    - paragraph [ref=e64]: Four content formats, each with its own production logic.
+    - generic [ref=e65]:
+      - generic [ref=e66]:
+        - generic [ref=e67]: 🎮
+        - heading "Highlight Clips" [level=3] [ref=e68]
+        - paragraph [ref=e69]: Best-moment extraction from gaming streams, sports broadcasts, or live events. Scored by engagement density, audio peaks, and crowd reaction. Outputs multiple clip options or one optimized single.
+      - generic [ref=e70]:
+        - generic [ref=e71]: 🎤
+        - heading "Gameplay Commentary" [level=3] [ref=e72]
+        - paragraph [ref=e73]: Turn a full gaming session or VOD into a structured commentary video with AI narration, auto-paced cuts, and platform-specific framing. Great for YouTube long-form.
+      - generic [ref=e74]:
+        - generic [ref=e75]: 🎬
+        - heading "Show & Film Analysis" [level=3] [ref=e76]
+        - paragraph [ref=e77]: Source a TV show, film, or documentary clip. AuraFlux generates commentary, assembles reaction-style content, and packages it for publish — all within fair-use clip lengths.
+      - generic [ref=e78]:
+        - generic [ref=e79]: 📡
+        - heading "Live Event Recap" [level=3] [ref=e80]
+        - paragraph [ref=e81]: Post-event summary video from a live stream or event recording. Automatically segments the timeline, selects key moments, and produces a short-form recap optimized for social.
+  - generic [ref=e82]:
+    - heading "Every Feature, Explained In App" [level=2] [ref=e83]
+    - paragraph [ref=e84]: Select what you need when you create a job. Pay only for what you use.
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - generic [ref=e87]: Content & Script
+        - list [ref=e88]:
+          - listitem [ref=e89]: ✓ Write my script
+          - listitem [ref=e90]: ✓ Add AI voiceover
+          - listitem [ref=e91]: ✓ Auto-select clips
+          - listitem [ref=e92]: ✓ Show commentary mode
+      - generic [ref=e93]:
+        - generic [ref=e94]: Editing & Format
+        - list [ref=e95]:
+          - listitem [ref=e96]: ✓ Vertical crop (9:16)
+          - listitem [ref=e97]: ✓ Auto-cut pacing
+          - listitem [ref=e98]: ✓ Audio loudness normalization
+          - listitem [ref=e99]: ✓ Multi-clip assembly
+      - generic [ref=e100]:
+        - generic [ref=e101]: Effects & Captions
+        - list [ref=e102]:
+          - listitem [ref=e103]: ✓ Lower thirds (segment labels)
+          - listitem [ref=e104]: ✓ Add speaker captions
+          - listitem [ref=e105]: ✓ Scene transitions
+          - listitem [ref=e106]: ✓ Add chapter markers
+      - generic [ref=e107]:
+        - generic [ref=e108]: Brand & Thumbnails
+        - list [ref=e109]:
+          - listitem [ref=e110]: ✓ AI thumbnail (frame grab)
+          - listitem [ref=e111]: ✓ AI thumbnail (designed)
+          - listitem [ref=e112]: ✓ Custom branding overlay
+          - listitem [ref=e113]: ✓ Imagen 3 thumbnail (Managed)
+      - generic [ref=e114]:
+        - generic [ref=e115]: Publishing
+        - list [ref=e116]:
+          - listitem [ref=e117]: ✓ Direct YouTube publish
+          - listitem [ref=e118]: ✓ Direct TikTok publish
+          - listitem [ref=e119]: ✓ Scheduled publish
+          - listitem [ref=e120]: ✓ Multiple platform targets
+      - generic [ref=e121]:
+        - generic [ref=e122]: Quality & Review
+        - list [ref=e123]:
+          - listitem [ref=e124]: ✓ FFmpeg defect detection
+          - listitem [ref=e125]: ✓ AI creative QA score
+          - listitem [ref=e126]: ✓ Manual review hold
+          - listitem [ref=e127]: ✓ Thumbnail approval step
+  - generic [ref=e129]:
+    - heading "How Credits Work" [level=2] [ref=e130]
+    - paragraph [ref=e131]: One credit = one production job. It doesn't matter how long the video is or how many features you enable. You know exactly what you're spending before you start.
+    - generic [ref=e132]:
+      - generic [ref=e133]:
+        - generic [ref=e134]: Operate
+        - generic [ref=e135]: "50"
+        - generic [ref=e136]: credits / month
+        - generic [ref=e137]: Self-serve. Full API access. Manage the platform yourself.
+      - generic [ref=e138]:
+        - generic [ref=e139]: Guided
+        - generic [ref=e140]: "200"
+        - generic [ref=e141]: credits / month
+        - generic [ref=e142]: Same features as Operate, plus Collab guidance and in-app visual flows.
+      - generic [ref=e143]:
+        - generic [ref=e144]: Managed
+        - generic [ref=e145]: 1,000+
+        - generic [ref=e146]: credits / month
+        - generic [ref=e147]: Done-for-you. Dedicated account manager. Custom workflows. Unlimited scale.
+    - paragraph
+  - generic [ref=e148]:
+    - heading "Where AuraFlux Publishes" [level=2] [ref=e149]
+    - paragraph [ref=e150]: Connect your accounts once. AuraFlux handles the rest via OAuth.
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - generic [ref=e153]: YouTube
+        - generic [ref=e154]: Direct publish + chapters
+      - generic [ref=e155]:
+        - generic [ref=e156]: TikTok
+        - generic [ref=e157]: Direct publish via API
+      - generic [ref=e158]:
+        - generic [ref=e159]: Twitch
+        - generic [ref=e160]: Source import
+      - generic [ref=e161]:
+        - generic [ref=e162]: Kick
+        - generic [ref=e163]: Source import
+      - generic [ref=e164]:
+        - generic [ref=e165]: Direct Upload
+        - generic [ref=e166]: Any video file
+  - generic [ref=e167]:
+    - heading "Ready to run the pipeline?" [level=2] [ref=e168]
+    - paragraph [ref=e169]: Your first job ships in under 10 minutes.
+    - link "Compare Plans" [ref=e171] [cursor=pointer]:
+      - /url: /plans
+  - contentinfo [ref=e172]:
+    - generic [ref=e173]:
+      - generic [ref=e174]:
+        - navigation "Footer navigation" [ref=e175]:
+          - generic [ref=e176]:
+            - generic [ref=e177]: Platform
+            - link "Our Story" [ref=e178] [cursor=pointer]:
+              - /url: /our-story
+            - link "Our System" [ref=e179] [cursor=pointer]:
+              - /url: /our-system
+            - link "Roadmap" [ref=e180] [cursor=pointer]:
+              - /url: /roadmap
+          - generic [ref=e181]:
+            - generic [ref=e182]: Resources
+            - link "Plans" [ref=e183] [cursor=pointer]:
+              - /url: /pricing
+            - link "Blog" [ref=e184] [cursor=pointer]:
+              - /url: /blog
+            - link "Contact Us" [ref=e185] [cursor=pointer]:
+              - /url: /contact-us
+        - generic [ref=e186]:
+          - link "AuraFlux home" [ref=e187] [cursor=pointer]:
+            - /url: /
+            - img "AuraFlux" [ref=e188]
+          - paragraph [ref=e189]: Automated content production from source to publish. No team required.
+          - generic [ref=e190]:
+            - link "Privacy Policy" [ref=e191] [cursor=pointer]:
+              - /url: /privacy
+            - generic [ref=e192]: ·
+            - link "Terms" [ref=e193] [cursor=pointer]:
+              - /url: /terms
+            - generic [ref=e194]: ·
+            - link "AUP" [ref=e195] [cursor=pointer]:
+              - /url: /aup
+            - generic [ref=e196]: ·
+            - link "Cookies" [ref=e197] [cursor=pointer]:
+              - /url: /cookies
+        - generic [ref=e198]:
+          - link [ref=e199] [cursor=pointer]:
+            - /url: https://linkedin.com/company/auraflux
+            - img [ref=e201]
+          - link [ref=e203] [cursor=pointer]:
+            - /url: https://instagram.com/auraflux
+            - img [ref=e205]
+          - link [ref=e207] [cursor=pointer]:
+            - /url: https://tiktok.com/@auraflux
+            - img [ref=e209]
+          - link [ref=e211] [cursor=pointer]:
+            - /url: https://youtube.com/@auraflux
+            - img [ref=e213]
+      - paragraph [ref=e216]: © 2026 AuraFlux. All rights reserved.
+  - generic "Chat with us" [ref=e217] [cursor=pointer]:
+    - img [ref=e218]

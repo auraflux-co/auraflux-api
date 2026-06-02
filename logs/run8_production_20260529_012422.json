@@ -1,0 +1,396 @@
+{
+  "ts": "20260529_012422",
+  "submitted": 15,
+  "total": 15,
+  "at_100": 1,
+  "avg_grade": 16.7,
+  "grades": [
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780032262574",
+      "status": "published",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/AgitatedDelightfulArmadilloWOOP",
+        "title": "Hasan 50/50 with AOC",
+        "duration_s": 18
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780032262574/1780032279692_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780032262574.mp4"
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        }
+      ],
+      "summary": "Grade: 30/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780032352929",
+      "status": "failed",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR",
+        "title": "hasanabi clip",
+        "duration_s": 35
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is timeout"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780032443210",
+      "status": "timeout",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg",
+        "title": "irl ban",
+        "duration_s": 51
+      },
+      "outputUrl": ""
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is timeout"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780032533487",
+      "status": "timeout",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF",
+        "title": "Emiru calls out streamers",
+        "duration_s": 43
+      },
+      "outputUrl": ""
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is timeout"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780032714341",
+      "status": "timeout",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP",
+        "title": "finish halo 2",
+        "duration_s": 45
+      },
+      "outputUrl": ""
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        }
+      ],
+      "summary": "Grade: 30/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780032804598",
+      "status": "failed",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/ObeseFrigidBibimbapTBTacoLeft",
+        "title": "D:",
+        "duration_s": 41
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is timeout"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780032894983",
+      "status": "timeout",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/LivelyNeighborlySnailCclamChamp",
+        "title": "Shamelesss",
+        "duration_s": 26
+      },
+      "outputUrl": ""
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        }
+      ],
+      "summary": "Grade: 30/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780032985235",
+      "status": "failed",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana",
+        "title": "Shameless Mod Defends",
+        "duration_s": 43
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is timeout"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780033166443",
+      "status": "timeout",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC",
+        "title": "nahh",
+        "duration_s": 22
+      },
+      "outputUrl": ""
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        }
+      ],
+      "summary": "Grade: 30/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780033256775",
+      "status": "failed",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK",
+        "title": "hey!",
+        "duration_s": 47
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is timeout"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780033437550",
+      "status": "timeout",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/SneakyBlatantChickpeaPeanutButterJellyTime-B6eWTXlxT7efwqM3",
+        "title": "classic ronaldo",
+        "duration_s": 15
+      },
+      "outputUrl": ""
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780033528048",
+      "status": "failed",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/HardObeseChickenM4xHeh-3_xAOUa3XSFrZnWG",
+        "title": "IGHT BET",
+        "duration_s": 10
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is timeout"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780033618652",
+      "status": "timeout",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/FrigidSingleTortoiseMau5",
+        "title": "Stan and cops character",
+        "duration_s": 44
+      },
+      "outputUrl": ""
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        }
+      ],
+      "summary": "Grade: 30/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780033708951",
+      "status": "failed",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/BlushingCovertDurianJonCarnage",
+        "title": "Mark's so hard right now",
+        "duration_s": 22
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780033980252",
+      "status": "failed",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/IcySuspiciousMelonOneHand",
+        "title": "Markiplier caught the xQc virus",
+        "duration_s": 6
+      },
+      "outputUrl": null
+    }
+  ]
+}

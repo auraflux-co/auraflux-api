@@ -1,0 +1,65 @@
+{
+  "run": "run_11_20260531_182327",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780266207805",
+      "label": "Post Everywhere",
+      "tier": "operate",
+      "status": "processing",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780266207805/1780266418775_1780266418774_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780266207805_final.mp4",
+      "grade": 98,
+      "grade_detail": {
+        "grade": 98,
+        "gaps": [],
+        "source": "server_grade_operator_review"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job final status is 'processing' rather than 'completed' or 'failed', indicating the pipeline did not reach a terminal state. The output URL exists structurally but the job may have stalled or timed out.",
+          "suggested_change": "Implement pipeline timeout monitoring with automatic failure detection after a maximum processing duration. Add alerting for jobs stuck in 'processing' state beyond expected SLA for OPERATE tier."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result', meaning content quality validation was either skipped or failed to execute. For an OPERATE tier job with 6 add-ons, QA should be mandatory before delivery.",
+          "suggested_change": "Make Twelve Labs QA a blocking step in the pipeline for OPERATE tier. If QA fails to return results, retry up to 3 times before escalating to manual review queue."
+        },
+        {
+          "area": "add_ons",
+          "severity": "low",
+          "observation": "Add-on combination (captions, audio, branding, colorGrade, effects, layout) is comprehensive and well-suited for 'Post Everywhere' multi-platform distribution template. No missing or conflicting add-ons detected.",
+          "suggested_change": "None required \u2014 add-on selection is appropriate for the template goal."
+        },
+        {
+          "area": "output",
+          "severity": "medium",
+          "observation": "Output filename contains redundant identifiers (user ID and job ID appear multiple times) and uses inconsistent timestamp formats, making debugging and asset tracking unnecessarily complex.",
+          "suggested_change": "Standardize output naming convention to: {timestamp}_{jobType}_{userId_short}_{status}.mp4 for cleaner asset management and faster log correlation."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "User experience is degraded: an OPERATE tier customer submitted a job with 6 premium add-ons but received no deliverable and no QA feedback. The job appears abandoned mid-process with no clear resolution path.",
+          "suggested_change": "Implement customer-facing status webhooks or polling endpoint that surfaces stuck jobs. Auto-generate support ticket after 2x expected processing time with job diagnostics attached."
+        }
+      ],
+      "ran_at": "2026-05-31T22:28:44.250639+00:00",
+      "jira_ticket": "CPD-474"
+    }
+  ],
+  "saved_templates": []
+}

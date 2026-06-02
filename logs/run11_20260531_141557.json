@@ -1,0 +1,71 @@
+{
+  "run": "run_11_20260531_141557",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780251357548",
+      "label": "Viral Clip",
+      "tier": "operate",
+      "status": "failed",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780251357548/1780251601347_1780251601346_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780251357548_final.mp4",
+      "grade": 60,
+      "grade_detail": {
+        "grade": 60,
+        "passed": false,
+        "gaps": [
+          {
+            "checkId": "status",
+            "reason": "expected ('staged', 'complete', 'published'), got failed"
+          }
+        ],
+        "summary": "Grade: 60/100 | GAPS:1"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job final status is 'failed' with no output generated despite having a constructed output URL path. The pipeline failed silently without producing a deliverable asset.",
+          "suggested_change": "Implement detailed failure logging with specific error codes at each pipeline stage (captions, audio, branding, colorGrade, effects, layout, assembly) to identify exact failure point. Add automated retry logic for transient failures."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' which indicates either the QA step was skipped due to upstream failure, or the QA service itself failed to evaluate. No quality feedback is available for debugging.",
+          "suggested_change": "Ensure Twelve Labs QA still runs partial analysis on intermediate assets if final assembly fails, or log explicitly why QA was skipped. This provides diagnostic data even on failed jobs."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons activated simultaneously (captions, audio, branding, colorGrade, effects, layout) represents maximum complexity for viral_clip template. High add-on count increases failure surface area.",
+          "suggested_change": "Review if all 6 add-ons are necessary for OPERATE tier viral clips. Consider staged processing with checkpoints after each add-on, or dependency validation before full pipeline execution."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "Output URL was pre-generated with timestamp (1780251601347) but job failed, leaving a dangling/orphaned asset path reference. User-facing systems may incorrectly reference this non-existent URL.",
+          "suggested_change": "Only commit output URLs to job metadata after successful assembly verification. Implement URL cleanup or null-setting on job failure to prevent broken link references downstream."
+        },
+        {
+          "area": "output",
+          "severity": "critical",
+          "observation": "OPERATE tier customers expect reliable production-ready outputs. A complete job failure with no partial deliverable or recovery option severely impacts user trust and platform reliability metrics.",
+          "suggested_change": "For OPERATE tier, implement automatic job retry (up to 2 attempts) before marking as failed. Provide users with partial outputs or intermediate previews when full assembly fails, along with clear failure messaging."
+        }
+      ],
+      "ran_at": "2026-05-31T18:22:45.387826+00:00",
+      "jira_ticket": null
+    }
+  ],
+  "saved_templates": []
+}

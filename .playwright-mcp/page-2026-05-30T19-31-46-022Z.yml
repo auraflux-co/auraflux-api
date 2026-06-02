@@ -1,0 +1,7 @@
+- generic [ref=e5]:
+  - 'heading "ERROR: PAGE NOT FOUND" [level=2] [ref=e6]'
+  - heading "404" [level=1] [ref=e7]
+  - generic [ref=e9]: This page isn’t available.
+  - link "Go to Homepage" [ref=e10] [cursor=pointer]:
+    - /url: //www.learningwithlumi.com
+    - button "Go to Homepage" [ref=e11]

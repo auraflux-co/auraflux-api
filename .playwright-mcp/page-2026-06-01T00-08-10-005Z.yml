@@ -1,0 +1,189 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "AuraFlux home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "AuraFlux" [ref=e5]
+      - generic [ref=e7]:
+        - link "Home" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - link "Our Story" [ref=e9] [cursor=pointer]:
+          - /url: /our-story
+        - link "Our System" [ref=e10] [cursor=pointer]:
+          - /url: /our-system
+        - link "Plans" [ref=e11] [cursor=pointer]:
+          - /url: /pricing
+        - link "Roadmap" [ref=e12] [cursor=pointer]:
+          - /url: /roadmap
+        - link "Contact Us" [ref=e13] [cursor=pointer]:
+          - /url: /contact-us
+      - link "Get Started" [ref=e15] [cursor=pointer]:
+        - /url: /plans
+  - generic [ref=e16]:
+    - heading "Match Your Team's Capability" [level=1] [ref=e17]
+    - paragraph [ref=e18]: Choose the path that fits your current operational setup. All plans include the full AuraFlux automated production pipeline.
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - img "Operate plan" [ref=e21]
+      - generic [ref=e22]:
+        - generic [ref=e23]: Operate
+        - generic [ref=e24]: DIY / API
+        - generic [ref=e25]: Automated processing via self-serve dashboard & API access only.
+        - generic [ref=e26]: $499/mo
+        - generic [ref=e27]: 50 credits/month · Self-serve instant checkout
+        - list [ref=e28]:
+          - listitem [ref=e29]: ✓ Full API access & raw endpoints
+          - listitem [ref=e30]: ✓ Comprehensive developer documentation
+          - listitem [ref=e31]: ✓ Self-hosted integration control
+          - listitem [ref=e32]: ✓ Community & standard support
+          - listitem [ref=e33]: — In-app visual flow builders
+          - listitem [ref=e34]: — Collab-powered guidance
+          - listitem [ref=e35]: — Dedicated account manager
+        - link "Get API Access" [ref=e36] [cursor=pointer]:
+          - /url: /contact-us
+    - generic [ref=e37]:
+      - generic [ref=e38]: MOST POPULAR
+      - img "Guided plan" [ref=e40]
+      - generic [ref=e41]:
+        - generic [ref=e42]: Guided
+        - generic [ref=e43]: Collab Assist
+        - generic [ref=e44]: Complete platform toolkit plus Gemini-backed Collab AI workspace assistance.
+        - generic [ref=e45]: $999/mo
+        - generic [ref=e46]: 200 credits/month · Self-serve subscription upgrade
+        - list [ref=e47]:
+          - listitem [ref=e48]: ✓ Everything in Operate
+          - listitem [ref=e49]: ✓ Interactive in-app flows
+          - listitem [ref=e50]: ✓ Collab-powered live visual guidance
+          - listitem [ref=e51]: ✓ Visual drag-and-drop workflow builders
+          - listitem [ref=e52]: ✓ Automated operational threshold alerts
+          - listitem [ref=e53]: — Custom end-to-end workflow builds
+          - listitem [ref=e54]: — Dedicated account manager
+        - link "Start Guided Setup" [ref=e55] [cursor=pointer]:
+          - /url: /contact-us
+    - generic [ref=e56]:
+      - img "Managed plan" [ref=e57]
+      - generic [ref=e58]:
+        - generic [ref=e59]: Managed
+        - generic [ref=e60]: Done-For-You
+        - generic [ref=e61]: Full Collab AI platform plus a dedicated human account manager.
+        - generic [ref=e62]: Custom
+        - generic [ref=e63]: 1000+ credits/month · Custom onboarding & sales intake
+        - list [ref=e64]:
+          - listitem [ref=e65]: ✓ Everything in Guided
+          - listitem [ref=e66]: ✓ Dedicated Account Manager
+          - listitem [ref=e67]: ✓ Custom end-to-end workflow builds
+          - listitem [ref=e68]: ✓ Priority support with custom SLAs
+          - listitem [ref=e69]: ✓ Unlimited credits
+        - link "Request Managed Plan" [ref=e70] [cursor=pointer]:
+          - /url: /contact-us
+  - paragraph [ref=e73]:
+    - text: Running low mid-month?
+    - strong [ref=e74]: Extra Credit Packs
+    - text: are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.
+  - generic [ref=e75]:
+    - generic [ref=e76]: Implementation & Feature Comparison
+    - table [ref=e77]:
+      - rowgroup [ref=e78]:
+        - row "Feature / Resource Operate Guided Managed" [ref=e79]:
+          - columnheader "Feature / Resource" [ref=e80]
+          - columnheader "Operate" [ref=e81]
+          - columnheader "Guided" [ref=e82]
+          - columnheader "Managed" [ref=e83]
+      - rowgroup [ref=e84]:
+        - row "Core Infrastructure & API Access ✓ ✓ ✓" [ref=e85]:
+          - cell "Core Infrastructure & API Access" [ref=e86]
+          - cell "✓" [ref=e87]
+          - cell "✓" [ref=e88]
+          - cell "✓" [ref=e89]
+        - row "Developer Documentation & SDKs ✓ ✓ ✓" [ref=e90]:
+          - cell "Developer Documentation & SDKs" [ref=e91]
+          - cell "✓" [ref=e92]
+          - cell "✓" [ref=e93]
+          - cell "✓" [ref=e94]
+        - row "In-App Visual Flow Builders — ✓ ✓" [ref=e95]:
+          - cell "In-App Visual Flow Builders" [ref=e96]
+          - cell "—" [ref=e97]
+          - cell "✓" [ref=e98]
+          - cell "✓" [ref=e99]
+        - row "Collab AI Guidance — ✓ ✓" [ref=e100]:
+          - cell "Collab AI Guidance" [ref=e101]
+          - cell "—" [ref=e102]
+          - cell "✓" [ref=e103]
+          - cell "✓" [ref=e104]
+        - row "Automated Threshold Notifications — ✓ ✓" [ref=e105]:
+          - cell "Automated Threshold Notifications" [ref=e106]
+          - cell "—" [ref=e107]
+          - cell "✓" [ref=e108]
+          - cell "✓" [ref=e109]
+        - row "Custom Workflow Construction by Experts — — ✓" [ref=e110]:
+          - cell "Custom Workflow Construction by Experts" [ref=e111]
+          - cell "—" [ref=e112]
+          - cell "—" [ref=e113]
+          - cell "✓" [ref=e114]
+        - row "Dedicated Account Manager — — ✓" [ref=e115]:
+          - cell "Dedicated Account Manager" [ref=e116]
+          - cell "—" [ref=e117]
+          - cell "—" [ref=e118]
+          - cell "✓" [ref=e119]
+        - row "Support SLA Standard Standard Priority 24/7" [ref=e120]:
+          - cell "Support SLA" [ref=e121]
+          - cell "Standard" [ref=e122]
+          - cell "Standard" [ref=e123]
+          - cell "Priority 24/7" [ref=e124]
+  - contentinfo [ref=e125]:
+    - generic [ref=e126]:
+      - generic [ref=e127]:
+        - navigation "Footer navigation" [ref=e128]:
+          - generic [ref=e129]:
+            - generic [ref=e130]: Platform
+            - link "Our Story" [ref=e131] [cursor=pointer]:
+              - /url: /our-story
+            - link "Our System" [ref=e132] [cursor=pointer]:
+              - /url: /our-system
+            - link "Roadmap" [ref=e133] [cursor=pointer]:
+              - /url: /roadmap
+          - generic [ref=e134]:
+            - generic [ref=e135]: Resources
+            - link "Plans" [ref=e136] [cursor=pointer]:
+              - /url: /pricing
+            - link "Blog" [ref=e137] [cursor=pointer]:
+              - /url: /blog
+            - link "Contact Us" [ref=e138] [cursor=pointer]:
+              - /url: /contact-us
+        - generic [ref=e139]:
+          - link "AuraFlux home" [ref=e140] [cursor=pointer]:
+            - /url: /
+            - img "AuraFlux" [ref=e141]
+          - paragraph [ref=e142]: Automated content production from source to publish. No team required.
+          - generic [ref=e143]:
+            - link "Privacy Policy" [ref=e144] [cursor=pointer]:
+              - /url: /privacy
+            - generic [ref=e145]: ·
+            - link "Terms" [ref=e146] [cursor=pointer]:
+              - /url: /terms
+            - generic [ref=e147]: ·
+            - link "AUP" [ref=e148] [cursor=pointer]:
+              - /url: /aup
+            - generic [ref=e149]: ·
+            - link "Cookies" [ref=e150] [cursor=pointer]:
+              - /url: /cookies
+        - generic [ref=e151]:
+          - link "LinkedIn" [ref=e152] [cursor=pointer]:
+            - /url: https://linkedin.com/company/auraflux
+            - generic [ref=e153]: LinkedIn
+            - img [ref=e155]
+          - link "Instagram" [ref=e157] [cursor=pointer]:
+            - /url: https://instagram.com/auraflux
+            - generic [ref=e158]: Instagram
+            - img [ref=e160]
+          - link "TikTok" [ref=e162] [cursor=pointer]:
+            - /url: https://tiktok.com/@auraflux
+            - generic [ref=e163]: TikTok
+            - img [ref=e165]
+          - link "YouTube" [ref=e167] [cursor=pointer]:
+            - /url: https://youtube.com/@auraflux
+            - generic [ref=e168]: YouTube
+            - img [ref=e170]
+      - paragraph [ref=e173]: © 2026 AuraFlux. All rights reserved.
+  - generic "Chat with us" [ref=e174] [cursor=pointer]:
+    - img [ref=e175]

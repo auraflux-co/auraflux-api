@@ -1,0 +1,92 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/blank
+                    - generic [ref=e55]: Contact Us
+      - main:
+        - generic [ref=e57]:
+          - group:
+            - heading "Medical & Allergy Policy" [level=1] [ref=e61]
+            - heading "1. Health Information Requirement" [level=4] [ref=e63]
+            - paragraph [ref=e65]: Parents must disclose allergies, medical conditions, current medications, emergency contacts, and physician information during registration. Updates to medical details must be reported before camp starts.
+            - heading "2. Allergy Awareness" [level=4] [ref=e67]
+            - paragraph [ref=e69]: Lumi Education strives to maintain an allergy-aware environment; however, we cannot guarantee an allergen-free facility. Parents must clearly disclose allergies and provide management instructions plus emergency medications. Camp staff will attempt allergen reduction and supervise meal times but are not medical professionals.
+            - heading "3. Medications & Medical Care" [level=4] [ref=e71]
+            - paragraph [ref=e73]: All medications require written instructions in original labeled containers. Lumi Education Summer Programs does not have licensed nurses, medical professionals, or on-site medical staff present. Staff may contact 911 during emergencies. Parents accept responsibility for all medical costs.
+            - heading "4. Illness & When to Keep Children Home" [level=4] [ref=e75]
+            - paragraph [ref=e77]: Children exhibiting fever, vomiting, diarrhea, contagious illness, cough, rash, or severe fatigue should stay home. Return requires 24 hours symptom-free without fever-reducing medication.
+            - heading "5. Emergency Medical Care" [level=4] [ref=e79]
+            - paragraph [ref=e81]: Staff attempt immediate parent contact; 911 may be called if necessary. Parents authorize emergency care access and accept financial responsibility.
+            - heading "6. Food & Snacks" [level=4] [ref=e83]
+            - paragraph [ref=e85]: Parents should disclose allergies and send labeled meals, avoiding severe allergen risks to other campers when requested. Campers must bring nut-free snacks daily.
+            - heading "7. Acknowledgment of Risk" [level=4] [ref=e87]
+            - paragraph [ref=e89]: Parents acknowledge inherent risks from allergen exposure, illness, and accidental injuries during group activities.
+            - paragraph [ref=e91]: Phone (571) 207-8373 · Email contact.us@learningwithlumi.com
+      - contentinfo:
+        - generic [ref=e93]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e97] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e99]
+            - heading "Quick Links" [level=3] [ref=e101]
+            - paragraph [ref=e103]:
+              - link "About Us" [ref=e105] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e107]:
+              - link "Summer Programs" [ref=e109] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e111]:
+              - link "Tutoring" [ref=e113] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e115]:
+              - link "Join Our Team" [ref=e117] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e119]:
+              - link "Contact Us" [ref=e121] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/blank
+            - heading "Contact Info" [level=3] [ref=e123]
+            - paragraph [ref=e125]:
+              - link "(571) 207-8373" [ref=e127] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e129]:
+              - link "contact.us@learningwithlumi.com" [ref=e131] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e133]: © 2026 Lumi Education
+            - paragraph [ref=e135]:
+              - link "Privacy Policy" [ref=e137] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/blank-7
+  - region "bottom of page"

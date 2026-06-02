@@ -1,0 +1,55 @@
+{
+  "run": "run10_feature_matrix",
+  "ts": "20260530_200939",
+  "total": 4,
+  "at_100": 0,
+  "avg_grade": 0.0,
+  "templates_saved": 0,
+  "results": [
+    {
+      "label": "Guided: audio clean + portrait + GPT-4o QA",
+      "tier": "guided",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    },
+    {
+      "label": "Guided: captions + colour grade + defect scan",
+      "tier": "guided",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    },
+    {
+      "label": "Guided: TTS + full stack + thumbnailApproval (\u2192 held)",
+      "tier": "guided",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    },
+    {
+      "label": "Guided: dynamicOverlays + transitions + GPT-4o QA",
+      "tier": "guided",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    }
+  ],
+  "templates": []
+}

@@ -1,0 +1,150 @@
+{
+  "run": "run_11_20260531_220234",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 2,
+  "templates_saved": 1,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780279357161",
+      "label": "TikTok Clutch",
+      "tier": "operate",
+      "status": "staged",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780279357161/1780279373802_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780279357161.mp4",
+      "grade": 100,
+      "grade_detail": {
+        "grade": 100,
+        "passed": true,
+        "gaps": [],
+        "summary": "Grade: 100/100 | PASSED"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "branding",
+          "severity": "critical",
+          "observation": "Branding add-on is active but both chrome_show_name and chrome_streamer_name are empty strings. Output currently displays 'AuraFlux' in the top bar AND lower-third simultaneously, making this look like platform promotional spam rather than creator content.",
+          "suggested_change": "Block staged outputs when branding=true and chrome_name fields are empty. Require at least one of show_name or streamer_name to be non-empty before assembly completes, or auto-disable branding overlay if unconfigured."
+        },
+        {
+          "area": "source_fit",
+          "severity": "high",
+          "observation": "TikTok Clutch template is described as 'single high-energy gaming moment' but source is tagged as 'irl_event' (basketball fight footage, not gaming). 333s duration also far exceeds typical TikTok clutch moment length (usually 15-60s).",
+          "suggested_change": "Add content_type validation to template \u2014 TikTok Clutch should require content_type in ['gaming', 'esports']. Flag source duration >90s as needing manual trim selection or auto-highlight extraction."
+        },
+        {
+          "area": "pipeline",
+          "severity": "high",
+          "observation": "Twelve Labs QA shows 'no result (extension did not run)' \u2014 this is the content safety/moderation check that should flag a physical altercation before staging. Pipeline pushed to staged status without any QA validation.",
+          "suggested_change": "Make Twelve Labs QA a blocking dependency for OPERATE tier jobs. If extension fails to run, job should halt at 'pending_qa' status, not auto-advance to 'staged'."
+        },
+        {
+          "area": "output_value",
+          "severity": "high",
+          "observation": "Source is third-party streamer content (AdinRoss) being processed for an unknown user. Output would post someone else's viral moment with no attribution, branding shows 'AuraFlux' instead of original creator, creating potential DMCA/attribution issues.",
+          "suggested_change": "Implement source ownership validation \u2014 if clip.channel !== user.linked_channels, require explicit 'repost rights' confirmation or add mandatory attribution overlay."
+        },
+        {
+          "area": "source_fit",
+          "severity": "medium",
+          "observation": "Portrait format applied to what is likely landscape IRL stream footage of a basketball court. Standard fight footage would have significant cropping issues with subjects moving laterally across frame.",
+          "suggested_change": "Run aspect ratio analysis on source before format lock. If source is landscape 16:9 with high horizontal motion, recommend landscape output or require manual safe-zone confirmation for portrait crop."
+        },
+        {
+          "area": "add_ons",
+          "severity": "low",
+          "observation": "Six add-ons stacked including 'effects' on IRL event content. Gaming effects (kill feeds, damage numbers, etc.) would look incongruous on basketball fight footage.",
+          "suggested_change": "Filter available effects add-on presets by content_type. IRL events should only surface IRL-appropriate effects (slow-mo, zoom, impact frames) not gaming HUD elements."
+        }
+      ],
+      "ran_at": "2026-06-01T02:20:11.397870+00:00",
+      "template_id": "31dd91d6-5748-4b62-99e3-e51a752b4edc"
+    },
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780280414822",
+      "label": "YouTube Deep Dive",
+      "tier": "operate",
+      "status": "failed",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780280414822/1780280439124_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780280414822.mp4",
+      "grade": 45,
+      "grade_detail": {
+        "grade": 45,
+        "passed": false,
+        "gaps": [
+          {
+            "checkId": "status",
+            "reason": "expected ('staged', 'complete', 'published'), got failed"
+          },
+          {
+            "checkId": "portal_scores",
+            "reason": "avg 50 < 60"
+          }
+        ],
+        "summary": "Grade: 45/100 | GAPS:2"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "branding",
+          "severity": "critical",
+          "observation": "Branding add-on is active but both chrome_show_name and chrome_streamer_name are empty strings. Output has 'AuraFlux' watermarked in top bar AND lower-third simultaneously \u2014 reads as platform spam rather than creator-branded content.",
+          "suggested_change": "Block branding add-on from activating unless at least one of chrome_show_name or chrome_streamer_name is explicitly set. For this job: populate chrome_streamer_name with 'Greekgodx' from source metadata."
+        },
+        {
+          "area": "pipeline",
+          "severity": "high",
+          "observation": "Job status is 'failed' but output URL was still generated and passed to QA. Twelve Labs QA shows 'no result (extension did not run)' \u2014 failed jobs should not reach QA stage, or QA should flag the failure state before evaluating assets.",
+          "suggested_change": "Add pipeline gate: if job.status === 'failed', halt QA and return early with failure reason. Do not evaluate partial outputs from failed jobs."
+        },
+        {
+          "area": "pipeline",
+          "severity": "medium",
+          "observation": "Twelve Labs QA extension did not run, meaning no automated content validation (profanity, copyright audio, dead frames) was performed before this output would ship.",
+          "suggested_change": "Make Twelve Labs QA mandatory for all longform YouTube outputs. If extension fails to run, block release and alert Rob with extension error logs."
+        },
+        {
+          "area": "source_fit",
+          "severity": "low",
+          "observation": "380s gaming_reaction content fits within template bounds (300\u20133600s) and longform format is appropriate for YouTube Deep Dive. No source fit issues.",
+          "suggested_change": "None required \u2014 source validates correctly."
+        },
+        {
+          "area": "output_value",
+          "severity": "high",
+          "observation": "A real streamer (Greekgodx) would not post this output: it displays competitor branding ('AuraFlux') instead of their identity, job failed so quality is unknown, and no QA verified the content is clean for YouTube monetization.",
+          "suggested_change": "This output should be blocked from delivery. Require passing job status + valid branding + completed QA before marking any YouTube longform as ready."
+        },
+        {
+          "area": "add_ons",
+          "severity": "info",
+          "observation": "Add-on stack [captions, audio, branding, colorGrade, effects, layout] is reasonable for gaming_reaction content. No TTS on voiced content, no conflicting add-ons detected.",
+          "suggested_change": "None required \u2014 add-on selection is appropriate for content type."
+        }
+      ],
+      "ran_at": "2026-06-01T02:30:39.269821+00:00",
+      "jira_ticket": "CPD-477"
+    }
+  ],
+  "saved_templates": [
+    {
+      "templateId": "31dd91d6-5748-4b62-99e3-e51a752b4edc",
+      "name": "[Run11] TikTok Clutch",
+      "tier": "operate",
+      "round_trip": true
+    }
+  ]
+}

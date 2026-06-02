@@ -1,0 +1,91 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e7]:
+      - generic [ref=e8]:
+        - link [ref=e10] [cursor=pointer]:
+          - /url: ./
+        - generic [ref=e13]:
+          - paragraph [ref=e15]:
+            - link "Roadmap" [ref=e16] [cursor=pointer]:
+              - /url: ./roadmap
+          - paragraph [ref=e18]:
+            - link "Pricing" [ref=e19] [cursor=pointer]:
+              - /url: ./pricing
+          - paragraph [ref=e21]:
+            - link "Blog" [ref=e22] [cursor=pointer]:
+              - /url: ./blog
+          - paragraph [ref=e24]:
+            - link "Contact" [ref=e25] [cursor=pointer]:
+              - /url: ./contact
+      - generic [ref=e26]:
+        - paragraph [ref=e32]: Online now
+        - link "Get Started" [ref=e34] [cursor=pointer]:
+          - /url: ./contact
+          - paragraph [ref=e36]: Get Started
+    - generic [ref=e37]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - paragraph [ref=e47]: Oops!
+          - heading "404" [level=1] [ref=e50]
+          - paragraph [ref=e52]: The page you're looking for no longer exists. Let us take you back
+        - link "Back to home" [ref=e55] [cursor=pointer]:
+          - /url: ./
+          - paragraph [ref=e57]: Back to home
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - paragraph [ref=e64]: FAQ
+          - paragraph [ref=e67]: Frequently Asked Questions
+        - generic [ref=e71]:
+          - heading "How can I tell if using AI is the right solution for my problem?" [level=5] [ref=e76] [cursor=pointer]
+          - heading "How long does an AI solution take to implement?" [level=5] [ref=e84] [cursor=pointer]
+          - heading "Will we need to make changes in our teams?" [level=5] [ref=e92] [cursor=pointer]
+    - contentinfo [ref=e98]:
+      - generic [ref=e100]:
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - paragraph [ref=e104]:
+              - link "Home" [ref=e105] [cursor=pointer]:
+                - /url: ./
+            - paragraph [ref=e107]:
+              - link "Roadmap" [ref=e108] [cursor=pointer]:
+                - /url: ./roadmap
+            - paragraph [ref=e110]:
+              - link "Pricing" [ref=e111] [cursor=pointer]:
+                - /url: ./pricing
+            - paragraph [ref=e113]:
+              - link "Blog" [ref=e114] [cursor=pointer]:
+                - /url: ./blog
+            - paragraph [ref=e116]:
+              - link "Contact" [ref=e117] [cursor=pointer]:
+                - /url: ./contact
+          - generic [ref=e118]:
+            - link [ref=e119] [cursor=pointer]:
+              - /url: ./
+            - paragraph [ref=e122]: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.
+            - generic [ref=e123]:
+              - paragraph [ref=e125]:
+                - link "Privacy Policy" [ref=e126] [cursor=pointer]:
+                  - /url: ./privacy-policy
+              - paragraph [ref=e128]: •
+              - paragraph [ref=e130]:
+                - link "Terms & Conditions" [ref=e131] [cursor=pointer]:
+                  - /url: ./terms-and-conditions
+          - generic [ref=e132]:
+            - link "Facebook" [ref=e134] [cursor=pointer]:
+              - /url: https://facebook.com
+              - paragraph [ref=e136]: Facebook
+            - link "Instagram" [ref=e140] [cursor=pointer]:
+              - /url: https://instagram.com
+              - paragraph [ref=e142]: Instagram
+            - link "LinkedIn" [ref=e146] [cursor=pointer]:
+              - /url: https://linkedin.com
+              - paragraph [ref=e148]: LinkedIn
+        - generic [ref=e153]:
+          - paragraph [ref=e155]: © 2023 Equinox. All rights reserved.
+          - paragraph [ref=e157]:
+            - text: Website by
+            - link "Wize" [ref=e158] [cursor=pointer]:
+              - /url: https://wizetemplates.com
+  - link "Create a free website with Framer, the website builder loved by startups, designers and agencies." [ref=e159] [cursor=pointer]:
+    - /url: https://www.framer.com
+    - paragraph [ref=e164]: Create a free website with Framer, the website builder loved by startups, designers and agencies.

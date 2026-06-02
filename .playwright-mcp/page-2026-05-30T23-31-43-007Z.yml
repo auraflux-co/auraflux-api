@@ -1,0 +1,261 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                    - generic [ref=e55]: Contact Us
+            - img "Teacher Engaging Students" [ref=e61]
+      - main:
+        - generic [ref=e63]:
+          - group:
+            - heading "Registration Form for Summer Programs" [level=2] [ref=e67]
+            - heading "Grades K-5 · Weeks available July 6 – August 14" [level=5] [ref=e69]
+            - form "My Form" [ref=e76]:
+              - group [ref=e77]:
+                - generic [ref=e78]:
+                  - generic [ref=e79]:
+                    - generic [ref=e81]:
+                      - generic [ref=e83]:
+                        - text: Student's First Name
+                        - generic [ref=e84]: "*"
+                      - textbox "Student's First Name" [ref=e89]
+                    - generic [ref=e91]:
+                      - generic [ref=e93]:
+                        - text: Student's Last Name
+                        - generic [ref=e94]: "*"
+                      - textbox "Student's Last Name" [ref=e99]
+                    - generic [ref=e101]:
+                      - generic [ref=e103]:
+                        - text: Student Grade in SY 2026-27
+                        - generic [ref=e104]: "*"
+                      - generic [ref=e105]:
+                        - generic "required" [ref=e106]:
+                          - combobox "Student Grade in SY 2026-27" [ref=e111] [cursor=pointer]:
+                            - img [ref=e115]
+                        - paragraph [ref=e122]:
+                          - generic [ref=e123]: Please select appropriate grade category for your student based on what grade they will start in the fall.
+                    - generic [ref=e125]:
+                      - generic [ref=e127]:
+                        - text: Parent's / Guardian's First Name
+                        - generic [ref=e128]: "*"
+                      - textbox "Parent's / Guardian's First Name" [ref=e133]
+                    - generic [ref=e135]:
+                      - generic [ref=e137]:
+                        - text: Parent's / Guardian's Last Name
+                        - generic [ref=e138]: "*"
+                      - textbox "Parent's / Guardian's Last Name" [ref=e143]
+                    - generic [ref=e145]:
+                      - generic [ref=e147]:
+                        - text: Parent's /Guardian's Contact Number
+                        - generic [ref=e148]: "*"
+                      - textbox "Parent's /Guardian's Contact Number" [ref=e153]
+                    - generic [ref=e155]:
+                      - generic [ref=e157]:
+                        - text: Parent's /Guardian's Email
+                        - generic [ref=e158]: "*"
+                      - generic [ref=e163]:
+                        - button "Parent's /Guardian's Email. Phone. Select a country code" [ref=e167] [cursor=pointer]:
+                          - generic [ref=e170]:
+                            - img [ref=e172]
+                            - img [ref=e175]
+                        - textbox "Parent's /Guardian's Email. Phone" [ref=e177]
+                    - generic [ref=e179]:
+                      - generic [ref=e181]:
+                        - text: Emergency Contact First Name
+                        - generic [ref=e182]: "*"
+                      - textbox "Emergency Contact First Name" [ref=e187]
+                    - generic [ref=e189]:
+                      - generic [ref=e191]:
+                        - text: Emergency Contact Last Name
+                        - generic [ref=e192]: "*"
+                      - textbox "Emergency Contact Last Name" [ref=e197]
+                    - generic [ref=e199]:
+                      - generic [ref=e201]:
+                        - text: Emergency Contact Number
+                        - generic [ref=e202]: "*"
+                      - generic [ref=e207]:
+                        - button "Emergency Contact Number. Phone. Select a country code" [ref=e211] [cursor=pointer]:
+                          - generic [ref=e214]:
+                            - img [ref=e216]
+                            - img [ref=e219]
+                        - textbox "Emergency Contact Number. Phone" [ref=e221]
+                    - generic [ref=e223]:
+                      - generic [ref=e225]:
+                        - text: Address
+                        - generic [ref=e226]: "*"
+                      - textbox "Address" [ref=e231]
+                    - generic [ref=e233]:
+                      - generic [ref=e235]: Address Line 2
+                      - textbox "Address Line 2" [ref=e240]
+                    - generic [ref=e242]:
+                      - generic [ref=e244]:
+                        - text: Pin/Postal Code
+                        - generic [ref=e245]: "*"
+                      - textbox "Pin/Postal Code" [ref=e250]
+                      - generic [ref=e252]:
+                        - text: City
+                        - generic [ref=e253]: "*"
+                      - textbox "City" [ref=e258]
+                    - generic [ref=e260]:
+                      - generic [ref=e262]:
+                        - text: Week Selection
+                        - generic [ref=e263]: "*"
+                      - group "Week Selection" [ref=e265]:
+                        - generic [ref=e266]:
+                          - generic [ref=e269] [cursor=pointer]:
+                            - radio "July 6-10" [ref=e270]
+                            - generic [ref=e276]: July 6-10
+                          - generic [ref=e279] [cursor=pointer]:
+                            - radio "July 13-17" [ref=e280]
+                            - generic [ref=e286]: July 13-17
+                          - generic [ref=e289] [cursor=pointer]:
+                            - radio "July 20-24" [ref=e290]
+                            - generic [ref=e296]: July 20-24
+                          - generic [ref=e299] [cursor=pointer]:
+                            - radio "July 27-31" [ref=e300]
+                            - generic [ref=e306]: July 27-31
+                          - generic [ref=e309] [cursor=pointer]:
+                            - radio "Aug 3-7" [ref=e310]
+                            - generic [ref=e316]: Aug 3-7
+                          - generic [ref=e319] [cursor=pointer]:
+                            - radio "Aug 10-14" [ref=e320]
+                            - generic [ref=e326]: Aug 10-14
+                    - generic [ref=e328]:
+                      - generic [ref=e330]:
+                        - text: Session Type
+                        - generic [ref=e331]: "*"
+                      - group "Session Type" [ref=e333]:
+                        - generic [ref=e334]:
+                          - generic [ref=e336] [cursor=pointer]:
+                            - checkbox "Full Day Camp 9am-4pm ($499)"
+                            - generic [ref=e340]: Full Day Camp 9am-4pm ($499)
+                          - generic [ref=e342] [cursor=pointer]:
+                            - checkbox "Extended Day Camp 9am-6pm ($599)"
+                            - generic [ref=e346]: Extended Day Camp 9am-6pm ($599)
+                          - generic [ref=e348] [cursor=pointer]:
+                            - checkbox "Morning Half Day 9am-12pm ($299)"
+                            - generic [ref=e352]: Morning Half Day 9am-12pm ($299)
+                          - generic [ref=e354] [cursor=pointer]:
+                            - checkbox "Afternoon Half Day 1pm-4pm ($299)"
+                            - generic [ref=e358]: Afternoon Half Day 1pm-4pm ($299)
+                          - generic [ref=e360] [cursor=pointer]:
+                            - checkbox "Extended Afternoon 1pm-6pm ($399)"
+                            - generic [ref=e364]: Extended Afternoon 1pm-6pm ($399)
+                    - generic [ref=e366]:
+                      - generic [ref=e368]:
+                        - text: Photo/Recording Consent
+                        - generic [ref=e369]: "*"
+                      - group "Photo/Recording Consent" [ref=e371]:
+                        - generic [ref=e372]:
+                          - generic [ref=e375] [cursor=pointer]:
+                            - radio "Yes" [ref=e376]
+                            - generic [ref=e382]: "Yes"
+                          - generic [ref=e385] [cursor=pointer]:
+                            - radio "No" [ref=e386]
+                            - generic [ref=e392]: "No"
+                    - generic [ref=e399] [cursor=pointer]:
+                      - checkbox "I have read and agree to the Attendance Policy"
+                      - paragraph [ref=e408]:
+                        - generic [ref=e409]:
+                          - text: I have read and agree to the
+                          - link "Attendance Policy" [ref=e410]:
+                            - /url: https://www.learningwithlumi.com/attendance-policy
+                            - generic [ref=e411]: Attendance Policy
+                          - text: "*"
+                    - generic [ref=e418] [cursor=pointer]:
+                      - checkbox "I have read and agree to the Cancellation"
+                      - paragraph [ref=e427]:
+                        - generic [ref=e428]:
+                          - text: I have read and agree to the
+                          - link "Cancellation" [ref=e429]:
+                            - /url: https://www.learningwithlumi.com/cancellation-refund-policy
+                            - generic [ref=e430]: Cancellation
+                          - text: "*"
+                    - generic [ref=e437] [cursor=pointer]:
+                      - checkbox "I have read and agree to the Medical"
+                      - paragraph [ref=e446]:
+                        - generic [ref=e447]:
+                          - text: I have read and agree to the
+                          - link "Medical" [ref=e448]:
+                            - /url: https://www.learningwithlumi.com/medical-allergy-policy
+                            - generic [ref=e449]: Medical
+                          - text: "*"
+                    - generic [ref=e456] [cursor=pointer]:
+                      - checkbox "I have read and agree to the Privacy Policy"
+                      - paragraph [ref=e465]:
+                        - generic [ref=e466]:
+                          - text: I have read and agree to the
+                          - link "Privacy Policy" [ref=e467]:
+                            - /url: https://www.learningwithlumi.com/privacy-policy
+                            - generic [ref=e468]: Privacy Policy
+                          - text: "*"
+                    - button "Checkout" [ref=e473] [cursor=pointer]:
+                      - generic [ref=e474]: Checkout
+                  - region
+            - paragraph [ref=e476]: A 3.99% processing fee applies to all registrations. Questions? Call (571) 207-8373
+      - contentinfo:
+        - generic [ref=e478]:
+          - group:
+            - link [ref=e482] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+            - heading "Quick Links" [level=3] [ref=e485]
+            - paragraph [ref=e487]:
+              - link "About Us" [ref=e489] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e491]:
+              - link "Summer Programs" [ref=e493] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e495]:
+              - link "Tutoring" [ref=e497] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e499]:
+              - link "Join Our Team" [ref=e501] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e503]:
+              - link "Contact Us" [ref=e505] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/contact-us
+            - heading "Contact Info" [level=3] [ref=e507]
+            - paragraph [ref=e509]:
+              - link "(571) 207-8373" [ref=e511] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e513]:
+              - link "contact.us@learningwithlumi.com" [ref=e515] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e517]: © 2026 Lumi Education
+            - paragraph [ref=e519]:
+              - link "Privacy Policy" [ref=e521] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/privacy-policy
+  - region "bottom of page"

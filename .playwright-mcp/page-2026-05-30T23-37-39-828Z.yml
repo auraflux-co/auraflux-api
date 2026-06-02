@@ -1,0 +1,144 @@
+- generic [ref=e3]:
+  - region "top of page" [active]
+  - button "Skip to Main Content"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                    - generic [ref=e55]: Contact Us
+      - main:
+        - generic [ref=e57]:
+          - group:
+            - heading "Discover Exceptional Childrens Educational Programs" [level=1] [ref=e61]
+            - paragraph [ref=e63]: Unlock academic potential with our premier summer tracks, engaging after-school clubs, and dedicated private tutoring for every student's unique journey.
+            - generic [ref=e66]:
+              - img "Interactive AR Classroom Activity" [ref=e71]
+              - generic [ref=e73]:
+                - slider "Seek slider" [ref=e74]
+                - generic [ref=e78]:
+                  - generic [ref=e79]:
+                    - button "Pause" [ref=e82] [cursor=pointer]:
+                      - img [ref=e83]
+                    - generic [ref=e85]:
+                      - generic [ref=e86]: 00:00
+                      - generic [ref=e87]: /
+                      - generic [ref=e88]: 00:07
+                  - generic [ref=e89]:
+                    - button "Playback speed" [ref=e92] [cursor=pointer]:
+                      - img [ref=e93]
+                    - button "Enter picture in picture" [ref=e100] [cursor=pointer]:
+                      - img [ref=e101]
+                    - button "Enter fullscreen" [ref=e105] [cursor=pointer]:
+                      - img [ref=e106]
+            - link "Browse Our Offerings" [ref=e108] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com/tutoring
+              - generic [ref=e109]: Browse Our Offerings
+        - generic [ref=e111]:
+          - group:
+            - heading "Our Services" [level=2] [ref=e115]
+            - generic [ref=e117]:
+              - heading "Summer Sessions" [level=2] [ref=e121]
+              - list [ref=e123]:
+                - listitem [ref=e124]: Creative Arts & STEM
+                - listitem [ref=e125]: Project Based Learning
+                - listitem [ref=e126]: Success
+              - img "Children Conducting Experiment" [ref=e132]
+              - link "See Program Offerings" [ref=e134] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+                - generic [ref=e135]: See Program Offerings
+            - generic [ref=e137]:
+              - heading "Evening Enrichment HQ" [level=2] [ref=e141]
+              - list [ref=e143]:
+                - listitem [ref=e144]: Problem Solving Skills
+                - listitem [ref=e145]: Fine Arts
+                - listitem [ref=e146]: Academic Advancement
+              - img "Classroom Art Activity" [ref=e152]
+              - link "Read Details" [ref=e154] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/after-school-programs
+                - generic [ref=e155]: Read Details
+            - generic [ref=e157]:
+              - heading "Private Help" [level=2] [ref=e161]
+              - list [ref=e163]:
+                - listitem [ref=e164]: Individual Success Path
+                - listitem [ref=e165]: Mindset Growth
+                - listitem [ref=e166]: Expert Help
+              - link "Schedule a Chat for Free" [ref=e168] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/booking-calendar/free-telephonic-consultation
+                - generic [ref=e169]: Schedule a Chat for Free
+              - img "Classroom Participation Scene" [ref=e175]
+            - generic [ref=e177]:
+              - heading "Internship Opportunities" [level=2] [ref=e181]
+              - list [ref=e183]:
+                - listitem [ref=e184]: Professional Growth
+                - listitem [ref=e185]: True Leadership
+                - listitem [ref=e186]: Future Careers
+              - img "Outdoor Learning Group" [ref=e192]
+              - link "Join Us Now" [ref=e194] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                - generic [ref=e195]: Join Us Now
+      - contentinfo:
+        - generic [ref=e197]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e201] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e203]
+            - heading "Quick Links" [level=3] [ref=e205]
+            - paragraph [ref=e207]:
+              - link "About Us" [ref=e209] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e211]:
+              - link "Summer Programs" [ref=e213] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e215]:
+              - link "Tutoring" [ref=e217] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e219]:
+              - link "Join Our Team" [ref=e221] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e223]:
+              - link "Contact Us" [ref=e225] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/contact-us
+            - heading "Contact Info" [level=3] [ref=e227]
+            - paragraph [ref=e229]:
+              - link "(571) 207-8373" [ref=e231] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e233]:
+              - link "contact.us@learningwithlumi.com" [ref=e235] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e237]: © 2026 Lumi Education
+            - paragraph [ref=e239]:
+              - link "Privacy Policy" [ref=e241] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/privacy-policy
+  - region "bottom of page"

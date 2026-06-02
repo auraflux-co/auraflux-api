@@ -270,7 +270,24 @@ async function runBackup(exitOnComplete = false) {
     errors.push({ stage: 'data', error: e.message });
   }
 
-  // 4. Render env var backup (all services → R2 under envvars/<service-id>/<date>.json.gz)
+  // 4. Marketing site snapshot (cloudflare/marketing/ → R2 under marketing/<date>.tar.gz)
+  try {
+    const mktgSrc = path.join(ROOT_DIR, 'cloudflare', 'marketing');
+    if (fs.existsSync(mktgSrc)) {
+      const tmpMktg = path.join(os.tmpdir(), `marketing-snapshot-${date}.tar.gz`);
+      execSync(`tar -czf "${tmpMktg}" -C "${path.dirname(mktgSrc)}" marketing`, { stdio: 'pipe' });
+      const mktgBuf = fs.readFileSync(tmpMktg);
+      await uploadToR2(client, bucket, `marketing/marketing-${date}.tar.gz`, mktgBuf);
+      fs.unlinkSync(tmpMktg);
+      await pruneOldBackups(client, bucket, 'marketing/');
+      console.log('[backup] Marketing site snapshot uploaded');
+    }
+  } catch (e) {
+    console.error('[backup] Marketing snapshot failed:', e.message);
+    errors.push({ stage: 'marketing', error: e.message });
+  }
+
+  // 5. Render env var backup (all services → R2 under envvars/<service-id>/<date>.json.gz)
   try {
     const envResult = await backupRenderEnvVars();
     if (!envResult.ok) {

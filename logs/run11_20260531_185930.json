@@ -1,0 +1,197 @@
+{
+  "run": "run_11_20260531_185930",
+  "phase": "0",
+  "passed": true,
+  "jobs_run": 3,
+  "templates_saved": 3,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780268370542",
+      "label": "Post Everywhere",
+      "tier": "operate",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780268370542/1780268765253_1780268765252_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780268370542_final.mp4",
+      "grade": 100,
+      "grade_detail": {
+        "grade": 100,
+        "passed": true,
+        "gaps": [],
+        "summary": "Grade: 100/100 | PASSED"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "add_ons",
+          "severity": "info",
+          "observation": "Comprehensive add-on suite activated (captions, audio, branding, colorGrade, effects, layout) aligns well with 'Post Everywhere' template goal, which requires polished, platform-ready content with consistent branding and accessibility features.",
+          "suggested_change": "None required - add-on selection is appropriate for OPERATE tier social distribution use case."
+        },
+        {
+          "area": "output",
+          "severity": "low",
+          "observation": "Output URL structure appears valid and follows expected naming convention. Job status marked 'complete' suggests successful asset generation, though actual file accessibility cannot be verified from this review context.",
+          "suggested_change": "Implement automated HTTP HEAD check on output URLs post-completion to confirm asset accessibility before marking job fully delivered."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' despite job completion. This represents a gap in quality validation - no automated content analysis was performed to verify visual coherence, caption accuracy, or brand compliance.",
+          "suggested_change": "Investigate Twelve Labs integration failure: check API timeout thresholds, ensure QA step is not being skipped for OPERATE tier, and add fallback QA mechanism or retry logic."
+        },
+        {
+          "area": "pipeline",
+          "severity": "medium",
+          "observation": "QA step appears to be a non-blocking process that doesn't prevent job completion even when it fails to return results. This could allow low-quality outputs to reach end users without validation.",
+          "suggested_change": "For OPERATE tier, consider making QA a blocking step or implementing a 'QA pending' intermediate state with async notification once analysis completes."
+        },
+        {
+          "area": "flow",
+          "severity": "low",
+          "observation": "Timestamp delta between job ID (1780268370542) and output file (1780268765253) suggests ~6.5 minute processing time for a multi-add-on assembly, which is reasonable but should be benchmarked against tier SLAs.",
+          "suggested_change": "Track and surface processing duration metrics per add-on combination to identify optimization opportunities and set user expectations accurately."
+        }
+      ],
+      "ran_at": "2026-05-31T23:08:20.224995+00:00",
+      "template_id": "3ed36921-829c-451b-ba12-3b5f6b6df54e"
+    },
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780268900611",
+      "label": "Best-Of Reel",
+      "tier": "operate",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780268900611/1780269113504_1780269113501_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780268900611_final.mp4",
+      "grade": 100,
+      "grade_detail": {
+        "grade": 100,
+        "passed": true,
+        "gaps": [],
+        "summary": "Grade: 100/100 | PASSED"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "add_ons",
+          "severity": "info",
+          "observation": "Comprehensive add-on suite activated for Best-Of Reel: captions, audio, branding, colorGrade, effects, and layout. This combination is well-suited for the template goal of creating polished highlight content.",
+          "suggested_change": "None required - add-on selection is appropriate for OPERATE tier expectations."
+        },
+        {
+          "area": "output",
+          "severity": "low",
+          "observation": "Output URL structure appears valid and follows expected naming convention with user ID, job type, and timestamps. File path suggests successful assembly pipeline completion.",
+          "suggested_change": "Implement automated URL health check to verify asset accessibility post-completion before marking job as fully delivered."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' despite job completing successfully. This means no automated content quality validation (scene detection, content appropriateness, visual quality metrics) was performed on the final output.",
+          "suggested_change": "Investigate Twelve Labs integration - check API connectivity, quota limits, or timeout issues. For OPERATE tier, QA validation should be mandatory before final delivery."
+        },
+        {
+          "area": "pipeline",
+          "severity": "medium",
+          "observation": "Job marked 'complete' without QA validation creates a gap in quality assurance. Pipeline should not finalize status without all verification steps passing or explicitly flagging skipped checks.",
+          "suggested_change": "Add pipeline gate: if QA service returns no result, set status to 'complete_unverified' and trigger alert for manual review or QA retry."
+        },
+        {
+          "area": "flow",
+          "severity": "medium",
+          "observation": "No visibility into whether QA failure is a one-off or systemic issue. Without historical context, cannot identify patterns in Twelve Labs failures for this job type or tier.",
+          "suggested_change": "Implement QA service health dashboard tracking success/failure rates by job type, enabling proactive identification of integration issues."
+        }
+      ],
+      "ran_at": "2026-05-31T23:13:35.780567+00:00",
+      "template_id": "7a602cb1-af34-4805-a746-b7518e7bb334"
+    },
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780269216241",
+      "label": "Full Episode",
+      "tier": "operate",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780269216241/1780269483861_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780269216241_final.mp4",
+      "grade": 100,
+      "grade_detail": {
+        "grade": 100,
+        "passed": true,
+        "gaps": [],
+        "summary": "Grade: 100/100 | PASSED"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "add_ons",
+          "severity": "info",
+          "observation": "Comprehensive add-on suite activated for full_episode job including captions, tts, audio, branding, effects, and layout - this is an appropriate combination for OPERATE tier full episode production requiring polished, broadcast-ready output.",
+          "suggested_change": "None required - add-on selection aligns well with template goal expectations."
+        },
+        {
+          "area": "output",
+          "severity": "low",
+          "observation": "Output URL structure indicates successful assembly with proper naming convention (assembled_*_final.mp4) and complete job status, suggesting the pipeline executed end-to-end without fatal errors.",
+          "suggested_change": "Consider adding a CDN verification step to confirm asset accessibility post-generation before marking job complete."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' which means content quality validation was either skipped, timed out, or failed silently. For OPERATE tier full episodes, this is a significant gap in quality assurance coverage.",
+          "suggested_change": "Implement fallback QA mechanism or retry logic for Twelve Labs integration; add alerting when QA returns null for OPERATE tier jobs to prevent unvalidated content delivery."
+        },
+        {
+          "area": "pipeline",
+          "severity": "medium",
+          "observation": "No QA result combined with 'complete' status indicates the pipeline does not gate final delivery on successful quality analysis - jobs can ship without content validation passing.",
+          "suggested_change": "For OPERATE tier, consider making Twelve Labs QA a blocking step or at minimum flag outputs as 'complete_unvalidated' when QA fails to return results."
+        },
+        {
+          "area": "flow",
+          "severity": "low",
+          "observation": "Job timestamp delta between clips generation (1780269216241) and final assembly (1780269483861) shows ~267 seconds processing time which appears reasonable for a full episode with 6 add-ons.",
+          "suggested_change": "Benchmark this against similar jobs to establish performance baselines for OPERATE tier full_episode workflows."
+        }
+      ],
+      "ran_at": "2026-05-31T23:21:21.937095+00:00",
+      "template_id": "12a60307-a28e-4317-9da7-19f5e4bd6912"
+    }
+  ],
+  "saved_templates": [
+    {
+      "templateId": "3ed36921-829c-451b-ba12-3b5f6b6df54e",
+      "name": "[Run11] Post Everywhere",
+      "tier": "operate",
+      "round_trip": true
+    },
+    {
+      "templateId": "7a602cb1-af34-4805-a746-b7518e7bb334",
+      "name": "[Run11] Best-Of Reel",
+      "tier": "operate",
+      "round_trip": true
+    },
+    {
+      "templateId": "12a60307-a28e-4317-9da7-19f5e4bd6912",
+      "name": "[Run11] Full Episode",
+      "tier": "operate",
+      "round_trip": true
+    }
+  ]
+}

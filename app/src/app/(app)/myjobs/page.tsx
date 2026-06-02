@@ -30,22 +30,34 @@ interface StatCardProps {
   label:   string;
   count:   number | null;
   sub?:    string;
-  accent?: boolean;
+  variant?: 'default' | 'warn' | 'success' | 'active';
 }
 
-function StatCard({ href, label, count, sub, accent }: StatCardProps) {
+function StatCard({ href, label, count, sub, variant = 'default' }: StatCardProps) {
+  const borderCls =
+    variant === 'warn'    ? 'border-yellow-700/50 bg-yellow-950/10' :
+    variant === 'success' ? 'border-emerald-700/50 bg-emerald-950/10' :
+    variant === 'active'  ? 'border-blue-700/50 bg-blue-950/10' :
+    '';
+  const numCls =
+    variant === 'warn'    ? 'text-yellow-400' :
+    variant === 'success' ? 'text-emerald-400' :
+    variant === 'active'  ? 'text-blue-400' :
+    'text-foreground';
+  const hasCount = count !== null && count > 0;
+
   return (
     <Link href={href} className="group block">
       <div className={cn(
-        'af-surface px-5 py-4 transition-all',
-        'group-hover:border-primary/40 group-hover:shadow-md group-hover:shadow-primary/5',
-        accent && count && count > 0 ? 'border-yellow-500/50' : '',
+        'af-surface px-5 py-4 transition-all rounded-xl',
+        'group-hover:border-primary/30 group-hover:shadow-sm',
+        hasCount && variant !== 'default' ? borderCls : '',
       )}>
-        <p className="af-subhead">{label}</p>
-        <p className={cn('af-metric mt-1.5', count === null ? 'text-foreground/30' : '')}>
+        <p className="af-subhead text-muted-foreground">{label}</p>
+        <p className={cn('af-metric mt-1.5', count === null ? 'text-foreground/30' : numCls)}>
           {count === null ? '—' : count}
         </p>
-        {sub && <p className="af-caption mt-1">{sub}</p>}
+        {sub && <p className="af-caption mt-1 text-muted-foreground/70">{sub}</p>}
       </div>
     </Link>
   );
@@ -103,9 +115,9 @@ export default function JobsHubPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard href="/myjobs/active"  label="Active"           count={jobs === null ? null : active.length}   sub="queued + running" />
-        <StatCard href="/myjobs/active"  label="Needs attention"  count={jobs === null ? null : held.length}     sub="held or failed" accent />
-        <StatCard href="/review" label="Ready to review" count={jobs === null ? null : staged.length} sub="awaiting approval" accent={staged.length > 0} />
+        <StatCard href="/myjobs/active"  label="Active"           count={jobs === null ? null : active.length}   sub="queued + running" variant="active" />
+        <StatCard href="/myjobs/active"  label="Needs attention"  count={jobs === null ? null : held.length}     sub="held or failed"   variant="warn" />
+        <StatCard href="/review"         label="Ready to review"  count={jobs === null ? null : staged.length}   sub="awaiting approval" variant="success" />
         <StatCard href="/myjobs/history" label="Completed"        count={jobs === null ? null : complete.length} sub="all time" />
       </div>
 
@@ -167,13 +179,11 @@ export default function JobsHubPage() {
       )}
 
       {/* Quick links */}
-      <div>
-        <p className="af-subhead mb-3">Quick actions</p>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/myjobs/new"     className={cn(buttonVariants({ size: 'sm' }))}>New job</Link>
-          <Link href="/myjobs/active"  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>View active</Link>
-          <Link href="/myjobs/history" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>View history</Link>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <Link href="/myjobs/new"     className={cn(buttonVariants({ size: 'sm' }))}>+ New job</Link>
+        <Link href="/myjobs/active"  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>View active</Link>
+        <Link href="/myjobs/history" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>View history</Link>
+        <Link href="/review"         className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>Review queue</Link>
       </div>
 
       {/* Empty state */}

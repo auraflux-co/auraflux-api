@@ -1,0 +1,11 @@
+- generic [active]:
+  - generic [ref=e1]:
+    - text: Loading
+    - strong [ref=e2]: Sveltia
+    - emphasis [ref=e3]: UI
+    - text: favorite
+  - heading "Sveltia CMS" [level=1] [ref=e4]
+  - button "Sign In with ⁨GitHub⁩" [ref=e5] [cursor=pointer]
+  - button "Sign In Using Access Token" [ref=e6] [cursor=pointer]
+  - status: Welcome to ⁨Sveltia CMS⁩
+  - alertdialog "Sign In Using Access Token"

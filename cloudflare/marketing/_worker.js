@@ -469,6 +469,20 @@ function addSecurityHeaders(headers) {
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   headers.set('X-XSS-Protection', '1; mode=block');
+  // M4: HSTS — pin HTTPS-only for 1 year, include subdomains
+  headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  // M3: CSP — allow self + known third-party scripts (Framer assets, BotPenguin, Cloudflare Analytics)
+  headers.set('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' assets.framer.com cdn.botpenguin.com static.cloudflareinsights.com",
+    "style-src 'self' 'unsafe-inline' assets.framer.com fonts.googleapis.com",
+    "font-src 'self' fonts.gstatic.com assets.framer.com",
+    "img-src 'self' data: https:",
+    "connect-src 'self' https://auraflux-api.onrender.com https://api.auraflux.co cloudflareinsights.com",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; '));
   return headers;
 }
 

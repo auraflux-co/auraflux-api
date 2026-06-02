@@ -313,7 +313,7 @@ n_rewrites = home_raw.count(ASSETS_PROXY)
 if n_rewrites:
     print(f"  ✓ Rewrote {n_rewrites} URLs via /cf-assets/ in home.html (<style>, <script>, <link> only)")
 
-home             = js_escape(inject_framer(home_raw))
+home             = js_escape(home_raw)
 
 blog             = js_escape(inject_framer(read_page('blog.html')))
 pricing          = js_escape(inject_framer(read_page('pricing.html')))
@@ -341,56 +341,6 @@ if '__PAGE_ROADMAP_CONTENT__' in build:
 if '__PAGE_DEVELOPER_API__' in build:
     build = build.replace('__PAGE_DEVELOPER_API__', developer_api)
 
-# ── 404 page ──────────────────────────────────────────────────────────────────
-page_404 = js_escape(inject_framer(read_page('404.html')))
-if '__PAGE_404__' in build:
-    build = build.replace('__PAGE_404__', page_404)
-    print("  ✓ Injected 404.html")
-
-# ── SEO meta injection from content/seo.json ─────────────────────────────────
-seo_path = os.path.join(os.path.dirname(pages), 'content', 'seo.json')
-if os.path.isfile(seo_path):
-    import json as _json
-    seo_data = _json.loads(open(seo_path).read())
-    seo_pages = {p['page']: p for p in seo_data.get('pages', [])}
-
-    def apply_seo(html_str, page_key):
-        meta = seo_pages.get(page_key)
-        if not meta:
-            return html_str
-        if meta.get('title'):
-            html_str = re.sub(r'<title>[^<]*</title>',
-                              f'<title>{meta["title"]}</title>', html_str)
-        if meta.get('description'):
-            html_str = re.sub(
-                r'<meta name="description" content="[^"]*"',
-                f'<meta name="description" content="{meta["description"]}"',
-                html_str)
-        if meta.get('og_image'):
-            html_str = re.sub(
-                r'<meta property="og:image" content="[^"]*"',
-                f'<meta property="og:image" content="{meta["og_image"]}"',
-                html_str)
-            html_str = re.sub(
-                r'<meta name="twitter:image" content="[^"]*"',
-                f'<meta name="twitter:image" content="{meta["og_image"]}"',
-                html_str)
-        return html_str
-
-    # Re-build with SEO applied (pages already js_escaped — re-read raw, apply, re-escape)
-    seo_map = {
-        'home': ('home', home_raw),
-    }
-    if seo_map.get('home') and 'home' in seo_pages:
-        home_seo = apply_seo(home_raw, 'home')
-        if home_seo != home_raw:
-            home = js_escape(inject_framer(home_seo))
-            if '__PAGE_HOME__' in build:
-                build = build.replace('__PAGE_HOME__', home)
-            print("  ✓ SEO meta applied → home")
-
-    print("  ✓ SEO meta injection complete")
-
 # ── Inject admin UI and config ────────────────────────────────────────────────
 admin_index = read_shell('../public/admin/index.html') if os.path.isfile(os.path.join(shell, '../public/admin/index.html')) else ''
 if not admin_index:
@@ -413,12 +363,6 @@ if '__ADMIN_CONFIG__' in build and admin_config:
 with open("$WORKER_BUILD", 'w', encoding='utf-8') as f:
     f.write(build)
 PYEOF
-
-# ── Blog post compilation (separate script to avoid heredoc conflicts) ────────
-echo "📝  Compiling blog posts..."
-python3 "$SCRIPT_DIR/scripts/build_blog_posts.py" \
-  "$WORKER_BUILD" "$PAGES_DIR" "$SCRIPT_DIR/content" || \
-  echo "  – Blog post compilation failed (non-fatal)"
 
 echo ""
 # ── Step 3: Deploy via Python urllib (curl not available in all environments) ──
@@ -453,38 +397,10 @@ def part_file(name, filename, content_type, data):
         + data + b'\r\n'
     )
 
-ROBOTS_TXT = b"""User-agent: *
-Allow: /
-
-Sitemap: https://auraflux.co/sitemap.xml
-
-Disallow: /admin
-Disallow: /oauth/
-"""
-
-SITEMAP_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://auraflux.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://auraflux.co/our-story</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://auraflux.co/our-system</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://auraflux.co/plans</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://auraflux.co/roadmap</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://auraflux.co/blog</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://auraflux.co/contact-us</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://auraflux.co/developer-api</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://auraflux.co/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://auraflux.co/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-</urlset>"""
-
-ROUTES_JSON = b'{"version":1,"include":["/*"],"exclude":[]}'
-
 body = (
-    part_field('manifest', '{"robots.txt":{"type":"text/plain"},"sitemap.xml":{"type":"application/xml"},"_routes.json":{"type":"application/json"}}')
+    part_field('manifest', '{}')
     + part_field('branch', 'main')
     + part_file('_worker.js', '_worker.js', 'application/javascript', worker_data)
-    + part_file('robots.txt', 'robots.txt', 'text/plain', ROBOTS_TXT)
-    + part_file('sitemap.xml', 'sitemap.xml', 'application/xml', SITEMAP_XML)
-    + part_file('_routes.json', '_routes.json', 'application/json', ROUTES_JSON)
     + b'--' + boundary + b'--\r\n'
 )
 

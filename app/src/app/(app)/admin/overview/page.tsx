@@ -65,10 +65,10 @@ const TYPE_LABEL: Record<string, string> = {
 
 function StatCard({ label, value, sub, accent }: { label: string; value: number | string; sub?: string; accent?: string }) {
   return (
-    <div className="af-surface p-4">
-      <p className={cn('af-metric', accent)}>{value}</p>
-      <p className="af-label font-medium text-foreground mt-0.5">{label}</p>
-      {sub && <p className="af-caption mt-0.5">{sub}</p>}
+    <div className="rounded-xl border border-border bg-card p-4 space-y-0.5">
+      <p className={cn('text-xl font-bold tabular-nums', accent ?? 'text-foreground')}>{value}</p>
+      <p className="af-caption font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
+      {sub && <p className="af-caption text-muted-foreground/60">{sub}</p>}
     </div>
   );
 }
@@ -99,33 +99,33 @@ function ServiceCard({ svc }: { svc: RenderService }) {
 
   return (
     <div className={cn(
-      'rounded-lg border p-4 space-y-2',
-      isFailed ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30'
-      : isSuspended ? 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/30'
+      'rounded-xl border p-4 space-y-2',
+      isFailed    ? 'border-red-800/60 bg-red-950/20'
+      : isSuspended ? 'border-border/40 bg-muted/20'
       : 'border-border bg-card',
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={cn(
-            'w-2.5 h-2.5 rounded-full flex-shrink-0',
-            isFailed ? 'bg-red-500' : isSuspended ? 'bg-slate-400' : isLive ? 'bg-emerald-500' : 'bg-blue-400 animate-pulse',
+            'w-2 h-2 rounded-full flex-shrink-0',
+            isFailed ? 'bg-red-500' : isSuspended ? 'bg-muted-foreground/40' : isLive ? 'bg-emerald-500' : 'bg-blue-400 animate-pulse',
           )} />
-          <span className="font-medium text-sm">{svc.name}</span>
-          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{svc.type}</span>
+          <span className="font-semibold text-sm">{svc.name}</span>
+          <span className="text-[10px] text-muted-foreground/70 bg-muted/60 px-1.5 py-0.5 rounded">{svc.type}</span>
         </div>
         {!isSuspended && (
-          <span className={cn('text-xs px-2 py-0.5 rounded font-medium', DEPLOY_BADGE[status] ?? 'bg-muted text-muted-foreground')}>
+          <span className={cn('text-[10px] px-2 py-0.5 rounded font-medium', DEPLOY_BADGE[status] ?? 'bg-muted text-muted-foreground')}>
             {status.replace(/_/g, ' ')}
           </span>
         )}
         {isSuspended && (
-          <span className="text-xs px-2 py-0.5 rounded font-medium bg-slate-100 text-slate-500 dark:bg-slate-800">suspended</span>
+          <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-muted text-muted-foreground/60">suspended</span>
         )}
       </div>
       {deploy && (
-        <div className="text-xs text-muted-foreground space-y-0.5">
-          {deploy.commit && <p className="truncate" title={deploy.commit}>{deploy.commit}</p>}
-          {deploy.finishedAt && <p>{relTime(deploy.finishedAt)}</p>}
+        <div className="text-[11px] text-muted-foreground/70 space-y-0.5">
+          {deploy.commit && <p className="truncate font-mono" title={deploy.commit}>{deploy.commit.slice(0, 50)}</p>}
+          {deploy.finishedAt && <p className="tabular-nums">{relTime(deploy.finishedAt)}</p>}
         </div>
       )}
     </div>
@@ -134,29 +134,32 @@ function ServiceCard({ svc }: { svc: RenderService }) {
 
 function MetricBox({ label, value, sub, warn }: { label: string; value: string | number | null; sub?: string; warn?: boolean }) {
   return (
-    <div className="af-surface p-3 text-center">
-      <p className={cn('text-lg font-bold tabular-nums', warn ? 'text-red-400' : '')}>{value ?? '—'}</p>
-      <p className="af-caption">{label}</p>
-      {sub && <p className="af-caption opacity-70">{sub}</p>}
+    <div className={cn(
+      'rounded-lg border p-3 text-center',
+      warn ? 'border-red-800/50 bg-red-950/10' : 'border-border bg-card',
+    )}>
+      <p className={cn('text-base font-bold tabular-nums', warn ? 'text-red-400' : 'text-foreground')}>{value ?? '—'}</p>
+      <p className="af-caption text-muted-foreground">{label}</p>
+      {sub && <p className="af-caption text-muted-foreground/60">{sub}</p>}
     </div>
   );
 }
 
 function IncidentCard({ inc }: { inc: NrIncident }) {
   return (
-    <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30 px-4 py-3 flex items-start gap-3">
-      <span className="mt-0.5 w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse" />
+    <div className="rounded-xl border border-red-800/60 bg-red-950/20 px-4 py-3 flex items-start gap-3">
+      <span className="mt-1 w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={cn('text-xs font-medium px-1.5 py-0.5 rounded', PRIORITY_BADGE[inc.priority] ?? PRIORITY_BADGE.LOW)}>
+          <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide', PRIORITY_BADGE[inc.priority] ?? PRIORITY_BADGE.LOW)}>
             {inc.priority}
           </span>
-          <span className="font-medium text-sm text-foreground">{inc.title}</span>
+          <span className="font-semibold text-sm text-foreground">{inc.title}</span>
         </div>
         {inc.entityNames?.length > 0 && (
           <p className="text-xs text-muted-foreground mt-0.5">{inc.entityNames.join(', ')}</p>
         )}
-        <p className="text-xs text-muted-foreground mt-0.5">Opened {relTime(inc.createdAt)}</p>
+        <p className="text-xs text-muted-foreground/70 mt-0.5 tabular-nums">Opened {relTime(inc.createdAt)}</p>
       </div>
     </div>
   );
@@ -271,7 +274,7 @@ export default function AdminOverviewPage() {
 
       {/* Tabs + filters */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1">
+        <div className="flex gap-1 p-1 bg-muted/40 rounded-lg border border-border/60">
           {([
             ['system',   'System Health'],
             ['feed',     'Activity Feed'],
@@ -281,10 +284,10 @@ export default function AdminOverviewPage() {
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                'px-3 py-1.5 text-sm rounded border transition-colors',
+                'px-3 py-1.5 text-sm rounded-md transition-colors font-medium',
                 tab === t
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'border-border text-muted-foreground hover:text-foreground',
+                  ? 'bg-card text-foreground shadow-sm border border-border/60'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               {label}
@@ -301,7 +304,7 @@ export default function AdminOverviewPage() {
             placeholder={tab === 'feed' ? 'Filter by email or topic…' : 'Filter by email or name…'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-8 px-3 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary w-56"
+            className="h-8 px-3 text-sm rounded-lg border border-border bg-card focus:outline-none focus:ring-1 focus:ring-primary w-56"
           />
           {tab === 'feed' && (
             <div className="flex gap-1">
@@ -310,10 +313,10 @@ export default function AdminOverviewPage() {
                   key={st}
                   onClick={() => setStatusFilter(st)}
                   className={cn(
-                    'px-2 py-1 text-xs rounded border transition-colors capitalize',
+                    'px-2 py-1 text-[11px] rounded-md border transition-colors capitalize font-medium',
                     statusFilter === st
                       ? 'bg-primary text-primary-foreground border-primary'
-                      : 'border-border text-muted-foreground hover:text-foreground',
+                      : 'border-border/60 text-muted-foreground hover:text-foreground bg-card',
                   )}
                 >
                   {st}
@@ -326,15 +329,15 @@ export default function AdminOverviewPage() {
 
       {/* ── Activity Feed tab ── */}
       {tab === 'feed' && (
-        <div className="rounded-lg border border-border overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-2.5 af-subhead">Account</th>
-                <th className="text-left px-4 py-2.5 af-subhead">Type</th>
-                <th className="text-left px-4 py-2.5 af-subhead">Topic</th>
-                <th className="text-left px-4 py-2.5 af-subhead">Status</th>
-                <th className="text-right px-4 py-2.5 af-subhead">When</th>
+              <tr className="border-b border-border/60 bg-muted/30">
+                <th className="text-left px-4 py-3 af-subhead text-muted-foreground font-semibold uppercase tracking-wide text-[11px]">Account</th>
+                <th className="text-left px-4 py-3 af-subhead text-muted-foreground font-semibold uppercase tracking-wide text-[11px]">Type</th>
+                <th className="text-left px-4 py-3 af-subhead text-muted-foreground font-semibold uppercase tracking-wide text-[11px]">Topic</th>
+                <th className="text-left px-4 py-3 af-subhead text-muted-foreground font-semibold uppercase tracking-wide text-[11px]">Status</th>
+                <th className="text-right px-4 py-3 af-subhead text-muted-foreground font-semibold uppercase tracking-wide text-[11px]">When</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -385,19 +388,19 @@ export default function AdminOverviewPage() {
 
       {/* ── Accounts tab ── */}
       {tab === 'accounts' && (
-        <div className="rounded-lg border border-border overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-2.5 af-subhead">Account</th>
-                <th className="text-left px-4 py-2.5 af-subhead">Plan</th>
-                <th className="text-right px-4 py-2.5 af-subhead">Total</th>
-                <th className="text-right px-4 py-2.5 af-subhead">7d</th>
-                <th className="text-right px-4 py-2.5 af-subhead">Published</th>
-                <th className="text-right px-4 py-2.5 af-subhead">Running</th>
-                <th className="text-right px-4 py-2.5 af-subhead">Failed</th>
-                <th className="text-right px-4 py-2.5 af-subhead">Last login</th>
-                <th className="text-right px-4 py-2.5 af-subhead">Last job</th>
+              <tr className="border-b border-border/60 bg-muted/30">
+                <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Account</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Plan</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Total</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">7d</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Published</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Running</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Failed</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Last login</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Last job</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -461,17 +464,16 @@ export default function AdminOverviewPage() {
 
           {/* Open incidents */}
           <section className="space-y-2">
-            <h2 className="af-h3">
-              New Relic Incidents
-              {' '}
-              <span className="font-normal af-label">
+            <div className="flex items-center gap-2">
+              <h2 className="af-h3">New Relic Incidents</h2>
+              <span className="af-caption text-muted-foreground">
                 {healthLoading ? '(loading…)' : health?.incidents?.length === 0 ? '— all clear' : `— ${health?.incidents?.length} open`}
               </span>
-            </h2>
+            </div>
             {(health?.incidents ?? []).length === 0 && !healthLoading && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30 px-4 py-3 flex items-center gap-2">
+              <div className="rounded-xl border border-emerald-800/50 bg-emerald-950/20 px-4 py-3 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
-                <span className="text-sm text-emerald-700 dark:text-emerald-300">No open incidents — all clear</span>
+                <span className="text-sm text-emerald-400 font-medium">No open incidents — all clear</span>
               </div>
             )}
             {(health?.incidents ?? []).map((inc) => (
@@ -491,10 +493,10 @@ export default function AdminOverviewPage() {
 
           {/* NR metrics */}
           <section className="space-y-2">
-            <h2 className="af-h3">
-              New Relic Metrics
-              <span className="ml-1 font-normal af-caption">last 1 hour</span>
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="af-h3">New Relic Metrics</h2>
+              <span className="af-caption text-muted-foreground">last 1 hour</span>
+            </div>
             {health?.nrMetrics && (() => {
               const m = health.nrMetrics;
               const apps = Array.from(new Set([
@@ -502,10 +504,10 @@ export default function AdminOverviewPage() {
                 ...Object.keys(m.throughput  ?? {}),
               ])).filter(Boolean);
               return (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {apps.map((app) => (
-                    <div key={app} className="rounded-lg border border-border p-4 space-y-3">
-                      <p className="text-sm font-medium">{app}</p>
+                    <div key={app} className="rounded-xl border border-border bg-card p-4 space-y-3">
+                      <p className="text-sm font-semibold text-foreground">{app}</p>
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                         <MetricBox
                           label="Error rate"

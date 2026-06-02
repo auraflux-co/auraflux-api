@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { chatWithConcierge, ApiError, type ChatMessage } from '@/lib/api';
+import { chatWithCollab as chatWithConcierge, ApiError, type ChatMessage } from '@/lib/api';
 
 interface ConciergeChatProps {
   currentSpec?: Record<string, unknown>;

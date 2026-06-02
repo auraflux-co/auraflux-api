@@ -1,8 +1,15 @@
+// ── New Relic APM — MUST be the first require in the entire process ──────────
+// NR patches the Node.js module loader at startup. If any other require runs
+// first, NR cannot instrument those modules (Express, pg, axios, etc.).
+// The agent reads NEW_RELIC_LICENSE_KEY + NEW_RELIC_APP_NAME from env.
+// If the license key is absent, NR starts in disabled mode — no errors thrown.
+if (process.env.NEW_RELIC_LICENSE_KEY) {
+  require('newrelic');
+}
+
 // Load repo-root .env regardless of PM2/cwd (folder_id and keys live here).
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
-// New Relic removed from dependencies (no license key configured).
-// Re-add with: npm install newrelic && set NEW_RELIC_LICENSE_KEY + NEW_RELIC_APP_NAME on Render.
 
 // ── Build identity — set once at startup, never changes during runtime ────────
 const BUILD_INFO = (() => {
@@ -26,13 +33,67 @@ const BUILD_INFO = (() => {
   }
 })();
 
+// ── Sentry — runtime error aggregation ───────────────────────────────────────
+// Sentry replaces New Relic for error tracking (NR license key was never
+// provisioned). Captures unhandled rejections, pipeline-level portal errors,
+// and assembly failures with full job context so alerts fire at 2am not at
+// 9am when a customer complains.
+//
+// SENTRY_DSN is optional — if absent Sentry is silently disabled.
+// Set on Render env: Settings → Environment → SENTRY_DSN
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'production',
+    release: `auraflux-api@${BUILD_INFO?.version || 'unknown'}+${BUILD_INFO?.gitHash || 'unknown'}`,
+    tracesSampleRate: 0.05,   // 5% of requests traced — low enough to avoid perf impact
+    // Capture portal-level errors with job context set via Sentry.setContext below
+  });
+  Sentry.setTag('service', 'auraflux-api');
+  Sentry.setTag('git_hash', BUILD_INFO?.gitHash || 'unknown');
+}
+
+// ── Sentry portal helper ──────────────────────────────────────────────────────
+// Wraps a portal async function. On error, enriches the Sentry capture with
+// portal stage, jobId, and templateId before re-throwing so the job handler
+// can still decide whether to retry.
+function withSentryPortal(stage, jobSpec, fn) {
+  return fn().catch((err) => {
+    if (process.env.SENTRY_DSN) {
+      Sentry.withScope((scope) => {
+        scope.setTag('portal', String(stage));
+        scope.setContext('job', {
+          jobId:      jobSpec?.jobId,
+          templateId: jobSpec?.templateId,
+          customerId: jobSpec?.customerId,
+          contentType: jobSpec?.contentType,
+        });
+        Sentry.captureException(err);
+      });
+    }
+    throw err;
+  });
+}
+
 // ── New Relic custom event helpers ───────────────────────────────────────────
-// All events are fire-and-forget — never block the pipeline.
-// Queryable via NRQL on each custom event type name.
+// Fire-and-forget pipeline events — queryable via NRQL in New Relic.
+// nrPipelineEvent() is a safe no-op when the NR agent is not loaded.
+// Sentry breadcrumbs are added alongside every event for dual-path tracing.
 const { nrPipelineEvent } = require('./lib/nr_pipeline');
 
 function nrEvent(eventType, attributes) {
   nrPipelineEvent(eventType, attributes);
+  // Also add as a Sentry breadcrumb so every portal transition is visible
+  // in the event trail when an error occurs later in the same job.
+  if (process.env.SENTRY_DSN) {
+    Sentry.addBreadcrumb({
+      category: 'pipeline',
+      message: eventType,
+      data: attributes,
+      level: 'info',
+    });
+  }
 }
 
 // Keep old helper for backwards compat
@@ -1886,15 +1947,19 @@ app.get('/health', async (req, res) => {
     }
   }
 
-  // Check VectCut API (optional)
-  try {
-    const vectCutHealth = await vectCutClient.healthCheck();
-    health.dependencies.vectcut = vectCutHealth.healthy
-      ? { status: 'ok' }
-      : { status: 'offline', error: vectCutHealth.error };
-  } catch (err) {
-    health.dependencies.vectcut = { status: 'offline', error: err.message };
-    // VectCut is optional, don't fail health check
+  // Check VectCut API (optional — skip entirely when VECTCUT_API_URL not configured,
+  // otherwise GET /health polls this every 5s and floods logs with "offline" entries)
+  if (process.env.VECTCUT_API_URL) {
+    try {
+      const vectCutHealth = await vectCutClient.healthCheck();
+      health.dependencies.vectcut = vectCutHealth.healthy
+        ? { status: 'ok' }
+        : { status: 'offline', error: vectCutHealth.error };
+    } catch (err) {
+      health.dependencies.vectcut = { status: 'offline', error: err.message };
+    }
+  } else {
+    health.dependencies.vectcut = { status: 'not_configured' };
   }
 
   // Check disk space
@@ -7350,9 +7415,10 @@ app.use(adminChatRoutes);
 const planRouter      = require('./lib/routes/plan');
 const creditsRouter        = require('./lib/routes/credits');
 const marketingRouter      = require('./lib/routes/marketing'); // CPD-402
+const appContentRouter     = require('./lib/routes/app_content'); // CPD-490
 const billingRouter        = require('./lib/routes/billing');
 const notificationsRouter  = require('./lib/routes/notifications');
-const conciergeRouter = require('./lib/routes/concierge');
+const collabRouter    = require('./lib/routes/collab');
 const socialRouter    = require('./lib/routes/social_connect');
 const channelConnectRouter = require('./lib/routes/channel_connect');
 const supportRouter   = require('./lib/routes/support');
@@ -7371,9 +7437,12 @@ const jobsC1Router        = require('./lib/routes/jobs_c1');
 app.use(planRouter);
 app.use(creditsRouter);
 app.use(marketingRouter);
+app.use(appContentRouter);
 app.use(billingRouter);
 app.use(notificationsRouter);
-app.use(conciergeRouter);
+// Backward-compat: /concierge/* → /collab/* (CPD-489)
+app.all('/concierge*', (req, res) => res.redirect(301, req.path.replace('/concierge', '/collab')));
+app.use(collabRouter);
 app.use(socialRouter);
 app.use(channelConnectRouter);
 app.use(supportRouter);
@@ -7476,7 +7545,7 @@ const server = app.listen(PORT, () => {
 
   // Pipeline health report — 07:00 UTC (2am Eastern) daily.
   // Runs the 3-layer ecosystem check and posts findings to Jira (label: pipeline-health-report)
-  // so the agent can read the latest report at session start via:
+  // so the agent can read today's status at session start via:
   //   jira_search: project=CPD AND labels=pipeline-health-report ORDER BY created DESC
   try {
     const cron = require('node-cron');

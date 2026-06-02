@@ -1,0 +1,117 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+            - navigation "Site" [ref=e20]:
+              - list [ref=e21]:
+                - listitem [ref=e22]:
+                  - link "Home" [ref=e25] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e26]: Home
+                - listitem [ref=e27]:
+                  - link "About Us" [ref=e30] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e31]: About Us
+                - listitem [ref=e32]:
+                  - generic [ref=e34]:
+                    - link "Summer Programs" [ref=e35] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e36]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e37] [cursor=pointer]:
+                      - img [ref=e38]
+                - listitem [ref=e40]:
+                  - link "Tutoring" [ref=e43] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e44]: Tutoring
+                - listitem [ref=e45]:
+                  - link "Become a Lumi-nary" [ref=e48] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e49]: Become a Lumi-nary
+                - listitem [ref=e50]:
+                  - link "Contact Us" [ref=e53] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/blank
+                    - generic [ref=e54]: Contact Us
+      - main:
+        - generic [ref=e56]:
+          - group:
+            - heading "Summer Programs Daily Schedule" [level=2] [ref=e60]
+            - heading "Grades K-2 and Grades 3-5" [level=5] [ref=e62]
+            - generic [ref=e64]:
+              - paragraph [ref=e68]:
+                - strong [ref=e69]: 9:00am
+              - paragraph [ref=e74]: Drop-off begins
+              - paragraph [ref=e76]:
+                - strong [ref=e77]: 9:15–10:15am
+              - paragraph [ref=e82]: "Themed activity #1"
+              - paragraph [ref=e84]:
+                - strong [ref=e85]: 10:15am
+              - paragraph [ref=e90]: Snack break
+              - paragraph [ref=e92]:
+                - strong [ref=e93]: 10:30–11:30am
+              - paragraph [ref=e98]: "Themed activity #2"
+              - paragraph [ref=e100]:
+                - strong [ref=e101]: 11:45am
+              - paragraph [ref=e106]: Half-day campers depart
+              - paragraph [ref=e108]:
+                - strong [ref=e109]: 11:30am–1:00pm
+              - paragraph [ref=e114]: Lunch & recess (lunch not provided)
+              - paragraph [ref=e116]:
+                - strong [ref=e117]: 1:00–1:15pm
+              - paragraph [ref=e122]: Afternoon drop-off window
+              - paragraph [ref=e124]:
+                - strong [ref=e125]: 1:15–3:45pm
+              - paragraph [ref=e130]: Two afternoon activities + snack break
+              - paragraph [ref=e132]:
+                - strong [ref=e133]: 3:45–4:00pm
+              - paragraph [ref=e138]: Full-day camper pickup
+              - paragraph [ref=e140]:
+                - strong [ref=e141]: 4:00–6:00pm
+              - paragraph [ref=e146]: "Extended day: unstructured games and activities"
+              - paragraph [ref=e148]:
+                - strong [ref=e149]: 6:00pm
+              - paragraph [ref=e151]: Mandatory pickup
+            - generic [ref=e153]:
+              - heading "Notes" [level=5] [ref=e157]
+              - list [ref=e159]:
+                - listitem [ref=e160]: Campers must bring nut-free snacks dailyLunch is not provided by the facilityExtended day requires parent check-out by 6:00pm
+            - link "Register Now" [ref=e161] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com/grade-k-2-4th-week
+              - generic [ref=e162]: Register Now
+      - contentinfo:
+        - generic [ref=e164]:
+          - group:
+            - link [ref=e168] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+            - heading "Quick Links" [level=3] [ref=e171]
+            - paragraph [ref=e173]:
+              - link "About Us" [ref=e175] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e177]:
+              - link "Summer Programs" [ref=e179] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e181]:
+              - link "Tutoring" [ref=e183] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e185]:
+              - link "Join Our Team" [ref=e187] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e189]:
+              - link "Contact Us" [ref=e191] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/blank
+            - heading "Contact Info" [level=3] [ref=e193]
+            - paragraph [ref=e195]:
+              - link "(571) 207-8373" [ref=e197] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e199]:
+              - link "contact.us@learningwithlumi.com" [ref=e201] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e203]: © 2026 Lumi Education
+            - paragraph [ref=e205]:
+              - link "Privacy Policy" [ref=e207] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/blank-7
+  - region "bottom of page"

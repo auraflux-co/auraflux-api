@@ -1,0 +1,182 @@
+- generic [active] [ref=e1]:
+  - text: "${FRAMER_FONTS || ''} ${FRAMER_CSS || ''} ${FRAMER_NAV || FALLBACK_NAV}"
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: New
+      - text: Fully automated content workflows →
+    - heading "Run Your Content Without a Team." [level=1] [ref=e5]:
+      - text: Run Your Content
+      - text: Without a
+      - emphasis [ref=e6]: Team.
+    - paragraph [ref=e7]: AuraFlux runs your content production from start to finish — transforming raw clips, videos, and ideas into polished, published content automatically.
+    - generic [ref=e8]:
+      - link "Start Producing" [ref=e9] [cursor=pointer]:
+        - /url: https://app.auraflux.co/sign-up
+      - link "See How It Works →" [ref=e10] [cursor=pointer]:
+        - /url: /system
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - img [ref=e14]
+        - text: Fully automated workflows
+      - generic [ref=e16]:
+        - img [ref=e18]
+        - text: No team required
+      - generic [ref=e23]:
+        - img [ref=e25]
+        - text: Consistent publishing
+  - generic [ref=e27]:
+    - paragraph [ref=e28]: Trusted by creators on
+    - generic [ref=e29]:
+      - generic [ref=e30]: YouTube
+      - generic [ref=e31]: TikTok
+      - generic [ref=e32]: Twitch
+      - generic [ref=e33]: Kick
+      - generic [ref=e34]: Instagram
+  - generic [ref=e35]:
+    - generic [ref=e36]: The Problem
+    - heading "Creating Content Isn't The Hard Part. Running It Is." [level=2] [ref=e37]:
+      - text: Creating Content Isn't The Hard Part.
+      - emphasis [ref=e38]: Running It Is.
+    - paragraph [ref=e39]: You have the ideas, the clips, the audience. What you don't have is the time to turn raw footage into polished, published content every single day.
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]: "01"
+        - heading "Smart Clip Selection" [level=3] [ref=e43]
+        - paragraph [ref=e44]: AI analyses your raw footage and identifies the highest-performing moments — ranked by engagement potential before a single edit is made.
+      - generic [ref=e45]:
+        - generic [ref=e46]: "02"
+        - heading "Full Video Production" [level=3] [ref=e47]
+        - paragraph [ref=e48]: Script, voiceover, brand overlays, captions, and effects — assembled automatically from a single source file to a finished video.
+      - generic [ref=e49]:
+        - generic [ref=e50]: "03"
+        - heading "AI Quality Checks" [level=3] [ref=e51]
+        - paragraph [ref=e52]: Every output passes through automated QA gates before publish — checking for brand compliance, audio quality, and content accuracy.
+      - generic [ref=e53]:
+        - generic [ref=e54]: "04"
+        - heading "Auto-Publishing" [level=3] [ref=e55]
+        - paragraph [ref=e56]: Direct OAuth connections to YouTube, TikTok, Instagram, Twitch, and Kick. One job, every platform, zero manual uploads.
+  - generic [ref=e57]:
+    - generic [ref=e58]: How It Works
+    - heading "From Idea to Published Content Automatically." [level=2] [ref=e59]:
+      - text: From Idea to Published Content
+      - emphasis [ref=e60]: Automatically.
+    - paragraph [ref=e61]: Four steps. No editors, no coordinators, no upload queues.
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]: "01"
+        - heading "Start With Any Source" [level=3] [ref=e65]
+        - paragraph [ref=e66]: Submit a YouTube URL, Twitch VOD, Kick replay, or direct upload. AuraFlux ingests it instantly.
+      - generic [ref=e67]:
+        - generic [ref=e68]: "02"
+        - heading "AuraFlux Publishes For You" [level=3] [ref=e69]
+        - paragraph [ref=e70]: Our pipeline scripts, assembles, applies brand chrome, QA-checks, and queues your content for publish.
+      - generic [ref=e71]:
+        - generic [ref=e72]: "03"
+        - heading "Automated Production" [level=3] [ref=e73]
+        - paragraph [ref=e74]: Six production portals run in sequence — each one verified before the next begins. No manual steps.
+      - generic [ref=e75]:
+        - generic [ref=e76]: "04"
+        - heading "Content Published" [level=3] [ref=e77]
+        - paragraph [ref=e78]: Your content lands on every connected platform with the right format, captions, and metadata. Done.
+  - generic [ref=e80]:
+    - generic [ref=e81]:
+      - generic [ref=e82]: Content Types
+      - heading "From Shorts To Full Productions." [level=2] [ref=e83]:
+        - text: From Shorts To
+        - emphasis [ref=e84]: Full Productions.
+      - paragraph [ref=e85]: Your content format, your content type — AuraFlux handles every combination.
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - img [ref=e89]
+          - generic [ref=e91]:
+            - heading "Highlight Clips" [level=4] [ref=e92]
+            - paragraph [ref=e93]: Best moments from streams and VODs — auto-cut, captioned, and formatted for short-form.
+        - generic [ref=e94]:
+          - img [ref=e96]
+          - generic [ref=e98]:
+            - heading "Gameplay Commentary" [level=4] [ref=e99]
+            - paragraph [ref=e100]: AI-generated narration over gameplay clips — personalised to your style and audience.
+        - generic [ref=e101]:
+          - img [ref=e103]
+          - generic [ref=e105]:
+            - heading "Show & Film Analysis" [level=4] [ref=e106]
+            - paragraph [ref=e107]: Narrated breakdowns from TV and movie clips — fair-use formatted and ready to publish.
+        - generic [ref=e108]:
+          - img [ref=e110]
+          - generic [ref=e112]:
+            - heading "Live Event Recap" [level=4] [ref=e113]
+            - paragraph [ref=e114]: Sports, news, and live events turned into structured recap videos within minutes of the event.
+    - generic [ref=e115]:
+      - generic [ref=e116]:
+        - text: From Shorts To
+        - emphasis [ref=e117]: Full Productions.
+      - paragraph [ref=e118]: Every format. Every platform. One pipeline.
+      - generic [ref=e119]:
+        - generic [ref=e120]: Short-form vertical (9:16)
+        - generic [ref=e122]: Long-form landscape (16:9)
+        - generic [ref=e124]: Multi-clip compilations
+        - generic [ref=e126]: Narrated analysis
+        - generic [ref=e128]: Direct upload or auto-publish
+  - generic [ref=e130]:
+    - generic [ref=e131]: The Difference
+    - heading "Work Smarter. Not Harder." [level=2] [ref=e132]:
+      - text: Work Smarter.
+      - emphasis [ref=e133]: Not Harder.
+    - paragraph [ref=e134]: Stop spending 80% of your time on production. Start spending it on what actually matters.
+    - generic [ref=e135]:
+      - generic [ref=e136]:
+        - generic [ref=e137]: "Instead of:"
+        - generic [ref=e138]:
+          - generic [ref=e139]:
+            - img [ref=e140]
+            - text: Hiring editors and coordinators
+          - generic [ref=e143]:
+            - img [ref=e144]
+            - text: Manual clip selection and review
+          - generic [ref=e147]:
+            - img [ref=e148]
+            - text: Uploading to every platform separately
+      - generic [ref=e151]:
+        - generic [ref=e152]: "Use AuraFlux to:"
+        - generic [ref=e153]:
+          - generic [ref=e154]:
+            - img [ref=e155]
+            - text: Run fully automated production
+          - generic [ref=e157]:
+            - img [ref=e158]
+            - text: Submit one job, get every format
+          - generic [ref=e160]:
+            - img [ref=e161]
+            - text: Publish everywhere simultaneously
+  - generic [ref=e164]:
+    - generic [ref=e165]:
+      - generic [ref=e166]: Who It's For
+      - heading "Built for Creators and Teams Who Are Serious About Growth." [level=2] [ref=e167]:
+        - text: Built for Creators and Teams Who Are
+        - emphasis [ref=e168]: Serious About Growth.
+      - generic [ref=e169]:
+        - generic [ref=e170]: Streamers posting daily to YouTube and TikTok
+        - generic [ref=e172]: Sports and news channels on tight deadlines
+        - generic [ref=e174]: Agencies running multi-client content operations
+        - generic [ref=e176]: Operators who need consistent output at scale
+    - generic [ref=e178]:
+      - generic [ref=e179]:
+        - generic [ref=e180]: "6"
+        - generic [ref=e181]: Production portals
+      - generic [ref=e182]:
+        - generic [ref=e183]: "5"
+        - generic [ref=e184]: Publishing platforms
+      - generic [ref=e185]:
+        - generic [ref=e186]: "3"
+        - generic [ref=e187]: Plans available
+      - generic [ref=e188]:
+        - generic [ref=e189]: "0"
+        - generic [ref=e190]: Editors needed
+  - generic [ref=e191]:
+    - heading "Stop Managing Content. Start Producing It." [level=2] [ref=e192]:
+      - text: Stop Managing Content.
+      - emphasis [ref=e193]: Start Producing It.
+    - paragraph [ref=e194]: No team, no editors, no upload queues. AuraFlux handles the entire pipeline from source to publish.
+    - link "Start Producing Free" [ref=e195] [cursor=pointer]:
+      - /url: https://app.auraflux.co/sign-up
+  - text: "${FRAMER_FOOTER || FALLBACK_FOOTER}"

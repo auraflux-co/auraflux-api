@@ -1,0 +1,174 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "AuraFlux home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "AuraFlux" [ref=e5]
+      - generic [ref=e6]:
+        - button "Menu" [ref=e7] [cursor=pointer]
+        - link "Get Started" [ref=e11] [cursor=pointer]:
+          - /url: /plans
+  - generic [ref=e12]:
+    - heading "Match Your Team's Capability" [level=1] [ref=e13]
+    - paragraph [ref=e14]: Choose the path that fits your current operational setup. All plans include the full AuraFlux automated production pipeline.
+  - generic [ref=e15]:
+    - generic [ref=e16]:
+      - img "Operate plan" [ref=e17]
+      - generic [ref=e18]:
+        - generic [ref=e19]: Operate
+        - generic [ref=e20]: DIY / API
+        - generic [ref=e21]: Automated processing via self-serve dashboard & API access only.
+        - generic [ref=e22]: $499/mo
+        - generic [ref=e23]: 50 credits/month · Self-serve instant checkout
+        - list [ref=e24]:
+          - listitem [ref=e25]: ✓ Full API access & raw endpoints
+          - listitem [ref=e26]: ✓ Comprehensive developer documentation
+          - listitem [ref=e27]: ✓ Self-hosted integration control
+          - listitem [ref=e28]: ✓ Community & standard support
+          - listitem [ref=e29]: — In-app visual flow builders
+          - listitem [ref=e30]: — Collab-powered guidance
+          - listitem [ref=e31]: — Dedicated account manager
+        - link "Get API Access" [ref=e32] [cursor=pointer]:
+          - /url: /contact-us
+    - generic [ref=e33]:
+      - generic [ref=e34]: MOST POPULAR
+      - img "Guided plan" [ref=e36]
+      - generic [ref=e37]:
+        - generic [ref=e38]: Guided
+        - generic [ref=e39]: Collab Assist
+        - generic [ref=e40]: Complete platform toolkit plus Gemini-backed Collab AI workspace assistance.
+        - generic [ref=e41]: $999/mo
+        - generic [ref=e42]: 200 credits/month · Self-serve subscription upgrade
+        - list [ref=e43]:
+          - listitem [ref=e44]: ✓ Everything in Operate
+          - listitem [ref=e45]: ✓ Interactive in-app flows
+          - listitem [ref=e46]: ✓ Collab-powered live visual guidance
+          - listitem [ref=e47]: ✓ Visual drag-and-drop workflow builders
+          - listitem [ref=e48]: ✓ Automated operational threshold alerts
+          - listitem [ref=e49]: — Custom end-to-end workflow builds
+          - listitem [ref=e50]: — Dedicated account manager
+        - link "Start Guided Setup" [ref=e51] [cursor=pointer]:
+          - /url: /contact-us
+    - generic [ref=e52]:
+      - img "Managed plan" [ref=e53]
+      - generic [ref=e54]:
+        - generic [ref=e55]: Managed
+        - generic [ref=e56]: Done-For-You
+        - generic [ref=e57]: Full Collab AI platform plus a dedicated human account manager.
+        - generic [ref=e58]: Custom
+        - generic [ref=e59]: 1000+ credits/month · Custom onboarding & sales intake
+        - list [ref=e60]:
+          - listitem [ref=e61]: ✓ Everything in Guided
+          - listitem [ref=e62]: ✓ Dedicated Account Manager
+          - listitem [ref=e63]: ✓ Custom end-to-end workflow builds
+          - listitem [ref=e64]: ✓ Priority support with custom SLAs
+          - listitem [ref=e65]: ✓ Unlimited credits
+        - link "Request Managed Plan" [ref=e66] [cursor=pointer]:
+          - /url: /contact-us
+  - paragraph [ref=e69]:
+    - text: Running low mid-month?
+    - strong [ref=e70]: Extra Credit Packs
+    - text: are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.
+  - generic [ref=e71]:
+    - generic [ref=e72]: Implementation & Feature Comparison
+    - table [ref=e73]:
+      - rowgroup [ref=e74]:
+        - row "Feature / Resource Operate Guided Managed" [ref=e75]:
+          - columnheader "Feature / Resource" [ref=e76]
+          - columnheader "Operate" [ref=e77]
+          - columnheader "Guided" [ref=e78]
+          - columnheader "Managed" [ref=e79]
+      - rowgroup [ref=e80]:
+        - row "Core Infrastructure & API Access ✓ ✓ ✓" [ref=e81]:
+          - cell "Core Infrastructure & API Access" [ref=e82]
+          - cell "✓" [ref=e83]
+          - cell "✓" [ref=e84]
+          - cell "✓" [ref=e85]
+        - row "Developer Documentation & SDKs ✓ ✓ ✓" [ref=e86]:
+          - cell "Developer Documentation & SDKs" [ref=e87]
+          - cell "✓" [ref=e88]
+          - cell "✓" [ref=e89]
+          - cell "✓" [ref=e90]
+        - row "In-App Visual Flow Builders — ✓ ✓" [ref=e91]:
+          - cell "In-App Visual Flow Builders" [ref=e92]
+          - cell "—" [ref=e93]
+          - cell "✓" [ref=e94]
+          - cell "✓" [ref=e95]
+        - row "Collab AI Guidance — ✓ ✓" [ref=e96]:
+          - cell "Collab AI Guidance" [ref=e97]
+          - cell "—" [ref=e98]
+          - cell "✓" [ref=e99]
+          - cell "✓" [ref=e100]
+        - row "Automated Threshold Notifications — ✓ ✓" [ref=e101]:
+          - cell "Automated Threshold Notifications" [ref=e102]
+          - cell "—" [ref=e103]
+          - cell "✓" [ref=e104]
+          - cell "✓" [ref=e105]
+        - row "Custom Workflow Construction by Experts — — ✓" [ref=e106]:
+          - cell "Custom Workflow Construction by Experts" [ref=e107]
+          - cell "—" [ref=e108]
+          - cell "—" [ref=e109]
+          - cell "✓" [ref=e110]
+        - row "Dedicated Account Manager — — ✓" [ref=e111]:
+          - cell "Dedicated Account Manager" [ref=e112]
+          - cell "—" [ref=e113]
+          - cell "—" [ref=e114]
+          - cell "✓" [ref=e115]
+        - row "Support SLA Standard Standard Priority 24/7" [ref=e116]:
+          - cell "Support SLA" [ref=e117]
+          - cell "Standard" [ref=e118]
+          - cell "Standard" [ref=e119]
+          - cell "Priority 24/7" [ref=e120]
+  - contentinfo [ref=e121]:
+    - generic [ref=e122]:
+      - generic [ref=e123]:
+        - navigation "Footer navigation" [ref=e124]:
+          - generic [ref=e125]:
+            - generic [ref=e126]: Platform
+            - link "Our Story" [ref=e127] [cursor=pointer]:
+              - /url: /our-story
+            - link "Our System" [ref=e128] [cursor=pointer]:
+              - /url: /our-system
+            - link "Roadmap" [ref=e129] [cursor=pointer]:
+              - /url: /roadmap
+          - generic [ref=e130]:
+            - generic [ref=e131]: Resources
+            - link "Plans" [ref=e132] [cursor=pointer]:
+              - /url: /pricing
+            - link "Blog" [ref=e133] [cursor=pointer]:
+              - /url: /blog
+            - link "Contact Us" [ref=e134] [cursor=pointer]:
+              - /url: /contact-us
+        - generic [ref=e135]:
+          - link "AuraFlux home" [ref=e136] [cursor=pointer]:
+            - /url: /
+            - img "AuraFlux" [ref=e137]
+          - paragraph [ref=e138]: Automated content production from source to publish. No team required.
+          - generic [ref=e139]:
+            - link "Privacy Policy" [ref=e140] [cursor=pointer]:
+              - /url: /privacy
+            - generic [ref=e141]: ·
+            - link "Terms" [ref=e142] [cursor=pointer]:
+              - /url: /terms
+            - generic [ref=e143]: ·
+            - link "AUP" [ref=e144] [cursor=pointer]:
+              - /url: /aup
+            - generic [ref=e145]: ·
+            - link "Cookies" [ref=e146] [cursor=pointer]:
+              - /url: /cookies
+        - generic [ref=e147]:
+          - link [ref=e148] [cursor=pointer]:
+            - /url: https://linkedin.com/company/auraflux
+            - img [ref=e150]
+          - link [ref=e152] [cursor=pointer]:
+            - /url: https://instagram.com/auraflux
+            - img [ref=e154]
+          - link [ref=e156] [cursor=pointer]:
+            - /url: https://tiktok.com/@auraflux
+            - img [ref=e158]
+          - link [ref=e160] [cursor=pointer]:
+            - /url: https://youtube.com/@auraflux
+            - img [ref=e162]
+      - paragraph [ref=e165]: © 2026 AuraFlux. All rights reserved.
+  - generic "Chat with us" [ref=e166] [cursor=pointer]:
+    - img [ref=e167]

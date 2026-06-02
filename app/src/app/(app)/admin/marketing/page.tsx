@@ -14,14 +14,13 @@ import { PageShell, PageHeader } from '@/components/ui/page-shell';
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'https://auraflux-api.onrender.com';
 
 const SUGGESTED_PROMPTS = [
-  { label: 'Read the design brief', prompt: 'Read the design migration brief and summarise what still needs to be done.' },
-  { label: 'Update footer', prompt: 'Update the footer on all pages to match the Framer homepage footer design, keeping existing copy.' },
-  { label: 'New blog post', prompt: 'Add a new blog post card to the blog page about how AuraFlux publishes directly to TikTok and YouTube via OAuth.' },
-  { label: 'Pricing headline', prompt: 'Update the pricing page hero headline to be more compelling and action-oriented.' },
-  { label: 'Contact FAQ', prompt: 'Add a new FAQ to the contact page: "How long does it take to get started?" with a concise answer.' },
-  { label: 'About — founder bio', prompt: 'Update the founder bio on the About page to be more personal and compelling.' },
-  { label: 'System — portal descriptions', prompt: 'Review the portal descriptions on the Our System page and make them more customer-friendly.' },
-  { label: 'What pages do we own?', prompt: 'What pages does the worker currently own and what can you edit on each?' },
+  { label: 'What can I edit?', prompt: 'List all the pages you can edit and what kind of content changes are easiest to make on each.' },
+  { label: 'Update Plans headline', prompt: 'Update the Plans page (/plans) hero headline to be more compelling and conversion-focused.' },
+  { label: 'Add roadmap item', prompt: 'Add a new feature to the Now column on the roadmap: "Multi-language Voiceover" — AI-generated voiceover in Spanish, French, and Portuguese.' },
+  { label: 'Our Story bio', prompt: 'Update the founder bio on the Our Story page (/our-story) to be more personal and compelling. Keep it concise.' },
+  { label: 'Blog posts', prompt: 'Update the blog page post titles and descriptions to feel more specific and less generic.' },
+  { label: 'Home social proof', prompt: 'Update the Trusted By section on the homepage — make the platform quotes feel more authentic and specific.' },
+  { label: 'Our System copy', prompt: 'Review the portal descriptions on the Our System page and make them more customer-friendly and less technical.' },
 ];
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string };

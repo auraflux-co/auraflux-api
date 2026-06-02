@@ -1,107 +1,200 @@
 #!/usr/bin/env node
-'use strict';
 /**
- * validate_pipeline_routing.js
+ * scripts/validate_pipeline_routing.js
  *
- * Pre-commit routing validator. Checks that known template paths resolve
- * correctly through the pipeline without running a full job.
+ * Static validator for the AuraFlux pipeline routing layer.
  *
- * Exits 0 if all checks pass, non-zero if any check fails.
+ * Run this whenever developer_api.js, pipeline_routing.js, or any portal file
+ * changes to confirm that all known template types still route correctly through
+ * the pipeline BEFORE submitting any real jobs.
  *
- * Run manually: node scripts/validate_pipeline_routing.js [--verbose]
+ * Usage:
+ *   node scripts/validate_pipeline_routing.js          # validates all templates
+ *   node scripts/validate_pipeline_routing.js --verbose # prints full routing table
  *
- * CPD-475: Initial version — structural checks only.
- * When lib/pipeline_routing.js is extracted, import it here for
- * symbol-level routing assertions.
+ * Exit code 0 = all paths OK
+ * Exit code 1 = one or more paths broken — do NOT run tests until fixed
+ *
+ * This script is wired into the pre-commit hook for changes to:
+ *   - lib/routes/developer_api.js
+ *   - lib/pipeline_routing.js
+ *   - lib/portals/portal*.js
+ *   - lib/assembly_service.js
  */
 
-const fs   = require('fs');
-const path = require('path');
+'use strict';
+
+const {
+  resolveProductionProfileAndContentType,
+  resolveTemplateIdFromBody,
+  KNOWN_CLEAN_PATHS,
+} = require('../lib/pipeline_routing');
 
 const VERBOSE = process.argv.includes('--verbose');
-const ROOT    = path.join(__dirname, '..');
+
+// ── Test cases ────────────────────────────────────────────────────────────────
+// Each test specifies an input body and the exact routing outcome expected.
+// These are derived from KNOWN_CLEAN_PATHS + additional edge cases.
+
+const TEST_CASES = [
+  // ── Registered templates (from KNOWN_CLEAN_PATHS) ─────────────────────────
+  {
+    id: 'tiktok_clutch',
+    body: { contentType: 'clips', format: 'portrait', platforms: ['tiktok', 'youtube', 'instagram'] },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'short-form' },
+  },
+  {
+    id: 'youtube_deep_dive',
+    body: { contentType: 'clips', format: 'longform', platforms: ['youtube'] },
+    expected: { productionProfile: 'broadcast_desk', contentType: 'clips', templateId: 'long-form' },
+  },
+  {
+    id: 'irl_story_time',
+    body: { contentType: 'clips', format: 'portrait', platforms: ['tiktok', 'instagram'] },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'short-form' },
+  },
+  {
+    id: 'montage_hype_reel',
+    body: { contentType: 'clips', format: 'portrait', platforms: ['tiktok', 'youtube'] },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'short-form' },
+  },
+  {
+    id: 'reaction_cut',
+    body: { contentType: 'clips', format: 'longform', platforms: ['youtube'] },
+    expected: { productionProfile: 'broadcast_desk', contentType: 'clips', templateId: 'long-form' },
+  },
+  {
+    id: 'quick_guide',
+    body: { contentType: 'clips', format: 'portrait', platforms: ['youtube', 'tiktok'] },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'short-form' },
+  },
+
+  // ── Legacy / broadcast paths (must not regress) ────────────────────────────
+  {
+    id: 'broadcast_news (legacy)',
+    body: { contentType: 'news' },
+    expected: { productionProfile: 'broadcast_desk', contentType: 'news', templateId: 'long-form' },
+  },
+  {
+    id: 'broadcast_news via productionProfile',
+    body: { productionProfile: 'broadcast_desk' },
+    expected: { productionProfile: 'broadcast_desk', contentType: 'news', templateId: 'long-form' },
+  },
+  {
+    id: 'sports/live_event (legacy)',
+    body: { contentType: 'sports' },
+    expected: { productionProfile: 'live_event', contentType: 'sports', templateId: 'long-form' },
+  },
+  {
+    id: 'show_commentary (CPD-236)',
+    body: { contentType: 'show_commentary', productionProfile: 'broadcast_desk' },
+    expected: { productionProfile: 'broadcast_desk', contentType: 'show_commentary', templateId: 'long-form' },
+  },
+  {
+    id: 'show_commentary should not be overridden by vertical_reel',
+    body: { contentType: 'show_commentary', productionProfile: 'vertical_reel' },
+    expected: { productionProfile: 'vertical_reel', contentType: 'show_commentary', templateId: 'long-form' },
+  },
+
+  // ── Regression: CPD-486 longform override ────────────────────────────────
+  {
+    id: 'clips+longform must NOT be vertical_reel (CPD-486)',
+    body: { contentType: 'clips', format: 'longform' },
+    expected: { productionProfile: 'broadcast_desk', contentType: 'clips', templateId: 'long-form' },
+  },
+  {
+    id: 'clips+long must NOT be vertical_reel (CPD-486)',
+    body: { contentType: 'clips', format: 'long' },
+    expected: { productionProfile: 'broadcast_desk', contentType: 'clips', templateId: 'long-form' },
+  },
+  {
+    id: 'clips+portrait must be vertical_reel',
+    body: { contentType: 'clips', format: 'portrait' },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'short-form' },
+  },
+  {
+    id: 'clips with no format must be vertical_reel (default)',
+    body: { contentType: 'clips' },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'long-form' },
+  },
+
+  // ── templateId resolution edge cases ─────────────────────────────────────
+  {
+    id: 'explicit templateId:short-form passthrough',
+    body: { templateId: 'short-form', contentType: 'clips' },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'short-form' },
+  },
+  {
+    id: 'explicit templateId:long-form passthrough',
+    body: { templateId: 'long-form', contentType: 'clips' },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'long-form' },
+  },
+  {
+    id: 'format:short → short-form',
+    body: { contentType: 'clips', format: 'short' },
+    expected: { productionProfile: 'vertical_reel', contentType: 'clips', templateId: 'short-form' },
+  },
+  {
+    id: 'empty body → broadcast_desk default',
+    body: {},
+    expected: { productionProfile: 'broadcast_desk', contentType: 'news', templateId: 'long-form' },
+  },
+];
+
+// ── Runner ─────────────────────────────────────────────────────────────────
 
 let passed = 0;
 let failed = 0;
+const failures = [];
 
-function check(label, fn) {
-  try {
-    const result = fn();
-    if (result !== false) {
-      if (VERBOSE) console.log(`  ✅ ${label}`);
-      passed++;
-    } else {
-      console.error(`  ❌ ${label}`);
-      failed++;
+for (const tc of TEST_CASES) {
+  const { productionProfile, contentType } = resolveProductionProfileAndContentType(tc.body);
+  const templateId = resolveTemplateIdFromBody(tc.body, contentType);
+
+  const actual = { productionProfile, contentType, templateId };
+  const ok = (
+    actual.productionProfile === tc.expected.productionProfile &&
+    actual.contentType       === tc.expected.contentType &&
+    actual.templateId        === tc.expected.templateId
+  );
+
+  if (ok) {
+    passed++;
+    if (VERBOSE) {
+      console.log(`  ✅  ${tc.id}`);
+      console.log(`       profile=${actual.productionProfile}  contentType=${actual.contentType}  templateId=${actual.templateId}`);
     }
-  } catch (err) {
-    console.error(`  ❌ ${label} — ${err.message}`);
+  } else {
     failed++;
+    const diff = [];
+    if (actual.productionProfile !== tc.expected.productionProfile)
+      diff.push(`productionProfile: got "${actual.productionProfile}", want "${tc.expected.productionProfile}"`);
+    if (actual.contentType !== tc.expected.contentType)
+      diff.push(`contentType: got "${actual.contentType}", want "${tc.expected.contentType}"`);
+    if (actual.templateId !== tc.expected.templateId)
+      diff.push(`templateId: got "${actual.templateId}", want "${tc.expected.templateId}"`);
+    failures.push({ id: tc.id, diff });
+    console.error(`  ❌  ${tc.id}`);
+    diff.forEach((d) => console.error(`       ${d}`));
   }
 }
 
-function fileExists(rel) {
-  return fs.existsSync(path.join(ROOT, rel));
-}
+// ── Summary ────────────────────────────────────────────────────────────────
 
-// ── 1. Required pipeline files present ───────────────────────────────────────
-check('assembly_service.js exists',       () => fileExists('lib/assembly_service.js'));
-check('assembly_postprocess.js exists',   () => fileExists('lib/assembly_postprocess.js'));
-check('developer_api.js exists',          () => fileExists('lib/routes/developer_api.js'));
-check('job_grader.js exists',             () => fileExists('lib/services/job_grader.js'));
+console.log('');
+console.log(`Pipeline routing: ${passed}/${TEST_CASES.length} passed`);
 
-// ── 2. Assembly semaphore is present (CPD-479) ────────────────────────────────
-check('assembly semaphore defined', () => {
-  const src = fs.readFileSync(path.join(ROOT, 'lib/assembly_service.js'), 'utf8');
-  return src.includes('_withAssemblySemaphore') && src.includes('_assemblySemaphoreHeld');
-});
-
-// ── 3. Chrome pass accepts needsPortraitReframe (CPD-479) ────────────────────
-check('_applyChrome accepts needsPortraitReframe', () => {
-  const src = fs.readFileSync(path.join(ROOT, 'lib/assembly_service.js'), 'utf8');
-  return src.includes('needsPortraitReframe');
-});
-
-// ── 4. -threads flag is present in assembly (CPD-479) ────────────────────────
-check('-threads 2 present in assembly_service', () => {
-  const src = fs.readFileSync(path.join(ROOT, 'lib/assembly_service.js'), 'utf8');
-  return src.includes("'-threads', '2'");
-});
-check('-threads 2 present in assembly_postprocess', () => {
-  const src = fs.readFileSync(path.join(ROOT, 'lib/assembly_postprocess.js'), 'utf8');
-  return src.includes("'-threads', '2'");
-});
-
-// ── 5. developer_api.js passes needsPortraitReframe to all chrome call sites ─
-check('developer_api.js passes needsPortraitReframe (3 call sites)', () => {
-  const src = fs.readFileSync(path.join(ROOT, 'lib/routes/developer_api.js'), 'utf8');
-  const matches = (src.match(/needsPortraitReframe/g) || []).length;
-  return matches >= 3;
-});
-
-// ── 6. Known-good template IDs referenced in run_11 script ──────────────────
-const RUN11 = path.join(ROOT, 'scripts/run_11_template_matrix.py');
-if (fileExists('scripts/run_11_template_matrix.py')) {
-  const py = fs.readFileSync(RUN11, 'utf8');
-  const expectedTemplates = [
-    'tiktok_clutch',
-    'youtube_deep_dive',
-    'reaction_cut',
-    'irl_story_time',
-    'montage_hype_reel',
-    'quick_guide',
-  ];
-  for (const tpl of expectedTemplates) {
-    check(`template "${tpl}" present in run_11`, () => py.includes(tpl));
-  }
-}
-
-// ── Summary ──────────────────────────────────────────────────────────────────
-const total = passed + failed;
-if (VERBOSE || failed > 0) {
-  console.log(`\n  Pipeline routing: ${passed}/${total} checks passed`);
-}
 if (failed > 0) {
+  console.error('');
+  console.error(`FAIL — ${failed} routing path(s) broken. Fix lib/pipeline_routing.js before running tests or deploying.`);
+  console.error('');
+  console.error('Broken paths:');
+  failures.forEach(({ id, diff }) => {
+    console.error(`  • ${id}`);
+    diff.forEach((d) => console.error(`    - ${d}`));
+  });
   process.exit(1);
+} else {
+  console.log('All pipeline routing paths verified ✅');
+  process.exit(0);
 }
-process.exit(0);

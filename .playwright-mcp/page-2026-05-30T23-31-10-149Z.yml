@@ -1,0 +1,262 @@
+- generic [ref=e3]:
+  - region "top of page" [active]
+  - button "Skip to Main Content"
+  - generic [ref=e9]:
+    - banner [ref=e10]:
+      - generic [ref=e16]:
+        - generic:
+          - generic:
+            - link "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e18] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e19]
+            - generic [ref=e25]:
+              - generic:
+                - generic:
+                  - navigation "Site" [ref=e30]:
+                    - list [ref=e31]:
+                      - listitem [ref=e32]:
+                        - link "Home" [ref=e33] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com
+                          - paragraph [ref=e37]: Home
+                      - listitem [ref=e38]:
+                        - link "About Us" [ref=e39] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/about-us
+                          - paragraph [ref=e43]: About Us
+                      - listitem [ref=e44]:
+                        - link "Summer Camps 2026" [ref=e45] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/summer-camps-2026
+                          - paragraph [ref=e49]: Summer Camps 2026
+                      - listitem [ref=e50]:
+                        - link "Tutoring" [ref=e51] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/tutoring
+                          - paragraph [ref=e55]: Tutoring
+                      - listitem [ref=e56]:
+                        - link "Become a Lumi-nary" [ref=e57] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                          - paragraph [ref=e61]: Become a Lumi-nary
+                  - link "Call (571) 207-8373" [ref=e63] [cursor=pointer]:
+                    - /url: tel:+15712078373
+                    - generic [ref=e65]: Call (571) 207-8373
+    - main [ref=e66]:
+      - generic [ref=e71]:
+        - generic:
+          - generic:
+            - generic:
+              - generic [ref=e89]:
+                - generic [ref=e90]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - heading "Illuminating the Path to Academic Excellence" [level=5] [ref=e94]:
+                              - generic [ref=e98]: Illuminating the Path to Academic Excellence
+                            - paragraph [ref=e99]:
+                              - generic [ref=e104]: Unlock your full academic potential with customized, one-on-one tutoring designed around your unique learning style, pace, and goals. Whether at home or online, we make learning convenient, effective, and confidence-building.
+                            - link "Book a Free Consultation" [ref=e106] [cursor=pointer]:
+                              - /url: https://www.learningwithlumi.com/booking-calendar/free-consultation-1-1-tutoring
+                              - generic [ref=e107]: Book a Free Consultation
+                - img "Student and Teacher" [ref=e113]
+              - generic [ref=e114]:
+                - generic:
+                  - generic:
+                    - heading "Our Lumi-naries" [level=2] [ref=e120]:
+                      - generic [ref=e122]: Our Lumi-naries
+                    - generic "Smiling Female Teacher" [ref=e123]:
+                      - img "A smiling Female Tutor holding files" [ref=e125]
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - paragraph [ref=e126]:
+                              - generic [ref=e129]: Our tutors are more than just educators. They are the
+                              - generic [ref=e133]: "\"Lumi-naries\""
+                              - generic [ref=e136]: who guide our students towards academic clarity.
+                            - paragraph [ref=e137]:
+                              - generic [ref=e140]: Every member of our team undergoes a rigorous vetting process to ensure they meet our standards of excellence. From subject-matter experts to executive functioning coaches, our staff brings a wealth of knowledge from top-tier academic institutions to every session.
+                            - paragraph [ref=e141]:
+                              - generic [ref=e144]: We match our students with mentors who share their spark, fostering a relationship built on trust, mastery, and measurable growth.
+                            - paragraph [ref=e145]
+                          - generic:
+                            - paragraph [ref=e146]:
+                              - generic [ref=e149]: "Our Luminaries are:"
+                            - paragraph [ref=e150]
+                            - paragraph [ref=e151]:
+                              - generic [ref=e154]: 100% Vetted and Background checked
+                            - paragraph [ref=e155]:
+                              - generic [ref=e158]: Certified Teachers or Degreed Professionals
+                            - paragraph [ref=e159]:
+                              - generic [ref=e162]: Experinced in working with students
+                            - paragraph [ref=e163]:
+                              - generic [ref=e166]: In-depth knowledge in the field of their study
+                          - link "Become a Lumi-nary" [ref=e168] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                            - generic [ref=e170]: Become a Lumi-nary
+                    - heading "Our Spectrum of Expertise" [level=2] [ref=e171]:
+                      - generic [ref=e173]: Our Spectrum of Expertise
+                    - generic "create an image of a black board in a classroom with legible English Language writing on o" [ref=e174]
+                    - generic:
+                      - heading [level=2] [ref=e176]
+                      - paragraph [ref=e177]:
+                        - generic [ref=e180]: Core Academic Subjects
+                      - paragraph [ref=e181]
+                      - paragraph [ref=e184]:
+                        - generic [ref=e186]: Math, Reading/Writing, Science, Social Science
+                      - paragraph [ref=e188]:
+                        - generic [ref=e189]: Elementary • Middle • High School
+                      - paragraph [ref=e190]
+                      - paragraph [ref=e191]:
+                        - generic [ref=e194]: Test Preparation
+                      - paragraph [ref=e195]
+                      - paragraph [ref=e198]:
+                        - generic [ref=e201]: SAT • ACT • AP • GED• ASVAB
+                      - paragraph [ref=e202]:
+                        - generic [ref=e205]: Study strategies, test-taking techniques and
+                      - paragraph [ref=e206]:
+                        - generic [ref=e209]: performance tracking
+                      - paragraph [ref=e210]
+                      - paragraph [ref=e214]:
+                        - generic [ref=e217]: Foreign Languages
+                      - paragraph [ref=e218]
+                      - paragraph [ref=e221]:
+                        - generic [ref=e224]: Spanish, French, Latin, and more
+                      - paragraph [ref=e225]:
+                        - generic [ref=e228]: Beginner to Advanced levels
+                      - paragraph [ref=e229]
+                      - paragraph [ref=e230]
+                      - paragraph [ref=e231]:
+                        - generic [ref=e234]: Executive Functioning & Study Skills
+                      - paragraph [ref=e235]
+                      - paragraph [ref=e238]:
+                        - generic [ref=e241]: Time management,
+                      - paragraph [ref=e242]:
+                        - generic [ref=e245]: Organizational skills,
+                      - paragraph [ref=e246]:
+                        - generic [ref=e249]: Note-taking, Active Listening
+                    - link "Book a Free Consultation" [ref=e251] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/booking-calendar/free-consultation-1-1-tutoring
+                      - generic [ref=e252]: Book a Free Consultation
+                    - heading "The Lumi Method" [level=2] [ref=e253]:
+                      - generic [ref=e255]: The Lumi Method
+                    - heading "1" [level=2] [ref=e258]:
+                      - generic [ref=e261]: "1"
+                    - generic:
+                      - paragraph [ref=e262]
+                      - paragraph [ref=e263]:
+                        - generic [ref=e265]: "The Match:"
+                      - paragraph [ref=e266]:
+                        - generic [ref=e268]: We pair your child with a Lumi-nary based on personality and learning style—not just subject matter.
+                      - paragraph [ref=e269]
+                      - paragraph [ref=e270]
+                      - paragraph [ref=e271]
+                      - paragraph [ref=e272]
+                      - paragraph [ref=e273]
+                      - paragraph [ref=e274]
+                      - paragraph [ref=e275]
+                      - paragraph [ref=e276]:
+                        - generic [ref=e278]: "The Custom Roadmap:"
+                      - paragraph [ref=e279]:
+                        - generic [ref=e281]: No "cookie-cutter" packets. We align every lesson with your specific needs.
+                      - paragraph [ref=e282]
+                      - paragraph [ref=e283]
+                      - paragraph [ref=e284]
+                      - paragraph [ref=e285]
+                      - paragraph [ref=e286]
+                      - paragraph [ref=e287]
+                      - paragraph [ref=e288]
+                      - paragraph [ref=e289]
+                      - paragraph [ref=e290]:
+                        - generic [ref=e292]: "The Glow-Up:"
+                      - paragraph [ref=e293]:
+                        - generic [ref=e295]: Consistent feedback loops for parents so you can see the progress in real-time.
+                    - heading "2" [level=2] [ref=e298]:
+                      - generic [ref=e301]: "2"
+                    - heading "3" [level=2] [ref=e304]:
+                      - generic [ref=e307]: "3"
+                    - link "Call (571) 207-8373" [ref=e309] [cursor=pointer]:
+                      - /url: tel:+15712078373
+                      - generic [ref=e310]:
+                        - generic [ref=e311]: Call (571) 207-8373
+                        - img [ref=e314]
+              - generic [ref=e325]:
+                - generic [ref=e326]:
+                  - generic:
+                    - generic:
+                      - heading "What Makes Our 1:1 Tutoring Different?" [level=3] [ref=e330]:
+                        - generic [ref=e333]: What Makes Our 1:1 Tutoring Different?
+                      - generic:
+                        - heading [level=4] [ref=e334]
+                        - heading "Customized Learning Plans" [level=4] [ref=e335]:
+                          - generic [ref=e338]: Customized Learning Plans
+                        - paragraph [ref=e339]:
+                          - generic [ref=e342]: We assess each student to identify their strengths, gaps, and goals. We then build a fully personalized tutoring strategy customized to each student's need.
+                        - paragraph [ref=e343]
+                        - paragraph [ref=e344]:
+                          - generic [ref=e347]: Perfect Tutor Match
+                        - paragraph [ref=e348]:
+                          - generic [ref=e351]: "Students are matched with tutors based on:"
+                        - list [ref=e352]:
+                          - listitem [ref=e353]:
+                            - paragraph [ref=e354]:
+                              - generic [ref=e357]: Academic needs
+                          - listitem [ref=e358]:
+                            - paragraph [ref=e359]:
+                              - generic [ref=e362]: Learning style
+                          - listitem [ref=e363]:
+                            - paragraph [ref=e364]:
+                              - generic [ref=e367]: Personality compatibility
+                          - listitem [ref=e368]:
+                            - paragraph [ref=e369]:
+                              - generic [ref=e372]: Long-term goals
+                        - paragraph [ref=e373]:
+                          - generic [ref=e376]: This ensures a strong connection and more effective learning outcomes - something our tutoring program prioritizes for success.
+                        - paragraph [ref=e377]
+                        - paragraph [ref=e378]:
+                          - generic [ref=e381]: Flexible In-Home & Online Options
+                        - list [ref=e382]:
+                          - listitem [ref=e383]:
+                            - paragraph [ref=e384]:
+                              - generic [ref=e387]: Learn at home, online, or a combination of both
+                          - listitem [ref=e388]:
+                            - paragraph [ref=e389]:
+                              - generic [ref=e392]: Sessions available after school, evenings, and weekend
+                          - listitem [ref=e393]:
+                            - paragraph [ref=e394]:
+                              - generic [ref=e397]: Designed to fit your family’s schedule
+                        - paragraph [ref=e398]
+                        - heading "Aligned with School Curriculum" [level=4] [ref=e399]:
+                          - generic [ref=e402]: Aligned with School Curriculum
+                        - paragraph [ref=e403]:
+                          - generic [ref=e406]: Our tutors work with your student’s school materials and curriculum so learning is immediately applicable in the classroom.
+                - img "Helping Tutor" [ref=e412]
+    - contentinfo [ref=e414]:
+      - generic [ref=e425]:
+        - generic [ref=e426]:
+          - generic:
+            - generic:
+              - 'heading "Call Now: +1 (571) 207-8373" [level=5] [ref=e430]':
+                - 'link "Call Now: +1 (571) 207-8373" [ref=e435] [cursor=pointer]':
+                  - /url: tel:+15712078373
+              - paragraph [ref=e436]:
+                - link "contact.us@learningwithlumi.com" [ref=e439] [cursor=pointer]:
+                  - /url: mailto:contact.us@learningwithlumi.com
+                  - generic [ref=e440]: contact.us@learningwithlumi.com
+        - paragraph [ref=e445]: Copyright © 2026 Lumi Education
+        - generic [ref=e446]:
+          - generic:
+            - generic:
+              - heading "Quick Links" [level=5] [ref=e450]:
+                - generic [ref=e453]: Quick Links
+              - heading "About Us Summer Camp 1:1 Tutoring Contact Us Careers" [level=6] [ref=e454]:
+                - generic [ref=e457]:
+                  - link "About Us" [ref=e458] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                  - link "Summer Camp" [ref=e459] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/summer-camps-2026
+                  - link "1:1 Tutoring" [ref=e460] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                  - link "Contact Us" [ref=e461] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                  - link "Careers" [ref=e462] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/comming-soon
+  - region "bottom of page"
