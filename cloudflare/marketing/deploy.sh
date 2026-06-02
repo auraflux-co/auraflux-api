@@ -313,6 +313,9 @@ n_rewrites = home_raw.count(ASSETS_PROXY)
 if n_rewrites:
     print(f"  ✓ Rewrote {n_rewrites} URLs via /cf-assets/ in home.html (<style>, <script>, <link> only)")
 
+# home.html is now a static CMS-wired template (not a Framer export) so it
+# needs inject_framer just like the other worker-owned pages.
+home_raw = inject_framer(home_raw)
 home             = js_escape(home_raw)
 
 blog             = js_escape(inject_framer(read_page('blog.html')))
@@ -367,7 +370,11 @@ PYEOF
 # ── Step 2c: Validate — abort if any placeholder survived the build ───────────
 echo ""
 echo "🔍  Validating build (checking for unresolved placeholders)..."
+# __WORD__ = unresolved page/shell placeholder (always bad)
+# \${FRAMER_ = js_escape'd Framer var that inject_framer missed (backslash prefix = bad)
+# Note: bare ${FRAMER_  in LEGAL_SHELL JS template literals are VALID runtime expressions — skip those
 LEFTOVER=$(grep -oE '__[A-Z_]{3,}__' "$WORKER_BUILD" | sort -u || true)
+LEFTOVER+=$(grep -oP '\\\$\{FRAMER_[A-Z_]+' "$WORKER_BUILD" | sort -u || true)
 if [[ -n "$LEFTOVER" ]]; then
   echo "❌  Deploy ABORTED — unresolved placeholders found in built worker:"
   echo "$LEFTOVER" | sed 's/^/    /'
