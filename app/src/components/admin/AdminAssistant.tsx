@@ -171,7 +171,7 @@ export function AdminAssistant() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-sm font-semibold text-slate-100">Admin Assistant</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300 border border-blue-700/40 font-medium">
-                Gemini
+                Beta
               </span>
             </div>
             <button

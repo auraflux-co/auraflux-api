@@ -107,7 +107,7 @@ function MessageBubble({ msg }: { msg: PublicChatMessage }) {
           'text-[10px] mt-1',
           isUser ? 'text-primary-foreground/60' : 'text-muted-foreground',
         )}>
-          {isUser ? 'Visitor' : 'Gemini AI'} · {relTime(msg.created_at)}
+          {isUser ? 'Visitor' : 'Collab Assistant'} · {relTime(msg.created_at)}
         </p>
       </div>
     </div>
@@ -325,7 +325,7 @@ export default function PublicChatInbox() {
               {/* Read-only footer */}
               <div className="border-t border-border px-4 py-3 bg-muted/10">
                 <p className="text-xs text-muted-foreground text-center">
-                  Read-only — Gemini AI handles replies. Polling for new messages every 15s.
+                  Read-only — Collab Assistant handles replies. Polling for new messages every 15s.
                 </p>
               </div>
             </>

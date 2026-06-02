@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-02 v1.0.937 (Cursor — chore(ux): remove Gemini brand and AI labels from app UI + marketing site — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.936 (Cursor — fix(admin): add fonts.googleapis.com + fonts.gstatic.com to admin CSP — Material Symbols icon font blocked, expand_more showing as text)
 **Last Updated:** 2026-06-02 v1.0.935 (Cursor — fix(marketing): home.html is now CMS template not Framer export — add inject_framer for home; fix guard false positive from LEGAL_SHELL JS runtime exprs)
 **Last Updated:** 2026-06-02 v1.0.934 (Cursor — fix(admin): pin Sveltia CMS to 0.165.1 via jsDelivr; add loading spinner; tighten admin CSP to named domains)

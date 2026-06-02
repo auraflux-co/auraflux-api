@@ -77,8 +77,8 @@ export default function PrivacyPolicyPage() {
         <li><strong>Cloudflare</strong> — file storage (R2), CDN, and DDoS protection</li>
         <li><strong>Render</strong> — cloud hosting and infrastructure</li>
         <li><strong>New Relic</strong> — application performance monitoring</li>
-        <li><strong>Google / Gemini</strong> — AI content analysis and generation</li>
-        <li><strong>ElevenLabs</strong> — AI text-to-speech generation</li>
+        <li><strong>Google</strong> — AI content analysis and generation</li>
+        <li><strong>ElevenLabs</strong> — text-to-speech generation</li>
       </ul>
 
       <h3>3.2 Third-party platforms you connect</h3>

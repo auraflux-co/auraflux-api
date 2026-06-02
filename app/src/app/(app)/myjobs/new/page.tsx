@@ -144,15 +144,15 @@ const AUDIO_OPTS = [
 const FEATURES: Feature[] = [
   {
     id: 'script', label: 'Write my script',
-    description: 'AI writes the video script from your source material',
-    tooltip: 'Gemini analyses your source and writes a structured script.',
+    description: 'Writes a structured video script from your source material',
+    tooltip: 'Analyses your source and writes a structured script — intro, key segments, and a close.',
     outputImpact: 'Your video gets a structured script — intro, key segments, and a close.',
     default: true, formFactors: ['long'], hasConfig: true, category: 'content', status: 'live',
   },
   {
-    id: 'tts', label: 'Add AI voiceover',
-    description: 'AI voice narrates the generated script',
-    tooltip: 'A professional AI voice reads your script — no recording needed.',
+    id: 'tts', label: 'Add voiceover',
+    description: 'Professional voice narrates the generated script',
+    tooltip: 'A professional voice reads your script — no recording needed.',
     outputImpact: 'A professional voice reads your script — no recording needed.',
     default: false, formFactors: ['long'], requires: ['script'], hasConfig: true, advanced: true,
     category: 'content', status: 'live',
@@ -167,16 +167,16 @@ const FEATURES: Feature[] = [
   },
   {
     id: 'generation', label: 'Generate missing footage',
-    description: 'AI-generated clips fill missing footage',
-    tooltip: 'Where your source footage has gaps, AI generates matching video clips to fill them.',
+    description: 'Generated clips fill gaps in your footage',
+    tooltip: 'Where your source footage has gaps, matching video clips are generated to fill them.',
     outputImpact: 'Gaps in footage are filled with generated clips.',
     default: false, formFactors: ['long'], hasConfig: true, advanced: true,
     category: 'content', status: 'live',
   },
   {
     id: 'scene_select', label: 'Auto-select clips',
-    description: 'AI picks the best clips from your source',
-    tooltip: 'AI scores every clip for energy and relevance, then picks only the best segments — no manual trimming needed.',
+    description: 'Auto-selects the best clips from your source',
+    tooltip: 'Every clip is scored for energy and relevance — only the best segments are kept, no manual trimming needed.',
     outputImpact: 'Only the most relevant segments are used — weak clips are cut.',
     default: true, formFactors: ['long', 'short'], hasConfig: false, category: 'editing', status: 'live',
   },
@@ -226,7 +226,7 @@ const FEATURES: Feature[] = [
 ];
 
 const CATEGORY_BOXES: CategoryBox[] = [
-  { id: 'content',  label: 'Content & Script',  description: 'Script writing, AI voiceover, and commentary', icon: '✍️', formFactors: ['long'] },
+  { id: 'content',  label: 'Content & Script',  description: 'Script writing, voiceover, and commentary', icon: '✍️', formFactors: ['long'] },
   { id: 'editing',  label: 'Editing & Pacing',  description: 'Smart cuts, clip selection, and timing',       icon: '✂️', formFactors: ['long', 'short'] },
   { id: 'effects',  label: 'Effects & Captions', description: 'Overlays, animations, and on-screen text',    icon: '✨', formFactors: ['long', 'short'] },
   { id: 'brand',    label: 'Design & Brand',    description: 'Thumbnails, intros, and brand identity',       icon: '🎨', formFactors: ['long', 'short'] },
@@ -1037,7 +1037,7 @@ function JobBuilderPageInner() {
 
                   {/* Production features — 4 expandable category boxes (CPD-420) */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">AI production tools</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Production tools</p>
                     {!formFactor ? (
                       <p className="text-sm text-muted-foreground">Select a format above to see available tools.</p>
                     ) : (
