@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-02 v1.0.941 (Cursor — fix(marketing): favicon 404 resolved (inline SVG); .primary CTA class added to page-base.css — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.940 (Cursor — fix(twitch): auto-refresh app access token on expiry via TWITCH_CLIENT_SECRET; better frontend error message — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.939 (Cursor — feat(wizard): included-by-template panel; optional extras split; always-visible output summary — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.938 (Cursor — feat(wizard): template cards show platforms + included features; source section renamed; type summary uses chip labels — CPD-498)

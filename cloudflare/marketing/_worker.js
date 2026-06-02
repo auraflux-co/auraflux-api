@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://9885fb2a.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://7ebc6b36.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -614,6 +614,21 @@ self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
 // No fetch handler — all requests go directly to the network.`,
         { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-store' } }
       );
+    }
+
+    // ── Favicon — served inline as SVG ────────────────────────────────────────
+    if (path === '/favicon.png' || path === '/favicon.ico' || path === '/favicon.svg') {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="12" fill="#0b1220"/>
+        <text x="32" y="46" font-family="sans-serif" font-size="36" font-weight="700"
+          fill="#f5c542" text-anchor="middle">A</text>
+      </svg>`;
+      return new Response(svg, {
+        headers: {
+          'Content-Type': 'image/svg+xml',
+          'Cache-Control': 'public, max-age=86400',
+        },
+      });
     }
 
     // ── Asset proxy — serve fonts/JS from assets.auraflux.co with CORS ────
