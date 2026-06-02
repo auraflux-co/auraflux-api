@@ -7473,6 +7473,27 @@ const server = app.listen(PORT, () => {
   } catch (cronErr) {
     console.warn('   ⚠️  node-cron not available — overage billing cron disabled:', cronErr.message);
   }
+
+  // Pipeline health report — 07:00 UTC (2am Eastern) daily.
+  // Runs the 3-layer ecosystem check and posts findings to Jira (label: pipeline-health-report)
+  // so the agent can read the latest report at session start via:
+  //   jira_search: project=CPD AND labels=pipeline-health-report ORDER BY created DESC
+  try {
+    const cron = require('node-cron');
+    cron.schedule('0 7 * * *', async () => {
+      console.log('[pipeline-review] Starting nightly pipeline health review...');
+      try {
+        const { runReviewAndPost } = require('./scripts/pipeline_parity_review');
+        const result = await runReviewAndPost();
+        console.log(`[pipeline-review] Done — ${result.failures} failures, ${result.warnings} warnings. Jira: ${result.jiraKey || 'not posted'}`);
+      } catch (reviewErr) {
+        console.error('[pipeline-review] Nightly review failed:', reviewErr.message);
+      }
+    }, { timezone: 'UTC' });
+    console.log('   ✅ Nightly pipeline health review cron scheduled (07:00 UTC / 2am ET)');
+  } catch (cronErr) {
+    console.warn('   ⚠️  node-cron not available — pipeline health review cron disabled:', cronErr.message);
+  }
 });
 
 // CPD-266: Graceful shutdown — waits for HeyGen pollers, assembly jobs, AND

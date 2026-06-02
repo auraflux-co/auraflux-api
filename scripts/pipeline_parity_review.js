@@ -451,9 +451,80 @@ function runReview() {
   return { failures, warnings, passes };
 }
 
-if (require.main === module) {
-  const { failures } = runReview();
-  process.exit(failures > 0 ? 1 : 0);
+/**
+ * Post a completed review report to Jira as a new issue.
+ * The issue is created in the CPD project under issue type "Task" with a
+ * machine-readable label so the agent can query it at session start.
+ */
+async function postReportToJira(reportMarkdown, summary) {
+  const domain = process.env.ATLASSIAN_DOMAIN;
+  const email  = process.env.ATLASSIAN_EMAIL;
+  const token  = process.env.ATLASSIAN_API_TOKEN;
+  const project = process.env.JIRA_PROJECT_KEY || 'CPD';
+
+  if (!domain || !email || !token) {
+    console.warn('[pipeline-review] Jira env vars missing — skipping Jira post');
+    return null;
+  }
+
+  const auth = Buffer.from(`${email}:${token}`).toString('base64');
+  const url  = `https://${domain}/rest/api/2/issue`;
+
+  const body = JSON.stringify({
+    fields: {
+      project:     { key: project },
+      summary,
+      issuetype:   { name: 'Task' },
+      description: reportMarkdown.slice(0, 30000), // Jira body cap
+      labels:      ['pipeline-health-report', 'auto-generated'],
+    },
+  });
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type':  'application/json',
+      'Accept':        'application/json',
+    },
+    body,
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error(`[pipeline-review] Jira POST failed ${res.status}: ${txt}`);
+    return null;
+  }
+
+  const data = await res.json();
+  console.log(`[pipeline-review] Jira issue created: ${data.key} — ${url.replace('/rest/api/2/issue', '')}/browse/${data.key}`);
+  return data.key;
 }
 
-module.exports = { runReview };
+async function runReviewAndPost() {
+  const { failures, warnings, passes } = runReview();
+  const date    = new Date().toISOString().slice(0, 10);
+  const status  = failures > 0 ? 'RED' : warnings > 0 ? 'AMBER' : 'GREEN';
+  const report  = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'logs', `pipeline_parity_review_${date}.md`),
+    'utf8',
+  );
+  const summary = `[${status}] Pipeline Health Report ${date} — ${failures} failures, ${warnings} warnings, ${passes} passes`;
+  const key = await postReportToJira(report, summary);
+  return { failures, warnings, passes, jiraKey: key };
+}
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  if (args.includes('--jira')) {
+    runReviewAndPost().then(({ failures }) => process.exit(failures > 0 ? 1 : 0)).catch(e => {
+      console.error(e);
+      process.exit(1);
+    });
+  } else {
+    const { failures } = runReview();
+    process.exit(failures > 0 ? 1 : 0);
+  }
+}
+
+module.exports = { runReview, runReviewAndPost };
