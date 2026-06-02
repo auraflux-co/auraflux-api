@@ -731,8 +731,8 @@ function JobBuilderPageInner() {
 
   const summaries: Record<string, string> = {
     type: sourceIntent === 'longform'
-      ? (formFactor === 'short' ? 'Cut clips from long-form' : 'Produce from source')
-      : (inferredMultiClip ? 'Multi-clip stitch → long-form' : formFactor === 'short' ? 'Short clip / enhance' : ''),
+      ? (formFactor === 'short' ? 'Find highlights' : 'Create a full video')
+      : (inferredMultiClip ? 'Make a longer video' : formFactor === 'short' ? 'Polish short clips' : ''),
     source: sourceMode === 'upload'
       ? (uploadedName ? `Upload: ${uploadedName}` : '')
       : sourceItems.length === 0 ? ''
@@ -868,13 +868,13 @@ function JobBuilderPageInner() {
               <div className="h-px bg-border/50 my-0.5" />
 
               {/* SOURCE */}
-              <CollapsibleSection id="source" label="Footage" required
+              <CollapsibleSection id="source" label="Source video" required
                 summary={summaries.source} open={isOpen('source')} onToggle={() => toggle('source')}>
                 <div className="space-y-4">
                   {/* Tab bar */}
                   <div className="flex gap-2">
                     {(['source', 'upload'] as SourceMode[]).map((s) => {
-                      const labels: Record<SourceMode, string> = { source: 'Choose from library', upload: 'Upload file' };
+                      const labels: Record<SourceMode, string> = { source: 'Browse your channels', upload: 'Upload a file' };
                       return (
                         <button key={s} type="button" onClick={() => setSourceMode(s)}
                           className={cn('px-3 py-1.5 text-xs rounded-md border transition-colors',
