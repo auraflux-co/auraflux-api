@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-02 v1.0.939 (Cursor — feat(wizard): included-by-template panel; optional extras split; always-visible output summary — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.938 (Cursor — feat(wizard): template cards show platforms + included features; source section renamed; type summary uses chip labels — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.937 (Cursor — chore(ux): remove Gemini brand and AI labels from app UI + marketing site — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.936 (Cursor — fix(admin): add fonts.googleapis.com + fonts.gstatic.com to admin CSP — Material Symbols icon font blocked, expand_more showing as text)

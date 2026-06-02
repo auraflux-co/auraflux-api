@@ -510,6 +510,12 @@ function JobBuilderPageInner() {
     planTier: tier,
   });
 
+  // When a preset template is active, this holds the original template object so the
+  // production section can distinguish "included by template" from "optional extras".
+  const activeTemplate = templateId !== 'custom'
+    ? PRESET_TEMPLATES.find((t) => t.id === templateId) ?? null
+    : null;
+
   // ─── Section helpers ───────────────────────────────────────────────────────
 
   const isOpen   = (id: string) => openSections.includes(id);
@@ -990,70 +996,127 @@ function JobBuilderPageInner() {
               <div className="h-px bg-border/50 my-0.5" />
 
               {/* PRODUCTION FEATURES */}
-              <CollapsibleSection id="production" label="Production add-ons"
+              <CollapsibleSection id="production"
+                label={activeTemplate ? 'Optional extras' : 'Production add-ons'}
                 summary={summaries.production} open={isOpen('production')} onToggle={() => toggle('production')}>
                 <div className="space-y-4">
 
-                  {/* Captions + voiceover toggles */}
+                  {/* ── When a template is active: show what it already includes ── */}
+                  {activeTemplate && (() => {
+                    const GRADE_LABELS: Record<string, string> = { vivid: 'Vivid color', neut: 'Neutral color', warm: 'Warm color', cool: 'Cool color' };
+                    const EFFECT_LABELS: Record<string, string> = { zoom: 'Zoom cuts', transitions: 'Scene transitions' };
+                    const AUDIO_LABELS: Record<string, string>  = { loudnorm: 'Volume balance', duck: 'Music ducking' };
+                    const FEAT_LABELS: Record<string, string>   = { scene_select: 'Auto-select clips', branding: 'Branded intro/outro' };
+                    const FORMAT_LABELS: Record<string, string> = { portrait: 'Portrait 9:16', longform: 'Landscape 16:9' };
+                    const pills: string[] = [
+                      FORMAT_LABELS[activeTemplate.format] ?? activeTemplate.format,
+                      ...(activeTemplate.captions ? ['Captions'] : []),
+                      ...(GRADE_LABELS[activeTemplate.grade] ? [GRADE_LABELS[activeTemplate.grade]] : []),
+                      ...activeTemplate.effects.flatMap((e) => EFFECT_LABELS[e] ? [EFFECT_LABELS[e]] : []),
+                      ...activeTemplate.audioOpts.flatMap((a) => AUDIO_LABELS[a] ? [AUDIO_LABELS[a]] : []),
+                      ...activeTemplate.features.flatMap((f) => FEAT_LABELS[f] ? [FEAT_LABELS[f]] : []),
+                    ];
+                    return (
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 space-y-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/70">
+                          Included by {activeTemplate.label} template
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {pills.map((pill) => (
+                            <span key={pill}
+                              className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                              ✓ {pill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── Output options — only show voiceover as optional when template is active ── */}
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Output options</p>
                     <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: 'captions',  label: 'Captions',   sub: 'Added directly to the video', on: captions,  set: setCaptions },
-                        { id: 'voiceover', label: 'Voice-over', sub: 'Script narration',         on: voiceover, set: setVoiceover },
-                      ].map((opt) => (
-                        <button key={opt.id} type="button" onClick={() => opt.set(!opt.on)}
+                      {/* Captions: show as locked read-only if template includes it */}
+                      {activeTemplate?.captions ? (
+                        <div className="text-left rounded-lg border px-3 py-2 min-w-[140px] opacity-60 border-primary/30 bg-primary/5 cursor-default">
+                          <p className="text-sm font-medium text-primary">Captions</p>
+                          <p className="text-[11px] mt-0.5 text-primary/60">Included in template</p>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => setCaptions(!captions)}
                           className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
-                            opt.on ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
-                          <p className="text-sm font-medium">{opt.label}</p>
-                          <p className={cn('text-[11px] mt-0.5', opt.on ? 'text-primary-foreground/70' : 'text-muted-foreground')}>{opt.sub}</p>
+                            captions ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
+                          <p className="text-sm font-medium">Captions</p>
+                          <p className={cn('text-[11px] mt-0.5', captions ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Added directly to the video</p>
                         </button>
-                      ))}
+                      )}
+                      {/* Voiceover is always optional */}
+                      <button type="button" onClick={() => setVoiceover(!voiceover)}
+                        className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
+                          voiceover ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
+                        <p className="text-sm font-medium">Voiceover</p>
+                        <p className={cn('text-[11px] mt-0.5', voiceover ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Script narration</p>
+                      </button>
                     </div>
                   </div>
 
-                  {/* Color grade + effects */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Visual style</p>
-                    <div className="flex gap-4 flex-wrap">
-                      <div className="space-y-1.5">
-                        <p className="text-[11px] text-muted-foreground">Color grade</p>
-                        <ChipGroup options={GRADES} selected={[grade]} singleSelect onToggle={setGrade} />
-                      </div>
-                      <div className="space-y-1.5 flex-1 min-w-[200px]">
-                        <p className="text-[11px] text-muted-foreground">Effects</p>
-                        <ChipGroup options={EFFECTS_OPTS} selected={effects}
-                          onToggle={(id) => setEffects((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
+                  {/* ── Visual style — hide when template is active (it sets these) ── */}
+                  {!activeTemplate && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Visual style</p>
+                      <div className="flex gap-4 flex-wrap">
+                        <div className="space-y-1.5">
+                          <p className="text-[11px] text-muted-foreground">Color grade</p>
+                          <ChipGroup options={GRADES} selected={[grade]} singleSelect onToggle={setGrade} />
+                        </div>
+                        <div className="space-y-1.5 flex-1 min-w-[200px]">
+                          <p className="text-[11px] text-muted-foreground">Effects</p>
+                          <ChipGroup options={EFFECTS_OPTS} selected={effects}
+                            onToggle={(id) => setEffects((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Audio */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Audio</p>
-                    <ChipGroup options={AUDIO_OPTS} selected={audioOpts}
-                      onToggle={(id) => setAudioOpts((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
-                  </div>
+                  {/* ── Audio — hide when template is active ── */}
+                  {!activeTemplate && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Audio</p>
+                      <ChipGroup options={AUDIO_OPTS} selected={audioOpts}
+                        onToggle={(id) => setAudioOpts((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
+                    </div>
+                  )}
 
-                  {/* Production features — 4 expandable category boxes (CPD-420) */}
+                  {/* ── Production tools — exclude template-included features when template is active ── */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Production tools</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      {activeTemplate ? 'Add to your job' : 'Production tools'}
+                    </p>
                     {!formFactor ? (
                       <p className="text-sm text-muted-foreground">Select a format above to see available tools.</p>
                     ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {CATEGORY_BOXES.map((cat) => (
-                        <FeatureCategoryBox
-                          key={cat.id}
-                          category={cat}
-                          features={FEATURES.filter(
-                            (f) => f.category === cat.id && f.status === 'live' && f.formFactors.includes(formFactor),
-                          )}
-                          allFeatures={FEATURES}
-                          selected={features}
-                          onToggle={toggleFeature}
-                        />
-                      ))}
+                      {CATEGORY_BOXES.map((cat) => {
+                        const catFeatures = FEATURES.filter(
+                          (f) => f.category === cat.id
+                            && f.status === 'live'
+                            && f.formFactors.includes(formFactor)
+                            // Hide features already provided by the active template
+                            && !(activeTemplate?.features.includes(f.id)),
+                        );
+                        if (catFeatures.length === 0) return null;
+                        return (
+                          <FeatureCategoryBox
+                            key={cat.id}
+                            category={cat}
+                            features={catFeatures}
+                            allFeatures={FEATURES}
+                            selected={features}
+                            onToggle={toggleFeature}
+                          />
+                        );
+                      })}
                     </div>
                     )}
                     {/* Config panels for enabled features that have configuration */}
@@ -1135,28 +1198,32 @@ function JobBuilderPageInner() {
               effects={effects}
             />
 
-            {/* Summary bullets */}
-            {canSubmit && (
-              <div className="space-y-1.5 border-t border-border pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Summary</p>
-                {[
-                  FORMATS.find((f) => f.id === format)?.label,
-                  !isLongForm && durLabel(duration),
-                  platforms.map((p) => PLATFORMS.find((x) => x.id === p)?.label ?? p).join(' · '),
-                  captions && 'Captions',
-                  voiceover && 'Voice-over',
-                  grade !== 'none' && `${grade.charAt(0).toUpperCase()}${grade.slice(1)} grade`,
-                  effects.length > 0 && effects.map((e) => EFFECTS_OPTS.find((x) => x.id === e)?.label ?? e).join(', '),
-                  features.size > 0 && `${features.size} feature${features.size !== 1 ? 's' : ''} enabled`,
-                  `${estimate.credits} credits`,
-                ].filter(Boolean).map((line, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs">
-                    <div className="w-1 h-1 rounded-full bg-primary shrink-0" />
-                    <span>{String(line)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Expected output summary — visible as soon as template is picked */}
+            <div className="space-y-1.5 border-t border-border pt-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">What you&apos;ll get</p>
+              {[
+                format && FORMATS.find((f) => f.id === format)?.label,
+                !isLongForm && duration && durLabel(duration),
+                platforms.length > 0 && platforms.map((p) => PLATFORMS.find((x) => x.id === p)?.label ?? p).join(' · '),
+                captions && 'Burnt-in captions',
+                voiceover && 'Voiceover narration',
+                grade !== 'none' && `${(GRADES.find((g) => g.id === grade)?.label ?? grade)} color grade`,
+                effects.length > 0 && effects.map((e) => EFFECTS_OPTS.find((x) => x.id === e)?.label ?? e).join(' + '),
+                features.size > 0 && Array.from(features)
+                  .map((fid) => FEATURES.find((f) => f.id === fid)?.label)
+                  .filter(Boolean)
+                  .join(', '),
+                canSubmit && `${estimate.credits} credits`,
+              ].filter(Boolean).map((line, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs">
+                  <div className="w-1 h-1 rounded-full bg-primary shrink-0 mt-1.5" />
+                  <span>{String(line)}</span>
+                </div>
+              ))}
+              {!format && !platforms.length && (
+                <p className="text-[11px] text-muted-foreground italic">Complete the sections above to see your output summary.</p>
+              )}
+            </div>
 
             <Button size="sm" className="w-full" disabled={!canSubmit || isPending} onClick={handleSubmit}>
               {isPending ? 'Starting…' : 'Start production →'}
