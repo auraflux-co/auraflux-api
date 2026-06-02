@@ -558,7 +558,7 @@ export default {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-store',
       }));
-      adminHeaders.set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;");
+      adminHeaders.set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://api.github.com https://github.com https://raw.githubusercontent.com data: blob:;");
       return new Response(`__ADMIN_INDEX__`, { headers: adminHeaders });
     }
     if (path === '/admin/config.yml') {
