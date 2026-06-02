@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-02 v1.0.930 (Cursor — fix(review): 4 false positives in aider_session_review.sh — NEXT_PUBLIC_API_BASE wrong env file, marketing/staging unmerged branch noise, chat widget static HTML vs JS, /concierge stale page context)
 **Last Updated:** 2026-05-30 v1.0.929 (Cursor — fix: queue/worker.js _resolveExtensionWorkers(jobSpec) BullMQ path; review script false positives eliminated — 0 RED 1 AMBER (SENTRY_DSN local-only intentional))
 **Last Updated:** 2026-05-30 v1.0.928 (Cursor — fix(cpd-491/492/493/495/496/497): _resolveExtensionWorkers injects jobSpec; onPortalPass propagates; operator retry/advance add assembly+completion hooks; burn_image/shoppable/thumbnail_ext feature gates; review script false positives fixed)
 **Last Updated:** 2026-05-30 v1.0.927 (Cursor — feat: 3-layer pipeline_parity_review.js; nightly cron at 07:00 UTC posts Jira pipeline-health-report; session-review rule reads it at session start)

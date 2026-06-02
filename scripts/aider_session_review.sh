@@ -74,7 +74,10 @@ echo ""
 echo "📦 Collecting git context..."
 COMMIT_LOG=$(git -C "$REPO_ROOT" log --oneline "$SINCE..HEAD" 2>/dev/null | head -30 || git -C "$REPO_ROOT" log --oneline -20)
 CHANGED_FILES=$(git -C "$REPO_ROOT" diff --name-only "$SINCE..HEAD" 2>/dev/null | head -80 || echo "(unable to diff)")
-OPEN_BRANCHES=$(git -C "$REPO_ROOT" branch -r --no-merged main 2>/dev/null | grep -v HEAD | head -10 || echo "none")
+# Exclude known deployment/long-lived branches (marketing = CF Pages deploy, staging = Render staging)
+OPEN_BRANCHES=$(git -C "$REPO_ROOT" branch -r --no-merged main 2>/dev/null \
+  | grep -v HEAD | grep -v 'origin/marketing' | grep -v 'origin/staging' | grep -v 'dependabot' \
+  | head -10 || echo "none")
 
 # ── 2. Jira board state ────────────────────────────────────────────────────────
 echo "📋 Fetching Jira board state..."
@@ -176,7 +179,13 @@ FRONTEND_ENV_IN_CODE=$(grep -rh 'process\.env\.' "$REPO_ROOT/app/src" 2>/dev/nul
 
 ENV_IN_EXAMPLE=$(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)=' "$REPO_ROOT/.env.example" 2>/dev/null | sed -E 's/^[# ]*//;s/=.*//' | sort -u || true)
 ENV_MISSING=$(comm -23 <(echo "$ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
-FRONTEND_ENV_MISSING=$(comm -23 <(echo "$FRONTEND_ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
+# Frontend NEXT_PUBLIC_* vars live in app/.env.local.example (not the root .env.example)
+# Merge both sources before checking for missing vars.
+FRONTEND_ENV_IN_EXAMPLE=$(cat \
+  <(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)=' "$REPO_ROOT/.env.example" 2>/dev/null | sed -E 's/^[# ]*//;s/=//') \
+  <(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)=' "$REPO_ROOT/app/.env.local.example" 2>/dev/null | sed -E 's/^[# ]*//;s/=//') \
+  2>/dev/null | sort -u || true)
+FRONTEND_ENV_MISSING=$(comm -23 <(echo "$FRONTEND_ENV_IN_CODE" | sort) <(echo "$FRONTEND_ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
 
 # ── 7. Frontend UI inventory ──────────────────────────────────────────────────
 echo "🖥️  Auditing frontend UI layer..."
@@ -264,14 +273,15 @@ if [[ "$ROADMAP_HTTP" =~ ^[23] ]]; then
 else
   MKTG_STATUS="${MKTG_STATUS}  ❌ Roadmap page: HTTP ${ROADMAP_HTTP} (expected 2xx or 3xx)\n"
 fi
-# Chat widget injected on homepage?
-# grep -c exits 1 when count=0; separate the fallback so we don't capture both outputs
-CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -c "af-chat-bubble" 2>/dev/null) || true
+# Chat widget: BotPenguin injects the widget element via JS at runtime — it is NOT in
+# the static HTML that curl sees. Check for the BotPenguin <script> tag instead,
+# which IS present in the static HTML if the widget is configured.
+CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -c "botpenguin\|BotPenguin\|bp-widget" 2>/dev/null) || true
 CHAT_WIDGET="${CHAT_WIDGET:-0}"
 if [ "${CHAT_WIDGET}" -gt 0 ] 2>/dev/null; then
-  MKTG_STATUS="${MKTG_STATUS}  ✅ Chat widget injected on homepage\n"
+  MKTG_STATUS="${MKTG_STATUS}  ✅ Chat widget script present on homepage (BotPenguin)\n"
 else
-  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget NOT found on homepage (af-chat-bubble missing from HTML)\n"
+  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget script NOT found on homepage (BotPenguin tag missing from HTML)\n"
 fi
 [ -z "$MKTG_STATUS" ] && MKTG_STATUS="  (no checks run)"
 
@@ -331,6 +341,12 @@ FRONTEND NEXT_PUBLIC_* vars missing from .env.example: ${FRONTEND_ENV_MISSING:-n
 
 FRONTEND UI PAGES (app/src/app/(app)/*/page.tsx):
 ${UI_PAGES}
+
+KNOWN INTENTIONAL NON-NAV PAGES (do NOT flag these as orphaned or stale):
+  /concierge — backward-compat redirect to /collab (CPD-489); intentional, not stale
+  /home      — default authenticated landing route, not a nav item by design
+  /plans     — public-facing plan comparison page, linked from marketing not sidebar
+  /team/accept — invite acceptance flow, appropriately not in nav
 
 SIDEBAR NAV ROUTES (what customers can actually navigate to):
 ${SIDEBAR_ROUTES}
