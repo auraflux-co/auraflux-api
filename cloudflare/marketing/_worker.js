@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://3cf432af.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://c3b2b137.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -204,6 +204,7 @@ const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 <title>${title} — AuraFlux</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
+<link rel="icon" type="image/png" href="/favicon.png">
 ${FRAMER_FONTS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -618,17 +619,17 @@ self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
 
     // ── Favicon — served inline as SVG ────────────────────────────────────────
     if (path === '/favicon.png' || path === '/favicon.ico' || path === '/favicon.svg') {
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-        <rect width="64" height="64" rx="12" fill="#0b1220"/>
-        <text x="32" y="46" font-family="sans-serif" font-size="36" font-weight="700"
-          fill="#f5c542" text-anchor="middle">A</text>
-      </svg>`;
-      return new Response(svg, {
-        headers: {
-          'Content-Type': 'image/svg+xml',
+      try {
+        const logoUrl = 'https://assets.auraflux.co/marketing/images/QbVUbsjpCzrLC1gPNNNGcQzwPp8.png';
+        const upstream = await fetch(logoUrl, { signal: AbortSignal.timeout(5000) });
+        const headers = new Headers({
+          'Content-Type': 'image/png',
           'Cache-Control': 'public, max-age=86400',
-        },
-      });
+        });
+        return new Response(upstream.body, { status: 200, headers });
+      } catch {
+        return new Response(null, { status: 404 });
+      }
     }
 
     // ── Asset proxy — serve fonts/JS from assets.auraflux.co with CORS ────

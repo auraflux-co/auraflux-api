@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-03 v1.0.947 (Cursor — fix(marketing): favicon now serves the AuraFlux logo PNG from R2 instead of inline SVG letter A)
 **Last Updated:** 2026-06-02 v1.0.946 (Cursor — fix(marketing): nav+Blog+GetStarted; roadmap grid HTML fix; plans Stripe CTAs; dash copy cleanup; about.html CTA consolidation — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.945 (Cursor — fix(marketing): restore plan images via Canva MCP — text removed from Operate/Guided/Managed images, re-uploaded to R2, img tags restored in pricing.html; price number spacing fix)
 **Last Updated:** 2026-06-02 v1.0.944 (Cursor — fix(marketing): remove redundant grid copy — home how-it-works steps 02/03 rewritten, about.html portal summaries made conceptual vs system.html technical)
