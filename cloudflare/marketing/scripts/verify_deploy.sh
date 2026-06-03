@@ -119,12 +119,12 @@ absent "AI Avatar"             "$BASE/roadmap"  'AI Avatar'
 absent "AI tag"                "$BASE/roadmap"  '>AI<'
 absent "em-dash"               "$BASE/roadmap"  '—'
 
-# Duplication guard: exactly 6 unique card titles should appear (no triplicate)
+# Duplication guard: each card title should appear exactly once
 CARD_COUNT=$(grep -o 'Subscription Platforms' "$TMP_FILE" | wc -l | tr -d ' ')
 if [ "$CARD_COUNT" -eq 1 ]; then
   pass "No duplicate roadmap cards"
 else
-  fail "Duplicate roadmap cards detected (Subscription Platforms appears ${CARD_COUNT}x)"
+  fail "Duplicate roadmap cards (Subscription Platforms appears ${CARD_COUNT}x, expected 1)"
 fi
 
 echo ""

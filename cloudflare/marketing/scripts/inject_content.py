@@ -56,43 +56,46 @@ def patch_blog(html, data):
 
 
 def patch_roadmap(html, data):
-    """Rebuild the flat rdm-grid with all phase cards from JSON data."""
-    PHASE_MAP = {
-        'now':    ('rdm-card-now',    'rdm-phase-now',    'In Development'),
-        'next':   ('rdm-card-next',   'rdm-phase-next',   'Q3 2026'),
-        'future': ('rdm-card-future', 'rdm-phase-future', 'Future'),
-    }
-    cards = []
-    for key in ('now', 'next', 'future'):
-        items = data.get(key, [])
-        card_cls, phase_cls, phase_label = PHASE_MAP[key]
-        progress = (key == 'now')
+    """Populate kanban column sentinels with cards from JSON data.
+
+    roadmap-content.html contains three sentinels:
+      <!-- RDM_NOW -->    inside the IN DEVELOPMENT column
+      <!-- RDM_NEXT -->   inside the PLANNED PIPELINE column
+      <!-- RDM_FUTURE --> inside the FUTURE HORIZONS column
+
+    Simple string replacement — no regex, no accumulation risk.
+    """
+    def build_cards(items, progress=False):
+        out = []
         for item in items:
             tag = item.get('tag', '')
-            tag_cls = ('rdm-tag-publish' if 'publish' in tag.lower()
-                       else 'rdm-tag-prod' if any(x in tag.lower() for x in ['prod', 'ai'])
-                       else 'rdm-tag-mono')
+            cls = ('rdm-tag-publish' if 'publish' in tag.lower()
+                   else 'rdm-tag-prod' if any(x in tag.lower() for x in ['prod'])
+                   else 'rdm-tag-mono')
             prog = (
-                '\n    <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>'
-                '\n    <div class="rdm-progress-label">Engine Stage: Processing</div>'
+                '\n        <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>'
+                '\n        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>'
                 if progress else ''
             )
             headline = item['headline'].replace('&', '&amp;')
-            cards.append(
-                f'  <div class="rdm-card {card_cls}">\n'
-                f'    <div class="rdm-card-header">\n'
-                f'      <span class="rdm-phase {phase_cls}"><span class="rdm-phase-dot"></span>{phase_label}</span>\n'
-                f'      <span class="rdm-tag {tag_cls}">{tag}</span>\n'
-                f'    </div>\n'
-                f'    <h3>{headline}</h3>{prog}\n'
-                f'    <p>{item["description"]}</p>\n'
-                f'  </div>'
+            out.append(
+                f'      <div class="rdm-card">\n'
+                f'        <span class="rdm-tag {cls}">{tag}</span>\n'
+                f'        <h3>{headline}</h3>{prog}\n'
+                f'        <p>{item["description"]}</p>\n'
+                f'      </div>'
             )
+        return '\n'.join(out)
 
-    new_grid = '\n'.join(cards)
-    # Replace the sentinel comment with the generated cards.
-    # The sentinel <!-- RDM_CARDS --> is placed inside <div class="rdm-grid"> in roadmap-content.html.
-    html = html.replace('<!-- RDM_CARDS -->', '\n\n' + new_grid + '\n\n', 1)
+    for sentinel, key, with_progress in [
+        ('<!-- RDM_NOW -->',    'now',    True),
+        ('<!-- RDM_NEXT -->',   'next',   False),
+        ('<!-- RDM_FUTURE -->', 'future', False),
+    ]:
+        items = data.get(key, [])
+        if items:
+            html = html.replace(sentinel, '\n' + build_cards(items, with_progress) + '\n    ', 1)
+
     return html
 
 
