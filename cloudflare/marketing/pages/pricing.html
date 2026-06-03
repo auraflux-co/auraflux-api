@@ -48,40 +48,11 @@ body{line-height:1.6}
 }
 @keyframes planpulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* Plan visual header — replaces the image, no text, perfectly centered */
-.plan-visual{
-  width:100%;aspect-ratio:4/3;
-  display:flex;align-items:center;justify-content:center;
+/* Plan image header */
+.plan-img{
+  width:100%;display:block;
   border-bottom:1px solid rgba(255,255,255,.06);
-  position:relative;overflow:hidden;
-}
-.plan-visual-icon{
-  font-size:4rem;line-height:1;position:relative;z-index:1;
-  filter:drop-shadow(0 2px 16px rgba(0,0,0,.4));
-}
-/* Operate: clean dark-blue tech gradient */
-.plan-visual-operate{
-  background:linear-gradient(145deg,#0c1a30 0%,#0f2a4a 50%,#0c1a30 100%);
-}
-.plan-visual-operate::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 50%,rgba(59,130,246,.18) 0%,transparent 70%);
-}
-/* Guided: warm gold gradient — featured */
-.plan-visual-guided{
-  background:linear-gradient(145deg,#1a1205 0%,#2a1e08 50%,#1a1205 100%);
-}
-.plan-visual-guided::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 50%,rgba(245,197,66,.25) 0%,transparent 70%);
-}
-/* Managed: deep premium dark with gold accent */
-.plan-visual-managed{
-  background:linear-gradient(145deg,#12081e 0%,#1c0f30 50%,#12081e 100%);
-}
-.plan-visual-managed::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 50%,rgba(139,92,246,.22) 0%,transparent 70%);
+  object-fit:cover;object-position:center center;
 }
 
 .plan-body{padding:28px 28px 24px;display:flex;flex-direction:column;flex:1;}
@@ -100,13 +71,13 @@ body{line-height:1.6}
 /* Price — proportional to headings: same font, sized between h2 and h1 */
 .price{
   font-size:2.8rem;font-weight:800;color:#fff;
-  letter-spacing:-.04em;line-height:1;margin-bottom:4px;
+  letter-spacing:-.02em;line-height:1.15;margin-bottom:10px;
   font-family:'Satoshi','Inter',sans-serif;
 }
 .price .period{font-size:1rem;font-weight:400;color:#8f9bb7;letter-spacing:0;}
 .credits{
   font-size:.8rem;color:#8f9bb7;
-  margin-bottom:24px;padding-bottom:20px;
+  margin-bottom:24px;padding-bottom:20px;margin-top:2px;
   border-bottom:1px solid rgba(255,255,255,.07);
   line-height:1.5;
 }
@@ -201,7 +172,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <!-- OPERATE -->
   <div class="plan">
-    <div class="plan-visual plan-visual-operate"><span class="plan-visual-icon">⚙️</span></div>
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-operate.png" alt="Operate plan">
     <div class="plan-body">
       <div class="plan-name">Operate</div>
       <div class="plan-title">DIY / API</div>
@@ -224,7 +195,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <!-- GUIDED -->
   <div class="plan featured">
     <div class="badge"><span class="badge-dot"></span>MOST POPULAR</div>
-    <div class="plan-visual plan-visual-guided"><span class="plan-visual-icon">✦</span></div>
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-guided.png" alt="Guided plan">
     <div class="plan-body">
       <div class="plan-name">Guided</div>
       <div class="plan-title">Collab Assist</div>
@@ -246,7 +217,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <!-- MANAGED -->
   <div class="plan">
-    <div class="plan-visual plan-visual-managed"><span class="plan-visual-icon">◆</span></div>
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan">
     <div class="plan-body">
       <div class="plan-name">Managed</div>
       <div class="plan-title">Done-For-You</div>
