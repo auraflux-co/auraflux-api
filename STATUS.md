@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-03 v1.0.970 (Cursor — feat(qa): processingManifest + feature delivery verification — portal3a now compares ordered vs applied features with timestamps, generates chapter breakdown, deducts for missing features; grader adds features_delivered + chapters_documented checks; colorGrade.preset resolver in assembly_effects; captions/zoom activation paths wired)
 **Last Updated:** 2026-06-03 v1.0.969 (Cursor — fix(api): extract captions/colorGrade/effects/audioOpts from addOns on developer_api job submit — these were silently dropped by createJobSpec)
 **Last Updated:** 2026-06-03 v1.0.968 (Cursor — fix(e2e): skip Ludwig frozen-frame clip in SKIP_CLIPS; CPD-502 Montage Hype Reel now rotates past it)
 **Last Updated:** 2026-06-03 v1.0.967 (Cursor — fix(api): wire designSpec.chrome.showName from streamer param on job submit — branding_config grader check was warning because showName never set; CPD-501)
