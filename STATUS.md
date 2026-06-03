@@ -679,6 +679,7 @@ You are copying a 64-character **Ingest API Key** from New Relic UI. The Node.js
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+|| Cursor | **fix(marketing): clean roadmap HTML, restore all 10 cards with no duplicates; fix inject_content.py sentinel logic** | cloudflare/marketing/pages/roadmap-content.html, cloudflare/marketing/scripts/inject_content.py | main | 2026-06-03 |
 || Cursor | **feat(marketing): add 4 missing roadmap items from Jira backlog — WAN i2v, Imagen 3 thumbnails, Face-Cam Overlay (Next), Mobile App (Future)** | cloudflare/marketing/content/roadmap.json, cloudflare/marketing/pages/roadmap-content.html | main | 2026-06-03 |
 || Cursor | **fix(marketing): single source of truth — marketing.js commits changed files back to git after every in-app deploy; GitHub Actions skips [skip ci] commits to avoid redundant redeploy** | lib/routes/marketing.js, .github/workflows/marketing-deploy.yml | main | 2026-05-30 |
 || Cursor | **fix(marketing): add GitHub Actions auto-deploy workflow; document deployment pipeline; replace nanoid with crypto.randomBytes** | .github/workflows/marketing-deploy.yml, docs/architecture/MARKETING_SITE_DEPLOYMENT.md, lib/routes/public.js, .env.example | main | 2026-05-30 |
