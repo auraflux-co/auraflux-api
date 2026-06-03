@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://ba2c4d98.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://a5f66413.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -201,7 +201,7 @@ const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title} — AuraFlux</title>
+<title>${title} | AuraFlux</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -454,7 +454,7 @@ const PAGES = {
 
   '/roadmap': LEGAL_SHELL(
     'Roadmap',
-    'See what\'s coming to AuraFlux — upcoming features, platform improvements, and new publishing destinations.',
+    'See what\'s coming to AuraFlux: upcoming features, platform improvements, and new publishing destinations.',
     'https://auraflux.co/roadmap',
     `__PAGE_ROADMAP_CONTENT__`
   ),

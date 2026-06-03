@@ -9,20 +9,31 @@ PASS=0
 FAIL=0
 FAILURES=()
 
+_fetch() {
+  # Saves response to a temp file and echoes the path.
+  # Using a temp file avoids echo-pipe truncation issues with large HTML responses.
+  local url="$1"
+  local tmp
+  tmp=$(mktemp)
+  curl -s --max-time 15 --compressed "$url" > "$tmp"
+  echo "$tmp"
+}
+
 check() {
   local label="$1"
   local url="$2"
   local expected="$3"
-  local body
-  body=$(curl -s --max-time 15 --compressed "$url")
-  if echo "$body" | grep -qF "$expected"; then
+  local tmp
+  tmp=$(_fetch "$url")
+  if grep -qF "$expected" "$tmp"; then
     echo "  ✅ $label"
     PASS=$((PASS+1))
+    rm -f "$tmp"
   else
-    # One retry after 20s — Cloudflare propagation can be uneven
+    # One retry after 20s — Cloudflare propagation can be uneven across PoPs
     sleep 20
-    body=$(curl -s --max-time 15 --compressed "$url")
-    if echo "$body" | grep -qF "$expected"; then
+    tmp=$(_fetch "$url")
+    if grep -qF "$expected" "$tmp"; then
       echo "  ✅ $label (on retry)"
       PASS=$((PASS+1))
     else
@@ -32,6 +43,7 @@ check() {
       FAIL=$((FAIL+1))
       FAILURES+=("$label ($url)")
     fi
+    rm -f "$tmp"
   fi
 }
 
@@ -39,12 +51,13 @@ absent() {
   local label="$1"
   local url="$2"
   local forbidden="$3"
-  local body
-  body=$(curl -s --max-time 15 --compressed "$url")
-  # Strip CSS/JS block comments before checking so comment text doesn't false-positive
+  local tmp
+  tmp=$(_fetch "$url")
+  # Strip CSS/JS block comments so comment text doesn't false-positive
   local stripped
-  stripped=$(echo "$body" | sed 's|/\*[^*]*\*\+\([^/*][^*]*\*\+\)*/||g')
-  if echo "$stripped" | grep -qF "$forbidden"; then
+  stripped=$(sed 's|/\*[^*]*\*\+\([^/*][^*]*\*\+\)*/||g' "$tmp")
+  rm -f "$tmp"
+  if grep -qF "$forbidden" <<< "$stripped"; then
     echo "  ❌ $label — found forbidden string: $forbidden"
     FAIL=$((FAIL+1))
     FAILURES+=("$label ($url)")
