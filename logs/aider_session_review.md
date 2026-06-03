@@ -1,166 +1,188 @@
 ```md
-# AuraFlux Session Review — 2026-05-28
+# AuraFlux Platform Health Review
+
+**Session Date:** 2025-06-03  
+**Commit Range:** 21f09db → 288ad1d  
+**Reviewer:** Automated Session Review
+
+---
 
 ## 1. Session Summary
 
-This session delivered major features across all three layers: pay-first Stripe checkout flow with Clerk sign-up integration (CPD-403), marketing site content editor for superadmins (CPD-402), R2 screenshot capture with Confluence embedding for score=100 jobs (CPD-392), and streamer social analysis pipeline for feature gap profiles (CPD-404). Backend stability improved significantly with sliding window job execution (CPD-390) and correct clip URL handling that resolved the root cause of job failures. Marketing site received a complete worker overhaul including brand color fixes, badge removal, and worker-owned pages.
+This session focused heavily on marketing site polish (CPD-498): roadmap layout fixes, plan card image cropping, CTA consistency, AI/Gemini branding removal, and favicon deployment. Frontend dashboard work included wizard template UX improvements, Twitch token auto-refresh, and CSP fixes for Google Fonts. A new `verify_deploy.sh` QA script was added with multiple iterative bug fixes. No backend API schema changes were made.
+
+---
 
 ## 2. Jira Consistency
 
-**Status: Unable to verify** — Jira API returned HTTP 400 for all board queries.
+| Check | Status |
+|-------|--------|
+| Jira API connectivity | ❌ HTTP 400 — unable to fetch board data |
+| Stuck tickets audit | ⚠️ Cannot verify — API unavailable |
+| PR-to-ticket mapping | ⚠️ Cannot verify — API unavailable |
+| Merged work not transitioned | ⚠️ Cannot verify — API unavailable |
 
-Based on commit messages, the following tickets were worked:
-- CPD-390: Multiple fixes merged (benchmark, job execution, clip URLs)
-- CPD-391: Billing page positioning
-- CPD-392: R2 screenshot + Confluence embed
-- CPD-396, CPD-397: Public API + chat widget
-- CPD-398: Roadmap redirect
-- CPD-401: Post-checkout onboarding
-- CPD-402: Marketing content editor
-- CPD-403: Pay-first checkout flow
-- CPD-404: Streamer analysis pipeline
-- CPD-89: Marketing site wiring
+**Action Required:** Investigate Jira API credentials or scope. All commits reference CPD-498 but cannot confirm ticket status.
 
-**Action required:** Manually verify these tickets are transitioned to Done in Jira.
+---
 
 ## 3. GitHub Consistency
 
-- **Open PRs:** None
-- **CI Failures:** None
-- **Unmerged Branches:** None
+| Check | Status |
+|-------|--------|
+| CI failures | ✅ None |
+| Open PRs | 7 dependabot PRs (all dep bumps) |
+| Unmerged branches | ✅ None |
+| Stale PRs | ⚠️ Review dependabot PRs — security patches may be pending |
 
-✅ GitHub is clean. All work merged to main.
+**Dependabot Queue:**
+- `@aws-sdk/s3-request-presigner` 3.1056.0 → 3.1058.0
+- `jest` 30.3.0 → 30.4.2
+- `tailwindcss` 4.2.4 → 4.3.0 (app)
+- `lucide-react` 1.14.0 → 1.17.0
+- `ioredis` 5.10.1 → 5.11.0
+- `shadcn` 4.6.0 → 4.10.0
+- `@tailwindcss/postcss` 4.2.4 → 4.3.0
+
+---
 
 ## 4. Confluence Consistency
 
-Recent Confluence pages focus on architecture and strategy docs. Feature-level HOW docs need verification.
+| Changed Feature/Page | HOW Doc Exists? |
+|---------------------|-----------------|
+| Wizard template flow (CPD-498) | ❓ Not listed in recent pages |
+| Twitch auto-refresh token | ❓ Not listed |
+| Marketing site CMS workflow | ❓ Not listed |
+| `verify_deploy.sh` QA script | ❓ Not listed |
 
-**Gaps identified:**
-| Feature | Missing HOW Doc |
-|---------|-----------------|
-| Pay-first checkout flow (CPD-403) | No dedicated doc |
-| Marketing content editor (CPD-402) | No superadmin guide |
-| Streamer social analysis (CPD-404) | No pipeline documentation |
-| R2 screenshot capture (CPD-392) | No operational runbook |
-| Public API endpoints (CPD-396/397) | No integration guide |
+**Gaps:** Recent Confluence pages (819309, 4816898, etc.) are strategy/architecture docs. No operational HOW docs visible for:
+- Wizard template selection flow
+- Twitch token refresh mechanism
+- Marketing site deployment pipeline
+- QA verification script usage
+
+---
 
 ## 5. Frontend UI Integrity
 
-**TypeScript Status:** ✅ No errors
+### Pages on Disk vs Sidebar Nav
 
-**Orphaned Pages (on disk but not in sidebar nav):**
-- `/admin/overview`
-- `/admin/customers`
-- `/billing/add-brand`
-- `/billing/add-brand/success`
-- `/concierge`
-- `/home`
-- `/myjobs/[jobId]`
-- `/plans`
-- `/settings`
-- `/team/accept`
+| Page Path | In Sidebar? | Status |
+|-----------|-------------|--------|
+| `/admin/overview` | ❌ | Orphaned — no nav entry |
+| `/admin/customers` | ❌ | Orphaned — no nav entry |
+| `/collab` | ❌ | Intentional (redirect) ✅ |
+| `/home` | ❌ | Intentional (landing) ✅ |
+| `/plans` | ❌ | Intentional (public) ✅ |
+| `/team/accept` | ❌ | Intentional (invite flow) ✅ |
+| `/billing/add-brand` | ❌ | Orphaned — no nav entry |
+| `/billing/add-brand/success` | ❌ | Orphaned (sub-route) |
+| `/admin/crm/[accountId]` | ❌ | Dynamic route — OK if parent linked |
 
-**Assessment:** Most orphans are intentional (detail pages, success states, team invite acceptance). `/home` and `/concierge` warrant review — may need sidebar entries or explicit routing.
+### TypeScript Check
+✅ No TypeScript errors
+
+---
 
 ## 6. API-to-UI Mapping
 
-✅ All `apiFetch` paths in `app/src/lib/api.ts` have matching backend routes.
+| Check | Status |
+|-------|--------|
+| All `apiFetch` paths have backend routes | ✅ Verified |
+| Stale API calls | ✅ None detected |
+| Missing backend routes | ✅ None detected |
 
-**Verification passed for 28 endpoints.**
+**Note:** `/api/admin/app-content` path differs from standard `/admin/*` pattern — verify this is intentional routing.
 
-No stale calls or missing routes detected.
+---
 
 ## 7. Codebase Structural Integrity
 
-**Backend routes registered in server.js:**
-- `/api/admin` → `lib/routes/admin.js`
-- `/api/credits` → `lib/routes/credits.js`
-- `/api/marketing` → `lib/routes/marketing.js`
-- `/api/public` → `lib/routes/public.js`
+| Check | Status |
+|-------|--------|
+| Backend routes registered | ✅ All mapped |
+| server.js health | ✅ No issues flagged |
+| Circular dependencies | ✅ None detected |
+| lib/clients/ changes | `twitch_client.js` modified — token refresh logic added |
 
-**New routes this session:**
-- `lib/routes/marketing.js` — content editor CRUD
-- `lib/routes/public.js` — pre-sales chat, plans API
-
-**Portal fixes:**
-- `portal0.js` — minDuration enforcement on yt-dlp success path
-
-**No circular dependency issues detected.**
+---
 
 ## 8. C0 / C1+ Boundary
 
-**Cloudflare Worker (`_worker.js`):**
-- Brand color injection targets specific hex values
-- Badge removal implemented
-- Worker-owned pages for `/pricing`, `/contact`, `/privacy`, `/terms`
+| Check | Status |
+|-------|--------|
+| Hardcoded customer branding | ✅ Gemini/AI refs removed per commits |
+| C0 leaks to C1+ | ✅ No obvious leaks |
+| Tenant isolation | Not audited this session |
 
-**Potential leaks:**
-- None detected in current implementation
+**Session Work:** Multiple commits explicitly removed AI/Gemini branding from both app UI and marketing site.
 
-**Hardcoded branding:**
-- Framer source still contains original template branding; worker runtime fixes this
-- Long-term: Replace Framer source or migrate to worker-rendered pages
+---
 
 ## 9. Environment and Secrets
 
-**Backend vars in code but missing from `.env.example`:** None
+| Check | Status |
+|-------|--------|
+| Backend `process.env.*` missing from `.env.example` | ✅ None |
+| `NEXT_PUBLIC_*` missing from `.env.example` | ✅ None |
+| `.env.example` updated | ✅ Listed in changed files |
 
-**Frontend vars missing from `.env.example`:**
-| Variable | Status |
-|----------|--------|
-| `NEXT_PUBLIC_API_BASE` | ⚠️ Missing from .env.example |
+---
 
 ## 10. Marketing Site Health
 
-| Endpoint | Status | Issue |
-|----------|--------|-------|
-| Homepage (`/`) | ⚠️ | HTTP 200 but "AuraFlux" text not detected |
-| Pricing (`/pricing`) | ✅ | OK |
-| Contact (`/contact`) | ⚠️ | HTTP 200 but "AuraFlux" text not detected |
-| Privacy (`/privacy`) | ✅ | OK |
-| Terms (`/terms`) | ✅ | OK |
-| Plans API (`/api/plans`) | ⚠️ | HTTP 200 but missing "operate" tier |
-| Chat API (`/api/chat`) | ✅ | OK |
-| Roadmap (`/roadmap`) | ⚠️ | Returns 200, expected 3xx redirect |
-| Chat widget injection | ✅ | Present on homepage |
+| Endpoint | Status |
+|----------|--------|
+| Homepage (/) | ✅ HTTP 200 |
+| Pricing (/pricing) | ✅ HTTP 200 |
+| Contact (/contact) | ✅ HTTP 200 |
+| Privacy (/privacy) | ✅ HTTP 200 |
+| Terms (/terms) | ✅ HTTP 200 |
+| Roadmap (/roadmap) | ✅ HTTP 200 |
+| Plans API | ✅ HTTP 200 |
+| Chat API | ⚠️ HTTP 404 |
 
-**Assessment:** Content detection may be a timing/SSR issue with Framer. Roadmap redirect logic needs verification. Plans API response schema should include all tiers.
+### Content Issues
+| Issue | Severity |
+|-------|----------|
+| Chat widget script missing from homepage | ⚠️ BotPenguin tag not found |
+| Chat API returning 404 | ⚠️ Endpoint may be deprecated or misconfigured |
+
+### Session Fixes Deployed
+- Roadmap 3-column kanban layout restored
+- Plan card images: cover + center-35% positioning
+- Em-dashes removed from titles/CSS
+- Pre-footer CTA added to blog
+- Favicon cache-busted with R2 logo
+
+---
 
 ## 11. Recommendations
 
 ### App Recommendations
 
-**[BLOCKING]**
-- Add `NEXT_PUBLIC_API_BASE` to `.env.example` with documentation — builds will fail without it in new environments
-
-**[SHOULD FIX]**
-- Create Confluence HOW docs for CPD-402, CPD-403, CPD-404 features
-- Verify `/home` page routing — currently orphaned, may be landing page intent
-- Transition all merged CPD tickets to Done in Jira (manual, API is down)
-- Add `stripe_subscription_id` usage documentation after TypeScript interface fix
-
-**[NICE TO HAVE]**
-- Add sidebar entry for `/concierge` if feature is customer-facing
-- Document `/team/accept` flow in onboarding docs
-- Add integration tests for pay-first checkout flow
+| Priority | Issue | Action |
+|----------|-------|--------|
+| **[BLOCKING]** | Jira API returning HTTP 400 | Fix credentials/scope before next session |
+| **[SHOULD FIX]** | `/admin/overview` orphaned page | Add to sidebar or remove if deprecated |
+| **[SHOULD FIX]** | `/admin/customers` orphaned page | Add to sidebar or remove if deprecated |
+| **[SHOULD FIX]** | `/billing/add-brand` flow not in nav | Document or add contextual entry point |
+| **[SHOULD FIX]** | No HOW doc for wizard template flow | Create Confluence page for CPD-498 feature |
+| **[SHOULD FIX]** | No HOW doc for Twitch token refresh | Document in Operations or Tech Stack |
+| **[NICE TO HAVE]** | Merge dependabot PRs | 7 pending — batch merge after review |
+| **[NICE TO HAVE]** | `/api/admin/app-content` path inconsistency | Standardize to `/admin/app-content` if feasible |
 
 ### Marketing Site Recommendations
 
-**[BLOCKING]**
-- None
-
-**[SHOULD FIX]**
-- Investigate "AuraFlux" brand text detection failure on homepage/contact — may be Framer lazy-load or worker injection timing
-- Fix roadmap redirect to return 3xx instead of 200 with client-side redirect
-- Verify Plans API returns all pricing tiers including "operate"
-
-**[NICE TO HAVE]**
-- Migrate high-traffic pages from Framer to worker-rendered for faster brand consistency
-- Add health check endpoint to marketing worker for monitoring
-- Document worker deployment process in `cloudflare/marketing/deploy.sh`
+| Priority | Issue | Action |
+|----------|-------|--------|
+| **[SHOULD FIX]** | Chat widget missing from homepage | Re-add BotPenguin script tag or confirm removal intentional |
+| **[SHOULD FIX]** | Chat API returning 404 | Verify endpoint configuration or remove from health checks |
+| **[SHOULD FIX]** | No HOW doc for marketing deploy pipeline | Document `deploy.sh` + `verify_deploy.sh` workflow |
+| **[NICE TO HAVE]** | Roadmap duplication guard in QA | Consider promoting to CI check |
 
 ---
 
-<!-- last-reviewed-commit: 91435879cfd25cc9a12ef536da71cde449000be6 -->
-<!-- reviewed-at: 2026-05-28T04:29:20Z -->
+<!-- last-reviewed-commit: 288ad1d8e5de177b7e416732ba99fd759834bd6e -->
+<!-- reviewed-at: 2025-06-03T17:26:27Z -->
 ```
