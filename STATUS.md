@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-02 v1.0.943 (Cursor — fix(marketing): strip all AI/Gemini refs from all pages; .secondary CTA now renders as outline button; /pricing→/plans nav+CTAs; plans page gradient visuals replace image headers; font fallback fix — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.942 (Cursor — feat(wizard): Short/Long-form badges on template cards; hide type+format sections when template active; optional extras only — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.941 (Cursor — fix(marketing): favicon 404 resolved (inline SVG); .primary CTA class added to page-base.css — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.940 (Cursor — fix(twitch): auto-refresh app access token on expiry via TWITCH_CLIENT_SECRET; better frontend error message — CPD-498)

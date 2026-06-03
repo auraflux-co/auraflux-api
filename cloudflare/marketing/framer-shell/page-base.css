@@ -75,9 +75,20 @@ a:hover { text-decoration: underline; opacity: .85; }
   text-decoration: none !important;
 }
 .btn-primary:hover, .cta-primary:hover, .primary:hover { opacity: .88; }
-.btn-secondary {
-  border-color: rgba(245,197,66,.35) !important;
+/* .secondary is the class Framer/CMS exports use for outline buttons */
+.btn-secondary, .secondary {
+  display: inline-block;
+  background: transparent !important;
   color: var(--af-gold) !important;
+  font-weight: 600 !important;
+  padding: .6em 1.4em;
+  border-radius: 6px;
+  border: 1.5px solid rgba(245,197,66,.45) !important;
+  text-decoration: none !important;
+}
+.btn-secondary:hover, .secondary:hover {
+  border-color: var(--af-gold) !important;
+  opacity: .88;
 }
 
 /* ── Eyebrow labels ─────────────────────────────────────────────────────── */

@@ -390,7 +390,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <table class="dev-table">
         <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td>entry</td><td>"fetch"|"upload"|"compose"|"generate"</td><td>No (default: fetch)</td><td>How the source is provided. fetch=URL, upload=file, compose=script-only, generate=AI video</td></tr>
+          <tr><td>entry</td><td>"fetch"|"upload"|"compose"|"generate"</td><td>No (default: fetch)</td><td>How the source is provided. fetch=URL, upload=file, compose=script-only, generate=generated video</td></tr>
           <tr><td>url</td><td>string</td><td>If entry=fetch</td><td>Source video URL (Twitch clip, YouTube, direct MP4)</td></tr>
           <tr><td>urls</td><td>string[]</td><td>No</td><td>Multiple source URLs for multi-clip jobs</td></tr>
           <tr><td>fileId</td><td>string</td><td>If entry=upload</td><td>File ID from POST /upload</td></tr>
@@ -424,7 +424,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <ul style="display:flex;flex-direction:column;gap:8px;list-style:none;">
           <li style="font-size:.88rem;color:#a0a0b8;">Short-form, single clip — <strong style="color:#f5c542;">1 credit</strong></li>
           <li style="font-size:.88rem;color:#a0a0b8;">Long-form or multi-clip — <strong style="color:#f5c542;">2 credits</strong></li>
-          <li style="font-size:.88rem;color:#a0a0b8;">AI video generation — <strong style="color:#f5c542;">3 credits</strong></li>
+          <li style="font-size:.88rem;color:#a0a0b8;">Video generation — <strong style="color:#f5c542;">3 credits</strong></li>
         </ul>
       </div>
     </div>

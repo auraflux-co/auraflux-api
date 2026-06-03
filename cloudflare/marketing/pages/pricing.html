@@ -48,10 +48,40 @@ body{line-height:1.6}
 }
 @keyframes planpulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* Plan image header */
-.plan-img{
-  width:100%;aspect-ratio:4/3;object-fit:cover;
-  display:block;border-bottom:1px solid rgba(255,255,255,.06);
+/* Plan visual header — replaces the image, no text, perfectly centered */
+.plan-visual{
+  width:100%;aspect-ratio:4/3;
+  display:flex;align-items:center;justify-content:center;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  position:relative;overflow:hidden;
+}
+.plan-visual-icon{
+  font-size:4rem;line-height:1;position:relative;z-index:1;
+  filter:drop-shadow(0 2px 16px rgba(0,0,0,.4));
+}
+/* Operate: clean dark-blue tech gradient */
+.plan-visual-operate{
+  background:linear-gradient(145deg,#0c1a30 0%,#0f2a4a 50%,#0c1a30 100%);
+}
+.plan-visual-operate::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(59,130,246,.18) 0%,transparent 70%);
+}
+/* Guided: warm gold gradient — featured */
+.plan-visual-guided{
+  background:linear-gradient(145deg,#1a1205 0%,#2a1e08 50%,#1a1205 100%);
+}
+.plan-visual-guided::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(245,197,66,.25) 0%,transparent 70%);
+}
+/* Managed: deep premium dark with gold accent */
+.plan-visual-managed{
+  background:linear-gradient(145deg,#12081e 0%,#1c0f30 50%,#12081e 100%);
+}
+.plan-visual-managed::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(139,92,246,.22) 0%,transparent 70%);
 }
 
 .plan-body{padding:28px 28px 24px;display:flex;flex-direction:column;flex:1;}
@@ -59,7 +89,7 @@ body{line-height:1.6}
 .plan-name{
   font-size:.68rem;font-weight:800;letter-spacing:.14em;
   text-transform:uppercase;color:#f5c542;margin-bottom:6px;
-  font-family:'Satoshi','Inter',monospace;
+  font-family:'Satoshi','Inter',sans-serif;
 }
 .plan-title{
   font-size:1.5rem;font-weight:700;color:#fff;
@@ -139,7 +169,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 }
 .compare-mobile-card h3{
   font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:#f5c542;margin-bottom:14px;font-family:'Satoshi','Inter',monospace;
+  color:#f5c542;margin-bottom:14px;font-family:'Satoshi','Inter',sans-serif;
 }
 .compare-mobile-row{
   display:flex;justify-content:space-between;align-items:center;
@@ -171,7 +201,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <!-- OPERATE -->
   <div class="plan">
-    <img class="plan-img" src="/cf-assets/marketing/images/plan-operate.png" alt="Operate plan" style="object-position:center 20%;">
+    <div class="plan-visual plan-visual-operate"><span class="plan-visual-icon">⚙️</span></div>
     <div class="plan-body">
       <div class="plan-name">Operate</div>
       <div class="plan-title">DIY / API</div>
@@ -194,7 +224,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <!-- GUIDED -->
   <div class="plan featured">
     <div class="badge"><span class="badge-dot"></span>MOST POPULAR</div>
-    <img class="plan-img" src="/cf-assets/marketing/images/plan-guided.png" alt="Guided plan">
+    <div class="plan-visual plan-visual-guided"><span class="plan-visual-icon">✦</span></div>
     <div class="plan-body">
       <div class="plan-name">Guided</div>
       <div class="plan-title">Collab Assist</div>
@@ -216,11 +246,11 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <!-- MANAGED -->
   <div class="plan">
-    <img class="plan-img" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan" style="object-position:center 15%;">
+    <div class="plan-visual plan-visual-managed"><span class="plan-visual-icon">◆</span></div>
     <div class="plan-body">
       <div class="plan-name">Managed</div>
       <div class="plan-title">Done-For-You</div>
-      <div class="plan-sub">Full Collab AI platform plus a dedicated human account manager.</div>
+      <div class="plan-sub">Full Collab platform plus a dedicated human account manager.</div>
       <div class="price">Custom</div>
       <div class="credits">1000+ credits/month · Custom onboarding &amp; sales intake</div>
       <ul class="features">
@@ -259,7 +289,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <tr><td class="label">Core Infrastructure &amp; API Access</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">Developer Documentation &amp; SDKs</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">In-App Visual Flow Builders</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Collab AI Guidance</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Collab Guidance</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">Automated Threshold Notifications</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">Custom Workflow Construction by Experts</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
       <tr><td class="label">Dedicated Account Manager</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
@@ -274,7 +304,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="no-m">—</span></div>
       <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="no-m">—</span></div>
       <div class="compare-mobile-row"><span>Custom Workflows</span><span class="no-m">—</span></div>
       <div class="compare-mobile-row"><span>Account Manager</span><span class="no-m">—</span></div>
@@ -285,7 +315,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Custom Workflows</span><span class="no-m">—</span></div>
       <div class="compare-mobile-row"><span>Account Manager</span><span class="no-m">—</span></div>
@@ -296,7 +326,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Custom Workflows</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Account Manager</span><span class="yes-m">✓</span></div>
