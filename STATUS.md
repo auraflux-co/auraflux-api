@@ -1,5 +1,5 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-06-03 v1.0.955 (Cursor — fix(marketing): roadmap flat grid layout; branded source boxes on our-system; plans image height fixed; blog body bg)
+**Last Updated:** 2026-06-03 v1.0.956 (Cursor — fix(marketing): blog pre-footer CTA section added for visual consistency with other pages)
 **Last Updated:** 2026-06-03 v1.0.953 (Cursor — feat(marketing): add job templates showcase grid to homepage — TikTok Clutch, YouTube Deep Dive, IRL Story Time, Montage Hype Reel, Reaction Cut, Quick Guide)
 **Last Updated:** 2026-06-03 v1.0.951 (Cursor — fix(marketing): plans CTA centering + duplicate credit_note; roadmap div cleanup; publishing section split into publish+source; stats strip removed from about; blog body bg; step padding; favicon cache-bust v2)
 **Last Updated:** 2026-06-03 v1.0.950 (Cursor — fix(marketing): em-dashes removed from og:title/page-title tags; LEGAL_SHELL uses pipe separator; verify_deploy uses temp files not echo-pipe)
