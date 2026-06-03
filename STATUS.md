@@ -1,5 +1,5 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-06-03 v1.0.952 (Cursor — chore: stamp deploy artifacts; adding job template showcase section to home page next)
+**Last Updated:** 2026-06-03 v1.0.953 (Cursor — feat(marketing): add job templates showcase grid to homepage — TikTok Clutch, YouTube Deep Dive, IRL Story Time, Montage Hype Reel, Reaction Cut, Quick Guide)
 **Last Updated:** 2026-06-03 v1.0.951 (Cursor — fix(marketing): plans CTA centering + duplicate credit_note; roadmap div cleanup; publishing section split into publish+source; stats strip removed from about; blog body bg; step padding; favicon cache-bust v2)
 **Last Updated:** 2026-06-03 v1.0.950 (Cursor — fix(marketing): em-dashes removed from og:title/page-title tags; LEGAL_SHELL uses pipe separator; verify_deploy uses temp files not echo-pipe)
 **Last Updated:** 2026-06-03 v1.0.948 (Cursor — fix(marketing): all CMS JSON files are the source of truth — fixed plans Stripe CTAs, our-story How It Works CTA, removed all AI/Gemini/em-dash from JSON; added verify_deploy.sh post-deploy QA script; deploy.sh now runs content checks after every deploy)

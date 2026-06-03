@@ -256,6 +256,19 @@ body{line-height:1.6}
 }
 .final-cta h2 .gold{font-style:normal;color:#f5c542;}
 .final-cta p{font-size:1rem;color:#a0a0b8;max-width:480px;margin:0 auto 40px;}
+
+/* Job Templates grid */
+.tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px;max-width:1000px;margin-left:auto;margin-right:auto;}
+@media(max-width:900px){.tpl-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.tpl-grid{grid-template-columns:1fr;}}
+.tpl-card{background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:22px 20px;text-align:left;transition:border-color .2s;}
+.tpl-card:hover{border-color:rgba(245,197,66,.3);}
+.tpl-badge{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border-radius:4px;padding:3px 8px;margin-bottom:10px;}
+.tpl-short{background:rgba(245,197,66,.12);color:#f5c542;}
+.tpl-long{background:rgba(96,165,250,.12);color:#60a5fa;}
+.tpl-name{font-size:1rem;font-weight:700;color:#fff;margin-bottom:6px;}
+.tpl-tag{font-size:.82rem;color:#8f9bb7;margin-bottom:10px;line-height:1.4;}
+.tpl-platforms{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#555580;}
 </style>
 </head>
 <body>
@@ -387,6 +400,51 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="step-num">04</div>
       <h3>Published Everywhere</h3>
       <p>Metadata, thumbnails, captions, and scheduling applied. Your content goes live on every connected platform simultaneously.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Job Templates ──────────────────────────────────────────────────────── -->
+<div class="section section-center">
+  <span class="section-eyebrow">Job Templates</span>
+  <h2 class="section-title">Pick a Template. <span class="gold">Everything Else Is Handled.</span></h2>
+  <p class="section-sub" style="max-width:560px">Pre-configured templates bundle the right format, platforms, effects, and settings for your content type. Choose one, connect your source, submit once.</p>
+  <div class="tpl-grid">
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-short">Short-form</div>
+      <div class="tpl-name">TikTok Clutch</div>
+      <div class="tpl-tag">Single high-energy gaming moment</div>
+      <div class="tpl-platforms">TikTok · YouTube · Instagram</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-long">Long-form</div>
+      <div class="tpl-name">YouTube Deep Dive</div>
+      <div class="tpl-tag">Full VOD trimmed and polished</div>
+      <div class="tpl-platforms">YouTube</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-short">Short-form</div>
+      <div class="tpl-name">IRL Story Time</div>
+      <div class="tpl-tag">IRL or just-chatting moment</div>
+      <div class="tpl-platforms">TikTok · Instagram</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-short">Short-form</div>
+      <div class="tpl-name">Montage Hype Reel</div>
+      <div class="tpl-tag">Multi-clip highlight reel, fast cuts</div>
+      <div class="tpl-platforms">TikTok · YouTube</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-long">Long-form</div>
+      <div class="tpl-name">Reaction Cut</div>
+      <div class="tpl-tag">Reaction or commentary VOD</div>
+      <div class="tpl-platforms">YouTube</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-short">Short-form</div>
+      <div class="tpl-name">Quick Guide</div>
+      <div class="tpl-tag">Educational or tip clip</div>
+      <div class="tpl-platforms">YouTube · TikTok</div>
     </div>
   </div>
 </div>
