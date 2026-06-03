@@ -90,9 +90,9 @@ def patch_roadmap(html, data):
             )
 
     new_grid = '\n'.join(cards)
-    # Replace everything inside <div class="rdm-grid">…</div>
-    pattern = r'(<div class="rdm-grid">)([\s\S]*?)(</div>)'
-    html = re.sub(pattern, lambda m: m.group(1) + '\n\n' + new_grid + '\n\n' + m.group(3), html, count=1)
+    # Replace the sentinel comment with the generated cards.
+    # The sentinel <!-- RDM_CARDS --> is placed inside <div class="rdm-grid"> in roadmap-content.html.
+    html = html.replace('<!-- RDM_CARDS -->', '\n\n' + new_grid + '\n\n', 1)
     return html
 
 
