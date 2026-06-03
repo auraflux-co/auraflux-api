@@ -1,5 +1,7 @@
 <style>
 /* ── Roadmap Kanban ─────────────────────────────────────────────────── */
+/* Override the LEGAL_SHELL .wrap container so the 3-column board has full width */
+.wrap{max-width:1280px !important;padding-left:24px !important;padding-right:24px !important;}
 .rdm-hero{text-align:center;margin-bottom:56px;}
 .rdm-hero h1{letter-spacing:-.03em;}
 .rdm-hero p{max-width:42rem;margin:16px auto 0;color:#8f9bb7;line-height:1.7;}
@@ -133,7 +135,22 @@
       </div>
       <span class="rdm-col-quarter">Q2 2026</span>
     </div>
-    <div class="rdm-cards"><!-- RDM_NOW --></div>
+    <div class="rdm-cards">
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-publish">Publishing</span>
+        <h3>Subscription Platforms</h3>
+        <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>
+        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>
+        <p>Direct publish to OnlyFans, Fansly, and Patreon using secure OAuth. same pipeline as YouTube and TikTok.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-prod">Production</span>
+        <h3>Compilation Carousel</h3>
+        <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>
+        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>
+        <p>Auto-generate side-by-side clip grids, batch compilations, and image carousels from your short-form library.</p>
+      </div>
+    </div>
   </div>
 
   <!-- NEXT -->
@@ -144,7 +161,23 @@
       </div>
       <span class="rdm-col-quarter">Q3 2026</span>
     </div>
-    <div class="rdm-cards"><!-- RDM_NEXT --></div>
+    <div class="rdm-cards">
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-prod">Production</span>
+        <h3>Show &amp; Film Engine</h3>
+        <p>Fair-use sourcing algorithm generating narrated video from TV and movie scene libraries.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-mono">Automation</span>
+        <h3>Avatar Video</h3>
+        <p>On-camera presenter videos generated from your script. full control over voice, appearance, and background.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-mono">Monetisation</span>
+        <h3>Shoppable Video</h3>
+        <p>Embed product tags and tappable CTAs into short-form videos for social commerce on TikTok and Instagram.</p>
+      </div>
+    </div>
   </div>
 
   <!-- FUTURE -->
@@ -154,7 +187,13 @@
         ⚪ Future Horizons
       </div>
     </div>
-    <div class="rdm-cards"><!-- RDM_FUTURE --></div>
+    <div class="rdm-cards">
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-mono">Monetisation</span>
+        <h3>Paid Ad Creative</h3>
+        <p>Aspect ratio and copy overlay optimization for Meta, TikTok, and Google. production-ready ad formats built in.</p>
+      </div>
+    </div>
   </div>
 
 </div>
