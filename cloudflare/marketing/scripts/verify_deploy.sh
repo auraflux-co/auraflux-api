@@ -19,6 +19,11 @@ _fetch() {
   echo "$tmp"
 }
 
+pass() {
+  echo "  ✅ $1"
+  PASS=$((PASS+1))
+}
+
 check() {
   local label="$1"
   local url="$2"
