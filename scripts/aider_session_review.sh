@@ -89,10 +89,13 @@ JIRA_APPROVED=""
 if [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "$JIRA_BASE" ]; then
   _jira() {
     local jql="$1"
-    # Atlassian deprecated /rest/api/3/search (HTTP 410) — use /rest/api/3/search/jql instead.
+    # Build JSON safely via python3 to avoid shell-quoting issues with JQL double-quotes
+    # (e.g. status="To Do" would break a shell-interpolated JSON string).
+    local _body
+    _body=$(python3 -c "import json,sys; print(json.dumps({'jql':sys.argv[1],'maxResults':25,'fields':['summary','priority','labels']}))" "$jql" 2>/dev/null)
     HTTP_STATUS=$(curl -s --max-time 10 --connect-timeout 5 -o /tmp/auraflux_jira_issues.json -w "%{http_code}" \
       -H "Accept: application/json" -H "Content-Type: application/json" -u "$JIRA_AUTH" \
-      -X POST --data "{\"jql\":\"${jql}\",\"maxResults\":25,\"fields\":[\"summary\",\"priority\",\"labels\"]}" \
+      -X POST --data "$_body" \
       "${JIRA_BASE}/rest/api/3/search/jql" \
       2>/dev/null) || HTTP_STATUS="000"
     if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then

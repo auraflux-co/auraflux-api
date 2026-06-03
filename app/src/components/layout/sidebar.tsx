@@ -184,6 +184,7 @@ function settingsNavItem(planTier: string | null): NavItem {
 
 const ADMIN_NAV: NavItem[] = [
   { href: '/admin',              label: 'Overview',       divider: 'Platform tools' },
+  { href: '/admin/customers',    label: 'Customers'       },
   { href: '/admin/users',        label: 'All Users'       },
   { href: '/admin/support',      label: 'Support Inbox'   },
   { href: '/admin/chat',         label: 'Chat Inbox'      },
