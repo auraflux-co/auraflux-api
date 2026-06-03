@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://a5f66413.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://8f4ad38c.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -204,7 +204,7 @@ const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 <title>${title} | AuraFlux</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
-<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
 ${FRAMER_FONTS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}

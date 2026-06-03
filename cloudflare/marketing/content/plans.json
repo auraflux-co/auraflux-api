@@ -15,7 +15,7 @@
     "cta_label": "Get Started",
     "image_url": "/cf-assets/marketing/images/plan-operate.png",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=operate",
-    "cta_style": "primary"
+    "cta_style": "cta cta-primary"
   },
   "guided": {
     "title": "Collab Assist",
@@ -32,7 +32,7 @@
     "cta_label": "Get Started",
     "image_url": "/cf-assets/marketing/images/plan-guided.png",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=guided",
-    "cta_style": "primary"
+    "cta_style": "cta cta-primary"
   },
   "managed": {
     "title": "Done-For-You",

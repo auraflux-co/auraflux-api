@@ -73,7 +73,7 @@ echo "    $(date)"
 echo ""
 
 echo "[ / — Homepage ]"
-check  "favicon link"          "$BASE/"      'href="/favicon.png"'
+check  "favicon link"          "$BASE/"      'href="/favicon.png?v=2"'
 check  "nav Blog link"         "$BASE/"      'href="/blog"'
 check  "nav Get Started → /plans" "$BASE/"  'href="/plans"'
 absent "nav Get Started → sign-up" "$BASE/" 'href="https://app.auraflux.co/sign-up"'
@@ -89,7 +89,7 @@ check  "Managed chat onclick"  "$BASE/plans"  'af-chat-panel'
 absent "Managed /contact-us CTA (data-cta)" "$BASE/plans" 'data-cta="managed_cta"'
 absent "AI mention"            "$BASE/plans"  ' AI '
 absent "Gemini mention"        "$BASE/plans"  'Gemini'
-check  "favicon link"          "$BASE/plans"  'href="/favicon.png"'
+check  "favicon link"          "$BASE/plans"  'href="/favicon.png?v=2"'
 
 echo ""
 echo "[ /about — Our Story ]"
@@ -98,14 +98,14 @@ check  "Bottom CTA = View Plans"   "$BASE/about"  'View Plans'
 absent "AI mention"                "$BASE/about"  ' AI '
 absent "Gemini mention"            "$BASE/about"  'Gemini'
 absent "em-dash"                   "$BASE/about"  '—'
-check  "favicon link"              "$BASE/about"  'href="/favicon.png"'
+check  "favicon link"              "$BASE/about"  'href="/favicon.png?v=2"'
 
 echo ""
 echo "[ /our-system — System ]"
 absent "AI mention"            "$BASE/our-system"  ' AI '
 absent "Gemini mention"        "$BASE/our-system"  'Gemini'
 absent "em-dash"               "$BASE/our-system"  '—'
-check  "favicon link"          "$BASE/our-system"  'href="/favicon.png"'
+check  "favicon link"          "$BASE/our-system"  'href="/favicon.png?v=2"'
 
 echo ""
 echo "[ /blog — Blog ]"

@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Our System — AuraFlux</title>
+<title>Our System. AuraFlux</title>
 <meta name="description" content="How AuraFlux works: a six-portal automated production pipeline from raw content to published video.">
 <link rel="canonical" href="https://auraflux.co/system">
-<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
@@ -88,8 +88,16 @@ a:hover{text-decoration:underline}
 .platform-grid{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
 .platform{background:#0f172a;border:1px solid rgba(199,175,79,.15);border-radius:12px;padding:20px 28px;text-align:center;min-width:160px;transition:border-color .2s;}
 .platform:hover{border-color:rgba(199,175,79,.4);}
-.platform-name{font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px}
+.platform-name{font-size:1rem;font-weight:700;margin-bottom:4px}
 .platform-note{font-size:.8rem;color:#a0a0b8}
+.platform-yt .platform-name{color:#ff0000}
+.platform-tk .platform-name{color:#69c9d0}
+.platform-ig .platform-name{color:#e1306c}
+.sources-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#8f9bb7;text-align:center;margin:36px 0 16px}
+.source-grid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.source{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 20px;text-align:center;min-width:120px}
+.source-name{font-size:.9rem;font-weight:600;color:#8f9bb7;margin-bottom:3px}
+.source-note{font-size:.75rem;color:#555570}
 
 /* CTA */
 .cta-section{text-align:center;padding:72px 24px 80px}
@@ -304,28 +312,39 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <!-- Publishing platforms -->
 <div class="publish">
-  <h2 >Where AuraFlux Publishes</h2>
-  <p class="publish-sub" >Connect your accounts once. AuraFlux handles the rest via OAuth.</p>
+  <h2>Where AuraFlux Publishes</h2>
+  <p class="publish-sub">Connect your account once. Title, description, tags, thumbnail, chapters, and scheduling are all generated and applied automatically. No manual export. No upload queue.</p>
   <div class="platform-grid">
-    <div class="platform">
+    <div class="platform platform-yt">
       <div class="platform-name">YouTube</div>
-      <div class="platform-note">Direct publish + chapters</div>
+      <div class="platform-note">Direct publish + chapter markers</div>
     </div>
-    <div class="platform">
+    <div class="platform platform-tk">
       <div class="platform-name">TikTok</div>
       <div class="platform-note">Direct publish via API</div>
     </div>
-    <div class="platform">
-      <div class="platform-name">Twitch</div>
-      <div class="platform-note">Source import</div>
+    <div class="platform platform-ig">
+      <div class="platform-name">Instagram</div>
+      <div class="platform-note">Reels via direct publish</div>
     </div>
-    <div class="platform">
-      <div class="platform-name">Kick</div>
-      <div class="platform-note">Source import</div>
+  </div>
+  <div class="sources-label">Content Sources</div>
+  <div class="source-grid">
+    <div class="source">
+      <div class="source-name">Twitch</div>
+      <div class="source-note">VODs + clips</div>
     </div>
-    <div class="platform">
-      <div class="platform-name">Direct Upload</div>
-      <div class="platform-note">Any video file</div>
+    <div class="source">
+      <div class="source-name">YouTube</div>
+      <div class="source-note">Channel replays</div>
+    </div>
+    <div class="source">
+      <div class="source-name">Kick</div>
+      <div class="source-note">VODs + replays</div>
+    </div>
+    <div class="source">
+      <div class="source-name">Direct Upload</div>
+      <div class="source-note">Any video file</div>
     </div>
   </div>
 </div>

@@ -83,8 +83,9 @@ def patch_roadmap(html, data):
         items = data.get(key, [])
         if not items:
             continue
-        # Find the column's rdm-cards div and replace its contents
-        pattern = rf'(<!-- {col} -->[\s\S]*?<div class="rdm-cards">)([\s\S]*?)(</div>\s*\n\s*</div>)'
+        # Replace only the contents of <div class="rdm-cards">…</div>
+        # The closing pattern is exactly </div>\n  </div> (cards close then col close)
+        pattern = rf'(<!-- {col} -->[\s\S]*?<div class="rdm-cards">)([\s\S]*?)(</div>\n  </div>)'
         replacement = lambda m, c=cards(items, prog): m.group(1) + '\n' + c + '\n    ' + m.group(3)
         html = re.sub(pattern, replacement, html)
 
