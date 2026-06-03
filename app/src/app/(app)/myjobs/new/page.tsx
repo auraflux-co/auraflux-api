@@ -773,7 +773,10 @@ function JobBuilderPageInner() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 pb-4">
         <div>
-          <h1 className="text-2xl font-semibold">Create a video</h1>
+          <h1 className="text-2xl font-semibold">
+            <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Create a video</span>
+            <span className="ml-2 text-xl">✨</span>
+          </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {templatePicked && templateId !== 'custom'
               ? `Using template: ${PRESET_TEMPLATES.find((t) => t.id === templateId)?.label ?? templateBanner ?? templateId}`
@@ -810,18 +813,29 @@ function JobBuilderPageInner() {
               />
             </div>
           ) : (
-            <div className="flex items-center gap-3 rounded-lg border px-4 py-2.5 mb-4 bg-muted/20">
+            <div className="flex items-center gap-3 rounded-lg border border-primary/30 px-4 py-2.5 mb-4 bg-primary/5">
               {templateId === 'custom'
-                ? <span className="text-sm font-medium">Building from scratch</span>
-                : <>
-                    <Badge variant="outline" className="border-primary/40 text-primary text-[11px]">
-                      {PRESET_TEMPLATES.find((t) => t.id === templateId)?.label ?? templateBanner ?? 'Saved template'}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">Pre-configured — change any section below</span>
+                ? <>
+                    <span className="text-base">🛠️</span>
+                    <span className="text-sm font-medium">Building from scratch</span>
                   </>
+                : (() => {
+                    const t = PRESET_TEMPLATES.find((x) => x.id === templateId);
+                    const ICONS: Record<string, string> = {
+                      tiktok_clutch: '⚡', youtube_deep_dive: '🎬', irl_story_time: '💬',
+                      montage_hype_reel: '🔥', reaction_cut: '😂', quick_guide: '🎯',
+                    };
+                    return <>
+                      <span className="text-base shrink-0">{ICONS[templateId] ?? '▶'}</span>
+                      <Badge variant="outline" className="border-primary/40 text-primary text-[11px]">
+                        {t?.label ?? templateBanner ?? 'Saved template'}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">Pre-configured — change any section below</span>
+                    </>;
+                  })()
               }
               <button type="button" onClick={changeTemplate}
-                      className="ml-auto text-[11px] text-primary hover:underline">
+                      className="ml-auto text-[11px] text-muted-foreground hover:text-foreground transition-colors">
                 Change template
               </button>
             </div>
