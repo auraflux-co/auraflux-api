@@ -120,7 +120,10 @@ absent "AI tag"                "$BASE/roadmap"  '>AI<'
 absent "em-dash"               "$BASE/roadmap"  '—'
 
 # Duplication guard: each card title should appear exactly once
-CARD_COUNT=$(grep -o 'Subscription Platforms' "$TMP_FILE" | wc -l | tr -d ' ')
+_RDM_TMP=$(mktemp)
+curl -sfL "$BASE/roadmap" -o "$_RDM_TMP" 2>/dev/null
+CARD_COUNT=$(grep -o 'Subscription Platforms' "$_RDM_TMP" | wc -l | tr -d ' ')
+rm -f "$_RDM_TMP"
 if [ "$CARD_COUNT" -eq 1 ]; then
   pass "No duplicate roadmap cards"
 else
