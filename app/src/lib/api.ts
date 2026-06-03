@@ -133,6 +133,21 @@ export interface CreateJobPayload {
   tone?:            string;
   // Feature-level configuration: keyed by feature ID (script, tts, commentary, generation, burn_images)
   featureConfig?:   Record<string, Record<string, string>>;
+
+  // ── Enhancement addOns (feature input parity with POST /v1/jobs) ──────────
+  // These mirror what the wizard collects and what the API expects in addOns.
+  // Sending them here ensures dashboard and API jobs are always equivalent.
+  addOns?: {
+    captions?:   { active: boolean; style?: 'animated' | 'clean' | 'minimal' | 'burnin' };
+    colorGrade?: { active: boolean; preset?: 'vivid' | 'warm' | 'cool' | 'moody' | 'crisp' | 'neut' };
+    effects?:    { zoom?: boolean; transitions?: boolean; slowmo?: boolean; vignette?: boolean };
+    audio?:      { loudnorm?: boolean; duck?: boolean; denoise?: boolean };
+    branding?:   { active: boolean; brandId?: string };
+    layout?:     { portrait?: boolean; square?: boolean };
+    tts?:        { active: boolean; provider?: string; voiceId?: string };
+    heygen?:     { active: boolean; avatarId?: string };
+    [key: string]: Record<string, unknown> | undefined;
+  };
 }
 
 // ─── Credit estimation ────────────────────────────────────────────────────────

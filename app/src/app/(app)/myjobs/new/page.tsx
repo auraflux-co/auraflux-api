@@ -668,6 +668,26 @@ function JobBuilderPageInner() {
       mergedConfig.script = { ...(mergedConfig.script ?? {}), tone };
     }
 
+    // Build addOns from the wizard's collected state so dashboard and API jobs
+    // are always equivalent — matches the canonical feature_input_schema on the server.
+    const addOns: CreateJobPayload['addOns'] = {};
+    if (captions) {
+      addOns.captions = { active: true, style: 'animated' };
+    }
+    if (grade && grade !== 'none') {
+      addOns.colorGrade = { active: true, preset: grade as 'vivid' | 'warm' | 'cool' | 'moody' | 'crisp' | 'neut' };
+    }
+    if (effects.length > 0) {
+      const effObj: Record<string, boolean> = {};
+      for (const e of effects) effObj[e] = true;
+      addOns.effects = effObj as { zoom?: boolean; transitions?: boolean; slowmo?: boolean; vignette?: boolean };
+    }
+    if (audioOpts.length > 0) {
+      const audioObj: Record<string, boolean> = {};
+      for (const a of audioOpts) audioObj[a] = true;
+      addOns.audio = audioObj as { loudnorm?: boolean; duck?: boolean; denoise?: boolean };
+    }
+
     const payload: CreateJobPayload = {
       contentType:    pathToContentType(inferredPath),
       entryType:      (sourceMode === 'source' ? 'fetch' : 'upload') as 'fetch' | 'upload',
@@ -679,6 +699,7 @@ function JobBuilderPageInner() {
       durationMins,
       publishMode:    'immediate',
       featureConfig:  Object.keys(mergedConfig).length ? mergedConfig : undefined,
+      addOns:         Object.keys(addOns).length > 0 ? addOns : undefined,
     };
 
     if (sourceMode === 'source') {
