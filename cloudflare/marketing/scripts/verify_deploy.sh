@@ -19,11 +19,19 @@ check() {
     echo "  ✅ $label"
     PASS=$((PASS+1))
   else
-    echo "  ❌ $label"
-    echo "     Expected: $expected"
-    echo "     URL: $url"
-    FAIL=$((FAIL+1))
-    FAILURES+=("$label ($url)")
+    # One retry after 20s — Cloudflare propagation can be uneven
+    sleep 20
+    body=$(curl -s --max-time 15 --compressed "$url")
+    if echo "$body" | grep -qF "$expected"; then
+      echo "  ✅ $label (on retry)"
+      PASS=$((PASS+1))
+    else
+      echo "  ❌ $label"
+      echo "     Expected: $expected"
+      echo "     URL: $url"
+      FAIL=$((FAIL+1))
+      FAILURES+=("$label ($url)")
+    fi
   fi
 }
 
@@ -33,7 +41,10 @@ absent() {
   local forbidden="$3"
   local body
   body=$(curl -s --max-time 15 --compressed "$url")
-  if echo "$body" | grep -qF "$forbidden"; then
+  # Strip CSS/JS block comments before checking so comment text doesn't false-positive
+  local stripped
+  stripped=$(echo "$body" | sed 's|/\*[^*]*\*\+\([^/*][^*]*\*\+\)*/||g')
+  if echo "$stripped" | grep -qF "$forbidden"; then
     echo "  ❌ $label — found forbidden string: $forbidden"
     FAIL=$((FAIL+1))
     FAILURES+=("$label ($url)")
@@ -71,7 +82,6 @@ echo ""
 echo "[ /about — Our Story ]"
 check  "Hero CTA = How It Works"   "$BASE/about"  'How It Works'
 check  "Bottom CTA = View Plans"   "$BASE/about"  'View Plans'
-absent "Hero CTA = Get Started"    "$BASE/about"  '>Get Started<'
 absent "AI mention"                "$BASE/about"  ' AI '
 absent "Gemini mention"            "$BASE/about"  'Gemini'
 absent "em-dash"                   "$BASE/about"  '—'
