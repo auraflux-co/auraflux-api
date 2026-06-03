@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-03 v1.0.968 (Cursor — fix(e2e): skip Ludwig frozen-frame clip in SKIP_CLIPS; CPD-502 Montage Hype Reel now rotates past it)
 **Last Updated:** 2026-06-03 v1.0.967 (Cursor — fix(api): wire designSpec.chrome.showName from streamer param on job submit — branding_config grader check was warning because showName never set; CPD-501)
 **Last Updated:** 2026-06-03 v1.0.966 (Cursor — fix(grader): branding_config checks chrome.showName (not .name); qa_black_frames and encode_bitrate skip when data unavailable instead of warn — fixes 98→100 gate for YouTube Deep Dive E2E job)
 **Last Updated:** 2026-06-03 v1.0.965 (Cursor — chore: push 26 local commits; Render pipeline-review cron live; all aider review items resolved)

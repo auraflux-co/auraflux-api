@@ -107,105 +107,38 @@ def _dashboard_hdr():
     return {'Authorization': f'Bearer {CLERK_SESSION_TOKEN}', 'Content-Type': 'application/json'}
 
 
-# ── Clip inventory — 20 verified clips downloaded May 2026 ───────────────────
-# Source: scripts/video_inventory/manifest.json (60 clips downloaded, 20 curated)
-# Covers all duration ranges so each template's min/max_duration_s is satisfiable:
-#   Short (10-180s):  Twitch + Kick clips → TikTok Clutch, IRL Story Time, Montage, Quick Guide
-#   Medium (180-600s): YouTube VODs → Reaction Cut, Quick Guide (upper range)
-#   Long (600-3600s): YouTube VODs → YouTube Deep Dive, Reaction Cut
+# ── Clip inventory — loaded from R2 manifest (60 pre-uploaded clips) ─────────
+# All clips already on R2 at assets.auraflux.co/video_inventory/
+# Using r2_url bypasses yt-dlp entirely — assembly_service downloads directly.
+def _load_clip_inventory():
+    manifest_path = REPO_DIR / 'scripts' / 'video_inventory' / 'manifest.json'
+    with open(manifest_path, encoding='utf-8') as f:
+        manifest = json.load(f)
+    return [
+        {
+            'platform':     v['platform'],
+            'streamer':     v['streamer'],
+            'title':        v['title'],
+            'content_type': v.get('content_type', 'clip'),
+            'url':          v['r2_url'],   # R2 direct URL — no yt-dlp needed
+            'duration_s':   v['duration_s'],
+        }
+        for v in manifest.get('videos', [])
+    ]
 
-CLIP_INVENTORY = [
-    # ── Twitch gaming clips ────────────────────────────────────────────────────
-    {'platform': 'twitch', 'streamer': 'shroud',
-     'title': 'shroud takes a hot bite', 'content_type': 'gaming_irl',
-     'url': 'https://www.twitch.tv/shroud/clip/HonestPlacidBadgerPRChase-cFUAO5SX_8xH_h2s',
-     'duration_s': 33},
-    {'platform': 'twitch', 'streamer': 'moistcr1tikal',
-     'title': 'reaction to 18 second record', 'content_type': 'gaming_reaction',
-     'url': 'https://www.twitch.tv/moistcr1tikal/clip/AgreeableSaltySrirachaDerpina-XnfBeMhYqGi42UYh',
-     'duration_s': 34},
-    {'platform': 'twitch', 'streamer': 'xqc',
-     'title': 'xQc Forza gamba moment', 'content_type': 'gaming_clip',
-     'url': 'https://www.twitch.tv/xqc/clip/ObeseSeductiveAntKlappa-DVpCqlvAfxKlFXAl',
-     'duration_s': 38},
-    {'platform': 'twitch', 'streamer': 'nickmercs',
-     'title': 'NICKMERCS reaction', 'content_type': 'gaming_clip',
-     'url': 'https://www.twitch.tv/nickmercs/clip/GiantCautiousSaladBuddhaBar-JMwRKi_JWNf7nMlq',
-     'duration_s': 47},
-    {'platform': 'twitch', 'streamer': 'shroud',
-     'title': 'Esfand finds shroud', 'content_type': 'gaming_irl',
-     'url': 'https://www.twitch.tv/shroud/clip/ObliqueDaintyPeppermintNomNom-LmhyvFWVNmaBNJvU',
-     'duration_s': 48},
-    # ── Twitch IRL / just chatting ─────────────────────────────────────────────
-    {'platform': 'twitch', 'streamer': 'hasanabi',
-     'title': 'protestors heckle hasan', 'content_type': 'irl_reaction',
-     'url': 'https://www.twitch.tv/hasanabi/clip/LitigiousEntertainingClintmullinsOptimizePrime',
-     'duration_s': 32},
-    {'platform': 'twitch', 'streamer': 'ludwig',
-     'title': 'Tenzin unban request', 'content_type': 'irl_chatting',
-     'url': 'https://www.twitch.tv/ludwig/clip/LachrymoseLaconicWalrusShadyLulu-0yNvQOFsFEI16O6C',
-     'duration_s': 55},
-    {'platform': 'twitch', 'streamer': 'hasanabi',
-     'title': 'PBD fangirl moment', 'content_type': 'irl_reaction',
-     'url': 'https://www.twitch.tv/hasanabi/clip/SpineyDignifiedEndiveTheTarFu-SBFJVpJYEJnZXQvC',
-     'duration_s': 59},
-    {'platform': 'twitch', 'streamer': 'hasanabi',
-     'title': 'Dabbling in socialism', 'content_type': 'irl_commentary',
-     'url': 'https://www.twitch.tv/hasanabi/clip/ShakingMagnificentAmazonWholesomeBlind',
-     'duration_s': 60},
-    # ── Kick IRL clips ────────────────────────────────────────────────────────
-    {'platform': 'kick', 'streamer': 'trainwreckstv',
-     'title': 'Train had a dream', 'content_type': 'irl_clip',
-     'url': 'https://kick.com/trainwreckstv?clip=clip_01KSPTE5E9KRHXD0QV4HHGBM',
-     'duration_s': 37},
-    {'platform': 'kick', 'streamer': 'mizkif',
-     'title': 'W crashout', 'content_type': 'irl_reaction',
-     'url': 'https://kick.com/mizkif?clip=clip_01KSGG3B62QGXBVRS89TEMWWCA',
-     'duration_s': 60},
-    {'platform': 'kick', 'streamer': 'xqc',
-     'title': 'xQc $7000 maxwin reaction', 'content_type': 'irl_reaction',
-     'url': 'https://kick.com/xqc?clip=clip_01KSKNEFZHF5K8MVDFJX7MS873',
-     'duration_s': 75},
-    {'platform': 'kick', 'streamer': 'mizkif',
-     'title': 'miz diss track reaction', 'content_type': 'irl_reaction',
-     'url': 'https://kick.com/mizkif?clip=clip_01KSTYTV3385TVZSPJ34T3YSDA',
-     'duration_s': 99},
-    {'platform': 'kick', 'streamer': 'mizkif',
-     'title': 'Mizkif rage moment', 'content_type': 'irl_clip',
-     'url': 'https://kick.com/mizkif?clip=clip_01KSJXR5GK8K3SMC0FRC2EAHKZ',
-     'duration_s': 180},
-    # ── YouTube medium-length (3-10min) for Reaction Cut ─────────────────────
-    {'platform': 'youtube', 'streamer': 'AdinRoss',
-     'title': 'Michael Beasley vs Lance Stephenson full fight', 'content_type': 'irl_event',
-     'url': 'https://www.youtube.com/watch?v=ohUqvAZizH8',
-     'duration_s': 333},
-    {'platform': 'youtube', 'streamer': 'Penguinz0',
-     'title': 'Cringe Officer Embarrasses Himself', 'content_type': 'commentary',
-     'url': 'https://www.youtube.com/watch?v=SKJ9ULFJhME',
-     'duration_s': 523},
-    {'platform': 'youtube', 'streamer': 'HasanAbi',
-     'title': 'THE UK REVOKED MY VISA', 'content_type': 'irl_vod',
-     'url': 'https://www.youtube.com/watch?v=ZRY5zSoBIx4',
-     'duration_s': 551},
-    # ── YouTube long-form VODs for YouTube Deep Dive ──────────────────────────
-    {'platform': 'youtube', 'streamer': 'xQcOW',
-     'title': 'Woman Drives Through Crowd — xQc Reacts', 'content_type': 'reaction_vod',
-     'url': 'https://www.youtube.com/watch?v=y0SDDoaudRI',
-     'duration_s': 682},
-    {'platform': 'youtube', 'streamer': 'Ludwig',
-     'title': 'How I Masterfully Won a $50,000 GeoGuessr Tournament', 'content_type': 'entertainment_vod',
-     'url': 'https://www.youtube.com/watch?v=x7TjKQx9mFg',
-     'duration_s': 909},
-    {'platform': 'youtube', 'streamer': 'ShinyaTheNinja',
-     'title': '31 Kills SOLO in Arc Raiders World Record', 'content_type': 'gaming_vod',
-     'url': 'https://www.youtube.com/watch?v=q2W0BP_0OSw',
-     'duration_s': 1090},
-]
+CLIP_INVENTORY = _load_clip_inventory()
+
+# Clips with known quality defects (frozen frames, corrupted audio, etc.).
+# _pick_clip skips these and advances to the next valid clip.
+SKIP_CLIPS = {
+    'https://assets.auraflux.co/video_inventory/twitch/1163218581.mp4',  # ludwig: frozen frames at 34s/40s
+}
 
 def _pick_clip(idx, job_def=None):
     """
     Pick a clip from CLIP_INVENTORY by index.
     If job_def specifies min/max duration, scan forward from idx to find a fit.
+    Skips clips listed in SKIP_CLIPS (known quality defects).
     Falls back to idx % len if no fit found within a full rotation.
     """
     min_s = (job_def or {}).get('min_duration_s', 0)
@@ -214,6 +147,8 @@ def _pick_clip(idx, job_def=None):
     for offset in range(n):
         clip = CLIP_INVENTORY[(idx + offset) % n]
         d = clip.get('duration_s', 0)
+        if clip.get('r2_url') in SKIP_CLIPS or clip.get('url') in SKIP_CLIPS:
+            continue
         if min_s <= d <= max_s:
             if offset > 0:
                 print(f"  ⚙  Clip rotated +{offset} to match duration constraint "
