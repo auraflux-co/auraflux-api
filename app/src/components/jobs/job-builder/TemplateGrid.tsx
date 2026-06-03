@@ -90,13 +90,16 @@ const PLATFORM_LABELS: Record<string, string> = {
   tiktok: 'TikTok', youtube: 'YouTube', instagram: 'Instagram',
 };
 
-const FORMAT_LABELS: Record<string, string> = {
-  portrait: 'Portrait 9:16', longform: 'Landscape 16:9',
+// Customer-facing output format labels (not technical aspect ratios)
+const OUTPUT_FORM: Record<string, { label: string; color: string }> = {
+  portrait: { label: 'Short-form',  color: 'bg-violet-500/15 text-violet-400 border-violet-500/30' },
+  longform: { label: 'Long-form',   color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
 };
 
 function templatePills(t: JobTemplate): string[] {
   const pills: string[] = [];
-  pills.push(FORMAT_LABELS[t.format] ?? t.format);
+  const aspect = t.format === 'longform' ? '16:9 landscape' : '9:16 portrait';
+  pills.push(aspect);
   if (t.captions) pills.push('Captions');
   if (t.voiceover) pills.push('Voiceover');
   if (t.features.includes('branding')) pills.push('Branded intro/outro');
@@ -138,16 +141,27 @@ export function TemplateGrid({ selectedId, onApply, onBuildMyOwn, className }: P
                     : 'border-border hover:border-primary/40 hover:bg-muted/30',
                 )}
               >
-                <div className="space-y-0.5">
-                  <p className="text-sm font-semibold leading-tight">{t.label}</p>
-                  <p className="text-[11px] text-muted-foreground leading-snug">{t.tagline}</p>
+                {/* Header: name + short/long-form badge */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-0.5 min-w-0">
+                    <p className="text-sm font-semibold leading-tight">{t.label}</p>
+                    <p className="text-[11px] text-muted-foreground leading-snug">{t.tagline}</p>
+                  </div>
+                  <span className={cn(
+                    'shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded border whitespace-nowrap',
+                    OUTPUT_FORM[t.format]?.color ?? 'bg-muted text-muted-foreground border-border',
+                  )}>
+                    {OUTPUT_FORM[t.format]?.label ?? t.format}
+                  </span>
                 </div>
-                <div className="space-y-1">
+                {/* Publishes to */}
+                <div className="space-y-0.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">
                     Publishes to
                   </p>
                   <p className="text-[11px] text-foreground/80">{platformStr}</p>
                 </div>
+                {/* Included features */}
                 <div className="space-y-1">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">
                     Included

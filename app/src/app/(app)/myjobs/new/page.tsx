@@ -830,8 +830,8 @@ function JobBuilderPageInner() {
           {templatePicked && (
             <div className="space-y-1">
 
-              {/* TYPE */}
-              <CollapsibleSection id="type" label="What are you making?" required
+              {/* TYPE — hidden when a template is active (template already defines this) */}
+              {!activeTemplate && <CollapsibleSection id="type" label="What are you making?" required
                 summary={summaries.type} open={isOpen('type')} onToggle={() => toggle('type')}>
                 <div className="space-y-3">
                   <ChipGroup
@@ -869,9 +869,9 @@ function JobBuilderPageInner() {
                     singleSelect
                   />
                 </div>
-              </CollapsibleSection>
+              </CollapsibleSection>}
 
-              <div className="h-px bg-border/50 my-0.5" />
+              {!activeTemplate && <div className="h-px bg-border/50 my-0.5" />}
 
               {/* SOURCE */}
               <CollapsibleSection id="source" label="Source video" required
@@ -961,8 +961,8 @@ function JobBuilderPageInner() {
 
               <div className="h-px bg-border/50 my-0.5" />
 
-              {/* FORMAT */}
-              <CollapsibleSection id="format" label="Format" required
+              {/* FORMAT — hidden when template is active (template defines format + duration) */}
+              {!activeTemplate && <CollapsibleSection id="format" label="Format" required
                 summary={summaries.format} open={isOpen('format')} onToggle={() => toggle('format')}>
                 <div className="space-y-4">
                   <ChipGroup options={FORMATS} selected={[format]} singleSelect
@@ -982,9 +982,9 @@ function JobBuilderPageInner() {
                     </div>
                   )}
                 </div>
-              </CollapsibleSection>
+              </CollapsibleSection>}
 
-              <div className="h-px bg-border/50 my-0.5" />
+              {!activeTemplate && <div className="h-px bg-border/50 my-0.5" />}
 
               {/* PLATFORM */}
               <CollapsibleSection id="platform" label="Where to publish" required
@@ -1001,13 +1001,13 @@ function JobBuilderPageInner() {
                 summary={summaries.production} open={isOpen('production')} onToggle={() => toggle('production')}>
                 <div className="space-y-4">
 
-                  {/* ── When a template is active: show what it already includes ── */}
+                  {/* ── Included by template summary ── */}
                   {activeTemplate && (() => {
                     const GRADE_LABELS: Record<string, string> = { vivid: 'Vivid color', neut: 'Neutral color', warm: 'Warm color', cool: 'Cool color' };
                     const EFFECT_LABELS: Record<string, string> = { zoom: 'Zoom cuts', transitions: 'Scene transitions' };
                     const AUDIO_LABELS: Record<string, string>  = { loudnorm: 'Volume balance', duck: 'Music ducking' };
                     const FEAT_LABELS: Record<string, string>   = { scene_select: 'Auto-select clips', branding: 'Branded intro/outro' };
-                    const FORMAT_LABELS: Record<string, string> = { portrait: 'Portrait 9:16', longform: 'Landscape 16:9' };
+                    const FORMAT_LABELS: Record<string, string> = { portrait: '9:16 portrait', longform: '16:9 landscape' };
                     const pills: string[] = [
                       FORMAT_LABELS[activeTemplate.format] ?? activeTemplate.format,
                       ...(activeTemplate.captions ? ['Captions'] : []),
@@ -1033,35 +1033,34 @@ function JobBuilderPageInner() {
                     );
                   })()}
 
-                  {/* ── Output options — only show voiceover as optional when template is active ── */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Output options</p>
-                    <div className="flex flex-wrap gap-2">
-                      {/* Captions: show as locked read-only if template includes it */}
-                      {activeTemplate?.captions ? (
-                        <div className="text-left rounded-lg border px-3 py-2 min-w-[140px] opacity-60 border-primary/30 bg-primary/5 cursor-default">
-                          <p className="text-sm font-medium text-primary">Captions</p>
-                          <p className="text-[11px] mt-0.5 text-primary/60">Included in template</p>
-                        </div>
-                      ) : (
-                        <button type="button" onClick={() => setCaptions(!captions)}
-                          className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
-                            captions ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
-                          <p className="text-sm font-medium">Captions</p>
-                          <p className={cn('text-[11px] mt-0.5', captions ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Added directly to the video</p>
-                        </button>
+                  {/* ── Optional output add-ons (not set by template) ── */}
+                  {(!activeTemplate?.captions || !activeTemplate?.voiceover) && (
+                    <div className="space-y-2">
+                      {!activeTemplate && (
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Output options</p>
                       )}
-                      {/* Voiceover is always optional */}
-                      <button type="button" onClick={() => setVoiceover(!voiceover)}
-                        className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
-                          voiceover ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
-                        <p className="text-sm font-medium">Voiceover</p>
-                        <p className={cn('text-[11px] mt-0.5', voiceover ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Script narration</p>
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        {!activeTemplate?.captions && (
+                          <button type="button" onClick={() => setCaptions(!captions)}
+                            className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
+                              captions ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
+                            <p className="text-sm font-medium">Captions</p>
+                            <p className={cn('text-[11px] mt-0.5', captions ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Added directly to the video</p>
+                          </button>
+                        )}
+                        {!activeTemplate?.voiceover && (
+                          <button type="button" onClick={() => setVoiceover(!voiceover)}
+                            className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
+                              voiceover ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
+                            <p className="text-sm font-medium">Voiceover</p>
+                            <p className={cn('text-[11px] mt-0.5', voiceover ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Script narration</p>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* ── Visual style — hide when template is active (it sets these) ── */}
+                  {/* ── Visual style — only shown in Build My Own ── */}
                   {!activeTemplate && (
                     <div className="space-y-2">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Visual style</p>
@@ -1079,7 +1078,7 @@ function JobBuilderPageInner() {
                     </div>
                   )}
 
-                  {/* ── Audio — hide when template is active ── */}
+                  {/* ── Audio — only shown in Build My Own ── */}
                   {!activeTemplate && (
                     <div className="space-y-2">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Audio</p>
@@ -1088,55 +1087,58 @@ function JobBuilderPageInner() {
                     </div>
                   )}
 
-                  {/* ── Production tools — exclude template-included features when template is active ── */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {activeTemplate ? 'Add to your job' : 'Production tools'}
-                    </p>
-                    {!formFactor ? (
-                      <p className="text-sm text-muted-foreground">Select a format above to see available tools.</p>
-                    ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {CATEGORY_BOXES.map((cat) => {
-                        const catFeatures = FEATURES.filter(
-                          (f) => f.category === cat.id
-                            && f.status === 'live'
-                            && f.formFactors.includes(formFactor)
-                            // Hide features already provided by the active template
-                            && !(activeTemplate?.features.includes(f.id)),
-                        );
-                        if (catFeatures.length === 0) return null;
-                        return (
-                          <FeatureCategoryBox
-                            key={cat.id}
-                            category={cat}
-                            features={catFeatures}
-                            allFeatures={FEATURES}
-                            selected={features}
-                            onToggle={toggleFeature}
-                          />
-                        );
-                      })}
+                  {/* ── Production tools: extras not already in the template ── */}
+                  {formFactor && CATEGORY_BOXES.some((cat) =>
+                    FEATURES.some((f) => f.category === cat.id && f.status === 'live'
+                      && f.formFactors.includes(formFactor) && !(activeTemplate?.features.includes(f.id)))
+                  ) && (
+                    <div className="space-y-2">
+                      {!activeTemplate && (
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Production tools
+                        </p>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {CATEGORY_BOXES.map((cat) => {
+                          const catFeatures = FEATURES.filter(
+                            (f) => f.category === cat.id
+                              && f.status === 'live'
+                              && f.formFactors.includes(formFactor)
+                              && !(activeTemplate?.features.includes(f.id)),
+                          );
+                          if (catFeatures.length === 0) return null;
+                          return (
+                            <FeatureCategoryBox
+                              key={cat.id}
+                              category={cat}
+                              features={catFeatures}
+                              allFeatures={FEATURES}
+                              selected={features}
+                              onToggle={toggleFeature}
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
-                    )}
-                    {/* Config panels for enabled features that have configuration */}
-                    {Array.from(features)
-                      .map((fid) => FEATURES.find((f) => f.id === fid))
-                      .filter((f): f is Feature => !!f && f.hasConfig)
-                      .map((feat) => (
-                        <FeatureRow
-                          key={feat.id}
-                          feat={feat}
-                          features={features}
-                          featureConfig={featureConfig}
-                          toggleFeature={toggleFeature}
-                          tier={tier}
-                          tone={tone}
-                          setTone={setTone}
-                          setFeatureCfg={setFeatureCfg}
-                        />
-                      ))}
-                  </div>
+                  )}
+
+                  {/* Config panels for enabled features */}
+                  {Array.from(features)
+                    .map((fid) => FEATURES.find((f) => f.id === fid))
+                    .filter((f): f is Feature => !!f && f.hasConfig)
+                    .map((feat) => (
+                      <FeatureRow
+                        key={feat.id}
+                        feat={feat}
+                        features={features}
+                        featureConfig={featureConfig}
+                        toggleFeature={toggleFeature}
+                        tier={tier}
+                        tone={tone}
+                        setTone={setTone}
+                        setFeatureCfg={setFeatureCfg}
+                      />
+                    ))}
 
                   {/* Credit estimate */}
                   <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1">
@@ -1146,6 +1148,7 @@ function JobBuilderPageInner() {
                     </div>
                     <p className="text-xs text-foreground/80">{estimate.message}</p>
                   </div>
+
                 </div>
               </CollapsibleSection>
 
