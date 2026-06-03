@@ -96,8 +96,16 @@ a:hover{text-decoration:underline}
 .sources-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#8f9bb7;text-align:center;margin:36px 0 16px}
 .source-grid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 .source{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 20px;text-align:center;min-width:120px}
-.source-name{font-size:.9rem;font-weight:600;color:#8f9bb7;margin-bottom:3px}
+.source-name{font-size:.9rem;font-weight:600;margin-bottom:3px}
 .source-note{font-size:.75rem;color:#555570}
+.source-twitch .source-name{color:#9b59b6}
+.source-twitch{border-color:rgba(155,89,182,.2);}
+.source-youtube .source-name{color:#ff4444}
+.source-youtube{border-color:rgba(255,68,68,.2);}
+.source-kick .source-name{color:#2ecc71}
+.source-kick{border-color:rgba(46,204,113,.2);}
+.source-upload .source-name{color:#a0a0b8}
+.source-upload{border-color:rgba(160,160,184,.15);}
 
 /* CTA */
 .cta-section{text-align:center;padding:72px 24px 80px}
@@ -330,19 +338,19 @@ ${FRAMER_NAV || FALLBACK_NAV}
   </div>
   <div class="sources-label">Content Sources</div>
   <div class="source-grid">
-    <div class="source">
+    <div class="source source-twitch">
       <div class="source-name">Twitch</div>
       <div class="source-note">VODs + clips</div>
     </div>
-    <div class="source">
+    <div class="source source-youtube">
       <div class="source-name">YouTube</div>
       <div class="source-note">Channel replays</div>
     </div>
-    <div class="source">
+    <div class="source source-kick">
       <div class="source-name">Kick</div>
       <div class="source-note">VODs + replays</div>
     </div>
-    <div class="source">
+    <div class="source source-upload">
       <div class="source-name">Direct Upload</div>
       <div class="source-note">Any video file</div>
     </div>
