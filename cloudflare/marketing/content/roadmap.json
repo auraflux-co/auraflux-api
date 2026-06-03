@@ -5,7 +5,7 @@
     {
       "tag": "Publishing",
       "headline": "Subscription Platforms",
-      "description": "Direct publish to OnlyFans, Fansly, and Patreon using secure OAuth — same pipeline as YouTube and TikTok."
+      "description": "Direct publish to OnlyFans, Fansly, and Patreon using secure OAuth. same pipeline as YouTube and TikTok."
     },
     {
       "tag": "Production",
@@ -20,9 +20,9 @@
       "description": "Fair-use sourcing algorithm generating narrated video from TV and movie scene libraries."
     },
     {
-      "tag": "AI",
-      "headline": "AI Avatar Video",
-      "description": "On-camera presenter videos generated from your script — full control over voice, appearance, and background."
+      "tag": "Automation",
+      "headline": "Avatar Video",
+      "description": "On-camera presenter videos generated from your script. full control over voice, appearance, and background."
     },
     {
       "tag": "Monetisation",
@@ -34,7 +34,7 @@
     {
       "tag": "Monetisation",
       "headline": "Paid Ad Creative",
-      "description": "Aspect ratio and copy overlay optimization for Meta, TikTok, and Google — production-ready ad formats built in."
+      "description": "Aspect ratio and copy overlay optimization for Meta, TikTok, and Google. production-ready ad formats built in."
     }
   ]
 }

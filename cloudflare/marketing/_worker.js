@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://c3b2b137.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://ba2c4d98.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 

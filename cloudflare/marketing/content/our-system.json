@@ -1,6 +1,6 @@
 {
   "hero_headline": "From Raw Content to Published Video",
-  "hero_sub": "AuraFlux is a six-stage automated production pipeline. You submit a job. The pipeline handles clip selection, scripting, editing, QA, brand application, and direct publish \u2014 without a single manual step.",
+  "hero_sub": "AuraFlux is a six-stage automated production pipeline. You submit a job. The pipeline handles clip selection, scripting, editing, QA, brand application, and direct publish. without a single manual step.",
   "portals": [
     {
       "badge": "P0",
@@ -11,7 +11,7 @@
     {
       "badge": "P1",
       "name": "Script & Voice",
-      "description": "AI-generated script tailored to your content type and platform format. ElevenLabs TTS voiceover produced at broadcast quality.",
+      "description": "Script tailored to your content type and platform format. ElevenLabs TTS voiceover produced at broadcast quality.",
       "tag": "OPTIONAL"
     },
     {
@@ -41,22 +41,22 @@
   ],
   "content_types": [
     {
-      "icon": "\ud83c\udfae",
+      "icon": "🎮",
       "name": "Highlight Clips",
-      "description": "Best moments from streams and VODs \u2014 auto-cut, captioned, and formatted for short-form."
+      "description": "Best moments from streams and VODs. Auto-cut, captioned, and formatted for short-form."
     },
     {
-      "icon": "\ud83c\udf99\ufe0f",
+      "icon": "🎙️",
       "name": "Gameplay Commentary",
-      "description": "AI-generated narration over gameplay clips \u2014 personalised to your style and audience."
+      "description": "Automated narration over gameplay clips, personalised to your style and audience."
     },
     {
-      "icon": "\ud83c\udfac",
+      "icon": "🎬",
       "name": "Show & Film Analysis",
-      "description": "Narrated breakdowns from TV and movie clips \u2014 fair-use formatted and ready to publish."
+      "description": "Narrated breakdowns from TV and movie clips, fair-use formatted and ready to publish."
     },
     {
-      "icon": "\ud83d\udce1",
+      "icon": "📡",
       "name": "Live Event Recap",
       "description": "Sports, news, and live events turned into structured recap videos within minutes of the event."
     }

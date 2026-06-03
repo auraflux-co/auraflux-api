@@ -1,10 +1,10 @@
 {
   "hero_headline": "Get in Touch",
-  "hero_sub": "Sales, support, partnerships, or feedback \u2014 we read every message.",
+  "hero_sub": "Sales, support, partnerships, or feedback. We read every message.",
   "faq": [
     {
       "question": "What's the difference between our plans?",
-      "answer": "Both plans include the full AuraFlux automated engine. Operate is entirely self-serve via our dashboard and API. Guided integrates our Gemini-backed Collab AI assistant to monitor and refine your outputs. Managed adds dedicated human account managers alongside the AI layer."
+      "answer": "Both plans include the full AuraFlux automated engine. Operate is entirely self-serve via our dashboard and API. Guided includes our built-in Collab assistant to monitor and refine your outputs. Managed adds dedicated human account managers."
     },
     {
       "question": "How do credits work?",
@@ -12,7 +12,7 @@
     },
     {
       "question": "Can I connect multiple social accounts?",
-      "answer": "Yes \u2014 connect all major platforms and target any job to one or more simultaneously. YouTube, TikTok, Instagram, Twitch, and Kick are all supported."
+      "answer": "Yes. connect all major platforms and target any job to one or more simultaneously. YouTube, TikTok, Instagram, Twitch, and Kick are all supported."
     },
     {
       "question": "Do I need technical knowledge?",

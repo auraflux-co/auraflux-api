@@ -449,6 +449,11 @@ if [[ "$SUCCESS" == "True" || "$SUCCESS" == "true" ]]; then
   echo "✅  Deployed!"
   echo "    Preview: $PREVIEW_URL"
   echo "    Live:    https://auraflux.co  (propagates in ~60s)"
+  echo ""
+  echo "⏳  Waiting 90s for propagation before content QA..."
+  sleep 90
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  bash "$SCRIPT_DIR/scripts/verify_deploy.sh" || echo "⚠️  Some QA checks failed — review output above before declaring the deploy good."
 else
   echo "❌  Deploy failed:"
   echo "$RESPONSE" | python3 -m json.tool

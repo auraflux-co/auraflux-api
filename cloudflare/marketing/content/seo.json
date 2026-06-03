@@ -2,44 +2,44 @@
   "pages": [
     {
       "page": "home",
-      "title": "AuraFlux — Automated Content Production",
-      "description": "Automated content production from source to publish. No team, no editors — AuraFlux handles everything.",
+      "title": "AuraFlux. Automated Content Production",
+      "description": "Automated content production from source to publish. No team, no editors. AuraFlux handles everything.",
       "og_image": "https://auraflux.co/favicon.png"
     },
     {
       "page": "plans",
-      "title": "Plans — AuraFlux",
-      "description": "Choose the plan that fits your team. Operate, Guided, or Managed — all include the full AuraFlux automated content pipeline.",
+      "title": "Plans. AuraFlux",
+      "description": "Choose the plan that fits your team. Operate, Guided, or Managed. all include the full AuraFlux automated content pipeline.",
       "og_image": ""
     },
     {
       "page": "our-story",
-      "title": "Our Story — AuraFlux",
-      "description": "AuraFlux automates content production from source to publish — no editors, no team required.",
+      "title": "Our Story. AuraFlux",
+      "description": "AuraFlux automates content production from source to publish. no editors, no team required.",
       "og_image": ""
     },
     {
       "page": "our-system",
-      "title": "Our System — AuraFlux",
+      "title": "Our System. AuraFlux",
       "description": "How AuraFlux works: a six-portal automated production pipeline from raw content to published video.",
       "og_image": ""
     },
     {
       "page": "roadmap",
-      "title": "Roadmap — AuraFlux",
-      "description": "See what's coming to AuraFlux — features in active development and on the near-term roadmap.",
+      "title": "Roadmap. AuraFlux",
+      "description": "See what's coming to AuraFlux. features in active development and on the near-term roadmap.",
       "og_image": ""
     },
     {
       "page": "contact",
-      "title": "Contact Us — AuraFlux",
-      "description": "Get in touch with the AuraFlux team — sales, support, or partnership enquiries.",
+      "title": "Contact Us. AuraFlux",
+      "description": "Get in touch with the AuraFlux team. sales, support, or partnership enquiries.",
       "og_image": ""
     },
     {
       "page": "blog",
-      "title": "Blog — AuraFlux",
-      "description": "Insights on AI video production, content automation, and building a streaming-to-revenue pipeline.",
+      "title": "Blog. AuraFlux",
+      "description": "Insights on automated video production, content automation, and building a streaming-to-revenue pipeline.",
       "og_image": ""
     }
   ]

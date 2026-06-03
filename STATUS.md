@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-03 v1.0.948 (Cursor — fix(marketing): all CMS JSON files are the source of truth — fixed plans Stripe CTAs, our-story How It Works CTA, removed all AI/Gemini/em-dash from JSON; added verify_deploy.sh post-deploy QA script; deploy.sh now runs content checks after every deploy)
 **Last Updated:** 2026-06-03 v1.0.947 (Cursor — fix(marketing): favicon now serves the AuraFlux logo PNG from R2 instead of inline SVG letter A)
 **Last Updated:** 2026-06-02 v1.0.946 (Cursor — fix(marketing): nav+Blog+GetStarted; roadmap grid HTML fix; plans Stripe CTAs; dash copy cleanup; about.html CTA consolidation — CPD-498)
 **Last Updated:** 2026-06-02 v1.0.945 (Cursor — fix(marketing): restore plan images via Canva MCP — text removed from Operate/Guided/Managed images, re-uploaded to R2, img tags restored in pricing.html; price number spacing fix)
