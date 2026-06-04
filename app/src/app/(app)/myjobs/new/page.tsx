@@ -232,7 +232,7 @@ const CATEGORY_BOXES: CategoryBox[] = [
   { id: 'brand',    label: 'Design & Brand',    description: 'Thumbnails, intros, and brand identity',       icon: '🎨', formFactors: ['long', 'short'] },
 ];
 
-const ALL_SECTIONS = ['type', 'source', 'format', 'platform', 'production', 'schedule'];
+const ALL_SECTIONS = ['type', 'source', 'format', 'platform', 'production', 'schedule', 'publish_settings'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -489,6 +489,12 @@ function JobBuilderPageInner() {
   const [featureConfig,  setFeatureConfig]  = useState<Record<string, Record<string, string>>>({});
   const [scheduledStart, setScheduledStart] = useState<'now' | 'scheduled'>('now');
   const [scheduledAt,    setScheduledAt]    = useState('');
+  // CPD-511/513: publish mode + optional metadata override
+  const [publishMode,    setPublishMode]    = useState<'immediate' | 'review'>('immediate');
+  const [pubTitle,       setPubTitle]       = useState('');
+  const [pubDescription, setPubDescription] = useState('');
+  const [pubTags,        setPubTags]        = useState('');
+  const [pubPrivacy,     setPubPrivacy]     = useState<'public' | 'unlisted' | 'private'>('public');
   const [tone,           setTone]           = useState('professional');
   const [durationMins,   setDurationMins]   = useState(3);
 
@@ -700,6 +706,16 @@ function JobBuilderPageInner() {
       publishMode:    'immediate',
       featureConfig:  Object.keys(mergedConfig).length ? mergedConfig : undefined,
       addOns:         Object.keys(addOns).length > 0 ? addOns : undefined,
+      // CPD-511/513: staging gate + customer-provided publish metadata
+      staging:        publishMode === 'review' ? true : undefined,
+      publishMeta: (() => {
+        const pm: CreateJobPayload['publishMeta'] = {};
+        if (pubTitle.trim())       pm.title         = pubTitle.trim();
+        if (pubDescription.trim()) pm.description   = pubDescription.trim();
+        if (pubTags.trim())        pm.tags           = pubTags.split(',').map((t) => t.trim()).filter(Boolean);
+        if (pubPrivacy !== 'public') pm.privacyStatus = pubPrivacy;
+        return Object.keys(pm).length ? pm : undefined;
+      })(),
     };
 
     if (sourceMode === 'source') {
@@ -1212,6 +1228,72 @@ function JobBuilderPageInner() {
                       <p className="text-[10px] text-muted-foreground">Publish timing is set when you review the output</p>
                     </div>
                   )}
+                </div>
+              </CollapsibleSection>
+
+              <div className="h-px bg-border/50 my-0.5" />
+
+              {/* PUBLISH SETTINGS — CPD-511/513 */}
+              <CollapsibleSection id="publish_settings" label="Publish settings"
+                summary={publishMode === 'review' ? 'Review before publishing' : pubTitle ? `Title: ${pubTitle.slice(0, 32)}` : 'Publish immediately'}
+                open={isOpen('publish_settings')} onToggle={() => toggle('publish_settings')}>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs mb-1.5 block">After production</Label>
+                    <ChipGroup
+                      options={[
+                        { id: 'immediate', label: 'Publish immediately' },
+                        { id: 'review',    label: 'Review before publishing' },
+                      ]}
+                      selected={[publishMode]}
+                      singleSelect
+                      onToggle={(id) => setPublishMode(id as 'immediate' | 'review')}
+                    />
+                    {publishMode === 'review' && (
+                      <p className="text-[11px] text-muted-foreground mt-1.5">
+                        Your video will be held for review. You&apos;ll approve and publish from the job detail page.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">
+                      Publish metadata <span className="font-normal">(optional — AI generates these if left blank)</span>
+                    </Label>
+                    <input
+                      type="text"
+                      placeholder="Video title"
+                      value={pubTitle}
+                      onChange={(e) => setPubTitle(e.target.value)}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <textarea
+                      placeholder="Description"
+                      value={pubDescription}
+                      onChange={(e) => setPubDescription(e.target.value)}
+                      rows={2}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Tags (comma-separated)"
+                      value={pubTags}
+                      onChange={(e) => setPubTags(e.target.value)}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs shrink-0">Visibility</Label>
+                      <select
+                        value={pubPrivacy}
+                        onChange={(e) => setPubPrivacy(e.target.value as typeof pubPrivacy)}
+                        className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="public">Public</option>
+                        <option value="unlisted">Unlisted</option>
+                        <option value="private">Private</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </CollapsibleSection>
 

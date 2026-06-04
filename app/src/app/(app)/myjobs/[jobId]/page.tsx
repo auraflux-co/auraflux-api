@@ -18,7 +18,8 @@ import { cn } from '@/lib/utils';
 import { formatUserError, platformLabel } from '@/lib/job-labels';
 import {
   getJobDetail, operatorJobAction, saveJobAsTemplate, approveAndPublish,
-  type Job, type OperatorAction,
+  getThumbnailCandidates, approveThumbnail,
+  type Job, type OperatorAction, type ThumbnailCandidate,
 } from '@/lib/api';
 import { SaveTemplateDialog, type SaveTemplateOptions } from '@/components/jobs/save-template-dialog';
 import { labelForContentType } from '@/lib/content-types';
@@ -204,6 +205,10 @@ export default function JobDetailPage() {
   const [approving, setApproving]             = useState(false);
   const [approveError, setApproveError]       = useState<string | null>(null);
   const [approveResult, setApproveResult]     = useState<Record<string, unknown> | null>(null);
+  // CPD-512: thumbnail picker
+  const [thumbCandidates, setThumbCandidates] = useState<ThumbnailCandidate[] | null>(null);
+  const [thumbApproving, setThumbApproving]   = useState(false);
+  const [thumbApproved, setThumbApproved]     = useState<string | null>(null);
 
   async function handleSaveAsTemplate(opts: SaveTemplateOptions) {
     if (!job) return;
@@ -276,6 +281,36 @@ export default function JobDetailPage() {
     const timer = setInterval(fetchJob, 5000);
     return () => clearInterval(timer);
   }, [job, fetchJob]);
+
+  // CPD-512: fetch thumbnail candidates when job is complete/staged and not yet approved
+  useEffect(() => {
+    if (!job) return;
+    if (job.status !== 'staged' && job.status !== 'complete') return;
+    if (thumbCandidates !== null || thumbApproved) return;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await getThumbnailCandidates(jobId, token ?? undefined);
+        if (res.candidates?.length) setThumbCandidates(res.candidates);
+        if (res.status === 'approved' && res.r2Url) setThumbApproved(res.r2Url);
+      } catch {
+        // thumbnail stage not initiated yet — ignore silently
+      }
+    })();
+  }, [job, jobId, getToken, thumbCandidates, thumbApproved]);
+
+  async function handleSelectThumbnail(candidate: ThumbnailCandidate) {
+    setThumbApproving(true);
+    try {
+      const token = await getToken();
+      await approveThumbnail(jobId, { method: candidate.method, candidateIndex: candidate.index }, token ?? undefined);
+      setThumbApproved(candidate.url);
+    } catch {
+      // non-fatal — thumbnail approval is optional
+    } finally {
+      setThumbApproving(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -480,6 +515,37 @@ export default function JobDetailPage() {
           {approveResult && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
               ✓ Published. Check your platforms for live links.
+            </div>
+          )}
+
+          {/* CPD-512: Thumbnail picker */}
+          {thumbCandidates && thumbCandidates.length > 0 && !thumbApproved && (
+            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Choose a thumbnail</p>
+              <div className="grid grid-cols-3 gap-2">
+                {thumbCandidates.map((c) => (
+                  <button
+                    key={c.index}
+                    disabled={thumbApproving}
+                    onClick={() => handleSelectThumbnail(c)}
+                    className="relative rounded overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary transition-colors focus:outline-none disabled:opacity-50"
+                  >
+                    <img src={c.url} alt={`Thumbnail ${c.index + 1}`} className="w-full aspect-video object-cover" />
+                    {c.score != null && (
+                      <span className="absolute bottom-1 right-1 text-[9px] font-bold bg-black/70 text-white rounded px-1">
+                        {c.score}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Click to set as your video thumbnail before publishing.</p>
+            </div>
+          )}
+          {thumbApproved && (
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2">
+              <img src={thumbApproved} alt="Approved thumbnail" className="w-12 h-7 object-cover rounded shrink-0" />
+              <p className="text-xs text-emerald-700 dark:text-emerald-300">✓ Thumbnail selected</p>
             </div>
           )}
         </div>

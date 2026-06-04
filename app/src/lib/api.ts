@@ -149,6 +149,16 @@ export interface CreateJobPayload {
     heygen?:     { active: boolean; avatarId?: string };
     [key: string]: Record<string, unknown> | undefined;
   };
+  // CPD-511/513: staging gate + customer-provided publish metadata
+  staging?: boolean;
+  publishMeta?: {
+    title?:              string;
+    description?:        string;
+    tags?:               string[];
+    privacyStatus?:      'public' | 'unlisted' | 'private';
+    tiktokCaption?:      string;
+    scheduledPublishAt?: string;
+  };
 }
 
 // ─── Credit estimation ────────────────────────────────────────────────────────
@@ -932,6 +942,49 @@ export async function approveAndPublish(
     method: 'POST',
     token,
     body: platforms ? JSON.stringify({ platforms }) : undefined,
+  });
+}
+
+// ─── Thumbnail candidates (CPD-512) ──────────────────────────────────────────
+
+export interface ThumbnailCandidate {
+  index:         number;
+  url:           string;
+  score:         number | null;
+  offsetSeconds: number | null;
+  method:        'frame' | 'designed' | 'vectcut' | 'imagen' | string;
+}
+
+export interface ThumbnailCandidatesResponse {
+  jobId:               string;
+  status:              string;
+  method?:             string;
+  r2Url?:              string | null;
+  approvedAt?:         string | null;
+  geminiRecommendation?: string | null;
+  geminiRanking?:      unknown;
+  candidates:          ThumbnailCandidate[];
+  designedUrl?:        string | null;
+  vectcutUrl?:         string | null;
+  imagenUrl?:          string | null;
+}
+
+export async function getThumbnailCandidates(
+  jobId: string,
+  token?: string,
+): Promise<ThumbnailCandidatesResponse> {
+  return apiFetch(`/jobs/${jobId}/thumbnail/candidates`, { token });
+}
+
+export async function approveThumbnail(
+  jobId: string,
+  opts: { method: string; candidateIndex?: number; r2Url?: string },
+  token?: string,
+): Promise<{ ok: boolean; thumbnail: unknown }> {
+  return apiFetch(`/jobs/${jobId}/thumbnail/approve`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify(opts),
   });
 }
 
