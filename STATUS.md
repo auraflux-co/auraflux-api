@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-04 v1.0.975 (Cursor — fix(schema+effects): add neutral/clean to colorGrade preset list and COLOR_PRESETS — YouTube Deep Dive template was failing validation with preset:neutral)
 **Last Updated:** 2026-06-04 v1.0.974 (Cursor — fix(manifest): portrait recorded as layout.portrait (not effects.portrait) in manifest recording loop — aligns applied key with ordered key so QA doesn't false-flag portrait as missing)
 **Last Updated:** 2026-06-03 v1.0.973 (Cursor — fix(effects): replace zoompan with static 8% scale+crop zoom — zoompan was hanging postprocess for 8+ min on assembled clips; static zoom is 100x faster and visually equivalent for gaming clip reels)
 **Last Updated:** 2026-06-03 v1.0.972 (Cursor — fix(qa): FFmpeg eq filter syntax (eq=k=v not eq:k=v); zoompan drops hardcoded s=1920x1080; transitions stub registered; branding removed from manifest ordered list + recorded after chrome succeeds; processingManifest now tracks deliverable features accurately)
