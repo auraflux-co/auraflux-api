@@ -4,6 +4,17 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 
+const BRAND       = {
+  href: '/settings/brand',
+  title: 'Brand',
+  description: 'Upload your brand logo, intro card, and outro card — applied to every assembled video.',
+  cta: 'Manage brand →',
+  icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+    </svg>
+  ),
+};
 const API_KEYS    = {
   href: '/settings/api-keys',
   title: 'API Keys',
@@ -50,8 +61,8 @@ const MY_TEAM     = {
 };
 
 function sectionsForTier(planTier: string | undefined) {
-  if (planTier === 'operate') return [API_KEYS, MY_CHANNELS, SOCIAL, MY_TEAM];
-  return [MY_CHANNELS, SOCIAL, MY_TEAM];
+  if (planTier === 'operate') return [BRAND, API_KEYS, MY_CHANNELS, SOCIAL, MY_TEAM];
+  return [BRAND, MY_CHANNELS, SOCIAL, MY_TEAM];
 }
 
 export default async function SettingsPage() {

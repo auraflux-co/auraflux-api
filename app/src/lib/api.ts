@@ -1221,6 +1221,8 @@ export interface Brand {
   stripe_subscription_id: string | null;
   image_url:              string | null;
   description:            string | null;
+  intro_card_url:         string | null;
+  outro_card_url:         string | null;
 }
 
 export interface BrandSubscription {
@@ -1258,7 +1260,13 @@ export async function renameBrandApi(id: string, name: string, token?: string): 
 
 export async function updateBrandApi(
   id: string,
-  fields: { name?: string; image_url?: string | null; description?: string | null },
+  fields: {
+    name?:           string;
+    image_url?:      string | null;
+    description?:    string | null;
+    intro_card_url?: string | null;
+    outro_card_url?: string | null;
+  },
   token?: string,
 ): Promise<Brand> {
   const res = await apiFetch<{ ok: boolean; brand: Brand }>(`/brands/${id}`, {
@@ -1267,6 +1275,22 @@ export async function updateBrandApi(
     token,
   });
   return res.brand;
+}
+
+export type BrandAssetType = 'logo' | 'intro_card' | 'outro_card';
+
+export async function getBrandUploadUrl(
+  brandId:     string,
+  assetType:   BrandAssetType,
+  filename:    string,
+  contentType: string,
+  token?:      string,
+): Promise<{ uploadUrl: string; assetUrl: string; key: string }> {
+  const res = await apiFetch<{ ok: boolean; uploadUrl: string; assetUrl: string; key: string }>(
+    `/brands/${brandId}/upload-url`,
+    { method: 'POST', body: JSON.stringify({ assetType, filename, contentType }), token },
+  );
+  return { uploadUrl: res.uploadUrl, assetUrl: res.assetUrl, key: res.key };
 }
 
 export async function deleteBrandApi(id: string, token?: string): Promise<void> {
