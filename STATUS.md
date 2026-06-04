@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-04 v1.0.945 (Cursor — fix(env): 6 Render-only vars (NODE_ENV/OPTIONS/TZ/PUPPETEER/WAN_MODEL/R2_BACKUP) added to .env so guard restores them after any destructive PUT; guard LOCAL_SKIP_KEYS cleaned; --set mode added for safe single-var updates without wiping)
 **Last Updated:** 2026-06-04 v1.0.944 (Cursor — fix(social): revert resetProfile-on-disconnect (wiped all platforms); connect URL no longer filters by platform — full session allows disconnect+reconnect in one JWT for account switching)
 **Last Updated:** 2026-06-04 v1.0.943 (Cursor — fix(social): disconnect TikTok/Instagram now resets Upload-Post profile so reconnect gets clean OAuth session; add webhook POST /social/webhooks/uploadpost to sync disconnects back to token_store)
 **Last Updated:** 2026-06-04 v1.0.942 (Cursor — fix(cron): auraflux-pipeline-review build failure — set PUPPETEER_SKIP_DOWNLOAD=true + ATLASSIAN env vars on Render cron; Chrome binary corrupted in cache blocked every npm install)

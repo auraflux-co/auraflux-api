@@ -10,23 +10,76 @@
 #   4. Verifies the restore succeeded
 #   5. Exits 0 (deploy can proceed) or 1 (unrecoverable — stop the deploy)
 #
-# This is the permanent fix for the "env vars wiped on every deploy" problem.
-# Root cause: render.yaml Blueprint sync clears sync:false vars with no value;
-# agents calling PUT /env-vars with partial lists wipe the rest.
-# This script ensures the full set is always restored before any deploy fires.
+# AGENTS: Never use raw `PUT /env-vars` with a partial list — it wipes everything.
+# Use the safe helper instead:
+#   bash scripts/predeploy_env_guard.sh --set KEY=value [KEY2=value2 ...]
+# This does GET→merge→PUT so no existing vars are lost.
 #
 # Usage:
-#   bash scripts/predeploy_env_guard.sh                  # check + auto-restore
-#   bash scripts/predeploy_env_guard.sh --dry-run        # print what would change, no write
-#   SKIP_PREDEPLOY_ENV_GUARD=1 bash scripts/...          # bypass (NOT recommended)
+#   bash scripts/predeploy_env_guard.sh                        # check + auto-restore
+#   bash scripts/predeploy_env_guard.sh --dry-run              # print what would change, no write
+#   bash scripts/predeploy_env_guard.sh --set FOO=bar BAZ=qux  # safely add/update vars
+#   SKIP_PREDEPLOY_ENV_GUARD=1 bash scripts/...                # bypass (NOT recommended)
 
 set -euo pipefail
 
 DRY_RUN=0
-[[ "${1:-}" == "--dry-run" ]] && DRY_RUN=1
+SET_MODE=0
+SET_PAIRS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run) DRY_RUN=1; shift ;;
+    --set)
+      SET_MODE=1; shift
+      while [[ $# -gt 0 && "$1" != --* ]]; do
+        SET_PAIRS+=("$1"); shift
+      done
+      ;;
+    *) shift ;;
+  esac
+done
 
 if [[ "${SKIP_PREDEPLOY_ENV_GUARD:-0}" == "1" ]]; then
   echo "[predeploy_env_guard] SKIPPED (SKIP_PREDEPLOY_ENV_GUARD=1)"
+  exit 0
+fi
+
+# ── --set mode: safely add/update specific vars without wiping others ────────
+if [[ "$SET_MODE" -eq 1 ]]; then
+  if [[ ${#SET_PAIRS[@]} -eq 0 ]]; then
+    echo "Usage: $0 --set KEY=value [KEY2=value2 ...]"; exit 1
+  fi
+  RKEY="${RENDER_API_KEY:-$(grep -m1 '^RENDER_API_KEY=' .env 2>/dev/null | cut -d= -f2-)}"
+  RSVC="${RENDER_SERVICE_ID:-$(grep -m1 '^RENDER_SERVICE_ID=' .env 2>/dev/null | cut -d= -f2-)}"
+  CURRENT_JSON=$(curl -sf -H "Authorization: Bearer ${RKEY}" \
+    "https://api.render.com/v1/services/${RSVC}/env-vars?limit=100")
+  python3 << PYEOF
+import json, urllib.request as ur, sys
+
+rkey = "${RKEY}"
+rsvc = "${RSVC}"
+pairs_raw = """${SET_PAIRS[*]:-}"""
+current_raw = json.loads('''${CURRENT_JSON}''')
+
+# Start with existing vars
+merged = {item.get("envVar", item)["key"]: item.get("envVar", item)["value"] for item in current_raw}
+
+# Apply the --set overrides
+for pair in pairs_raw.strip().split():
+    k, _, v = pair.partition("=")
+    if k:
+        merged[k] = v
+        print(f"  SET {k} = {v[:20]}{'...' if len(v)>20 else ''}")
+
+payload = json.dumps([{"key": k, "value": v} for k, v in merged.items()]).encode()
+req = ur.Request(f"https://api.render.com/v1/services/{rsvc}/env-vars",
+    data=payload, method="PUT",
+    headers={"Authorization": f"Bearer {rkey}", "Content-Type": "application/json"})
+resp = ur.urlopen(req)
+result = json.loads(resp.read())
+print(f"✅ Set {len([p for p in pairs_raw.split() if '=' in p])} var(s) — {len(result)} total vars preserved on Render.")
+PYEOF
   exit 0
 fi
 
@@ -51,8 +104,11 @@ echo "[predeploy_env_guard] ${CURRENT_COUNT} vars currently on Render."
 
 # ── 2. Build canonical list from .env (skip local-only vars) ────────────────
 LOCAL_SKIP_PREFIXES="http://localhost,http://127"
-# Never push these to Render — render.yaml already sets the correct production values
-LOCAL_SKIP_KEYS="VECTCUT_API_URL,DASHBOARD_PORT,ATLASSIAN_API_TOKEN,ATLASSIAN_DOMAIN,ATLASSIAN_EMAIL,JIRA_PROJECT_KEY,JIRA_WEBHOOK_SECRET,CONFLUENCE_SPACE_KEY,NEW_RELIC_APP_NAME,NEW_RELIC_LICENSE_KEY,NEW_RELIC_USER_KEY,RENDER_API_KEY,GATE_TEST_MODE,PORT,PUPPETEER_EXECUTABLE_PATH,PUPPETEER_SKIP_CHROMIUM_DOWNLOAD,USE_LOCAL_FFMPEG,NODE_ENV,TZ,NODE_OPTIONS"
+# Keys to skip — local-dev-only vars that must never reach Render.
+# DO NOT add production vars here (NODE_ENV, TZ, NODE_OPTIONS, etc.) — if a
+# destructive PUT ever wipes Render vars, the guard can only restore what it
+# knows about. Production vars belong in .env, not in this skip list.
+LOCAL_SKIP_KEYS="VECTCUT_API_URL,DASHBOARD_PORT,ATLASSIAN_API_TOKEN,ATLASSIAN_DOMAIN,ATLASSIAN_EMAIL,JIRA_PROJECT_KEY,JIRA_WEBHOOK_SECRET,CONFLUENCE_SPACE_KEY,NEW_RELIC_APP_NAME,NEW_RELIC_LICENSE_KEY,NEW_RELIC_USER_KEY,RENDER_API_KEY,GATE_TEST_MODE,PORT,PUPPETEER_EXECUTABLE_PATH,USE_LOCAL_FFMPEG"
 
 CANONICAL_JSON=$(python3 << PYEOF
 import json
