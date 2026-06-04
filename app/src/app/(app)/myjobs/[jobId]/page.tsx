@@ -120,7 +120,7 @@ function SpecStrip({ job }: { job: Job }) {
     job.platforms.length > 0
       ? job.platforms.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')
       : null,
-    new Date(job.createdAt).toLocaleDateString(),
+    new Date(job.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
   ].filter(Boolean) as string[];
 
   const topic = wc?.topic
@@ -703,7 +703,7 @@ export default function JobDetailPage() {
                   <div>
                     <p className="text-sm font-semibold capitalize">{r.platform}</p>
                     {r.publishedAt && (
-                      <p className="text-[10px] text-muted-foreground">{new Date(r.publishedAt).toLocaleDateString()}</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(r.publishedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
                     )}
                   </div>
                 </div>

@@ -42,6 +42,19 @@ const ADDON_LABELS: Record<string, string> = {
   dynamicOverlays:'Dynamic overlays',
 };
 
+function fmtJobTime(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const opts: Intl.DateTimeFormatOptions = {
+    month:  'short',
+    day:    'numeric',
+    hour:   'numeric',
+    minute: '2-digit',
+  };
+  if (d.getFullYear() !== now.getFullYear()) opts.year = 'numeric';
+  return d.toLocaleString('en-US', opts);
+}
+
 function formFactorLabel(wc: WizardConfig) {
   const ff = wc.formFactor || (wc.templateId === 'short-form' ? 'short' : 'long');
   return ff === 'short' ? 'Short-form (9:16)' : 'Long-form (16:9)';
@@ -285,7 +298,7 @@ function ReviewCard({ job }: { job: Job }) {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {labelForContentType(job.contentType)} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {labelForContentType(job.contentType)} · {fmtJobTime(job.createdAt)}
             </p>
             {job.publishCopy?.youtube?.title && (
               <p className="text-xs text-muted-foreground/70 italic line-clamp-1">
@@ -348,7 +361,7 @@ function HistoryCard({ job }: { job: Job }) {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {labelForContentType(job.contentType)} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {labelForContentType(job.contentType)} · {fmtJobTime(job.createdAt)}
             </p>
             {job.publishCopy?.youtube?.title && (
               <p className="text-xs text-muted-foreground/70 italic line-clamp-1">
