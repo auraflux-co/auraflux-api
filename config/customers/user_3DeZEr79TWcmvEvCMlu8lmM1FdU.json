@@ -1,0 +1,459 @@
+{
+  "customerId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU",
+  "showId": "cwn",
+  "showName": "ClipzWorld News",
+  "templates": {
+    "long-form": {
+      "contentTypes": ["news", "clips", "sports", "twitch", "nba"],
+      "sceneFormulas": {
+        "news": "1 + (items * 4) + 1",
+        "clips": "1 + (items * 7) + 1",
+        "sports": "1 + (items * 4) + 1"
+      },
+      "maxItems": {
+        "news": 5,
+        "clips": 10,
+        "sports": 5
+      },
+      "providers": {
+        "fetch": "site_scrape",
+        "script": "gemini",
+        "avatar": "heygen",
+        "assembly": "internal",
+        "upload": "upload-post"
+      },
+      "designDefaults": {
+        "chrome": {
+          "name": "BECAUSE THE LIGHT WAS ON",
+          "baselinePreset": "0415",
+
+          "colors": {
+            "primary": "#22304b",
+            "accent": "#c7af4f",
+            "active": "#C0392B",
+            "text": "#ffffff",
+            "background": "#0d1424"
+          },
+
+          "topBar": {
+            "height": 48,
+            "episodePrefix": "Episode"
+          },
+
+          "flag": {
+            "width": 620,
+            "height": 88,
+            "borderWidth": 4,
+            "maxTitleChars": 50,
+            "categoryLabel": {
+              "news": "WORLD NEWS",
+              "clips": "ON STREAM",
+              "sports": "NBA GAME"
+            }
+          },
+
+          "sidebar": {
+            "top": 120,
+            "rightMargin": 32,
+            "width": 420,
+            "itemHeight": 90,
+            "itemGap": 12,
+            "maxItems": 5,
+            "borderWidth": 4,
+            "activeBorderWidth": 5
+          },
+
+          "logo": {
+            "asset": "assets/cwn_logo.png",
+            "x": 1725,
+            "y": 910,
+            "size": 90,
+            "opacity": 0.85
+          },
+
+          "font": {
+            "headline": "assets/fonts/BebasNeue-Regular.ttf",
+            "body": "assets/fonts/BarlowCondensed-SemiBold.ttf",
+            "small": "assets/fonts/BarlowCondensed-Regular.ttf"
+          },
+
+          "contentTypeOverrides": {
+            "news": {
+              "name": "BECAUSE THE LIGHT WAS ON",
+              "colors": { "primary": "#22304b", "accent": "#c7af4f", "active": "#C0392B" },
+              "flag": {
+                "topGapBelowTopBar": 0,
+                "leftMargin": 0,
+                "maxTitleChars": 44,
+                "twoLineSplitAtChars": 22,
+                "fontSizeSingleLine": 26,
+                "fontSizeDoubleLine": 16
+              },
+              "sidebar": {
+                "top": 132
+              }
+            },
+            "clips": {
+              "name": "TWITCH SOUP",
+              "colors": { "primary": "#6441A5", "accent": "#7d5bbe", "active": "#6441A5" }
+            },
+            "sports": {
+              "name": "OTHER SIDE OF THE PILLOW",
+              "colors": { "primary": "#17408B", "accent": "#1a4fa8", "active": "#C9082A" }
+            }
+          },
+
+          "templateFile": "tools/clipzworld_newscast.html",
+          "skins": {
+            "news": { "accentColor": "#C41E3A", "accentColor2": "#8B0000" },
+            "clips": { "accentColor": "#6441A5", "accentColor2": "#4B2D8F" },
+            "sports": { "accentColor": "#17408B", "accentColor2": "#C9082A" }
+          },
+          "hasTopBar": true,
+          "hasFlag": true,
+          "hasSidebar": true,
+          "hasTicker": true,
+          "hasLogo": true,
+          "logoPosition": "bottom-right-mug",
+          "logoSize": 120,
+          "caption": {
+            "position": "panel-bottom-center",
+            "align": "center",
+            "fontsize": 68,
+            "font": "/System/Library/Fonts/Supplemental/Arial Bold Italic.ttf",
+            "useBox": true,
+            "textColor": "#FFFFFF",
+            "strokeColor": "#000000",
+            "strokeWidth": 5,
+            "shadowColor": "#000000@0.75",
+            "shadowX": 2,
+            "shadowY": 2,
+            "yOffset": 20,
+            "maxLines": 2,
+            "boxOpacity": 0.75,
+            "boxBorderW": 18,
+            "colors": {
+              "news": "#c7af4f",
+              "clips": "#6441A5",
+              "sports": "#1CE8FF"
+            }
+          }
+        },
+        "voice": {
+          "lockedIntro": {
+            "news": "I'm Bobby G, and this is Because the Light was on. I'm told this is the news. A recent study shows that people who watch news programs are 40% more likely to be aware that a news program is currently happening. ... [Pause] ... Here are some things that occurred while we weren't looking.",
+            "clips": "Welcome to Twitch Soup. I'm your host Bobby G, and for the next five minutes, I'll be your guide through the digital world that is livestreaming.",
+            "sports": "What's up, ClipzWorld! Grab your shades, because we're heading to the Other Side of the Pillow. I'm Bobby G, and we're breaking down the highlights that weren't just good—they were cold."
+          },
+          "lockedOutro": "That's all the time we have before the light bill is due. I'm Bobby G for ClipzWorld News. Keep your clips short and your takes shorter. Goodnight and good luck.",
+          "showName": {
+            "news": "BECAUSE THE LIGHT WAS ON",
+            "clips": "TWITCH SOUP",
+            "sports": "OTHER SIDE OF THE PILLOW"
+          },
+          "categoryLabel": {
+            "news": "WORLD NEWS",
+            "clips": "ON STREAM",
+            "sports": "NBA GAME"
+          }
+        },
+        "audio": {
+          "mixMode": "both",
+          "avatarTrack": true,
+          "sourceTrack": true
+        },
+        "resolution": {
+          "width": 1920,
+          "height": 1080
+        },
+        "avatarId": "842f20b75ce242aea397f5030aa018aa",
+        "voiceId": "2e598f1a6022448cb6710e5d44665325",
+        "speakSpeed": 0.85
+      },
+      "qaThresholds": {
+        "gate0": {
+          "minDurationSeconds": 10
+        },
+        "gate1": {
+          "pass": 90,
+          "manualReview": 55
+        },
+        "gate2": {
+          "pass": 85,
+          "manualReview": 65
+        },
+        "gate3a": {
+          "pass": 70,
+          "manualReview": 60
+        },
+        "gate4": {
+          "pass": 70
+        }
+      },
+      "voice": {
+        "style": "jon-stewart-norm-macdonald-space-ghost",
+        "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
+        "outroLine": "Goodnight and good luck.",
+        "speakerName": "Bobby G"
+      },
+      "thumbnail": {
+        "news": {
+          "templateType": "html",
+          "templatePath": "templates/cwn_news_tool.html",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "clips": {
+          "templateType": "overlay",
+          "backgroundPath": "assets/twitch_thumbnail_canva.png",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "sports": {
+          "templateType": "html",
+          "templatePath": "templates/nba_thumbnail_generator.html",
+          "backgroundPath": "assets/nba_playoffs_2026_bracket.png",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        }
+      },
+      "ffmpeg": {
+        "codec": "h264_videotoolbox",
+        "codecFallback": "libx264",
+        "resolution": "1920x1080",
+        "fps": 30,
+        "audioCodec": "aac",
+        "audioBitrate": "192k",
+        "dissolveSeconds": 0.7
+      },
+      "assemblyConfig": {
+        "news": {
+          "sourceCropFilter": "crop=1920:1080,",
+          "clipIntroSkipSecs": 5,
+          "clipMaxSecs": 25,
+          "watermarkBox": {
+            "enabled": false,
+            "x": 1780,
+            "y": 960,
+            "w": 120,
+            "h": 80,
+            "color": "0x0d1424@1.0"
+          }
+        },
+        "clips": {
+          "sourceCropFilter": "crop=1880:1040,",
+          "clipIntroSkipSecs": 0,
+          "clipMaxSecs": null
+        },
+        "sports": {
+          "sourceCropFilter": "crop=1920:1080,",
+          "clipIntroSkipSecs": 0,
+          "clipMaxSecs": null,
+          "mixMode": "voiceover",
+          "musicVolume": 0.2
+        }
+      }
+    },
+    "short-form": {
+      "contentTypes": ["news", "clips", "sports", "twitch", "nba"],
+      "sceneFormulas": {
+        "news": "1 + 1 + 1",
+        "clips": "1 + 1 + 1 + 1 + 1",
+        "sports": "1 + 1 + 1 + 1"
+      },
+      "maxItems": {
+        "news": 1,
+        "clips": 1,
+        "sports": 1
+      },
+      "providers": {
+        "fetch": "site_scrape",
+        "script": "gemini",
+        "avatar": "heygen",
+        "assembly": "internal",
+        "upload": "upload-post"
+      },
+      "designDefaults": {
+        "chrome": {
+          "templateFile": "tools/clipzworld_newscast.html",
+          "skins": {
+            "news": {
+              "accentColor": "#C41E3A",
+              "accentColor2": "#8B0000"
+            },
+            "clips": {
+              "accentColor": "#6441A5",
+              "accentColor2": "#4B2D8F"
+            },
+            "sports": {
+              "accentColor": "#17408B",
+              "accentColor2": "#C9082A"
+            }
+          },
+          "hasTopBar": false,
+          "hasFlag": false,
+          "hasSidebar": false,
+          "hasTicker": false,
+          "hasLogo": true,
+          "logoPosition": "top-right",
+          "logoSize": 80,
+          "layout": "split-screen",
+          "splitTop": "avatar",
+          "splitBottom": "clip",
+          "caption": {
+            "position": "y=920",
+            "align": "center",
+            "fontsize": 68,
+            "font": "/System/Library/Fonts/Supplemental/Arial Bold Italic.ttf",
+            "boxOpacity": 0.75,
+            "boxBorderW": 18,
+            "colors": {
+              "news": "#c7af4f",
+              "clips": "#6441A5",
+              "sports": "#1CE8FF"
+            }
+          }
+        },
+        "voice": {
+          "lockedIntro": null,
+          "lockedOutro": null,
+          "showName": {
+            "news": "BECAUSE THE LIGHT WAS ON",
+            "clips": "TWITCH SOUP",
+            "sports": "OTHER SIDE OF THE PILLOW"
+          },
+          "categoryLabel": {
+            "news": "WORLD NEWS",
+            "clips": "ON STREAM",
+            "sports": "NBA GAME"
+          }
+        },
+        "audio": {
+          "mixMode": "both"
+        },
+        "resolution": {
+          "width": 1080,
+          "height": 1920
+        },
+        "avatarId": "b3da9bba7b234526a0527c7970ea728e",
+        "voiceId": "2e598f1a6022448cb6710e5d44665325",
+        "speakSpeed": 0.95
+      },
+      "qaThresholds": {
+        "gate0": {
+          "minDurationSeconds": 30,
+          "maxDurationSeconds": 90
+        },
+        "gate1": {
+          "pass": 70,
+          "manualReview": 55
+        },
+        "gate2": {
+          "pass": 85,
+          "manualReview": 65
+        },
+        "gate3a": {
+          "pass": 70,
+          "manualReview": 60
+        },
+        "gate4": {
+          "pass": 70
+        }
+      },
+      "voice": {
+        "style": "jon-stewart-norm-macdonald-space-ghost",
+        "prohibitedWords": ["incredible", "amazing", "crazy", "wild"],
+        "outroLine": "Subscribe. Appreciate you.",
+        "speakerName": "Bobby G"
+      },
+      "thumbnail": {
+        "news": {
+          "templateType": "html",
+          "templatePath": "templates/cwn_news_tool.html",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "clips": {
+          "templateType": "overlay",
+          "backgroundPath": "assets/twitchsoup_thumbnail.jpeg",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "sports": {
+          "templateType": "html",
+          "templatePath": "templates/nba_thumbnail_generator.html",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          }
+        }
+      },
+      "ffmpeg": {
+        "codec": "h264_videotoolbox",
+        "codecFallback": "libx264",
+        "resolution": "1080x1920",
+        "fps": 30,
+        "audioCodec": "aac",
+        "audioBitrate": "192k"
+      },
+      "assemblyConfig": {
+        "news": {
+          "sourceCropFilter": "crop=1920:1080,",
+          "clipIntroSkipSecs": 5,
+          "clipMaxSecs": 25,
+          "watermarkBox": {
+            "enabled": false,
+            "x": 1780,
+            "y": 960,
+            "w": 120,
+            "h": 80,
+            "color": "0x0d1424@1.0"
+          }
+        },
+        "clips": {
+          "sourceCropFilter": "crop=1880:1040,",
+          "clipIntroSkipSecs": 0,
+          "clipMaxSecs": null
+        },
+        "sports": {
+          "sourceCropFilter": "crop=1920:1080,",
+          "clipIntroSkipSecs": 0,
+          "clipMaxSecs": null,
+          "mixMode": "voiceover",
+          "musicVolume": 0.2
+        }
+      }
+    }
+  },
+  "delivery": {
+    "platforms": ["youtube", "tiktok", "instagram"],
+    "driveFolderId": "${DRIVE_FOLDER_ID}",
+    "uploadPostProfile": "${UPLOADPOST_PROFILE}",
+    "categoryIds": {
+      "news": "25",
+      "clips": "24",
+      "sports": "17"
+    },
+    "visibility": "private",
+    "pinnedComments": {
+      "clips": "What was your favorite streamer clip? Let me know below! 👇 If you enjoyed this, consider subscribing for more Twitch Soup episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
+      "sports": "What was your favorite game highlight? Let me know below! 👇 If you enjoyed this, consider subscribing for more Other Side of the Pillow episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1",
+      "news": "What was your favorite news story? Let me know below! 👇 If you enjoyed this, consider subscribing for more Because the Light Was On episodes. www.youtube.com/@clipzworldnews?sub_confirmation=1"
+    },
+    "tickerFiles": {
+      "sports": "tools/sports_ticker.html",
+      "news": "tools/cwn_combined_ticker.html",
+      "clips": "tools/cwn_twitch_ticker.html"
+    }
+  }
+}
