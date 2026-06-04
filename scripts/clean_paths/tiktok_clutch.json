@@ -1,0 +1,17 @@
+{
+  "templateId": "tiktok_clutch",
+  "label": "TikTok Clutch",
+  "format": "portrait",
+  "platforms": [
+    "tiktok",
+    "youtube",
+    "instagram"
+  ],
+  "lastCleanRun": {
+    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780534262267",
+    "grade": 100,
+    "gitHash": "6edaca1",
+    "runDate": "2026-06-04T00:58:24.013123+00:00"
+  },
+  "cleanRunCount": 3
+}

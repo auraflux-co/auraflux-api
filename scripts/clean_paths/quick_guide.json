@@ -1,0 +1,16 @@
+{
+  "templateId": "quick_guide",
+  "label": "Quick Guide",
+  "format": "portrait",
+  "platforms": [
+    "youtube",
+    "tiktok"
+  ],
+  "lastCleanRun": {
+    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780516911295",
+    "grade": 100,
+    "gitHash": "42f53e6",
+    "runDate": "2026-06-03T20:05:06.011758+00:00"
+  },
+  "cleanRunCount": 1
+}
