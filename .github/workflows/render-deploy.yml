@@ -60,7 +60,9 @@ jobs:
           fi
 
       - name: Summary
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          echo "✅ Render deploys triggered for commit: ${{ github.event.head_commit.message }}"
+          echo "✅ Render deploys triggered for commit: ${COMMIT_MSG%%$'\n'*}"
           echo "   auraflux-api → https://dashboard.render.com/web/srv-d7nsd77avr4c73frifcg"
           echo "   auraflux-app → https://dashboard.render.com/web/srv-d7pnalhj2pic73btevl0"
