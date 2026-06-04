@@ -1,7 +1,7 @@
 backend:
   name: github
   repo: auraflux-co/auraflux-api
-  branch: marketing
+  branch: main
   base_url: https://auraflux.co
   auth_endpoint: /oauth/authorize
 
