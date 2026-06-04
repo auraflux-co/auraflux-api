@@ -15,7 +15,7 @@ import { buttonVariants, Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { formatUserError } from '@/lib/job-labels';
+import { formatUserError, platformLabel } from '@/lib/job-labels';
 import {
   getJobDetail, operatorJobAction, saveJobAsTemplate, approveAndPublish,
   type Job, type OperatorAction,
@@ -30,6 +30,15 @@ const PLATFORM_ICONS: Record<string, string> = {
   youtube:   '▶',
   tiktok:    '♪',
   instagram: '◎',
+};
+
+const PLATFORM_BADGE_CLASSES: Record<string, string> = {
+  youtube:   'bg-red-950/60 text-red-400 border border-red-800/50',
+  tiktok:    'bg-cyan-950/60 text-cyan-300 border border-cyan-800/50',
+  instagram: 'bg-purple-950/60 text-purple-400 border border-purple-800/50',
+  twitter:   'bg-sky-950/60 text-sky-400 border border-sky-800/50',
+  facebook:  'bg-blue-950/60 text-blue-400 border border-blue-800/50',
+  linkedin:  'bg-blue-950/60 text-blue-300 border border-blue-800/50',
 };
 
 const PORTAL_LABELS: Record<string, string> = {
@@ -118,7 +127,7 @@ function SpecStrip({ job }: { job: Job }) {
     wc?.contentType ? labelForContentType(wc.contentType) : null,
     ff,
     job.platforms.length > 0
-      ? job.platforms.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')
+      ? job.platforms.map(platformLabel).join(', ')
       : null,
     new Date(job.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
   ].filter(Boolean) as string[];
@@ -437,7 +446,7 @@ export default function JobDetailPage() {
               >
                 {approving
                   ? 'Publishing…'
-                  : `✓ Approve & publish${job.platforms.length > 0 ? ` to ${job.platforms.join(', ')}` : ''}`}
+                  : `✓ Approve & publish${job.platforms.length > 0 ? ` to ${job.platforms.map(platformLabel).join(', ')}` : ''}`}
               </Button>
             ) : (
               <a
@@ -701,7 +710,7 @@ export default function JobDetailPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-xl leading-none">{PLATFORM_ICONS[r.platform] ?? '•'}</span>
                   <div>
-                    <p className="text-sm font-semibold capitalize">{r.platform}</p>
+                    <p className="text-sm font-semibold">{platformLabel(r.platform)}</p>
                     {r.publishedAt && (
                       <p className="text-[10px] text-muted-foreground">{new Date(r.publishedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
                     )}
