@@ -281,3 +281,67 @@ collections:
               - { label: Title Tag, name: title, widget: string, hint: "Shown in browser tab and Google" }
               - { label: Meta Description, name: description, widget: text, hint: "150-160 chars. Shown in Google search results." }
               - { label: OG Image URL, name: og_image, widget: string, required: false }
+
+  # ── Navigation ─────────────────────────────────────────────────────────────
+  - name: navigation
+    label: Navigation
+    files:
+      - name: nav
+        label: Top Navigation
+        file: cloudflare/marketing/content/nav.json
+        fields:
+          - { label: "CTA Button Label", name: cta_label, widget: string, default: "Get Started" }
+          - { label: "CTA Button URL", name: cta_url, widget: string, default: "/plans" }
+          - label: "Nav Links"
+            name: links
+            widget: list
+            hint: "Order matters — left to right in the menu"
+            fields:
+              - { label: Label, name: label, widget: string }
+              - { label: URL, name: url, widget: string }
+
+  # ── Footer ─────────────────────────────────────────────────────────────────
+  - name: footer_content
+    label: Footer
+    files:
+      - name: footer
+        label: Footer Content
+        file: cloudflare/marketing/content/footer.json
+        fields:
+          - { label: "Tagline", name: tagline, widget: string }
+          - { label: "Copyright", name: copyright, widget: string }
+          - label: "Platform Column Links"
+            name: platform_links
+            widget: list
+            fields:
+              - { label: Label, name: label, widget: string }
+              - { label: URL, name: url, widget: string }
+          - label: "Resources Column Links"
+            name: resource_links
+            widget: list
+            fields:
+              - { label: Label, name: label, widget: string }
+              - { label: URL, name: url, widget: string }
+          - label: "Social Media Links"
+            name: social_links
+            widget: list
+            fields:
+              - { label: Platform, name: platform, widget: select, options: [LinkedIn, Instagram, TikTok, YouTube, Twitter, Facebook] }
+              - { label: URL, name: url, widget: string }
+
+  # ── Blog Posts (full articles) ─────────────────────────────────────────────
+  - name: blog_posts
+    label: Blog Posts
+    folder: cloudflare/marketing/content/blog-posts
+    create: true
+    slug: "{{slug}}"
+    identifier_field: title
+    fields:
+      - { label: "Title", name: title, widget: string }
+      - { label: "Publish Date", name: date, widget: datetime, required: false }
+      - { label: "Author", name: author, widget: string, default: "Rob Gregory" }
+      - { label: "Tag / Category", name: tag, widget: string }
+      - { label: "Description", name: description, widget: text }
+      - { label: "Cover Image", name: cover_image, widget: image, required: false }
+      - { label: "Published", name: published, widget: boolean, default: false }
+      - { label: "Body", name: body, widget: markdown }
