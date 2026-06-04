@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-04 v1.0.947 (Cursor — fix(social): restore platforms:[platform] filter in Upload-Post connect URL — without it TikTok account-switching was broken; old account stuck in Upload-Post UI with no way to swap)
 **Last Updated:** 2026-06-04 v1.0.946 (Cursor — fix(oauth): NEXT_PUBLIC_APP_URL missing on API caused post-OAuth redirect to dead API domain; popup never posted social_connected message so user had to manually refresh; set env var + hardened all 3 fallbacks in social_connect.js)
 **Last Updated:** 2026-06-04 v1.0.945 (Cursor — fix(env): 6 Render-only vars (NODE_ENV/OPTIONS/TZ/PUPPETEER/WAN_MODEL/R2_BACKUP) added to .env so guard restores them after any destructive PUT; guard LOCAL_SKIP_KEYS cleaned; --set mode added for safe single-var updates without wiping)
 **Last Updated:** 2026-06-04 v1.0.944 (Cursor — fix(social): revert resetProfile-on-disconnect (wiped all platforms); connect URL no longer filters by platform — full session allows disconnect+reconnect in one JWT for account switching)
