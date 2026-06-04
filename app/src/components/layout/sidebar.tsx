@@ -171,6 +171,7 @@ function settingsNavItem(planTier: string | null): NavItem {
     children.push({ href: '/settings/api-keys', label: 'API Keys' });
   }
   children.push(
+    { href: '/settings/brand',   label: 'Brand Identity'     },
     { href: '/settings/channels', label: 'My Channels'       },
     { href: '/settings/social',  label: 'My Social Accounts' },
     { href: '/profile',          label: 'My Profile'         },
