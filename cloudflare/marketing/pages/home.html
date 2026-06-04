@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AuraFlux — Automated Content Production</title>
-<meta name="description" content="Automated content production from source to publish. No team, no editors — AuraFlux handles everything.">
+<title>AuraFlux. Automated Content Production</title>
+<meta name="description" content="Automated content production from source to publish. No team, no editors. AuraFlux handles everything.">
 <link rel="canonical" href="https://auraflux.co/">
-<link href="/favicon.png" rel="icon" type="image/png">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
 <meta property="og:type" content="website">
-<meta property="og:title" content="AuraFlux — Automated Content Production">
-<meta property="og:description" content="Automated content production from source to publish. No team, no editors — AuraFlux handles everything.">
+<meta property="og:title" content="AuraFlux. Automated Content Production">
+<meta property="og:description" content="Automated content production from source to publish. No team, no editors. AuraFlux handles everything.">
 <meta property="og:image" content="https://auraflux.co/favicon.png">
 <meta name="twitter:card" content="summary_large_image">
 ${FRAMER_FONTS || ''}
@@ -256,6 +256,19 @@ body{line-height:1.6}
 }
 .final-cta h2 .gold{font-style:normal;color:#f5c542;}
 .final-cta p{font-size:1rem;color:#a0a0b8;max-width:480px;margin:0 auto 40px;}
+
+/* Job Templates grid */
+.tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px;max-width:1000px;margin-left:auto;margin-right:auto;}
+@media(max-width:900px){.tpl-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.tpl-grid{grid-template-columns:1fr;}}
+.tpl-card{background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:22px 20px;text-align:left;transition:border-color .2s;}
+.tpl-card:hover{border-color:rgba(245,197,66,.3);}
+.tpl-badge{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border-radius:4px;padding:3px 8px;margin-bottom:10px;}
+.tpl-short{background:rgba(245,197,66,.12);color:#f5c542;}
+.tpl-long{background:rgba(96,165,250,.12);color:#60a5fa;}
+.tpl-name{font-size:1rem;font-weight:700;color:#fff;margin-bottom:6px;}
+.tpl-tag{font-size:.82rem;color:#8f9bb7;margin-bottom:10px;line-height:1.4;}
+.tpl-platforms{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#555580;}
 </style>
 </head>
 <body>
@@ -264,10 +277,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <!-- ── Hero ──────────────────────────────────────────────────────────────── -->
 <section class="hero">
   <div class="hero-glow"></div>
-  <h1 data-editable="hero_headline">Run Your Content<br><span class="gold">Without a Team.</span></h1>
-  <p class="hero-sub" data-editable="hero_sub">AuraFlux runs your content production from start to finish — transforming raw clips, videos, and ideas into polished, published content automatically.</p>
+  <h1 >Run Your Content Without a Team.</span></h1>
+  <p class="hero-sub" >AuraFlux runs your content production from start to finish, transforming raw clips, videos, and ideas into polished, published content automatically.</p>
   <div style="text-align:center;margin-bottom:56px;">
-    <a href="/our-system" class="btn-primary" data-cta="hero_cta">See How It Works</a>
+    <a href="/our-system" class="primary" data-cta="hero_cta">See How It Works</a>
   </div>
   <div class="hero-features">
     <div class="hero-feat">
@@ -293,7 +306,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <!-- ── Logo bar ──────────────────────────────────────────────────────────── -->
 <div class="logo-bar">
-  <p class="logo-bar-label" data-editable="trusted_by_label">Trusted by creators on</p>
+  <p class="logo-bar-label" >Trusted by creators on</p>
   <div class="logo-bar-items">
     <div class="logo-bar-item">
       <div class="logo-bar-avatar" style="background:rgba(255,0,0,.12);border-color:rgba(255,0,0,.35);">
@@ -335,24 +348,24 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <!-- ── Value prop ─────────────────────────────────────────────────────────── -->
 <div class="section section-center">
-  <span class="section-eyebrow" data-editable="value_eyebrow">The Problem</span>
-  <h2 class="section-title" data-editable="value_title">Creating Content Isn't The Hard Part.<br><span class="gold">Running It Is.</span></h2>
-  <p class="section-sub" data-editable="value_sub">You have the ideas, the clips, the audience. What you don't have is the time to turn raw footage into polished, published content every single day.</p>
+  <span class="section-eyebrow" >The Problem</span>
+  <h2 class="section-title" >Creating Content Isn't The Hard Part.<br><span class="gold">Running It Is.</span></span></h2>
+  <p class="section-sub" >You have the ideas, the clips, the audience. What you don't have is the time to turn raw footage into polished, published content every single day.</p>
   <div class="value-grid">
     <div class="value-card">
       <div class="value-card-num">01</div>
       <h3>Smart Clip Selection</h3>
-      <p>AI analyses your raw footage and identifies the highest-performing moments — ranked by engagement potential before a single edit is made.</p>
+      <p>Our pipeline analyses your raw footage and identifies the highest-performing moments, ranked by engagement potential before a single edit is made.</p>
     </div>
     <div class="value-card">
       <div class="value-card-num">02</div>
       <h3>Full Video Production</h3>
-      <p>Script, voiceover, brand overlays, captions, and effects — assembled automatically from a single source file to a finished video.</p>
+      <p>Script, voiceover, brand overlays, captions, and effects assembled automatically from a single source file to a finished video.</p>
     </div>
     <div class="value-card">
       <div class="value-card-num">03</div>
-      <h3>AI Quality Checks</h3>
-      <p>Every output passes through automated QA gates before publish — checking for brand compliance, audio quality, and content accuracy.</p>
+      <h3>Automated Quality Checks</h3>
+      <p>Every output passes through automated QA gates before publish, checking for brand compliance, audio quality, and content accuracy.</p>
     </div>
     <div class="value-card">
       <div class="value-card-num">04</div>
@@ -364,9 +377,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <!-- ── 4-step process ─────────────────────────────────────────────────────── -->
 <div class="section section-center">
-  <span class="section-eyebrow" data-editable="steps_eyebrow">How It Works</span>
-  <h2 class="section-title" data-editable="steps_title">From Idea to Published Content <span class="gold">Automatically.</span></h2>
-  <p class="section-sub" data-editable="steps_sub">Four steps. No editors, no coordinators, no upload queues.</p>
+  <span class="section-eyebrow" >How It Works</span>
+  <h2 class="section-title" >From Idea to Published Content <span class="gold">Automatically.</span></span></h2>
+  <p class="section-sub" >Four steps. No editors, no coordinators, no upload queues.</p>
   <div class="steps">
     <div class="step-card">
       <div class="step-num">01</div>
@@ -375,18 +388,63 @@ ${FRAMER_NAV || FALLBACK_NAV}
     </div>
     <div class="step-card">
       <div class="step-num">02</div>
-      <h3>AuraFlux Publishes For You</h3>
-      <p>Our pipeline scripts, assembles, applies brand chrome, QA-checks, and queues your content for publish.</p>
+      <h3>Pipeline Builds Your Video</h3>
+      <p>Script, edit, brand overlays, captions, and effects. Every production step runs automatically, in order.</p>
     </div>
     <div class="step-card">
       <div class="step-num">03</div>
-      <h3>Automated Production</h3>
-      <p>Six production portals run in sequence — each one verified before the next begins. No manual steps.</p>
+      <h3>Every Output Verified</h3>
+      <p>Quality gates check audio, frame integrity, and creative standards at each stage. Nothing ships until it clears the bar.</p>
     </div>
     <div class="step-card">
       <div class="step-num">04</div>
-      <h3>Content Published</h3>
-      <p>Your content lands on every connected platform with the right format, captions, and metadata. Done.</p>
+      <h3>Published Everywhere</h3>
+      <p>Metadata, thumbnails, captions, and scheduling applied. Your content goes live on every connected platform simultaneously.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Job Templates ──────────────────────────────────────────────────────── -->
+<div class="section section-center">
+  <span class="section-eyebrow">Job Templates</span>
+  <h2 class="section-title">Pick a Template. <span class="gold">Everything Else Is Handled.</span></h2>
+  <p class="section-sub" style="max-width:560px">Pre-configured templates bundle the right format, platforms, effects, and settings for your content type. Choose one, connect your source, submit once.</p>
+  <div class="tpl-grid">
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-short">Short-form</div>
+      <div class="tpl-name">TikTok Clutch</div>
+      <div class="tpl-tag">Single high-energy gaming moment</div>
+      <div class="tpl-platforms">TikTok · YouTube · Instagram</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-long">Long-form</div>
+      <div class="tpl-name">YouTube Deep Dive</div>
+      <div class="tpl-tag">Full VOD trimmed and polished</div>
+      <div class="tpl-platforms">YouTube</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-short">Short-form</div>
+      <div class="tpl-name">IRL Story Time</div>
+      <div class="tpl-tag">IRL or just-chatting moment</div>
+      <div class="tpl-platforms">TikTok · Instagram</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-short">Short-form</div>
+      <div class="tpl-name">Montage Hype Reel</div>
+      <div class="tpl-tag">Multi-clip highlight reel, fast cuts</div>
+      <div class="tpl-platforms">TikTok · YouTube</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-long">Long-form</div>
+      <div class="tpl-name">Reaction Cut</div>
+      <div class="tpl-tag">Reaction or commentary VOD</div>
+      <div class="tpl-platforms">YouTube</div>
+    </div>
+    <div class="tpl-card">
+      <div class="tpl-badge tpl-short">Short-form</div>
+      <div class="tpl-name">Quick Guide</div>
+      <div class="tpl-tag">Educational or tip clip</div>
+      <div class="tpl-platforms">YouTube · TikTok</div>
     </div>
   </div>
 </div>
@@ -395,29 +453,29 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="section">
   <div class="formats">
     <div>
-      <span class="section-eyebrow" data-editable="formats_eyebrow">Content Types</span>
-      <h2 class="section-title" data-editable="formats_title">From Shorts To <span class="gold">Full Productions.</span></h2>
-      <p class="section-sub" style="margin-bottom:32px;" data-editable="formats_sub">Your content format, your content type — AuraFlux handles every combination.</p>
+      <span class="section-eyebrow" >Content Types</span>
+      <h2 class="section-title" >From Shorts To <span class="gold">Full Productions.</span></span></h2>
+      <p class="section-sub" style="margin-bottom:32px;" >Your content format, your content type. AuraFlux handles every combination.</p>
       <div class="format-list">
         <div class="format-item">
           <div class="format-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
           <div>
             <h4>Highlight Clips</h4>
-            <p>Best moments from streams and VODs — auto-cut, captioned, and formatted for short-form.</p>
+            <p>Best moments from streams and VODs, auto-cut, captioned, and formatted for short-form.</p>
           </div>
         </div>
         <div class="format-item">
           <div class="format-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
           <div>
             <h4>Gameplay Commentary</h4>
-            <p>AI-generated narration over gameplay clips — personalised to your style and audience.</p>
+            <p>Auto-generated narration over gameplay clips, personalised to your style and audience.</p>
           </div>
         </div>
         <div class="format-item">
           <div class="format-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
           <div>
             <h4>Show & Film Analysis</h4>
-            <p>Narrated breakdowns from TV and movie clips — fair-use formatted and ready to publish.</p>
+            <p>Narrated breakdowns from TV and movie clips, fair-use formatted and ready to publish.</p>
           </div>
         </div>
         <div class="format-item">
@@ -445,9 +503,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <!-- ── Comparison ─────────────────────────────────────────────────────────── -->
 <div class="section section-center">
-  <span class="section-eyebrow" data-editable="compare_eyebrow">The Difference</span>
-  <h2 class="section-title" data-editable="compare_title">Work Smarter. <span class="gold">Not Harder.</span></h2>
-  <p class="section-sub" data-editable="compare_sub">Stop spending 80% of your time on production. Start spending it on what actually matters.</p>
+  <span class="section-eyebrow" >The Difference</span>
+  <h2 class="section-title" >Work Smarter. <span class="gold">Not Harder.</span></span></h2>
+  <p class="section-sub" >Stop spending 80% of your time on production. Start spending it on what actually matters.</p>
   <div class="compare">
     <div class="compare-card bad">
       <div class="compare-label">Instead of:</div>
@@ -493,8 +551,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <span class="section-eyebrow">Who It's For</span>
       <h2 class="section-title">Built for Creators and Teams Who Are <span class="gold">Serious About Growth.</span></h2>
       <div class="audience-list">
-        <div class="audience-item"><div class="audience-dot"></div>Streamers posting daily to YouTube and TikTok</div>
-        <div class="audience-item"><div class="audience-dot"></div>Sports and news channels on tight deadlines</div>
+        <div class="audience-item"><div class="audience-dot"></div>Streamers posting daily to YouTube, TikTok, and Instagram</div>
         <div class="audience-item"><div class="audience-dot"></div>Agencies running multi-client content operations</div>
         <div class="audience-item"><div class="audience-dot"></div>Operators who need consistent output at scale</div>
       </div>
@@ -505,7 +562,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="audience-stat-label">Production portals</div>
       </div>
       <div class="audience-stat">
-        <div class="audience-stat-num">5</div>
+        <div class="audience-stat-num">3</div>
         <div class="audience-stat-label">Publishing platforms</div>
       </div>
       <div class="audience-stat">
@@ -522,9 +579,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <!-- ── Final CTA ──────────────────────────────────────────────────────────── -->
 <div class="final-cta">
-  <h2 data-editable="final_cta_headline">Stop Managing Content.<br><span class="gold">Start Producing It.</span></h2>
-  <p data-editable="final_cta_sub">No team, no editors, no upload queues. AuraFlux handles the entire pipeline from source to publish.</p>
-  <a href="/plans" class="btn-primary" data-cta="final_cta">Start Producing</a>
+  <h2 >Stop Managing Content. Start Producing It.</span></h2>
+  <p >No team, no editors, no upload queues. AuraFlux handles the entire pipeline from source to publish.</p>
+  <a href="/plans" class="primary" data-cta="final_cta">Start Producing</a>
 </div>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}

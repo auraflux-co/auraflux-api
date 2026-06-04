@@ -19,7 +19,7 @@
     "@tailwindcss/postcss": "^4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.14.0",
+    "lucide-react": "^1.17.0",
     "newrelic": "^13.20.0",
     "next": "16.2.7",
     "next-themes": "^0.4.6",
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@types/newrelic": "^9.14.8",
     "@types/node": "^20",
-    "shadcn": "^4.6.0",
+    "shadcn": "^4.10.0",
     "typescript": "^5"
   }
 }

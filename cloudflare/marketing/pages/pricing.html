@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Plans — AuraFlux</title>
-<meta name="description" content="Choose the plan that fits your team. Operate, Guided, or Managed — all include the full AuraFlux automated content pipeline.">
+<title>Plans. AuraFlux</title>
+<meta name="description" content="Choose the plan that fits your team. Operate, Guided, or Managed. all include the full AuraFlux automated content pipeline.">
 <link rel="canonical" href="https://auraflux.co/plans">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
@@ -50,8 +51,11 @@ body{line-height:1.6}
 
 /* Plan image header */
 .plan-img{
-  width:100%;aspect-ratio:4/3;object-fit:cover;
-  display:block;border-bottom:1px solid rgba(255,255,255,.06);
+  width:100%;display:block;
+  height:240px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  object-fit:cover;
+  object-position:center 35%;
 }
 
 .plan-body{padding:28px 28px 24px;display:flex;flex-direction:column;flex:1;}
@@ -59,7 +63,7 @@ body{line-height:1.6}
 .plan-name{
   font-size:.68rem;font-weight:800;letter-spacing:.14em;
   text-transform:uppercase;color:#f5c542;margin-bottom:6px;
-  font-family:'Satoshi','Inter',monospace;
+  font-family:'Satoshi','Inter',sans-serif;
 }
 .plan-title{
   font-size:1.5rem;font-weight:700;color:#fff;
@@ -70,13 +74,13 @@ body{line-height:1.6}
 /* Price — proportional to headings: same font, sized between h2 and h1 */
 .price{
   font-size:2.8rem;font-weight:800;color:#fff;
-  letter-spacing:-.04em;line-height:1;margin-bottom:4px;
+  letter-spacing:-.02em;line-height:1.15;margin-bottom:10px;
   font-family:'Satoshi','Inter',sans-serif;
 }
 .price .period{font-size:1rem;font-weight:400;color:#8f9bb7;letter-spacing:0;}
 .credits{
   font-size:.8rem;color:#8f9bb7;
-  margin-bottom:24px;padding-bottom:20px;
+  margin-bottom:24px;padding-bottom:20px;margin-top:2px;
   border-bottom:1px solid rgba(255,255,255,.07);
   line-height:1.5;
 }
@@ -139,7 +143,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 }
 .compare-mobile-card h3{
   font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:#f5c542;margin-bottom:14px;font-family:'Satoshi','Inter',monospace;
+  color:#f5c542;margin-bottom:14px;font-family:'Satoshi','Inter',sans-serif;
 }
 .compare-mobile-row{
   display:flex;justify-content:space-between;align-items:center;
@@ -163,15 +167,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
 ${FRAMER_NAV || FALLBACK_NAV}
 
 <div class="hero">
-  <h1 data-editable="hero_headline">Match Your Team's Capability</h1>
-  <p data-editable="hero_sub">Choose the path that fits your current operational setup. All plans include the full AuraFlux automated production pipeline.</p>
+  <h1 >Match Your Team's Capability</h1>
+  <p >Choose the path that fits your current operational setup. All plans include the full AuraFlux automated production pipeline.</p>
 </div>
 
 <div class="plans">
 
   <!-- OPERATE -->
   <div class="plan">
-    <img class="plan-img" src="/cf-assets/marketing/images/plan-operate.png" alt="Operate plan" style="object-position:center 20%;">
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-operate.png" alt="Operate plan">
     <div class="plan-body">
       <div class="plan-name">Operate</div>
       <div class="plan-title">DIY / API</div>
@@ -187,7 +191,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <li class="no">Collab-powered guidance</li>
         <li class="no">Dedicated account manager</li>
       </ul>
-      <a href="/contact-us" class="cta cta-secondary" data-cta="operate_cta">Get API Access</a>
+      <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Get Started</a>
     </div>
   </div>
 
@@ -198,7 +202,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <div class="plan-body">
       <div class="plan-name">Guided</div>
       <div class="plan-title">Collab Assist</div>
-      <div class="plan-sub">Complete platform toolkit plus Gemini-backed Collab AI workspace assistance.</div>
+      <div class="plan-sub">Complete platform toolkit plus built-in Collab workspace assistance.</div>
       <div class="price price-loading" id="price-guided"><span class="price-val">$999</span><span class="period">/mo</span></div>
       <div class="credits">200 credits/month · Self-serve subscription upgrade</div>
       <ul class="features">
@@ -210,17 +214,17 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <li class="no">Custom end-to-end workflow builds</li>
         <li class="no">Dedicated account manager</li>
       </ul>
-      <a href="/contact-us" class="cta cta-primary" data-cta="guided_cta">Start Guided Setup</a>
+      <a href="https://api.auraflux.co/api/public/checkout?plan=guided" class="cta cta-primary" data-cta="guided_cta">Get Started</a>
     </div>
   </div>
 
   <!-- MANAGED -->
   <div class="plan">
-    <img class="plan-img" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan" style="object-position:center 15%;">
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan">
     <div class="plan-body">
       <div class="plan-name">Managed</div>
       <div class="plan-title">Done-For-You</div>
-      <div class="plan-sub">Full Collab AI platform plus a dedicated human account manager.</div>
+      <div class="plan-sub">Full Collab platform plus a dedicated human account manager.</div>
       <div class="price">Custom</div>
       <div class="credits">1000+ credits/month · Custom onboarding &amp; sales intake</div>
       <ul class="features">
@@ -230,7 +234,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <li>Priority support with custom SLAs</li>
         <li>Unlimited credits</li>
       </ul>
-      <a href="/contact-us" class="cta cta-secondary" data-cta="managed_cta">Request Managed Plan</a>
+      <a href="#" class="cta cta-secondary" onclick="document.getElementById('af-chat-panel').classList.add('open');return false;">Talk to Sales</a>
     </div>
   </div>
 
@@ -239,13 +243,13 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <!-- Credit pack footnote -->
 <div class="credit-note">
   <div class="credit-note-inner">
-    <p data-editable="credit_note">Running low mid-month? <strong>Extra Credit Packs</strong> are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.</p>
+    <p >Running low mid-month? Extra Credit Packs are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.</p>
   </div>
 </div>
 
 <!-- Comparison table -->
 <div class="ladder">
-  <div class="ladder-title" data-editable="comparison_title">Implementation &amp; Feature Comparison</div>
+  <div class="ladder-title" >Implementation &amp; Feature Comparison</div>
   <table>
     <thead>
       <tr>
@@ -259,7 +263,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <tr><td class="label">Core Infrastructure &amp; API Access</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">Developer Documentation &amp; SDKs</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">In-App Visual Flow Builders</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Collab AI Guidance</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Collab Guidance</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">Automated Threshold Notifications</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
       <tr><td class="label">Custom Workflow Construction by Experts</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
       <tr><td class="label">Dedicated Account Manager</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
@@ -274,7 +278,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="no-m">—</span></div>
+      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="no-m">—</span></div>
       <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="no-m">—</span></div>
       <div class="compare-mobile-row"><span>Custom Workflows</span><span class="no-m">—</span></div>
       <div class="compare-mobile-row"><span>Account Manager</span><span class="no-m">—</span></div>
@@ -285,7 +289,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Custom Workflows</span><span class="no-m">—</span></div>
       <div class="compare-mobile-row"><span>Account Manager</span><span class="no-m">—</span></div>
@@ -296,7 +300,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Collab AI Guidance</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Custom Workflows</span><span class="yes-m">✓</span></div>
       <div class="compare-mobile-row"><span>Account Manager</span><span class="yes-m">✓</span></div>

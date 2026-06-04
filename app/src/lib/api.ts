@@ -38,6 +38,7 @@ export type RecurrenceType = 'once' | 'daily' | 'weekly' | 'monthly';
 export interface WizardConfig {
   formFactor:     'long' | 'short' | string | null;
   templateId:     string | null;
+  templateName?:  string | null;
   contentType:    string | null;
   entryType:      string | null;
   addOns:         string[];
@@ -133,6 +134,31 @@ export interface CreateJobPayload {
   tone?:            string;
   // Feature-level configuration: keyed by feature ID (script, tts, commentary, generation, burn_images)
   featureConfig?:   Record<string, Record<string, string>>;
+
+  // ── Enhancement addOns (feature input parity with POST /v1/jobs) ──────────
+  // These mirror what the wizard collects and what the API expects in addOns.
+  // Sending them here ensures dashboard and API jobs are always equivalent.
+  addOns?: {
+    captions?:   { active: boolean; style?: 'animated' | 'clean' | 'minimal' | 'burnin' };
+    colorGrade?: { active: boolean; preset?: 'vivid' | 'warm' | 'cool' | 'moody' | 'crisp' | 'neut' };
+    effects?:    { zoom?: boolean; transitions?: boolean; slowmo?: boolean; vignette?: boolean };
+    audio?:      { loudnorm?: boolean; duck?: boolean; denoise?: boolean };
+    branding?:   { active: boolean; brandId?: string };
+    layout?:     { portrait?: boolean; square?: boolean };
+    tts?:        { active: boolean; provider?: string; voiceId?: string };
+    heygen?:     { active: boolean; avatarId?: string };
+    [key: string]: Record<string, unknown> | undefined;
+  };
+  // CPD-511/513: staging gate + customer-provided publish metadata
+  staging?: boolean;
+  publishMeta?: {
+    title?:              string;
+    description?:        string;
+    tags?:               string[];
+    privacyStatus?:      'public' | 'unlisted' | 'private';
+    tiktokCaption?:      string;
+    scheduledPublishAt?: string;
+  };
 }
 
 // ─── Credit estimation ────────────────────────────────────────────────────────
@@ -919,6 +945,49 @@ export async function approveAndPublish(
   });
 }
 
+// ─── Thumbnail candidates (CPD-512) ──────────────────────────────────────────
+
+export interface ThumbnailCandidate {
+  index:         number;
+  url:           string;
+  score:         number | null;
+  offsetSeconds: number | null;
+  method:        'frame' | 'designed' | 'vectcut' | 'imagen' | string;
+}
+
+export interface ThumbnailCandidatesResponse {
+  jobId:               string;
+  status:              string;
+  method?:             string;
+  r2Url?:              string | null;
+  approvedAt?:         string | null;
+  geminiRecommendation?: string | null;
+  geminiRanking?:      unknown;
+  candidates:          ThumbnailCandidate[];
+  designedUrl?:        string | null;
+  vectcutUrl?:         string | null;
+  imagenUrl?:          string | null;
+}
+
+export async function getThumbnailCandidates(
+  jobId: string,
+  token?: string,
+): Promise<ThumbnailCandidatesResponse> {
+  return apiFetch(`/jobs/${jobId}/thumbnail/candidates`, { token });
+}
+
+export async function approveThumbnail(
+  jobId: string,
+  opts: { method: string; candidateIndex?: number; r2Url?: string },
+  token?: string,
+): Promise<{ ok: boolean; thumbnail: unknown }> {
+  return apiFetch(`/jobs/${jobId}/thumbnail/approve`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify(opts),
+  });
+}
+
 // ─── Support (CPD-115) ───────────────────────────────────────────────────────
 
 export interface SupportMessage {
@@ -1205,6 +1274,8 @@ export interface Brand {
   stripe_subscription_id: string | null;
   image_url:              string | null;
   description:            string | null;
+  intro_card_url:         string | null;
+  outro_card_url:         string | null;
 }
 
 export interface BrandSubscription {
@@ -1242,7 +1313,13 @@ export async function renameBrandApi(id: string, name: string, token?: string): 
 
 export async function updateBrandApi(
   id: string,
-  fields: { name?: string; image_url?: string | null; description?: string | null },
+  fields: {
+    name?:           string;
+    image_url?:      string | null;
+    description?:    string | null;
+    intro_card_url?: string | null;
+    outro_card_url?: string | null;
+  },
   token?: string,
 ): Promise<Brand> {
   const res = await apiFetch<{ ok: boolean; brand: Brand }>(`/brands/${id}`, {
@@ -1251,6 +1328,22 @@ export async function updateBrandApi(
     token,
   });
   return res.brand;
+}
+
+export type BrandAssetType = 'logo' | 'intro_card' | 'outro_card';
+
+export async function getBrandUploadUrl(
+  brandId:     string,
+  assetType:   BrandAssetType,
+  filename:    string,
+  contentType: string,
+  token?:      string,
+): Promise<{ uploadUrl: string; assetUrl: string; key: string }> {
+  const res = await apiFetch<{ ok: boolean; uploadUrl: string; assetUrl: string; key: string }>(
+    `/brands/${brandId}/upload-url`,
+    { method: 'POST', body: JSON.stringify({ assetType, filename, contentType }), token },
+  );
+  return { uploadUrl: res.uploadUrl, assetUrl: res.assetUrl, key: res.key };
 }
 
 export async function deleteBrandApi(id: string, token?: string): Promise<void> {

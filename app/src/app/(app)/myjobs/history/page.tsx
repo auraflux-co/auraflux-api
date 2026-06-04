@@ -30,8 +30,33 @@ const PLATFORM_ICONS: Record<string, string> = {
   instagram: '◎',
 };
 
+// Brand-accurate platform colors
+const PLATFORM_BADGE_CLASSES: Record<string, string> = {
+  youtube:   'bg-red-950/60 text-red-400 border border-red-800/50',
+  tiktok:    'bg-cyan-950/60 text-cyan-300 border border-cyan-800/50',
+  instagram: 'bg-purple-950/60 text-purple-400 border border-purple-800/50',
+  twitter:   'bg-sky-950/60 text-sky-400 border border-sky-800/50',
+  facebook:  'bg-blue-950/60 text-blue-400 border border-blue-800/50',
+  linkedin:  'bg-blue-950/60 text-blue-300 border border-blue-800/50',
+};
+
+// Left-border accent color for cards based on primary platform
+const PLATFORM_BORDER: Record<string, string> = {
+  youtube:   'border-l-red-500',
+  tiktok:    'border-l-cyan-400',
+  instagram: 'border-l-purple-500',
+  twitter:   'border-l-sky-400',
+  facebook:  'border-l-blue-500',
+  linkedin:  'border-l-blue-400',
+};
+
+function cardAccent(platforms: string[]): string {
+  const primary = platforms[0];
+  return primary ? (PLATFORM_BORDER[primary] ?? 'border-l-indigo-500') : 'border-l-indigo-500';
+}
+
 const ADDON_LABELS: Record<string, string> = {
-  tts:            'AI Voiceover',
+  tts:            'Voiceover',
   heygen:         'AI Avatar',
   shoppable:      'Shoppable tagging',
   wan:            'Video generation',
@@ -40,7 +65,23 @@ const ADDON_LABELS: Record<string, string> = {
   branding:       'Brand overlay',
   imageBurn:      'Image burn',
   dynamicOverlays:'Dynamic overlays',
+  captions:       'Captions',
+  colorGrade:     'Color grade',
+  effects:        'Visual effects',
 };
+
+function fmtJobTime(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const opts: Intl.DateTimeFormatOptions = {
+    month:  'short',
+    day:    'numeric',
+    hour:   'numeric',
+    minute: '2-digit',
+  };
+  if (d.getFullYear() !== now.getFullYear()) opts.year = 'numeric';
+  return d.toLocaleString('en-US', opts);
+}
 
 function formFactorLabel(wc: WizardConfig) {
   const ff = wc.formFactor || (wc.templateId === 'short-form' ? 'short' : 'long');
@@ -67,6 +108,12 @@ function SelectionReview({ wc }: { wc: WizardConfig }) {
       {open && (
         <div className="mt-2 rounded-md border border-border bg-muted/20 p-3 text-xs space-y-2">
           <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            {wc.templateName && (
+              <>
+                <span className="text-muted-foreground">Template</span>
+                <span className="font-medium">{wc.templateName}</span>
+              </>
+            )}
             <span className="text-muted-foreground">Format</span>
             <span>{formFactorLabel(wc)}</span>
             <span className="text-muted-foreground">Source</span>
@@ -101,8 +148,8 @@ function SelectionReview({ wc }: { wc: WizardConfig }) {
               <p className="text-muted-foreground mb-1">Platforms</p>
               <div className="flex gap-1">
                 {wc.platforms.map((p) => (
-                  <Badge key={p} variant="secondary" className="text-[10px] capitalize px-1.5">
-                    {PLATFORM_ICONS[p] ?? '•'} {p}
+                  <Badge key={p} variant="secondary" className={cn('text-[10px] px-1.5', PLATFORM_BADGE_CLASSES[p])}>
+                    {PLATFORM_ICONS[p] ?? '•'} {platformLabel(p)}
                   </Badge>
                 ))}
               </div>
@@ -263,7 +310,7 @@ function HistoryPageContent() {
 
 function ReviewCard({ job }: { job: Job }) {
   return (
-    <div className="rounded-xl border border-emerald-800/50 bg-emerald-950/10 overflow-hidden">
+    <div className={cn('rounded-xl border border-emerald-800/50 bg-emerald-950/10 overflow-hidden border-l-4', cardAccent(job.platforms))}>
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1.5 min-w-0">
@@ -279,13 +326,13 @@ function ReviewCard({ job }: { job: Job }) {
                 Ready to review
               </span>
               {job.platforms.map((p) => (
-                <span key={p} className="text-[10px] bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded border border-border/60">
+                <span key={p} className={cn('text-[10px] px-1.5 py-0.5 rounded font-medium', PLATFORM_BADGE_CLASSES[p] ?? 'bg-muted/60 text-muted-foreground border border-border/60')}>
                   {PLATFORM_ICONS[p] ?? '•'} {platformLabel(p)}
                 </span>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {labelForContentType(job.contentType)} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {labelForContentType(job.contentType)} · {fmtJobTime(job.createdAt)}
             </p>
             {job.publishCopy?.youtube?.title && (
               <p className="text-xs text-muted-foreground/70 italic line-clamp-1">
@@ -320,8 +367,9 @@ function HistoryCard({ job }: { job: Job }) {
   const isPublished = job.status === 'published';
   return (
     <div className={cn(
-      'rounded-xl border bg-card overflow-hidden',
+      'rounded-xl border bg-card overflow-hidden border-l-4',
       isPublished ? 'border-violet-800/40' : 'border-border',
+      cardAccent(job.platforms),
     )}>
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-start justify-between gap-3">
@@ -342,13 +390,13 @@ function HistoryCard({ job }: { job: Job }) {
                 {jobStatusLabel(job.status)}
               </span>
               {job.platforms.map((p) => (
-                <span key={p} className="text-[10px] bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded border border-border/60">
+                <span key={p} className={cn('text-[10px] px-1.5 py-0.5 rounded font-medium', PLATFORM_BADGE_CLASSES[p] ?? 'bg-muted/60 text-muted-foreground border border-border/60')}>
                   {PLATFORM_ICONS[p] ?? '•'} {platformLabel(p)}
                 </span>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {labelForContentType(job.contentType)} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {labelForContentType(job.contentType)} · {fmtJobTime(job.createdAt)}
             </p>
             {job.publishCopy?.youtube?.title && (
               <p className="text-xs text-muted-foreground/70 italic line-clamp-1">

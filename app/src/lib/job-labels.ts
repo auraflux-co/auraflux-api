@@ -100,12 +100,18 @@ export function creditTypeLabel(type: string | null | undefined): string {
 
 export function jobDisplayTitle(job: {
   contentType?: string | null;
-  wizardConfig?: { topic?: string | null } | null;
+  templateName?: string | null;
+  wizardConfig?: { topic?: string | null; templateName?: string | null } | null;
   createdAt?: string | number | null;
   jobId?: string;
 }): string {
+  // 1. Prefer topic (text-to-video jobs have a meaningful topic)
   const topic = job.wizardConfig?.topic?.trim();
   if (topic) return topic;
+  // 2. Use the saved template name (TikTok Clutch, YouTube Deep Dive, etc.)
+  const tplName = job.templateName || job.wizardConfig?.templateName;
+  if (tplName) return tplName;
+  // 3. Fall back to content-type + date
   const type = job.contentType ? labelForContentType(job.contentType) : null;
   if (job.createdAt) {
     const d = new Date(typeof job.createdAt === 'string' ? job.createdAt : Number(job.createdAt));

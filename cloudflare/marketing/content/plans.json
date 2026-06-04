@@ -12,14 +12,14 @@
       "Self-hosted integration control",
       "Community & standard support"
     ],
-    "cta_label": "Get API Access",
+    "cta_label": "Get Started",
     "image_url": "/cf-assets/marketing/images/plan-operate.png",
-    "cta_url": "/contact-us",
-    "cta_style": "secondary"
+    "cta_url": "https://api.auraflux.co/api/public/checkout?plan=operate",
+    "cta_style": "cta cta-primary"
   },
   "guided": {
     "title": "Collab Assist",
-    "subtitle": "Complete platform toolkit plus Gemini-backed Collab AI workspace assistance.",
+    "subtitle": "Complete platform toolkit plus built-in Collab workspace assistance.",
     "price": "$999",
     "credits": "200 credits/month \u00b7 Self-serve subscription upgrade",
     "features": [
@@ -29,14 +29,14 @@
       "Visual drag-and-drop workflow builders",
       "Automated operational threshold alerts"
     ],
-    "cta_label": "Start Guided Setup",
+    "cta_label": "Get Started",
     "image_url": "/cf-assets/marketing/images/plan-guided.png",
-    "cta_url": "/contact-us",
-    "cta_style": "primary"
+    "cta_url": "https://api.auraflux.co/api/public/checkout?plan=guided",
+    "cta_style": "cta cta-primary"
   },
   "managed": {
     "title": "Done-For-You",
-    "subtitle": "Full Collab AI platform plus a dedicated human account manager.",
+    "subtitle": "Full Collab platform plus a dedicated human account manager.",
     "credits": "1000+ credits/month \u00b7 Custom onboarding & sales intake",
     "features": [
       "Everything in Guided",
@@ -45,7 +45,7 @@
       "Priority support with custom SLAs",
       "Unlimited credits"
     ],
-    "cta_label": "Request Managed Plan",
+    "cta_label": "Talk to Sales",
     "image_url": "/cf-assets/marketing/images/plan-managed.png",
     "cta_url": "/contact-us",
     "cta_style": "secondary"

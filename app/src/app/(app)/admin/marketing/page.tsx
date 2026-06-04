@@ -164,7 +164,7 @@ export default function MarketingEditorPage() {
     <PageShell>
       <PageHeader
         title="Marketing Site Editor"
-        subtitle="Chat with Gemini to edit auraflux.co. Changes deploy to Cloudflare in ~60 seconds."
+        subtitle="Chat to edit auraflux.co. Changes deploy to Cloudflare in ~60 seconds."
       />
 
       {msg && (
@@ -197,7 +197,7 @@ export default function MarketingEditorPage() {
           <div className="flex-1 flex flex-col items-center justify-center p-8 gap-8">
             <div className="text-center space-y-2">
               <p className="text-base font-medium text-foreground">What would you like to change?</p>
-              <p className="text-sm text-muted-foreground">Describe the change in plain English — Gemini will edit the site and queue a deploy.</p>
+              <p className="text-sm text-muted-foreground">Describe the change in plain English — the assistant will edit the site and queue a deploy.</p>
             </div>
             <div className="grid grid-cols-2 gap-2 w-full max-w-xl">
               {SUGGESTED_PROMPTS.map(s => (

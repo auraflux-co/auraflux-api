@@ -505,8 +505,11 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
         setError('platform-unavailable:Kick browsing isn\'t available right now. Paste a Kick clip URL directly when submitting your job instead.');
       } else {
         const raw = e instanceof Error ? e.message : String(e);
+        const isTokenError = /expired|invalid.*token|token.*invalid|credentials/i.test(raw);
         const msg = raw === 'Failed to fetch'
           ? 'retry:Could not reach the server — it may be restarting. Please try again.'
+          : isTokenError
+          ? `retry:${targetPlatform.charAt(0).toUpperCase() + targetPlatform.slice(1)} connection needs to be refreshed — please try again in a moment.`
           : 'error:Couldn\'t load content. Try again or paste a direct URL.';
         setError(msg);
       }

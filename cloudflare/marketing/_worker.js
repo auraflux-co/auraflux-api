@@ -12,7 +12,7 @@
 
 // Retained for deploy.sh snapshot detection (FRAMER_ORIGIN is stamped during build).
 // Not used at runtime — all pages are served statically.
-const FRAMER_ORIGIN = 'https://9885fb2a.auraflux-marketing.pages.dev';
+const FRAMER_ORIGIN = 'https://17de1e4a.auraflux-marketing.pages.dev';
 
 const API_ORIGIN = 'https://auraflux-api.onrender.com';
 
@@ -176,10 +176,10 @@ const FALLBACK_NAV = `<nav style="display:flex;align-items:center;justify-conten
   <a href="/" style="font-size:1.2rem;font-weight:700;color:#f5c542;letter-spacing:.03em;text-decoration:none">AuraFlux</a>
   <div style="display:flex;gap:24px;align-items:center">
     <a href="/our-system" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our System</a>
-    <a href="/pricing" style="font-size:.9rem;color:#9999b8;text-decoration:none">Pricing</a>
+    <a href="/plans" style="font-size:.9rem;color:#9999b8;text-decoration:none">Plans</a>
     <a href="/our-story" style="font-size:.9rem;color:#9999b8;text-decoration:none">Our Story</a>
     <a href="/contact" style="font-size:.9rem;color:#9999b8;text-decoration:none">Contact</a>
-    <a href="https://app.auraflux.co/sign-up" style="background:#f5c542;color:#0b1220;padding:8px 20px;border-radius:8px;font-size:.9rem;font-weight:600;text-decoration:none">Get Started</a>
+    <a href="/plans" style="background:#f5c542;color:#0b1220;padding:8px 20px;border-radius:8px;font-size:.9rem;font-weight:600;text-decoration:none">Get Started</a>
   </div>
 </nav>`;
 
@@ -202,9 +202,10 @@ const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title} — AuraFlux</title>
+<title>${title} | AuraFlux</title>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
 ${FRAMER_FONTS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -300,7 +301,7 @@ const PAGES = {
 <p>By accessing or using AuraFlux you agree to these Terms. If you do not agree, do not use the service.</p>
 
 <h2>1. The Service</h2>
-<p>AuraFlux is an AI-powered video production platform that automates script creation, video assembly, and publishing to connected social accounts. We offer Operate, Guided, and Managed subscription plans.</p>
+<p>AuraFlux is an automated video production platform that handles script creation, video assembly, and publishing to connected social accounts. We offer Operate, Guided, and Managed subscription plans.</p>
 
 <h2>2. Account Responsibilities</h2>
 <ul>
@@ -352,11 +353,11 @@ const PAGES = {
   <li>Defamatory or fraudulent content</li>
 </ul>
 
-<h2>Prohibited Uses of AI Features</h2>
+<h2>Usage Restrictions</h2>
 <ul>
   <li>Deepfakes or voice clones of real people without their consent</li>
   <li>Impersonation of individuals, brands, or public figures</li>
-  <li>AI-generated misinformation or coordinated inauthentic behaviour</li>
+  <li>Misinformation or coordinated inauthentic behaviour</li>
   <li>Spam or mass unsolicited publishing</li>
 </ul>
 
@@ -454,7 +455,7 @@ const PAGES = {
 
   '/roadmap': LEGAL_SHELL(
     'Roadmap',
-    'See what\'s coming to AuraFlux — upcoming features, platform improvements, and new publishing destinations.',
+    'See what\'s coming to AuraFlux: upcoming features, platform improvements, and new publishing destinations.',
     'https://auraflux.co/roadmap',
     `__PAGE_ROADMAP_CONTENT__`
   ),
@@ -615,6 +616,21 @@ self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
 // No fetch handler — all requests go directly to the network.`,
         { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-store' } }
       );
+    }
+
+    // ── Favicon — served inline as SVG ────────────────────────────────────────
+    if (path === '/favicon.png' || path === '/favicon.ico' || path === '/favicon.svg') {
+      try {
+        const logoUrl = 'https://assets.auraflux.co/marketing/images/QbVUbsjpCzrLC1gPNNNGcQzwPp8.png';
+        const upstream = await fetch(logoUrl, { signal: AbortSignal.timeout(5000) });
+        const headers = new Headers({
+          'Content-Type': 'image/png',
+          'Cache-Control': 'public, max-age=86400',
+        });
+        return new Response(upstream.body, { status: 200, headers });
+      } catch {
+        return new Response(null, { status: 404 });
+      }
     }
 
     // ── Asset proxy — serve fonts/JS from assets.auraflux.co with CORS ────

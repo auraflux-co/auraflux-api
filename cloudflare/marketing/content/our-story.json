@@ -1,8 +1,8 @@
 {
   "hero_headline": "Content Production, Without the Team",
   "hero_sub": "AuraFlux is the production infrastructure for creators who can't afford to stop streaming to edit.",
-  "mission_body": "Most streamers and creators produce hours of content every week \u2014 and then lose most of it. Editing takes longer than the stream itself. Hiring an editor costs more than the content earns. So the clips sit on a hard drive, and the channel doesn't grow.\n\nWe built AuraFlux to close that gap. Not by making editing faster, but by eliminating the need for it entirely.",
-  "blockquote": "Every creator should be able to produce like a media company. That's not a staffing problem \u2014 it's a software problem.",
+  "mission_body": "Most streamers and creators produce hours of content every week and then lose most of it. Editing takes longer than the stream itself. Hiring an editor costs more than the content earns. So the clips sit on a hard drive, and the channel doesn't grow.\n\nWe built AuraFlux to close that gap. Not by making editing faster, but by eliminating the need for it entirely.",
+  "blockquote": "Every creator should be able to produce like a media company. That's not a staffing problem. It's a software problem.",
   "stats": [
     {
       "number": "06",
@@ -34,18 +34,18 @@
     },
     {
       "icon": "\ud83e\udd16",
-      "headline": "AI quality checks at every stage",
-      "body": "Before your content ever reaches a platform, our AI quality gates check it against your brand spec and technical requirements."
+      "headline": "Automated quality checks at every stage",
+      "body": "Before your content ever reaches a platform, our quality gates check it against your brand spec and technical requirements."
     },
     {
       "icon": "\ud83d\udce4",
       "headline": "Direct publish, no manual export",
-      "body": "OAuth connections to every major platform mean your content publishes directly \u2014 no downloading, uploading, or scheduling tools needed."
+      "body": "OAuth connections to every major platform mean your content publishes directly. No downloading, uploading, or scheduling tools needed."
     },
     {
       "icon": "\ud83d\udcac",
       "headline": "Collab guides you through it",
-      "body": "Your plan includes Collab, the AuraFlux AI assistant. It monitors your pipeline, flags issues, and guides you to better outputs."
+      "body": "Your plan includes Collab, the AuraFlux in-app assistant. It monitors your pipeline, flags issues, and guides you to better outputs."
     },
     {
       "icon": "\ud83d\udd0c",
@@ -65,16 +65,16 @@
   "diff_sub": "Not a tool. An automated production environment.",
   "team_title": "The People Behind AuraFlux",
   "team_sub": "Built by operators, for operators.",
-  "hero_cta_label": "Get Started",
-  "hero_cta_url": "/plans",
+  "hero_cta_label": "How It Works",
+  "hero_cta_url": "/our-system",
   "hero_cta_style": "primary",
-  "hero_cta_secondary_label": "See How It Works",
-  "hero_cta_secondary_url": "/our-system",
+  "hero_cta_secondary_label": "",
+  "hero_cta_secondary_url": "",
   "hero_cta_secondary_style": "secondary",
-  "bottom_cta_label": "Get Started",
+  "bottom_cta_label": "View Plans",
   "bottom_cta_url": "/plans",
   "bottom_cta_style": "primary",
-  "bottom_cta_secondary_label": "View Pricing",
-  "bottom_cta_secondary_url": "/plans",
+  "bottom_cta_secondary_label": "",
+  "bottom_cta_secondary_url": "",
   "bottom_cta_secondary_style": "secondary"
 }

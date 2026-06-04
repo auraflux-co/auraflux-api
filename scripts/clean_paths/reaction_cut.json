@@ -1,0 +1,15 @@
+{
+  "templateId": "reaction_cut",
+  "label": "Reaction Cut",
+  "format": "longform",
+  "platforms": [
+    "youtube"
+  ],
+  "lastCleanRun": {
+    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780516410327",
+    "grade": 100,
+    "gitHash": "42f53e6",
+    "runDate": "2026-06-03T20:01:49.927367+00:00"
+  },
+  "cleanRunCount": 1
+}

@@ -1,6 +1,6 @@
 {
   "name": "auraflux-api",
-  "version": "1.0.934",
+  "version": "1.0.986",
   "description": "AuraFlux — AI-powered video content production platform",
   "main": "server.js",
   "scripts": {
@@ -71,7 +71,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
     "@aws-sdk/client-s3": "^3.1049.0",
-    "@aws-sdk/s3-request-presigner": "^3.1056.0",
+    "@aws-sdk/s3-request-presigner": "^3.1058.0",
     "@clerk/express": "^2.1.10",
     "@elevenlabs/elevenlabs-js": "^2.49.1",
     "@sentry/node": "^10.55.0",
@@ -84,9 +84,10 @@
     "express": "^4.18.2",
     "express-rate-limit": "^8.5.2",
     "express-validator": "^7.3.2",
+    "form-data": "^4.0.5",
     "googleapis": "^171.4.0",
     "helmet": "^8.2.0",
-    "ioredis": "^5.10.1",
+    "ioredis": "^5.11.0",
     "multer": "^2.1.1",
     "newrelic": "^13.20.0",
     "node-cron": "^4.2.1",
@@ -107,7 +108,7 @@
   "devDependencies": {
     "autocannon": "^2.0.1",
     "eslint": "^10.2.1",
-    "jest": "^30.3.0",
+    "jest": "^30.4.2",
     "playwright": "^1.60.0",
     "prettier": "^3.5.3",
     "supertest": "^7.2.2"

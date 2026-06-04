@@ -56,37 +56,45 @@ def patch_blog(html, data):
 
 
 def patch_roadmap(html, data):
-    def cards(items, progress=False):
+    """Populate kanban column sentinels with cards from JSON data.
+
+    roadmap-content.html contains three sentinels:
+      <!-- RDM_NOW -->    inside the IN DEVELOPMENT column
+      <!-- RDM_NEXT -->   inside the PLANNED PIPELINE column
+      <!-- RDM_FUTURE --> inside the FUTURE HORIZONS column
+
+    Simple string replacement — no regex, no accumulation risk.
+    """
+    def build_cards(items, progress=False):
         out = []
         for item in items:
             tag = item.get('tag', '')
             cls = ('rdm-tag-publish' if 'publish' in tag.lower()
-                   else 'rdm-tag-prod' if any(x in tag.lower() for x in ['prod', 'ai'])
+                   else 'rdm-tag-prod' if any(x in tag.lower() for x in ['prod'])
                    else 'rdm-tag-mono')
-            prog = ('\n        <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>'
-                    '\n        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>'
-                    if progress else '')
+            prog = (
+                '\n        <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>'
+                '\n        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>'
+                if progress else ''
+            )
+            headline = item['headline'].replace('&', '&amp;')
             out.append(
                 f'      <div class="rdm-card">\n'
                 f'        <span class="rdm-tag {cls}">{tag}</span>\n'
-                f'        <h3>{item["headline"]}</h3>{prog}\n'
+                f'        <h3>{headline}</h3>{prog}\n'
                 f'        <p>{item["description"]}</p>\n'
                 f'      </div>'
             )
         return '\n'.join(out)
 
-    for col, key, prog in [
-        ('NOW',    'now',    True),
-        ('NEXT',   'next',   False),
-        ('FUTURE', 'future', False),
+    for sentinel, key, with_progress in [
+        ('<!-- RDM_NOW -->',    'now',    True),
+        ('<!-- RDM_NEXT -->',   'next',   False),
+        ('<!-- RDM_FUTURE -->', 'future', False),
     ]:
         items = data.get(key, [])
-        if not items:
-            continue
-        # Find the column's rdm-cards div and replace its contents
-        pattern = rf'(<!-- {col} -->[\s\S]*?<div class="rdm-cards">)([\s\S]*?)(</div>\s*\n\s*</div>)'
-        replacement = lambda m, c=cards(items, prog): m.group(1) + '\n' + c + '\n    ' + m.group(3)
-        html = re.sub(pattern, replacement, html)
+        if items:
+            html = html.replace(sentinel, '\n' + build_cards(items, with_progress) + '\n    ', 1)
 
     return html
 

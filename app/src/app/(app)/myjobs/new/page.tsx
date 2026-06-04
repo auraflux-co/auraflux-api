@@ -144,15 +144,15 @@ const AUDIO_OPTS = [
 const FEATURES: Feature[] = [
   {
     id: 'script', label: 'Write my script',
-    description: 'AI writes the video script from your source material',
-    tooltip: 'Gemini analyses your source and writes a structured script.',
+    description: 'Writes a structured video script from your source material',
+    tooltip: 'Analyses your source and writes a structured script — intro, key segments, and a close.',
     outputImpact: 'Your video gets a structured script — intro, key segments, and a close.',
     default: true, formFactors: ['long'], hasConfig: true, category: 'content', status: 'live',
   },
   {
-    id: 'tts', label: 'Add AI voiceover',
-    description: 'AI voice narrates the generated script',
-    tooltip: 'A professional AI voice reads your script — no recording needed.',
+    id: 'tts', label: 'Add voiceover',
+    description: 'Professional voice narrates the generated script',
+    tooltip: 'A professional voice reads your script — no recording needed.',
     outputImpact: 'A professional voice reads your script — no recording needed.',
     default: false, formFactors: ['long'], requires: ['script'], hasConfig: true, advanced: true,
     category: 'content', status: 'live',
@@ -167,16 +167,16 @@ const FEATURES: Feature[] = [
   },
   {
     id: 'generation', label: 'Generate missing footage',
-    description: 'AI-generated clips fill missing footage',
-    tooltip: 'Where your source footage has gaps, AI generates matching video clips to fill them.',
+    description: 'Generated clips fill gaps in your footage',
+    tooltip: 'Where your source footage has gaps, matching video clips are generated to fill them.',
     outputImpact: 'Gaps in footage are filled with generated clips.',
     default: false, formFactors: ['long'], hasConfig: true, advanced: true,
     category: 'content', status: 'live',
   },
   {
     id: 'scene_select', label: 'Auto-select clips',
-    description: 'AI picks the best clips from your source',
-    tooltip: 'AI scores every clip for energy and relevance, then picks only the best segments — no manual trimming needed.',
+    description: 'Auto-selects the best clips from your source',
+    tooltip: 'Every clip is scored for energy and relevance — only the best segments are kept, no manual trimming needed.',
     outputImpact: 'Only the most relevant segments are used — weak clips are cut.',
     default: true, formFactors: ['long', 'short'], hasConfig: false, category: 'editing', status: 'live',
   },
@@ -226,13 +226,13 @@ const FEATURES: Feature[] = [
 ];
 
 const CATEGORY_BOXES: CategoryBox[] = [
-  { id: 'content',  label: 'Content & Script',  description: 'Script writing, AI voiceover, and commentary', icon: '✍️', formFactors: ['long'] },
+  { id: 'content',  label: 'Content & Script',  description: 'Script writing, voiceover, and commentary', icon: '✍️', formFactors: ['long'] },
   { id: 'editing',  label: 'Editing & Pacing',  description: 'Smart cuts, clip selection, and timing',       icon: '✂️', formFactors: ['long', 'short'] },
   { id: 'effects',  label: 'Effects & Captions', description: 'Overlays, animations, and on-screen text',    icon: '✨', formFactors: ['long', 'short'] },
   { id: 'brand',    label: 'Design & Brand',    description: 'Thumbnails, intros, and brand identity',       icon: '🎨', formFactors: ['long', 'short'] },
 ];
 
-const ALL_SECTIONS = ['type', 'source', 'format', 'platform', 'production', 'schedule'];
+const ALL_SECTIONS = ['type', 'source', 'format', 'platform', 'production', 'schedule', 'publish_settings'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -489,6 +489,12 @@ function JobBuilderPageInner() {
   const [featureConfig,  setFeatureConfig]  = useState<Record<string, Record<string, string>>>({});
   const [scheduledStart, setScheduledStart] = useState<'now' | 'scheduled'>('now');
   const [scheduledAt,    setScheduledAt]    = useState('');
+  // CPD-511/513: publish mode + optional metadata override
+  const [publishMode,    setPublishMode]    = useState<'immediate' | 'review'>('immediate');
+  const [pubTitle,       setPubTitle]       = useState('');
+  const [pubDescription, setPubDescription] = useState('');
+  const [pubTags,        setPubTags]        = useState('');
+  const [pubPrivacy,     setPubPrivacy]     = useState<'public' | 'unlisted' | 'private'>('public');
   const [tone,           setTone]           = useState('professional');
   const [durationMins,   setDurationMins]   = useState(3);
 
@@ -509,6 +515,12 @@ function JobBuilderPageInner() {
     sourceMode: sourceMode === 'source' ? 'source' : 'upload',
     planTier: tier,
   });
+
+  // When a preset template is active, this holds the original template object so the
+  // production section can distinguish "included by template" from "optional extras".
+  const activeTemplate = templateId !== 'custom'
+    ? PRESET_TEMPLATES.find((t) => t.id === templateId) ?? null
+    : null;
 
   // ─── Section helpers ───────────────────────────────────────────────────────
 
@@ -662,6 +674,26 @@ function JobBuilderPageInner() {
       mergedConfig.script = { ...(mergedConfig.script ?? {}), tone };
     }
 
+    // Build addOns from the wizard's collected state so dashboard and API jobs
+    // are always equivalent — matches the canonical feature_input_schema on the server.
+    const addOns: CreateJobPayload['addOns'] = {};
+    if (captions) {
+      addOns.captions = { active: true, style: 'animated' };
+    }
+    if (grade && grade !== 'none') {
+      addOns.colorGrade = { active: true, preset: grade as 'vivid' | 'warm' | 'cool' | 'moody' | 'crisp' | 'neut' };
+    }
+    if (effects.length > 0) {
+      const effObj: Record<string, boolean> = {};
+      for (const e of effects) effObj[e] = true;
+      addOns.effects = effObj as { zoom?: boolean; transitions?: boolean; slowmo?: boolean; vignette?: boolean };
+    }
+    if (audioOpts.length > 0) {
+      const audioObj: Record<string, boolean> = {};
+      for (const a of audioOpts) audioObj[a] = true;
+      addOns.audio = audioObj as { loudnorm?: boolean; duck?: boolean; denoise?: boolean };
+    }
+
     const payload: CreateJobPayload = {
       contentType:    pathToContentType(inferredPath),
       entryType:      (sourceMode === 'source' ? 'fetch' : 'upload') as 'fetch' | 'upload',
@@ -673,6 +705,17 @@ function JobBuilderPageInner() {
       durationMins,
       publishMode:    'immediate',
       featureConfig:  Object.keys(mergedConfig).length ? mergedConfig : undefined,
+      addOns:         Object.keys(addOns).length > 0 ? addOns : undefined,
+      // CPD-511/513: staging gate + customer-provided publish metadata
+      staging:        publishMode === 'review' ? true : undefined,
+      publishMeta: (() => {
+        const pm: CreateJobPayload['publishMeta'] = {};
+        if (pubTitle.trim())       pm.title         = pubTitle.trim();
+        if (pubDescription.trim()) pm.description   = pubDescription.trim();
+        if (pubTags.trim())        pm.tags           = pubTags.split(',').map((t) => t.trim()).filter(Boolean);
+        if (pubPrivacy !== 'public') pm.privacyStatus = pubPrivacy;
+        return Object.keys(pm).length ? pm : undefined;
+      })(),
     };
 
     if (sourceMode === 'source') {
@@ -731,8 +774,8 @@ function JobBuilderPageInner() {
 
   const summaries: Record<string, string> = {
     type: sourceIntent === 'longform'
-      ? (formFactor === 'short' ? 'Cut clips from long-form' : 'Produce from source')
-      : (inferredMultiClip ? 'Multi-clip stitch → long-form' : formFactor === 'short' ? 'Short clip / enhance' : ''),
+      ? (formFactor === 'short' ? 'Find highlights' : 'Create a full video')
+      : (inferredMultiClip ? 'Make a longer video' : formFactor === 'short' ? 'Polish short clips' : ''),
     source: sourceMode === 'upload'
       ? (uploadedName ? `Upload: ${uploadedName}` : '')
       : sourceItems.length === 0 ? ''
@@ -767,7 +810,10 @@ function JobBuilderPageInner() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 pb-4">
         <div>
-          <h1 className="text-2xl font-semibold">Create a video</h1>
+          <h1 className="text-2xl font-semibold">
+            <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Create a video</span>
+            <span className="ml-2 text-xl">✨</span>
+          </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {templatePicked && templateId !== 'custom'
               ? `Using template: ${PRESET_TEMPLATES.find((t) => t.id === templateId)?.label ?? templateBanner ?? templateId}`
@@ -804,18 +850,29 @@ function JobBuilderPageInner() {
               />
             </div>
           ) : (
-            <div className="flex items-center gap-3 rounded-lg border px-4 py-2.5 mb-4 bg-muted/20">
+            <div className="flex items-center gap-3 rounded-lg border border-primary/30 px-4 py-2.5 mb-4 bg-primary/5">
               {templateId === 'custom'
-                ? <span className="text-sm font-medium">Building from scratch</span>
-                : <>
-                    <Badge variant="outline" className="border-primary/40 text-primary text-[11px]">
-                      {PRESET_TEMPLATES.find((t) => t.id === templateId)?.label ?? templateBanner ?? 'Saved template'}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">Pre-configured — change any section below</span>
+                ? <>
+                    <span className="text-base">🛠️</span>
+                    <span className="text-sm font-medium">Building from scratch</span>
                   </>
+                : (() => {
+                    const t = PRESET_TEMPLATES.find((x) => x.id === templateId);
+                    const ICONS: Record<string, string> = {
+                      tiktok_clutch: '⚡', youtube_deep_dive: '🎬', irl_story_time: '💬',
+                      montage_hype_reel: '🔥', reaction_cut: '😂', quick_guide: '🎯',
+                    };
+                    return <>
+                      <span className="text-base shrink-0">{ICONS[templateId] ?? '▶'}</span>
+                      <Badge variant="outline" className="border-primary/40 text-primary text-[11px]">
+                        {t?.label ?? templateBanner ?? 'Saved template'}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">Pre-configured — change any section below</span>
+                    </>;
+                  })()
               }
               <button type="button" onClick={changeTemplate}
-                      className="ml-auto text-[11px] text-primary hover:underline">
+                      className="ml-auto text-[11px] text-muted-foreground hover:text-foreground transition-colors">
                 Change template
               </button>
             </div>
@@ -824,8 +881,8 @@ function JobBuilderPageInner() {
           {templatePicked && (
             <div className="space-y-1">
 
-              {/* TYPE */}
-              <CollapsibleSection id="type" label="What are you making?" required
+              {/* TYPE — hidden when a template is active (template already defines this) */}
+              {!activeTemplate && <CollapsibleSection id="type" label="What are you making?" required
                 summary={summaries.type} open={isOpen('type')} onToggle={() => toggle('type')}>
                 <div className="space-y-3">
                   <ChipGroup
@@ -863,18 +920,18 @@ function JobBuilderPageInner() {
                     singleSelect
                   />
                 </div>
-              </CollapsibleSection>
+              </CollapsibleSection>}
 
-              <div className="h-px bg-border/50 my-0.5" />
+              {!activeTemplate && <div className="h-px bg-border/50 my-0.5" />}
 
               {/* SOURCE */}
-              <CollapsibleSection id="source" label="Footage" required
+              <CollapsibleSection id="source" label="Source video" required
                 summary={summaries.source} open={isOpen('source')} onToggle={() => toggle('source')}>
                 <div className="space-y-4">
                   {/* Tab bar */}
                   <div className="flex gap-2">
                     {(['source', 'upload'] as SourceMode[]).map((s) => {
-                      const labels: Record<SourceMode, string> = { source: 'Choose from library', upload: 'Upload file' };
+                      const labels: Record<SourceMode, string> = { source: 'Browse your channels', upload: 'Upload a file' };
                       return (
                         <button key={s} type="button" onClick={() => setSourceMode(s)}
                           className={cn('px-3 py-1.5 text-xs rounded-md border transition-colors',
@@ -955,8 +1012,8 @@ function JobBuilderPageInner() {
 
               <div className="h-px bg-border/50 my-0.5" />
 
-              {/* FORMAT */}
-              <CollapsibleSection id="format" label="Format" required
+              {/* FORMAT — hidden when template is active (template defines format + duration) */}
+              {!activeTemplate && <CollapsibleSection id="format" label="Format" required
                 summary={summaries.format} open={isOpen('format')} onToggle={() => toggle('format')}>
                 <div className="space-y-4">
                   <ChipGroup options={FORMATS} selected={[format]} singleSelect
@@ -976,9 +1033,9 @@ function JobBuilderPageInner() {
                     </div>
                   )}
                 </div>
-              </CollapsibleSection>
+              </CollapsibleSection>}
 
-              <div className="h-px bg-border/50 my-0.5" />
+              {!activeTemplate && <div className="h-px bg-border/50 my-0.5" />}
 
               {/* PLATFORM */}
               <CollapsibleSection id="platform" label="Where to publish" required
@@ -990,90 +1047,149 @@ function JobBuilderPageInner() {
               <div className="h-px bg-border/50 my-0.5" />
 
               {/* PRODUCTION FEATURES */}
-              <CollapsibleSection id="production" label="Production add-ons"
+              <CollapsibleSection id="production"
+                label={activeTemplate ? 'Optional extras' : 'Production add-ons'}
                 summary={summaries.production} open={isOpen('production')} onToggle={() => toggle('production')}>
                 <div className="space-y-4">
 
-                  {/* Captions + voiceover toggles */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Output options</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: 'captions',  label: 'Captions',   sub: 'Added directly to the video', on: captions,  set: setCaptions },
-                        { id: 'voiceover', label: 'Voice-over', sub: 'Script narration',         on: voiceover, set: setVoiceover },
-                      ].map((opt) => (
-                        <button key={opt.id} type="button" onClick={() => opt.set(!opt.on)}
-                          className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
-                            opt.on ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
-                          <p className="text-sm font-medium">{opt.label}</p>
-                          <p className={cn('text-[11px] mt-0.5', opt.on ? 'text-primary-foreground/70' : 'text-muted-foreground')}>{opt.sub}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Color grade + effects */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Visual style</p>
-                    <div className="flex gap-4 flex-wrap">
-                      <div className="space-y-1.5">
-                        <p className="text-[11px] text-muted-foreground">Color grade</p>
-                        <ChipGroup options={GRADES} selected={[grade]} singleSelect onToggle={setGrade} />
+                  {/* ── Included by template summary ── */}
+                  {activeTemplate && (() => {
+                    const GRADE_LABELS: Record<string, string> = { vivid: 'Vivid color', neut: 'Neutral color', warm: 'Warm color', cool: 'Cool color' };
+                    const EFFECT_LABELS: Record<string, string> = { zoom: 'Zoom cuts', transitions: 'Scene transitions' };
+                    const AUDIO_LABELS: Record<string, string>  = { loudnorm: 'Volume balance', duck: 'Music ducking' };
+                    const FEAT_LABELS: Record<string, string>   = { scene_select: 'Auto-select clips', branding: 'Branded intro/outro' };
+                    const FORMAT_LABELS: Record<string, string> = { portrait: '9:16 portrait', longform: '16:9 landscape' };
+                    const pills: string[] = [
+                      FORMAT_LABELS[activeTemplate.format] ?? activeTemplate.format,
+                      ...(activeTemplate.captions ? ['Captions'] : []),
+                      ...(GRADE_LABELS[activeTemplate.grade] ? [GRADE_LABELS[activeTemplate.grade]] : []),
+                      ...activeTemplate.effects.flatMap((e) => EFFECT_LABELS[e] ? [EFFECT_LABELS[e]] : []),
+                      ...activeTemplate.audioOpts.flatMap((a) => AUDIO_LABELS[a] ? [AUDIO_LABELS[a]] : []),
+                      ...activeTemplate.features.flatMap((f) => FEAT_LABELS[f] ? [FEAT_LABELS[f]] : []),
+                    ];
+                    return (
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 space-y-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/70">
+                          Included by {activeTemplate.label} template
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {pills.map((pill) => (
+                            <span key={pill}
+                              className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                              ✓ {pill}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="space-y-1.5 flex-1 min-w-[200px]">
-                        <p className="text-[11px] text-muted-foreground">Effects</p>
-                        <ChipGroup options={EFFECTS_OPTS} selected={effects}
-                          onToggle={(id) => setEffects((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
+                    );
+                  })()}
+
+                  {/* ── Optional output add-ons (not set by template) ── */}
+                  {(!activeTemplate?.captions || !activeTemplate?.voiceover) && (
+                    <div className="space-y-2">
+                      {!activeTemplate && (
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Output options</p>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        {!activeTemplate?.captions && (
+                          <button type="button" onClick={() => setCaptions(!captions)}
+                            className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
+                              captions ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
+                            <p className="text-sm font-medium">Captions</p>
+                            <p className={cn('text-[11px] mt-0.5', captions ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Added directly to the video</p>
+                          </button>
+                        )}
+                        {!activeTemplate?.voiceover && (
+                          <button type="button" onClick={() => { toggleFeature('tts'); setVoiceover(!voiceover); }}
+                            className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
+                              features.has('tts') ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
+                            <p className="text-sm font-medium">Voiceover</p>
+                            <p className={cn('text-[11px] mt-0.5', features.has('tts') ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Script narration</p>
+                          </button>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Audio */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Audio</p>
-                    <ChipGroup options={AUDIO_OPTS} selected={audioOpts}
-                      onToggle={(id) => setAudioOpts((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
-                  </div>
-
-                  {/* Production features — 4 expandable category boxes (CPD-420) */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">AI production tools</p>
-                    {!formFactor ? (
-                      <p className="text-sm text-muted-foreground">Select a format above to see available tools.</p>
-                    ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {CATEGORY_BOXES.map((cat) => (
-                        <FeatureCategoryBox
-                          key={cat.id}
-                          category={cat}
-                          features={FEATURES.filter(
-                            (f) => f.category === cat.id && f.status === 'live' && f.formFactors.includes(formFactor),
-                          )}
-                          allFeatures={FEATURES}
-                          selected={features}
-                          onToggle={toggleFeature}
-                        />
-                      ))}
+                  {/* ── Visual style — only shown in Build My Own ── */}
+                  {!activeTemplate && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Visual style</p>
+                      <div className="flex gap-4 flex-wrap">
+                        <div className="space-y-1.5">
+                          <p className="text-[11px] text-muted-foreground">Color grade</p>
+                          <ChipGroup options={GRADES} selected={[grade]} singleSelect onToggle={setGrade} />
+                        </div>
+                        <div className="space-y-1.5 flex-1 min-w-[200px]">
+                          <p className="text-[11px] text-muted-foreground">Effects</p>
+                          <ChipGroup options={EFFECTS_OPTS} selected={effects}
+                            onToggle={(id) => setEffects((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
+                        </div>
+                      </div>
                     </div>
-                    )}
-                    {/* Config panels for enabled features that have configuration */}
-                    {Array.from(features)
-                      .map((fid) => FEATURES.find((f) => f.id === fid))
-                      .filter((f): f is Feature => !!f && f.hasConfig)
-                      .map((feat) => (
-                        <FeatureRow
-                          key={feat.id}
-                          feat={feat}
-                          features={features}
-                          featureConfig={featureConfig}
-                          toggleFeature={toggleFeature}
-                          tier={tier}
-                          tone={tone}
-                          setTone={setTone}
-                          setFeatureCfg={setFeatureCfg}
-                        />
-                      ))}
-                  </div>
+                  )}
+
+                  {/* ── Audio — only shown in Build My Own ── */}
+                  {!activeTemplate && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Audio</p>
+                      <ChipGroup options={AUDIO_OPTS} selected={audioOpts}
+                        onToggle={(id) => setAudioOpts((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />
+                    </div>
+                  )}
+
+                  {/* ── Production tools: extras not already in the template ── */}
+                  {formFactor && CATEGORY_BOXES.some((cat) =>
+                    FEATURES.some((f) => f.category === cat.id && f.status === 'live'
+                      && f.formFactors.includes(formFactor) && !(activeTemplate?.features.includes(f.id)))
+                  ) && (
+                    <div className="space-y-2">
+                      {!activeTemplate && (
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Production tools
+                        </p>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {CATEGORY_BOXES.map((cat) => {
+                          const catFeatures = FEATURES.filter(
+                            (f) => f.category === cat.id
+                              && f.status === 'live'
+                              && f.formFactors.includes(formFactor)
+                              && !(activeTemplate?.features.includes(f.id)),
+                          );
+                          if (catFeatures.length === 0) return null;
+                          return (
+                            <FeatureCategoryBox
+                              key={cat.id}
+                              category={cat}
+                              features={catFeatures}
+                              allFeatures={FEATURES}
+                              selected={features}
+                              onToggle={toggleFeature}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Config panels for enabled features */}
+                  {Array.from(features)
+                    .map((fid) => FEATURES.find((f) => f.id === fid))
+                    .filter((f): f is Feature => !!f && f.hasConfig)
+                    .map((feat) => (
+                      <FeatureRow
+                        key={feat.id}
+                        feat={feat}
+                        features={features}
+                        featureConfig={featureConfig}
+                        toggleFeature={toggleFeature}
+                        tier={tier}
+                        tone={tone}
+                        setTone={setTone}
+                        setFeatureCfg={setFeatureCfg}
+                      />
+                    ))}
 
                   {/* Credit estimate */}
                   <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1">
@@ -1083,6 +1199,7 @@ function JobBuilderPageInner() {
                     </div>
                     <p className="text-xs text-foreground/80">{estimate.message}</p>
                   </div>
+
                 </div>
               </CollapsibleSection>
 
@@ -1114,6 +1231,72 @@ function JobBuilderPageInner() {
                 </div>
               </CollapsibleSection>
 
+              <div className="h-px bg-border/50 my-0.5" />
+
+              {/* PUBLISH SETTINGS — CPD-511/513 */}
+              <CollapsibleSection id="publish_settings" label="Publish settings"
+                summary={publishMode === 'review' ? 'Review before publishing' : pubTitle ? `Title: ${pubTitle.slice(0, 32)}` : 'Publish immediately'}
+                open={isOpen('publish_settings')} onToggle={() => toggle('publish_settings')}>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs mb-1.5 block">After production</Label>
+                    <ChipGroup
+                      options={[
+                        { id: 'immediate', label: 'Publish immediately' },
+                        { id: 'review',    label: 'Review before publishing' },
+                      ]}
+                      selected={[publishMode]}
+                      singleSelect
+                      onToggle={(id) => setPublishMode(id as 'immediate' | 'review')}
+                    />
+                    {publishMode === 'review' && (
+                      <p className="text-[11px] text-muted-foreground mt-1.5">
+                        Your video will be held for review. You&apos;ll approve and publish from the job detail page.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">
+                      Publish metadata <span className="font-normal">(optional — AI generates these if left blank)</span>
+                    </Label>
+                    <input
+                      type="text"
+                      placeholder="Video title"
+                      value={pubTitle}
+                      onChange={(e) => setPubTitle(e.target.value)}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <textarea
+                      placeholder="Description"
+                      value={pubDescription}
+                      onChange={(e) => setPubDescription(e.target.value)}
+                      rows={2}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Tags (comma-separated)"
+                      value={pubTags}
+                      onChange={(e) => setPubTags(e.target.value)}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs shrink-0">Visibility</Label>
+                      <select
+                        value={pubPrivacy}
+                        onChange={(e) => setPubPrivacy(e.target.value as typeof pubPrivacy)}
+                        className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="public">Public</option>
+                        <option value="unlisted">Unlisted</option>
+                        <option value="private">Private</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </CollapsibleSection>
+
             </div>
           )}
 
@@ -1135,28 +1318,32 @@ function JobBuilderPageInner() {
               effects={effects}
             />
 
-            {/* Summary bullets */}
-            {canSubmit && (
-              <div className="space-y-1.5 border-t border-border pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Summary</p>
-                {[
-                  FORMATS.find((f) => f.id === format)?.label,
-                  !isLongForm && durLabel(duration),
-                  platforms.map((p) => PLATFORMS.find((x) => x.id === p)?.label ?? p).join(' · '),
-                  captions && 'Captions',
-                  voiceover && 'Voice-over',
-                  grade !== 'none' && `${grade.charAt(0).toUpperCase()}${grade.slice(1)} grade`,
-                  effects.length > 0 && effects.map((e) => EFFECTS_OPTS.find((x) => x.id === e)?.label ?? e).join(', '),
-                  features.size > 0 && `${features.size} feature${features.size !== 1 ? 's' : ''} enabled`,
-                  `${estimate.credits} credits`,
-                ].filter(Boolean).map((line, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs">
-                    <div className="w-1 h-1 rounded-full bg-primary shrink-0" />
-                    <span>{String(line)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Expected output summary — visible as soon as template is picked */}
+            <div className="space-y-1.5 border-t border-border pt-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">What you&apos;ll get</p>
+              {[
+                format && FORMATS.find((f) => f.id === format)?.label,
+                !isLongForm && duration && durLabel(duration),
+                platforms.length > 0 && platforms.map((p) => PLATFORMS.find((x) => x.id === p)?.label ?? p).join(' · '),
+                captions && 'Burnt-in captions',
+                voiceover && 'Voiceover narration',
+                grade !== 'none' && `${(GRADES.find((g) => g.id === grade)?.label ?? grade)} color grade`,
+                effects.length > 0 && effects.map((e) => EFFECTS_OPTS.find((x) => x.id === e)?.label ?? e).join(' + '),
+                features.size > 0 && Array.from(features)
+                  .map((fid) => FEATURES.find((f) => f.id === fid)?.label)
+                  .filter(Boolean)
+                  .join(', '),
+                canSubmit && `${estimate.credits} credits`,
+              ].filter(Boolean).map((line, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs">
+                  <div className="w-1 h-1 rounded-full bg-primary shrink-0 mt-1.5" />
+                  <span>{String(line)}</span>
+                </div>
+              ))}
+              {!format && !platforms.length && (
+                <p className="text-[11px] text-muted-foreground italic">Complete the sections above to see your output summary.</p>
+              )}
+            </div>
 
             <Button size="sm" className="w-full" disabled={!canSubmit || isPending} onClick={handleSubmit}>
               {isPending ? 'Starting…' : 'Start production →'}

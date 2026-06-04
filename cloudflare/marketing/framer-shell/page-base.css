@@ -27,7 +27,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Display headings — heavy sans per spec ─────────────────────────────── */
+/* ── Display headings: heavy sans per spec ─────────────────────────────── */
 h1, h2 {
   font-family: 'Satoshi', 'Inter', -apple-system, sans-serif !important;
   font-weight: 800 !important;
@@ -38,7 +38,7 @@ h1, h2 {
 /* ── Body line-height ───────────────────────────────────────────────────── */
 p { line-height: 1.7 !important; }
 
-/* Nav is now #af-nav — fixed 84px, handled entirely in nav.html.
+/* Nav is now #af-nav: fixed 84px, handled entirely in nav.html.
    Keep Framer class overrides only for homepage compatibility. */
 :where(.framer-frJN9) {
   background: rgba(0,0,0,0) !important;
@@ -64,14 +64,31 @@ body { padding-top: 84px; }
 a { color: var(--af-gold); text-decoration: none; }
 a:hover { text-decoration: underline; opacity: .85; }
 
-.btn-primary, .cta-primary, .nav-cta {
+/* .primary is the class Framer/CMS exports use; btn-primary is legacy (both styled) */
+.btn-primary, .cta-primary, .nav-cta, .primary {
+  display: inline-block;
   background: var(--af-gold) !important;
   color: #0b1220 !important;
   font-weight: 700 !important;
+  padding: .6em 1.4em;
+  border-radius: 6px;
+  text-decoration: none !important;
 }
-.btn-secondary {
-  border-color: rgba(245,197,66,.35) !important;
+.btn-primary:hover, .cta-primary:hover, .primary:hover { opacity: .88; }
+/* .secondary is the class Framer/CMS exports use for outline buttons */
+.btn-secondary, .secondary {
+  display: inline-block;
+  background: transparent !important;
   color: var(--af-gold) !important;
+  font-weight: 600 !important;
+  padding: .6em 1.4em;
+  border-radius: 6px;
+  border: 1.5px solid rgba(245,197,66,.45) !important;
+  text-decoration: none !important;
+}
+.btn-secondary:hover, .secondary:hover {
+  border-color: var(--af-gold) !important;
+  opacity: .88;
 }
 
 /* ── Eyebrow labels ─────────────────────────────────────────────────────── */

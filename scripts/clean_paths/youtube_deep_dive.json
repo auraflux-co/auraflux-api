@@ -1,0 +1,15 @@
+{
+  "templateId": "youtube_deep_dive",
+  "label": "YouTube Deep Dive",
+  "format": "longform",
+  "platforms": [
+    "youtube"
+  ],
+  "lastCleanRun": {
+    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780515145909",
+    "grade": 100,
+    "gitHash": "c425a66",
+    "runDate": "2026-06-03T19:41:14.893875+00:00"
+  },
+  "cleanRunCount": 1
+}
