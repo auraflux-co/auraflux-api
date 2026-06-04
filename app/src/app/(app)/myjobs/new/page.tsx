@@ -1100,11 +1100,11 @@ function JobBuilderPageInner() {
                           </button>
                         )}
                         {!activeTemplate?.voiceover && (
-                          <button type="button" onClick={() => setVoiceover(!voiceover)}
+                          <button type="button" onClick={() => { toggleFeature('tts'); setVoiceover(!voiceover); }}
                             className={cn('text-left rounded-lg border px-3 py-2 transition-colors min-w-[140px]',
-                              voiceover ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
+                              features.has('tts') ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/40')}>
                             <p className="text-sm font-medium">Voiceover</p>
-                            <p className={cn('text-[11px] mt-0.5', voiceover ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Script narration</p>
+                            <p className={cn('text-[11px] mt-0.5', features.has('tts') ? 'text-primary-foreground/70' : 'text-muted-foreground')}>Script narration</p>
                           </button>
                         )}
                       </div>

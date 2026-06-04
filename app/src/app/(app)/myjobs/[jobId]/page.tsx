@@ -349,7 +349,7 @@ export default function JobDetailPage() {
         job.portalReports.filter((r) => r.score != null).length,
       )
     : null;
-  const publishedResults = (job.publishResults ?? []).filter((r) => r.status === 'published');
+  const publishedResults = job.publishResults ?? [];
   const jobHeading       = job.wizardConfig?.topic
     ? job.wizardConfig.topic
     : job.wizardConfig?.contentType
@@ -753,13 +753,13 @@ export default function JobDetailPage() {
         <ScriptCard script={job.filledScript} />
       )}
 
-      {/* ── Published links — horizontal platform grid ── */}
+      {/* ── Published / failed publish results — horizontal platform grid ── */}
       {publishedResults.length > 0 && (
         <div className="rounded-xl border-2 border-violet-200 dark:border-violet-800 bg-gradient-to-b from-violet-50/30 to-background dark:from-violet-950/15 overflow-hidden">
           <div className="px-4 py-3 border-b border-violet-200/60 dark:border-violet-800/60 flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-violet-500 shrink-0" />
             <span className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-400">
-              Published
+              Publish results
             </span>
           </div>
           <div className={cn(
@@ -771,7 +771,12 @@ export default function JobDetailPage() {
             {publishedResults.map((r) => (
               <div
                 key={r.platform}
-                className="flex flex-col gap-2.5 rounded-lg bg-violet-50/60 dark:bg-violet-950/25 border border-violet-100 dark:border-violet-900/40 px-3 py-3"
+                className={cn(
+                  'flex flex-col gap-2.5 rounded-lg border px-3 py-3',
+                  r.status === 'published'
+                    ? 'bg-violet-50/60 dark:bg-violet-950/25 border-violet-100 dark:border-violet-900/40'
+                    : 'bg-red-50/60 dark:bg-red-950/25 border-red-200 dark:border-red-900/40',
+                )}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-xl leading-none">{PLATFORM_ICONS[r.platform] ?? '•'}</span>
@@ -780,8 +785,17 @@ export default function JobDetailPage() {
                     {r.publishedAt && (
                       <p className="text-[10px] text-muted-foreground">{new Date(r.publishedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
                     )}
+                    {r.status !== 'published' && (
+                      <p className="text-[10px] text-red-600 dark:text-red-400 font-medium mt-0.5">Publish failed</p>
+                    )}
                   </div>
                 </div>
+                {r.status !== 'published' && r.error && (
+                  <p className="text-[11px] text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 rounded px-2 py-1.5">{r.error}</p>
+                )}
+                {r.status !== 'published' && !r.error && (
+                  <p className="text-[11px] text-muted-foreground">Contact support if this persists.</p>
+                )}
                 {r.driveUrl && (
                   <a
                     href={r.driveUrl}
