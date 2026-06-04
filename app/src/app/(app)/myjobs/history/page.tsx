@@ -40,6 +40,9 @@ const ADDON_LABELS: Record<string, string> = {
   branding:       'Brand overlay',
   imageBurn:      'Image burn',
   dynamicOverlays:'Dynamic overlays',
+  captions:       'Captions',
+  colorGrade:     'Color grade',
+  effects:        'Visual effects',
 };
 
 function fmtJobTime(iso: string) {
@@ -80,6 +83,12 @@ function SelectionReview({ wc }: { wc: WizardConfig }) {
       {open && (
         <div className="mt-2 rounded-md border border-border bg-muted/20 p-3 text-xs space-y-2">
           <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            {wc.templateName && (
+              <>
+                <span className="text-muted-foreground">Template</span>
+                <span className="font-medium">{wc.templateName}</span>
+              </>
+            )}
             <span className="text-muted-foreground">Format</span>
             <span>{formFactorLabel(wc)}</span>
             <span className="text-muted-foreground">Source</span>

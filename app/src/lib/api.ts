@@ -38,6 +38,7 @@ export type RecurrenceType = 'once' | 'daily' | 'weekly' | 'monthly';
 export interface WizardConfig {
   formFactor:     'long' | 'short' | string | null;
   templateId:     string | null;
+  templateName?:  string | null;
   contentType:    string | null;
   entryType:      string | null;
   addOns:         string[];
