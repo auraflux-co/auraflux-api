@@ -13,7 +13,7 @@
  *   1. Submit jobs with "staging": true via POST /v1/jobs
  *   2. Poll GET /v1/jobs/:id until status = "complete" or "staged"
  *   3. Open this page to review inputs vs outputs visually
- *   4. Use "Approve & Publish" to push to clipzworldnews social accounts via upload-post
+ *   4. Use "Approve & Publish" to push to AuraFlux social accounts via upload-post
  *
  * Rob can delete test content from social platforms after review.
  */

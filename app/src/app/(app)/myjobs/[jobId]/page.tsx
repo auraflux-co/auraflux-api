@@ -823,7 +823,7 @@ export default function JobDetailPage() {
           {/* Customer CTA for failed */}
           {job.status === 'failed' && !isSuperAdmin && (
             <a
-              href="mailto:support@clipzworld.com"
+              href="mailto:support@auraflux.co"
               className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'border-red-200 text-red-700 dark:border-red-800 dark:text-red-400')}
             >
               Contact support →
