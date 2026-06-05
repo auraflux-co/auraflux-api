@@ -237,22 +237,6 @@ const FEATURES: Feature[] = [
     outputImpact: 'Your face-cam appears in a corner — great for commentary or reaction videos.',
     default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true, category: 'effects', status: 'live',
   },
-  {
-    id: 'i2v', label: 'Image-to-video generation',
-    description: 'Generate video starting from your reference image',
-    tooltip: 'Provide a reference image and WAN i2v generates video footage that begins from that exact frame.',
-    outputImpact: 'Missing footage is generated starting from your reference image — not a blank prompt.',
-    default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true, category: 'content',
-    minPlan: 'managed', status: 'live',
-  },
-  {
-    id: 'imagen', label: 'Imagen 3 thumbnails',
-    description: 'AI-designed thumbnail options powered by Google Imagen 3',
-    tooltip: 'Generates polished branded thumbnails using Google Imagen 3 — shown alongside frame and designed options in the thumbnail picker.',
-    outputImpact: 'Imagen 3 thumbnail candidates appear in the thumbnail picker for you to choose from.',
-    default: false, formFactors: ['long', 'short'], hasConfig: false, advanced: true, category: 'brand',
-    minPlan: 'managed', status: 'live',
-  },
 ];
 
 const CATEGORY_BOXES: CategoryBox[] = [
@@ -450,16 +434,6 @@ function FeatureConfigPanel({ feat, cfg, tone, setTone, setFeatureCfg }: Feature
             <option value="top-left">Top left</option>
           </select>
           <p className="text-[10px] text-muted-foreground">Upload your face-cam clip in the Source section above (secondary video input).</p>
-        </div>
-      )}
-      {feat.id === 'i2v' && (
-        <div className="space-y-1.5">
-          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Reference image URL</Label>
-          <input type="url"
-            value={cfg.imageUrl ?? ''} onChange={(e) => setFeatureCfg('i2v', 'imageUrl', e.target.value)}
-            placeholder="https://… or leave blank to use first video frame"
-            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
-          <p className="text-[10px] text-muted-foreground">The video generator starts from this image. If blank, the first frame of your source footage is used.</p>
         </div>
       )}
     </div>
@@ -795,16 +769,6 @@ function JobBuilderPageInner() {
         active:   true,
         position: (pipCfg.position || 'bottom-right') as 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left',
       };
-    }
-    if (features.has('i2v')) {
-      const i2vCfg = featureConfig['i2v'] ?? {};
-      addOns.i2v = {
-        active:   true,
-        imageUrl: i2vCfg.imageUrl?.trim() || undefined,
-      };
-    }
-    if (features.has('imagen')) {
-      addOns.imagen = { active: true };
     }
 
     const payload: CreateJobPayload = {
