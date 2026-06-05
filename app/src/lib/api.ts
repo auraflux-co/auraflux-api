@@ -25,6 +25,7 @@ export type PortalStatus = 'pending' | 'running' | 'pass' | 'hold' | 'failed' | 
 
 export interface PortalReport {
   portal:  string;
+  label?:  string;
   status:  PortalStatus;
   passed:  boolean;
   score?:  number;
@@ -932,17 +933,53 @@ export async function operatorJobAction(
   return apiFetch(`/jobs/${jobId}/${action}`, { method: 'POST', token });
 }
 
+// ─── Staging assets (CPD-505) ────────────────────────────────────────────────
+
+export interface StagingPublishMeta {
+  title:            string | null;
+  description:      string | null;
+  tags:             string[];
+  privacyStatus:    string;
+  tiktokCaption:    string | null;
+  instagramCaption: string | null;
+}
+
+export interface StagingAssets {
+  ok:          boolean;
+  jobId:       string;
+  status:      string;
+  staging:     boolean;
+  input:       Record<string, unknown>;
+  output: {
+    videoUrl:     string | null;
+    thumbnailUrl: string | null;
+    script:       string | null;
+    publishCopy:  {
+      youtube?:   { title?: string; description?: string; tags?: string[] };
+      tiktok?:    { caption?: string; hashtags?: string[] };
+      instagram?: { caption?: string; hashtags?: string[] };
+    } | null;
+  };
+  publishMeta:   StagingPublishMeta;
+  portalReports: PortalReport[];
+  urlExpiresAt:  string;
+}
+
+export async function getStagingAssets(jobId: string, token?: string): Promise<StagingAssets> {
+  return apiFetch(`/jobs/${jobId}/staging-assets`, { token });
+}
+
 // ─── Customer approve-publish (staged → published) ───────────────────────────
 
 export async function approveAndPublish(
   jobId: string,
-  platforms?: string[],
+  opts?: { platforms?: string[]; publishMeta?: Partial<StagingPublishMeta> },
   token?: string,
 ): Promise<{ ok: boolean; jobId: string; approved: boolean; platforms: Record<string, unknown> }> {
   return apiFetch(`/jobs/${jobId}/approve-publish`, {
     method: 'POST',
     token,
-    body: platforms ? JSON.stringify({ platforms }) : undefined,
+    body: JSON.stringify({ platforms: opts?.platforms, publishMeta: opts?.publishMeta }),
   });
 }
 

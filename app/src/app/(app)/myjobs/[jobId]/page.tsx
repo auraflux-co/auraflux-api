@@ -18,8 +18,9 @@ import { cn } from '@/lib/utils';
 import { formatUserError, platformLabel } from '@/lib/job-labels';
 import {
   getJobDetail, operatorJobAction, saveJobAsTemplate, approveAndPublish,
-  getThumbnailCandidates, approveThumbnail,
-  type Job, type OperatorAction, type ThumbnailCandidate,
+  getThumbnailCandidates, approveThumbnail, getStagingAssets, listConnectedAccounts,
+  type Job, type OperatorAction, type ThumbnailCandidate, type StagingAssets,
+  type ConnectedAccount,
 } from '@/lib/api';
 import { SaveTemplateDialog, type SaveTemplateOptions } from '@/components/jobs/save-template-dialog';
 import { labelForContentType } from '@/lib/content-types';
@@ -209,6 +210,16 @@ export default function JobDetailPage() {
   const [thumbCandidates, setThumbCandidates] = useState<ThumbnailCandidate[] | null>(null);
   const [thumbApproving, setThumbApproving]   = useState(false);
   const [thumbApproved, setThumbApproved]     = useState<string | null>(null);
+  // CPD-505: staging review — editable publish metadata + script + QA + account confirmation
+  const [stagingAssets, setStagingAssets]     = useState<StagingAssets | null>(null);
+  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
+  const [reviewTitle,       setReviewTitle]       = useState('');
+  const [reviewDesc,        setReviewDesc]         = useState('');
+  const [reviewTags,        setReviewTags]         = useState('');
+  const [reviewPrivacy,     setReviewPrivacy]      = useState<'public'|'unlisted'|'private'>('public');
+  const [reviewTiktok,      setReviewTiktok]       = useState('');
+  const [reviewInstagram,   setReviewInstagram]    = useState('');
+  const [scriptExpanded,    setScriptExpanded]     = useState(false);
 
   async function handleSaveAsTemplate(opts: SaveTemplateOptions) {
     if (!job) return;
@@ -235,7 +246,19 @@ export default function JobDetailPage() {
     setApproving(true);
     try {
       const token = await getToken();
-      const res = await approveAndPublish(jobId, job?.platforms, token ?? undefined);
+      const publishMeta = {
+        title:            reviewTitle.trim()     || undefined,
+        description:      reviewDesc.trim()      || undefined,
+        tags:             reviewTags.trim() ? reviewTags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
+        privacyStatus:    reviewPrivacy          || undefined,
+        tiktokCaption:    reviewTiktok.trim()    || undefined,
+        instagramCaption: reviewInstagram.trim() || undefined,
+      };
+      const res = await approveAndPublish(
+        jobId,
+        { platforms: job?.platforms, publishMeta },
+        token ?? undefined,
+      );
       setApproveResult(res.platforms);
       await fetchJob();
     } catch (e: unknown) {
@@ -281,6 +304,32 @@ export default function JobDetailPage() {
     const timer = setInterval(fetchJob, 5000);
     return () => clearInterval(timer);
   }, [job, fetchJob]);
+
+  // CPD-505: fetch staging assets + connected accounts when job is staged
+  useEffect(() => {
+    if (!job || job.status !== 'staged') return;
+    if (stagingAssets) return;
+    (async () => {
+      try {
+        const token = await getToken();
+        const [sa, ca] = await Promise.all([
+          getStagingAssets(jobId, token ?? undefined),
+          listConnectedAccounts(token ?? undefined),
+        ]);
+        setStagingAssets(sa);
+        setConnectedAccounts(ca.accounts || []);
+        // Pre-fill editable fields: customer-provided first, then AI publishCopy fallback
+        const pm = sa.publishMeta;
+        const pc = sa.output?.publishCopy;
+        setReviewTitle(pm.title || pc?.youtube?.title || '');
+        setReviewDesc(pm.description || pc?.youtube?.description || '');
+        setReviewTags((pm.tags?.join(', ')) || (pc?.youtube?.tags?.join(', ')) || '');
+        setReviewPrivacy((pm.privacyStatus as 'public'|'unlisted'|'private') || 'public');
+        setReviewTiktok(pm.tiktokCaption || pc?.tiktok?.caption || '');
+        setReviewInstagram(pm.instagramCaption || pc?.instagram?.caption || '');
+      } catch { /* non-fatal */ }
+    })();
+  }, [job, jobId, getToken, stagingAssets]);
 
   // CPD-512: fetch thumbnail candidates when job is complete/staged and not yet approved
   useEffect(() => {
@@ -448,12 +497,14 @@ export default function JobDetailPage() {
       {/* ── Ready for review hero ── */}
       {isReadyForReview && (
         <div className="rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-b from-emerald-50/50 to-background dark:from-emerald-950/20 px-5 py-6 space-y-4">
+
+          {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                 <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                  Ready for review
+                  {isStaged ? 'Review before publishing' : 'Ready'}
                 </span>
                 {scoreBadge}
               </div>
@@ -465,6 +516,7 @@ export default function JobDetailPage() {
             </Link>
           </div>
 
+          {/* Video player */}
           <video
             src={job.outputUrl!}
             controls
@@ -473,6 +525,191 @@ export default function JobDetailPage() {
             className="w-full rounded-lg border bg-black aspect-video object-contain"
           />
 
+          {/* Thumbnail picker (CPD-512) */}
+          {thumbCandidates && thumbCandidates.length > 0 && !thumbApproved && (
+            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Choose a thumbnail</p>
+              <div className="grid grid-cols-3 gap-2">
+                {thumbCandidates.map((c) => (
+                  <button
+                    key={c.index}
+                    disabled={thumbApproving}
+                    onClick={() => handleSelectThumbnail(c)}
+                    className="relative rounded overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary transition-colors focus:outline-none disabled:opacity-50"
+                  >
+                    <img src={c.url} alt={`Thumbnail ${c.index + 1}`} className="w-full aspect-video object-cover" />
+                    {c.score != null && (
+                      <span className="absolute bottom-1 right-1 text-[9px] font-bold bg-black/70 text-white rounded px-1">
+                        {c.score}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Click to set as your video thumbnail before publishing.</p>
+            </div>
+          )}
+          {thumbApproved && (
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2">
+              <img src={thumbApproved} alt="Approved thumbnail" className="w-12 h-7 object-cover rounded shrink-0" />
+              <p className="text-xs text-emerald-700 dark:text-emerald-300">✓ Thumbnail selected</p>
+            </div>
+          )}
+
+          {/* ── Staging-only: full pre-publish review panel ── */}
+          {isStaged && (
+            <div className="space-y-4 border-t pt-4">
+
+              {/* Publishing to — connected account confirmation */}
+              {job.platforms.length > 0 && (
+                <div className="rounded-lg border bg-muted/30 px-3 py-2.5 space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Publishing to</p>
+                  <div className="flex flex-wrap gap-2">
+                    {job.platforms.map((p) => {
+                      const acct = connectedAccounts.find((a) => a.platform === p);
+                      return (
+                        <span key={p} className="flex items-center gap-1.5 text-xs bg-background border rounded-full px-2.5 py-1">
+                          <span>{PLATFORM_ICONS[p] ?? '📤'}</span>
+                          <span className="font-medium">{platformLabel(p)}</span>
+                          {acct?.handle && <span className="text-muted-foreground">· @{acct.handle}</span>}
+                          {!acct && <span className="text-amber-500 text-[10px]">· not connected</span>}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Editable publish metadata */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Post details — edit before publishing
+                  <span className="ml-1.5 font-normal normal-case">(AI-generated · you can change these)</span>
+                </p>
+
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-[11px] text-muted-foreground block mb-0.5">Title</label>
+                    <input
+                      type="text"
+                      value={reviewTitle}
+                      onChange={(e) => setReviewTitle(e.target.value)}
+                      placeholder="Video title"
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-muted-foreground block mb-0.5">Description</label>
+                    <textarea
+                      value={reviewDesc}
+                      onChange={(e) => setReviewDesc(e.target.value)}
+                      placeholder="Video description"
+                      rows={3}
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-muted-foreground block mb-0.5">Tags (comma-separated)</label>
+                    <input
+                      type="text"
+                      value={reviewTags}
+                      onChange={(e) => setReviewTags(e.target.value)}
+                      placeholder="gaming, highlights, clip"
+                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-[11px] text-muted-foreground shrink-0">Visibility</label>
+                    <select
+                      value={reviewPrivacy}
+                      onChange={(e) => setReviewPrivacy(e.target.value as typeof reviewPrivacy)}
+                      className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="public">Public</option>
+                      <option value="unlisted">Unlisted</option>
+                      <option value="private">Private</option>
+                    </select>
+                  </div>
+
+                  {/* TikTok caption */}
+                  {job.platforms.includes('tiktok') && (
+                    <div>
+                      <label className="text-[11px] text-muted-foreground block mb-0.5">
+                        TikTok caption <span className="text-[10px]">(max 280)</span>
+                      </label>
+                      <textarea
+                        value={reviewTiktok}
+                        onChange={(e) => setReviewTiktok(e.target.value.slice(0, 280))}
+                        placeholder="TikTok caption + hashtags"
+                        rows={2}
+                        maxLength={280}
+                        className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                      />
+                      <p className="text-[10px] text-muted-foreground text-right">{reviewTiktok.length}/280</p>
+                    </div>
+                  )}
+
+                  {/* Instagram caption */}
+                  {job.platforms.includes('instagram') && (
+                    <div>
+                      <label className="text-[11px] text-muted-foreground block mb-0.5">
+                        Instagram caption <span className="text-[10px]">(max 2200)</span>
+                      </label>
+                      <textarea
+                        value={reviewInstagram}
+                        onChange={(e) => setReviewInstagram(e.target.value.slice(0, 2200))}
+                        placeholder="Instagram caption + hashtags"
+                        rows={3}
+                        maxLength={2200}
+                        className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                      />
+                      <p className="text-[10px] text-muted-foreground text-right">{reviewInstagram.length}/2200</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Script preview (collapsible) */}
+              {stagingAssets?.output?.script && (
+                <div className="rounded-lg border bg-muted/20 overflow-hidden">
+                  <button
+                    onClick={() => setScriptExpanded((v) => !v)}
+                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted/40 transition-colors"
+                  >
+                    <span>📄 Script preview</span>
+                    <span>{scriptExpanded ? '▲' : '▼'}</span>
+                  </button>
+                  {scriptExpanded && (
+                    <pre className="px-3 pb-3 text-[11px] leading-relaxed whitespace-pre-wrap text-foreground/80 max-h-48 overflow-y-auto">
+                      {stagingAssets.output.script}
+                    </pre>
+                  )}
+                </div>
+              )}
+
+              {/* QA scores */}
+              {stagingAssets?.portalReports && stagingAssets.portalReports.length > 0 && (
+                <div className="rounded-lg border bg-muted/20 p-3 space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">QA gate scores</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    {stagingAssets.portalReports.filter((r) => r.score != null).map((r) => (
+                      <div key={r.portal} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground truncate">{r.label ?? r.portal}</span>
+                        <span className={cn('font-semibold tabular-nums ml-2 shrink-0',
+                          (r.score ?? 0) >= 90 ? 'text-emerald-600' :
+                          (r.score ?? 0) >= 70 ? 'text-amber-600' : 'text-destructive'
+                        )}>
+                          {r.score}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-2">
             {job.status === 'staged' ? (
               <Button
@@ -517,37 +754,6 @@ export default function JobDetailPage() {
           {approveResult && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
               ✓ Published. Check your platforms for live links.
-            </div>
-          )}
-
-          {/* CPD-512: Thumbnail picker */}
-          {thumbCandidates && thumbCandidates.length > 0 && !thumbApproved && (
-            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Choose a thumbnail</p>
-              <div className="grid grid-cols-3 gap-2">
-                {thumbCandidates.map((c) => (
-                  <button
-                    key={c.index}
-                    disabled={thumbApproving}
-                    onClick={() => handleSelectThumbnail(c)}
-                    className="relative rounded overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary transition-colors focus:outline-none disabled:opacity-50"
-                  >
-                    <img src={c.url} alt={`Thumbnail ${c.index + 1}`} className="w-full aspect-video object-cover" />
-                    {c.score != null && (
-                      <span className="absolute bottom-1 right-1 text-[9px] font-bold bg-black/70 text-white rounded px-1">
-                        {c.score}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] text-muted-foreground">Click to set as your video thumbnail before publishing.</p>
-            </div>
-          )}
-          {thumbApproved && (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2">
-              <img src={thumbApproved} alt="Approved thumbnail" className="w-12 h-7 object-cover rounded shrink-0" />
-              <p className="text-xs text-emerald-700 dark:text-emerald-300">✓ Thumbnail selected</p>
             </div>
           )}
         </div>
