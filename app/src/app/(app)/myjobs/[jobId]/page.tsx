@@ -544,6 +544,11 @@ export default function JobDetailPage() {
                     className="relative rounded overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary transition-colors focus:outline-none disabled:opacity-50"
                   >
                     <img src={c.url} alt={`Thumbnail ${c.index + 1}`} className="w-full aspect-video object-cover" />
+                    {c.method === 'imagen' && (
+                      <span className="absolute top-1 left-1 text-[8px] font-bold bg-purple-600/90 text-white rounded px-1 py-0.5 leading-none">
+                        Imagen 3
+                      </span>
+                    )}
                     {c.score != null && (
                       <span className="absolute bottom-1 right-1 text-[9px] font-bold bg-black/70 text-white rounded px-1">
                         {c.score}

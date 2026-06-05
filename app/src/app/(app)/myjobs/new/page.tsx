@@ -223,6 +223,36 @@ const FEATURES: Feature[] = [
     outputImpact: 'Smooth crossfades are applied between every clip.',
     default: false, formFactors: ['long', 'short'], hasConfig: false, category: 'editing', status: 'live', requires: [],
   },
+  {
+    id: 'shoppable', label: 'Shoppable CTA overlay',
+    description: 'Add a tappable buy button to your video',
+    tooltip: 'Overlays a branded CTA button at the bottom of your video — link viewers to a product, offer, or page.',
+    outputImpact: 'A tappable CTA is burned into the video at the position you choose.',
+    default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true, category: 'brand', status: 'live',
+  },
+  {
+    id: 'pip', label: 'Face-cam overlay (PiP)',
+    description: 'Overlay your face-cam in a corner of the video',
+    tooltip: 'Upload a reaction or commentary clip and it\'s overlaid as a picture-in-picture in the corner.',
+    outputImpact: 'Your face-cam appears in a corner — great for commentary or reaction videos.',
+    default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true, category: 'effects', status: 'live',
+  },
+  {
+    id: 'i2v', label: 'Image-to-video generation',
+    description: 'Generate video starting from your reference image',
+    tooltip: 'Provide a reference image and WAN i2v generates video footage that begins from that exact frame.',
+    outputImpact: 'Missing footage is generated starting from your reference image — not a blank prompt.',
+    default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true, category: 'content',
+    minPlan: 'managed', status: 'live',
+  },
+  {
+    id: 'imagen', label: 'Imagen 3 thumbnails',
+    description: 'AI-designed thumbnail options powered by Google Imagen 3',
+    tooltip: 'Generates polished branded thumbnails using Google Imagen 3 — shown alongside frame and designed options in the thumbnail picker.',
+    outputImpact: 'Imagen 3 thumbnail candidates appear in the thumbnail picker for you to choose from.',
+    default: false, formFactors: ['long', 'short'], hasConfig: false, advanced: true, category: 'brand',
+    minPlan: 'managed', status: 'live',
+  },
 ];
 
 const CATEGORY_BOXES: CategoryBox[] = [
@@ -382,6 +412,56 @@ function FeatureConfigPanel({ feat, cfg, tone, setTone, setFeatureCfg }: Feature
           </div>
         </>
       )}
+      {feat.id === 'shoppable' && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Button text</Label>
+            <input type="text" maxLength={40}
+              value={cfg.ctaText ?? 'Shop now'} onChange={(e) => setFeatureCfg('shoppable', 'ctaText', e.target.value)}
+              placeholder="Shop now"
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Destination URL</Label>
+            <input type="url"
+              value={cfg.ctaUrl ?? ''} onChange={(e) => setFeatureCfg('shoppable', 'ctaUrl', e.target.value)}
+              placeholder="https://yourstore.com/product"
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Position</Label>
+            <select value={cfg.position ?? 'bottom-center'} onChange={(e) => setFeatureCfg('shoppable', 'position', e.target.value)}
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="bottom-center">Bottom centre</option>
+              <option value="bottom-left">Bottom left</option>
+              <option value="bottom-right">Bottom right</option>
+            </select>
+          </div>
+        </>
+      )}
+      {feat.id === 'pip' && (
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Face-cam position</Label>
+          <select value={cfg.position ?? 'bottom-right'} onChange={(e) => setFeatureCfg('pip', 'position', e.target.value)}
+            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+            <option value="bottom-right">Bottom right (default)</option>
+            <option value="bottom-left">Bottom left</option>
+            <option value="top-right">Top right</option>
+            <option value="top-left">Top left</option>
+          </select>
+          <p className="text-[10px] text-muted-foreground">Upload your face-cam clip in the Source section above (secondary video input).</p>
+        </div>
+      )}
+      {feat.id === 'i2v' && (
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Reference image URL</Label>
+          <input type="url"
+            value={cfg.imageUrl ?? ''} onChange={(e) => setFeatureCfg('i2v', 'imageUrl', e.target.value)}
+            placeholder="https://… or leave blank to use first video frame"
+            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+          <p className="text-[10px] text-muted-foreground">The video generator starts from this image. If blank, the first frame of your source footage is used.</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -498,6 +578,9 @@ function JobBuilderPageInner() {
   const [pubTiktokCaption,  setPubTiktokCaption]  = useState('');
   const [pubInstagramCaption, setPubInstagramCaption] = useState('');
   const [tone,           setTone]           = useState('professional');
+  const [shoppableCtaText, setShoppableCtaText] = useState('Shop now');
+  const [shoppableCtaUrl,  setShoppableCtaUrl]  = useState('');
+  const [pipVideoFile,   setPipVideoFile]   = useState<File | null>(null);
   const [durationMins,   setDurationMins]   = useState(3);
 
   // ── Derived ──
@@ -694,6 +777,34 @@ function JobBuilderPageInner() {
       const audioObj: Record<string, boolean> = {};
       for (const a of audioOpts) audioObj[a] = true;
       addOns.audio = audioObj as { loudnorm?: boolean; duck?: boolean; denoise?: boolean };
+    }
+    if (features.has('shoppable')) {
+      const shopCfg = featureConfig['shoppable'] ?? {};
+      if (shopCfg.ctaUrl?.trim()) {
+        addOns.shoppable = {
+          active:   true,
+          ctaText:  shopCfg.ctaText?.trim() || 'Shop now',
+          ctaUrl:   shopCfg.ctaUrl.trim(),
+          position: (shopCfg.position || 'bottom-center') as 'bottom-center' | 'bottom-left' | 'bottom-right',
+        };
+      }
+    }
+    if (features.has('pip')) {
+      const pipCfg = featureConfig['pip'] ?? {};
+      addOns.pip = {
+        active:   true,
+        position: (pipCfg.position || 'bottom-right') as 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left',
+      };
+    }
+    if (features.has('i2v')) {
+      const i2vCfg = featureConfig['i2v'] ?? {};
+      addOns.i2v = {
+        active:   true,
+        imageUrl: i2vCfg.imageUrl?.trim() || undefined,
+      };
+    }
+    if (features.has('imagen')) {
+      addOns.imagen = { active: true };
     }
 
     const payload: CreateJobPayload = {
