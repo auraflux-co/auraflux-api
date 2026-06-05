@@ -146,6 +146,80 @@ def patch_seo(html, meta):
     return html
 
 
+def patch_footer(html, data):
+    """Patch framer-shell/footer.html from content/footer.json."""
+    tagline = data.get('tagline')
+    if tagline:
+        html = re.sub(
+            r'(<p id="af-footer-tagline">)[^<]*(</p>)',
+            rf'\g<1>{tagline}\g<2>', html)
+
+    copyright_text = data.get('copyright')
+    if copyright_text:
+        html = re.sub(
+            r'(<p id="af-footer-copy">)[^<]*(</p>)',
+            rf'\g<1>{copyright_text}\g<2>', html)
+
+    platform_links = data.get('platform_links', [])
+    if platform_links:
+        links_html = '\n'.join(
+            f'          <a href="{lk["url"]}">{lk["label"]}</a>' for lk in platform_links)
+        html = re.sub(
+            r'(<div class="af-footer-col">\s*<span class="af-footer-col-label">Platform</span>)'
+            r'([\s\S]*?)(</div>)',
+            lambda m: m.group(1) + '\n' + links_html + '\n        ' + m.group(3),
+            html, count=1)
+
+    resource_links = data.get('resource_links', [])
+    if resource_links:
+        links_html = '\n'.join(
+            f'          <a href="{lk["url"]}">{lk["label"]}</a>' for lk in resource_links)
+        html = re.sub(
+            r'(<div class="af-footer-col">\s*<span class="af-footer-col-label">Resources</span>)'
+            r'([\s\S]*?)(</div>)',
+            lambda m: m.group(1) + '\n' + links_html + '\n        ' + m.group(3),
+            html, count=1)
+
+    cls_map = {
+        'LinkedIn': 'af-social-li', 'Instagram': 'af-social-ig',
+        'TikTok': 'af-social-tt',   'YouTube': 'af-social-yt',
+    }
+    for social in data.get('social_links', []):
+        css_class = cls_map.get(social.get('platform', ''))
+        url = social.get('url', '')
+        if css_class and url:
+            html = re.sub(
+                rf'(<a class="af-social {re.escape(css_class)}" href=")[^"]*(")',
+                rf'\g<1>{url}\g<2>', html)
+
+    return html
+
+
+def patch_nav(html, data):
+    """Patch framer-shell/nav.html from content/nav.json."""
+    links = data.get('links', [])
+    if links:
+        links_html = '\n'.join(
+            f'      <a href="{lk["url"]}">{lk["label"]}</a>' for lk in links)
+        html = re.sub(
+            r'(<div id="af-nav-links">)([\s\S]*?)(</div>)',
+            lambda m: m.group(1) + '\n' + links_html + '\n    ' + m.group(3),
+            html, count=1)
+
+    cta_url   = data.get('cta_url')
+    cta_label = data.get('cta_label')
+    if cta_url:
+        html = re.sub(
+            r'(<a id="af-nav-cta" href=")[^"]*(")',
+            rf'\g<1>{cta_url}\g<2>', html)
+    if cta_label:
+        html = re.sub(
+            r'(<a id="af-nav-cta"[^>]*>)[^<]*(</a>)',
+            rf'\g<1>{cta_label}\g<2>', html)
+
+    return html
+
+
 # ── Page → content mapping ────────────────────────────────────────────────────
 PAGES = {
     'home.html':              ('home',       None),
@@ -264,3 +338,25 @@ for filename, (content_key, extra_patch) in PAGES.items():
     changed += 1
 
 print(f'  → {changed} pages updated from content JSON')
+
+# ── Framer-shell patches (footer.json + nav.json) ─────────────────────────────
+SHELL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'framer-shell')
+for shell_file, content_key, patch_fn in [
+    ('footer.html', 'footer', patch_footer),
+    ('nav.html',    'nav',    patch_nav),
+]:
+    path = os.path.join(SHELL_DIR, shell_file)
+    if not os.path.isfile(path):
+        print(f'  – framer-shell/{shell_file} not found — skipping')
+        continue
+    data = load(content_key)
+    if not data:
+        print(f'  – {content_key}.json empty — skipping {shell_file}')
+        continue
+    html = open(path, encoding='utf-8').read()
+    html = patch_fn(html, data)
+    open(path, 'w', encoding='utf-8').write(html)
+    print(f'  ✓ framer-shell/{shell_file} patched from {content_key}.json')
+    changed += 1
+
+print(f'  → {changed} total files updated (pages + shell)')

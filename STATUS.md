@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-05 v1.0.965 (Cursor — fix(marketing): wire footer.json + nav.json to framer-shell at deploy time — inject_content.py now patches framer-shell/footer.html and framer-shell/nav.html from CMS JSON; CMS footer/nav edits were committing to GitHub and triggering successful deploys but changes were never applied to rendered HTML)
 **Last Updated:** 2026-06-05 v1.0.964 (Cursor — fix(smoke-test): /api/plans → /api/public/plans — route was stale, smoke test now passes 3/3)
 **Last Updated:** 2026-06-05 v1.0.963 (Cursor — fix(branding): support@clipzworld.com → support@auraflux.co in job detail page; clipzworldnews ref in review page comment fixed)
 **Last Updated:** 2026-06-05 v1.0.962 (Cursor — feat(cpd-406/442): shoppable CTA overlay + PiP face-cam config panels wired into wizard — both flow into addOns payload; revert(cpd-412/413): i2v and Imagen 3 removed from customer-facing wizard — gated behind CPD-315 100-job score gate; Imagen 3 badge retained in thumbnail picker for data already in system)
