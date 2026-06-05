@@ -124,16 +124,18 @@ export default function ProfilePage() {
       </PageShell>
     );
     return (
-      <div className="max-w-2xl space-y-6 animate-pulse">
-        <div className="h-8 bg-muted rounded w-40" />
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-xl border border-border p-6 space-y-4">
-            <div className="h-4 bg-muted rounded w-32" />
-            <div className="h-10 bg-muted rounded" />
-            <div className="h-10 bg-muted rounded" />
-          </div>
-        ))}
-      </div>
+      <PageShell maxWidth="3xl">
+        <PageHeader title="Profile" subtitle="Manage your identity, appearance, and brand." />
+        <div className="space-y-4 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-border p-6 space-y-4">
+              <div className="h-4 bg-muted rounded w-32" />
+              <div className="h-10 bg-muted rounded" />
+              <div className="h-10 bg-muted rounded" />
+            </div>
+          ))}
+        </div>
+      </PageShell>
     );
   }
 

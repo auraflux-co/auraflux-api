@@ -85,11 +85,12 @@ function formatCurrency(cents: number) {
 function CreditsSkeleton() {
   return (
     <PageShell maxWidth="3xl">
-      <div className="h-8 w-48 rounded bg-muted animate-pulse mb-1" />
-      <div className="h-4 w-72 rounded bg-muted animate-pulse mb-6" />
-      <div className="h-32 rounded-lg bg-muted animate-pulse mb-4" />
-      <div className="h-24 rounded-lg bg-muted animate-pulse mb-4" />
-      <div className="h-48 rounded-lg bg-muted animate-pulse" />
+      <PageHeader title="Credits" subtitle="Your balance, usage history, and top-up options." />
+      <div className="space-y-4 animate-pulse">
+        <div className="h-32 rounded-lg bg-muted" />
+        <div className="h-24 rounded-lg bg-muted" />
+        <div className="h-48 rounded-lg bg-muted" />
+      </div>
     </PageShell>
   );
 }

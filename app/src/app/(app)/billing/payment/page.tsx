@@ -221,9 +221,9 @@ export default function PaymentPage() {
   if (loading) return (
     <PageShell maxWidth="3xl">
       <PageHeader title="Payment method & invoices" subtitle="Manage your card and download invoices." />
-      <div className="space-y-3">
+      <div className="space-y-3 animate-pulse">
         {[1, 2].map((i) => (
-          <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
+          <div key={i} className="h-24 rounded-lg bg-muted" />
         ))}
       </div>
     </PageShell>

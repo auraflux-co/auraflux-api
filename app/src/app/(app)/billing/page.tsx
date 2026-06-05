@@ -104,12 +104,13 @@ const FEATURE_COMPARISON: Array<{
 function BillingSkeleton() {
   return (
     <PageShell maxWidth="3xl">
-      <div className="h-8 w-44 rounded bg-muted animate-pulse mb-1" />
-      <div className="h-4 w-64 rounded bg-muted animate-pulse mb-6" />
-      <div className="h-36 rounded-lg bg-muted animate-pulse mb-4" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="h-52 rounded-lg bg-muted animate-pulse" />
-        <div className="h-52 rounded-lg bg-muted animate-pulse" />
+      <PageHeader title="Subscription" subtitle="Manage your plan and credit top-ups." />
+      <div className="space-y-4 animate-pulse">
+        <div className="h-36 rounded-lg bg-muted" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="h-52 rounded-lg bg-muted" />
+          <div className="h-52 rounded-lg bg-muted" />
+        </div>
       </div>
     </PageShell>
   );
