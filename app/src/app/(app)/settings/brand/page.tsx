@@ -193,6 +193,7 @@ export default function BrandSettingsPage() {
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
   const [loadErr,  setLoadErr]  = useState<string | null>(null);
+  const [noBrand,  setNoBrand]  = useState(false);
   const [token,    setToken]    = useState<string>('');
 
   // Load token + active brand
@@ -211,8 +212,10 @@ export default function BrandSettingsPage() {
     if (!token) return;
     getBrands(token)
       .then((all) => {
+        if (!all || all.length === 0) { setNoBrand(true); return; }
         const match = activeBrand ? all.find((b) => b.id === activeBrand.id) ?? all[0] : all[0];
         if (match) { setBrand(match); setName(match.name); }
+        else setNoBrand(true);
       })
       .catch((e) => setLoadErr(e.message));
   }, [token, activeBrand]);
@@ -253,6 +256,17 @@ export default function BrandSettingsPage() {
       <PageShell maxWidth="3xl">
         <PageHeader title="Brand" subtitle="Manage your brand identity" />
         <p className="text-destructive af-caption">{loadErr}</p>
+      </PageShell>
+    );
+  }
+
+  if (noBrand) {
+    return (
+      <PageShell maxWidth="3xl">
+        <PageHeader title="Brand" subtitle="Manage your brand identity" />
+        <p className="af-caption text-muted-foreground">
+          No brand profile found for your account. Contact support to set one up.
+        </p>
       </PageShell>
     );
   }

@@ -347,7 +347,7 @@ export default function DeveloperPage() {
                 <ul className="space-y-1 text-xs">
                   <li>Short-form, single clip — <strong>1 credit</strong></li>
                   <li>Long-form or multi-clip — <strong>2 credits</strong></li>
-                  <li>AI video generation (WAN) — <strong>3 credits</strong></li>
+                  <li>Video generation (WAN) — <strong>3 credits</strong></li>
                 </ul>
               </div>
             </div>
