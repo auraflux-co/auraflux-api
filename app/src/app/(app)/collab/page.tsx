@@ -3,7 +3,7 @@ import { CollabChat } from '@/components/collab/collab-chat';
 
 export const metadata: Metadata = {
   title: 'Collab — AuraFlux',
-  description: 'AI job assistant — configure your video job with guided help.',
+  description: 'Job assistant — configure your video job with guided help.',
 };
 
 export default function CollabPage() {

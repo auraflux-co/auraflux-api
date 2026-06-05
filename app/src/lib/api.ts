@@ -221,7 +221,7 @@ export function estimateCreditCost({
     aiLabel = 'Avatar IV';
   } else if (hasWan) {
     aiFeatureCost = ai(CREDIT_RATES.wan_t2v_per_min);
-    aiLabel = 'AI video gen';
+    aiLabel = 'Video gen';
   } else if (hasTts) {
     aiFeatureCost = ai(CREDIT_RATES.tts_per_min);
     aiLabel = 'TTS narration';

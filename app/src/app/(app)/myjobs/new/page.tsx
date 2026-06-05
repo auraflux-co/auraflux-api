@@ -1262,7 +1262,7 @@ function JobBuilderPageInner() {
 
                   <div className="space-y-2">
                     <Label className="text-xs text-muted-foreground">
-                      Publish metadata <span className="font-normal">(optional — AI generates these if left blank)</span>
+                      Publish metadata <span className="font-normal">(optional — auto-filled if left blank)</span>
                     </Label>
                     <input
                       type="text"
@@ -1308,7 +1308,7 @@ function JobBuilderPageInner() {
                     {platforms.includes('tiktok') && (
                       <div className="space-y-1 pt-1 border-t">
                         <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                          <span>🎵</span> TikTok caption <span className="font-normal">(max 280 chars — AI generates if blank)</span>
+                          <span>🎵</span> TikTok caption <span className="font-normal">(max 280 chars — auto-filled if blank)</span>
                         </Label>
                         <textarea
                           placeholder="TikTok caption + hashtags"
@@ -1326,7 +1326,7 @@ function JobBuilderPageInner() {
                     {platforms.includes('instagram') && (
                       <div className="space-y-1 pt-1 border-t">
                         <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                          <span>📸</span> Instagram caption <span className="font-normal">(max 2200 chars — AI generates if blank)</span>
+                          <span>📸</span> Instagram caption <span className="font-normal">(max 2200 chars — auto-filled if blank)</span>
                         </Label>
                         <textarea
                           placeholder="Instagram caption + hashtags"

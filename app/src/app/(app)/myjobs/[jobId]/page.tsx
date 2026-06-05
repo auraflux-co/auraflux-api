@@ -605,7 +605,7 @@ export default function JobDetailPage() {
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   ✨ Post details
-                  <span className="ml-1.5 font-normal normal-case text-muted-foreground/70">(AI-suggested — edit anything before publishing)</span>
+                  <span className="ml-1.5 font-normal normal-case text-muted-foreground/70">(pre-filled — edit anything before publishing)</span>
                 </p>
 
                 <div className="space-y-2">

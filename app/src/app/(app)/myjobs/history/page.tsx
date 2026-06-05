@@ -57,7 +57,7 @@ function cardAccent(platforms: string[]): string {
 
 const ADDON_LABELS: Record<string, string> = {
   tts:            'Voiceover',
-  heygen:         'AI Avatar',
+  heygen:         'Avatar',
   shoppable:      'Shoppable tagging',
   wan:            'Video generation',
   clipSourcing:   'Scene selection',
