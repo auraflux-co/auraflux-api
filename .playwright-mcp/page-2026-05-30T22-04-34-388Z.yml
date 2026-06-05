@@ -1,0 +1,317 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - button "Skip to Main Content"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                    - generic [ref=e55]: Contact Us
+      - main:
+        - generic [ref=e57]:
+          - group:
+            - generic [ref=e63]:
+              - generic [ref=e67]:
+                - heading "Schedule your service" [level=1] [ref=e68]
+                - paragraph [ref=e69]: Check out our availability and book the date and time that works for you
+              - generic [ref=e121]:
+                - generic [ref=e123]:
+                  - generic [ref=e124]:
+                    - heading "Select a Date and Time" [level=2] [ref=e125]
+                    - 'button "Time zone: Central Daylight Time (CDT)" [ref=e132] [cursor=pointer]':
+                      - generic [ref=e134]:
+                        - generic [ref=e135]:
+                          - generic [ref=e136]: "Time zone:"
+                          - generic [ref=e137]: Central Daylight Time (CDT)
+                        - img [ref=e138]
+                  - separator [ref=e140]
+                  - generic [ref=e141]:
+                    - region [ref=e143]:
+                      - generic [ref=e147]:
+                        - generic [ref=e211]:
+                          - button "previous month" [ref=e212] [cursor=pointer]:
+                            - img [ref=e214]
+                          - generic [ref=e216]:
+                            - generic [ref=e217]: June
+                            - generic [ref=e218]: "2026"
+                          - button "next month" [ref=e219] [cursor=pointer]:
+                            - img [ref=e221]
+                        - grid "June 2026" [ref=e223]:
+                          - rowgroup [ref=e162]:
+                            - row [ref=e163]:
+                              - columnheader [ref=e164]: Sun
+                              - columnheader [ref=e165]: Mon
+                              - columnheader [ref=e166]: Tue
+                              - columnheader [ref=e167]: Wed
+                              - columnheader [ref=e168]: Thu
+                              - columnheader [ref=e169]: Fri
+                              - columnheader [ref=e170]: Sat
+                          - rowgroup [ref=e171]:
+                            - row "Monday, June 1st, 2026, selected Tuesday, June 2nd, 2026 Wednesday, June 3rd, 2026 Thursday, June 4th, 2026 Friday, June 5th, 2026 Saturday, June 6th, 2026" [ref=e224]:
+                              - gridcell
+                              - gridcell "Monday, June 1st, 2026, selected" [selected] [ref=e225] [cursor=pointer]:
+                                - button "Monday, June 1st, 2026, selected" [ref=e226]:
+                                  - generic [ref=e227]: "1"
+                                  - generic "Available Spots" [ref=e229]:
+                                    - img [ref=e230]
+                              - gridcell "Tuesday, June 2nd, 2026" [ref=e232] [cursor=pointer]:
+                                - button "Tuesday, June 2nd, 2026" [ref=e233]:
+                                  - generic [ref=e234]: "2"
+                                  - generic "Available Spots" [ref=e236]:
+                                    - img [ref=e237]
+                              - gridcell "Wednesday, June 3rd, 2026" [ref=e239] [cursor=pointer]:
+                                - button "Wednesday, June 3rd, 2026" [ref=e240]:
+                                  - generic [ref=e241]: "3"
+                                  - generic "Available Spots" [ref=e243]:
+                                    - img [ref=e244]
+                              - gridcell "Thursday, June 4th, 2026" [ref=e246] [cursor=pointer]:
+                                - button "Thursday, June 4th, 2026" [ref=e247]:
+                                  - generic [ref=e248]: "4"
+                                  - generic "Available Spots" [ref=e250]:
+                                    - img [ref=e251]
+                              - gridcell "Friday, June 5th, 2026" [ref=e253] [cursor=pointer]:
+                                - button "Friday, June 5th, 2026" [ref=e254]:
+                                  - generic [ref=e255]: "5"
+                                  - generic "Available Spots" [ref=e257]:
+                                    - img [ref=e258]
+                              - gridcell "Saturday, June 6th, 2026" [ref=e260] [cursor=pointer]:
+                                - button "Saturday, June 6th, 2026" [ref=e261]:
+                                  - generic [ref=e262]: "6"
+                            - row "Sunday, June 7th, 2026 Monday, June 8th, 2026 Tuesday, June 9th, 2026 Wednesday, June 10th, 2026 Thursday, June 11th, 2026 Friday, June 12th, 2026 Saturday, June 13th, 2026" [ref=e263]:
+                              - gridcell "Sunday, June 7th, 2026" [ref=e264] [cursor=pointer]:
+                                - button "Sunday, June 7th, 2026" [ref=e265]:
+                                  - generic [ref=e266]: "7"
+                              - gridcell "Monday, June 8th, 2026" [ref=e267] [cursor=pointer]:
+                                - button "Monday, June 8th, 2026" [ref=e268]:
+                                  - generic [ref=e269]: "8"
+                                  - generic "Available Spots" [ref=e271]:
+                                    - img [ref=e272]
+                              - gridcell "Tuesday, June 9th, 2026" [ref=e274] [cursor=pointer]:
+                                - button "Tuesday, June 9th, 2026" [ref=e275]:
+                                  - generic [ref=e276]: "9"
+                                  - generic "Available Spots" [ref=e278]:
+                                    - img [ref=e279]
+                              - gridcell "Wednesday, June 10th, 2026" [ref=e281] [cursor=pointer]:
+                                - button "Wednesday, June 10th, 2026" [ref=e282]:
+                                  - generic [ref=e283]: "10"
+                                  - generic "Available Spots" [ref=e285]:
+                                    - img [ref=e286]
+                              - gridcell "Thursday, June 11th, 2026" [ref=e288] [cursor=pointer]:
+                                - button "Thursday, June 11th, 2026" [ref=e289]:
+                                  - generic [ref=e290]: "11"
+                                  - generic "Available Spots" [ref=e292]:
+                                    - img [ref=e293]
+                              - gridcell "Friday, June 12th, 2026" [ref=e295] [cursor=pointer]:
+                                - button "Friday, June 12th, 2026" [ref=e296]:
+                                  - generic [ref=e297]: "12"
+                                  - generic "Available Spots" [ref=e299]:
+                                    - img [ref=e300]
+                              - gridcell "Saturday, June 13th, 2026" [ref=e302] [cursor=pointer]:
+                                - button "Saturday, June 13th, 2026" [ref=e303]:
+                                  - generic [ref=e304]: "13"
+                            - row "Sunday, June 14th, 2026 Monday, June 15th, 2026 Tuesday, June 16th, 2026 Wednesday, June 17th, 2026 Thursday, June 18th, 2026 Friday, June 19th, 2026 Saturday, June 20th, 2026" [ref=e305]:
+                              - gridcell "Sunday, June 14th, 2026" [ref=e306] [cursor=pointer]:
+                                - button "Sunday, June 14th, 2026" [ref=e307]:
+                                  - generic [ref=e308]: "14"
+                              - gridcell "Monday, June 15th, 2026" [ref=e309] [cursor=pointer]:
+                                - button "Monday, June 15th, 2026" [ref=e310]:
+                                  - generic [ref=e311]: "15"
+                                  - generic "Available Spots" [ref=e313]:
+                                    - img [ref=e314]
+                              - gridcell "Tuesday, June 16th, 2026" [ref=e316] [cursor=pointer]:
+                                - button "Tuesday, June 16th, 2026" [ref=e317]:
+                                  - generic [ref=e318]: "16"
+                                  - generic "Available Spots" [ref=e320]:
+                                    - img [ref=e321]
+                              - gridcell "Wednesday, June 17th, 2026" [ref=e323] [cursor=pointer]:
+                                - button "Wednesday, June 17th, 2026" [ref=e324]:
+                                  - generic [ref=e325]: "17"
+                                  - generic "Available Spots" [ref=e327]:
+                                    - img [ref=e328]
+                              - gridcell "Thursday, June 18th, 2026" [ref=e330] [cursor=pointer]:
+                                - button "Thursday, June 18th, 2026" [ref=e331]:
+                                  - generic [ref=e332]: "18"
+                                  - generic "Available Spots" [ref=e334]:
+                                    - img [ref=e335]
+                              - gridcell "Friday, June 19th, 2026" [ref=e337] [cursor=pointer]:
+                                - button "Friday, June 19th, 2026" [ref=e338]:
+                                  - generic [ref=e339]: "19"
+                                  - generic "Available Spots" [ref=e341]:
+                                    - img [ref=e342]
+                              - gridcell "Saturday, June 20th, 2026" [ref=e344] [cursor=pointer]:
+                                - button "Saturday, June 20th, 2026" [ref=e345]:
+                                  - generic [ref=e346]: "20"
+                            - row "Sunday, June 21st, 2026 Monday, June 22nd, 2026 Tuesday, June 23rd, 2026 Wednesday, June 24th, 2026 Thursday, June 25th, 2026 Friday, June 26th, 2026 Saturday, June 27th, 2026" [ref=e347]:
+                              - gridcell "Sunday, June 21st, 2026" [ref=e348] [cursor=pointer]:
+                                - button "Sunday, June 21st, 2026" [ref=e349]:
+                                  - generic [ref=e350]: "21"
+                              - gridcell "Monday, June 22nd, 2026" [ref=e351] [cursor=pointer]:
+                                - button "Monday, June 22nd, 2026" [ref=e352]:
+                                  - generic [ref=e353]: "22"
+                                  - generic "Available Spots" [ref=e355]:
+                                    - img [ref=e356]
+                              - gridcell "Tuesday, June 23rd, 2026" [ref=e358] [cursor=pointer]:
+                                - button "Tuesday, June 23rd, 2026" [ref=e359]:
+                                  - generic [ref=e360]: "23"
+                                  - generic "Available Spots" [ref=e362]:
+                                    - img [ref=e363]
+                              - gridcell "Wednesday, June 24th, 2026" [ref=e365] [cursor=pointer]:
+                                - button "Wednesday, June 24th, 2026" [ref=e366]:
+                                  - generic [ref=e367]: "24"
+                                  - generic "Available Spots" [ref=e369]:
+                                    - img [ref=e370]
+                              - gridcell "Thursday, June 25th, 2026" [ref=e372] [cursor=pointer]:
+                                - button "Thursday, June 25th, 2026" [ref=e373]:
+                                  - generic [ref=e374]: "25"
+                                  - generic "Available Spots" [ref=e376]:
+                                    - img [ref=e377]
+                              - gridcell "Friday, June 26th, 2026" [ref=e379] [cursor=pointer]:
+                                - button "Friday, June 26th, 2026" [ref=e380]:
+                                  - generic [ref=e381]: "26"
+                                  - generic "Available Spots" [ref=e383]:
+                                    - img [ref=e384]
+                              - gridcell "Saturday, June 27th, 2026" [ref=e386] [cursor=pointer]:
+                                - button "Saturday, June 27th, 2026" [ref=e387]:
+                                  - generic [ref=e388]: "27"
+                            - row "Sunday, June 28th, 2026 Monday, June 29th, 2026 Tuesday, June 30th, 2026" [ref=e389]:
+                              - gridcell "Sunday, June 28th, 2026" [ref=e390] [cursor=pointer]:
+                                - button "Sunday, June 28th, 2026" [ref=e391]:
+                                  - generic [ref=e392]: "28"
+                              - gridcell "Monday, June 29th, 2026" [ref=e393] [cursor=pointer]:
+                                - button "Monday, June 29th, 2026" [ref=e394]:
+                                  - generic [ref=e395]: "29"
+                                  - generic "Available Spots" [ref=e397]:
+                                    - img [ref=e398]
+                              - gridcell "Tuesday, June 30th, 2026" [ref=e400] [cursor=pointer]:
+                                - button "Tuesday, June 30th, 2026" [ref=e401]:
+                                  - generic [ref=e402]: "30"
+                                  - generic "Available Spots" [ref=e404]:
+                                    - img [ref=e405]
+                              - gridcell
+                              - gridcell
+                              - gridcell
+                              - gridcell
+                            - row [ref=e407]:
+                              - gridcell
+                              - gridcell
+                              - gridcell
+                              - gridcell
+                              - gridcell
+                              - gridcell
+                              - gridcell
+                    - generic [ref=e184]:
+                      - alert [ref=e185]: 15 available slots
+                      - group "Availability for Monday, June 1" [ref=e408]:
+                        - paragraph [ref=e187]: Availability for Monday, June 1
+                        - generic [ref=e410]:
+                          - group [ref=e411]:
+                            - generic [ref=e412]:
+                              - generic [ref=e415] [cursor=pointer]:
+                                - radio "10:00 am" [checked] [active] [ref=e416]
+                                - generic [ref=e419]: 10:00 am
+                              - generic [ref=e422] [cursor=pointer]:
+                                - radio "10:30 am" [ref=e423]
+                                - generic [ref=e426]: 10:30 am
+                              - generic [ref=e429] [cursor=pointer]:
+                                - radio "11:00 am" [ref=e430]
+                                - generic [ref=e433]: 11:00 am
+                              - generic [ref=e436] [cursor=pointer]:
+                                - radio "11:30 am" [ref=e437]
+                                - generic [ref=e440]: 11:30 am
+                              - generic [ref=e443] [cursor=pointer]:
+                                - radio "12:00 pm" [ref=e444]
+                                - generic [ref=e447]: 12:00 pm
+                              - generic [ref=e450] [cursor=pointer]:
+                                - radio "12:30 pm" [ref=e451]
+                                - generic [ref=e454]: 12:30 pm
+                              - generic [ref=e457] [cursor=pointer]:
+                                - radio "1:00 pm" [ref=e458]
+                                - generic [ref=e461]: 1:00 pm
+                              - generic [ref=e464] [cursor=pointer]:
+                                - radio "1:30 pm" [ref=e465]
+                                - generic [ref=e468]: 1:30 pm
+                              - generic [ref=e471] [cursor=pointer]:
+                                - radio "2:00 pm" [ref=e472]
+                                - generic [ref=e475]: 2:00 pm
+                              - generic [ref=e478] [cursor=pointer]:
+                                - radio "2:30 pm" [ref=e479]
+                                - generic [ref=e482]: 2:30 pm
+                          - button "Show all sessions" [ref=e483] [cursor=pointer]:
+                            - generic [ref=e484]: Show all sessions
+                - generic [ref=e192]:
+                  - generic [ref=e194]:
+                    - heading "Service Details" [level=2] [ref=e195]
+                    - separator [ref=e196]
+                    - generic [ref=e198]: Free Phone Consultation
+                    - region [ref=e199]:
+                      - button "More details" [ref=e201] [cursor=pointer]:
+                        - generic [ref=e203]:
+                          - heading "More details" [level=3] [ref=e206]
+                          - img [ref=e208]
+                  - button "Next" [ref=e485] [cursor=pointer]:
+                    - generic [ref=e486]: Next
+      - contentinfo:
+        - generic [ref=e76]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e80] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e82]
+            - heading "Quick Links" [level=3] [ref=e84]
+            - paragraph [ref=e86]:
+              - link "About Us" [ref=e88] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e90]:
+              - link "Summer Programs" [ref=e92] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e94]:
+              - link "Tutoring" [ref=e96] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e98]:
+              - link "Join Our Team" [ref=e100] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e102]:
+              - link "Contact Us" [ref=e104] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/contact-us
+            - heading "Contact Info" [level=3] [ref=e106]
+            - paragraph [ref=e108]:
+              - link "(571) 207-8373" [ref=e110] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e112]:
+              - link "contact.us@learningwithlumi.com" [ref=e114] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e116]: © 2026 Lumi Education
+            - paragraph [ref=e118]:
+              - link "Privacy Policy" [ref=e120] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/privacy-policy
+  - region "bottom of page"

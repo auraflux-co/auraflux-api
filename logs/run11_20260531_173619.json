@@ -1,0 +1,56 @@
+{
+  "run": "run_11_20260531_173619",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780263380530",
+      "label": "Post Everywhere",
+      "tier": "operate",
+      "status": "timeout",
+      "output_url": null,
+      "grade": 0,
+      "grade_detail": null,
+      "twelve_labs_qa": {},
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job terminated with 'timeout' status and no video output was produced. The pipeline failed to complete execution entirely, resulting in zero deliverable for the customer.",
+          "suggested_change": "Investigate timeout root cause\u2014check if the 6 active add-ons exceeded processing time limits. Implement chunked processing or increase timeout thresholds for jobs with 4+ add-ons. Add automatic retry with reduced add-on complexity as fallback."
+        },
+        {
+          "area": "output",
+          "severity": "critical",
+          "observation": "Output URL is NONE, meaning the customer received nothing despite initiating a paid OPERATE tier job. This is a complete service failure.",
+          "suggested_change": "Implement partial output recovery\u2014if timeout occurs mid-render, save and deliver whatever frames/segments completed. Trigger immediate customer notification with ETA for resolution or automatic refund/credit."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' which means content quality validation never ran. Without QA verification, even if output had been produced, quality standards would be unverified.",
+          "suggested_change": "Ensure QA hooks are triggered earlier in pipeline (not just post-render). Add health check to confirm Twelve Labs API connectivity before job starts. Log why QA was skipped\u2014timeout before QA stage vs. QA service unavailable."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons activated simultaneously (captions, audio, branding, colorGrade, effects, layout) for 'Post Everywhere' template. This is a heavy combination that may have contributed to the timeout.",
+          "suggested_change": "Profile processing time per add-on combination. For 'post_everywhere' jobs, consider parallelizing independent add-ons (e.g., captions + colorGrade can run concurrently). Set realistic SLAs based on add-on count."
+        },
+        {
+          "area": "flow",
+          "severity": "medium",
+          "observation": "No intermediate status or progress indicators captured between job start and timeout. Customer likely had no visibility into why their job was taking long or failing.",
+          "suggested_change": "Implement progress checkpoints (e.g., 'captions complete', 'color grading at 50%') and expose via customer dashboard. Add proactive timeout warning at 80% of limit with option to extend or simplify."
+        }
+      ],
+      "ran_at": "2026-05-31T22:06:48.890611+00:00",
+      "jira_ticket": "CPD-473"
+    }
+  ],
+  "saved_templates": []
+}

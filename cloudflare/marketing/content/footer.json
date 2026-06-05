@@ -1,0 +1,50 @@
+{
+  "tagline": "Automated content production from source to publish. No team required.",
+  "copyright": "© 2026 AuraFlux. All rights reserved.",
+  "platform_links": [
+    {
+      "label": "Our Story",
+      "url": "/our-story"
+    },
+    {
+      "label": "Our System",
+      "url": "/our-system"
+    },
+    {
+      "label": "Roadmap",
+      "url": "/roadmap"
+    }
+  ],
+  "resource_links": [
+    {
+      "label": "Plans",
+      "url": "/pricing"
+    },
+    {
+      "label": "Blog",
+      "url": "/blog"
+    },
+    {
+      "label": "Contact Us",
+      "url": "/contact-us"
+    }
+  ],
+  "social_links": [
+    {
+      "platform": "LinkedIn",
+      "url": "https://linkedin.com/company/auraflux"
+    },
+    {
+      "platform": "Instagram",
+      "url": "https://www.instagram.com/aurafluxco/"
+    },
+    {
+      "platform": "TikTok",
+      "url": "https://tiktok.com/@auraflux"
+    },
+    {
+      "platform": "YouTube",
+      "url": "https://youtube.com/@auraflux"
+    }
+  ]
+}

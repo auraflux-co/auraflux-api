@@ -12,7 +12,7 @@ name: Deploy Marketing Site (Cloudflare Pages)
 
 on:
   push:
-    branches: [marketing]
+    branches: [main, marketing]
     paths:
       - 'cloudflare/marketing/**'
   workflow_dispatch:

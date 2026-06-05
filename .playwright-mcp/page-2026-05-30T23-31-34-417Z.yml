@@ -1,0 +1,86 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                    - generic [ref=e55]: Contact Us
+            - img "Teacher Engaging Students" [ref=e61]
+      - main:
+        - generic [ref=e63]:
+          - group:
+            - heading "After-School Programs" [level=1] [ref=e67]
+            - heading "Something exciting is coming soon!" [level=4] [ref=e69]
+            - paragraph [ref=e71]: We're putting the finishing touches on our After-School Programs. Check back soon or get in touch to be the first to know when enrollment opens.
+            - link "Contact Us" [ref=e72] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com/contact-us
+              - generic [ref=e73]: Contact Us
+            - link "Explore Summer Programs" [ref=e74] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com/summer-camps-2026
+              - generic [ref=e75]: Explore Summer Programs
+      - contentinfo:
+        - generic [ref=e77]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e81] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e83]
+            - heading "Quick Links" [level=3] [ref=e85]
+            - paragraph [ref=e87]:
+              - link "About Us" [ref=e89] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e91]:
+              - link "Summer Programs" [ref=e93] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e95]:
+              - link "Tutoring" [ref=e97] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e99]:
+              - link "Join Our Team" [ref=e101] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e103]:
+              - link "Contact Us" [ref=e105] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/contact-us
+            - heading "Contact Info" [level=3] [ref=e107]
+            - paragraph [ref=e109]:
+              - link "(571) 207-8373" [ref=e111] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e113]:
+              - link "contact.us@learningwithlumi.com" [ref=e115] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e117]: © 2026 Lumi Education
+            - paragraph [ref=e119]:
+              - link "Privacy Policy" [ref=e121] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/privacy-policy
+  - region "bottom of page"

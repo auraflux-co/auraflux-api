@@ -1,0 +1,109 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "AuraFlux" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "AuraFlux" [ref=e7]
+      - generic [ref=e8]:
+        - paragraph [ref=e10]:
+          - link "Our System" [ref=e11] [cursor=pointer]:
+            - /url: /system
+        - paragraph [ref=e13]:
+          - link "Pricing" [ref=e14] [cursor=pointer]:
+            - /url: /pricing
+        - paragraph [ref=e16]:
+          - link "About" [ref=e17] [cursor=pointer]:
+            - /url: /about
+        - paragraph [ref=e19]:
+          - link "Roadmap" [ref=e20] [cursor=pointer]:
+            - /url: /roadmap
+        - paragraph [ref=e22]:
+          - link "Contact" [ref=e23] [cursor=pointer]:
+            - /url: /contact
+    - generic [ref=e25]:
+      - link "+1 (571) 600-2835" [ref=e26] [cursor=pointer]:
+        - /url: tel:+15716002835
+        - img [ref=e27]
+        - text: +1 (571) 600-2835
+      - button "Chat" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+        - text: Chat
+  - generic [ref=e32]:
+    - heading "What's Coming to AuraFlux" [level=1] [ref=e33]
+    - paragraph [ref=e34]: We ship fast. Here's what we're building next — features in active development and on the near-term roadmap.
+    - heading "Publishing & Distribution" [level=2] [ref=e35]
+    - list [ref=e36]:
+      - listitem [ref=e37]:
+        - strong [ref=e38]: Subscription Platform Publishing
+        - text: — Direct publish to OnlyFans, Fansly, and Patreon for lifestyle and creator content. Same OAuth flow as YouTube and TikTok.
+    - heading "Content & Production" [level=2] [ref=e39]
+    - list [ref=e40]:
+      - listitem [ref=e41]:
+        - strong [ref=e42]: Compilation Carousel
+        - text: — Auto-generate side-by-side clip grids, batch stitched compilations, and image carousels from your existing short-form library.
+      - listitem [ref=e43]:
+        - strong [ref=e44]: Show & Film Content Type
+        - text: — Narrated video production using TV show and movie scene clips, with fair-use sourcing from your uploaded footage library.
+      - listitem [ref=e45]:
+        - strong [ref=e46]: AI Avatar Video
+        - text: — On-camera presenter videos generated from your script, with full control over voice, appearance, and background.
+    - heading "Monetisation" [level=2] [ref=e47]
+    - list [ref=e48]:
+      - listitem [ref=e49]:
+        - strong [ref=e50]: Shoppable Video
+        - text: — Embed product tags and tappable CTAs directly into your short-form videos for social commerce on TikTok and Instagram.
+      - listitem [ref=e51]:
+        - strong [ref=e52]: Paid Ad Creative
+        - text: — Short-form video ad production optimised for Meta, TikTok, and Google — aspect ratios, copy overlays, and CTA formatting included.
+    - heading "Have a feature request?" [level=2] [ref=e53]
+    - paragraph [ref=e54]:
+      - link "Contact us" [ref=e55] [cursor=pointer]:
+        - /url: /contact
+      - text: — we read every message and the best ideas go straight to the board.
+  - contentinfo [ref=e56]:
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - paragraph [ref=e62]:
+            - link "Home" [ref=e63] [cursor=pointer]:
+              - /url: /
+          - paragraph [ref=e65]:
+            - link "Roadmap" [ref=e66] [cursor=pointer]:
+              - /url: /roadmap
+          - paragraph [ref=e68]:
+            - link "Pricing" [ref=e69] [cursor=pointer]:
+              - /url: /pricing
+          - paragraph [ref=e71]:
+            - link "Blog" [ref=e72] [cursor=pointer]:
+              - /url: /blog
+          - paragraph [ref=e74]:
+            - link "Contact" [ref=e75] [cursor=pointer]:
+              - /url: https://app.auraflux.co/sign-up
+        - generic [ref=e76]:
+          - link [ref=e77] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=e80]: Automated content production from source to publish. No team required.
+          - generic [ref=e81]:
+            - paragraph [ref=e83]:
+              - link "Privacy Policy" [ref=e84] [cursor=pointer]:
+                - /url: /privacy
+            - paragraph [ref=e86]: •
+            - paragraph [ref=e88]:
+              - link "Terms & Conditions" [ref=e89] [cursor=pointer]:
+                - /url: /terms
+        - generic [ref=e90]:
+          - link "Facebook" [ref=e92] [cursor=pointer]:
+            - /url: https://facebook.com
+            - paragraph [ref=e94]: Facebook
+          - link "Instagram" [ref=e98] [cursor=pointer]:
+            - /url: https://instagram.com
+            - paragraph [ref=e100]: Instagram
+          - link "LinkedIn" [ref=e104] [cursor=pointer]:
+            - /url: https://linkedin.com
+            - paragraph [ref=e106]: LinkedIn
+      - generic [ref=e111]:
+        - paragraph [ref=e113]: © 2026 AuraFlux. All rights reserved.
+        - generic:
+          - paragraph
+  - generic "Chat with us" [ref=e114] [cursor=pointer]:
+    - img [ref=e115]

@@ -1,0 +1,4 @@
+- generic [active] [ref=e1]:
+  - img "AuraFlux" [ref=e3]
+  - region "Notifications alt+T"
+  - alert [ref=e4]

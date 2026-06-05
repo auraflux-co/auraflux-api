@@ -1,0 +1,94 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                    - generic [ref=e55]: Contact Us
+      - main:
+        - generic [ref=e57]:
+          - group:
+            - heading "Attendance Policy" [level=1] [ref=e61]
+            - paragraph [ref=e63]:
+              - strong [ref=e64]: IntroductionTo help ensure a safe, organized, and positive experience for all campers, Lumi Education has established the following attendance policy for all Summer Programs participants.
+            - paragraph [ref=e66]:
+              - strong [ref=e67]: 1. Daily AttendanceCampers are expected to attend all registered camp sessions and arrive on time each day. Regular participation supports students in engaging fully with camp activities and routines.
+            - paragraph [ref=e69]:
+              - strong [ref=e70]: "2. Arrival & Pick-UpParents/guardians must handle timely drop-off and pick-up per camp schedule.Late Arrival: Parents should notify staff in advance if a camper will be late.Late Pick-Up: Repeated late pick-ups may result in additional fees or possible dismissal from the camp program at the discretion of Lumi Education."
+            - paragraph [ref=e72]:
+              - strong [ref=e73]: 3. AbsencesParents should notify the organization promptly about absences through email, phone, or designated methods. Covered reasons include illness, emergencies, vacation, or personal circumstances.
+            - paragraph [ref=e75]:
+              - strong [ref=e76]: 4. No Refunds for Missed DaysLumi Education Summer Programs does not provide refunds, credits, prorated tuition, or make-up days for absences, late arrivals, early departures, or missed days.
+            - paragraph [ref=e78]:
+              - strong [ref=e79]: 5. Illness & Health-Related AbsencesIll campers should stay home per the Medical & Allergy Policy. Lumi Education reserves the right to request that a camper be picked up if they appear too ill to safely participate in camp activities.
+            - paragraph [ref=e81]:
+              - strong [ref=e82]: 6. Emergency Contact AvailabilityParents/guardians or authorized emergency contacts must remain reachable during camp hours for health, safety, or behavioral issues.
+            - paragraph [ref=e84]:
+              - strong [ref=e85]: 7. Withdrawal from CampWithdrawals are governed by the Summer Programs Cancellation & Refund Policy.
+            - paragraph [ref=e87]: Phone (571) 207-8373 · Email contact.us@learningwithlumi.com
+      - contentinfo:
+        - generic [ref=e89]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e93] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e95]
+            - heading "Quick Links" [level=3] [ref=e97]
+            - paragraph [ref=e99]:
+              - link "About Us" [ref=e101] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e103]:
+              - link "Summer Programs" [ref=e105] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e107]:
+              - link "Tutoring" [ref=e109] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e111]:
+              - link "Join Our Team" [ref=e113] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e115]:
+              - link "Contact Us" [ref=e117] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/contact-us
+            - heading "Contact Info" [level=3] [ref=e119]
+            - paragraph [ref=e121]:
+              - link "(571) 207-8373" [ref=e123] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e125]:
+              - link "contact.us@learningwithlumi.com" [ref=e127] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e129]: © 2026 Lumi Education
+            - paragraph [ref=e131]:
+              - link "Privacy Policy" [ref=e133] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/privacy-policy
+  - region "bottom of page"

@@ -1,0 +1,104 @@
+======================================================================
+VIDEO INVENTORY DOWNLOAD REPORT
+Generated: 2026-05-31
+Total videos downloaded: 60
+Total disk usage: 2933.6 MB
+======================================================================
+
+PLATFORM: TWITCH
+  Downloaded: 20/20
+  Total size: 195.8 MB
+  Streamers covered: hasanabi, ludwig, moistcr1tikal, nickmercs, pokimane, shroud, xqc
+
+  #   Streamer        Duration Type   Published    Title
+  --- --------------- -------- ------ ------------ ------------------------------
+  1   shroud          48s      clip   2026-05-26   Esfand finds shroud
+  2   nickmercs       13s      clip   2026-05-26   NICK SLAMMING
+  3   ludwig          28s      clip   2026-05-27   0_0
+  4   ludwig          55s      clip   2026-05-28   Tenzin unban request
+  5   nickmercs       15s      clip   2026-05-27   TURNED ON
+  6   shroud          33s      clip   2026-05-26   shroud takes a hot bite
+  7   pokimane        4s       clip   2026-05-26   Angle mort
+  8   xqc             37s      clip   2026-05-26   7K knife
+  9   pokimane        5s       clip   2026-05-26   string
+  10  xqc             29s      clip   2026-05-26   MAX WIN BUTTERFLY EMERALD
+  11  hasanabi        60s      clip   2026-05-26   Dabbling in socialism
+  12  shroud          59s      clip   2026-05-26   Shroud meets Shroud
+  13  nickmercs       47s      clip   2026-05-29   lol
+  14  hasanabi        32s      clip   2026-05-30   protestors heckle hasan
+  15  hasanabi        59s      clip   2026-05-25   PBD FANGIRL
+  16  moistcr1tikal   7s       clip   2026-05-28   damn it, flushed himself down the toilet
+  17  moistcr1tikal   8s       clip   2026-05-26   MIDAIR PISTOL SHOT
+  18  moistcr1tikal   34s      clip   2026-05-26   Moistcr1ikal's reaction to a 18 second r
+  19  ludwig          15s      clip   2026-05-25   ludwig finds a new purple rarity card
+  20  xqc             38s      clip   2026-05-25   xQc got Forza Horizon for 1 thing...GAMB
+
+PLATFORM: YOUTUBE
+  Downloaded: 20/20
+  Total size: 988.8 MB
+  Streamers covered: AdinRoss, Cloakzy, Greekgodx, HasanAbi, Lilypichu, Ludwig, MaximilianDood, Mizkif, Penguinz0, Scarra, ShinyaTheNinja, Summit1g, TimTheTatman, xQcOW
+
+  #   Streamer        Duration Type   Published    Title
+  --- --------------- -------- ------ ------------ ------------------------------
+  1   Scarra          874s     vod    2026-06-01   My Friends Summoned Me For League
+  2   TimTheTatman    775s     vod    2026-05-25   SPECTATING A SNIPER DEMON IN REBIRTH ISL
+  3   Penguinz0       922s     vod    2026-05-30   The Backrooms Hate Situation
+  4   Mizkif          837s     vod    2026-05-27   One Stock Trader VS 8000 Strangers (Who 
+  5   Lilypichu       785s     vod    2026-05-31   Sakura & Lily 🌸 | Brush it Off
+  6   AdinRoss        648s     vod    2026-05-24   RAY J VS SUPA HOT FIRE Full Fight - Bran
+  7   AdinRoss        580s     vod    2026-05-24   NO NECK JAY VS SHANE CHANCE Full Fight -
+  8   TimTheTatman    890s     vod    2026-05-24   SPECTATING CHEATER ISLAND
+  9   Penguinz0       523s     vod    2026-05-29   Cringe Officer Embarrasses Himself
+  10  MaximilianDood  480s     vod    2026-05-26   R6 Players Don't Understand Ragebait
+  11  HasanAbi        947s     vod    2026-05-31   f*** ice...
+  12  AdinRoss        601s     vod    2026-05-24   JOHNNY MANZIEL VS BOB MENERY Full Fight 
+  13  HasanAbi        551s     vod    2026-05-31   THE UK REVOKED MY VISA
+  14  Summit1g        670s     vod    2026-05-25   Summit1g Gets Hunted in DayZ & This Happ
+  15  Greekgodx       380s     vod    2026-05-30   THEY ARE IN THE TREES | Hell Let Loose: 
+  16  AdinRoss        333s     vod    2026-05-24   MICHAEL BEASLEY VS LANCE STEPHENSON Full
+  17  ShinyaTheNinja  1090s    vod    2026-05-26   'World Record' 31 Kills SOLO in Arc Raid
+  18  Ludwig          909s     vod    2026-05-25   How I Masterfully Won a $50,000 Geoguess
+  19  xQcOW           682s     vod    2026-05-31   Woman Drives Through Crowd Because She's
+  20  Cloakzy         1138s    vod    2026-05-24   GOING TO THE DEPTHS OF HELL
+
+PLATFORM: KICK
+  Downloaded: 20/20
+  Total size: 1749.1 MB
+  Streamers covered: mizkif, purplebixi, trainwreckstv, xqc
+
+  #   Streamer        Duration Type   Published    Title
+  --- --------------- -------- ------ ------------ ------------------------------
+  1   trainwreckstv   122s     clip   2026-05-25   9.2m (Harakiri)
+  2   purplebixi      10s      clip   2026-05-25   hayır olsun inşallah
+  3   purplebixi      60s      clip   2026-05-25   cehapeliler
+  4   purplebixi      64s      clip   2026-05-25   Hakan
+  5   purplebixi      36s      clip   2026-05-25   ERLIK
+  6   purplebixi      30s      clip   2026-05-25   Feci
+  7   mizkif          60s      clip   2026-05-25   W crashout
+  8   mizkif          179s     clip   2026-05-26   wdd
+  9   xqc             179s     clip   2026-05-26   lolmafaooooooooooolol
+  10  mizkif          180s     clip   2026-05-26   rage
+  11  mizkif          60s      clip   2026-05-26   jinny back
+  12  xqc             75s      clip   2026-05-27   $7000 MAXWIN
+  13  trainwreckstv   51s      clip   2026-05-27   19ms
+  14  xqc             160s     clip   2026-05-27   jfghndfnfn
+  15  trainwreckstv   37s      clip   2026-05-28   Train had a dream
+  16  trainwreckstv   80s      clip   2026-05-28   Train's first women
+  17  trainwreckstv   85s      clip   2026-05-28   odskpokdsfopd
+  18  xqc             180s     clip   2026-05-29   rdcfgvhbjn m
+  19  xqc             64s      clip   2026-05-29   `wzesxrtcvyubinomp,[.]/'
+  20  mizkif          99s      clip   2026-05-29   miz diss
+
+======================================================================
+FAILURES / SKIPPED
+  Twitch: 0 failures (nmplol and asmongold clips pages were empty)
+  YouTube: 0 failures (some channels had no recent content — substituted)
+  Kick: 0 failures (API blocked by Cloudflare — bypassed via curl_cffi)
+
+NOTES:
+  - Kick /clips listing endpoint blocked by Cloudflare; used curl_cffi
+    impersonation to query v2 API for clip IDs, then downloaded via yt-dlp.
+  - Some originally requested YouTube channels (FaZeJev, BoxBox, Caedrel,
+    pChalDaily) had no uploads after May 24. Substituted with active channels.
+  - Twitch: nmplol and asmongold clips pages returned no results.
+======================================================================

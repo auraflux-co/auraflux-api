@@ -1,0 +1,163 @@
+- generic [ref=e3]:
+  - region "top of page" [active]
+  - button "Skip to Main Content"
+  - generic [ref=e9]:
+    - banner [ref=e10]:
+      - generic [ref=e16]:
+        - generic:
+          - generic:
+            - link "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e18] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e19]
+            - generic [ref=e25]:
+              - generic:
+                - generic:
+                  - navigation "Site" [ref=e30]:
+                    - list [ref=e31]:
+                      - listitem [ref=e32]:
+                        - link "Home" [ref=e33] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com
+                          - paragraph [ref=e37]: Home
+                      - listitem [ref=e38]:
+                        - link "About Us" [ref=e39] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/about-us
+                          - paragraph [ref=e43]: About Us
+                      - listitem [ref=e44]:
+                        - link "Summer Camps 2026" [ref=e45] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/summer-camps-2026
+                          - paragraph [ref=e49]: Summer Camps 2026
+                      - listitem [ref=e50]:
+                        - link "Tutoring" [ref=e51] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/tutoring
+                          - paragraph [ref=e55]: Tutoring
+                      - listitem [ref=e56]:
+                        - link "Become a Lumi-nary" [ref=e57] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                          - paragraph [ref=e61]: Become a Lumi-nary
+                  - link "Call (571) 207-8373" [ref=e63] [cursor=pointer]:
+                    - /url: tel:+15712078373
+                    - generic [ref=e65]: Call (571) 207-8373
+    - main [ref=e66]:
+      - generic [ref=e71]:
+        - generic:
+          - generic:
+            - generic:
+              - generic [ref=e81]:
+                - generic:
+                  - generic:
+                    - heading "Lumi Education" [level=1] [ref=e85]
+                    - generic "d91773_07310e2cc1564619b54f655e70d8bd47~mv2.png" [ref=e86]:
+                      - img "LUMI 04.png" [ref=e88]
+              - generic "Video Player" [ref=e103]:
+                - generic [ref=e122]:
+                  - generic [ref=e123]:
+                    - button "Pause" [ref=e126] [cursor=pointer]:
+                      - img [ref=e128]
+                    - generic [ref=e131]:
+                      - button "Unmute" [ref=e132] [cursor=pointer]:
+                        - img [ref=e134]
+                      - generic "Volume control"
+                    - generic [ref=e137]:
+                      - generic [ref=e138]: 00:00
+                      - generic [ref=e139]: /00:07
+                  - generic [ref=e140]:
+                    - button "Play Picture-in-Picture" [ref=e143] [cursor=pointer]:
+                      - img [ref=e145]
+                    - button "Enter full screen" [ref=e151] [cursor=pointer]:
+                      - img [ref=e152]
+              - generic [ref=e171]:
+                - generic [ref=e172]:
+                  - generic:
+                    - generic:
+                      - heading "Summer Camps" [level=2] [ref=e176]:
+                        - generic [ref=e178]: Summer Camps
+                      - paragraph [ref=e179]:
+                        - generic [ref=e182]: At Lumi Education, our summer camps combine creativity, innovation, and hands-on learning to help students explore new interests, build future-ready skills, and have an unforgettable summer of discovery.Our programs are designed to inspire curiosity and confidence in every student. Through engaging workshops, collaborative projects, and interactive activities, campers dive into exciting areas such as technology, science, arts, and problem-solving. Guided by passionate instructors, students are encouraged to experiment, think critically, and express their ideas in a supportive environment. Every day offers fresh chances for growth, friendships, and difficulties. By the end of the camp, students not only gain valuable knowledge and skills but also lasting memories and a stronger passion for learning.
+                      - link "Learn More" [ref=e184] [cursor=pointer]:
+                        - /url: https://www.learningwithlumi.com/summer-camps-2026
+                        - generic [ref=e186]: Learn More
+                - img "Children Doing Art" [ref=e192]
+              - generic [ref=e201]:
+                - img "Students Building Project" [ref=e207]
+                - generic [ref=e208]:
+                  - generic:
+                    - generic:
+                      - heading "After School Programs" [level=2] [ref=e212]:
+                        - generic [ref=e214]: After School Programs
+                      - generic:
+                        - paragraph [ref=e215]:
+                          - generic [ref=e218]: Our After School Program blends academic enrichment with innovative, hands-on learning. Students explore new ideas, build critical thinking skills, and grow their curiosity and confidence in a collaborative environment.
+                        - paragraph [ref=e219]:
+                          - generic [ref=e222]: Our program is designed to support students beyond the classroom by reinforcing key academic concepts while encouraging creativity and exploration. Through engaging activities, interactive projects, and guided mentorship, students develop problem-solving abilities, teamwork, and communication skills. We create a safe and inspiring space where learners can ask questions, experiment with new ideas, and discover their strengths. From STEM-based challenges to creative arts and leadership activities, every session helps students grow academically and personally, empowering them to become confident, motivated, and lifelong learners.
+                        - paragraph [ref=e223]
+                        - paragraph [ref=e224]
+                        - paragraph [ref=e225]
+                      - link "Learn More" [ref=e227] [cursor=pointer]:
+                        - /url: https://www.learningwithlumi.com/comming-soon
+                        - generic [ref=e229]: Learn More
+              - generic [ref=e238]:
+                - generic [ref=e239]:
+                  - generic:
+                    - generic:
+                      - heading "1:1 Tutoring" [level=2] [ref=e243]:
+                        - generic [ref=e245]: 1:1 Tutoring
+                      - generic:
+                        - paragraph [ref=e246]:
+                          - generic [ref=e249]: Our personalized tutoring sessions provide students with the focused attention they need to strengthen skills, build confidence, and reach their full potential.
+                        - paragraph [ref=e250]:
+                          - generic [ref=e253]: In our 1:1 Tutoring program, each student receives customized support tailored to their unique learning style, pace, and academic goals. Our experienced tutors identify strengths and areas for improvement, creating targeted learning plans that make complex concepts easier to understand. Through patient guidance, interactive explanations, and consistent feedback, students gain clarity, improve performance, and develop stronger study habits. Whether the goal is catching up, staying ahead, or preparing for exams, our tutoring sessions empower students to learn with confidence, overcome challenges, and achieve lasting academic success.
+                        - paragraph [ref=e254]
+                        - paragraph [ref=e255]
+                        - paragraph [ref=e256]
+                        - paragraph [ref=e257]
+                      - link "Learn More" [ref=e259] [cursor=pointer]:
+                        - /url: https://www.learningwithlumi.com/tutoring
+                        - generic [ref=e261]: Learn More
+                - img "Tutoring Session" [ref=e267]
+              - generic [ref=e276]:
+                - img "Student Giving Presentation" [ref=e282]
+                - generic [ref=e283]:
+                  - generic:
+                    - generic:
+                      - heading "Volunteering & Internship Opportunities for High School Students" [level=3] [ref=e287]:
+                        - generic [ref=e290]: Volunteering & Internship Opportunities for High School Students
+                      - generic:
+                        - paragraph [ref=e291]:
+                          - generic [ref=e294]: Through our Volunteering and Internship Opportunities, students step into meaningful roles where they can apply what they learn in real-life situations. Participants work alongside mentors and educators on community projects, educational programs, and creative initiatives that encourage responsibility and teamwork. These experiences help students develop practical skills such as time management, collaboration, and professional communication. In addition to building their resumes, students gain a deeper understanding of community impact and leadership. By engaging in purposeful work and reflective learning, they grow as confident individuals who are better prepared for college, careers, and future opportunities to make a positive difference.
+                        - paragraph [ref=e295]
+                        - paragraph [ref=e296]
+                        - paragraph [ref=e297]
+                      - link "Learn More" [ref=e299] [cursor=pointer]:
+                        - /url: https://www.learningwithlumi.com/comming-soon
+                        - generic [ref=e301]: Learn More
+    - contentinfo [ref=e303]:
+      - generic [ref=e314]:
+        - generic [ref=e315]:
+          - generic:
+            - generic:
+              - 'heading "Call Now: +1 (571) 207-8373" [level=5] [ref=e319]':
+                - 'link "Call Now: +1 (571) 207-8373" [ref=e324] [cursor=pointer]':
+                  - /url: tel:+15712078373
+              - paragraph [ref=e325]:
+                - link "contact.us@learningwithlumi.com" [ref=e328] [cursor=pointer]:
+                  - /url: mailto:contact.us@learningwithlumi.com
+                  - generic [ref=e329]: contact.us@learningwithlumi.com
+        - paragraph [ref=e334]: Copyright © 2026 Lumi Education
+        - generic [ref=e335]:
+          - generic:
+            - generic:
+              - heading "Quick Links" [level=5] [ref=e339]:
+                - generic [ref=e342]: Quick Links
+              - heading "About Us Summer Camp 1:1 Tutoring Contact Us Careers" [level=6] [ref=e343]:
+                - generic [ref=e346]:
+                  - link "About Us" [ref=e347] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                  - link "Summer Camp" [ref=e348] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/summer-camps-2026
+                  - link "1:1 Tutoring" [ref=e349] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                  - link "Contact Us" [ref=e350] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                  - link "Careers" [ref=e351] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/comming-soon
+  - region "bottom of page"

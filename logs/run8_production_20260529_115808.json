@@ -1,0 +1,492 @@
+{
+  "ts": "20260529_115808",
+  "submitted": 26,
+  "total": 26,
+  "at_100": 17,
+  "avg_grade": 78.2,
+  "grades": [
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is timeout"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780070288588",
+      "status": "timeout",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP",
+        "title": "xqc makes the wrong choice",
+        "duration_s": 45
+      },
+      "outputUrl": ""
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780071530857",
+      "status": "complete",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/ConsiderateColdbloodedBeaverRickroll-NHbTiYQlzwHVvvVf",
+        "title": "xqc kisses nyyxxii",
+        "duration_s": 42
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780071530857/1780071920524_1780071920523_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780071530857_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780072046488",
+      "status": "complete",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/EntertainingTsunderePicklesSaltBae-_znCL0KuMwXadfP1",
+        "title": "xQc DRAMA NEWS STORIES",
+        "duration_s": 60
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780072046488/1780072429121_1780072429120_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780072046488_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780072533720",
+      "status": "complete",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/ShySavoryWerewolfTTours-gtkYnILCafbYWyMJ",
+        "title": "X with the clutch",
+        "duration_s": 37
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780072533720/1780072928006_1780072927990_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780072533720_final.mp4"
+    },
+    {
+      "grade": 15,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "avg 50 < 75"
+        }
+      ],
+      "summary": "Grade: 15/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073019755",
+      "status": "failed",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/CuriousBlindingSquidMrDestructoid",
+        "title": "xQc reacts",
+        "duration_s": 30
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 15,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "avg 50 < 75"
+        }
+      ],
+      "summary": "Grade: 15/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073171365",
+      "status": "failed",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/GleamingSmallTurtleKappa",
+        "title": "xQc gameplay moment",
+        "duration_s": 25
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073323081",
+      "status": "complete",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/AgitatedDelightfulArmadilloWOOP",
+        "title": "Hasan 50/50 with AOC",
+        "duration_s": 18
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073323081/1780073445842_1780073445841_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073323081_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073535688",
+      "status": "complete",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR",
+        "title": "hasanabi clip",
+        "duration_s": 35
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073535688/1780073717622_1780073717621_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073535688_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073838606",
+      "status": "complete",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg",
+        "title": "irl ban",
+        "duration_s": 51
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073838606/1780074242065_1780074242064_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780073838606_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074354434",
+      "status": "complete",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF",
+        "title": "Emiru calls out streamers",
+        "duration_s": 43
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074354434/1780074582222_1780074582221_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074354434_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074688461",
+      "status": "complete",
+      "clip": {
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/SaltyBashfulLarkAMPTropPunch-_Wij8ppJxCpMlXOp",
+        "title": "hasanabi reaction clip",
+        "duration_s": 30
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074688461/1780074868934_1780074868933_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074688461_final.mp4"
+    },
+    {
+      "grade": 90,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "portal_score_avg",
+          "reason": "avg 68 < 75"
+        }
+      ],
+      "summary": "Grade: 90/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074992082",
+      "status": "complete",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP",
+        "title": "finish halo 2",
+        "duration_s": 45
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074992082/1780075183261_1780075183260_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780074992082_final.mp4"
+    },
+    {
+      "grade": 90,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "portal_score_avg",
+          "reason": "avg 68 < 75"
+        }
+      ],
+      "summary": "Grade: 90/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075295394",
+      "status": "complete",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/ObeseFrigidBibimbapTBTacoLeft",
+        "title": "D:",
+        "duration_s": 41
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075295394/1780075486262_1780075486261_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075295394_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075598490",
+      "status": "complete",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/LivelyNeighborlySnailCclamChamp",
+        "title": "Shamelesss",
+        "duration_s": 26
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075598490/1780075799152_1780075799152_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075598490_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075932566",
+      "status": "complete",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana",
+        "title": "Shameless Mod Defends",
+        "duration_s": 43
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075932566/1780076404834_1780076404833_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780075932566_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780076511538",
+      "status": "complete",
+      "clip": {
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/AmericanCleanYamKlappa",
+        "title": "roasted",
+        "duration_s": 31
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780076511538/1780076741460_1780076741459_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780076511538_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780076846278",
+      "status": "complete",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC",
+        "title": "nahh",
+        "duration_s": 22
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780076846278/1780077037366_1780077037365_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780076846278_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780077150817",
+      "status": "complete",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK",
+        "title": "hey!",
+        "duration_s": 47
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780077150817/1780077382812_1780077382812_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780077150817_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780077514830",
+      "status": "complete",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/EphemeralLittleTildeStoneLightning-w0vB8TL5OGhKl_4S",
+        "title": "BACK TO BACK",
+        "duration_s": 32
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780077514830/1780077938642_1780077938642_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780077514830_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078031662",
+      "status": "complete",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/SneakyBlatantChickpeaPeanutButterJellyTime-B6eWTXlxT7efwqM3",
+        "title": "classic ronaldo",
+        "duration_s": 15
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078031662/1780078212409_1780078212409_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078031662_final.mp4"
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078305556",
+      "status": "failed",
+      "clip": {
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/HardObeseChickenM4xHeh-3_xAOUa3XSFrZnWG",
+        "title": "IGHT BET",
+        "duration_s": 16
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078366999",
+      "status": "complete",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/FrigidSingleTortoiseMau5",
+        "title": "Stan and cops character",
+        "duration_s": 44
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078366999/1780078785681_1780078785681_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078366999_final.mp4"
+    },
+    {
+      "grade": 92,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "portal_score_avg",
+          "reason": "avg 74 < 75"
+        }
+      ],
+      "summary": "Grade: 92/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078884119",
+      "status": "complete",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/BlushingCovertDurianJonCarnage",
+        "title": "Mark's so hard right now",
+        "duration_s": 22
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078884119/1780079000148_1780079000148_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780078884119_final.mp4"
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780079097137",
+      "status": "complete",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid",
+        "title": "Wade's Romantic Cruise",
+        "duration_s": 51
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780079097137/1780079435624_1780079435623_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780079097137_final.mp4"
+    },
+    {
+      "grade": 15,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "avg 50 < 75"
+        }
+      ],
+      "summary": "Grade: 15/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780079524154",
+      "status": "failed",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/CautiousKawaiiAniseedKeepo",
+        "title": "Markiplier scared moment",
+        "duration_s": 35
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 15,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "avg 50 < 75"
+        }
+      ],
+      "summary": "Grade: 15/100 | FAILED",
+      "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780079675407",
+      "status": "failed",
+      "clip": {
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/HonestAgitatedBisonOptimizePrime",
+        "title": "Markiplier reacts",
+        "duration_s": 28
+      },
+      "outputUrl": null
+    }
+  ]
+}

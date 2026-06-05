@@ -1,0 +1,75 @@
+{
+  "run": "run_11_20260531_142800",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252080644",
+      "label": "Viral Clip",
+      "tier": "operate",
+      "status": "failed",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252080644/1780252283369_1780252283368_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252080644_final.mp4",
+      "grade": 45,
+      "grade_detail": {
+        "grade": 45,
+        "passed": false,
+        "gaps": [
+          {
+            "checkId": "status",
+            "reason": "expected ('staged', 'complete', 'published'), got failed"
+          },
+          {
+            "checkId": "portal_scores",
+            "reason": "avg 50 < 60"
+          }
+        ],
+        "summary": "Grade: 45/100 | GAPS:2"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job final status is 'failed' and output URL returns no accessible content, indicating a complete pipeline failure for this OPERATE tier job.",
+          "suggested_change": "Implement pipeline failure diagnostics to capture and surface the specific failure point (assembly, rendering, upload). Add automated retry logic with exponential backoff for transient failures."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' which suggests either the QA step was skipped due to upstream failure, or the QA integration itself is not handling failed jobs gracefully.",
+          "suggested_change": "Ensure Twelve Labs QA step logs a clear status even on pipeline failures (e.g., 'skipped_no_output' vs 'analysis_failed') to differentiate between upstream issues and QA system problems."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons activated simultaneously (captions, audio, branding, colorGrade, effects, layout) represents a complex processing chain that may increase failure risk without clear dependency ordering.",
+          "suggested_change": "Review if all 6 add-ons are necessary for viral_clip template. Consider implementing staged processing with checkpoints, or identify which add-on combination caused the failure through better error attribution."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "OPERATE tier users expect reliable, hands-off production. A failed job with no actionable error feedback creates a poor experience and likely requires manual support intervention.",
+          "suggested_change": "Surface user-facing error messaging with recommended actions (retry, adjust settings, contact support). Implement automatic fallback to render without optional add-ons if full processing fails."
+        },
+        {
+          "area": "output",
+          "severity": "medium",
+          "observation": "Output URL structure suggests the file was partially assembled (contains 'assembled' and 'final' in filename) but either failed during final write or upload to assets CDN.",
+          "suggested_change": "Add file integrity verification after assembly and before marking job complete. Implement asset upload confirmation with rollback if CDN write fails."
+        }
+      ],
+      "ran_at": "2026-05-31T18:35:48.682129+00:00",
+      "jira_ticket": "CPD-466"
+    }
+  ],
+  "saved_templates": []
+}

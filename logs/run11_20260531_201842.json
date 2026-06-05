@@ -1,0 +1,26 @@
+{
+  "run": "run_11_20260531_201842",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "preflight_fail",
+      "label": "Reaction Cut",
+      "tier": "operate",
+      "status": "preflight_fail",
+      "grade": 0,
+      "grade_detail": {
+        "gaps": [
+          {
+            "checkId": "longform_needs_vod",
+            "reason": "Longform template got a 180s clip \u2014 streamers expect a real VOD here (\u22655min), not a short. Output will be meaningless."
+          }
+        ]
+      }
+    }
+  ],
+  "saved_templates": []
+}

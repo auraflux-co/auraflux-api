@@ -1,0 +1,135 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "AuraFlux" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "AuraFlux" [ref=e7]
+      - generic [ref=e8]:
+        - paragraph [ref=e10]:
+          - link "Our System" [ref=e11] [cursor=pointer]:
+            - /url: /system
+        - paragraph [ref=e13]:
+          - link "Pricing" [ref=e14] [cursor=pointer]:
+            - /url: /pricing
+        - paragraph [ref=e16]:
+          - link "About" [ref=e17] [cursor=pointer]:
+            - /url: /about
+        - paragraph [ref=e19]:
+          - link "Roadmap" [ref=e20] [cursor=pointer]:
+            - /url: /roadmap
+        - paragraph [ref=e22]:
+          - link "Contact" [ref=e23] [cursor=pointer]:
+            - /url: /contact
+    - generic [ref=e25]:
+      - link "+1 (571) 600-2835" [ref=e26] [cursor=pointer]:
+        - /url: tel:+15716002835
+        - img [ref=e27]
+        - text: +1 (571) 600-2835
+      - button "Chat" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+        - text: Chat
+  - generic [ref=e32]:
+    - heading "Get in Touch" [level=1] [ref=e33]
+    - paragraph [ref=e34]: Sales, support, partnerships, or feedback — we read every message.
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - heading "Send a message" [level=2] [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]: Name
+            - textbox "Name" [ref=e41]:
+              - /placeholder: Your name
+          - generic [ref=e42]:
+            - generic [ref=e43]: Email *
+            - textbox "Email *" [ref=e44]:
+              - /placeholder: you@example.com
+          - generic [ref=e45]:
+            - generic [ref=e46]: Topic
+            - combobox "Topic" [ref=e47]:
+              - option "— Select a topic —" [selected]
+              - option "Sales & pricing"
+              - option "Technical support"
+              - option "Partnership or integration"
+              - option "Product feedback"
+              - option "Other"
+          - generic [ref=e48]:
+            - generic [ref=e49]: Message *
+            - textbox "Message *" [ref=e50]:
+              - /placeholder: Tell us what's on your mind…
+          - button "Send message" [ref=e51] [cursor=pointer]
+      - generic [ref=e52]:
+        - heading "Other ways to reach us" [level=2] [ref=e53]
+        - generic [ref=e54]:
+          - generic [ref=e55]:
+            - text: 📧
+            - generic [ref=e56]:
+              - text: "Email:"
+              - link "support@auraflux.co" [ref=e57] [cursor=pointer]:
+                - /url: mailto:support@auraflux.co
+          - generic [ref=e58]:
+            - text: 📞
+            - generic [ref=e59]:
+              - text: "Phone / SMS:"
+              - link "+1 (571) 600-2835" [ref=e60] [cursor=pointer]:
+                - /url: tel:+15716002835
+        - heading "Frequently asked questions" [level=2] [ref=e61]
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - term [ref=e64]: What's the difference between Operate and Guided?
+            - definition [ref=e65]: Both plans include the full AuraFlux platform. Operate is self-serve — you run everything yourself via API or the dashboard. Guided includes Collab-powered monitoring and guidance from the AuraFlux team.
+          - generic [ref=e66]:
+            - term [ref=e67]: How do credits work?
+            - definition [ref=e68]: Each plan includes a monthly credit allowance. One credit = one short-form job. Long-form and multi-clip jobs use 2 credits. Unused credits roll over and additional packs are available any time.
+          - generic [ref=e69]:
+            - term [ref=e70]: Can I connect multiple social accounts?
+            - definition [ref=e71]: Yes — you can connect YouTube, TikTok, Instagram, Twitch, and Kick. Each job can be targeted to one or more platforms simultaneously.
+          - generic [ref=e72]:
+            - term [ref=e73]: Do I need technical knowledge to use AuraFlux?
+            - definition [ref=e74]: No. The dashboard guides you through every step. If you prefer direct API access, full developer documentation is available at app.auraflux.co/developer.
+  - contentinfo [ref=e75]:
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - paragraph [ref=e81]:
+            - link "Home" [ref=e82] [cursor=pointer]:
+              - /url: /
+          - paragraph [ref=e84]:
+            - link "Roadmap" [ref=e85] [cursor=pointer]:
+              - /url: /roadmap
+          - paragraph [ref=e87]:
+            - link "Pricing" [ref=e88] [cursor=pointer]:
+              - /url: /pricing
+          - paragraph [ref=e90]:
+            - link "Blog" [ref=e91] [cursor=pointer]:
+              - /url: /blog
+          - paragraph [ref=e93]:
+            - link "Contact" [ref=e94] [cursor=pointer]:
+              - /url: https://app.auraflux.co/sign-up
+        - generic [ref=e95]:
+          - link [ref=e96] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=e99]: Automated content production from source to publish. No team required.
+          - generic [ref=e100]:
+            - paragraph [ref=e102]:
+              - link "Privacy Policy" [ref=e103] [cursor=pointer]:
+                - /url: /privacy
+            - paragraph [ref=e105]: •
+            - paragraph [ref=e107]:
+              - link "Terms & Conditions" [ref=e108] [cursor=pointer]:
+                - /url: /terms
+        - generic [ref=e109]:
+          - link "Facebook" [ref=e111] [cursor=pointer]:
+            - /url: https://facebook.com
+            - paragraph [ref=e113]: Facebook
+          - link "Instagram" [ref=e117] [cursor=pointer]:
+            - /url: https://instagram.com
+            - paragraph [ref=e119]: Instagram
+          - link "LinkedIn" [ref=e123] [cursor=pointer]:
+            - /url: https://linkedin.com
+            - paragraph [ref=e125]: LinkedIn
+      - generic [ref=e130]:
+        - paragraph [ref=e132]: © 2026 AuraFlux. All rights reserved.
+        - generic:
+          - paragraph
+  - generic "Chat with us" [ref=e133] [cursor=pointer]:
+    - img [ref=e134]

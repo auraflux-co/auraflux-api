@@ -1,0 +1,304 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e9]:
+    - banner [ref=e10]:
+      - generic [ref=e16]:
+        - generic:
+          - generic:
+            - link "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e18] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e19]
+            - generic [ref=e25]:
+              - generic:
+                - generic:
+                  - navigation "Site" [ref=e30]:
+                    - list [ref=e31]:
+                      - listitem [ref=e32]:
+                        - link "Home" [ref=e33] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com
+                          - paragraph [ref=e37]: Home
+                      - listitem [ref=e38]:
+                        - link "About Us" [ref=e39] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/about-us
+                          - paragraph [ref=e43]: About Us
+                      - listitem [ref=e44]:
+                        - link "Summer Camps 2026" [ref=e45] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/summer-camps-2026
+                          - paragraph [ref=e49]: Summer Camps 2026
+                      - listitem [ref=e50]:
+                        - link "Tutoring" [ref=e51] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/tutoring
+                          - paragraph [ref=e55]: Tutoring
+                      - listitem [ref=e56]:
+                        - link "Become a Lumi-nary" [ref=e57] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                          - paragraph [ref=e61]: Become a Lumi-nary
+                  - link "Call (571) 207-8373" [ref=e63] [cursor=pointer]:
+                    - /url: tel:+15712078373
+                    - generic [ref=e65]: Call (571) 207-8373
+    - main [ref=e66]:
+      - generic [ref=e72]:
+        - generic:
+          - generic:
+            - form "Join as a Tutor" [ref=e82]:
+              - group [ref=e83]:
+                - generic [ref=e84]:
+                  - generic [ref=e85]:
+                    - heading "Join as a Tutor" [level=1] [ref=e93]:
+                      - generic [ref=e94]: Join as a Tutor
+                    - generic [ref=e96]:
+                      - generic [ref=e98]:
+                        - text: First Name
+                        - generic [ref=e99]: "*"
+                      - textbox "First Name" [ref=e104]
+                      - generic [ref=e106]:
+                        - text: Last Name
+                        - generic [ref=e107]: "*"
+                      - textbox "Last Name" [ref=e112]
+                    - generic [ref=e114]:
+                      - generic [ref=e116]:
+                        - text: Contact Number
+                        - generic [ref=e117]: "*"
+                      - generic [ref=e122]:
+                        - img [ref=e125]
+                        - textbox "Contact Number. Phone" [ref=e126]
+                      - generic [ref=e128]:
+                        - text: Email
+                        - generic [ref=e129]: "*"
+                      - textbox "Email" [ref=e134]
+                    - generic [ref=e136]:
+                      - generic [ref=e138]:
+                        - text: Address
+                        - generic [ref=e139]: "*"
+                      - textbox "Address" [ref=e144]
+                    - generic [ref=e146]:
+                      - generic [ref=e148]: Address - line 2
+                      - textbox "Address - line 2" [ref=e153]
+                    - generic [ref=e155]:
+                      - generic [ref=e157]:
+                        - text: Pin / Postal Code
+                        - generic [ref=e158]: "*"
+                      - textbox "Pin / Postal Code" [ref=e163]
+                      - generic [ref=e165]:
+                        - text: City
+                        - generic [ref=e166]: "*"
+                      - textbox "City" [ref=e171]
+                    - paragraph [ref=e179]:
+                      - strong [ref=e181]: Undergraduate Degree
+                    - generic [ref=e183]:
+                      - generic [ref=e185]:
+                        - text: College Name
+                        - generic [ref=e186]: "*"
+                      - textbox "College Name" [ref=e191]
+                      - generic [ref=e193]:
+                        - text: Major
+                        - generic [ref=e194]: "*"
+                      - textbox "Major" [ref=e199]
+                    - generic [ref=e201]:
+                      - generic [ref=e203]:
+                        - text: Degree Type
+                        - generic [ref=e204]: "*"
+                      - textbox "Degree Type" [ref=e209]
+                      - generic [ref=e211]:
+                        - text: Year
+                        - generic [ref=e212]: "*"
+                      - textbox "Year" [ref=e218]
+                    - paragraph [ref=e226]:
+                      - strong [ref=e228]: Graduate Degree
+                    - generic [ref=e230]:
+                      - generic [ref=e232]:
+                        - text: College Name
+                        - generic [ref=e233]: "*"
+                      - textbox "College Name" [ref=e238]
+                      - generic [ref=e240]:
+                        - text: Major
+                        - generic [ref=e241]: "*"
+                      - textbox "Major" [ref=e246]
+                    - generic [ref=e248]:
+                      - generic [ref=e250]:
+                        - text: Degree Type
+                        - generic [ref=e251]: "*"
+                      - textbox "Degree Type" [ref=e256]
+                      - generic [ref=e258]:
+                        - text: Year
+                        - generic [ref=e259]: "*"
+                      - textbox "Year" [ref=e265]
+                    - generic [ref=e267]:
+                      - generic [ref=e269]:
+                        - text: Teaching Certificate ?
+                        - generic [ref=e270]: "*"
+                      - group "Teaching Certificate ?" [ref=e272]:
+                        - generic [ref=e273]:
+                          - generic [ref=e276] [cursor=pointer]:
+                            - radio "Yes" [ref=e277]
+                            - generic [ref=e283]: "Yes"
+                          - generic [ref=e286] [cursor=pointer]:
+                            - radio "No" [ref=e287]
+                            - generic [ref=e293]: "No"
+                    - generic [ref=e295]:
+                      - generic [ref=e297]: If yes, in which all subject's
+                      - textbox "If yes, in which all subject's" [ref=e302]:
+                        - /placeholder: Answer in a few words
+                    - button "Resume Upload *" [ref=e309] [cursor=pointer]:
+                      - img [ref=e311]
+                      - generic [ref=e313]: Upload Resume
+                    - button "Register" [ref=e318] [cursor=pointer]:
+                      - generic [ref=e319]: Register
+                  - region
+            - form "Internship and Voluntering Form" [ref=e326]:
+              - group [ref=e327]:
+                - generic [ref=e328]:
+                  - generic [ref=e329]:
+                    - paragraph [ref=e337]:
+                      - generic [ref=e338]: Internship and Voluntering Form
+                    - generic [ref=e340]:
+                      - generic [ref=e342]:
+                        - text: Student's First Name
+                        - generic [ref=e343]: "*"
+                      - textbox "Student's First Name" [ref=e348]
+                      - generic [ref=e350]:
+                        - text: Student's Last Name
+                        - generic [ref=e351]: "*"
+                      - textbox "Student's Last Name" [ref=e356]
+                    - generic [ref=e358]:
+                      - generic [ref=e360]:
+                        - text: Student's Grade
+                        - generic [ref=e361]: "*"
+                      - textbox "Student's Grade" [ref=e366]
+                      - generic [ref=e368]:
+                        - text: Student's Email
+                        - generic [ref=e369]: "*"
+                      - textbox "Student's Email" [ref=e374]
+                    - generic [ref=e376]:
+                      - generic [ref=e378]:
+                        - text: Student's Birthday
+                        - generic [ref=e379]: "*"
+                      - group "Student's Birthday" [ref=e381]:
+                        - generic [ref=e382]:
+                          - generic [ref=e383]: Month
+                          - combobox "Month" [ref=e388] [cursor=pointer]:
+                            - img [ref=e392]
+                        - generic [ref=e394]:
+                          - generic [ref=e395]: Day
+                          - textbox "Day" [ref=e399]
+                        - generic [ref=e400]:
+                          - generic [ref=e401]: Year
+                          - textbox "Year" [ref=e405]
+                    - generic [ref=e407]:
+                      - generic [ref=e409]:
+                        - text: Parent's / Guardian's First Name
+                        - generic [ref=e410]: "*"
+                      - textbox "Parent's / Guardian's First Name" [ref=e415]
+                      - generic [ref=e417]:
+                        - text: Parent's / Guardian's Last Name
+                        - generic [ref=e418]: "*"
+                      - textbox "Parent's / Guardian's Last Name" [ref=e423]
+                    - generic [ref=e425]:
+                      - generic [ref=e427]:
+                        - text: Parent's /Guardian's Contact Number
+                        - generic [ref=e428]: "*"
+                      - generic [ref=e433]:
+                        - img [ref=e436]
+                        - textbox "Parent's /Guardian's Contact Number. Phone" [ref=e437]
+                      - generic [ref=e439]:
+                        - text: Parent's / Guardian's Email
+                        - generic [ref=e440]: "*"
+                      - textbox "Parent's / Guardian's Email" [ref=e445]
+                    - generic [ref=e447]:
+                      - generic [ref=e449]:
+                        - text: Emergency Contact First Name
+                        - generic [ref=e450]: "*"
+                      - textbox "Emergency Contact First Name" [ref=e455]
+                      - generic [ref=e457]:
+                        - text: Emergency Contact Last Name
+                        - generic [ref=e458]: "*"
+                      - textbox "Emergency Contact Last Name" [ref=e463]
+                    - generic [ref=e465]:
+                      - generic [ref=e467]:
+                        - text: Emergency Contact Contact Number
+                        - generic [ref=e468]: "*"
+                      - generic [ref=e473]:
+                        - img [ref=e476]
+                        - textbox "Emergency Contact Contact Number. Phone" [ref=e477]
+                    - generic [ref=e479]:
+                      - generic [ref=e481]:
+                        - text: Address
+                        - generic [ref=e482]: "*"
+                      - textbox "Address" [ref=e487]
+                    - generic [ref=e489]:
+                      - generic [ref=e491]: Address - line 2
+                      - textbox "Address - line 2" [ref=e496]
+                    - generic [ref=e498]:
+                      - generic [ref=e500]:
+                        - text: Pin / Postal Code
+                        - generic [ref=e501]: "*"
+                      - textbox "Pin / Postal Code" [ref=e506]
+                      - generic [ref=e508]:
+                        - text: City
+                        - generic [ref=e509]: "*"
+                      - textbox "City" [ref=e514]
+                    - generic [ref=e516]:
+                      - generic [ref=e518]:
+                        - text: List all your interests, talents and skills that you bring to Internship or volunteering job.
+                        - generic [ref=e519]: "*"
+                      - textbox "List all your interests, talents and skills that you bring to Internship or volunteering job." [ref=e524]:
+                        - /placeholder: (E.g. Visual Art, People management, Public Speaking, Reading, Math skills, Writing skills, coding,)
+                    - generic [ref=e526]:
+                      - generic [ref=e528]:
+                        - text: List skills that you would like to learn through an Internship or Volunteering opportunity.
+                        - generic [ref=e529]: "*"
+                      - textbox "List skills that you would like to learn through an Internship or Volunteering opportunity." [ref=e534]:
+                        - /placeholder: ""
+                    - generic [ref=e536]:
+                      - generic [ref=e538]: Do you have any volunteering experiences? Please list them below.
+                      - textbox "Do you have any volunteering experiences? Please list them below." [ref=e543]:
+                        - /placeholder: ""
+                    - generic [ref=e550] [cursor=pointer]:
+                      - checkbox "This will be my first experience."
+                      - paragraph [ref=e559]:
+                        - generic [ref=e560]: This will be my first experience.
+                    - generic [ref=e562]:
+                      - generic [ref=e564]: Is there anything else you would like us to know about you?
+                      - textbox "Is there anything else you would like us to know about you?" [ref=e569]:
+                        - /placeholder: ""
+                    - generic [ref=e571]:
+                      - generic [ref=e573]: Resume upload
+                      - button "Resume upload" [ref=e578] [cursor=pointer]:
+                        - img [ref=e580]
+                        - generic [ref=e582]: Upload File
+                    - paragraph [ref=e590]:
+                      - generic [ref=e591]: (If you have a resume, please upload here. Optional)
+                    - button "Submit My Application" [ref=e596] [cursor=pointer]:
+                      - generic [ref=e597]: Submit My Application
+                  - region
+    - contentinfo [ref=e599]:
+      - generic [ref=e610]:
+        - generic [ref=e611]:
+          - generic:
+            - generic:
+              - 'heading "Call Now: +1 (571) 207-8373" [level=5] [ref=e615]':
+                - 'link "Call Now: +1 (571) 207-8373" [ref=e620] [cursor=pointer]':
+                  - /url: tel:+15712078373
+              - paragraph [ref=e621]:
+                - link "contact.us@learningwithlumi.com" [ref=e624] [cursor=pointer]:
+                  - /url: mailto:contact.us@learningwithlumi.com
+                  - generic [ref=e625]: contact.us@learningwithlumi.com
+        - paragraph [ref=e630]: Copyright © 2026 Lumi Education
+        - generic [ref=e631]:
+          - generic:
+            - generic:
+              - heading "Quick Links" [level=5] [ref=e635]:
+                - generic [ref=e638]: Quick Links
+              - heading "About Us Summer Camp 1:1 Tutoring Contact Us Careers" [level=6] [ref=e639]:
+                - generic [ref=e642]:
+                  - link "About Us" [ref=e643] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                  - link "Summer Camp" [ref=e644] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/summer-camps-2026
+                  - link "1:1 Tutoring" [ref=e645] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                  - link "Contact Us" [ref=e646] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                  - link "Careers" [ref=e647] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/comming-soon
+  - region "bottom of page"

@@ -352,9 +352,11 @@ export default function JobDetailPage() {
   const publishedResults = job.publishResults ?? [];
   const jobHeading       = job.wizardConfig?.topic
     ? job.wizardConfig.topic
-    : job.wizardConfig?.contentType
-      ? labelForContentType(job.wizardConfig.contentType)
-      : 'Video job';
+    : job.wizardConfig?.templateName
+      ? job.wizardConfig.templateName
+      : job.wizardConfig?.contentType
+        ? labelForContentType(job.wizardConfig.contentType)
+        : 'Video job';
 
   // Pre-compute terminal state config outside JSX to avoid IIFE
   type TerminalCfg = { border: string; from: string; dot: string; labelColor: string; label: string; desc: string };

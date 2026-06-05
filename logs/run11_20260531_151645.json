@@ -1,0 +1,71 @@
+{
+  "run": "run_11_20260531_151645",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780255006098",
+      "label": "YouTube Short",
+      "tier": "operate",
+      "status": "failed",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780255006098/1780255441754_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780255006098_final.mp4",
+      "grade": 60,
+      "grade_detail": {
+        "grade": 60,
+        "passed": false,
+        "gaps": [
+          {
+            "checkId": "status",
+            "reason": "expected ('staged', 'complete', 'published'), got failed"
+          }
+        ],
+        "summary": "Grade: 60/100 | GAPS:1"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job final status is 'failed' indicating the pipeline did not complete successfully. The output URL exists in format but likely points to a non-existent or corrupted file since the job never finished.",
+          "suggested_change": "Implement pipeline failure diagnostics to capture and surface the specific failure point (e.g., asset assembly, encoding, add-on processing). Add automated retry logic for transient failures and alert monitoring for repeated failures on the same job type."
+        },
+        {
+          "area": "quality",
+          "severity": "critical",
+          "observation": "Twelve Labs QA returned 'no result' which indicates either the QA step was skipped due to upstream failure, or the QA service itself failed to process. No quality validation was performed on this job.",
+          "suggested_change": "Ensure QA step logs explicitly indicate whether it was skipped (due to no output) or failed independently. If skipped, mark as 'skipped_no_output' rather than 'no result' for clearer debugging."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons were activated (captions, tts, audio, branding, effects, layout) which is a complex combination for YouTube Shorts. The high add-on count may increase pipeline fragility and processing time, potentially contributing to failure.",
+          "suggested_change": "Review if all 6 add-ons are necessary for OPERATE tier YouTube Shorts. Consider add-on dependency validation to ensure compatible combinations and implement staged processing with checkpoints between add-on applications."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "For OPERATE tier, users expect reliable automated production. A failed job with no output and no QA feedback creates a poor user experience with no actionable information for the user.",
+          "suggested_change": "Implement user-facing failure notifications with categorized error types (e.g., 'Processing Error - Retrying' vs 'Asset Issue - Action Required'). Provide partial outputs or previews when available, even on failure."
+        },
+        {
+          "area": "output",
+          "severity": "high",
+          "observation": "Output URL was generated with timestamp-based naming (1780255441754_assembled) suggesting the assembly step was reached before failure, but no valid output was produced. This indicates late-stage pipeline failure.",
+          "suggested_change": "Add validation checkpoint after assembly step to verify file integrity before marking output URL as ready. Implement cleanup process to remove orphaned output URLs from failed jobs to prevent confusion."
+        }
+      ],
+      "ran_at": "2026-05-31T19:28:07.284298+00:00",
+      "jira_ticket": "CPD-468"
+    }
+  ],
+  "saved_templates": []
+}

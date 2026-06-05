@@ -1,0 +1,318 @@
+- generic [ref=e3]:
+  - region "top of page" [active]
+  - button "Skip to Main Content"
+  - generic [ref=e9]:
+    - banner [ref=e10]:
+      - generic [ref=e16]:
+        - generic:
+          - generic:
+            - link "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e18] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e19]
+            - generic [ref=e25]:
+              - generic:
+                - generic:
+                  - navigation "Site" [ref=e30]:
+                    - list [ref=e31]:
+                      - listitem [ref=e32]:
+                        - link "Home" [ref=e33] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com
+                          - paragraph [ref=e37]: Home
+                      - listitem [ref=e38]:
+                        - link "About Us" [ref=e39] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/about-us
+                          - paragraph [ref=e43]: About Us
+                      - listitem [ref=e44]:
+                        - link "Summer Camps 2026" [ref=e45] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/summer-camps-2026
+                          - paragraph [ref=e49]: Summer Camps 2026
+                      - listitem [ref=e50]:
+                        - link "Tutoring" [ref=e51] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/tutoring
+                          - paragraph [ref=e55]: Tutoring
+                      - listitem [ref=e56]:
+                        - link "Become a Lumi-nary" [ref=e57] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                          - paragraph [ref=e61]: Become a Lumi-nary
+                  - link "Call (571) 207-8373" [ref=e63] [cursor=pointer]:
+                    - /url: tel:+15712078373
+                    - generic [ref=e65]: Call (571) 207-8373
+    - main [ref=e66]:
+      - generic [ref=e71]:
+        - generic:
+          - generic:
+            - generic:
+              - generic [ref=e72]:
+                - generic:
+                  - generic:
+                    - heading "SUMMER CAMPS 2026" [level=1] [ref=e77]:
+                      - generic [ref=e81]: SUMMER CAMPS 2026
+                    - heading "Grades K-5" [level=2] [ref=e82]:
+                      - generic [ref=e85]: Grades K-5
+              - generic [ref=e86]:
+                - generic:
+                  - generic:
+                    - heading "Our camps are built around grade-specific curriculum. Campers will work with age-appropriate content designed by our expert instructors. You can select your preferred schedule week-by-week directly on our registration form." [level=3] [ref=e90]:
+                      - generic [ref=e93]:
+                        - text: Our camps are built around grade-specific curriculum. Campers will work with age-appropriate content designed by our expert instructors.
+                        - text: You can select your preferred schedule week-by-week directly on our registration form.
+                    - generic:
+                      - paragraph [ref=e95]:
+                        - generic [ref=e98]: Full Day Camps
+                      - list [ref=e99]:
+                        - listitem [ref=e100]:
+                          - paragraph [ref=e101]:
+                            - generic [ref=e103]:
+                              - generic [ref=e104]: Full Day | 9am - 4pm |
+                              - generic [ref=e107]: $499
+                        - listitem [ref=e108]:
+                          - paragraph [ref=e109]:
+                            - generic [ref=e111]:
+                              - generic [ref=e112]: Extended Day | 9am - 6pm |
+                              - generic [ref=e115]: $599
+                    - generic:
+                      - paragraph [ref=e116]:
+                        - generic [ref=e119]: Half Day Camps
+                      - list [ref=e120]:
+                        - listitem [ref=e121]:
+                          - paragraph [ref=e122]:
+                            - generic [ref=e124]:
+                              - generic [ref=e125]: Morning | 9am - 12pm |
+                              - generic [ref=e128]: $299
+                        - listitem [ref=e129]:
+                          - paragraph [ref=e130]:
+                            - generic [ref=e132]: Afternoon | 1pm - 4pm |
+                            - generic [ref=e135]: $299
+                        - listitem [ref=e136]:
+                          - paragraph [ref=e137]:
+                            - generic [ref=e139]:
+                              - generic [ref=e140]: Extended Afternoon | 1pm - 6pm |
+                              - generic [ref=e143]: $399
+                      - paragraph [ref=e144]
+                    - 'heading "Note: A standard 3.99% processing fee applies to each weekly registration." [level=6] [ref=e145]':
+                      - generic [ref=e149]: "Note: A standard 3.99% processing fee applies to each weekly registration."
+              - generic [ref=e150]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img [ref=e157]
+                          - img [ref=e162]
+                          - img [ref=e167]
+                          - img [ref=e172]
+                          - img [ref=e177]
+                          - generic:
+                            - paragraph [ref=e180]:
+                              - generic [ref=e182]:
+                                - text: "\"Just the camp my child needs this summer to have fun while learning new skills.\""
+                                - text: "- Sarah M., Ashburn Parent"
+                            - paragraph [ref=e183]
+                          - img [ref=e186]
+                          - img [ref=e191]
+                          - img [ref=e196]
+                          - img [ref=e201]
+                          - img [ref=e206]
+                          - paragraph [ref=e209]:
+                            - generic [ref=e211]:
+                              - text: "\"We registered both our kids (2nd and 5th grade) and they both are looking forward to an incredible experience. The grade-specific activities mean they aren't just 'lumped together'—they each have projects tailored to their level. Worth every penny!\""
+                              - text: "- The Thompson Family, Herndon"
+              - generic [ref=e212]:
+                - generic:
+                  - generic:
+                    - link "Start Registration" [ref=e217] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/grade-k-2-4th-week
+                      - generic [ref=e219]: Start Registration
+                    - link "Daily Schedule of our Campers" [ref=e221] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/daily-schedule-for-our-camps
+                      - generic [ref=e223]: Daily Schedule of our Campers
+              - list [ref=e229]:
+                - generic [ref=e230]:
+                  - listitem [ref=e231]:
+                    - generic [ref=e232]:
+                      - generic:
+                        - generic:
+                          - img "Children Reading Books" [ref=e238]
+                          - heading "Week of July 6th to July 10, 2026" [level=5] [ref=e239]
+                          - paragraph [ref=e240]:
+                            - generic [ref=e241]: Weekly Theme
+                          - generic:
+                            - paragraph [ref=e242]:
+                              - generic [ref=e243]: This week Campers will be engaged in a book club reading age appropriate fictional books as well as expressing their creativeity through a writing workshop, exploring their imaginations through 3-D art and keeping physically active through physical activities.
+                            - paragraph [ref=e244]
+                            - paragraph [ref=e245]
+                            - paragraph [ref=e246]:
+                              - generic [ref=e247]: Book Club
+                            - paragraph [ref=e248]:
+                              - generic [ref=e249]: 3-D Art
+                            - paragraph [ref=e250]:
+                              - generic [ref=e251]: Writing Workshop
+                          - link "Register" [ref=e253] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com
+                            - generic [ref=e255]: Register
+                  - listitem [ref=e256]:
+                    - generic [ref=e257]:
+                      - generic:
+                        - generic:
+                          - img "Colorful Children's Art" [ref=e263]
+                          - heading "Week of July 20 to July 24, 2026" [level=5] [ref=e264]
+                          - paragraph [ref=e265]:
+                            - generic [ref=e266]: Activities -
+                          - generic:
+                            - paragraph [ref=e267]:
+                              - generic [ref=e268]: Soccer
+                            - paragraph [ref=e269]:
+                              - generic [ref=e270]: Book Club
+                            - paragraph [ref=e271]:
+                              - generic [ref=e272]: Art
+                            - paragraph [ref=e273]:
+                              - generic [ref=e274]: Lego Robotics
+                          - link "Register" [ref=e276] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com
+                            - generic [ref=e278]: Register
+                  - listitem [ref=e279]:
+                    - generic [ref=e280]:
+                      - generic:
+                        - generic:
+                          - img "Image by Gabe Pierce" [ref=e286]
+                          - heading "Week of Aug 03 to Aug 7, 2026" [level=5] [ref=e287]
+                          - paragraph [ref=e288]:
+                            - generic [ref=e289]: Activities -
+                          - generic:
+                            - paragraph [ref=e290]:
+                              - generic [ref=e291]: Writing Workshop
+                            - paragraph [ref=e292]:
+                              - generic [ref=e293]: Public Speaking
+                            - paragraph [ref=e294]:
+                              - generic [ref=e295]: Mathemagicians (Math is Magic!)
+                            - paragraph [ref=e296]:
+                              - generic [ref=e297]: Board Games
+                          - link "Register" [ref=e299] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com
+                            - generic [ref=e301]: Register
+                  - listitem [ref=e302]:
+                    - generic [ref=e303]:
+                      - generic:
+                        - generic:
+                          - img "Girl Building Robot" [ref=e309]
+                          - heading "Camp Grades K - 2" [level=5] [ref=e310]
+                          - paragraph [ref=e311]:
+                            - generic [ref=e312]: Activities -
+                          - generic:
+                            - paragraph [ref=e313]: Mathemagicians (Math is Magic!)
+                            - paragraph [ref=e314]: Lego Robotics
+                            - paragraph [ref=e315]:
+                              - generic [ref=e316]: Book Club
+                            - paragraph [ref=e317]: Public Speaking
+                          - link "Register" [ref=e319] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com/grade-k-2-4th-week
+                            - generic [ref=e321]: Register
+                - generic [ref=e322]:
+                  - listitem [ref=e323]:
+                    - generic [ref=e324]:
+                      - generic:
+                        - generic:
+                          - img "Children Reading Together" [ref=e330]
+                          - heading "Week of July 13 to July 17, 2026" [level=5] [ref=e331]
+                          - paragraph [ref=e332]:
+                            - generic [ref=e333]: Activities -
+                          - generic:
+                            - paragraph [ref=e334]:
+                              - generic [ref=e335]: Book Club
+                            - paragraph [ref=e336]:
+                              - generic [ref=e337]: Dance
+                            - paragraph [ref=e338]:
+                              - generic [ref=e339]: Writing Workshop
+                            - paragraph [ref=e340]:
+                              - generic [ref=e341]: Art
+                          - link "Register" [ref=e343] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com
+                            - generic [ref=e345]: Register
+                  - listitem [ref=e346]:
+                    - generic [ref=e347]:
+                      - generic:
+                        - generic:
+                          - img "Painting Stones" [ref=e353]
+                          - heading "Week of July 27 to July 31, 2026" [level=5] [ref=e354]
+                          - paragraph [ref=e355]:
+                            - generic [ref=e356]: Activities -
+                          - generic:
+                            - paragraph [ref=e357]:
+                              - generic [ref=e358]: Soccer
+                            - paragraph [ref=e359]:
+                              - generic [ref=e360]: Book Club
+                            - paragraph [ref=e361]:
+                              - generic [ref=e362]: Art
+                            - paragraph [ref=e363]:
+                              - generic [ref=e364]: Lego Robotics
+                          - link "Register" [ref=e366] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com
+                            - generic [ref=e368]: Register
+                  - listitem [ref=e369]:
+                    - generic [ref=e370]:
+                      - generic:
+                        - generic:
+                          - img "Girl Writing Notes" [ref=e376]
+                          - heading "Week of Aug 10 to Aug 14, 2026" [level=5] [ref=e377]
+                          - paragraph [ref=e378]:
+                            - generic [ref=e379]: Activities -
+                          - generic:
+                            - paragraph [ref=e380]:
+                              - generic [ref=e381]: Writing Workshop
+                            - paragraph [ref=e382]:
+                              - generic [ref=e383]: Public Speaking
+                            - paragraph [ref=e384]:
+                              - generic [ref=e385]: Mathemagicians (Math is Magic!)
+                            - paragraph [ref=e386]:
+                              - generic [ref=e387]: Board Games
+                          - link "Register" [ref=e389] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com
+                            - generic [ref=e391]: Register
+                  - listitem [ref=e392]:
+                    - generic [ref=e393]:
+                      - generic:
+                        - generic:
+                          - img "Classroom Presentation Scene" [ref=e399]
+                          - heading "Camp Grades 3 - 5" [level=5] [ref=e400]
+                          - paragraph [ref=e401]:
+                            - generic [ref=e402]: Activities -
+                          - generic:
+                            - paragraph [ref=e403]: Mathemagicians (Math is Magic!)
+                            - paragraph [ref=e404]: Lego Robotics
+                            - paragraph [ref=e405]:
+                              - generic [ref=e406]: Book Club
+                            - paragraph [ref=e407]: Public Speaking
+                          - link "Register" [ref=e409] [cursor=pointer]:
+                            - /url: https://www.learningwithlumi.com
+                            - generic [ref=e411]: Register
+    - contentinfo [ref=e413]:
+      - generic [ref=e424]:
+        - generic [ref=e425]:
+          - generic:
+            - generic:
+              - 'heading "Call Now: +1 (571) 207-8373" [level=5] [ref=e429]':
+                - 'link "Call Now: +1 (571) 207-8373" [ref=e434] [cursor=pointer]':
+                  - /url: tel:+15712078373
+              - paragraph [ref=e435]:
+                - link "contact.us@learningwithlumi.com" [ref=e438] [cursor=pointer]:
+                  - /url: mailto:contact.us@learningwithlumi.com
+                  - generic [ref=e439]: contact.us@learningwithlumi.com
+        - paragraph [ref=e444]: Copyright © 2026 Lumi Education
+        - generic [ref=e445]:
+          - generic:
+            - generic:
+              - heading "Quick Links" [level=5] [ref=e449]:
+                - generic [ref=e452]: Quick Links
+              - heading "About Us Summer Camp 1:1 Tutoring Contact Us Careers" [level=6] [ref=e453]:
+                - generic [ref=e456]:
+                  - link "About Us" [ref=e457] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                  - link "Summer Camp" [ref=e458] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/summer-camps-2026
+                  - link "1:1 Tutoring" [ref=e459] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                  - link "Contact Us" [ref=e460] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                  - link "Careers" [ref=e461] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/comming-soon
+  - region "bottom of page"

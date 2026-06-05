@@ -156,6 +156,7 @@ async function afSend(){
   send.disabled=false;
 }
 </script>
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "10041c40a8b64f7d9818e992e773ea6d"}'></script>
 `;
 
 // ── Framer design components (injected by deploy.sh from framer-shell/) ───────

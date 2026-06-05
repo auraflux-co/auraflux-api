@@ -1,0 +1,55 @@
+{
+  "run": "run10_feature_matrix",
+  "ts": "20260530_000049",
+  "total": 4,
+  "at_100": 0,
+  "avg_grade": 0.0,
+  "templates_saved": 0,
+  "results": [
+    {
+      "label": "Audio master suite (all audio effects)",
+      "tier": "operate",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    },
+    {
+      "label": "Portrait layout + branding overlays",
+      "tier": "operate",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    },
+    {
+      "label": "Cinematic colour grade (full colour suite)",
+      "tier": "operate",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    },
+    {
+      "label": "Captions + overlays + thumbnail suite",
+      "tier": "operate",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    }
+  ],
+  "templates": []
+}
