@@ -1,4 +1,6 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-05 v1.0.951 (Cursor — feat(cpd-505): API parity — developer_api.js now accepts publishMeta + order.publish.* fields; normalises to createJobSpec publishMeta param; matches jobs_c1.js behaviour)
+**Last Updated:** 2026-06-05 v1.0.950 (Cursor — fix(cpd-528): upload-entry assembly fix — hasSourceClips recognises fileId/uploadSessionId; pre-assembly resolve step finds uploaded file on disk + injects localPath; assembly_service handles upload-entry without URL download)
 **Last Updated:** 2026-06-04 v1.0.949 (Cursor — fix(social): per-platform Upload-Post disconnect — DELETE /api/uploadposts/users/social clears just TikTok/Instagram without wiping the other platform; wired into DELETE /social/accounts/:platform; CPD-530)
 **Last Updated:** 2026-06-04 v1.0.948 (Cursor — fix(youtube): prompt='select_account consent' so OAuth shows the Google account picker first, not the consent screen directly)
 **Last Updated:** 2026-06-04 v1.0.947 (Cursor — fix(social): restore platforms:[platform] filter in Upload-Post connect URL — without it TikTok account-switching was broken; old account stuck in Upload-Post UI with no way to swap)
