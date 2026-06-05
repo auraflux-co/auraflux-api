@@ -219,6 +219,7 @@ export default function JobDetailPage() {
   const [reviewPrivacy,     setReviewPrivacy]      = useState<'public'|'unlisted'|'private'>('public');
   const [reviewTiktok,      setReviewTiktok]       = useState('');
   const [reviewInstagram,   setReviewInstagram]    = useState('');
+  const [reviewEdited,      setReviewEdited]       = useState(false);
   const [scriptExpanded,    setScriptExpanded]     = useState(false);
 
   async function handleSaveAsTemplate(opts: SaveTemplateOptions) {
@@ -327,6 +328,7 @@ export default function JobDetailPage() {
         setReviewPrivacy((pm.privacyStatus as 'public'|'unlisted'|'private') || 'public');
         setReviewTiktok(pm.tiktokCaption || pc?.tiktok?.caption || '');
         setReviewInstagram(pm.instagramCaption || pc?.instagram?.caption || '');
+        setReviewEdited(false);
       } catch { /* non-fatal */ }
     })();
   }, [job, jobId, getToken, stagingAssets]);
@@ -399,13 +401,17 @@ export default function JobDetailPage() {
       )
     : null;
   const publishedResults = job.publishResults ?? [];
-  const jobHeading       = job.wizardConfig?.topic
-    ? job.wizardConfig.topic
-    : job.wizardConfig?.templateName
-      ? job.wizardConfig.templateName
-      : job.wizardConfig?.contentType
-        ? labelForContentType(job.wizardConfig.contentType)
-        : 'Video job';
+  // Heading priority: AI-generated title > customer topic (if not a raw content-type slug) >
+  // template name > content type label > fallback.
+  const CONTENT_TYPE_SLUGS = new Set(['clips', 'news', 'sports', 'short', 'custom', 'show_commentary']);
+  const _aiTitle      = job.publishCopy?.youtube?.title || null;
+  const _topicRaw     = job.wizardConfig?.topic || null;
+  const _topicClean   = _topicRaw && !CONTENT_TYPE_SLUGS.has(_topicRaw.toLowerCase()) ? _topicRaw : null;
+  const jobHeading    = _aiTitle
+    || _topicClean
+    || job.wizardConfig?.templateName
+    || (job.wizardConfig?.contentType ? labelForContentType(job.wizardConfig.contentType) : null)
+    || 'Video job';
 
   // Pre-compute terminal state config outside JSX to avoid IIFE
   type TerminalCfg = { border: string; from: string; dot: string; labelColor: string; label: string; desc: string };
@@ -564,7 +570,9 @@ export default function JobDetailPage() {
               <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 dark:bg-emerald-950/20 px-3 py-2.5">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Ready to publish?</p>
-                  <p className="text-[10px] text-emerald-700/70 dark:text-emerald-400/70">Approve as-is or review & edit below first.</p>
+                  <p className="text-[10px] text-emerald-700/70 dark:text-emerald-400/70">
+                    {reviewEdited ? 'Changes saved — publish when ready.' : 'Review & edit below, or publish as-is.'}
+                  </p>
                 </div>
                 <Button
                   size="sm"
@@ -614,7 +622,7 @@ export default function JobDetailPage() {
                     <input
                       type="text"
                       value={reviewTitle}
-                      onChange={(e) => setReviewTitle(e.target.value)}
+                      onChange={(e) => { setReviewTitle(e.target.value); setReviewEdited(true); }}
                       placeholder="Video title"
                       className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                     />
@@ -623,7 +631,7 @@ export default function JobDetailPage() {
                     <label className="text-[11px] text-muted-foreground block mb-0.5">Description</label>
                     <textarea
                       value={reviewDesc}
-                      onChange={(e) => setReviewDesc(e.target.value)}
+                      onChange={(e) => { setReviewDesc(e.target.value); setReviewEdited(true); }}
                       placeholder="Video description"
                       rows={3}
                       className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
@@ -634,7 +642,7 @@ export default function JobDetailPage() {
                     <input
                       type="text"
                       value={reviewTags}
-                      onChange={(e) => setReviewTags(e.target.value)}
+                      onChange={(e) => { setReviewTags(e.target.value); setReviewEdited(true); }}
                       placeholder="gaming, highlights, clip"
                       className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                     />
@@ -645,7 +653,7 @@ export default function JobDetailPage() {
                       <label className="text-[11px] text-muted-foreground shrink-0">Visibility</label>
                       <select
                         value={reviewPrivacy}
-                        onChange={(e) => setReviewPrivacy(e.target.value as typeof reviewPrivacy)}
+                        onChange={(e) => { setReviewPrivacy(e.target.value as typeof reviewPrivacy); setReviewEdited(true); }}
                         className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                       >
                         <option value="public">Public</option>
@@ -663,7 +671,7 @@ export default function JobDetailPage() {
                       </label>
                       <textarea
                         value={reviewTiktok}
-                        onChange={(e) => setReviewTiktok(e.target.value.slice(0, 280))}
+                        onChange={(e) => { setReviewTiktok(e.target.value.slice(0, 280)); setReviewEdited(true); }}
                         placeholder="TikTok caption + hashtags"
                         rows={2}
                         maxLength={280}
@@ -681,7 +689,7 @@ export default function JobDetailPage() {
                       </label>
                       <textarea
                         value={reviewInstagram}
-                        onChange={(e) => setReviewInstagram(e.target.value.slice(0, 2200))}
+                        onChange={(e) => { setReviewInstagram(e.target.value.slice(0, 2200)); setReviewEdited(true); }}
                         placeholder="Instagram caption + hashtags"
                         rows={3}
                         maxLength={2200}
@@ -693,25 +701,7 @@ export default function JobDetailPage() {
                 </div>
               </div>
 
-              {/* Script preview (collapsible) */}
-              {stagingAssets?.output?.script && (
-                <div className="rounded-lg border bg-muted/20 overflow-hidden">
-                  <button
-                    onClick={() => setScriptExpanded((v) => !v)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted/40 transition-colors"
-                  >
-                    <span>📄 Script preview</span>
-                    <span>{scriptExpanded ? '▲' : '▼'}</span>
-                  </button>
-                  {scriptExpanded && (
-                    <pre className="px-3 pb-3 text-[11px] leading-relaxed whitespace-pre-wrap text-foreground/80 max-h-48 overflow-y-auto">
-                      {stagingAssets.output.script}
-                    </pre>
-                  )}
-                </div>
-              )}
-
-              {/* QA scores (CPD-547: context + colour coding) */}
+              {/* QA scores — shown before script so decision-relevant info is higher (CPD-547, CPD-557) */}
               {stagingAssets?.portalReports && stagingAssets.portalReports.length > 0 && (
                 <div className="rounded-lg border bg-muted/20 p-3 space-y-1.5">
                   <div>
@@ -731,6 +721,24 @@ export default function JobDetailPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Script preview (collapsible) — below QA scores */}
+              {stagingAssets?.output?.script && (
+                <div className="rounded-lg border bg-muted/20 overflow-hidden">
+                  <button
+                    onClick={() => setScriptExpanded((v) => !v)}
+                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted/40 transition-colors"
+                  >
+                    <span>📄 Script preview</span>
+                    <span>{scriptExpanded ? '▲' : '▼'}</span>
+                  </button>
+                  {scriptExpanded && (
+                    <pre className="px-3 pb-3 text-[11px] leading-relaxed whitespace-pre-wrap text-foreground/80 max-h-48 overflow-y-auto">
+                      {stagingAssets.output.script}
+                    </pre>
+                  )}
                 </div>
               )}
             </div>

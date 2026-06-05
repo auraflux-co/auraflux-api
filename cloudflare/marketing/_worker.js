@@ -531,12 +531,8 @@ export default {
         );
       }
 
-      // Inject chat widget + brand overrides before </body> on non-Framer pages.
-      // The homepage (Framer SSR) already includes its own interactive shell;
-      // all other worker-owned pages need INJECTED_CSS for the chat panel to work.
-      if (path !== '/') {
-        html = html.replace('</body>', INJECTED_CSS + '\n</body>');
-      }
+      // Inject chat widget + brand overrides before </body> on all worker-owned pages.
+      html = html.replace('</body>', INJECTED_CSS + '\n</body>');
 
       const headers = addSecurityHeaders(new Headers({
         'Content-Type': 'text/html; charset=utf-8',

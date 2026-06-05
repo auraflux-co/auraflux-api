@@ -55,15 +55,25 @@ export default function SocialConnectPage() {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get('social_connected');
     const errMsg    = params.get('social_error');
-    if (errMsg) setError(decodeURIComponent(errMsg));
+    const platform  = params.get('platform') as SocialPlatform | null;
+
     if (connected || errMsg) {
       window.history.replaceState({}, '', '/settings/social');
+
       // If we're running inside a popup, notify the parent and close
       if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({ type: 'social_connected', platform: connected }, window.location.origin);
+        if (connected) {
+          window.opener.postMessage({ type: 'social_connected', platform: connected }, window.location.origin);
+        } else {
+          // Relay the error back to the parent so it can show it and auto-retry
+          window.opener.postMessage({ type: 'social_error', platform, error: errMsg }, window.location.origin);
+        }
         window.close();
-        return; // parent will call fetchAccounts via the message listener
+        return;
       }
+
+      // Not in a popup — show error inline
+      if (errMsg) setError(decodeURIComponent(errMsg));
     }
     fetchAccounts();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -118,6 +128,18 @@ export default function SocialConnectPage() {
     function onMessage(e: MessageEvent) {
       if (e.data?.type === 'social_connected') {
         window.removeEventListener('message', onMessage);
+        // Delay slightly so Upload-Post state settles before we fetch
+        setTimeout(fetchAccounts, 1000);
+      } else if (e.data?.type === 'social_error') {
+        window.removeEventListener('message', onMessage);
+        const errText: string = e.data.error ?? 'Connection failed';
+        // Auto-retry once on PKCE session errors — they resolve after a fresh pre-disconnect
+        if (errText.toLowerCase().includes('missing') || errText.toLowerCase().includes('verifier')) {
+          setError('Reconnecting — please complete the connection again.');
+          setTimeout(() => handleConnect(platform), 1500);
+        } else {
+          setError(decodeURIComponent(errText));
+        }
         fetchAccounts();
       }
     }

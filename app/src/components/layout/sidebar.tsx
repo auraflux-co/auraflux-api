@@ -149,6 +149,7 @@ const CUSTOMER_NAV_BASE: NavItem[] = [
     ],
   },
   { href: '/review',    label: 'Review Queue'  },
+  { href: '/collab',    label: 'Job Assistant' },
   { href: '/schedule',   label: 'Schedule'      },
   { href: '/templates',  label: 'My Templates'  },
   {
@@ -184,7 +185,7 @@ function settingsNavItem(planTier: string | null): NavItem {
 }
 
 const ADMIN_NAV: NavItem[] = [
-  { href: '/admin',              label: 'Overview',       divider: 'Platform tools' },
+  { href: '/admin/overview',     label: 'Overview',       divider: 'Platform tools' },
   { href: '/admin/customers',    label: 'Customers'       },
   { href: '/admin/users',        label: 'All Users'       },
   { href: '/admin/support',      label: 'Support Inbox'   },
@@ -236,6 +237,10 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
 
   function isActive(href: string) {
     if (href === '/home') return pathname === href;
+    // Job detail pages (/myjobs/[jobId]) — highlight "Active" child, not "History"
+    if (href === '/myjobs/active' && /^\/myjobs\/(?!new$|active$|history$)[^/]+/.test(pathname)) {
+      return true;
+    }
     return pathname === href || pathname.startsWith(href + '/');
   }
 
@@ -457,6 +462,9 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
 
   function isActive(href: string) {
     if (href === '/home') return pathname === href;
+    if (href === '/myjobs/active' && /^\/myjobs\/(?!new$|active$|history$)[^/]+/.test(pathname)) {
+      return true;
+    }
     return pathname === href || pathname.startsWith(href + '/');
   }
 

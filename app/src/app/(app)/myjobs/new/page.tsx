@@ -1392,7 +1392,7 @@ function JobBuilderPageInner() {
             </div>
 
             <Button size="sm" className="w-full" disabled={!canSubmit || isPending} onClick={handleSubmit}>
-              {isPending ? 'Starting…' : 'Start production →'}
+              {isPending ? 'Starting…' : canSubmit ? 'Start production →' : 'Complete required steps'}
             </Button>
           </div>
         )}
