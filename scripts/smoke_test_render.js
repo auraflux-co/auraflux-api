@@ -9,7 +9,7 @@
  * Checks:
  *   1. GET /health            — service up, version present
  *   2. GET /health            — DB reported (postgres connected)
- *   3. GET /api/plans         — plan feature matrix endpoint reachable
+ *   3. GET /api/public/plans  — plan feature matrix endpoint reachable
  *   4. POST /jobs (dry-run)   — job creation rejects gracefully without auth (401)
  *
  * Exit 0 = all checks passed. Exit 1 = one or more failed.
@@ -109,13 +109,13 @@ async function run() {
 
   // 3. Plan feature matrix
   try {
-    const res = await request('GET', `${BASE_URL}/api/plans`);
+    const res = await request('GET', `${BASE_URL}/api/public/plans`);
     if (res.status === 200 && res.body) {
-      pass('GET /api/plans', `tiers=${Object.keys(res.body).join(',')}`);
+      pass('GET /api/public/plans', `tiers=${Object.keys(res.body).join(',')}`);
     } else if (res.status === 401 || res.status === 403) {
-      pass('GET /api/plans', `auth-gated (${res.status}) — endpoint reachable`);
+      pass('GET /api/public/plans', `auth-gated (${res.status}) — endpoint reachable`);
     } else {
-      fail('GET /api/plans', `status=${res.status}`);
+      fail('GET /api/public/plans', `status=${res.status}`);
     }
   } catch (e) {
     fail('GET /api/plans', e.message);
