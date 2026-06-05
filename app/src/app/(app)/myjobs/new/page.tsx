@@ -1278,31 +1278,37 @@ function JobBuilderPageInner() {
                       rows={2}
                       className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                     />
-                    <input
-                      type="text"
-                      placeholder="Tags (comma-separated)"
-                      value={pubTags}
-                      onChange={(e) => setPubTags(e.target.value)}
-                      className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs shrink-0">Visibility</Label>
-                      <select
-                        value={pubPrivacy}
-                        onChange={(e) => setPubPrivacy(e.target.value as typeof pubPrivacy)}
-                        className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                      >
-                        <option value="public">Public</option>
-                        <option value="unlisted">Unlisted</option>
-                        <option value="private">Private</option>
-                      </select>
+                    <div className="space-y-1">
+                      <input
+                        type="text"
+                        placeholder="Tags (comma-separated)"
+                        value={pubTags}
+                        onChange={(e) => setPubTags(e.target.value)}
+                        className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <p className="text-[10px] text-muted-foreground">No # needed — e.g. gaming, twitch, highlights</p>
                     </div>
+                    {/* Visibility is YouTube-specific — hide when YouTube is not selected */}
+                    {platforms.includes('youtube') && (
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs shrink-0">Visibility</Label>
+                        <select
+                          value={pubPrivacy}
+                          onChange={(e) => setPubPrivacy(e.target.value as typeof pubPrivacy)}
+                          className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                          <option value="public">Public</option>
+                          <option value="unlisted">Unlisted</option>
+                          <option value="private">Private</option>
+                        </select>
+                      </div>
+                    )}
 
                     {/* TikTok-specific caption — shown only when TikTok is a selected platform */}
                     {platforms.includes('tiktok') && (
                       <div className="space-y-1 pt-1 border-t">
-                        <Label className="text-xs text-muted-foreground">
-                          TikTok caption <span className="font-normal">(max 280 chars — AI generates if blank)</span>
+                        <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span>🎵</span> TikTok caption <span className="font-normal">(max 280 chars — AI generates if blank)</span>
                         </Label>
                         <textarea
                           placeholder="TikTok caption + hashtags"
@@ -1319,8 +1325,8 @@ function JobBuilderPageInner() {
                     {/* Instagram-specific caption — shown only when Instagram is a selected platform */}
                     {platforms.includes('instagram') && (
                       <div className="space-y-1 pt-1 border-t">
-                        <Label className="text-xs text-muted-foreground">
-                          Instagram caption <span className="font-normal">(max 2200 chars — AI generates if blank)</span>
+                        <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span>📸</span> Instagram caption <span className="font-normal">(max 2200 chars — AI generates if blank)</span>
                         </Label>
                         <textarea
                           placeholder="Instagram caption + hashtags"

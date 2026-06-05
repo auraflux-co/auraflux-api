@@ -560,6 +560,22 @@ export default function JobDetailPage() {
           {isStaged && (
             <div className="space-y-4 border-t pt-4">
 
+              {/* Quick-approve CTA — visible at top so customers don't need to scroll (CPD-544, CPD-546) */}
+              <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 dark:bg-emerald-950/20 px-3 py-2.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Ready to publish?</p>
+                  <p className="text-[10px] text-emerald-700/70 dark:text-emerald-400/70">Approve as-is or review & edit below first.</p>
+                </div>
+                <Button
+                  size="sm"
+                  className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                  onClick={handleApprovePublish}
+                  disabled={approving}
+                >
+                  {approving ? 'Publishing…' : '✓ Publish now'}
+                </Button>
+              </div>
+
               {/* Publishing to — connected account confirmation */}
               {job.platforms.length > 0 && (
                 <div className="rounded-lg border bg-muted/30 px-3 py-2.5 space-y-1">
@@ -572,7 +588,12 @@ export default function JobDetailPage() {
                           <span>{PLATFORM_ICONS[p] ?? '📤'}</span>
                           <span className="font-medium">{platformLabel(p)}</span>
                           {acct?.handle && <span className="text-muted-foreground">· @{acct.handle}</span>}
-                          {!acct && <span className="text-amber-500 text-[10px]">· not connected</span>}
+                          {!acct && (
+                            <>
+                              <span className="text-amber-500 text-[10px]">· not connected</span>
+                              <a href="/settings/social" className="text-[10px] text-primary underline hover:no-underline ml-0.5">Connect →</a>
+                            </>
+                          )}
                         </span>
                       );
                     })}
@@ -583,8 +604,8 @@ export default function JobDetailPage() {
               {/* Editable publish metadata */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Post details — edit before publishing
-                  <span className="ml-1.5 font-normal normal-case">(AI-generated · you can change these)</span>
+                  ✨ Post details
+                  <span className="ml-1.5 font-normal normal-case text-muted-foreground/70">(AI-suggested — edit anything before publishing)</span>
                 </p>
 
                 <div className="space-y-2">
@@ -609,7 +630,7 @@ export default function JobDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-muted-foreground block mb-0.5">Tags (comma-separated)</label>
+                    <label className="text-[11px] text-muted-foreground block mb-0.5">Tags</label>
                     <input
                       type="text"
                       value={reviewTags}
@@ -617,25 +638,28 @@ export default function JobDetailPage() {
                       placeholder="gaming, highlights, clip"
                       className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                     />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">No # needed — e.g. gaming, twitch, highlights</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-[11px] text-muted-foreground shrink-0">Visibility</label>
-                    <select
-                      value={reviewPrivacy}
-                      onChange={(e) => setReviewPrivacy(e.target.value as typeof reviewPrivacy)}
-                      className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                    >
-                      <option value="public">Public</option>
-                      <option value="unlisted">Unlisted</option>
-                      <option value="private">Private</option>
-                    </select>
-                  </div>
+                  {job.platforms.includes('youtube') && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] text-muted-foreground shrink-0">Visibility</label>
+                      <select
+                        value={reviewPrivacy}
+                        onChange={(e) => setReviewPrivacy(e.target.value as typeof reviewPrivacy)}
+                        className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="public">Public</option>
+                        <option value="unlisted">Unlisted</option>
+                        <option value="private">Private</option>
+                      </select>
+                    </div>
+                  )}
 
                   {/* TikTok caption */}
                   {job.platforms.includes('tiktok') && (
                     <div>
-                      <label className="text-[11px] text-muted-foreground block mb-0.5">
-                        TikTok caption <span className="text-[10px]">(max 280)</span>
+                      <label className="text-[11px] text-muted-foreground flex items-center gap-1 mb-0.5">
+                        <span>🎵</span> TikTok caption <span className="text-[10px]">(max 280)</span>
                       </label>
                       <textarea
                         value={reviewTiktok}
@@ -652,8 +676,8 @@ export default function JobDetailPage() {
                   {/* Instagram caption */}
                   {job.platforms.includes('instagram') && (
                     <div>
-                      <label className="text-[11px] text-muted-foreground block mb-0.5">
-                        Instagram caption <span className="text-[10px]">(max 2200)</span>
+                      <label className="text-[11px] text-muted-foreground flex items-center gap-1 mb-0.5">
+                        <span>📸</span> Instagram caption <span className="text-[10px]">(max 2200)</span>
                       </label>
                       <textarea
                         value={reviewInstagram}
@@ -687,10 +711,13 @@ export default function JobDetailPage() {
                 </div>
               )}
 
-              {/* QA scores */}
+              {/* QA scores (CPD-547: context + colour coding) */}
               {stagingAssets?.portalReports && stagingAssets.portalReports.length > 0 && (
                 <div className="rounded-lg border bg-muted/20 p-3 space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">QA gate scores</p>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Production QA scores</p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">How closely your video matched the order. 90+ is excellent. Below 70 goes to operator review.</p>
+                  </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {stagingAssets.portalReports.filter((r) => r.score != null).map((r) => (
                       <div key={r.portal} className="flex items-center justify-between text-xs">

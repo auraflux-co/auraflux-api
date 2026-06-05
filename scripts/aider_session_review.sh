@@ -311,7 +311,7 @@ _mktg_size_check "Our System size"   "https://auraflux.co/our-system"     5000
 # If missing, in-app marketing edits deploy to Cloudflare but do NOT commit back to git → divergence
 GITHUB_API_TOKEN_SET="${GITHUB_API_TOKEN:-}"
 if [ -z "$GITHUB_API_TOKEN_SET" ] && [ -f "$REPO_ROOT/.env" ]; then
-  GITHUB_API_TOKEN_SET=$(grep '^GITHUB_API_TOKEN=' "$REPO_ROOT/.env" 2>/dev/null | head -1 | cut -d'=' -f2- | tr -d '"'"'" )
+  GITHUB_API_TOKEN_SET=$(grep '^GITHUB_API_TOKEN=' "$REPO_ROOT/.env" 2>/dev/null | head -1 | cut -d'=' -f2- | tr -d '"'"'"  || true)
 fi
 if [ -n "$GITHUB_API_TOKEN_SET" ]; then
   MKTG_STATUS="${MKTG_STATUS}  ✅ GITHUB_API_TOKEN present — commitToGit() operational\n"
@@ -319,7 +319,7 @@ else
   MKTG_STATUS="${MKTG_STATUS}  ❌ GITHUB_API_TOKEN missing — commitToGit() will SILENTLY FAIL; git and Cloudflare will diverge on any in-app edit\n"
 fi
 
-[ -z "$MKTG_STATUS" ] && MKTG_STATUS="  (no checks run)"
+MKTG_STATUS="${MKTG_STATUS:-(  (no checks run))}"
 
 # ── 8. API-to-UI mapping: check apiFetch paths have a backend route ───────────
 API_UNMAPPED=""
