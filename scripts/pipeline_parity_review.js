@@ -179,9 +179,22 @@ function checkRouteMounting() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function checkPipelineDependencyEnvVars() {
-  const env = readFile('.env') || '';
+  const envFile = readFile('.env') || '';
   const example = readFile('.env.example') || '';
   const results = [];
+
+  // On Render (no .env file on disk), treat process.env as the source of truth.
+  // Locally, read .env to catch vars that haven't been set yet.
+  const runningOnRender = !envFile && (process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.DATABASE_URL);
+
+  // Helper: is a key actually set with a non-empty value?
+  function isKeySet(key) {
+    if (runningOnRender) {
+      return !!(process.env[key] && process.env[key].trim());
+    }
+    const m = envFile.match(new RegExp(`^${key}=(.+)$`, 'm'));
+    return !!(m && m[1]?.trim());
+  }
 
   const required = [
     // Queue / storage
@@ -212,23 +225,22 @@ function checkPipelineDependencyEnvVars() {
     { key: 'SENTRY_DSN',             label: 'Sentry error tracking', warn_only: true },
   ];
 
+  const envSource = runningOnRender ? 'Render env' : '.env';
+
   for (const { key, label, warn_only } of required) {
-    // Consider a var "set" if the line exists AND has a non-empty value after '='
-    const valueMatch = env.match(new RegExp(`^${key}=(.+)$`, 'm'));
-    const inEnv = !!(valueMatch && valueMatch[1]?.trim());
+    const inEnv     = isKeySet(key);
     const inExample = example.includes(key);
     if (inEnv) {
-      results.push(pass(`${key}: set in .env (${label})`));
+      results.push(pass(`${key}: set in ${envSource} (${label})`));
     } else if (warn_only) {
-      // Observability/optional vars — likely set on Render but not in local .env
-      results.push(warn(`${key}: not in local .env (may be set on Render) — verify in Render env panel (${label})`));
-    } else if (inExample && env.includes(`${key}=`)) {
-      // In .env but blank — may be set on Render but not locally
-      results.push(warn(`${key}: present in .env but blank (may be set on Render) — verify (${label})`));
+      results.push(warn(`${key}: not set (optional — ${label})`));
+    } else if (!runningOnRender && inExample && envFile.includes(`${key}=`)) {
+      // Locally: key present but blank in .env
+      results.push(warn(`${key}: present in .env but blank — may be set on Render; verify (${label})`));
     } else if (inExample) {
-      results.push(fail(`${key}: in .env.example but missing from .env — pipeline dependency missing (${label})`));
+      results.push(fail(`${key}: in .env.example but not set in ${envSource} — pipeline dependency missing (${label})`));
     } else {
-      results.push(warn(`${key}: not found in .env or .env.example — verify manually (${label})`));
+      results.push(warn(`${key}: not found in ${envSource} or .env.example — verify manually (${label})`));
     }
   }
   return results;
@@ -515,10 +527,10 @@ function runReview() {
  * machine-readable label so the agent can query it at session start.
  */
 async function postReportToJira(reportMarkdown, summary) {
-  const domain = process.env.ATLASSIAN_DOMAIN;
-  const email  = process.env.ATLASSIAN_EMAIL;
-  const token  = process.env.ATLASSIAN_API_TOKEN;
-  const project = process.env.JIRA_PROJECT_KEY || 'CPD';
+  const domain  = (process.env.ATLASSIAN_DOMAIN  || '').trim();
+  const email   = (process.env.ATLASSIAN_EMAIL   || '').trim();
+  const token   = (process.env.ATLASSIAN_API_TOKEN || '').trim();
+  const project = (process.env.JIRA_PROJECT_KEY  || 'CPD').trim();
 
   if (!domain || !email || !token) {
     console.warn('[pipeline-review] Jira env vars missing — skipping Jira post');
