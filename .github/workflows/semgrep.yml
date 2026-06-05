@@ -72,16 +72,17 @@ jobs:
         continue-on-error: true
 
       - name: Fail if high-severity findings
-        # Re-run without --error to get the exit code separately so we can
-        # annotate findings before failing the job.
+        # semgrep ci does not support --severity; use semgrep scan instead.
+        # --severity ERROR means only ERROR-level findings fail the job.
         run: |
-          semgrep ci \
+          semgrep scan \
             --config=p/nodejs \
             --config=p/secrets \
             --exclude=node_modules \
             --exclude=.next \
             --exclude=logs \
             --exclude=docs \
-            --severity=ERROR
+            --severity ERROR \
+            --error
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
