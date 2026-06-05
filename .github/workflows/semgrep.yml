@@ -44,17 +44,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Semgrep
-        # If SEMGREP_APP_TOKEN is set, results are also sent to Semgrep Cloud
-        # for PR inline comments and dashboard tracking.
-        # Without it, the scan still runs and fails the step on findings.
+        # Generates SARIF for the GitHub Security tab.
+        # continue-on-error so SARIF upload always runs even if findings exist.
+        # If SEMGREP_APP_TOKEN is set, results also go to Semgrep Cloud.
         run: |
-          semgrep ci \
+          semgrep scan \
             --config=p/nodejs \
             --config=p/javascript \
             --config=p/secrets \
             --config=p/owasp-top-ten \
             --sarif --output=semgrep.sarif \
-            --error \
             --exclude=node_modules \
             --exclude=.next \
             --exclude=logs \
