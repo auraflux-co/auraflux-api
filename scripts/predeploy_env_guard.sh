@@ -52,15 +52,29 @@ if [[ "$SET_MODE" -eq 1 ]]; then
   fi
   RKEY="${RENDER_API_KEY:-$(grep -m1 '^RENDER_API_KEY=' .env 2>/dev/null | cut -d= -f2-)}"
   RSVC="${RENDER_SERVICE_ID:-$(grep -m1 '^RENDER_SERVICE_ID=' .env 2>/dev/null | cut -d= -f2-)}"
-  CURRENT_JSON=$(curl -sf -H "Authorization: Bearer ${RKEY}" \
-    "https://api.render.com/v1/services/${RSVC}/env-vars?limit=100")
   python3 << PYEOF
 import json, urllib.request as ur, sys
 
 rkey = "${RKEY}"
 rsvc = "${RSVC}"
 pairs_raw = """${SET_PAIRS[*]:-}"""
-current_raw = json.loads('''${CURRENT_JSON}''')
+
+def fetch_all_env_vars(rkey, rsvc):
+    """Fetch ALL Render env vars, paging through every 100-item page."""
+    all_items = []
+    url = f"https://api.render.com/v1/services/{rsvc}/env-vars?limit=100"
+    while url:
+        req = ur.Request(url, headers={"Authorization": f"Bearer {rkey}", "Accept": "application/json"})
+        with ur.urlopen(req) as r:
+            page = json.loads(r.read())
+        if not isinstance(page, list):
+            print(f"ERROR fetching env vars: {page}", file=sys.stderr)
+            sys.exit(1)
+        all_items.extend(page)
+        url = None if len(page) < 100 else f"https://api.render.com/v1/services/{rsvc}/env-vars?limit=100&cursor={all_items[-1].get('cursor','')}"
+    return all_items
+
+current_raw = fetch_all_env_vars(rkey, rsvc)
 
 # Start with existing vars
 merged = {item.get("envVar", item)["key"]: item.get("envVar", item)["value"] for item in current_raw}
@@ -94,13 +108,36 @@ fi
 
 echo "[predeploy_env_guard] Fetching current Render env vars for ${RSVC}..."
 
-# ── 1. GET current env vars from Render ─────────────────────────────────────
-CURRENT_JSON=$(curl -sf \
-  -H "Authorization: Bearer ${RKEY}" \
-  "https://api.render.com/v1/services/${RSVC}/env-vars?limit=100")
+# ── 1. GET current env vars from Render (paginated — fetches ALL pages) ─────
+CURRENT_JSON=$(python3 << 'FETCHEOF'
+import json, urllib.request as ur, sys, os
+
+rkey = open(".env").read()
+rkey = [l.split("=",1)[1].strip() for l in rkey.splitlines() if l.startswith("RENDER_API_KEY=")][0]
+rsvc = [l.split("=",1)[1].strip() for l in open(".env").read().splitlines() if l.startswith("RENDER_SERVICE_ID=")][0]
+
+# Override from env vars if set (allows CI usage)
+rkey = os.environ.get("RENDER_API_KEY", rkey)
+rsvc = os.environ.get("RENDER_SERVICE_ID", rsvc)
+
+all_items = []
+url = f"https://api.render.com/v1/services/{rsvc}/env-vars?limit=100"
+while url:
+    req = ur.Request(url, headers={"Authorization": f"Bearer {rkey}", "Accept": "application/json"})
+    with ur.urlopen(req) as r:
+        page = json.loads(r.read())
+    if not isinstance(page, list):
+        print(f"[]", file=sys.stdout)
+        sys.exit(0)
+    all_items.extend(page)
+    url = None if len(page) < 100 else f"https://api.render.com/v1/services/{rsvc}/env-vars?limit=100&cursor={all_items[-1].get('cursor','')}"
+
+print(json.dumps(all_items))
+FETCHEOF
+)
 
 CURRENT_COUNT=$(echo "$CURRENT_JSON" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
-echo "[predeploy_env_guard] ${CURRENT_COUNT} vars currently on Render."
+echo "[predeploy_env_guard] ${CURRENT_COUNT} vars currently on Render (all pages fetched)."
 
 # ── 2. Build canonical list from .env (skip local-only vars) ────────────────
 LOCAL_SKIP_PREFIXES="http://localhost,http://127"
@@ -135,6 +172,33 @@ PYEOF
 
 CANONICAL_COUNT=$(echo "$CANONICAL_JSON" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")
 echo "[predeploy_env_guard] ${CANONICAL_COUNT} canonical vars in .env."
+
+# ── 2b. Warn for REQUIRED vars that are empty/missing in .env ───────────────
+python3 << 'REQEOF'
+# REQUIRED keys that must have a value in .env (not just on Render).
+# If empty → warn loudly but don't block (they may already be set on Render).
+REQUIRED_KEYS = [
+    ("GITHUB_API_TOKEN", "BLOCKING — marketing site reverts on deploy. Generate at https://github.com/settings/tokens (Fine-grained, Contents:read+write on auraflux-co/auraflux-api)"),
+    ("SENTRY_DSN",       "Sentry disabled — get from https://auraflux.sentry.io → Settings → Projects → Client Keys"),
+]
+env = {}
+with open(".env") as f:
+    for line in f:
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, _, v = line.partition("=")
+            env[k.strip()] = v.strip()
+
+warned = False
+for key, hint in REQUIRED_KEYS:
+    if not env.get(key):
+        if not warned:
+            print("\n⚠️   predeploy_env_guard: REQUIRED vars missing from .env (must be filled in by operator):")
+            warned = True
+        print(f"     - {key}: {hint}")
+if warned:
+    print()
+REQEOF
 
 # ── 3. Find missing vars ─────────────────────────────────────────────────────
 RESULT=$(python3 << PYEOF
