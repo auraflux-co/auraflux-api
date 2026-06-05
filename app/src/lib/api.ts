@@ -157,6 +157,7 @@ export interface CreateJobPayload {
     tags?:               string[];
     privacyStatus?:      'public' | 'unlisted' | 'private';
     tiktokCaption?:      string;
+    instagramCaption?:   string;
     scheduledPublishAt?: string;
   };
 }

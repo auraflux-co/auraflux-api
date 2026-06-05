@@ -493,8 +493,10 @@ function JobBuilderPageInner() {
   const [publishMode,    setPublishMode]    = useState<'immediate' | 'review'>('immediate');
   const [pubTitle,       setPubTitle]       = useState('');
   const [pubDescription, setPubDescription] = useState('');
-  const [pubTags,        setPubTags]        = useState('');
-  const [pubPrivacy,     setPubPrivacy]     = useState<'public' | 'unlisted' | 'private'>('public');
+  const [pubTags,           setPubTags]           = useState('');
+  const [pubPrivacy,        setPubPrivacy]        = useState<'public' | 'unlisted' | 'private'>('public');
+  const [pubTiktokCaption,  setPubTiktokCaption]  = useState('');
+  const [pubInstagramCaption, setPubInstagramCaption] = useState('');
   const [tone,           setTone]           = useState('professional');
   const [durationMins,   setDurationMins]   = useState(3);
 
@@ -713,7 +715,9 @@ function JobBuilderPageInner() {
         if (pubTitle.trim())       pm.title         = pubTitle.trim();
         if (pubDescription.trim()) pm.description   = pubDescription.trim();
         if (pubTags.trim())        pm.tags           = pubTags.split(',').map((t) => t.trim()).filter(Boolean);
-        if (pubPrivacy !== 'public') pm.privacyStatus = pubPrivacy;
+        if (pubPrivacy !== 'public')         pm.privacyStatus    = pubPrivacy;
+        if (pubTiktokCaption.trim())          pm.tiktokCaption    = pubTiktokCaption.trim();
+        if (pubInstagramCaption.trim())       pm.instagramCaption = pubInstagramCaption.trim();
         return Object.keys(pm).length ? pm : undefined;
       })(),
     };
@@ -1293,6 +1297,42 @@ function JobBuilderPageInner() {
                         <option value="private">Private</option>
                       </select>
                     </div>
+
+                    {/* TikTok-specific caption — shown only when TikTok is a selected platform */}
+                    {platforms.includes('tiktok') && (
+                      <div className="space-y-1 pt-1 border-t">
+                        <Label className="text-xs text-muted-foreground">
+                          TikTok caption <span className="font-normal">(max 280 chars — AI generates if blank)</span>
+                        </Label>
+                        <textarea
+                          placeholder="TikTok caption + hashtags"
+                          value={pubTiktokCaption}
+                          onChange={(e) => setPubTiktokCaption(e.target.value.slice(0, 280))}
+                          rows={2}
+                          maxLength={280}
+                          className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                        />
+                        <p className="text-[10px] text-muted-foreground text-right">{pubTiktokCaption.length}/280</p>
+                      </div>
+                    )}
+
+                    {/* Instagram-specific caption — shown only when Instagram is a selected platform */}
+                    {platforms.includes('instagram') && (
+                      <div className="space-y-1 pt-1 border-t">
+                        <Label className="text-xs text-muted-foreground">
+                          Instagram caption <span className="font-normal">(max 2200 chars — AI generates if blank)</span>
+                        </Label>
+                        <textarea
+                          placeholder="Instagram caption + hashtags"
+                          value={pubInstagramCaption}
+                          onChange={(e) => setPubInstagramCaption(e.target.value.slice(0, 2200))}
+                          rows={3}
+                          maxLength={2200}
+                          className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                        />
+                        <p className="text-[10px] text-muted-foreground text-right">{pubInstagramCaption.length}/2200</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CollapsibleSection>

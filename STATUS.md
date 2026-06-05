@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-05 v1.0.952 (Cursor — fix(cpd-505): Instagram + TikTok captions missing from publish metadata — wizard now shows platform-specific caption fields (TikTok 280, Instagram 2200) conditional on platform selection; portal5 uses customer captions before AI fallback; instagramCaption wired through jobs_c1/developer_api/job_spec/portal5)
 **Last Updated:** 2026-06-05 v1.0.951 (Cursor — feat(cpd-505): API parity — developer_api.js now accepts publishMeta + order.publish.* fields; normalises to createJobSpec publishMeta param; matches jobs_c1.js behaviour)
 **Last Updated:** 2026-06-05 v1.0.950 (Cursor — fix(cpd-528): upload-entry assembly fix — hasSourceClips recognises fileId/uploadSessionId; pre-assembly resolve step finds uploaded file on disk + injects localPath; assembly_service handles upload-entry without URL download)
 **Last Updated:** 2026-06-04 v1.0.949 (Cursor — fix(social): per-platform Upload-Post disconnect — DELETE /api/uploadposts/users/social clears just TikTok/Instagram without wiping the other platform; wired into DELETE /social/accounts/:platform; CPD-530)
