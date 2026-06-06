@@ -309,6 +309,8 @@ function HistoryPageContent() {
 }
 
 function ReviewCard({ job }: { job: Job }) {
+  const videoTitle = job.publishCopy?.youtube?.title as string | undefined;
+  const displayTitle = videoTitle || jobDisplayTitle(job);
   return (
     <div className={cn('rounded-xl border border-emerald-800/50 bg-emerald-950/10 overflow-hidden border-l-4', cardAccent(job.platforms))}>
       <div className="px-4 pt-4 pb-3">
@@ -320,7 +322,7 @@ function ReviewCard({ job }: { job: Job }) {
                 href={`/myjobs/${job.jobId}`}
                 className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
               >
-                {jobDisplayTitle(job)}
+                {displayTitle}
               </Link>
               <span className="text-[10px] font-medium bg-emerald-900/60 text-emerald-400 border border-emerald-800/60 px-1.5 py-0.5 rounded">
                 Ready to review
@@ -332,13 +334,8 @@ function ReviewCard({ job }: { job: Job }) {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {labelForContentType(job.contentType)} · {fmtJobTime(job.createdAt)}
+              {fmtJobTime(job.createdAt)}
             </p>
-            {job.publishCopy?.youtube?.title && (
-              <p className="text-xs text-muted-foreground/70 italic line-clamp-1">
-                &ldquo;{job.publishCopy.youtube.title}&rdquo;
-              </p>
-            )}
           </div>
           <Link
             href={`/myjobs/${job.jobId}`}
@@ -365,6 +362,8 @@ function ReviewCard({ job }: { job: Job }) {
 
 function HistoryCard({ job }: { job: Job }) {
   const isPublished = job.status === 'published';
+  const videoTitle = job.publishCopy?.youtube?.title as string | undefined;
+  const displayTitle = videoTitle || jobDisplayTitle(job);
   return (
     <div className={cn(
       'rounded-xl border bg-card overflow-hidden border-l-4',
@@ -379,7 +378,7 @@ function HistoryCard({ job }: { job: Job }) {
                 href={`/myjobs/${job.jobId}`}
                 className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
               >
-                {jobDisplayTitle(job)}
+                {displayTitle}
               </Link>
               <span className={cn(
                 'text-[10px] font-medium px-1.5 py-0.5 rounded border',
@@ -396,13 +395,8 @@ function HistoryCard({ job }: { job: Job }) {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {labelForContentType(job.contentType)} · {fmtJobTime(job.createdAt)}
+              {fmtJobTime(job.createdAt)}
             </p>
-            {job.publishCopy?.youtube?.title && (
-              <p className="text-xs text-muted-foreground/70 italic line-clamp-1">
-                &ldquo;{job.publishCopy.youtube.title}&rdquo;
-              </p>
-            )}
           </div>
           <Link
             href={`/myjobs/${job.jobId}`}

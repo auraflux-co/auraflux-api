@@ -24,7 +24,6 @@ import { useRole } from '@/hooks/use-role';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { apiFetch } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
@@ -110,15 +109,15 @@ const PLATFORM_DISPLAY: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   const variants: Record<string, string> = {
-    complete:  'bg-green-100 text-green-800',
-    staged:    'bg-blue-100 text-blue-800',
-    running:   'bg-yellow-100 text-yellow-800',
-    queued:    'bg-gray-100 text-gray-700',
-    failed:    'bg-red-100 text-red-800',
-    published: 'bg-purple-100 text-purple-800',
+    complete:  'bg-green-950/60 text-green-400 border border-green-800/60',
+    staged:    'bg-blue-950/60 text-blue-400 border border-blue-800/60',
+    running:   'bg-yellow-950/60 text-yellow-400 border border-yellow-800/60',
+    queued:    'bg-muted/60 text-muted-foreground border border-border/60',
+    failed:    'bg-red-950/60 text-red-400 border border-red-800/60',
+    published: 'bg-violet-950/60 text-violet-400 border border-violet-800/60',
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${variants[status] ?? 'bg-gray-100 text-gray-600'}`}>
+    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${variants[status] ?? 'bg-muted/60 text-muted-foreground border border-border/60'}`}>
       {jobStatusLabel(status)}
     </span>
   );
@@ -496,53 +495,57 @@ export default function StagingPage() {
 
       {jobs.map((job) => {
         const isOpen = expanded === job.jobId;
+        const primaryPlatform = job.platforms?.[0];
+        const accentBorder: Record<string, string> = {
+          youtube: 'border-l-red-500', tiktok: 'border-l-cyan-400',
+          instagram: 'border-l-purple-500',
+        };
         return (
-          <Card key={job.jobId} className={isOpen ? 'ring-2 ring-blue-500/30' : ''}>
-            <CardHeader className="pb-3">
+          <div
+            key={job.jobId}
+            className={`rounded-xl border bg-card overflow-hidden border-l-4 ${accentBorder[primaryPlatform ?? ''] ?? 'border-l-indigo-500'} ${isOpen ? 'ring-1 ring-primary/20' : ''}`}
+          >
+            <div className="px-4 pt-4 pb-3">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+                <div className="min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <CardTitle className="text-sm">{jobDisplayTitle(job)}</CardTitle>
+                    <span className="text-sm font-semibold text-foreground">
+                      {jobDisplayTitle(job)}
+                    </span>
                     <StatusBadge status={job.status} />
-                    {job.outputUrl && (
-                      <Badge variant="outline" className="text-xs">Has output</Badge>
-                    )}
-                  </div>
-                  <p className="af-caption mt-1">
-                    {isSuperAdmin && (job.customerName || job.customerId) && (
-                      <span className="text-muted-foreground mr-1">
-                        {job.customerName ?? job.customerId!.slice(0, 12) + '…'}{' · '}
+                    {job.platforms?.map((p) => (
+                      <span key={p} className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-muted/60 text-muted-foreground border border-border/60">
+                        {PLATFORM_ICONS[p] ?? '●'} {PLATFORM_DISPLAY[p] ?? p}
                       </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {isSuperAdmin && (job.customerName || job.customerId) && (
+                      <span className="mr-1">{job.customerName ?? job.customerId!.slice(0, 12) + '…'} · </span>
                     )}
-                    {labelForContentType(job.contentType ?? '')}{' · '}
-                    {job.platforms?.length ? job.platforms.map((p) => PLATFORM_ICONS[p] ?? platformLabel(p)).join(' ') : 'No platforms'}{' · '}
                     {formatDate(job.createdAt)}
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Link
-                    href={`/myjobs/${job.jobId}`}
-                    className="text-xs text-blue-600 hover:underline"
-                  >
+                  <Link href={`/myjobs/${job.jobId}`} className="text-xs text-muted-foreground hover:text-foreground">
                     Detail
                   </Link>
                   <button
-                    className="text-xs font-medium text-blue-600 hover:underline"
+                    className="text-xs font-medium text-primary hover:underline"
                     onClick={() => setExpanded(isOpen ? null : job.jobId)}
                   >
                     {isOpen ? 'Collapse ▲' : 'Review ▼'}
                   </button>
                 </div>
               </div>
-            </CardHeader>
+            </div>
 
             {isOpen && (
-              <CardContent className="pt-0">
-                <Separator className="mb-4" />
+              <div className="px-4 pb-4 border-t border-border/50 pt-4">
                 <StagingPanel jobId={job.jobId} getToken={getToken} isSuperAdmin={isSuperAdmin} />
-              </CardContent>
+              </div>
             )}
-          </Card>
+          </div>
         );
       })}
     </PageShell>
