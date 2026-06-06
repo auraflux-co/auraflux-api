@@ -442,14 +442,18 @@ export default function StagingPage() {
   const [error, setError]       = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  // CPD-590: /review is a superadmin staging tool. Non-admins use /myjobs/history.
+  if (!isSuperAdmin && typeof window !== 'undefined') {
+    window.location.replace('/myjobs/history?tab=review');
+    return null;
+  }
+
   useEffect(() => {
     (async () => {
       try {
         const token = await getToken();
-        // Superadmin sees all accounts' jobs; customers see only their own.
         const endpoint = isSuperAdmin ? '/jobs?all=true' : '/jobs';
         const data = await apiFetch<{ jobs: JobRow[] }>(endpoint, { token: token ?? undefined });
-        // Review queue = work to do only. Published jobs live in Jobs → History.
         const withOutput = (data.jobs ?? []).filter(
           (j) => ['complete', 'staged'].includes(j.status)
         );

@@ -8,6 +8,7 @@ export const CONTENT_TYPE_LABELS: Record<string, string> = {
   'news-short':      'News (Short-form)',
   'clips-long':      'Clips (Long-form)',
   'clips-short':     'Clips (Short-form)',
+  'clips':           'Clips',
   'sports-long':     'Sports (Long-form)',
   'sports-short':    'Sports (Short-form)',
   'show_commentary': 'Narrative Clip Content',
