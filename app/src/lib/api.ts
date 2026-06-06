@@ -1230,6 +1230,32 @@ export interface ResolvedChannel {
   thumbnailUrl?: string;
 }
 
+// ─── Publish schedule preferences (CPD-594) ──────────────────────────────────
+
+export interface ScheduleSlot {
+  day:  number; // 0=Sun … 6=Sat, -1=daily
+  time: string; // 'HH:MM'
+}
+
+export type SchedulePrefs = Partial<Record<'youtube' | 'tiktok' | 'instagram', ScheduleSlot[]>>;
+
+export async function getSchedulePrefs(
+  token?: string,
+): Promise<{ ok: boolean; prefs: SchedulePrefs }> {
+  return apiFetch('/account/schedule-prefs', { token });
+}
+
+export async function saveSchedulePrefs(
+  prefs: SchedulePrefs,
+  token?: string,
+): Promise<{ ok: boolean; prefs: SchedulePrefs }> {
+  return apiFetch('/account/schedule-prefs', {
+    method: 'PUT',
+    body:   JSON.stringify({ prefs }),
+    token,
+  });
+}
+
 export async function getSourceChannels(
   token?: string,
 ): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {

@@ -7,14 +7,23 @@ import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   listJobs, updateJobSchedule, listTemplates, updateTemplate,
-  getScheduleSuggestion,
-  type Job, type JobTemplate,
+  getScheduleSuggestion, getSchedulePrefs, saveSchedulePrefs,
+  type Job, type JobTemplate, type ScheduleSlot, type SchedulePrefs,
 } from '@/lib/api';
 import { jobDisplayTitle, jobStatusLabel, platformListLabel, formatUserError } from '@/lib/job-labels';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-type Tab = 'upcoming' | 'recurring' | 'history';
+type Tab = 'upcoming' | 'recurring' | 'history' | 'mySchedule';
+
+const PLATFORMS_DISPLAY: Record<string, string> = {
+  youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram',
+};
+const PLATFORM_COLORS: Record<string, string> = {
+  youtube: 'border-red-800/60 text-red-400', tiktok: 'border-cyan-800/60 text-cyan-400',
+  instagram: 'border-purple-800/60 text-purple-400',
+};
+const ALL_PLATFORMS = ['youtube', 'tiktok', 'instagram'] as const;
 
 export default function SchedulePage() {
   const { getToken, isLoaded } = useAuth();
@@ -29,18 +38,25 @@ export default function SchedulePage() {
   const [goalsInput, setGoalsInput]     = useState('');
   const [editingJob, setEditingJob] = useState<string | null>(null);
   const [newDate, setNewDate]       = useState('');
+  // My Schedule prefs (CPD-594)
+  const [prefs, setPrefs]           = useState<SchedulePrefs>({});
+  const [prefsSaving, setPrefsSaving] = useState(false);
+  const [prefsMsg, setPrefsMsg]     = useState<string | null>(null);
+  const [addSlot, setAddSlot]       = useState<Record<string, { day: string; time: string }>>({});
 
   useEffect(() => {
     if (!isLoaded) return;
     (async () => {
       try {
         const token = await getToken();
-        const [{ jobs: all }, { templates: tpls }] = await Promise.all([
+        const [{ jobs: all }, { templates: tpls }, { prefs: savedPrefs }] = await Promise.all([
           listJobs(token ?? undefined),
           listTemplates(token ?? undefined),
+          getSchedulePrefs(token ?? undefined),
         ]);
         setJobs(all.filter((j) => j.status === 'queued_scheduled' || j.scheduledPublishAt || j.scheduledStartAt));
         setTemplates(tpls.filter((t) => t.recurrenceType && t.recurrenceType !== 'once'));
+        setPrefs(savedPrefs ?? {});
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load schedule');
       } finally {
@@ -123,6 +139,39 @@ export default function SchedulePage() {
     }
   }
 
+  async function handleSavePrefs() {
+    setPrefsSaving(true);
+    setPrefsMsg(null);
+    try {
+      const token = await getToken();
+      const { prefs: saved } = await saveSchedulePrefs(prefs, token ?? undefined);
+      setPrefs(saved);
+      setPrefsMsg('Saved');
+      setTimeout(() => setPrefsMsg(null), 2500);
+    } catch {
+      setPrefsMsg('Save failed. Please try again.');
+    } finally {
+      setPrefsSaving(false);
+    }
+  }
+
+  function addPrefSlot(platform: string) {
+    const s = addSlot[platform];
+    if (!s?.time) return;
+    const day = s.day === '' ? -1 : parseInt(s.day, 10);
+    const slot: ScheduleSlot = { day, time: s.time };
+    setPrefs((prev) => ({ ...prev, [platform]: [...(prev[platform as keyof SchedulePrefs] ?? []), slot] }));
+    setAddSlot((prev) => ({ ...prev, [platform]: { day: '', time: '' } }));
+  }
+
+  function removePrefSlot(platform: string, idx: number) {
+    setPrefs((prev) => {
+      const arr = [...(prev[platform as keyof SchedulePrefs] ?? [])];
+      arr.splice(idx, 1);
+      return { ...prev, [platform]: arr };
+    });
+  }
+
   function fmtDate(iso: string) {
     return new Date(iso).toLocaleString(undefined, {
       month: 'short', day: 'numeric', year: 'numeric',
@@ -138,10 +187,12 @@ export default function SchedulePage() {
     return tpl.recurrenceType ?? '';
   }
 
+  const totalPrefsSlots = ALL_PLATFORMS.reduce((n, p) => n + (prefs[p]?.length ?? 0), 0);
   const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: 'upcoming',  label: 'Upcoming',  count: upcoming.length },
-    { id: 'recurring', label: 'Recurring', count: recurringActive.length + recurringInactive.length },
-    { id: 'history',   label: 'History',   count: history.length },
+    { id: 'upcoming',   label: 'Upcoming',    count: upcoming.length },
+    { id: 'recurring',  label: 'Recurring',   count: recurringActive.length + recurringInactive.length },
+    { id: 'history',    label: 'History',     count: history.length },
+    { id: 'mySchedule', label: 'My Schedule', count: totalPrefsSlots },
   ];
 
   return (
@@ -387,6 +438,85 @@ export default function SchedulePage() {
                 </table>
               </div>
             )
+          )}
+          {/* My Schedule tab */}
+          {tab === 'mySchedule' && (
+            <div className="space-y-6">
+              <p className="text-xs text-muted-foreground">
+                Save your preferred publish days and times per platform. These appear as one-click options when scheduling a job from the Review Queue.
+              </p>
+
+              {ALL_PLATFORMS.map((platform) => {
+                const slots = prefs[platform] ?? [];
+                const draft = addSlot[platform] ?? { day: '', time: '' };
+                return (
+                  <div key={platform} className={`rounded-xl border ${PLATFORM_COLORS[platform]} bg-muted/10 p-4 space-y-3`}>
+                    <p className="text-sm font-semibold">{PLATFORMS_DISPLAY[platform]}</p>
+
+                    {/* Existing slots */}
+                    {slots.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No saved slots yet.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {slots.map((s, i) => (
+                          <span key={i} className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background px-2.5 py-1 text-xs">
+                            {s.day === -1 ? 'Daily' : DAYS[s.day]} at {s.time}
+                            <button
+                              onClick={() => removePrefSlot(platform, i)}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                              aria-label="Remove slot"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add new slot */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <select
+                        value={draft.day}
+                        onChange={(e) => setAddSlot((prev) => ({ ...prev, [platform]: { ...draft, day: e.target.value } }))}
+                        className="rounded border border-border bg-background px-2 py-1 text-xs"
+                      >
+                        <option value="">Daily</option>
+                        {DAYS.map((d, i) => <option key={i} value={String(i)}>{d}</option>)}
+                      </select>
+                      <input
+                        type="time"
+                        value={draft.time}
+                        onChange={(e) => setAddSlot((prev) => ({ ...prev, [platform]: { ...draft, time: e.target.value } }))}
+                        className="rounded border border-border bg-background px-2 py-1 text-xs"
+                      />
+                      <button
+                        onClick={() => addPrefSlot(platform)}
+                        disabled={!draft.time}
+                        className="text-xs px-3 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-40 transition-colors"
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Save button */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSavePrefs}
+                  disabled={prefsSaving}
+                  className="text-sm px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  {prefsSaving ? 'Saving…' : 'Save my schedule'}
+                </button>
+                {prefsMsg && (
+                  <span className={`text-xs ${prefsMsg === 'Saved' ? 'text-green-500' : 'text-destructive'}`}>
+                    {prefsMsg}
+                  </span>
+                )}
+              </div>
+            </div>
           )}
         </>
       )}

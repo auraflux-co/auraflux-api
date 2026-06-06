@@ -24,7 +24,7 @@ import { useRole } from '@/hooks/use-role';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { updateJobSchedule } from '@/lib/api';
+import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleSlot } from '@/lib/api';
 import { Separator } from '@/components/ui/separator';
 import { apiFetch } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
@@ -254,7 +254,32 @@ function PublishCopySection({ copy }: { copy: Record<string, Record<string, unkn
 
 // ── Staging review panel ──────────────────────────────────────────────────────
 
-function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getToken: () => Promise<string | null>; isSuperAdmin: boolean }) {
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function nextOccurrence(slot: ScheduleSlot): Date {
+  const now = new Date();
+  const [hh, mm] = slot.time.split(':').map(Number);
+  if (slot.day === -1) {
+    // daily — next occurrence is today at slot.time if still in the future, else tomorrow
+    const candidate = new Date(now);
+    candidate.setHours(hh, mm, 0, 0);
+    if (candidate <= now) candidate.setDate(candidate.getDate() + 1);
+    return candidate;
+  }
+  // specific weekday
+  const candidate = new Date(now);
+  candidate.setHours(hh, mm, 0, 0);
+  const diff = ((slot.day - now.getDay()) + 7) % 7;
+  candidate.setDate(candidate.getDate() + (diff === 0 && candidate <= now ? 7 : diff));
+  return candidate;
+}
+
+function toDatetimeLocal(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: string; platforms: string[]; getToken: () => Promise<string | null>; isSuperAdmin: boolean }) {
   const [assets, setAssets]     = useState<StagingAssets | null>(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -267,16 +292,21 @@ function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getTok
   const [scheduleAt, setScheduleAt]       = useState('');
   const [scheduling, setScheduling]       = useState(false);
   const [scheduleResult, setScheduleResult] = useState<{ ok?: boolean; at?: string; error?: string } | null>(null);
+  const [savedPrefs, setSavedPrefs]       = useState<SchedulePrefs>({});
 
   useEffect(() => {
     (async () => {
       try {
         const token = await getToken();
-        const data = await apiFetch<StagingAssets & { ok?: boolean }>(
-          `/jobs/${jobId}/staging-assets`,
-          { token: token ?? undefined }
-        );
+        const [data, { prefs }] = await Promise.all([
+          apiFetch<StagingAssets & { ok?: boolean }>(
+            `/jobs/${jobId}/staging-assets`,
+            { token: token ?? undefined }
+          ),
+          getSchedulePrefs(token ?? undefined),
+        ]);
         setAssets(data);
+        setSavedPrefs(prefs ?? {});
       } catch (e: unknown) {
         setError('Failed to load review assets. Please refresh and try again.');
       } finally {
@@ -485,6 +515,36 @@ function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getTok
         {showScheduler && !scheduleResult && (
           <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-3">
             <p className="text-xs font-semibold">Choose a publish date and time</p>
+
+            {/* Saved slot chips — only for platforms on this job */}
+            {(() => {
+              const chips = platforms.flatMap((p) =>
+                (savedPrefs[p as keyof SchedulePrefs] ?? []).map((s) => ({ platform: p, slot: s }))
+              );
+              if (chips.length === 0) return null;
+              return (
+                <div className="space-y-1">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Your saved slots</p>
+                  <div className="flex flex-wrap gap-2">
+                    {chips.map(({ platform, slot }, i) => {
+                      const next = nextOccurrence(slot);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setScheduleAt(toDatetimeLocal(next))}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background px-2.5 py-1 text-xs hover:border-primary/60 hover:bg-accent transition-colors"
+                        >
+                          <span className="capitalize text-muted-foreground">{platform}</span>
+                          {slot.day === -1 ? 'Daily' : DAY_NAMES[slot.day]} {slot.time}
+                          <span className="text-muted-foreground/60">→ {next.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             <input
               type="datetime-local"
               className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
@@ -692,7 +752,7 @@ export default function StagingPage() {
 
             {isOpen && (
               <div className="px-4 pb-4 border-t border-border/50 pt-4">
-                <StagingPanel jobId={job.jobId} getToken={getToken} isSuperAdmin={isSuperAdmin} />
+                <StagingPanel jobId={job.jobId} platforms={job.platforms ?? []} getToken={getToken} isSuperAdmin={isSuperAdmin} />
               </div>
             )}
           </div>
