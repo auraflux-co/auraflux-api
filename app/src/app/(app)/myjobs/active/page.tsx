@@ -21,8 +21,6 @@ import { jobStatusLabel, jobDisplayTitle, platformListLabel, formatUserError } f
 import { labelForContentType } from '@/lib/content-types';
 
 const ACTIVE_STATUSES = new Set(['queued', 'running', 'held', 'failed', 'credit_paused', 'staged']);
-// CPD-589: jobs running longer than this with no portal update are considered stale
-const STALE_MS = 90 * 60 * 1000;
 const SCHEDULED_JOB_STATUSES = new Set(['queued_scheduled']);
 const POLL_MS = 15_000;
 
@@ -119,22 +117,17 @@ export default function ActiveJobsPage() {
     }
   }
 
-  // CPD-588: Only credit_paused and held require customer action.
-  // Failed = system/pipeline error — customers cannot action it. Superadmin sees all.
+  // Failed = self-healing system error, never surfaces to customers.
+  // Superadmin sees all; customers only see jobs they can act on or are in flight.
   const needsAttention = jobs.filter((j) =>
     j.status === 'credit_paused' ||
     j.status === 'held' ||
     (isSuperAdmin && j.status === 'failed')
   );
-  // CPD-588: Pipeline failures shown separately to customers as informational only
-  const systemErrors = !isSuperAdmin ? jobs.filter((j) => j.status === 'failed') : [];
-  const inProgress   = jobs.filter((j) => j.status === 'queued' || j.status === 'running');
-  // CPD-589: jobs running longer than STALE_MS with no progress
-  const now = Date.now();
-  const isStale = (j: Job) => {
-    const started = new Date(j.createdAt).getTime();
-    return (now - started) > STALE_MS;
-  };
+  const inProgress = jobs.filter((j) =>
+    j.status === 'queued' || j.status === 'running' ||
+    (isSuperAdmin && j.status === 'failed')
+  ).filter((j) => isSuperAdmin || j.status !== 'failed');
 
   return (
     <PageShell maxWidth="4xl">
@@ -197,27 +190,7 @@ export default function ActiveJobsPage() {
         </section>
       )}
 
-      {/* Pipeline errors — informational for customers (CPD-588) */}
-      {systemErrors.length > 0 && (
-        <section className="space-y-2">
-          <div className="flex items-center gap-2">
-            <h2 className="af-subhead text-muted-foreground">Processing issue</h2>
-            <span className="text-xs bg-muted/60 text-muted-foreground border border-border/60 px-1.5 py-0.5 rounded font-medium">
-              {systemErrors.length}
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            These jobs encountered an issue during processing. Our team has been notified and will retry automatically.
-          </p>
-          <div className="space-y-2">
-            {systemErrors.map((job) => (
-              <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* In progress (CPD-589: stale warning after 90 min) */}
+      {/* In progress */}
       {inProgress.length > 0 && (
         <section className="space-y-2">
           <div className="flex items-center gap-2">
@@ -228,7 +201,7 @@ export default function ActiveJobsPage() {
           </div>
           <div className="space-y-2">
             {inProgress.map((job) => (
-              <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} stale={isStale(job)} />
+              <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} />
             ))}
           </div>
         </section>
