@@ -24,6 +24,7 @@ import { useRole } from '@/hooks/use-role';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { updateJobSchedule } from '@/lib/api';
 import { Separator } from '@/components/ui/separator';
 import { apiFetch } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
@@ -262,6 +263,10 @@ function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getTok
   const [showScript, setShowScript] = useState(false);
   const [redoing, setRedoing]   = useState(false);
   const [redoResult, setRedoResult] = useState<{ ok?: boolean; error?: string } | null>(null);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [scheduleAt, setScheduleAt]       = useState('');
+  const [scheduling, setScheduling]       = useState(false);
+  const [scheduleResult, setScheduleResult] = useState<{ ok?: boolean; at?: string; error?: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -300,6 +305,22 @@ function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getTok
       setPublishing(false);
     }
   }, [assets, jobId, getToken]);
+
+  const handleApproveSchedule = useCallback(async () => {
+    if (!scheduleAt) return;
+    const iso = new Date(scheduleAt).toISOString();
+    setScheduling(true);
+    try {
+      const token = await getToken();
+      await updateJobSchedule(jobId, 'scheduled', iso, token ?? undefined);
+      setScheduleResult({ ok: true, at: iso });
+      setShowScheduler(false);
+    } catch {
+      setScheduleResult({ error: 'Schedule failed. Please try again.' });
+    } finally {
+      setScheduling(false);
+    }
+  }, [scheduleAt, jobId, getToken]);
 
   const handleRequestRedo = useCallback(async () => {
     setRedoing(true);
@@ -427,7 +448,7 @@ function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getTok
 
       <Separator />
 
-      {/* Actions — Approve, Download, Redo */}
+      {/* Actions — Approve, Schedule, Download, Redo */}
       <div className="space-y-3">
         {/* Publish result */}
         {publishResult && (
@@ -440,6 +461,17 @@ function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getTok
           </div>
         )}
 
+        {/* Schedule result */}
+        {scheduleResult && (
+          <div className="rounded-md border p-3 text-xs">
+            {scheduleResult.error
+              ? <p className="text-red-600">{scheduleResult.error}</p>
+              : <p className="text-green-600">
+                  Scheduled for {new Date(scheduleResult.at!).toLocaleString()} — you&apos;ll find it in the Schedule section.
+                </p>}
+          </div>
+        )}
+
         {/* Redo result */}
         {redoResult && (
           <div className="rounded-md border p-3 text-xs">
@@ -449,15 +481,56 @@ function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getTok
           </div>
         )}
 
+        {/* Schedule date picker */}
+        {showScheduler && !scheduleResult && (
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-3">
+            <p className="text-xs font-semibold">Choose a publish date and time</p>
+            <input
+              type="datetime-local"
+              className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              min={(() => {
+                const d = new Date(); d.setMinutes(d.getMinutes() + 30);
+                return d.toISOString().slice(0, 16);
+              })()}
+              value={scheduleAt}
+              onChange={(e) => setScheduleAt(e.target.value)}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                disabled={!scheduleAt || scheduling}
+                onClick={handleApproveSchedule}
+              >
+                {scheduling ? 'Scheduling…' : 'Confirm schedule'}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => { setShowScheduler(false); setScheduleAt(''); }}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center gap-3">
           {/* Approve & Publish */}
-          {!publishResult && (
+          {!publishResult && !scheduleResult && (
             <Button
               size="sm"
               disabled={!canPublish || publishing}
               onClick={handleApprovePublish}
             >
               {publishing ? 'Publishing…' : 'Approve & Publish'}
+            </Button>
+          )}
+
+          {/* Schedule for later */}
+          {!publishResult && !scheduleResult && !showScheduler && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!canPublish}
+              onClick={() => setShowScheduler(true)}
+            >
+              Schedule for later
             </Button>
           )}
 
@@ -478,7 +551,7 @@ function StagingPanel({ jobId, getToken, isSuperAdmin }: { jobId: string; getTok
           )}
 
           {/* Request Redo */}
-          {!redoResult && assets.status !== 'published' && (
+          {!redoResult && assets.status !== 'published' && !scheduleResult && (
             <Button
               size="sm"
               variant="outline"

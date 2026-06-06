@@ -39,7 +39,7 @@ export default function SchedulePage() {
           listJobs(token ?? undefined),
           listTemplates(token ?? undefined),
         ]);
-        setJobs(all.filter((j) => j.scheduledPublishAt || j.scheduledStartAt));
+        setJobs(all.filter((j) => j.status === 'queued_scheduled' || j.scheduledPublishAt || j.scheduledStartAt));
         setTemplates(tpls.filter((t) => t.recurrenceType && t.recurrenceType !== 'once'));
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load schedule');
@@ -51,6 +51,7 @@ export default function SchedulePage() {
 
   const upcoming = jobs.filter((j) => {
     const at = j.scheduledStartAt || j.scheduledPublishAt;
+    if (j.status === 'queued_scheduled' && !at) return true;
     return at && new Date(at) > new Date();
   });
   const history = jobs.filter((j) => {
