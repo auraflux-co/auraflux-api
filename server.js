@@ -10,6 +10,10 @@ if (process.env.NEW_RELIC_LICENSE_KEY) {
 // Load repo-root .env regardless of PM2/cwd (folder_id and keys live here).
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
+// Load Render Secret File if present — encrypted-at-rest secrets override env vars.
+// Render mounts the file at /etc/secrets/.secrets.env (name set in secret-files API).
+// Falls back silently so local dev (no secret file) is unaffected.
+require('dotenv').config({ path: '/etc/secrets/.secrets.env', override: true });
 
 // ── Build identity — set once at startup, never changes during runtime ────────
 const BUILD_INFO = (() => {
