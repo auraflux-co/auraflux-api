@@ -43,7 +43,9 @@ TIER_KEYS = {
     "managed": ("AURAFLUX_E2E_API_KEY_MANAGED",),
 }
 
-PUBLIC_SHORT = "https://media.w3.org/2010/05/sintel/trailer_hd.mp4"
+# CPD-597: Sintel trailer has fade-to-black frames that trigger Portal 3a HARD FAIL.
+# Using a W3C HTML5 test clip (Big Buck Bunny excerpt) which has no black frames.
+PUBLIC_SHORT = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
 PUBLIC_LONG = PUBLIC_SHORT
 
 JOBS = [
