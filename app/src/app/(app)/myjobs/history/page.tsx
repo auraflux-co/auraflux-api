@@ -21,7 +21,6 @@ import { jobDisplayTitle, jobStatusLabel, platformLabel, formatUserError } from 
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 
-const STAGED_STATUSES   = new Set(['staged']);
 const COMPLETE_STATUSES = new Set(['complete', 'published']);
 
 const PLATFORM_ICONS: Record<string, string> = {
@@ -197,9 +196,7 @@ function HistoryPageContent() {
   const searchParams           = useSearchParams();
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
-  const [tab, setTab]          = useState<'review' | 'completed'>(
-    searchParams.get('tab') === 'review' ? 'review' : 'completed'
-  );
+  const [tab] = useState<'completed'>('completed');
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -207,7 +204,7 @@ function HistoryPageContent() {
       try {
         const token = await getToken();
         const res = await listJobs(token ?? undefined);
-        setJobs((res.jobs ?? []).filter((j) => STAGED_STATUSES.has(j.status) || COMPLETE_STATUSES.has(j.status)));
+        setJobs((res.jobs ?? []).filter((j) => COMPLETE_STATUSES.has(j.status)));
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load jobs');
       }
@@ -215,14 +212,13 @@ function HistoryPageContent() {
     load();
   }, [getToken, isLoaded]);
 
-  const reviewJobs    = jobs?.filter((j) => STAGED_STATUSES.has(j.status)) ?? [];
   const completedJobs = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
 
   return (
     <PageShell maxWidth="3xl">
       <PageHeader
-        title="Jobs"
-        subtitle="Review staged outputs and view completed job history"
+        title="History"
+        subtitle="Your completed and published jobs"
       >
         <Link href="/myjobs/new" className={cn(buttonVariants({ size: 'sm' }))}>
           + New job
@@ -233,35 +229,6 @@ function HistoryPageContent() {
         <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-border/60 pb-0">
-        {([
-          { id: 'review' as const,    label: 'Ready to review', count: reviewJobs.length },
-          { id: 'completed' as const, label: 'Completed',       count: completedJobs.length },
-        ] as { id: 'review' | 'completed'; label: string; count: number }[]).map(({ id, label, count }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={cn(
-              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
-              tab === id ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {label}
-            {count > 0 && (
-              <span className={cn(
-                'ml-1.5 text-xs rounded-full px-1.5 py-0.5 font-semibold',
-                id === 'review' && count > 0
-                  ? 'bg-emerald-900/60 text-emerald-400 border border-emerald-800/60'
-                  : 'bg-muted text-muted-foreground',
-              )}>
-                {count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
       {/* Loading skeleton */}
       {jobs === null && !error && (
         <div className="space-y-2">
@@ -271,29 +238,11 @@ function HistoryPageContent() {
         </div>
       )}
 
-      {/* Review tab */}
-      {tab === 'review' && jobs !== null && (
-        reviewJobs.length === 0 ? (
-          <EmptyState
-            title="No videos waiting for review"
-            description="Staged jobs appear here when production finishes. Approve to publish directly to your connected platforms."
-            action={{ label: 'Create a new job', href: '/myjobs/new' }}
-          />
-        ) : (
-          <div className="space-y-3">
-            {reviewJobs.map((job) => (
-              <ReviewCard key={job.jobId} job={job} />
-            ))}
-          </div>
-        )
-      )}
-
-      {/* Completed tab */}
-      {tab === 'completed' && jobs !== null && (
+      {jobs !== null && (
         completedJobs.length === 0 ? (
           <EmptyState
             title="No completed jobs yet"
-            description="Once a job finishes and is published, it will appear here with platform links and download options."
+            description="Once a job is published it will appear here with platform links and download options."
             action={{ label: 'Create your first job', href: '/myjobs/new' }}
           />
         ) : (

@@ -20,7 +20,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { jobStatusLabel, jobDisplayTitle, platformListLabel, formatUserError } from '@/lib/job-labels';
 import { labelForContentType } from '@/lib/content-types';
 
-const ACTIVE_STATUSES = new Set(['queued', 'running', 'held', 'failed', 'credit_paused', 'staged']);
+const ACTIVE_STATUSES = new Set(['queued', 'running', 'held', 'failed', 'credit_paused']);
 const SCHEDULED_JOB_STATUSES = new Set(['queued_scheduled']);
 const POLL_MS = 15_000;
 

@@ -80,6 +80,77 @@ interface JobRow {
   createdAt: string | number;
 }
 
+// ── Publish best practices ────────────────────────────────────────────────────
+
+const BEST_PRACTICES: Record<string, {
+  icon: string;
+  color: string;
+  bestDays: string;
+  bestTimes: string;
+  frequency: string;
+  tip: string;
+}> = {
+  youtube: {
+    icon: '▶',
+    color: 'border-red-800/50 bg-red-950/20',
+    bestDays: 'Thu – Sun',
+    bestTimes: '2 – 4 PM  ·  7 – 9 PM',
+    frequency: '2 – 3× per week',
+    tip: 'Upload by Thursday — the algorithm surfaces new content over the weekend when watch time peaks.',
+  },
+  tiktok: {
+    icon: '♪',
+    color: 'border-cyan-800/50 bg-cyan-950/20',
+    bestDays: 'Tue – Thu',
+    bestTimes: '7 – 9 AM  ·  7 – 11 PM',
+    frequency: 'Daily or 5 – 7× per week',
+    tip: 'TikTok rewards consistency over perfection. Daily posting is the single biggest growth lever.',
+  },
+  instagram: {
+    icon: '◎',
+    color: 'border-purple-800/50 bg-purple-950/20',
+    bestDays: 'Tue – Fri',
+    bestTimes: '11 AM – 1 PM  ·  7 – 9 PM',
+    frequency: '3 – 5× per week',
+    tip: 'Reels get 2× the reach of static posts. Prioritise scheduling Reels during lunch and evening slots.',
+  },
+};
+
+function PublishBestPractices({ platforms }: { platforms: string[] }) {
+  const relevant = platforms.filter((p) => BEST_PRACTICES[p]);
+  if (relevant.length === 0) return null;
+  return (
+    <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-3">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        Best times to publish
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {relevant.map((p) => {
+          const bp = BEST_PRACTICES[p];
+          return (
+            <div key={p} className={`rounded-lg border p-3 space-y-1.5 ${bp.color}`}>
+              <p className="text-xs font-semibold">
+                {bp.icon} {p.charAt(0).toUpperCase() + p.slice(1)}
+              </p>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px]">
+                <span className="text-muted-foreground">Best days</span>
+                <span>{bp.bestDays}</span>
+                <span className="text-muted-foreground">Best times</span>
+                <span>{bp.bestTimes}</span>
+                <span className="text-muted-foreground">Frequency</span>
+                <span>{bp.frequency}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground/70 pt-0.5 border-t border-border/30 leading-relaxed">
+                {bp.tip}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Portal labels ─────────────────────────────────────────────────────────────
 
 const PORTAL_LABELS: Record<string, string> = {
@@ -471,6 +542,9 @@ export default function StagingPage() {
     return isNaN(d.getTime()) ? String(ts) : d.toLocaleString();
   }
 
+  // Collect all platforms across queued jobs to show relevant best practices
+  const activePlatforms = [...new Set(jobs.flatMap((j) => j.platforms ?? []))];
+
   return (
     <PageShell maxWidth="4xl">
       <PageHeader
@@ -483,12 +557,15 @@ export default function StagingPage() {
       {loading && <p className="af-body text-muted-foreground">Loading jobs…</p>}
       {error   && <p className="af-body text-destructive">{formatUserError(error)}</p>}
 
+      {/* Platform publish best practices */}
+      {!loading && !isSuperAdmin && (
+        <PublishBestPractices platforms={activePlatforms.length > 0 ? activePlatforms : ['youtube', 'tiktok', 'instagram']} />
+      )}
+
       {!loading && !error && jobs.length === 0 && (
         <EmptyState
           title="Queue is clear"
-          description={isSuperAdmin
-            ? 'No jobs across any account are awaiting review right now.'
-            : 'Once a job finishes processing, it will appear here for review before publishing.'}
+          description="Once a job finishes processing, it will appear here for review before publishing."
           size="md"
         />
       )}
