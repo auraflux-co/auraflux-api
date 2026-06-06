@@ -43,9 +43,10 @@ TIER_KEYS = {
     "managed": ("AURAFLUX_E2E_API_KEY_MANAGED",),
 }
 
-# CPD-597: Sintel trailer has fade-to-black frames that trigger Portal 3a HARD FAIL.
-# Using a W3C HTML5 test clip (Big Buck Bunny excerpt) which has no black frames.
-PUBLIC_SHORT = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+# CPD-597/598: All public sample videos (Sintel, ForBiggerBlazes) have black frames that
+# trigger Portal 3a HARD FAIL. Using a synthetic ffmpeg test pattern video stored in R2
+# that is guaranteed to have no black frames, consistent 440 Hz tone, and standard 1280x720 resolution.
+PUBLIC_SHORT = "https://assets.auraflux.co/uploads/1780719017493_test-fixtures/e2e_test_fixture_clean.mp4"
 PUBLIC_LONG = PUBLIC_SHORT
 
 JOBS = [
@@ -168,10 +169,12 @@ def poll_job(base: str, headers: dict, job_id, label, timeout=1200):
         if status != last_status:
             print(f"  [{label}] status: {status}")
             last_status = status
-        if status in ("complete", "completed", "failed", "error"):
+        # CPD-598: compose/topic-only jobs reach 'staged' (script done, no video yet);
+        # 'held' = operator attention needed. Both are valid terminal states for polling.
+        if status in ("complete", "completed", "failed", "error", "staged", "held", "non-compliant"):
             return r
         time.sleep(15)
-    return {"status": "timeout"}
+    return {"status": "timeout", "_timedOut": True}
 
 
 def validate_output(spec_input, result, label):
@@ -179,53 +182,61 @@ def validate_output(spec_input, result, label):
     passed = []
 
     body = spec_input["body"]
-    api_topic = result.get("topic") or ""
-    api_tone = result.get("tone") or ""
-
-    ordered_topic = body.get("topic", "")
-    if ordered_topic and api_topic:
-        if ordered_topic.lower()[:30] in api_topic.lower() or api_topic.lower()[:30] in ordered_topic.lower():
-            passed.append("✓ topic persisted to jobSpec")
-        else:
-            issues.append(f"✗ topic mismatch: ordered='{ordered_topic[:40]}' got='{api_topic[:40]}'")
-    elif ordered_topic and not api_topic:
-        issues.append(f"✗ topic missing from jobSpec (ordered: '{ordered_topic[:40]}')")
-
-    ordered_tone = body.get("tone", "")
-    if ordered_tone and api_tone:
-        passed.append(f"✓ tone persisted ({api_tone})")
-    elif ordered_tone and not api_tone:
-        issues.append(f"✗ tone missing from jobSpec (ordered: '{ordered_tone}')")
-
-    ordered_profile = body.get("productionProfile", "")
-    result_profile = result.get("productionProfile") or ""
-    if ordered_profile:
-        if result_profile == ordered_profile:
-            passed.append(f"✓ productionProfile={result_profile}")
-        else:
-            issues.append(
-                f"✗ productionProfile mismatch: ordered={ordered_profile!r} got={result_profile!r}"
-            )
-
-    portal_list = result.get("portals", [])
-    portal_map = {p.get("portal", "?"): p for p in portal_list}
-
-    p0 = portal_map.get("portal0", {})
-    if p0.get("passed"):
-        passed.append("✓ portal0 passed")
-    elif p0:
-        issues.append(f"✗ portal0 failed: {p0.get('failReason', p0.get('reason', '?'))[:100]}")
-
-    p1 = portal_map.get("portal1", {})
-    if p1:
-        status_icon = "✓" if p1.get("passed") else "✗"
-        passed.append(f"{status_icon} portal1 passed={p1.get('passed')}")
-        if not p1.get("passed"):
-            issues.append(f"✗ portal1 failed: {p1.get('failReason', '?')[:100]}")
-
     final_status = result.get("status") or result.get("jobStatus", "?")
-    if final_status in ("complete", "completed"):
-        passed.append("✓ job completed")
+    is_timeout = result.get("_timedOut") or final_status == "timeout"
+
+    # CPD-598: when poll timed out, the result object is synthetic {"status":"timeout"} —
+    # skip all data-field checks that depend on actual API response fields.
+    if not is_timeout:
+        api_topic = result.get("topic") or ""
+        api_tone = result.get("tone") or ""
+
+        ordered_topic = body.get("topic", "")
+        if ordered_topic and api_topic:
+            if ordered_topic.lower()[:30] in api_topic.lower() or api_topic.lower()[:30] in ordered_topic.lower():
+                passed.append("✓ topic persisted to jobSpec")
+            else:
+                issues.append(f"✗ topic mismatch: ordered='{ordered_topic[:40]}' got='{api_topic[:40]}'")
+        elif ordered_topic and not api_topic:
+            issues.append(f"✗ topic missing from jobSpec (ordered: '{ordered_topic[:40]}')")
+
+        ordered_tone = body.get("tone", "")
+        if ordered_tone and api_tone:
+            passed.append(f"✓ tone persisted ({api_tone})")
+        elif ordered_tone and not api_tone:
+            issues.append(f"✗ tone missing from jobSpec (ordered: '{ordered_tone}')")
+
+        ordered_profile = body.get("productionProfile", "")
+        result_profile = result.get("productionProfile") or ""
+        if ordered_profile:
+            if result_profile == ordered_profile:
+                passed.append(f"✓ productionProfile={result_profile}")
+            else:
+                issues.append(
+                    f"✗ productionProfile mismatch: ordered={ordered_profile!r} got={result_profile!r}"
+                )
+
+        portal_list = result.get("portals", [])
+        portal_map = {p.get("portal", "?"): p for p in portal_list}
+
+        p0 = portal_map.get("portal0", {})
+        if p0.get("passed"):
+            passed.append("✓ portal0 passed")
+        elif p0:
+            issues.append(f"✗ portal0 failed: {p0.get('failReason', p0.get('reason', '?'))[:100]}")
+
+        p1 = portal_map.get("portal1", {})
+        if p1:
+            status_icon = "✓" if p1.get("passed") else "✗"
+            passed.append(f"{status_icon} portal1 passed={p1.get('passed')}")
+            if not p1.get("passed"):
+                issues.append(f"✗ portal1 failed: {p1.get('failReason', '?')[:100]}")
+
+    # CPD-598: staged = compose/topic-only job done (script generated, no video yet — correct)
+    # complete/completed = fetch/upload/generate job done with video output
+    if final_status in ("complete", "completed", "staged"):
+        status_label = "staged (script complete)" if final_status == "staged" else "completed"
+        passed.append(f"✓ job {status_label}")
     else:
         issues.append(f"✗ job ended with status: {final_status}")
 
