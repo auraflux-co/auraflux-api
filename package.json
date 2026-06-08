@@ -107,7 +107,7 @@
   },
   "devDependencies": {
     "autocannon": "^2.0.1",
-    "eslint": "^10.2.1",
+    "eslint": "^10.4.1",
     "jest": "^30.4.2",
     "playwright": "^1.60.0",
     "prettier": "^3.5.3",
