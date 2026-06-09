@@ -7471,6 +7471,10 @@ app.use(heygenRouter);
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
 
+// ── Auto-apply pending migrations ─────────────────────────────────
+const { main: runMigrations } = require('./scripts/auto_migrate');
+runMigrations().catch(err => console.error('[server] Migration failed:', err));
+
 // ── Start ─────────────────────────────────────────────────────────
 const server = app.listen(PORT, () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
