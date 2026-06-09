@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-09 v1.0.974 (Cursor — feat: add CHEDDARUP_API_KEY to .env and .env.example)
 **Last Updated:** 2026-06-09 v1.0.973 (Cursor — feat: add Google Analytics G-MBS26S2W6E to marketing site HTML)
 **Last Updated:** 2026-06-09 v1.0.972 (Cursor — fix: GA tag rendered server-side via dangerouslySetInnerHTML so Google crawler detects it)
 **Last Updated:** 2026-06-09 v1.0.970 (Cursor — feat(cpd-xxx): source bypass tool — POST /admin/sources/bypass (SUPERADMIN, bulk up to 50); 20 af-test client_plans rows seeded with twitchLogin handles + custom tier; scripts/seed_source_channels.py for re-runs)
