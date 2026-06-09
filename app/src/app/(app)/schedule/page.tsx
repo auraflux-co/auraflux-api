@@ -203,6 +203,27 @@ export default function SchedulePage() {
         badge={<FlowNetwork size={20} className="text-primary shrink-0" />}
       />
 
+      {/* Content strategy tip */}
+      <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary shrink-0">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          <span className="text-xs font-semibold uppercase tracking-wide text-primary">Recommended Content Mix</span>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3 text-xs">
+          <div className="rounded-lg border border-border/60 bg-background p-3 space-y-1.5">
+            <p className="font-semibold text-foreground">Shorts — 30% of output</p>
+            <p className="text-muted-foreground">Post 3–5× per week. Repurpose clips from long-form to multiply output. Acts as a discovery billboard to hook new viewers.</p>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-background p-3 space-y-1.5">
+            <p className="font-semibold text-foreground">Long-form — 70% of output</p>
+            <p className="text-muted-foreground">Post 1–2× per month. Aim for 8+ minutes to unlock mid-roll ads. Builds community loyalty and maximises RPM.</p>
+          </div>
+        </div>
+        <p className="text-[11px] text-muted-foreground">Top channels follow a 30/70 Shorts-to-long-form ratio — each format serves a distinct role in growth and monetisation.</p>
+      </div>
+
       {error && <p className="af-body text-destructive bg-destructive/10 rounded px-3 py-2">{formatUserError(error)}</p>}
 
       {/* Tabs */}

@@ -57,6 +57,13 @@ body{line-height:1.6}
   object-fit:cover;
   object-position:center 35%;
 }
+/* Guided and Managed images: contain so full artwork is visible */
+.plan-img-contain{
+  object-fit:contain;
+  object-position:center center;
+  background:#0a1224;
+  padding:8px 0;
+}
 
 .plan-body{padding:28px 28px 24px;display:flex;flex-direction:column;flex:1;}
 
@@ -198,7 +205,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <!-- GUIDED -->
   <div class="plan featured">
     <div class="badge"><span class="badge-dot"></span>MOST POPULAR</div>
-    <img class="plan-img" src="/cf-assets/marketing/images/plan-guided.png" alt="Guided plan">
+    <img class="plan-img plan-img-contain" src="/cf-assets/marketing/images/plan-guided.png" alt="Guided plan">
     <div class="plan-body">
       <div class="plan-name">Guided</div>
       <div class="plan-title">Collab Assist</div>
@@ -220,7 +227,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <!-- MANAGED -->
   <div class="plan">
-    <img class="plan-img" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan">
+    <img class="plan-img plan-img-contain" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan">
     <div class="plan-body">
       <div class="plan-name">Managed</div>
       <div class="plan-title">Done-For-You</div>

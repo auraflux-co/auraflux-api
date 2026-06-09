@@ -30,7 +30,7 @@ const GuideContext = createContext<GuideContextValue>({
 });
 
 export function GuideProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen]           = useState(false);
+  const [isOpen, setIsOpen]           = useState(true);
   const [contextHint, setContextHint] = useState<string | null>(null);
 
   const open            = useCallback(() => setIsOpen(true), []);

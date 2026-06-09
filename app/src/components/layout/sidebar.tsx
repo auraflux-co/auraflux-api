@@ -149,7 +149,6 @@ const CUSTOMER_NAV_BASE: NavItem[] = [
     ],
   },
   { href: '/review',    label: 'Review Queue'  },
-  { href: '/collab',    label: 'Job Assistant' },
   { href: '/schedule',   label: 'Schedule'      },
   { href: '/templates',  label: 'My Templates'  },
   {
