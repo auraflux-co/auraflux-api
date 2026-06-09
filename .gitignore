@@ -224,3 +224,4 @@ docs/lumi/live-site-velo/
 
 # Playwright MCP artifacts
 .playwright-mcp/
+.vercel

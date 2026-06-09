@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-09 v1.0.975 (Cursor — feat: multi-brand profiles system — migration 028, scripts for profile creation)
 **Last Updated:** 2026-06-09 v1.0.974 (Cursor — feat: add CHEDDARUP_API_KEY to .env and .env.example)
 **Last Updated:** 2026-06-09 v1.0.973 (Cursor — feat: add Google Analytics G-MBS26S2W6E to marketing site HTML)
 **Last Updated:** 2026-06-09 v1.0.972 (Cursor — fix: GA tag rendered server-side via dangerouslySetInnerHTML so Google crawler detects it)
