@@ -442,7 +442,7 @@ prompt_file, report_file, api_key = sys.argv[1], sys.argv[2], sys.argv[3]
 prompt = open(prompt_file).read()
 
 payload = json.dumps({
-    "model": "claude-opus-4-5",
+    "model": "claude-haiku-4-5",
     "max_tokens": 4096,
     "messages": [{"role": "user", "content": prompt}]
 }).encode()
@@ -456,15 +456,27 @@ req = urllib.request.Request(
         "content-type": "application/json"
     }
 )
-try:
-    with urllib.request.urlopen(req, timeout=120) as r:
-        data = json.loads(r.read())
-    report = data["content"][0]["text"]
-    with open(report_file, "w") as f:
-        f.write(report)
-    print(f"Report written — {len(report)} chars")
-except urllib.error.HTTPError as e:
-    print(f"API error {e.code}: {e.read().decode()}", file=sys.stderr)
+import time
+for attempt in range(5):
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            data = json.loads(r.read())
+        report = data["content"][0]["text"]
+        with open(report_file, "w") as f:
+            f.write(report)
+        print(f"Report written — {len(report)} chars")
+        break
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        if e.code == 529 and attempt < 4:
+            wait = 20 * (attempt + 1)
+            print(f"API overloaded (529) — retry {attempt+1}/5 in {wait}s...", file=sys.stderr)
+            time.sleep(wait)
+            continue
+        print(f"API error {e.code}: {body}", file=sys.stderr)
+        sys.exit(1)
+else:
+    print("All retries exhausted — Anthropic API still overloaded", file=sys.stderr)
     sys.exit(1)
 PYEOF
 

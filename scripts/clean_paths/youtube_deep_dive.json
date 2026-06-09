@@ -6,10 +6,10 @@
     "youtube"
   ],
   "lastCleanRun": {
-    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780515145909",
+    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780700890996",
     "grade": 100,
-    "gitHash": "c425a66",
-    "runDate": "2026-06-03T19:41:14.893875+00:00"
+    "gitHash": "033b25bc",
+    "runDate": "2026-06-05T23:23:35.354613+00:00"
   },
-  "cleanRunCount": 1
+  "cleanRunCount": 3
 }

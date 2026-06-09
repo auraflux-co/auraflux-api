@@ -1,0 +1,94 @@
+# Jira Issue Type Hierarchy — When to Use Subtask vs Story vs Epic
+
+## The decision tree (apply this before creating any ticket)
+
+```
+Is this work a discrete deliverable with independent business value?
+├── YES → Story or Task
+│   └── Does it group 3+ related stories toward a single outcome/milestone?
+│       ├── YES → Epic
+│       └── NO  → Story (feature/UX) or Task (ops/infra/non-UI work)
+│
+└── NO — it only exists to complete a parent ticket
+    └── → Subtask of that parent ticket
+```
+
+## Use Subtask when ALL of these are true
+
+1. The work has no standalone value if the parent is cancelled
+2. It is a specific implementation step, test run, or fix **within** a larger Story/Task
+3. It will be completed in the same sprint as its parent (or the sprint the parent is active in)
+4. It cannot appear on a roadmap independently
+
+**Concrete examples that MUST be subtasks:**
+
+| Work | Subtask of |
+|---|---|
+| "E2E Run N: Template X — guided tier" | CPD-315 (the CI gate tracker) |
+| "[Run11 0b] Grade<100: specific job bug" | The Run N ticket for that template |
+| "Fix: branding addOn gates chrome overlay" (blocker for a specific run) | That run's ticket |
+| "Step 3 of the migration: verify data integrity" | The migration story |
+| Implementation sub-steps of a single feature | The feature Story |
+| A QA finding from a specific run | That run's ticket |
+
+## Use Story when
+
+- It is a customer-facing feature or UX change (stands alone on a roadmap)
+- It spans one or more full sprints
+- It has its own acceptance criteria and definition of done independent of other tickets
+- It could be prioritised, deferred, or cancelled without affecting other open stories
+
+## Use Task when
+
+- It is infrastructure, ops, research, or tooling work (not a customer-facing feature)
+- Still independently deliverable (not a sub-step of another open ticket)
+- Examples: token rotation, cost reviews, vendor evaluations, docs site setup
+
+## Use Epic when
+
+- It groups 3+ related Stories/Tasks under a single milestone or outcome
+- Progress is measured at the Epic level (e.g. "50 of 100 jobs passed")
+- Examples: CPD-568 (E2E Launch Gate), Phase epics
+
+---
+
+## Jira hierarchy enforced by the API
+
+```
+Epic (level 1)
+└── Story / Task (level 0)  ← children of an Epic
+    └── Subtask (level -1)  ← children of a Story or Task
+```
+
+- Stories and Tasks **cannot** be children of other Stories/Tasks (only of Epics)
+- Subtasks **can** be children of any Story or Task (not Epics)
+- To convert an existing Story/Task to a Subtask: Jira UI → `...` → **Convert to sub-task** (REST API does not support this conversion)
+- The issue being converted must have **no subtasks of its own** before conversion
+
+---
+
+## E2E run ticket rule (standing convention)
+
+Every new E2E run ticket (e.g. "E2E Run N: Template — tier") is created as a **Subtask of CPD-315**, not as a standalone Story.
+
+Every bug ticket surfaced during a run (e.g. "[RunN] Grade<100: ...") is created as a **Subtask of that run's ticket**.
+
+This keeps CPD-315 as the single roll-up tracker and keeps the backlog clean.
+
+---
+
+## Creating subtasks via API
+
+```js
+// POST /rest/api/2/issue
+{
+  "fields": {
+    "project": { "key": "CPD" },
+    "issuetype": { "id": "10013" },   // Subtask type ID for CPD project
+    "parent": { "key": "CPD-315" },
+    "summary": "E2E Run N: Template — tier"
+  }
+}
+```
+
+Subtask type ID for the CPD project: **10013**

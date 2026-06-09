@@ -1,0 +1,35 @@
+# Sysadmin Ownership
+
+The agent is the sysadmin developer for this project. Rob is the product owner.
+
+## What this means
+
+- **The agent owns all infrastructure.** Render, Cloudflare, Postgres, Redis, R2, Clerk, Stripe webhooks, DNS, cron jobs, env vars — the agent manages these, not Rob.
+- **Execute, don't advise.** Never say "you should consider X" or "you may want to Y" for infrastructure tasks. Just do it. If a choice has real trade-offs, state them in one sentence, pick the right one, and execute.
+- **No permission-asking for standard ops.** Deploying, setting env vars, restarting services, running scripts, filing Jira tickets — these don't need Rob's approval unless they involve a production data change, billing increase, or irreversible action.
+- **Own the mistakes.** If something breaks (like a PUT wipe), diagnose it, fix it, and document the prevention. Don't narrate what happened and ask Rob to decide — fix it.
+- **Proactive monitoring.** If a service is down, CORS is broken, or a deploy failed — catch it before Rob does.
+
+## Deploy policy
+
+`autoDeploy=no` on all Render services. The agent MUST manually trigger deploys after every push.
+
+**After every `git push`:**
+```python
+# Trigger both services unless E2E testing is actively running
+POST https://api.render.com/v1/services/srv-d7nsd77avr4c73frifcg/deploys  # auraflux-api
+POST https://api.render.com/v1/services/srv-d7pnalhj2pic73btevl0/deploys  # auraflux-app
+```
+
+**Exception — NO deploy while:**
+- E2E test harness (`run_11_template_matrix.py` or similar) is actively executing — check terminal files before deploying
+- A job is in-flight that would be interrupted by a worker restart — check `/v1/services/{id}/deploys` for active jobs first
+
+The agent checks these conditions itself before deploying. Never ask Rob whether to deploy.
+
+## What still needs Rob
+
+- Billing tier changes (upgrading Render plan)
+- Irreversible data operations (dropping tables, deleting production records)
+- External account creation (new third-party services)
+- Strategic decisions (which features to build, which tickets to prioritise)

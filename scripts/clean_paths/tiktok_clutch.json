@@ -8,10 +8,10 @@
     "instagram"
   ],
   "lastCleanRun": {
-    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780534262267",
+    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780694272505",
     "grade": 100,
-    "gitHash": "6edaca1",
-    "runDate": "2026-06-04T00:58:24.013123+00:00"
+    "gitHash": "033b25bc",
+    "runDate": "2026-06-05T21:31:21.885011+00:00"
   },
-  "cleanRunCount": 3
+  "cleanRunCount": 7
 }

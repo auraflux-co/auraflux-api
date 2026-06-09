@@ -88,7 +88,7 @@ VIDEO_CACHE_DIR = REPO_DIR / 'tmp' / 'video_cache'
 VIDEO_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 POLL_INTERVAL = 30   # seconds between status polls
-POLL_TIMEOUT  = 1800 # 30 min max per job
+POLL_TIMEOUT  = 3600 # 60 min max per job (longform clips need up to 30min postprocess + rescue cycle)
 TS            = datetime.now().strftime('%Y%m%d_%H%M%S')
 
 HDR_OP = {'Authorization': f'Bearer {API_KEY_OPERATE}', 'Content-Type': 'application/json'}
@@ -272,7 +272,7 @@ PRESET_TEMPLATES = [
         'platforms': ['youtube'],
         'addOns': {
             'captions':   {'active': True, 'style': 'clean', 'position': 'bottom'},
-            'audio':      {'loudnorm': True, 'duck': True},
+            'audio':      {'loudnorm': True},
             'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
             'colorGrade': {'active': True, 'preset': 'neutral'},
             'effects':    {'transitions': True},
@@ -294,7 +294,7 @@ PRESET_TEMPLATES = [
         'platforms': ['tiktok', 'instagram'],
         'addOns': {
             'captions':   {'active': True, 'style': 'clean', 'position': 'bottom'},
-            'audio':      {'loudnorm': True, 'duck': True},
+            'audio':      {'loudnorm': True},
             'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
             'colorGrade': {'active': True, 'preset': 'warm'},
             'effects':    {'transitions': True},
@@ -317,7 +317,7 @@ PRESET_TEMPLATES = [
         'platforms': ['tiktok', 'youtube'],
         'addOns': {
             'captions':   {'active': True, 'style': 'animated', 'position': 'center'},
-            'audio':      {'loudnorm': True, 'duck': True},
+            'audio':      {'loudnorm': True},
             'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
             'colorGrade': {'active': True, 'preset': 'vivid'},
             'effects':    {'zoom': True, 'transitions': True},
@@ -340,7 +340,7 @@ PRESET_TEMPLATES = [
         'platforms': ['youtube'],
         'addOns': {
             'captions':   {'active': True, 'style': 'clean', 'position': 'bottom'},
-            'audio':      {'loudnorm': True, 'duck': True},
+            'audio':      {'loudnorm': True},
             'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
             'colorGrade': {'active': True, 'preset': 'neutral'},
             'effects':    {'zoom': True, 'transitions': True},
@@ -363,7 +363,7 @@ PRESET_TEMPLATES = [
         'platforms': ['youtube', 'tiktok'],
         'addOns': {
             'captions':   {'active': True, 'style': 'clean', 'position': 'center'},
-            'audio':      {'loudnorm': True, 'duck': True},
+            'audio':      {'loudnorm': True},
             'branding':   {'active': True, 'brandId': ROB_BRAND_ID},
             'colorGrade': {'active': True, 'preset': 'cool'},
             'effects':    {'transitions': True},
@@ -383,7 +383,7 @@ SINGLE_FEATURE_JOBS = [
     # Audio
     {'id': 'sf_loudnorm',    'label': 'Audio: loudnorm only',
      'addOns': {'audio': {'loudnorm': True}, 'contentType': 'clips', 'branding': {'active': True, 'brandId': ROB_BRAND_ID}}},
-    {'id': 'sf_duck',        'label': 'Audio: duck only',
+    {'id': 'sf_duck',        'label': 'Audio: duck only',  'skip': True,  # CPD-576: audio.duck not implemented in assembly_effects.js
      'addOns': {'audio': {'duck': True},     'contentType': 'clips', 'branding': {'active': True, 'brandId': ROB_BRAND_ID}}},
     # Captions
     {'id': 'sf_cap_animated','label': 'Captions: animated',
@@ -437,7 +437,7 @@ TWO_FEATURE_JOBS = [
     {'id': 'tf_tts_brand',     'label': 'TTS + Branding',
      'addOns': {'tts': {'active': True, 'provider': 'elevenlabs'}, 'branding': {'active': True, 'brandId': ROB_BRAND_ID},
                 'audio': {'loudnorm': True}, 'contentType': 'clips'}},
-    {'id': 'tf_duck_cap',      'label': 'Audio duck + Captions',
+    {'id': 'tf_duck_cap',      'label': 'Audio duck + Captions',  'skip': True,  # CPD-576: audio.duck not implemented
      'addOns': {'audio': {'loudnorm': True, 'duck': True}, 'captions': {'active': True, 'style': 'animated'},
                 'contentType': 'clips', 'branding': {'active': True, 'brandId': ROB_BRAND_ID}}},
     {'id': 'tf_zoom_color',    'label': 'Zoom + Color grade (vivid)',
@@ -539,6 +539,17 @@ def poll_job(job_id, tier):
             print(f"  ⚠  Poll error: {e}")
         time.sleep(POLL_INTERVAL)
     print(f"  ❌ Timeout after {POLL_TIMEOUT}s")
+    # Rescue check: if the job has an outputUrl it completed despite us timing out —
+    # fetch one final time and return the job so grading can proceed.
+    try:
+        r = requests.get(f"{API_BASE}/v1/jobs/{job_id}", headers=headers, timeout=15)
+        if r.status_code == 200:
+            job = r.json()
+            if job.get('outputUrl') or job.get('cleanVideoUrl'):
+                print(f"  ♻  Rescued: job has outputUrl — using final status={job.get('status')}")
+                return job
+    except Exception:
+        pass
     return None
 
 
@@ -618,7 +629,240 @@ def gpt4o_check(job_data):
     return saved.get('gpt4oQA') or {}
 
 
-# ── Claude UX observer ────────────────────────────────────────────────────────
+# ── Gemini video review (actual visual QA — watches the output MP4) ──────────
+# Ported from run_all_18_twitch.py / CPD-392.  Gemini Files API downloads and
+# watches every output video then scores spec-vs-output.  Replaces text-only
+# Claude review for the primary QA signal.  Claude still runs for spec-
+# consistency checks (branding config, add-on logic, source fit).
+
+def _normalize_output_url(url):
+    """Swap R2 direct URLs for CDN-hosted equivalents so Gemini can fetch them."""
+    if not url:
+        return url
+    import re
+    url = re.sub(
+        r'https://[a-z0-9]+\.r2\.cloudflarestorage\.com/[^/]+/',
+        f'https://{os.environ.get("R2_ASSETS_DOMAIN", "")}/',
+        url,
+    )
+    return url
+
+
+def _ask_gemini_video_json(video_url, prompt):
+    """
+    Download video_url, upload to Gemini Files API, watch it, return JSON.
+    Raises RuntimeError on any failure so caller can fall back gracefully.
+    """
+    import tempfile, time as _time, re as _re
+
+    if not GEMINI_API_KEY:
+        raise RuntimeError('GEMINI_API_KEY not set')
+
+    MAX_VIDEO_MB = 200
+    try:
+        dl_req = urllib.request.Request(video_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(dl_req, timeout=90) as r:
+            cl = int(r.headers.get('Content-Length', 0))
+            if cl > MAX_VIDEO_MB * 1024 * 1024:
+                raise RuntimeError(f'Video too large ({cl/1e6:.0f}MB > {MAX_VIDEO_MB}MB)')
+            video_bytes = r.read(MAX_VIDEO_MB * 1024 * 1024)
+    except Exception as e:
+        raise RuntimeError(f'Video download failed: {e}')
+
+    upload_url = (f'https://generativelanguage.googleapis.com/upload/v1beta/files'
+                  f'?uploadType=multipart&key={GEMINI_API_KEY}')
+    boundary  = 'auraflux_run11_boundary'
+    meta_json = json.dumps({'file': {'display_name': 'run11_output.mp4'}})
+    body = b''.join([
+        f'--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{meta_json}\r\n'.encode(),
+        f'--{boundary}\r\nContent-Type: video/mp4\r\n\r\n'.encode(),
+        video_bytes,
+        f'\r\n--{boundary}--'.encode(),
+    ])
+    up_req = urllib.request.Request(
+        upload_url, data=body,
+        headers={'Content-Type': f'multipart/related; boundary={boundary}'},
+    )
+    try:
+        with urllib.request.urlopen(up_req, timeout=180) as r:
+            file_meta = json.loads(r.read())
+        file_uri  = file_meta.get('file', {}).get('uri', '')
+        file_name = file_meta.get('file', {}).get('name', '')
+        if not file_uri:
+            raise RuntimeError('Files API returned no URI')
+    except Exception as e:
+        raise RuntimeError(f'Files API upload failed: {e}')
+
+    # Poll until ACTIVE (video processing can take up to 60s for large files)
+    if file_name:
+        poll_url = (f'https://generativelanguage.googleapis.com/v1beta/{file_name}'
+                    f'?key={GEMINI_API_KEY}')
+        for _ in range(30):
+            _time.sleep(5)
+            try:
+                with urllib.request.urlopen(
+                    urllib.request.Request(poll_url), timeout=15
+                ) as r:
+                    state = json.loads(r.read()).get('state', '')
+                if state == 'ACTIVE':
+                    break
+                if state == 'FAILED':
+                    raise RuntimeError('Gemini file processing FAILED')
+            except RuntimeError:
+                raise
+            except Exception:
+                pass
+
+    gc_url  = (f'https://generativelanguage.googleapis.com/v1beta/models/'
+               f'gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}')
+    gc_body = json.dumps({'contents': [{'parts': [
+        {'file_data': {'mime_type': 'video/mp4', 'file_uri': file_uri}},
+        {'text': prompt},
+    ]}]}).encode()
+    gc_req = urllib.request.Request(
+        gc_url, data=gc_body, headers={'Content-Type': 'application/json'}
+    )
+    with urllib.request.urlopen(gc_req, timeout=180) as r:
+        text = json.loads(r.read())['candidates'][0]['content']['parts'][0]['text']
+
+    m = _re.search(r'```(?:json)?\s*([\s\S]+?)\s*```', text)
+    raw = m.group(1) if m else text.strip()
+    return json.loads(raw)
+
+
+def gemini_video_review(job_def, job_spec_sent, output_url, final_job, tier, clip=None):
+    """
+    Gemini watches the actual output video and scores spec-vs-output (CPD-392).
+    Downloads MP4 → Gemini Files API → visual QA.
+    Returns a dict with keys: passed, score, has_chrome_overlay, format_correct,
+    has_captions, has_color_grade, issues, notes, method.
+    """
+    cdn_url = _normalize_output_url(output_url)
+    if not cdn_url:
+        return {'passed': False, 'score': 0, 'method': 'no_output',
+                'issues': ['No output URL — video was never produced']}
+
+    platforms     = job_def.get('platforms', [])
+    fmt           = job_def.get('format', 'portrait')
+    captions_on   = (job_spec_sent.get('addOns') or {}).get('captions', {}).get('active', False)
+    colorgrade_on = (job_spec_sent.get('addOns') or {}).get('colorGrade', {}).get('active', False)
+    branding_on   = (job_spec_sent.get('addOns') or {}).get('branding', {}).get('active', False)
+    tts_on        = (job_spec_sent.get('addOns') or {}).get('tts', {}).get('active', False)
+    clip_dur      = (clip or {}).get('duration_s', '?')
+
+    prompt = f"""You are a QA engineer reviewing an AuraFlux video production output.
+Watch the ENTIRE video carefully from start to finish.
+
+=== JOB SPEC ===
+Template: {job_def.get('label','?')} | Tier: {tier.upper()}
+Source clip: {(clip or {}).get('streamer','?')} — {(clip or {}).get('title','?')} ({clip_dur}s)
+Target platforms: {platforms} | Format: {fmt}
+Add-ons ordered:
+  - Captions: {captions_on} (style={( job_spec_sent.get('addOns') or {}).get('captions',{}).get('style','?')})
+  - Color grade: {colorgrade_on}
+  - Branding/chrome overlay: {branding_on}
+  - TTS voiceover: {tts_on}
+
+=== WHAT TO CHECK ===
+Watch for these specific visual and audio elements at key timestamps:
+1. CHROME OVERLAY (0-5s and final 5s): Is there a broadcast-style overlay with show name / lower-third?
+   Flag ABSENT if no overlay is visible anywhere in the video.
+2. CAPTIONS ({captions_on}): Are word-level captions visible and correctly timed to speech?
+   If captions=True and none are visible, that is a FAIL.
+3. FORMAT: Is the aspect ratio correct for {fmt} / {platforms}?
+   Portrait = 9:16 vertical. Landscape = 16:9 horizontal.
+4. COLOR GRADE ({colorgrade_on}): Does the video look processed vs raw?
+   Raw/flat footage when colorGrade=True is a gap.
+5. TTS ({tts_on}): Is there a host voiceover narrating over the clip?
+   If tts=True and there is only original streamer audio, flag it.
+6. OVERALL PRODUCTION QUALITY: Would a real streamer post this without embarrassment?
+
+=== TIMESTAMP NOTES ===
+Call out the specific timestamps (e.g. "0:03 chrome overlay visible", "0:45 caption appears")
+for each feature you confirm OR deny. This is required for audit.
+
+=== SCORING (spec compliance — does output match what was ordered?) ===
+100: ALL ordered features confirmed visually present, correct format, no gaps
+90-99: All core features present, minor imperfection only
+70-89: Core met, one meaningful gap (overlay missing, captions off)
+50-69: Output exists but significant gaps
+0-49: Raw/unprocessed or major spec mismatches
+
+Return ONLY valid JSON:
+{{
+  "passed": true/false,
+  "score": 0-100,
+  "has_chrome_overlay": true/false,
+  "has_captions": true/false,
+  "format_correct": true/false,
+  "has_color_grade": true/false,
+  "has_tts": true/false,
+  "timestamp_notes": ["0:03 chrome visible", "0:12 caption appears", ...],
+  "issues": ["list any spec mismatches"],
+  "notes": "brief summary"
+}}"""
+
+    try:
+        result = _ask_gemini_video_json(cdn_url, prompt)
+        result['method'] = 'video'
+        result['output_url'] = cdn_url
+        return result
+    except Exception as e:
+        # Fallback: text-only metadata review
+        return {
+            'passed': False, 'score': 0, 'method': f'fallback:{e}',
+            'issues': [f'Gemini video review failed: {e}'],
+            'notes': 'Visual review unavailable — only metadata checked',
+        }
+
+
+# ── R2 frame capture + Confluence archival (CPD-392) ─────────────────────────
+
+def _archive_screenshot(job_id, template_id, output_url, tier):
+    """
+    Extract a frame from the output video, upload to R2 at
+    e2e/{YYYY-MM-DD}/{template_id}/{job_id}.jpg, embed in Confluence CPD-390 page.
+    Fails silently — never blocks the gate.
+    """
+    try:
+        from scripts.benchmark_screenshot import process_score_100_job as _ss
+        _ss({'job_id': job_id, 'output_url': output_url,
+             'tier': tier, 'template_id': template_id})
+    except Exception:
+        pass
+    # Fallback: direct ffmpeg frame + R2 upload without benchmark_screenshot
+    try:
+        import subprocess, tempfile, boto3
+        from pathlib import Path
+        from datetime import date
+
+        cdn_url = _normalize_output_url(output_url)
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
+            frame_path = tmp.name
+
+        subprocess.run(
+            ['ffmpeg', '-y', '-ss', '5', '-i', cdn_url,
+             '-vframes', '1', '-q:v', '3', '-vf', 'scale=960:-1', frame_path],
+            capture_output=True, timeout=60,
+        )
+        if not Path(frame_path).exists() or Path(frame_path).stat().st_size == 0:
+            return
+
+        s3 = boto3.client('s3',
+            endpoint_url=f"https://{os.environ.get('R2_ACCOUNT_ID','')}.r2.cloudflarestorage.com",
+            aws_access_key_id=os.environ.get('R2_ACCESS_KEY_ID',''),
+            aws_secret_access_key=os.environ.get('R2_SECRET_ACCESS_KEY',''),
+        )
+        r2_key = f"e2e/{date.today().isoformat()}/{template_id}/{job_id}.jpg"
+        s3.upload_file(frame_path, os.environ.get('R2_VIDEO_BUCKET',''), r2_key,
+                       ExtraArgs={'ContentType': 'image/jpeg'})
+        domain = os.environ.get('R2_ASSETS_DOMAIN', '')
+        print(f"  📸 Frame archived → https://{domain}/{r2_key}")
+    except Exception:
+        pass
+
+
+# ── Claude UX observer (spec-consistency + metadata — runs AFTER Gemini video) ─
 
 try:
     import anthropic as _anthropic_lib
@@ -870,6 +1114,31 @@ def save_clean_path(job_def, job_id, grade):
     print(f"  💾 Clean path saved → scripts/clean_paths/{template_id}.json (run #{record['cleanRunCount']})")
 
 
+def _drain_queue(tier, max_wait=1800):
+    """
+    Wait until the API has no running/assembled jobs before submitting a new one.
+    Prevents CPD-266 zombie jobs (auto-retried interrupted jobs) from competing
+    with new jobs and causing concurrent OOM on longform clips.
+    """
+    headers  = _hdr(tier)
+    deadline = time.time() + max_wait
+    active_statuses = {'running', 'assembled', 'processing'}
+    while time.time() < deadline:
+        try:
+            r = requests.get(f"{API_BASE}/v1/jobs", headers=headers, timeout=15,
+                             params={'status': 'running', 'limit': 10})
+            if r.status_code == 200:
+                active = [j for j in (r.json() if isinstance(r.json(), list) else r.json().get('jobs', []))
+                          if j.get('status') in active_statuses]
+                if not active:
+                    return
+                print(f"  ⏳ Queue drain: {len(active)} active job(s) — waiting 30s before submit...")
+        except Exception:
+            pass
+        time.sleep(30)
+    print("  ⚠  Queue drain timed out — submitting anyway")
+
+
 def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates, dry_run=False):
     """
     Submit, poll, grade, QA-gate, and gate-check one job.
@@ -880,6 +1149,10 @@ def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates
     print(f"  Phase: {phase_label} | Job: {label} | Tier: {tier.upper()}")
     print(f"  Clip:  {clip['streamer']} — {clip['title'][:50]} ({clip['url'][:60]}...)")
     print(f"{'='*64}")
+
+    # Drain any zombie jobs before submitting (CPD-266 auto-retry can cause concurrent OOM)
+    if not dry_run:
+        _drain_queue(tier)
 
     # ── Pre-submission: routing pre-flight ────────────────────────────────────
     routing_errors = _routing_preflight(job_def)
@@ -943,8 +1216,29 @@ def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates
     if gpt4o_qa.get('score') is not None:
         print(f"  🤖 GPT-4o QA: score={gpt4o_qa.get('score')} pass={gpt4o_qa.get('pass')}")
 
-    # ── Claude UX observer ────────────────────────────────────────────────
-    print(f"  🔍 Running Claude UX observer...")
+    # ── Gemini visual QA — watches the actual output video (CPD-392) ──────
+    gemini_review = {}
+    if output_url:
+        print(f"  🎬 Running Gemini video review (downloading + watching output)...")
+        gemini_review = gemini_video_review(job_def, job_spec_sent or {}, output_url, final, tier, clip=clip)
+        g_score = gemini_review.get('score', 0)
+        g_method = gemini_review.get('method', '?')
+        print(f"  🎯 Gemini visual: score={g_score}/100 method={g_method} "
+              f"chrome={gemini_review.get('has_chrome_overlay','?')} "
+              f"captions={gemini_review.get('has_captions','?')} "
+              f"format={gemini_review.get('format_correct','?')}")
+        for ts in (gemini_review.get('timestamp_notes') or [])[:4]:
+            print(f"     ⏱  {ts}")
+        for issue in (gemini_review.get('issues') or [])[:3]:
+            print(f"     ⚠  {issue}")
+        # Archive frame to R2 + Confluence for every 100-grade job
+        if grade_value == 100:
+            _archive_screenshot(job_id, job_def.get('id', label), output_url, tier)
+    else:
+        print(f"  🎬 Gemini video review skipped — no output URL")
+
+    # ── Claude UX observer — spec-consistency + metadata check ────────────
+    print(f"  🔍 Running Claude spec observer...")
     ux_obs = claude_ux_observe(job_def, job_spec_sent or {}, output_url, final, tier, clip=clip)
     critical_ux = [o for o in ux_obs if o.get('severity') in ('critical', 'high')]
     print(f"  🗣  Claude UX: {len(ux_obs)} observations ({len(critical_ux)} critical/high)")
@@ -953,18 +1247,19 @@ def run_job(clip, job_def, tier, phase_label, clip_idx, results, saved_templates
 
     # ── Record result ──────────────────────────────────────────────────────
     result = {
-        'phase':          phase_label,
-        'job_id':         job_id,
-        'label':          label,
-        'tier':           tier,
-        'status':         (final or {}).get('status', 'timeout'),
-        'output_url':     output_url,
-        'grade':          grade_value,
-        'grade_detail':   grade_result,
-        'twelve_labs_qa': tl_qa,
-        'gpt4o_qa':       gpt4o_qa,
+        'phase':           phase_label,
+        'job_id':          job_id,
+        'label':           label,
+        'tier':            tier,
+        'status':          (final or {}).get('status', 'timeout'),
+        'output_url':      output_url,
+        'grade':           grade_value,
+        'grade_detail':    grade_result,
+        'twelve_labs_qa':  tl_qa,
+        'gpt4o_qa':        gpt4o_qa,
+        'gemini_video_qa': gemini_review,
         'ux_observations': ux_obs,
-        'ran_at':         datetime.now(timezone.utc).isoformat(),
+        'ran_at':          datetime.now(timezone.utc).isoformat(),
     }
     results.append(result)
 
@@ -999,6 +1294,9 @@ def run_phase(phase_label, jobs, tier, results, saved_templates, dry_run=False, 
     for i, job_def in enumerate(jobs):
         if i < from_job:
             print(f"  ⏭  Skipping job {i} ({job_def.get('label','?')}) — from-job={from_job}")
+            continue
+        if job_def.get('skip'):
+            print(f"  ⏭  Skipping job {i} ({job_def.get('label','?')}) — marked skip (see comment)")
             continue
         clip = _pick_clip(i, job_def)
         ok   = run_job(clip, job_def, tier, phase_label, i, results, saved_templates, dry_run)

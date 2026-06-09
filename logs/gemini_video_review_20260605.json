@@ -1,0 +1,202 @@
+[
+  {
+    "score": 100,
+    "passed": true,
+    "format_correct": true,
+    "observed_format": "portrait",
+    "has_chrome_overlay": true,
+    "chrome_timestamp": "00:00",
+    "has_captions": true,
+    "captions_timestamp": "00:00",
+    "has_color_grade": true,
+    "has_tts_voiceover": false,
+    "timestamp_notes": [
+      "00:00 \u2014 Chrome overlay (top bar 'shroud' and lower-third 'shroud - via AuraFlux') is present.",
+      "00:00 \u2014 Word-level burned-in captions are present and synced to speech.",
+      "00:00 \u2014 The video is in portrait (9:16) aspect ratio.",
+      "00:00 \u2014 The footage exhibits clear color grading, with vibrant colors and enhanced contrast, not appearing flat or raw.",
+      "00:00 \u2014 Only original source audio (streamer's voice and game audio/dialogue) is present; no additional host voiceover."
+    ],
+    "spec_gaps": [],
+    "summary": "All specified features are present and correctly implemented, resulting in a high-quality video output. The portrait format, chrome overlay, captions, and color grade align perfectly with the given specifications.",
+    "label": "TikTok Clutch",
+    "tier": "guided",
+    "url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780669974724/1780670770379_1780670770378_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780669974724_final.mp4"
+  },
+  {
+    "score": 100,
+    "passed": true,
+    "format_correct": true,
+    "observed_format": "portrait",
+    "has_chrome_overlay": true,
+    "chrome_timestamp": "00:00",
+    "has_captions": true,
+    "captions_timestamp": "00:01",
+    "has_color_grade": true,
+    "has_tts_voiceover": false,
+    "timestamp_notes": [
+      "00:00 \u2014 Chrome overlay (top bar 'shroud' and lower-third 'shroud - via AuraFlux') is present.",
+      "00:01 \u2014 Word-level burned-in captions appear and are synced to speech.",
+      "00:00 \u2014 The aspect ratio is consistently portrait (9:16) throughout the video.",
+      "00:00 \u2014 The footage exhibits a processed and graded color palette, not flat or raw.",
+      "00:00 \u2014 Only original source audio (game audio and streamer voices) is present; no additional host voiceover.",
+      "00:00 \u2014 The overall quality and presentation are professional, making it suitable for a streamer to post."
+    ],
+    "spec_gaps": [],
+    "summary": "The video output perfectly adheres to the 'TikTok Clutch' template specification, delivering all ordered features in the correct portrait format. The production quality, including chrome overlays, accurate captions, and color grading, is excellent and would be readily accepted by a streamer.",
+    "label": "TikTok Clutch",
+    "tier": "operate",
+    "url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780685407340/1780686740241_1780686740239_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780685407340_final.mp4"
+  },
+  {
+    "score": 100,
+    "passed": true,
+    "format_correct": true,
+    "observed_format": "landscape",
+    "has_chrome_overlay": true,
+    "chrome_timestamp": "00:00",
+    "has_captions": true,
+    "captions_timestamp": "00:00",
+    "has_color_grade": true,
+    "has_tts_voiceover": false,
+    "timestamp_notes": [
+      "00:00 - The video begins with a top bar displaying 'Scarra' and a lower-third showing 'Scarra via AuraFlux'. Word-level captions are present and synced to speech. The aspect ratio is landscape (16:9).",
+      "00:00 - The footage appears to be color-graded, not raw. There are distinct streamer voices and in-game audio present.",
+      "00:00 - 14:35 - All identified features (chrome overlay, captions, landscape format, color grade, and original audio) remain consistent throughout the video."
+    ],
+    "spec_gaps": [],
+    "summary": "The video output perfectly matches the requested specifications, featuring a chrome overlay, accurate word-level captions, proper landscape format, and a polished color grade. This output is professional and would be suitable for a streamer to publish without any issues.",
+    "label": "YouTube Deep Dive",
+    "tier": "operate",
+    "url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780691342110/1780692089538_1780692089533_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780691342110_final.mp4"
+  },
+  {
+    "score": 100,
+    "passed": true,
+    "format_correct": true,
+    "observed_format": "portrait",
+    "has_chrome_overlay": true,
+    "chrome_timestamp": "00:00",
+    "has_captions": true,
+    "captions_timestamp": "00:00",
+    "has_color_grade": false,
+    "has_tts_voiceover": false,
+    "timestamp_notes": [
+      "00:00 - 00:29 \u2014 Chrome overlay with 'ludwig' at the top and 'AuraFlux' lower-third is present and correctly formatted.",
+      "00:00 - 00:29 \u2014 Word-level burned-in captions are present and accurately synced to speech.",
+      "00:00 - 00:29 \u2014 Video is in portrait (9:16) aspect ratio.",
+      "00:00 - 00:29 \u2014 Footage appears natural with no discernible color grading beyond standard processing.",
+      "00:00 - 00:29 \u2014 Only original source audio is present; no host voiceover or TTS is detected."
+    ],
+    "spec_gaps": [],
+    "summary": "The video output successfully meets all specified requirements, including the portrait format, chrome overlay, and word-level captions. The output quality is high, making it suitable for direct posting by a streamer.",
+    "label": "IRL Story Time",
+    "tier": "operate",
+    "url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780692325608/1780692546152_1780692546152_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780692325608_final.mp4"
+  },
+  {
+    "score": 40,
+    "passed": false,
+    "format_correct": false,
+    "observed_format": "portrait",
+    "has_chrome_overlay": true,
+    "chrome_timestamp": "00:00",
+    "has_captions": false,
+    "captions_timestamp": null,
+    "has_color_grade": true,
+    "has_tts_voiceover": false,
+    "timestamp_notes": [
+      "00:00 \u2014 The video displays a chrome overlay with 'nickmercs' at the top and 'AuraFlux' as a lower-third handle, present throughout the video.",
+      "00:00 \u2014 The footage exhibits clear color grading, with vibrant colors and processed aesthetics from start to finish.",
+      "00:00 \u2014 Audio consists solely of original game sounds and player voice comms; no separate host voiceover is present.",
+      "00:00 \u2014 The video's aspect ratio is portrait (9:16), which is incorrect as the spec requested landscape (16:9).",
+      "00:00 \u2014 No word-level burned-in captions are present, which aligns with the `ORDERED=False` spec for captions."
+    ],
+    "spec_gaps": [
+      "Aspect ratio is portrait (9:16) instead of the specified landscape (16:9) horizontal format."
+    ],
+    "summary": "The video includes the requested chrome overlay and appears color-graded, with appropriate source audio. However, the critical failure to deliver in the specified landscape (16:9) aspect ratio, instead providing a portrait (9:16) format, makes this output unacceptable for the target platforms.",
+    "label": "Montage Hype Reel",
+    "tier": "operate",
+    "url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780692675384/1780692842923_1780692842922_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780692675384_final.mp4"
+  },
+  {
+    "score": 100,
+    "passed": true,
+    "format_correct": true,
+    "observed_format": "landscape",
+    "has_chrome_overlay": true,
+    "chrome_timestamp": "00:00",
+    "has_captions": true,
+    "captions_timestamp": "00:00",
+    "has_color_grade": false,
+    "has_tts_voiceover": false,
+    "timestamp_notes": [
+      "00:00 - Chrome overlay (top bar 'Scarra', lower-thirds 'Scarra - via AuraFlux' and 'AuraFlux') is present and consistently ordered throughout the video.",
+      "00:00 - Word-level burned-in captions are present and accurately synced to speech for the entire video duration.",
+      "00:00 - The video content (gameplay and streamer webcams/avatars) is presented in a 16:9 landscape aspect ratio, adhering to the target format.",
+      "00:00 - No distinct artistic color grade is applied; the footage appears natural and well-lit.",
+      "00:00 - The audio consists solely of the original voices of the streamers; there is no host voiceover."
+    ],
+    "spec_gaps": [],
+    "summary": "All ordered features are present and correctly formatted, demonstrating full compliance with the specification. The video output is professionally edited with clear overlays, accurate captions, and appropriate aspect ratio.",
+    "label": "Reaction Cut",
+    "tier": "operate",
+    "url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780692932602/1780693666294_1780693666293_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780692932602_final.mp4"
+  },
+  {
+    "score": 55,
+    "passed": false,
+    "format_correct": true,
+    "observed_format": "portrait",
+    "has_chrome_overlay": true,
+    "chrome_timestamp": "00:00",
+    "has_captions": true,
+    "captions_timestamp": "00:12",
+    "has_color_grade": true,
+    "has_tts_voiceover": false,
+    "timestamp_notes": [
+      "00:00 \u2014 Video is in portrait (9:16) format.",
+      "00:00 \u2014 Chrome overlay is present, including 'shroud' top bar and 'shroud \u2022 via AuraFlux' lower-third.",
+      "00:00 \u2014 Footage appears color-graded, not flat/raw.",
+      "00:12 \u2014 Captions appear for dialogue, but are sentence/phrase level, not word-level burned-in as specified. They also do not caption the groaning sounds prior to this timestamp."
+    ],
+    "spec_gaps": [
+      "Chrome/broadcast overlay was ORDERED=False, but a top bar with 'shroud' and a lower-third with 'shroud \u2022 via AuraFlux' are present throughout the video.",
+      "Color grade was ORDERED=False, but the footage clearly exhibits a processed/graded color profile.",
+      "Captions were ORDERED=True as word-level burned-in, but are instead sentence/phrase level and only appear from 00:12 for dialogue, missing the initial audible groans."
+    ],
+    "summary": "The video fails to meet several key specifications. The chrome overlay and color grade were explicitly ordered to be absent but are both present in the output. Additionally, captions were not truly word-level and did not cover all audible content from the start of the video.",
+    "label": "Quick Guide",
+    "tier": "operate",
+    "url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780693916530/1780694117848_1780694117847_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780693916530_final.mp4"
+  },
+  {
+    "score": 80,
+    "passed": false,
+    "format_correct": true,
+    "observed_format": "portrait",
+    "has_chrome_overlay": true,
+    "chrome_timestamp": "00:00",
+    "has_captions": true,
+    "captions_timestamp": "00:00",
+    "has_color_grade": true,
+    "has_tts_voiceover": false,
+    "timestamp_notes": [
+      "00:00 \u2014 Chrome overlay (top bar with 'shroud' streamer handle) is present.",
+      "00:00 \u2014 Word-level captions are visible and accurately synced to speech.",
+      "00:00 \u2014 Video is in portrait (9:16) aspect ratio.",
+      "00:00 \u2014 Footage appears color graded and processed.",
+      "00:00 \u2014 Audio consists solely of the original source audio (streamer's voice and game sounds).",
+      "00:46 \u2014 The video ends abruptly on a game menu screen ('Resume game', 'Restart checkpoint', 'Exit to menu')."
+    ],
+    "spec_gaps": [
+      "The chrome overlay does not include an explicit 'show name' distinct from the streamer handle.",
+      "The chrome overlay is missing a 'lower-third' graphic with the streamer handle. Only a top bar and a small 'AuraFlux' watermark are present."
+    ],
+    "summary": "The video successfully presents in the correct portrait format with accurate word-level captions and a noticeable color grade. However, the chrome overlay is incomplete as it lacks a distinct 'show name' and the specified 'lower-third' graphic.",
+    "label": "TikTok Clutch",
+    "tier": "guided",
+    "url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780694255237/1780694802603_1780694802509_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780694255237_final.mp4"
+  }
+]

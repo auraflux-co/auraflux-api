@@ -1,49 +1,80 @@
-# Render Env Var Safety — NEVER do a bare PUT
+# Render Environment Variable Safety
 
-## The problem (has caused 29+ production outages)
+## The wipe problem
 
-`PUT /v1/services/{id}/env-vars` **REPLACES ALL environment variables** with only what's in the payload.
-Sending a partial list (e.g. just one new var) wipes every other env var on the service.
+`PUT /v1/services/{id}/env-vars` **replaces ALL env vars** with the body you send.
+If your body omits variables that are currently set, those variables are silently deleted.
+This has caused two production outages in this project (ALLOWED_ORIGINS wiped → dashboard 500).
 
-This has happened 29+ times, each time taking the production API offline.
+## Required: always use render_env_safe.py
 
-## ❌ NEVER do this
+Never write raw `PUT /env-vars` requests in scripts or one-off Python snippets.
 
 ```bash
-# WRONG — wipes all other vars
-curl -X PUT .../env-vars -d '[{"key":"MY_KEY","value":"val"}]'
+# ✅ Safe — merges into existing, preserves everything else
+python3 scripts/render_env_safe.py srv-xxxx KEY=value KEY2=value2
+
+# ✅ Safe — dry run shows what would change
+python3 scripts/render_env_safe.py srv-xxxx --dry-run KEY=value
 ```
 
 ```python
-# WRONG — wipes all other vars
-requests.put(f"/services/{id}/env-vars", json=[{"key": k, "value": v}])
+# ✅ Safe — import and use in Python scripts
+from scripts.render_env_safe import render_env_upsert
+render_env_upsert('srv-xxxx', {'KEY': 'value', 'KEY2': 'value2'})
+
+# Delete a key safely (set value to None)
+render_env_upsert('srv-xxxx', {'STALE_KEY': None})
 ```
 
-## ✅ ALWAYS use the safe helper
-
-```bash
-# CORRECT — fetches existing vars, merges, then does full PUT
-bash scripts/render_env_set.sh MY_KEY=value
-bash scripts/render_env_set.sh KEY1=val1 KEY2=val2
+```python
+# ❌ NEVER do this — wipes everything not in payload
+payload = [{'key': 'MY_KEY', 'value': 'val'}]
+requests.put(f'https://api.render.com/v1/services/{svc}/env-vars', json=payload)
 ```
 
-## If you must call the Render API directly
+## Render service IDs
 
-You MUST follow this pattern:
+| Service | ID |
+|---|---|
+| auraflux-api | `srv-d7nsd77avr4c73frifcg` |
+| auraflux-app | `srv-d7pnalhj2pic73btevl0` |
+| auraflux-api-staging | `srv-d8a5i1vavr4c73d6pvr0` |
+| auraflux-app-staging | `srv-d8a5hn6gvqtc73ci267g` |
 
-1. `GET /v1/services/{id}/env-vars?limit=100` → fetch all current vars
-2. Merge your new/changed vars into the existing list
-3. `PUT /v1/services/{id}/env-vars` with the **complete merged list**
+## Critical vars that must always be present on auraflux-api
 
-## Pre-commit hook
+If any of these are missing, the service boots but the dashboard breaks silently:
+- `ALLOWED_ORIGINS` — CORS whitelist. Missing = all browser requests return 500.
+- `CLERK_SECRET_KEY` — auth. Missing = all authenticated routes 401.
+- `STRIPE_SECRET_KEY` — Stripe init at load time. Missing = server crashes on startup.
+- `REDIS_URL` — queue. Missing = BullMQ crashes, no job processing.
+- `DATABASE_URL` — Postgres. Missing = all job queries fail.
 
-`scripts/predeploy_env_guard.sh` runs on every commit and auto-restores any missing vars
-using the safe fetch→merge→PUT pattern. It cannot protect against mid-session API calls
-made before a commit.
+## Hardening status (as of June 2026)
 
-## Rule
+### ✅ Render Secret Files — DONE
+Critical secrets (Clerk, Stripe, DB, Redis, all API keys) are stored in an encrypted-at-rest
+Secret File (`.secrets.env`) on `auraflux-api`. `server.js` loads it via dotenv at startup from
+`/etc/secrets/.secrets.env`. The file is never visible in build logs or Render dashboard UI.
 
-Any time an agent needs to add or change a Render env var:
-1. Run `bash scripts/render_env_set.sh KEY=value`
-2. Do NOT call the Render REST API directly for env var changes
-3. Do NOT run the pre-commit hook guard as a substitute — it only fixes missing vars, not wrong values
+Secrets in the file: `CLERK_SECRET_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+`DATABASE_URL`, `REDIS_URL`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `ANTHROPIC_API_KEY`,
+`OPENAI_API_KEY`, `GEMINI_API_KEY`, `HEYGEN_API_KEY`, `RUNPOD_API_KEY`, `SMTP_PASS`, `GITHUB_API_TOKEN`.
+
+To update a secret: use `render_env_safe.py` for env vars, OR use the
+`PUT /v1/services/{svc_id}/secret-files` endpoint with the full merged file content.
+
+### ✅ Doppler — IN PROGRESS
+Doppler CLI installed (v3.76.0). Project `auraflux` to be created under the workspace.
+All secrets will sync from Doppler → Render env vars at deploy time, providing:
+- Full audit log (who changed what, when)
+- Single source of truth (no more .env drift)
+- No direct secret exposure in terminal commands
+
+### 🔶 Render Protected Environments — NEEDS PROFESSIONAL PLAN
+Requires Render Professional plan. Currently on Standard.
+Feature: locks non-Admin members from modifying env vars, secret files, DB passwords.
+To enable: upgrade workspace to Professional in Render billing, then mark the production
+environment as Protected (Dashboard → Project → ••• → All settings → Permissions → Protected).
+Estimated cost delta: ~$19/mo for workspace upgrade.

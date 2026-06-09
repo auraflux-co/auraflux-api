@@ -206,6 +206,13 @@ const LEGAL_SHELL = (title, description, canonical, content) => `<!DOCTYPE html>
 <meta name="description" content="${description}">
 <link rel="canonical" href="${canonical}">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-MBS26S2W6E');
+</script>
 ${FRAMER_FONTS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
