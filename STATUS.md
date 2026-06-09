@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-09 v1.0.1038 (Cursor — docs: Doppler secrets management rule to prevent env var wipes — agent workflow documented)
 **Last Updated:** 2026-06-09 v1.0.981 (Cursor — add POST /api/admin/seed/brands endpoint with secret auth)
 **Last Updated:** 2026-06-09 v1.0.980 (Cursor — add seed_test_brands.js to create 20 brands via DB directly)
 **Last Updated:** 2026-06-09 v1.0.979 (Cursor — revert brand_profiles, use existing brands system + create_test_brands.js script)
