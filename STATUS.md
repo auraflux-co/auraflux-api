@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-09 v1.0.980 (Cursor — add seed_test_brands.js to create 20 brands via DB directly)
 **Last Updated:** 2026-06-09 v1.0.979 (Cursor — revert brand_profiles, use existing brands system + create_test_brands.js script)
 **Last Updated:** 2026-06-09 v1.0.978 (Cursor — feat: add admin endpoint to seed 20 brand profiles)
 **Last Updated:** 2026-06-09 v1.0.977 (Cursor — feat: auto-apply pending migrations on server start)
