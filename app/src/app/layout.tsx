@@ -38,14 +38,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* New Relic Browser agent — real user monitoring, Core Web Vitals, JS errors */}
         <Script src="/newrelic-browser.js" strategy="beforeInteractive" />
-        {/* Google Analytics */}
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E" strategy="afterInteractive" />
-        <Script id="gtag-init" strategy="afterInteractive">{`
+        {/* Google Analytics — inline so it appears in server-rendered HTML */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E" />
+        <script dangerouslySetInnerHTML={{ __html: `
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-MBS26S2W6E');
-        `}</Script>
+        ` }} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider afterSignOutUrl="/sign-in">

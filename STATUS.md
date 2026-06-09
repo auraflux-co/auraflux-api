@@ -1,5 +1,5 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-06-09 v1.0.971 (Cursor — feat: add Google Analytics G-MBS26S2W6E to root layout)
+**Last Updated:** 2026-06-09 v1.0.972 (Cursor — fix: GA tag rendered server-side via dangerouslySetInnerHTML so Google crawler detects it)
 **Last Updated:** 2026-06-09 v1.0.970 (Cursor — feat(cpd-xxx): source bypass tool — POST /admin/sources/bypass (SUPERADMIN, bulk up to 50); 20 af-test client_plans rows seeded with twitchLogin handles + custom tier; scripts/seed_source_channels.py for re-runs)
 **Last Updated:** 2026-06-08 v1.0.969 (Cursor — feat(cpd-601/602/603): marketing site fixes + dashboard UX + CMS footer bug — nav Blog link added; blog CTA restored; plans images contain-fit for guided/managed; developer-api CTA fixed to checkout URL; Job Assistant removed from sidebar; Collab panel open by default; schedule 30/70 content strategy tip; CMS marketing.js FALLBACK_FOOTER→FRAMER_FOOTER routing fix)
 **Last Updated:** 2026-06-06 v1.0.968 (Cursor — fix(cpd-598): topic-only compose jobs no longer stuck in operator_review — job_grader skips output_exists check for isTopicOnly jobs; developer_api.js tags spec; poll_job terminates on staged/held; validate_output skips data-field checks for synthetic timeout object; E2E test fixture replaced with R2-hosted clean ffmpeg test pattern with no black frames)
