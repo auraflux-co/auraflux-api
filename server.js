@@ -858,7 +858,7 @@ async function startHeyGenPoller(jobId, card) {
       const statuses = await Promise.all(videoJobs.map(async (job) => {
         try {
           const resp = await axios.get(
-            `https://api.heygen.com/v1/video_status.get?video_id=${job.video_id}`,
+            `https://api.heygen.com/v3/videos/${job.video_id}`,
             { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
           );
           const data = resp.data?.data || {};
@@ -2317,8 +2317,8 @@ app.post('/job/:id/run-gate5', async (req, res) => {
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
 
   const stage = card.stage || '';
-  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running'].includes(stage)) {
-    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/gate5_forced/gate5_failed/gate5_running` });
+  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked'].includes(stage)) {
+    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/heygen_done/gate5_forced/gate5_failed/gate5_running` });
   }
 
   // Allow caller to inject driveUrl / assembledPath when Gate 3b blocked the normal save path
@@ -2364,7 +2364,7 @@ app.get('/job/:id/assembly-preflight', (req, res) => {
   const card  = persistedJobs[jobId];
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
 
-  const { getManualDir, discoverHeyGenNestedExports: _discoverNestedExports } = require('./lib/manual_segment_workflow');
+  const { getManualDir, discoverHeyGenNestedExports: _discoverNestedExports, labelSceneTypeSuffixMatch: _labelSuffixMatch } = require('./lib/manual_segment_workflow');
   const manualDir = getManualDir(jobId);
   const dirExists = fs.existsSync(manualDir);
 
@@ -2416,14 +2416,38 @@ app.get('/job/:id/assembly-preflight', (req, res) => {
       expectedFile = null; // checked via label matching below
     }
 
-    // For avatar: find matching nested folder using same logic as applyManualOverrides
+    // For avatar: mirror the 3-priority matching used in applyManualOverrides so the
+    // preflight accurately reflects whether assembly will find each segment.
     let foundMp4 = null;
     if (segType === 'avatar') {
       if (dirExists) {
         const nested = _discoverNestedExports(manualDir);
-        const segLabel = String(seg.label || '').toUpperCase();
-        const match = nested.find(n => n.label === segLabel);
-        if (match) foundMp4 = match.mp4Path;
+        const segLabel = String(seg.label || '').toUpperCase().trim();
+        // heygenOrdinal = count of non-source_clip segments before this index
+        const heygenOrdinal = segments.slice(0, i).filter(s => (s.type || 'avatar') !== 'source_clip').length;
+
+        // Priority 1: exact label match (e.g. folder "RON_INTRO" === seg label "RON_INTRO")
+        const labelMatches = segLabel ? nested.filter(n => n.label === segLabel) : [];
+        const byLabel = labelMatches.length === 1
+          ? labelMatches[0]
+          : labelMatches.length > 1
+            ? labelMatches.reduce((best, n) =>
+                Math.abs(n.ord - heygenOrdinal) < Math.abs(best.ord - heygenOrdinal) ? n : best)
+            : null;
+
+        // Priority 2: HeyGen avatar ordinal + scene-type suffix match
+        // (handles NBA short labels "G1_INTRO" matching manifest "GAME1_NEW_YORK_KNICKS_..._INTRO")
+        const byHeygenOrd = nested.find(n => n.ord === heygenOrdinal && (
+          !n.label || !segLabel || n.label === segLabel || _labelSuffixMatch(n.label, segLabel)
+        ));
+
+        // Priority 3: absolute index + suffix match (fallback when user names folders 00_, 01_…)
+        const byAbsoluteIdx = nested.find(n => n.ord === i && (
+          !n.label || !segLabel || n.label === segLabel || _labelSuffixMatch(n.label, segLabel)
+        ));
+
+        const pick = byLabel || byHeygenOrd || byAbsoluteIdx;
+        if (pick) foundMp4 = pick.mp4Path;
       }
     } else {
       if (expectedFile && fs.existsSync(expectedFile) && fs.statSync(expectedFile).size > 10000) {
@@ -2601,25 +2625,60 @@ app.post('/job/:id/reassemble', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'No heygen.videoJobs on this card — cannot build segment data.' });
   }
 
-  // ── Build segmentData (same logic as the manual reassemble script) ─────────
+  // ── Build segmentData — prefer manifest (has correct clip interleaving) ────
+  // The manifest written at hold time is authoritative: it has both avatar and
+  // source_clip segments in the correct order.  Fall back to videoJobs-only
+  // reconstruction if no manifest exists (older jobs / NBA long-form).
+  const { getManualDir } = require('./lib/manual_segment_workflow');
+  const manualDir = getManualDir(jobId);
+  const manifestPath = path.join(manualDir, 'manifest.json');
+  let manifest = null;
+  try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch (_) {}
+
   let clipIdx = 0;
-  const segmentData = videoJobs.map(job => {
-    const sceneName    = job.sceneName || job.scene || `SEG_${clipIdx}`;
-    const isClipScene  = /CLIP/i.test(sceneName) && !/COLD_OPEN/i.test(sceneName);
-    if (isClipScene) {
-      const clipEntry = orderedClips[clipIdx++] || {};
-      return {
-        type:               'source_clip',
-        url:                clipEntry.url || clipEntry.pageUrl || '',
-        label:              sceneName,
-        clipTimingTargets:  clipEntry.clipTimingTargets  || [],
-        clipTimingFormat:   clipEntry.clipTimingFormat   || 'timestamp_table',
-        pillarboxFilter:    clipEntry.pillarboxFilter    || null,
-        sourceOrientation:  clipEntry.sourceOrientation  || 'landscape'
-      };
-    }
-    return { type: 'avatar', url: job.video_url || '', label: sceneName };
-  });
+  let segmentData;
+
+  if (manifest?.segments?.length) {
+    // Use manifest — interleaves source_clip segments in the correct positions
+    segmentData = manifest.segments.map((seg, i) => {
+      if ((seg.type || 'avatar') === 'source_clip') {
+        const clipEntry = orderedClips[clipIdx++] || {};
+        return {
+          type:              'source_clip',
+          url:               seg.url || clipEntry.url || clipEntry.pageUrl || '',
+          label:             seg.label,
+          clipTimingTargets: clipEntry.clipTimingTargets  || seg.clipTimingTargets  || [],
+          clipTimingFormat:  clipEntry.clipTimingFormat   || seg.clipTimingFormat   || 'timestamp_table',
+          pillarboxFilter:   clipEntry.pillarboxFilter    || seg.pillarboxFilter    || null,
+          sourceOrientation: clipEntry.sourceOrientation  || seg.sourceOrientation  || 'landscape'
+        };
+      }
+      // Avatar — find matching videoJob for the HeyGen URL (best-effort, overridden by applyManualOverrides anyway)
+      const matchingJob = videoJobs.find(j => (j.sceneName || j.scene) === seg.label);
+      return { type: 'avatar', url: matchingJob?.video_url || seg.url || '', label: seg.label };
+    });
+    console.log(`[reassemble] ${jobId}: using manifest (${segmentData.length} segs, ${clipIdx} clips)`);
+  } else {
+    // Fallback: rebuild from videoJobs only (no clip interleaving)
+    segmentData = videoJobs.map(job => {
+      const sceneName   = job.sceneName || job.scene || `SEG_${clipIdx}`;
+      const isClipScene = /CLIP/i.test(sceneName) && !/COLD_OPEN/i.test(sceneName);
+      if (isClipScene) {
+        const clipEntry = orderedClips[clipIdx++] || {};
+        return {
+          type:              'source_clip',
+          url:               clipEntry.url || clipEntry.pageUrl || '',
+          label:             sceneName,
+          clipTimingTargets: clipEntry.clipTimingTargets  || [],
+          clipTimingFormat:  clipEntry.clipTimingFormat   || 'timestamp_table',
+          pillarboxFilter:   clipEntry.pillarboxFilter    || null,
+          sourceOrientation: clipEntry.sourceOrientation  || 'landscape'
+        };
+      }
+      return { type: 'avatar', url: job.video_url || '', label: sceneName };
+    });
+    console.log(`[reassemble] ${jobId}: no manifest — rebuilt from videoJobs (${segmentData.length} segs, ${clipIdx} clips)`);
+  }
 
   // ── Reset assembly-related state so old stitch artefacts are gone ──────────
   const retryNum  = (card._assemblyRetryCount || 0) + 1;
@@ -3498,52 +3557,15 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
     const summaryData = summaryResp.data;
 
-    // Check article.video first — this is where the compiled highlights reel lives
-    const articleVideos = (summaryData.article && summaryData.article.video) || [];
-    if (articleVideos.length) {
-      const highlight = articleVideos[0]; // First is always the Game Highlights reel
-      // Prefer Akamai HLS manifest (stable, no expiring token) over direct CDN MP4 (expires in seconds)
-      const hlsUrl = highlight.links?.source?.HLS?.HD?.href || highlight.links?.source?.HLS?.href;
-      const directMp4 = highlight.links?.source?.HD?.href;
-      const hlUrl = hlsUrl || directMp4;
-      if (hlUrl) {
-        console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s) [${hlsUrl ? 'HLS' : 'direct MP4'}]`);
-        // Download immediately — ESPN CDN URLs expire within seconds
-        const tmpPathAv = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
-        let localPathAv = null;
-        try {
-          localPathAv = await downloadEspnVideo(hlUrl, tmpPathAv);
-        } catch(e) {
-          console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
-        }
-        return res.json({
-          ok: true,
-          gate0: 'pass',
-          gameId,
-          videoUrl: hlUrl,
-          localPath: localPathAv,
-          thumbnail: (highlight.thumbnail && highlight.thumbnail.href) || '',
-          title: highlight.headline || 'Game Highlights',
-          description: highlight.description || '',
-          duration: highlight.duration || 0,
-          source: 'article.video'
-        });
-      }
-    }
-
-    // Long-form requires the compiled Game Highlights reel — individual play clips are too short
-    // and don't give Bobby G enough material for voiced narration.
-    if (!isShortFormRequest) {
-      return res.json({
-        ok: false,
-        gate0: 'fail',
-        error: `No Game Highlights reel found for game ${gameId} — article.video is empty. ESPN may not have processed the highlights yet. Try again in a few minutes, or pick a different game.`
-      });
-    }
-
-    // Short-form only: fall back to individual play clips (30-90s range preferred)
-    console.warn(`[nba-scrape] ⚠️ article.video empty — falling back to API play clips for short-form`);
-    const videos = summaryData.videos || [];
+    // Merge article.video + summaryData.videos into one pool, then pick by duration.
+    // article.video[0] was previously assumed to always be the highlights reel, but ESPN
+    // sometimes puts short stat/milestone clips (16-27s) there instead. Picking by duration
+    // is the only reliable way to get the actual highlights compilation for long form.
+    const articleVideos = Array.isArray(summaryData.article?.video)
+      ? summaryData.article.video
+      : (summaryData.article?.video ? [summaryData.article.video] : []);
+    const topVideos = summaryData.videos || [];
+    const videos = [...topVideos, ...articleVideos];
 
     if (!videos.length) {
       return res.json({
@@ -3553,38 +3575,56 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       });
     }
 
-    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting best 30-90s clip for short-form`);
+    console.log(`[nba-scrape] Found ${videos.length} total videos for game ${gameId} (${topVideos.length} top + ${articleVideos.length} article)`);
 
-    // Step 2: Use full video pool — select best clip based on form type.
-    // Long-form: select longest duration (game highlights reel is reliably longest at 115s).
-    // Short-form: prefer clips in 30-90s range for split-screen; fall back to longest if none in range.
-    // Keyword filtering on API metadata was removed: ESPN titles don't contain "highlight"
-    // even when the page shows "Game Highlights", so the filter always returned 0 matches.
+    // Select best clip by form type from the merged pool.
+    // Long-form: prefer "Game Highlights" titled clip (the actual compiled reel ESPN produces).
+    //   Fall back to longest clip only if no highlights-titled clip exists.
+    //   Duration-only selection is unreliable — player feature clips ("Ant drops 36 points", 109s)
+    //   can beat the actual "Game Highlights" reel (107s) by a few seconds.
+    // Short-form: prefer 30-90s range; fall back to longest if none in range.
     const videoPool = videos;
     console.log(`[nba-scrape]   Using full pool of ${videoPool.length} videos`);
 
-    // Step 3: Find best video — prefer 30-90s range for short-form, longest for long-form
+    const isHighlightsReel = (v) => {
+      const t = (v.headline || v.title || v.description || '').toLowerCase();
+      return /game highlights|highlights$/i.test(t);
+    };
+
+    // Log all clips for diagnostics
+    for (const video of videoPool) {
+      const title = video.headline || video.title || video.description || '';
+      console.log(`[nba-scrape]   Video: "${title}" (${video.duration || 0}s)${isHighlightsReel(video) ? ' ← HIGHLIGHTS REEL' : ''}`);
+    }
+
     let highestDurationVideo = null;
     let maxDuration = 0;
-    let shortFormPreferred = null;  // best clip in 30-90s range for short-form
+    let shortFormPreferred = null;
 
     for (const video of videoPool) {
       const duration = video.duration || 0;
-      const title = video.headline || video.title || video.description || '';
-
-      console.log(`[nba-scrape]   Video: "${title}" (${duration}s)`);
-
-      // Track the longest clip (long-form selection + short-form fallback)
       if (duration > maxDuration) {
         maxDuration = duration;
         highestDurationVideo = video;
       }
-
-      // Track best clip in 30-90s range for short-form (prefer longer within range)
       if (isShortFormRequest && duration >= minDurationSecs && duration <= maxDurationSecs) {
         if (!shortFormPreferred || duration > (shortFormPreferred.duration || 0)) {
           shortFormPreferred = video;
         }
+      }
+    }
+
+    if (!isShortFormRequest) {
+      // Long-form: prefer the "Game Highlights" reel over pure duration
+      const highlightsReelCandidates = videoPool.filter(isHighlightsReel);
+      if (highlightsReelCandidates.length > 0) {
+        // Among highlights reels, pick the longest
+        const best = highlightsReelCandidates.slice().sort((a, b) => (b.duration || 0) - (a.duration || 0))[0];
+        console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected "Game Highlights" reel: "${best.headline || best.title}" (${best.duration}s)`);
+        highestDurationVideo = best;
+        maxDuration = best.duration || 0;
+      } else {
+        console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected longest duration video: "${(highestDurationVideo?.headline || highestDurationVideo?.title) || '?'}" (${maxDuration}s)`);
       }
     }
 
@@ -5665,7 +5705,7 @@ app.get('/heygen/latest-videos', async (req, res) => {
       const results = await Promise.all(batch.map(async (v) => {
         try {
           const statusResp = await axios.get(
-            `https://api.heygen.com/v1/video_status.get?video_id=${v.video_id}`,
+            `https://api.heygen.com/v3/videos/${v.video_id}`,
             { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
           );
           const data = statusResp.data?.data || {};
@@ -5866,7 +5906,7 @@ app.post('/heygen/video-urls', async (req, res) => {
     const batchResults = await Promise.all(batch.map(async (videoId) => {
       try {
         const statusResp = await axios.get(
-          `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
+          `https://api.heygen.com/v3/videos/${videoId}`,
           { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
         );
         const data = statusResp.data?.data || {};

@@ -145,7 +145,7 @@ async function poll(videoJobs, pollCount) {
   const statuses = await Promise.all(videoJobs.map(async (job) => {
     try {
       const resp = await axios.get(
-        `https://api.heygen.com/v1/video_status.get?video_id=${job.video_id}`,
+        `https://api.heygen.com/v3/videos/${job.video_id}`,
         { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
       );
       const data = resp.data?.data || {};

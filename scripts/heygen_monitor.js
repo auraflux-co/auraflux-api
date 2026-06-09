@@ -33,7 +33,7 @@ function log(message) {
 async function checkHeyGenStatus(videoId) {
   try {
     const response = await axios.get(
-      `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
+      `https://api.heygen.com/v3/videos/${videoId}`,
       {
         headers: {
           'X-Api-Key': HEYGEN_API_KEY
@@ -51,7 +51,7 @@ async function checkHeyGenStatus(videoId) {
     return {
       video_id: videoId,
       status: data.status,
-      error: data.error,
+      error: data.failure_message || data.error,
       video_url: data.video_url,
       gif_url: data.gif_url,
       duration: data.duration,

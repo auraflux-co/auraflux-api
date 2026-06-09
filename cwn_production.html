@@ -109,6 +109,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
 .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:20px; }
 .cal-day { background:#0d1524; border:1px solid rgba(199,175,79,0.1); border-radius:6px; padding:10px; min-height:120px; }
+.cal-day.cal-day-today { border-color:rgba(199,175,79,0.5); background:#0f1a2e; }
 .cal-day-name { font-size:9px; font-weight:900; color:rgba(199,175,79,0.5); letter-spacing:2px; margin-bottom:8px; }
 .cal-item { background:rgba(199,175,79,0.08); border-left:2px solid #c7af4f; padding:4px 6px; border-radius:2px; margin-bottom:4px; font-size:10px; color:#fff; cursor:pointer; }
 .cal-item.nba { border-color:#4a90d9; background:rgba(74,144,217,0.1); }
@@ -182,13 +183,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div class="card-body">
             <div id="nba-games-summary" style="font-size:12px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:12px;">Auto-fetches yesterday's completed games with highlight clips.</div>
             <input id="nba-game-ids" type="hidden" value="">
-            <div class="field"><label>GAME COUNT</label>
-              <select id="nba-count">
-                <option value="1">1 game (test)</option>
-                <option value="3" selected>3 games (~5 min)</option>
-                <option value="5">5 games (~8 min)</option>
-              </select>
-            </div>
+            <input type="hidden" id="nba-count" value="10">
             <!-- inline clip picker — populated by previewNBAGames() -->
             <div id="nba-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
             <!-- short-form clip gallery — shown when SHORT is clicked, lets user pick exact clip -->
@@ -202,14 +197,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <button id="btn-preview-nba" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNBAGames()">PICK CLIPS</button>
               <span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;letter-spacing:.03em;">↑ feeds both</span>
               <button id="btn-gen-nba" class="btn btn-gold" onclick="generateNBAWithPicker()">LONG FORM</button>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <select id="nba-short-batch" style="background:#0b111f;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:11px;padding:4px 6px;border-radius:4px;">
-                  <option value="1">×1</option>
-                  <option value="3">×3</option>
-                  <option value="5">×5</option>
-                </select>
-                <button id="btn-gen-nba-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ openNbaShortClipPicker(platforms); })">SHORT</button>
-              </div>
+              <button id="btn-gen-nba-short" class="btn btn-outline" onclick="triggerNbaShort()">SHORT</button>
               <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
             </div>
           </div>
@@ -221,22 +209,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <span class="tag tag-pending" id="news-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
+            <input type="hidden" id="news-source" value="all">
             <div class="field"><label>SOURCES</label>
-              <select id="news-source">
-                <option value="aljazeera">Al Jazeera</option>
-                <option value="bbc">BBC World</option>
-                <option value="npr">NPR</option>
-                <option value="all">All Sources (Top 10 mixed)</option>
-              </select>
+              <div style="font-size:12px;color:rgba(255,255,255,0.6);font-family:monospace;padding:8px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;background:rgba(255,255,255,0.03);">All Sources (AJ · BBC · AP · Reuters)</div>
             </div>
-            <div class="field"><label>STORY COUNT</label>
-              <select id="news-count">
-                <option value="1">1 story (test)</option>
-                <option value="5">5 stories (~5 min)</option>
-                <option value="10" selected>10 stories (~10 min)</option>
-                <option value="15">15 stories (~15 min)</option>
-              </select>
-            </div>
+            <input type="hidden" id="news-count" value="15">
             <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
             <!-- inline story picker — populated by previewNewsStories() -->
             <div id="news-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
@@ -250,14 +227,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <button id="btn-preview-news" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNewsStories()">PICK STORIES</button>
               <span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;letter-spacing:.03em;">↑ feeds both</span>
               <button id="btn-gen-news" class="btn btn-gold" onclick="generateNewsWithPicker()">LONG FORM</button>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <select id="news-short-batch" style="background:#0b111f;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:11px;padding:4px 6px;border-radius:4px;">
-                  <option value="1">×1</option>
-                  <option value="3">×3</option>
-                  <option value="5">×5</option>
-                </select>
-                <button id="btn-gen-news-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ openNewsShortClipPicker(platforms); })">SHORT</button>
-              </div>
+              <button id="btn-gen-news-short" class="btn btn-outline" onclick="triggerNewsShort()">SHORT</button>
             </div>
           </div>
         </div>
@@ -296,7 +266,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="btn-row">
               <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">PICK CLIPS</button>
               <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitchWithPicker()">LONG FORM</button>
-              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="showPlatformModal(function(platforms){ openTwitchShortClipPicker(platforms); })">SHORT</button>
+              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()">SHORT</button>
             </div>
           </div>
         </div>
@@ -307,9 +277,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="card">
         <div class="card-header">
           <div class="card-title" id="script-type-label">SELECT A CONTENT TYPE ABOVE TO LOAD SCRIPT</div>
-          <div class="btn-row" style="margin:0">
+          <div class="btn-row" style="margin:0;align-items:center;gap:10px;">
+            <label id="hold-label" style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;" title="Script runs normally but pauses before HeyGen — edit scenes in the textarea then click SEND TO HEYGEN">
+              <input type="checkbox" id="hold-before-heygen" style="cursor:pointer;accent-color:#c7af4f;" onchange="updateHoldUI()">
+              ⏸ HOLD BEFORE HEYGEN
+            </label>
             <button class="btn btn-outline btn-sm" onclick="regenScript()">REGENERATE</button>
-            <button class="btn btn-gold btn-sm" onclick="sendToHeyGen()">SEND TO HEYGEN</button>
+            <button class="btn btn-gold btn-sm" id="send-to-heygen-btn" onclick="sendToHeyGen()">SEND TO HEYGEN</button>
           </div>
         </div>
         <div class="card-body">
@@ -343,7 +317,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     <!-- CONTENT CALENDAR PAGE -->
     <div class="page" id="page-calendar">
       <div class="sec-title">CONTENT CALENDAR <span class="badge">THIS WEEK</span></div>
-      <div class="alert alert-info">Long form: 10-11AM ET daily | Shorts: 4-7PM ET daily</div>
+      <div class="alert alert-info">Long form: News daily 10:45AM · Twitch Wed–Sun 11AM · NBA day-after-games 10:30AM (live from ESPN) &nbsp;|&nbsp; Shorts: 3/day — Twitch 5PM · News 6PM · NBA (or bonus) 7PM</div>
       <div class="calendar-grid" id="calendar-grid"></div>
       <div class="sec-title">THIS WEEK'S SCHEDULE</div>
       <div class="card"><div class="card-body"><div id="schedule-list" style="font-family:Arial,sans-serif;font-size:13px;line-height:2;color:rgba(255,255,255,0.8);"></div></div></div>
@@ -1283,25 +1257,26 @@ function scanScriptForNames(scriptText) {
 }
 
 function generateVideo(script, title, isPortrait, cb) {
-  var w = isPortrait ? 1080 : 1920;
-  var h = isPortrait ? 1920 : 1080;
+  // v3 API (migrated from legacy v2 2026-06-09) — Avatar V engine
   var payload = {
-    video_inputs: [{
-      character: { type:'avatar', avatar_id:(isPortrait ? (CFG.avatarShortId||CFG.avatarId) : CFG.avatarId), avatar_style:'normal' },
-      voice: { type:'text', input_text:applyPronunciations(cleanAvatarText(script)), voice_id:CFG.voiceId, speed: (function(){
-        // Reactions are short punchy sentences — slightly faster sounds more natural
-        // Intros, cold open, outro use base speed
-        var lbl = (title || '').toUpperCase();
-        if (lbl.indexOf('REACTION') !== -1) return Math.min(1.5, (CFG.speakSpeed || 0.85) + 0.10);
-        return CFG.speakSpeed || 0.85;
-      })() },
-      background: { type:'color', value:CFG.bgColor }
-    }],
-    dimension: { width:w, height:h },
+    type: 'avatar',
+    avatar_id: (isPortrait ? (CFG.avatarShortId||CFG.avatarId) : CFG.avatarId),
     title: title || undefined,
-    test: false
+    script: applyPronunciations(cleanAvatarText(script)),
+    voice_id: CFG.voiceId,
+    voice_settings: { speed: (function(){
+      // Reactions are short punchy sentences — slightly faster sounds more natural
+      // Intros, cold open, outro use base speed
+      var lbl = (title || '').toUpperCase();
+      if (lbl.indexOf('REACTION') !== -1) return Math.min(1.5, (CFG.speakSpeed || 0.85) + 0.10);
+      return CFG.speakSpeed || 0.85;
+    })() },
+    background: { type:'color', value:CFG.bgColor },
+    resolution: '1080p',
+    aspect_ratio: isPortrait ? '9:16' : '16:9',
+    engine: { type: 'avatar_v' }
   };
-  hgPost('v2/video/generate', payload, function(err, data) {
+  hgPost('v3/videos', payload, function(err, data) {
     if (err) { cb(err); return; }
     var videoId = data.data && data.data.video_id;
     if (!videoId) { cb(new Error('No video_id returned')); return; }
@@ -1313,13 +1288,13 @@ function pollVideo(videoId, onUpdate, onDone) {
   var attempts = 0;
   function check() {
     attempts++;
-    hgGet('v1/video_status.get?video_id='+videoId, function(err, data) {
+    hgGet('v3/videos/'+videoId, function(err, data) {
       if (err) { setTimeout(check, 8000); return; }
       var status = data.data && data.data.status;
       var pct = status==='processing' ? Math.min(90, attempts*8) : status==='completed' ? 100 : 0;
       if (onUpdate) onUpdate(status, pct);
       if (status === 'completed') { onDone(null, data.data); }
-      else if (status === 'failed') { onDone(new Error('Video generation failed')); }
+      else if (status === 'failed') { onDone(new Error((data.data && data.data.failure_message) || 'Video generation failed')); }
       else { setTimeout(check, 6000); }
     });
   }
@@ -1754,32 +1729,6 @@ function triggerGate5(job) {
 
       if (qaEl) qaEl.innerHTML = html;
 
-      // ── Auto-advance: Gate 5 PASS → generate publish copy → approveAndUpload ──
-      // Per GATED_PIPELINE_ARCHITECTURE.md Stage 5 → Stage 6 → Stage 7:
-      // Stage 5 PASS sets status='publishable' and Stage 6 (Drive + Upload-Post)
-      // is pure-code automation. The only human checkpoint is Stage 7 (Rob
-      // reviewing drafts on YouTube/TikTok/IG themselves — NOT in the dashboard).
-      // Any button here is a regression against the spec's "full automation
-      // runs without manual intervention" definition of done.
-      if (result.score >= 85 && !job._autoPublishFired) {
-        job._autoPublishFired = true;
-        var approvalEl = document.getElementById('gate3-approval-' + job.id);
-        if (approvalEl) {
-          approvalEl.style.display = '';
-          approvalEl.innerHTML = '<div style="margin-top:8px;padding:10px 12px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.4);border-radius:4px;">'
-            + '<div style="font-size:9px;letter-spacing:2px;color:#2ecc71;font-weight:900;margin-bottom:6px;">✅ GATE 5 PASS — AUTO-PUBLISHING</div>'
-            + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;">Gate 5 passed (' + result.score + '/100). Generating publish copy → Upload-Post → YouTube/TikTok/IG as private draft.</div>'
-            + '<div id="gate3-upload-status-' + job.id + '" style="margin-top:6px;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);">⏳ Generating title, description, and hashtags...</div>'
-            + '<button onclick="rejectJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="margin-top:6px;border-color:rgba(231,76,60,0.5);color:#e74c3c;">❌ REJECT — STOP AUTO-PUBLISH</button>'
-            + '</div>';
-        }
-        cwn_log('[auto-advance] Gate 5 PASS (' + result.score + '/100) — auto-generating publish copy then firing Upload-Post', false);
-        console.log('[auto-advance] Gate 5 → autoGeneratePublishPrep → approveAndUpload');
-        setTimeout(function(){
-          try { autoGeneratePublishPrep(job.id); } catch(e) { console.error('[auto-advance] autoGeneratePublishPrep threw:', e); }
-        }, 1500);
-      }
-
       renderQueue();
     } catch(e) {
       job._gate5Running = false;
@@ -2180,10 +2129,13 @@ function restoreJobsFromServer(showAlert) {
           return;
         }
 
+        // gate5_forced / gate5_running — Gate 5 is actively uploading; restore and poll.
+        var isGate5InFlight = (serverStage === 'gate5_forced' || serverStage === 'gate5_running');
+
         // On AUTO-restore (page load), skip assembled jobs too — they are done and awaiting manual publish.
-        // On MANUAL restore (operator clicked ↩ RESTORE JOBS), allow assembled jobs to come back
-        // so the operator can re-trigger publish if needed.
-        var isAssembledDone = !!(serverJob.assembledAt || serverStage === 'assembled');
+        // On MANUAL restore (operator clicked ↩ RESTORE JOBS), allow assembled jobs to come back.
+        // Always restore gate5_in_flight jobs so the dashboard shows upload progress.
+        var isAssembledDone = !isGate5InFlight && !!(serverJob.assembledAt || serverStage === 'assembled');
         if (isAssembledDone && !showAlert) {
           cwn_log('[restore] Skipping assembled job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS to bring it back', false);
           return;
@@ -2231,6 +2183,12 @@ function restoreJobsFromServer(showAlert) {
         JOBS.push(restoredJob);
         existingIds[serverJob.jobId] = true;
         added++;
+
+        // If Gate 5 is actively uploading, start polling so the card auto-updates to "published".
+        if (isGate5InFlight) {
+          cwn_log('[restore] ' + serverJob.jobId + ' Gate 5 in-flight — polling for published status.', false);
+          (function(jid){ setTimeout(function(){ _pollForPublished(jid); }, 3000); })(serverJob.jobId);
+        }
       });
 
       if (added > 0) {
@@ -2308,8 +2266,9 @@ function renderQueue() {
     pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
     pipe += pipeStep('FFMPEG', !!job.assembledAt, !!(status==='all_sent'&&doneSegs.length>0&&!job.assembledAt), '#e67e22');
     pipe += pipeStep('GATE 5 QA', !!(job.gate5&&job.gate5.score>=85), !!(job.assembledAt&&!job.gate5), '#3498db');
-    pipe += pipeStep('GATE 3 APPROVE', !!(job._gate3Approved), !!(job.gate5&&job.gate5.score>=85&&!job._gate3Approved&&!job._gate3Rejected), '#c7af4f');
-    pipe += pipeStep('PUBLISHED', !!(job.publishRecord&&job.publishRecord.gate4==='pass'), !!(job._gate3Approved&&!(job.publishRecord&&job.publishRecord.gate4==='pass')), '#27ae60');
+    var isGate5Running = !!(job.stage === 'gate5_forced' || job.stage === 'gate5_running');
+    pipe += pipeStep('UPLOAD-POST', isGate5Running, !!(job.gate5&&!isGate5Running&&job.stage!=='published'), '#c7af4f');
+    pipe += pipeStep('PUBLISHED', !!(job.stage==='published'||!!(job.publishRecord&&job.publishRecord.gate4==='pass')), isGate5Running, '#27ae60');
     pipe += '</div>';
 
     // PLATFORM STATUS
@@ -2366,6 +2325,18 @@ function renderQueue() {
     if (canRetryAsm) {
       actions += '<button onclick="retryAssembly(\'' + job.asmId + '\',\'' + (job.type||'news') + '\',\'' + (job.title||'').replace(/'/g,"\\'") + '\',\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(230,126,34,0.6);" title="Re-run FFmpeg assembly from existing tmp segments — skips HeyGen, no credits used">🔄 RETRY ASSEMBLY</button>';
     }
+    // RESUME ASSEMBLY — primary flow after manual segment drops. Shows only when waiting for drops.
+    if (status === 'awaiting_manual_segments') {
+      actions += '<button onclick="resumeAssembly(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(46,204,113,0.7);color:#2ecc71;font-weight:700;" title="Run preflight check then trigger assembly with the files you dropped in manual_segments/">▶ RESUME ASSEMBLY</button>';
+    }
+    // RE-ASSEMBLE FROM FILES — uses manual_segments folder overrides, skips Gate 2 (chrome burning).
+    // Show for any job that has been through HeyGen (not just submitted — any post-script stage).
+    // Server validates that heygen.videoJobs exists; shows error toast if not ready.
+    var pastHeygenStage = ['all_sent','awaiting_manual_segments','heygen_done','assembled',
+      'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1;
+    if (pastHeygenStage && status !== 'published') {
+      actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Skip Gate 2 — build segments from card data and fire assembly. Files in manual_segments folder are used automatically.">📁 RE-ASSEMBLE FROM FILES</button>';
+    }
     actions += '</div>';
     // Short-form status div (for thumbnail + CapCut feedback)
     if (isShortJob) {
@@ -2414,7 +2385,7 @@ function renderQueue() {
     var tagLbl = status.toUpperCase().replace('_',' ');
     var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
 
-    return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':status==='failed'?'failed':'')+'">'
+    return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':status==='failed'?'failed':'')+'" id="job-'+job.id+'">'
       +'<div class="job-row-top"><div class="job-info" style="flex:1;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
       +'<div><div class="job-title">'+job.title+'</div>'
@@ -2429,7 +2400,7 @@ function renderQueue() {
       +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+'<div id="gate3-approval-'+job.id+'" style="display:'+(job._gate3Approved||job._gate3Rejected?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
+      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -2720,14 +2691,17 @@ function advanceJob(jobId) {
           // Mark all avatar segments as completed so ASSEMBLE button appears
           (job.segments||[]).forEach(function(s){ if(s.type==='avatar' && !s.url){ s.status='completed'; s.url='forced'; } });
         }
-        if (resp.before === 'assembled') {
-          job._gate5Done = true;
-          if (!job.gate5) job.gate5 = { score: 100, outcome: 'force_passed', _forced: true };
-        }
         saveJobs();
       }
       restoreJobsFromServer(false);
-      alert('✅ Force-advanced: ' + resp.before + ' → ' + resp.after + '\n\n' + (resp.message || ''));
+      if (resp.after === 'gate5_forced') {
+        // Gate 5 is already running server-side (advance endpoint triggers it automatically).
+        // Show a non-blocking notice; polling will pick up the stage change when published.
+        cwn_log('[advance] ' + jobId + ': Gate 5 triggered — upload in progress. Polling for published status.', false);
+        _pollForPublished(jobId);
+      } else {
+        alert('✅ Force-advanced: ' + resp.before + ' → ' + resp.after + '\n\n' + (resp.message || ''));
+      }
     } catch(e) {
       cwn_log('[advance] Error: ' + e.message, true);
       alert('❌ Force-advance failed: ' + e.message);
@@ -2738,6 +2712,48 @@ function advanceJob(jobId) {
     alert('❌ Server unreachable — is server.js running?');
   };
   xhr.send(JSON.stringify({}));
+}
+
+// Polls server every 10 s until the job stage becomes 'published' or 'gate5_failed'.
+// Used after Gate 5 is triggered via force-advance so the dashboard auto-refreshes
+// without Rob needing to click ↩ RESTORE JOBS.
+function _pollForPublished(jobId) {
+  var attempts = 0;
+  var maxAttempts = 36; // 6 minutes total
+  function check() {
+    attempts++;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', CFG.ffmpegUrl + '/jobs', true);
+    xhr.timeout = 10000;
+    xhr.onload = function() {
+      try {
+        var resp = JSON.parse(xhr.responseText);
+        var serverJob = (resp.jobs || []).find(function(j){ return j.jobId === jobId; });
+        if (!serverJob) return;
+        var stage = serverJob.stage || '';
+        if (stage === 'published') {
+          cwn_log('[gate5] ' + jobId + ' published ✅ — refreshing queue.', false);
+          restoreJobsFromServer(false);
+          renderQueue();
+        } else if (stage === 'gate5_failed') {
+          cwn_log('[gate5] ' + jobId + ': Gate 5 FAILED. Check server logs for details.', true);
+          restoreJobsFromServer(false);
+          renderQueue();
+        } else if (attempts < maxAttempts) {
+          setTimeout(check, 10000);
+        } else {
+          cwn_log('[gate5] ' + jobId + ': still not published after ' + maxAttempts + ' polls — stopping. Click ↩ RESTORE JOBS to check.', true);
+        }
+      } catch(_e) {
+        if (attempts < maxAttempts) setTimeout(check, 10000);
+      }
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+      if (attempts < maxAttempts) setTimeout(check, 10000);
+    };
+    xhr.send();
+  }
+  setTimeout(check, 5000); // first check after 5 s
 }
 
 function dismissJob(jobId) {
@@ -2763,6 +2779,291 @@ function dismissJob(jobId) {
   };
   xhr.onerror = xhr.ontimeout = function() {
     cwn_log('[dismiss] Server unreachable', true);
+    alert('❌ Server unreachable — is server.js running?');
+  };
+  xhr.send(JSON.stringify({}));
+}
+
+// ▶ RESUME ASSEMBLY — primary post-manual-drop flow (POST /job/:id/manual-segments/resume)
+// Runs preflight first, shows verification panel, then resumes pipeline.
+function resumeAssembly(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  cwn_log('[resume-preflight] ' + jobId + ' — running preflight check…', false);
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/job/' + jobId + '/assembly-preflight', true);
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    var pf = null;
+    try { pf = JSON.parse(xhr.responseText); } catch(e) { pf = { ok: false, error: e.message }; }
+    _showResumePreflight(jobId, job, pf);
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    _doResumeConfirmed(jobId, job);
+  };
+  xhr.send();
+}
+
+function _showResumePreflight(jobId, job, pf) {
+  var panelEl = document.getElementById('job-preflight-' + jobId);
+  if (!panelEl) {
+    var jobCardEl = document.getElementById('job-' + jobId);
+    if (!jobCardEl) { _doResumeConfirmed(jobId, job); return; }
+    panelEl = document.createElement('div');
+    panelEl.id = 'job-preflight-' + jobId;
+    panelEl.style.cssText = 'margin:4px 0 8px 0;padding:12px 14px;border-radius:6px;font-size:11px;font-family:monospace;line-height:1.5;';
+    jobCardEl.parentNode.insertBefore(panelEl, jobCardEl.nextSibling);
+  }
+
+  if (pf && pf.error && !pf.segments) {
+    panelEl.style.background = 'rgba(231,76,60,0.1)';
+    panelEl.style.border = '1px solid rgba(231,76,60,0.4)';
+    panelEl.innerHTML = '<span style="color:#e74c3c;">❌ Preflight error: ' + pf.error + '</span>'
+      + '<div style="margin-top:8px;display:flex;gap:8px;">'
+      + '<button onclick="_doResumeConfirmed(\'' + jobId + '\')" style="padding:4px 14px;background:#3498db;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;">▶ Resume Anyway</button>'
+      + '<button onclick="document.getElementById(\'job-preflight-' + jobId + '\').remove()" style="padding:4px 14px;background:transparent;color:#aaa;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;">✕ Cancel</button>'
+      + '</div>';
+    return;
+  }
+
+  var missing = (pf && pf.summary && pf.summary.missing) || 0;
+  var dimWrong = (pf && pf.summary && pf.summary.dimensionWrong) || 0;
+  var noAudio = (pf && pf.summary && pf.summary.audioMissing) || 0;
+  var allOk = pf && pf.ready;
+
+  var html = '';
+
+  // Chrome story order — show first, this is the most critical verification
+  if (pf && pf.chromeStoryOrder && pf.chromeStoryOrder.length > 0) {
+    html += '<div style="margin-bottom:8px;">';
+    html += '<span style="color:rgba(255,255,255,0.5);font-size:10px;text-transform:uppercase;letter-spacing:1px;">Sidebar/flag will highlight in this order:</span><br>';
+    pf.chromeStoryOrder.forEach(function(s) {
+      html += '<span style="color:#e0e0e0;">[' + s.position + '] ' + s.title + '</span><br>';
+    });
+    html += '</div>';
+  }
+
+  // Clip segments with their mapped story
+  if (pf && pf.segments) {
+    var clipRows = pf.segments.filter(function(s){ return s.type === 'source_clip'; });
+    if (clipRows.length > 0) {
+      html += '<div style="margin-bottom:6px;"><span style="color:rgba(255,255,255,0.5);font-size:10px;text-transform:uppercase;letter-spacing:1px;">Source clips:</span><br>';
+      clipRows.forEach(function(s) {
+        var ok = s.present && !s.issue;
+        html += '<span style="color:' + (ok ? '#2ecc71' : '#e74c3c') + ';">' + (ok ? '✓' : '✗') + ' ' + s.label + ' — ' + (s.dimensions || '?') + (s.issue ? ' ← ' + s.issue : '') + '</span><br>';
+      });
+      html += '</div>';
+    }
+
+    var avatarIssues = pf.segments.filter(function(s){ return s.type === 'avatar' && s.issue; });
+    if (avatarIssues.length > 0) {
+      html += '<div style="margin-bottom:6px;">';
+      avatarIssues.forEach(function(s) {
+        html += '<span style="color:#e74c3c;">✗ ' + s.label + ' ← ' + s.issue + '</span><br>';
+      });
+      html += '</div>';
+    }
+  }
+
+  var summaryColor = allOk ? '#2ecc71' : (missing > 0 ? '#e74c3c' : '#f39c12');
+  var summaryText = allOk
+    ? '✅ ' + (pf.summary.total) + ' segments verified — all present, all have audio'
+    : '⚠ ' + (missing > 0 ? missing + ' missing' : '') + (dimWrong > 0 ? ' · ' + dimWrong + ' wrong dims' : '') + (noAudio > 0 ? ' · ' + noAudio + ' no audio' : '');
+
+  html += '<div style="margin-top:8px;color:' + summaryColor + ';font-weight:700;">' + summaryText + '</div>';
+  html += '<div style="margin-top:8px;display:flex;gap:8px;">';
+  if (allOk) {
+    html += '<button onclick="_doResumeConfirmed(\'' + jobId + '\')" style="padding:5px 18px;background:#2ecc71;color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-size:12px;">▶ Resume Assembly</button>';
+  } else {
+    html += '<button onclick="_doResumeConfirmed(\'' + jobId + '\')" style="padding:5px 14px;background:#f39c12;color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-size:11px;">⚠ Resume Anyway</button>';
+  }
+  html += '<button onclick="document.getElementById(\'job-preflight-' + jobId + '\').remove()" style="padding:5px 14px;background:transparent;color:#aaa;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;">✕ Cancel</button>';
+  html += '</div>';
+
+  panelEl.style.background = allOk ? 'rgba(46,204,113,0.06)' : 'rgba(243,156,18,0.08)';
+  panelEl.style.border = '1px solid ' + (allOk ? 'rgba(46,204,113,0.3)' : 'rgba(243,156,18,0.4)');
+  panelEl.style.color = '#e0e0e0';
+  panelEl.innerHTML = html;
+}
+
+function _doResumeConfirmed(jobId, job) {
+  if (!job) job = JOBS.find(function(j){ return j.id === jobId; });
+  var pf = document.getElementById('job-preflight-' + jobId);
+  if (pf) pf.remove();
+
+  cwn_log('[resume] ' + jobId + ' — triggering assembly resume…', false);
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/manual-segments/resume', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 20000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Resume failed');
+      if (job) { job.stage = 'all_sent'; saveJobs(); }
+      renderQueue();
+      cwn_log('[resume] ' + jobId + ' — pipeline resumed, assembly starting', false);
+    } catch(e) {
+      cwn_log('[resume] Error: ' + e.message, true);
+      alert('❌ Resume failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    cwn_log('[resume] Server unreachable', true);
+    alert('❌ Server unreachable');
+  };
+  xhr.send(JSON.stringify({}));
+}
+
+// POST /job/:id/reassemble — skip Gate 2, go straight to assembly using
+// manual_segments folder overrides. Expired HeyGen URLs don't matter.
+function reassembleFromFiles(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+
+  // Run preflight check first — show segment verification before any assembly
+  cwn_log('[preflight] ' + jobId + ' — checking manual_segments…', false);
+  var pfXhr = new XMLHttpRequest();
+  pfXhr.open('GET', CFG.ffmpegUrl + '/job/' + jobId + '/assembly-preflight', true);
+  pfXhr.timeout = 15000;
+  pfXhr.onload = function() {
+    var pf = null;
+    try { pf = JSON.parse(pfXhr.responseText); } catch(e) { pf = { ok: false, error: e.message }; }
+    _showAssemblyPreflight(jobId, job, pf);
+  };
+  pfXhr.onerror = pfXhr.ontimeout = function() {
+    // Preflight unreachable — fall back to simple confirm
+    _doReassembleConfirmed(jobId, job);
+  };
+  pfXhr.send();
+}
+
+function _showAssemblyPreflight(jobId, job, pf) {
+  var retryNum = ((job && job._assemblyRetryCount) || 0) + 1;
+
+  // Build preflight panel HTML
+  var panelEl = document.getElementById('job-preflight-' + jobId);
+  if (!panelEl) {
+    // Inject inline panel below the job card — find the job card container
+    var jobCardEl = document.getElementById('job-' + jobId);
+    if (!jobCardEl) { _doReassembleConfirmed(jobId, job); return; }
+    panelEl = document.createElement('div');
+    panelEl.id = 'job-preflight-' + jobId;
+    panelEl.style.cssText = 'margin:4px 0 8px 0;padding:12px 14px;border-radius:6px;font-size:11px;font-family:monospace;line-height:1.5;';
+    jobCardEl.parentNode.insertBefore(panelEl, jobCardEl.nextSibling);
+  }
+
+  if (pf && pf.error && !pf.segments) {
+    panelEl.style.background = 'rgba(231,76,60,0.1)';
+    panelEl.style.border = '1px solid rgba(231,76,60,0.4)';
+    panelEl.innerHTML = '<span style="color:#e74c3c;">❌ Preflight error: ' + pf.error + '</span>'
+      + '<div style="margin-top:8px;display:flex;gap:8px;">'
+      + '<button onclick="_doReassembleConfirmed(\'' + jobId + '\')" style="padding:4px 14px;background:#3498db;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;">🚀 Assemble Anyway</button>'
+      + '<button onclick="document.getElementById(\'job-preflight-' + jobId + '\').remove()" style="padding:4px 14px;background:transparent;color:#aaa;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;">✕ Cancel</button>'
+      + '</div>';
+    return;
+  }
+
+  var hasIssues = pf && pf.issues && pf.issues.length > 0;
+  var missing = (pf && pf.summary && pf.summary.missing) || 0;
+  var dimWrong = (pf && pf.summary && pf.summary.dimensionWrong) || 0;
+  var noAudio = (pf && pf.summary && pf.summary.audioMissing) || 0;
+  var allOk = pf && pf.ready;
+
+  var html = '';
+
+  // Chrome story order — always show so user can verify
+  if (pf && pf.chromeStoryOrder && pf.chromeStoryOrder.length > 0) {
+    html += '<div style="margin-bottom:8px;">';
+    html += '<span style="color:rgba(255,255,255,0.5);font-size:10px;text-transform:uppercase;letter-spacing:1px;">Chrome story order (sidebar + flag will show in this order):</span><br>';
+    pf.chromeStoryOrder.forEach(function(s) {
+      html += '<span style="color:' + (allOk ? '#2ecc71' : '#e0e0e0') + ';">[' + s.position + '] ' + s.title + '</span><br>';
+    });
+    html += '</div>';
+  }
+
+  // Segment table — group by avatar/clip, show issues
+  if (pf && pf.segments && pf.segments.length > 0) {
+    var clipRows = pf.segments.filter(function(s){ return s.type === 'source_clip'; });
+    var avatarIssues = pf.segments.filter(function(s){ return s.type === 'avatar' && s.issue; });
+
+    if (clipRows.length > 0) {
+      html += '<div style="margin-bottom:6px;"><span style="color:rgba(255,255,255,0.5);font-size:10px;text-transform:uppercase;letter-spacing:1px;">Source clips:</span><br>';
+      clipRows.forEach(function(s) {
+        var ok = s.present && s.dimensionsOk !== false && s.hasAudio !== false;
+        var col = ok ? '#2ecc71' : '#e74c3c';
+        html += '<span style="color:' + col + ';">' + (ok ? '✓' : '✗') + ' [' + s.index + '] ' + s.label;
+        if (s.dimensions) html += ' ' + s.dimensions;
+        if (s.issue) html += ' ← ' + s.issue;
+        html += '</span><br>';
+      });
+      html += '</div>';
+    }
+
+    if (avatarIssues.length > 0) {
+      html += '<div style="margin-bottom:6px;"><span style="color:#f39c12;font-size:10px;">Avatar issues:</span><br>';
+      avatarIssues.forEach(function(s) {
+        html += '<span style="color:#e74c3c;">✗ [' + s.index + '] ' + s.label + ' ← ' + s.issue + '</span><br>';
+      });
+      html += '</div>';
+    }
+  }
+
+  // Summary line + action buttons
+  var summaryColor = allOk ? '#2ecc71' : (missing > 0 ? '#e74c3c' : '#f39c12');
+  var summaryText = allOk
+    ? '✅ All ' + (pf.summary.total) + ' segments verified — ready to assemble (retry #' + retryNum + ')'
+    : '⚠ ' + (missing > 0 ? missing + ' missing' : '') + (dimWrong > 0 ? ' · ' + dimWrong + ' wrong dimensions' : '') + (noAudio > 0 ? ' · ' + noAudio + ' no audio' : '');
+
+  html += '<div style="margin-top:8px;color:' + summaryColor + ';font-weight:700;">' + summaryText + '</div>';
+  html += '<div style="margin-top:8px;display:flex;gap:8px;">';
+  if (allOk) {
+    html += '<button onclick="_doReassembleConfirmed(\'' + jobId + '\')" style="padding:5px 16px;background:#2ecc71;color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-size:11px;">🚀 Start Assembly</button>';
+  } else {
+    html += '<button onclick="_doReassembleConfirmed(\'' + jobId + '\')" style="padding:5px 14px;background:#f39c12;color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-size:11px;">⚠ Assemble Anyway</button>';
+  }
+  html += '<button onclick="document.getElementById(\'job-preflight-' + jobId + '\').remove()" style="padding:5px 14px;background:transparent;color:#aaa;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;">✕ Cancel</button>';
+  html += '</div>';
+
+  panelEl.style.background = allOk ? 'rgba(46,204,113,0.06)' : 'rgba(243,156,18,0.08)';
+  panelEl.style.border = '1px solid ' + (allOk ? 'rgba(46,204,113,0.3)' : 'rgba(243,156,18,0.4)');
+  panelEl.style.color = '#e0e0e0';
+  panelEl.innerHTML = html;
+}
+
+function _doReassembleConfirmed(jobId, job) {
+  if (!job) job = JOBS.find(function(j){ return j.id === jobId; });
+  var retryNum = ((job && job._assemblyRetryCount) || 0) + 1;
+  var pf = document.getElementById('job-preflight-' + jobId);
+  if (pf) pf.remove();
+
+  cwn_log('[reassemble] ' + jobId + ' — requesting r' + retryNum + ' from manual_segments files…', false);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/reassemble', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 20000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Reassemble failed');
+      if (job) {
+        job._assemblyRetryCount = retryNum;
+        job.stage = 'heygen_done';
+        delete job.assembledAt;
+        delete job.finalUrl;
+        saveJobs();
+      }
+      renderQueue();
+      cwn_log('[reassemble] ' + jobId + ' r' + retryNum + ' started — ' + resp.segmentCount + ' segs, ' + resp.clipCount + ' clips', false);
+      alert('✅ Re-assembly r' + retryNum + ' started!\n\n'
+        + resp.segmentCount + ' segments (' + resp.clipCount + ' clips)\n\n'
+        + 'Watch the dashboard — Gate 3 QA result will appear when FFmpeg finishes.');
+    } catch(e) {
+      cwn_log('[reassemble] Error: ' + e.message, true);
+      alert('❌ Reassemble failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    cwn_log('[reassemble] Server unreachable', true);
     alert('❌ Server unreachable — is server.js running?');
   };
   xhr.send(JSON.stringify({}));
@@ -3135,6 +3436,17 @@ function statusTagIdForType(type) {
   return null;
 }
 
+function updateHoldUI() {
+  var checked = g('hold-before-heygen') ? g('hold-before-heygen').checked : false;
+  var lbl = g('hold-label');
+  var btn = g('send-to-heygen-btn');
+  if (lbl) lbl.style.color = checked ? '#c7af4f' : 'rgba(255,255,255,0.45)';
+  if (btn) {
+    btn.style.opacity = checked ? '0.5' : '';
+    btn.title = checked ? 'Script will be held here after Gate 1 — edit scenes above then click this button' : '';
+  }
+}
+
 function setGenerateModeActive(type, form) {
   var longBtn = g('btn-gen-' + type);
   var shortBtn = g('btn-gen-' + type + '-short');
@@ -3250,36 +3562,46 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms) 
     if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ server.js not running — start it first</span>';
     unlockGenerateButtons();
   };
-  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {}, platforms: platforms || null }));
+  var holdEl = g('hold-before-heygen');
+  var holdBeforeHeygen = holdEl ? holdEl.checked : false;
+  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {}, platforms: platforms || null, holdBeforeHeygen: holdBeforeHeygen }));
 }
 
 // ── Fix 25b: Adapter — fetch CWN US/Canada video stories from server endpoint ──
-// Calls /news/us-canada-videos and adapts response to legacy rss2json item shape.
-function fetchCwnNewsVideos(callback) {
+// Fetches news videos from the appropriate endpoint based on source.
+// source = 'aljazeera' → /news/us-canada-videos (existing AJ Puppeteer scraper)
+// source = 'bbc'       → /news/stories?source=bbc
+// source = 'all'       → /news/stories?source=all (AJ + BBC merged)
+// Adapts response to legacy rss2json item shape expected by all callers.
+function fetchCwnNewsVideos(callback, source) {
+  var src = source || (g('news-source') ? g('news-source').value : 'aljazeera');
+  var endpoint = (src === 'aljazeera')
+    ? (CFG.ffmpegUrl + '/news/us-canada-videos')
+    : (CFG.ffmpegUrl + '/news/stories?source=' + encodeURIComponent(src) + '&limit=15');
+
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', CFG.ffmpegUrl + '/news/us-canada-videos', true); xhr.timeout = 480000;
+  xhr.open('GET', endpoint, true); xhr.timeout = 480000;
   xhr.onload = function() {
     try {
       var d = JSON.parse(xhr.responseText);
       if (!d.ok) { callback(null, 'Server error: ' + (d.error || 'unknown')); return; }
-      // Adapt to legacy rss2json item shape expected by all callers
-      // Track C: preserve validation data per-item and summary
+      var SOURCE_LABELS = { aljazeera: 'Al Jazeera', bbc: 'BBC World', ap: 'AP', reuters: 'Reuters', npr: 'NPR', all: 'All Sources' };
       var items = (d.videos || []).map(function(v) {
-        // Must mirror API orientation — server defaults missing orientation to landscape and
-        // news long-form Gate 0 uses portraitPool only; omitting this caused 0/N "have video".
         var ori = (v.orientation && String(v.orientation).toLowerCase()) || 'portrait';
+        var itemSrc = v.source || src;
         return {
-          title:       v.title || '',
-          link:        v.url || '',
-          pubDate:     v.publishedAt || '',
-          thumbnail:   v.thumbnail || '',
-          description: '',
-          enclosure:   {},
-          hlsUrl:      v.hlsUrl || '',
-          orientation: ori,
+          title:             v.title || '',
+          link:              v.url || v.href || '',
+          pubDate:           v.publishedAt || '',
+          thumbnail:         v.thumbnail || '',
+          description:       v.description || '',
+          enclosure:         {},
+          hlsUrl:            v.hlsUrl || '',
+          orientation:       ori,
           sourceOrientation: ori,
-          pillarboxFilter: v.pillarboxFilter != null ? v.pillarboxFilter : null,
-          validation:  v.validation || null   // Track C: per-video validation result
+          pillarboxFilter:   v.pillarboxFilter != null ? v.pillarboxFilter : null,
+          source:            SOURCE_LABELS[itemSrc] || itemSrc,
+          validation:        v.validation || null
         };
       });
       callback({
@@ -3302,13 +3624,14 @@ function generateNews() {
   setGenerateModeActive('news', 'long');
   CURRENT_TYPE = 'news';
   var newsSrc = g('news-source') ? g('news-source').value : 'aljazeera';
-  CURRENT_META = { source: newsSrc, feedUrl: '/news/us-canada-videos' };
-  setGeneratingState('news-status', 'NEWS — Fetching stories...');
+  var SOURCE_LABELS = { aljazeera: 'Al Jazeera', bbc: 'BBC World', ap: 'AP', reuters: 'Reuters', npr: 'NPR', all: 'All Sources' };
+  CURRENT_META = { source: newsSrc, feedUrl: newsSrc === 'aljazeera' ? '/news/us-canada-videos' : '/news/stories?source=' + newsSrc };
+  setGeneratingState('news-status', 'NEWS — Fetching stories (' + (SOURCE_LABELS[newsSrc] || newsSrc) + ')...');
   fetchCwnNewsVideos(function(d, err) {
     if (err || !d) { g('news-status').innerHTML = 'ERROR: ' + (err || 'no data'); unlockGenerateButtons(); return; }
     try {
       var count = parseInt(g('news-count').value)||10;
-      var sourceName = 'Al Jazeera';
+      var sourceName = SOURCE_LABELS[newsSrc] || newsSrc;
       var items = (d.items||[]).slice(0,count).map(function(it){
         // New endpoint items already have video URLs via server-side scrape
         // thumbnailUrl comes from thumbnail field; videoUrl resolved server-side
@@ -4352,7 +4675,16 @@ function sendToHeyGen() {
   // ── Pre-flight check (inline panel — no system confirm() popup) ──────────
   var totalWords = allParsed.reduce(function(a,s){ return a+s.wordCount; }, 0);
   var totalSecs  = allParsed.reduce(function(a,s){ return a+(s.estSecs||0); }, 0);
-  var shortSegs  = allParsed.filter(function(s){ return s.type==='avatar' && s.estSecs < 10; });
+  // Exclude _CLIP sections (brief pre-clip narration is by design) and _OUTRO sections
+  // (Bobby G's deadpan style — 5-word outros are intentional, not broken).
+  // Threshold lowered to 5s (~10 words) since anything longer is a false positive for this show.
+  var shortSegs  = allParsed.filter(function(s){
+    if (s.type !== 'avatar') return false;
+    var lbl = (s.label || '').toUpperCase();
+    if (/_CLIP(\s|$)/.test(lbl) || lbl.endsWith('_CLIP')) return false;
+    if (lbl.endsWith('_OUTRO') || lbl === 'OUTRO') return false;
+    return s.estSecs < 5;
+  });
   var avatarSegs = allParsed.filter(function(s){ return s.type==='avatar'; });
   var clipSegs   = allParsed.filter(function(s){ return s.type==='source_clip'; });
   var missingClipUrls = clipSegs.filter(function(s){ return !s.clipUrl; }).length;
@@ -4371,16 +4703,7 @@ function sendToHeyGen() {
   var panel = document.getElementById('preflight-panel');
 
   if (!hasWarnings) {
-    // Clean run — show green status line, proceed immediately without waiting
-    if (panel) {
-      panel.style.display = 'block';
-      panel.style.background = 'rgba(46,204,113,0.08)';
-      panel.style.borderColor = 'rgba(46,204,113,0.3)';
-      panel.style.color = '#2ecc71';
-      panel.innerHTML = '✅ Pre-flight: ' + avatarSegs.length + ' avatar segments, ' + clipSegs.length + ' clips — ' + estDurFmt(totalSecs) + ' est. speech. Sending to HeyGen...';
-      setTimeout(function(){ if (panel) panel.style.display = 'none'; }, 3000);
-    }
-    // Fall through immediately — no user action required
+    // No issues — proceed immediately, no panel needed
   } else {
     // Warnings present — show inline panel with Send Anyway / Cancel
     if (!panel) return; // safety: if panel element missing, don't block
@@ -4791,26 +5114,151 @@ function testHeyGen() {
 }
 
 // ── CALENDAR ──────────────────────────────────────────────────────
+// ── Content Calendar ─────────────────────────────────────────────────────────
+// Rules:
+//   Long form — News: every day. Twitch: Wed–Sun. NBA: day after games (from ESPN).
+//   Shorts — always 3/day: Twitch Short @ 5PM, News Short @ 6PM,
+//             NBA Short @ 7PM if there were games yesterday,
+//             else bonus News or Twitch short (alternates by day index).
+
 function buildCalendar() {
-  var days = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-  var grid = g('calendar-grid'); var schedule = g('schedule-list');
-  grid.innerHTML = ''; var schedHtml = '';
-  days.forEach(function(day, i) {
-    var div = document.createElement('div'); div.className = 'cal-day';
+  var grid = g('calendar-grid');
+  var schedule = g('schedule-list');
+  grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;padding:16px 4px;">Fetching NBA schedule from ESPN…</div>';
+  schedule.innerHTML = '';
+
+  // Monday of current week
+  var now = new Date();
+  var dow = now.getDay();
+  var daysToMon = dow === 0 ? -6 : 1 - dow;
+  var monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToMon);
+
+  var weekDates = [];
+  for (var i = 0; i < 7; i++) {
+    weekDates.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
+  }
+  // Also need previous Sunday to determine Monday's NBA slot
+  var prevSunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 1);
+  var datesNeeded = [prevSunday].concat(weekDates);
+
+  function _pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function _localFmt(date) {
+    return date.getFullYear() + '-' + _pad2(date.getMonth() + 1) + '-' + _pad2(date.getDate());
+  }
+  function _espnFmt(date) { return _localFmt(date).replace(/-/g, ''); }
+
+  var espnData = {};  // 'YYYY-MM-DD' -> [{name, completed}]
+  var pending = datesNeeded.length;
+
+  datesNeeded.forEach(function(date) {
+    var dateStr = _localFmt(date);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + _espnFmt(date), true);
+    xhr.timeout = 8000;
+    xhr.onload = function() {
+      try {
+        var d = JSON.parse(xhr.responseText);
+        espnData[dateStr] = (d.events || []).map(function(ev) {
+          var comp = (ev.competitions || [])[0] || {};
+          var comps = comp.competitors || [];
+          var away = comps.find(function(c) { return c.homeAway === 'away'; }) || comps[0] || {};
+          var home = comps.find(function(c) { return c.homeAway === 'home'; }) || comps[1] || {};
+          var awayAbbr = (away.team && away.team.abbreviation) || '?';
+          var homeAbbr = (home.team && home.team.abbreviation) || '?';
+          return {
+            name: awayAbbr + ' @ ' + homeAbbr,
+            completed: !!(ev.status && ev.status.type && ev.status.type.completed)
+          };
+        });
+      } catch(e) { espnData[dateStr] = []; }
+      if (--pending === 0) _renderCalendar(weekDates, espnData);
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+      espnData[dateStr] = [];
+      if (--pending === 0) _renderCalendar(weekDates, espnData);
+    };
+    xhr.send();
+  });
+}
+
+function _renderCalendar(weekDates, espnData) {
+  var DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  var TWITCH_STREAMERS = ['jasontheween','adapt','marlon','extraemily','stableronaldo','maya','cinna','yonnajay','jaycinco','lacy','hasanabi','yourragegaming'];
+  var grid = g('calendar-grid');
+  var schedule = g('schedule-list');
+  grid.innerHTML = '';
+  var schedHtml = '';
+
+  function _pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function _localFmt(date) {
+    return date.getFullYear() + '-' + _pad2(date.getMonth() + 1) + '-' + _pad2(date.getDate());
+  }
+
+  weekDates.forEach(function(date, i) {
+    // Previous day's ESPN games determine NBA content today
+    var prevDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+    var prevGames = espnData[_localFmt(prevDate)] || [];
+    var hasNBAGames = prevGames.length > 0;
+
+    // Twitch long form runs Wed–Sun (index 2–6 in Mon=0 week)
+    var hasTwitchLong = i >= 2;
+
+    // --- Build items list ---
     var items = [];
-    items.push({cls:'nba',lbl:'NBA Compilation 10:30AM'});
-    items.push({cls:'news',lbl:'News Compilation 10:45AM'});
-    items.push({cls:'twitch',lbl:'Twitch Compilation 11:00AM'});
-    var twitchStreamers=['jasontheween','adapt','marlon','extraemily','stableronaldo','maya','cinna','yonnajay','jaycinco','lacy','hasanabi','yourragegaming'];
-    items.push({cls:'short',lbl:'Twitch Short: '+twitchStreamers[i%twitchStreamers.length]+' 5PM'});
-    if (i%2===0) items.push({cls:'short',lbl:'News Short: Iran/Trump 6PM'});
-    if (i%3===0) items.push({cls:'short',lbl:'NBA Short: Top Scorer 7PM'});
-    div.innerHTML = '<div class="cal-day-name">'+day+'</div>'+items.map(function(it){ return '<div class="cal-item '+it.cls+'">'+it.lbl+'</div>'; }).join('');
+
+    // Long form
+    if (hasNBAGames) {
+      var gameLabel = prevGames.length === 1
+        ? prevGames[0].name
+        : prevGames.length + ' games';
+      items.push({ cls: 'nba', lbl: 'NBA: ' + gameLabel + ' 10:30AM' });
+    }
+    items.push({ cls: 'news', lbl: 'News Compilation 10:45AM' });
+    if (hasTwitchLong) {
+      items.push({ cls: 'twitch', lbl: 'Twitch Compilation 11:00AM' });
+    }
+
+    // Shorts — always 3
+    var streamer1 = TWITCH_STREAMERS[i % TWITCH_STREAMERS.length];
+    items.push({ cls: 'short', lbl: 'Twitch Short: ' + streamer1 + ' 5PM' });
+    items.push({ cls: 'short', lbl: 'News Short 6PM' });
+    if (hasNBAGames) {
+      items.push({ cls: 'short', lbl: 'NBA Short: ' + prevGames[0].name + ' 7PM' });
+    } else {
+      // Bonus short — alternate News / Twitch by day index
+      if (i % 2 === 0) {
+        items.push({ cls: 'short', lbl: 'News Short 7PM' });
+      } else {
+        var streamer2 = TWITCH_STREAMERS[(i + 6) % TWITCH_STREAMERS.length];
+        items.push({ cls: 'short', lbl: 'Twitch Short: ' + streamer2 + ' 7PM' });
+      }
+    }
+
+    // Calendar cell
+    var today = new Date();
+    var isToday = date.getFullYear() === today.getFullYear() &&
+                  date.getMonth() === today.getMonth() &&
+                  date.getDate() === today.getDate();
+
+    var div = document.createElement('div');
+    div.className = 'cal-day' + (isToday ? ' cal-day-today' : '');
+    div.innerHTML = '<div class="cal-day-name">' + DAYS[i]
+      + (isToday ? ' <span style="font-size:8px;color:#c7af4f;font-family:monospace;vertical-align:middle;">TODAY</span>' : '')
+      + '</div>'
+      + items.map(function(it) {
+          return '<div class="cal-item ' + it.cls + '">' + it.lbl + '</div>';
+        }).join('')
+      + '<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.05);">'
+      + '<button disabled title="Coming soon — schedule jobs to auto-run and publish private" '
+      + 'style="width:100%;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.12);color:rgba(255,255,255,0.25);font-size:9px;font-family:monospace;letter-spacing:1px;padding:4px;border-radius:3px;cursor:not-allowed;">+ SCHEDULE</button>'
+      + '</div>';
     grid.appendChild(div);
-    schedHtml += '<strong style="color:#c7af4f">'+day+'</strong><br>';
-    items.forEach(function(it){ schedHtml += '&nbsp;&nbsp;'+it.lbl+'<br>'; });
+
+    schedHtml += '<strong style="color:#c7af4f">' + DAYS[i] + (isToday ? ' <span style="font-size:10px;color:#c7af4f;">(TODAY)</span>' : '') + '</strong><br>';
+    items.forEach(function(it) { schedHtml += '&nbsp;&nbsp;' + it.lbl + '<br>'; });
     schedHtml += '<br>';
   });
+
   schedule.innerHTML = schedHtml;
 }
 
@@ -4818,13 +5266,15 @@ function buildCalendar() {
 // Shows ALL available clips from ESPN for each game so user picks exactly one.
 // No auto-selection logic — user must explicitly click a clip.
 
-function openNbaShortClipPicker(platforms) {
+// filterGameIds: optional array of gameId strings — if provided, only fetch clips for those games.
+// Pass null/undefined to auto-fetch yesterday's completed games.
+function openNbaShortClipPicker(platforms, filterGameIds) {
   var gallery = g('nba-short-clip-gallery');
   var list    = g('nba-short-clip-list');
   var status  = g('nba-short-clip-status');
 
-  // Toggle off if already open
-  if (gallery.style.display !== 'none') {
+  // Toggle off if already open and no new filter applied
+  if (gallery.style.display !== 'none' && !filterGameIds) {
     gallery.style.display = 'none';
     return;
   }
@@ -4833,11 +5283,21 @@ function openNbaShortClipPicker(platforms) {
   gallery.style.display = '';
   status.textContent = '';
 
-  // Collect game pool: picker games with clips first, then fetch fresh if empty
+  // If caller supplied specific game IDs (from the inline picker selection), use those directly
+  if (filterGameIds && filterGameIds.length > 0) {
+    var pool = filterGameIds.map(function(id) {
+      // Prefer full metadata from _nbaPickerGames if available
+      var existing = (window._nbaPickerGames || []).find(function(gm){ return gm.gameId === id; });
+      return existing || { gameId: id, away: '?', home: '?', awayAbbr: '?', homeAbbr: '?', awayScore: '', homeScore: '' };
+    });
+    _fetchAndRenderShortClips(pool, list, status, platforms);
+    return;
+  }
+
+  // Otherwise build pool from inline picker (if loaded) or auto-fetch yesterday's games
   var pool = (window._nbaPickerGames || []).filter(function(gm){ return gm.gameId; });
 
   if (pool.length === 0) {
-    // No picker data yet — fetch yesterday's completed games
     var dateKey = localDateMinus(0).replace(/-/g,'');
     var xhr = new XMLHttpRequest();
     xhr.open('GET','https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+dateKey,true);
@@ -4908,30 +5368,67 @@ function _renderShortClipList(clips, list, status, platforms) {
     status.textContent = '';
     return;
   }
-  // Sort by duration desc within each game
-  clips.sort(function(a,b){ return b.duration - a.duration; });
-  status.textContent = clips.length+' clips available — click one to generate';
 
-  list.innerHTML = clips.map(function(c, idx){
-    var dur = c.duration ? c.duration+'s' : '?s';
-    var durColor = c.duration >= 60 ? '#2ecc71' : c.duration >= 30 ? '#c7af4f' : 'rgba(255,255,255,0.4)';
+  // Group clips by game, then within each game:
+  //   1. Short-form plays (< 90s) sorted ascending — best for short form
+  //   2. Highlights reel (>= 90s) at the bottom — labelled clearly
+  var byGame = {}; var gameOrder = [];
+  clips.forEach(function(c) {
+    if (!byGame[c.gameLabel]) { byGame[c.gameLabel] = []; gameOrder.push(c.gameLabel); }
+    byGame[c.gameLabel].push(c);
+  });
+  gameOrder.forEach(function(gl) {
+    byGame[gl].sort(function(a, b) {
+      var aLong = a.duration >= 90; var bLong = b.duration >= 90;
+      if (aLong !== bLong) return aLong ? 1 : -1; // short clips first
+      return a.duration - b.duration; // within each bucket, ascending
+    });
+  });
+
+  // Flatten back keeping game order, with game headers
+  var flatClips = [];
+  gameOrder.forEach(function(gl) { byGame[gl].forEach(function(c) { flatClips.push(c); }); });
+
+  var shortCount = flatClips.filter(function(c){ return c.duration < 90; }).length;
+  status.textContent = flatClips.length + ' clips (' + shortCount + ' short-form) — click one to generate';
+
+  var html = '';
+  var lastGame = null;
+  flatClips.forEach(function(c, idx) {
+    // Game header separator
+    if (c.gameLabel !== lastGame) {
+      lastGame = c.gameLabel;
+      html += '<div style="font-size:9px;font-family:monospace;letter-spacing:1px;color:rgba(28,232,255,0.6);padding:8px 4px 4px;border-top:'+(idx>0?'1px solid rgba(255,255,255,0.06)':'none')+';">'
+        + c.gameLabel.toUpperCase()
+        + '</div>';
+    }
+
+    var isHighlights = c.duration >= 90;
+    var dur = c.duration ? c.duration + 's' : '?s';
+    var durColor = isHighlights ? '#4a90d9' : (c.duration >= 30 ? '#2ecc71' : 'rgba(255,255,255,0.4)');
+    var typeTag = isHighlights
+      ? '<span style="font-size:8px;background:rgba(74,144,217,0.15);color:#4a90d9;border:1px solid rgba(74,144,217,0.3);padding:1px 5px;border-radius:8px;margin-left:6px;flex-shrink:0;">HIGHLIGHTS REEL</span>'
+      : '';
     var thumb = c.thumbnail
       ? '<img src="'+c.thumbnail+'" style="width:72px;height:41px;object-fit:cover;border-radius:3px;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);" onerror="this.style.display=\'none\'">'
       : '<div style="width:72px;height:41px;background:#111;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.2);">NO THUMB</div>';
-    return '<div onclick="_selectNbaShortClip('+idx+')" data-idx="'+idx+'" id="nba-short-clip-'+idx+'" '
-      +'style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:background 0.15s;" '
+
+    html += '<div onclick="_selectNbaShortClip('+idx+')" data-idx="'+idx+'" id="nba-short-clip-'+idx+'" '
+      +'style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:background 0.15s;margin-bottom:3px;" '
       +'onmouseover="this.style.background=\'rgba(28,232,255,0.07)\'" onmouseout="this.style.background=\'transparent\'">'
       + thumb
-      +'<div style="flex:1;min-width:0;">'
-        +'<div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.headline+'</div>'
-        +'<div style="font-size:10px;color:rgba(255,255,255,0.4);font-family:monospace;margin-top:2px;">'+c.gameLabel+'</div>'
-      +'</div>'
-      +'<div style="font-family:Bebas Neue,monospace;font-size:16px;color:'+durColor+';flex-shrink:0;">'+dur+'</div>'
-    +'</div>';
-  }).join('');
+      + '<div style="flex:1;min-width:0;">'
+        + '<div style="display:flex;align-items:center;flex-wrap:wrap;">'
+          + '<div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">'+c.headline+'</div>'
+          + typeTag
+        + '</div>'
+      + '</div>'
+      + '<div style="font-family:Bebas Neue,monospace;font-size:16px;color:'+durColor+';flex-shrink:0;">'+dur+'</div>'
+    + '</div>';
+  });
 
-  // Store clip list on window for onclick handler
-  window._nbaShortClipMenu = { clips: clips, platforms: platforms };
+  list.innerHTML = html;
+  window._nbaShortClipMenu = { clips: flatClips, platforms: platforms };
 }
 
 function _selectNbaShortClip(idx) {
@@ -4946,9 +5443,8 @@ function _selectNbaShortClip(idx) {
   var sel = g('nba-short-clip-'+idx);
   if (sel) { sel.style.border='1px solid rgba(28,232,255,0.6)'; sel.style.background='rgba(28,232,255,0.08)'; }
 
-  g('nba-short-clip-status').textContent = 'Selected: '+c.headline+' ('+c.duration+'s) — generating...';
+  g('nba-short-clip-status').textContent = 'Selected: '+c.headline+' ('+c.duration+'s) — pick platforms to generate...';
 
-  // Fire pipeline with exact clip
   var item = {
     gameId:       c.gameId,
     away:         c.gameLabel.split('@')[0].trim(),
@@ -4956,20 +5452,22 @@ function _selectNbaShortClip(idx) {
     awayScore:    '', homeScore: '',
     leader: '', leaderStat: '', injuries: [],
     clipUrl:      c.url,
+    clipDuration: c.duration || null,
     thumbnailUrl: c.thumbnail || ''
   };
-
-  // Parse scores out of gameLabel if present (e.g. "DET @ ORL  105-113")
   var scoreMatch = c.gameLabel.match(/(\d+)-(\d+)/);
   if (scoreMatch) { item.awayScore = scoreMatch[1]; item.homeScore = scoreMatch[2]; }
 
-  setGenerateModeActive('nba', 'short');
-  CURRENT_TYPE = 'nba-short';
-  lockGenerateButton('btn-gen-nba-short');
-  CURRENT_META = { gameIds: [c.gameId] };
-  g('script-type-label').textContent = 'NBA SHORT — '+c.headline+' ('+c.duration+'s)';
-
-  callFullScriptServer('nba-short', [item], statusTagIdForType('nba-short'), null, null, menu.platforms);
+  // Platform modal fires AFTER clip selection
+  showPlatformModal(function(platforms) {
+    g('nba-short-clip-status').textContent = 'Selected: '+c.headline+' ('+c.duration+'s) — generating...';
+    setGenerateModeActive('nba', 'short');
+    CURRENT_TYPE = 'nba-short';
+    lockGenerateButton('btn-gen-nba-short');
+    CURRENT_META = { gameIds: [c.gameId] };
+    g('script-type-label').textContent = 'NBA SHORT — '+c.headline+' ('+c.duration+'s)';
+    callFullScriptServer('nba-short', [item], statusTagIdForType('nba-short'), null, null, platforms);
+  });
 }
 
 // ── News short-form manual clip picker ───────────────────────────────────────
@@ -5034,14 +5532,17 @@ function _renderNewsShortClipList(clips, list, status, platforms) {
     var thumb = c.thumbnailUrl
       ? '<img src="'+c.thumbnailUrl+'" style="width:80px;height:45px;object-fit:cover;border-radius:3px;flex-shrink:0;" onerror="this.style.display=\'none\'">'
       : '<div style="width:80px;height:45px;background:#1a2035;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.2);">NO IMG</div>';
-    var date = c.pubDate ? '<span style="font-size:9px;color:rgba(255,255,255,0.3);margin-left:4px;">'+c.pubDate.slice(0,10)+'</span>' : '';
+    var _scMap = { 'al jazeera':'#c7af4f', 'bbc world':'#e05252', 'ap':'#4fa8e0', 'reuters':'#e0944f' };
+    var srcLabel = c.source || 'NEWS';
+    var srcClr = _scMap[(srcLabel).toLowerCase()] || 'rgba(28,232,255,0.5)';
+    var date = c.pubDate ? '<span style="font-size:9px;color:rgba(255,255,255,0.3);margin-left:6px;">'+c.pubDate.slice(0,10)+'</span>' : '';
     return '<div onclick="_selectNewsShortClip('+idx+')" data-idx="'+idx+'" id="news-short-clip-'+idx+'" '
       +'style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);transition:background 0.15s;" '
       +'onmouseover="this.style.background=\'rgba(28,232,255,0.08)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.02)\'">'
       +thumb
       +'<div style="flex:1;min-width:0;">'
       +'<div style="font-size:12px;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.title+'</div>'
-      +'<div style="font-size:10px;color:rgba(28,232,255,0.5);font-family:monospace;margin-top:2px;">NEWS'+date+'</div>'
+      +'<div style="font-size:10px;font-family:monospace;margin-top:2px;"><span style="color:'+srcClr+';">'+srcLabel+'</span>'+date+'</div>'
       +'</div>'
       +'</div>';
   }).join('');
@@ -5050,7 +5551,6 @@ function _renderNewsShortClipList(clips, list, status, platforms) {
 }
 
 function _selectNewsShortClip(idx) {
-  var menu = { platforms: g('news-short-clip-list')._platforms || null };
   var all = g('news-short-clip-list').querySelectorAll('[data-idx]');
   all.forEach(function(el){ el.style.border='1px solid rgba(255,255,255,0.06)'; el.style.background='rgba(255,255,255,0.02)'; });
   var sel = g('news-short-clip-'+idx);
@@ -5058,12 +5558,12 @@ function _selectNewsShortClip(idx) {
 
   var c = _newsShortClipPool[idx];
   if (!c) return;
-  g('news-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" — generating...';
+  g('news-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" — pick platforms to generate...';
 
   var item = {
     title:        c.title,
     desc:         c.desc||'',
-    source:       'Al Jazeera',
+    source:       c.source || 'Al Jazeera',
     link:         c.link||'',
     thumbnailUrl: c.thumbnailUrl||'',
     videoUrl:     c.hlsUrl||c.videoUrl||'',
@@ -5074,13 +5574,17 @@ function _selectNewsShortClip(idx) {
     pubDate:      c.pubDate||''
   };
 
-  setGenerateModeActive('news', 'short');
-  CURRENT_TYPE = 'news-short';
-  lockGenerateButton('btn-gen-news-short');
-  CURRENT_META = { source: 'aljazeera' };
-  g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
-
-  callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, menu.platforms);
+  // Platform modal fires AFTER story selection
+  showPlatformModal(function(platforms) {
+    g('news-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" — generating...';
+    setGenerateModeActive('news', 'short');
+    CURRENT_TYPE = 'news-short';
+    lockGenerateButton('btn-gen-news-short');
+    var _newsShortSrc = g('news-source') ? g('news-source').value : 'aljazeera';
+    CURRENT_META = { source: _newsShortSrc };
+    g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
+    callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, platforms);
+  });
 }
 
 // ── Twitch short-form manual clip picker ─────────────────────────────────────
@@ -5153,7 +5657,6 @@ function _renderTwitchShortClipList(clips, list, status, platforms) {
 }
 
 function _selectTwitchShortClip(idx) {
-  var menu = { platforms: g('twitch-short-clip-list')._platforms || null };
   var all = g('twitch-short-clip-list').querySelectorAll('[data-idx]');
   all.forEach(function(el){ el.style.border='1px solid rgba(255,255,255,0.06)'; el.style.background='rgba(255,255,255,0.02)'; });
   var sel = g('twitch-short-clip-'+idx);
@@ -5161,7 +5664,7 @@ function _selectTwitchShortClip(idx) {
 
   var c = _twitchShortClipPool[idx];
   if (!c) return;
-  g('twitch-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" ('+c.streamer+') — generating...';
+  g('twitch-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" ('+c.streamer+') — pick platforms to generate...';
 
   var item = {
     streamer:     c.streamer,
@@ -5181,12 +5684,15 @@ function _selectTwitchShortClip(idx) {
     }]
   };
 
-  setGenerateModeActive('twitch', 'short');
-  CURRENT_TYPE = 'twitch-short';
-  lockGenerateButton('btn-gen-twitch-short');
-  g('script-type-label').textContent = 'TWITCH SHORT — '+c.streamer+': "'+c.title.slice(0,50)+'"';
-
-  callFullScriptServer('twitch-short', [item], statusTagIdForType('twitch-short'), null, null, menu.platforms);
+  // Platform modal fires AFTER clip selection
+  showPlatformModal(function(platforms) {
+    g('twitch-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" ('+c.streamer+') — generating...';
+    setGenerateModeActive('twitch', 'short');
+    CURRENT_TYPE = 'twitch-short';
+    lockGenerateButton('btn-gen-twitch-short');
+    g('script-type-label').textContent = 'TWITCH SHORT — '+c.streamer+': "'+c.title.slice(0,50)+'"';
+    callFullScriptServer('twitch-short', [item], statusTagIdForType('twitch-short'), null, null, platforms);
+  });
 }
 
 function generateShort(type, platforms) {
@@ -5201,7 +5707,7 @@ function generateShort(type, platforms) {
   // For short: use only the FIRST selected item (one clip per short video).
   // For batch shorts (generateShortBatch), each selected item gets its own short.
   if (type === 'nba') {
-    var _nbaSelected = (window._nbaPickerGames || []).filter(function(g){ return !!g._selected; });
+    var _nbaSelected = (window._nbaPickerGames || []).filter(function(g){ return !!g.selected; });
     if (_nbaSelected.length > 0) {
       var pickedGame = _nbaSelected[0];
       var item = {
@@ -5229,13 +5735,13 @@ function generateShort(type, platforms) {
   }
 
   if (type === 'news') {
-    var _newsSelected = (window._newsPickerStories || []).filter(function(s){ return !!s._selected; });
+    var _newsSelected = (window._newsPickerStories || []).filter(function(s){ return !!s.selected; });
     if (_newsSelected.length > 0) {
       var pickedStory = _newsSelected[0];
       var item = {
         title:        (pickedStory.title || '').trim(),
         desc:         (pickedStory.desc || pickedStory.description || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 1200),
-        source:       'Al Jazeera',
+        source:       pickedStory.source || 'Al Jazeera',
         link:         pickedStory.link || '',
         thumbnailUrl: pickedStory.thumbnail || pickedStory.thumbnailUrl || '',
         videoUrl:     pickedStory.hlsUrl || pickedStory.videoUrl || '',
@@ -5245,7 +5751,8 @@ function generateShort(type, platforms) {
         pillarboxFilter: pickedStory.pillarboxFilter != null ? pickedStory.pillarboxFilter : null,
         pubDate:      pickedStory.pubDate || ''
       };
-      CURRENT_META = { source: 'aljazeera' };
+      var _pkrSrc = g('news-source') ? g('news-source').value : 'aljazeera';
+      CURRENT_META = { source: _pkrSrc };
       g('script-type-label').textContent = 'NEWS SHORT — "' + (item.title||'').slice(0, 60) + '" (picker)';
       callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, _shortPlatforms);
       return;
@@ -5379,7 +5886,7 @@ function generateShort(type, platforms) {
         var item = {
           title:        (story.title||'').trim(),
           desc:         (story.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
-          source:       'Al Jazeera',
+          source:       story.source || 'Al Jazeera',
           link:         story.link||'',
           thumbnailUrl: story.thumbnail||'',
           videoUrl:     story.hlsUrl||'',
@@ -5389,7 +5896,8 @@ function generateShort(type, platforms) {
           pillarboxFilter: story.pillarboxFilter != null ? story.pillarboxFilter : null,
           pubDate:      story.pubDate||''
         };
-        CURRENT_META = { source: 'aljazeera' };
+        var _sfSrc = g('news-source') ? g('news-source').value : 'aljazeera';
+        CURRENT_META = { source: _sfSrc };
         g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
         callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, _shortPlatforms);
       } catch(e) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
@@ -5750,21 +6258,16 @@ function launchNBAScriptGen(gameEntries, statusEl) {
       localPath: gm.localPath || ''
     };
   });
-  var nbaCountSel = g('nba-count');
-  var nbaLimit = nbaCountSel ? (parseInt(nbaCountSel.value) || 3) : 3;
   var withClipsAll = allItems.filter(function(i){ return !!i.clipUrl; });
-  // Prefer games user selected in the picker, but always backfill to requested count.
+  // Prefer games user selected in the picker; if none selected use all available with clips.
   var selectedIds = {};
   (NBA_GAMES || []).forEach(function(g){
     if (g && g.selected && g.hasHighlights && g.id) selectedIds[String(g.id)] = true;
   });
   var preferred = withClipsAll.filter(function(i){ return selectedIds[String(i.gameId)]; });
   var fallback = withClipsAll.filter(function(i){ return !selectedIds[String(i.gameId)]; });
-  var items = preferred.slice(0, nbaLimit);
-  if (items.length < nbaLimit) {
-    items = items.concat(fallback.slice(0, nbaLimit - items.length));
-  }
-  var label = items.length + '/' + nbaLimit + ' requested games have clips';
+  var items = preferred.length > 0 ? preferred : fallback;
+  var label = items.length + ' games with clips';
   if (!items.length) {
     if (statusEl) statusEl.textContent = 'No selected NBA games have usable highlight clips. Refresh and retry.';
     var summaryFail = g('nba-games-summary');
@@ -5896,8 +6399,15 @@ function renderNBAPicker(btn, statusEl, dateStr) {
   _nbaPickerGames.forEach(function(gm, i) {
     var hasClip = !!gm.clipUrl;
     var score = gm.awayScore&&gm.homeScore ? gm.awayScore+'-'+gm.homeScore : 'N/A';
+    var durSecs = gm.clipDuration ? Math.round(gm.clipDuration) : null;
+    var durLabel = durSecs ? durSecs+'s' : '';
+    var durColor = durSecs
+      ? (durSecs >= 90 ? '#4a90d9' : durSecs >= 30 ? '#2ecc71' : 'rgba(255,255,255,0.4)')
+      : '';
     var badge = hasClip
-      ? '<span style="font-size:9px;color:#2ecc71;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3);padding:1px 6px;border-radius:8px;">✓ CLIP</span>'
+      ? '<span style="font-size:9px;color:#2ecc71;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3);padding:1px 6px;border-radius:8px;">✓ CLIP'
+        + (durLabel ? ' <span style="color:'+durColor+';font-weight:700;">'+durLabel+'</span>' : '')
+        + '</span>'
       : '<span style="font-size:9px;color:rgba(255,255,255,0.25);padding:1px 6px;">NO CLIP</span>';
     html += '<label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
       +'<input type="checkbox" id="nbapick-'+i+'" '+(gm.selected&&hasClip?'checked':'')+(hasClip?'':' disabled')+' onchange="_nbaPickerGames['+i+'].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;">'
@@ -5921,9 +6431,8 @@ var _origGenerateNBA = null;
   window.generateNBAWithPicker = function() {
     // If picker has been used and has selections, skip auto-fetch and use picker items directly
     var selected = _nbaPickerGames.filter(function(gm){ return gm.selected && gm.clipUrl; });
-    var nbaLimit = parseInt((g('nba-count')||{value:'3'}).value)||3;
     if (selected.length > 0) {
-      var items = selected.slice(0, nbaLimit).map(function(gm) {
+      var items = selected.map(function(gm) {
         return { gameId:gm.gameId, away:gm.away, home:gm.home, awayAbbr:gm.awayAbbr, homeAbbr:gm.homeAbbr,
           awayScore:gm.awayScore, homeScore:gm.homeScore, leader:'', leaderStat:'', injuries:[],
           clipUrl:gm.clipUrl, clipDuration:gm.clipDuration||null, thumbnailUrl:gm.thumbnail||'', localPath:gm.localPath||'' };
@@ -5932,6 +6441,8 @@ var _origGenerateNBA = null;
       lockGenerateButton('btn-gen-nba');
       setGenerateModeActive('nba','long');
       CURRENT_TYPE = 'nba';
+      setGeneratingState('nba-status', 'NBA — Analyzing '+items.length+' game clips with Gemini (~2-3 min)...');
+      if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#c7af4f;">⏳ Gemini analyzing clips · script generating · HeyGen queue incoming…</span>';
       CURRENT_META = { gameIds: items.map(function(i){return i.gameId;}), items: items };
       g('nba-status').className = 'tag tag-done';
       g('nba-status').innerHTML = '<span class="tag-dot"></span> '+items.length+' GAMES (MANUAL)';
@@ -5966,7 +6477,6 @@ function previewNewsStories() {
       return;
     }
     var count = parseInt((g('news-count')||{value:'10'}).value)||10;
-    var sourceName = 'Al Jazeera';
     (d.items||[]).slice(0, Math.max(count, 15)).forEach(function(it) {
       _newsPickerStories.push({
         title: (it.title||'').trim(),
@@ -5977,8 +6487,8 @@ function previewNewsStories() {
         orientation: it.sourceOrientation||it.orientation||'portrait',
         sourceOrientation: it.sourceOrientation||it.orientation||'portrait',
         pillarboxFilter: it.pillarboxFilter != null ? it.pillarboxFilter : null,
+        source: it.source || 'All Sources',
         pubDate: it.pubDate||'',
-        source: sourceName,
         desc: (it.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
         selected: !!(it.hlsUrl||it.videoUrl) // default: only select stories with video
       });
@@ -5994,15 +6504,22 @@ function renderNewsPicker(btn, maxCount) {
   var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:6px;letter-spacing:1px;">'
     +'SELECT STORIES — '+withVideo+'/'+_newsPickerStories.length+' HAVE VIDEO — TOP '+maxCount+' CHECKED WILL BE USED'
     +'</div>';
+  var _srcColor = { 'al jazeera':'#c7af4f', 'bbc world':'#e05252', 'ap':'#4fa8e0', 'reuters':'#e0944f' };
   _newsPickerStories.forEach(function(story, i) {
     var hasVideo = !!story.hlsUrl;
-    var badge = hasVideo
+    var srcKey = (story.source||'').toLowerCase();
+    var srcColor = _srcColor[srcKey] || 'rgba(255,255,255,0.35)';
+    var srcBadge = '<span style="font-size:9px;font-family:monospace;color:'+srcColor+';white-space:nowrap;flex-shrink:0;">'+(story.source||'')+'</span>';
+    var videoBadge = hasVideo
       ? '<span style="font-size:9px;color:#2ecc71;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3);padding:1px 6px;border-radius:8px;flex-shrink:0;">✓ VIDEO</span>'
       : '<span style="font-size:9px;color:rgba(255,255,255,0.25);padding:1px 6px;flex-shrink:0;">NO VIDEO</span>';
     html += '<label style="display:flex;align-items:flex-start;gap:8px;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
       +'<input type="checkbox" id="newspick-'+i+'" '+(story.selected?'checked':'')+' onchange="_newsPickerStories['+i+'].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;">'
-      +'<div style="flex:1;font-size:12px;color:'+(hasVideo?'#fff':'rgba(255,255,255,0.4)')+';">'+story.title+'</div>'
-      +badge
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:12px;color:'+(hasVideo?'#fff':'rgba(255,255,255,0.4)')+';line-height:1.3;">'+story.title+'</div>'
+      +'<div style="margin-top:2px;">'+srcBadge+'</div>'
+      +'</div>'
+      +videoBadge
       +'</label>';
   });
   picker.innerHTML = html;
@@ -6027,7 +6544,7 @@ function generateShortBatch(type, platforms) {
   if (type === 'nba') {
     // Prefer: selected picker items → all picker items with clips → auto-fetch
     var _nbaAllPicker = window._nbaPickerGames || [];
-    var _nbaSelPool = _nbaAllPicker.filter(function(gm){ return gm._selected && gm.clipUrl; });
+    var _nbaSelPool = _nbaAllPicker.filter(function(gm){ return gm.selected && gm.clipUrl; });
     var pool = _nbaSelPool.length > 0 ? _nbaSelPool : _nbaAllPicker.filter(function(gm){ return gm.clipUrl; });
     if (pool.length > 0) {
       _dispatchBatchNBAShorts(pool, n, platforms, statusId);
@@ -6064,7 +6581,7 @@ function generateShortBatch(type, platforms) {
   } else if (type === 'news') {
     // Prefer: selected picker items → all picker items with video → auto-fetch
     var _newsAllPicker = window._newsPickerStories || [];
-    var _newsSelPool = _newsAllPicker.filter(function(s){ return s._selected && (s.hlsUrl || s.videoUrl); });
+    var _newsSelPool = _newsAllPicker.filter(function(s){ return s.selected && (s.hlsUrl || s.videoUrl); });
     var pool = _newsSelPool.length > 0 ? _newsSelPool : _newsAllPicker.filter(function(s){ return !!(s.hlsUrl || s.videoUrl); });
     if (pool.length > 0) {
       _dispatchBatchNewsShorts(pool, n, platforms, statusId);
@@ -6121,6 +6638,29 @@ function _dispatchBatchNewsShorts(pool, n, platforms, statusId) {
   setGeneratingState(statusId,'NEWS SHORT ×'+fired+' — all dispatched');
 }
 
+// ── Picker-driven short triggers (one job per selected clip) ─────────────────
+// If picker has selections → dispatch N short jobs (1 per clip).
+// If no selections yet → fall through to the manual gallery picker.
+
+function triggerNbaShort() {
+  // Always open the gallery so the user can pick individual play clips (not just the
+  // highlights reel that was fetched for long form).  If games are pre-selected via
+  // PICK CLIPS, pass their IDs so the gallery only shows clips from those games.
+  var selected = (_nbaPickerGames || []).filter(function(g){ return g.selected && g.gameId; });
+  var filterGameIds = selected.length > 0 ? selected.map(function(g){ return g.gameId; }) : null;
+  openNbaShortClipPicker(null, filterGameIds);
+}
+
+function triggerNewsShort() {
+  // Always open the gallery — platform modal fires after story selection
+  openNewsShortClipPicker(null);
+}
+
+function triggerTwitchShort() {
+  // Always open the gallery — platform modal fires after clip selection
+  openTwitchShortClipPicker(null);
+}
+
 // ── generateNews override — respects manual story picker if used ──────────────
 
 var _origGenerateNews = null;
@@ -6128,14 +6668,15 @@ var _origGenerateNews = null;
   _origGenerateNews = typeof generateNews === 'function' ? generateNews : null;
   window.generateNewsWithPicker = function() {
     var selected = _newsPickerStories.filter(function(s){ return s.selected && s.hlsUrl; });
-    var count = parseInt((g('news-count')||{value:'10'}).value)||10;
     if (selected.length > 0) {
-      var items = selected.slice(0, count);
+      var items = selected;
       if (!items.length) { alert('No stories selected with video. Use PICK STORIES to select some.'); return; }
       lockGenerateButton('btn-gen-news');
       setGenerateModeActive('news','long');
       CURRENT_TYPE = 'news';
+      setGeneratingState('news-status', 'NEWS — Analyzing '+items.length+' stories with Gemini (~2-3 min)...');
       if (g('script-type-label')) g('script-type-label').textContent = 'NEWS — '+items.length+' selected stories — generating script...';
+      if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#c7af4f;">⏳ Gemini analyzing clips · script generating · HeyGen queue incoming…</span>';
       nav('generate');
       callFullScriptServer('news', items, 'news-status', null);
     } else {
@@ -6281,6 +6822,9 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         var usedBadge = clip.isUsed ? '<span style="font-size:8px;background:rgba(255,165,0,0.2);color:rgba(255,165,0,0.8);padding:1px 4px;border-radius:3px;margin-left:4px;">USED</span>' : '';
         var rankLabel = ci < clipsPerStreamer ? 'PRIMARY' : 'BACKUP';
         var rankColor = ci < clipsPerStreamer ? 'rgba(199,175,79,0.7)' : 'rgba(255,255,255,0.25)';
+        var clipDur = clip.duration || 0;
+        var durStr = clipDur ? clipDur + 's' : '';
+        var durClr = clipDur >= 45 ? '#2ecc71' : clipDur >= 20 ? '#c7af4f' : 'rgba(255,255,255,0.35)';
 
         html += '<div onclick="_toggleTwitchClip(' + si + ',' + ci + ')" style="cursor:pointer;width:155px;border:1px solid ' + cardBorder + ';border-radius:5px;background:' + cardBg + ';padding:4px;transition:all 0.15s;">';
         if (thumb) {
@@ -6292,6 +6836,7 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         html += '<div style="display:flex;justify-content:space-between;align-items:center;">'
           + '<span style="font-size:8px;color:rgba(255,255,255,0.3);">' + views + ' views</span>'
           + usedBadge
+          + (durStr ? '<span style="font-size:9px;font-family:monospace;font-weight:700;color:' + durClr + ';">' + durStr + '</span>' : '')
           + '<span style="font-size:8px;color:' + rankColor + ';font-family:monospace;font-weight:700;">' + rankLabel + '</span>'
           + '</div>';
         html += '</div>';
@@ -6716,147 +7261,6 @@ function checkPublishStatus() {
   xhr.send();
 }
 
-// ── Auto-fire publish copy generation (headless) ──────────────────
-function autoGeneratePublishPrep(jobId) {
-  var job = JOBS.find(function(j){ return j.id === jobId; });
-  if (!job) { console.error('[autoGeneratePublishPrep] Job not found:', jobId); return; }
-  var statusEl = document.getElementById('gate3-upload-status-' + jobId);
-  var setStatus = function(txt, isErr) {
-    if (statusEl) { statusEl.textContent = txt; statusEl.style.color = isErr ? '#e74c3c' : 'rgba(255,255,255,0.6)'; }
-  };
-  if (job.publishPrep && job.publishPrep.title) {
-    cwn_log('[autoGeneratePublishPrep] publishPrep already exists — skipping generation, firing approveAndUpload', false);
-    setStatus('⏳ Publish copy ready — firing Upload-Post...');
-    setTimeout(function(){ approveAndUpload(jobId); }, 500);
-    return;
-  }
-  setStatus('⏳ Generating title, description, and hashtags...');
-  var type = (job.type || 'twitch').toLowerCase();
-  var contentTypeKey = type.indexOf('nba') > -1 ? 'nba' : type.indexOf('twitch') > -1 ? 'twitch' : 'news';
-  var isShort = (job.format === 'portrait') || (type.indexOf('short') > -1);
-  var scriptContext = job.script || '';
-  var streamersList = (contentTypeKey === 'twitch' && Array.isArray(job.streamers)) ? job.streamers : [];
-  var today = new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'});
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', CFG.ffmpegUrl + '/generate-publish-copy', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 60000;
-  xhr.onload = function() {
-    try {
-      var resp = JSON.parse(xhr.responseText);
-      if (resp.error) throw new Error(resp.error);
-      var yt = (resp.platforms && resp.platforms.youtube) || resp;
-      var tt = (resp.platforms && resp.platforms.tiktok) || {};
-      var ig = (resp.platforms && resp.platforms.instagram) || {};
-      job.publishPrep = {
-        title: yt.title || resp.title || job.title || 'ClipzWorld News',
-        description: yt.description || resp.description || '',
-        pinnedComment: yt.pinnedComment || resp.pinnedComment || '',
-        endscreen: yt.endscreen || '', cards: yt.cards || '', twitchTitle: yt.twitchTitle || '',
-        tiktokCaption: tt.caption || '', igCaption: ig.caption || '',
-        igAlt: ig.altText || ig.alt_text || '',
-        generatedAt: new Date().toISOString(), autoGenerated: true
-      };
-      saveJobs();
-      cwn_log('[autoGeneratePublishPrep] Publish copy generated for ' + jobId + ' — firing approveAndUpload', false);
-      setStatus('⏳ Publish copy ready — firing Upload-Post...');
-      renderQueue();
-      setTimeout(function(){ approveAndUpload(jobId); }, 500);
-    } catch(e) {
-      console.error('[autoGeneratePublishPrep] Parse error:', e);
-      setStatus('❌ Publish copy generation failed: ' + e.message + '. Click 📋 PUBLISH COPY to run manually.', true);
-      cwn_log('[autoGeneratePublishPrep] Failed: ' + e.message, true);
-    }
-  };
-  xhr.onerror = xhr.ontimeout = function() {
-    var msg = xhr.ontimeout ? 'Request timed out' : 'Server unreachable';
-    setStatus('❌ ' + msg + '. Click 📋 PUBLISH COPY to run manually.', true);
-    cwn_log('[autoGeneratePublishPrep] ' + msg, true);
-  };
-  xhr.send(JSON.stringify({
-    contentType: contentTypeKey, formType: isShort ? 'short' : 'long',
-    script: scriptContext, date: today, streamers: streamersList,
-    platforms: ['youtube', 'tiktok', 'instagram']
-  }));
-}
-
-// ── GATE 3: Human Approval + Gate 6 Auto-Publish ─────────────────
-// Called when Rob clicks "APPROVE & UPLOAD →" in the Gate 3 checkpoint
-function approveAndUpload(jobId) {
-  var job = JOBS.find(function(j){ return j.id === jobId; });
-  if (!job) return;
-
-  var statusEl = document.getElementById('gate3-upload-status-' + jobId);
-  if (statusEl) statusEl.textContent = '⏳ Approving — triggering Gate 6 auto-publish...';
-
-  // Mark job as approved
-  job._gate3Approved = true;
-  job._gate3Rejected = false;
-  saveJobs();
-
-  // Determine platforms based on content type
-  var contentType = (job.format === 'portrait' || (job.type||'').indexOf('short') > -1) ? 'short' : 'long';
-  var platforms = contentType === 'short'
-    ? ['tiktok', 'instagram', 'youtube']
-    : ['youtube'];
-
-  var prep = job.publishPrep || {};
-  if (statusEl) statusEl.textContent = '⏳ Sending to Upload-Post for ' + platforms.join(', ') + '...';
-
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', CFG.ffmpegUrl + '/publish', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 120000;
-  xhr.onload = function() {
-    try {
-      var resp = JSON.parse(xhr.responseText);
-      if (resp.error) throw new Error(resp.error);
-
-      var gate4Pass = !!(resp.request_id || resp.job_id);
-      if (gate4Pass) {
-        var jobRef = resp.job_id ? resp.job_id : resp.request_id;
-        if (statusEl) statusEl.innerHTML = '<span style="color:#2ecc71;font-weight:700;">✅ GATE 6 — UPLOAD TRIGGERED</span><br>'
-          + 'job_id: ' + jobRef + '<br>'
-          + 'Platforms: ' + platforms.join(', ') + '<br>'
-          + '<button onclick="pollPublishStatus(\'' + jobId + '\')" class="btn btn-outline btn-sm" style="margin-top:6px;">🔍 POLL STATUS</button>';
-
-        // Save publish record
-        job.publishRecord = {
-          requestId:   resp.request_id,
-          jobId:       resp.job_id,
-          platforms:   platforms,
-          publishedAt: new Date().toISOString(),
-          gate4:       'pass',
-          gate6:       'triggered'
-        };
-        saveJobs();
-
-        // Auto-start polling
-        setTimeout(function() { pollPublishStatus(jobId); }, 5000);
-      } else {
-        if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ GATE 6 FAIL — no job_id returned from Upload-Post</span>';
-      }
-    } catch(e) {
-      if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ Upload error: ' + e.message + '</span>';
-    }
-  };
-  xhr.onerror = xhr.ontimeout = function() {
-    if (statusEl) statusEl.innerHTML = '<span style="color:#e74c3c;">❌ Server unreachable — is server.js running?</span>';
-  };
-
-  xhr.send(JSON.stringify({
-    driveUrl:      job.driveUrl || '',
-    filename:      job.filename || '',
-    platforms:     platforms,
-    title:         prep.title || job.title || 'ClipzWorld News',
-    description:   prep.description || prep.ytDescription || '',
-    tags:          prep.tags || [],
-    contentType:   contentType,
-    thumbnailUrl:  prep.thumbnailUrl || job.canvaUrl || job.thumbDriveUrl || job.thumbnailUrl || '',
-    pinnedComment: prep.pinnedComment || prep.comment || '',
-    async:         true
-  }));
-}
 
 // Called when Rob clicks "REJECT — BACK TO EDIT"
 function rejectJob(jobId) {
@@ -7092,25 +7496,19 @@ function displayScriptQA(scriptQA) {
 
   var html = [
     '<div style="margin-top:12px;padding:12px;background:rgba(0,0,0,0.3);border:1px solid ' + color + ';border-radius:4px;">',
-    '<div style="font-size:10px;letter-spacing:3px;color:' + color + ';font-weight:700;margin-bottom:6px;">GATE 1 — SCRIPT QA (GEMINI REVIEWED CLAUDE\'S SCRIPT)</div>',
+    '<div style="font-size:10px;letter-spacing:3px;color:' + color + ';font-weight:700;margin-bottom:6px;">GATE 1 — SCRIPT QA (GEMINI REVIEWED GEMINI\'S SCRIPT)</div>',
     '<div style="font-size:24px;font-weight:700;color:' + color + ';">' + scriptQA.score + '/100</div>',
     '<div style="font-size:12px;color:' + color + ';margin-bottom:8px;">' + (scriptQA.outcomeLabel || scriptQA.outcome) + '</div>',
   ];
 
-  if (scriptQA.outcome === 'pass') {
-    html.push('<div style="font-size:11px;color:rgba(255,255,255,0.6);">✅ Auto-proceeding to HeyGen — no issues found.</div>');
-    // Red 4 hotfix 8: the UI text said "auto-proceeding" but no code actually
-    // fired sendToHeyGen() on a clean Gate 1 pass. The legacy auto-advance
-    // behavior was lost somewhere in the Red 4 / Track C / hotfix series
-    // tonight. Re-add the auto-call. Small timeout lets displayScriptQA render
-    // + the callback store orderedClipUrls before parseSegments re-runs inside
-    // sendToHeyGen (avoids the race condition from the 22:34 ET test run).
-    setTimeout(function() {
-      if (typeof sendToHeyGen === 'function') {
-        console.log('[gate1] Auto-firing sendToHeyGen() after clean Gate 1 pass');
-        sendToHeyGen();
-      }
-    }, 500);
+  if (scriptQA.outcome === 'pass' && scriptQA.held) {
+    html.push('<div style="font-size:12px;color:#c7af4f;font-weight:700;margin-bottom:6px;">⏸ HELD — script ready, HeyGen auto-send skipped</div>');
+    html.push('<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:10px;">Gate 1 passed (' + scriptQA.score + '/100). Review and edit the script in the textarea above — find the scene you want to change, update the words, then click:</div>');
+    html.push('<button onclick="sendToHeyGen()" class="btn btn-gold btn-sm" style="font-size:12px;padding:8px 18px;">APPROVE &amp; SEND TO HEYGEN →</button>');
+    // Highlight the send button in the header too
+    html.push('<script>var _hb=document.getElementById("send-to-heygen-btn");if(_hb){_hb.style.opacity="";_hb.style.boxShadow="0 0 0 2px #c7af4f";_hb.textContent="APPROVE & SEND TO HEYGEN →";}<\/script>');
+  } else if (scriptQA.outcome === 'pass') {
+    html.push('<div style="font-size:11px;color:rgba(255,255,255,0.6);">✅ Script sent to HeyGen by server — segments rendering.</div>');
   } else if (scriptQA.outcome === 'manual_review') {
     html.push('<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;">Script is acceptable but below auto-pass threshold (90). Review issues below, then approve manually to send to HeyGen.</div>');
     if (scriptQA.deductions && scriptQA.deductions.length) {
