@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1063 (Cursor — fix(CPD-571,CPD-576): chrome name fallback from streamer inputs; audio.duck implemented via acompressor; OAuth popup auto-close fix)
 **Last Updated:** 2026-06-10 v1.0.1062 (Cursor — fix(CPD-596): runpod pod deleted — _ensurePodRunningImpl now auto-deploys fresh pod via _deployFreshPod instead of throwing)
 **Last Updated:** 2026-06-10 v1.0.1061 (Cursor — fix: pg_dump version mismatch, secure brand-oauth-status endpoint, RunPod health check endpoint)
 **Last Updated:** 2026-06-10 v1.0.1060 (Cursor — fix: add resolveBrandContext to GET /jobs so brand filter is not silently null)

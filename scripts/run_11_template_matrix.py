@@ -383,7 +383,7 @@ SINGLE_FEATURE_JOBS = [
     # Audio
     {'id': 'sf_loudnorm',    'label': 'Audio: loudnorm only',
      'addOns': {'audio': {'loudnorm': True}, 'contentType': 'clips', 'branding': {'active': True, 'brandId': ROB_BRAND_ID}}},
-    {'id': 'sf_duck',        'label': 'Audio: duck only',  'skip': True,  # CPD-576: audio.duck not implemented in assembly_effects.js
+    {'id': 'sf_duck',        'label': 'Audio: duck only',  'skip': False,  # CPD-576: implemented in assembly_effects.js
      'addOns': {'audio': {'duck': True},     'contentType': 'clips', 'branding': {'active': True, 'brandId': ROB_BRAND_ID}}},
     # Captions
     {'id': 'sf_cap_animated','label': 'Captions: animated',
@@ -437,7 +437,7 @@ TWO_FEATURE_JOBS = [
     {'id': 'tf_tts_brand',     'label': 'TTS + Branding',
      'addOns': {'tts': {'active': True, 'provider': 'elevenlabs'}, 'branding': {'active': True, 'brandId': ROB_BRAND_ID},
                 'audio': {'loudnorm': True}, 'contentType': 'clips'}},
-    {'id': 'tf_duck_cap',      'label': 'Audio duck + Captions',  'skip': True,  # CPD-576: audio.duck not implemented
+    {'id': 'tf_duck_cap',      'label': 'Audio duck + Captions',  'skip': False,  # CPD-576: implemented
      'addOns': {'audio': {'loudnorm': True, 'duck': True}, 'captions': {'active': True, 'style': 'animated'},
                 'contentType': 'clips', 'branding': {'active': True, 'brandId': ROB_BRAND_ID}}},
     {'id': 'tf_zoom_color',    'label': 'Zoom + Color grade (vivid)',

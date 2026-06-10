@@ -69,11 +69,21 @@ export default function AdminConnectBrands() {
 
   useEffect(() => {
     fetchStatus();
-    // Also pick up ?social_connected or ?social_error from OAuth callback redirect
+    // Pick up ?social_connected or ?social_error injected by OAuth callback redirect.
+    // If we're running inside a popup (window.opener is set), close this window so the
+    // parent page's popup.closed timer fires and it refreshes status automatically.
     const params = new URLSearchParams(window.location.search);
-    if (params.get('social_connected') || params.get('social_error')) {
-      // Strip query params without reloading
+    const connected = params.get('social_connected');
+    const error = params.get('social_error');
+    if (connected || error) {
       window.history.replaceState({}, '', '/admin/connect-brands');
+      if (window.opener) {
+        // Running as a popup — signal success/error back to the opener then close.
+        try {
+          window.opener.postMessage({ type: 'oauth_complete', platform: connected || 'unknown', error: error || null }, '*');
+        } catch (_e) { /* cross-origin — ignore, popup.closed timer will catch it */ }
+        window.close();
+      }
     }
   }, [fetchStatus]);
 
@@ -100,13 +110,29 @@ export default function AdminConnectBrands() {
         return;
       }
 
-      // Poll until popup closes, then refresh status
+      const finish = () => {
+        setConnecting(null);
+        setRefreshing(true);
+        fetchStatus();
+      };
+
+      // Primary: listen for the postMessage the popup sends on OAuth completion.
+      // This fires as soon as the popup calls window.close(), before the interval fires.
+      const onMessage = (e: MessageEvent) => {
+        if (e.data?.type === 'oauth_complete') {
+          window.removeEventListener('message', onMessage);
+          clearInterval(timer);
+          finish();
+        }
+      };
+      window.addEventListener('message', onMessage);
+
+      // Fallback: poll popup.closed in case postMessage was blocked (cross-origin or popup blocker)
       const timer = setInterval(() => {
         if (popup.closed) {
           clearInterval(timer);
-          setConnecting(null);
-          setRefreshing(true);
-          fetchStatus();
+          window.removeEventListener('message', onMessage);
+          finish();
         }
       }, 800);
     } catch (err) {
@@ -117,6 +143,15 @@ export default function AdminConnectBrands() {
   }
 
   const connectedCount = Object.values(status).filter((s) => s.connected).length;
+
+  // Detect duplicate handles — same YouTube channel connected to multiple brands
+  const handleCount: Record<string, number> = {};
+  Object.values(status).forEach((s) => {
+    if (s.connected && s.handle) {
+      handleCount[s.handle] = (handleCount[s.handle] || 0) + 1;
+    }
+  });
+  const duplicateHandles = new Set(Object.entries(handleCount).filter(([, c]) => c > 1).map(([h]) => h));
 
   if (loading) {
     return (
@@ -145,12 +180,20 @@ export default function AdminConnectBrands() {
         </Button>
       </div>
 
+      {duplicateHandles.size > 0 && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/8 px-4 py-3 text-sm text-amber-400 mb-3">
+          <strong>Duplicate channels detected:</strong> {[...duplicateHandles].join(', ')} is connected to more than one brand.
+          Each brand needs its own YouTube channel. Sign in with a different Google account when connecting each brand.
+        </div>
+      )}
+
       <div className="space-y-2">
         {BRANDS.map((brand) => {
           const s = status[brand.id];
           const isConnected = s?.connected;
+          const isDuplicate = isConnected && s.handle && duplicateHandles.has(s.handle);
           return (
-            <Card key={brand.id} className={isConnected ? 'border-green-500/40 bg-green-500/5' : ''}>
+            <Card key={brand.id} className={isDuplicate ? 'border-amber-500/40 bg-amber-500/5' : isConnected ? 'border-green-500/40 bg-green-500/5' : ''}>
               <CardContent className="flex items-center gap-4 py-3 px-4">
                 <div className="shrink-0">
                   <YouTubeIcon size={32} />
@@ -158,15 +201,15 @@ export default function AdminConnectBrands() {
 
                 <div className="flex-1 min-w-0">
                   <div className="af-h4">{brand.name}</div>
-                  <div className="af-label text-muted-foreground">
+                  <div className={`af-label ${isDuplicate ? 'text-amber-400' : 'text-muted-foreground'}`}>
                     {isConnected
-                      ? `Connected${s.handle ? ` · ${s.handle}` : ''}`
-                      : `Brand ID: ${brand.id.slice(0, 8)}...`}
+                      ? <>Connected{s.handle ? <> · <span className="font-medium">{s.handle}</span></> : ''}{isDuplicate ? ' ⚠ duplicate channel' : ''}</>
+                      : `Not connected`}
                   </div>
                 </div>
 
                 <div className="shrink-0 flex items-center gap-2">
-                  {isConnected && (
+                  {isConnected && !isDuplicate && (
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
                   )}
                   {isConnected && (
@@ -201,14 +244,19 @@ export default function AdminConnectBrands() {
         })}
       </div>
 
-      <div className="mt-6 rounded-md bg-muted/50 p-4 af-body text-sm">
+      <div className="mt-6 rounded-md bg-muted/50 p-4 af-body text-sm space-y-2">
         <strong>Instructions:</strong>
         <ol className="list-decimal list-inside mt-2 space-y-1">
-          <li>Click &ldquo;Connect YouTube&rdquo; for each brand</li>
-          <li>Sign in with the correct YouTube account when Google prompts</li>
-          <li>Click &ldquo;Allow&rdquo; to grant permissions</li>
-          <li>Status updates automatically when the popup closes</li>
+          <li>Click <strong>Connect YouTube</strong> for each brand</li>
+          <li>In the popup, sign in with the <strong>correct Google account</strong> for that brand&apos;s YouTube channel</li>
+          <li>If Google shows the wrong account, click <strong>&ldquo;Use a different account&rdquo;</strong> and log in with the right one</li>
+          <li>Click <strong>Allow</strong> to grant permissions</li>
+          <li>The popup closes automatically and status updates immediately</li>
         </ol>
+        <p className="text-muted-foreground mt-2">
+          <strong>Important:</strong> Each brand must connect to its own unique YouTube channel.
+          If you see a &ldquo;duplicate channel&rdquo; warning, reconnect that brand using the correct Google account.
+        </p>
       </div>
     </PageShell>
   );
