@@ -56,9 +56,22 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   // Track whether the user has manually set a brand so load() won't overwrite it
   const userSelectedRef = useRef(false);
 
-  // Sync LS → apiFetch header synchronously on mount (before first fetch)
+  // Sync LS → apiFetch header synchronously on mount (before first fetch).
+  // Also handle warp_brand_id query param — set after an admin warp sign-in
+  // to pre-select a specific sub-brand, then redirect to warp_redirect path.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const warpBrandId  = params.get('warp_brand_id');
+    const warpRedirect = params.get('warp_redirect');
+    if (warpBrandId) {
+      localStorage.setItem(LS_KEY, warpBrandId);
+      setActiveBrandId(warpBrandId);
+      // Strip warp params and redirect
+      const clean = warpRedirect || '/settings/social';
+      window.history.replaceState({}, '', clean);
+      return;
+    }
     const saved = localStorage.getItem(LS_KEY);
     if (saved) setActiveBrandId(saved);
   }, []);

@@ -6,7 +6,7 @@ import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { YouTubeIcon } from '@/components/icons/brand-icons';
-import { CheckCircle2, RefreshCw } from 'lucide-react';
+import { CheckCircle2, RefreshCw, ExternalLink } from 'lucide-react';
 
 interface BrandStatus {
   connected: boolean;
@@ -165,6 +165,19 @@ export default function AdminConnectBrands() {
                 <div className="shrink-0 flex items-center gap-2">
                   {isConnected && (
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  )}
+                  {isConnected && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      title="View social settings as this brand"
+                      onClick={() => {
+                        localStorage.setItem('auraflux_active_brand_id', brand.id);
+                        window.open('/settings/social', '_blank');
+                      }}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
                   )}
                   <Button
                     size="sm"

@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1053 (Cursor — feat: sub-brands in CRM + warp with brandId + view-as-brand shortcut)
 **Last Updated:** 2026-06-10 v1.0.1052 (Cursor — feat: brand-oauth-status endpoint + connect-brands page shows live connection status with auto-refresh)
 **Last Updated:** 2026-06-10 v1.0.1051 (Cursor — fix: OAuth callback redirects to admin page when brandId present)
 **Last Updated:** 2026-06-10 v1.0.1050 (Cursor — feat: admin page to connect 20 YouTube brands at /admin/connect-brands)
