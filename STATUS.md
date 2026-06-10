@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1071 (Cursor — fix: dashboard settings tile now shows real YouTube/TikTok/Instagram SVG icons instead of text initials YT/TK/IG)
 **Last Updated:** 2026-06-10 v1.0.1070 (Cursor — feat: platform-branded social connect tiles (YouTube red, TikTok, Instagram gradient) lit when connected, dimmed when not; fix API keys hidden for guided; drop legacy oauth unique constraint migration 031)
 **Last Updated:** 2026-06-10 v1.0.1069 (Cursor — fix: logError import wrong path in telnyx adapter; brand routing safety ACK if to-number not support number)
 **Last Updated:** 2026-06-10 v1.0.1068 (Cursor — fix: Telnyx webhook 403 — SDK v6.66.2 has no constructEvent; replaced with native Node crypto Ed25519 SPKI verification)

@@ -12,6 +12,7 @@ import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { usePlan } from '@/contexts/plan-context';
 import { tierLabel } from '@/lib/tier-labels';
+import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';
 import {
   listJobs,
   getCreditBalance,
@@ -148,24 +149,27 @@ function TileCard({
 
 // ─── Social platform badges (Settings tile) ───────────────────────────────────
 
-const PLATFORM_LABELS: Record<string, string> = { youtube: 'YT', tiktok: 'TK', instagram: 'IG' };
-const PLATFORM_COLORS: Record<string, string> = {
-  youtube:   'bg-red-500 text-white',
-  tiktok:    'bg-black text-white border border-white/20',
-  instagram: 'bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 text-white',
+const PLATFORM_ICONS: Record<string, React.ReactNode> = {
+  youtube:   <YouTubeIcon size={22} />,
+  tiktok:    <TikTokIcon size={22} />,
+  instagram: <InstagramIcon size={22} />,
 };
 
 function PlatformBadge({ platform, connected }: { platform: string; connected: boolean }) {
   return (
     <span
-      title={`${platform}${connected ? ' (connected)' : ' (not connected)'}`}
+      title={`${platform}${connected ? ' (connected)' : ' (not connected)'}`
+      }
       className={cn(
-        'inline-flex items-center justify-center w-6 h-6 rounded text-[9px] font-bold',
-        PLATFORM_COLORS[platform] ?? 'bg-muted text-muted-foreground',
-        !connected && 'opacity-20',
+        'inline-flex items-center justify-center rounded-md transition-all',
+        !connected && 'opacity-25 grayscale',
       )}
     >
-      {PLATFORM_LABELS[platform] ?? platform[0].toUpperCase()}
+      {PLATFORM_ICONS[platform] ?? (
+        <span className="w-5 h-5 rounded bg-muted text-[9px] font-bold flex items-center justify-center text-muted-foreground">
+          {platform[0].toUpperCase()}
+        </span>
+      )}
     </span>
   );
 }
