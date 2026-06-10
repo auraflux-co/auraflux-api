@@ -66,6 +66,10 @@ const PLATFORMS: PlatformDef[] = [
   },
 ];
 
+// Platforms that use Upload-Post OAuth — TikTok caches the browser session
+// so connecting a different account requires a private/incognito window.
+const UPLOADPOST_PLATFORMS = new Set<SocialPlatform>(['tiktok', 'instagram']);
+
 export default function SocialConnectPage() {
   const { getToken } = useAuth();
   const [accounts, setAccounts]   = useState<ConnectedAccount[]>([]);
@@ -236,18 +240,27 @@ export default function SocialConnectPage() {
                 )}
               </div>
 
-              {/* Action button */}
-              <div className="w-full">
+              {/* Action button(s) */}
+              <div className="w-full flex flex-col gap-2">
                 {isConnected ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => handleDisconnect(p.id)}
-                    disabled={isDisc || isPending}
-                  >
-                    {isDisc ? 'Disconnecting…' : 'Disconnect'}
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleDisconnect(p.id)}
+                      disabled={isDisc || isPending}
+                    >
+                      {isDisc ? 'Disconnecting…' : 'Disconnect'}
+                    </Button>
+                    {UPLOADPOST_PLATFORMS.has(p.id) && (
+                      <p className="text-[11px] text-muted-foreground/70 text-center leading-snug">
+                        To switch accounts: disconnect, then reconnect in a{' '}
+                        <span className="font-medium">private / incognito window</span>{' '}
+                        so {p.label} doesn&apos;t auto-approve the cached session.
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <Button
                     size="sm"
