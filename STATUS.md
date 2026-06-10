@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1078 (Cursor — fix: correct stale comment on DELETE /social/accounts/:platform; disconnectPlatform confirmed working per-platform without affecting other connected accounts)
 **Last Updated:** 2026-06-10 v1.0.1077 (Cursor — ux: social accounts — replace Disconnect-only with Switch account (disconnect+reconnect popup) + ghost Disconnect; removes incognito hint)
 **Last Updated:** 2026-06-10 v1.0.1076 (Cursor — fix: TikTok/Instagram OAuth caches browser session; bump pre-disconnect wait 600ms→1500ms, add UI hint to use incognito when switching accounts)
 **Last Updated:** 2026-06-10 v1.0.1075 (Cursor — fix: getBrandsForAccount was omitting image_url/intro_card_url/outro_card_url from SELECT; logo/intro/outro appeared to not save on page reload)
