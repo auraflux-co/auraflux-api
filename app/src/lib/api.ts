@@ -900,11 +900,12 @@ export async function pollVideoStatus(
 export type SocialPlatform = 'youtube' | 'tiktok' | 'instagram';
 
 export interface ConnectedAccount {
-  platform:       SocialPlatform;
-  handle:         string | null;
-  platformUserId: string | null;
-  tokenExpiry:    string | null;
-  connectedAt:    string;
+  platform:        SocialPlatform;
+  handle:          string | null;
+  platformUserId:  string | null;
+  tokenExpiry:     string | null;
+  hasRefreshToken: boolean;
+  connectedAt:     string;
 }
 
 export async function listConnectedAccounts(token?: string): Promise<{ ok: boolean; accounts: ConnectedAccount[] }> {

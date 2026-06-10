@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1054 (Cursor — fix: suppress Reconnect Soon for tokens with refresh_token)
 **Last Updated:** 2026-06-10 v1.0.1053 (Cursor — feat: sub-brands in CRM + warp with brandId + view-as-brand shortcut)
 **Last Updated:** 2026-06-10 v1.0.1052 (Cursor — feat: brand-oauth-status endpoint + connect-brands page shows live connection status with auto-refresh)
 **Last Updated:** 2026-06-10 v1.0.1051 (Cursor — fix: OAuth callback redirects to admin page when brandId present)

@@ -200,7 +200,7 @@ export default function SocialConnectPage() {
                   {connected ? (
                     <p className="af-label mt-0.5">
                       {connected.handle || connected.platformUserId || 'Account linked'}
-                      {connected.tokenExpiry && (
+                      {connected.tokenExpiry && !connected.hasRefreshToken && (
                         <span>
                           {' '}· expires {new Date(connected.tokenExpiry).toLocaleDateString()}
                           {new Date(connected.tokenExpiry).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 && (
