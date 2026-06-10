@@ -66,9 +66,6 @@ const PLATFORMS: PlatformDef[] = [
   },
 ];
 
-// Platforms that use Upload-Post OAuth — TikTok caches the browser session
-// so connecting a different account requires a private/incognito window.
-const UPLOADPOST_PLATFORMS = new Set<SocialPlatform>(['tiktok', 'instagram']);
 
 export default function SocialConnectPage() {
   const { getToken } = useAuth();
@@ -76,6 +73,7 @@ export default function SocialConnectPage() {
   const [isPending, start]        = useTransition();
   const [error, setError]         = useState<string | null>(null);
   const [disconnecting, setDisc]  = useState<SocialPlatform | null>(null);
+  const [switching, setSwitching] = useState<SocialPlatform | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -125,6 +123,22 @@ export default function SocialConnectPage() {
     } finally {
       setDisc(null);
     }
+  }
+
+  // Disconnect the current account then immediately open the connect popup.
+  // This gives a clean OAuth flow for reconnecting to the same or a different account.
+  async function handleSwitch(platform: SocialPlatform) {
+    setSwitching(platform);
+    try {
+      const token = await getToken();
+      await disconnectPlatform(platform, token ?? undefined);
+      setAccounts((prev) => prev.filter((a) => a.platform !== platform));
+    } catch {
+      // Non-fatal — proceed to connect even if disconnect had an error
+    } finally {
+      setSwitching(null);
+    }
+    handleConnect(platform);
   }
 
   async function handleConnect(platform: SocialPlatform) {
@@ -240,26 +254,27 @@ export default function SocialConnectPage() {
                 )}
               </div>
 
-              {/* Action button(s) */}
+              {/* Action buttons */}
               <div className="w-full flex flex-col gap-2">
                 {isConnected ? (
                   <>
                     <Button
-                      variant="outline"
                       size="sm"
                       className="w-full"
+                      onClick={() => handleSwitch(p.id)}
+                      disabled={isDisc || switching === p.id || isPending}
+                    >
+                      {switching === p.id ? 'Switching…' : 'Switch account'}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-muted-foreground hover:text-destructive"
                       onClick={() => handleDisconnect(p.id)}
-                      disabled={isDisc || isPending}
+                      disabled={isDisc || switching === p.id || isPending}
                     >
                       {isDisc ? 'Disconnecting…' : 'Disconnect'}
                     </Button>
-                    {UPLOADPOST_PLATFORMS.has(p.id) && (
-                      <p className="text-[11px] text-muted-foreground/70 text-center leading-snug">
-                        To switch accounts: disconnect, then reconnect in a{' '}
-                        <span className="font-medium">private / incognito window</span>{' '}
-                        so {p.label} doesn&apos;t auto-approve the cached session.
-                      </p>
-                    )}
                   </>
                 ) : (
                   <Button
