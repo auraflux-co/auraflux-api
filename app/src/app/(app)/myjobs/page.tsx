@@ -16,6 +16,7 @@ import { formatUserError } from '@/lib/job-labels';
 import { listJobs, type Job } from '@/lib/api';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
+import { useBrand } from '@/contexts/brand-context';
 import { useRouter } from 'next/navigation';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -68,6 +69,8 @@ export default function JobsHubPage() {
   const router                 = useRouter();
   const { openWithContext }    = useGuide();
   const { planTier }           = usePlan();
+  const { activeBrand }        = useBrand();
+  const activeBrandId          = activeBrand?.id;
   const isOperate              = planTier === 'operate' || planTier === null;
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
@@ -84,7 +87,7 @@ export default function JobsHubPage() {
       }
     }
     load();
-  }, [getToken, isLoaded]);
+  }, [getToken, isLoaded, activeBrandId]);
 
   const active    = jobs?.filter((j) => ACTIVE_STATUSES.has(j.status)) ?? [];
   const held      = jobs?.filter((j) => j.status === 'held' || j.status === 'failed') ?? [];

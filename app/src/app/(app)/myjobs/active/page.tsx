@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { listJobs, listTemplates, operatorJobAction, type Job, type JobTemplate, type OperatorAction } from '@/lib/api';
 import { useRole } from '@/hooks/use-role';
+import { useBrand } from '@/contexts/brand-context';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 import { jobStatusLabel, jobDisplayTitle, platformListLabel, formatUserError } from '@/lib/job-labels';
@@ -68,6 +69,8 @@ function fmtJobTime(iso: string) {
 export default function ActiveJobsPage() {
   const { getToken, isLoaded } = useAuth();
   const { isSuperAdmin }         = useRole();
+  const { activeBrand }          = useBrand();
+  const activeBrandId            = activeBrand?.id;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [scheduledJobs, setScheduledJobs] = useState<Job[]>([]);
   const [upcomingTemplates, setUpcomingTemplates] = useState<JobTemplate[]>([]);
@@ -97,7 +100,7 @@ export default function ActiveJobsPage() {
         setError(e instanceof Error ? e.message : 'Failed to load jobs');
       }
     });
-  }, [getToken]);
+  }, [getToken, activeBrandId]);
 
   useEffect(() => {
     if (!isLoaded) return;

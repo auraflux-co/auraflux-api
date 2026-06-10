@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1058 (Cursor — feat(CPD-brand-arch): Phase 3 — brand context bar in TopBar, re-fetch on brand switch)
 **Last Updated:** 2026-06-10 v1.0.1057 (Cursor — feat(CPD-brand-arch): Phase 2 — scope jobs/templates/credits by brand_id)
 **Last Updated:** 2026-06-10 v1.0.1056 (Cursor — fix: correct platform branding YouTube/TikTok/Instagram in notifications and UI)
 **Last Updated:** 2026-06-10 v1.0.1055 (Cursor — feat: brand is_primary migration, brand_id on templates, primary-only switcher)

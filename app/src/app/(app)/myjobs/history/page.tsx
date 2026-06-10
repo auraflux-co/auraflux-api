@@ -20,6 +20,7 @@ import { labelForContentType } from '@/lib/content-types';
 import { jobDisplayTitle, jobStatusLabel, platformLabel, formatUserError } from '@/lib/job-labels';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useBrand } from '@/contexts/brand-context';
 
 const COMPLETE_STATUSES = new Set(['complete', 'published']);
 
@@ -193,6 +194,8 @@ export default function HistoryPage() {
 
 function HistoryPageContent() {
   const { getToken, isLoaded } = useAuth();
+  const { activeBrand }        = useBrand();
+  const activeBrandId          = activeBrand?.id;
   const searchParams           = useSearchParams();
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
@@ -210,7 +213,7 @@ function HistoryPageContent() {
       }
     }
     load();
-  }, [getToken, isLoaded]);
+  }, [getToken, isLoaded, activeBrandId]);
 
   const completedJobs = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
 

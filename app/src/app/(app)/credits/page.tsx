@@ -11,6 +11,7 @@
 import { useEffect, useState, useTransition, Suspense } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useBrand } from '@/contexts/brand-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -126,6 +127,8 @@ function DismissiblePackBanner({
 
 function CreditsPageInner() {
   const { getToken, isLoaded } = useAuth();
+  const { activeBrand }        = useBrand();
+  const activeBrandId          = activeBrand?.id;
   const searchParams   = useSearchParams();
   const router         = useRouter();
   const packSuccess    = searchParams.get('pack_success')   === '1';
@@ -168,7 +171,7 @@ function CreditsPageInner() {
         setLoading(false);
       }
     })();
-  }, [getToken, isLoaded]);
+  }, [getToken, isLoaded, activeBrandId]);
 
   async function handleBuyPack(packId: string) {
     setPackError(null);

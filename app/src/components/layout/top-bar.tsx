@@ -9,6 +9,7 @@ import { UserButton, useAuth } from '@clerk/nextjs';
 import { useGuide } from '@/contexts/guide-context';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';
+import { useBrand } from '@/contexts/brand-context';
 import { cn } from '@/lib/utils';
 
 const COLLAB_LABEL = 'Collab';
@@ -17,10 +18,15 @@ export function TopBar() {
   const { toggle, isOpen } = useGuide();
   const { openMobile }     = useSidebar();
   const { actor }          = useAuth();
+  const { activeBrand, brands, setActiveBrand } = useBrand();
   const collabLabel        = COLLAB_LABEL;
 
+  const isSubBrand  = activeBrand && activeBrand.is_primary === false;
+  const primaryBrand = brands.find((b) => b.is_primary) ?? null;
+  const hasBanners  = !!(actor || isSubBrand);
+
   return (
-    <header className={cn('shrink-0 border-b border-border bg-card/50 backdrop-blur-sm flex flex-col px-4', actor ? 'h-auto' : 'h-12')}>
+    <header className={cn('shrink-0 border-b border-border bg-card/50 backdrop-blur-sm flex flex-col px-4', hasBanners ? 'h-auto' : 'h-12')}>
       {/* Actor warp banner — visible when an admin is signed in as a customer */}
       {actor && (
         <div className="w-full bg-amber-500/10 border-b border-amber-500/20 py-1.5 flex items-center justify-center gap-3 text-xs text-amber-700">
@@ -29,6 +35,24 @@ export function TopBar() {
           </svg>
           Acting as another account
           <UserButton />
+        </div>
+      )}
+      {/* Sub-brand context bar — visible when viewing a non-primary brand */}
+      {isSubBrand && (
+        <div className="w-full bg-indigo-500/8 border-b border-indigo-500/20 py-1 flex items-center justify-center gap-2.5 text-xs text-indigo-400">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" />
+            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+          </svg>
+          <span className="font-medium">{activeBrand.name}</span>
+          {primaryBrand && (
+            <button
+              onClick={() => setActiveBrand(primaryBrand)}
+              className="ml-1 underline underline-offset-2 opacity-70 hover:opacity-100 transition-opacity"
+            >
+              ← back to {primaryBrand.name}
+            </button>
+          )}
         </div>
       )}
       <div className="flex-1 flex items-center justify-between gap-3 h-12">

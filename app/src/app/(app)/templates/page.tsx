@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
+import { useBrand } from '@/contexts/brand-context';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatUserError } from '@/lib/job-labels';
@@ -39,6 +40,8 @@ export default function TemplatesPage() {
 
 function TemplatesPageContent() {
   const { getToken, isLoaded } = useAuth();
+  const { activeBrand }        = useBrand();
+  const activeBrandId          = activeBrand?.id;
   const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<JobTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +70,7 @@ function TemplatesPageContent() {
         setLoading(false);
       }
     })();
-  }, [getToken, isLoaded]);
+  }, [getToken, isLoaded, activeBrandId]);
 
   useEffect(() => {
     const editId = searchParams.get('edit');
