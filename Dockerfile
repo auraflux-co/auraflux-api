@@ -61,7 +61,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libxfixes3 \
     libxrandr2 \
     xdg-utils \
-    postgresql-client
+    curl \
+    gnupg2
+
+# Install PostgreSQL 18 client to match Render managed PG 18.3.
+# Bookworm apt only ships pg_dump 15 which causes "server version mismatch" in backups.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    apt-get update && apt-get install -y --no-install-recommends postgresql-client-18
 
 # Install Python deps: yt-dlp for VOD extract, curl-cffi + tls-client for Kick Cloudflare bypass
 RUN pip3 install --break-system-packages yt-dlp curl-cffi tls-client 2>/dev/null || \

@@ -53,7 +53,10 @@ export default function AdminConnectBrands() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/admin/brand-oauth-status`);
+      const token = await getToken();
+      const res = await fetch(`${API}/api/admin/brand-oauth-status`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const data = await res.json();
       if (data.ok) setStatus(data.brands ?? {});
     } catch {
@@ -62,7 +65,7 @@ export default function AdminConnectBrands() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     fetchStatus();
