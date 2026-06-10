@@ -167,9 +167,13 @@ const CUSTOMER_NAV_BASE: NavItem[] = [
 
 // Settings children differ by plan tier
 function settingsNavItem(planTier: string | null): NavItem {
-  const isOperate = !planTier || planTier === 'operate' || planTier === 'custom';
+  // API keys only for self-serve (operate) and enterprise (custom).
+  // Guided / managed are operator-run — they don't need direct API access.
+  // When planTier is null (still loading) we default to hidden to avoid flashing
+  // the link at guided/managed customers before the plan is resolved.
+  const showApiKeys = planTier === 'operate' || planTier === 'custom';
   const children: { href: string; label: string }[] = [];
-  if (isOperate) {
+  if (showApiKeys) {
     children.push({ href: '/settings/api-keys', label: 'API Keys' });
   }
   children.push(
@@ -179,7 +183,7 @@ function settingsNavItem(planTier: string | null): NavItem {
     { href: '/profile',          label: 'My Profile'         },
     { href: '/settings/team',    label: 'My Team'            },
   );
-  if (isOperate) {
+  if (showApiKeys) {
     children.push({ href: '/developer', label: 'API Reference' });
   }
   return { href: '/settings', label: 'Settings', children };

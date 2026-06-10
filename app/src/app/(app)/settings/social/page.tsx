@@ -3,13 +3,12 @@ import { formatUserError } from '@/lib/job-labels';
 /**
  * /settings/social — Connect/disconnect YouTube, TikTok, Instagram (CPD-86)
  *
- * Displays connected accounts with OAuth connect buttons.
- * Connect flow: redirect to /social/connect/:platform → OAuth → callback → save tokens.
+ * Platform tiles lit up in their own brand colours when connected;
+ * muted (opacity) when not — real logo always shown, never initials.
  */
 
 import { useEffect, useState, useTransition } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';
 import type { ReactNode } from 'react';
@@ -21,25 +20,48 @@ import {
   type ConnectedAccount,
   type SocialPlatform,
 } from '@/lib/api';
+import { CheckCircle2 } from 'lucide-react';
 
-const PLATFORMS: { id: SocialPlatform; label: string; icon: ReactNode; hint: string }[] = [
+interface PlatformDef {
+  id: SocialPlatform;
+  label: string;
+  icon: ReactNode;
+  hint: string;
+  /** Tailwind classes applied to the card when CONNECTED */
+  connectedCard: string;
+  /** Tailwind classes applied to the icon wrapper when CONNECTED */
+  connectedGlow: string;
+  /** Tailwind classes applied to the icon wrapper when NOT connected */
+  dimmedGlow: string;
+}
+
+const PLATFORMS: PlatformDef[] = [
   {
     id: 'youtube',
     label: 'YouTube',
-    icon: <YouTubeIcon size={40} />,
+    icon: <YouTubeIcon size={48} />,
     hint: 'Publish directly to YouTube. Available on all plans.',
+    connectedCard: 'border-red-500/50 bg-red-500/5',
+    connectedGlow: 'ring-2 ring-red-500/40 rounded-xl',
+    dimmedGlow: 'opacity-40 grayscale rounded-xl',
   },
   {
     id: 'tiktok',
     label: 'TikTok',
-    icon: <TikTokIcon size={40} />,
+    icon: <TikTokIcon size={48} />,
     hint: 'Publish directly to TikTok. Available on all plans.',
+    connectedCard: 'border-zinc-300/30 bg-zinc-900/30 dark:border-zinc-300/20 dark:bg-zinc-900/40',
+    connectedGlow: 'ring-2 ring-zinc-400/40 rounded-xl',
+    dimmedGlow: 'opacity-40 grayscale rounded-xl',
   },
   {
     id: 'instagram',
     label: 'Instagram',
-    icon: <InstagramIcon size={40} />,
+    icon: <InstagramIcon size={48} />,
     hint: 'Publish directly to Instagram Reels. Available on all plans.',
+    connectedCard: 'border-pink-500/50 bg-gradient-to-br from-yellow-500/5 via-pink-500/5 to-purple-600/5',
+    connectedGlow: 'ring-2 ring-pink-500/40 rounded-xl',
+    dimmedGlow: 'opacity-40 grayscale rounded-xl',
   },
 ];
 
@@ -50,7 +72,6 @@ export default function SocialConnectPage() {
   const [error, setError]         = useState<string | null>(null);
   const [disconnecting, setDisc]  = useState<SocialPlatform | null>(null);
 
-  // Check for callback query params (handles both popup and full-page redirect flows)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get('social_connected');
@@ -60,19 +81,16 @@ export default function SocialConnectPage() {
     if (connected || errMsg) {
       window.history.replaceState({}, '', '/settings/social');
 
-      // If we're running inside a popup, notify the parent and close
       if (window.opener && !window.opener.closed) {
         if (connected) {
           window.opener.postMessage({ type: 'social_connected', platform: connected }, window.location.origin);
         } else {
-          // Relay the error back to the parent so it can show it and auto-retry
           window.opener.postMessage({ type: 'social_error', platform, error: errMsg }, window.location.origin);
         }
         window.close();
         return;
       }
 
-      // Not in a popup — show error inline
       if (errMsg) setError(decodeURIComponent(errMsg));
     }
     fetchAccounts();
@@ -86,7 +104,7 @@ export default function SocialConnectPage() {
         setAccounts(res.accounts ?? []);
         setError(null);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load accounts');
+        setError(e instanceof Error ? formatUserError(e.message) : 'Failed to load accounts');
       }
     });
   }
@@ -109,9 +127,6 @@ export default function SocialConnectPage() {
     const url   = new URL(getSocialConnectUrl(platform));
     if (token) url.searchParams.set('token', token);
 
-    // Open in a popup so users never leave app.auraflux.co.
-    // When the popup lands back on /settings/social it posts 'social_connected'
-    // to the opener and closes itself — we then refresh the accounts list.
     const popup = window.open(
       url.toString(),
       'auraflux_social_connect',
@@ -119,21 +134,17 @@ export default function SocialConnectPage() {
     );
 
     if (!popup) {
-      // Popups blocked — fall back to full-page redirect
       window.location.href = url.toString();
       return;
     }
 
-    // Listen for the callback page posting back to us
     function onMessage(e: MessageEvent) {
       if (e.data?.type === 'social_connected') {
         window.removeEventListener('message', onMessage);
-        // Delay slightly so Upload-Post state settles before we fetch
         setTimeout(fetchAccounts, 1000);
       } else if (e.data?.type === 'social_error') {
         window.removeEventListener('message', onMessage);
         const errText: string = e.data.error ?? 'Connection failed';
-        // Auto-retry once on PKCE session errors — they resolve after a fresh pre-disconnect
         if (errText.toLowerCase().includes('missing') || errText.toLowerCase().includes('verifier')) {
           setError('Reconnecting — please complete the connection again.');
           setTimeout(() => handleConnect(platform), 1500);
@@ -145,7 +156,6 @@ export default function SocialConnectPage() {
     }
     window.addEventListener('message', onMessage);
 
-    // Also poll for popup close as a fallback (e.g. user closes manually)
     const poll = setInterval(() => {
       if (popup.closed) {
         clearInterval(poll);
@@ -161,85 +171,93 @@ export default function SocialConnectPage() {
     <PageShell maxWidth="3xl">
       <PageHeader
         title="My Social Accounts"
-        subtitle="Connect your publishing channels. AuraFlux will post directly without a third-party proxy."
+        subtitle="Connect your publishing channels. AuraFlux posts directly — no third-party proxy."
       />
 
       {error && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 af-body text-destructive">
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 af-body text-destructive mb-4">
           {error}
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {PLATFORMS.map((p) => {
           const connected = accountMap[p.id] as ConnectedAccount | undefined;
           const isDisc = disconnecting === p.id;
+          const isConnected = !!connected;
 
           return (
-            <Card key={p.id} className={connected ? 'border-success/40 bg-success/5' : ''}>
-              <CardContent className="flex items-center gap-4 py-4 px-5">
-                {/* Platform icon */}
-                <div className="shrink-0 rounded-xl overflow-hidden">
-                  {p.icon}
+            <div
+              key={p.id}
+              className={`
+                relative rounded-2xl border p-5 flex flex-col items-center gap-4 transition-all
+                ${isConnected
+                  ? `${p.connectedCard} shadow-sm`
+                  : 'border-border/60 bg-card'}
+              `}
+            >
+              {/* Connected badge */}
+              {isConnected && (
+                <div className="absolute top-3 right-3">
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
                 </div>
+              )}
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2.5">
-                    <span className="af-h3">{p.label}</span>
-                    {connected ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full af-caption font-medium bg-success/20 text-success border border-success/30">
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
-                        Connected
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full af-caption font-medium text-muted-foreground border border-border">
-                        Not connected
-                      </span>
+              {/* Platform logo — full color when connected, dimmed when not */}
+              <div className={isConnected ? p.connectedGlow : p.dimmedGlow}>
+                {p.icon}
+              </div>
+
+              {/* Platform name + status */}
+              <div className="text-center flex-1 w-full">
+                <p className={`text-sm font-semibold ${isConnected ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {p.label}
+                </p>
+                {isConnected ? (
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    {connected.handle || connected.platformUserId || 'Account linked'}
+                    {connected.tokenExpiry && !connected.hasRefreshToken && (
+                      <>
+                        {' '}·{' '}
+                        {new Date(connected.tokenExpiry).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000
+                          ? <span className="text-amber-400 font-medium">Reconnect soon</span>
+                          : <span>expires {new Date(connected.tokenExpiry).toLocaleDateString()}</span>
+                        }
+                      </>
                     )}
-                  </div>
-                  {connected ? (
-                    <p className="af-label mt-0.5">
-                      {connected.handle || connected.platformUserId || 'Account linked'}
-                      {connected.tokenExpiry && !connected.hasRefreshToken && (
-                        <span>
-                          {' '}· expires {new Date(connected.tokenExpiry).toLocaleDateString()}
-                          {new Date(connected.tokenExpiry).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 && (
-                            <span className="ml-2 text-xs text-amber-500 font-medium">Reconnect soon</span>
-                          )}
-                        </span>
-                      )}
-                    </p>
-                  ) : (
-                    <p className="af-label mt-0.5">{p.hint}</p>
-                  )}
-                </div>
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground/60 mt-0.5">{p.hint}</p>
+                )}
+              </div>
 
-                <div className="shrink-0">
-                  {connected ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDisconnect(p.id)}
-                      disabled={isDisc}
-                    >
-                      {isDisc ? 'Disconnecting…' : 'Disconnect'}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => handleConnect(p.id)}
-                      disabled={isPending}
-                    >
-                      Connect
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              {/* Action button */}
+              <div className="w-full">
+                {isConnected ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleDisconnect(p.id)}
+                    disabled={isDisc || isPending}
+                  >
+                    {isDisc ? 'Disconnecting…' : 'Disconnect'}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleConnect(p.id)}
+                    disabled={isPending}
+                  >
+                    Connect
+                  </Button>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>
-
     </PageShell>
   );
 }

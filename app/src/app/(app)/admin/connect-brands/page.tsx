@@ -396,21 +396,31 @@ export default function AdminConnectBrands() {
               const isConnected = s?.connected;
               const isDuplicate = isConnected && s.handle && duplicateHandles.has(s.handle);
               return (
-                <Card key={brand.id} className={isDuplicate ? 'border-amber-500/40 bg-amber-500/5' : isConnected ? 'border-green-500/40 bg-green-500/5' : ''}>
+                <Card
+                  key={brand.id}
+                  className={
+                    isDuplicate
+                      ? 'border-amber-500/40 bg-amber-500/5'
+                      : isConnected
+                        ? 'border-red-500/40 bg-red-500/5'
+                        : 'border-border/60'
+                  }
+                >
                   <CardContent className="flex items-center gap-4 py-3 px-4">
-                    <div className="shrink-0">
-                      <YouTubeIcon size={32} />
+                    {/* YouTube logo — lit when connected, dimmed when not */}
+                    <div className={`shrink-0 transition-all ${isConnected && !isDuplicate ? 'ring-2 ring-red-500/30 rounded-xl' : 'opacity-35 grayscale'}`}>
+                      <YouTubeIcon size={36} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="af-h4">{brand.name}</div>
-                      <div className={`af-label ${isDuplicate ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                      <div className={`af-label ${isDuplicate ? 'text-amber-400' : isConnected ? 'text-red-400/80' : 'text-muted-foreground'}`}>
                         {isConnected
-                          ? <>Connected{s.handle ? <> · <span className="font-medium">{s.handle}</span></> : ''}{isDuplicate ? ' ⚠ duplicate channel' : ''}</>
+                          ? <>Connected{s.handle ? <> · <span className="font-medium text-foreground">{s.handle}</span></> : ''}{isDuplicate ? ' ⚠ duplicate channel' : ''}</>
                           : 'Not connected'}
                       </div>
                     </div>
                     <div className="shrink-0 flex items-center gap-2">
-                      {isConnected && !isDuplicate && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                      {isConnected && !isDuplicate && <CheckCircle2 className="h-4 w-4 text-green-500" />}
                       {isConnected && (
                         <Button
                           size="sm"
