@@ -1,4 +1,7 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1050 (Cursor — feat: admin page to connect 20 YouTube brands at /admin/connect-brands)
+**Last Updated:** 2026-06-09 v1.0.1049 (Cursor — RESOLVED: 3rd OAuth client creation cleared Google cache, YouTube OAuth working)
+**Last Updated:** 2026-06-09 v1.0.1048 (Cursor — deploy new OAuth client 949357093166, test end-to-end, confirm Google cache bug)
 **Last Updated:** 2026-06-09 v1.0.1047 (Cursor — add debug endpoint to check YouTube env vars for trailing spaces)
 **Last Updated:** 2026-06-09 v1.0.1046 (Cursor — brand-specific YouTube OAuth ready, blocked by Google cache bug)
 **Last Updated:** 2026-06-09 v1.0.1045 (Cursor — fix: import query function in admin_seed)
