@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1051 (Cursor — fix: OAuth callback redirects to admin page when brandId present)
 **Last Updated:** 2026-06-10 v1.0.1050 (Cursor — feat: admin page to connect 20 YouTube brands at /admin/connect-brands)
 **Last Updated:** 2026-06-09 v1.0.1049 (Cursor — RESOLVED: 3rd OAuth client creation cleared Google cache, YouTube OAuth working)
 **Last Updated:** 2026-06-09 v1.0.1048 (Cursor — deploy new OAuth client 949357093166, test end-to-end, confirm Google cache bug)
