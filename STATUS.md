@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1079 (Cursor — fix(social): Upload-Post profile keyed by brandId instead of customerId; each brand now has its own TikTok/Instagram connection independent of other brands; brand picker now reflects correct social accounts per brand)
 **Last Updated:** 2026-06-10 v1.0.1078 (Cursor — fix: correct stale comment on DELETE /social/accounts/:platform; disconnectPlatform confirmed working per-platform without affecting other connected accounts)
 **Last Updated:** 2026-06-10 v1.0.1077 (Cursor — ux: social accounts — replace Disconnect-only with Switch account (disconnect+reconnect popup) + ghost Disconnect; removes incognito hint)
 **Last Updated:** 2026-06-10 v1.0.1076 (Cursor — fix: TikTok/Instagram OAuth caches browser session; bump pre-disconnect wait 600ms→1500ms, add UI hint to use incognito when switching accounts)
