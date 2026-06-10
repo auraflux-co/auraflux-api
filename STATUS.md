@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1067 (Cursor — feat: superadmin SMS inbox at /admin/sms-inbox; live feed all brand numbers, auto-polls 8s, code extraction, copy buttons)
 **Last Updated:** 2026-06-10 v1.0.1066 (Cursor — feat(CPD-brand-phones): provision 18 Telnyx numbers for sub-brands; migration 030 adds telnyx_number + brand_sms_inbox; SMS webhook routes to brand inbox by to-number; admin UI shows phone/code per brand with auto-poll)
 **Last Updated:** 2026-06-10 v1.0.1065 (Cursor — fix(CPD-862): OAuth callback routes errors to correct page; state encodes :admin/:settings source so pkceStore expiry redirects popup instead of showing blank JSON 400)
 **Last Updated:** 2026-06-10 v1.0.1064 (Cursor — fix(CPD-571,CPD-576): chrome name fallback from streamer inputs; audio.duck implemented via acompressor; OAuth popup auto-close fix)
