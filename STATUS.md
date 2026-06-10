@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1075 (Cursor — fix: getBrandsForAccount was omitting image_url/intro_card_url/outro_card_url from SELECT; logo/intro/outro appeared to not save on page reload)
 **Last Updated:** 2026-06-10 v1.0.1074 (Cursor — fix: brand asset upload (logo/intro/outro) now proxies through backend to R2 instead of presigned PUT; R2 bucket has no CORS rules so browser-direct PUT was failing with network error)
 **Last Updated:** 2026-06-10 v1.0.1073 (Cursor — remove /admin/connect-brands page; brand owners connect socials by switching to sub-brand via brand toggle then using Settings → Social Accounts)
 **Last Updated:** 2026-06-10 v1.0.1072 (Cursor — fix: OAuth callback always returns to /settings/social not /admin/connect-brands; settings/social now passes active brandId in OAuth URL so token saves to correct brand)
