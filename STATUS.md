@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-09 v1.0.1045 (Cursor — fix: import query function in admin_seed)
 **Last Updated:** 2026-06-09 v1.0.1044 (Cursor — fix: correct reassign-brands endpoint path)
 **Last Updated:** 2026-06-09 v1.0.1043 (Cursor — feat: admin endpoint to reassign brands to correct account)
 **Last Updated:** 2026-06-09 v1.0.1042 (Cursor — feat: accept brandId query param for OAuth automation)
