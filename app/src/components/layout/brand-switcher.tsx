@@ -140,16 +140,75 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
   // No brands loaded (network error or empty account) — hide entirely
   if (!activeBrand) return null;
 
-  // Only one brand — show as plain label, no dropdown
+  // Single brand: still render a dropdown trigger so the "Add brand" item is reachable
   if (brands.length <= 1) {
-    if (collapsed) return <BrandAvatar brand={activeBrand} />;
-    return (
-      <div className="flex items-center gap-2 px-1 py-1">
-        <BrandAvatar brand={activeBrand} />
-        <span className="flex-1 min-w-0 truncate text-sm font-medium text-foreground">
+    const singleMenu = open && (
+      <div
+        ref={menuRef}
+        style={menuStyle}
+        className="bg-popover border border-border rounded-md shadow-lg py-1"
+        role="menu"
+        aria-label="Brand options"
+      >
+        <div className="px-3 py-2 text-xs text-muted-foreground font-medium border-b border-border">
           {activeBrand.name}
-        </span>
+        </div>
+        <button
+          onClick={handleAddBrand}
+          role="menuitem"
+          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-left"
+        >
+          <span className="w-5 h-5 flex items-center justify-center text-base leading-none shrink-0">+</span>
+          <span>Add brand</span>
+        </button>
       </div>
+    );
+    if (collapsed) {
+      return (
+        <>
+          <button
+            ref={triggerRef}
+            onClick={toggleOpen}
+            title={activeBrand.name}
+            aria-label={`Brand options (current: ${activeBrand.name})`}
+            aria-expanded={open}
+            aria-haspopup="menu"
+            className="rounded hover:opacity-80 transition-opacity"
+          >
+            <BrandAvatar brand={activeBrand} />
+          </button>
+          {typeof document !== 'undefined' && singleMenu && createPortal(singleMenu, document.body)}
+        </>
+      );
+    }
+    return (
+      <>
+        <button
+          ref={triggerRef}
+          onClick={toggleOpen}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label={`Brand options (current: ${activeBrand.name})`}
+          className={cn(
+            'w-full flex items-center gap-2 px-1 py-1 rounded-md transition-colors text-left',
+            'hover:bg-muted/60',
+            open && 'bg-muted/60',
+          )}
+        >
+          <BrandAvatar brand={activeBrand} />
+          <span className="flex-1 min-w-0 truncate text-sm font-medium text-foreground">
+            {activeBrand.name}
+          </span>
+          <svg
+            width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className={cn('shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')}
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {typeof document !== 'undefined' && singleMenu && createPortal(singleMenu, document.body)}
+      </>
     );
   }
 

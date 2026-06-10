@@ -14,6 +14,7 @@
 import { useEffect, useState, useTransition, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
+import { useBrand } from '@/contexts/brand-context';
 import { tierLabel } from '@/lib/tier-labels';
 import { formatUserError } from '@/lib/job-labels';
 import { Badge } from '@/components/ui/badge';
@@ -146,6 +147,7 @@ function DismissibleBanner({
 
 function BillingPageInner() {
   const { getToken, isLoaded } = useAuth();
+  const { brands, activeBrand } = useBrand();
   const searchParams    = useSearchParams();
   const router          = useRouter();
   // C2: distinguish in-place upgrade (?upgraded=1) from new checkout (?success=1)
@@ -522,6 +524,39 @@ function BillingPageInner() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── Brands ──────────────────────────────────────────────────────── */}
+      {activeBrand?.is_primary && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="af-subhead font-semibold">Your brands</h3>
+            <Button size="sm" variant="outline" onClick={() => router.push('/billing/add-brand')}>
+              + Add brand
+            </Button>
+          </div>
+          <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+            {brands.map((brand) => (
+              <div key={brand.id} className="flex items-center gap-3 px-4 py-3 bg-card">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{brand.name}</p>
+                  {brand.is_primary && (
+                    <p className="text-xs text-muted-foreground">Primary</p>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground capitalize shrink-0">
+                  {brand.tier ? `${brand.tier} plan` : 'No plan'}
+                </span>
+                {brand.id === activeBrand.id && (
+                  <span className="text-[10px] font-semibold text-primary uppercase tracking-wider shrink-0">Active</span>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="af-caption text-muted-foreground">
+            Each brand has its own plan, credits, channels, and job history.
+          </p>
         </div>
       )}
 

@@ -156,9 +156,10 @@ const CUSTOMER_NAV_BASE: NavItem[] = [
     href:  '/billing',
     label: 'Billing',
     children: [
-      { href: '/billing',          label: 'Subscription'          },
-      { href: '/credits',          label: 'Credits'               },
-      { href: '/billing/payment',  label: 'Payment & Invoices'    },
+      { href: '/billing',             label: 'Subscription'          },
+      { href: '/credits',             label: 'Credits'               },
+      { href: '/billing/payment',     label: 'Payment & Invoices'    },
+      { href: '/billing/add-brand',   label: 'Add brand'             },
     ],
   },
   { href: '/support',    label: 'Support'   },
