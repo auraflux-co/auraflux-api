@@ -131,7 +131,7 @@ function PublishBestPractices({ platforms }: { platforms: string[] }) {
           return (
             <div key={p} className={`rounded-lg border p-3 space-y-1.5 ${bp.color}`}>
               <p className="text-xs font-semibold">
-                {bp.icon} {p.charAt(0).toUpperCase() + p.slice(1)}
+                {bp.icon} {{ youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram' }[p] ?? (p.charAt(0).toUpperCase() + p.slice(1))}
               </p>
               <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px]">
                 <span className="text-muted-foreground">Best days</span>

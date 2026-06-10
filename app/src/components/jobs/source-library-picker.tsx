@@ -509,7 +509,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
         const msg = raw === 'Failed to fetch'
           ? 'retry:Could not reach the server — it may be restarting. Please try again.'
           : isTokenError
-          ? `retry:${targetPlatform.charAt(0).toUpperCase() + targetPlatform.slice(1)} connection needs to be refreshed — please try again in a moment.`
+          ? `retry:${{ youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram', twitch: 'Twitch', kick: 'Kick' }[targetPlatform] ?? (targetPlatform.charAt(0).toUpperCase() + targetPlatform.slice(1))} connection needs to be refreshed — please try again in a moment.`
           : 'error:Couldn\'t load content. Try again or paste a direct URL.';
         setError(msg);
       }

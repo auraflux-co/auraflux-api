@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1056 (Cursor — fix: correct platform branding YouTube/TikTok/Instagram in notifications and UI)
 **Last Updated:** 2026-06-10 v1.0.1055 (Cursor — feat: brand is_primary migration, brand_id on templates, primary-only switcher)
 **Last Updated:** 2026-06-10 v1.0.1054 (Cursor — fix: suppress Reconnect Soon for tokens with refresh_token)
 **Last Updated:** 2026-06-10 v1.0.1053 (Cursor — feat: sub-brands in CRM + warp with brandId + view-as-brand shortcut)
