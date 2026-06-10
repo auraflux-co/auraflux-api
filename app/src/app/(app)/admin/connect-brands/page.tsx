@@ -50,6 +50,7 @@ export default function AdminConnectBrands() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -83,6 +84,9 @@ export default function AdminConnectBrands() {
           window.opener.postMessage({ type: 'oauth_complete', platform: connected || 'unknown', error: error || null }, '*');
         } catch (_e) { /* cross-origin — ignore, popup.closed timer will catch it */ }
         window.close();
+      } else if (error) {
+        // Opened in main tab (not a popup) — show the error inline
+        setOauthError(decodeURIComponent(error));
       }
     }
   }, [fetchStatus]);
@@ -122,6 +126,9 @@ export default function AdminConnectBrands() {
         if (e.data?.type === 'oauth_complete') {
           window.removeEventListener('message', onMessage);
           clearInterval(timer);
+          if (e.data?.error) {
+            setOauthError(`OAuth failed: ${e.data.error}. Make sure to click Allow on the Google consent screen.`);
+          }
           finish();
         }
       };
@@ -179,6 +186,13 @@ export default function AdminConnectBrands() {
           Refresh
         </Button>
       </div>
+
+      {oauthError && (
+        <div className="rounded-md border border-red-500/40 bg-red-500/8 px-4 py-3 text-sm text-red-400 mb-3 flex items-start justify-between gap-3">
+          <span><strong>Connection error:</strong> {oauthError}</span>
+          <button onClick={() => setOauthError(null)} className="shrink-0 text-red-400/60 hover:text-red-400">✕</button>
+        </div>
+      )}
 
       {duplicateHandles.size > 0 && (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/8 px-4 py-3 text-sm text-amber-400 mb-3">
