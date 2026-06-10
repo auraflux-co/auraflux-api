@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1065 (Cursor — fix(CPD-862): OAuth callback routes errors to correct page; state encodes :admin/:settings source so pkceStore expiry redirects popup instead of showing blank JSON 400)
 **Last Updated:** 2026-06-10 v1.0.1064 (Cursor — fix(CPD-571,CPD-576): chrome name fallback from streamer inputs; audio.duck implemented via acompressor; OAuth popup auto-close fix)
 **Last Updated:** 2026-06-10 v1.0.1062 (Cursor — fix(CPD-596): runpod pod deleted — _ensurePodRunningImpl now auto-deploys fresh pod via _deployFreshPod instead of throwing)
 **Last Updated:** 2026-06-10 v1.0.1061 (Cursor — fix: pg_dump version mismatch, secure brand-oauth-status endpoint, RunPod health check endpoint)
