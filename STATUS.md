@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1062 (Cursor — fix(CPD-596): runpod pod deleted — _ensurePodRunningImpl now auto-deploys fresh pod via _deployFreshPod instead of throwing)
 **Last Updated:** 2026-06-10 v1.0.1061 (Cursor — fix: pg_dump version mismatch, secure brand-oauth-status endpoint, RunPod health check endpoint)
 **Last Updated:** 2026-06-10 v1.0.1060 (Cursor — fix: add resolveBrandContext to GET /jobs so brand filter is not silently null)
 **Last Updated:** 2026-06-10 v1.0.1059 (Cursor — feat(CPD-brand-arch): Phase 4 — Add Brand flow: entry points, webhook fix, billing brands section)
