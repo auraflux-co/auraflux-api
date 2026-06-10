@@ -1,4 +1,6 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-09 v1.0.1047 (Cursor — add debug endpoint to check YouTube env vars for trailing spaces)
+**Last Updated:** 2026-06-09 v1.0.1046 (Cursor — brand-specific YouTube OAuth ready, blocked by Google cache bug)
 **Last Updated:** 2026-06-09 v1.0.1045 (Cursor — fix: import query function in admin_seed)
 **Last Updated:** 2026-06-09 v1.0.1044 (Cursor — fix: correct reassign-brands endpoint path)
 **Last Updated:** 2026-06-09 v1.0.1043 (Cursor — feat: admin endpoint to reassign brands to correct account)
