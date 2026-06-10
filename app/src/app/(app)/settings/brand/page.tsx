@@ -22,7 +22,7 @@ import { useBrand } from '@/contexts/brand-context';
 import {
   getBrands,
   updateBrandApi,
-  getBrandUploadUrl,
+  uploadBrandAsset,
   type Brand,
   type BrandAssetType,
 } from '@/lib/api';
@@ -70,21 +70,10 @@ function AssetUploader({
     setProgress(0);
 
     try {
-      const { uploadUrl, assetUrl } = await getBrandUploadUrl(
-        brandId, assetType, file.name, file.type, token,
+      const { assetUrl } = await uploadBrandAsset(
+        brandId, assetType, file, token,
+        (pct) => setProgress(pct),
       );
-
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type);
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload  = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed: ${xhr.status}`)));
-        xhr.onerror = () => reject(new Error('Network error during upload'));
-        xhr.send(file);
-      });
 
       setPreview(isVideo ? null : URL.createObjectURL(file));
       onUploaded(assetUrl);

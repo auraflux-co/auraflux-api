@@ -1398,6 +1398,7 @@ export async function updateBrandApi(
 
 export type BrandAssetType = 'logo' | 'intro_card' | 'outro_card';
 
+/** @deprecated use uploadBrandAsset instead — presigned-URL path had no R2 CORS */
 export async function getBrandUploadUrl(
   brandId:     string,
   assetType:   BrandAssetType,
@@ -1410,6 +1411,54 @@ export async function getBrandUploadUrl(
     { method: 'POST', body: JSON.stringify({ assetType, filename, contentType }), token },
   );
   return { uploadUrl: res.uploadUrl, assetUrl: res.assetUrl, key: res.key };
+}
+
+/**
+ * Upload a brand asset (logo / intro card / outro card) directly via the backend.
+ * The server handles R2 upload — no browser→R2 CORS required.
+ */
+export async function uploadBrandAsset(
+  brandId:   string,
+  assetType: BrandAssetType,
+  file:      File,
+  token?:    string,
+  onProgress?: (pct: number) => void,
+): Promise<{ assetUrl: string; key: string }> {
+  const base = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
+  const url  = `${base}/brands/${brandId}/upload`;
+
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('assetType', assetType);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          resolve({ assetUrl: data.assetUrl, key: data.key });
+        } catch {
+          reject(new Error('Invalid response from upload endpoint'));
+        }
+      } else {
+        try {
+          const err = JSON.parse(xhr.responseText);
+          reject(new Error(err.message || `Upload failed: ${xhr.status}`));
+        } catch {
+          reject(new Error(`Upload failed: ${xhr.status}`));
+        }
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(form);
+  });
 }
 
 export async function deleteBrandApi(id: string, token?: string): Promise<void> {
