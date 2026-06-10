@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-09 v1.0.1043 (Cursor — feat: admin endpoint to reassign brands to correct account)
 **Last Updated:** 2026-06-09 v1.0.1042 (Cursor — feat: accept brandId query param for OAuth automation)
 **Last Updated:** 2026-06-09 v1.0.1041 (Cursor — feat: brand-specific social connections — migration + token_store + social_connect + publish updated)
 **Last Updated:** 2026-06-09 v1.0.1040 (Cursor — feat: add brand_id to platform_oauth_tokens migration)
