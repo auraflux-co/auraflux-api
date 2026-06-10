@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1073 (Cursor — remove /admin/connect-brands page; brand owners connect socials by switching to sub-brand via brand toggle then using Settings → Social Accounts)
 **Last Updated:** 2026-06-10 v1.0.1072 (Cursor — fix: OAuth callback always returns to /settings/social not /admin/connect-brands; settings/social now passes active brandId in OAuth URL so token saves to correct brand)
 **Last Updated:** 2026-06-10 v1.0.1071 (Cursor — fix: dashboard settings tile now shows real YouTube/TikTok/Instagram SVG icons instead of text initials YT/TK/IG)
 **Last Updated:** 2026-06-10 v1.0.1070 (Cursor — feat: platform-branded social connect tiles (YouTube red, TikTok, Instagram gradient) lit when connected, dimmed when not; fix API keys hidden for guided; drop legacy oauth unique constraint migration 031)

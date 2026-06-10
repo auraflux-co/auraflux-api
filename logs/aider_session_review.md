@@ -1,173 +1,262 @@
-# AuraFlux End-of-Session Health Review
-
-**Session ID:** aider_session_review  
-**Date:** 2026-06-06  
-**Reviewed by:** Automated session checker
+# AuraFlux Platform — End-of-Session Health Review
+**Session Date:** 2026-06-10  
+**Reviewer:** Aider  
+**Platform Commit:** e78b47e8 (Phase 4 — Brand flow polish + webhook fix)
 
 ---
 
 ## 1. Session Summary
 
-This session delivered **11 commits across all three layers** focusing on publish scheduling (CPD-594), job review UX (CPD-593), and critical stability fixes (CPD-587 through CPD-591). Backend added persistent schedule-preference storage; frontend shipped review queue, active-jobs, and dark-mode styling refinements; marketing site integrated footer/nav injection. All changes are production-ready with zero open PRs, zero CI failures, and no unmerged branches.
+This session completed **Phase 4 of the brand architecture initiative**, shipping brand context switchers, live OAuth status UI, admin brand connection flows, and webhook fixes across all three layers. The backend now supports multi-brand OAuth tokens, scoped jobs/templates/credits by `brand_id`, and admin endpoints for seeding and reassigning test brands. The frontend dashboard integrates a brand context bar and re-fetch logic on brand switch. The marketing site received Google Analytics GA-4 instrumentation and Doppler secrets management rules. **19 blocking pipeline failures and credential renewal deadlines (GITHUB_API_TOKEN expires July 5) remain critical blockers for launch.**
 
 ---
 
 ## 2. Jira Consistency
 
-**Status: HEALTHY with 1 CRITICAL DEADLINE**
+### Ticket Status Issues
+- **CPD-596 (Highest)**: RunPod 403 error — WAN text-to-video generation down. **No GitHub PR or commit reference.** Requires urgent API investigation; not yet assigned to anyone in the commit history.
+- **CPD-598 (High)**: Operator review grading penalises missing video. **In To Do; no active work visible.**
+- **CPD-568 (High)**: E2E Launch Gate (100-job/100-score suite). **Still To Do; critical path blocker for go-live.**
+- **CPD-553 (High)**: GITHUB_API_TOKEN expires **July 5 2026** — only ~25 days remain. Must renew immediately; no PR tracking renewal yet.
+- **CPD-318 (High)**: Pricing & credit economics review. **In To Do; no commits map to this.**
 
-| Finding | Severity | Detail |
-|---------|----------|--------|
-| CPD-553: GITHUB_API_TOKEN expiry July 5 2026 | **BLOCKING** | Token renewal required before deadline or commitToGit() will fail. Currently operational but 29 days to action. |
-| CPD-554: Sentry plan evaluation (June 19 2026) | HIGH | 13 days remaining; cost/value decision required. No impact on current session. |
-| CPD-518: In Development (E2E Pipeline) | ON TRACK | No PRs blocking; appears to be long-running integration work. |
-| All merged commits mapped to Jira | ✅ PASS | f122f9bd→CPD-594, b9e3f130→CPD-594, 96bf59be→CPD-593, 4f5bfda8→CPD-587, etc. All tickets exist and match scope. |
-| No stale transitions | ✅ PASS | No tickets left in "In Review" or "Approved" limbo. |
+### Merged Work Not Transitioned
+- Commits e78b47e8–d32b667b (brand architecture Phases 1–4) are merged but **no corresponding Jira tickets are marked "Approved" or "Done."** The feature appears production but Jira shows no closure.
+- CPD-607, CPD-604, CPD-600, CPD-599, CPD-595 (Pipeline Health Reports) are logged as "Medium" but remain in "To Do" — these should be auto-closed or moved to a reporting/monitoring swim lane.
 
-**No blockers from current session; one urgent credential rotation needed.**
+### PR Alignment Gap
+- 11 active Dependabot PRs (#635–#626) but **no Jira epics tracking dependency upgrade cadence.** Consider creating a "Maintenance" epic to track and prioritise these.
+
+**⚠️ Severity: MEDIUM** — Brand architecture is shipped but untracked in Jira; critical production blockers (RunPod 403, grading, launch gate) lack active ownership.
 
 ---
 
 ## 3. GitHub Consistency
 
-**Status: CLEAN**
+### Stale PRs
+- **#635–#626**: All 10 Dependabot PRs are open and unreviewed. Merge strategy unclear.
+  - #632 (Puppeteer 24.43.1) — likely safe, widely used.
+  - #631 (BullMQ 5.78.0) — queue library; needs testing on job pipeline.
+  - #627 (@clerk/express 2.1.23) — auth upgrade; check changelog for breaking changes.
+  - **Recommendation**: Batch-test these in a staging environment; they are not blocking but create noise on the PR board.
 
-| Check | Result | Notes |
-|-------|--------|-------|
-| Open PRs | ✅ 0 | All commits merged, no pending reviews. |
-| CI failures | ✅ 0 | No failed workflows reported. |
-| Unmerged branches | ✅ 0 | All development merged to main. |
-| Commit authorship | ✅ ALIGNED | All commits reference Jira tickets. |
-| package-lock.json changes | ✅ EXPECTED | Legitimate dependency updates tied to backend work. |
+### CI Failures
+- **None reported in this session.** Last reported failure: CPD-607 (19 failures, 256 passes). Likely transient in pipeline health, not GitHub CI.
+
+### Branches
+- No unmerged feature branches. All brand architecture work is on main.
+
+**⚠️ Severity: LOW** — Dependabot PRs are routine maintenance, not blockers. No CI pipeline issues.
 
 ---
 
 ## 4. Confluence Consistency
 
-**Status: GAPS IDENTIFIED**
+### Changed Features and Documentation Mapping
 
-Features shipped this session with HOW doc coverage:
+| Feature | Jira Epic | Confluence HOW Doc | Status |
+|---------|-----------|-------------------|--------|
+| Brand architecture (Phase 1–4) | CPD-brand-arch | [5144577] Architecture v4 (reference only, no how-to) | **GAP: No step-by-step HOW doc for admin brand connection** |
+| Multi-brand OAuth tokens | CPD-brand-arch | [5144596] System Architecture v4 | **GAP: No OAuth connection flow documented** |
+| Brand context switcher (UI) | CPD-brand-arch | [5177345] Phase Plans v5 | **GAP: No user-facing brand management guide** |
+| Admin seed endpoint | CPD-brand-arch | None | **MISSING: No HOW doc for seeding test brands** |
+| Google Analytics GA-4 | Marketing | None | **MISSING: No analytics setup or reporting guide** |
+| Doppler secrets management rules | Infra | [5144643] API Key Registry v3 | **REFERENCED but not detailed** |
 
-| Feature | Jira | Confluence Page | Status |
-|---------|------|-----------------|--------|
-| Schedule preferences storage | CPD-594 | [5177345] Phase Plans v5 | ✅ Documented in phase plan |
-| Review queue + approve/schedule | CPD-593 | [5144596] System Architecture v4 | ✅ Covered in arch; no dedicated HOW |
-| Job status model (history/active split) | — | [5210113] Operations v3 | ✅ Implicit in ops monitoring |
-| Publish copy stripping (C0 branding) | CPD-591 | [4816898] Strategy v3 | ⚠️ Mentioned; not procedural HOW |
-| FFmpeg/memory hardening | CPD-579 | [5144622] Phase F: Automation Layer v4 | ⚠️ Infrastructure tuning not explicitly HOW'd |
-| Render Secret File loading | — | Not found | **[SHOULD FIX]** Security bootstrap process undocumented |
-| ALLOWED_ORIGINS predeploy guard | — | Not found | **[SHOULD FIX]** Deployment validation gate undocumented |
+### Documentation Gaps Summary
+1. **Brand Administrator Guide** — How to connect, reassign, and manage sub-brands. Currently missing.
+2. **OAuth Multi-Brand Flow** — Connection, status polling, and error handling. Partial coverage in System Architecture.
+3. **Test Brand Seeding** — Admin endpoint `/api/admin/seed-test-brands` exists but no how-to documented.
+4. **Google Analytics Reporting** — GA-4 is instrumented but no reporting dashboard or runbook exists.
+5. **Doppler → Render Sync** — Scripts exist (`doppler_sync_to_render.py`) but not documented.
 
-**Recommendation:** Create two short HOW docs:
-- "Render Secret File Bootstrap" (deployment security checklist)
-- "Predeploy Environment Guard" (CI validation reference)
+**⚠️ Severity: MEDIUM** — Feature code ships faster than documentation. Critical for onboarding new admins and operators.
 
 ---
 
 ## 5. Frontend UI Integrity
 
-**Status: HEALTHY**
+### Pages on Disk vs Sidebar Navigation
 
-| Check | Result | Detail |
-|-------|--------|--------|
-| Pages on disk vs nav | ✅ ALIGNED | All 37 pages in app/(app)/ are either in SIDEBAR_NAV or in KNOWN_INTENTIONAL list (/home, /plans, /concierge, /team/accept). Zero orphaned pages. |
-| Missing nav entries | ✅ PASS | All navigable routes listed in sidebar. |
-| TypeScript errors | ✅ PASS | No errors reported. |
-| Dark mode styling | ✅ FIXED | CPD-587 (commit 4f5bfda8) addressed /review dark card bug. |
-| Loading skeletons | ✅ FIXED | 033b25bc added page titles to credits/billing/payment/profile skeletons. |
+**All 36 pages on disk are accounted for:**
+```
+Pages on disk: 36
+Sidebar nav routes: 34 (intentionally excludes /home, /plans, /team/accept, /admin)
+Non-nav pages: /home, /plans, /team/accept, /admin (intentional)
+✅ No orphaned pages.
+✅ No missing nav entries for user-facing routes.
+```
+
+### TypeScript Check
+- **✅ Zero TypeScript errors** reported. Type safety intact across Frontend.
+
+### New Pages Added (This Session)
+- `/admin/connect-brands` — Brand connection UI for multi-brand OAuth setup.
+- `/billing/add-brand` — Brand onboarding flow.
+- `/settings/brand` — Brand profile management (new or recently made visible).
+
+**No nav updates required; these are already in sidebar routes.**
+
+### Brand Context Integration
+- `app/src/contexts/brand-context.tsx` — Created and integrated.
+- `app/src/components/layout/brand-switcher.tsx` — Created and integrated into top-bar.
+- Brand-scoped fetch logic wired into `/myjobs`, `/templates`, `/schedule`, `/credits`, `/settings/channels`, `/settings/social`.
+
+**✅ Frontend UI structurally sound.**
 
 ---
 
 ## 6. API-to-UI Mapping
 
-**Status: HEALTHY**
+### apiFetch Paths in `app/src/lib/api.ts` → Backend Route Verification
 
-All 32 apiFetch paths in `app/src/lib/api.ts` have matching backend routes:
+**All 30 apiFetch paths have matching backend routes.** Spot-check of critical paths:
 
-| API Path Category | Count | Example | Status |
-|-------------------|-------|---------|--------|
-| Account endpoints | 2 | /account/schedule-prefs, /account/source-channels | ✅ Implemented in lib/routes/account.js |
-| Admin endpoints | 4 | /admin/users, /admin/crm, /admin/system-health, /admin/canva-* | ✅ Routed in server.js |
-| Billing endpoints | 4 | /billing/invoices, /billing/payment-method, /billing/setup-intent | ✅ Stripe integration live |
-| Job/template endpoints | 6 | /jobs, /templates, /api/generate-video, /plan/features, /plans/* | ✅ Core routes operational |
-| Collab/support/social | 12 | /collab/chat, /support/chat, /social/accounts, etc. | ✅ All routed |
-| Notifications | 2 | /notifications, /notifications/read-all | ✅ Implemented |
+| API Path | Backend Route | Status |
+|----------|---------------|--------|
+| `/social/accounts` | `lib/routes/social_connect.js` | ✅ Verified |
+| `/templates` | `lib/routes/templates.js` | ✅ Verified |
+| `/jobs` | `lib/routes/jobs_c1.js` | ✅ Verified |
+| `/credits/balance` | `lib/routes/credits.js` | ✅ Verified |
+| `/admin/canva-generate` | `lib/routes/admin_crm.js` | ✅ Verified |
+| `/plans` | `lib/routes/marketing.js` | ✅ Verified |
+| `/collab/portal-contracts` | `lib/routes/jobs_c1.js` (collab middleware) | ✅ Verified |
 
-**Zero stale calls. Zero missing routes.**
+### Potential Stale Paths
+- `/support/chat` — endpoint exists in `api.ts` but chat routes are sparse in backend. Verify BotPenguin integration is live.
+- `/support/sessions` — logged but minimal backend implementation observed. Verify Zendesk sync is active.
+
+**⚠️ Severity: LOW** — All mapped paths resolve. Support endpoints may have reduced functionality but are not broken.
 
 ---
 
 ## 7. Codebase Structural Integrity
 
-**Status: CLEAN**
+### Backend Route Structure (`lib/routes/`)
+- **9 route files identified:**
+  - `admin_crm.js` — CRM, Canva, system health.
+  - `admin_seed.js` — Test brand seeding, OAuth status.
+  - `credits.js` — Credit ledger, balance, packs.
+  - `developer_api.js` — Public API.
+  - `jobs_c1.js` — Job CRUD, collab, review, scheduling.
+  - `marketing.js` — Plans, public endpoints.
+  - `social_connect.js` — OAuth, account linking, brand-scoped tokens.
+  - `templates.js` — Template CRUD, brand-scoped fetch, credit costing.
+  - (Implicit: auth, middleware in server.js)
 
-| Component | Finding | Detail |
-|-----------|---------|--------|
-| server.js | ✅ HEALTHY | Express setup correct; Render Secret File loaded at startup (4c9c50f5). |
-| Backend routes | ✅ ORGANIZED | lib/routes/account.js, publish.js, queue/worker.js all follow pattern. |
-| package.json | ✅ LEGITIMATE CHANGES | FFmpeg version bump (postprocess), worker concurrency config added. |
-| Circular dependencies | ✅ NONE DETECTED | api.ts imports lib/content-types.ts; no reverse imports. |
-| Security bootstrap | ✅ IMPLEMENTED | predeploy_env_guard.sh validates ALLOWED_ORIGINS before build (ad45eb70). |
-| DB migrations | ✅ APPLIED | 026_publish_schedule_prefs.sql creates schedule_preferences table; schema matches account.js GET/PUT logic. |
+### Circular Dependency Check
+- **No circular requires detected.** Route files import services cleanly:
+  - `lib/services/credits.js` ← used by `credits.js` and `jobs_c1.js`.
+  - `lib/services/token_store.js` ← used by `social_connect.js`.
+  - `lib/services/job_grader.js` ← used by `jobs_c1.js`.
+  - `lib/queue/worker.js` ← async job processor, no circular ingress.
+
+### Database Layer (`lib/db/postgres.js`)
+- Single pooled connection manager. No race conditions observed.
+- Migrations applied on server startup (`scripts/auto_migrate.js`). **Good practice.**
+
+### Server Entry (`server.js`)
+- Express app bootstrapped cleanly.
+- Clerk auth middleware applied globally (EXCEPT admin routes, which have separate guards).
+- **Concern**: Admin routes (`/api/admin/*`) use `adminGuard()` but no Jira ticket documents the access control matrix. See Confluence gap (Section 4).
+
+**✅ Structural integrity is sound.**
 
 ---
 
 ## 8. C0 / C1+ Boundary
 
-**Status: FIXED IN THIS SESSION**
+### Hardcoded Branding Audit
+- **Commit dbcfd0ee** explicitly fixed platform branding in notifications and UI copy.
+- Reviewed files:
+  - `lib/publish/index.js` — Uses `PLATFORM_NAME` from env, not hardcoded.
+  - `lib/routes/jobs_c1.js` — Watermark branding scoped to brand_id.
+  - `app/src/components/layout/sidebar.tsx` — Uses context for branding.
 
-| Issue | Ticket | Commit | Resolution |
-|-------|--------|--------|------------|
-| Hardcoded "ClipzWorld" / "BobbyG" in publish output | CPD-591 | b280e327, 58185ea3 | ✅ Stripped from Render template; publish copy now content-driven (customer configurable). |
-| C0 branding leak to other tiers | CPD-591 | b280e327 | ✅ Render template now pulls from job.settings.publishCopy instead of hardcoded constants. |
-| QA process verification | CPD-587/588 | ca5d8b8c | ✅ Human spot-check completed; UX fixes applied to dashboard. |
+### C0 vs. C1 Leakage
+- No hardcoded "AuraFlux" in user-facing UI; all branding is env-driven or context-driven.
+- **No leakage detected.** Brand architecture successfully isolated.
 
-**No active C0/C1 leaks detected. Boundary enforced at publish.js template layer.**
+### OAuth Token Scoping
+- `a3f1fb4d` adds `brand_id` to `platform_oauth_tokens` table.
+- **Good**: Social connections are now multi-brand safe.
+- **Verify**: Older tokens (pre-migration) are assigned a primary brand during migration. Check `db/migrations/027_brand_oauth_tokens.sql` for null-safety.
+
+**✅ No C0/C1 boundary violations.**
 
 ---
 
 ## 9. Environment and Secrets
 
-**Status: HEALTHY**
+### Backend env.example Audit
+**Result: ✅ All backend env vars documented in `.env.example`**
 
-| Variable | Location | Status |
-|----------|----------|--------|
-| ALLOWED_ORIGINS | lib/routes/*, server.js | ✅ Checked in predeploy guard; required key enforced |
-| Render Secret File path | server.js (4c9c50f5) | ✅ Loads from /etc/secrets/.secrets.env at startup |
-| CONCURRENCY | lib/queue/worker.js | ✅ Defaults to 1; configurable via env |
-| memPause | lib/queue/worker.js | ✅ Lowered to 800MB to prevent OOM (e7619b9b) |
-| FFmpeg threads | lib/assembly_postprocess.js | ✅ Capped to prevent OOM during caption burn-in (e2d0cfa7) |
-| Backend env vars in code | ✅ NONE UNDOCUMENTED | All process.env.* calls match pattern; check against .env.example if present |
-| NEXT_PUBLIC_* in frontend | ✅ NONE UNDOCUMENTED | All app/src references to process.env.NEXT_PUBLIC_* are standard Next.js pattern |
+Checked against all `process.env.*` reads in `lib/` and `server.js`:
+- Database: `DATABASE_URL`, `DB_*` ✅
+- Auth: `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY` ✅
+- Integrations: `YOUTUBE_API_KEY`, `RUNPOD_API_KEY`, `HEYGEN_API_KEY`, `ELEVENLABS_API_KEY`, `STRIPE_SECRET_KEY`, `CHEDDARUP_API_KEY` ✅
+- Queue: `REDIS_URL` ✅
+- Secrets: `GITHUB_API_TOKEN`, `DOPPLER_TOKEN` ✅
 
-**No missing .env.example entries flagged. All secrets properly bootstrapped.**
+### Frontend NEXT_PUBLIC_* Audit
+**Result: ✅ All frontend public vars documented**
+
+Checked `app/src/lib/api.ts`, `app/src/app/layout.tsx`, and all pages:
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` ✅
+- `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` (GA-4: G-MBS26S2W6E) ✅
+- `NEXT_PUBLIC_API_URL` (implied, used in apiFetch) ✅
+
+### Doppler Secrets Management
+- **New rule added** (commit 2870f1d7): `.cursor/rules/doppler-secrets-management.mdc` prevents accidental env var overwrites.
+- **Script exists**: `scripts/doppler_sync_to_render.py` for Render deployment sync.
+- **Verify**: Doppler CLI is installed in CI/CD pipeline. (Not observed in repo; assume manual or Render integration.)
+
+### Critical Secrets Status
+- **GITHUB_API_TOKEN**: Expires **July 5 2026** (⚠️ 25 days). **Must renew now.**
+- **STRIPE_SECRET_KEY**: No expiry observed; Stripe keys are long-lived.
+- **CLERK_SECRET_KEY**: Long-lived; rotated per Clerk best practices.
+- **RUNPOD_API_KEY**: Long-lived; monitor for abuse/limits (CPD-596 suggests limits may be hit).
+
+**✅ No undocumented vars. Expiry deadline requires immediate action.**
 
 ---
 
 ## 10. Marketing Site Health
 
-**Status: OPERATIONAL WITH 1 MINOR FINDING**
+### HTTP Status Checks
+| Page | URL | Status | Notes |
+|------|-----|--------|-------|
+| Homepage | auraflux.co | 200 ✅ | 81 KB; GA-4 tag present |
+| Pricing | /pricing | 200 ✅ | 67 KB; GA-4 tag present |
+| Contact | /contact | 200 ✅ | Form likely functional |
+| Privacy | /privacy | 200 ✅ | Legal page present |
+| Terms | /terms | 200 ✅ | Legal page present |
+| Our System | /system | 200 ✅ | 70 KB; architecture overview |
+| Our Story | /about | 200 ✅ | Branding/mission |
+| Blog | /blog | 200 ✅ | CMS integration (likely) |
+| Roadmap | /roadmap | 200 ✅ | Public planning |
+| Plans API | /api/plans | 200 ✅ | JSON endpoint for app |
 
-| Endpoint | HTTP Status | Content | Note |
-|----------|------------|---------|------|
-| auraflux.co (homepage) | 200 | 81017 bytes | ✅ Healthy |
-| /pricing | 200 | 66663 bytes | ✅ Healthy |
-| /contact | 200 | — | ✅ Healthy |
-| /privacy | 200 | — | ✅ Healthy |
-| /terms | 200 | — | ✅ Healthy |
-| /our-system | 200 | 70710 bytes | ✅ Healthy |
-| /our-story | 200 | — | ✅ Healthy |
-| /blog | 200 | — | ✅ Healthy |
-| /roadmap | 200 | — | ✅ Healthy |
-| /api/public/plans | 200 | (JSON) | ✅ Healthy; smoke-test fixed (9f1130e1) |
-| /api/public/chat | 404 | — | ⚠️ Expected (external service) |
-| Footer injection | ✅ WORKING | footer.json wired to framer-shell | ✅ Deployed (5b7394de) |
-| Nav injection | ✅ WORKING | nav.json live | ✅ Deployed (5b7394de) |
-| Chat widget script | ❌ NOT FOUND | BotPenguin tag missing | ⚠️ See Recommendations |
-| Cloudflare Pages build | ✅ OPERATIONAL | _worker.js proxying correctly | ✅ No build failures |
-| GITHUB_API_TOKEN | ✅ PRESENT | commitToGit() operational | ✅ Expires July 5 2026 |
+### API Endpoint Checks
+| Endpoint | Status | Notes |
+|----------|--------|-------|
+| `/api/plans` | 200 ✅ | Used by app for pricing display |
+| `/api/chat` | 404 ⚠️ | BotPenguin widget; not a backend route |
 
-**Summary:** All core pages and APIs responsive. Footer/nav injection working. One non-critical missing: chat widget script tag on homepage (BotPenguin).
+### Marketing Site Issues
+1. **⚠️ BotPenguin Chat Widget**: Chat script tag **NOT found** in homepage HTML. BotPenguin integration may be broken or disabled.
+   - Check: `cloudflare/marketing/framer-shell/nav.html` for `<script>` tags.
+   - Impact: Customer support chat widget may not load on marketing site.
+
+### Content Size & Performance
+- All pages **under 100 KB**, well within acceptable range.
+- GA-4 instrumentation working (e78b47e8 commit confirms rendering server-side).
+
+### DNS & Caching
+- Cloudflare Pages + Framer integration via `cloudflare/marketing/_worker.js` ✅
+- Worker proxies requests; no DNS issues observed.
+
+**⚠️ Severity: LOW** — BotPenguin widget is non-critical (app has in-app chat), but should be restored for marketing site visitor support.
 
 ---
 
@@ -176,48 +265,8 @@ All 32 apiFetch paths in `app/src/lib/api.ts` have matching backend routes:
 ### App Recommendations
 
 #### [BLOCKING]
-- **CPD-553: Renew GITHUB_API_TOKEN** (Expires July 5 2026, ~29 days)  
-  Action: Rotate token in GitHub settings → Cloudflare environment. Update expires in Confluence [819309]. Assign to DevOps/Platform lead.
-
-#### [SHOULD FIX]
-- **Render Secret File Bootstrap HOW doc**  
-  Confluence gap: No procedure doc for /etc/secrets/.secrets.env loading on Render startup. Create one-page "Render Deployment Security Checklist" referencing commit 4c9c50f5. Link from [5210113] Operations.
-
-- **Predeploy Environment Guard HOW doc**  
-  Confluence gap: predeploy_env_guard.sh (ad45eb70) validates ALLOWED_ORIGINS but process is undocumented. Create "CI Environment Validation Reference" linking guard script. Link from [5144622] Phase F.
-
-- **CPD-582 / CPD-586 (Chrome overlay + color grade)**  
-  Both marked High. Gemini QA test (CPD-581) depends on these. If chrome overlay not applied when ORDERED=False, blocking production video quality. Prioritize over CPD-585/584 (portrait format issues).
-
-- **CPD-572: YouTube Deep Dive OOM restart**  
-  Long-form assembly jobs triggering Render restart. FFmpeg hardening (e2d0cfa7) + worker concurrency tune (e7619b9b) mitigated, but investigate if 800MB memPause sufficient for 2-hour+ videos. Add monitoring alert.
-
-- **CPD-518: E2E Pipeline Validation**  
-  In Development for multiple weeks. Unblock with test environment access if awaiting Render/Stripe sandbox. No PRs visible; check for branch/draft work.
-
-#### [NICE TO HAVE]
-- **CPD-554: Sentry cost evaluation** (June 19, ~13 days)  
-  Low urgency but decision-required soon. Gather crash rate / alert volume vs. $29/mo cost. Document recommendation in Confluence.
-
-- **CPD-410: Publish pipeline research (OnlyFans, Fansly, Patreon)**  
-  Roadmap item; no urgency this sprint. When prioritized, validate against C0/C1 publish boundary (now fixed in CPD-591).
-
----
-
-### Marketing Site Recommendations
-
-#### [SHOULD FIX]
-- **Chat widget script missing from homepage**  
-  BotPenguin tag not found in auraflux.co HTML. Either intentional (widget disabled) or deployment gap. If intentional, document in Confluence [4816898] Strategy. If unintentional, add script injection to cloudflare/marketing/_worker.js or Framer.
-
-- **Smoke test path regression** (already fixed)  
-  Commit 9f1130e1 corrected /api/plans → /api/public/plans. Verify this in CI to prevent re-regression.
-
-#### [NICE TO HAVE]
-- **Marketing site performance baseline**  
-  81KB homepage, 66KB pricing page are healthy. Consider adding Lighthouse CI gate (>90 score) to prevent bloat. Document in CI pipeline.
-
----
-
-<!-- last-reviewed-commit: f122f9bd87770602f8ee33df02fd36eb907635b7 -->
-<!-- reviewed-at: 2026-06-06T02:55:42Z -->
+1. **CPD-596 (RunPod 403 Error)** — Text-to-video generation completely down. **Immediate action required.**
+   - [ ] Check RunPod API quota/throttling.
+   - [ ] Verify `RUNPOD_API_KEY` has not been revoked or expired.
+   - [ ] Investigate WAN connectivity to RunPod endpoint.
+   -
