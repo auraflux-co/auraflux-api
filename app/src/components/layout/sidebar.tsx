@@ -12,6 +12,7 @@ import { getCreditBalance } from '@/lib/api';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { CreditToken } from '@/components/icons/brand-icons';
 import { BrandSwitcher } from '@/components/layout/brand-switcher';
+import { useBrand } from '@/contexts/brand-context';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -223,7 +224,10 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const { isSuperAdmin }                       = useRole();
   const { planTier }                           = usePlan();
   const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
+  const { activeBrand, brands, setActiveBrand } = useBrand();
   const router                                 = useRouter();
+  const primaryBrand = brands.find((b) => b.is_primary) ?? null;
+  const isOnPrimaryBrand = !activeBrand || activeBrand.is_primary;
 
   const CUSTOMER_NAV = [...CUSTOMER_NAV_BASE, settingsNavItem(planTier)];
 
@@ -277,8 +281,23 @@ export function Sidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
           </Link>
         )}
 
-        {/* Brand switcher — shown for customer nav only */}
-        {!isSuperAdmin && <BrandSwitcher collapsed={collapsed} />}
+        {/* Brand switcher — primary brand shows full switcher; sub-brand shows back link */}
+        {!isSuperAdmin && isOnPrimaryBrand && <BrandSwitcher collapsed={collapsed} />}
+        {!isSuperAdmin && !isOnPrimaryBrand && primaryBrand && (
+          <button
+            onClick={() => { setActiveBrand(primaryBrand); router.push('/home'); }}
+            className={cn(
+              'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors',
+              collapsed && 'justify-center px-0'
+            )}
+            title={`Back to ${primaryBrand.name}`}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+            {!collapsed && <span className="truncate">{primaryBrand.name}</span>}
+          </button>
+        )}
 
         {/* Credits badge */}
         {!collapsed && <CreditsBadge collapsed={collapsed} />}
@@ -449,7 +468,10 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
   const pathname                    = usePathname();
   const { isSuperAdmin }            = useRole();
   const { planTier }                = usePlan();
+  const { activeBrand, brands, setActiveBrand } = useBrand();
   const router                      = useRouter();
+  const primaryBrand = brands.find((b) => b.is_primary) ?? null;
+  const isOnPrimaryBrand = !activeBrand || activeBrand.is_primary;
 
   const CUSTOMER_NAV = [...CUSTOMER_NAV_BASE, settingsNavItem(planTier)];
 
@@ -494,8 +516,19 @@ export function MobileSidebar({ setupLocked }: { setupLocked?: boolean } = {}) {
             </svg>
           </button>
         </div>
-        {/* Brand switcher — customer nav only */}
-        {!isSuperAdmin && <BrandSwitcher collapsed={false} />}
+        {/* Brand switcher — primary brand only; sub-brand shows back link */}
+        {!isSuperAdmin && isOnPrimaryBrand && <BrandSwitcher collapsed={false} />}
+        {!isSuperAdmin && !isOnPrimaryBrand && primaryBrand && (
+          <button
+            onClick={() => { setActiveBrand(primaryBrand); closeMobile(); router.push('/home'); }}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+            <span className="truncate">{primaryBrand.name}</span>
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">

@@ -1334,6 +1334,7 @@ export interface Brand {
   slug:                   string | null;
   created_at:             string;
   active:                 boolean;
+  is_primary:             boolean;
   tier:                   PlanTier | null;
   credits_included:       number | null;
   stripe_subscription_id: string | null;
