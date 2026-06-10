@@ -9,6 +9,7 @@ import { formatUserError } from '@/lib/job-labels';
 
 import { useEffect, useState, useTransition } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useBrand } from '@/contexts/brand-context';
 import { Button } from '@/components/ui/button';
 import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';
 import type { ReactNode } from 'react';
@@ -69,12 +70,15 @@ const PLATFORMS: PlatformDef[] = [
 
 export default function SocialConnectPage() {
   const { getToken } = useAuth();
+  const { activeBrand } = useBrand();
+  const activeBrandId = activeBrand?.id;
   const [accounts, setAccounts]   = useState<ConnectedAccount[]>([]);
   const [isPending, start]        = useTransition();
   const [error, setError]         = useState<string | null>(null);
   const [disconnecting, setDisc]  = useState<SocialPlatform | null>(null);
   const [switching, setSwitching] = useState<SocialPlatform | null>(null);
 
+  // Handle OAuth callback on mount (runs once — no brand dep needed)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get('social_connected');
@@ -96,8 +100,12 @@ export default function SocialConnectPage() {
 
       if (errMsg) setError(decodeURIComponent(errMsg));
     }
-    fetchAccounts();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch accounts whenever the active brand changes
+  useEffect(() => {
+    fetchAccounts();
+  }, [activeBrandId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function fetchAccounts() {
     start(async () => {

@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, useTransition, useCallback } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
+import { useBrand } from '@/contexts/brand-context';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -83,6 +84,8 @@ const API_BASE    = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.on
 export default function SourceChannelsPage() {
   const { getToken }  = useAuth();
   const searchParams  = useSearchParams();
+  const { activeBrand } = useBrand();
+  const activeBrandId   = activeBrand?.id;
 
   const [channels, setChannels]   = useState<SourceChannels>({});
   const [saved, setSaved]         = useState(false);
@@ -146,7 +149,7 @@ export default function SourceChannelsPage() {
       } catch { /* non-blocking */ }
     })();
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getToken, loadConnections, activeBrandId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleConnect(oauthPlatform: string) {
     try {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useBrand } from '@/contexts/brand-context';
 import { FlowNetwork } from '@/components/icons/brand-icons';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -27,6 +28,8 @@ const ALL_PLATFORMS = ['youtube', 'tiktok', 'instagram'] as const;
 
 export default function SchedulePage() {
   const { getToken, isLoaded } = useAuth();
+  const { activeBrand } = useBrand();
+  const activeBrandId = activeBrand?.id;
   const [tab, setTab]               = useState<Tab>('upcoming');
   const [jobs, setJobs]             = useState<Job[]>([]);
   const [templates, setTemplates]   = useState<JobTemplate[]>([]);
@@ -46,6 +49,7 @@ export default function SchedulePage() {
 
   useEffect(() => {
     if (!isLoaded) return;
+    setLoading(true);
     (async () => {
       try {
         const token = await getToken();
@@ -63,7 +67,7 @@ export default function SchedulePage() {
         setLoading(false);
       }
     })();
-  }, [getToken, isLoaded]);
+  }, [getToken, isLoaded, activeBrandId]);
 
   const upcoming = jobs.filter((j) => {
     const at = j.scheduledStartAt || j.scheduledPublishAt;

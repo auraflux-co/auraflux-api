@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { usePlan } from '@/contexts/plan-context';
+import { useBrand } from '@/contexts/brand-context';
 import { tierLabel } from '@/lib/tier-labels';
 import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';
 import {
@@ -372,6 +373,8 @@ const ICONS = {
 
 export function LiveTiles() {
   const { getToken } = useAuth();
+  const { activeBrand } = useBrand();
+  const activeBrandId = activeBrand?.id;
   const [data, setData] = useState<TileData>(EMPTY);
 
   const fetchJobs = useCallback(async (token: string | null) => {
@@ -412,6 +415,7 @@ export function LiveTiles() {
 
   useEffect(() => {
     let cancelled = false;
+    setData(EMPTY);
     (async () => {
       const token = await getToken();
       if (cancelled) return;
@@ -426,7 +430,7 @@ export function LiveTiles() {
       if (!cancelled) fetchJobs(token);
     }, 15_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [getToken, fetchJobs, fetchCredits, fetchTemplates, fetchAccounts]);
+  }, [getToken, activeBrandId, fetchJobs, fetchCredits, fetchTemplates, fetchAccounts]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
