@@ -17,6 +17,7 @@ import {
   listConnectedAccounts,
   disconnectPlatform,
   getSocialConnectUrl,
+  getActiveBrandId,
   type ConnectedAccount,
   type SocialPlatform,
 } from '@/lib/api';
@@ -126,6 +127,10 @@ export default function SocialConnectPage() {
     const token = await getToken();
     const url   = new URL(getSocialConnectUrl(platform));
     if (token) url.searchParams.set('token', token);
+    // Always pass the active brand so the token is stored against the right brand,
+    // not just the account's primary brand fallback.
+    const activeBrandId = getActiveBrandId();
+    if (activeBrandId) url.searchParams.set('brandId', activeBrandId);
 
     const popup = window.open(
       url.toString(),
