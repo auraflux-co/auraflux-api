@@ -9,6 +9,7 @@ const {
   buildClipManifest,
   rankCandidates,
   extractKeywordsFromScript,
+  runForJob,
   CANDIDATE_STATUS,
   MIN_RELEVANCE_SCORE,
   MAX_CANDIDATES,
@@ -289,5 +290,101 @@ describe('suggestClips', () => {
       _geminiClient: mockClient,
     });
     expect(candidates.length).toBeLessThanOrEqual(3);
+  });
+});
+
+// ─── runForJob (CPD-870) ──────────────────────────────────────────────────────
+
+jest.mock('../lib/utils/logger', () => ({ logError: jest.fn() }), { virtual: true });
+
+function makeJobSpec(overrides = {}) {
+  return {
+    jobId:    'job-test-1',
+    planTier: 'operate',
+    state:    {},
+    order:    { inputs: { items: [] } },
+    ...overrides,
+  };
+}
+
+describe('runForJob', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('returns null and sets clipAutoSelectFailed when no items', async () => {
+    const spec = makeJobSpec();
+    const result = await runForJob(spec);
+    expect(result).toBeNull();
+    expect(spec.state.clipAutoSelectFailed).toBe(true);
+    expect(spec.state.clipAutoSelectFailedAt).toBeDefined();
+  });
+
+  it('falls back to view-count ordering for URL-only items', async () => {
+    const spec = makeJobSpec({
+      order: {
+        inputs: {
+          items: [
+            { id: 'c-low',  url: 'https://cdn.test/low.mp4',  viewCount: 100, duration: 30, title: 'Low views' },
+            { id: 'c-high', url: 'https://cdn.test/high.mp4', viewCount: 999, duration: 45, title: 'Top clip' },
+          ],
+        },
+      },
+    });
+    const result = await runForJob(spec);
+    expect(result).not.toBeNull();
+    expect(result.source).toBe('view_count_fallback');
+    expect(result._isFallback).toBe(true);
+    // Top-by-viewCount should be first
+    expect(result.clips[0].url).toBe('https://cdn.test/high.mp4');
+  });
+
+  it('populates orderedClipUrls from URL fallback clips', async () => {
+    const spec = makeJobSpec({
+      order: {
+        inputs: {
+          items: [
+            { id: 'u1', url: 'https://cdn.test/clip1.mp4', viewCount: 50, title: 'Clip 1' },
+          ],
+        },
+      },
+    });
+    await runForJob(spec);
+    expect(Array.isArray(spec.orderedClipUrls)).toBe(true);
+    expect(spec.orderedClipUrls.length).toBeGreaterThan(0);
+    expect(spec.orderedClipUrls[0]).toHaveProperty('clipUrl');
+    expect(spec.orderedClipUrls[0].autoSelected).toBe(true);
+  });
+
+  it('persists clipManifest and clipSelectionLog to state', async () => {
+    const spec = makeJobSpec({
+      order: {
+        inputs: {
+          items: [{ id: 'u1', url: 'https://cdn.test/c.mp4', viewCount: 200, title: 'C' }],
+        },
+      },
+    });
+    await runForJob(spec);
+    expect(spec.state.clipManifest).toBeDefined();
+    expect(spec.state.clipSelectionLog).toBeDefined();
+    expect(spec.state.clipAutoSelectedAt).toBeDefined();
+  });
+
+  it('handles jobSpec with no order.inputs gracefully', async () => {
+    const spec = { jobId: 'j2', planTier: 'operate', state: {} };
+    const result = await runForJob(spec);
+    expect(result).toBeNull();
+    expect(spec.state.clipAutoSelectFailed).toBe(true);
+  });
+
+  it('uses pre-existing state object if present', async () => {
+    const spec = makeJobSpec({
+      state: { existingKey: 'keep' },
+      order: {
+        inputs: {
+          items: [{ id: 'u1', url: 'https://cdn.test/c.mp4', viewCount: 1 }],
+        },
+      },
+    });
+    await runForJob(spec);
+    expect(spec.state.existingKey).toBe('keep');
   });
 });
