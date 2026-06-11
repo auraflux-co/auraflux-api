@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-06-10 (Cursor — CPD-880: publish copy upgraded to YouTube Growth Strategist prompt — category-first classification, SEO package, virality scores, per-platform variants; live-tested vs gpt-4o. Prior: CPD-879 HeyGen 720p overlay fix, CPD-874/875/876 QA prompt fixes)
+**Last Updated:** 2026-06-10 (Cursor — CPD-884: Gate 3a/4 prompts trained against frame-verified false positives — source-stream UI inside clips never attributed to chrome; spelling deductions require character-certain legibility. Prior: CPD-880 growth-strategist publish copy, CPD-879 HeyGen 720p overlay fix)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
