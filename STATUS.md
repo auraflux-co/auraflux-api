@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1083 (Cursor — feat(CPD-860,867,868,871): brand switcher search/filter for 5+ brands; always show active brand name in sidebar; clearer sub-brand context label; brand logo in TTS + safety-net chrome paths)
 **Last Updated:** 2026-06-10 v1.0.1082 (Cursor — revert(social): remove Upload-Post customerId fallback; it leaked owner's TikTok/Instagram into every sub-brand that hadn't yet connected their own accounts)
 **Last Updated:** 2026-06-10 v1.0.1081 (Cursor — fix(social): legacy customerId→brandId migration fallback in GET /social/accounts; social page shows opacity-dim during brand switch pending state; channels dep array no longer suppressed)
 **Last Updated:** 2026-06-10 v1.0.1080 (Cursor — fix(brand-context): POST /jobs + GET /jobs/:jobId now use resolveBrandContext; LiveTiles/schedule/social/channels re-fetch on brand switch; credit history filtered by brandId; job detail enforces brand ownership check)

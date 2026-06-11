@@ -44,13 +44,17 @@ export function TopBar() {
             <rect x="2" y="7" width="20" height="14" rx="2" />
             <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
           </svg>
-          <span className="font-medium">{activeBrand.name}</span>
+          <span className="text-indigo-300 opacity-60">Viewing</span>
+          <span className="font-semibold text-indigo-200">{activeBrand.name}</span>
           {primaryBrand && (
             <button
               onClick={() => setActiveBrand(primaryBrand)}
-              className="ml-1 underline underline-offset-2 opacity-70 hover:opacity-100 transition-opacity"
+              className="ml-2 flex items-center gap-1 px-2 py-0.5 rounded border border-indigo-400/30 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors opacity-80 hover:opacity-100"
             >
-              ← back to {primaryBrand.name}
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Switch to {primaryBrand.name}
             </button>
           )}
         </div>

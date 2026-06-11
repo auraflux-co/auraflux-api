@@ -11,7 +11,7 @@
  * escapes the sidebar's overflow-hidden clipping boundary.
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -74,9 +74,18 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
   const { brands, activeBrand, setActiveBrand, isLoading } = useBrand();
   const [open, setOpen]       = useState(false);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const [search, setSearch]   = useState('');
   const triggerRef            = useRef<HTMLButtonElement>(null);
   const menuRef               = useRef<HTMLDivElement>(null);
+  const searchRef             = useRef<HTMLInputElement>(null);
   const router                = useRouter();
+
+  const showSearch = brands.length >= 5;
+  const filteredBrands = useMemo(() => {
+    if (!showSearch || !search.trim()) return brands;
+    const q = search.toLowerCase();
+    return brands.filter((b) => b.name.toLowerCase().includes(q));
+  }, [brands, search, showSearch]);
 
   // Position the portal menu below the trigger button
   const positionMenu = useCallback(() => {
@@ -93,8 +102,18 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
 
   const toggleOpen = useCallback(() => {
     if (!open) positionMenu();
-    setOpen((v) => !v);
+    setOpen((v) => {
+      if (v) setSearch('');
+      return !v;
+    });
   }, [open, positionMenu]);
+
+  // Focus the search field as soon as the menu opens
+  useEffect(() => {
+    if (open && showSearch) {
+      requestAnimationFrame(() => searchRef.current?.focus());
+    }
+  }, [open, showSearch]);
 
   // Close on outside click or Escape
   useEffect(() => {
@@ -119,6 +138,7 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
 
   function handleSelect(brand: Brand) {
     setActiveBrand(brand);
+    setSearch('');
     setOpen(false);
   }
 
@@ -216,38 +236,73 @@ export function BrandSwitcher({ collapsed }: { collapsed: boolean }) {
     <div
       ref={menuRef}
       style={menuStyle}
-      className="bg-popover border border-border rounded-md shadow-lg py-1"
+      className="bg-popover border border-border rounded-md shadow-lg py-1 flex flex-col"
       role="menu"
       aria-label="Switch brand"
     >
-      {brands.map((brand) => {
-        const isActive = brand.id === activeBrand.id;
-        return (
-          <button
-            key={brand.id}
-            onClick={() => handleSelect(brand)}
-            role="menuitem"
-            className={cn(
-              'w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left',
-              'hover:bg-muted/60',
-              isActive && 'text-primary',
+      {showSearch && (
+        <div className="px-2 pt-1.5 pb-1 border-b border-border">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-muted-foreground">
+              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search brands…"
+              className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground text-foreground"
+              aria-label="Search brands"
+              onKeyDown={(e) => e.key === 'Escape' && (search ? setSearch('') : setOpen(false))}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
             )}
-          >
-            <BrandAvatar brand={brand} size="lg" />
-            <span className="flex-1 min-w-0 truncate">{brand.name}</span>
-            {brand.tier && (
-              <span className="text-[10px] text-muted-foreground shrink-0">
-                {TIER_LABELS[brand.tier] ?? brand.tier}
-              </span>
-            )}
-            {isActive && (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-primary">
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-            )}
-          </button>
-        );
-      })}
+          </div>
+        </div>
+      )}
+
+      <div className="overflow-y-auto" style={{ maxHeight: 280 }}>
+        {filteredBrands.map((brand) => {
+          const isActive = brand.id === activeBrand.id;
+          return (
+            <button
+              key={brand.id}
+              onClick={() => handleSelect(brand)}
+              role="menuitem"
+              className={cn(
+                'w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-left',
+                'hover:bg-muted/60',
+                isActive && 'text-primary',
+              )}
+            >
+              <BrandAvatar brand={brand} size="lg" />
+              <span className="flex-1 min-w-0 truncate">{brand.name}</span>
+              {brand.tier && (
+                <span className="text-[10px] text-muted-foreground shrink-0">
+                  {TIER_LABELS[brand.tier] ?? brand.tier}
+                </span>
+              )}
+              {isActive && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-primary">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              )}
+            </button>
+          );
+        })}
+        {filteredBrands.length === 0 && (
+          <p className="px-3 py-2 text-xs text-muted-foreground">No brands match &ldquo;{search}&rdquo;</p>
+        )}
+      </div>
 
       <div className="border-t border-border mt-1 pt-1">
         <button
