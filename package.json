@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.61",
+  "version": "1.0.62",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -70,6 +70,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@aws-sdk/client-s3": "^3.1066.0",
     "axios": "^1.14.0",
     "better-sqlite3": "^12.9.0",
     "bullmq": "^5.74.1",
