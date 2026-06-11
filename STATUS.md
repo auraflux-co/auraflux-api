@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-11 v1.0.1096 (Cursor — fix(CPD-869): assembly_service Twitch VOD download — add _isTwitchVodUrl routing to yt-dlp with --download-sections *00:00:00-00:01:30; full broadcasts had null duration because _downloadFile fetched HTML page)
 **Last Updated:** 2026-06-11 v1.0.1095 (Cursor — fix(CPD-869): worker.js discarded generateJobScript return value — filledScript/orderedClipUrls/publishCopy never written back to jobSpec causing PORTAL1_NO_SCRIPT on every job)
 **Last Updated:** 2026-06-11 v1.0.1094 (Cursor — fix(CPD-869): Portal 0 Twitch VOD URL bypass — twitch.tv/videos/NNNNN URLs now accepted without ffprobe, same path as Twitch clip bypass; assembly_service handles yt-dlp download at job time)
 **Last Updated:** 2026-06-11 v1.0.1093 (Cursor — fix(CPD-872): same productionProfile fix applied to developer_api.js — productionProfile now passed to createJobSpec in all callers)
