@@ -2914,9 +2914,18 @@ app.post('/generate-clip-comp', async (req, res) => {
     jobSpec = updateJobSpec(jobSpec.jobId, {
       clipsOnly: true,
       deliverySpec: { platforms },
+      // Spec-driven routing: declare the stages this job actually skips. Clips-only
+      // comps have no script generation and no HeyGen avatar — the spec must say so.
+      stageMap: {
+        script: { active: false },
+        avatar: { active: false }
+      },
       designSpec: { chrome: {
         layout: 'clip-comp',
-        hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false, hasLogo: true
+        hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false, hasLogo: true,
+        // Short-form assembly places the logo bottom-right (shortLogoPos "mug") — the
+        // inherited top-right default made Gate 3a dock points for a per-spec logo.
+        logoPosition: 'bottom-right', logoSize: 80
       } }
     });
   } catch (specErr) {
