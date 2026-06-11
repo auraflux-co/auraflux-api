@@ -6057,7 +6057,7 @@ app.post('/publish/youtube', async (req, res) => {
     const { google } = require('googleapis');
     // Reuse OAuth2 from Drive
     const CLIENT_ID     = '764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com';
-    const CLIENT_SECRET = 'YOUTUBE-CLIENT-SECRET-REDACTED';
+    const CLIENT_SECRET = 'd-FL95Q19q7MQmFpd7hHD0Ty';
     const oauth2Client  = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
     if (!process.env.DRIVE_REFRESH_TOKEN) return res.status(400).json({ error: 'Run node cwn-auth.js first to authorize Google' });
     oauth2Client.setCredentials({ refresh_token: process.env.DRIVE_REFRESH_TOKEN });

@@ -16,10 +16,10 @@ Two separate Google OAuth2 secrets are hardcoded directly in source:
 
 ```js
 // Location 1 (~line 1604) — has env fallback but secret is still in git history:
-const CLIENT_SECRET = process.env.DRIVE_CLIENT_SECRET || 'GOCSPX-REDACTED-ROTATE-IN-GOOGLE-CONSOLE';
+const CLIENT_SECRET = process.env.DRIVE_CLIENT_SECRET || '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';
 
 // Location 2 (~line 9377) — NO env fallback at all, always hardcoded:
-const CLIENT_SECRET = 'YOUTUBE-CLIENT-SECRET-REDACTED';
+const CLIENT_SECRET = 'd-FL95Q19q7MQmFpd7hHD0Ty';
 ```
 
 **Risk:** Anyone with repo access (or git history access) can authenticate as your Google account and access/delete Drive files.
