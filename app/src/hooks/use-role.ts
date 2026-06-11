@@ -3,7 +3,7 @@
  * useRole — returns the current user's platform role from Clerk publicMetadata.
  *
  * Two platform roles only:
- *   superadmin — full platform access (robert@auraflux.co)
+ *   superadmin — full platform access (support@auraflux.co)
  *   customer   — everyone else (default when no role is set)
  *
  * Account-level roles (Owner / Admin / Member / Billing) live in
