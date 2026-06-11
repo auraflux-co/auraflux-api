@@ -2310,6 +2310,47 @@ async function _runGate5ForCard(jobId) {
   saveJobCard(jobId, card);
 }
 
+// POST /job/:id/schedule — set/clear a deferred publish time (CPD-924)
+// Body: { scheduledAt: ISO-8601 string } to set, { scheduledAt: null } to clear.
+// Gate 5 holds at 'publish_scheduled' and scheduling_cron fires it when due.
+app.post('/job/:id/schedule', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job already published — cannot schedule' });
+  }
+
+  const { scheduledAt } = req.body;
+  if (scheduledAt === null || scheduledAt === '') {
+    card.scheduledPublishAt = null;
+    if (card.deliverySpec) card.deliverySpec.scheduledAt = null;
+    if (card.stage === 'publish_scheduled') card.stage = 'assembled';
+    saveJobCard(jobId, card);
+    return res.json({ ok: true, jobId, scheduledAt: null, message: 'Schedule cleared — job will publish on normal Gate 5 flow' });
+  }
+
+  const due = new Date(scheduledAt);
+  if (isNaN(due.getTime())) {
+    return res.status(400).json({ ok: false, error: `Invalid scheduledAt: ${scheduledAt} — must be ISO-8601` });
+  }
+  if (due.getTime() <= Date.now()) {
+    return res.status(400).json({ ok: false, error: 'scheduledAt must be in the future' });
+  }
+
+  card.scheduledPublishAt = due.toISOString();
+  card.deliverySpec = card.deliverySpec || {};
+  card.deliverySpec.scheduledAt = due.toISOString();
+  // If the video is already assembled and waiting, hold it now;
+  // otherwise assembly's Gate 5 trigger will see the schedule and hold.
+  if (['assembled', 'gate5_forced', 'gate5_failed'].includes(card.stage)) {
+    card.stage = 'publish_scheduled';
+  }
+  saveJobCard(jobId, card);
+  console.log(`[schedule] ${jobId}: publish scheduled for ${card.scheduledPublishAt} (stage=${card.stage})`);
+  return res.json({ ok: true, jobId, scheduledAt: card.scheduledPublishAt, stage: card.stage });
+});
+
 // POST /job/:id/run-gate5 — trigger Gate 5 upload for an assembled/force-advanced job
 app.post('/job/:id/run-gate5', async (req, res) => {
   const jobId = req.params.id;
@@ -3470,14 +3511,28 @@ app.get('/twitch/clips-pool', async (req, res) => {
     );
     const users = userResp.data?.data || [];
 
-    // Fetch recent clips for each resolved user in parallel
+    // Fetch recent clips for each resolved user in parallel.
+    // Recency: last 24h first; if a streamer has none, fall back to last 7d.
+    const fetchClips = async (userId, sinceIso) => {
+      const startedAt = sinceIso ? `&started_at=${encodeURIComponent(sinceIso)}` : '';
+      const resp = await axios.get(
+        `https://api.twitch.tv/helix/clips?broadcaster_id=${userId}&first=${clipsPerStreamer}${startedAt}`,
+        { headers: { 'Client-Id': clientId, 'Authorization': `Bearer ${token}` }, timeout: 10000 }
+      );
+      return resp.data?.data || [];
+    };
+
+    const since24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const since7d  = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
     const allClips = (await Promise.all(users.map(async user => {
       try {
-        const clipsResp = await axios.get(
-          `https://api.twitch.tv/helix/clips?broadcaster_id=${user.id}&first=${clipsPerStreamer}`,
-          { headers: { 'Client-Id': clientId, 'Authorization': `Bearer ${token}` }, timeout: 10000 }
-        );
-        return (clipsResp.data?.data || []).map(c => ({
+        let clips = await fetchClips(user.id, since24h);
+        if (!clips.length) {
+          console.log(`[twitch/clips-pool] No 24h clips for ${user.login} — falling back to 7d window`);
+          clips = await fetchClips(user.id, since7d);
+        }
+        return clips.map(c => ({
           streamer:  user.display_name || user.login,
           title:     c.title || 'Clip',
           thumbnail: c.thumbnail_url || '',
@@ -3485,7 +3540,8 @@ app.get('/twitch/clips-pool', async (req, res) => {
           url:       c.url || '',
           slug:      c.id || '',
           game:      c.game_id || '',
-          viewCount: c.view_count || 0
+          viewCount: c.view_count || 0,
+          createdAt: c.created_at || null
         }));
       } catch (e) {
         console.warn(`[twitch/clips-pool] Failed for ${user.login}: ${e.message}`);
@@ -7951,6 +8007,18 @@ const server = app.listen(PORT, () => {
     else console.log('✅ FFmpeg:', v);
   });
   startMonitoring(); // Start pipeline event monitoring
+
+  // CPD-924: deferred publish cron — fires Gate 5 for 'publish_scheduled' cards when due
+  try {
+    const { startSchedulingCron } = require('./lib/services/scheduling_cron');
+    startSchedulingCron({
+      getCards: () => persistedJobs,
+      runGate5: _runGate5ForCard,
+      saveCard: saveJobCard,
+    });
+  } catch (e) {
+    console.warn('⚠️  Scheduling cron failed to start:', e.message);
+  }
 });
 
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
