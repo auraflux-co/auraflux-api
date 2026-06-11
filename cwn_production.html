@@ -239,7 +239,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           </div>
           <div class="card-body">
             <div class="field"><label>STREAMERS (top clips from each)</label>
-              <textarea id="twitch-streamers" style="min-height:60px" onchange="saveStreamerList()" oninput="saveStreamerList()">jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming</textarea>
+              <!-- CPD-930: chip multi-select. Hidden input keeps the same id/value
+                   contract (comma-joined) so all existing readers work unchanged. -->
+              <input type="hidden" id="twitch-streamers" value="jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming">
+              <div id="streamer-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#0d1524;border:1px solid rgba(199,175,79,0.3);border-radius:4px;min-height:40px;"></div>
+              <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(true)" style="font-size:10px;padding:2px 10px;">ALL</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)" style="font-size:10px;padding:2px 10px;">NONE</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerChip()" style="font-size:10px;padding:2px 10px;">+ ADD</button>
+                <span id="streamer-chip-count" style="font-size:10px;color:rgba(255,255,255,0.4);"></span>
+              </div>
               <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
             </div>
             <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
@@ -956,8 +965,8 @@ https://www.youtube.com/watch?v=j4vcHuc3VzI</textarea>
       <div class="tab-pane" id="tab-twitch-cfg">
         <div class="card"><div class="card-header"><div class="card-title">TWITCH CONFIG</div></div>
           <div class="card-body">
-            <div class="field"><label>CLIENT ID</label><input id="cfg-twitch-id" value="nghzr9gr22acplvunvkm5c13784nit"></div>
-            <div class="field"><label>ACCESS TOKEN</label><input id="cfg-twitch-token" value="shcz8knnxikq8pz8rogp7nli8e84qm"></div>
+            <div class="field"><label>CLIENT ID</label><input id="cfg-twitch-id" value="uij5069s6khlyv3basynjg93l0sov6"></div>
+            <div class="field"><label>ACCESS TOKEN</label><input id="cfg-twitch-token" value="5atjm1reycdlwkj2sysafa7ba8o3fe"></div>
           </div>
         </div>
       </div>
@@ -1068,8 +1077,8 @@ var CFG = {
   avatarShortId: 'ed57439c9c3d4a398f3b247b75714b13',
   voiceId: '2e598f1a6022448cb6710e5d44665325',
   speakSpeed: 0.85,
-  twitchId: 'nghzr9gr22acplvunvkm5c13784nit',
-  twitchToken: 'shcz8knnxikq8pz8rogp7nli8e84qm',
+  twitchId: 'uij5069s6khlyv3basynjg93l0sov6',
+  twitchToken: '5atjm1reycdlwkj2sysafa7ba8o3fe',
   bgColor: '#22304b',
   longformTime: '10:30 AM ET',
   shortsTime: '5:00 PM ET',
@@ -5635,6 +5644,20 @@ function openTwitchShortClipPicker(platforms) {
   xhr.send();
 }
 
+function _clipRelTime(iso) {
+  if (!iso) return '';
+  var ms = Date.now() - new Date(iso).getTime();
+  if (isNaN(ms)) return '';
+  var mins = Math.round(ms / 60000);
+  if (mins < 60) return mins + 'm ago';
+  var hrs = Math.round(mins / 60);
+  if (hrs < 48) return hrs + 'h ago';
+  var days = Math.round(hrs / 24);
+  if (days < 30) return days + 'd ago';
+  var d = new Date(iso);
+  return (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+}
+
 function _renderTwitchShortClipList(clips, list, status, platforms) {
   list.innerHTML = clips.map(function(c, idx) {
     var thumb = c.thumbnail
@@ -5642,13 +5665,15 @@ function _renderTwitchShortClipList(clips, list, status, platforms) {
       : '<div style="width:80px;height:45px;background:#1a2035;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.2);">NO IMG</div>';
     var dur = c.duration ? '<span style="font-size:9px;color:rgba(255,255,255,0.35);margin-left:4px;">'+c.duration+'s</span>' : '';
     var views = c.viewCount ? '<span style="font-size:9px;color:rgba(255,255,255,0.25);margin-left:4px;">'+c.viewCount.toLocaleString()+' views</span>' : '';
+    var when = _clipRelTime(c.createdAt);
+    var ts = when ? '<span style="font-size:9px;color:rgba(255,200,80,0.55);margin-left:4px;" title="'+(c.createdAt||'')+'">'+when+'</span>' : '';
     return '<div onclick="_selectTwitchShortClip('+idx+')" data-idx="'+idx+'" id="twitch-short-clip-'+idx+'" '
       +'style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);transition:background 0.15s;" '
       +'onmouseover="this.style.background=\'rgba(28,232,255,0.08)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.02)\'">'
       +thumb
       +'<div style="flex:1;min-width:0;">'
       +'<div style="font-size:12px;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.title+'</div>'
-      +'<div style="font-size:10px;color:rgba(28,232,255,0.5);font-family:monospace;margin-top:2px;">'+c.streamer+dur+views+'</div>'
+      +'<div style="font-size:10px;color:rgba(28,232,255,0.5);font-family:monospace;margin-top:2px;">'+c.streamer+dur+views+ts+'</div>'
       +'</div>'
       +'</div>';
   }).join('');
@@ -6709,7 +6734,8 @@ function previewTwitchClips() {
   var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
   var fetchWindow = Math.max(clipsPerStreamer * 6, 24);
   var done = 0;
-  var since = new Date(Date.now() - 86400000 * 2).toISOString();
+  var since24h = new Date(Date.now() - 86400000).toISOString();
+  var since7d  = new Date(Date.now() - 86400000 * 7).toISOString();
 
   streamers.forEach(function(name) {
     var entry = { name: name, displayName: TWITCH_PICKER_DISPLAY_NAMES[name] || name, selected: true, clips: [], dropReason: null };
@@ -6725,38 +6751,44 @@ function previewTwitchClips() {
         var u = JSON.parse(xU.responseText); var user = u.data && u.data[0];
         if (!user) { entry.dropReason = 'Twitch user not found'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); return; }
         entry.userId = user.id; entry.displayName = TWITCH_PICKER_DISPLAY_NAMES[name] || user.display_name;
-        var xC = new XMLHttpRequest();
-        xC.open('GET', 'https://api.twitch.tv/helix/clips?broadcaster_id=' + user.id + '&first=' + fetchWindow + '&started_at=' + since, true);
-        xC.setRequestHeader('Client-Id', CFG.twitchId);
-        xC.setRequestHeader('Authorization', 'Bearer ' + CFG.twitchToken);
-        xC.timeout = 8000;
-        xC.onload = function() {
-          try {
-            var cd = JSON.parse(xC.responseText);
-            var allRaw = (cd.data || []);
-            // Titles are viewer-created and never used in the video — no title filter
-            var unused = allRaw.filter(function(c){ return !isClipUsed(c.url); });
-            var pool = unused.length >= clipsPerStreamer ? unused : allRaw;
-            entry.clips = pool.slice(0, Math.max(clipsPerStreamer * 2, 6)).map(function(c, ci) {
-              return {
-                title: c.title, url: c.url, views: c.view_count || 0,
-                game: c.game_name || '', thumbnailUrl: c.thumbnail_url || '',
-                duration: c.duration || 0, isUsed: isClipUsed(c.url),
-                selected: ci < clipsPerStreamer  // default: first N selected
-              };
-            });
-            if (pool.length < clipsPerStreamer) {
-              var rawCount = allRaw.length;
-              entry.dropReason = rawCount === 0
-                ? 'No clips in 48h window'
-                : 'Only ' + rawCount + ' clip' + (rawCount === 1 ? '' : 's') + ' in 48h window (need ' + clipsPerStreamer + ')';
-              entry.selected = false;
-            }
-          } catch(e) { entry.dropReason = 'Parse error'; }
-          done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length);
+        // Recency: try 24h first; if a streamer has zero clips, fall back to 7d
+        var fetchClipsFor = function(sinceIso, windowLabel, onEmpty) {
+          var xC = new XMLHttpRequest();
+          xC.open('GET', 'https://api.twitch.tv/helix/clips?broadcaster_id=' + user.id + '&first=' + fetchWindow + '&started_at=' + sinceIso, true);
+          xC.setRequestHeader('Client-Id', CFG.twitchId);
+          xC.setRequestHeader('Authorization', 'Bearer ' + CFG.twitchToken);
+          xC.timeout = 8000;
+          xC.onload = function() {
+            try {
+              var cd = JSON.parse(xC.responseText);
+              var allRaw = (cd.data || []);
+              if (allRaw.length === 0 && onEmpty) { onEmpty(); return; }
+              // Titles are viewer-created and never used in the video — no title filter
+              var unused = allRaw.filter(function(c){ return !isClipUsed(c.url); });
+              var pool = unused.length >= clipsPerStreamer ? unused : allRaw;
+              entry.clips = pool.slice(0, Math.max(clipsPerStreamer * 2, 6)).map(function(c, ci) {
+                return {
+                  title: c.title, url: c.url, views: c.view_count || 0,
+                  game: c.game_name || '', thumbnailUrl: c.thumbnail_url || '',
+                  duration: c.duration || 0, isUsed: isClipUsed(c.url),
+                  createdAt: c.created_at || null,
+                  selected: ci < clipsPerStreamer  // default: first N selected
+                };
+              });
+              if (pool.length < clipsPerStreamer) {
+                var rawCount = allRaw.length;
+                entry.dropReason = rawCount === 0
+                  ? 'No clips in ' + windowLabel + ' window'
+                  : 'Only ' + rawCount + ' clip' + (rawCount === 1 ? '' : 's') + ' in ' + windowLabel + ' window (need ' + clipsPerStreamer + ')';
+                entry.selected = false;
+              }
+            } catch(e) { entry.dropReason = 'Parse error'; }
+            done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length);
+          };
+          xC.onerror = xC.ontimeout = function() { entry.dropReason = 'Clips API timeout'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); };
+          xC.send();
         };
-        xC.onerror = xC.ontimeout = function() { entry.dropReason = 'Clips API timeout'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); };
-        xC.send();
+        fetchClipsFor(since24h, '24h', function() { fetchClipsFor(since7d, '7d', null); });
       } catch(e) { entry.dropReason = 'Error: ' + e.message; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); }
     };
     xU.onerror = xU.ontimeout = function() { entry.dropReason = 'User API timeout'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); };
@@ -6833,6 +6865,10 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
           html += '<div style="width:100%;height:55px;background:rgba(255,255,255,0.05);border-radius:3px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.2);font-size:10px;">NO THUMB</span></div>';
         }
         html += '<div style="font-size:9px;color:rgba(255,255,255,0.6);line-height:1.3;margin-bottom:3px;max-height:32px;overflow:hidden;">' + (clip.title || '').slice(0, 60) + '</div>';
+        var clipWhen = _clipRelTime(clip.createdAt);
+        if (clipWhen) {
+          html += '<div style="font-size:8px;color:rgba(255,200,80,0.6);font-family:monospace;margin-bottom:3px;" title="' + (clip.createdAt || '') + '">' + clipWhen + '</div>';
+        }
         html += '<div style="display:flex;justify-content:space-between;align-items:center;">'
           + '<span style="font-size:8px;color:rgba(255,255,255,0.3);">' + views + ' views</span>'
           + usedBadge
@@ -7728,6 +7764,91 @@ function saveStreamerList() {
   if (cfgEl) cfgEl.value = el.value.split(',').map(function(s){return s.trim();}).join('\n');
 }
 
+// ── CPD-930: streamer chip multi-select ──────────────────────────────────────
+// Roster = all known handles (CWN_STREAMER_ROSTER). Selection = comma string in
+// the hidden #twitch-streamers input + CWN_STREAMERS (unchanged contract).
+
+function getStreamerRoster() {
+  try {
+    var raw = localStorage.getItem('CWN_STREAMER_ROSTER');
+    if (raw) { var r = JSON.parse(raw); if (Array.isArray(r) && r.length) return r; }
+  } catch(e) {}
+  // Seed from current selection + Settings roster
+  var seed = {};
+  ((g('twitch-streamers') || {value:''}).value || '').split(',').forEach(function(s){ s = s.trim().toLowerCase(); if (s) seed[s] = 1; });
+  ((g('twitch-config-streamers') || {value:''}).value || '').split('\n').forEach(function(s){ s = s.trim().toLowerCase(); if (s) seed[s] = 1; });
+  var roster = Object.keys(seed);
+  if (roster.length) localStorage.setItem('CWN_STREAMER_ROSTER', JSON.stringify(roster));
+  return roster;
+}
+
+function saveStreamerRoster(roster) {
+  localStorage.setItem('CWN_STREAMER_ROSTER', JSON.stringify(roster));
+}
+
+function getSelectedStreamers() {
+  return ((g('twitch-streamers') || {value:''}).value || '')
+    .split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+}
+
+function setSelectedStreamers(list) {
+  var el = g('twitch-streamers');
+  if (!el) return;
+  el.value = list.join(',');
+  saveStreamerList();
+  renderStreamerChips();
+}
+
+function toggleStreamerChip(handle) {
+  var sel = getSelectedStreamers();
+  var idx = sel.indexOf(handle);
+  if (idx >= 0) sel.splice(idx, 1); else sel.push(handle);
+  setSelectedStreamers(sel);
+}
+
+function setAllStreamerChips(on) {
+  setSelectedStreamers(on ? getStreamerRoster().slice() : []);
+}
+
+function addStreamerChip() {
+  var handle = prompt('Twitch handle to add (exact username):');
+  if (!handle) return;
+  handle = handle.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (!handle) return;
+  var roster = getStreamerRoster();
+  if (roster.indexOf(handle) === -1) { roster.push(handle); saveStreamerRoster(roster); }
+  var sel = getSelectedStreamers();
+  if (sel.indexOf(handle) === -1) sel.push(handle);
+  setSelectedStreamers(sel);
+}
+
+function removeStreamerChip(handle, ev) {
+  if (ev) ev.stopPropagation();
+  if (!confirm('Remove "' + handle + '" from the roster?')) return;
+  var roster = getStreamerRoster().filter(function(s){ return s !== handle; });
+  saveStreamerRoster(roster);
+  setSelectedStreamers(getSelectedStreamers().filter(function(s){ return s !== handle; }));
+}
+
+function renderStreamerChips() {
+  var wrap = g('streamer-chips');
+  if (!wrap) return;
+  var roster = getStreamerRoster();
+  var sel = getSelectedStreamers();
+  wrap.innerHTML = roster.map(function(h) {
+    var on = sel.indexOf(h) >= 0;
+    return '<span onclick="toggleStreamerChip(\'' + h + '\')" title="' + (on ? 'Click to deselect' : 'Click to select') + '" ' +
+      'style="cursor:pointer;user-select:none;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:6px;' +
+      (on
+        ? 'background:rgba(145,70,255,0.25);border:1px solid #9146ff;color:#fff;'
+        : 'background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.35);') +
+      '">' + (on ? '✓ ' : '') + h +
+      '<span onclick="removeStreamerChip(\'' + h + '\', event)" title="Remove from roster" style="color:rgba(255,255,255,0.3);font-weight:400;">✕</span></span>';
+  }).join('');
+  var cnt = g('streamer-chip-count');
+  if (cnt) cnt.textContent = sel.length + ' of ' + roster.length + ' selected';
+}
+
 function saveClipsPerStreamer() {
   try {
     var sel = g('twitch-clips-per-main');
@@ -7814,11 +7935,13 @@ function loadStreamerList() {
       saved = migrated;
     }
   }
-  if (!saved) return;
-  var el = g('twitch-streamers');
-  if (el) el.value = saved;
-  var cfgEl = g('twitch-config-streamers');
-  if (cfgEl) cfgEl.value = saved.split(',').map(function(s){return s.trim();}).join('\n');
+  if (saved) {
+    var el = g('twitch-streamers');
+    if (el) el.value = saved;
+    var cfgEl = g('twitch-config-streamers');
+    if (cfgEl) cfgEl.value = saved.split(',').map(function(s){return s.trim();}).join('\n');
+  }
+  renderStreamerChips(); // CPD-930 — always render, even on first load with defaults
 }
 
 function saveReferenceLibrary() {
