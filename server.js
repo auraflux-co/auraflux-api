@@ -2758,6 +2758,38 @@ app.post('/job/:id/reassemble', async (req, res) => {
       return { type: 'avatar', url: matchingJob?.video_url || seg.url || '', label: seg.label };
     });
     console.log(`[reassemble] ${jobId}: using manifest (${segmentData.length} segs, ${clipIdx} clips)`);
+  } else if (card.script?.scenes?.length) {
+    // Script-driven rebuild — same source of truth as the heygen-poller build.
+    // The videoJobs-only fallback below drops source_clip scenes (they are never
+    // sent to HeyGen), which produced 0-clip re-assemblies on shorts (CPD-932).
+    const pushClip = (scene, labelFallback) => {
+      const clipEntry = orderedClips[clipIdx++] || {};
+      const url = clipEntry.clipUrl || clipEntry.url || clipEntry.pageUrl || '';
+      if (!url) return;
+      segmentData.push({
+        type:              'source_clip',
+        url,
+        label:             clipEntry.label || scene.name || labelFallback,
+        clipTimingTargets: Array.isArray(clipEntry.clipTimingTargets) ? clipEntry.clipTimingTargets : [],
+        clipTimingFormat:  clipEntry.clipTimingFormat || 'timestamp_table',
+        pillarboxFilter:   clipEntry.pillarboxFilter || null,
+        sourceOrientation: clipEntry.sourceOrientation || clipEntry.orientation || 'landscape'
+      });
+    };
+    segmentData = [];
+    for (const scene of card.script.scenes) {
+      if (scene.type === 'source_clip') {
+        pushClip(scene, `CLIP_${clipIdx + 1}`);
+      } else {
+        const sceneKey = scene.name || scene.id;
+        const matchingJob = videoJobs.find(j => (j.sceneName || j.scene) === sceneKey);
+        if (matchingJob?.video_url) {
+          segmentData.push({ type: 'avatar', url: matchingJob.video_url, label: sceneKey });
+        }
+        if (scene.hasClipInsert) pushClip(scene, `${sceneKey}_CLIP`);
+      }
+    }
+    console.log(`[reassemble] ${jobId}: script-driven rebuild (${segmentData.length} segs, ${clipIdx} clips)`);
   } else {
     // Fallback: rebuild from videoJobs only (no clip interleaving)
     segmentData = videoJobs.map(job => {
@@ -2807,7 +2839,9 @@ app.post('/job/:id/reassemble', async (req, res) => {
     segmentData,
     labels:       segmentData.map(s => s.label),
     transition:   'crossfade',
-    format:       'mp4',
+    // Shorts must re-assemble down the split-screen portrait path (CPD-932):
+    // assembly.js only routes short-form when format === 'portrait'.
+    format:       (card.contentType || '').includes('-short') ? 'portrait' : 'mp4',
     assemblyId,
     contentType:  card.contentType || 'nba',
     jobId,
