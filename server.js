@@ -2267,13 +2267,17 @@ async function _runGate5ForCard(jobId) {
       ...(card.state || {}),
       savedOutputs: { ...savedOutputs, publishCopy, thumbnailDriveUrl }
     },
-    deliverySpec: card.deliverySpec || {
-      platforms,
-      driveFolderId: process.env.DRIVE_FOLDER_ID || null,
-      uploadPostProfile: process.env.UPLOADPOST_PROFILE || null,
-      categoryId: '24',
-      scheduledAt: null
-    },
+    // A card deliverySpec without platforms (e.g. created by /job/:id/schedule)
+    // must not defeat the platform fallback — merge defaults underneath it.
+    deliverySpec: (card.deliverySpec && Array.isArray(card.deliverySpec.platforms) && card.deliverySpec.platforms.length)
+      ? card.deliverySpec
+      : {
+          driveFolderId: process.env.DRIVE_FOLDER_ID || null,
+          uploadPostProfile: process.env.UPLOADPOST_PROFILE || null,
+          categoryId: '24',
+          ...(card.deliverySpec || {}),
+          platforms
+        },
     order: card.order || {},
     planTier: card.planTier || 'dfy'
   };
@@ -2874,6 +2878,135 @@ app.post('/job/:id/reassemble', async (req, res) => {
       console.log(`[reassemble] ${jobId} r${retryNum}: /assemble fired (${segmentData.length} segs, ${clipIdx} clips)`);
     } catch (err) {
       console.error(`[reassemble] ${jobId} r${retryNum}: /assemble failed — ${err.message}`);
+    }
+  });
+});
+
+// ── POST /generate-clip-comp — CPD-935: clips-only compilation short ─────────
+// No script gen, no HeyGen. Picked clips (already mp4-resolved by the dashboard)
+// go straight to assembly: blur-pad portrait per clip + concat. Whisper captions
+// and loudnorm apply in the standard post-process pass.
+app.post('/generate-clip-comp', async (req, res) => {
+  const clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
+  if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
+  if (clips.length > 10) return res.status(400).json({ error: `Too many clips (${clips.length} > 10 max)` });
+
+  const platforms = Array.isArray(req.body.platforms) && req.body.platforms.length ? req.body.platforms : ['tiktok'];
+  const streamers = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
+  const title     = req.body.title || `Clips Comp — ${streamers.join(', ') || 'Twitch'}`;
+  const jobId     = `script_twitch-short_${Date.now()}`;
+
+  // Job spec — same contract as the script flow so all gates read normally.
+  // contentType twitch-short inherits the CPD-932 short-form gate handling.
+  let jobSpec = null;
+  try {
+    jobSpec = await createJobSpec({
+      customerId:   'c0',
+      templateId:   'short-form',
+      contentType:  'twitch-short',
+      createdBy:    'dashboard',
+      sourceType:   'url_list',
+      sourceConfig: { urls: clips.map(c => c.pageUrl || c.url).filter(Boolean) },
+      items:        clips,
+      title
+    });
+    const { updateJobSpec } = require('./lib/job_spec');
+    jobSpec = updateJobSpec(jobSpec.jobId, {
+      clipsOnly: true,
+      deliverySpec: { platforms },
+      designSpec: { chrome: {
+        layout: 'clip-comp',
+        hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false, hasLogo: true
+      } }
+    });
+  } catch (specErr) {
+    console.warn('[/generate-clip-comp] Job Spec creation failed (non-fatal):', specErr.message);
+  }
+
+  const orderedClipUrls = clips.map((c, i) => ({
+    url:         c.url || c.clipUrl || '',
+    clipUrl:     c.url || c.clipUrl || '',
+    pageUrl:     c.pageUrl || '',
+    label:       `CLIP_${i + 1}`,
+    streamer:    c.streamer || '',
+    displayName: c.displayName || c.streamer || '',
+    title:       c.title || '',
+    orientation: c.orientation || 'landscape'
+  }));
+
+  const card = {
+    id:          jobId,
+    contentType: 'twitch-short',
+    clipsOnly:   true,
+    title,
+    streamers,
+    platforms,
+    specId:      jobSpec?.jobId || null,
+    jobSpecId:   jobSpec?.jobId || null,
+    createdAt:   new Date().toISOString(),
+    stage:       'heygen_done',
+    status:      'assembling',
+    // Synthetic all-clip scene script: keeps saveJobCard segment extraction and
+    // the /reassemble script-driven rebuild (CPD-932) working with no avatar scenes.
+    script: {
+      title,
+      scenes: clips.map((c, i) => ({ name: `CLIP_${i + 1}`, type: 'source_clip', title: c.title || '' }))
+    },
+    orderedClipUrls,
+    heygen: { videoJobs: [] },
+    designSpec: jobSpec?.designSpec || { chrome: { layout: 'clip-comp', hasLogo: true, hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false } },
+    _assemblyRetryCount: 1
+  };
+  saveJobCard(jobId, card);
+
+  const segmentData = orderedClipUrls.map(c => ({
+    url:             c.clipUrl,
+    pageUrl:         c.pageUrl,
+    label:           c.label,
+    type:            'source_clip',
+    clipUrl:         c.clipUrl,
+    pillarboxFilter: null,
+    orientation:     c.orientation,
+    clipTimingTargets: [],
+    clipTimingFormat: 'none'
+  }));
+
+  const assemblyId = `asm_${jobId}_r1`;
+  const port = process.env.PORT || 3000;
+  const payload = {
+    segments:      segmentData.map(s => s.url),
+    segmentData,
+    labels:        segmentData.map(s => s.label),
+    transition:    'crossfade',
+    format:        'portrait',
+    assemblyId,
+    contentType:   'twitch-short',
+    jobId,
+    jobSpecId:     jobSpec?.jobId || null,
+    jobTitle:      title,
+    streamers,
+    expectedClips: segmentData.length,
+    designSpec:    card.designSpec,
+    captionText:   null, // CPD-935: no hook caption — whisper captions only
+    // Synthetic script from clip titles so publish-copy generation has material
+    fullScript:    clips.map((c, i) => `CLIP ${i + 1} (${c.displayName || c.streamer || 'streamer'}): ${c.title || 'untitled clip'}`).join('\n')
+  };
+
+  res.json({
+    ok: true,
+    jobId,
+    assemblyId,
+    clipCount: segmentData.length,
+    platforms,
+    message: `Clips comp started — ${segmentData.length} clip(s) assembling full-frame portrait. Watch the dashboard for Gate 3 result.`
+  });
+
+  setImmediate(async () => {
+    try {
+      await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
+      console.log(`[clip-comp] ${jobId}: /assemble fired (${segmentData.length} clips)`);
+    } catch (err) {
+      console.error(`[clip-comp] ${jobId}: /assemble failed — ${err.message}`);
     }
   });
 });
