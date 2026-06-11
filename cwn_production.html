@@ -252,12 +252,6 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
             </div>
             <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
-            <!-- short-form clip gallery — shown when SHORT is clicked -->
-            <div id="twitch-short-clip-gallery" style="display:none;margin-bottom:10px;border:1px solid rgba(28,232,255,0.25);border-radius:6px;padding:10px;background:#060a12;">
-              <div style="font-size:10px;color:rgba(28,232,255,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:8px;">PICK ONE CLIP FOR SHORT FORM — CLICK TO SELECT</div>
-              <div id="twitch-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
-              <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;" id="twitch-short-clip-status"></div>
-            </div>
             <div class="field" style="margin-bottom:8px;">
               <label>CLIPS PER STREAMER</label>
               <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:13px;letter-spacing:1px;font-weight:700;">
@@ -5596,53 +5590,6 @@ function _selectNewsShortClip(idx) {
   });
 }
 
-// ── Twitch short-form manual clip picker ─────────────────────────────────────
-var _twitchShortClipPool = [];
-
-function openTwitchShortClipPicker(platforms) {
-  var gallery = g('twitch-short-clip-gallery');
-  var list    = g('twitch-short-clip-list');
-  var status  = g('twitch-short-clip-status');
-
-  if (gallery.style.display !== 'none' && _twitchShortClipPool.length > 0) {
-    gallery.style.display = 'none';
-    _twitchShortClipPool = [];
-    return;
-  }
-
-  gallery.style.display = '';
-  list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;padding:8px;">Fetching Twitch clips...</div>';
-  status.textContent = '';
-  list._platforms = platforms;
-
-  var streamersTxt = (g('twitch-streamers')||{value:''}).value || '';
-  var streamers = streamersTxt.split(/[\n,]+/).map(function(s){ return s.trim(); }).filter(Boolean);
-  if (!streamers.length) {
-    list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">No streamers configured — add them in the STREAMERS field above.</div>';
-    return;
-  }
-
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', CFG.ffmpegUrl + '/twitch/clips-pool?streamers='+encodeURIComponent(streamers.join(','))+'&clipsPerStreamer=3', true);
-  xhr.timeout = 15000;
-  xhr.onload = function() {
-    try {
-      var d = JSON.parse(xhr.responseText);
-      if (!d.ok || !d.clips || !d.clips.length) {
-        list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">'+(d.error||'No clips found')+'</div>';
-        return;
-      }
-      _twitchShortClipPool = d.clips;
-      _renderTwitchShortClipList(d.clips, list, status, platforms);
-    } catch(e) {
-      list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">Parse error: '+e.message+'</div>';
-    }
-  };
-  xhr.onerror = xhr.ontimeout = function() {
-    list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">Request failed — check server.</div>';
-  };
-  xhr.send();
-}
 
 function _clipRelTime(iso) {
   if (!iso) return '';
@@ -5658,67 +5605,6 @@ function _clipRelTime(iso) {
   return (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
 }
 
-function _renderTwitchShortClipList(clips, list, status, platforms) {
-  list.innerHTML = clips.map(function(c, idx) {
-    var thumb = c.thumbnail
-      ? '<img src="'+c.thumbnail+'" style="width:80px;height:45px;object-fit:cover;border-radius:3px;flex-shrink:0;" onerror="this.style.display=\'none\'">'
-      : '<div style="width:80px;height:45px;background:#1a2035;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.2);">NO IMG</div>';
-    var dur = c.duration ? '<span style="font-size:9px;color:rgba(255,255,255,0.35);margin-left:4px;">'+c.duration+'s</span>' : '';
-    var views = c.viewCount ? '<span style="font-size:9px;color:rgba(255,255,255,0.25);margin-left:4px;">'+c.viewCount.toLocaleString()+' views</span>' : '';
-    var when = _clipRelTime(c.createdAt);
-    var ts = when ? '<span style="font-size:9px;color:rgba(255,200,80,0.55);margin-left:4px;" title="'+(c.createdAt||'')+'">'+when+'</span>' : '';
-    return '<div onclick="_selectTwitchShortClip('+idx+')" data-idx="'+idx+'" id="twitch-short-clip-'+idx+'" '
-      +'style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);transition:background 0.15s;" '
-      +'onmouseover="this.style.background=\'rgba(28,232,255,0.08)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.02)\'">'
-      +thumb
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:12px;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.title+'</div>'
-      +'<div style="font-size:10px;color:rgba(28,232,255,0.5);font-family:monospace;margin-top:2px;">'+c.streamer+dur+views+ts+'</div>'
-      +'</div>'
-      +'</div>';
-  }).join('');
-  status.textContent = clips.length + ' clips — click one to generate short';
-  list._platforms = platforms;
-}
-
-function _selectTwitchShortClip(idx) {
-  var all = g('twitch-short-clip-list').querySelectorAll('[data-idx]');
-  all.forEach(function(el){ el.style.border='1px solid rgba(255,255,255,0.06)'; el.style.background='rgba(255,255,255,0.02)'; });
-  var sel = g('twitch-short-clip-'+idx);
-  if (sel) { sel.style.border='1px solid rgba(28,232,255,0.6)'; sel.style.background='rgba(28,232,255,0.08)'; }
-
-  var c = _twitchShortClipPool[idx];
-  if (!c) return;
-  g('twitch-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" ('+c.streamer+') — pick platforms to generate...';
-
-  var item = {
-    streamer:     c.streamer,
-    title:        c.title,
-    thumbnailUrl: c.thumbnail||'',
-    url:          c.url||'',
-    slug:         c.slug||'',
-    game:         c.game||'',
-    viewCount:    c.viewCount||0,
-    clips: [{
-      streamer:     c.streamer,
-      title:        c.title,
-      thumbnailUrl: c.thumbnail||'',
-      url:          c.url||'',
-      slug:         c.slug||'',
-      game:         c.game||''
-    }]
-  };
-
-  // Platform modal fires AFTER clip selection
-  showPlatformModal(function(platforms) {
-    g('twitch-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" ('+c.streamer+') — generating...';
-    setGenerateModeActive('twitch', 'short');
-    CURRENT_TYPE = 'twitch-short';
-    lockGenerateButton('btn-gen-twitch-short');
-    g('script-type-label').textContent = 'TWITCH SHORT — '+c.streamer+': "'+c.title.slice(0,50)+'"';
-    callFullScriptServer('twitch-short', [item], statusTagIdForType('twitch-short'), null, null, platforms);
-  });
-}
 
 function generateShort(type, platforms) {
   lockGenerateButton('btn-gen-' + type + '-short');
@@ -6682,8 +6568,54 @@ function triggerNewsShort() {
 }
 
 function triggerTwitchShort() {
-  // Always open the gallery — platform modal fires after clip selection
-  openTwitchShortClipPicker(null);
+  // CPD-931: one picker — SHORT consumes the same inline PICK CLIPS selections
+  // as LONG FORM. One short job per selected clip.
+  var picked = [];
+  (_twitchPickerStreamers || []).forEach(function(entry) {
+    if (entry.dropReason || !entry.selected) return;
+    entry.clips.forEach(function(c) {
+      if (c.selected) picked.push({ name: entry.name, displayName: entry.displayName, clip: c });
+    });
+  });
+
+  if (!picked.length) {
+    // No selections yet — open the inline picker (if closed) and prompt
+    var picker = g('twitch-inline-picker');
+    if (!picker || picker.style.display === 'none' || !(_twitchPickerStreamers || []).length) {
+      previewTwitchClips();
+    }
+    var statusEl = g('twitch-fetch-status');
+    if (statusEl) statusEl.textContent = 'Pick clip(s) above, then click SHORT — one short is generated per selected clip.';
+    return;
+  }
+
+  if (picked.length > 1 && !confirm(picked.length + ' clips selected — this will generate ' + picked.length + ' separate shorts (one per clip). Continue?')) return;
+
+  showPlatformModal(function(platforms) {
+    lockGenerateButton('btn-gen-twitch-short');
+    setGenerateModeActive('twitch', 'short');
+    CURRENT_TYPE = 'twitch-short';
+    var statusId = statusTagIdForType('twitch-short');
+    picked.forEach(function(p, idx) {
+      var c = p.clip;
+      var item = {
+        streamer:     p.displayName,
+        displayName:  p.displayName,
+        notes:        (parseStreamerNotes ? parseStreamerNotes() : {})[p.name] || '',
+        title:        c.title,
+        thumbnailUrl: c.thumbnailUrl || '',
+        url:          c.url || '',
+        game:         c.game || '',
+        viewCount:    c.views || 0,
+        clips: [{ rank: 1, streamer: p.displayName, title: c.title, thumbnailUrl: c.thumbnailUrl || '', url: c.url || '', game: c.game || '', views: c.views || 0 }]
+      };
+      setTimeout(function() {
+        setGeneratingState(statusId, 'TWITCH SHORT ×' + picked.length + ' — dispatched ' + (idx + 1) + '/' + picked.length + ' (' + p.displayName + ')');
+        g('script-type-label').textContent = 'TWITCH SHORT — ' + p.displayName + ': "' + (c.title || '').slice(0, 50) + '"';
+        callFullScriptServer('twitch-short', [item], statusId, null, null, platforms);
+      }, idx * 1500);
+    });
+  });
 }
 
 // ── generateNews override — respects manual story picker if used ──────────────
@@ -6888,14 +6820,34 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
 
 function _toggleTwitchClip(si, ci) {
   if (!_twitchPickerStreamers[si]) return;
-  var clip = _twitchPickerStreamers[si].clips[ci];
+  var entry = _twitchPickerStreamers[si];
+  var clip = entry.clips[ci];
   if (!clip) return;
-  clip.selected = !clip.selected;
-  // Sync streamer-level selected to true if any clip is selected
-  _twitchPickerStreamers[si].selected = _twitchPickerStreamers[si].clips.some(function(c){ return c.selected; });
-  // Re-render picker in place
   var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
+  var swapMsg = null;
+
+  if (clip.selected) {
+    clip.selected = false;
+  } else {
+    // Enforce CLIPS PER STREAMER cap: selecting past the limit swaps out the
+    // earliest-selected clip so the count never exceeds the dropdown value.
+    var selectedIdxs = [];
+    entry.clips.forEach(function(c, i){ if (c.selected) selectedIdxs.push(i); });
+    if (selectedIdxs.length >= clipsPerStreamer) {
+      var swapped = entry.clips[selectedIdxs[0]];
+      swapped.selected = false;
+      swapMsg = entry.displayName + ': limit is ' + clipsPerStreamer + ' clip' + (clipsPerStreamer !== 1 ? 's' : '') + ' per streamer — swapped out "' + (swapped.title || '').slice(0, 40) + '"';
+    }
+    clip.selected = true;
+  }
+  // Sync streamer-level selected to true if any clip is selected
+  entry.selected = entry.clips.some(function(c){ return c.selected; });
+  // Re-render picker in place (this resets the status line, so set swap notice after)
   renderTwitchPicker(g('btn-preview-twitch'), clipsPerStreamer);
+  if (swapMsg) {
+    var statusEl = g('twitch-fetch-status');
+    if (statusEl) statusEl.textContent = swapMsg;
+  }
 }
 
 function generateTwitchWithPicker() {
@@ -6917,6 +6869,7 @@ function generateTwitchWithPicker() {
   var items = activeStreamers.map(function(entry) {
     var selectedClips = entry.clips.filter(function(c){ return c.selected; });
     if (!selectedClips.length) selectedClips = entry.clips.slice(0, clipsPerStreamer);
+    selectedClips = selectedClips.slice(0, clipsPerStreamer); // hard cap at dropdown value
     return {
       streamer: entry.displayName,
       displayName: entry.displayName,
@@ -7853,6 +7806,20 @@ function saveClipsPerStreamer() {
   try {
     var sel = g('twitch-clips-per-main');
     if (sel && sel.value) localStorage.setItem('cwn_clips_per_streamer', sel.value);
+    // If the picker is open, trim each streamer's selections to the new limit
+    var limit = parseInt((sel && sel.value) || '2');
+    if (window._twitchPickerStreamers && _twitchPickerStreamers.length) {
+      _twitchPickerStreamers.forEach(function(entry) {
+        var kept = 0;
+        (entry.clips || []).forEach(function(c) {
+          if (c.selected) { kept++; if (kept > limit) c.selected = false; }
+        });
+      });
+      var picker = g('twitch-inline-picker');
+      if (picker && picker.style.display !== 'none') {
+        renderTwitchPicker(g('btn-preview-twitch'), limit);
+      }
+    }
   } catch(e) {}
 }
 
