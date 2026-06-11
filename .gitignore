@@ -113,3 +113,4 @@ venv/
 env/
 ENV/
 venv-*/
+data/youtube_tokens.json
