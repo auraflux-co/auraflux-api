@@ -211,7 +211,7 @@ export default function SocialConnectPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 transition-opacity duration-200 ${isPending ? 'opacity-50 pointer-events-none' : ''}`}>
         {PLATFORMS.map((p) => {
           const connected = accountMap[p.id] as ConnectedAccount | undefined;
           const isDisc = disconnecting === p.id;

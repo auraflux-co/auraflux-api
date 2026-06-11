@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-10 v1.0.1081 (Cursor — fix(social): legacy customerId→brandId migration fallback in GET /social/accounts; social page shows opacity-dim during brand switch pending state; channels dep array no longer suppressed)
 **Last Updated:** 2026-06-10 v1.0.1080 (Cursor — fix(brand-context): POST /jobs + GET /jobs/:jobId now use resolveBrandContext; LiveTiles/schedule/social/channels re-fetch on brand switch; credit history filtered by brandId; job detail enforces brand ownership check)
 **Last Updated:** 2026-06-10 v1.0.1079 (Cursor — fix(social): Upload-Post profile keyed by brandId instead of customerId; each brand now has its own TikTok/Instagram connection independent of other brands; brand picker now reflects correct social accounts per brand)
 **Last Updated:** 2026-06-10 v1.0.1078 (Cursor — fix: correct stale comment on DELETE /social/accounts/:platform; disconnectPlatform confirmed working per-platform without affecting other connected accounts)
