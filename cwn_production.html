@@ -270,7 +270,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">PICK CLIPS</button>
               <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitchWithPicker()">LONG FORM</button>
               <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()">SHORT</button>
-              <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch all selected clips into one full-frame portrait short — no avatar">CLIPS COMP</button>
+              <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch 4 selected clips into one full-frame portrait short — no avatar">CLIPS COMP</button>
             </div>
           </div>
         </div>
@@ -6630,16 +6630,24 @@ function triggerClipComp() {
     });
   });
 
+  var COMP_CLIP_COUNT = 4; // Rob 2026-06-11: carousel comps are 4 clips
   if (!picked.length) {
     var picker = g('twitch-inline-picker');
     if (!picker || picker.style.display === 'none' || !(_twitchPickerStreamers || []).length) {
       previewTwitchClips();
     }
     var statusEl = g('twitch-fetch-status');
-    if (statusEl) statusEl.textContent = 'Pick clip(s) above, then click CLIPS COMP — all selected clips stitch into one short.';
+    if (statusEl) statusEl.textContent = 'Pick ' + COMP_CLIP_COUNT + ' clips above, then click CLIPS COMP — they stitch into one short.';
     return;
   }
-  if (picked.length > 10) { alert('Max 10 clips per comp — ' + picked.length + ' selected. Deselect some.'); return; }
+  if (picked.length < COMP_CLIP_COUNT) {
+    alert('CLIPS COMP needs ' + COMP_CLIP_COUNT + ' clips — only ' + picked.length + ' selected. Pick ' + (COMP_CLIP_COUNT - picked.length) + ' more.');
+    return;
+  }
+  if (picked.length > COMP_CLIP_COUNT) {
+    if (!confirm(picked.length + ' clips selected — comp uses the first ' + COMP_CLIP_COUNT + ' in picker order. Continue?')) return;
+    picked = picked.slice(0, COMP_CLIP_COUNT);
+  }
 
   showPlatformModal(function(platforms) {
     lockGenerateButton('btn-gen-twitch-comp');

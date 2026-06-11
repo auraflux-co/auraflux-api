@@ -470,7 +470,10 @@ try {
     console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
     persistedJobs = {};
     for (const card of sqliteJobs) {
-      if (card && card.jobId) persistedJobs[card.jobId] = card;
+      // Cards created by /generate-clip-comp (and some legacy flows) use `id`, not `jobId`
+      // — keying on jobId alone silently dropped them from memory on every restart.
+      const key = card && (card.jobId || card.id);
+      if (key) persistedJobs[key] = card;
     }
   } else {
     console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
@@ -506,7 +509,8 @@ try {
     console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
     persistedJobs = {};
     for (const card of sqliteJobs) {
-      if (card && card.jobId) persistedJobs[card.jobId] = card;
+      const key = card && (card.jobId || card.id);
+      if (key) persistedJobs[key] = card;
     }
   } else {
     console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
@@ -2233,13 +2237,16 @@ async function _runGate5ForCard(jobId) {
   // publishCopy may be in the DB spec's savedOutputs but not yet flushed to the in-memory card
   // (assembly saves it via saveOutput() which writes to DB, but card is in-memory snapshot).
   // Load from DB as fallback so Gate 5 always has the correct title/description.
+  // Short-form publish copy has no top-level title — titles nest under
+  // platforms.youtube.* (gate5 resolves via publishCopy.platforms?.youtube).
+  const _pcUsable = pc => pc && (pc.title || pc.platforms?.youtube || pc.youtube);
   let publishCopy = savedOutputs.publishCopy || card.publishCopy || null;
-  if (!publishCopy || !publishCopy.title) {
+  if (!_pcUsable(publishCopy)) {
     try {
       const { getJobSpec: _g5GetSpec } = require('./lib/job_spec');
       const _dbSpec = _g5GetSpec(jobId);
       const _dbPc = _dbSpec?.state?.savedOutputs?.publishCopy;
-      if (_dbPc && _dbPc.title) publishCopy = _dbPc;
+      if (_pcUsable(_dbPc)) publishCopy = _dbPc;
     } catch (_e) { /* non-fatal */ }
   }
   publishCopy = publishCopy || {};
