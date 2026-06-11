@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-11 v1.0.1084 (Cursor — feat(CPD-889,891,892,893,894,895,896,897,900): pipeline parity — raise portal1 threshold 60→85; rescue timeout 600→1800s; portal4 suggestive mode on Gemini fail; gpt4o_qa_ext wiring fix; missing upload hard fail; portal1 fixDirective→script regen on retry; portal3b chrome reburn + portal3a reverify; pre-assembly clip validation; env.example fixes)
 **Last Updated:** 2026-06-10 v1.0.1083 (Cursor — feat(CPD-860,867,868,871): brand switcher search/filter for 5+ brands; always show active brand name in sidebar; clearer sub-brand context label; brand logo in TTS + safety-net chrome paths)
 **Last Updated:** 2026-06-10 v1.0.1082 (Cursor — revert(social): remove Upload-Post customerId fallback; it leaked owner's TikTok/Instagram into every sub-brand that hadn't yet connected their own accounts)
 **Last Updated:** 2026-06-10 v1.0.1081 (Cursor — fix(social): legacy customerId→brandId migration fallback in GET /social/accounts; social page shows opacity-dim during brand switch pending state; channels dep array no longer suppressed)
