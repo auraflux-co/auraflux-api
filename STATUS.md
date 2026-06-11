@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-06-11 (Cursor — CPD-887: publish path now uploads to Cloudflare R2 instead of Google Drive (video + thumbnail), matching production Upload-Post pattern; smoke-tested against assets.auraflux.co. CPD-888: clip segments get dip-to-black video fades (0.13s) + audio fades (0.15s) at TS conversion to smooth hard-cut transitions. Prior: CPD-885 A/V desync fixes verified + published clean r5)
+**Last Updated:** 2026-06-11 (Cursor — CPD-884 follow-up: Gate 3a/4 prompts now require verifying the studio AVATAR is on screen before any missing-chrome deduction (r6 false positive: IRL streamer clip at 11:54 mislabeled "avatar talking", cost 13 pts). Earlier today: CPD-887 R2 publish path replaces Drive, CPD-888 clip transition fades — both verified on r6 (Gate 3a 87, true 100))
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
