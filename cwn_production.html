@@ -6698,7 +6698,7 @@ function previewTwitchClips() {
               // Titles are viewer-created and never used in the video — no title filter
               var unused = allRaw.filter(function(c){ return !isClipUsed(c.url); });
               var pool = unused.length >= clipsPerStreamer ? unused : allRaw;
-              entry.clips = pool.slice(0, Math.max(clipsPerStreamer * 2, 6)).map(function(c, ci) {
+              entry.clips = pool.slice(0, 10).map(function(c, ci) {
                 return {
                   title: c.title, url: c.url, views: c.view_count || 0,
                   game: c.game_name || '', thumbnailUrl: c.thumbnail_url || '',
