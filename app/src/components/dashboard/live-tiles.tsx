@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { usePlan } from '@/contexts/plan-context';
+import { useRole } from '@/hooks/use-role';
 import { useBrand } from '@/contexts/brand-context';
 import { tierLabel } from '@/lib/tier-labels';
 import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';
@@ -177,7 +178,7 @@ function PlatformBadge({ platform, connected }: { platform: string; connected: b
 
 // ─── Per-tile bodies ──────────────────────────────────────────────────────────
 
-function JobsTileBody({ data }: { data: TileData }) {
+function JobsTileBody({ data, isSuperAdmin }: { data: TileData; isSuperAdmin: boolean }) {
   const active  = data.jobs.filter((j) => ['running', 'queued'].includes(j.status)).length;
   const failed  = data.jobs.filter((j) => j.status === 'failed').length;
   const loading = !data.loaded.jobs;
@@ -185,9 +186,15 @@ function JobsTileBody({ data }: { data: TileData }) {
   return (
     <>
       <NumStat count={active} label="active jobs" loading={loading} warn={false} />
-      {!loading && failed > 0 && (
+      {/* CPD-588: failed = system error, not customer-actionable */}
+      {!loading && failed > 0 && isSuperAdmin && (
         <p className="text-xs text-destructive -mt-1 font-medium">
           {failed} job{failed !== 1 ? 's' : ''} failed — needs attention
+        </p>
+      )}
+      {!loading && failed > 0 && !isSuperAdmin && (
+        <p className="text-xs text-muted-foreground -mt-1">
+          System error — we&apos;re on it
         </p>
       )}
       <CtaSection>
@@ -374,6 +381,7 @@ const ICONS = {
 export function LiveTiles() {
   const { getToken } = useAuth();
   const { activeBrand } = useBrand();
+  const { isSuperAdmin } = useRole();
   const activeBrandId = activeBrand?.id;
   const [data, setData] = useState<TileData>(EMPTY);
 
@@ -435,7 +443,7 @@ export function LiveTiles() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <TileCard icon={ICONS.jobs}      title="My Jobs"      titleHref="/myjobs">
-        <JobsTileBody data={data} />
+        <JobsTileBody data={data} isSuperAdmin={isSuperAdmin} />
       </TileCard>
       <TileCard icon={ICONS.review}    title="Review Queue" titleHref="/review">
         <ReviewTileBody data={data} />

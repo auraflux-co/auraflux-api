@@ -17,6 +17,7 @@ import { listJobs, type Job } from '@/lib/api';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
 import { useBrand } from '@/contexts/brand-context';
+import { useRole } from '@/hooks/use-role';
 import { useRouter } from 'next/navigation';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -70,6 +71,7 @@ export default function JobsHubPage() {
   const { openWithContext }    = useGuide();
   const { planTier }           = usePlan();
   const { activeBrand }        = useBrand();
+  const { isSuperAdmin }       = useRole();
   const activeBrandId          = activeBrand?.id;
   const isOperate              = planTier === 'operate' || planTier === null;
   const [jobs, setJobs]        = useState<Job[] | null>(null);
@@ -90,7 +92,8 @@ export default function JobsHubPage() {
   }, [getToken, isLoaded, activeBrandId]);
 
   const active    = jobs?.filter((j) => ACTIVE_STATUSES.has(j.status)) ?? [];
-  const held      = jobs?.filter((j) => j.status === 'held' || j.status === 'failed') ?? [];
+  // CPD-588: failed = system error, not customer-actionable — only count for superadmin
+  const held      = jobs?.filter((j) => j.status === 'held' || (isSuperAdmin && j.status === 'failed')) ?? [];
   const staged    = jobs?.filter((j) => STAGED_STATUSES.has(j.status)) ?? [];
   const complete  = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
 

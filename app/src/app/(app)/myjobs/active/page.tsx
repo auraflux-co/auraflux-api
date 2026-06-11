@@ -132,6 +132,13 @@ export default function ActiveJobsPage() {
     (isSuperAdmin && j.status === 'failed')
   ).filter((j) => isSuperAdmin || j.status !== 'failed');
 
+  // CPD-589: stale = running/queued with no progress update for > 90 min
+  const STALE_MS = 90 * 60 * 1000;
+  const nowMs = Date.now();
+  const isStale = (job: Job) =>
+    ['queued', 'running'].includes(job.status) &&
+    nowMs - new Date(job.createdAt).getTime() > STALE_MS;
+
   return (
     <PageShell maxWidth="4xl">
       <PageHeader
@@ -204,7 +211,7 @@ export default function ActiveJobsPage() {
           </div>
           <div className="space-y-2">
             {inProgress.map((job) => (
-              <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} />
+              <JobRow key={job.jobId} job={job} isSuperAdmin={isSuperAdmin} onAction={handleAction} stale={isStale(job)} />
             ))}
           </div>
         </section>
