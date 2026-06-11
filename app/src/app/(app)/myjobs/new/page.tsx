@@ -226,9 +226,10 @@ const FEATURES: Feature[] = [
   {
     id: 'shoppable', label: 'Shoppable CTA overlay',
     description: 'Add a tappable buy button to your video',
-    tooltip: 'Overlays a branded CTA button at the bottom of your video — link viewers to a product, offer, or page.',
-    outputImpact: 'A tappable CTA is burned into the video at the position you choose.',
+    tooltip: 'Overlays a branded CTA button at the bottom of your video — link viewers to a product, offer, or page. Managed plan only.',
+    outputImpact: 'A tappable CTA is burned into the video at the position and timing you choose.',
     default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true, category: 'brand', status: 'live',
+    minPlan: 'managed',
   },
   {
     id: 'pip', label: 'Face-cam overlay (PiP)',
@@ -412,6 +413,22 @@ function FeatureConfigPanel({ feat, cfg, tone, setTone, setFeatureCfg }: Feature
               placeholder="https://yourstore.com/product"
               className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Show from (sec)</Label>
+              <input type="number" min={0} step={1}
+                value={cfg.startSec ?? '3'} onChange={(e) => setFeatureCfg('shoppable', 'startSec', e.target.value)}
+                placeholder="3"
+                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Hide at (sec, optional)</Label>
+              <input type="number" min={0} step={1}
+                value={cfg.endSec ?? ''} onChange={(e) => setFeatureCfg('shoppable', 'endSec', e.target.value)}
+                placeholder="end of video"
+                className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+            </div>
+          </div>
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Position</Label>
             <select value={cfg.position ?? 'bottom-center'} onChange={(e) => setFeatureCfg('shoppable', 'position', e.target.value)}
@@ -419,6 +436,7 @@ function FeatureConfigPanel({ feat, cfg, tone, setTone, setFeatureCfg }: Feature
               <option value="bottom-center">Bottom centre</option>
               <option value="bottom-left">Bottom left</option>
               <option value="bottom-right">Bottom right</option>
+              <option value="top-right">Top right</option>
             </select>
           </div>
         </>
@@ -755,11 +773,15 @@ function JobBuilderPageInner() {
     if (features.has('shoppable')) {
       const shopCfg = featureConfig['shoppable'] ?? {};
       if (shopCfg.ctaUrl?.trim()) {
+        const startSec = shopCfg.startSec !== undefined && shopCfg.startSec !== '' ? Number(shopCfg.startSec) : 3;
+        const endSec   = shopCfg.endSec   !== undefined && shopCfg.endSec   !== '' ? Number(shopCfg.endSec)   : null;
         addOns.shoppable = {
           active:   true,
           ctaText:  shopCfg.ctaText?.trim() || 'Shop now',
           ctaUrl:   shopCfg.ctaUrl.trim(),
-          position: (shopCfg.position || 'bottom-center') as 'bottom-center' | 'bottom-left' | 'bottom-right',
+          position: (shopCfg.position || 'bottom-center') as 'bottom-center' | 'bottom-left' | 'bottom-right' | 'top-right',
+          startSec,
+          ...(endSec !== null && { endSec }),
         };
       }
     }
