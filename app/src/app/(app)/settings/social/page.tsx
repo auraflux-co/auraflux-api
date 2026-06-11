@@ -18,11 +18,12 @@ import {
   listConnectedAccounts,
   disconnectPlatform,
   getSocialConnectUrl,
+  getSocialBulkConnectUrl,
   getActiveBrandId,
   type ConnectedAccount,
   type SocialPlatform,
 } from '@/lib/api';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Layers } from 'lucide-react';
 
 interface PlatformDef {
   id: SocialPlatform;
@@ -147,6 +148,13 @@ export default function SocialConnectPage() {
       setSwitching(null);
     }
     handleConnect(platform);
+  }
+
+  async function handleBulkConnect() {
+    const token = await getToken();
+    const url   = new URL(getSocialBulkConnectUrl());
+    if (token) url.searchParams.set('token', token);
+    window.location.href = url.toString();
   }
 
   async function handleConnect(platform: SocialPlatform) {
@@ -299,6 +307,31 @@ export default function SocialConnectPage() {
           );
         })}
       </div>
+
+      {/* Bulk connect — owner context only (CPD-866) */}
+      {activeBrand?.is_primary && (
+        <div className="mt-8 rounded-2xl border border-dashed border-border/60 bg-card/50 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex-shrink-0 rounded-xl bg-muted p-3">
+            <Layers className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold">Connect all brands — YouTube</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Sign in to your Google account once and map each YouTube channel to a brand.
+              Saves you repeating the OAuth flow for every brand in your roster.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-shrink-0"
+            onClick={handleBulkConnect}
+            disabled={isPending}
+          >
+            Connect all brands
+          </Button>
+        </div>
+      )}
     </PageShell>
   );
 }

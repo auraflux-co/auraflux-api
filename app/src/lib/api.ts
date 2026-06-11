@@ -922,6 +922,43 @@ export function getSocialConnectUrl(platform: SocialPlatform): string {
   return `${base}/social/connect/${platform}`;
 }
 
+/** Returns the bulk-connect URL for YouTube (CPD-866). Redirects to /settings/social/bulk after OAuth. */
+export function getSocialBulkConnectUrl(): string {
+  const base = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
+  return `${base}/social/connect/youtube/bulk`;
+}
+
+export interface BulkChannel {
+  platformUserId: string;
+  platformHandle: string | null;
+  thumbnailUrl:   string | null;
+}
+
+export interface BulkBrand {
+  id:         string;
+  name:       string;
+  is_primary: boolean;
+}
+
+export async function getBulkSession(
+  sessionToken: string,
+  token?: string,
+): Promise<{ ok: boolean; platform: string; channels: BulkChannel[]; brands: BulkBrand[] }> {
+  return apiFetch(`/social/bulk/session/${sessionToken}`, { token });
+}
+
+export async function saveBulkMapping(
+  sessionToken: string,
+  mappings: { channelId: string; channelHandle: string | null; brandId: string }[],
+  token?: string,
+): Promise<{ ok: boolean; saved: { channelId: string; brandId: string }[] }> {
+  return apiFetch('/social/bulk/save', {
+    method: 'POST',
+    body:   JSON.stringify({ sessionToken, mappings }),
+    token,
+  });
+}
+
 // ─── Operator job actions (CPD-104) ──────────────────────────────────────────
 
 export type OperatorAction = 'retry' | 'advance' | 'rollback';
