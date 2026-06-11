@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-11 v1.0.1098 (Cursor — fix(CPD-869): replace yt-dlp Twitch clip download with direct GQL+CDN approach; _resolveTwitchClipGql calls Twitch GQL with public clientId to get signed URL, downloads via axios; removes 60s/30s inter-clip delays; fixes datacenter IP block)
 **Last Updated:** 2026-06-11 v1.0.1097 (Cursor — fix(CPD-869): portal3a two fixes — LUFS regex now matches Summary block instead of first transient reading (-70 cosmetic bug); frozen-frame end-skip window widened 4s→8s for Twitch gaming clip endings)
 **Last Updated:** 2026-06-11 v1.0.1096 (Cursor — fix(CPD-869): assembly_service Twitch VOD download — add _isTwitchVodUrl routing to yt-dlp with --download-sections *00:00:00-00:01:30; full broadcasts had null duration because _downloadFile fetched HTML page)
 **Last Updated:** 2026-06-11 v1.0.1095 (Cursor — fix(CPD-869): worker.js discarded generateJobScript return value — filledScript/orderedClipUrls/publishCopy never written back to jobSpec causing PORTAL1_NO_SCRIPT on every job)
