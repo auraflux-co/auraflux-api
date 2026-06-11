@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-06-11 (Cursor — CPD-884 follow-up: Gate 3a/4 prompts now require verifying the studio AVATAR is on screen before any missing-chrome deduction (r6 false positive: IRL streamer clip at 11:54 mislabeled "avatar talking", cost 13 pts). Earlier today: CPD-887 R2 publish path replaces Drive, CPD-888 clip transition fades — both verified on r6 (Gate 3a 87, true 100))
+**Last Updated:** 2026-06-11 (Cursor — CPD-922: TwelveLabs Pegasus QA ported from production. Gate 4 now analyzes >480MB videos via their public R2 URL (no more silent skip / Gate 3a-only fallback). Updated TL client to current v1.3 schema (video.type, stream:false). Live smoke test on r6 (735MB): score 88/100 PASS in 55s. Tickets queued: CPD-923 direct YouTube publish, CPD-924 scheduling cron, CPD-925 ffmpeg post-processing port. Earlier: CPD-884 avatar-on-screen QA rule, CPD-887 R2 publish path, CPD-888 transition fades)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
