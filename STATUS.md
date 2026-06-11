@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-11 v1.0.1094 (Cursor — fix(CPD-869): Portal 0 Twitch VOD URL bypass — twitch.tv/videos/NNNNN URLs now accepted without ffprobe, same path as Twitch clip bypass; assembly_service handles yt-dlp download at job time)
 **Last Updated:** 2026-06-11 v1.0.1093 (Cursor — fix(CPD-872): same productionProfile fix applied to developer_api.js — productionProfile now passed to createJobSpec in all callers)
 **Last Updated:** 2026-06-11 v1.0.1092 (Cursor — fix(CPD-872): productionProfile ReferenceError in createJobSpec — undeclared variable introduced in CPD-872 feature; add as optional param derived from contentType, pre-resolve in jobs_c1.js before createJobSpec call; fixes all POST /jobs submissions via dashboard)
 **Last Updated:** 2026-06-12 v1.0.1091 (Cursor — fix(CPD-929): loudnorm two-pass measure never ran — spawn(ffmpegPath) missing call parens; two-pass EBU R128 normalisation now active on all video output. Bulk-closed 22 tickets: 18 auto-created session-close stubs (CPD-904-921) + 4 C0 already-implemented (CPD-874,875,876,877))
