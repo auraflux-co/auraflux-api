@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Last Updated:** 2026-06-11 (Cursor — CPD-885: fixed progressive A/V desync (~2.6s over 24 min) — avatar segments now get -t video-duration clamp in TS conversion + -shortest on group concat; root cause was HeyGen v3 audio overhang accumulating across ~57 segments. Prior: CPD-884 QA prompt training, CPD-880 growth-strategist publish copy)
+**Last Updated:** 2026-06-11 (Cursor — CPD-885 part 2: ticker burn -t buffer 2.0s→0.2s — was appending ~2s frozen video tail past end of audio on every long-form video. Part 1 (avatar -t clamp + -shortest) verified clean at chunk+stitch level on r4. Prior: CPD-884 QA prompt training, CPD-880 growth-strategist publish copy)
 **Branch:** aider/test-suite
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
