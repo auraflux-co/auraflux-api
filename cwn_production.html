@@ -248,6 +248,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(true)" style="font-size:10px;padding:2px 10px;">ALL</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)" style="font-size:10px;padding:2px 10px;">NONE</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerChip()" style="font-size:10px;padding:2px 10px;">+ ADD</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" title="Merge your Twitch follows (the live grid bench) into this roster" style="font-size:10px;padding:2px 10px;color:#9146ff;border-color:rgba(145,70,255,0.5);">⟳ SYNC FOLLOWS</button>
                 <span id="streamer-chip-count" style="font-size:10px;color:rgba(255,255,255,0.4);"></span>
               </div>
               <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
@@ -7912,6 +7913,28 @@ function addStreamerChip() {
   var sel = getSelectedStreamers();
   if (sel.indexOf(handle) === -1) sel.push(handle);
   setSelectedStreamers(sel);
+}
+
+// CPD-982: merge Twitch follows (the live grid bench source) into the generator
+// roster. New handles arrive UNSELECTED — operator picks who goes in the job.
+function syncStreamersFromFollows() {
+  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  fetch(base + '/live-grid/followed-bench')
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !Array.isArray(d.bench)) { alert('Follow sync failed: ' + (d.error || 'no bench in response')); return; }
+      var roster = getStreamerRoster();
+      var added = [];
+      d.bench.forEach(function(h) {
+        h = String(h || '').trim().toLowerCase();
+        if (h && roster.indexOf(h) === -1) { roster.push(h); added.push(h); }
+      });
+      if (added.length) { saveStreamerRoster(roster); renderStreamerChips(); }
+      alert(added.length
+        ? 'Added ' + added.length + ' streamer(s) from your Twitch follows (unselected — click chips to include):\n\n' + added.join(', ')
+        : 'All ' + d.bench.length + ' followed streamers are already in the roster.');
+    })
+    .catch(function(e){ alert('Follow sync failed: ' + e.message); });
 }
 
 function removeStreamerChip(handle, ev) {

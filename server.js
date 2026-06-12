@@ -2996,7 +2996,11 @@ app.post('/job/:id/reassemble', async (req, res) => {
   const videoJobs     = card.heygen?.videoJobs || [];
   const orderedClips  = card.orderedClipUrls   || [];
 
-  if (!videoJobs.length) {
+  // Clips-only jobs (CPD-935 comps / CPD-981 avatar-free shorts) legitimately
+  // have zero videoJobs — their script scenes are all source_clip, so the
+  // script-driven rebuild below works fine. Only reject when there is nothing
+  // at all to rebuild from.
+  if (!videoJobs.length && !card.clipsOnly && !orderedClips.length) {
     return res.status(400).json({ ok: false, error: 'No heygen.videoJobs on this card — cannot build segment data.' });
   }
 
