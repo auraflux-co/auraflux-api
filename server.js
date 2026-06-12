@@ -2645,6 +2645,13 @@ app.get('/live-tv/status', (req, res) => {
   res.json({ ok: true, ...liveTvManager.status() });
 });
 
+// GET /stream-scheduler/status — programming windows + next start/stop (CPD-975/976)
+let streamScheduler = null;
+app.get('/stream-scheduler/status', (req, res) => {
+  if (!streamScheduler) return res.json({ ok: true, enabled: false });
+  res.json({ ok: true, enabled: true, streams: streamScheduler.status() });
+});
+
 // POST /job/:id/run-gate5 — trigger Gate 5 upload for an assembled/force-advanced job
 app.post('/job/:id/run-gate5', async (req, res) => {
   const jobId = req.params.id;
@@ -8484,6 +8491,14 @@ const server = app.listen(PORT, () => {
     });
   } catch (e) {
     console.warn('⚠️  Scheduling cron failed to start:', e.message);
+  }
+
+  // CPD-975/976: daily programming windows — Twitch loop 12–6pm ET, Live Grid 6pm–3am ET
+  try {
+    const { startStreamScheduler } = require('./lib/services/stream_scheduler');
+    streamScheduler = startStreamScheduler({ baseUrl: `http://localhost:${PORT}` });
+  } catch (e) {
+    console.warn('⚠️  Stream scheduler failed to start:', e.message);
   }
 });
 
