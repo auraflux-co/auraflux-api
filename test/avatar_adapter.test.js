@@ -47,8 +47,12 @@ describe('core engine selection', () => {
     expect(avatar.resolveEngine('heygen').name).toBe('heygen');
   });
 
+  test('echomimic is a registered engine (CPD-991)', () => {
+    expect(avatar.resolveEngine('echomimic').name).toBe('echomimic');
+  });
+
   test('unknown engine throws with available list', () => {
-    expect(() => avatar.resolveEngine('echomimic')).toThrow(/Unknown avatar engine 'echomimic'.*heygen/);
+    expect(() => avatar.resolveEngine('d-id')).toThrow(/Unknown avatar engine 'd-id'.*heygen.*echomimic/);
   });
 });
 
