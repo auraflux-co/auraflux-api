@@ -86,3 +86,50 @@ describe('live_grid computeAssignments', () => {
     expect(r.streaks.e).toBe(1);
   });
 });
+
+describe('live_grid bench tier (CPD-951)', () => {
+  const bench = new Set(['x', 'y', 'z']);
+
+  test('bench fills quadrants the roster cannot', () => {
+    const live = { a: 100, b: 50, x: 5000, y: 10 }; // only 2 roster live
+    const { assignments } = computeAssignments(empty(), live, {}, { bench });
+    // Roster a+b seated first despite x's 5000 viewers; bench fills the rest
+    expect(assignments).toEqual(['a', 'b', 'x', 'y']);
+  });
+
+  test('roster-only when 4+ roster streamers are live', () => {
+    const live = { a: 100, b: 90, c: 80, d: 70, x: 9999 };
+    const { assignments } = computeAssignments(empty(), live, {}, { bench });
+    expect(assignments).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  test('roster streamer going live preempts weakest bench incumbent immediately', () => {
+    const current = ['a', 'b', 'x', 'y'];
+    const live = { a: 100, b: 90, x: 500, y: 30, c: 10 }; // c (roster) just went live
+    const { assignments, swaps } = computeAssignments(current, live, {}, { bench });
+    expect(assignments).toEqual(['a', 'b', 'x', 'c']); // y (weakest bench) out, no streak needed
+    expect(swaps).toEqual([{ quadrant: 3, out: 'y', in: 'c', reason: 'roster_priority' }]);
+  });
+
+  test('bench challenger cannot unseat roster incumbents, only bench (with hysteresis)', () => {
+    const current = ['a', 'b', 'c', 'x'];
+    const live = { a: 100, b: 90, c: 20, x: 30, y: 5000 }; // y is bench
+    let r = computeAssignments(current, live, {}, { bench });
+    expect(r.assignments).toEqual(current); // no instant swap
+    expect(r.streaks.y).toBe(1);            // streak vs x (weakest bench), NOT c
+    r = computeAssignments(r.assignments, live, r.streaks, { bench });
+    r = computeAssignments(r.assignments, live, r.streaks, { bench });
+    expect(r.assignments).toEqual(['a', 'b', 'c', 'y']); // x displaced after streak
+    expect(r.swaps).toEqual([{ quadrant: 3, out: 'x', in: 'y', reason: 'outviewed' }]);
+  });
+
+  test('all-bench grid drains as roster streamers come online', () => {
+    const current = ['x', 'y', 'z', null];
+    const live = { x: 100, y: 90, z: 80, a: 5, b: 3 };
+    const { assignments, swaps } = computeAssignments(current, live, {}, { bench });
+    // a fills the empty slot, b preempts weakest bench (z)
+    expect(assignments).toEqual(['x', 'y', 'b', 'a']);
+    expect(swaps).toContainEqual({ quadrant: 3, out: null, in: 'a', reason: 'fill' });
+    expect(swaps).toContainEqual({ quadrant: 2, out: 'z', in: 'b', reason: 'roster_priority' });
+  });
+});

@@ -2462,7 +2462,7 @@ app.post('/job/:id/schedule', (req, res) => {
 // ---------------------------------------------------------------------------
 let liveGridManager = null;
 
-// POST /live-grid/start { privacyStatus?, title?, roster?, exclude?, output? }
+// POST /live-grid/start { privacyStatus?, title?, roster?, bench?, exclude?, output? }
 app.post('/live-grid/start', async (req, res) => {
   try {
     if (liveGridManager?.running) {
@@ -2487,6 +2487,17 @@ app.post('/live-grid/stop', async (req, res) => {
   await liveGridManager.stop();
   liveGridManager = null;
   res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
+});
+
+// POST /live-grid/roster { add?, remove?, benchAdd?, benchRemove? } — mutate the
+// running grid's streamer lists on demand (CPD-951); next 60s poll applies it.
+// Bench streamers only fill quadrants the A-roster can't and are preempted
+// the moment a roster streamer goes live.
+app.post('/live-grid/roster', (req, res) => {
+  if (!liveGridManager?.running) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const lists = liveGridManager.poller.updateRoster(req.body || {});
+  liveGridManager.poller.pollOnce().catch(() => {}); // apply immediately, don't wait for the tick
+  res.json({ ok: true, ...lists });
 });
 
 // POST /live-grid/audio { quadrant: 1-4 } pins audio (operator override);
