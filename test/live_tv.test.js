@@ -1,4 +1,4 @@
-const { buildPlaylist, isPlayable } = require('../lib/live_tv/manager');
+const { buildPlaylist, isPlayable, buildConcatList } = require('../lib/live_tv/manager');
 
 describe('live_tv buildPlaylist', () => {
   test('keeps only mp4 files and dedupes', () => {
@@ -44,5 +44,17 @@ describe('live_tv isPlayable (default scan eligibility)', () => {
   test('tiny/broken artifacts and non-mp4 excluded', () => {
     expect(isPlayable('cwn_short_script_1.mp4', 0.5 * MB)).toBe(false);
     expect(isPlayable('notes.txt', 10 * MB)).toBe(false);
+  });
+});
+
+describe('live_tv buildConcatList', () => {
+  test('produces valid ffconcat with one file line per video', () => {
+    const out = buildConcatList(['/a/one.ts', '/a/two.ts']);
+    expect(out).toBe("ffconcat version 1.0\nfile '/a/one.ts'\nfile '/a/two.ts'\n");
+  });
+
+  test('escapes single quotes in paths', () => {
+    const out = buildConcatList(["/a/rob's video.ts"]);
+    expect(out).toContain("file '/a/rob'\\''s video.ts'");
   });
 });
