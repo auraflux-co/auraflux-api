@@ -275,6 +275,42 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           </div>
         </div>
 
+        <!-- LIVE GRID (CPD-952) — 4-quadrant Twitch mosaic → YouTube Live -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">LIVE GRID</div>
+            <span class="tag tag-pending" id="lg-status-tag"><span class="tag-dot"></span> OFFLINE</span>
+          </div>
+          <div class="card-body">
+            <div id="lg-watch-row" style="display:none;font-size:11px;margin-bottom:10px;">
+              <a id="lg-watch-link" href="#" target="_blank" style="color:#c7af4f;font-weight:700;letter-spacing:1px;">▶ OPEN STREAM ON YOUTUBE</a>
+              <span id="lg-uptime" style="color:rgba(255,255,255,0.35);margin-left:8px;"></span>
+            </div>
+            <div id="lg-quads" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+              <!-- quadrant tiles injected by liveGridRender() -->
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+              <span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);">AUDIO: <b id="lg-audio-mode" style="color:#c7af4f;">—</b></span>
+              <button class="btn btn-outline btn-sm" id="lg-audio-auto" style="font-size:10px;padding:2px 10px;display:none;" onclick="liveGridAudio('auto')">RELEASE TO AUTO</button>
+            </div>
+            <div id="lg-bench-row" style="display:none;margin-bottom:10px;">
+              <div style="display:flex;gap:6px;">
+                <input id="lg-bench-input" type="text" placeholder="bench streamer login…" style="flex:1;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);border-radius:4px;padding:4px 8px;font-size:12px;">
+                <button class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 10px;" onclick="liveGridAddBench()">+ BENCH</button>
+              </div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:3px;">Bench fills empty quadrants; your 12 always take priority. Click a quadrant to put it on air.</div>
+            </div>
+            <div class="btn-row">
+              <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
+                <option value="public">PUBLIC</option>
+                <option value="unlisted" selected>UNLISTED</option>
+              </select>
+              <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
+              <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <div class="sec-title">SCRIPT EDITOR <span class="badge">EDIT BEFORE GENERATING</span></div>
@@ -9070,6 +9106,124 @@ function confirmPlatformModal() {
   if (_platformModalCallback) _platformModalCallback(platforms);
   _platformModalCallback = null;
 }
+</script>
+<script>
+// ===========================================================================
+// LIVE GRID controls (CPD-952) — start/stop, click-to-listen, bench add
+// ===========================================================================
+const LG_BASE = (typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000';
+let _lgStatus = null;
+
+async function liveGridRefresh() {
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/status');
+    _lgStatus = await r.json();
+  } catch (e) { _lgStatus = null; }
+  liveGridRender();
+}
+
+function liveGridRender() {
+  const s = _lgStatus;
+  const running = !!(s && s.running);
+  const tag = document.getElementById('lg-status-tag');
+  tag.innerHTML = running
+    ? '<span class="tag-dot" style="background:#e33;"></span> LIVE'
+    : '<span class="tag-dot"></span> OFFLINE';
+  tag.style.color = running ? '#e88' : '';
+
+  document.getElementById('lg-start-btn').style.display = running ? 'none' : '';
+  document.getElementById('lg-privacy').style.display = running ? 'none' : '';
+  document.getElementById('lg-stop-btn').style.display = running ? '' : 'none';
+  document.getElementById('lg-bench-row').style.display = running ? '' : 'none';
+
+  const watchRow = document.getElementById('lg-watch-row');
+  const watchUrl = s && s.broadcast && s.broadcast.watchUrl;
+  watchRow.style.display = (running && watchUrl) ? '' : 'none';
+  if (watchUrl) document.getElementById('lg-watch-link').href = watchUrl;
+  if (running && s.uptimeSec != null) {
+    const mins = Math.floor(s.uptimeSec / 60);
+    document.getElementById('lg-uptime').textContent = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
+  }
+
+  const audio = (s && s.audio) || {};
+  document.getElementById('lg-audio-mode').textContent = running
+    ? `${(audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}`
+    : '—';
+  document.getElementById('lg-audio-auto').style.display = (running && audio.mode === 'manual') ? '' : 'none';
+
+  const quadsEl = document.getElementById('lg-quads');
+  if (!running) { quadsEl.innerHTML = '<div style="grid-column:1/3;font-size:11px;color:rgba(255,255,255,0.3);text-align:center;padding:14px 0;">Stream offline — GO LIVE starts the 2x2 grid broadcast</div>'; return; }
+
+  const live = (s.poller && s.poller.live) || {};
+  quadsEl.innerHTML = (s.quadrants || []).map(q => {
+    const onAir = audio.quadrant === q.quadrant;
+    const login = q.login;
+    const viewers = login && live[login] != null ? live[login].toLocaleString() : '';
+    return `<div onclick="${login ? `liveGridAudio(${q.quadrant})` : ''}" title="${login ? 'Click to put this quadrant on air' : 'Slate'}"
+      style="cursor:${login ? 'pointer' : 'default'};padding:8px;border-radius:4px;background:#0d1524;
+      border:1px solid ${onAir ? '#c7af4f' : 'rgba(199,175,79,0.2)'};${onAir ? 'box-shadow:0 0 6px rgba(199,175,79,0.4);' : ''}">
+      <div style="font-size:9px;color:rgba(255,255,255,0.35);">Q${q.quadrant} ${onAir ? '· 🔊 ON AIR' : ''}</div>
+      <div style="font-size:12px;font-weight:700;color:${login ? '#fff' : 'rgba(255,255,255,0.3)'};letter-spacing:0.5px;">${login ? login.toUpperCase() : 'SLATE'}</div>
+      <div style="font-size:9px;color:rgba(199,175,79,0.8);">${viewers ? viewers + ' viewers' : '&nbsp;'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function liveGridStart() {
+  const privacy = document.getElementById('lg-privacy').value;
+  if (!confirm(`Start the Live Grid broadcast (${privacy.toUpperCase()})?`)) return;
+  const btn = document.getElementById('lg-start-btn');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/start', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privacyStatus: privacy }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('Start failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Start failed: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'GO LIVE';
+  liveGridRefresh();
+}
+
+async function liveGridStop() {
+  if (!confirm('End the live stream? The VOD stays on the channel.')) return;
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/stop', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Stop failed: ' + e.message); }
+  liveGridRefresh();
+}
+
+async function liveGridAudio(quadrant) {
+  try {
+    await fetch(LG_BASE + '/live-grid/audio', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quadrant }),
+    });
+  } catch (e) { alert('Audio switch failed: ' + e.message); }
+  setTimeout(liveGridRefresh, 500);
+}
+
+async function liveGridAddBench() {
+  const input = document.getElementById('lg-bench-input');
+  const login = (input.value || '').trim().toLowerCase();
+  if (!login) return;
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/roster', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ benchAdd: [login] }),
+    });
+    const d = await r.json();
+    if (d.ok) input.value = '';
+    else alert('Bench add failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Bench add failed: ' + e.message); }
+  setTimeout(liveGridRefresh, 3000); // give the immediate poll a moment
+}
+
+liveGridRefresh();
+setInterval(liveGridRefresh, 15000);
 </script>
 </body>
 </html>
