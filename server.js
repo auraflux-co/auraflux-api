@@ -4691,6 +4691,25 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
           `sitemap where/united-states=${sitemapWhereUs.length}, sitemap /us-canada/=${sitemapUsCanada.length}, ` +
           `US-first filter (hub=/news|section, sitemap=section only) → ${candidateUrls.length} URL(s)`
       );
+      // Thin-pool top-up (CPD-963): when the news cycle is dominated by non-US
+      // sections (e.g. Iran war 2026-06-12 → US pool = 0), the strict filter
+      // starves the scraper and the operator sees 0 stories. Top up with
+      // all-topics sitemap articles, US-first ordering preserved. Puppeteer +
+      // Brightcove confirmation still gates what gets returned.
+      const MIN_CANDIDATES = Math.max(targetCount * 3, 12);
+      if (candidateUrls.length < MIN_CANDIDATES) {
+        const seenTopUp = new Set(candidateUrls);
+        let added = 0;
+        for (const raw of mergedSitemap) {
+          if (candidateUrls.length >= MIN_CANDIDATES * 2) break;
+          const u = stripAjPageFragment(String(raw));
+          if (!u || seenTopUp.has(u) || !ajAljazeeraArticleBaseOk(u)) continue;
+          seenTopUp.add(u);
+          candidateUrls.push(u);
+          added++;
+        }
+        console.log(`[scrapeAjNewsVideos] Thin US pool — topped up with ${added} all-topics sitemap article(s) → ${candidateUrls.length} total`);
+      }
     } catch (e) {
       console.warn(`[scrapeAjNewsVideos] Sitemap fetch error: ${e.message}`);
       return [];
@@ -4714,6 +4733,9 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
 
   const browser = await puppeteer.launch(withPuppeteerExecutable({
     headless: 'new',
+    // Default 30s protocolTimeout caused "Target.closeTarget timed out" aborts
+    // mid-scan (seen 2026-06-12); slow Brightcove pages need more headroom.
+    protocolTimeout: 120000,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   }));
 
