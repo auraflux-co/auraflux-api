@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.98",
+  "version": "1.0.99",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -112,6 +112,10 @@
     "testEnvironment": "node",
     "testMatch": [
       "**/test/**/*.test.js"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/tmp/",
+      "<rootDir>/output/"
     ],
     "collectCoverageFrom": [
       "lib/**/*.js"

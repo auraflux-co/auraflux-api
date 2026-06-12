@@ -26,9 +26,14 @@ describe('live_tv buildPlaylist', () => {
 describe('live_tv isPlayable (default scan eligibility)', () => {
   const MB = 1_000_000;
 
-  test('finished videos are playable', () => {
+  test('finished avatar/commentary videos are playable', () => {
     expect(isPlayable('cwn_22clips_script_twitch_123.mp4', 700 * MB)).toBe(true);
-    expect(isPlayable('clips_comp_jason_script_twitch-short_1.mp4', 10 * MB)).toBe(true);
+    expect(isPlayable('twitch_short_june_11_2_avatar_1_clip_script_1.mp4', 15 * MB)).toBe(true);
+  });
+
+  test('clips-only comps excluded — no Bobby G, takedown bait on Twitch', () => {
+    expect(isPlayable('clips_comp_jason_script_twitch-short_1.mp4', 10 * MB)).toBe(false);
+    expect(isPlayable('clips_comp_jasontheween_stableronaldo_script_twitch-short_2.mp4', 32 * MB)).toBe(false);
   });
 
   test('pipeline intermediates excluded', () => {
