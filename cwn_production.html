@@ -296,6 +296,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div id="lg-bench-row" style="display:none;margin-bottom:10px;">
               <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:4px;">BENCH <span id="lg-bench-count" style="color:#c7af4f;"></span></div>
               <div id="lg-bench-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:110px;overflow-y:auto;margin-bottom:6px;"></div>
+              <div id="lg-removed-row" style="display:none;margin-bottom:6px;">
+                <div style="font-size:9px;letter-spacing:1px;color:rgba(255,120,120,0.55);margin-bottom:3px;">REMOVED (manual re-add only)</div>
+                <div id="lg-removed-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:60px;overflow-y:auto;"></div>
+              </div>
               <div style="display:flex;gap:6px;">
                 <input id="lg-bench-input" type="text" placeholder="bench streamer login…" style="flex:1;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);border-radius:4px;padding:4px 8px;font-size:12px;">
                 <button class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 10px;" onclick="liveGridAddBench()">+ BENCH</button>
@@ -9181,6 +9185,17 @@ function liveGridRender() {
     </span>`;
   }).join('');
 
+  // Removed streamers — stay listed, only return via manual re-add (CPD-972)
+  const removed = (s.poller && s.poller.benchRemoved) || [];
+  document.getElementById('lg-removed-row').style.display = removed.length ? '' : 'none';
+  document.getElementById('lg-removed-list').innerHTML = [...removed].sort().map(login =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:10px;font-size:10px;
+      background:#0d1524;border:1px solid rgba(255,120,120,0.25);color:rgba(255,255,255,0.35);text-decoration:line-through;">
+      ${login}
+      <span onclick="liveGridReAddBench('${login}')" title="Re-add to bench" style="cursor:pointer;color:#5c8;font-weight:700;padding:0 2px;text-decoration:none;">+</span>
+    </span>`
+  ).join('');
+
   quadsEl.innerHTML = (s.quadrants || []).map(q => {
     const onAir = audio.quadrant === q.quadrant;
     const login = q.login;
@@ -9246,6 +9261,18 @@ async function liveGridAddBench() {
     else alert('Bench add failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Bench add failed: ' + e.message); }
   setTimeout(liveGridRefresh, 3000); // give the immediate poll a moment
+}
+
+async function liveGridReAddBench(login) {
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/roster', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ benchAdd: [login] }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('Re-add failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Re-add failed: ' + e.message); }
+  setTimeout(liveGridRefresh, 3000);
 }
 
 async function liveGridRemoveBench(login) {
