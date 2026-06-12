@@ -1,4 +1,4 @@
-const { computeAssignments, GRID_SIZE } = require('../lib/live_grid/poller');
+const { computeAssignments, mergeBench, GRID_SIZE } = require('../lib/live_grid/poller');
 
 const empty = () => [null, null, null, null];
 
@@ -131,5 +131,37 @@ describe('live_grid bench tier (CPD-951)', () => {
     expect(assignments).toEqual(['x', 'y', 'b', 'a']);
     expect(swaps).toContainEqual({ quadrant: 3, out: null, in: 'a', reason: 'fill' });
     expect(swaps).toContainEqual({ quadrant: 2, out: 'z', in: 'b', reason: 'roster_priority' });
+  });
+});
+
+describe('live_grid mergeBench (CPD-955 live follows sync)', () => {
+  const none = new Set();
+
+  test('fresh follow appears in bench on next merge', () => {
+    const bench = mergeBench(['x', 'y', 'newguy'], none, none, ['a', 'b']);
+    expect([...bench]).toEqual(['x', 'y', 'newguy']);
+  });
+
+  test('manual +BENCH adds survive a follows refresh', () => {
+    const bench = mergeBench(['x'], new Set(['manual']), none, []);
+    expect(bench.has('manual')).toBe(true);
+    expect(bench.has('x')).toBe(true);
+  });
+
+  test('manual removes stick even if still followed', () => {
+    const bench = mergeBench(['x', 'banned'], none, new Set(['banned']), []);
+    expect(bench.has('banned')).toBe(false);
+  });
+
+  test('roster members never land in the bench', () => {
+    const bench = mergeBench(['a', 'x'], new Set(['b']), none, ['a', 'b']);
+    expect([...bench]).toEqual(['x']);
+  });
+
+  test('unfollowed channel drops out unless manually added', () => {
+    // previously followed 'gone', now unfollowed
+    const bench = mergeBench(['x'], new Set(['keeper']), none, []);
+    expect(bench.has('gone')).toBe(false);
+    expect(bench.has('keeper')).toBe(true);
   });
 });
