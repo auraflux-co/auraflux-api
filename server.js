@@ -2457,6 +2457,44 @@ app.post('/job/:id/schedule', (req, res) => {
   return res.json({ ok: true, jobId, scheduledAt: card.scheduledPublishAt, stage: card.stage });
 });
 
+// ---------------------------------------------------------------------------
+// Live Grid (CPD-940/CPD-946) — 4-quadrant Twitch mosaic → YouTube Live
+// ---------------------------------------------------------------------------
+let liveGridManager = null;
+
+// POST /live-grid/start { privacyStatus?, title?, roster?, exclude?, output? }
+app.post('/live-grid/start', async (req, res) => {
+  try {
+    if (liveGridManager?.running) {
+      return res.status(400).json({ ok: false, error: 'Live grid already running', status: liveGridManager.status() });
+    }
+    const { LiveGridManager } = require('./lib/live_grid/manager');
+    liveGridManager = new LiveGridManager();
+    const status = await liveGridManager.start(req.body || {});
+    res.json({ ok: true, status });
+  } catch (e) {
+    console.error('[live-grid] start failed:', e.message);
+    try { await liveGridManager?.stop(); } catch (_) {}
+    liveGridManager = null;
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-grid/stop — instant kill (also the DMCA mitigation switch)
+app.post('/live-grid/stop', async (req, res) => {
+  if (!liveGridManager) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const watchUrl = liveGridManager.broadcast?.watchUrl || null;
+  await liveGridManager.stop();
+  liveGridManager = null;
+  res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
+});
+
+// GET /live-grid/status
+app.get('/live-grid/status', (req, res) => {
+  if (!liveGridManager) return res.json({ ok: true, running: false });
+  res.json({ ok: true, ...liveGridManager.status() });
+});
+
 // POST /job/:id/run-gate5 — trigger Gate 5 upload for an assembled/force-advanced job
 app.post('/job/:id/run-gate5', async (req, res) => {
   const jobId = req.params.id;
