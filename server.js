@@ -2420,6 +2420,14 @@ app.post('/job/:id/schedule', (req, res) => {
   }
 
   const { scheduledAt } = req.body;
+
+  // Optional: update delivery platforms alongside the schedule (calendar workflows)
+  if (Array.isArray(req.body.platforms) && req.body.platforms.length) {
+    card.platforms = req.body.platforms;
+    card.deliverySpec = card.deliverySpec || {};
+    card.deliverySpec.platforms = req.body.platforms;
+  }
+
   if (scheduledAt === null || scheduledAt === '') {
     card.scheduledPublishAt = null;
     if (card.deliverySpec) card.deliverySpec.scheduledAt = null;
