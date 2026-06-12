@@ -2489,6 +2489,16 @@ app.post('/live-grid/stop', async (req, res) => {
   res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
 });
 
+// POST /live-grid/audio { quadrant: 1-4 } pins audio (operator override);
+// { quadrant: "auto" } releases back to chat/auto control
+app.post('/live-grid/audio', (req, res) => {
+  if (!liveGridManager?.running) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const { quadrant } = req.body || {};
+  const arg = quadrant === 'auto' ? 'auto' : Number(quadrant) - 1;
+  const switched = liveGridManager.setAudio(arg, 'manual');
+  res.json({ ok: true, switched, audio: liveGridManager.status().audio });
+});
+
 // GET /live-grid/status
 app.get('/live-grid/status', (req, res) => {
   if (!liveGridManager) return res.json({ ok: true, running: false });
