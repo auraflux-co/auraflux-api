@@ -60,6 +60,7 @@ type ProductionPath =
   | 'long_produce_source'
   | 'long_show_film'
   | 'short_cut_longform'
+  | 'short_compile_clips'
   | 'short_enhance_upload'
   | 'short_fetch_enhance';
 
@@ -283,6 +284,7 @@ function pathToContentType(path: ProductionPath): string {
     case 'long_produce_source':  return 'custom';
     case 'long_show_film':       return 'show_commentary';
     case 'short_cut_longform':   return 'clips-short';
+    case 'short_compile_clips':  return 'clips';
     case 'short_enhance_upload': return 'custom';
     case 'short_fetch_enhance':  return 'custom';
   }
@@ -787,6 +789,8 @@ function JobBuilderPageInner() {
     const inferredPath: ProductionPath = (() => {
       if (formFactor === 'short') {
         if (sourceIntent === 'longform') return 'short_cut_longform';
+        // clips source intent (e.g. TikTok Clutch, IRL Story Time) → contentType:'clips' → vertical_reel (9:16)
+        if (sourceIntent === 'clips') return 'short_compile_clips';
         return sourceMode === 'upload' ? 'short_enhance_upload' : 'short_fetch_enhance';
       }
       if (sourceIntent === 'show_film') return 'long_show_film';
