@@ -16,6 +16,9 @@ Stories under test:
     AC: passing jobs land on /schedule with scheduledPublishAt (status=ready_to_publish)
         when publish_schedule_prefs configured; otherwise fall to Review Queue (not a failure)
 
+Target platform: YouTube (VODs + clips connected for all sub-brands).
+TikTok and Instagram are still being connected — excluded from this run.
+
 Sub-brands under test (from seed_test_brands.js):
   natashaughey, martinezofwonkru, thevarietygurl, millkberry, lettucek,
   fuzzyness, hana, wanderbot, somarcus, rockleesmile, clintus, ninuschk,
@@ -71,7 +74,7 @@ BASE = os.environ.get('AURAFLUX_E2E_BASE', 'https://auraflux-api.onrender.com')
 # We authenticate as that user via the E2E clerk_user_ + X-E2E-Secret mechanism so
 # GET /brands returns the 20 sub-brands for that account.
 E2E_AUTH_SECRET   = os.environ.get('E2E_AUTH_SECRET', '')
-CPD869_CLERK_USER = os.environ.get('AURAFLUX_CPD869_CLERK_USER', 'user_2kxLZH7ckSLZH3d6dCK3hVVqvHs')
+CPD869_CLERK_USER = os.environ.get('AURAFLUX_CPD869_CLERK_USER', 'user_3DeZESHSt4pqQtkDuYJoGDicm2q')  # robert@auraflux.co
 
 def get_auth_headers():
     if E2E_AUTH_SECRET and CPD869_CLERK_USER:
@@ -174,10 +177,12 @@ def get_clips_for_brand(username, broadcaster_id, count=1, min_duration_s=15):
         if c.get('duration', 0) < min_duration_s:
             continue
         results.append({
-            'slug':      c['id'],
-            'url':       f'https://www.twitch.tv/{username}/clip/{c["id"]}',
-            'title':     c.get('title', 'Untitled'),
+            'slug':       c['id'],
+            'url':        f'https://www.twitch.tv/{username}/clip/{c["id"]}',
+            'title':      c.get('title', 'Untitled'),
             'duration_s': c.get('duration', 0),
+            'view_count': c.get('view_count', 0),
+            'game_name':  c.get('game_name', ''),
         })
         if len(results) >= count:
             break
@@ -310,49 +315,52 @@ def run_brand_test(brand, dry_run=False):
         print(f'    ⚠️  Could not resolve Twitch broadcaster ID for "{name}" — skipping')
         return {'brand': name, 'status': 'SKIP', 'reason': 'no Twitch broadcaster ID'}
 
-    # Fetch 1 fresh clip
-    clips = get_clips_for_brand(name, broadcaster_id, count=1, min_duration_s=15)
+    # Fetch up to 5 fresh clips — Gemini (CPD-947) picks the best one from the candidates
+    clips = get_clips_for_brand(name, broadcaster_id, count=5, min_duration_s=15)
     if not clips:
         print(f'    ⚠️  No clips found for {name} on Twitch — skipping')
         return {'brand': name, 'status': 'SKIP', 'reason': 'no Twitch clips found'}
 
-    clip = clips[0]
-    print(f'    clip: "{clip["title"]}" ({clip["duration_s"]:.0f}s) → {clip["url"]}')
+    print(f'    {len(clips)} clip candidate(s) fetched — Gemini will pick the best:')
+    for c in clips:
+        print(f'      · "{c["title"]}" ({c["duration_s"]:.0f}s)')
 
     if dry_run:
         print(f'    [dry-run] would submit job for brandId={brand_id}')
         return {'brand': name, 'status': 'DRY_RUN'}
 
-    # Build job spec — single clip, clips content type, TTS + thumbnail + branding
-    # publishMode=scheduled exercises CPD-873; addOns.branding exercises CPD-871
+    # Build job spec — pass all clip candidates + clipSourcing=true so CPD-947 Gemini
+    # picker selects the best one.  Target: YouTube (connected for all sub-brands).
+    # publishMode=scheduled exercises CPD-873; addOns.branding exercises CPD-871.
+    clip_urls = [c['url'] for c in clips]
     job_spec = {
         'entry':             'fetch',
         'productionProfile': 'vertical_reel',
         'format':            'short',
         'contentType':       'clips',
-        'platforms':         ['tiktok'],
-        'targetPlatform':    'tiktok',
-        'url':               clip['url'],
-        'urls':              [clip['url']],
+        'platforms':         ['youtube'],
+        'targetPlatform':    'youtube',
+        'url':               clip_urls[0],
+        'urls':              clip_urls,
         'topic':             f'{name} Twitch highlight',
         'tone':              'high-energy, engaging',
         'durationMins':      1,
         'publishMode':       'scheduled',
         'brandId':           brand_id,
         'addOns': {
-            'tts':       {'active': False},
-            'thumbnail': {'active': True},
-            'branding':  {'active': True},
-            'clipSourcing': {'active': False},
+            'tts':            {'active': False},
+            'thumbnail':      {'active': True},
+            'branding':       {'active': True},
+            'clipSourcing':   {'active': True},   # CPD-947: Gemini ranks candidates
             'showCommentary': {'active': False},
-            'imageBurn': {'active': False},
-            'dynamicOverlays': {'active': False},
+            'imageBurn':      {'active': False},
+            'dynamicOverlays':{'active': False},
         },
     }
 
-    # Submit job
+    # Submit job — API returns 200/201 (sync) or 202 (async accepted)
     resp, code = api('POST', '/jobs', job_spec)
-    if code not in (200, 201):
+    if code not in (200, 201, 202):
         print(f'    ❌ Job submission failed (HTTP {code}): {resp}')
         return {'brand': name, 'status': 'FAIL', 'reason': f'submission HTTP {code}: {resp}'}
 
