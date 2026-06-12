@@ -271,6 +271,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="btn-row">
               <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">PICK CLIPS</button>
               <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitchWithPicker()">LONG FORM</button>
+              <button id="btn-gen-twitch-top10" class="btn btn-outline" onclick="generateTwitchTop10()" title="Countdown show — one clip per selected streamer, ranked by views (most viewed = #1)">TOP 10</button>
               <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()">SHORT</button>
               <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch 4 selected clips into one full-frame portrait short — no avatar">CLIPS COMP</button>
             </div>
@@ -3534,7 +3535,7 @@ function setGenerateModeActive(type, form) {
   shortBtn.className = longOn ? 'btn btn-outline' : 'btn btn-gold';
 }
 
-function callFullScriptServer(type, items, statusElId, onDone, tone, platforms) {
+function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, extra) {
   var dateStr = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   var xhr = new XMLHttpRequest();
   xhr.open('POST', CFG.ffmpegUrl + '/generate-full-script', true);
@@ -3642,7 +3643,10 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms) 
   };
   var holdEl = g('hold-before-heygen');
   var holdBeforeHeygen = holdEl ? holdEl.checked : false;
-  xhr.send(JSON.stringify({ type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {}, platforms: platforms || null, holdBeforeHeygen: holdBeforeHeygen }));
+  var payload = { type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {}, platforms: platforms || null, holdBeforeHeygen: holdBeforeHeygen };
+  // CPD-997: extra fields (e.g. scriptVariant: 'top10') merged into the request
+  if (extra && typeof extra === 'object') Object.keys(extra).forEach(function(k){ payload[k] = extra[k]; });
+  xhr.send(JSON.stringify(payload));
 }
 
 // ── Fix 25b: Adapter — fetch CWN US/Canada video stories from server endpoint ──
@@ -7086,6 +7090,67 @@ function generateTwitchWithPicker() {
     markClipsUsed(primaryUrls);
     if (g('script-type-label')) g('script-type-label').textContent = 'TWITCH — Gemini + Claude writing full script...';
     callFullScriptServer('twitch', items, 'twitch-gen-status', null);
+  });
+}
+
+// CPD-997: Top-10 countdown show — twitch pipeline with scriptVariant 'top10'.
+// One clip per selected streamer; items sorted by clip views ascending so the
+// most-viewed clip lands at NUMBER ONE (countdown order = array order).
+function generateTwitchTop10() {
+  var activeStreamers = _twitchPickerStreamers.filter(function(e){ return e.selected && !e.dropReason && e.clips.some(function(c){ return c.selected; }); });
+  if (activeStreamers.length < 3) {
+    var statusEl = g('twitch-fetch-status');
+    if (statusEl) statusEl.textContent = 'TOP 10 needs at least 3 selected streamers (one clip each) — use PICK CLIPS first.';
+    if (!(_twitchPickerStreamers || []).length) previewTwitchClips();
+    return;
+  }
+  var streamerNotes = parseStreamerNotes();
+  lockGenerateButton('btn-gen-twitch-top10');
+  setGenerateModeActive('twitch', 'long');
+  CURRENT_TYPE = 'twitch';
+  CURRENT_META = { streamers: activeStreamers.map(function(e){ return e.name; }), clipMp4Urls: {}, clipFailureReasons: {} };
+  setGeneratingState('twitch-gen-status', 'TOP ' + activeStreamers.length + ' — Resolving clips...');
+
+  var items = activeStreamers.map(function(entry) {
+    var clip = entry.clips.filter(function(c){ return c.selected; })[0] || entry.clips[0];
+    return {
+      streamer: entry.displayName, displayName: entry.displayName,
+      notes: streamerNotes[entry.name] || '',
+      clipsPerStreamer: 1, targetClipsPerStreamer: 1,
+      clips: [{ rank: 1, isBackup: false, title: clip.title, url: clip.url, views: clip.views, game: clip.game, thumbnailUrl: clip.thumbnailUrl }],
+      title: clip.title, url: clip.url, views: clip.views, game: clip.game, thumbnailUrl: clip.thumbnailUrl
+    };
+  });
+  // Countdown order: lowest views first, most-viewed clip = NUMBER ONE (last)
+  items.sort(function(a, b) { return (a.views || 0) - (b.views || 0); });
+
+  var allClips = [];
+  items.forEach(function(item) {
+    (item.clips || []).forEach(function(clip) {
+      clip.streamer = item.streamer || '';
+      clip.displayName = item.displayName || item.streamer || '';
+      allClips.push(clip);
+    });
+  });
+
+  if (g('script-type-label')) g('script-type-label').textContent = 'TOP ' + items.length + ' — Resolving clip URLs...';
+  resolveTwitchClipUrls(allClips, function() {
+    CURRENT_META.clipMp4Urls = {};
+    CURRENT_META.orderedClipUrls = [];
+    CURRENT_META.clipsByStreamer = {};
+    allClips.forEach(function(clip) {
+      if (clip.mp4Url) CURRENT_META.clipMp4Urls[clip.url] = clip.mp4Url;
+      var entry2 = { url: clip.mp4Url || clip.url || '', pageUrl: clip.url || '',
+        streamer: clip.streamer || '', displayName: clip.displayName || '',
+        title: clip.title || '', isBackup: false };
+      CURRENT_META.orderedClipUrls.push(entry2);
+      var sKey = (clip.streamer || 'unknown').toLowerCase();
+      if (!CURRENT_META.clipsByStreamer[sKey]) CURRENT_META.clipsByStreamer[sKey] = [];
+      CURRENT_META.clipsByStreamer[sKey].push(entry2);
+    });
+    markClipsUsed(items.map(function(item){ return item.url; }).filter(Boolean));
+    if (g('script-type-label')) g('script-type-label').textContent = 'TOP ' + items.length + ' — Gemini + Claude writing countdown script...';
+    callFullScriptServer('twitch', items, 'twitch-gen-status', null, null, null, { scriptVariant: 'top10' });
   });
 }
 

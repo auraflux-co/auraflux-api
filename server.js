@@ -2728,6 +2728,21 @@ function tvAutoEnqueue(jobId) {
 }
 pipelineBus.on('publish:complete', ({ jobId }) => tvAutoEnqueue(jobId));
 
+// CPD-998: one production run feeds every platform — a published longform
+// auto-spawns a vertical sibling (clip short / news-short / nba-short).
+// Gated by REPURPOSE_SHORTS=on; short-form and clips-only cards never repurpose.
+pipelineBus.on('publish:complete', ({ jobId }) => {
+  try {
+    const { repurposeOnPublish } = require('./lib/services/repurpose');
+    const card = persistedJobs[jobId];
+    if (!card) return;
+    repurposeOnPublish(card, { baseUrl: `http://localhost:${PORT}` })
+      .catch((e) => console.warn(`[repurpose] ${jobId}: unexpected error (non-fatal): ${e.message}`));
+  } catch (e) {
+    console.warn(`[repurpose] listener error (non-fatal): ${e.message}`);
+  }
+});
+
 // GET /stream-scheduler/status — programming windows + next start/stop (CPD-975/976)
 let streamScheduler = null;
 app.get('/stream-scheduler/status', (req, res) => {
@@ -3294,6 +3309,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     title,
     streamers,
     platforms,
+    repurposedFrom: req.body.repurposedFrom || null, // CPD-998: spawned from a published longform
     specId:      jobSpec?.jobId || null,
     jobSpecId:   jobSpec?.jobId || null,
     createdAt:   new Date().toISOString(),
@@ -8592,7 +8608,7 @@ app.get('/errors', (req, res) => {
 app.use(errorMiddleware);
 
 // ── Start ─────────────────────────────────────────────────────────
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
   console.log(`   FFmpeg path: ${ffmpegPath()}`);
   console.log(`   Tmp dir:     ${TMP_DIR}`);
@@ -8619,6 +8635,17 @@ const server = app.listen(PORT, () => {
     });
   } catch (e) {
     console.warn('⚠️  Scheduling cron failed to start:', e.message);
+  }
+
+  // CPD-996: end orphaned live broadcasts from a previous process (restart kills
+  // the ffmpeg feed but never told YouTube the broadcast ended). Must complete
+  // BEFORE the stream scheduler can start a fresh grid session, or the guard
+  // could end the broadcast the new session just created.
+  try {
+    const { reconcileOrphanedBroadcasts } = require('./lib/services/youtube_direct');
+    await reconcileOrphanedBroadcasts();
+  } catch (e) {
+    console.warn('⚠️  Broadcast reconciliation failed (non-fatal):', e.message);
   }
 
   // CPD-975/976: daily programming windows — Twitch loop 12–6pm ET, Live Grid 6pm–3am ET
