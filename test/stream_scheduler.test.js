@@ -15,6 +15,10 @@ describe('parseWindow', () => {
     expect(parseWindow('nope', TV)).toEqual(TV);
     expect(parseWindow(undefined, GRID)).toEqual(GRID);
   });
+  test('"off" disables the stream (CPD-994) — null even with a fallback', () => {
+    expect(parseWindow('off', TV)).toBeNull();
+    expect(parseWindow(' OFF ', TV)).toBeNull();
+  });
 });
 
 describe('inWindow', () => {
