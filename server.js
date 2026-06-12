@@ -33,7 +33,14 @@ const BUILD_INFO = (() => {
       deployedAt: new Date().toISOString()
     };
   } catch(e) {
-    return { version: require('./package.json').version, gitHash: 'unknown', deployedAt: new Date().toISOString() };
+    // Render injects RENDER_GIT_COMMIT automatically — use it when .git is not available
+    const renderHash = process.env.RENDER_GIT_COMMIT || 'unknown';
+    return {
+      version: require('./package.json').version,
+      gitHash: renderHash.length > 7 ? renderHash.slice(0, 7) : renderHash,
+      gitHashFull: renderHash,
+      deployedAt: new Date().toISOString()
+    };
   }
 })();
 
