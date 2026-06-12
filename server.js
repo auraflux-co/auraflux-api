@@ -2525,7 +2525,7 @@ app.post('/connect/twitch/token', async (req, res) => {
     if (!(v.data.scopes || []).includes('user:read:follows')) {
       return res.status(400).json({ ok: false, error: 'token missing user:read:follows scope' });
     }
-    require('./lib/live_grid/follows').saveUserToken({ accessToken, login: v.data.login, clientId: v.data.client_id });
+    require('./lib/live_grid/follows').saveUserToken({ accessToken, login: v.data.login, clientId: v.data.client_id, userId: v.data.user_id });
     console.log(`[live-grid:follows] Twitch user token saved for ${v.data.login}`);
     res.json({ ok: true, login: v.data.login });
   } catch (e) {
