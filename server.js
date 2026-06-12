@@ -858,20 +858,18 @@ async function startHeyGenPoller(jobId, card) {
     }
 
     try {
-      // Check status of all video IDs in parallel
+      // Check status of all video IDs in parallel (CPD-989: via the avatar adapter layer —
+      // card.avatarEngine selects the engine; absent = heygen, unchanged behaviour)
+      const avatarCore = require('./lib/avatar');
       const statuses = await Promise.all(videoJobs.map(async (job) => {
         try {
-          const resp = await axios.get(
-            `https://api.heygen.com/v3/videos/${job.video_id}`,
-            { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
-          );
-          const data = resp.data?.data || {};
+          const s = await avatarCore.getSegmentStatus(job.video_id, { engine: card.avatarEngine || null });
           return {
             video_id: job.video_id,
             sceneName: job.sceneName,
             sceneIndex: job.sceneIndex,
-            status: data.status,
-            video_url: data.video_url || null
+            status: s.status,
+            video_url: s.videoUrl
           };
         } catch(e) {
           return { video_id: job.video_id, sceneName: job.sceneName, sceneIndex: job.sceneIndex, status: 'error', video_url: null };
