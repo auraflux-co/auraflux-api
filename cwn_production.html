@@ -209,7 +209,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <span class="tag tag-pending" id="news-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
-            <input type="hidden" id="news-source" value="all">
+            <!-- CPD-963: default aljazeera — AP/Reuters wire video is Content ID'd (AP UK claim 2026-06-12) -->
+            <input type="hidden" id="news-source" value="aljazeera">
             <div class="field"><label>SOURCES</label>
               <div style="font-size:12px;color:rgba(255,255,255,0.6);font-family:monospace;padding:8px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;background:rgba(255,255,255,0.03);">All Sources (AJ · BBC · AP · Reuters)</div>
             </div>
