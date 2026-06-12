@@ -9154,7 +9154,9 @@ function liveGridRender() {
 
   const audio = (s && s.audio) || {};
   document.getElementById('lg-audio-mode').textContent = running
-    ? `${(audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}`
+    ? (audio.muted
+        ? '🔇 MUTED — MUSIC ON ALL QUADS'
+        : `${(audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}${audio.musicWarning ? ' · 🎵 MUSIC ON AIR' : ''}`)
     : '—';
   document.getElementById('lg-audio-auto').style.display = (running && audio.mode === 'manual') ? '' : 'none';
 
@@ -9197,14 +9199,16 @@ function liveGridRender() {
     </span>`
   ).join('');
 
+  const musicFlags = audio.musicFlags || [];
   quadsEl.innerHTML = (s.quadrants || []).map(q => {
     const onAir = audio.quadrant === q.quadrant;
     const login = q.login;
     const viewers = login && live[login] != null ? live[login].toLocaleString() : '';
-    return `<div onclick="${login ? `liveGridAudio(${q.quadrant})` : ''}" title="${login ? 'Click to put this quadrant on air' : 'Slate'}"
+    const music = !!musicFlags[q.quadrant - 1];
+    return `<div onclick="${login ? `liveGridAudio(${q.quadrant})` : ''}" title="${login ? (music ? 'Music detected — claims risk if put on air' : 'Click to put this quadrant on air') : 'Slate'}"
       style="cursor:${login ? 'pointer' : 'default'};padding:8px;border-radius:4px;background:#0d1524;
-      border:1px solid ${onAir ? '#c7af4f' : 'rgba(199,175,79,0.2)'};${onAir ? 'box-shadow:0 0 6px rgba(199,175,79,0.4);' : ''}">
-      <div style="font-size:9px;color:rgba(255,255,255,0.35);">Q${q.quadrant} ${onAir ? '· 🔊 ON AIR' : ''}</div>
+      border:1px solid ${onAir ? '#c7af4f' : music ? 'rgba(255,120,120,0.4)' : 'rgba(199,175,79,0.2)'};${onAir ? 'box-shadow:0 0 6px rgba(199,175,79,0.4);' : ''}">
+      <div style="font-size:9px;color:rgba(255,255,255,0.35);">Q${q.quadrant} ${onAir ? (audio.muted ? '· 🔇 MUTED' : '· 🔊 ON AIR') : ''}${music ? ' <span style="color:#e88;">🎵 MUSIC</span>' : ''}</div>
       <div style="font-size:12px;font-weight:700;color:${login ? '#fff' : 'rgba(255,255,255,0.3)'};letter-spacing:0.5px;">${login ? login.toUpperCase() : 'SLATE'}</div>
       <div style="font-size:9px;color:rgba(199,175,79,0.8);">${viewers ? viewers + ' viewers' : '&nbsp;'}</div>
     </div>`;
