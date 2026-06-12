@@ -3125,6 +3125,10 @@ app.post('/job/:id/reassemble', async (req, res) => {
     contentType:  card.contentType || 'nba',
     jobId,
     jobSpecId:    card.specId || card.jobSpecId || null,
+    // Without jobTitle the short-form output falls back to a cwn_short_* name —
+    // clips-only retries then lose their clips_comp_*/clip_short_* slug and the
+    // ClipzWorld TV takedown-shield filename filter no longer matches them.
+    jobTitle:     card.title || null,
     sceneTextMap: card.heygen?.sceneTextMap || null,
     fullScript:   card.script?.raw || card.script || null,
     streamers:    card.streamers || [],
@@ -3195,7 +3199,11 @@ app.post('/generate-clip-comp', async (req, res) => {
       items:        clips,
       title
     });
-    const { updateJobSpec } = require('./lib/job_spec');
+    const { updateJobSpec, linkScriptJob } = require('./lib/job_spec');
+    // Link semantic spec ↔ card id like the script flow does. Without this,
+    // saveOutput(card id) seeds a DUPLICATE spec row and Gate 5 (reading the
+    // semantic row) sees publishCopy=null → "YouTube: title is required" fail.
+    linkScriptJob(jobSpec.jobId, jobId);
     jobSpec = updateJobSpec(jobSpec.jobId, {
       clipsOnly: true,
       deliverySpec: { platforms },
