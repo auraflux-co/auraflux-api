@@ -1252,6 +1252,21 @@ pipelineBus.on('thumbnail:uploaded', ({ jobId, thumbnailDriveUrl }) => {
   }
 });
 
+// CPD-883: every successful assembly upload refreshes the canonical card's
+// driveUrl (re-assemblies included) so Gate 5 recovery never publishes a stale file.
+pipelineBus.on('assembly:drive_url', ({ jobId, driveUrl }) => {
+  if (!jobId || !driveUrl) return;
+  const card = persistedJobs[jobId];
+  if (!card) return;
+  const prev = card.state?.savedOutputs?.driveUrl || card.driveUrl || null;
+  card.driveUrl = driveUrl;
+  card.state = card.state || {};
+  card.state.savedOutputs = card.state.savedOutputs || {};
+  card.state.savedOutputs.driveUrl = driveUrl;
+  saveJobCard(jobId, card);
+  console.log(`[assembly:drive_url] ${jobId}: card driveUrl refreshed${prev && prev !== driveUrl ? ' (replaced stale URL)' : ''}`);
+});
+
 // CPD-936: assembly held Gate 5 for a scheduled publish — persist the hold state
 // (stage/driveUrl/publishCopy/thumbnail) so a restart during the hold window
 // doesn't strand the job (cron used to fire with no driveUrl on the reloaded card).
@@ -1565,6 +1580,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
         if (asmJob.publishResult) {
           finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
           finalCard.stage = 'published';
+          tvAutoEnqueue(jobId); // CPD-958: published in-assembly → join the TV rotation
         }
         saveJobCard(jobId, finalCard);
         logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
@@ -2195,6 +2211,23 @@ app.post('/job/:id/advance', (req, res) => {
 
   const stage = card.stage || detectStage(card);
 
+  // CPD-971 recovery: a card stuck at gate5_forced/gate5_running after the
+  // publish ACTUALLY completed (confirmed publish_results rows) advances to
+  // 'published' instead of re-firing Gate 5 and double-publishing.
+  if (stage === 'gate5_forced' || stage === 'gate5_running') {
+    let publishedRows = [];
+    try { publishedRows = db.getPublishedResults(jobId) || []; } catch (_e) { /* table may not exist in tests */ }
+    if (publishedRows.length) {
+      card.stage = 'published';
+      card.publishedAt = card.publishedAt || new Date(publishedRows[0].published_at || Date.now()).toISOString();
+      saveJobCard(jobId, card);
+      const platforms = publishedRows.map(r => r.platform).join(', ');
+      console.log(`[advance] ${jobId}: ${stage} → published (recovered — publish_results confirm ${platforms})`);
+      logError('PIPELINE_ADVANCE', `Job recovered: ${stage} → published`, { jobId, before: stage, after: 'published', platforms, at: new Date().toISOString() });
+      return res.json({ ok: true, jobId, before: stage, after: 'published', message: `Publish already confirmed on: ${platforms} — card marked published.` });
+    }
+  }
+
   if (stage === 'script_ready') {
     // Force-advance: mark Gate 1 as force-passed so SEND TO HEYGEN is unblocked
     card.gate1 = card.gate1 || {};
@@ -2677,6 +2710,23 @@ app.get('/live-tv/status', (req, res) => {
   if (!liveTvManager) return res.json({ ok: true, running: false });
   res.json({ ok: true, ...liveTvManager.status() });
 });
+
+// CPD-958: the channel programs itself — every successful Gate 5 publish
+// auto-appends the produced video to a running ClipzWorld TV rotation.
+// (isPlayable inside enqueue() still applies the takedown shield: clips-only
+// comps / clip shorts / grid recordings are refused.)
+function tvAutoEnqueue(jobId) {
+  try {
+    if (!liveTvManager?.running) return;
+    const card = persistedJobs[jobId];
+    const file = card?.outputPath || card?.state?.savedOutputs?.outputPath || null;
+    if (!file) return;
+    if (liveTvManager.enqueue(file)) {
+      console.log(`[live-tv] ${jobId}: published video auto-enqueued into the rotation`);
+    }
+  } catch (_e) { /* non-fatal */ }
+}
+pipelineBus.on('publish:complete', ({ jobId }) => tvAutoEnqueue(jobId));
 
 // GET /stream-scheduler/status — programming windows + next start/stop (CPD-975/976)
 let streamScheduler = null;

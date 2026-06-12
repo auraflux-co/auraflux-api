@@ -319,6 +319,35 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           </div>
         </div>
 
+        <!-- CLIPZWORLD TV (CPD-958) — 24/7 Twitch loop of produced videos -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">CLIPZWORLD TV</div>
+            <span class="tag tag-pending" id="tv-status-tag"><span class="tag-dot"></span> OFFLINE</span>
+          </div>
+          <div class="card-body">
+            <div id="tv-info-row" style="display:none;font-size:11px;margin-bottom:10px;color:rgba(255,255,255,0.5);">
+              <span id="tv-uptime"></span> · loop <b id="tv-loop" style="color:#c7af4f;">0</b> ·
+              <span id="tv-cache-state"></span>
+            </div>
+            <div id="tv-caching-row" style="display:none;font-size:10px;color:rgba(199,175,79,0.8);margin-bottom:8px;">
+              ⏳ caching: <span id="tv-caching"></span>
+            </div>
+            <div id="tv-playlist" style="display:none;max-height:140px;overflow-y:auto;margin-bottom:10px;font-size:10px;font-family:monospace;line-height:1.8;"></div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:10px;">
+              Self-programming: every video that publishes through Gate 5 auto-joins the rotation
+              (clips-only comps and clip shorts excluded — takedown shield). New videos join at the next loop pass.
+            </div>
+            <div class="btn-row">
+              <label style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;">
+                <input type="checkbox" id="tv-shuffle" style="cursor:pointer;accent-color:#c7af4f;"> SHUFFLE
+              </label>
+              <button id="tv-start-btn" class="btn btn-gold" onclick="liveTvStart()">START TV</button>
+              <button id="tv-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveTvStop()">STOP TV</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <div class="sec-title">SCRIPT EDITOR <span class="badge">EDIT BEFORE GENERATING</span></div>
@@ -7915,14 +7944,19 @@ function addStreamerChip() {
   setSelectedStreamers(sel);
 }
 
-// CPD-982: merge Twitch follows (the live grid bench source) into the generator
-// roster. New handles arrive UNSELECTED — operator picks who goes in the job.
-function syncStreamersFromFollows() {
+// CPD-982/CPD-959: merge Twitch follows (the live grid bench source) into the
+// generator roster. New handles arrive UNSELECTED — operator picks who goes in
+// the job. Runs automatically on page load (silent) so following someone makes
+// their clips immediately available to Bobby G shows; button = manual re-sync.
+function syncStreamersFromFollows(silent) {
   var base = CFG.ffmpegUrl || 'http://localhost:3000';
   fetch(base + '/live-grid/followed-bench')
     .then(function(r){ return r.json(); })
     .then(function(d) {
-      if (!d.ok || !Array.isArray(d.bench)) { alert('Follow sync failed: ' + (d.error || 'no bench in response')); return; }
+      if (!d.ok || !Array.isArray(d.bench)) {
+        if (!silent) alert('Follow sync failed: ' + (d.error || 'no bench in response'));
+        return;
+      }
       var roster = getStreamerRoster();
       var added = [];
       d.bench.forEach(function(h) {
@@ -7930,12 +7964,19 @@ function syncStreamersFromFollows() {
         if (h && roster.indexOf(h) === -1) { roster.push(h); added.push(h); }
       });
       if (added.length) { saveStreamerRoster(roster); renderStreamerChips(); }
+      if (silent) {
+        if (added.length) cwn_log('[follows-sync] ' + added.length + ' new followed streamer(s) added to the roster: ' + added.join(', '), false);
+        return;
+      }
       alert(added.length
         ? 'Added ' + added.length + ' streamer(s) from your Twitch follows (unselected — click chips to include):\n\n' + added.join(', ')
         : 'All ' + d.bench.length + ' followed streamers are already in the roster.');
     })
-    .catch(function(e){ alert('Follow sync failed: ' + e.message); });
+    .catch(function(e){ if (!silent) alert('Follow sync failed: ' + e.message); });
 }
+
+// CPD-959: auto-sync on load — the bench doubles as the clip-source pool
+setTimeout(function(){ try { syncStreamersFromFollows(true); } catch(_e) {} }, 2500);
 
 function removeStreamerChip(handle, ev) {
   if (ev) ev.stopPropagation();
@@ -9372,6 +9413,76 @@ async function liveGridRemoveBench(login) {
 
 liveGridRefresh();
 setInterval(liveGridRefresh, 15000);
+
+// ===========================================================================
+// CLIPZWORLD TV controls (CPD-958) — start/stop + now-playing rotation
+// ===========================================================================
+let _tvStatus = null;
+
+async function liveTvRefresh() {
+  try {
+    const r = await fetch(LG_BASE + '/live-tv/status');
+    _tvStatus = await r.json();
+  } catch (e) { _tvStatus = null; }
+  liveTvRender();
+}
+
+function liveTvRender() {
+  const s = _tvStatus;
+  const running = !!(s && s.running);
+  const tag = document.getElementById('tv-status-tag');
+  if (!tag) return;
+  tag.innerHTML = running
+    ? '<span class="tag-dot" style="background:#9146FF;"></span> ON AIR'
+    : '<span class="tag-dot"></span> OFFLINE';
+  tag.style.color = running ? '#b794f6' : '';
+
+  document.getElementById('tv-start-btn').style.display = running ? 'none' : '';
+  document.getElementById('tv-stop-btn').style.display = running ? '' : 'none';
+  document.getElementById('tv-info-row').style.display = running ? '' : 'none';
+  document.getElementById('tv-caching-row').style.display = (running && s.caching) ? '' : 'none';
+  document.getElementById('tv-playlist').style.display = running ? '' : 'none';
+  if (!running) return;
+
+  const mins = Math.floor((s.uptimeSec || 0) / 60);
+  document.getElementById('tv-uptime').textContent = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
+  document.getElementById('tv-loop').textContent = s.loop || 0;
+  document.getElementById('tv-cache-state').textContent = `${s.cached || 0}/${s.total || 0} in rotation${s.shuffle ? ' · shuffled' : ''}`;
+  if (s.caching) document.getElementById('tv-caching').textContent = s.caching;
+
+  document.getElementById('tv-playlist').innerHTML = (s.playlist || []).map((name, i) =>
+    `<div style="color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${i + 1}. ${name}</div>`
+  ).join('');
+}
+
+async function liveTvStart() {
+  if (!confirm('Start ClipzWorld TV? Streams the produced-video rotation to Twitch.')) return;
+  const btn = document.getElementById('tv-start-btn');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  try {
+    const r = await fetch(LG_BASE + '/live-tv/start', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shuffle: document.getElementById('tv-shuffle').checked }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('TV start failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('TV start failed: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'START TV';
+  liveTvRefresh();
+}
+
+async function liveTvStop() {
+  if (!confirm('Stop ClipzWorld TV? The Twitch stream ends immediately.')) return;
+  try {
+    const r = await fetch(LG_BASE + '/live-tv/stop', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) alert('TV stop failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('TV stop failed: ' + e.message); }
+  liveTvRefresh();
+}
+
+liveTvRefresh();
+setInterval(liveTvRefresh, 15000);
 </script>
 </body>
 </html>

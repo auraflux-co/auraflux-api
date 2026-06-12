@@ -1,4 +1,7 @@
-const { buildPlaylist, isPlayable, buildConcatList } = require('../lib/live_tv/manager');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { LiveTvManager, buildPlaylist, isPlayable, buildConcatList } = require('../lib/live_tv/manager');
 
 describe('live_tv buildPlaylist', () => {
   test('keeps only mp4 files and dedupes', () => {
@@ -64,5 +67,49 @@ describe('live_tv buildConcatList', () => {
   test('escapes single quotes in paths', () => {
     const out = buildConcatList(["/a/rob's video.ts"]);
     expect(out).toContain("file '/a/rob'\\''s video.ts'");
+  });
+});
+
+describe('live_tv enqueue (CPD-958 auto-enqueue)', () => {
+  let dir, mgr;
+
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tv-enqueue-'));
+    mgr = new LiveTvManager({ outputDir: dir, log: () => {} });
+    mgr.running = true; // bypass start() — no ffmpeg/RTMP in unit tests
+    mgr.cacheProc = {};  // pretend caching is busy so _cacheNext is not kicked
+  });
+  afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); });
+
+  const writeMp4 = (name, mb = 5) => {
+    const p = path.join(dir, name);
+    fs.writeFileSync(p, Buffer.alloc(mb * 1_000_000));
+    return p;
+  };
+
+  test('accepts a fresh published video into the rotation', () => {
+    const f = writeMp4('cwn_8clips_script_twitch_99.mp4');
+    expect(mgr.enqueue(f)).toBe(true);
+    expect(mgr.playlist).toContain(f);
+  });
+
+  test('refuses takedown-shield content (clips comps / clip shorts)', () => {
+    expect(mgr.enqueue(writeMp4('clips_comp_x_script_twitch-short_1.mp4'))).toBe(false);
+    expect(mgr.enqueue(writeMp4('clip_short_y_script_news-short_2.mp4'))).toBe(false);
+    expect(mgr.playlist).toHaveLength(0);
+  });
+
+  test('refuses duplicates, missing files, and when not running', () => {
+    const f = writeMp4('cwn_4clips_script_news_7.mp4');
+    expect(mgr.enqueue(f)).toBe(true);
+    expect(mgr.enqueue(f)).toBe(false); // duplicate
+    expect(mgr.enqueue(path.join(dir, 'nope.mp4'))).toBe(false); // missing
+    mgr.running = false;
+    expect(mgr.enqueue(writeMp4('cwn_5clips_script_news_8.mp4'))).toBe(false);
+  });
+
+  test('resolves bare filenames against outputDir', () => {
+    writeMp4('cwn_6clips_script_twitch_55.mp4');
+    expect(mgr.enqueue('cwn_6clips_script_twitch_55.mp4')).toBe(true);
   });
 });
