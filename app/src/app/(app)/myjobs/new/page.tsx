@@ -58,6 +58,7 @@ type SourceMode  = 'source' | 'upload';
 type ProductionPath =
   | 'long_compile_clips'
   | 'long_produce_source'
+  | 'long_show_film'
   | 'short_cut_longform'
   | 'short_enhance_upload'
   | 'short_fetch_enhance';
@@ -238,6 +239,22 @@ const FEATURES: Feature[] = [
     outputImpact: 'Your face-cam appears in a corner — great for commentary or reaction videos.',
     default: false, formFactors: ['long', 'short'], hasConfig: true, advanced: true, category: 'effects', status: 'live',
   },
+  {
+    id: 'imagen_thumbnail', label: 'AI-generated thumbnail (Imagen 3)',
+    description: 'Generate a photorealistic AI thumbnail automatically',
+    tooltip: 'Gemini Imagen 3 generates a photorealistic thumbnail from your video hook text. Managed plan only.',
+    outputImpact: 'An AI-generated thumbnail is added as a candidate in your thumbnail selection.',
+    default: false, formFactors: ['long', 'short'], hasConfig: false, advanced: false, category: 'brand', status: 'live',
+    minPlan: 'managed',
+  },
+  {
+    id: 'heygen_avatar', label: 'AI avatar presenter',
+    description: 'A photorealistic AI avatar presents your video',
+    tooltip: 'A HeyGen AI avatar narrates your script on-camera — no recording required. Available on Managed plan.',
+    outputImpact: 'A photorealistic AI avatar presents your video with your script.',
+    default: false, formFactors: ['long'], hasConfig: true, advanced: true, category: 'content', status: 'live',
+    minPlan: 'managed',
+  },
 ];
 
 const CATEGORY_BOXES: CategoryBox[] = [
@@ -264,6 +281,7 @@ function pathToContentType(path: ProductionPath): string {
   switch (path) {
     case 'long_compile_clips':   return 'clips-long';
     case 'long_produce_source':  return 'custom';
+    case 'long_show_film':       return 'show_commentary';
     case 'short_cut_longform':   return 'clips-short';
     case 'short_enhance_upload': return 'custom';
     case 'short_fetch_enhance':  return 'custom';
@@ -441,17 +459,46 @@ function FeatureConfigPanel({ feat, cfg, tone, setTone, setFeatureCfg }: Feature
           </div>
         </>
       )}
+      {feat.id === 'heygen_avatar' && (
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Avatar ID</Label>
+            <input type="text"
+              value={cfg.avatarId ?? ''} onChange={(e) => setFeatureCfg('heygen_avatar', 'avatarId', e.target.value)}
+              placeholder="e.g. Avatar_ID_from_HeyGen"
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+            <p className="text-[10px] text-muted-foreground">Find your Avatar ID in the HeyGen dashboard under Avatars.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Voice ID <span className="normal-case font-normal">(optional)</span></Label>
+            <input type="text"
+              value={cfg.voiceId ?? ''} onChange={(e) => setFeatureCfg('heygen_avatar', 'voiceId', e.target.value)}
+              placeholder="e.g. Voice_ID_from_HeyGen"
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+            <p className="text-[10px] text-muted-foreground">Leave blank to use the avatar&apos;s default voice.</p>
+          </div>
+        </div>
+      )}
       {feat.id === 'pip' && (
-        <div className="space-y-1.5">
-          <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Face-cam position</Label>
-          <select value={cfg.position ?? 'bottom-right'} onChange={(e) => setFeatureCfg('pip', 'position', e.target.value)}
-            className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
-            <option value="bottom-right">Bottom right (default)</option>
-            <option value="bottom-left">Bottom left</option>
-            <option value="top-right">Top right</option>
-            <option value="top-left">Top left</option>
-          </select>
-          <p className="text-[10px] text-muted-foreground">Upload your face-cam clip in the Source section above (secondary video input).</p>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Face-cam video URL</Label>
+            <input type="url"
+              value={cfg.videoUrl ?? ''} onChange={(e) => setFeatureCfg('pip', 'videoUrl', e.target.value)}
+              placeholder="https://cdn.example.com/facecam.mp4"
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+            <p className="text-[10px] text-muted-foreground">Direct MP4 link to your reaction / commentary clip.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Face-cam position</Label>
+            <select value={cfg.position ?? 'bottom-right'} onChange={(e) => setFeatureCfg('pip', 'position', e.target.value)}
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="bottom-right">Bottom right (default)</option>
+              <option value="bottom-left">Bottom left</option>
+              <option value="top-right">Top right</option>
+              <option value="top-left">Top left</option>
+            </select>
+          </div>
         </div>
       )}
     </div>
@@ -541,7 +588,7 @@ function JobBuilderPageInner() {
 
   // ── Form state ──
   const [formFactor,     setFormFactor]     = useState<FormFactor | null>(null);
-  const [sourceIntent,   setSourceIntent]   = useState<'clips' | 'longform' | null>(null);
+  const [sourceIntent,   setSourceIntent]   = useState<'clips' | 'longform' | 'show_film' | null>(null);
   const [sourceMode,     setSourceMode]     = useState<SourceMode>('source');
   const [sourceItems,    setSourceItems]    = useState<SourceItem[]>([]);
   const [fileKeys,       setFileKeys]       = useState('');
@@ -742,6 +789,7 @@ function JobBuilderPageInner() {
         if (sourceIntent === 'longform') return 'short_cut_longform';
         return sourceMode === 'upload' ? 'short_enhance_upload' : 'short_fetch_enhance';
       }
+      if (sourceIntent === 'show_film') return 'long_show_film';
       if (sourceIntent === 'longform') return 'long_produce_source';
       return 'long_compile_clips';
     })();
@@ -785,11 +833,26 @@ function JobBuilderPageInner() {
         };
       }
     }
+    if (features.has('imagen_thumbnail')) {
+      // thumbnail.imagen is plan-gated in thumbnail_stage.js; enabling this just signals intent
+      addOns.thumbnail = { ...(addOns.thumbnail as Record<string, unknown> ?? {}), imagenRequested: true } as typeof addOns.thumbnail;
+    }
+    if (features.has('heygen_avatar')) {
+      const hgCfg = featureConfig['heygen_avatar'] ?? {};
+      if (hgCfg.avatarId?.trim()) {
+        addOns.heygen = {
+          active:   true,
+          avatarId: hgCfg.avatarId.trim(),
+          ...(hgCfg.voiceId?.trim() && { voiceId: hgCfg.voiceId.trim() }),
+        };
+      }
+    }
     if (features.has('pip')) {
       const pipCfg = featureConfig['pip'] ?? {};
       addOns.pip = {
         active:   true,
         position: (pipCfg.position || 'bottom-right') as 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left',
+        ...(pipCfg.videoUrl?.trim() && { videoUrl: pipCfg.videoUrl.trim() }),
       };
     }
 
@@ -874,7 +937,9 @@ function JobBuilderPageInner() {
   // ─── Section summaries ─────────────────────────────────────────────────────
 
   const summaries: Record<string, string> = {
-    type: sourceIntent === 'longform'
+    type: sourceIntent === 'show_film'
+      ? 'Show / film commentary'
+      : sourceIntent === 'longform'
       ? (formFactor === 'short' ? 'Find highlights' : 'Create a full video')
       : (inferredMultiClip ? 'Make a longer video' : formFactor === 'short' ? 'Polish short clips' : ''),
     source: sourceMode === 'upload'
@@ -992,19 +1057,22 @@ function JobBuilderPageInner() {
                       { id: 'long_compile', label: 'Make a longer video', sub: 'Combine clips into one YouTube video' },
                       { id: 'from_vod',     label: 'Find highlights',     sub: 'Pull standout moments from long footage' },
                       { id: 'produce_vod',  label: 'Create a full video', sub: 'Add script, narration, and structure' },
+                      { id: 'show_film',    label: 'Show / film commentary', sub: 'Narrated commentary over TV or movie clips' },
                     ]}
                     selected={[
-                      sourceIntent === 'clips' && formFactor === 'short' ? 'short_clips' :
-                      sourceIntent === 'clips' && formFactor === 'long'  ? 'long_compile' :
-                      sourceIntent === 'longform' && formFactor === 'short' ? 'from_vod' :
-                      sourceIntent === 'longform' && formFactor === 'long'  ? 'produce_vod' : '',
+                      sourceIntent === 'clips'     && formFactor === 'short' ? 'short_clips' :
+                      sourceIntent === 'clips'     && formFactor === 'long'  ? 'long_compile' :
+                      sourceIntent === 'longform'  && formFactor === 'short' ? 'from_vod' :
+                      sourceIntent === 'longform'  && formFactor === 'long'  ? 'produce_vod' :
+                      sourceIntent === 'show_film' ? 'show_film' : '',
                     ].filter(Boolean)}
                     onToggle={(id) => {
-                      const map: Record<string, [FormFactor, 'clips' | 'longform']> = {
+                      const map: Record<string, [FormFactor, 'clips' | 'longform' | 'show_film']> = {
                         short_clips:  ['short', 'clips'],
                         long_compile: ['long',  'clips'],
                         from_vod:     ['short', 'longform'],
                         produce_vod:  ['long',  'longform'],
+                        show_film:    ['long',  'show_film'],
                       };
                       const [ff, si] = map[id];
                       setFormFactor(ff);

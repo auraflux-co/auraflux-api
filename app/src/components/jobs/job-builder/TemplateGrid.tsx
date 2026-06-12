@@ -10,7 +10,7 @@ export interface JobTemplate {
   /** Maps to FormFactor */
   formFactor: 'long' | 'short';
   /** Maps to sourceIntent */
-  sourceIntent: 'clips' | 'longform';
+  sourceIntent: 'clips' | 'longform' | 'show_film';
   format:    string;
   platforms: string[];
   captions:  boolean;
