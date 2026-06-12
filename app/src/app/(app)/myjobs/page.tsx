@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 
-const ACTIVE_STATUSES    = new Set(['queued', 'running', 'held', 'failed']);
+const ACTIVE_STATUSES    = new Set(['queued', 'running']);
 const SCHEDULED_STATUSES = new Set(['queued_scheduled']);
 const STAGED_STATUSES    = new Set(['staged']);
 const COMPLETE_STATUSES  = new Set(['complete', 'published']);

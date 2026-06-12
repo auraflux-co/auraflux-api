@@ -88,7 +88,7 @@ function CreditsBadge({ collapsed }: { collapsed: boolean }) {
         const token = await getToken();
         if (!token) return;
         const b = await getCreditBalance(token);
-        if (!cancelled) setRemaining(b.included_remaining);
+        if (!cancelled) setRemaining(b.included_remaining + b.pack_remaining);
       } catch { /* fall back to tier allocation */ }
     }
     load();
