@@ -463,6 +463,7 @@ maya: she/her</textarea>
               <input id="pub-headline" type="text" placeholder="e.g. Iran nuclear talks resume">
             </div>
             <button class="btn btn-gold" style="flex-shrink:0;" onclick="generatePublishPrep()">GENERATE ALL COPY</button>
+            <button class="btn btn-outline" style="flex-shrink:0;border-color:rgba(255,120,120,0.4);color:#e88;" onclick="fixClaims()" title="Mute Content ID claimed ranges and republish as a new YouTube video (CPD-980)">🎵 FIX CLAIMS</button>
           </div>
           <!-- Job info strip -->
           <div id="pub-job-info" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(199,175,79,0.06);border:1px solid rgba(199,175,79,0.15);border-radius:4px;font-size:11px;font-family:monospace;">
@@ -8121,6 +8122,32 @@ function pubPopulateJobDropdown() {
     opt.textContent = typeLabel + ' — ' + dateLabel + ' (' + segCount + ')' + canvaTag;
     sel.appendChild(opt);
   });
+}
+
+// CPD-980: mute Content ID claimed ranges on the selected job's final video
+// and republish to YouTube as a NEW video (claimed original left for operator
+// review/delete). Use for FRESH uploads only — views don't transfer.
+function fixClaims() {
+  var jobId = g('pub-job-select').value;
+  if (!jobId) { alert('Select the claimed video\'s job in FINISHED VIDEO first.'); return; }
+  var ranges = prompt(
+    'Claimed timestamp ranges from the Studio claim panel.\n' +
+    'Format: start-end, comma-separated. mm:ss or h:mm:ss.\n' +
+    'Example: 12:34-13:10, 45:00-45:40');
+  if (!ranges || !ranges.trim()) return;
+  if (!confirm('Mute ' + ranges + ' and republish as a NEW YouTube video?\n\n' +
+    'Views/watch hours on the claimed copy do NOT transfer — only worth it for fresh uploads. ' +
+    'The claimed original stays up until you delete it.')) return;
+  var btn = event && event.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'FIXING… (mute + upload, takes a few min)'; }
+  fetch(CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/fix-claims', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ranges: ranges.trim() })
+  }).then(function(r){ return r.json(); }).then(function(d) {
+    if (d.ok) alert('✅ Clean copy live: ' + d.url + '\n\nCheck it, then delete the claimed original in YouTube Studio.');
+    else alert('❌ Fix claims failed: ' + (d.error || 'unknown'));
+  }).catch(function(e){ alert('❌ Fix claims failed: ' + e.message); })
+    .finally(function(){ if (btn) { btn.disabled = false; btn.textContent = '🎵 FIX CLAIMS'; } });
 }
 
 function pubJobSelected() {

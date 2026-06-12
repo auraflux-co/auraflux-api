@@ -2061,6 +2061,39 @@ app.delete('/job/:id', (req, res) => {
   res.json({ ok: true, deleted: jobId });
 });
 
+// ── POST /job/:id/fix-claims (CPD-980) — mute claimed ranges + republish ─────
+// Body: { ranges: "12:34-13:10, 45:00-45:40" } (timestamps from the Studio
+// claim panel). Mutes those ranges on the job's final video (video stream
+// copied) and uploads a clean copy to YouTube as a NEW video. The claimed
+// original is left alone — deleting it is the operator's call.
+app.post('/job/:id/fix-claims', async (req, res) => {
+  const card = persistedJobs[req.params.id];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found: ' + req.params.id });
+  try {
+    const { parseTimeRanges, muteAndRepublish } = require('./lib/services/claim_fixer');
+    const ranges = parseTimeRanges(req.body?.ranges);
+    const out = await muteAndRepublish({
+      card, ranges,
+      tmpDir: path.join(__dirname, 'tmp'),
+      log: (m) => console.log(m),
+    });
+    try {
+      const { savePublishResult } = require('./lib/db');
+      savePublishResult(card.id, 'youtube', {
+        platformJobId: out.videoId,
+        driveUrl: out.url,
+        title: card.publishPrep?.title || card.title,
+        status: 'published',
+      });
+    } catch (e) { console.warn('[claim-fixer] publish_results save failed (non-fatal):', e.message); }
+    try { fs.unlinkSync(out.mutedPath); } catch (_) {}
+    res.json({ ok: true, videoId: out.videoId, url: out.url });
+  } catch (e) {
+    console.error(`[claim-fixer] ${req.params.id} failed:`, e.message);
+    res.status(400).json({ ok: false, error: e.message });
+  }
+});
+
 // ── POST /job/:id/rollback — roll a job back to the previous pipeline stage ──
 // Stages (in order): script_ready → all_sent → assembled → published
 // Rollback clears the data from the current stage so the previous stage's
