@@ -2569,6 +2569,44 @@ app.get('/live-grid/status', (req, res) => {
   res.json({ ok: true, ...liveGridManager.status() });
 });
 
+// ---------------------------------------------------------------------------
+// ClipzWorld TV (CPD-956/CPD-957) — 24/7 loop of produced videos → Twitch
+// ---------------------------------------------------------------------------
+let liveTvManager = null;
+
+// POST /live-tv/start { videos?, shuffle?, output? } — default playlist scans
+// output/ for finished videos (build artifacts + Live Grid recordings excluded)
+app.post('/live-tv/start', (req, res) => {
+  try {
+    if (liveTvManager?.running) {
+      return res.status(400).json({ ok: false, error: 'ClipzWorld TV already running', status: liveTvManager.status() });
+    }
+    const { LiveTvManager } = require('./lib/live_tv/manager');
+    liveTvManager = new LiveTvManager();
+    const status = liveTvManager.start(req.body || {});
+    res.json({ ok: true, status });
+  } catch (e) {
+    console.error('[live-tv] start failed:', e.message);
+    try { liveTvManager?.stop(); } catch (_) {}
+    liveTvManager = null;
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-tv/stop
+app.post('/live-tv/stop', (req, res) => {
+  if (!liveTvManager) return res.status(400).json({ ok: false, error: 'ClipzWorld TV not running' });
+  liveTvManager.stop();
+  liveTvManager = null;
+  res.json({ ok: true, message: 'ClipzWorld TV stopped' });
+});
+
+// GET /live-tv/status
+app.get('/live-tv/status', (req, res) => {
+  if (!liveTvManager) return res.json({ ok: true, running: false });
+  res.json({ ok: true, ...liveTvManager.status() });
+});
+
 // POST /job/:id/run-gate5 — trigger Gate 5 upload for an assembled/force-advanced job
 app.post('/job/:id/run-gate5', async (req, res) => {
   const jobId = req.params.id;
