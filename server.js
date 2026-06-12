@@ -3157,15 +3157,25 @@ app.post('/job/:id/reassemble', async (req, res) => {
 // No script gen, no HeyGen. Picked clips (already mp4-resolved by the dashboard)
 // go straight to assembly: blur-pad portrait per clip + concat. Whisper captions
 // and loudnorm apply in the standard post-process pass.
+// CPD-981: also the path for ALL dashboard shorts — Bobby G is VOD-only now
+// (HeyGen credits reserved for watch-hour content until CPD-881 lands), so the
+// SHORT buttons dispatch single-clip jobs here. contentType 'news-short' rides
+// the same flow: assembly re-scrapes fresh Brightcove HLS from clip pageUrl.
 app.post('/generate-clip-comp', async (req, res) => {
   const clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
   if (clips.length > 10) return res.status(400).json({ error: `Too many clips (${clips.length} > 10 max)` });
 
+  const contentType = ['twitch-short', 'news-short'].includes(req.body.contentType)
+    ? req.body.contentType : 'twitch-short';
   const platforms = Array.isArray(req.body.platforms) && req.body.platforms.length ? req.body.platforms : ['tiktok'];
   const streamers = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
-  const title     = req.body.title || `Clips Comp — ${streamers.join(', ') || 'Twitch'}`;
-  const jobId     = `script_twitch-short_${Date.now()}`;
+  // Single-clip shorts slug to clip_short_* — the ClipzWorld TV playlist filter
+  // excludes that prefix (no avatar = no transformative layer = never on the loop)
+  const title     = req.body.title ||
+    (clips.length === 1 ? `Clip Short — ${streamers[0] || 'Twitch'}`
+                        : `Clips Comp — ${streamers.join(', ') || 'Twitch'}`);
+  const jobId     = `script_${contentType}_${Date.now()}`;
 
   // Job spec — same contract as the script flow so all gates read normally.
   // contentType twitch-short inherits the CPD-932 short-form gate handling.
@@ -3174,7 +3184,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     jobSpec = await createJobSpec({
       customerId:   'c0',
       templateId:   'short-form',
-      contentType:  'twitch-short',
+      contentType,
       createdBy:    'dashboard',
       sourceType:   'url_list',
       sourceConfig: { urls: clips.map(c => c.pageUrl || c.url).filter(Boolean) },
@@ -3211,12 +3221,13 @@ app.post('/generate-clip-comp', async (req, res) => {
     streamer:    c.streamer || '',
     displayName: c.displayName || c.streamer || '',
     title:       c.title || '',
-    orientation: c.orientation || 'landscape'
+    orientation: c.orientation || 'landscape',
+    pillarboxFilter: c.pillarboxFilter != null ? c.pillarboxFilter : null
   }));
 
   const card = {
     id:          jobId,
-    contentType: 'twitch-short',
+    contentType,
     clipsOnly:   true,
     title,
     streamers,
@@ -3245,7 +3256,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     label:           c.label,
     type:            'source_clip',
     clipUrl:         c.clipUrl,
-    pillarboxFilter: null,
+    pillarboxFilter: c.pillarboxFilter,
     orientation:     c.orientation,
     clipTimingTargets: [],
     clipTimingFormat: 'none'
@@ -3260,7 +3271,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     transition:    'crossfade',
     format:        'portrait',
     assemblyId,
-    contentType:   'twitch-short',
+    contentType,
     jobId,
     jobSpecId:     jobSpec?.jobId || null,
     jobTitle:      title,

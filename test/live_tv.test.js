@@ -34,6 +34,9 @@ describe('live_tv isPlayable (default scan eligibility)', () => {
   test('clips-only comps excluded — no Bobby G, takedown bait on Twitch', () => {
     expect(isPlayable('clips_comp_jason_script_twitch-short_1.mp4', 10 * MB)).toBe(false);
     expect(isPlayable('clips_comp_jasontheween_stableronaldo_script_twitch-short_2.mp4', 32 * MB)).toBe(false);
+    // CPD-981: avatar-free single-clip shorts — same takedown shield as comps
+    expect(isPlayable('clip_short_jasontheween_1clips_script_twitch-short_3.mp4', 20 * MB)).toBe(false);
+    expect(isPlayable('clip_short_iran_talks_resume_1clips_script_news-short_4.mp4', 20 * MB)).toBe(false);
   });
 
   test('pipeline intermediates excluded', () => {

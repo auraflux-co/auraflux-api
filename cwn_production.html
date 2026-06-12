@@ -6579,14 +6579,21 @@ function _dispatchBatchNBAShorts(pool, n, platforms, statusId) {
 }
 
 function _dispatchBatchNewsShorts(pool, n, platforms, statusId) {
-  // Each short gets one story — cycle through pool
+  // Each short gets one story — cycle through pool.
+  // CPD-981: avatar-free — the story video goes through the clips-only pipeline
+  // (assembly re-scrapes fresh Brightcove HLS from pageUrl at assembly time).
   var fired = 0;
   for (var i = 0; i < n; i++) {
     var story = pool[i % pool.length];
     (function(s, idx) {
       setTimeout(function(){
-        setGeneratingState(statusId,'NEWS SHORT ×'+n+' — dispatched '+(idx+1)+'/'+n);
-        callFullScriptServer('news-short', [s], statusId, null, null, platforms);
+        setGeneratingState(statusId,'NEWS SHORT ×'+n+' — dispatched '+(idx+1)+'/'+n+' (no avatar)');
+        _dispatchClipShort({
+          url: s.hlsUrl || s.videoUrl || '', pageUrl: s.link || '',
+          title: s.title || '', streamer: '', displayName: s.source || 'News',
+          orientation: s.sourceOrientation || s.orientation || 'portrait',
+          pillarboxFilter: s.pillarboxFilter != null ? s.pillarboxFilter : null
+        }, 'news-short', 'Clip Short — ' + (s.title || 'News'), platforms, statusId);
       }, idx * 1500);
     })(story, i);
     fired++;
@@ -6636,31 +6643,51 @@ function triggerTwitchShort() {
 
   if (picked.length > 1 && !confirm(picked.length + ' clips selected — this will generate ' + picked.length + ' separate shorts (one per clip). Continue?')) return;
 
+  // CPD-981: shorts are avatar-free — each picked clip becomes a single-clip
+  // clips-only job (full-frame portrait, whisper captions, transcript copy).
+  // Bobby G / HeyGen is VOD-only now; no script gen, no credits spent.
   showPlatformModal(function(platforms) {
     lockGenerateButton('btn-gen-twitch-short');
     setGenerateModeActive('twitch', 'short');
     CURRENT_TYPE = 'twitch-short';
     var statusId = statusTagIdForType('twitch-short');
-    picked.forEach(function(p, idx) {
-      var c = p.clip;
-      var item = {
-        streamer:     p.displayName,
-        displayName:  p.displayName,
-        notes:        (parseStreamerNotes ? parseStreamerNotes() : {})[p.name] || '',
-        title:        c.title,
-        thumbnailUrl: c.thumbnailUrl || '',
-        url:          c.url || '',
-        game:         c.game || '',
-        viewCount:    c.views || 0,
-        clips: [{ rank: 1, streamer: p.displayName, title: c.title, thumbnailUrl: c.thumbnailUrl || '', url: c.url || '', game: c.game || '', views: c.views || 0 }]
-      };
-      setTimeout(function() {
-        setGeneratingState(statusId, 'TWITCH SHORT ×' + picked.length + ' — dispatched ' + (idx + 1) + '/' + picked.length + ' (' + p.displayName + ')');
-        g('script-type-label').textContent = 'TWITCH SHORT — ' + p.displayName + ': "' + (c.title || '').slice(0, 50) + '"';
-        callFullScriptServer('twitch-short', [item], statusId, null, null, platforms);
-      }, idx * 1500);
+
+    var allClips = picked.map(function(p) {
+      return { streamer: p.name, displayName: p.displayName, title: p.clip.title || '', url: p.clip.url || '', views: p.clip.views || 0, game: p.clip.game || '' };
+    });
+    setGeneratingState(statusId, 'TWITCH SHORT ×' + picked.length + ' — resolving clip URL(s)...');
+    resolveTwitchClipUrls(allClips, function() {
+      markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
+      allClips.forEach(function(c, idx) {
+        setTimeout(function() {
+          setGeneratingState(statusId, 'TWITCH SHORT ×' + allClips.length + ' — dispatched ' + (idx + 1) + '/' + allClips.length + ' (' + c.displayName + ', no avatar)');
+          g('script-type-label').textContent = 'TWITCH SHORT (no avatar) — ' + c.displayName + ': "' + (c.title || '').slice(0, 50) + '"';
+          _dispatchClipShort({
+            url: c.mp4Url || c.url, pageUrl: c.url, title: c.title,
+            streamer: c.streamer, displayName: c.displayName, orientation: 'landscape'
+          }, 'twitch-short', 'Clip Short — ' + c.displayName, platforms, statusId);
+        }, idx * 1500);
+      });
     });
   });
+}
+
+// CPD-981: dispatch one avatar-free short (single-clip clips-only job)
+function _dispatchClipShort(clip, contentType, title, platforms, statusId) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', (CFG.ffmpegUrl || 'http://localhost:3000') + '/generate-clip-comp', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText || '{}');
+      if (!(xhr.status === 200 && d.ok)) {
+        setGeneratingState(statusId, 'SHORT failed: ' + (d.error || ('HTTP ' + xhr.status)));
+      }
+    } catch (e) { setGeneratingState(statusId, 'SHORT failed: ' + e.message); }
+    unlockGenerateButtons();
+  };
+  xhr.onerror = function() { setGeneratingState(statusId, 'SHORT failed: network error'); unlockGenerateButtons(); };
+  xhr.send(JSON.stringify({ clips: [clip], platforms: platforms, contentType: contentType, title: title }));
 }
 
 function triggerClipComp() {
