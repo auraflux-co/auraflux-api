@@ -2492,7 +2492,8 @@ app.post('/live-grid/stop', async (req, res) => {
 // --- Twitch user OAuth (CPD-953) — one-time connect so the grid can read
 // Rob's followed channels (user:read:follows) and use them as the bench. ---
 app.get('/connect/twitch', (req, res) => {
-  const clientId = process.env.TWITCH_CLIENT_ID;
+  // Separate localhost OAuth app (production app's redirect is auraflux.co)
+  const clientId = process.env.TWITCH_OAUTH_CLIENT_ID || process.env.TWITCH_CLIENT_ID;
   const redirectUri = `http://localhost:${PORT}/connect/twitch`;
   const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${encodeURIComponent(clientId)}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=user:read:follows`;
@@ -2524,7 +2525,7 @@ app.post('/connect/twitch/token', async (req, res) => {
     if (!(v.data.scopes || []).includes('user:read:follows')) {
       return res.status(400).json({ ok: false, error: 'token missing user:read:follows scope' });
     }
-    require('./lib/live_grid/follows').saveUserToken({ accessToken, login: v.data.login });
+    require('./lib/live_grid/follows').saveUserToken({ accessToken, login: v.data.login, clientId: v.data.client_id });
     console.log(`[live-grid:follows] Twitch user token saved for ${v.data.login}`);
     res.json({ ok: true, login: v.data.login });
   } catch (e) {
