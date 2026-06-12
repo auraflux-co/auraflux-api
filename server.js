@@ -2489,6 +2489,58 @@ app.post('/live-grid/stop', async (req, res) => {
   res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
 });
 
+// --- Twitch user OAuth (CPD-953) — one-time connect so the grid can read
+// Rob's followed channels (user:read:follows) and use them as the bench. ---
+app.get('/connect/twitch', (req, res) => {
+  const clientId = process.env.TWITCH_CLIENT_ID;
+  const redirectUri = `http://localhost:${PORT}/connect/twitch`;
+  const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${encodeURIComponent(clientId)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=user:read:follows`;
+  // Implicit grant returns the token in the URL #fragment — only the browser
+  // can see it, so this page captures it and POSTs it back.
+  res.send(`<!doctype html><html><body style="background:#0d1424;color:#fff;font-family:monospace;padding:40px;">
+<div id="msg">Connecting to Twitch…</div>
+<script>
+const h = new URLSearchParams(location.hash.slice(1));
+const token = h.get('access_token');
+if (token) {
+  fetch('/connect/twitch/token', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ access_token: token }) })
+    .then(r => r.json())
+    .then(d => { document.getElementById('msg').textContent = d.ok ? ('✅ Twitch connected as ' + d.login + ' — followed channels will be used as the live grid bench. You can close this tab.') : ('❌ ' + (d.error || 'failed')); })
+    .catch(e => { document.getElementById('msg').textContent = '❌ ' + e.message; });
+} else if (h.get('error') || new URLSearchParams(location.search).get('error')) {
+  document.getElementById('msg').textContent = '❌ Twitch error: ' + (h.get('error_description') || new URLSearchParams(location.search).get('error_description') || 'denied');
+} else {
+  location.href = ${JSON.stringify(authUrl)};
+}
+</script></body></html>`);
+});
+
+app.post('/connect/twitch/token', async (req, res) => {
+  try {
+    const accessToken = req.body?.access_token;
+    if (!accessToken) return res.status(400).json({ ok: false, error: 'access_token required' });
+    const v = await axios.get('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: `OAuth ${accessToken}` } });
+    if (!(v.data.scopes || []).includes('user:read:follows')) {
+      return res.status(400).json({ ok: false, error: 'token missing user:read:follows scope' });
+    }
+    require('./lib/live_grid/follows').saveUserToken({ accessToken, login: v.data.login });
+    console.log(`[live-grid:follows] Twitch user token saved for ${v.data.login}`);
+    res.json({ ok: true, login: v.data.login });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.response?.data?.message || e.message });
+  }
+});
+
+// GET /live-grid/followed-bench — preview the bench the next stream would use
+app.get('/live-grid/followed-bench', async (req, res) => {
+  const { getFollowedBench, FOLLOWS_USER } = require('./lib/live_grid/follows');
+  const { DEFAULT_ROSTER } = require('./lib/live_grid/poller');
+  const bench = await getFollowedBench({ roster: DEFAULT_ROSTER });
+  if (!bench) return res.status(400).json({ ok: false, error: `No Twitch user token (or expired) — connect at /connect/twitch as ${FOLLOWS_USER}` });
+  res.json({ ok: true, user: FOLLOWS_USER, count: bench.length, bench });
+});
+
 // POST /live-grid/roster { add?, remove?, benchAdd?, benchRemove? } — mutate the
 // running grid's streamer lists on demand (CPD-951); next 60s poll applies it.
 // Bench streamers only fill quadrants the A-roster can't and are preempted
