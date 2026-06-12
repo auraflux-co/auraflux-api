@@ -1,11 +1,27 @@
+'use client';
+
 import Link from 'next/link';
-import { Show } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
+  const { isSignedIn, isLoaded } = useUser();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <header className="flex items-center justify-end px-6 py-4">
+        {/* Always-visible sign-in link — renders before Clerk hydrates */}
+        {isLoaded && isSignedIn ? (
+          <Link href="/dashboard" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
+            Dashboard
+          </Link>
+        ) : (
+          <Link href="/sign-in" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
+            Sign in
+          </Link>
+        )}
+      </header>
       <main className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-6 max-w-xl px-4">
           <div className="space-y-2">
@@ -18,19 +34,21 @@ export default function LandingPage() {
             Produce broadcast-ready video content at scale — from fetch to publish.
           </p>
           <div className="flex gap-3 justify-center">
-            <Show when="signed-out">
-              <Link href="/sign-in" className={cn(buttonVariants())}>
-                Sign in
-              </Link>
-              <Link href="/sign-up" className={cn(buttonVariants({ variant: 'outline' }))}>
-                Get started
-              </Link>
-            </Show>
-            <Show when="signed-in">
+            {/* Default to Sign In / Get Started; swap to dashboard once Clerk confirms signed-in */}
+            {isLoaded && isSignedIn ? (
               <Link href="/dashboard" className={cn(buttonVariants())}>
                 Go to dashboard
               </Link>
-            </Show>
+            ) : (
+              <>
+                <Link href="/sign-in" className={cn(buttonVariants())}>
+                  Sign in
+                </Link>
+                <Link href="/sign-up" className={cn(buttonVariants({ variant: 'outline' }))}>
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </main>
