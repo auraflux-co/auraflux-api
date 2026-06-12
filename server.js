@@ -1252,6 +1252,34 @@ pipelineBus.on('thumbnail:uploaded', ({ jobId, thumbnailDriveUrl }) => {
   }
 });
 
+// CPD-936: assembly held Gate 5 for a scheduled publish — persist the hold state
+// (stage/driveUrl/publishCopy/thumbnail) so a restart during the hold window
+// doesn't strand the job (cron used to fire with no driveUrl on the reloaded card).
+pipelineBus.on('gate5:scheduled_hold', ({ jobId, driveUrl, scheduledAt, publishCopy, thumbnailDriveUrl }) => {
+  if (!jobId) return;
+  const card = persistedJobs[jobId];
+  if (!card) {
+    console.warn(`[gate5:scheduled_hold] No card for ${jobId} — hold state NOT persisted`);
+    return;
+  }
+  card.stage = 'publish_scheduled';
+  if (driveUrl) card.driveUrl = driveUrl;
+  if (scheduledAt) card.scheduledPublishAt = scheduledAt;
+  card.state = card.state || {};
+  card.state.savedOutputs = card.state.savedOutputs || {};
+  if (driveUrl) card.state.savedOutputs.driveUrl = driveUrl;
+  if (publishCopy) {
+    card.publishCopy = publishCopy;
+    card.state.savedOutputs.publishCopy = publishCopy;
+  }
+  if (thumbnailDriveUrl) {
+    card.thumbnailDriveUrl = thumbnailDriveUrl;
+    card.state.savedOutputs.thumbnailDriveUrl = thumbnailDriveUrl;
+  }
+  saveJobCard(jobId, card);
+  console.log(`[gate5:scheduled_hold] Persisted hold state for ${jobId} (driveUrl=${!!driveUrl}, publishCopy=${!!publishCopy}, due=${scheduledAt})`);
+});
+
 pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
   // Concurrent job isolation guard: verify the card in persistedJobs matches the event's jobId
   // and contentType. If a concurrent job mutated persistedJobs[jobId] with the wrong contentType,
