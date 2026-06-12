@@ -2491,10 +2491,48 @@ app.post('/live-grid/stop', async (req, res) => {
 
 // --- Twitch user OAuth (CPD-953) — one-time connect so the grid can read
 // Rob's followed channels (user:read:follows) and use them as the bench. ---
-app.get('/connect/twitch', (req, res) => {
+app.get('/connect/twitch', async (req, res) => {
   // Separate localhost OAuth app (production app's redirect is auraflux.co)
   const clientId = process.env.TWITCH_OAUTH_CLIENT_ID || process.env.TWITCH_CLIENT_ID;
+  const clientSecret = process.env.TWITCH_OAUTH_CLIENT_SECRET;
   const redirectUri = `http://localhost:${PORT}/connect/twitch`;
+
+  // Authorization code grant (CPD-966) — confidential client with secret.
+  // One browser auth ever: the refresh token keeps the server tokened forever.
+  if (clientSecret) {
+    const page = (msg) => `<!doctype html><html><body style="background:#0d1424;color:#fff;font-family:monospace;padding:40px;">${msg}</body></html>`;
+    if (req.query.error) {
+      return res.send(page(`❌ Twitch error: ${req.query.error_description || req.query.error}`));
+    }
+    if (req.query.code) {
+      try {
+        const t = await axios.post('https://id.twitch.tv/oauth2/token', new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: req.query.code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+        }).toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+        const v = await axios.get('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: `OAuth ${t.data.access_token}` } });
+        require('./lib/live_grid/follows').saveUserToken({
+          accessToken: t.data.access_token,
+          refreshToken: t.data.refresh_token,
+          login: v.data.login,
+          clientId: v.data.client_id,
+          userId: v.data.user_id,
+        });
+        console.log(`[live-grid:follows] Twitch user token saved for ${v.data.login} (auth-code + refresh)`);
+        return res.send(page(`✅ Twitch connected as ${v.data.login} — token now auto-refreshes, no re-auth needed. You can close this tab.`));
+      } catch (e) {
+        return res.send(page(`❌ Token exchange failed: ${e.response?.data?.message || e.message}`));
+      }
+    }
+    const codeUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${encodeURIComponent(clientId)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=user:read:follows`;
+    return res.redirect(codeUrl);
+  }
+
+  // Legacy implicit grant (no client secret configured) — token lasts ~4h.
   const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${encodeURIComponent(clientId)}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=user:read:follows`;
   // Implicit grant returns the token in the URL #fragment — only the browser
