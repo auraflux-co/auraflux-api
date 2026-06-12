@@ -868,6 +868,9 @@ function JobBuilderPageInner() {
       publishMode:    'immediate',
       featureConfig:  Object.keys(mergedConfig).length ? mergedConfig : undefined,
       addOns:         Object.keys(addOns).length > 0 ? addOns : undefined,
+      // Include the selected preset name so the backend can persist it as templateName
+      // (used for job card titles and script generation context)
+      ...(activeTemplate ? { templateName: activeTemplate.label } : {}),
       // CPD-511/513: staging gate + customer-provided publish metadata
       staging:        publishMode === 'review' ? true : undefined,
       publishMeta: (() => {
