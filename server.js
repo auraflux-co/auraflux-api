@@ -7441,6 +7441,7 @@ const clipSourcingRouter  = require('./lib/routes/clip_sourcing');
 const sourceRouter        = require('./lib/routes/source');
 const heygenRouter        = require('./lib/routes/heygen');
 const jobsC1Router        = require('./lib/routes/jobs_c1');
+const claimFixerRouter    = require('./lib/routes/claim_fixer'); // CPD-980
 app.use(planRouter);
 app.use(creditsRouter);
 app.use(marketingRouter);
@@ -7464,6 +7465,7 @@ app.use(thumbnailRouter);
 app.use(clipSourcingRouter);
 app.use(sourceRouter);
 app.use(jobsC1Router);
+app.use(claimFixerRouter); // CPD-980: mute claimed timestamp ranges + republish
 // heygen inline routes are guarded with !DATABASE_URL — with DB now set those
 // won't register, so the router file is safe to mount without conflicts.
 app.use(heygenRouter);
