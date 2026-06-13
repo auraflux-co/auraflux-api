@@ -7,8 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { listJobs, type Job } from '@/lib/api';
-
-const REVIEW_STATUSES = new Set(['complete', 'staged']);
+import { isReviewQueueJob } from '@/lib/job-labels';
 
 export function ReviewCountBadge() {
   const { getToken }       = useAuth();
@@ -19,7 +18,7 @@ export function ReviewCountBadge() {
       const token = await getToken();
       const res   = await listJobs(token ?? undefined);
       const jobs  = (res.jobs ?? []) as Job[];
-      setCount(jobs.filter((j) => REVIEW_STATUSES.has(j.status)).length);
+      setCount(jobs.filter(isReviewQueueJob).length);
     } catch { /* non-fatal */ }
   }, [getToken]);
 

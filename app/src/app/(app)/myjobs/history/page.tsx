@@ -199,7 +199,13 @@ function HistoryPageContent() {
   const searchParams           = useSearchParams();
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
-  const [tab] = useState<'completed'>('completed');
+
+  // Legacy deep-link — review lives at /review (brand-scoped for sub-brands).
+  useEffect(() => {
+    if (searchParams.get('tab') === 'review' && typeof window !== 'undefined') {
+      window.location.replace('/review');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isLoaded) return;

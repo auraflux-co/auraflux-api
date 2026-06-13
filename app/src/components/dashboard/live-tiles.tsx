@@ -14,6 +14,7 @@ import { usePlan } from '@/contexts/plan-context';
 import { useRole } from '@/hooks/use-role';
 import { useBrand } from '@/contexts/brand-context';
 import { tierLabel } from '@/lib/tier-labels';
+import { isReviewQueueJob } from '@/lib/job-labels';
 import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';
 import {
   listJobs,
@@ -206,7 +207,7 @@ function JobsTileBody({ data, isSuperAdmin }: { data: TileData; isSuperAdmin: bo
 }
 
 function ReviewTileBody({ data }: { data: TileData }) {
-  const ready   = data.jobs.filter((j) => ['complete', 'staged'].includes(j.status)).length;
+  const ready   = data.jobs.filter(isReviewQueueJob).length;
   const loading = !data.loaded.jobs;
 
   return (

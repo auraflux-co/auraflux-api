@@ -1,7 +1,7 @@
 'use client';
 /**
  * ReviewQueueWidget — shows a count of jobs waiting for user review (status:
- * complete or staged). Appears on the dashboard home alongside the pipeline
+ * complete, staged, or operator_review (CPD-431 grade-99 hold)). Appears on the dashboard home alongside the pipeline
  * status so users immediately see when output is ready to approve and publish.
  *
  * Polls every 15s (less aggressive than the pipeline widget — review state
@@ -14,8 +14,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { listJobs, type Job } from '@/lib/api';
-
-const REVIEW_STATUSES = new Set(['complete', 'staged']);
+import { isReviewQueueJob } from '@/lib/job-labels';
 
 export function ReviewQueueWidget() {
   const { getToken }           = useAuth();
@@ -28,7 +27,7 @@ export function ReviewQueueWidget() {
       const token = await getToken();
       const res   = await listJobs(token ?? undefined);
       const jobs  = res.jobs ?? [] as Job[];
-      setCount(jobs.filter((j) => REVIEW_STATUSES.has(j.status)).length);
+      setCount(jobs.filter(isReviewQueueJob).length);
       setFailed(jobs.filter((j) => j.status === 'failed').length);
     } catch {
       // non-fatal

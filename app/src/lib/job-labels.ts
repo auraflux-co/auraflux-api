@@ -15,8 +15,10 @@ export const JOB_STATUS_LABELS: Record<string, string> = {
   queued:           'In Queue',
   queued_scheduled: 'Scheduled',
   running:          'Processing',
+  processing:       'In Review',
   complete:         'Complete',
   staged:           'In Review',
+  operator_review:  'In Review',
   published:        'Published',
   failed:           'Failed',
   held:             'On Hold',
@@ -26,6 +28,25 @@ export const JOB_STATUS_LABELS: Record<string, string> = {
 
 export function jobStatusLabel(status: string | null | undefined): string {
   return JOB_STATUS_LABELS[status ?? ''] ?? (status ?? 'Unknown');
+}
+
+/** Statuses that belong on /review once output exists (CPD-431 operator_review included). */
+export const REVIEW_QUEUE_STATUSES = new Set([
+  'complete',
+  'staged',
+  'operator_review',
+]);
+
+/** True when assembled output is ready for human review / approve-publish. */
+export function isReviewQueueJob(job: {
+  status?: string | null;
+  outputUrl?: string | null;
+}): boolean {
+  const status = job.status ?? '';
+  if (REVIEW_QUEUE_STATUSES.has(status)) return true;
+  // Customer/developer API masks operator_review as processing (CPD-431).
+  if (status === 'processing' && job.outputUrl) return true;
+  return false;
 }
 
 // ── Portal status ─────────────────────────────────────────────────────────────

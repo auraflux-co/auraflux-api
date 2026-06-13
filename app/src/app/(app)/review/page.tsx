@@ -11,7 +11,7 @@
  *
  * Usage by Gemini QA agent:
  *   1. Submit jobs with "staging": true via POST /v1/jobs
- *   2. Poll GET /v1/jobs/:id until status = "complete" or "staged"
+ *   2. Poll GET /v1/jobs/:id until status = "complete", "staged", or "operator_review"
  *   3. Open this page to review inputs vs outputs visually
  *   4. Use "Approve & Publish" to push to AuraFlux social accounts via upload-post
  *
@@ -26,11 +26,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleSlot } from '@/lib/api';
 import { Separator } from '@/components/ui/separator';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, listJobs } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
-import { jobDisplayTitle, jobStatusLabel, portalStatusLabel, platformLabel, entryTypeLabel, formatUserError } from '@/lib/job-labels';
+import { jobDisplayTitle, jobStatusLabel, portalStatusLabel, platformLabel, entryTypeLabel, formatUserError, isReviewQueueJob } from '@/lib/job-labels';
 import { labelForContentType } from '@/lib/content-types';
+import { useBrand } from '@/contexts/brand-context';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -181,8 +182,10 @@ const PLATFORM_DISPLAY: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   const variants: Record<string, string> = {
-    complete:  'bg-green-950/60 text-green-400 border border-green-800/60',
-    staged:    'bg-blue-950/60 text-blue-400 border border-blue-800/60',
+    complete:        'bg-green-950/60 text-green-400 border border-green-800/60',
+    staged:            'bg-blue-950/60 text-blue-400 border border-blue-800/60',
+    operator_review:   'bg-blue-950/60 text-blue-400 border border-blue-800/60',
+    processing:        'bg-blue-950/60 text-blue-400 border border-blue-800/60',
     running:   'bg-yellow-950/60 text-yellow-400 border border-yellow-800/60',
     queued:    'bg-muted/60 text-muted-foreground border border-border/60',
     failed:    'bg-red-950/60 text-red-400 border border-red-800/60',
@@ -639,27 +642,33 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
 
 export default function StagingPage() {
   const { getToken }             = useAuth();
-  const { isSuperAdmin }         = useRole();
+  const { isSuperAdmin, isLoaded: roleLoaded } = useRole();
+  const { activeBrand }          = useBrand();
+  const activeBrandId            = activeBrand?.id;
   const [jobs, setJobs]         = useState<JobRow[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  // CPD-590: /review is a superadmin staging tool. Non-admins use /myjobs/history.
-  if (!isSuperAdmin && typeof window !== 'undefined') {
-    window.location.replace('/myjobs/history?tab=review');
-    return null;
-  }
-
   useEffect(() => {
+    if (!roleLoaded) return;
     (async () => {
       try {
         const token = await getToken();
-        const endpoint = isSuperAdmin ? '/jobs?all=true' : '/jobs';
-        const data = await apiFetch<{ jobs: JobRow[] }>(endpoint, { token: token ?? undefined });
-        const withOutput = (data.jobs ?? []).filter(
-          (j) => ['complete', 'staged'].includes(j.status)
-        );
+        const data = isSuperAdmin
+          ? await apiFetch<{ jobs: JobRow[] }>('/jobs?all=true', { token: token ?? undefined })
+          : await listJobs(token ?? undefined);
+        const withOutput = (data.jobs ?? []).filter(isReviewQueueJob);
+        withOutput.sort((a, b) => {
+          const toMs = (v: string | number | undefined) => {
+            if (v == null) return 0;
+            const n = typeof v === 'number' ? v : Number(v);
+            if (!Number.isNaN(n) && n > 0) return n > 1e12 ? n : n;
+            const d = Date.parse(String(v));
+            return Number.isNaN(d) ? 0 : d;
+          };
+          return toMs(b.createdAt) - toMs(a.createdAt);
+        });
         setJobs(withOutput);
       } catch {
         setError('Failed to load jobs. Refresh to try again.');
@@ -667,7 +676,7 @@ export default function StagingPage() {
         setLoading(false);
       }
     })();
-  }, [getToken, isSuperAdmin]);
+  }, [getToken, isSuperAdmin, roleLoaded, activeBrandId]);
 
   function formatDate(ts: string | number) {
     const n = typeof ts === 'string' ? Number(ts) : ts;
@@ -684,10 +693,12 @@ export default function StagingPage() {
         title="Review Queue"
         subtitle={isSuperAdmin
           ? `Platform-wide — all accounts. ${jobs.length > 0 ? `${jobs.length} job${jobs.length === 1 ? '' : 's'} awaiting review.` : ''}`
-          : 'Videos ready for your review before publishing to social platforms.'}
+          : activeBrand
+            ? `${activeBrand.name}${activeBrand.is_primary === false ? ' sub-brand' : ''} — ${jobs.length > 0 ? `${jobs.length} job${jobs.length === 1 ? '' : 's'} ready to approve and publish.` : 'Videos ready for your review before publishing.'}`
+            : 'Videos ready for your review before publishing to social platforms.'}
       />
 
-      {loading && <p className="af-body text-muted-foreground">Loading jobs…</p>}
+      {(loading || !roleLoaded) && <p className="af-body text-muted-foreground">Loading jobs…</p>}
       {error   && <p className="af-body text-destructive">{formatUserError(error)}</p>}
 
       {/* Platform publish best practices */}

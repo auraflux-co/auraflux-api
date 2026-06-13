@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { formatUserError } from '@/lib/job-labels';
+import { formatUserError, isReviewQueueJob } from '@/lib/job-labels';
 import { listJobs, type Job } from '@/lib/api';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
@@ -24,7 +24,6 @@ import { EmptyState } from '@/components/ui/empty-state';
 
 const ACTIVE_STATUSES    = new Set(['queued', 'running']);
 const SCHEDULED_STATUSES = new Set(['queued_scheduled']);
-const STAGED_STATUSES    = new Set(['staged']);
 const COMPLETE_STATUSES  = new Set(['complete', 'published']);
 
 interface StatCardProps {
@@ -94,7 +93,7 @@ export default function JobsHubPage() {
   const active    = jobs?.filter((j) => ACTIVE_STATUSES.has(j.status)) ?? [];
   // CPD-588: failed = system error, not customer-actionable — only count for superadmin
   const held      = jobs?.filter((j) => j.status === 'held' || (isSuperAdmin && j.status === 'failed')) ?? [];
-  const staged    = jobs?.filter((j) => STAGED_STATUSES.has(j.status)) ?? [];
+  const staged    = jobs?.filter(isReviewQueueJob) ?? [];
   const complete  = jobs?.filter((j) => COMPLETE_STATUSES.has(j.status)) ?? [];
 
   return (
