@@ -307,7 +307,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <input id="lg-bench-input" type="text" placeholder="bench streamer login…" style="flex:1;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);border-radius:4px;padding:4px 8px;font-size:12px;">
                 <button class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 10px;" onclick="liveGridAddBench()">+ BENCH</button>
               </div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:3px;">Bench fills empty quadrants; your 12 always take priority. ● = live now. × removes (survives the follows sync). Click a quadrant to put it on air.</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:3px;">Bench fills empty quadrants; your 12 always take priority. ● = live now. × on a tile sends that streamer to the bench (they sit out until re-added). × on a chip removes from the bench. Click a quadrant to put it on air.</div>
             </div>
             <div class="btn-row">
               <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
@@ -9358,15 +9358,18 @@ function liveGridRender() {
     if (la && lb && live[b] !== live[a]) return live[b] - live[a];
     return a.localeCompare(b);
   });
+  const excluded = new Set((s.poller && s.poller.excluded) || []);
   document.getElementById('lg-bench-list').innerHTML = sorted.map(login => {
     const isLive = live[login] != null;
     const onGrid = seated.has(login);
+    const satOut = excluded.has(login);
     return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:10px;font-size:10px;
       background:${onGrid ? 'rgba(199,175,79,0.18)' : '#0d1524'};
-      border:1px solid ${onGrid ? '#c7af4f' : isLive ? 'rgba(80,200,120,0.5)' : 'rgba(255,255,255,0.12)'};
+      border:1px solid ${onGrid ? '#c7af4f' : satOut ? 'rgba(255,170,80,0.5)' : isLive ? 'rgba(80,200,120,0.5)' : 'rgba(255,255,255,0.12)'};
       color:${isLive || onGrid ? '#fff' : 'rgba(255,255,255,0.45)'};">
       <span style="color:${isLive ? '#5c8' : 'rgba(255,255,255,0.2)'};font-size:8px;">●</span>
-      ${login}${isLive ? ` <span style="color:rgba(199,175,79,0.8);">${live[login].toLocaleString()}</span>` : ''}${onGrid ? ' <span style="color:#c7af4f;font-size:8px;">ON GRID</span>' : ''}
+      ${login}${isLive ? ` <span style="color:rgba(199,175,79,0.8);">${live[login].toLocaleString()}</span>` : ''}${onGrid ? ' <span style="color:#c7af4f;font-size:8px;">ON GRID</span>' : ''}${satOut ? ' <span style="color:#fa5;font-size:8px;">SAT OUT</span>' : ''}
+      ${satOut ? `<span onclick="liveGridReAddBench('${login}')" title="Re-admit to the grid" style="cursor:pointer;color:#5c8;font-weight:700;padding:0 2px;">+</span>` : ''}
       <span onclick="liveGridRemoveBench('${login}')" title="Remove from bench" style="cursor:pointer;color:rgba(255,120,120,0.7);font-weight:700;padding:0 2px;">×</span>
     </span>`;
   }).join('');
@@ -9389,8 +9392,10 @@ function liveGridRender() {
     const viewers = login && live[login] != null ? live[login].toLocaleString() : '';
     const music = !!musicFlags[q.quadrant - 1];
     return `<div onclick="${login ? `liveGridAudio(${q.quadrant})` : ''}" title="${login ? (music ? 'Music detected — claims risk if put on air' : 'Click to put this quadrant on air') : 'Slate'}"
-      style="cursor:${login ? 'pointer' : 'default'};padding:8px;border-radius:4px;background:#0d1524;
+      style="cursor:${login ? 'pointer' : 'default'};position:relative;padding:8px;border-radius:4px;background:#0d1524;
       border:1px solid ${onAir ? '#c7af4f' : music ? 'rgba(255,120,120,0.4)' : 'rgba(199,175,79,0.2)'};${onAir ? 'box-shadow:0 0 6px rgba(199,175,79,0.4);' : ''}">
+      ${login ? `<span onclick="event.stopPropagation();liveGridRemoveFromGrid('${login}')" title="Remove from grid — back to the bench (re-add to re-admit)"
+        style="position:absolute;top:4px;right:6px;cursor:pointer;color:rgba(255,120,120,0.7);font-weight:700;font-size:12px;line-height:1;">×</span>` : ''}
       <div style="font-size:9px;color:rgba(255,255,255,0.35);">Q${q.quadrant} ${onAir ? (audio.muted ? '· 🔇 MUTED' : '· 🔊 ON AIR') : ''}${music ? ' <span style="color:#e88;">🎵 MUSIC</span>' : ''}</div>
       <div style="font-size:12px;font-weight:700;color:${login ? '#fff' : 'rgba(255,255,255,0.3)'};letter-spacing:0.5px;">${login ? login.toUpperCase() : 'SLATE'}</div>
       <div style="font-size:9px;color:rgba(199,175,79,0.8);">${viewers ? viewers + ' viewers' : '&nbsp;'}</div>
@@ -9460,6 +9465,22 @@ async function liveGridReAddBench(login) {
     const d = await r.json();
     if (!d.ok) alert('Re-add failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Re-add failed: ' + e.message); }
+  setTimeout(liveGridRefresh, 3000);
+}
+
+async function liveGridRemoveFromGrid(login) {
+  // CPD-1001: kick a grid occupant (roster or bench) back to the bench. They
+  // sit out until re-added — otherwise a big streamer reclaims the quad in
+  // minutes, defeating the point (e.g. duo streams = duplicate content).
+  if (!confirm(`Remove ${login} from the grid? They go back to the bench and sit out until you re-add them.`)) return;
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/roster', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ remove: [login] }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('Remove failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Remove failed: ' + e.message); }
   setTimeout(liveGridRefresh, 3000);
 }
 

@@ -165,3 +165,43 @@ describe('live_grid mergeBench (CPD-955 live follows sync)', () => {
     expect(bench.has('keeper')).toBe(true);
   });
 });
+
+describe('live_grid updateRoster remove-to-bench (CPD-1001)', () => {
+  const { LiveGridPoller } = require('../lib/live_grid/poller');
+  const mkPoller = () => new LiveGridPoller({ roster: ['a', 'b', 'c'], bench: ['x'] });
+
+  test('remove demotes a roster streamer to the bench and bars re-seating', () => {
+    const p = mkPoller();
+    const lists = p.updateRoster({ remove: ['b'] });
+    expect(lists.roster).toEqual(['a', 'c']);
+    expect(p.bench.has('b')).toBe(true);
+    expect(p.exclude.has('b')).toBe(true);
+    // barred: computeAssignments treats excluded as ineligible
+    const { assignments } = computeAssignments(['b', null, null, null], { b: 9999, x: 10 }, {}, { exclude: p.exclude, bench: p.bench });
+    expect(assignments).not.toContain('b');
+  });
+
+  test('removed streamer survives a follows re-sync on the bench', () => {
+    const p = mkPoller();
+    p.updateRoster({ remove: ['b'] });
+    p.bench = mergeBench(['x'], p.benchManualAdds, p.benchManualRemoves, p.roster);
+    expect(p.bench.has('b')).toBe(true);
+  });
+
+  test('benchAdd re-admits a removed streamer', () => {
+    const p = mkPoller();
+    p.updateRoster({ remove: ['b'] });
+    p.updateRoster({ benchAdd: ['b'] });
+    expect(p.exclude.has('b')).toBe(false);
+    expect(p.bench.has('b')).toBe(true);
+  });
+
+  test('roster add re-admits and promotes a removed streamer', () => {
+    const p = mkPoller();
+    p.updateRoster({ remove: ['b'] });
+    p.updateRoster({ add: ['b'] });
+    expect(p.exclude.has('b')).toBe(false);
+    expect(p.roster).toContain('b');
+    expect(p.bench.has('b')).toBe(false);
+  });
+});
