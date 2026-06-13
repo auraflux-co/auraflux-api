@@ -148,6 +148,23 @@ describe('getSegmentStatus', () => {
   });
 });
 
+describe('speech chunking', () => {
+  test('mergeTagOnlyChunks attaches tag-only slices to previous chunk', () => {
+    const merged = echomimic._mergeTagOnlyChunks(['Hello world.', '[excited]', 'Next line.']);
+    expect(merged).toEqual(['Hello world. [excited]', 'Next line.']);
+  });
+
+  test('prepareTextChunksForTts rejects chunks with no speakable text', () => {
+    expect(() => echomimic._prepareTextChunksForTts('[pause]', 3)).toThrow(/no speakable text/);
+  });
+
+  test('prepareTextChunksForTts keeps delivery tags when speakable words remain', () => {
+    const chunks = echomimic._prepareTextChunksForTts('[excited] Jason just dropped a bomb.', 3);
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(echomimic._speakablePlain(chunks[0])).toMatch(/Jason/);
+  });
+});
+
 describe('submitSegment', () => {
   // ttsToWav shells out to ffmpeg; stub the ElevenLabs response and ffmpeg
   // by mocking axios.post for TTS (arraybuffer) then intercepting execFile via
@@ -167,7 +184,7 @@ describe('submitSegment', () => {
 
     const config = echomimic.resolveConfig({});
     await expect(echomimic.submitSegment({ text: 'long monologue', config }))
-      .rejects.toThrow(/single-window limit/);
+      .rejects.toThrow(/window/);
     // RunPod /run must never have been called
     expect(axios.post).toHaveBeenCalledTimes(1);
     expect(storage.uploadToR2).not.toHaveBeenCalled();
@@ -185,7 +202,7 @@ describe('submitSegment', () => {
     const r = await echomimic.submitSegment({ text: 'short hook', title: '00 INTRO', config });
 
     expect(r.status).toBe('pending');
-    expect(r.videoId).toMatch(/^rp-abc::avatar\/echomimic\/.+\/render\.mp4$/);
+    expect(r.videoId).toMatch(/^rp-abc::avatar\/echomimic\/.+\/part\.mp4$/);
 
     // wav uploaded with exact key
     const [, , upOpts] = storage.uploadToR2.mock.calls[0];

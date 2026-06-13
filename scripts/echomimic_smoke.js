@@ -47,7 +47,19 @@ async function main() {
   console.log(`[smoke] presigned mp4 (24h):\n${videoUrl}`);
 }
 
-main().catch((e) => {
-  console.error(`[smoke] ❌ ${e.message}`);
-  process.exit(1);
-});
+(async () => {
+  try {
+    await main();
+  } catch (e) {
+    console.error(`[smoke] ❌ ${e.message}`);
+    process.exitCode = 1;
+  } finally {
+    if (process.env.ECHOMIMIC_RENDER_MODE === 'pod' || process.env.ECHOMIMIC_POD_ID) {
+      try {
+        await require('../lib/avatar/echomimic_pod').stopPod();
+      } catch (e) {
+        console.warn(`[smoke] pod stop: ${e.message}`);
+      }
+    }
+  }
+})();
