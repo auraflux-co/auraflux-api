@@ -36,6 +36,7 @@ import { VideoUpload } from '@/components/upload/video-upload';
 import { LockedFeature } from '@/components/ui/locked-feature';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
+import { useBrand } from '@/contexts/brand-context';
 import { SourceLibraryPicker } from '@/components/jobs/source-library-picker';
 import { ClipEditor, type ClipSpec, type CompactClip, type ExtractClip } from '@/components/jobs/clip-editor';
 import type { SourceItem } from '@/lib/api';
@@ -579,6 +580,8 @@ function JobBuilderPageInner() {
 
   const { openWithContext, setContextHint } = useGuide();
   const { planTier } = usePlan();
+  const { activeBrand } = useBrand();
+  const activeBrandId   = activeBrand?.id;
 
   const [error, setError] = useState<string | null>(null);
 
@@ -902,6 +905,7 @@ function JobBuilderPageInner() {
       // Include the selected preset name so the backend can persist it as templateName
       // (used for job card titles and script generation context)
       ...(activeTemplate ? { templateName: activeTemplate.label } : {}),
+      ...(activeBrandId ? { brandId: activeBrandId } : {}),
       // CPD-511/513: staging gate + customer-provided publish metadata
       staging:        publishMode === 'review' ? true : undefined,
       publishMeta: (() => {

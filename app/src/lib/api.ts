@@ -151,8 +151,9 @@ export interface CreateJobPayload {
     heygen?:     { active: boolean; avatarId?: string };
     [key: string]: Record<string, unknown> | undefined;
   };
-  // Preset template from the job wizard (e.g. 'TikTok Clutch', 'YouTube Deep Dive')
-  templateName?: string;
+  brandName?:       string;
+  // CPD-328: explicit brand context (also sent via X-Brand-Id header)
+  brandId?:         string;
   // CPD-511/513: staging gate + customer-provided publish metadata
   staging?: boolean;
   publishMeta?: {
