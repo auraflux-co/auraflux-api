@@ -46,6 +46,10 @@ export function isReviewQueueJob(job: {
   if (REVIEW_QUEUE_STATUSES.has(status)) return true;
   // Customer/developer API masks operator_review as processing (CPD-431).
   if (status === 'processing' && job.outputUrl) return true;
+  // Portal-policy leak before API deploy — passed/non-compliant with output is review-ready.
+  if (job.outputUrl && (status === 'passed' || status === 'non-compliant' || status === 'sendback')) {
+    return true;
+  }
   return false;
 }
 

@@ -179,9 +179,16 @@ function PlatformBadge({ platform, connected }: { platform: string; connected: b
 
 // ─── Per-tile bodies ──────────────────────────────────────────────────────────
 
+const RECENT_FAILURE_MS = 24 * 60 * 60 * 1000;
+
 function JobsTileBody({ data, isSuperAdmin }: { data: TileData; isSuperAdmin: boolean }) {
   const active  = data.jobs.filter((j) => ['running', 'queued'].includes(j.status)).length;
-  const failed  = data.jobs.filter((j) => j.status === 'failed').length;
+  const failed  = data.jobs.filter((j) => {
+    if (j.status !== 'failed') return false;
+    const ts = j.updatedAt || j.createdAt;
+    if (!ts) return true;
+    return Date.now() - new Date(ts).getTime() < RECENT_FAILURE_MS;
+  }).length;
   const loading = !data.loaded.jobs;
 
   return (
