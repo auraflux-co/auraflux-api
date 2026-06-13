@@ -116,6 +116,24 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .cal-item.news { border-color:#2ecc71; background:rgba(46,204,113,0.1); }
 .cal-item.twitch { border-color:#9146ff; background:rgba(145,70,255,0.1); }
 .cal-item.short { border-color:#e74c3c; background:rgba(231,76,60,0.1); }
+.cal-item-sub { font-size:8px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.cal-published { border-left-color:#2ecc71 !important; }
+.cal-progress { border-left-color:#3498db !important; }
+.cal-scheduled { border-left-color:#e67e22 !important; }
+.cal-skipped { opacity:0.4; text-decoration:line-through; }
+.cal-section-label { font-size:8px; letter-spacing:1px; color:rgba(199,175,79,0.6); margin:8px 0 4px; }
+.cal-live-strip { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+.cal-live-chip { font-size:8px; padding:2px 6px; border-radius:3px; background:rgba(145,70,255,0.15); color:#b794f6; border:1px solid rgba(145,70,255,0.25); }
+.cal-live-twitch { background:rgba(145,70,255,0.2); }
+.cal-guidelines-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:11px; line-height:1.5; }
+.cal-guidelines-grid ul { margin:6px 0 0; padding-left:18px; color:rgba(255,255,255,0.65); }
+.cal-override-btn { width:100%; margin-top:8px; font-size:9px; padding:4px; background:rgba(199,175,79,0.1); border:1px dashed rgba(199,175,79,0.4); color:#c7af4f; cursor:pointer; border-radius:3px; }
+.cal-schedule-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; }
+.cal-schedule-modal.open { display:flex; }
+.cal-schedule-panel { background:#0d1524; border:1px solid rgba(199,175,79,0.35); border-radius:8px; padding:20px; max-width:480px; width:90%; max-height:80vh; overflow:auto; }
+.cal-job-pick { display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:6px; background:rgba(199,175,79,0.08); border:1px solid rgba(199,175,79,0.2); color:#fff; font-size:11px; cursor:pointer; border-radius:4px; }
+.cal-job-pick:hover { border-color:#c7af4f; }
+.bc-cal-banner { font-size:11px; padding:10px 12px; margin-bottom:16px; border-radius:4px; background:rgba(199,175,79,0.08); border:1px solid rgba(199,175,79,0.25); line-height:1.45; }
 
 .ab-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .ab-thumb { border:2px solid rgba(199,175,79,0.2); border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color 0.2s; }
@@ -147,6 +165,33 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .bc-ops-chip.bc-live-tw { border-color:rgba(145,70,255,0.5); color:#b794f6; }
 .bc-ops-warn { margin-top:8px; font-size:11px; color:#e88; background:rgba(231,76,60,0.1); padding:8px 10px; border-radius:4px; }
 .bc-ops-info { margin-top:8px; font-size:11px; color:#3498db; }
+.tv-catalog-group { margin-bottom:10px; }
+.tv-catalog-title { font-size:10px; letter-spacing:1px; color:#c7af4f; margin-bottom:6px; font-weight:700; }
+.tv-catalog-item { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:11px; cursor:pointer; }
+.tv-catalog-item input { margin-top:2px; accent-color:#9146ff; flex-shrink:0; }
+.tv-catalog-item .tv-dur { color:rgba(255,255,255,0.35); font-size:10px; white-space:nowrap; }
+.tv-catalog-item .tv-lbl { color:rgba(255,255,255,0.85); line-height:1.35; }
+.tv-catalog-item.offseason { opacity:0.45; }
+.tv-rotation-summary { font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:10px; padding:8px 10px; background:rgba(145,70,255,0.08); border-radius:4px; border:1px solid rgba(145,70,255,0.2); }
+.bc-board-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:12px; }
+.bc-board-col h4 { font-size:10px; letter-spacing:1px; color:#c7af4f; margin:0 0 8px; }
+.bc-board-item { font-size:11px; padding:8px 10px; margin-bottom:6px; border-radius:4px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); line-height:1.4; }
+.bc-board-item .bc-board-sub { font-size:10px; color:rgba(255,255,255,0.4); margin-top:4px; }
+.bc-status-ready { border-left:3px solid #2ecc71; }
+.bc-status-pipeline { border-left:3px solid #3498db; }
+.bc-status-stale { border-left:3px solid #e67e22; }
+.bc-status-gap { border-left:3px solid #e74c3c; }
+.bc-board-gaps { margin-top:10px; padding:10px 12px; border-radius:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.25); font-size:11px; }
+.bc-board-gaps b { color:#e88; }
+.bc-play-tier { font-size:10px; font-weight:700; color:#c7af4f; letter-spacing:0.5px; margin:12px 0 6px; }
+.bc-play-item { font-size:11px; padding:10px 12px; margin-bottom:8px; border-radius:4px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); line-height:1.45; }
+.bc-play-item .bc-play-ch { font-size:10px; color:#9146ff; margin-top:4px; }
+.bc-play-item .bc-play-ev { font-size:10px; color:rgba(255,255,255,0.35); }
+.bc-play-wired { border-left:3px solid #2ecc71; }
+.bc-play-partial { border-left:3px solid #e67e22; }
+.bc-play-gap { border-left:3px solid #e74c3c; }
+.bc-play-skip { opacity:0.5; border-left:3px solid rgba(255,255,255,0.15); }
+.bc-play-principle { font-size:11px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); line-height:1.4; }
 .bc-quad-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .bc-quad-src { font-size:11px; padding:6px 8px; background:#060a12; border-radius:4px; border:1px solid rgba(199,175,79,0.15); }
 .bc-quad-src span { color:rgba(199,175,79,0.6); font-size:9px; margin-right:4px; }
@@ -339,7 +384,29 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     <div class="page" id="page-broadcast">
       <div class="sec-title">BROADCAST CONTROL <span class="badge">LIVE GRID + CLIPZWORLD TV</span></div>
 
+      <div id="bc-cal-banner" class="bc-cal-banner" style="display:none;"></div>
+
       <div id="bc-ops-bar" class="bc-ops-bar">Loading ops…</div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-title">PROGRAMMING PLAYBOOK</div>
+          <span style="font-size:10px;color:rgba(255,255,255,0.35);">From YouTube top-200 data · Jun 13</span>
+        </div>
+        <div class="card-body" id="bc-playbook">
+          <div style="font-size:11px;color:rgba(255,255,255,0.35);">Loading playbook…</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-title">CONTENT BOARD</div>
+          <span style="font-size:10px;color:rgba(255,255,255,0.35);">What’s scheduled · in production · ready for Twitch</span>
+        </div>
+        <div class="card-body" id="bc-content-board">
+          <div style="font-size:11px;color:rgba(255,255,255,0.35);">Loading…</div>
+        </div>
+      </div>
 
       <div class="cards-grid">
         <div class="card">
@@ -465,17 +532,33 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <span class="tag tag-pending" id="tv-status-tag"><span class="tag-dot"></span> OFFLINE</span>
           </div>
           <div class="card-body">
+            <div id="tv-rotation-summary" class="tv-rotation-summary">
+              Pick what plays on <b style="color:#b794f6;">twitch.tv/clipzworldnews</b> below, then click <b>Apply rotation</b>. Bobby G Twitch VODs + news only — no streamer shorts, NBA off-season.
+            </div>
             <div id="tv-info-row" style="display:none;font-size:11px;margin-bottom:10px;color:rgba(255,255,255,0.5);">
               <span id="tv-uptime"></span> · loop <b id="tv-loop" style="color:#c7af4f;">0</b> · <span id="tv-cache-state"></span>
+              <span id="tv-curated-badge" style="display:none;margin-left:8px;color:#9146ff;">· saved rotation</span>
             </div>
-            <div id="tv-caching-row" style="display:none;font-size:10px;color:rgba(199,175,79,0.8);margin-bottom:8px;">⏳ caching: <span id="tv-caching"></span></div>
-            <div id="tv-playlist" style="display:none;max-height:100px;overflow-y:auto;margin-bottom:10px;font-size:10px;font-family:monospace;"></div>
+            <div id="tv-caching-row" style="display:none;font-size:10px;color:rgba(199,175,79,0.8);margin-bottom:8px;">⏳ Preparing: <span id="tv-caching"></span></div>
+            <div id="tv-playlist" style="display:none;max-height:72px;overflow-y:auto;margin-bottom:10px;font-size:10px;font-family:monospace;"></div>
+
+            <div id="tv-catalog-loading" style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;">Loading videos…</div>
+            <div id="tv-catalog-bobbyg" class="tv-catalog-group" style="display:none;"></div>
+            <div id="tv-catalog-news" class="tv-catalog-group" style="display:none;"></div>
+            <details id="tv-nba-details" style="margin-bottom:10px;display:none;">
+              <summary style="font-size:10px;color:rgba(255,255,255,0.35);cursor:pointer;">NBA (off-season — usually off)</summary>
+              <div id="tv-catalog-nba" class="tv-catalog-group"></div>
+            </details>
+
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;">
+              <span id="tv-duration-est" style="font-size:11px;color:#c7af4f;font-weight:700;">—</span>
+              <button type="button" class="btn btn-outline btn-sm" id="tv-recommended-btn" onclick="tvUseRecommended()">~1 HOUR PRESET</button>
+              <button type="button" class="btn btn-gold btn-sm" id="tv-apply-btn" onclick="tvApplyRotation()">APPLY ROTATION</button>
+            </div>
+
             <div class="btn-row">
-              <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer;">
-                <input type="checkbox" id="tv-shuffle" style="accent-color:#c7af4f;"> SHUFFLE
-              </label>
-              <button id="tv-start-btn" class="btn btn-gold" onclick="liveTvStart()">START TV</button>
-              <button id="tv-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveTvStop()">STOP TV</button>
+              <button id="tv-start-btn" class="btn btn-gold" onclick="liveTvStart()">START TWITCH</button>
+              <button id="tv-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveTvStop()">STOP TWITCH</button>
             </div>
           </div>
         </div>
@@ -515,11 +598,35 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
     <!-- CONTENT CALENDAR PAGE -->
     <div class="page" id="page-calendar">
-      <div class="sec-title">CONTENT CALENDAR <span class="badge">THIS WEEK</span></div>
-      <div class="alert alert-info">Long form: News daily 10:45AM · Twitch Wed–Sun 11AM · NBA day-after-games 10:30AM (live from ESPN) &nbsp;|&nbsp; Shorts: 3/day — Twitch 5PM · News 6PM · NBA (or bonus) 7PM</div>
+      <div class="sec-title">CONTENT CALENDAR <span class="badge">MASTER PLAN</span></div>
+      <div class="btn-row" style="margin-bottom:12px;">
+        <button class="btn btn-outline btn-sm" onclick="calendarRefresh()">REFRESH</button>
+        <button class="btn btn-gold btn-sm" onclick="calUnlockOwner()">OWNER UNLOCK</button>
+        <span style="font-size:10px;color:rgba(255,255,255,0.4);align-self:center;">Production · Live streams · VOD publish — hard rules; only you override with PIN</span>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><div class="card-title">GUIDELINES</div></div>
+        <div class="card-body cal-guidelines-grid" id="cal-guidelines">Loading…</div>
+      </div>
       <div class="calendar-grid" id="calendar-grid"></div>
-      <div class="sec-title">THIS WEEK'S SCHEDULE</div>
-      <div class="card"><div class="card-body"><div id="schedule-list" style="font-family:Arial,sans-serif;font-size:13px;line-height:2;color:rgba(255,255,255,0.8);"></div></div></div>
+      <div id="cal-schedule-modal" class="cal-schedule-modal" onclick="if(event.target===this)calCloseSchedule()">
+        <div class="cal-schedule-panel">
+          <div style="font-size:12px;font-weight:700;color:#c7af4f;margin-bottom:8px;" id="cal-schedule-title">Schedule publish</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:12px;" id="cal-schedule-sub">Pick an assembled job</div>
+          <div id="cal-schedule-jobs"></div>
+          <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="calCloseSchedule()">Cancel</button>
+        </div>
+      </div>
+      <div class="cards-grid" style="margin-top:16px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">THIS WEEK (detail)</div></div>
+          <div class="card-body"><div id="schedule-list" style="font-family:Arial,sans-serif;font-size:13px;line-height:2;color:rgba(255,255,255,0.8);"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">PUBLISH BY PLATFORM</div></div>
+          <div class="card-body" id="cal-publish-rules">—</div>
+        </div>
+      </div>
     </div>
 
     <!-- NBA PAGE — retired, generate is now on main page -->
@@ -1313,7 +1420,7 @@ function nav(page) {
   document.querySelectorAll('.sidebar-btn').forEach(function(b){
     if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'"+page+"'") > -1) b.classList.add('active');
   });
-  if (page === 'calendar') buildCalendar();
+  if (page === 'calendar') { if (typeof calendarPageInit === 'function') calendarPageInit(); else buildCalendar(); }
   if (page === 'queue') refreshQueue();
   if (page === 'broadcast' && typeof broadcastPageInit === 'function') broadcastPageInit();
   if (page === 'publish') pubPopulateJobDropdown();
@@ -9664,19 +9771,21 @@ function liveTvRender() {
 }
 
 async function liveTvStart() {
-  if (!confirm('Start ClipzWorld TV? Streams the produced-video rotation to Twitch.')) return;
+  if (!confirm('Start ClipzWorld TV on Twitch with your saved rotation?')) return;
   const btn = document.getElementById('tv-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
   try {
+    const body = typeof tvBuildStartBody === 'function' ? await tvBuildStartBody() : {};
     const r = await fetch(LG_BASE + '/live-tv/start', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shuffle: document.getElementById('tv-shuffle').checked }),
+      body: JSON.stringify(body),
     });
     const d = await r.json();
-    if (!d.ok) alert('TV start failed: ' + (d.error || 'unknown'));
-  } catch (e) { alert('TV start failed: ' + e.message); }
-  btn.disabled = false; btn.textContent = 'START TV';
+    if (!d.ok) alert('Could not start Twitch: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Could not start Twitch: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'START TWITCH';
   liveTvRefresh();
+  if (typeof tvRefreshCatalog === 'function') tvRefreshCatalog();
 }
 
 async function liveTvStop() {
@@ -9692,6 +9801,7 @@ async function liveTvStop() {
 liveTvRefresh();
 setInterval(liveTvRefresh, 15000);
 </script>
+<script src="/assets/calendar_dashboard.js"></script>
 <script src="/assets/broadcast_dashboard.js"></script>
 </body>
 </html>

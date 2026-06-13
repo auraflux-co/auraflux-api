@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "timezone": "America/New_York",
+  "updated": "2026-06-13",
+  "ownerOverride": {
+    "requirePin": true,
+    "note": "Schedule changes require CALENDAR_OWNER_PIN in .env — only Rob overrides hard rules."
+  },
+  "guidelines": {
+    "live": [
+      "Twitch TV: transformative produced video only (Bobby G commentary VODs + news desk). No streamer clip comps, no 4-up grid rebroadcast.",
+      "YouTube Live: follow dayparts from this calendar — event_night → news_desk → grid. Commentary/transform layers per allowlist.",
+      "Live overrides require owner PIN — agents and automation cannot change the calendar without it."
+    ],
+    "vod": [
+      "Long-form VOD: publish YouTube after Gate 5 QA pass (direct API when enabled, else Upload-Post).",
+      "Shorts: 3/day at fixed slots — Twitch 5pm, News 6pm, bonus 7pm — YouTube + TikTok + Instagram via Upload-Post.",
+      "Scheduled publish: job holds at publish_scheduled until slot time; cron fires Gate 5 automatically.",
+      "NBA long-form and shorts: OFF until NFL prep (August) unless owner override."
+    ]
+  },
+  "production": {
+    "slots": [
+      {
+        "id": "nba_long",
+        "label": "NBA highlights long-form",
+        "time": "10:30",
+        "contentType": "nba",
+        "kind": "longform",
+        "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+        "when": "dayAfterGames",
+        "enabled": false,
+        "disabledReason": "NBA off-season — NFL prep starts August",
+        "publishPlatforms": ["youtube", "tiktok", "instagram"]
+      },
+      {
+        "id": "news_long",
+        "label": "News desk compilation",
+        "time": "10:45",
+        "contentType": "news",
+        "kind": "longform",
+        "daily": true,
+        "enabled": true,
+        "publishPlatforms": ["youtube"],
+        "liveAlso": ["twitchTv", "youtubeNewsDesk"]
+      },
+      {
+        "id": "twitch_long",
+        "label": "Twitch Soup (Bobby G avatar VOD)",
+        "time": "11:00",
+        "contentType": "twitch",
+        "kind": "longform",
+        "days": ["wed", "thu", "fri", "sat", "sun"],
+        "enabled": true,
+        "publishPlatforms": ["youtube"],
+        "liveAlso": ["twitchTv"]
+      },
+      {
+        "id": "twitch_short",
+        "label": "Twitch short (clip comp)",
+        "time": "17:00",
+        "contentType": "twitch-short",
+        "kind": "short",
+        "daily": true,
+        "enabled": true,
+        "publishPlatforms": ["youtube", "tiktok", "instagram"],
+        "liveAlso": []
+      },
+      {
+        "id": "news_short",
+        "label": "News short",
+        "time": "18:00",
+        "contentType": "news-short",
+        "kind": "short",
+        "daily": true,
+        "enabled": true,
+        "publishPlatforms": ["youtube", "tiktok", "instagram"],
+        "liveAlso": []
+      },
+      {
+        "id": "bonus_short",
+        "label": "Bonus short (news or twitch alternate)",
+        "time": "19:00",
+        "contentType": "alternate",
+        "alternateTypes": ["news-short", "twitch-short"],
+        "kind": "short",
+        "daily": true,
+        "enabled": true,
+        "publishPlatforms": ["youtube", "tiktok", "instagram"],
+        "liveAlso": []
+      }
+    ]
+  },
+  "liveStreams": {
+    "twitchTv": {
+      "label": "ClipzWorld TV",
+      "window": "15:00-18:00",
+      "composition": "curated_playlist",
+      "contentRule": "bobbyg_vod_and_news_only",
+      "playlistConfig": "config/live_tv_playlist.json"
+    },
+    "youtubeLive": {
+      "label": "YouTube Live Grid",
+      "dayparts": [
+        {
+          "id": "yt_event",
+          "start": "18:00",
+          "end": "20:00",
+          "mode": "event_night",
+          "label": "Event watch-along",
+          "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+        },
+        {
+          "id": "yt_news",
+          "start": "20:00",
+          "end": "23:00",
+          "mode": "news_desk",
+          "label": "News desk live",
+          "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+        },
+        {
+          "id": "yt_grid",
+          "start": "23:00",
+          "end": "03:00",
+          "mode": "grid",
+          "label": "Multiview grid",
+          "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+        }
+      ]
+    }
+  },
+  "vodPublish": {
+    "youtube": {
+      "longform": { "when": "gate5_pass", "method": "youtube_direct_or_upload_post" },
+      "shorts": { "when": "scheduled_slot", "method": "youtube_direct_or_upload_post" },
+      "liveArchive": { "when": "after_stream_end", "method": "manual_or_future_auto" }
+    },
+    "tiktok": {
+      "shorts": { "when": "scheduled_slot", "method": "upload_post" },
+      "longform": { "when": "optional", "method": "upload_post" }
+    },
+    "instagram": {
+      "reels": { "when": "scheduled_slot", "method": "upload_post" }
+    }
+  }
+}

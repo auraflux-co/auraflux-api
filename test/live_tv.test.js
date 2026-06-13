@@ -2,6 +2,31 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { LiveTvManager, buildPlaylist, isPlayable, buildConcatList } = require('../lib/live_tv/manager');
+const {
+  classifyTvContent,
+  recommendedPlaylist,
+  friendlyTvLabel,
+} = require('../lib/live_tv/curated_playlist');
+
+describe('curated_playlist classifyTvContent', () => {
+  test('hides streamer shorts and clip comps', () => {
+    expect(classifyTvContent('clips_comp_jason_script_twitch-short_1.mp4')).toBe('hidden');
+    expect(classifyTvContent('cwn_short_script_twitch-short_1.mp4')).toBe('hidden');
+  });
+
+  test('Bobby G twitch VODs vs news vs nba', () => {
+    expect(classifyTvContent('cwn_22clips_script_twitch_1.mp4')).toBe('bobbyg');
+    expect(classifyTvContent('cwn_7clips_script_news_1.mp4')).toBe('news');
+    expect(classifyTvContent('cwn_2clips_script_nba_1.mp4')).toBe('nba');
+  });
+});
+
+describe('curated_playlist friendlyTvLabel', () => {
+  test('human labels for dashboard', () => {
+    expect(friendlyTvLabel('cwn_22clips_script_twitch_178.mp4')).toMatch(/Twitch Soup/);
+    expect(friendlyTvLabel('cwn_7clips_script_news_1.mp4')).toMatch(/News desk/);
+  });
+});
 
 describe('live_tv buildPlaylist', () => {
   test('keeps only mp4 files and dedupes', () => {

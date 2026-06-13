@@ -450,14 +450,44 @@ const heygenJobs   = {};
 // Dashboard calls GET /jobs on load to restore the job queue.
 const JOBS_FILE = path.join(__dirname, 'data', 'jobs.json');
 let persistedJobs = {};
+let jsonJobsSnapshot = {};
 try {
   persistedJobs = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+  jsonJobsSnapshot = { ...persistedJobs };
   console.log(`[jobs] Loaded ${Object.keys(persistedJobs).length} persisted jobs from disk`);
 } catch(e) {
   persistedJobs = {};
 }
 // Expose to assembly.js Gate 2 bypass (avoids circular require)
 global.persistedJobsRef = persistedJobs;
+
+function countCompletedAvatarScenes(card) {
+  return (card?.heygen?.videoJobs || []).filter((v) => v.status === 'completed' && v.video_id).length;
+}
+
+/** SQLite may lag jobs.json on avatar checkpoints — merge newer heygen.videoJobs from JSON. */
+function mergeJsonAvatarCheckpoints(intoJobs, jsonJobs) {
+  let merged = 0;
+  for (const [id, jsonCard] of Object.entries(jsonJobs || {})) {
+    const mem = intoJobs[id];
+    if (!mem || !jsonCard?.heygen?.videoJobs?.length) continue;
+    const jsonDone = countCompletedAvatarScenes(jsonCard);
+    const memDone = countCompletedAvatarScenes(mem);
+    const jsonSaved = new Date(jsonCard.savedAt || 0).getTime();
+    const memSaved = new Date(mem.savedAt || 0).getTime();
+    if (jsonDone <= memDone && jsonSaved <= memSaved) continue;
+    intoJobs[id] = {
+      ...mem,
+      stage: jsonCard.stage || mem.stage,
+      avatarEngine: jsonCard.avatarEngine || mem.avatarEngine,
+      heygen: { ...(mem.heygen || {}), ...jsonCard.heygen },
+      savedAt: jsonCard.savedAt || mem.savedAt
+    };
+    try { db.saveJob(id, intoJobs[id]); } catch (_) { /* saveJobCard also writes SQLite */ }
+    merged++;
+  }
+  if (merged > 0) console.log(`[jobs] Merged avatar checkpoints from jobs.json for ${merged} job(s)`);
+}
 
 // ── SQLite init + fallback load ───────────────────────────────────────────────
 // Initialize SQLite alongside jobs.json. During transition both run in parallel.
@@ -475,43 +505,7 @@ try {
       const key = card && (card.jobId || card.id);
       if (key) persistedJobs[key] = card;
     }
-  } else {
-    console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
-  }
-} catch (e) {
-  console.error('[db] SQLite init failed — falling back to jobs.json only:', e.message);
-}
-
-// Infer job stage from card fields for legacy jobs that predate the explicit stage field.
-// Used by /jobs filter and startup resume logic.
-function inferJobStage(job) {
-  if (job.finalUrl) return 'assembled';
-  if (job.assembly?.url || job.assembledUrl) return 'assembled';
-  const videoJobs = job.heygen?.videoJobs || [];
-  if (videoJobs.length > 0) {
-    const allComplete = videoJobs.every(vj => vj.status === 'completed' && vj.video_url);
-    if (allComplete) return 'all_sent'; // all done — ready for assembly
-    const anyStarted = videoJobs.some(vj => vj.video_id);
-    if (anyStarted) return 'all_sent'; // in-flight in HeyGen
-  }
-  if (job.script) return 'script_ready';
-  return '';
-}
-
-// ── SQLite init + fallback load ───────────────────────────────────────────────
-// Initialize SQLite alongside jobs.json. During transition both run in parallel.
-// If SQLite has more jobs than the JSON file (e.g. after a partial migration),
-// prefer SQLite so no jobs are lost.
-try {
-  db.initDb();
-  const sqliteJobs = db.loadAllJobs();
-  if (sqliteJobs.length > Object.keys(persistedJobs).length) {
-    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
-    persistedJobs = {};
-    for (const card of sqliteJobs) {
-      const key = card && (card.jobId || card.id);
-      if (key) persistedJobs[key] = card;
-    }
+    mergeJsonAvatarCheckpoints(persistedJobs, jsonJobsSnapshot);
   } else {
     console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
   }
@@ -2768,6 +2762,97 @@ app.get('/live-grid/files', (req, res) => {
   }
 });
 
+// GET /calendar/plan — master week plan (production + live + publish)
+app.get('/calendar/plan', (req, res) => {
+  try {
+    const { buildWeekPlan } = require('./lib/calendar/master_plan');
+    res.json(buildWeekPlan({ persistedJobs }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/broadcast-today — what Broadcast should use right now
+app.get('/calendar/broadcast-today', (req, res) => {
+  try {
+    const { buildBroadcastToday } = require('./lib/calendar/master_plan');
+    res.json(buildBroadcastToday({ persistedJobs }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /calendar/verify-pin — unlock owner mode in dashboard
+app.post('/calendar/verify-pin', (req, res) => {
+  const { verifyOwnerPin } = require('./lib/calendar/owner_gate');
+  const gate = verifyOwnerPin(req.body?.pin);
+  if (!gate.ok) return res.status(403).json(gate);
+  res.json({ ok: true, message: 'Owner verified' });
+});
+
+// POST /calendar/override — owner PIN required { pin, type, date, slotId?, daypartId?, patch, reason }
+app.post('/calendar/override', (req, res) => {
+  try {
+    const { applyOwnerOverride } = require('./lib/calendar/master_plan');
+    const result = applyOwnerOverride(req.body || {});
+    if (!result.ok) return res.status(result.error?.includes('PIN') ? 403 : 400).json(result);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/eligible-jobs?contentType=news — assembled jobs ready to schedule to a slot
+app.get('/calendar/eligible-jobs', (req, res) => {
+  try {
+    const { listEligibleJobs } = require('./lib/calendar/slot_jobs');
+    const jobs = listEligibleJobs(persistedJobs, req.query.contentType);
+    res.json({ ok: true, jobs });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /calendar/schedule-job — link assembled job to calendar slot + set publish time
+app.post('/calendar/schedule-job', (req, res) => {
+  try {
+    const { scheduleJobToSlot } = require('./lib/calendar/slot_jobs');
+    const { jobId, slotId, date } = req.body || {};
+    if (!jobId || !slotId || !date) {
+      return res.status(400).json({ ok: false, error: 'jobId, slotId, and date required' });
+    }
+    const result = scheduleJobToSlot({
+      jobId, slotId, date,
+      persistedJobs,
+      saveJobCard,
+    });
+    if (!result.ok) return res.status(400).json(result);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/playbook — youtube top200 data + allowlist programming (dashboard)
+app.get('/broadcast/playbook', (req, res) => {
+  try {
+    const { buildProgrammingPlaybook } = require('./lib/broadcast/programming_playbook');
+    res.json(buildProgrammingPlaybook());
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/content-board — schedule, pipeline, gaps (dashboard)
+app.get('/broadcast/content-board', (req, res) => {
+  try {
+    const { buildContentBoard } = require('./lib/broadcast/content_board');
+    res.json(buildContentBoard({ persistedJobs }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // GET /broadcast/ops — pipeline + stream safety snapshot (CPD-1028)
 app.get('/broadcast/ops', (req, res) => {
   try {
@@ -2805,21 +2890,107 @@ app.post('/broadcast/24h-arm', (req, res) => {
 // ---------------------------------------------------------------------------
 let liveTvManager = null;
 
-// POST /live-tv/start { videos?, shuffle?, output? } — default playlist scans
-// output/ for finished videos (build artifacts + Live Grid recordings excluded)
+function resolveLiveTvStartOpts(body = {}) {
+  const opts = { ...body };
+  if (!opts.videos?.length) {
+    const { loadCuratedPlaylist } = require('./lib/live_tv/curated_playlist');
+    const curated = loadCuratedPlaylist();
+    if (curated?.videos?.length) {
+      opts.videos = curated.videos;
+      if (curated.curated) opts.curated = true;
+    }
+  }
+  return opts;
+}
+
+function startLiveTv(body = {}) {
+  const { LiveTvManager } = require('./lib/live_tv/manager');
+  liveTvManager = new LiveTvManager();
+  return liveTvManager.start(resolveLiveTvStartOpts(body));
+}
+
+// POST /live-tv/start { videos?, shuffle?, output?, curated? } — default uses
+// config/live_tv_playlist.json when set; else scans output/
 app.post('/live-tv/start', (req, res) => {
   try {
     if (liveTvManager?.running) {
       return res.status(400).json({ ok: false, error: 'ClipzWorld TV already running', status: liveTvManager.status() });
     }
-    const { LiveTvManager } = require('./lib/live_tv/manager');
-    liveTvManager = new LiveTvManager();
-    const status = liveTvManager.start(req.body || {});
+    const status = startLiveTv(req.body || {});
     res.json({ ok: true, status });
   } catch (e) {
     console.error('[live-tv] start failed:', e.message);
     try { liveTvManager?.stop(); } catch (_) {}
     liveTvManager = null;
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-tv/restart — swap playlist with minimal downtime (~2s Twitch blip)
+app.post('/live-tv/restart', (req, res) => {
+  try {
+    if (liveTvManager?.running) {
+      liveTvManager.stop();
+      liveTvManager = null;
+    }
+    const status = startLiveTv(req.body || {});
+    res.json({ ok: true, status });
+  } catch (e) {
+    console.error('[live-tv] restart failed:', e.message);
+    try { liveTvManager?.stop(); } catch (_) {}
+    liveTvManager = null;
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /live-tv/playlist — catalog + saved rotation for Broadcast dashboard
+app.get('/live-tv/playlist', (req, res) => {
+  try {
+    const pl = require('./lib/live_tv/curated_playlist');
+    const curated = pl.loadCuratedPlaylist();
+    const catalog = pl.buildTvCatalog();
+    const selected = new Set(curated?.videos || []);
+    const recommended = pl.recommendedPlaylist(catalog);
+    const pathMod = require('path');
+    res.json({
+      ok: true,
+      curated,
+      catalog: pl.markSelected(catalog, selected),
+      recommended: recommended.map((abs) => ({
+        abs,
+        path: pathMod.relative(pl.REPO_ROOT, abs).replace(/\\/g, '/'),
+        label: pl.friendlyTvLabel(pathMod.basename(abs)),
+      })),
+      running: liveTvManager?.running ? liveTvManager.status() : { running: false },
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-tv/playlist { videos: string[], apply?: boolean } — save from dashboard; optional live swap
+app.post('/live-tv/playlist', (req, res) => {
+  try {
+    const pl = require('./lib/live_tv/curated_playlist');
+    const videos = req.body?.videos;
+    if (!Array.isArray(videos) || !videos.length) {
+      return res.status(400).json({ ok: false, error: 'Pick at least one video' });
+    }
+    const saved = pl.saveCuratedPlaylist({
+      videos,
+      notes: req.body?.notes || 'Saved from Broadcast dashboard',
+      targetDurationMin: req.body?.targetDurationMin || null,
+    });
+    let status = liveTvManager?.running ? liveTvManager.status() : { running: false };
+    if (req.body?.apply) {
+      if (liveTvManager?.running) {
+        liveTvManager.stop();
+        liveTvManager = null;
+      }
+      status = startLiveTv({ videos: saved.videos, curated: true });
+    }
+    res.json({ ok: true, curated: saved, status });
+  } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
@@ -2844,7 +3015,7 @@ app.get('/live-tv/status', (req, res) => {
 // comps / clip shorts / grid recordings are refused.)
 function tvAutoEnqueue(jobId) {
   try {
-    if (!liveTvManager?.running) return;
+    if (!liveTvManager?.running || liveTvManager.curated) return;
     const card = persistedJobs[jobId];
     const file = card?.outputPath || card?.state?.savedOutputs?.outputPath || null;
     if (!file) return;
@@ -8860,12 +9031,26 @@ const server = app.listen(PORT, async () => {
     console.warn('⚠️  Broadcast reconciliation failed (non-fatal):', e.message);
   }
 
-  // CPD-975/976: daily programming windows — Twitch loop 12–6pm ET, Live Grid 6pm–3am ET
+  // CPD-975/976: daily programming windows — driven by content_calendar.json when env unset
   try {
     const { startStreamScheduler } = require('./lib/services/stream_scheduler');
-    streamScheduler = startStreamScheduler({ baseUrl: `http://localhost:${PORT}` });
+    streamScheduler = startStreamScheduler({
+      baseUrl: `http://localhost:${PORT}`,
+      getPersistedJobs: () => persistedJobs,
+    });
   } catch (e) {
     console.warn('⚠️  Stream scheduler failed to start:', e.message);
+  }
+
+  // YouTube Live daypart auto-switch (8pm event→news, 11pm news→grid)
+  try {
+    const { startCalendarLiveSync } = require('./lib/calendar/live_sync');
+    startCalendarLiveSync({
+      baseUrl: `http://localhost:${PORT}`,
+      getPersistedJobs: () => persistedJobs,
+    });
+  } catch (e) {
+    console.warn('⚠️  Calendar live sync failed to start:', e.message);
   }
 });
 
