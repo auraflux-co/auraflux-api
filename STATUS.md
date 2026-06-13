@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-13 v1.0.1126 (Cursor — fix(CPD-869): Review Queue expand crash — publishCopy null tiktok + internal keys; staging-assets returns _buildWizardConfig job spec; JobSpecSummary on expand)
 **Last Updated:** 2026-06-13 v1.0.1125 (Cursor — fix(CPD-1006): bake brandName on job creation + resolve from getBrand at chrome time so sub-brand lower-third shows millkberry not AuraFlux; wizard sends brandId explicitly)
 **Last Updated:** 2026-06-13 v1.0.1124 (Cursor — fix(CPD-869): unblock auraflux-app deploy — review page Job type + processing/operator_review status in Job interface and job-card; prior app deploys failed TS check so Review Queue never shipped)
 **Last Updated:** 2026-06-13 v1.0.1123 (Cursor — fix(CPD-869): GET /jobs resolves customer status from job_spec not portal-policy DB leak; martinezofwonkru zombie cleared from Active; review queue surfaces operator_review as processing; home tile system-error limited to failures in last 24h)

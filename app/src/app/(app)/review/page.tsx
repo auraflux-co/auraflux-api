@@ -202,9 +202,9 @@ function PortalTimeline({ reports }: { reports: PortalReport[] }) {
             {r.status !== 'passed' && r.status !== 'pending' && (
               <span className="ml-1 text-muted-foreground">— {portalStatusLabel(r.status)}</span>
             )}
-            {r.violations.length > 0 && (
+            {r.violations?.length > 0 && (
               <ul className="mt-0.5 ml-2 list-disc text-red-600">
-                {r.violations.map((v, i) => <li key={i}>{v}</li>)}
+                {(r.violations ?? []).map((v, i) => <li key={i}>{v}</li>)}
               </ul>
             )}
           </div>
@@ -214,12 +214,71 @@ function PortalTimeline({ reports }: { reports: PortalReport[] }) {
   );
 }
 
+const PUBLISH_COPY_PLATFORMS = new Set(['youtube', 'tiktok', 'instagram', 'twitter', 'facebook', 'linkedin']);
+
+/** Strip internal/null publishCopy keys before rendering (savedOutputs.publishCopy includes ok, _jobId, etc.). */
+function normalizePublishCopy(
+  copy: Record<string, unknown> | null | undefined,
+): Record<string, Record<string, unknown>> | null {
+  if (!copy || typeof copy !== 'object') return null;
+  const out: Record<string, Record<string, unknown>> = {};
+  for (const [platform, meta] of Object.entries(copy)) {
+    if (!PUBLISH_COPY_PLATFORMS.has(platform)) continue;
+    if (!meta || typeof meta !== 'object') continue;
+    out[platform] = meta as Record<string, unknown>;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+function JobSpecSummary({ wc }: { wc: Record<string, unknown> }) {
+  const addOns = Array.isArray(wc.addOns) ? (wc.addOns as string[]) : [];
+  const activeFeatures = Array.isArray(wc.activeFeatures) ? (wc.activeFeatures as string[]) : [];
+  const platforms = Array.isArray(wc.platforms) ? (wc.platforms as string[]) : [];
+  const allFeatures = [...addOns, ...activeFeatures].filter(Boolean);
+  return (
+    <div className="mt-2 rounded-md border bg-background/60 p-3 space-y-1.5 text-xs">
+      <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">Job spec</p>
+      {!!wc.templateName && (
+        <p><span className="text-muted-foreground">Template:</span> {String(wc.templateName)}</p>
+      )}
+      {!!wc.entryType && (
+        <p><span className="text-muted-foreground">Source:</span> {entryTypeLabel(String(wc.entryType))}</p>
+      )}
+      {!!wc.contentType && (
+        <p><span className="text-muted-foreground">Content:</span> {labelForContentType(String(wc.contentType))}</p>
+      )}
+      {wc.durationMins != null && (
+        <p><span className="text-muted-foreground">Duration:</span> {String(wc.durationMins)} min</p>
+      )}
+      {!!wc.publishMode && (
+        <p><span className="text-muted-foreground">Publish:</span>{' '}
+          <span className="capitalize">{String(wc.publishMode)}</span>
+        </p>
+      )}
+      {allFeatures.length > 0 && (
+        <p><span className="text-muted-foreground">Features:</span>{' '}
+          {allFeatures.map((f) => f.replace(/_/g, ' ')).join(', ')}
+        </p>
+      )}
+      {platforms.length > 0 && (
+        <p><span className="text-muted-foreground">Platforms:</span>{' '}
+          {platforms.map(platformLabel).join(', ')}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ── Publish copy section ──────────────────────────────────────────────────────
 
 function PublishCopySection({ copy }: { copy: Record<string, Record<string, unknown>> }) {
+  const entries = Object.entries(copy).filter(
+    ([platform, meta]) => PUBLISH_COPY_PLATFORMS.has(platform) && !!meta && typeof meta === 'object',
+  );
+  if (entries.length === 0) return null;
   return (
     <div className="space-y-3">
-      {Object.entries(copy).map(([platform, meta]) => (
+      {entries.map(([platform, meta]) => (
         <div key={platform} className="rounded-md border p-3">
           <p className="af-subhead mb-1">
             {PLATFORM_ICONS[platform] ?? '●'} {platform}
@@ -385,28 +444,9 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
             <dt className="text-muted-foreground">Submitted</dt>
             <dd>{input.submittedAt ? new Date(input.submittedAt).toLocaleString() : '—'}</dd>
           </dl>
-          {input.wizardConfig && (() => {
-            const wc = input.wizardConfig as Record<string, unknown>;
-            const addOns = Array.isArray(wc.addOns) ? (wc.addOns as string[]) : [];
-            const activeFeatures = Array.isArray(wc.activeFeatures) ? (wc.activeFeatures as string[]) : [];
-            const platforms = Array.isArray(wc.platforms) ? (wc.platforms as string[]) : [];
-            const allFeatures = [...addOns, ...activeFeatures].filter(Boolean);
-            return (
-              <div className="mt-2 rounded-md border bg-background/60 p-3 space-y-1.5 text-xs">
-                <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">Spec detail</p>
-                {!!wc.entryType    && <p><span className="text-muted-foreground">Source type:</span> {entryTypeLabel(String(wc.entryType))}</p>}
-                {wc.durationMins != null && <p><span className="text-muted-foreground">Duration:</span> {String(wc.durationMins)} min</p>}
-                {wc.creditCost != null && <p><span className="text-muted-foreground">Credit cost:</span> {String(wc.creditCost)}</p>}
-                {!!wc.publishMode  && <p><span className="text-muted-foreground">Publish:</span> <span className="capitalize">{String(wc.publishMode)}{wc.scheduledAt ? ` — ${new Date(String(wc.scheduledAt)).toLocaleDateString()}` : ''}</span></p>}
-                {allFeatures.length > 0 && (
-                  <p><span className="text-muted-foreground">Features:</span> {allFeatures.map((f) => f.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())).join(', ')}</p>
-                )}
-                {platforms.length > 0 && (
-                  <p><span className="text-muted-foreground">Platforms:</span> {platforms.map(platformLabel).join(', ')}</p>
-                )}
-              </div>
-            );
-          })()}
+          {input.wizardConfig && (
+            <JobSpecSummary wc={input.wizardConfig as Record<string, unknown>} />
+          )}
         </div>
 
         {/* RIGHT: What was produced */}
@@ -453,12 +493,16 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
       )}
 
       {/* Publish copy */}
-      {output.publishCopy && Object.keys(output.publishCopy).length > 0 && (
-        <div>
-          <p className="text-xs font-semibold mb-2">Publish copy</p>
-          <PublishCopySection copy={output.publishCopy as Record<string, Record<string, unknown>>} />
-        </div>
-      )}
+      {(() => {
+        const copy = normalizePublishCopy(output.publishCopy as Record<string, unknown> | null);
+        if (!copy) return null;
+        return (
+          <div>
+            <p className="text-xs font-semibold mb-2">Publish copy</p>
+            <PublishCopySection copy={copy} />
+          </div>
+        );
+      })()}
 
       {/* Production steps — superadmin only */}
       {isSuperAdmin && (
@@ -734,6 +778,9 @@ export default function StagingPage() {
                       <span className="mr-1">{job.customerName ?? job.customerId!.slice(0, 12) + '…'} · </span>
                     )}
                     {formatDate(job.createdAt)}
+                    {job.wizardConfig?.templateName && (
+                      <span className="ml-1">· {job.wizardConfig.templateName}</span>
+                    )}
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -751,7 +798,10 @@ export default function StagingPage() {
             </div>
 
             {isOpen && (
-              <div className="px-4 pb-4 border-t border-border/50 pt-4">
+              <div className="px-4 pb-4 border-t border-border/50 pt-4 space-y-4">
+                {job.wizardConfig && (
+                  <JobSpecSummary wc={job.wizardConfig as unknown as Record<string, unknown>} />
+                )}
                 <StagingPanel jobId={job.jobId} platforms={job.platforms ?? []} getToken={getToken} isSuperAdmin={isSuperAdmin} />
               </div>
             )}
