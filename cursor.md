@@ -90,7 +90,8 @@ cd ~/cwn-production/VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py
 cd ~/cwn-production && tail -f output/*.log
 ```
 
-**Dashboard:** http://localhost:8765/cwn_production.html
+**Dashboard:** http://localhost:3000/ (canonical — `server.js` serves `cwn_production.html`; `/cwn_production.html` redirects here)
+**Legacy static (optional):** http://localhost:8765/cwn_production.html — same files from `cwn-c0` cwd; API still on :3000
 **API:** http://localhost:3000
 **VectCut API:** http://localhost:9001
 

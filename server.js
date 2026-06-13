@@ -3697,6 +3697,10 @@ app.get('/', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'cwn_production.html'));
 });
+app.get('/cwn_production.html', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.redirect(302, '/');
+});
 
 // ── POST /assemble ────────────────────────────────────────────────
 // ── GOOGLE DRIVE AUTO-UPLOAD ──────────────────────────────────────
