@@ -18,6 +18,10 @@ data/jobs.json
 data/cwn.db
 data/cwn.db-shm
 data/cwn.db-wal
+data/cwn_c0.db
+data/jobs.db
+data/follows_sync_seen.json
+data/twitch_user_token.json
 data/upload_status.json
 data/episode_counters.json
 data/chrome_synth_history.json
@@ -31,6 +35,14 @@ logs/newrelic_health.json
 logs/roo_status.json
 logs/roo_trigger.json
 logs/roo_notification.md
+logs/ai_memory_trace.jsonl
+logs/live_grid_discovery_report.json
+logs/youtube_top200_build_analysis.json
+logs/youtube_top200_live_30d.json
+logs/youtube_top20_live_30d.json
+
+# Spike artifacts with ephemeral presigned URLs
+spike/cpd881/poll_urls.json
 
 # Roo Code — machine-local autostart only (modes/rules stay tracked)
 .roo/autostart.json
