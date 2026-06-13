@@ -96,6 +96,15 @@ cd ~/cwn-production && tail -f output/*.log
 
 **Note:** VectCut API is required for NBA/News intro card generation and short-form split-screen assembly
 
+### ⛔ Never restart the server while a job is running (Rob's rule, 2026-06-10)
+
+Before ANY `pm2 restart` / `pm2 stop` of `auraflux`:
+1. Check `curl -s localhost:3000/jobs` — count must be 0
+2. Check pm2 logs for active assembly (`[assembly:asm_*]` lines in the last ~2 min) — assembly runs even when `/jobs` shows in-flight stages, and a restart kills it mid-burn
+3. If anything is running: queue the change and wait for the pipeline to go idle
+
+Config/code edits that need a restart (e.g. `lib/scaffold.js`, `ecosystem.config.js` changes) take effect on the next idle-time restart — never force one mid-job. The only exception is a deliberate kill of a bad in-flight run, explicitly approved by Rob.
+
 ## Agent Model Routing
 
 The principal coding agent (Cursor / Claude Code) owns this routing table. Update here when models change. Full domain split and file ownership in `AGENT_FILE_REGISTRY.md`.

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "timezone": "America/New_York",
+  "notes": "Rotates event_night metadata from allowlist. eventFile optional — uses LIVE_GRID_EVENT_FILE when set.",
+  "entries": [
+    {
+      "days": ["sat", "sun"],
+      "start": "18:00",
+      "end": "20:00",
+      "eventId": "sports_watchalong",
+      "eventTitle": "Weekend Sports Watch Party"
+    },
+    {
+      "days": ["mon", "wed", "fri"],
+      "start": "18:00",
+      "end": "20:00",
+      "eventId": "esports_grand_final",
+      "eventTitle": "Esports Grand Final Watch"
+    },
+    {
+      "days": ["tue", "thu"],
+      "start": "18:00",
+      "end": "20:00",
+      "eventId": "gaming_showcase",
+      "eventTitle": "Gaming Showcase Reacts"
+    },
+    {
+      "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+      "start": "12:00",
+      "end": "14:00",
+      "eventId": "breaking_news_wall",
+      "eventTitle": "Midday News Desk Live"
+    }
+  ],
+  "fallbackRotation": [
+    "sports_watchalong",
+    "esports_grand_final",
+    "gaming_showcase",
+    "weather_disaster",
+    "space_launch"
+  ]
+}

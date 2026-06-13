@@ -19,11 +19,12 @@ describe('live_grid program director', () => {
     expect(inScheduleBlock(12 * 60, 23 * 60, 3 * 60)).toBe(false);
   });
 
-  test('resolveScheduledMode picks news_desk in prime evening block', () => {
-    const config = loadPrograms(path.join(__dirname, '..', 'config', 'live_grid_programs.json'));
-    const et = { weekday: 'sat', minutes: 21 * 60, dateKey: '2026-06-13' };
-    const { mode } = resolveScheduledMode(config, et);
-    expect(mode).toBe('news_desk');
+  test('event calendar resolves weekend sports block', () => {
+    const { resolveCalendarEntry, loadEventCalendar } = require('../lib/live_grid/event_calendar');
+    const cal = loadEventCalendar(path.join(__dirname, '..', 'config', 'live_grid_event_calendar.json'));
+    const et = { weekday: 'sat', minutes: 19 * 60, dateKey: '2026-06-14' };
+    const ev = resolveCalendarEntry(cal, et);
+    expect(ev?.eventId).toBe('sports_watchalong');
   });
 
   test('resolveScheduledMode picks grid after 11pm ET', () => {

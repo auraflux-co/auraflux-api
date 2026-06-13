@@ -138,6 +138,31 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 .spin { animation:spin 1s linear infinite; display:inline-block; }
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+/* Broadcast control center (CPD-1026) */
+.bc-ops-bar { background:#0a1020; border:1px solid rgba(199,175,79,0.2); border-radius:6px; padding:12px 14px; margin-bottom:16px; }
+.bc-ops-grid { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.bc-ops-chip { font-size:11px; font-weight:700; letter-spacing:0.5px; padding:4px 10px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); }
+.bc-ops-chip.bc-live-yt { border-color:rgba(231,76,60,0.5); color:#e88; }
+.bc-ops-chip.bc-live-tw { border-color:rgba(145,70,255,0.5); color:#b794f6; }
+.bc-ops-warn { margin-top:8px; font-size:11px; color:#e88; background:rgba(231,76,60,0.1); padding:8px 10px; border-radius:4px; }
+.bc-ops-info { margin-top:8px; font-size:11px; color:#3498db; }
+.bc-quad-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.bc-quad-src { font-size:11px; padding:6px 8px; background:#060a12; border-radius:4px; border:1px solid rgba(199,175,79,0.15); }
+.bc-quad-src span { color:rgba(199,175,79,0.6); font-size:9px; margin-right:4px; }
+.bc-daypart-timeline { display:flex; gap:8px; margin-top:10px; }
+.bc-daypart { flex:1; text-align:center; font-size:10px; padding:8px 4px; border-radius:4px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); color:rgba(255,255,255,0.45); }
+.bc-daypart.active { border-color:#c7af4f; color:#c7af4f; background:rgba(199,175,79,0.08); }
+.bc-daypart span { display:block; font-size:9px; margin-top:2px; opacity:0.7; }
+.bc-bar-chart { display:flex; align-items:flex-end; gap:3px; height:100px; padding-top:8px; }
+.bc-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; }
+.bc-bar { width:100%; max-width:18px; background:linear-gradient(180deg,#c7af4f,#8a7530); border-radius:2px 2px 0 0; min-height:4px; }
+.bc-bar-lbl { font-size:8px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.bc-tier { font-size:9px; padding:1px 6px; border-radius:8px; margin-right:6px; }
+.bc-tier-green { background:rgba(46,204,113,0.2); color:#2ecc71; }
+.bc-tier-yellow { background:rgba(243,156,18,0.2); color:#f39c12; }
+.bc-bench-chip { display:inline-block; font-size:10px; padding:2px 8px; margin:2px; border-radius:10px; background:#0d1524; border:1px solid rgba(255,255,255,0.12); }
+.bc-log { font-family:monospace; font-size:10px; color:rgba(255,255,255,0.5); max-height:80px; overflow-y:auto; white-space:pre-wrap; background:#060a12; padding:8px; border-radius:4px; }
 </style>
 </head>
 <body>
@@ -157,6 +182,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <button class="sidebar-btn active" onclick="nav('generate')"><span class="icon">+</span> Generate Videos</button>
       <button class="sidebar-btn" onclick="nav('queue')"><span class="icon">Q</span> Job Queue</button>
       <button class="sidebar-btn" onclick="nav('calendar')"><span class="icon">C</span> Content Calendar</button>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-lbl">LIVE</div>
+      <button class="sidebar-btn" onclick="nav('broadcast')"><span class="icon">▶</span> Broadcast</button>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
@@ -278,79 +308,6 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           </div>
         </div>
 
-        <!-- LIVE GRID (CPD-952) — 4-quadrant Twitch mosaic → YouTube Live -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">LIVE GRID</div>
-            <span class="tag tag-pending" id="lg-status-tag"><span class="tag-dot"></span> OFFLINE</span>
-          </div>
-          <div class="card-body">
-            <div id="lg-watch-row" style="display:none;font-size:11px;margin-bottom:10px;">
-              <a id="lg-watch-link" href="#" target="_blank" style="color:#c7af4f;font-weight:700;letter-spacing:1px;">▶ OPEN STREAM ON YOUTUBE</a>
-              <span id="lg-uptime" style="color:rgba(255,255,255,0.35);margin-left:8px;"></span>
-            </div>
-            <div id="lg-quads" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
-              <!-- quadrant tiles injected by liveGridRender() -->
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-              <span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);">AUDIO: <b id="lg-audio-mode" style="color:#c7af4f;">—</b></span>
-              <button class="btn btn-outline btn-sm" id="lg-audio-auto" style="font-size:10px;padding:2px 10px;display:none;" onclick="liveGridAudio('auto')">RELEASE TO AUTO</button>
-            </div>
-            <div id="lg-bench-row" style="display:none;margin-bottom:10px;">
-              <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:4px;">BENCH <span id="lg-bench-count" style="color:#c7af4f;"></span></div>
-              <div id="lg-bench-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:110px;overflow-y:auto;margin-bottom:6px;"></div>
-              <div id="lg-removed-row" style="display:none;margin-bottom:6px;">
-                <div style="font-size:9px;letter-spacing:1px;color:rgba(255,120,120,0.55);margin-bottom:3px;">REMOVED (manual re-add only)</div>
-                <div id="lg-removed-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:60px;overflow-y:auto;"></div>
-              </div>
-              <div style="display:flex;gap:6px;">
-                <input id="lg-bench-input" type="text" placeholder="bench streamer login…" style="flex:1;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);border-radius:4px;padding:4px 8px;font-size:12px;">
-                <button class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 10px;" onclick="liveGridAddBench()">+ BENCH</button>
-              </div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:3px;">Bench fills empty quadrants; your 12 always take priority. ● = live now. × on a tile sends that streamer to the bench (they sit out until re-added). × on a chip removes from the bench. Click a quadrant to put it on air.</div>
-            </div>
-            <div class="btn-row">
-              <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
-                <option value="public" selected>PUBLIC</option>
-                <option value="unlisted">UNLISTED</option>
-              </select>
-              <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
-              <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- CLIPZWORLD TV (CPD-958) — 24/7 Twitch loop of produced videos -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">CLIPZWORLD TV</div>
-            <span class="tag tag-pending" id="tv-status-tag"><span class="tag-dot"></span> OFFLINE</span>
-          </div>
-          <div class="card-body">
-            <div id="tv-info-row" style="display:none;font-size:11px;margin-bottom:10px;color:rgba(255,255,255,0.5);">
-              <span id="tv-uptime"></span> · loop <b id="tv-loop" style="color:#c7af4f;">0</b> ·
-              <span id="tv-cache-state"></span>
-            </div>
-            <div id="tv-caching-row" style="display:none;font-size:10px;color:rgba(199,175,79,0.8);margin-bottom:8px;">
-              ⏳ caching: <span id="tv-caching"></span>
-            </div>
-            <div id="tv-playlist" style="display:none;max-height:140px;overflow-y:auto;margin-bottom:10px;font-size:10px;font-family:monospace;line-height:1.8;"></div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:10px;">
-              Self-programming: every video that publishes through Gate 5 auto-joins the rotation
-              (clips-only comps and clip shorts excluded — takedown shield). New videos join at the next loop pass.
-            </div>
-            <div class="btn-row">
-              <label style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;">
-                <input type="checkbox" id="tv-shuffle" style="cursor:pointer;accent-color:#c7af4f;"> SHUFFLE
-              </label>
-              <button id="tv-start-btn" class="btn btn-gold" onclick="liveTvStart()">START TV</button>
-              <button id="tv-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveTvStop()">STOP TV</button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
       <div class="sec-title">SCRIPT EDITOR <span class="badge">EDIT BEFORE GENERATING</span></div>
       <div class="card">
         <div class="card-header">
@@ -373,6 +330,168 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div id="preflight-panel" style="display:none; margin:10px 0; padding:12px 16px; border-radius:6px; font-size:12px; font-family:monospace; line-height:1.6; border:1px solid; max-height:220px; overflow-y:auto;"></div>
           <div class="alert alert-info" style="margin-top:8px">Use [beat] for pauses. Write in deadpan anchor voice. State facts flatly then ONE observation. Never explain the joke.</div>
         </div>
+      </div>
+    </div>
+
+    <!-- BROADCAST PAGE (CPD-1026/1027/1028) -->
+    <div class="page" id="page-broadcast">
+      <div class="sec-title">BROADCAST CONTROL <span class="badge">LIVE GRID + CLIPZWORLD TV</span></div>
+
+      <div id="bc-ops-bar" class="bc-ops-bar">Loading ops…</div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">GO LIVE</div></div>
+          <div class="card-body">
+            <div class="field"><label>PROGRAM MODE</label>
+              <select id="bc-program-mode" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
+                <option value="auto" selected>auto (daypart schedule)</option>
+                <option value="grid">grid (4× Twitch multiview)</option>
+                <option value="news_desk">news_desk</option>
+                <option value="event_night">event_night</option>
+              </select></div>
+            <div class="field"><label>HEADLINE (news_desk)</label>
+              <input id="bc-headline" type="text" placeholder="Breaking & Analysis"></div>
+            <div class="field"><label>EVENT TITLE (event_night)</label>
+              <input id="bc-event-title" type="text" placeholder="Weekend Sports Watch Party"></div>
+            <div class="field"><label>EVENT FILE (optional)</label>
+              <select id="bc-event-file" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px;font-size:11px;">
+                <option value="">— auto from calendar / output —</option>
+              </select></div>
+            <div id="bc-mobile-format" style="font-size:10px;color:#888;margin-bottom:8px;line-height:1.4;">
+              Mobile portrait is served by YouTube dual-format from this landscape stream (CPD-1029).
+            </div>
+            <div id="bc-vertical-row" style="display:none;font-size:11px;margin-bottom:8px;">
+              <span style="color:#888;">Legacy dual broadcast:</span>
+              <a id="bc-vertical-link" href="#" target="_blank" style="color:#9146ff;">▶ Vertical YouTube listing</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">SCHEDULER</div></div>
+          <div class="card-body" id="bc-scheduler-body">—</div>
+          <div class="card-body" style="border-top:1px solid rgba(199,175,79,0.1);padding-top:10px;">
+            <button class="btn btn-outline btn-sm" onclick="bcArm24h()">ARM 24H MEASUREMENT</button>
+            <div id="bc-waiter-log" class="bc-log" style="margin-top:8px;"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">ON AIR / PROGRAM</div></div>
+          <div class="card-body" id="bc-on-air">—</div>
+          <div id="bc-daypart-timeline" class="bc-daypart-timeline" style="padding:0 14px 14px;"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">CONNECTIONS</div></div>
+          <div class="card-body">
+            <div class="btn-row">
+              <button class="btn btn-outline btn-sm" onclick="bcConnectTwitch()">CONNECT TWITCH FOLLOWS</button>
+              <button class="btn btn-outline btn-sm" onclick="bcConnectYoutube()">CONNECT YOUTUBE</button>
+            </div>
+            <div id="bc-env-panel" style="margin-top:10px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE GRID (moved from Generate) -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-title">LIVE GRID</div>
+          <span class="tag tag-pending" id="lg-status-tag"><span class="tag-dot"></span> OFFLINE</span>
+        </div>
+        <div class="card-body">
+          <div id="lg-watch-row" style="display:none;font-size:11px;margin-bottom:10px;">
+            <a id="lg-watch-link" href="#" target="_blank" style="color:#c7af4f;font-weight:700;letter-spacing:1px;">▶ OPEN STREAM ON YOUTUBE</a>
+            <span id="lg-uptime" style="color:rgba(255,255,255,0.35);margin-left:8px;"></span>
+          </div>
+          <div id="lg-quads" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+            <span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);">AUDIO: <b id="lg-audio-mode" style="color:#c7af4f;">—</b></span>
+            <button class="btn btn-outline btn-sm" id="lg-audio-auto" style="font-size:10px;padding:2px 10px;display:none;" onclick="liveGridAudio('auto')">RELEASE TO AUTO</button>
+          </div>
+          <div id="lg-bench-row" style="display:none;margin-bottom:10px;">
+            <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:4px;">BENCH <span id="lg-bench-count" style="color:#c7af4f;"></span></div>
+            <div id="lg-bench-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:110px;overflow-y:auto;margin-bottom:6px;"></div>
+            <div id="lg-removed-row" style="display:none;margin-bottom:6px;">
+              <div style="font-size:9px;letter-spacing:1px;color:rgba(255,120,120,0.55);margin-bottom:3px;">REMOVED (manual re-add only)</div>
+              <div id="lg-removed-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:60px;overflow-y:auto;"></div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <input id="lg-bench-input" type="text" placeholder="bench streamer login…" style="flex:1;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);border-radius:4px;padding:4px 8px;font-size:12px;">
+              <button class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 10px;" onclick="liveGridAddBench()">+ BENCH</button>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label>HOT-SWAP FILE (while live)</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+              <select id="bc-file-swap-quad" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:12px;">
+                <option value="1">Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option>
+              </select>
+              <select id="bc-file-swap-select" style="flex:1;min-width:140px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px;font-size:11px;"></select>
+              <input id="bc-file-swap-label" type="text" placeholder="label" style="width:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;">
+              <button class="btn btn-outline btn-sm" onclick="bcSwapQuadrantFile()">SWAP</button>
+            </div>
+          </div>
+          <div class="btn-row">
+            <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
+              <option value="public" selected>PUBLIC</option>
+              <option value="unlisted">UNLISTED</option>
+            </select>
+            <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
+            <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">BENCH PREVIEW</div></div>
+          <div class="card-body">
+            <select id="bc-bench-tab" onchange="broadcastRefreshDiscovery()" style="margin-bottom:8px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
+              <option value="merged">Merged (follows + platform top)</option>
+              <option value="follows">Follows only</option>
+            </select>
+            <div id="bc-discovery-list" style="max-height:120px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">CLIPZWORLD TV</div>
+            <span class="tag tag-pending" id="tv-status-tag"><span class="tag-dot"></span> OFFLINE</span>
+          </div>
+          <div class="card-body">
+            <div id="tv-info-row" style="display:none;font-size:11px;margin-bottom:10px;color:rgba(255,255,255,0.5);">
+              <span id="tv-uptime"></span> · loop <b id="tv-loop" style="color:#c7af4f;">0</b> · <span id="tv-cache-state"></span>
+            </div>
+            <div id="tv-caching-row" style="display:none;font-size:10px;color:rgba(199,175,79,0.8);margin-bottom:8px;">⏳ caching: <span id="tv-caching"></span></div>
+            <div id="tv-playlist" style="display:none;max-height:100px;overflow-y:auto;margin-bottom:10px;font-size:10px;font-family:monospace;"></div>
+            <div class="btn-row">
+              <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer;">
+                <input type="checkbox" id="tv-shuffle" style="accent-color:#c7af4f;"> SHUFFLE
+              </label>
+              <button id="tv-start-btn" class="btn btn-gold" onclick="liveTvStart()">START TV</button>
+              <button id="tv-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveTvStop()">STOP TV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-title">YOUTUBE HOURLY ANALYTICS</div>
+          <select id="bc-analytics-days" onchange="broadcastRefreshAnalytics()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;">
+            <option value="7">7 days</option><option value="14" selected>14 days</option><option value="28">28 days</option>
+          </select>
+        </div>
+        <div class="card-body" id="bc-analytics-body">Open this page to load analytics.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">ALLOWLIST & PLATFORM RULES</div></div>
+        <div class="card-body" id="bc-allowlist-body">—</div>
       </div>
     </div>
 
@@ -1194,6 +1313,7 @@ function nav(page) {
   });
   if (page === 'calendar') buildCalendar();
   if (page === 'queue') refreshQueue();
+  if (page === 'broadcast' && typeof broadcastPageInit === 'function') broadcastPageInit();
   if (page === 'publish') pubPopulateJobDropdown();
   if (page === 'abtest') thumbPopulateDropdown();
 }
@@ -9570,5 +9690,6 @@ async function liveTvStop() {
 liveTvRefresh();
 setInterval(liveTvRefresh, 15000);
 </script>
+<script src="/assets/broadcast_dashboard.js"></script>
 </body>
 </html>

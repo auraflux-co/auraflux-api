@@ -687,8 +687,11 @@ function unregisterPoller(jobId) {
 // Implements the fully-automatic pipeline: Gate 1 → HeyGen render → auto-assemble → Gate 3 → Drive → Gate 6 publish (private)
 // Rob's only role: review private drafts on YouTube/TikTok/Instagram and flip to public.
 async function startHeyGenPoller(jobId, card) {
+  const avatarEngine = card.avatarEngine || process.env.AVATAR_ENGINE || 'heygen';
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
-  if (!HEYGEN_API_KEY) {
+  const simMode = process.env.HEYGEN_SIM_MODE === 'true';
+  const needsHeyGenKey = avatarEngine === 'heygen' && !simMode;
+  if (needsHeyGenKey && !HEYGEN_API_KEY) {
     console.error(`[heygen-poller:${jobId}] No HEYGEN_API_KEY — cannot poll`);
     return;
   }
@@ -2690,6 +2693,7 @@ app.get('/live-grid/program/status', (req, res) => {
         title: layout.title,
         sources: layout.sources,
         filePaths: layout.filePaths,
+        activeEvent: layout.activeEvent,
       } : null,
     });
   } catch (e) {
@@ -2753,8 +2757,51 @@ app.get('/live-grid/allowlist', (req, res) => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// ClipzWorld TV (CPD-956/CPD-957) — 24/7 loop of produced videos → Twitch
+// GET /live-grid/files — eligible mp4 list for quadrant swap (CPD-1028)
+app.get('/live-grid/files', (req, res) => {
+  try {
+    const { listEligibleGridFiles } = require('./lib/broadcast/ops');
+    const files = listEligibleGridFiles();
+    res.json({ ok: true, count: files.length, files });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/ops — pipeline + stream safety snapshot (CPD-1028)
+app.get('/broadcast/ops', (req, res) => {
+  try {
+    const { buildOpsSnapshot } = require('./lib/broadcast/ops');
+    const health = {
+      version: BUILD_INFO.version,
+      gitHash: BUILD_INFO.gitHash,
+      gitBranch: BUILD_INFO.gitBranch,
+      uptime: process.uptime(),
+    };
+    res.json({
+      ok: true,
+      ...buildOpsSnapshot({
+        persistedJobs,
+        gridRunning: !!liveGridManager?.running,
+        tvRunning: !!liveTvManager?.running,
+        health,
+      }),
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /broadcast/24h-arm — operator ready for 24h measurement (CPD-1028)
+app.post('/broadcast/24h-arm', (req, res) => {
+  try {
+    const { arm24hMeasurement } = require('./lib/broadcast/ops');
+    res.json({ ok: true, ...arm24hMeasurement() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ---------------------------------------------------------------------------
 let liveTvManager = null;
 
@@ -3043,6 +3090,87 @@ app.get('/job/:id/assembly-preflight', (req, res) => {
   report.issues = report.segments.filter(s => s.issue).map(s => `[${s.index}] ${s.label}: ${s.issue}`);
 
   res.json(report);
+});
+
+// POST /job/:id/resubmit-avatar — re-run avatar adapter (EchoMimic/HeyGen) for an approved script
+// Resumes from card.heygen.videoJobs checkpoints — skips scenes already completed.
+app.post('/job/:id/resubmit-avatar', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card?.script?.raw) {
+    return res.status(404).json({ ok: false, error: `Job not found or has no script: ${jobId}` });
+  }
+
+  const existing = card.heygen?.videoJobs || [];
+  const done = existing.filter((v) => v.status === 'completed' && v.video_id).length;
+  res.json({
+    ok: true,
+    jobId,
+    resume: done > 0,
+    completedScenes: done,
+    message: done > 0
+      ? `Avatar resume started (${done} scene(s) already done)`
+      : 'Avatar resubmit started — watch pm2 logs for progress'
+  });
+
+  (async () => {
+    const type = card.contentType || 'twitch';
+    const format = type.includes('-short') ? 'portrait' : 'landscape';
+    let script = card.script.raw
+      .replace(/^HOOK:\s*/mg, '')
+      .replace(/^REACTION:\s*/mg, '')
+      .replace(/^CAPTION:\s*.+$/mg, '')
+      .replace(/\[(?:pause|beat)[^\]]*\]/gi, '')
+      .replace(/\n{3,}/g, '\n\n').trim();
+
+    const checkpoint = (heygenPartial) => {
+      const snap = {
+        ...card,
+        ...persistedJobs[jobId],
+        stage: 'avatar_in_progress',
+        avatarEngine: process.env.AVATAR_ENGINE || 'heygen',
+        heygen: { ...(card.heygen || {}), ...heygenPartial, videoJobs: heygenPartial.videoJobs }
+      };
+      saveJobCard(jobId, snap);
+    };
+
+    console.log(`[resubmit-avatar:${jobId}] starting ${process.env.AVATAR_ENGINE || 'heygen'} — ${type}, ${format}${done ? ` (resume, ${done} done)` : ''}`);
+    try {
+      const heygenResult = await sendScriptToHeyGen(script, {
+        contentType: type,
+        format,
+        jobId,
+        existingVideoJobs: existing,
+        onSceneComplete: ({ videoJobs }) => checkpoint({ videoJobs, engine: process.env.AVATAR_ENGINE || 'heygen' })
+      });
+      if (heygenResult?.error) throw new Error(heygenResult.error);
+
+      const updated = { ...card, stage: 'all_sent', avatarEngine: process.env.AVATAR_ENGINE || 'heygen', heygen: heygenResult };
+      saveJobCard(jobId, updated);
+      console.log(`[resubmit-avatar:${jobId}] ✅ ${heygenResult.videoJobs?.length || 0} segments submitted`);
+
+      const manualWf = require('./lib/manual_segment_workflow');
+      if (manualWf.useC0ImmediateManualHold(updated)) {
+        const prep = await manualWf.prepareC0ManualHoldAfterHeyGen(jobId, updated);
+        updated.stage = 'awaiting_manual_segments';
+        updated.manualSegments = prep.manualSegments;
+        saveJobCard(jobId, updated);
+        console.log(`[resubmit-avatar:${jobId}] c0 manual hold — ${prep.manualSegments.manualDir}`);
+        return;
+      }
+
+      startHeyGenPoller(jobId, persistedJobs[jobId] || updated).catch(e => {
+        console.error(`[resubmit-avatar:${jobId}] poller error: ${e.message}`);
+      });
+    } catch (e) {
+      console.error(`[resubmit-avatar:${jobId}] ❌ ${e.message}`);
+      if (e.videoJobs?.length) {
+        checkpoint({ videoJobs: e.videoJobs, engine: process.env.AVATAR_ENGINE || 'heygen', lastError: e.message, failedScene: e.failedScene });
+        console.log(`[resubmit-avatar:${jobId}] 💾 checkpoint saved — ${e.videoJobs.length} scene(s) — resume with same endpoint`);
+      }
+      logError('RESUBMIT_AVATAR', e.message, { jobId, contentType: type, completedScenes: e.videoJobs?.length || done });
+    }
+  })();
 });
 
 // POST /job/:id/manual-segments/resume — continue pipeline after c0 manual checkpoint
