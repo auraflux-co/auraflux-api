@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleSlot } from '@/lib/api';
 import { Separator } from '@/components/ui/separator';
-import { apiFetch, listJobs } from '@/lib/api';
+import { apiFetch, listJobs, type Job } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 import { jobDisplayTitle, jobStatusLabel, portalStatusLabel, platformLabel, entryTypeLabel, formatUserError, isReviewQueueJob } from '@/lib/job-labels';
@@ -69,17 +69,6 @@ interface StagingAssets {
   };
   portalReports: PortalReport[];
   urlExpiresAt: string;
-}
-
-interface JobRow {
-  jobId: string;
-  status: string;
-  contentType: string | null;
-  customerId:   string | null;
-  customerName: string | null;
-  platforms: string[];
-  outputUrl: string | null;
-  createdAt: string | number;
 }
 
 // ── Publish best practices ────────────────────────────────────────────────────
@@ -645,7 +634,7 @@ export default function StagingPage() {
   const { isSuperAdmin, isLoaded: roleLoaded } = useRole();
   const { activeBrand }          = useBrand();
   const activeBrandId            = activeBrand?.id;
-  const [jobs, setJobs]         = useState<JobRow[]>([]);
+  const [jobs, setJobs]         = useState<Job[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -656,7 +645,7 @@ export default function StagingPage() {
       try {
         const token = await getToken();
         const data = isSuperAdmin
-          ? await apiFetch<{ jobs: JobRow[] }>('/jobs?all=true', { token: token ?? undefined })
+          ? await apiFetch<{ jobs: Job[] }>('/jobs?all=true', { token: token ?? undefined })
           : await listJobs(token ?? undefined);
         const withOutput = (data.jobs ?? []).filter(isReviewQueueJob);
         withOutput.sort((a, b) => {

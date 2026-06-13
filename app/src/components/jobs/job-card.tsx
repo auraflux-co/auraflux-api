@@ -12,6 +12,8 @@ const STATUS_MAP: Record<Job['status'], { label: string; variant: 'default' | 's
   queued:    { label: 'Queued',     variant: 'secondary'   },
   queued_scheduled: { label: 'Scheduled', variant: 'outline' },
   running:   { label: 'Running',    variant: 'default'     },
+  processing:       { label: 'In Review',  variant: 'secondary'   },
+  operator_review:  { label: 'In Review',  variant: 'secondary'   },
   complete:  { label: 'Complete',   variant: 'default'     },
   failed:    { label: 'Failed',     variant: 'destructive' },
   held:      { label: 'On Hold',    variant: 'outline'     },

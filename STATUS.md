@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-13 v1.0.1124 (Cursor — fix(CPD-869): unblock auraflux-app deploy — review page Job type + processing/operator_review status in Job interface and job-card; prior app deploys failed TS check so Review Queue never shipped)
 **Last Updated:** 2026-06-13 v1.0.1123 (Cursor — fix(CPD-869): GET /jobs resolves customer status from job_spec not portal-policy DB leak; martinezofwonkru zombie cleared from Active; review queue surfaces operator_review as processing; home tile system-error limited to failures in last 24h)
 **Last Updated:** 2026-06-13 v1.0.1122 (Cursor — fix(CPD-869): /review queue includes operator_review+processing jobs; customers/sub-brands no longer redirected to broken history tab; dashboard review counts aligned)
 **Last Updated:** 2026-06-13 v1.0.1121 (Cursor — fix(CPD-869): sub-brand E2E poll treats operator_review+grade+output as terminal; CPD-872 compliance proxy via portal summary when gpt4oQA hidden; clip-picker AC accepts submitted clip URLs; sync_subbrand_twitch_avatars bulk refresh hardened; brand_twitch_sync resolves Helix profile images on save)
