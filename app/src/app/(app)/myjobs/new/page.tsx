@@ -629,7 +629,40 @@ function JobBuilderPageInner() {
   const isLongForm         = format === 'longform' || formFactor === 'long';
   const durations          = isLongForm ? DUR_LONG : DUR_SHORT;
   const totalSecs          = sourceItems.reduce((s, i) => s + (i.duration ?? 0), 0);
-  const canSubmit          = !!formFactor && platforms.length > 0 &&
+
+  // Active template object — needed for clip requirements and production section context.
+  const activeTemplate = templateId !== 'custom'
+    ? PRESET_TEMPLATES.find((t) => t.id === templateId) ?? null
+    : null;
+
+  // Clip count requirements from the active template
+  const templateMinClips   = activeTemplate?.minClips ?? 1;
+  const templateMaxClips   = activeTemplate?.maxClips ?? Infinity;
+  const clipsForTemplate   = sourceMode === 'source' ? sourceItems.length : 0;
+  // Only enforce min/max clip count when the template uses clip sources (not longform VOD)
+  const templateUsesClips  = activeTemplate ? activeTemplate.sourceIntent === 'clips' : false;
+  const clipCountMet       = !templateUsesClips || clipsForTemplate >= templateMinClips;
+  const clipCountExceeded  = templateUsesClips && templateMaxClips < Infinity && clipsForTemplate > templateMaxClips;
+
+  // Human-readable clip requirement hint shown near the source section and submit button
+  const clipRequirementHint: string | null = (() => {
+    if (!activeTemplate || !templateUsesClips) return null;
+    if (clipsForTemplate === 0) {
+      return templateMinClips === 1
+        ? `Add at least 1 clip to continue`
+        : `${activeTemplate.label} requires ${templateMinClips}–${templateMaxClips === Infinity ? '∞' : templateMaxClips} clips — add ${templateMinClips} to continue`;
+    }
+    if (!clipCountMet) {
+      const needed = templateMinClips - clipsForTemplate;
+      return `${activeTemplate.label} needs ${needed} more clip${needed !== 1 ? 's' : ''} (${clipsForTemplate}/${templateMinClips} minimum)`;
+    }
+    if (clipCountExceeded) {
+      return `${activeTemplate.label} accepts up to ${templateMaxClips} clips — remove ${clipsForTemplate - templateMaxClips} to continue`;
+    }
+    return null;
+  })();
+
+  const canSubmit = !!formFactor && platforms.length > 0 && clipCountMet && !clipCountExceeded &&
     (sourceMode === 'source' ? sourceItems.length > 0 : !!fileKeys.trim());
 
   const tier = (planTier ?? 'operate') as PlanTier;
@@ -641,12 +674,6 @@ function JobBuilderPageInner() {
     sourceMode: sourceMode === 'source' ? 'source' : 'upload',
     planTier: tier,
   });
-
-  // When a preset template is active, this holds the original template object so the
-  // production section can distinguish "included by template" from "optional extras".
-  const activeTemplate = templateId !== 'custom'
-    ? PRESET_TEMPLATES.find((t) => t.id === templateId) ?? null
-    : null;
 
   // ─── Section helpers ───────────────────────────────────────────────────────
 
@@ -995,6 +1022,11 @@ function JobBuilderPageInner() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {clipRequirementHint && (
+            <span className="text-xs text-amber-500 font-medium max-w-[220px] text-right leading-tight">
+              {clipRequirementHint}
+            </span>
+          )}
           <button type="button" onClick={() => router.back()}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Cancel
@@ -1132,9 +1164,15 @@ function JobBuilderPageInner() {
                         onClose={() => { setSourceItems([]); setShowClipEditor(false); }}
                       />
                       {sourceItems.length > 0 && (
-                        <p className="text-xs text-primary font-medium">
-                          ✓ {sourceItems.length} clip{sourceItems.length !== 1 ? 's' : ''} selected
+                        <p className={`text-xs font-medium ${clipCountMet && !clipCountExceeded ? 'text-primary' : 'text-amber-500'}`}>
+                          {clipCountMet && !clipCountExceeded ? '✓' : '⚠'}
+                          {' '}{sourceItems.length} clip{sourceItems.length !== 1 ? 's' : ''} selected
                           {totalSecs > 0 ? ` · ${fmtSecs(totalSecs)} total` : ''}
+                        </p>
+                      )}
+                      {clipRequirementHint && (
+                        <p className="text-xs text-amber-500 font-medium">
+                          {clipRequirementHint}
                         </p>
                       )}
                     </div>
@@ -1563,6 +1601,11 @@ function JobBuilderPageInner() {
               )}
             </div>
 
+            {clipRequirementHint && (
+              <p className="text-xs text-amber-500 font-medium text-center leading-tight">
+                {clipRequirementHint}
+              </p>
+            )}
             <Button size="sm" className="w-full" disabled={!canSubmit || isPending} onClick={handleSubmit}>
               {isPending ? 'Starting…' : canSubmit ? 'Start production →' : 'Complete required steps'}
             </Button>

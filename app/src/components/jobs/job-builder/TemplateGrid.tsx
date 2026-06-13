@@ -20,19 +20,22 @@ export interface JobTemplate {
   audioOpts: string[];
   /** Feature ids to pre-enable */
   features:  string[];
+  /** Minimum clips required before the job can be submitted */
   minClips:  number;
+  /** Maximum clips accepted — excess clips are ignored or user is warned */
+  maxClips:  number;
 }
 
 export const PRESET_TEMPLATES: JobTemplate[] = [
   {
     id: 'tiktok_clutch',
     label: 'TikTok Clutch',
-    tagline: 'Single high-energy gaming moment for short-form platforms',
+    tagline: 'High-energy gaming clips compiled for short-form platforms',
     formFactor: 'short', sourceIntent: 'clips',
     format: 'portrait', platforms: ['tiktok', 'youtube', 'instagram'],
-    captions: true, voiceover: false, grade: 'vivid',
+    captions: true, voiceover: false, grade: 'crisp',
     effects: ['zoom', 'transitions'], audioOpts: ['loudnorm'],
-    features: ['scene_select', 'branding'], minClips: 1,
+    features: ['scene_select', 'branding'], minClips: 2, maxClips: 5,
   },
   {
     id: 'youtube_deep_dive',
@@ -40,19 +43,19 @@ export const PRESET_TEMPLATES: JobTemplate[] = [
     tagline: 'Full-length VOD trimmed and polished for YouTube',
     formFactor: 'long', sourceIntent: 'longform',
     format: 'longform', platforms: ['youtube'],
-    captions: true, voiceover: false, grade: 'neut',
+    captions: true, voiceover: false, grade: 'clean',
     effects: ['transitions'], audioOpts: ['loudnorm', 'duck'],
-    features: ['scene_select', 'branding'], minClips: 1,
+    features: ['scene_select', 'branding'], minClips: 1, maxClips: 1,
   },
   {
     id: 'irl_story_time',
     label: 'IRL Story Time',
-    tagline: 'IRL or just-chatting moment for TikTok and Instagram',
+    tagline: 'IRL or just-chatting story moments for TikTok and Instagram',
     formFactor: 'short', sourceIntent: 'clips',
     format: 'portrait', platforms: ['tiktok', 'instagram'],
     captions: true, voiceover: false, grade: 'warm',
     effects: ['transitions'], audioOpts: ['loudnorm', 'duck'],
-    features: ['scene_select', 'branding'], minClips: 1,
+    features: ['scene_select', 'branding'], minClips: 2, maxClips: 5,
   },
   {
     id: 'montage_hype_reel',
@@ -62,7 +65,7 @@ export const PRESET_TEMPLATES: JobTemplate[] = [
     format: 'portrait', platforms: ['tiktok', 'youtube'],
     captions: true, voiceover: false, grade: 'vivid',
     effects: ['zoom', 'transitions'], audioOpts: ['loudnorm', 'duck'],
-    features: ['scene_select', 'branding'], minClips: 1,
+    features: ['scene_select', 'branding'], minClips: 3, maxClips: 8,
   },
   {
     id: 'reaction_cut',
@@ -70,9 +73,9 @@ export const PRESET_TEMPLATES: JobTemplate[] = [
     tagline: 'Reaction or commentary VOD edited for YouTube',
     formFactor: 'long', sourceIntent: 'longform',
     format: 'longform', platforms: ['youtube'],
-    captions: true, voiceover: false, grade: 'neut',
+    captions: true, voiceover: false, grade: 'neutral',
     effects: ['zoom', 'transitions'], audioOpts: ['loudnorm', 'duck'],
-    features: ['scene_select', 'branding'], minClips: 1,
+    features: ['scene_select', 'branding'], minClips: 1, maxClips: 1,
   },
   {
     id: 'quick_guide',
@@ -82,7 +85,7 @@ export const PRESET_TEMPLATES: JobTemplate[] = [
     format: 'portrait', platforms: ['youtube', 'tiktok'],
     captions: true, voiceover: false, grade: 'cool',
     effects: ['transitions'], audioOpts: ['loudnorm', 'duck'],
-    features: ['scene_select', 'branding'], minClips: 1,
+    features: ['scene_select', 'branding'], minClips: 1, maxClips: 3,
   },
 ];
 
