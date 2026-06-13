@@ -4,18 +4,24 @@
 # (HOW page: Confluence 31555587, "Engineering gotchas"). Do NOT "clean up"
 # the version pins or reorder the install steps without re-running the spike.
 #
-# Image size: ~30GB (22GB weights baked in). Alternative: move /models to a
-# RunPod network volume and mount at /models — same paths, smaller image,
-# slower cold start on fresh hosts.
+# Weights are NOT baked: GHCR rejects layers >10GB and the weights are ~22GB.
+# They live on a RunPod network volume (populate with populate_volume.sh),
+# mounted by serverless at /runpod-volume — handler reads MODELS_DIR env
+# (default /runpod-volume/models). Image is ~10GB: CUDA runtime + torch stack.
 
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
+# PIP_PREFER_BINARY: transitive deps (e.g. stringzilla) otherwise fall back to
+# multi-GB gcc source builds that OOM the remote kaniko builder. The validated
+# pins live in constraints.txt and are unaffected.
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     HF_HUB_ENABLE_HF_TRANSFER=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_PREFER_BINARY=1
 
-RUN apt-get update -qq && \
+RUN rm -f /var/lib/dpkg/statoverride 2>/dev/null || true && \
+    apt-get update -qq && \
     apt-get install -y -qq python3.11 python3.11-venv python3-pip ffmpeg git curl && \
     ln -sf /usr/bin/python3.11 /usr/local/bin/python && \
     python -m pip install --upgrade pip && \
@@ -44,28 +50,16 @@ RUN pip uninstall -y tensorflow retina-face 2>/dev/null; \
     pip list 2>/dev/null | awk '/^nvidia-.*cu13/{print $1}' | xargs -r pip uninstall -y; \
     pip install nvidia-cudnn-cu12==9.1.0.70
 
-# ── 4. Bake weights (~22GB). HF_TOKEN build-arg only needed if rate-limited. ──
-ARG HF_TOKEN=""
-RUN export HF_TOKEN="${HF_TOKEN}" && \
-    mkdir -p /models && \
-    python -c "from huggingface_hub import snapshot_download as d; \
-d('alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP', local_dir='/models/Wan2.1-Fun-V1.1-1.3B-InP'); \
-d('TencentGameMate/chinese-wav2vec2-base', local_dir='/models/chinese-wav2vec2-base'); \
-d('BadToBest/EchoMimicV3', allow_patterns=['echomimicv3-flash-pro/*'], local_dir='/models/em3')"
+# ── 4. Weights are downloaded to the network volume by populate_volume.sh
+#       (NOT baked — see header). The wav2vec2 .bin→safetensors conversion
+#       (transformers >=4.53 CVE-2025-32434 check) happens there too. ──
 
-# ── 5. Spike gotcha: transformers >=4.53 refuses .bin checkpoints on torch <2.6
-#       (CVE-2025-32434) — wav2vec2 only ships pytorch_model.bin, convert now ──
-RUN python -c "\
-import torch; \
-from safetensors.torch import save_file; \
-sd = torch.load('/models/chinese-wav2vec2-base/pytorch_model.bin', map_location='cpu', weights_only=True); \
-save_file({k: v.contiguous() for k, v in sd.items()}, '/models/chinese-wav2vec2-base/model.safetensors'); \
-print('wav2vec2 converted to safetensors')"
-
-# ── 6. Build-time smoke: imports resolve against the pinned stack ──
+# ── 5. Build-time smoke: imports resolve against the pinned stack ──
 RUN python -c "import torch, transformers, diffusers; \
 print('torch', torch.__version__, '| transformers', transformers.__version__, '| diffusers', diffusers.__version__)"
 
 COPY handler.py /workspace/handler.py
+COPY http_server.py /workspace/http_server.py
 
+# Default: serverless handler. Pod mode: override CMD to http_server.py
 CMD ["python", "-u", "/workspace/handler.py"]

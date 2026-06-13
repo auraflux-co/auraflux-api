@@ -37,8 +37,10 @@ module.exports = {
       min_uptime: '10s',       // must stay up 10s to count as a successful start
       restart_delay: 2000,     // 2s between crash restarts
 
-      // Memory guard — restart if server leaks past 1GB
-      max_memory_restart: '1G',
+      // Memory guard — restart if server leaks past 4GB.
+      // 1G was too low: Gemini clip-analysis wave (8 parallel ~32MB downloads + base64
+      // upload buffers) legitimately peaks ~1.5-2GB and was OOM-killed mid-job (2026-06-10).
+      max_memory_restart: '4G',
 
       // Logging
       out_file: 'logs/pm2-out.log',

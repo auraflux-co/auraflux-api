@@ -33,7 +33,9 @@ import requests
 import runpod
 
 REPO_DIR = "/workspace/echomimic_v3"
-MODELS_DIR = "/models"
+# Weights live on a RunPod network volume (serverless mounts it at /runpod-volume).
+# GHCR's 10GB layer cap rules out baking the ~22GB of weights into the image.
+MODELS_DIR = os.environ.get("MODELS_DIR", "/runpod-volume/models")
 
 DEFAULT_PROMPT = (
     "A bearded man in a tan blazer over a black t-shirt sits at a desk in a "
@@ -143,4 +145,5 @@ def handler(job):
         shutil.rmtree(job_dir, ignore_errors=True)
 
 
-runpod.serverless.start({"handler": handler})
+if __name__ == "__main__":
+    runpod.serverless.start({"handler": handler})
