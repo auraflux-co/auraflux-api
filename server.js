@@ -2711,6 +2711,48 @@ app.post('/live-grid/quadrant/:n/file', (req, res) => {
   }
 });
 
+// GET /live-grid/discovery/bench — platform top live preview (CPD-1019)
+app.get('/live-grid/discovery/bench', async (req, res) => {
+  try {
+    const { DEFAULT_ROSTER } = require('./lib/live_grid/poller');
+    const { getFollowedBench } = require('./lib/live_grid/follows');
+    const { fetchPlatformTopLive, mergePlatformBench } = require('./lib/live_grid/discovery');
+    const roster = DEFAULT_ROSTER;
+    const follows = await getFollowedBench({ roster });
+    const platform = await fetchPlatformTopLive();
+    const bench = mergePlatformBench({ roster, follows: follows || [], platform });
+    res.json({ ok: true, followsCount: follows?.length || 0, platformTop: platform.slice(0, 20), benchCount: bench.length, bench: bench.slice(0, 50) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /live-grid/analytics/hourly — watch time by hour + schedule recommendation (CPD-1024)
+app.get('/live-grid/analytics/hourly', async (req, res) => {
+  try {
+    const yt = require('./lib/services/youtube_direct');
+    const { fetchHourlyWatch, aggregateByHour, recommendGridWindow } = require('./lib/live_grid/hourly_analytics');
+    const ch = await yt.getChannelInfo();
+    if (!ch?.id) return res.status(400).json({ ok: false, error: 'YouTube not connected' });
+    const rows = await fetchHourlyWatch(ch.id, { days: Number(req.query.days) || 14 });
+    const hourly = aggregateByHour(rows);
+    const recommendation = recommendGridWindow(hourly);
+    res.json({ ok: true, channelId: ch.id, rows: rows.slice(-48), hourly, recommendation });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.response?.data?.error?.message || e.message });
+  }
+});
+
+// GET /live-grid/allowlist — trial events + platform rules (CPD-1023)
+app.get('/live-grid/allowlist', (req, res) => {
+  try {
+    const { loadAllowlist } = require('./lib/live_grid/rights_registry');
+    res.json({ ok: true, ...loadAllowlist() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // ClipzWorld TV (CPD-956/CPD-957) — 24/7 loop of produced videos → Twitch
 // ---------------------------------------------------------------------------
