@@ -2526,7 +2526,8 @@ app.post('/job/:id/schedule', (req, res) => {
 // ---------------------------------------------------------------------------
 let liveGridManager = null;
 
-// POST /live-grid/start { privacyStatus?, title?, roster?, bench?, exclude?, output? }
+// POST /live-grid/start { privacyStatus?, title?, roster?, bench?, exclude?, output?,
+//   programMode?, eventFile?, eventTitle?, headline?, fileOverrides? }
 app.post('/live-grid/start', async (req, res) => {
   try {
     if (liveGridManager?.running) {
@@ -2669,6 +2670,45 @@ app.post('/live-grid/audio', (req, res) => {
 app.get('/live-grid/status', (req, res) => {
   if (!liveGridManager) return res.json({ ok: true, running: false });
   res.json({ ok: true, ...liveGridManager.status() });
+});
+
+// GET /live-grid/program/status — daypart mode + file sources (CPD-1017)
+app.get('/live-grid/program/status', (req, res) => {
+  try {
+    const { ProgramDirector } = require('./lib/live_grid/program_director');
+    const director = liveGridManager?.programDirector || new ProgramDirector();
+    const layout = liveGridManager?.running
+      ? liveGridManager._programLayout
+      : director.layout([null, null, null, null]);
+    res.json({
+      ok: true,
+      running: !!liveGridManager?.running,
+      ...director.status(),
+      layout: layout ? {
+        mode: layout.mode,
+        modeLabel: layout.modeLabel,
+        title: layout.title,
+        sources: layout.sources,
+        filePaths: layout.filePaths,
+      } : null,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-grid/quadrant/:n/file { path, label? } — hot-swap a file into quadrant (CPD-1018)
+app.post('/live-grid/quadrant/:n/file', (req, res) => {
+  if (!liveGridManager?.running) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const q = Number(req.params.n) - 1;
+  const { path: filePath, label } = req.body || {};
+  if (!filePath) return res.status(400).json({ ok: false, error: 'path required' });
+  try {
+    const quadrant = liveGridManager.setQuadrantFile(q, filePath, label);
+    res.json({ ok: true, quadrant });
+  } catch (e) {
+    res.status(400).json({ ok: false, error: e.message });
+  }
 });
 
 // ---------------------------------------------------------------------------
