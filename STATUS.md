@@ -13,7 +13,7 @@
 
 ---
 
-**Last Updated:** 2026-06-15 (CPD-1027) — fix deploy crash: gate_policy_runner → portal_policy_runner import. Prior: 2026-06-14 CPD-1026 portal5 Upload-Post poll.
+**Last Updated:** 2026-06-15 (CPD-1027) — restore C1 route mounts dropped in #637; gate_policy_runner import fix. Prior: CPD-1026 portal5 Upload-Post poll.
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.

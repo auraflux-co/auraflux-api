@@ -9081,6 +9081,91 @@ app.get('/errors', (req, res) => {
   res.json({ ok: true, errorRate: rate, recent, logFile: ERROR_LOG });
 });
 
+// ── Developer API — /v1/ surface for Operate plan (CPD-126) ──────
+const developerApiRouter = require('./lib/routes/developer_api');
+app.use('/v1', developerApiRouter);
+
+// ── Public API — unauthenticated, used by marketing site (CPD-397, CPD-396) ──
+const publicRouter = require('./lib/routes/public');
+app.use(publicRouter);
+
+// ── Admin CRM + Permissions (CPD-150 / CPD-154) ───────────────────
+const { clerkInit } = require('./lib/auth');
+app.use(clerkInit());
+
+const adminCrmRouter = require('./lib/routes/admin_crm');
+app.use(adminCrmRouter);
+
+const _adminHealthCacheStub = {
+  ffmpeg: { status: 'ok' },
+  directories: {},
+  freeSpaceGB: null,
+  apiKeys: {},
+  vectcut: { status: 'unknown' },
+  lastRefreshed: null,
+};
+const createAdminRouter = require('./lib/routes/admin');
+const adminRouter = createAdminRouter({ _healthCache: _adminHealthCacheStub, BUILD_INFO });
+app.use(adminRouter);
+
+const adminAssistantRoutes = require('./lib/routes/admin_assistant');
+app.use('/api/admin', adminAssistantRoutes);
+
+const adminChatRoutes = require('./lib/routes/admin_chat');
+app.use(adminChatRoutes);
+
+const adminSeedRoutes = require('./lib/routes/admin_seed');
+app.use(adminSeedRoutes);
+
+// ── Dashboard API routes (CPD-177 / frontend api.ts surface) ─────
+const planRouter      = require('./lib/routes/plan');
+const creditsRouter        = require('./lib/routes/credits');
+const marketingRouter      = require('./lib/routes/marketing');
+const appContentRouter     = require('./lib/routes/app_content');
+const billingRouter        = require('./lib/routes/billing');
+const notificationsRouter  = require('./lib/routes/notifications');
+const collabRouter    = require('./lib/routes/collab');
+const socialRouter    = require('./lib/routes/social_connect');
+const channelConnectRouter = require('./lib/routes/channel_connect');
+const supportRouter   = require('./lib/routes/support');
+const templatesRouter = require('./lib/routes/templates');
+const teamRouter          = require('./lib/routes/team');
+const uploadRouter        = require('./lib/routes/upload');
+const accountRouter       = require('./lib/routes/account');
+const brandsRouter        = require('./lib/routes/brands');
+const voiceRouter         = require('./lib/routes/voice');
+const videoRouter         = require('./lib/routes/video');
+const thumbnailRouter     = require('./lib/routes/thumbnail');
+const clipSourcingRouter  = require('./lib/routes/clip_sourcing');
+const sourceRouter        = require('./lib/routes/source');
+const heygenRouter        = require('./lib/routes/heygen');
+const jobsC1Router        = require('./lib/routes/jobs_c1');
+const claimFixerRouter    = require('./lib/routes/claim_fixer');
+app.use(planRouter);
+app.use(creditsRouter);
+app.use(marketingRouter);
+app.use(appContentRouter);
+app.use(billingRouter);
+app.use(notificationsRouter);
+app.all('/concierge*', (req, res) => res.redirect(301, req.path.replace('/concierge', '/collab')));
+app.use(collabRouter);
+app.use(socialRouter);
+app.use(channelConnectRouter);
+app.use(supportRouter);
+app.use(templatesRouter);
+app.use(teamRouter);
+app.use(uploadRouter);
+app.use(accountRouter);
+app.use('/brands', brandsRouter);
+app.use(voiceRouter);
+app.use(videoRouter);
+app.use(thumbnailRouter);
+app.use(clipSourcingRouter);
+app.use(sourceRouter);
+app.use(jobsC1Router);
+app.use(claimFixerRouter);
+app.use(heygenRouter);
+
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
 
