@@ -29,4 +29,15 @@ describe('publish copy prompt — long-form structured description (CPD-962)', (
     expect(out).toContain('1-2 punchy sentences');
     expect(out).not.toContain('Featured Streamers');
   });
+
+  test('news-short content type resolves news context without long-form SEO block', () => {
+    const out = buildPublishCopySystemPrompt({
+      ...base,
+      contentType: 'news-short',
+      isShort: true,
+      cd: '1. Iran tensions\n2. EU vote',
+    });
+    expect(out).toContain('Short (60-90 sec vertical)');
+    expect(out).not.toContain('EVERY story');
+  });
 });

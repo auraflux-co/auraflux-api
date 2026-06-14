@@ -216,6 +216,8 @@ env/
 ENV/
 venv-*/
 data/youtube_tokens.json
+data/creator_registry.json
+data/kick_follows_token.json
 .env.bak*
 
 # E2E test output logs

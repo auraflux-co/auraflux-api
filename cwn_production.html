@@ -421,8 +421,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
                 <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(true)" style="font-size:10px;padding:2px 10px;">ALL</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)" style="font-size:10px;padding:2px 10px;">NONE</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerChip()" style="font-size:10px;padding:2px 10px;">+ ADD</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" title="Merge your Twitch follows (the live grid bench) into this roster" style="font-size:10px;padding:2px 10px;color:#9146ff;border-color:rgba(145,70,255,0.5);">⟳ SYNC FOLLOWS</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()" style="font-size:10px;padding:2px 10px;">+ ADD URL</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" title="Sync Twitch follows, YouTube subscriptions, and Kick follows into the creator registry" style="font-size:10px;padding:2px 10px;color:#9146ff;border-color:rgba(145,70,255,0.5);">⟳ SYNC ALL</button>
+                <a href="/connect/twitch" target="_blank" style="font-size:9px;color:#9146ff;margin-left:4px;" title="Connect Twitch follows">TW</a>
+                <a href="/connect/youtube" target="_blank" style="font-size:9px;color:#ff0000;margin-left:2px;" title="Connect YouTube (subscriptions sync)">YT</a>
+                <a href="/connect/kick-follows" target="_blank" style="font-size:9px;color:#53fc18;margin-left:2px;" title="Connect Kick follows">KI</a>
                 <span id="streamer-chip-count" style="font-size:10px;color:rgba(255,255,255,0.4);"></span>
               </div>
               <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
@@ -9368,9 +9371,39 @@ function saveStreamerList() {
   if (cfgEl) cfgEl.value = el.value.split(',').map(function(s){return s.trim();}).join('\n');
 }
 
-// ── CPD-930: streamer chip multi-select ──────────────────────────────────────
-// Roster = all known handles (CWN_STREAMER_ROSTER). Selection = comma string in
-// the hidden #twitch-streamers input + CWN_STREAMERS (unchanged contract).
+// ── CPD-930 / CPD-1027: streamer chip multi-select + creator registry ─────────
+// Roster = server-side creator registry (fallback: localStorage CWN_STREAMER_ROSTER).
+// Selection = comma string in the hidden #twitch-streamers input.
+
+window._creatorRegistryMap = window._creatorRegistryMap || {};
+
+function loadCreatorRegistryFromServer(cb) {
+  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  fetch(base + '/creators?kind=streamer')
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !Array.isArray(d.creators)) { if (cb) cb(); return; }
+      window._creatorRegistryMap = {};
+      d.creators.forEach(function(c) {
+        var plat = c.primaryPlatform || 'twitch';
+        var key = (c.platforms && c.platforms.twitch && c.platforms.twitch.login)
+          || (c.platforms && c.platforms.kick && c.platforms.kick.slug)
+          || (c.platforms && c.platforms.youtube && (c.platforms.youtube.handle || c.id))
+          || c.id;
+        key = String(key || c.id).toLowerCase().replace(/^@/, '');
+        window._creatorRegistryMap[key] = { displayName: c.displayName, platform: plat, kind: c.kind };
+      });
+      var roster = d.creators.map(function(c) {
+        if (c.platforms && c.platforms.twitch && c.platforms.twitch.login) return c.platforms.twitch.login;
+        if (c.platforms && c.platforms.kick && c.platforms.kick.slug) return c.platforms.kick.slug;
+        if (c.platforms && c.platforms.youtube && c.platforms.youtube.handle) return String(c.platforms.youtube.handle).replace(/^@/, '');
+        return c.id;
+      }).filter(Boolean);
+      if (roster.length) saveStreamerRoster(roster);
+      if (cb) cb();
+    })
+    .catch(function(){ if (cb) cb(); });
+}
 
 function getStreamerRoster() {
   try {
@@ -9414,51 +9447,67 @@ function setAllStreamerChips(on) {
   setSelectedStreamers(on ? getStreamerRoster().slice() : []);
 }
 
-function addStreamerChip() {
-  var handle = prompt('Twitch handle to add (exact username):');
-  if (!handle) return;
-  handle = handle.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-  if (!handle) return;
-  var roster = getStreamerRoster();
-  if (roster.indexOf(handle) === -1) { roster.push(handle); saveStreamerRoster(roster); }
-  var sel = getSelectedStreamers();
-  if (sel.indexOf(handle) === -1) sel.push(handle);
-  setSelectedStreamers(sel);
-}
-
-// CPD-982/CPD-959: merge Twitch follows (the live grid bench source) into the
-// generator roster. New handles arrive UNSELECTED — operator picks who goes in
-// the job. Runs automatically on page load (silent) so following someone makes
-// their clips immediately available to Bobby G shows; button = manual re-sync.
-function syncStreamersFromFollows(silent) {
+function addStreamerFromUrl() {
+  var input = prompt('Paste Twitch/Kick/YouTube URL or @handle:');
+  if (!input) return;
   var base = CFG.ffmpegUrl || 'http://localhost:3000';
-  fetch(base + '/live-grid/followed-bench')
+  fetch(base + '/creators/resolve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input: input, kind: 'streamer', save: true })
+  })
     .then(function(r){ return r.json(); })
     .then(function(d) {
-      if (!d.ok || !Array.isArray(d.bench)) {
-        if (!silent) alert('Follow sync failed: ' + (d.error || 'no bench in response'));
-        return;
-      }
+      if (!d.ok) { alert('Could not resolve: ' + (d.error || 'unknown')); return; }
+      var key = (d.platformData && d.platformData.login) || d.id || input;
+      key = String(key).toLowerCase().replace(/^@/, '');
       var roster = getStreamerRoster();
-      var added = [];
-      d.bench.forEach(function(h) {
-        h = String(h || '').trim().toLowerCase();
-        if (h && roster.indexOf(h) === -1) { roster.push(h); added.push(h); }
-      });
-      if (added.length) { saveStreamerRoster(roster); renderStreamerChips(); }
-      if (silent) {
-        if (added.length) cwn_log('[follows-sync] ' + added.length + ' new followed streamer(s) added to the roster: ' + added.join(', '), false);
-        return;
-      }
-      alert(added.length
-        ? 'Added ' + added.length + ' streamer(s) from your Twitch follows (unselected — click chips to include):\n\n' + added.join(', ')
-        : 'All ' + d.bench.length + ' followed streamers are already in the roster.');
+      if (roster.indexOf(key) === -1) { roster.push(key); saveStreamerRoster(roster); }
+      window._creatorRegistryMap[key] = { displayName: d.displayName || key, platform: d.platform || 'twitch' };
+      renderStreamerChips();
+      alert('Added ' + (d.displayName || key) + ' (' + (d.platform || '?') + ')' + (d.created ? ' — new in registry' : ' — updated registry'));
     })
-    .catch(function(e){ if (!silent) alert('Follow sync failed: ' + e.message); });
+    .catch(function(e){ alert('Add failed: ' + e.message); });
 }
 
-// CPD-959: auto-sync on load — the bench doubles as the clip-source pool
-setTimeout(function(){ try { syncStreamersFromFollows(true); } catch(_e) {} }, 2500);
+function addStreamerChip() {
+  addStreamerFromUrl();
+}
+
+// CPD-1027: sync Twitch follows + YouTube subscriptions + Kick follows → creator registry
+function syncStreamersFromFollows(silent) {
+  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  fetch(base + '/creators/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      return loadCreatorRegistryFromServer(function() {
+        var added = 0;
+        var notes = [];
+        if (d.results) {
+          ['twitch', 'youtube', 'kick'].forEach(function(p) {
+            var r = d.results[p];
+            if (!r) return;
+            if (r.ok) { added += r.added || 0; if (r.note) notes.push(p + ': ' + r.note); }
+            else if (!silent && r.error) notes.push(p + ': ' + r.error);
+          });
+        }
+        renderStreamerChips();
+        if (silent) {
+          if (added) cwn_log('[creators-sync] ' + added + ' new creator(s) from follows/subscriptions', false);
+          return;
+        }
+        var msg = added
+          ? 'Added ' + added + ' creator(s) to the registry (unselected — click chips to include).'
+          : 'Registry up to date (' + (d.rosterCount || getStreamerRoster().length) + ' streamers).';
+        if (notes.length) msg += '\n\n' + notes.join('\n');
+        alert(msg);
+      });
+    })
+    .catch(function(e){ if (!silent) alert('Sync failed: ' + e.message); });
+}
+
+// CPD-959: auto-sync on load — follows + subscriptions → creator registry
+setTimeout(function(){ try { loadCreatorRegistryFromServer(function(){ syncStreamersFromFollows(true); }); } catch(_e) {} }, 2500);
 
 function removeStreamerChip(handle, ev) {
   if (ev) ev.stopPropagation();
@@ -9475,12 +9524,16 @@ function renderStreamerChips() {
   var sel = getSelectedStreamers();
   wrap.innerHTML = roster.map(function(h) {
     var on = sel.indexOf(h) >= 0;
-    return '<span onclick="toggleStreamerChip(\'' + h + '\')" title="' + (on ? 'Click to deselect' : 'Click to select') + '" ' +
+    var meta = window._creatorRegistryMap[h] || {};
+    var plat = meta.platform || 'tw';
+    var badge = plat === 'youtube' ? 'YT' : (plat === 'kick' ? 'KI' : 'TW');
+    var label = meta.displayName && meta.displayName !== h ? meta.displayName : h;
+    return '<span onclick="toggleStreamerChip(\'' + h + '\')" title="' + (on ? 'Click to deselect' : 'Click to select') + ' [' + badge + ']" ' +
       'style="cursor:pointer;user-select:none;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:6px;' +
       (on
         ? 'background:rgba(145,70,255,0.25);border:1px solid #9146ff;color:#fff;'
         : 'background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.35);') +
-      '">' + (on ? '✓ ' : '') + h +
+      '"><span style="font-size:8px;opacity:0.6;">' + badge + '</span> ' + (on ? '✓ ' : '') + label +
       '<span onclick="removeStreamerChip(\'' + h + '\', event)" title="Remove from roster" style="color:rgba(255,255,255,0.3);font-weight:400;">✕</span></span>';
   }).join('');
   var cnt = g('streamer-chip-count');

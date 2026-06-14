@@ -2291,6 +2291,17 @@ app.post('/job/:id/advance', (req, res) => {
   }
 
   if (stage === 'assembled') {
+    // CPD-971: Gate 5 may have already run inline during assembly — don't double-publish.
+    try {
+      const prior = db.getPublishedResults(jobId) || [];
+      if (prior.some(r => r.platform_job_id)) {
+        card.stage = 'published';
+        card.publishedAt = card.publishedAt || new Date(prior[0].published_at || Date.now()).toISOString();
+        saveJobCard(jobId, card);
+        return res.json({ ok: true, jobId, before: stage, after: 'published', message: 'Publish already confirmed — card marked published.' });
+      }
+    } catch (_e) { /* non-fatal */ }
+
     // Force-advance: mark stage then kick off server-side Gate 5 automatically.
     // Dashboard no longer needs an APPROVE button — Gate 5 runs the same path as the
     // normal auto-flow (assembly → Gate 4 → Gate 5) just triggered by the operator's
@@ -2335,6 +2346,21 @@ async function _runGate5ForCard(jobId) {
 
   const card = persistedJobs[jobId];
   if (!card) throw new Error(`Job not found: ${jobId}`);
+
+  if (card.stage === 'published') {
+    console.log(`[run-gate5] ${jobId}: already published — skipping duplicate upload`);
+    return;
+  }
+  try {
+    const prior = db.getPublishedResults(jobId) || [];
+    if (prior.some(r => r.platform_job_id)) {
+      card.stage = 'published';
+      card.publishedAt = card.publishedAt || new Date(prior[0].published_at || Date.now()).toISOString();
+      saveJobCard(jobId, card);
+      console.log(`[run-gate5] ${jobId}: publish_results confirm prior upload — skipping duplicate`);
+      return;
+    }
+  } catch (_e) { /* non-fatal — proceed with upload */ }
 
   const savedOutputs = card.state?.savedOutputs || {};
   const driveUrl = savedOutputs.driveUrl || card.driveUrl;
@@ -2661,6 +2687,47 @@ app.post('/connect/twitch/token', async (req, res) => {
   }
 });
 
+// --- Kick follows OAuth (CPD-1027) — connect so we can sync Kick follows into the creator registry when the API allows ---
+const _kickPkceSessions = {};
+app.get('/connect/kick-follows', async (req, res) => {
+  const kickOAuth = require('./lib/publish/adapters/kick_oauth');
+  const { saveKickFollowsToken } = require('./lib/creator_registry/sync');
+  const redirectUri = `http://localhost:${PORT}/connect/kick-follows`;
+  const page = (msg) => `<!doctype html><html><body style="background:#0d1424;color:#fff;font-family:monospace;padding:40px;">${msg}</body></html>`;
+
+  if (!process.env.KICK_CLIENT_ID || !process.env.KICK_CLIENT_SECRET) {
+    return res.send(page('❌ KICK_CLIENT_ID / KICK_CLIENT_SECRET not set in .env'));
+  }
+  if (req.query.error) {
+    return res.send(page(`❌ Kick error: ${req.query.error_description || req.query.error}`));
+  }
+  if (req.query.code) {
+    try {
+      const sessionKey = String(req.query.state || '');
+      const verifier = _kickPkceSessions[sessionKey];
+      delete _kickPkceSessions[sessionKey];
+      if (!verifier) throw new Error('PKCE session expired — restart at /connect/kick-follows');
+      const tokens = await kickOAuth.exchangeCode(req.query.code, redirectUri, verifier);
+      saveKickFollowsToken({
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        scope: tokens.scope,
+        obtained_at: new Date().toISOString(),
+      });
+      const { syncKickFollows } = require('./lib/creator_registry/sync');
+      const sync = await syncKickFollows();
+      const note = sync.note ? `<p>${sync.note}</p>` : '';
+      return res.send(page(`✅ Kick connected — ${sync.total || 0} follow(s) synced (${sync.added || 0} new). Creator registry updated.${note}<p>You can close this tab.</p>`));
+    } catch (e) {
+      return res.send(page(`❌ Kick token exchange failed: ${e.message}`));
+    }
+  }
+  const sessionKey = require('crypto').randomBytes(16).toString('hex');
+  const { url, verifier } = kickOAuth.buildAuthUrl(redirectUri, sessionKey);
+  _kickPkceSessions[sessionKey] = verifier;
+  return res.redirect(url);
+});
+
 // GET /live-grid/followed-bench — preview the bench the next stream would use
 app.get('/live-grid/followed-bench', async (req, res) => {
   const { getFollowedBench, getAllFollows, FOLLOWS_USER, loadUserToken } = require('./lib/live_grid/follows');
@@ -2671,6 +2738,13 @@ app.get('/live-grid/followed-bench', async (req, res) => {
     return res.status(400).json({ ok: false, error: `No Twitch user token (or expired) — connect at /connect/twitch as ${FOLLOWS_USER}` });
   }
   const tokenUser = loadUserToken()?.login || FOLLOWS_USER;
+  // CPD-1027: mirror follows into creator registry for picker + clip sourcing
+  if (all?.length) {
+    try {
+      const { syncTwitchFollows } = require('./lib/creator_registry/sync');
+      syncTwitchFollows().catch(() => {});
+    } catch (_) { /* non-fatal */ }
+  }
   res.json({
     ok: true,
     user: tokenUser,
@@ -3147,6 +3221,18 @@ app.post('/job/:id/run-gate5', async (req, res) => {
   const jobId = req.params.id;
   const card = persistedJobs[jobId];
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  if (card.stage === 'published') {
+    return res.json({ ok: true, skipped: true, message: 'Job already published — no duplicate upload.' });
+  }
+  try {
+    const prior = db.getPublishedResults(jobId) || [];
+    if (prior.some(r => r.platform_job_id)) {
+      card.stage = 'published';
+      saveJobCard(jobId, card);
+      return res.json({ ok: true, skipped: true, message: 'Publish already confirmed — card marked published.' });
+    }
+  } catch (_e) { /* non-fatal */ }
 
   const stage = card.stage || '';
   if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked'].includes(stage)) {
@@ -3835,6 +3921,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     expectedClips: segmentData.length,
     designSpec:    card.designSpec,
     captionText:   null, // CPD-935: no hook caption — whisper captions only
+    items:         clips.map(c => ({ title: c.title || '', headline: c.title || '', source: c.source || c.channel || '' })),
     // Synthetic script from clip titles so publish-copy generation has material
     fullScript:    clips.map((c, i) => `CLIP ${i + 1} (${c.displayName || c.streamer || 'streamer'}): ${c.title || 'untitled clip'}`).join('\n')
   };
@@ -6087,6 +6174,68 @@ app.get('/streamers/clips', async (req, res) => {
     console.error('[streamers/clips] Error:', err.message);
     res.status(500).json({ ok: false, error: err.message, streamers: [] });
   }
+});
+
+// ── Creator registry (CPD-1027) — multi-platform streamer lookup + follow sync ─
+const creatorRegistry = require('./lib/creator_registry');
+const creatorSync = require('./lib/creator_registry/sync');
+const creatorResolve = require('./lib/creator_registry/resolve');
+
+app.get('/creators', (req, res) => {
+  try {
+    const kind = req.query.kind || null;
+    const list = creatorRegistry.listCreators(kind ? { kind } : {});
+    res.json({ ok: true, count: list.length, creators: list });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.get('/creators/roster', (req, res) => {
+  try {
+    const logins = creatorRegistry.getStreamerRosterLogins();
+    res.json({ ok: true, count: logins.length, roster: logins });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/creators/resolve', async (req, res) => {
+  try {
+    const input = req.body?.input || req.body?.url || '';
+    const kind = req.body?.kind || 'streamer';
+    const save = req.body?.save !== false;
+    const result = save
+      ? await creatorResolve.resolveAndSave(input, { kind, source: 'manual_add' })
+      : await creatorResolve.resolveInput(input, { kind });
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/creators/sync', async (req, res) => {
+  try {
+    const platform = (req.body?.platform || 'all').toLowerCase();
+    let result;
+    if (platform === 'twitch') result = await creatorSync.syncTwitchFollows();
+    else if (platform === 'youtube') result = await creatorSync.syncYouTubeSubscriptions();
+    else if (platform === 'kick') result = await creatorSync.syncKickFollows();
+    else result = await creatorSync.syncAll();
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.get('/creators/connect-status', (req, res) => {
+  const yt = require('./lib/services/youtube_direct');
+  res.json({
+    ok: true,
+    twitch: { connected: !!require('./lib/live_grid/follows').loadUserToken()?.access_token, connectUrl: '/connect/twitch' },
+    youtube: { connected: yt.isConnected(), connectUrl: '/connect/youtube', note: 'Same OAuth as live grid — includes subscription read' },
+    kick: { connected: !!creatorSync.loadKickFollowsToken()?.access_token, connectUrl: '/connect/kick-follows' },
+  });
 });
 
 // ── AP / Reuters YouTube channel scrapers ────────────────────────────────────
@@ -9529,6 +9678,14 @@ const server = app.listen(PORT, async () => {
     else console.log('✅ FFmpeg:', v);
   });
   startMonitoring(); // Start pipeline event monitoring
+
+  try {
+    const { seedFromStreamerSources } = require('./lib/creator_registry');
+    const { seeded } = seedFromStreamerSources();
+    if (seeded) console.log(`[creator_registry] Seeded ${seeded} creators from streamerSources.json`);
+  } catch (e) {
+    console.warn('[creator_registry] seed skipped:', e.message);
+  }
 
   // CPD-924: deferred publish cron — fires Gate 5 for 'publish_scheduled' cards when due
   try {
