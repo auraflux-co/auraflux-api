@@ -1,0 +1,202 @@
+name: Jira — backfill untracked commits + CPD-1017
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Report only — do not create issues or update Confluence'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create missing Jira issues + update Confluence HOW pages
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PYEOF'
+          import os, re, json, urllib.request, urllib.error, base64
+
+          jira_base  = os.environ["JIRA_BASE_URL"].rstrip("/")
+          jira_email = os.environ["JIRA_USER_EMAIL"]
+          jira_token = os.environ["JIRA_API_TOKEN"]
+          dry_run    = os.environ.get("DRY_RUN", "false") == "true"
+          repo       = os.environ["REPO"]
+
+          auth = base64.b64encode(f"{jira_email}:{jira_token}".encode()).decode()
+          H = {"Authorization": f"Basic {auth}", "Content-Type": "application/json", "Accept": "application/json"}
+
+          def jira(method, path, body=None):
+              url = f"{jira_base}/rest/api/3/{path}"
+              data = json.dumps(body).encode() if body else None
+              req = urllib.request.Request(url, data=data, headers=H, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      raw = r.read()
+                      return json.loads(raw) if raw else {}
+              except urllib.error.HTTPError as e:
+                  err = e.read().decode()[:800]
+                  print(f"  Jira {method} {path}: HTTP {e.code} — {err}")
+                  return {"_error": e.code, "_body": err}
+
+          def issue_exists(key):
+              res = jira("GET", f"issue/{key}?fields=summary")
+              return "_error" not in res
+
+          def create_story(summary, description_md, labels=None):
+              if dry_run:
+                  print(f"  [dry-run] would create: {summary}")
+                  return "DRY-RUN"
+              for itype in ("Story", "Task", "Bug"):
+                  body = {
+                      "fields": {
+                          "project": {"key": "CPD"},
+                          "summary": summary[:250],
+                          "issuetype": {"name": itype},
+                          "description": {
+                              "type": "doc", "version": 1,
+                              "content": [{"type": "paragraph", "content": [{"type": "text", "text": description_md}]}],
+                          },
+                          "labels": labels or ["backfill"],
+                      }
+                  }
+                  res = jira("POST", "issue", body)
+                  if res.get("key"):
+                      print(f"  ✅ Created {res['key']}: {summary[:60]}")
+                      return res["key"]
+              return ""
+
+          def link_pr(issue_key, pr_number=637):
+              if dry_run or not issue_key or issue_key == "DRY-RUN":
+                  return
+              jira("POST", f"issue/{issue_key}/comment", {
+                  "body": {
+                      "type": "doc", "version": 1,
+                      "content": [{"type": "paragraph", "content": [
+                          {"type": "text", "text": f"GitHub PR #{pr_number}: "},
+                          {"type": "text", "text": f"https://github.com/{repo}/pull/{pr_number}",
+                             "marks": [{"type": "link", "attrs": {"href": f"https://github.com/{repo}/pull/{pr_number}"}}]},
+                      ]}],
+                  }
+              })
+
+          # ── 1. CPD-1017 for PR #637 ───────────────────────────────────────────
+          print("\n── CPD-1017 (PR #637) ──")
+          if issue_exists("CPD-1017"):
+              print("  CPD-1017 already exists")
+              link_pr("CPD-1017", 637)
+          else:
+              key = create_story(
+                  "Broadcast Control Center, native dual-format, EchoMimic resume (CPD-1017)",
+                  "Epic/story for PR #637 (feat/cpd-1017-program-director).\n\n"
+                  "Scope: CPD-1026–1029 Broadcast Control Center, retire default dual YouTube listing, "
+                  "CPD-991 EchoMimic checkpoint resume, CPD-963 Gate 0 mixed-format.\n\n"
+                  f"PR: https://github.com/{repo}/pull/637",
+                  labels=["broadcast", "pr-637"],
+              )
+              if key and key != "DRY-RUN":
+                  print(f"  Note: rename ticket to CPD-1017 in Jira if auto-number differs ({key})")
+
+          # ── 2. Untracked commits (no CPD-* in message) ───────────────────────
+          BACKFILL = [
+              ("b4ca5076", "fix(UX): landing page Sign In CTA always visible before Clerk hydrates",
+               "Landing page: Sign In / Get Started visible before Clerk hydrates; persistent header Sign In link.\n\n"
+               f"Commit: https://github.com/{repo}/commit/b4ca5076d5cea99e2292e70ec2cadf25b36bfbd0"),
+              ("e654cbce", "fix: populate gitHash from RENDER_GIT_COMMIT when .git unavailable",
+               "/health gitHash reads RENDER_GIT_COMMIT when .git stripped at Render runtime.\n\n"
+               f"Commit: https://github.com/{repo}/commit/e654cbce"),
+              ("be24ce2d", "feat: Slack SMS notifications + multi-number support inbox",
+               "Slack webhook for inbound SMS, getSupportNumbers() for ported Telnyx numbers, "
+               "telnyx_configure_ported_numbers.js script.\n\n"
+               f"Commit: https://github.com/{repo}/commit/be24ce2d"),
+          ]
+
+          print("\n── Untracked commits ──")
+          for sha, msg, desc in BACKFILL:
+              print(f"  {sha}: {msg[:55]}…")
+              create_story(f"[Backfill] {msg[:100]}", desc, labels=["auto-created", "session-close", "backfill"])
+
+          # ── 3. Confluence HOW append (CPD-869 / CPD-1006 sections) ───────────
+          print("\n── Confluence HOW updates ──")
+          CONF_SECTIONS = {
+              "21135361": (
+                  "CPD-869 Review order-vs-output (2026-06-14)",
+                  "h2. CPD-869 updates (2026-06-14)\n\n"
+                  "* Review Queue expand: What was ordered vs What was produced\n"
+                  "* createdBy tagging (dashboard / e2e_script / api)\n"
+                  "* staging-assets: orderSource, featureCompliance, wizardConfig\n"
+                  "* Customer status from job_spec; operator_review masked as processing\n\n"
+                  "See commit 0c7a24b6 on main."
+              ),
+              "31883268": (
+                  "Job submission policy (2026-06-14)",
+                  "h2. Production job submission policy\n\n"
+                  "* Production + sub-brand jobs: dashboard wizard only (My Jobs → New)\n"
+                  "* E2E scripts: Operate smoke tests only; ALLOW_E2E_JOB_SUBMIT=1 required\n"
+                  "* Review Queue shows amber banner for non-dashboard orders\n"
+              ),
+              "22216746": (
+                  "CPD-1006 sub-brand chrome (2026-06-14)",
+                  "h2. CPD-1006 sub-brand chrome\n\n"
+                  "* brandName baked on job creation; getBrand at chrome time\n"
+                  "* Twitch avatar sync to brands.image_url\n"
+                  "* Dual-logo: sub-brand avatar lower-third + AuraFlux watermark bottom-right\n"
+                  "* Wizard sends brandId + templateName + createdVia:dashboard\n",
+              ),
+          }
+
+          def conf_get(page_id):
+              req = urllib.request.Request(
+                  f"{jira_base}/wiki/rest/api/content/{page_id}?expand=body.storage,version",
+                  headers={"Authorization": f"Basic {auth}", "Accept": "application/json"},
+              )
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read())
+
+          def conf_append(page_id, heading, wiki_block):
+              if dry_run:
+                  print(f"  [dry-run] would append to page {page_id}: {heading}")
+                  return
+              try:
+                  page = conf_get(page_id)
+              except urllib.error.HTTPError as e:
+                  print(f"  Confluence GET {page_id}: HTTP {e.code}")
+                  return
+              old = page["body"]["storage"]["value"]
+              if heading.replace("h2. ", "") in old or "CPD-869 updates" in old and page_id == "21135361":
+                  print(f"  Page {page_id}: section already present — skip")
+                  return
+              new_body = old + f"\n\n{wiki_block}\n"
+              payload = json.dumps({
+                  "id": page_id,
+                  "type": "page",
+                  "title": page["title"],
+                  "version": {"number": page["version"]["number"] + 1},
+                  "body": {"storage": {"value": new_body, "representation": "storage"}},
+              }).encode()
+              req = urllib.request.Request(
+                  f"{jira_base}/wiki/rest/api/content/{page_id}",
+                  data=payload, method="PUT",
+                  headers={"Authorization": f"Basic {auth}", "Content-Type": "application/json"},
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      print(f"  ✅ Confluence page {page_id} updated")
+              except urllib.error.HTTPError as e:
+                  print(f"  Confluence PUT {page_id}: HTTP {e.code} — {e.read().decode()[:300]}")
+
+          for pid, (heading, block) in CONF_SECTIONS.items():
+              conf_append(pid, heading, block)
+
+          print("\nDone.")
+          PYEOF

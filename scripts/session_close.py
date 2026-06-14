@@ -13,7 +13,7 @@ Usage:
   python3 scripts/session_close.py --since <sha>
 """
 
-import os, sys, re, json, subprocess, urllib.request, urllib.parse, base64
+import os, sys, re, json, subprocess, urllib.request, urllib.error, base64
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -121,6 +121,10 @@ def jira_post(path: str, body: dict) -> dict:
         )
         with urllib.request.urlopen(req, timeout=10) as r:
             return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        err = e.read().decode()[:500]
+        print(f"  [jira_post] HTTP Error {e.code}: {err}")
+        return {}
     except Exception as e:
         print(f"  [jira_post] {e}")
         return {}
@@ -156,7 +160,7 @@ def create_jira_task(summary: str, commit_sha: str, commit_msg: str) -> str:
                     f"Commit message: {commit_msg}"
                 }]}],
             },
-            "issuetype": {"name": "Task"},
+            "issuetype": {"name": "Story"},
             "labels":    ["auto-created", "session-close"],
         }
     }

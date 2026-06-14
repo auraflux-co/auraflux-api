@@ -409,7 +409,8 @@ Write these 11 sections. Be direct. No padding.
 7. Codebase Structural Integrity — backend routes, server.js, circular deps
 8. C0 / C1+ Boundary (leaks, hardcoded branding)
 9. Environment and Secrets (undocumented vars — both backend process.env.* and NEXT_PUBLIC_*)
-10. Marketing Site Health — summarise check results; flag any endpoint down or content issues
+10. Marketing Site Health — summarise check results; flag any endpoint down or content issues.
+    Chat widget: injected by Cloudflare worker as af-chat-bubble (NOT BotPenguin). If af-chat-bubble is present, chat is OK — never flag BotPenguin as missing.
 11. Recommendations — mark each: [BLOCKING] [SHOULD FIX] [NICE TO HAVE]
     Separate sub-sections: App Recommendations | Marketing Site Recommendations
 

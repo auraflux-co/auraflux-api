@@ -133,7 +133,7 @@ jobs:
                                   )
                               }]}],
                           },
-                          "issuetype": {"name": "Task"},
+                          "issuetype": {"name": "Story"},
                           "labels":    ["auto-created", "on-push"],
                       }
                   }
