@@ -33,6 +33,18 @@ Read `docs/C0_REPOSITORY_POLICY.md` and the **Worker Memory** block at the top o
 - C0: `bash scripts/aider_session_review_local.sh`
 - Render: `bash scripts/aider_session_review.sh`
 
+## Commits — C0 repo only (~/cwn-c0 → auraflux-c0)
+
+**Before every commit here**, ask: is this C0-specific (live grid, gates, `cwn_production.html`, sidecar)?
+
+| Work type | Where to commit |
+|-----------|-----------------|
+| Live grid, broadcast, gates, dashboard HTML | **~/cwn-c0** (`c0/main`) |
+| Next.js app, `lib/portals/`, Render deploy, C1+ API | **~/cwn-production** (`main`) |
+| Shared `lib/` fix for both | C0 with `C0_PORTABLE=1`, then **cherry-pick** to `main` |
+
+Pre-commit hook (`bash scripts/install_git_hooks.sh`) **blocks** `app/`, `lib/portals/`, `render.yaml`, Postgres migrations, etc. **Warns** when staged code has no C0-native path. Bypass portable ports: `C0_PORTABLE=1 git commit …`
+
 ## Epic
 
 [CPD-1021](https://aurafluxco.atlassian.net/browse/CPD-1021) — C0 separation + publish regression

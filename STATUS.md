@@ -9,7 +9,9 @@
 | **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 · **GitHub:** [auraflux-c0](https://github.com/auraflux-co/auraflux-c0) |
 | **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app · **GitHub:** [auraflux-api](https://github.com/auraflux-co/auraflux-api) |
 
-**Never:** merge `origin/main` into C0 to sync; merge C0 → `main` without port ticket; replace C0 `gate5.js` with production `portal5` shim; delete gate shims; restart sidecar/auraflux during live RTMP stream.
+**Never:** merge C0 → `main` without port ticket; replace C0 `gate5.js` with `portal5` shim; delete gate shims; restart sidecar/auraflux during live RTMP stream; commit **Render/C1+ paths** (`app/`, `lib/portals/`, `render.yaml`) on `c0/main` — use `~/cwn-production` instead (pre-commit hook enforces).
+
+**C0 commits:** `bash scripts/install_git_hooks.sh` once per worktree — blocks/warns non-C0 scope. Portable `lib/` fixes: `C0_PORTABLE=1 git commit …` then cherry-pick to `main`. (`~/cwn-c0` is a **git worktree** of the same repo as production — scope guard matters.)
 
 **Jira CPD-1017** = Jira backfill workflow only — NOT Program Director / live grid (those commits mis-tagged `cpd-1017` in git).
 

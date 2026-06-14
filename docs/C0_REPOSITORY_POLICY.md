@@ -29,9 +29,10 @@ Before 2026-06-14 both lines pushed to `auraflux-co/auraflux-api`. PR #637 merge
 
 ## Day-to-day rules (agents + Rob)
 
-- **C0 work:** branch from `c0/main`, commit, push to `auraflux-c0`. No PR to production.
-- **C1+ work:** branch from `main` in `cwn-production`, PR → merge → Render deploy.
-- **Portable fixes** (storage, publish, feature_gate): commit on C0, cherry-pick hash onto `main` with a CPD ticket.
+- **C0 work:** branch from `c0/main`, commit **C0-native paths only**, push to `auraflux-c0`. No PR to production.
+- **C1+ work:** branch from `main` in `cwn-production`, PR → merge → Render deploy — **never commit on c0/main**.
+- **Portable fixes** (storage, publish, feature_gate): `C0_PORTABLE=1 git commit` on C0, cherry-pick hash onto `main` with a CPD ticket.
+- **Commit guard:** `bash scripts/install_git_hooks.sh` — blocks `app/`, `lib/portals/`, `render.yaml`, migrations; warns on bare `lib/*` commits with no grid/gates/dashboard file.
 - **Reviews:** `aider_session_review_local.sh` (C0) vs `aider_session_review.sh` (production).
 - **Dashboard URL:** http://localhost:3000/ (Node serves HTML). Port 8765 static server is optional legacy.
 
