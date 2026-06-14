@@ -181,7 +181,7 @@ async function renderVariant(variant, wavPath) {
   if (!imageKey) throw new Error(`unknown portrait: ${variant.portrait}`);
 
   const maxFrames = parseInt(process.env.ECHOMIMIC_MAX_FRAMES || '81', 10);
-  const sampleSize = parseInt(process.env.ECHOMIMIC_SAMPLE_SIZE || '768', 10);
+  const sampleSize = echomimic.resolveSampleSizePx();
   const durationSec = wavDurationSec(wavPath);
   const raw = Math.ceil(durationSec * FPS) + 1;
   const videoLength = Math.max(25, Math.min(Math.floor((raw - 1) / 4) * 4 + 1, maxFrames));
@@ -302,6 +302,15 @@ async function main() {
   await uploadHandlerToR2();
   if (!SKIP_RESTART) await restartExistingPod();
   else log('skip-restart');
+
+  const { getPod } = require('../lib/avatar/echomimic_pod');
+  const podNow = process.env.ECHOMIMIC_POD_ID ? await getPod(process.env.ECHOMIMIC_POD_ID) : null;
+  if (podNow?.machine?.gpuTypeId) process.env.ECHOMIMIC_LAST_GPU_TYPE = podNow.machine.gpuTypeId;
+  if (podNow?.costPerHr != null) process.env.ECHOMIMIC_POD_COST_PER_HR = String(podNow.costPerHr);
+  if (podNow) {
+    const ech = require('../lib/avatar/adapters/echomimic');
+    log(`pod ${podNow.id} $${podNow.costPerHr}/hr → sample ${ech.resolveSampleSizePx()}px`);
+  }
 
   const wavPath = await ensureCloneWav();
 

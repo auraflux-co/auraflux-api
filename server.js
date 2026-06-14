@@ -3947,6 +3947,25 @@ app.get('/twitch-token', (req, res) => {
   res.json({ clientId, token });
 });
 
+// Dashboard bootstrap — secrets from env (localhost C0 only; never expose on public C1+ frontend)
+app.get('/dashboard-config', (req, res) => {
+  res.json({
+    ok: true,
+    heygenApiKey: process.env.HEYGEN_API_KEY || '',
+    avatarId: process.env.HEYGEN_AVATAR_ID || '',
+    avatarShortId: process.env.HEYGEN_AVATAR_SHORT_ID || '',
+    voiceId: process.env.HEYGEN_VOICE_ID || '',
+    speakSpeed: parseFloat(process.env.HEYGEN_SPEAK_SPEED || '0.85') || 0.85,
+    bgColor: process.env.HEYGEN_BG_COLOR || '#22304b',
+    ffmpegUrl: process.env.DASHBOARD_FFMPEG_URL || '',
+    transition: process.env.FFMPEG_TRANSITION || 'crossfade',
+    outputFmt: process.env.FFMPEG_OUTPUT_FMT || 'mp4',
+    outputDir: process.env.OUTPUT_DIR || './output',
+    heygenConfigured: !!process.env.HEYGEN_API_KEY,
+    twitchConfigured: !!(process.env.TWITCH_CLIENT_ID && process.env.TWITCH_TOKEN),
+  });
+});
+
 app.get('/market-keys', (req, res) => {
   res.json({
     fmp:     process.env.FMP_API_KEY     || '',
