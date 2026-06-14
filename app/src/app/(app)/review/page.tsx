@@ -29,7 +29,7 @@ import { Separator } from '@/components/ui/separator';
 import { apiFetch, listJobs, type Job } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
-import { jobDisplayTitle, jobStatusLabel, portalStatusLabel, platformLabel, entryTypeLabel, formatUserError, isReviewQueueJob } from '@/lib/job-labels';
+import { jobDisplayTitle, jobStatusLabel, portalStatusLabel, platformLabel, entryTypeLabel, formatUserError, isReviewQueueJob, addOnLabel, resolveTemplateDisplayName, createdByLabel, isDashboardOrder } from '@/lib/job-labels';
 import { labelForContentType } from '@/lib/content-types';
 import { useBrand } from '@/contexts/brand-context';
 
@@ -45,6 +45,27 @@ interface PortalReport {
   notes: string | null;
 }
 
+interface OrderSourceClip {
+  url: string | null;
+  title: string;
+  duration?: number | null;
+  thumbnailUrl?: string | null;
+  platform?: string | null;
+}
+
+interface OrderSourceSummary {
+  candidates: OrderSourceClip[];
+  selected: { url: string | null; title: string; duration?: number | null; confidence?: number | null } | null;
+  selectionSource: string | null;
+  clipSourcing: boolean;
+}
+
+interface FeatureComplianceRow {
+  feature: string;
+  status: string;
+  note?: string;
+}
+
 interface StagingAssets {
   jobId: string;
   status: string;
@@ -54,11 +75,17 @@ interface StagingAssets {
     sourceType: string | null;
     tone: string | null;
     topic: string | null;
-    duration: string | null;
+    duration: string | number | null;
     platforms: string[];
     planTier: string | null;
+    brandId?: string | null;
+    brandName?: string | null;
+    templateName?: string | null;
+    createdBy?: string | null;
     wizardConfig: Record<string, unknown> | null;
-    submittedAt: string;
+    orderSource?: OrderSourceSummary | null;
+    featureCompliance?: FeatureComplianceRow[];
+    submittedAt: string | null;
   };
   output: {
     videoUrl: string | null;
@@ -230,17 +257,28 @@ function normalizePublishCopy(
   return Object.keys(out).length > 0 ? out : null;
 }
 
-function JobSpecSummary({ wc }: { wc: Record<string, unknown> }) {
+function JobSpecSummary({
+  wc,
+  templateName,
+  contentType,
+}: {
+  wc: Record<string, unknown>;
+  templateName?: string | null;
+  contentType?: string | null;
+}) {
   const addOns = Array.isArray(wc.addOns) ? (wc.addOns as string[]) : [];
   const activeFeatures = Array.isArray(wc.activeFeatures) ? (wc.activeFeatures as string[]) : [];
   const platforms = Array.isArray(wc.platforms) ? (wc.platforms as string[]) : [];
-  const allFeatures = [...addOns, ...activeFeatures].filter(Boolean);
+  const displayTemplate = resolveTemplateDisplayName({ templateName, contentType, wizardConfig: wc });
   return (
     <div className="mt-2 rounded-md border bg-background/60 p-3 space-y-1.5 text-xs">
       <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">Job spec</p>
-      {!!wc.templateName && (
-        <p><span className="text-muted-foreground">Template:</span> {String(wc.templateName)}</p>
-      )}
+      <p>
+        <span className="text-muted-foreground">Template:</span>{' '}
+        <span className={!templateName && !wc.templateName ? 'text-muted-foreground italic' : ''}>
+          {displayTemplate}
+        </span>
+      </p>
       {!!wc.entryType && (
         <p><span className="text-muted-foreground">Source:</span> {entryTypeLabel(String(wc.entryType))}</p>
       )}
@@ -255,9 +293,14 @@ function JobSpecSummary({ wc }: { wc: Record<string, unknown> }) {
           <span className="capitalize">{String(wc.publishMode)}</span>
         </p>
       )}
-      {allFeatures.length > 0 && (
-        <p><span className="text-muted-foreground">Features:</span>{' '}
-          {allFeatures.map((f) => f.replace(/_/g, ' ')).join(', ')}
+      {addOns.length > 0 && (
+        <p><span className="text-muted-foreground">Enhancements:</span>{' '}
+          {addOns.map(addOnLabel).join(', ')}
+        </p>
+      )}
+      {activeFeatures.length > 0 && (
+        <p><span className="text-muted-foreground">Production options:</span>{' '}
+          {activeFeatures.map((f) => f.replace(/_/g, ' ')).join(', ')}
         </p>
       )}
       {platforms.length > 0 && (
@@ -265,6 +308,111 @@ function JobSpecSummary({ wc }: { wc: Record<string, unknown> }) {
           {platforms.map(platformLabel).join(', ')}
         </p>
       )}
+    </div>
+  );
+}
+
+const SELECTION_SOURCE_LABELS: Record<string, string> = {
+  gemini_metadata_rank: 'Gemini clip picker',
+  view_count_fallback:  'View-count fallback',
+  stub:                 'Placeholder',
+};
+
+function OrderOriginBanner({ createdBy }: { createdBy?: string | null }) {
+  if (isDashboardOrder(createdBy)) return null;
+  return (
+    <div className="rounded-md border border-amber-800/40 bg-amber-950/20 px-3 py-2 text-xs text-amber-200/90">
+      <span className="font-semibold">Not from dashboard.</span>{' '}
+      Ordered via {createdByLabel(createdBy)} — compare source clips and enhancements below against the output.
+      Production jobs should use <Link href="/myjobs/new" className="underline hover:text-amber-100">My Jobs → New</Link>.
+    </div>
+  );
+}
+
+function OrderSourceSection({ orderSource }: { orderSource: OrderSourceSummary | null | undefined }) {
+  if (!orderSource) return null;
+  const { candidates, selected, selectionSource, clipSourcing } = orderSource;
+  if (!candidates.length && !selected) return null;
+
+  return (
+    <div className="space-y-2 text-xs">
+      <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">Source clips</p>
+      {clipSourcing && (
+        <p className="text-muted-foreground">
+          Clip sourcing active
+          {selectionSource ? ` · ${SELECTION_SOURCE_LABELS[selectionSource] || selectionSource}` : ''}
+        </p>
+      )}
+      {selected && (
+        <div className="rounded border border-green-800/40 bg-green-950/20 p-2">
+          <p className="text-[10px] uppercase text-green-400/80 font-semibold mb-0.5">Used in output</p>
+          <p className="font-medium truncate" title={selected.title}>{selected.title}</p>
+          {selected.url && (
+            <a href={selected.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:underline truncate block">
+              {selected.url}
+            </a>
+          )}
+          {(selected.duration != null || selected.confidence != null) && (
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {selected.duration != null ? `${Math.round(selected.duration)}s` : ''}
+              {selected.duration != null && selected.confidence != null ? ' · ' : ''}
+              {selected.confidence != null ? `${Math.round(selected.confidence <= 1 ? selected.confidence * 100 : selected.confidence)}% confidence` : ''}
+            </p>
+          )}
+        </div>
+      )}
+      {candidates.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-muted-foreground">
+            {candidates.length === 1 ? 'Submitted clip' : `${candidates.length} submitted clips`}
+          </p>
+          <ul className="space-y-1 max-h-32 overflow-y-auto">
+            {candidates.map((c, i) => {
+              const isSelected = selected?.url && c.url && selected.url === c.url;
+              return (
+                <li
+                  key={c.url || i}
+                  className={`rounded border px-2 py-1 ${isSelected ? 'border-green-800/50 bg-green-950/10' : 'border-border/50 bg-background/40'}`}
+                >
+                  <p className="font-medium truncate" title={c.title}>{c.title}</p>
+                  {c.url && (
+                    <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:underline truncate block">
+                      {c.url}
+                    </a>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FeatureComplianceSection({ rows }: { rows: FeatureComplianceRow[] | undefined }) {
+  if (!rows?.length) return null;
+  const missing = rows.filter((r) => r.status === 'missing');
+  return (
+    <div className="rounded-md border bg-background/60 p-3 space-y-2 text-xs">
+      <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">
+        Production checklist
+      </p>
+      {missing.length > 0 && (
+        <p className="text-red-400">{missing.length} required feature{missing.length > 1 ? 's' : ''} missing</p>
+      )}
+      <ul className="space-y-1">
+        {rows.map((r, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <span className={`mt-0.5 h-1.5 w-1.5 rounded-full shrink-0 ${r.status === 'found' ? 'bg-green-500' : r.status === 'missing' ? 'bg-red-500' : 'bg-gray-400'}`} />
+            <span>
+              <span className="font-medium">{r.feature.replace(/_/g, ' ')}</span>
+              <span className="text-muted-foreground"> — {r.status}</span>
+              {r.note && <span className="block text-[10px] text-muted-foreground">{r.note}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -432,11 +580,32 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         {/* LEFT: What was ordered */}
         <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
           <p className="af-subhead">What was ordered</p>
+          <OrderOriginBanner createdBy={input.createdBy} />
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+            <dt className="text-muted-foreground">Submitted via</dt>
+            <dd>{createdByLabel(input.createdBy)}</dd>
+            {input.brandName && (
+              <>
+                <dt className="text-muted-foreground">Brand</dt>
+                <dd>{input.brandName}</dd>
+              </>
+            )}
             <dt className="text-muted-foreground">Content type</dt>
             <dd>{labelForContentType(input.contentType ?? '')}</dd>
             <dt className="text-muted-foreground">Source</dt>
             <dd>{entryTypeLabel(input.sourceType)}</dd>
+            {input.topic && (
+              <>
+                <dt className="text-muted-foreground">Topic</dt>
+                <dd className="truncate" title={input.topic}>{input.topic}</dd>
+              </>
+            )}
+            {input.tone && (
+              <>
+                <dt className="text-muted-foreground">Tone</dt>
+                <dd>{input.tone}</dd>
+              </>
+            )}
             <dt className="text-muted-foreground">Duration</dt>
             <dd>{input.duration ?? '—'}</dd>
             <dt className="text-muted-foreground">Platforms</dt>
@@ -444,9 +613,15 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
             <dt className="text-muted-foreground">Submitted</dt>
             <dd>{input.submittedAt ? new Date(input.submittedAt).toLocaleString() : '—'}</dd>
           </dl>
+          <OrderSourceSection orderSource={input.orderSource} />
           {input.wizardConfig && (
-            <JobSpecSummary wc={input.wizardConfig as Record<string, unknown>} />
+            <JobSpecSummary
+              wc={input.wizardConfig as Record<string, unknown>}
+              templateName={input.templateName}
+              contentType={input.contentType}
+            />
           )}
+          <FeatureComplianceSection rows={input.featureCompliance} />
         </div>
 
         {/* RIGHT: What was produced */}
@@ -778,8 +953,8 @@ export default function StagingPage() {
                       <span className="mr-1">{job.customerName ?? job.customerId!.slice(0, 12) + '…'} · </span>
                     )}
                     {formatDate(job.createdAt)}
-                    {job.wizardConfig?.templateName && (
-                      <span className="ml-1">· {job.wizardConfig.templateName}</span>
+                    {(job.templateName || job.wizardConfig?.templateName) && (
+                      <span className="ml-1">· {job.templateName || job.wizardConfig?.templateName}</span>
                     )}
                   </p>
                 </div>
@@ -800,7 +975,11 @@ export default function StagingPage() {
             {isOpen && (
               <div className="px-4 pb-4 border-t border-border/50 pt-4 space-y-4">
                 {job.wizardConfig && (
-                  <JobSpecSummary wc={job.wizardConfig as unknown as Record<string, unknown>} />
+                  <JobSpecSummary
+                    wc={job.wizardConfig as unknown as Record<string, unknown>}
+                    templateName={job.templateName}
+                    contentType={job.contentType}
+                  />
                 )}
                 <StagingPanel jobId={job.jobId} platforms={job.platforms ?? []} getToken={getToken} isSuperAdmin={isSuperAdmin} />
               </div>

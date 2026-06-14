@@ -120,6 +120,63 @@ export function creditTypeLabel(type: string | null | undefined): string {
   return CREDIT_TYPE_LABELS[type ?? ''] ?? (type ?? '—');
 }
 
+// ── Add-on / enhancement labels (pipeline addOns, not wizard templates) ───────
+
+export const ADDON_LABELS: Record<string, string> = {
+  tts:             'Voiceover',
+  heygen:          'Avatar',
+  shoppable:       'Shoppable tagging',
+  wan:             'Video generation',
+  clipSourcing:    'Scene selection',
+  showCommentary:  'Narrative narration',
+  branding:        'Brand overlay',
+  imageBurn:       'Image burn',
+  dynamicOverlays: 'Dynamic overlays',
+  captions:        'Captions',
+  colorGrade:      'Color grade',
+  effects:         'Visual effects',
+  thumbnail:       'Thumbnail',
+  pip:             'Picture-in-picture',
+};
+
+export function addOnLabel(key: string): string {
+  return ADDON_LABELS[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Human label for how the job was submitted (dashboard vs API vs E2E script). */
+export function createdByLabel(createdBy: string | null | undefined): string {
+  switch (createdBy) {
+    case 'dashboard':   return 'Dashboard wizard';
+    case 'e2e_script':  return 'E2E test script';
+    case 'api':         return 'Direct API';
+    case 'agent':       return 'Automation agent';
+    default:            return createdBy ? String(createdBy) : 'Unknown';
+  }
+}
+
+export function isDashboardOrder(createdBy: string | null | undefined): boolean {
+  return createdBy === 'dashboard';
+}
+
+/** Wizard preset name, or a clear fallback when the job was not created from a template. */
+export function resolveTemplateDisplayName(job: {
+  templateName?: string | null;
+  contentType?: string | null;
+  wizardConfig?: {
+    templateName?: string | null;
+    templateId?: string | null;
+    contentType?: string | null;
+  } | null;
+}): string {
+  const name = job.templateName || job.wizardConfig?.templateName;
+  if (name) return name;
+  const ct = job.wizardConfig?.contentType || job.contentType;
+  if (ct) {
+    return `${labelForContentType(ct)} · no wizard template`;
+  }
+  return 'Custom job · no template selected';
+}
+
 // ── Job display title ─────────────────────────────────────────────────────────
 // Builds a human title from whatever data is available on a job row.
 

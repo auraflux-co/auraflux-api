@@ -906,6 +906,7 @@ function JobBuilderPageInner() {
       // (used for job card titles and script generation context)
       ...(activeTemplate ? { templateName: activeTemplate.label } : {}),
       ...(activeBrandId ? { brandId: activeBrandId } : {}),
+      createdVia: 'dashboard',
       // CPD-511/513: staging gate + customer-provided publish metadata
       staging:        publishMode === 'review' ? true : undefined,
       publishMeta: (() => {

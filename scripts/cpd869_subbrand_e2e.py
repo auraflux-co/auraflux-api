@@ -2,6 +2,13 @@
 """
 scripts/cpd869_subbrand_e2e.py — CPD-869 Sub-brand autonomous production loop E2E
 
+⚠️  JOB SUBMISSION POLICY (2026-06-13)
+Production and sub-brand jobs MUST be placed via the dashboard wizard (My Jobs → New).
+This script submits jobs via POST /jobs (createdBy=e2e_script) — use ONLY for Operate-tier
+pipeline smoke tests, never for customer-facing production batches.
+
+Requires ALLOW_E2E_JOB_SUBMIT=1 to submit (dry-run always allowed).
+
 Tests the 4 child stories of CPD-869 across all 20 sub-brands, sequentially,
 tailing each job to completion before moving to the next.
 
@@ -372,6 +379,11 @@ def run_brand_test(brand, dry_run=False):
         print(f'    [dry-run] would submit job for brandId={brand_id}')
         return {'brand': name, 'status': 'DRY_RUN'}
 
+    if not os.environ.get('ALLOW_E2E_JOB_SUBMIT'):
+        print('    ❌ Job submit blocked — set ALLOW_E2E_JOB_SUBMIT=1 for Operate smoke tests only.')
+        print('       Production/sub-brand jobs must use the dashboard wizard (My Jobs → New).')
+        return {'brand': name, 'status': 'SKIP', 'reason': 'ALLOW_E2E_JOB_SUBMIT not set'}
+
     # Build job spec — pass all clip candidates + clipSourcing=true so CPD-947 Gemini
     # picker selects the best one.  Target: YouTube (connected for all sub-brands).
     # publishMode=scheduled exercises CPD-873; addOns.branding exercises CPD-871.
@@ -385,10 +397,18 @@ def run_brand_test(brand, dry_run=False):
         'targetPlatform':    'youtube',
         'url':               clip_urls[0],
         'urls':              clip_urls,
+        'sourceLibrary':     [{
+            'url':          c['url'],
+            'title':        c['title'],
+            'duration':     c.get('duration_s'),
+            'platform':     'twitch',
+            'contentType':  'clips',
+        } for c in clips],
         'topic':             f'{name} Twitch highlight',
         'tone':              'high-energy, engaging',
         'durationMins':      1,
         'publishMode':       'scheduled',
+        'templateName':      'TikTok Clutch',
         'brandId':           brand_id,
         'addOns': {
             'tts':            {'active': False},

@@ -31,6 +31,18 @@ This file provides guidance to **Cursor** (AI coding agents in the Cursor IDE) a
 
 **Multi-agent rule:** If two sub-agents are running simultaneously, check `STATUS.md → 🔒 Active File Locks` before editing any Tier 1 or Tier 2 file. Declare your lock before your first edit. See `AGENT_FILE_REGISTRY.md` for the full protocol.
 
+### Job submission policy (production vs testing)
+
+**Customer-facing and sub-brand production jobs** must be placed only via the **dashboard wizard** (`My Jobs → New`). That path sets `createdBy: dashboard`, persists `templateName`, `sourceLibrary` (clip titles/thumbnails), and brand context — which the **Review Queue** uses for the “What was ordered” panel.
+
+| Channel | `createdBy` | When to use |
+|---------|-------------|-------------|
+| Dashboard wizard | `dashboard` | All production, sub-brand, and Rob acceptance testing |
+| E2E scripts (`scripts/cpd869_subbrand_e2e.py`, etc.) | `e2e_script` | **Operate-tier pipeline smoke only** — requires `ALLOW_E2E_JOB_SUBMIT=1`; never batch all sub-brands for production |
+| Direct `POST /jobs` / developer API | `api` | Integrations only — not for manual QA of what customers ordered |
+
+Review expand shows an amber banner when `createdBy !== dashboard`. Do not interpret API/E2E jobs as representative of wizard orders.
+
 **Doc structure (as of 2026-04-16):**
 
 - `docs/INDEX.md` — full index of all docs with descriptions. Read this to find anything.

@@ -187,3 +187,41 @@ describe('GET /jobs — customer job status resolution (CPD-869)', () => {
     expect(res.body.jobs[0].status).toBe('processing');
   });
 });
+
+describe('jobs_c1 order review helpers', () => {
+  const {
+    _resolveCreatedBy,
+    _buildOrderSourceSummary,
+  } = require('../lib/routes/jobs_c1');
+
+  test('_resolveCreatedBy tags dashboard vs e2e vs api', () => {
+    expect(_resolveCreatedBy({ headers: {}, body: { entryType: 'fetch' } })).toBe('dashboard');
+    expect(_resolveCreatedBy({ headers: { 'x-e2e-secret': 's' }, body: { entryType: 'fetch' } })).toBe('e2e_script');
+    expect(_resolveCreatedBy({ headers: {}, body: { entry: 'fetch', url: 'https://x' } })).toBe('api');
+  });
+
+  test('_buildOrderSourceSummary returns candidates and selected clip', () => {
+    const spec = {
+      addOns: { clipSourcing: { active: true } },
+      order: {
+        inputs: {
+          sourceLibrary: [
+            { url: 'https://clips.twitch.tv/a', title: 'Clip A' },
+            { url: 'https://clips.twitch.tv/b', title: 'Clip B' },
+          ],
+        },
+      },
+      state: {
+        clipManifest: {
+          source: 'gemini_metadata_rank',
+          clips: [{ url: 'https://clips.twitch.tv/b', label: 'Clip B', duration: 42, confidence: 0.91 }],
+        },
+      },
+    };
+    const summary = _buildOrderSourceSummary(spec);
+    expect(summary.candidates).toHaveLength(2);
+    expect(summary.selected?.url).toBe('https://clips.twitch.tv/b');
+    expect(summary.selectionSource).toBe('gemini_metadata_rank');
+    expect(summary.clipSourcing).toBe(true);
+  });
+});

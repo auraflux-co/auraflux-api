@@ -152,6 +152,8 @@ export interface CreateJobPayload {
     [key: string]: Record<string, unknown> | undefined;
   };
   brandName?:       string;
+  /** Set by dashboard wizard so API tags createdBy=dashboard on the job spec */
+  createdVia?:      'dashboard';
   // CPD-328: explicit brand context (also sent via X-Brand-Id header)
   brandId?:         string;
   // CPD-511/513: staging gate + customer-provided publish metadata
