@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-15 (CPD-1027) — force updateJobSpec for republish after false published state.
+**Last Updated:** 2026-06-15 (CPD-1027) — fix force updateJobSpec SQL param count blocking republish.
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
