@@ -13,7 +13,7 @@
 
 ---
 
-**Last Updated:** 2026-06-14 (CPD-1030) — C0 line now on [auraflux-c0](https://github.com/auraflux-co/auraflux-c0); STATUS delineation updated. Prior: CPD-1027 route mounts; CPD-1026 portal5 poll.
+**Last Updated:** 2026-06-15 (CPD-1027) — add missing `pg` npm dep (C1 routes crash without it). Prior: CPD-1030 auraflux-c0 link; CPD-1027 route mount restore.
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
