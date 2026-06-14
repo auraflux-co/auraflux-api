@@ -7672,9 +7672,15 @@ app.post('/nba/generate-intro-card', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Missing required field: gameId' });
   }
 
+  const { assertNumericGameId, gotoLocalTemplateWithParams } = require('./lib/puppeteer_safe');
+  const safeGameId = assertNumericGameId(gameId);
+  if (!safeGameId) {
+    return res.status(400).json({ ok: false, error: 'Invalid gameId: must be a numeric ESPN game ID' });
+  }
+
   const cardPath = outputPath
     ? path.resolve(outputPath)
-    : path.join(OUTPUT_DIR, `nba_intro_card_${gameId}.png`);
+    : path.join(OUTPUT_DIR, `nba_intro_card_${safeGameId}.png`);
 
   // Ensure output directory exists
   const cardDir = path.dirname(cardPath);
@@ -7687,7 +7693,7 @@ app.post('/nba/generate-intro-card', async (req, res) => {
 
   let browser;
   try {
-    console.log(`[nba-intro-card] Generating card for game ${gameId}...`);
+    console.log(`[nba-intro-card] Generating card for game ${safeGameId}...`);
 
     browser = await puppeteer.launch(withPuppeteerExecutable({
       headless: true,
@@ -7699,9 +7705,8 @@ app.post('/nba/generate-intro-card', async (req, res) => {
     // Set viewport to exactly 640×360 (TV aspect ratio)
     await page.setViewport({ width: 640, height: 360, deviceScaleFactor: 2 });
 
-    // Load the template with gameId param — HTML auto-fetches ESPN API
-    const fileUrl = `file://${templatePath}?gameId=${gameId}`;
-    await page.goto(fileUrl, { waitUntil: 'networkidle0', timeout: 20000 });
+    // Load local template; inject gameId via safe in-page navigation (not user URL in goto)
+    await gotoLocalTemplateWithParams(page, templatePath, { gameId: safeGameId });
 
     // Wait for ESPN API data to render (title changes to 'READY' when done)
     try {

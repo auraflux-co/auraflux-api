@@ -464,6 +464,7 @@ function FeatureConfigPanel({ feat, cfg, tone, setTone, setFeatureCfg }: Feature
       )}
       {feat.id === 'heygen_avatar' && (
         <div className="space-y-3">
+          <p className="text-[10px] text-muted-foreground">Managed plan — AI presenter reads your script on camera. Requires HeyGen avatar + voice IDs from your HeyGen dashboard.</p>
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Avatar ID</Label>
             <input type="text"
@@ -484,6 +485,7 @@ function FeatureConfigPanel({ feat, cfg, tone, setTone, setFeatureCfg }: Feature
       )}
       {feat.id === 'pip' && (
         <div className="space-y-3">
+          <p className="text-[10px] text-muted-foreground">Paste a direct MP4 link to your face-cam or reaction clip — it is composited over the main video at the position you choose.</p>
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Face-cam video URL</Label>
             <input type="url"
@@ -1101,7 +1103,7 @@ function JobBuilderPageInner() {
                       { id: 'long_compile', label: 'Make a longer video', sub: 'Combine clips into one YouTube video' },
                       { id: 'from_vod',     label: 'Find highlights',     sub: 'Pull standout moments from long footage' },
                       { id: 'produce_vod',  label: 'Create a full video', sub: 'Add script, narration, and structure' },
-                      { id: 'show_film',    label: 'Show / film commentary', sub: 'Narrated commentary over TV or movie clips' },
+                      { id: 'show_film',    label: 'Show / film commentary', sub: 'Narrated commentary over TV or movie clips — multi-segment script + B-roll' },
                     ]}
                     selected={[
                       sourceIntent === 'clips'     && formFactor === 'short' ? 'short_clips' :

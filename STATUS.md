@@ -1,4 +1,5 @@
 # AuraFlux — Status & Task Tracker
+**Last Updated:** 2026-06-14 v1.0.1128 (Cursor — chore: review follow-ups — puppeteer SSRF safe local template load, .env.example E2E vars, aider chat widget check, Review UX copy, wizard help text)
 **Last Updated:** 2026-06-13 v1.0.1127 (Cursor — fix(CPD-869): Review order-vs-output — brand/topic/source clips/createdBy on staging-assets; dashboard tags createdVia; E2E script gated by ALLOW_E2E_JOB_SUBMIT; job submission policy in cursor.md)
 **Last Updated:** 2026-06-13 v1.0.1126 (Cursor — fix(CPD-869): Review Queue expand crash — publishCopy null tiktok + internal keys; staging-assets returns _buildWizardConfig job spec; JobSpecSummary on expand)
 **Last Updated:** 2026-06-13 v1.0.1125 (Cursor — fix(CPD-1006): bake brandName on job creation + resolve from getBrand at chrome time so sub-brand lower-third shows millkberry not AuraFlux; wizard sends brandId explicitly)

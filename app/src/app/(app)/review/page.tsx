@@ -323,8 +323,10 @@ function OrderOriginBanner({ createdBy }: { createdBy?: string | null }) {
   return (
     <div className="rounded-md border border-amber-800/40 bg-amber-950/20 px-3 py-2 text-xs text-amber-200/90">
       <span className="font-semibold">Not from dashboard.</span>{' '}
-      Ordered via {createdByLabel(createdBy)} — compare source clips and enhancements below against the output.
-      Production jobs should use <Link href="/myjobs/new" className="underline hover:text-amber-100">My Jobs → New</Link>.
+      This job was created outside My Jobs → New ({createdByLabel(createdBy)}). Some fields may not match
+      what a customer would have selected — compare source clips and enhancements below against the output.
+      For production, use{' '}
+      <Link href="/myjobs/new" className="underline hover:text-amber-100">My Jobs → New</Link>.
     </div>
   );
 }
@@ -397,6 +399,9 @@ function FeatureComplianceSection({ rows }: { rows: FeatureComplianceRow[] | und
     <div className="rounded-md border bg-background/60 p-3 space-y-2 text-xs">
       <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground/70">
         Production checklist
+      </p>
+      <p className="text-[10px] text-muted-foreground">
+        Automated checks that ordered features (branding, captions, etc.) appear in the finished video.
       </p>
       {missing.length > 0 && (
         <p className="text-red-400">{missing.length} required feature{missing.length > 1 ? 's' : ''} missing</p>

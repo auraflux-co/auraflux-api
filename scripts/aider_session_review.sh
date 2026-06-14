@@ -279,15 +279,14 @@ if [[ "$ROADMAP_HTTP" =~ ^[23] ]]; then
 else
   MKTG_STATUS="${MKTG_STATUS}  ❌ Roadmap page: HTTP ${ROADMAP_HTTP} (expected 2xx or 3xx)\n"
 fi
-# Chat widget: BotPenguin injects the widget element via JS at runtime — it is NOT in
-# the static HTML that curl sees. Check for the BotPenguin <script> tag instead,
-# which IS present in the static HTML if the widget is configured.
-CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -c "botpenguin\|BotPenguin\|bp-widget" 2>/dev/null) || true
+# Chat widget: Cloudflare worker injects af-chat-bubble + panel (calls /api/public/chat).
+# BotPenguin is NOT used — check for our widget markup, not botpenguin CDN tags.
+CHAT_WIDGET=$(curl -sL --max-time 8 "https://auraflux.co/" 2>/dev/null | grep -cE "af-chat-bubble|af-chat-panel|afSend" 2>/dev/null) || true
 CHAT_WIDGET="${CHAT_WIDGET:-0}"
 if [ "${CHAT_WIDGET}" -gt 0 ] 2>/dev/null; then
-  MKTG_STATUS="${MKTG_STATUS}  ✅ Chat widget script present on homepage (BotPenguin)\n"
+  MKTG_STATUS="${MKTG_STATUS}  ✅ Chat widget present on homepage (af-chat via Cloudflare worker)\n"
 else
-  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget script NOT found on homepage (BotPenguin tag missing from HTML)\n"
+  MKTG_STATUS="${MKTG_STATUS}  ⚠️  Chat widget NOT found on homepage (af-chat-bubble missing — check cloudflare/marketing/_worker.js)\n"
 fi
 
 # Content-size guard — a page < 5 KB that returns 200 is likely corrupted/truncated
@@ -443,7 +442,7 @@ prompt = open(prompt_file).read()
 
 payload = json.dumps({
     "model": "claude-haiku-4-5",
-    "max_tokens": 4096,
+    "max_tokens": 16384,
     "messages": [{"role": "user", "content": prompt}]
 }).encode()
 
@@ -462,9 +461,11 @@ for attempt in range(5):
         with urllib.request.urlopen(req, timeout=120) as r:
             data = json.loads(r.read())
         report = data["content"][0]["text"]
+        if data.get("stop_reason") == "max_tokens":
+            report += "\n\n> ⚠️ Report truncated at max_tokens — sections above may be incomplete.\n"
         with open(report_file, "w") as f:
             f.write(report)
-        print(f"Report written — {len(report)} chars")
+        print(f"Report written — {len(report)} chars (stop_reason={data.get('stop_reason')})")
         break
     except urllib.error.HTTPError as e:
         body = e.read().decode()
@@ -481,6 +482,14 @@ else:
 PYEOF
 
 python3 "$PY_SCRIPT" "$PROMPT_FILE" "$REPORT" "$_ANTHROPIC_KEY" 2>&1 | tee "$LOG_FILE"
+
+# Footer is appended deterministically — the model truncating at max_tokens
+# (or paraphrasing the footer) must not invalidate an otherwise-good report.
+if [ -s "$REPORT" ] && ! grep -q "last-reviewed-commit: ${HEAD_SHA}" "$REPORT" 2>/dev/null; then
+  # Strip any stale/incorrect footer lines the model may have emitted
+  sed -i '' '/<!-- last-reviewed-commit:/d;/<!-- reviewed-at:/d' "$REPORT"
+  printf '\n<!-- last-reviewed-commit: %s -->\n<!-- reviewed-at: %s -->\n' "$HEAD_SHA" "$TIMESTAMP" >> "$REPORT"
+fi
 
 if grep -q "last-reviewed-commit: ${HEAD_SHA}" "$REPORT" 2>/dev/null; then
   echo ""

@@ -172,9 +172,9 @@ export function resolveTemplateDisplayName(job: {
   if (name) return name;
   const ct = job.wizardConfig?.contentType || job.contentType;
   if (ct) {
-    return `${labelForContentType(ct)} · no wizard template`;
+    return `${labelForContentType(ct)} (no wizard template selected)`;
   }
-  return 'Custom job · no template selected';
+  return 'Custom job (no wizard template selected)';
 }
 
 // ── Job display title ─────────────────────────────────────────────────────────
