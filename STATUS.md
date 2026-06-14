@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-15 (CPD-1027) — restore lib/db.js postgres facade (was replaced with SQLite in #637). Prior: C1 npm deps restore.
+**Last Updated:** 2026-06-15 (CPD-1027) — YouTube direct publish path (no Upload-Post gate); scheduled batch publish for CPD-869.
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
