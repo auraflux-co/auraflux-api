@@ -3703,10 +3703,8 @@ app.post('/job/:id/reassemble', async (req, res) => {
 // No script gen, no HeyGen. Picked clips (already mp4-resolved by the dashboard)
 // go straight to assembly: blur-pad portrait per clip + concat. Whisper captions
 // and loudnorm apply in the standard post-process pass.
-// CPD-981: also the path for ALL dashboard shorts — Bobby G is VOD-only now
-// (HeyGen credits reserved for watch-hour content until CPD-881 lands), so the
-// SHORT buttons dispatch single-clip jobs here. contentType 'news-short' rides
-// the same flow: assembly re-scrapes fresh Brightcove HLS from clip pageUrl.
+// CPD-981: also the path for ALL dashboard news shorts — no avatar, ever.
+// News VOD (long form) keeps the script + HeyGen avatar path; shorts stay clips-only.
 app.post('/generate-clip-comp', async (req, res) => {
   const clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
@@ -3964,6 +3962,88 @@ app.get('/dashboard-config', (req, res) => {
     heygenConfigured: !!process.env.HEYGEN_API_KEY,
     twitchConfigured: !!(process.env.TWITCH_CLIENT_ID && process.env.TWITCH_TOKEN),
   });
+});
+
+// C0 script scaffolding — locked intros/outros, show names (config/customers/c0.json)
+const C0_CONFIG_PATH = path.join(__dirname, 'config', 'customers', 'c0.json');
+
+function readC0ConfigFile() {
+  return JSON.parse(fs.readFileSync(C0_CONFIG_PATH, 'utf8'));
+}
+
+app.get('/customer-config/c0/scaffold', (req, res) => {
+  try {
+    const cfg = readC0ConfigFile();
+    const lfVoice = cfg.templates?.['long-form']?.designDefaults?.voice || {};
+    const voice = cfg.templates?.['long-form']?.voice || {};
+    return res.json({
+      ok: true,
+      scaffold: {
+        lockedIntro: lfVoice.lockedIntro || { news: '', clips: '', sports: '' },
+        lockedOutro: lfVoice.lockedOutro || '',
+        showName: lfVoice.showName || { news: '', clips: '', sports: '' },
+        categoryLabel: lfVoice.categoryLabel || { news: '', clips: '', sports: '' },
+        prohibitedWords: Array.isArray(voice.prohibitedWords) ? voice.prohibitedWords : [],
+        voiceStyle: voice.style || '',
+        outroLine: voice.outroLine || '',
+        speakerName: voice.speakerName || 'Bobby G',
+      },
+    });
+  } catch (err) {
+    console.error('[customer-config/c0/scaffold GET]', err.message);
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/customer-config/c0/scaffold', (req, res) => {
+  try {
+    const body = req.body?.scaffold || req.body || {};
+    const cfg = readC0ConfigFile();
+    const lf = cfg.templates?.['long-form'];
+    if (!lf?.designDefaults) return res.status(400).json({ ok: false, error: 'Invalid c0.json structure' });
+
+    lf.designDefaults.voice = lf.designDefaults.voice || {};
+    if (body.lockedIntro && typeof body.lockedIntro === 'object') {
+      lf.designDefaults.voice.lockedIntro = {
+        news: String(body.lockedIntro.news || ''),
+        clips: String(body.lockedIntro.clips || ''),
+        sports: String(body.lockedIntro.sports || ''),
+      };
+    }
+    if (body.lockedOutro != null) lf.designDefaults.voice.lockedOutro = String(body.lockedOutro);
+    if (body.showName && typeof body.showName === 'object') {
+      lf.designDefaults.voice.showName = {
+        news: String(body.showName.news || ''),
+        clips: String(body.showName.clips || ''),
+        sports: String(body.showName.sports || ''),
+      };
+    }
+    if (body.categoryLabel && typeof body.categoryLabel === 'object') {
+      lf.designDefaults.voice.categoryLabel = {
+        news: String(body.categoryLabel.news || ''),
+        clips: String(body.categoryLabel.clips || ''),
+        sports: String(body.categoryLabel.sports || ''),
+      };
+    }
+
+    lf.voice = lf.voice || {};
+    if (Array.isArray(body.prohibitedWords)) lf.voice.prohibitedWords = body.prohibitedWords.filter(Boolean);
+    if (body.voiceStyle != null) lf.voice.style = String(body.voiceStyle);
+    if (body.outroLine != null) lf.voice.outroLine = String(body.outroLine);
+    if (body.speakerName != null) lf.voice.speakerName = String(body.speakerName);
+
+    fs.writeFileSync(C0_CONFIG_PATH, `${JSON.stringify(cfg, null, 2)}\n`);
+    try {
+      const { clearCustomerConfigCache } = require('./lib/customerConfig');
+      clearCustomerConfigCache();
+    } catch (_) {}
+
+    console.log('[customer-config/c0/scaffold] Saved voice scaffolding');
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[customer-config/c0/scaffold POST]', err.message);
+    return res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 app.get('/market-keys', (req, res) => {
@@ -5657,9 +5737,21 @@ const BBC_RSS_URLS = [
   'https://feeds.bbci.co.uk/news/world/rss.xml'
 ];
 const BBC_YTDLP_CONCURRENCY = 8;   // parallel yt-dlp workers — local machine, no throttle needed
-const BBC_FETCH_LIMIT      = 30;   // articles to attempt (40% hit rate → ~12 videos from 30)
+const BBC_FETCH_LIMIT      = 45;   // articles to attempt (40% hit rate → ~18 videos from 45)
 const BBC_VIDEO_MIN_SEC    = 8;
 const BBC_VIDEO_MAX_SEC    = parseInt(process.env.NEWS_BBC_MAX_CLIP_SEC || '180');
+
+/** YouTube upload_date (YYYYMMDD) or unix timestamp → ISO. Never fakes "now". */
+function parseYtPublishedAt(uploadDate, timestamp) {
+  if (timestamp != null && Number(timestamp) > 0) {
+    return new Date(Number(timestamp) * 1000).toISOString();
+  }
+  const raw = uploadDate != null ? String(uploadDate) : '';
+  if (/^\d{8}$/.test(raw)) {
+    return new Date(`${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}T12:00:00.000Z`).toISOString();
+  }
+  return null;
+}
 
 /**
  * Parse a simple RSS feed with axios — no external xml parser needed.
@@ -5714,9 +5806,7 @@ async function extractBbcVideo(articleUrl) {
           hlsUrl,
           duration,
           thumbnail:   d.thumbnail || null,
-          publishedAt: d.upload_date
-            ? new Date(`${d.upload_date.slice(0,4)}-${d.upload_date.slice(4,6)}-${d.upload_date.slice(6,8)}`).toISOString()
-            : new Date().toISOString(),
+          publishedAt: parseYtPublishedAt(d.upload_date, d.timestamp),
           orientation: 'landscape',   // BBC is always landscape 16:9 — fits 1920x1080 assembly frame directly
           pillarboxFilter: null,
           source: 'bbc'
@@ -5757,6 +5847,11 @@ async function scrapeBbcNewsVideos(limit = 10) {
         // Merge RSS title/desc (cleaner than URL-slug title) if yt-dlp title is short
         if (!v.title || v.title.length < 10) v.title = art.title;
         v.description = art.description || '';
+        // RSS pubDate has real time; yt-dlp upload_date is date-only at UTC midnight
+        if (art.pubDate) {
+          const rssMs = new Date(art.pubDate).getTime();
+          if (!Number.isNaN(rssMs)) v.publishedAt = new Date(rssMs).toISOString();
+        }
       }
       return v;
     })));
@@ -5775,8 +5870,11 @@ async function scrapeBbcNewsVideos(limit = 10) {
 // 100% hit rate since the channel only contains videos.
 
 const YT_NEWS_CHANNELS = {
-  ap:      { handle: '@AssociatedPress/videos', label: 'AP',      maxSec: 180 },
-  reuters: { handle: '@Reuters/videos',         label: 'Reuters', maxSec: 180 },
+  ap:      { handle: '@AssociatedPress/videos', label: 'AP',           maxSec: 180 },
+  reuters: { handle: '@Reuters/videos',         label: 'Reuters',      maxSec: 180 },
+  pbs:     { handle: '@PBSNewsHour/videos',     label: 'PBS',          maxSec: 300, overfetch: 5 },
+  vox:     { handle: '@Vox/videos',             label: 'Vox',          maxSec: 600, overfetch: 3 },
+  bbc:     { handle: '@BBCNews/videos',         label: 'BBC',          maxSec: 180, overfetch: 3 },
 };
 
 /**
@@ -5795,7 +5893,7 @@ async function scrapeYtNewsChannel(source, limit = 12) {
     const { execFile } = require('child_process');
     const proc = execFile('yt-dlp', [
       '--no-download', '--dump-json', '--flat-playlist',
-      '--playlist-end', String(Math.min(limit * 3, 40)), // over-fetch to account for long-form
+      '--playlist-end', String(Math.min(limit * (cfg.overfetch || 3), 60)), // over-fetch for low hit-rate channels
       channelUrl
     ], { timeout: 30000 });
     proc.stdout.on('data', d => out += d);
@@ -5804,7 +5902,14 @@ async function scrapeYtNewsChannel(source, limit = 12) {
         try {
           const d = JSON.parse(line);
           const dur = d.duration || 0;
-          if (dur > 0 && dur <= cfg.maxSec) return [{ id: d.id, title: d.title || '', duration: dur }];
+          if (dur > 0 && dur <= cfg.maxSec) {
+            return [{
+              id: d.id,
+              title: d.title || '',
+              duration: dur,
+              uploadDate: d.upload_date || d.release_date || null,
+            }];
+          }
         } catch(_) {}
         return [];
       });
@@ -5824,26 +5929,31 @@ async function scrapeYtNewsChannel(source, limit = 12) {
     const batchResults = await Promise.all(batch.map(entry => new Promise(resolve => {
       const { execFile } = require('child_process');
       const ytUrl = `https://www.youtube.com/watch?v=${entry.id}`;
-      const proc = execFile('yt-dlp',
-        ['--get-url', '-f', 'best[ext=mp4][height<=720]/best[ext=mp4]/best', ytUrl],
-        { timeout: 14000 }
-      );
-      let url = '';
-      proc.stdout.on('data', d => url += d);
+      const proc = execFile('yt-dlp', [
+        '--no-download', '--dump-json', '--no-playlist',
+        '-f', 'best[ext=mp4][height<=720]/best[ext=mp4]/best',
+        ytUrl,
+      ], { timeout: 20000 });
+      let out = '';
+      proc.stdout.on('data', d => out += d);
       proc.on('close', () => {
-        const hlsUrl = url.trim().split('\n')[0].trim();
-        if (!hlsUrl || hlsUrl.length < 20) return resolve(null);
-        resolve({
-          url:         ytUrl,
-          title:       entry.title,
-          hlsUrl,
-          duration:    entry.duration,
-          thumbnail:   `https://i.ytimg.com/vi/${entry.id}/maxresdefault.jpg`,
-          publishedAt: new Date().toISOString(), // channel doesn't give publish date in flat mode
-          orientation: 'landscape',   // AP/Reuters YouTube clips are 16:9 — fit 1920x1080 assembly frame directly
-          pillarboxFilter: null,
-          source
-        });
+        try {
+          const d = JSON.parse(out);
+          const hlsUrl = (d.url || '').trim();
+          if (!hlsUrl || hlsUrl.length < 20) return resolve(null);
+          resolve({
+            url:         ytUrl,
+            title:       d.title || entry.title,
+            hlsUrl,
+            duration:    d.duration || entry.duration,
+            thumbnail:   d.thumbnail || `https://i.ytimg.com/vi/${entry.id}/hqdefault.jpg`,
+            publishedAt: parseYtPublishedAt(d.upload_date, d.timestamp)
+              || parseYtPublishedAt(entry.uploadDate, null),
+            orientation: 'landscape',
+            pillarboxFilter: null,
+            source
+          });
+        } catch (_) { resolve(null); }
       });
       proc.on('error', () => resolve(null));
     })));
@@ -5919,8 +6029,8 @@ function _getCachedNewsResults(src) {
 // Replaces hardcoded /news/us-canada-videos calls when source != aljazeera.
 // Returns same video shape as /news/us-canada-videos so dashboard needs minimal change.
 app.get('/news/stories', async (req, res) => {
-  const source = (req.query.source || 'aljazeera').toLowerCase();
-  const limit  = Math.min(parseInt(req.query.limit || '12'), 20);
+  const source = (req.query.source || 'bbc').toLowerCase();
+  const limit  = Math.min(parseInt(req.query.limit || '30', 10) || 30, 50);
 
   try {
     let videos = [];
@@ -5928,7 +6038,8 @@ app.get('/news/stories', async (req, res) => {
     // Run all requested sources in parallel — local machine, accuracy > speed
     const fetchTasks = [];
 
-    if (source === 'aljazeera' || source === 'all') {
+    // `all` = BBC + PBS + Vox wire sources (no AJ/AP/Reuters)
+    if (source === 'aljazeera') {
       fetchTasks.push(
         axios.get(`http://localhost:${process.env.PORT || 3000}/news/us-canada-videos`, { timeout: 180000 })
           .then(r => {
@@ -5947,29 +6058,84 @@ app.get('/news/stories', async (req, res) => {
     }
 
     if (source === 'bbc' || source === 'all') {
-      const bbcLimit = source === 'all' ? 8 : limit;
+      const bbcLimit = limit;
       fetchTasks.push(
-        scrapeBbcNewsVideos(bbcLimit)
+        Promise.all([
+          scrapeYtNewsChannel('bbc', bbcLimit).catch(e => {
+            console.warn(`[news/stories] BBC YT failed: ${e.message}`);
+            return [];
+          }),
+          scrapeBbcNewsVideos(bbcLimit).catch(e => {
+            console.warn(`[news/stories] BBC RSS failed: ${e.message}`);
+            return [];
+          }),
+        ]).then(([yt, rss]) => {
+          const merged = [...yt, ...rss];
+          merged.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+          const seen = new Set();
+          const v = merged.filter(item => {
+            const key = (item.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').slice(0, 60);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          }).slice(0, bbcLimit);
+          _cacheNewsResults('bbc', v);
+          console.log(`[news/stories] BBC: ${v.length} videos (${yt.length} YT + ${rss.length} RSS)`);
+          if (v.length === 0) {
+            const cached = _getCachedNewsResults('bbc');
+            if (cached) { console.log(`[news/stories] BBC: 0 fresh — using ${cached.length} cached`); return cached; }
+          }
+          return v;
+        })
+      );
+    }
+
+    if (source === 'pbs' || source === 'all') {
+      const pbsLimit = limit;
+      fetchTasks.push(
+        scrapeYtNewsChannel('pbs', pbsLimit)
           .then(v => {
-            _cacheNewsResults('bbc', v);
-            console.log(`[news/stories] BBC: ${v.length} videos`);
+            _cacheNewsResults('pbs', v);
+            console.log(`[news/stories] PBS: ${v.length} videos`);
             if (v.length === 0) {
-              const cached = _getCachedNewsResults('bbc');
-              if (cached) { console.log(`[news/stories] BBC: 0 fresh — using ${cached.length} cached`); return cached; }
+              const cached = _getCachedNewsResults('pbs');
+              if (cached) { console.log(`[news/stories] PBS: 0 fresh — using ${cached.length} cached`); return cached; }
             }
             return v;
           })
           .catch(e => {
-            console.warn(`[news/stories] BBC failed: ${e.message}`);
-            const cached = _getCachedNewsResults('bbc');
-            if (cached) { console.log(`[news/stories] BBC: using ${cached.length} cached videos`); return cached; }
+            console.warn(`[news/stories] PBS failed: ${e.message}`);
+            const cached = _getCachedNewsResults('pbs');
+            if (cached) { console.log(`[news/stories] PBS: using ${cached.length} cached videos`); return cached; }
             return [];
           })
       );
     }
 
-    if (source === 'ap' || source === 'all') {
-      const apLimit = source === 'all' ? 6 : limit;
+    if (source === 'vox' || source === 'all') {
+      const voxLimit = limit;
+      fetchTasks.push(
+        scrapeYtNewsChannel('vox', voxLimit)
+          .then(v => {
+            _cacheNewsResults('vox', v);
+            console.log(`[news/stories] Vox: ${v.length} videos`);
+            if (v.length === 0) {
+              const cached = _getCachedNewsResults('vox');
+              if (cached) { console.log(`[news/stories] Vox: 0 fresh — using ${cached.length} cached`); return cached; }
+            }
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] Vox failed: ${e.message}`);
+            const cached = _getCachedNewsResults('vox');
+            if (cached) { console.log(`[news/stories] Vox: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    if (source === 'ap') {
+      const apLimit = limit;
       fetchTasks.push(
         scrapeYtNewsChannel('ap', apLimit)
           .then(v => {
@@ -5990,8 +6156,8 @@ app.get('/news/stories', async (req, res) => {
       );
     }
 
-    if (source === 'reuters' || source === 'all') {
-      const reutersLimit = source === 'all' ? 6 : limit;
+    if (source === 'reuters') {
+      const reutersLimit = limit;
       fetchTasks.push(
         scrapeYtNewsChannel('reuters', reutersLimit)
           .then(v => {

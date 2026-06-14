@@ -171,14 +171,11 @@
     "news-short": {
       "label": "World News (Short-Form)",
       "formFactor": "short",
+      "clipsOnly": true,
       "source": {
         "module": "./sources/news_source"
       },
-      "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_SHORT_NEWS_ID",
-        "format": "portrait",
-        "speakSpeed": 0.95
-      },
+      "heygen": null,
       "assembly": {
         "chrome": {
           "skin": "news"

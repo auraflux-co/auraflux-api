@@ -309,16 +309,27 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <input type="hidden" id="news-source" value="all">
             <div class="field"><label>NEWS SOURCE</label>
               <select id="news-source-select" onchange="setNewsSource(this.value)" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
-                <option value="all" selected>All Sources (AJ · BBC · AP · Reuters)</option>
-                <option value="aljazeera">Al Jazeera US wire only</option>
-                <option value="bbc">BBC World</option>
+                <option value="all" selected>All (BBC · PBS · Vox)</option>
+                <option value="bbc">BBC only (YouTube + RSS)</option>
+                <option value="pbs">PBS NewsHour only</option>
+                <option value="vox">Vox only</option>
               </select>
-              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Al Jazeera-only avoids some Content ID risk on AP/Reuters wire clips.</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">SHORT = clips-only 9:16, no avatar. VOD (long form) will use Bobby G avatar when that pipeline is ready.</div>
             </div>
-            <input type="hidden" id="news-count" value="15">
+            <input type="hidden" id="news-count" value="40">
+            <div class="field" style="margin-bottom:8px;">
+              <label>STORIES TO FETCH</label>
+              <select id="news-fetch-limit" onchange="var nc=g('news-count');if(nc)nc.value=this.value;" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
+                <option value="20">20 stories</option>
+                <option value="30">30 stories</option>
+                <option value="40" selected>40 stories</option>
+                <option value="50">50 stories (max)</option>
+              </select>
+              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">PICK STORIES loads this many — check the ones you want for batch shorts.</div>
+            </div>
             <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
             <!-- inline story picker — populated by previewNewsStories() -->
-            <div id="news-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
+            <div id="news-inline-picker" style="display:none;margin-bottom:10px;max-height:560px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:10px;background:#060a12;"></div>
             <!-- short-form clip gallery — shown when SHORT is clicked, lets user pick one story -->
             <div id="news-short-clip-gallery" style="display:none;margin-bottom:10px;border:1px solid rgba(28,232,255,0.25);border-radius:6px;padding:10px;background:#060a12;">
               <div style="font-size:10px;color:rgba(28,232,255,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:8px;">PICK ONE STORY FOR SHORT FORM — CLICK TO SELECT</div>
@@ -328,8 +339,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="btn-row" style="flex-wrap:wrap;gap:10px;align-items:center;">
               <button id="btn-preview-news" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNewsStories()">PICK STORIES</button>
               <span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;letter-spacing:.03em;">↑ feeds both</span>
-              <button id="btn-gen-news" class="btn btn-gold" onclick="generateNewsWithPicker()">LONG FORM</button>
-              <button id="btn-gen-news-short" class="btn btn-outline" onclick="triggerNewsShort()">SHORT</button>
+              <button id="btn-gen-news" class="btn btn-gold" onclick="generateNewsWithPicker()" title="News VOD — full newscast with Bobby G avatar (when pipeline is ready)">VOD</button>
+              <button id="btn-gen-news-short" class="btn btn-gold" onclick="triggerNewsShort()">SHORT</button>
             </div>
           </div>
         </div>
@@ -381,28 +392,27 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
       </div>
 
-      <div class="sec-title">SCRIPT EDITOR <span class="badge">EDIT BEFORE GENERATING</span></div>
-      <div class="card">
+      <div class="sec-title">PIPELINE <span class="badge">STATUS</span></div>
+      <div class="card" id="pipeline-status-card">
         <div class="card-header">
-          <div class="card-title" id="script-type-label">SELECT A CONTENT TYPE ABOVE TO LOAD SCRIPT</div>
-          <div class="btn-row" style="margin:0;align-items:center;gap:10px;">
-            <label id="hold-label" style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;" title="Script runs normally but pauses before HeyGen — edit scenes in the textarea then click SEND TO HEYGEN">
-              <input type="checkbox" id="hold-before-heygen" style="cursor:pointer;accent-color:#c7af4f;" onchange="updateHoldUI()">
-              ⏸ HOLD BEFORE HEYGEN
-            </label>
-            <button class="btn btn-outline btn-sm" onclick="regenScript()">REGENERATE</button>
-            <button class="btn btn-gold btn-sm" id="send-to-heygen-btn" onclick="sendToHeyGen()">SEND TO HEYGEN</button>
-          </div>
+          <div class="card-title" id="script-type-label">Ready — pick content above to start a job</div>
         </div>
         <div class="card-body">
-          <textarea class="script-editor" id="main-script" placeholder="Script will appear here after selecting a content type above..." oninput="updateScriptStats()"></textarea>
-          <div style="margin-top:8px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);" id="script-stats"></div>
-          <!-- Gate 1 Script QA Result — populated after script generation -->
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);" id="script-stats"></div>
           <div id="script-qa-result"></div>
-          <!-- Pre-flight inline panel (replaces confirm() dialog before HeyGen send) -->
-          <div id="preflight-panel" style="display:none; margin:10px 0; padding:12px 16px; border-radius:6px; font-size:12px; font-family:monospace; line-height:1.6; border:1px solid; max-height:220px; overflow-y:auto;"></div>
-          <div class="alert alert-info" style="margin-top:8px">Use [beat] for pauses. Write in deadpan anchor voice. State facts flatly then ONE observation. Never explain the joke.</div>
+          <div id="preflight-panel" style="display:none;margin:10px 0;padding:12px 16px;border-radius:6px;font-size:12px;font-family:monospace;line-height:1.6;border:1px solid;max-height:220px;overflow-y:auto;"></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:10px;font-family:monospace;line-height:1.5;">
+            Shorts and clip comps skip script generation. VOD shows use locked intros/outros from
+            <a href="#" onclick="nav('settings');switchTab('script-cfg');loadScaffoldSettings();return false;" style="color:#c7af4f;text-decoration:none;">Settings → Script</a>.
+          </div>
         </div>
+      </div>
+      <!-- Hidden hooks — pipeline JS still reads/writes these; editor lives under Settings → Script -->
+      <div id="pipeline-hooks" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);" aria-hidden="true">
+        <textarea class="script-editor" id="main-script" oninput="updateScriptStats()"></textarea>
+        <input type="checkbox" id="hold-before-heygen" onchange="updateHoldUI()">
+        <button type="button" id="send-to-heygen-btn" onclick="sendToHeyGen()"></button>
+        <button type="button" id="btn-regen-script" onclick="regenScript()"></button>
       </div>
     </div>
 
@@ -1138,6 +1148,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="sec-title">SETTINGS</div>
       <div class="tab-bar">
         <button class="tab-btn active" onclick="switchTab('heygen')">HEYGEN</button>
+        <button class="tab-btn" onclick="switchTab('script-cfg');loadScaffoldSettings()">SCRIPT</button>
         <button class="tab-btn" onclick="switchTab('twitch-cfg')">TWITCH</button>
         <button class="tab-btn" onclick="switchTab('ffmpeg-cfg')">FFMPEG SERVER</button>
         <button class="tab-btn" onclick="switchTab('schedule-cfg')">SCHEDULE</button>
@@ -1261,6 +1272,73 @@ https://www.youtube.com/watch?v=j4vcHuc3VzI</textarea>
             <button onclick="scanScriptPronunciations()" class="btn btn-outline btn-sm" style="margin-top:10px;">🔍 SCAN CURRENT SCRIPT FOR NAMES</button>
           </div>
         </div>
+
+      </div><!-- /tab-heygen -->
+
+      <div class="tab-pane" id="tab-script-cfg">
+        <div class="card">
+          <div class="card-header"><div class="card-title">SCRIPT SCAFFOLDING <span class="badge">LOCKED INTROS · OUTROS · SHOW NAMES</span></div></div>
+          <div class="card-body">
+            <div class="alert alert-info" style="margin-bottom:12px;font-size:11px;">
+              These strings are injected into every VOD script before Claude writes scene copy.
+              Change them here instead of editing generated scripts on the Generate page.
+              Saved to <code style="background:rgba(0,0,0,0.35);padding:1px 5px;border-radius:3px;">config/customers/c0.json</code>.
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#e05252;letter-spacing:2px;margin-bottom:6px;">NEWS INTRO (LOCKED)</div>
+                <textarea id="scaffold-intro-news" rows="6" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:8px;font-size:11px;line-height:1.45;resize:vertical;font-family:Arial,sans-serif;"></textarea>
+              </div>
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#6441A5;letter-spacing:2px;margin-bottom:6px;">TWITCH INTRO (LOCKED)</div>
+                <textarea id="scaffold-intro-clips" rows="6" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:8px;font-size:11px;line-height:1.45;resize:vertical;font-family:Arial,sans-serif;"></textarea>
+              </div>
+              <div>
+                <div style="font-size:9px;font-weight:900;color:#17408B;letter-spacing:2px;margin-bottom:6px;">NBA INTRO (LOCKED)</div>
+                <textarea id="scaffold-intro-sports" rows="6" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:8px;font-size:11px;line-height:1.45;resize:vertical;font-family:Arial,sans-serif;"></textarea>
+              </div>
+            </div>
+            <div class="field"><label>LOCKED OUTRO (all VOD shows)</label>
+              <textarea id="scaffold-locked-outro" rows="3" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:8px;font-size:11px;line-height:1.45;resize:vertical;font-family:Arial,sans-serif;"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:12px 0;">
+              <div class="field" style="margin:0;"><label>SHOW NAME — NEWS</label><input id="scaffold-show-news" style="width:100%;"></div>
+              <div class="field" style="margin:0;"><label>SHOW NAME — TWITCH</label><input id="scaffold-show-clips" style="width:100%;"></div>
+              <div class="field" style="margin:0;"><label>SHOW NAME — NBA</label><input id="scaffold-show-sports" style="width:100%;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div class="field" style="margin:0;"><label>VOICE STYLE NOTES</label>
+                <input id="scaffold-voice-style" placeholder="e.g. jon-stewart-norm-macdonald-space-ghost" style="width:100%;">
+              </div>
+              <div class="field" style="margin:0;"><label>REQUIRED OUTRO LINE (Gate 1 check)</label>
+                <input id="scaffold-outro-line" placeholder="Goodnight and good luck." style="width:100%;">
+              </div>
+            </div>
+            <div class="field"><label>PROHIBITED WORDS <span style="font-weight:400;opacity:0.5;">(one per line)</span></label>
+              <textarea id="scaffold-prohibited" rows="4" placeholder="Words Claude must never use" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.2);padding:8px;font-size:11px;font-family:monospace;resize:vertical;"></textarea>
+            </div>
+            <label style="font-size:11px;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:8px;margin:12px 0;cursor:pointer;">
+              <input type="checkbox" id="scaffold-hold-heygen" onchange="syncHoldHeygenFromSettings()">
+              ⏸ Hold before HeyGen (pause after Gate 1 — edit script below, then send manually)
+            </label>
+            <details style="margin-top:8px;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:10px;background:#060a12;">
+              <summary style="cursor:pointer;font-size:11px;color:rgba(255,255,255,0.55);font-family:monospace;letter-spacing:0.5px;">Advanced — last generated script</summary>
+              <textarea id="scaffold-script-view" class="script-editor" rows="12" readonly style="margin-top:10px;min-height:180px;opacity:0.85;" placeholder="Appears here when a VOD job finishes Gate 0/1…"></textarea>
+              <div class="btn-row" style="margin-top:8px;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="syncScriptViewFromPipeline();document.getElementById('scaffold-script-view').removeAttribute('readonly')">↻ REFRESH FROM PIPELINE</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="pushScriptViewToPipeline()">APPLY TO PIPELINE</button>
+                <button type="button" class="btn btn-gold btn-sm" onclick="sendToHeyGen()">SEND TO HEYGEN</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="regenScript()">REGENERATE</button>
+              </div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:8px;">Use [beat] for pauses. Deadpan anchor voice — state facts flatly, one observation, never explain the joke.</div>
+            </details>
+            <div style="margin-top:14px;display:flex;align-items:center;gap:12px;">
+              <button class="btn btn-gold btn-sm" onclick="saveScaffoldSettings()">SAVE SCAFFOLDING</button>
+              <span id="scaffold-save-status" style="font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);"></span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="tab-pane" id="tab-twitch-cfg">
         <div class="card"><div class="card-header"><div class="card-title">TWITCH CONFIG</div></div>
@@ -3875,13 +3953,100 @@ function statusTagIdForType(type) {
 
 function updateHoldUI() {
   var checked = g('hold-before-heygen') ? g('hold-before-heygen').checked : false;
-  var lbl = g('hold-label');
-  var btn = g('send-to-heygen-btn');
-  if (lbl) lbl.style.color = checked ? '#c7af4f' : 'rgba(255,255,255,0.45)';
-  if (btn) {
-    btn.style.opacity = checked ? '0.5' : '';
-    btn.title = checked ? 'Script will be held here after Gate 1 — edit scenes above then click this button' : '';
+  var settingsHold = g('scaffold-hold-heygen');
+  if (settingsHold && settingsHold.checked !== checked) settingsHold.checked = checked;
+}
+
+function syncHoldHeygenFromSettings() {
+  var settingsHold = g('scaffold-hold-heygen');
+  var pipelineHold = g('hold-before-heygen');
+  if (settingsHold && pipelineHold) pipelineHold.checked = settingsHold.checked;
+  updateHoldUI();
+}
+
+function syncScriptViewFromPipeline() {
+  var view = g('scaffold-script-view');
+  var src = g('main-script');
+  if (view && src) view.value = src.value || '';
+}
+
+function pushScriptViewToPipeline() {
+  var view = g('scaffold-script-view');
+  var src = g('main-script');
+  if (view && src) {
+    src.value = view.value || '';
+    updateScriptStats();
   }
+}
+
+function loadScaffoldSettings() {
+  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', base + '/customer-config/c0/scaffold', true);
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (!r.ok || !r.scaffold) throw new Error(r.error || 'load failed');
+      var s = r.scaffold;
+      if (g('scaffold-intro-news')) g('scaffold-intro-news').value = s.lockedIntro?.news || '';
+      if (g('scaffold-intro-clips')) g('scaffold-intro-clips').value = s.lockedIntro?.clips || '';
+      if (g('scaffold-intro-sports')) g('scaffold-intro-sports').value = s.lockedIntro?.sports || '';
+      if (g('scaffold-locked-outro')) g('scaffold-locked-outro').value = s.lockedOutro || '';
+      if (g('scaffold-show-news')) g('scaffold-show-news').value = s.showName?.news || '';
+      if (g('scaffold-show-clips')) g('scaffold-show-clips').value = s.showName?.clips || '';
+      if (g('scaffold-show-sports')) g('scaffold-show-sports').value = s.showName?.sports || '';
+      if (g('scaffold-voice-style')) g('scaffold-voice-style').value = s.voiceStyle || '';
+      if (g('scaffold-outro-line')) g('scaffold-outro-line').value = s.outroLine || '';
+      if (g('scaffold-prohibited')) g('scaffold-prohibited').value = (s.prohibitedWords || []).join('\n');
+      if (g('scaffold-hold-heygen')) g('scaffold-hold-heygen').checked = !!(g('hold-before-heygen') && g('hold-before-heygen').checked);
+      syncScriptViewFromPipeline();
+    } catch (e) {
+      if (g('scaffold-save-status')) g('scaffold-save-status').textContent = 'Load failed: ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (g('scaffold-save-status')) g('scaffold-save-status').textContent = 'Could not load scaffolding from server';
+  };
+  xhr.send();
+}
+
+function saveScaffoldSettings() {
+  var status = g('scaffold-save-status');
+  var payload = {
+    lockedIntro: {
+      news: (g('scaffold-intro-news') && g('scaffold-intro-news').value) || '',
+      clips: (g('scaffold-intro-clips') && g('scaffold-intro-clips').value) || '',
+      sports: (g('scaffold-intro-sports') && g('scaffold-intro-sports').value) || ''
+    },
+    lockedOutro: (g('scaffold-locked-outro') && g('scaffold-locked-outro').value) || '',
+    showName: {
+      news: (g('scaffold-show-news') && g('scaffold-show-news').value) || '',
+      clips: (g('scaffold-show-clips') && g('scaffold-show-clips').value) || '',
+      sports: (g('scaffold-show-sports') && g('scaffold-show-sports').value) || ''
+    },
+    voiceStyle: (g('scaffold-voice-style') && g('scaffold-voice-style').value) || '',
+    outroLine: (g('scaffold-outro-line') && g('scaffold-outro-line').value) || '',
+    prohibitedWords: ((g('scaffold-prohibited') && g('scaffold-prohibited').value) || '').split('\n').map(function(w){ return w.trim(); }).filter(Boolean)
+  };
+  if (status) status.textContent = 'Saving…';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', (CFG.ffmpegUrl || 'http://localhost:3000') + '/customer-config/c0/scaffold', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (!r.ok) throw new Error(r.error || 'save failed');
+      if (status) { status.textContent = 'Saved — applies to next VOD job'; status.style.color = '#2ecc71'; }
+      setTimeout(function(){ if (status) { status.textContent = ''; status.style.color = ''; } }, 4000);
+    } catch (e) {
+      if (status) { status.textContent = 'Save failed: ' + e.message; status.style.color = '#e74c3c'; }
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (status) status.textContent = 'Save failed: network error';
+  };
+  xhr.send(JSON.stringify({ scaffold: payload }));
 }
 
 function setGenerateModeActive(type, form) {
@@ -3909,6 +4074,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
       if (resp.error) throw new Error(resp.error);
       g('main-script').value = resp.script;
       updateScriptStats();
+      syncScriptViewFromPipeline();
       var mins = Math.floor((resp.estSecs||0)/60);
       var secs = (resp.estSecs||0)%60;
       var statusEl = g(statusElId);
@@ -3976,7 +4142,8 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
         }
       }
 
-      g('main-script').scrollIntoView({behavior:'smooth'});
+      var statusCard = g('pipeline-status-card');
+      if (statusCard) statusCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       unlockGenerateButtons();
       if (onDone) onDone(resp);
     } catch(e) {
@@ -4013,11 +4180,19 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
 // source = 'bbc'       → /news/stories?source=bbc
 // source = 'all'       → /news/stories?source=all (AJ + BBC merged)
 // Adapts response to legacy rss2json item shape expected by all callers.
+function getNewsFetchLimit() {
+  var el = g('news-fetch-limit') || g('news-count');
+  var n = parseInt(el && el.value, 10);
+  if (!n || isNaN(n)) n = 40;
+  return Math.min(50, Math.max(10, n));
+}
+
 function fetchCwnNewsVideos(callback, source) {
-  var src = source || (g('news-source') ? g('news-source').value : 'aljazeera');
+  var src = source || (g('news-source') ? g('news-source').value : 'bbc');
+  var fetchLimit = getNewsFetchLimit();
   var endpoint = (src === 'aljazeera')
     ? (CFG.ffmpegUrl + '/news/us-canada-videos')
-    : (CFG.ffmpegUrl + '/news/stories?source=' + encodeURIComponent(src) + '&limit=15');
+    : (CFG.ffmpegUrl + '/news/stories?source=' + encodeURIComponent(src) + '&limit=' + fetchLimit);
 
   var xhr = new XMLHttpRequest();
   xhr.open('GET', endpoint, true); xhr.timeout = 480000;
@@ -4025,9 +4200,9 @@ function fetchCwnNewsVideos(callback, source) {
     try {
       var d = JSON.parse(xhr.responseText);
       if (!d.ok) { callback(null, 'Server error: ' + (d.error || 'unknown')); return; }
-      var SOURCE_LABELS = { aljazeera: 'Al Jazeera', bbc: 'BBC World', ap: 'AP', reuters: 'Reuters', npr: 'NPR', all: 'All Sources' };
+      var SOURCE_LABELS = { aljazeera: 'Al Jazeera', bbc: 'BBC', pbs: 'PBS', vox: 'Vox', ap: 'AP', reuters: 'Reuters', npr: 'NPR', all: 'BBC · PBS · Vox' };
       var items = (d.videos || []).map(function(v) {
-        var ori = (v.orientation && String(v.orientation).toLowerCase()) || 'portrait';
+        var ori = (v.orientation && String(v.orientation).toLowerCase()) || 'landscape';
         var itemSrc = v.source || src;
         return {
           title:             v.title || '',
@@ -4037,6 +4212,7 @@ function fetchCwnNewsVideos(callback, source) {
           description:       v.description || '',
           enclosure:         {},
           hlsUrl:            v.hlsUrl || '',
+          duration:          v.duration != null ? v.duration : null,
           orientation:       ori,
           sourceOrientation: ori,
           pillarboxFilter:   v.pillarboxFilter != null ? v.pillarboxFilter : null,
@@ -4063,8 +4239,8 @@ function generateNews() {
   lockGenerateButton('btn-gen-news');
   setGenerateModeActive('news', 'long');
   CURRENT_TYPE = 'news';
-  var newsSrc = g('news-source') ? g('news-source').value : 'aljazeera';
-  var SOURCE_LABELS = { aljazeera: 'Al Jazeera', bbc: 'BBC World', ap: 'AP', reuters: 'Reuters', npr: 'NPR', all: 'All Sources' };
+  var newsSrc = g('news-source') ? g('news-source').value : 'bbc';
+  var SOURCE_LABELS = { aljazeera: 'Al Jazeera', bbc: 'BBC', pbs: 'PBS', vox: 'Vox', ap: 'AP', reuters: 'Reuters', npr: 'NPR', all: 'BBC · PBS · Vox' };
   CURRENT_META = { source: newsSrc, feedUrl: newsSrc === 'aljazeera' ? '/news/us-canada-videos' : '/news/stories?source=' + newsSrc };
   setGeneratingState('news-status', 'NEWS — Fetching stories (' + (SOURCE_LABELS[newsSrc] || newsSrc) + ')...');
   fetchCwnNewsVideos(function(d, err) {
@@ -4095,7 +4271,7 @@ function generateNews() {
         var found = d.totalFound != null ? d.totalFound : 0;
         var sw = d.scrapedWithVideo != null ? d.scrapedWithVideo : null;
         var dropped = d.droppedNonPortrait != null ? d.droppedNonPortrait : null;
-        var detail = 'No portrait HLS stories from /news/us-canada-videos.';
+        var detail = 'No stories with video from ' + (SOURCE_LABELS[newsSrc] || newsSrc) + '.';
         if (sw != null && sw === 0) detail += ' Scraper returned 0 clips (Puppeteer/Brightcove or sitemap).';
         else if (sw != null && sw > 0 && found === 0) detail += ' ' + sw + ' clip(s) scraped but none passed portrait/duration rules.';
         else if (dropped != null && dropped > 0 && found === 0) detail += ' ' + dropped + ' non-portrait clip(s) filtered.';
@@ -5934,27 +6110,31 @@ function openNewsShortClipPicker(platforms) {
   if (window._newsPickerStories && window._newsPickerStories.length > 0) {
     _buildNewsShortClipPool(window._newsPickerStories, list, status, platforms);
   } else {
+    var _shortSrc = g('news-source') ? g('news-source').value : 'all';
     fetchCwnNewsVideos(function(d, err) {
       if (err || !d || !(d.items||[]).length) {
-        list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">Failed to load stories: ' + (err||'no data') + '</div>';
+        list.innerHTML = '<div style="color:#e55;font-family:monospace;font-size:11px;padding:8px;">Failed to load stories ('+_shortSrc+'): ' + (err||'no data') + '</div>';
         return;
       }
-      var stories = (d.items||[]).slice(0, 20).map(function(it) {
+      var stories = (d.items||[]).slice(0, getNewsFetchLimit()).map(function(it) {
+        var sty = newsSourceStyle(it.source || _shortSrc);
         return {
           title: (it.title||'').trim(),
           link: it.link||'',
           hlsUrl: it.hlsUrl||'',
           videoUrl: it.hlsUrl||'',
           thumbnailUrl: it.thumbnail||'',
-          orientation: it.sourceOrientation||it.orientation||'portrait',
-          sourceOrientation: it.sourceOrientation||it.orientation||'portrait',
+          orientation: it.sourceOrientation||it.orientation||'landscape',
+          sourceOrientation: it.sourceOrientation||it.orientation||'landscape',
           pillarboxFilter: it.pillarboxFilter != null ? it.pillarboxFilter : null,
+          source: it.source || sty.label,
           pubDate: it.pubDate||'',
+          duration: it.duration != null ? it.duration : null,
           desc: (it.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200)
         };
       });
       _buildNewsShortClipPool(stories, list, status, platforms);
-    });
+    }, _shortSrc);
   }
 }
 
@@ -5969,25 +6149,26 @@ function _buildNewsShortClipPool(stories, list, status, platforms) {
 }
 
 function _renderNewsShortClipList(clips, list, status, platforms) {
-  list.innerHTML = clips.map(function(c, idx) {
-    var thumb = c.thumbnailUrl
-      ? '<img src="'+c.thumbnailUrl+'" style="width:80px;height:45px;object-fit:cover;border-radius:3px;flex-shrink:0;" onerror="this.style.display=\'none\'">'
-      : '<div style="width:80px;height:45px;background:#1a2035;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.2);">NO IMG</div>';
-    var _scMap = { 'al jazeera':'#c7af4f', 'bbc world':'#e05252', 'ap':'#4fa8e0', 'reuters':'#e0944f' };
-    var srcLabel = c.source || 'NEWS';
-    var srcClr = _scMap[(srcLabel).toLowerCase()] || 'rgba(28,232,255,0.5)';
-    var date = c.pubDate ? '<span style="font-size:9px;color:rgba(255,255,255,0.3);margin-left:6px;">'+c.pubDate.slice(0,10)+'</span>' : '';
-    return '<div onclick="_selectNewsShortClip('+idx+')" data-idx="'+idx+'" id="news-short-clip-'+idx+'" '
-      +'style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);transition:background 0.15s;" '
-      +'onmouseover="this.style.background=\'rgba(28,232,255,0.08)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.02)\'">'
-      +thumb
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:12px;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.title+'</div>'
-      +'<div style="font-size:10px;font-family:monospace;margin-top:2px;"><span style="color:'+srcClr+';">'+srcLabel+'</span>'+date+'</div>'
-      +'</div>'
-      +'</div>';
-  }).join('');
-  status.textContent = _newsShortClipPool.length + ' stories with video — click one to generate short';
+  list.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + clips.map(function(c, idx) {
+    var thumb = c.thumbnailUrl || '';
+    var sty = newsSourceStyle(c.source);
+    var dur = c.duration ? Math.round(c.duration) : 0;
+    var durStr = dur ? dur + 's' : '';
+    var durClr = dur >= 45 ? '#2ecc71' : dur >= 20 ? '#c7af4f' : 'rgba(255,255,255,0.35)';
+    var when = _clipRelTime(c.pubDate);
+    return '<div onclick="_selectNewsShortClip(' + idx + ')" data-idx="' + idx + '" id="news-short-clip-' + idx + '" '
+      + 'style="width:168px;border:1px solid rgba(255,255,255,0.08);border-radius:6px;background:rgba(255,255,255,0.02);padding:5px;cursor:pointer;transition:all 0.15s;">'
+      + (thumb
+        ? '<img src="' + thumb + '" style="width:100%;height:72px;object-fit:cover;border-radius:4px;margin-bottom:5px;background:#1a2035;" onerror="this.style.display=\'none\'">'
+        : '<div style="width:100%;height:72px;background:rgba(255,255,255,0.05);border-radius:4px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.2);font-size:10px;">NO THUMB</span></div>')
+      + '<div style="font-size:10px;color:#fff;line-height:1.25;margin-bottom:4px;max-height:38px;overflow:hidden;">' + (c.title || '').slice(0, 72) + '</div>'
+      + '<div style="font-size:8px;font-family:monospace;color:' + sty.color + ';margin-bottom:4px;">' + sty.label + '</div>'
+      + (when ? '<div style="font-size:8px;color:rgba(255,200,80,0.65);font-family:monospace;margin-bottom:4px;">' + when + '</div>' : '')
+      + '<div style="display:flex;justify-content:flex-end;">'
+      + (durStr ? '<span style="font-size:9px;font-family:monospace;font-weight:700;color:' + durClr + ';">' + durStr + '</span>' : '')
+      + '</div></div>';
+  }).join('') + '</div>';
+  status.textContent = _newsShortClipPool.length + ' stories — click one card to generate short';
   list._platforms = platforms;
 }
 
@@ -6004,7 +6185,7 @@ function _selectNewsShortClip(idx) {
   var item = {
     title:        c.title,
     desc:         c.desc||'',
-    source:       c.source || 'Al Jazeera',
+    source:       c.source || 'News',
     link:         c.link||'',
     thumbnailUrl: c.thumbnailUrl||'',
     videoUrl:     c.hlsUrl||c.videoUrl||'',
@@ -6017,14 +6198,22 @@ function _selectNewsShortClip(idx) {
 
   // Platform modal fires AFTER story selection
   showPlatformModal(function(platforms) {
-    g('news-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" — generating...';
+    g('news-short-clip-status').textContent = 'Selected: "'+c.title.slice(0,60)+'" — generating (no avatar)...';
     setGenerateModeActive('news', 'short');
     CURRENT_TYPE = 'news-short';
     lockGenerateButton('btn-gen-news-short');
-    var _newsShortSrc = g('news-source') ? g('news-source').value : 'aljazeera';
+    var _newsShortSrc = g('news-source') ? g('news-source').value : 'bbc';
     CURRENT_META = { source: _newsShortSrc };
-    g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
-    callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, platforms);
+    g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '" (clips-only)';
+    _dispatchClipShort({
+      url: item.hlsUrl || item.videoUrl || '',
+      pageUrl: item.link || '',
+      title: item.title || '',
+      streamer: '',
+      displayName: item.source || 'News',
+      orientation: item.sourceOrientation || item.orientation || 'landscape',
+      pillarboxFilter: item.pillarboxFilter != null ? item.pillarboxFilter : null
+    }, 'news-short', 'Clip Short — ' + (item.title || 'News'), platforms, statusTagIdForType('news-short'));
   });
 }
 
@@ -6090,20 +6279,28 @@ function generateShort(type, platforms) {
       var item = {
         title:        (pickedStory.title || '').trim(),
         desc:         (pickedStory.desc || pickedStory.description || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 1200),
-        source:       pickedStory.source || 'Al Jazeera',
+        source:       pickedStory.source || 'News',
         link:         pickedStory.link || '',
         thumbnailUrl: pickedStory.thumbnail || pickedStory.thumbnailUrl || '',
         videoUrl:     pickedStory.hlsUrl || pickedStory.videoUrl || '',
         hlsUrl:       pickedStory.hlsUrl || pickedStory.videoUrl || '',
-        orientation:  pickedStory.orientation || 'portrait',
-        sourceOrientation: pickedStory.sourceOrientation || pickedStory.orientation || 'portrait',
+        orientation:  pickedStory.orientation || 'landscape',
+        sourceOrientation: pickedStory.sourceOrientation || pickedStory.orientation || 'landscape',
         pillarboxFilter: pickedStory.pillarboxFilter != null ? pickedStory.pillarboxFilter : null,
         pubDate:      pickedStory.pubDate || ''
       };
-      var _pkrSrc = g('news-source') ? g('news-source').value : 'aljazeera';
+      var _pkrSrc = g('news-source') ? g('news-source').value : 'bbc';
       CURRENT_META = { source: _pkrSrc };
-      g('script-type-label').textContent = 'NEWS SHORT — "' + (item.title||'').slice(0, 60) + '" (picker)';
-      callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, _shortPlatforms);
+      g('script-type-label').textContent = 'NEWS SHORT — "' + (item.title||'').slice(0, 60) + '" (clips-only, picker)';
+      _dispatchClipShort({
+        url: item.hlsUrl || item.videoUrl || '',
+        pageUrl: item.link || '',
+        title: item.title || '',
+        streamer: '',
+        displayName: item.source || 'News',
+        orientation: item.sourceOrientation || item.orientation || 'landscape',
+        pillarboxFilter: item.pillarboxFilter != null ? item.pillarboxFilter : null
+      }, 'news-short', 'Clip Short — ' + (item.title || 'News'), _shortPlatforms, statusTagIdForType('news-short'));
       return;
     }
   }
@@ -6235,7 +6432,7 @@ function generateShort(type, platforms) {
         var item = {
           title:        (story.title||'').trim(),
           desc:         (story.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
-          source:       story.source || 'Al Jazeera',
+          source:       story.source || 'News',
           link:         story.link||'',
           thumbnailUrl: story.thumbnail||'',
           videoUrl:     story.hlsUrl||'',
@@ -6245,10 +6442,18 @@ function generateShort(type, platforms) {
           pillarboxFilter: story.pillarboxFilter != null ? story.pillarboxFilter : null,
           pubDate:      story.pubDate||''
         };
-        var _sfSrc = g('news-source') ? g('news-source').value : 'aljazeera';
+        var _sfSrc = g('news-source') ? g('news-source').value : 'bbc';
         CURRENT_META = { source: _sfSrc };
-        g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '"';
-        callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, _shortPlatforms);
+        g('script-type-label').textContent = 'NEWS SHORT — "' + item.title.slice(0,60) + '" (clips-only)';
+        _dispatchClipShort({
+          url: item.hlsUrl || item.videoUrl || '',
+          pageUrl: item.link || '',
+          title: item.title || '',
+          streamer: '',
+          displayName: item.source || 'News',
+          orientation: item.sourceOrientation || item.orientation || 'landscape',
+          pillarboxFilter: item.pillarboxFilter != null ? item.pillarboxFilter : null
+        }, 'news-short', 'Clip Short — ' + (item.title || 'News'), _shortPlatforms, statusTagIdForType('news-short'));
       } catch(e) { unlockGenerateButtons(); g('script-type-label').textContent='NEWS SHORT -- error: '+e.message; }
     });
 
@@ -6808,6 +7013,28 @@ var _origGenerateNBA = null;
 
 // ── News inline story picker ──────────────────────────────────────────────────
 
+var _newsPickerFetchMeta = { ms: 0, source: '', breakdown: {} };
+
+var NEWS_SOURCE_STYLE = {
+  bbc:       { label: 'BBC', color: '#e05252' },
+  pbs:       { label: 'PBS', color: '#4fa8e0' },
+  vox:       { label: 'Vox', color: '#9b59ff' },
+  ap:        { label: 'AP', color: '#4fa8e0' },
+  reuters:   { label: 'Reuters', color: '#e0944f' },
+  aljazeera: { label: 'Al Jazeera', color: '#c7af4f' }
+};
+
+function newsSourceStyle(srcKey) {
+  var raw = String(srcKey || '').toLowerCase();
+  if (raw.indexOf('bbc') >= 0) return NEWS_SOURCE_STYLE.bbc;
+  if (raw.indexOf('pbs') >= 0) return NEWS_SOURCE_STYLE.pbs;
+  if (raw.indexOf('vox') >= 0) return NEWS_SOURCE_STYLE.vox;
+  if (raw.indexOf('reuters') >= 0) return NEWS_SOURCE_STYLE.reuters;
+  if (raw.indexOf('ap') >= 0 && raw.indexOf('jazeera') < 0) return NEWS_SOURCE_STYLE.ap;
+  if (raw.indexOf('jazeera') >= 0) return NEWS_SOURCE_STYLE.aljazeera;
+  return { label: srcKey || 'News', color: 'rgba(28,232,255,0.6)' };
+}
+
 function previewNewsStories() {
   var btn = g('btn-preview-news');
   var picker = g('news-inline-picker');
@@ -6818,61 +7045,114 @@ function previewNewsStories() {
   }
   btn.textContent = 'FETCHING...'; btn.disabled = true;
   _newsPickerStories = [];
+  var _pickSrc = g('news-source') ? g('news-source').value : 'all';
+  var _fetchStart = Date.now();
   fetchCwnNewsVideos(function(d, err) {
     btn.disabled = false;
+    _newsPickerFetchMeta.ms = Date.now() - _fetchStart;
+    _newsPickerFetchMeta.source = _pickSrc;
+    _newsPickerFetchMeta.breakdown = {};
     if (err || !d || !(d.items||[]).length) {
       btn.textContent = 'PICK STORIES';
-      alert('Could not fetch stories: ' + (err || 'no data'));
+      alert('Could not fetch stories (' + _pickSrc + '): ' + (err || 'no data'));
       return;
     }
-    var count = parseInt((g('news-count')||{value:'10'}).value)||10;
-    (d.items||[]).slice(0, Math.max(count, 15)).forEach(function(it) {
+    var fetchLimit = getNewsFetchLimit();
+    (d.items||[]).slice(0, fetchLimit).forEach(function(it) {
+      var sty = newsSourceStyle(it.source || _pickSrc);
+      _newsPickerFetchMeta.breakdown[sty.label] = (_newsPickerFetchMeta.breakdown[sty.label] || 0) + 1;
       _newsPickerStories.push({
         title: (it.title||'').trim(),
         link: it.link||'',
         videoUrl: it.hlsUrl||'',
         hlsUrl: it.hlsUrl||'',
         thumbnailUrl: it.thumbnail||'',
-        orientation: it.sourceOrientation||it.orientation||'portrait',
-        sourceOrientation: it.sourceOrientation||it.orientation||'portrait',
+        duration: it.duration != null ? it.duration : null,
+        orientation: it.sourceOrientation||it.orientation||'landscape',
+        sourceOrientation: it.sourceOrientation||it.orientation||'landscape',
         pillarboxFilter: it.pillarboxFilter != null ? it.pillarboxFilter : null,
-        source: it.source || 'All Sources',
+        source: it.source || sty.label,
         pubDate: it.pubDate||'',
         desc: (it.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
-        selected: !!(it.hlsUrl||it.videoUrl) // default: only select stories with video
+        selected: false
       });
     });
-    renderNewsPicker(btn, count);
-  });
+    renderNewsPicker(btn, fetchLimit);
+  }, _pickSrc);
 }
 
 function renderNewsPicker(btn, maxCount) {
   btn.textContent = 'HIDE PICKER';
   var picker = g('news-inline-picker');
   var withVideo = _newsPickerStories.filter(function(s){ return !!s.hlsUrl; }).length;
-  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:6px;letter-spacing:1px;">'
-    +'SELECT STORIES — '+withVideo+'/'+_newsPickerStories.length+' HAVE VIDEO — TOP '+maxCount+' CHECKED WILL BE USED'
-    +'</div>';
-  var _srcColor = { 'al jazeera':'#c7af4f', 'bbc world':'#e05252', 'ap':'#4fa8e0', 'reuters':'#e0944f' };
+  var selectedCount = _newsPickerStories.filter(function(s){ return s.selected && s.hlsUrl; }).length;
+  var breakdown = Object.keys(_newsPickerFetchMeta.breakdown || {}).map(function(k) {
+    return k + ' ' + _newsPickerFetchMeta.breakdown[k];
+  }).join(' · ');
+  var fetchNote = _newsPickerFetchMeta.ms
+    ? ('Fetched in ' + (_newsPickerFetchMeta.ms / 1000).toFixed(1) + 's' + (breakdown ? ' — ' + breakdown : ''))
+    : '';
+  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:8px;letter-spacing:1px;">'
+    + 'CHECK STORIES TO USE — ' + withVideo + '/' + _newsPickerStories.length + ' HAVE VIDEO — '
+    + selectedCount + ' SELECTED'
+    + (fetchNote ? '<br><span style="color:rgba(28,232,255,0.55);">' + fetchNote + '</span>' : '')
+    + '</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+
   _newsPickerStories.forEach(function(story, i) {
     var hasVideo = !!story.hlsUrl;
-    var srcKey = (story.source||'').toLowerCase();
-    var srcColor = _srcColor[srcKey] || 'rgba(255,255,255,0.35)';
-    var srcBadge = '<span style="font-size:9px;font-family:monospace;color:'+srcColor+';white-space:nowrap;flex-shrink:0;">'+(story.source||'')+'</span>';
-    var videoBadge = hasVideo
-      ? '<span style="font-size:9px;color:#2ecc71;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3);padding:1px 6px;border-radius:8px;flex-shrink:0;">✓ VIDEO</span>'
-      : '<span style="font-size:9px;color:rgba(255,255,255,0.25);padding:1px 6px;flex-shrink:0;">NO VIDEO</span>';
-    html += '<label style="display:flex;align-items:flex-start;gap:8px;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
-      +'<input type="checkbox" id="newspick-'+i+'" '+(story.selected?'checked':'')+' onchange="_newsPickerStories['+i+'].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;">'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:12px;color:'+(hasVideo?'#fff':'rgba(255,255,255,0.4)')+';line-height:1.3;">'+story.title+'</div>'
-      +'<div style="margin-top:2px;">'+srcBadge+'</div>'
-      +'</div>'
-      +videoBadge
-      +'</label>';
+    var sty = newsSourceStyle(story.source);
+    var isSelected = !!story.selected && hasVideo;
+    var cardBorder = isSelected ? 'rgba(199,175,79,0.55)' : 'rgba(255,255,255,0.1)';
+    var cardBg = isSelected ? 'rgba(199,175,79,0.06)' : 'rgba(255,255,255,0.02)';
+    var thumb = story.thumbnailUrl || '';
+    var dur = story.duration ? Math.round(story.duration) : 0;
+    var durStr = dur ? dur + 's' : '';
+    var durClr = dur >= 45 ? '#2ecc71' : dur >= 20 ? '#c7af4f' : 'rgba(255,255,255,0.35)';
+    var when = _clipRelTime(story.pubDate);
+    var opacity = hasVideo ? '1' : '0.45';
+    var cursor = hasVideo ? 'pointer' : 'not-allowed';
+
+    html += '<div onclick="' + (hasVideo ? '_toggleNewsStory(' + i + ')' : '') + '" style="cursor:' + cursor + ';opacity:' + opacity + ';width:168px;border:1px solid ' + cardBorder + ';border-radius:6px;background:' + cardBg + ';padding:5px;transition:all 0.15s;position:relative;">';
+    html += '<label style="position:absolute;top:6px;left:6px;z-index:2;cursor:' + cursor + ';" onclick="event.stopPropagation();">'
+      + '<input type="checkbox" id="newspick-' + i + '" ' + (isSelected ? 'checked' : '') + (hasVideo ? '' : ' disabled')
+      + ' onchange="_newsPickerStories[' + i + '].selected=this.checked&&!!_newsPickerStories[' + i + '].hlsUrl;_renderNewsPickerCards()" style="width:14px;height:14px;">'
+      + '</label>';
+    if (thumb) {
+      html += '<img src="' + thumb + '" style="width:100%;height:72px;object-fit:cover;border-radius:4px;margin-bottom:5px;background:#1a2035;" onerror="this.src=\'\';this.style.display=\'none\'">';
+    } else {
+      html += '<div style="width:100%;height:72px;background:rgba(255,255,255,0.05);border-radius:4px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.2);font-size:10px;">NO THUMB</span></div>';
+    }
+    html += '<div style="font-size:10px;color:#fff;line-height:1.25;margin-bottom:4px;max-height:38px;overflow:hidden;">' + (story.title || '').slice(0, 72) + '</div>';
+    html += '<div style="font-size:8px;font-family:monospace;color:' + sty.color + ';margin-bottom:4px;">' + sty.label + '</div>';
+    if (when) {
+      html += '<div style="font-size:8px;color:rgba(255,200,80,0.65);font-family:monospace;margin-bottom:4px;" title="' + (story.pubDate || '') + '">' + when + '</div>';
+    }
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;min-height:14px;">';
+    if (!hasVideo) {
+      html += '<span style="font-size:8px;color:rgba(255,80,80,0.75);">NO VIDEO</span>';
+    } else if (durStr) {
+      html += '<span style="font-size:9px;font-family:monospace;font-weight:700;color:' + durClr + ';">' + durStr + '</span>';
+    } else {
+      html += '<span style="font-size:8px;color:rgba(46,204,113,0.7);">✓ VIDEO</span>';
+    }
+    html += '</div></div>';
   });
+
+  html += '</div>';
   picker.innerHTML = html;
   picker.style.display = '';
+}
+
+function _toggleNewsStory(i) {
+  var story = _newsPickerStories[i];
+  if (!story || !story.hlsUrl) return;
+  story.selected = !story.selected;
+  _renderNewsPickerCards();
+}
+
+function _renderNewsPickerCards() {
+  renderNewsPicker(g('btn-preview-news'), getNewsFetchLimit());
 }
 
 // ── Batch shorts ──────────────────────────────────────────────────────────────
@@ -6931,9 +7211,14 @@ function generateShortBatch(type, platforms) {
     // Prefer: selected picker items → all picker items with video → auto-fetch
     var _newsAllPicker = window._newsPickerStories || [];
     var _newsSelPool = _newsAllPicker.filter(function(s){ return s.selected && (s.hlsUrl || s.videoUrl); });
-    var pool = _newsSelPool.length > 0 ? _newsSelPool : _newsAllPicker.filter(function(s){ return !!(s.hlsUrl || s.videoUrl); });
-    if (pool.length > 0) {
-      _dispatchBatchNewsShorts(pool, n, platforms, statusId);
+    if (_newsAllPicker.length > 0) {
+      if (!_newsSelPool.length) {
+        setGeneratingState(statusId, 'Check at least one story in the picker');
+        alert('Check at least one story in the picker before batch SHORT.');
+        unlockGenerateButtons();
+        return;
+      }
+      _dispatchBatchNewsShorts(_newsSelPool, n, platforms, statusId);
     } else {
       // Auto-fetch pool
       fetchCwnNewsVideos(function(d, err) {
@@ -7156,21 +7441,23 @@ var _origGenerateNews = null;
 (function patchGenerateNews() {
   _origGenerateNews = typeof generateNews === 'function' ? generateNews : null;
   window.generateNewsWithPicker = function() {
-    var selected = _newsPickerStories.filter(function(s){ return s.selected && s.hlsUrl; });
-    if (selected.length > 0) {
-      var items = selected;
-      if (!items.length) { alert('No stories selected with video. Use PICK STORIES to select some.'); return; }
+    if (_newsPickerStories.length > 0) {
+      var selected = _newsPickerStories.filter(function(s){ return s.selected && s.hlsUrl; });
+      if (!selected.length) {
+        alert('Check at least one story in the picker (click a card or its checkbox).');
+        return;
+      }
       lockGenerateButton('btn-gen-news');
       setGenerateModeActive('news','long');
       CURRENT_TYPE = 'news';
-      setGeneratingState('news-status', 'NEWS — Analyzing '+items.length+' stories with Gemini (~2-3 min)...');
-      if (g('script-type-label')) g('script-type-label').textContent = 'NEWS — '+items.length+' selected stories — generating script...';
-      if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#c7af4f;">⏳ Gemini analyzing clips · script generating · HeyGen queue incoming…</span>';
+      setGeneratingState('news-status', 'NEWS VOD — Analyzing '+selected.length+' stories with Gemini (~2-3 min)...');
+      if (g('script-type-label')) g('script-type-label').textContent = 'NEWS VOD — '+selected.length+' selected stories — script + avatar when ready...';
+      if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#c7af4f;">⏳ Gemini analyzing clips · script generating · HeyGen when VOD avatar pipeline is ready…</span>';
       nav('generate');
-      callFullScriptServer('news', items, 'news-status', null);
-    } else {
-      if (typeof generateNews === 'function') generateNews();
+      callFullScriptServer('news', selected, 'news-status', null);
+      return;
     }
+    if (typeof generateNews === 'function') generateNews();
   };
 })();
 
@@ -7645,7 +7932,10 @@ function analyzeAndScriptClip(clipIndex) {
 
       // Navigate to script editor
       nav('generate');
-      setTimeout(function(){ if(g('main-script')) g('main-script').scrollIntoView({behavior:'smooth'}); }, 100);
+      setTimeout(function(){
+        var card = g('pipeline-status-card');
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
 
     } catch(e) {
       if (btn) { btn.textContent = '❌ ERROR'; btn.disabled = false; }
