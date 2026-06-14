@@ -2,14 +2,17 @@
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
-**Epic:** [CPD-1021](https://aurafluxco.atlassian.net/browse/CPD-1021) · **Rule:** `.cursor/rules/c0-render-separation.mdc` · Serena: `c0-render-separation`
+**HOW (Confluence — source of truth):** [Server Split — C0/C1+ Boundary](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/6881341)  
+**Epic:** [CPD-1021](https://aurafluxco.atlassian.net/browse/CPD-1021) · **Local mirror (C0 folder):** `~/cwn-c0/docs/C0_REPOSITORY_POLICY.md` · **Rule:** `.cursor/rules/c0-render-separation.mdc`
 
-| World | Folder | Branch | Deploys to |
-|-------|--------|--------|------------|
-| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 · **GitHub:** [auraflux-c0](https://github.com/auraflux-co/auraflux-c0) |
-| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app · **GitHub:** [auraflux-api](https://github.com/auraflux-co/auraflux-api) |
+| World | Folder | Branch | GitHub |
+|-------|--------|--------|--------|
+| **C0 localhost** | `~/cwn-c0` | `c0/main` | [auraflux-c0](https://github.com/auraflux-co/auraflux-c0) |
+| **Render production** | `~/cwn-production` | `main` | [auraflux-api](https://github.com/auraflux-co/auraflux-api) |
 
-- **Commit guard:** on `c0/main`, pre-commit blocks `app/`, `lib/portals/`, etc. (`~/cwn-c0/scripts/c0_commit_scope_check.sh`). `~/cwn-c0` is a git **worktree** of this repo — commit C1+ work here on `main`, C0 work on `c0/main`.
+**Session start:** read Confluence HOW (commit scope guard, worktree remotes). Update Confluence when policy changes — STATUS is a pointer only.
+
+**Reviews:** C0 → `aider_session_review_local.sh` · Render → `aider_session_review.sh`
 
 ---
 
