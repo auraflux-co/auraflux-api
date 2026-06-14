@@ -1,5 +1,5 @@
 # AuraFlux — Status & Task Tracker
-**Last Updated:** 2026-06-14 v1.0.1129 (Cursor — chore: Jira backfill workflow, fix Task→Story issuetype, remove BotPenguin refs, delete stale aider/test-suite branch)
+**Last Updated:** 2026-06-14 v1.0.1130 (Cursor — fix Jira CI workflows curl+https normalize; session_close POST fix; stale branch cleanup)
 **Last Updated:** 2026-06-14 v1.0.1128 (Cursor — chore: review follow-ups — puppeteer SSRF safe local template load, .env.example E2E vars, aider chat widget check, Review UX copy, wizard help text)
 **Last Updated:** 2026-06-13 v1.0.1127 (Cursor — fix(CPD-869): Review order-vs-output — brand/topic/source clips/createdBy on staging-assets; dashboard tags createdVia; E2E script gated by ALLOW_E2E_JOB_SUBMIT; job submission policy in cursor.md)
 **Last Updated:** 2026-06-13 v1.0.1126 (Cursor — fix(CPD-869): Review Queue expand crash — publishCopy null tiktok + internal keys; staging-assets returns _buildWizardConfig job spec; JobSpecSummary on expand)

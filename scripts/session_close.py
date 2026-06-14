@@ -55,6 +55,8 @@ JIRA_BASE  = os.environ.get("JIRA_BASE_URL") or os.environ.get("ATLASSIAN_DOMAIN
 if JIRA_BASE and not JIRA_BASE.startswith("http"):
     JIRA_BASE = "https://" + JIRA_BASE
 JIRA_BASE = JIRA_BASE.rstrip("/")
+if JIRA_BASE.startswith("http://"):
+    JIRA_BASE = "https://" + JIRA_BASE[len("http://"):]
 JIRA_AUTH = base64.b64encode(f"{JIRA_EMAIL}:{JIRA_TOKEN}".encode()).decode() if JIRA_EMAIL else ""
 
 # ── Git helpers ────────────────────────────────────────────────────────────────
@@ -115,7 +117,7 @@ def jira_post(path: str, body: dict) -> dict:
     try:
         data = json.dumps(body).encode()
         req = urllib.request.Request(
-            f"{JIRA_BASE}/rest/api/3/{path}", data=data,
+            f"{JIRA_BASE}/rest/api/3/{path}", data=data, method="POST",
             headers={"Authorization": f"Basic {JIRA_AUTH}", "Content-Type": "application/json",
                      "Accept": "application/json"},
         )

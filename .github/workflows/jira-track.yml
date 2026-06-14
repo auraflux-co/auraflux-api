@@ -15,7 +15,7 @@ jobs:
     name: Track commits → Jira
     runs-on: ubuntu-latest
     # Skip [skip ci] pushes from the in-app marketing editor (content-only)
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: ${{ github.event.head_commit != null && !contains(github.event.head_commit.message, '[skip ci]') }}
     steps:
       - name: Checkout (with full history for this push)
         uses: actions/checkout@v4
@@ -29,117 +29,101 @@ jobs:
           JIRA_API_TOKEN:  ${{ secrets.JIRA_API_TOKEN }}
           BEFORE_SHA:      ${{ github.event.before }}
           AFTER_SHA:       ${{ github.event.after }}
+          REPO:            ${{ github.repository }}
         run: |
-          python3 - <<'PYEOF'
-          import os, re, json, urllib.request, urllib.parse, base64, subprocess
+          set -euo pipefail
 
-          jira_base  = os.environ["JIRA_BASE_URL"].rstrip("/")
-          jira_email = os.environ["JIRA_USER_EMAIL"]
-          jira_token = os.environ["JIRA_API_TOKEN"]
-          before_sha = os.environ["BEFORE_SHA"]
-          after_sha  = os.environ["AFTER_SHA"]
-
-          if not all([jira_base, jira_email, jira_token]):
-              print("Missing Jira credentials — skipping")
-              raise SystemExit(0)
-
-          auth = base64.b64encode(f"{jira_email}:{jira_token}".encode()).decode()
-          headers_json = {
-              "Authorization": f"Basic {auth}",
-              "Content-Type": "application/json",
-              "Accept": "application/json",
+          normalize_base() {
+            local b="${1%/}"
+            [[ -z "$b" ]] && return 1
+            [[ "$b" != http* ]] && b="https://${b}"
+            b="${b/http:\/\//https:\/\/}"
+            printf '%s' "$b"
           }
 
-          def jira(method, path, body=None):
-              url = f"{jira_base}/rest/api/3/{path}"
-              data = json.dumps(body).encode() if body else None
-              req = urllib.request.Request(url, data=data, headers=headers_json, method=method)
-              try:
-                  with urllib.request.urlopen(req, timeout=10) as r:
-                      return json.loads(r.read())
-              except urllib.error.HTTPError as e:
-                  print(f"  Jira {method} {path}: HTTP {e.code} — {e.read().decode()[:200]}")
-                  return {}
-              except Exception as e:
-                  print(f"  Jira {method} {path}: {e}")
-                  return {}
+          BASE="$(normalize_base "$JIRA_BASE_URL")"
+          AUTH="$JIRA_USER_EMAIL:$JIRA_API_TOKEN"
+          BEFORE_SHA="${BEFORE_SHA}"
+          AFTER_SHA="${AFTER_SHA}"
 
-          # ── Get commits in this push ─────────────────────────────────────────
-          # github.event.before is 000...000 on a new branch — fall back to HEAD~1
-          zero = "0" * 40
-          if before_sha == zero:
-              range_spec = f"{after_sha}~1..{after_sha}"
-          else:
-              range_spec = f"{before_sha}..{after_sha}"
+          if [[ -z "$BASE" || -z "$JIRA_USER_EMAIL" || -z "$JIRA_API_TOKEN" ]]; then
+            echo "Missing Jira credentials — skipping"
+            exit 0
+          fi
 
-          raw = subprocess.check_output(
-              ["git", "log", range_spec, "--format=%H|||%s", "--no-merges"],
-              text=True
-          ).strip().splitlines()
+          jira_post() {
+            local path="$1" payload="$2"
+            local http body
+            body=$(curl -sS --max-time 15 -u "$AUTH" \
+              -H "Content-Type: application/json" \
+              -H "Accept: application/json" \
+              -X POST "$BASE/rest/api/3/$path" \
+              -d "$payload" -w "\n__HTTP__:%{http_code}")
+            http="${body##*__HTTP__:}"
+            body="${body%__HTTP__:*}"
+            if [[ ! "$http" =~ ^2 ]]; then
+              echo "  Jira POST $path: HTTP $http — ${body:0:200}" >&2
+            fi
+            echo "$body"
+          }
 
-          if not raw:
-              print("No commits to process.")
-              raise SystemExit(0)
+          ZERO="$(printf '0%.0s' {1..40})"
+          if [[ "$BEFORE_SHA" == "$ZERO" ]]; then
+            RANGE="${AFTER_SHA}~1..${AFTER_SHA}"
+          else
+            RANGE="${BEFORE_SHA}..${AFTER_SHA}"
+          fi
 
-          print(f"Processing {len(raw)} commit(s)")
+          mapfile -t RAW < <(git log "$RANGE" --format='%H|||%s' --no-merges)
+          if [[ ${#RAW[@]} -eq 0 ]]; then
+            echo "No commits to process."
+            exit 0
+          fi
 
-          # Transition IDs in this project: In Development = 5
-          TRANSITION_IN_DEV = "5"
-          SKIP_PREFIXES = ("chore", "docs", "style", "test", "refactor", "ci")
+          echo "Processing ${#RAW[@]} commit(s)"
 
-          for line in raw:
-              parts = line.split("|||", 1)
-              if len(parts) != 2:
-                  continue
-              sha, msg = parts[0][:8], parts[1]
+          for line in "${RAW[@]}"; do
+            FULL_SHA="${line%%|||*}"
+            MSG="${line#*|||}"
+            SHA="${FULL_SHA:0:8}"
 
-              # Skip [skip ci] commits
-              if "[skip ci]" in msg:
-                  print(f"  {sha} — skipping [skip ci]")
-                  continue
+            if [[ "$MSG" == *"[skip ci]"* ]]; then
+              echo "  $SHA — skipping [skip ci]"
+              continue
+            fi
 
-              ticket_ids = list(dict.fromkeys(
-                  t.upper() for t in re.findall(r"CPD-\d+", msg, re.IGNORECASE)
-              ))
+            mapfile -t TICKETS < <(grep -oiE 'CPD-[0-9]+' <<< "$MSG" | tr '[:lower:]' '[:upper:]' | awk '!seen[$0]++')
+            if [[ ${#TICKETS[@]} -gt 0 ]]; then
+              for tid in "${TICKETS[@]}"; do
+                printf '  %s → %s: transitioning to In Development… ' "$SHA" "$tid"
+                HTTP=$(curl -sS -o /tmp/jira_trans.json -w "%{http_code}" --max-time 15 -u "$AUTH" \
+                  -H "Content-Type: application/json" \
+                  -X POST "$BASE/rest/api/3/issue/$tid/transitions" \
+                  -d '{"transition":{"id":"5"}}')
+                if [[ "$HTTP" =~ ^2 ]]; then echo "✅"; else echo "⚠️ HTTP $HTTP"; fi
+              done
+              continue
+            fi
 
-              if ticket_ids:
-                  for tid in ticket_ids:
-                      print(f"  {sha} → {tid}: transitioning to In Development…", end=" ")
-                      res = jira("POST", f"issue/{tid}/transitions",
-                                 {"transition": {"id": TRANSITION_IN_DEV}})
-                      # HTTP 204 = success (no body), empty dict from our helper = ok too
-                      print("✅" if res is not None else "⚠️")
-              else:
-                  # No ticket — create one (skip trivial commit types)
-                  first_word = re.split(r"[(:\ ]", msg)[0].lower()
-                  if first_word in SKIP_PREFIXES:
-                      print(f"  {sha} — no ticket, skipping ({first_word} commit)")
-                      continue
+            FIRST_WORD="$(sed -E 's/^([^(: ]+).*/\1/' <<< "$MSG" | tr '[:upper:]' '[:lower:]')"
+            case "$FIRST_WORD" in
+              chore|docs|style|test|refactor|ci)
+                echo "  $SHA — no ticket, skipping ($FIRST_WORD commit)"
+                continue
+                ;;
+            esac
 
-                  summary = f"[Untracked] {msg[:100]}"
-                  print(f"  {sha} — no ticket, creating task: {summary[:60]}…", end=" ")
-                  body = {
-                      "fields": {
-                          "project":     {"key": "CPD"},
-                          "summary":     summary,
-                          "description": {
-                              "type": "doc", "version": 1,
-                              "content": [{"type": "paragraph", "content": [{"type": "text",
-                                  "text": (
-                                      f"Auto-created on push — no Jira ticket in commit message.\n\n"
-                                      f"Commit: {sha}\n"
-                                      f"Full SHA: {parts[0]}\n"
-                                      f"Repo: https://github.com/${{{{ github.repository }}}}/commit/{parts[0]}"
-                                  )
-                              }]}],
-                          },
-                          "issuetype": {"name": "Story"},
-                          "labels":    ["auto-created", "on-push"],
-                      }
-                  }
-                  res = jira("POST", "issue", body)
-                  key = res.get("key", "")
-                  print(f"→ {key}" if key else "⚠️ failed")
+            SUMMARY="[Untracked] ${MSG:0:100}"
+            printf '  %s — no ticket, creating story: %s… ' "$SHA" "${SUMMARY:0:60}"
+            PAYLOAD=$(jq -n \
+              --arg summary "$SUMMARY" \
+              --arg sha "$SHA" \
+              --arg full "$FULL_SHA" \
+              --arg repo "$REPO" \
+              '{fields:{project:{key:"CPD"},summary:$summary,issuetype:{name:"Story"},labels:["auto-created","on-push"],description:{type:"doc",version:1,content:[{type:"paragraph",content:[{type:"text",text:("Auto-created on push — no Jira ticket in commit message.\n\nCommit: "+$sha+"\nFull SHA: "+$full+"\nRepo: https://github.com/"+$repo+"/commit/"+$full)}]}]}}}')
+            BODY=$(jira_post "issue" "$PAYLOAD")
+            KEY=$(echo "$BODY" | jq -r '.key // empty')
+            if [[ -n "$KEY" ]]; then echo "→ $KEY"; else echo "⚠️ failed"; fi
+          done
 
-          print("Done.")
-          PYEOF
+          echo "Done."
