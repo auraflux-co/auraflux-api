@@ -9,7 +9,7 @@
 | **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 · **GitHub:** [auraflux-c0](https://github.com/auraflux-co/auraflux-c0) |
 | **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app · **GitHub:** [auraflux-api](https://github.com/auraflux-co/auraflux-api) |
 
-**Never:** merge C0 → `main` without port ticket; replace C0 `gate5.js` with `portal5` shim; delete gate shims.
+- **Commit guard:** on `c0/main`, pre-commit blocks `app/`, `lib/portals/`, etc. (`~/cwn-c0/scripts/c0_commit_scope_check.sh`). `~/cwn-c0` is a git **worktree** of this repo — commit C1+ work here on `main`, C0 work on `c0/main`.
 
 ---
 
