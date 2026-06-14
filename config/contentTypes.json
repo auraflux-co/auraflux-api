@@ -198,6 +198,37 @@
         "pinnedCommentKey": "news",
         "platforms": ["youtube", "tiktok", "instagram"]
       }
+    },
+    "sports-short": {
+      "label": "Sports Highlights (Short-Form)",
+      "formFactor": "short",
+      "clipsOnly": true,
+      "source": {
+        "module": "./sources/nba_source"
+      },
+      "heygen": null,
+      "assembly": {
+        "chrome": {
+          "skin": "nba"
+        },
+        "ticker": "nba",
+        "sourceCrop": "crop=1920:1080,",
+        "voiceover": false,
+        "layout": "split-screen"
+      },
+      "qa": {
+        "checklistModule": "./qa/checklists/nba",
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "nba",
+        "platforms": ["youtube", "tiktok", "instagram"]
+      }
     }
   }
 }

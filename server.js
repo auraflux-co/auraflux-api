@@ -281,7 +281,7 @@ function withPuppeteerExecutable(opts) {
 
 const { body, validationResult } = require('express-validator');
 const { logError, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
-const { requireFields, validateContentType, validateArrayLength, sanitizeStrings } = require('./lib/validation');
+const { requireFields, validateContentType, validateArrayLength, sanitizeStrings, PIPELINE_CONTENT_TYPES } = require('./lib/validation');
 const TwitchClient = require('./lib/clients/twitch_client');
 const { CONFIG } = require('./lib/config');
 const logger = require('./lib/logger');
@@ -3710,9 +3710,15 @@ app.post('/generate-clip-comp', async (req, res) => {
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
   if (clips.length > 10) return res.status(400).json({ error: `Too many clips (${clips.length} > 10 max)` });
 
-  const contentType = ['twitch-short', 'news-short'].includes(req.body.contentType)
+  const contentType = ['twitch-short', 'news-short', 'sports-short'].includes(req.body.contentType)
     ? req.body.contentType : 'twitch-short';
   const platforms = Array.isArray(req.body.platforms) && req.body.platforms.length ? req.body.platforms : ['tiktok'];
+  const scheduledAtRaw = req.body.scheduledAt;
+  let scheduledAt = null;
+  if (scheduledAtRaw) {
+    const due = new Date(scheduledAtRaw);
+    if (!isNaN(due.getTime()) && due.getTime() > Date.now()) scheduledAt = due.toISOString();
+  }
   const streamers = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
   // Single-clip shorts slug to clip_short_* — the ClipzWorld TV playlist filter
   // excludes that prefix (no avatar = no transformative layer = never on the loop)
@@ -3742,7 +3748,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     linkScriptJob(jobSpec.jobId, jobId);
     jobSpec = updateJobSpec(jobSpec.jobId, {
       clipsOnly: true,
-      deliverySpec: { platforms },
+      deliverySpec: { platforms, scheduledAt: scheduledAt || null },
       // Spec-driven routing: declare the stages this job actually skips. Clips-only
       // comps have no script generation and no HeyGen avatar — the spec must say so.
       stageMap: {
@@ -3780,6 +3786,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     title,
     streamers,
     platforms,
+    scheduledPublishAt: scheduledAt,
     repurposedFrom: req.body.repurposedFrom || null, // CPD-998: spawned from a published longform
     specId:      jobSpec?.jobId || null,
     jobSpecId:   jobSpec?.jobId || null,
@@ -4373,7 +4380,7 @@ app.post('/assemble',
     next();
   },
   requireFields('segments', 'segmentData'),
-  validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
+  validateContentType(PIPELINE_CONTENT_TYPES),
   async (req, res) => {
     // Load job spec for this job (created at script gen time)
     const jobId = req.body.jobSpecId || req.body.asmId;
@@ -5741,6 +5748,82 @@ const BBC_FETCH_LIMIT      = 45;   // articles to attempt (40% hit rate → ~18 
 const BBC_VIDEO_MIN_SEC    = 8;
 const BBC_VIDEO_MAX_SEC    = parseInt(process.env.NEWS_BBC_MAX_CLIP_SEC || '180');
 
+/** ~30s news-short sweet spot — prefer clips in band when building picker lists. */
+function getNewsPickerDurationPrefs() {
+  const target = parseFloat(process.env.NEWS_PICKER_TARGET_SEC || '30', 10);
+  const sweetMin = parseFloat(process.env.NEWS_PICKER_SWEET_MIN_SEC || '18', 10);
+  const sweetMax = parseFloat(process.env.NEWS_PICKER_SWEET_MAX_SEC || '48', 10);
+  return {
+    target: Number.isFinite(target) ? target : 30,
+    sweetMin: Number.isFinite(sweetMin) ? sweetMin : 18,
+    sweetMax: Number.isFinite(sweetMax) ? sweetMax : 48,
+  };
+}
+
+function newsSweetSpotSortKey(v, prefs) {
+  const p = prefs || getNewsPickerDurationPrefs();
+  const dur = Number(v.duration);
+  if (!Number.isFinite(dur) || dur <= 0) {
+    return { tier: 2, distance: 9999, recency: new Date(v.publishedAt || 0).getTime() || 0 };
+  }
+  const inBand = dur >= p.sweetMin && dur <= p.sweetMax;
+  return {
+    tier: inBand ? 0 : 1,
+    distance: Math.abs(dur - p.target),
+    recency: new Date(v.publishedAt || 0).getTime() || 0,
+  };
+}
+
+/** Sweet-spot clips first (~30s), then nearest duration, then recency. */
+function sortNewsVideosForPicker(videos, prefs) {
+  const p = prefs || getNewsPickerDurationPrefs();
+  return [...videos].sort((a, b) => {
+    const ka = newsSweetSpotSortKey(a, p);
+    const kb = newsSweetSpotSortKey(b, p);
+    if (ka.tier !== kb.tier) return ka.tier - kb.tier;
+    if (ka.distance !== kb.distance) return ka.distance - kb.distance;
+    return kb.recency - ka.recency;
+  });
+}
+
+function sortNewsPlaylistEntries(entries, prefs) {
+  const p = prefs || getNewsPickerDurationPrefs();
+  return [...entries].sort((a, b) => {
+    const ka = newsSweetSpotSortKey({ duration: a.duration }, p);
+    const kb = newsSweetSpotSortKey({ duration: b.duration }, p);
+    if (ka.tier !== kb.tier) return ka.tier - kb.tier;
+    return ka.distance - kb.distance;
+  });
+}
+
+function parseNewsQueryInt(val) {
+  if (val == null || val === '') return null;
+  const n = parseInt(String(val), 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Operator filters from dashboard query params (durMin, durMax, pubHours). */
+function applyNewsPickerQueryFilters(videos, req) {
+  const durMin = parseNewsQueryInt(req.query.durMin);
+  const durMax = parseNewsQueryInt(req.query.durMax);
+  const pubHours = parseFloat(req.query.pubHours);
+  const pubSinceMs = Number.isFinite(pubHours) && pubHours > 0
+    ? Date.now() - pubHours * 3600000
+    : null;
+  if (durMin == null && durMax == null && pubSinceMs == null) return videos;
+
+  return videos.filter(v => {
+    const dur = Number(v.duration);
+    if (durMin != null && (!Number.isFinite(dur) || dur < durMin)) return false;
+    if (durMax != null && (!Number.isFinite(dur) || dur > durMax)) return false;
+    if (pubSinceMs != null) {
+      const t = new Date(v.publishedAt || 0).getTime();
+      if (!Number.isFinite(t) || t < pubSinceMs) return false;
+    }
+    return true;
+  });
+}
+
 /** YouTube upload_date (YYYYMMDD) or unix timestamp → ISO. Never fakes "now". */
 function parseYtPublishedAt(uploadDate, timestamp) {
   if (timestamp != null && Number(timestamp) > 0) {
@@ -5840,7 +5923,7 @@ async function scrapeBbcNewsVideos(limit = 10) {
   // Run yt-dlp in batches of BBC_YTDLP_CONCURRENCY
   const candidates = articles.slice(0, BBC_FETCH_LIMIT);
   const results = [];
-  for (let i = 0; i < candidates.length && results.length < limit; i += BBC_YTDLP_CONCURRENCY) {
+  for (let i = 0; i < candidates.length; i += BBC_YTDLP_CONCURRENCY) {
     const batch = candidates.slice(i, i + BBC_YTDLP_CONCURRENCY);
     const batchResults = await Promise.all(batch.map(art => extractBbcVideo(art.link).then(v => {
       if (v) {
@@ -5856,13 +5939,112 @@ async function scrapeBbcNewsVideos(limit = 10) {
       return v;
     })));
     for (const v of batchResults) {
-      if (v && results.length < limit) results.push(v);
+      if (v) results.push(v);
     }
   }
 
-  console.log(`[bbc-scraper] ✅ ${results.length} BBC articles with video (tested ${Math.min(candidates.length, BBC_FETCH_LIMIT)})`);
-  return results;
+  const ranked = sortNewsVideosForPicker(results).slice(0, limit);
+  const prefs = getNewsPickerDurationPrefs();
+  const sweet = ranked.filter(v => v.duration >= prefs.sweetMin && v.duration <= prefs.sweetMax).length;
+  console.log(`[bbc-scraper] ✅ ${ranked.length} BBC articles with video (${sweet} in ${prefs.sweetMin}-${prefs.sweetMax}s band, tested ${Math.min(candidates.length, BBC_FETCH_LIMIT)})`);
+  return ranked;
 }
+
+// ── Sports highlights picker (ESPN leagues + BBC Sport wire) ─────────────────
+const sportsCore = require('./lib/sports');
+
+app.get('/sports/sources', async (req, res) => {
+  try {
+    await sportsCore.discovery.getEspnRegistry(req.query.refresh === '1');
+    res.json({ ok: true, ...sportsCore.listSources(), configPath: 'config/sportsSources.json' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/sports/espn/discover', async (req, res) => {
+  try {
+    const reg = await sportsCore.discovery.getEspnRegistry(req.query.refresh === '1');
+    res.json({
+      ok: true,
+      count: reg.count,
+      discoveredAt: reg.discoveredAt,
+      aliases: reg.aliases,
+      sample: Object.values(reg.leagues).slice(0, 20).map(l => ({
+        id: l.id, label: l.label, path: l.path, webUrl: l.webUrl, webSegments: l.webSegments,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/sports/categories', async (req, res) => {
+  const pubHours = parseFloat(req.query.pubHours || sportsCore.listSources().probeWindowHours || 48) || 48;
+  const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
+  try {
+    const probe = await sportsCore.probeActiveCategories({
+      pubHours,
+      forceDiscovery: refresh,
+      extractBbcVideo: async (url) => {
+        const v = await extractBbcVideo(url);
+        if (v) v.source = 'bbc_sport';
+        return v;
+      },
+    });
+    res.json({ ok: true, ...probe });
+  } catch (err) {
+    console.error('[sports/categories] Error:', err.message);
+    res.status(500).json({ ok: false, error: err.message, categories: [] });
+  }
+});
+
+app.get('/sports/highlights', async (req, res) => {
+  const source = (req.query.source || 'nba').toLowerCase();
+  const limit = Math.min(parseInt(req.query.limit || '30', 10) || 30, 50);
+  const hasPickerFilters = req.query.durMin != null || req.query.durMax != null || req.query.pubHours != null;
+  const scrapeLimit = hasPickerFilters ? Math.min(limit * 3, 50) : limit;
+  const categories = req.query.categories
+    ? String(req.query.categories).split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+    : null;
+
+  try {
+    const videos = await sportsCore.fetchSportsHighlights({
+      source,
+      categories,
+      limit: scrapeLimit,
+      date: req.query.date || null,
+      durMin: parseNewsQueryInt(req.query.durMin),
+      durMax: parseNewsQueryInt(req.query.durMax),
+      pubHours: parseFloat(req.query.pubHours),
+      targetSec: parseFloat(process.env.NEWS_PICKER_TARGET_SEC || '30') || 30,
+      extractBbcVideo: async (url) => {
+        const v = await extractBbcVideo(url);
+        if (v) v.source = 'bbc_sport';
+        return v;
+      },
+    });
+
+    const filtered = applyNewsPickerQueryFilters(videos, req).slice(0, limit);
+    const prefs = getNewsPickerDurationPrefs();
+    const sweetSpotCount = filtered.filter(v => v.duration >= prefs.sweetMin && v.duration <= prefs.sweetMax).length;
+
+    res.json({
+      ok: true,
+      source,
+      categories: categories || [source],
+      videos: filtered,
+      recentCount: filtered.length,
+      totalFound: filtered.length,
+      sweetSpotCount,
+      sweetSpotBandSec: [prefs.sweetMin, prefs.sweetMax],
+      pickerFiltersApplied: hasPickerFilters,
+    });
+  } catch (err) {
+    console.error('[sports/highlights] Error:', err.message);
+    res.status(500).json({ ok: false, error: err.message, videos: [] });
+  }
+});
 
 // ── AP / Reuters YouTube channel scrapers ────────────────────────────────────
 // AP and Reuters block direct article scraping (JS-rendered / bot-blocked).
@@ -5872,9 +6054,9 @@ async function scrapeBbcNewsVideos(limit = 10) {
 const YT_NEWS_CHANNELS = {
   ap:      { handle: '@AssociatedPress/videos', label: 'AP',           maxSec: 180 },
   reuters: { handle: '@Reuters/videos',         label: 'Reuters',      maxSec: 180 },
-  pbs:     { handle: '@PBSNewsHour/videos',     label: 'PBS',          maxSec: 300, overfetch: 5 },
-  vox:     { handle: '@Vox/videos',             label: 'Vox',          maxSec: 600, overfetch: 3 },
-  bbc:     { handle: '@BBCNews/videos',         label: 'BBC',          maxSec: 180, overfetch: 3 },
+  pbs:     { handle: '@PBSNewsHour/videos',     label: 'PBS',          maxSec: 300, overfetch: 10 },
+  vox:     { handle: '@Vox/videos',             label: 'Vox',          maxSec: 600, overfetch: 8 },
+  bbc:     { handle: '@BBCNews/videos',         label: 'BBC',          maxSec: 180, overfetch: 6 },
 };
 
 /**
@@ -5893,9 +6075,9 @@ async function scrapeYtNewsChannel(source, limit = 12) {
     const { execFile } = require('child_process');
     const proc = execFile('yt-dlp', [
       '--no-download', '--dump-json', '--flat-playlist',
-      '--playlist-end', String(Math.min(limit * (cfg.overfetch || 3), 60)), // over-fetch for low hit-rate channels
+      '--playlist-end', String(Math.min(limit * (cfg.overfetch || 4), 120)),
       channelUrl
-    ], { timeout: 30000 });
+    ], { timeout: 45000 });
     proc.stdout.on('data', d => out += d);
     proc.on('close', () => {
       const entries = out.trim().split('\n').filter(Boolean).flatMap(line => {
@@ -5914,7 +6096,7 @@ async function scrapeYtNewsChannel(source, limit = 12) {
         return [];
       });
       console.log(`[${source}-yt] Playlist: ${entries.length} clips ≤${cfg.maxSec}s`);
-      resolve(entries);
+      resolve(sortNewsPlaylistEntries(entries));
     });
     proc.on('error', reject);
   });
@@ -5960,8 +6142,11 @@ async function scrapeYtNewsChannel(source, limit = 12) {
     for (const v of batchResults) { if (v && results.length < limit) results.push(v); }
   }
 
-  console.log(`[${source}-yt] ✅ ${results.length} extractable clips`);
-  return results;
+  const ranked = sortNewsVideosForPicker(results).slice(0, limit);
+  const prefs = getNewsPickerDurationPrefs();
+  const sweet = ranked.filter(v => v.duration >= prefs.sweetMin && v.duration <= prefs.sweetMax).length;
+  console.log(`[${source}-yt] ✅ ${ranked.length} extractable clips (${sweet} in ${prefs.sweetMin}-${prefs.sweetMax}s band)`);
+  return ranked;
 }
 
 // GET /news/ap-videos
@@ -6031,6 +6216,9 @@ function _getCachedNewsResults(src) {
 app.get('/news/stories', async (req, res) => {
   const source = (req.query.source || 'bbc').toLowerCase();
   const limit  = Math.min(parseInt(req.query.limit || '30', 10) || 30, 50);
+  const hasPickerFilters = req.query.durMin != null || req.query.durMax != null || req.query.pubHours != null;
+  // When operator filters by duration/recency, scrape extra candidates then filter down to limit.
+  const scrapeLimit = hasPickerFilters ? Math.min(limit * 3, 50) : limit;
 
   try {
     let videos = [];
@@ -6058,7 +6246,7 @@ app.get('/news/stories', async (req, res) => {
     }
 
     if (source === 'bbc' || source === 'all') {
-      const bbcLimit = limit;
+      const bbcLimit = scrapeLimit;
       fetchTasks.push(
         Promise.all([
           scrapeYtNewsChannel('bbc', bbcLimit).catch(e => {
@@ -6070,8 +6258,7 @@ app.get('/news/stories', async (req, res) => {
             return [];
           }),
         ]).then(([yt, rss]) => {
-          const merged = [...yt, ...rss];
-          merged.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+          const merged = sortNewsVideosForPicker([...yt, ...rss]);
           const seen = new Set();
           const v = merged.filter(item => {
             const key = (item.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').slice(0, 60);
@@ -6091,7 +6278,7 @@ app.get('/news/stories', async (req, res) => {
     }
 
     if (source === 'pbs' || source === 'all') {
-      const pbsLimit = limit;
+      const pbsLimit = scrapeLimit;
       fetchTasks.push(
         scrapeYtNewsChannel('pbs', pbsLimit)
           .then(v => {
@@ -6113,7 +6300,7 @@ app.get('/news/stories', async (req, res) => {
     }
 
     if (source === 'vox' || source === 'all') {
-      const voxLimit = limit;
+      const voxLimit = scrapeLimit;
       fetchTasks.push(
         scrapeYtNewsChannel('vox', voxLimit)
           .then(v => {
@@ -6181,8 +6368,8 @@ app.get('/news/stories', async (req, res) => {
     const results = await Promise.all(fetchTasks);
     for (const batch of results) videos.push(...batch);
 
-    // Sort by recency, then dedupe by normalised title (AJ can return URL variants of same story)
-    videos.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+    // Prefer ~30s sweet-spot clips, then dedupe by title, cap at limit
+    videos = sortNewsVideosForPicker(videos);
     const seenTitles = new Set();
     videos = videos.filter(v => {
       const key = (v.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
@@ -6190,14 +6377,27 @@ app.get('/news/stories', async (req, res) => {
       seenTitles.add(key);
       return true;
     });
-    if (source === 'all') videos = videos.slice(0, limit);
+    if (source === 'all') videos = videos.slice(0, scrapeLimit);
+
+    videos = applyNewsPickerQueryFilters(videos, req);
+    videos = videos.slice(0, limit);
+
+    const filterActive = hasPickerFilters;
+
+    const prefs = getNewsPickerDurationPrefs();
+    const sweetSpotCount = videos.filter(v => v.duration >= prefs.sweetMin && v.duration <= prefs.sweetMax).length;
 
     return res.json({
       ok: true,
       source,
       videos,
       recentCount: videos.length,
-      totalFound: videos.length
+      totalFound: videos.length,
+      sweetSpotCount,
+      sweetSpotBandSec: [prefs.sweetMin, prefs.sweetMax],
+      targetDurationSec: prefs.target,
+      pickerFiltersApplied: filterActive,
+      hiddenByFilters: 0,
     });
   } catch (err) {
     console.error('[news/stories] Error:', err.message);
@@ -6455,7 +6655,7 @@ app.post('/generate-full-script',
     next();
   },
   requireFields('type', 'items'),
-  validateContentType(['twitch', 'nba', 'news', 'twitch-short', 'nba-short', 'news-short']),
+  validateContentType(PIPELINE_CONTENT_TYPES),
   validateArrayLength('items', 1),
   async (req, res) => {
     const { type, items } = req.body;
