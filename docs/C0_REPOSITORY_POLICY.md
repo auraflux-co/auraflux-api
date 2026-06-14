@@ -1,7 +1,10 @@
 # C0 Repository Policy — localhost vs production
 
+**Confluence (source of truth):** [Server Split — C0/C1+ Boundary](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/6881341)  
 **Epic:** [CPD-1021](https://aurafluxco.atlassian.net/browse/CPD-1021) — C0 separation + publish regression  
-**Worker memory:** `STATUS.md` (top) · `.cursor/rules/c0-render-separation.mdc` · Serena `c0-render-separation`
+**Worker memory:** `STATUS.md` (top) · `.cursor/rules/c0-render-separation.mdc`
+
+> **This file is a local mirror for agents and offline use.** When policy changes, update the Confluence page first, then sync this file.
 
 **Purpose:** Keep Rob's C0 localhost tool (`cwn-c0`, pm2, `cwn_production.html`) separate from C1+ production (`main` on Render) without merge conflicts.
 
@@ -53,4 +56,4 @@ Extract by ticket, not wholesale merge:
 
 ## Confluence
 
-Single HOW page under AuraFlux / Engineering: **C0 vs C1+ branch policy** — link this file and the two repo URLs once split.
+**[Server Split — C0/C1+ Boundary](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/6881341)** — authoritative HOW for repo split, worktree remotes, commit scope guard, and `server.js` runtime boundary. Link this page on CPD-1021 and related tickets.

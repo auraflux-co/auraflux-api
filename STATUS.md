@@ -2,18 +2,17 @@
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
-**Epic:** [CPD-1021](https://aurafluxco.atlassian.net/browse/CPD-1021) · **Policy:** `docs/C0_REPOSITORY_POLICY.md` · **Rule:** `.cursor/rules/c0-render-separation.mdc`
+**HOW (Confluence — source of truth):** [Server Split — C0/C1+ Boundary](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/6881341)  
+**Epic:** [CPD-1021](https://aurafluxco.atlassian.net/browse/CPD-1021) · **Local mirror:** `docs/C0_REPOSITORY_POLICY.md` · **Rule:** `.cursor/rules/c0-render-separation.mdc`
 
-| World | Folder | Branch | Deploys to |
-|-------|--------|--------|------------|
-| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 · **GitHub:** [auraflux-c0](https://github.com/auraflux-co/auraflux-c0) |
-| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app · **GitHub:** [auraflux-api](https://github.com/auraflux-co/auraflux-api) |
+| World | Folder | Branch | GitHub |
+|-------|--------|--------|--------|
+| **C0 localhost** | `~/cwn-c0` | `c0/main` | [auraflux-c0](https://github.com/auraflux-co/auraflux-c0) |
+| **Render production** | `~/cwn-production` | `main` | [auraflux-api](https://github.com/auraflux-co/auraflux-api) |
 
-**Never:** merge C0 → `main` without port ticket; replace C0 `gate5.js` with `portal5` shim; delete gate shims; restart sidecar/auraflux during live RTMP stream; commit **Render/C1+ paths** (`app/`, `lib/portals/`, `render.yaml`) on `c0/main` — use `~/cwn-production` instead (pre-commit hook enforces).
+**Session start:** read Confluence HOW above (repos, worktree, commit scope guard). STATUS stays a pointer — **update Confluence when policy changes**, then sync the local mirror.
 
-**C0 commits:** `bash scripts/install_git_hooks.sh` once per worktree — blocks/warns non-C0 scope. Portable `lib/` fixes: `C0_PORTABLE=1 git commit …` then cherry-pick to `main`. (`~/cwn-c0` is a **git worktree** of the same repo as production — scope guard matters.)
-
-**Jira CPD-1017** = Jira backfill workflow only — NOT Program Director / live grid (those commits mis-tagged `cpd-1017` in git).
+**Never (summary):** merge C0 → `main`; commit `app/` / `lib/portals/` on `c0/main`; restart sidecar mid RTMP stream. Full list on Confluence.
 
 **Reviews:** C0 → `aider_session_review_local.sh` · Render → `aider_session_review.sh`
 

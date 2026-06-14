@@ -7,6 +7,8 @@ alwaysApply: true
 
 Read `docs/C0_REPOSITORY_POLICY.md` and the **Worker Memory** block at the top of `STATUS.md` before any git merge or gate/publish work.
 
+**Confluence HOW:** [Server Split — C0/C1+ Boundary](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/6881341) — update there first when policy changes.
+
 ## Three worlds (do not conflate)
 
 | World | Folder | Branch | Deploys to |
