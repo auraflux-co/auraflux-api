@@ -1,6 +1,12 @@
 const { parseChatMessage, isMemberPerk } = require('../lib/live_grid/chat_perks');
+const { AUDIO_INSTRUCTIONS } = require('../lib/live_grid/seo');
 
 describe('live_grid chat perks (CPD-1005)', () => {
+  test('chat announce lines each fit YouTube 200-char postMessage cap', () => {
+    for (const line of AUDIO_INSTRUCTIONS) {
+      expect(line.length).toBeLessThanOrEqual(200);
+    }
+  });
   test('parse audio command', () => {
     const cmd = parseChatMessage('!listen 3', { displayName: 'bob' });
     expect(cmd).toEqual({ type: 'audio', quadrant: 2, author: 'bob', isMember: false });

@@ -36,6 +36,15 @@ describe('calendar slot_jobs', () => {
     expect(listEligibleJobs(jobs, 'news-short').map((j) => j.jobId)).toEqual(['j3']);
   });
 
+  test('listEligibleJobs accepts alternate slot types', () => {
+    const jobs = {
+      j1: { contentType: 'news-short', stage: 'assembled', title: 'News clip' },
+      j2: { contentType: 'twitch-short', stage: 'assembled', title: 'Twitch clip' },
+      j3: { contentType: 'news', stage: 'assembled', title: 'Longform' },
+    };
+    expect(listEligibleJobs(jobs, 'alternate').map((j) => j.jobId).sort()).toEqual(['j1', 'j2']);
+  });
+
   test('scheduleJobToSlot writes assignment and updates card', () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 2);

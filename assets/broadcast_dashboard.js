@@ -11,7 +11,8 @@
   let _bcAllowlist = null;
   let _bcFiles = null;
   let _bcDiscovery = { merged: null, follows: null };
-  let _bcPoll = null;
+  let _bcEventFeed = null;
+  let _bcPrepared = null;
   let _tvCatalog = null;
   let _tvPlaylistApi = null;
   const TV_LS_KEY = 'cwn_tv_playlist_paths';
@@ -214,15 +215,76 @@
     return r.json();
   }
 
+  function bcTypeChip(type) {
+    const t = type || 'mixed';
+    const labels = { feed: 'Feed', produced: 'Produced', watchparty: 'Watch party', mixed: 'Mixed' };
+    return `<span class="bc-type-chip bc-type-${t}">${labels[t] || t}</span>`;
+  }
+
+  function renderViewBands(vb) {
+    if (!vb?.bands?.length) return '';
+    let html = `<div class="bc-band-head" style="margin-top:14px;">VIEW BANDS (5k → 250k+) — what competitors run</div>`;
+    html += `<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:8px;">${vb.sourceNote || ''} · Pool ${vb.poolSize || '—'} live VODs · ${vb.atLeast5k || '—'} with 5k+ views</div>`;
+
+    if (vb.streamTypeLegend?.length) {
+      html += `<div class="bc-type-legend">`;
+      for (const leg of vb.streamTypeLegend) {
+        html += `${bcTypeChip(leg.id)} <span style="font-size:9px;color:rgba(255,255,255,0.45);margin-right:10px;">${leg.short}</span>`;
+      }
+      html += `</div>`;
+    }
+
+    for (const band of vb.bands) {
+      const tc = band.typeCounts || {};
+      html += `<div class="bc-band-block">
+        <div class="bc-band-head">${band.label} · ${band.count} streams</div>
+        <div class="bc-band-counts">
+          ${bcTypeChip('feed')} ${tc.feed || 0}
+          ${bcTypeChip('produced')} ${tc.produced || 0}
+          ${bcTypeChip('watchparty')} ${tc.watchparty || 0}
+          ${bcTypeChip('mixed')} ${tc.mixed || 0}
+          ${band.dominantCategories?.length ? ' · ' + band.dominantCategories.join(', ') : ''}
+        </div>`;
+      for (const ex of (band.examples || []).slice(0, 5)) {
+        html += `<div class="bc-ex-row">
+          ${bcTypeChip(ex.streamType)}
+          <span style="font-size:9px;color:rgba(255,255,255,0.35);margin-left:4px;">${(ex.views || 0).toLocaleString()} views · ${ex.region || ''}</span>
+          <div class="bc-ex-title">${(ex.title || '').replace(/</g, '&lt;').slice(0, 72)}</div>
+          <div class="bc-ex-meta">${(ex.channel || '').replace(/</g, '&lt;')}</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    const ns = vb.newsSports5kTo160k;
+    if (ns?.regions?.length) {
+      html += `<div class="bc-band-head" style="margin-top:12px;">LOCAL NEWS & SPORTS (5k–160k) — by region</div>`;
+      html += `<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;">${ns.note || ''}</div>`;
+      html += `<table class="bc-region-table"><tr><td><b>Region</b></td><td><b>Count</b></td><td><b>Feed / Prod / Party</b></td></tr>`;
+      for (const r of ns.regions.slice(0, 10)) {
+        html += `<tr><td>${r.region}</td><td>${r.total}</td><td>${r.feed || 0} / ${r.produced || 0} / ${r.watchparty || 0}</td></tr>`;
+      }
+      html += `</table>`;
+      const topReg = ns.regions[0];
+      if (topReg?.examples?.length) {
+        html += `<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:8px;">Example (${topReg.region}):</div>`;
+        for (const ex of topReg.examples.slice(0, 2)) {
+          html += `<div class="bc-ex-row">${bcTypeChip(ex.streamType)} <span class="bc-ex-title">${(ex.title || '').slice(0, 60)}</span></div>`;
+        }
+      }
+    }
+    return html;
+  }
+
   function renderPlaybook() {
     const el = g('bc-playbook');
     if (!el) return;
     const pb = _bcOps?.playbook;
-    if (!pb?.tiers?.length) {
+    if (!pb?.tiers?.length && !pb?.viewBands?.bands?.length) {
       el.innerHTML = `<div class="bc-play-principle"><b>What the data said (Jun 13)</b><br>
         Tier A: sports watch-alongs, long-run news desk, esports finals — <b>YouTube Live</b> with commentary/transform layers.<br>
         Tier C: 4-up Twitch multiview — keep on YouTube late night only; <b>not</b> the Twitch TV loop.<br>
-        Full playbook loads after server reload — see logs/youtube_top200_build_analysis.json.</div>
+        Full playbook loads after server reload — run hybrid collect if view bands empty.</div>
         <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.35);">Your pipeline (Bobby G VODs + news) feeds Tier A news desk — but production rate is ~1 hr/day, not 6+ hours of live.</div>`;
       return;
     }
@@ -235,19 +297,24 @@
       return 'bc-play-partial';
     };
 
-    let html = (pb.principles || []).slice(0, 2).map((p) =>
+    let html = (pb.principles || []).slice(0, 3).map((p) =>
       `<div class="bc-play-principle"><b>${p.title}</b><br>${p.body}</div>`).join('');
 
-    for (const tier of pb.tiers) {
-      html += `<div class="bc-play-tier">${tier.tier}</div>`;
-      for (const item of tier.items) {
-        if (item.channel === 'skip') continue;
-        html += `<div class="bc-play-item ${statusClass(item.wiringStatus)}">
-          <b>${item.format}</b> <span class="bc-play-ev">(${item.evidence || ''})</span>
-          <div class="bc-play-ch">${item.channelLabel || ''}</div>
-          <div style="margin-top:4px;color:rgba(255,255,255,0.7);">${item.robSummary || item.build || ''}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;">Status: ${item.wiringDetail || item.wiringStatus}</div>
-        </div>`;
+    html += renderViewBands(pb.viewBands);
+
+    if (pb.tiers?.length) {
+      html += `<div class="bc-band-head" style="margin-top:16px;">BUILD TIERS (top 200 study)</div>`;
+      for (const tier of pb.tiers) {
+        html += `<div class="bc-play-tier">${tier.tier}</div>`;
+        for (const item of tier.items) {
+          if (item.channel === 'skip') continue;
+          html += `<div class="bc-play-item ${statusClass(item.wiringStatus)}">
+            <b>${item.format}</b> <span class="bc-play-ev">(${item.evidence || ''})</span>
+            <div class="bc-play-ch">${item.channelLabel || ''}</div>
+            <div style="margin-top:4px;color:rgba(255,255,255,0.7);">${item.robSummary || item.build || ''}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;">Status: ${item.wiringDetail || item.wiringStatus}</div>
+          </div>`;
+        }
       }
     }
     el.innerHTML = html;
@@ -278,6 +345,7 @@
 
   async function broadcastRefreshOps() {
     try { _bcOps = await bcFetch('/broadcast/ops'); } catch (_) { _bcOps = null; }
+    await broadcastRefreshPrepared();
     renderOpsBar();
     renderContentBoard();
     renderPlaybook();
@@ -392,10 +460,35 @@
       <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);">This board shows the gap between the calendar and what&apos;s on disk. Pick Ready items in ClipzWorld TV below.</div>`;
   }
 
+  async function broadcastRefreshEventFeed() {
+    const el = g('bc-event-feed');
+    if (!el) return;
+    try {
+      _bcEventFeed = await bcFetch('/live-grid/event-feed/preview');
+    } catch (_) {
+      _bcEventFeed = null;
+    }
+    if (!_bcEventFeed?.ok) {
+      el.innerHTML = '<span style="color:#e88;">Event feed preview unavailable</span>';
+      return;
+    }
+    const ev = _bcEventFeed.activeEvent;
+    const feed = _bcEventFeed.feed;
+    if (feed?.url) {
+      el.innerHTML = `<b style="color:#c7af4f;">EVENT FEED (Q1)</b> · ${feed.platform || 'live'} · ${feed.channel || ''}<br>
+        <span style="color:#fff;">${feed.title || 'Live'}</span>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;">${feed.source} · ${ev?.eventTitle || ev?.eventId || 'event_night'}</div>`;
+    } else {
+      el.innerHTML = `<b style="color:#c7af4f;">EVENT FEED</b> — none live right now for <i>${ev?.eventTitle || ev?.eventId || 'event'}</i>.
+        <div style="font-size:10px;margin-top:4px;">Will use co-streams only, or event file if set above.</div>`;
+    }
+  }
+
   async function broadcastRefreshProgram() {
     try { _bcProgram = await bcFetch('/live-grid/program/status'); } catch (_) { _bcProgram = null; }
     renderProgramPanel();
     renderScheduleTimeline();
+    await broadcastRefreshEventFeed();
   }
 
   async function broadcastRefreshScheduler() {
@@ -449,6 +542,11 @@
     const safe = o ? o.safeToRestart : true;
     const ver = o?.server?.version || '—';
     const branch = o?.server?.gitBranch || '';
+    const tokens = o?.tokens;
+    const tokenChips = tokens ? Object.values(tokens)
+      .filter((t) => t && typeof t.ok === 'boolean')
+      .map((t) => `<span class="bc-ops-chip ${t.ok ? '' : 'bc-ops-chip-warn'}" title="${t.detail || ''}">${t.label}: ${t.ok ? '✓' : '✗'}</span>`)
+      .join('') : '';
 
     bar.innerHTML = `
       <div class="bc-ops-grid">
@@ -457,10 +555,77 @@
         <span class="bc-ops-chip">Jobs: ${jobs}</span>
         <span class="bc-ops-chip">${o?.assemblyBusy ? '⚠ assembly' : 'Assembly: idle'}</span>
         <span class="bc-ops-chip">Server: v${ver}${branch ? ' · ' + branch : ''}</span>
+        ${tokenChips}
       </div>
       ${!safe ? `<div class="bc-ops-warn">⚠ ${(o.blockers || []).join(' · ')} — no restart/deploy while live</div>` : ''}
       ${o?.waiter?.okFile ? '<div class="bc-ops-info">24h test armed — waiter will start when pipeline idle</div>' : ''}`;
+    renderPreparedPanel();
   }
+
+  async function broadcastRefreshPrepared() {
+    try { _bcPrepared = await bcFetch('/live-grid/prepared'); } catch (_) { _bcPrepared = null; }
+    renderPreparedPanel();
+  }
+
+  function renderPreparedPanel() {
+    const row = g('lg-prepared-row');
+    const info = g('lg-prepared-info');
+    if (!row || !info) return;
+    const s = _lgStatus;
+    if (s?.running) {
+      row.style.display = 'none';
+      return;
+    }
+    const p = _bcPrepared?.prepared;
+    if (!p) {
+      row.style.display = '';
+      info.innerHTML = '<b>Schedule-ahead</b> — no prepared broadcast. Prepare before 6pm to show title + thumbnail on YouTube upcoming.';
+      return;
+    }
+    row.style.display = '';
+    const when = p.scheduledStartTime ? new Date(p.scheduledStartTime).toLocaleString('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit' }) + ' ET' : '—';
+    const stale = p.stale ? ' <span style="color:#e88;">(stale — refresh or clear)</span>' : '';
+    info.innerHTML = `<b>Prepared for tonight</b>${stale}<br>
+      <a href="${p.watchUrl}" target="_blank" style="color:#2ecc71;">${p.watchUrl}</a><br>
+      <span style="color:rgba(255,255,255,0.45);">Showtime: ${when}</span>`;
+  }
+
+  window.liveGridPrepare = async function () {
+    if (!confirm('Prepare YouTube broadcast + thumbnail for tonight? (Does not start the stream)')) return;
+    const programMode = g('bc-program-mode')?.value || 'auto';
+    const body = { programMode, force: true };
+    const headline = (g('bc-headline')?.value || '').trim();
+    const eventTitle = (g('bc-event-title')?.value || '').trim();
+    if (headline) body.headline = headline;
+    if (eventTitle) body.eventTitle = eventTitle;
+    try {
+      const r = await fetch(BC_BASE + '/live-grid/prepare', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json();
+      if (!d.ok) alert('Prepare failed: ' + (d.error || 'unknown'));
+      else alert('Prepared — check YouTube upcoming: ' + (d.watchUrl || ''));
+    } catch (e) { alert('Prepare failed: ' + e.message); }
+    broadcastRefreshPrepared();
+  };
+
+  window.liveGridRefreshPrepared = async function () {
+    try {
+      const r = await fetch(BC_BASE + '/live-grid/prepare/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const d = await r.json();
+      if (!d.ok) alert('Refresh failed: ' + (d.error || 'unknown'));
+    } catch (e) { alert('Refresh failed: ' + e.message); }
+    broadcastRefreshPrepared();
+  };
+
+  window.liveGridClearPrepared = async function () {
+    if (!confirm('Clear prepared broadcast state?')) return;
+    try {
+      await fetch(BC_BASE + '/live-grid/prepared/clear', { method: 'POST' });
+    } catch (_) {}
+    broadcastRefreshPrepared();
+  };
 
   function renderProgramPanel() {
     const el = g('bc-on-air');
@@ -480,11 +645,19 @@
         let label = 'SLATE';
         if (typeof src === 'string') label = src.toUpperCase();
         else if (src && src.type === 'file') label = (src.label || 'FILE') + ': ' + (src.path || '').split('/').pop();
+        else if (src && src.type === 'url') label = (src.label || 'FEED') + ': ' + (src.title || src.url || '').slice(0, 48);
         quads += `<div class="bc-quad-src"><span>Q${i + 1}</span> ${label}</div>`;
       });
     } else if (s && s.quadrants) {
       s.quadrants.forEach(q => {
-        quads += `<div class="bc-quad-src"><span>Q${q.quadrant}</span> ${(q.login || q.kind || 'slate').toString().toUpperCase()}</div>`;
+        let label = 'SLATE';
+        if (q.displayName) label = q.displayName;
+        else if (q.login) label = q.login.toUpperCase();
+        else if (q.label && q.feedUrl) label = `${q.label} · ${(q.feedUrl.split('/').pop() || 'live')}`;
+        else if (q.label) label = q.label;
+        else if (q.kind === 'url') label = 'FEED';
+        else if (q.kind) label = q.kind.toUpperCase();
+        quads += `<div class="bc-quad-src"><span>Q${q.quadrant}</span> ${label}</div>`;
       });
     }
 
@@ -492,10 +665,16 @@
     const fileLines = Object.entries(files).filter(([, v]) => v)
       .map(([k, v]) => `<div style="font-size:10px;color:rgba(255,255,255,0.45);">${k}: ${String(v).split('/').pop()}</div>`).join('');
 
+    const feed = layout?.eventFeed || p.layout?.eventFeed;
+    const feedLine = feed?.url
+      ? `<div style="font-size:10px;color:#2ecc71;margin-top:6px;">Live feed: ${feed.title || feed.channel} (${feed.platform})</div>`
+      : '';
+
     el.innerHTML = `
       <div style="margin-bottom:8px;"><b style="color:#c7af4f;">${active.toUpperCase()}</b>
         <span style="color:rgba(255,255,255,0.4);font-size:11px;"> scheduled: ${sched}${ev ? ' · ' + ev.eventTitle : ''}</span></div>
       ${layout?.title ? `<div style="font-size:12px;margin-bottom:8px;">${layout.title}</div>` : ''}
+      ${feedLine}
       <div class="bc-quad-grid">${quads || '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Start grid to see quadrants</span>'}</div>
       ${fileLines}`;
   }
@@ -699,7 +878,7 @@
     if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?`)) return;
     const btn = g('lg-start-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'STARTING…'; }
-    const body = { privacyStatus: privacy, programMode };
+    const body = { privacyStatus: privacy, programMode, usePrepared: false };
     if (headline) body.headline = headline;
     if (eventTitle) body.eventTitle = eventTitle;
     if (eventFile) body.eventFile = eventFile;

@@ -40,6 +40,15 @@ logs/live_grid_discovery_report.json
 logs/youtube_top200_build_analysis.json
 logs/youtube_top200_live_30d.json
 logs/youtube_top20_live_30d.json
+logs/youtube_top1000_live_30d.json
+logs/youtube_live_search_ids.json
+logs/youtube_live_ranked_full.json
+logs/youtube_ranks300_1000_scan.log
+logs/youtube_live_view_bands_30d.json
+logs/youtube_live_ytdlp_ids.json
+logs/youtube_hybrid_collect.log
+logs/youtube_view_bands_output.txt
+logs/youtube_view_bands_run.log
 
 # Spike artifacts with ephemeral presigned URLs
 spike/cpd881/poll_urls.json

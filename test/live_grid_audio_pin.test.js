@@ -49,6 +49,18 @@ test('manual pin holds while the pinned quadrant is still live', () => {
   jest.useRealTimers();
 });
 
+test('manual audio pin works on url/event feed quadrant', () => {
+  const mgr = makeManager({ alpha: 100 });
+  mgr.feeders = {
+    quads: [{ kind: 'url', label: 'EVENT', feedUrl: 'https://www.twitch.tv/ishowspeed' }, { kind: 'channel' }],
+    status: () => [{ displayName: 'EVENT · ishowspeed', kind: 'url' }],
+  };
+  mgr._lastAssignments = [null, 'alpha', null, null];
+  expect(mgr.setAudio(0, 'manual')).toBe(true);
+  expect(mgr.audioQuad).toBe(0);
+  expect(mgr.audioMode).toBe('manual');
+});
+
 test('all quadrants slate: pin stays (nowhere to move) without crashing', () => {
   jest.useFakeTimers();
   const mgr = makeManager({});

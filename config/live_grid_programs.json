@@ -28,10 +28,10 @@
     "event_night": {
       "label": "Sports / event watch party",
       "titleTemplate": "🔴 LIVE: {eventTitle} — ClipzWorld Watch Party",
-      "descriptionPrefix": "Live event watch party — produced ClipzWorld coverage plus co-stream reactions.",
+      "descriptionPrefix": "Live event watch party — allowlisted feed on Q1 plus Twitch co-stream reactions.",
       "eventTitle": "Live Event",
       "quadrants": [
-        { "type": "file", "source": "event_primary", "label": "EVENT" },
+        { "type": "feed", "source": "event_feed", "fileSource": "event_primary", "label": "EVENT" },
         { "type": "twitch" },
         { "type": "twitch" },
         { "type": "twitch" }

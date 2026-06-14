@@ -164,7 +164,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .bc-ops-chip.bc-live-yt { border-color:rgba(231,76,60,0.5); color:#e88; }
 .bc-ops-chip.bc-live-tw { border-color:rgba(145,70,255,0.5); color:#b794f6; }
 .bc-ops-warn { margin-top:8px; font-size:11px; color:#e88; background:rgba(231,76,60,0.1); padding:8px 10px; border-radius:4px; }
-.bc-ops-info { margin-top:8px; font-size:11px; color:#3498db; }
+.bc-ops-chip.bc-ops-chip-warn { border-color:rgba(231,76,60,0.45); color:#e88; }
 .tv-catalog-group { margin-bottom:10px; }
 .tv-catalog-title { font-size:10px; letter-spacing:1px; color:#c7af4f; margin-bottom:6px; font-weight:700; }
 .tv-catalog-item { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:11px; cursor:pointer; }
@@ -192,6 +192,21 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .bc-play-gap { border-left:3px solid #e74c3c; }
 .bc-play-skip { opacity:0.5; border-left:3px solid rgba(255,255,255,0.15); }
 .bc-play-principle { font-size:11px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); line-height:1.4; }
+.bc-type-legend { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+.bc-type-chip { font-size:9px; font-weight:700; padding:3px 8px; border-radius:3px; letter-spacing:0.3px; text-transform:uppercase; }
+.bc-type-feed { background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid rgba(231,76,60,0.35); }
+.bc-type-produced { background:rgba(46,204,113,0.12); color:#2ecc71; border:1px solid rgba(46,204,113,0.35); }
+.bc-type-watchparty { background:rgba(155,89,182,0.15); color:#b794f6; border:1px solid rgba(155,89,182,0.35); }
+.bc-type-mixed { background:rgba(199,175,79,0.12); color:#c7af4f; border:1px solid rgba(199,175,79,0.3); }
+.bc-band-block { margin:12px 0; padding:10px; background:rgba(0,0,0,0.2); border-radius:4px; border:1px solid rgba(255,255,255,0.06); }
+.bc-band-head { font-size:10px; font-weight:700; color:#c7af4f; margin-bottom:6px; }
+.bc-band-counts { font-size:9px; color:rgba(255,255,255,0.45); margin-bottom:8px; }
+.bc-ex-row { font-size:10px; padding:5px 0; border-top:1px solid rgba(255,255,255,0.04); line-height:1.35; }
+.bc-ex-title { color:rgba(255,255,255,0.85); }
+.bc-ex-meta { font-size:9px; color:rgba(255,255,255,0.4); margin-top:2px; }
+.bc-region-table { width:100%; font-size:10px; border-collapse:collapse; margin-top:8px; }
+.bc-region-table td { padding:4px 6px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+.bc-region-table td:first-child { color:rgba(255,255,255,0.75); }
 .bc-quad-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .bc-quad-src { font-size:11px; padding:6px 8px; background:#060a12; border-radius:4px; border:1px solid rgba(199,175,79,0.15); }
 .bc-quad-src span { color:rgba(199,175,79,0.6); font-size:9px; margin-right:4px; }
@@ -423,9 +438,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <input id="bc-headline" type="text" placeholder="Breaking & Analysis"></div>
             <div class="field"><label>EVENT TITLE (event_night)</label>
               <input id="bc-event-title" type="text" placeholder="Weekend Sports Watch Party"></div>
-            <div class="field"><label>EVENT FILE (optional)</label>
+            <div class="field"><label>EVENT FILE (fallback if no live feed)</label>
               <select id="bc-event-file" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px;font-size:11px;">
-                <option value="">— auto from calendar / output —</option>
+                <option value="">— auto: live feed picker first —</option>
               </select></div>
             <div id="bc-mobile-format" style="font-size:10px;color:#888;margin-bottom:8px;line-height:1.4;">
               Mobile portrait is served by YouTube dual-format from this landscape stream (CPD-1029).
@@ -449,6 +464,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         <div class="card">
           <div class="card-header"><div class="card-title">ON AIR / PROGRAM</div></div>
           <div class="card-body" id="bc-on-air">—</div>
+          <div class="card-body" id="bc-event-feed" style="border-top:1px solid rgba(199,175,79,0.1);padding-top:10px;font-size:11px;color:rgba(255,255,255,0.5);">Event feed: loading…</div>
           <div id="bc-daypart-timeline" class="bc-daypart-timeline" style="padding:0 14px 14px;"></div>
         </div>
 
@@ -476,13 +492,26 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <span id="lg-uptime" style="color:rgba(255,255,255,0.35);margin-left:8px;"></span>
           </div>
           <div id="lg-quads" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
+          <div id="lg-assign-row" style="display:none;margin-bottom:8px;font-size:10px;color:rgba(255,255,255,0.45);">
+            <span style="letter-spacing:1px;">ASSIGN BENCH →</span>
+            <span style="color:rgba(255,255,255,0.35);margin-left:6px;">Click Q1–Q4 on a streamer below · 🔒 = your lock (poller won&apos;t move it)</span>
+          </div>
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
             <span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);">AUDIO: <b id="lg-audio-mode" style="color:#c7af4f;">—</b></span>
             <button class="btn btn-outline btn-sm" id="lg-audio-auto" style="font-size:10px;padding:2px 10px;display:none;" onclick="liveGridAudio('auto')">RELEASE TO AUTO</button>
           </div>
           <div id="lg-bench-row" style="display:none;margin-bottom:10px;">
-            <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:4px;">BENCH <span id="lg-bench-count" style="color:#c7af4f;"></span></div>
-            <div id="lg-bench-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:110px;overflow-y:auto;margin-bottom:6px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+              <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);">BENCH <span id="lg-bench-count" style="color:#c7af4f;"></span></div>
+              <select id="lg-bench-filter" onchange="liveGridRender()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:2px 8px;font-size:10px;">
+                <option value="follows">My follows (live first)</option>
+                <option value="live">All bench — live only</option>
+                <option value="all">All bench</option>
+              </select>
+              <button type="button" class="btn btn-outline btn-sm" id="lg-operator-btn" style="font-size:10px;padding:2px 10px;" onclick="liveGridToggleOperatorMode()" title="When ON: you pick who goes where. When OFF: auto pilot fills from bench.">OPERATOR: …</button>
+            </div>
+            <div id="lg-bench-follows-label" style="font-size:9px;letter-spacing:1px;color:rgba(145,70,255,0.8);margin-bottom:3px;display:none;">YOUR TWITCH FOLLOWS</div>
+            <div id="lg-bench-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:160px;overflow-y:auto;margin-bottom:6px;"></div>
             <div id="lg-removed-row" style="display:none;margin-bottom:6px;">
               <div style="font-size:9px;letter-spacing:1px;color:rgba(255,120,120,0.55);margin-bottom:3px;">REMOVED (manual re-add only)</div>
               <div id="lg-removed-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:60px;overflow-y:auto;"></div>
@@ -501,6 +530,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <select id="bc-file-swap-select" style="flex:1;min-width:140px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px;font-size:11px;"></select>
               <input id="bc-file-swap-label" type="text" placeholder="label" style="width:80px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;">
               <button class="btn btn-outline btn-sm" onclick="bcSwapQuadrantFile()">SWAP</button>
+            </div>
+          </div>
+          <div id="lg-prepared-wrap" style="margin-bottom:10px;">
+            <div id="lg-prepared-row" style="display:none;padding:8px 10px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.25);border-radius:4px;font-size:11px;">
+              <div id="lg-prepared-info" style="margin-bottom:6px;color:rgba(255,255,255,0.75);"></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;" onclick="liveGridPrepare()">PREPARE TONIGHT</button>
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;" onclick="liveGridRefreshPrepared()">REFRESH SEO</button>
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;" onclick="liveGridClearPrepared()">CLEAR</button>
+              </div>
             </div>
           </div>
           <div class="btn-row">
@@ -9554,6 +9593,8 @@ function liveGridRender() {
   document.getElementById('lg-privacy').style.display = running ? 'none' : '';
   document.getElementById('lg-stop-btn').style.display = running ? '' : 'none';
   document.getElementById('lg-bench-row').style.display = running ? '' : 'none';
+  const assignRow = document.getElementById('lg-assign-row');
+  if (assignRow) assignRow.style.display = running ? '' : 'none';
 
   const watchRow = document.getElementById('lg-watch-row');
   const watchUrl = s && s.broadcast && s.broadcast.watchUrl;
@@ -9568,7 +9609,7 @@ function liveGridRender() {
   document.getElementById('lg-audio-mode').textContent = running
     ? (audio.muted
         ? '🔇 MUTED — MUSIC ON ALL QUADS'
-        : `${(audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}${audio.musicWarning ? ' · 🎵 MUSIC ON AIR' : ''}`)
+        : `${(audio.label || audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}${audio.musicWarning ? ' · 🎵 MUSIC ON AIR' : ''}`)
     : '—';
   document.getElementById('lg-audio-auto').style.display = (running && audio.mode === 'manual') ? '' : 'none';
 
@@ -9576,13 +9617,44 @@ function liveGridRender() {
   if (!running) { quadsEl.innerHTML = '<div style="grid-column:1/3;font-size:11px;color:rgba(255,255,255,0.3);text-align:center;padding:14px 0;">Stream offline — GO LIVE starts the 2x2 grid broadcast</div>'; return; }
 
   const live = (s.poller && s.poller.live) || {};
+  const operatorOn = !!(s.poller && s.poller.operatorMode);
+  const opBtn = document.getElementById('lg-operator-btn');
+  if (opBtn) {
+    opBtn.textContent = operatorOn ? 'OPERATOR: ON ✓' : 'AUTO PILOT: ON';
+    opBtn.style.borderColor = operatorOn ? '#c7af4f' : 'rgba(255,255,255,0.25)';
+    opBtn.style.color = operatorOn ? '#c7af4f' : 'rgba(255,255,255,0.55)';
+  }
 
-  // Bench chips — live first (by viewers desc), then alphabetical
-  const bench = (s.poller && s.poller.bench) || [];
-  const seated = new Set((s.poller && s.poller.assignments) || []);
-  document.getElementById('lg-bench-count').textContent = bench.length ? `(${bench.length})` : '';
+  const benchFilter = (document.getElementById('lg-bench-filter') || {}).value || 'follows';
+  const benchAll = (s.poller && s.poller.bench) || [];
+  const rosterList = (s.poller && s.poller.roster) || [];
+  const rosterSet = new Set(rosterList.map(l => String(l).toLowerCase()));
+  const twitchFollows = (s.poller && s.poller.allFollows) || [];
+  const allFollows = [...new Set([...rosterList.map(l => l.toLowerCase()), ...twitchFollows])];
+  const followsLabel = document.getElementById('lg-bench-follows-label');
+  if (followsLabel) {
+    followsLabel.style.display = benchFilter === 'follows' && allFollows.length ? '' : 'none';
+    followsLabel.textContent = allFollows.length
+      ? `YOUR TWITCH FOLLOWS (${allFollows.length} total · ${rosterList.length} roster always on grid priority)`
+      : 'YOUR TWITCH FOLLOWS';
+  }
+
+  let bench = benchAll;
+  if (benchFilter === 'follows' && allFollows.length) bench = allFollows;
+  else if (benchFilter === 'live') bench = benchAll.filter(l => live[l] != null);
+
+  const seated = new Set((s.quadrants || []).map(q => q.login || q.channelSlug).filter(Boolean));
+  const rosterInFollows = allFollows.filter(l => rosterSet.has(l)).length;
+  document.getElementById('lg-bench-count').textContent = bench.length
+    ? (benchFilter === 'follows' && allFollows.length
+      ? `(${allFollows.length} follows${rosterInFollows ? ` · ${rosterInFollows} roster` : ''})`
+      : `(${bench.length})`) : '';
   const sorted = [...bench].sort((a, b) => {
     const la = live[a] != null, lb = live[b] != null;
+    if (benchFilter === 'follows') {
+      const ra = rosterSet.has(a), rb = rosterSet.has(b);
+      if (ra !== rb) return ra ? -1 : 1;
+    }
     if (la !== lb) return la ? -1 : 1;
     if (la && lb && live[b] !== live[a]) return live[b] - live[a];
     return a.localeCompare(b);
@@ -9597,7 +9669,11 @@ function liveGridRender() {
       border:1px solid ${onGrid ? '#c7af4f' : satOut ? 'rgba(255,170,80,0.5)' : isLive ? 'rgba(80,200,120,0.5)' : 'rgba(255,255,255,0.12)'};
       color:${isLive || onGrid ? '#fff' : 'rgba(255,255,255,0.45)'};">
       <span style="color:${isLive ? '#5c8' : 'rgba(255,255,255,0.2)'};font-size:8px;">●</span>
-      ${login}${isLive ? ` <span style="color:rgba(199,175,79,0.8);">${live[login].toLocaleString()}</span>` : ''}${onGrid ? ' <span style="color:#c7af4f;font-size:8px;">ON GRID</span>' : ''}${satOut ? ' <span style="color:#fa5;font-size:8px;">SAT OUT</span>' : ''}
+      ${login}${rosterSet.has(login) ? ' <span style="color:#8cf;font-size:8px;">ROSTER</span>' : ''}${isLive ? ` <span style="color:rgba(199,175,79,0.8);">${live[login].toLocaleString()}</span>` : ''}${onGrid ? ' <span style="color:#c7af4f;font-size:8px;">ON GRID</span>' : ''}${satOut ? ' <span style="color:#fa5;font-size:8px;">SAT OUT</span>' : ''}
+      <span style="display:inline-flex;gap:2px;margin-left:2px;">
+        <span onclick="liveGridAssignEventFeed('${login}')" title="Lock as EVENT feed Q1" style="cursor:pointer;color:#c7af4f;font-size:8px;padding:0 2px;">E</span>
+        ${[2,3,4].map(n => `<span onclick="liveGridAssignChannel(${n},'${login}')" title="Lock Q${n}" style="cursor:pointer;color:rgba(199,175,79,0.75);font-size:8px;padding:0 2px;">${n}</span>`).join('')}
+      </span>
       ${satOut ? `<span onclick="liveGridReAddBench('${login}')" title="Re-admit to the grid" style="cursor:pointer;color:#5c8;font-weight:700;padding:0 2px;">+</span>` : ''}
       <span onclick="liveGridRemoveBench('${login}')" title="Remove from bench" style="cursor:pointer;color:rgba(255,120,120,0.7);font-weight:700;padding:0 2px;">×</span>
     </span>`;
@@ -9615,19 +9691,32 @@ function liveGridRender() {
   ).join('');
 
   const musicFlags = audio.musicFlags || [];
+  const eventFeed = s.program && s.program.layout && s.program.layout.eventFeed;
+  const lockByQ = {};
+  (s.operatorLocks || []).forEach(l => { if (l && l.quadrant) lockByQ[l.quadrant] = l; });
   quadsEl.innerHTML = (s.quadrants || []).map(q => {
     const onAir = audio.quadrant === q.quadrant;
-    const login = q.login;
-    const viewers = login && live[login] != null ? live[login].toLocaleString() : '';
+    const locked = !!lockByQ[q.quadrant];
+    const slug = q.channelSlug || q.login || (q.feedUrl ? (function () {
+      try { return new URL(q.feedUrl).pathname.split('/').filter(Boolean).pop(); } catch (_) { return null; }
+    })() : null);
+    const primary = q.displayName || (q.login ? q.login.toUpperCase() : (q.label && slug ? `${q.label} · ${slug}` : (q.label || (q.feedUrl ? 'FEED' : 'SLATE'))));
+    const viewers = slug && live[slug] != null ? live[slug].toLocaleString() : '';
+    const subline = viewers ? `${viewers} viewers` : (q.quadrant === 1 && eventFeed && eventFeed.title ? eventFeed.title.slice(0, 55) : (q.feedUrl ? q.feedUrl.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48) : '&nbsp;'));
     const music = !!musicFlags[q.quadrant - 1];
-    return `<div onclick="${login ? `liveGridAudio(${q.quadrant})` : ''}" title="${login ? (music ? 'Music detected — claims risk if put on air' : 'Click to put this quadrant on air') : 'Slate'}"
-      style="cursor:${login ? 'pointer' : 'default'};position:relative;padding:8px;border-radius:4px;background:#0d1524;
-      border:1px solid ${onAir ? '#c7af4f' : music ? 'rgba(255,120,120,0.4)' : 'rgba(199,175,79,0.2)'};${onAir ? 'box-shadow:0 0 6px rgba(199,175,79,0.4);' : ''}">
-      ${login ? `<span onclick="event.stopPropagation();liveGridRemoveFromGrid('${login}')" title="Remove from grid — back to the bench (re-add to re-admit)"
-        style="position:absolute;top:4px;right:6px;cursor:pointer;color:rgba(255,120,120,0.7);font-weight:700;font-size:12px;line-height:1;">×</span>` : ''}
-      <div style="font-size:9px;color:rgba(255,255,255,0.35);">Q${q.quadrant} ${onAir ? (audio.muted ? '· 🔇 MUTED' : '· 🔊 ON AIR') : ''}${music ? ' <span style="color:#e88;">🎵 MUSIC</span>' : ''}</div>
-      <div style="font-size:12px;font-weight:700;color:${login ? '#fff' : 'rgba(255,255,255,0.3)'};letter-spacing:0.5px;">${login ? login.toUpperCase() : 'SLATE'}</div>
-      <div style="font-size:9px;color:rgba(199,175,79,0.8);">${viewers ? viewers + ' viewers' : '&nbsp;'}</div>
+    const hasSource = !!(q.login || q.feedUrl || q.filePath);
+    const canAudio = hasSource;
+    const retryHint = q.login && !live[q.login] ? ' <span style="color:#e88;">⚠ offline — retrying</span>' : '';
+    const unlockBtn = locked ? `<span onclick="event.stopPropagation();liveGridUnlockQuad(${q.quadrant})" title="Release lock — auto-fill again" style="position:absolute;top:4px;right:6px;cursor:pointer;color:#c7af4f;font-size:11px;">🔓</span>` : '';
+    return `<div onclick="${canAudio ? `liveGridAudio(${q.quadrant})` : ''}" title="${canAudio ? (music ? 'Music detected — claims risk if put on air' : 'Click to put this quadrant on air') : 'Slate'}"
+      style="cursor:${canAudio ? 'pointer' : 'default'};position:relative;padding:8px;border-radius:4px;background:#0d1524;
+      border:1px solid ${onAir ? '#c7af4f' : locked ? 'rgba(199,175,79,0.55)' : music ? 'rgba(255,120,120,0.4)' : 'rgba(199,175,79,0.2)'};${onAir ? 'box-shadow:0 0 6px rgba(199,175,79,0.4);' : ''}">
+      ${q.login && !locked ? `<span onclick="event.stopPropagation();liveGridRemoveFromGrid('${q.login}')" title="Remove from grid — back to the bench (re-add to re-admit)"
+        style="position:absolute;top:4px;right:6px;cursor:pointer;color:rgba(255,120,120,0.7);font-weight:700;font-size:12px;line-height:1;">×</span>` : unlockBtn}
+      ${locked ? '<span style="position:absolute;top:4px;left:6px;font-size:10px;" title="Operator lock">🔒</span>' : ''}
+      <div style="font-size:9px;color:rgba(255,255,255,0.35);">Q${q.quadrant} ${onAir ? (audio.muted ? '· 🔇 MUTED' : '· 🔊 ON AIR') : ''}${music ? ' <span style="color:#e88;">🎵 MUSIC</span>' : ''}${retryHint}</div>
+      <div style="font-size:12px;font-weight:700;color:${hasSource ? '#fff' : 'rgba(255,255,255,0.3)'};letter-spacing:0.5px;padding-left:${locked ? '14px' : '0'};">${primary}</div>
+      <div style="font-size:9px;color:rgba(199,175,79,0.8);">${subline}</div>
     </div>`;
   }).join('');
 }
@@ -9698,19 +9787,44 @@ async function liveGridReAddBench(login) {
 }
 
 async function liveGridRemoveFromGrid(login) {
-  // CPD-1001: kick a grid occupant (roster or bench) back to the bench. They
-  // sit out until re-added — otherwise a big streamer reclaims the quad in
-  // minutes, defeating the point (e.g. duo streams = duplicate content).
-  if (!confirm(`Remove ${login} from the grid? They go back to the bench and sit out until you re-add them.`)) return;
+  const s = _lgStatus || {};
+  const qRec = (s.quadrants || []).find(x => x.login === login);
+  const qNum = qRec ? qRec.quadrant : null;
+  const follows = (s.poller && s.poller.allFollows && s.poller.allFollows.length)
+    ? s.poller.allFollows
+    : ((s.poller && s.poller.benchFollows) || []);
+  const live = (s.poller && s.poller.live) || {};
+  const liveFollows = follows.filter(f => live[f] != null).slice(0, 12);
+  let msg = `Remove ${login} from Q${qNum || '?'}?\n\n`;
+  if (liveFollows.length) msg += `Live follows (type one to replace):\n${liveFollows.join(', ')}\n\n`;
+  msg += 'Replacement twitch login (blank = slate until you pick):';
+  const rep = prompt(msg);
+  if (rep === null) return;
   try {
     const r = await fetch(LG_BASE + '/live-grid/roster', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ remove: [login] }),
     });
     const d = await r.json();
-    if (!d.ok) alert('Remove failed: ' + (d.error || 'unknown'));
+    if (!d.ok) { alert('Remove failed: ' + (d.error || 'unknown')); return; }
+    const next = String(rep || '').trim().toLowerCase();
+    if (next && qNum) await liveGridAssignChannel(qNum, next);
   } catch (e) { alert('Remove failed: ' + e.message); }
-  setTimeout(liveGridRefresh, 3000);
+  setTimeout(liveGridRefresh, 1500);
+}
+
+async function liveGridToggleOperatorMode() {
+  const s = _lgStatus || {};
+  const on = !!(s.poller && s.poller.operatorMode);
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/operator-mode', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: !on }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert(d.error || 'Toggle failed');
+  } catch (e) { alert(e.message); }
+  setTimeout(liveGridRefresh, 500);
 }
 
 async function liveGridRemoveBench(login) {
@@ -9724,6 +9838,40 @@ async function liveGridRemoveBench(login) {
     if (!d.ok) alert('Bench remove failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Bench remove failed: ' + e.message); }
   setTimeout(liveGridRefresh, 3000);
+}
+
+async function liveGridAssignChannel(quadrant, login) {
+  try {
+    const r = await fetch(LG_BASE + `/live-grid/quadrant/${quadrant}/channel`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('Assign failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Assign failed: ' + e.message); }
+  setTimeout(liveGridRefresh, 800);
+}
+
+async function liveGridAssignEventFeed(login) {
+  const url = `https://www.twitch.tv/${String(login).toLowerCase()}`;
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/quadrant/1/url', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, label: 'EVENT', login }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('Event feed failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Event feed failed: ' + e.message); }
+  setTimeout(liveGridRefresh, 800);
+}
+
+async function liveGridUnlockQuad(quadrant) {
+  try {
+    const r = await fetch(LG_BASE + `/live-grid/quadrant/${quadrant}/unlock`, { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) alert('Unlock failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Unlock failed: ' + e.message); }
+  setTimeout(liveGridRefresh, 1500);
 }
 
 liveGridRefresh();

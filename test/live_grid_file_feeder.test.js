@@ -56,4 +56,42 @@ describe('live_grid file feeder', () => {
     feeders.stopAll();
     fs.unlinkSync(allowed);
   });
+
+  test('setQuadrantUrl rejects blocked ESPN URLs', () => {
+    const feeders = new QuadrantFeeders({ log: () => {} });
+    expect(() => feeders.setQuadrantUrl(0, 'https://www.espn.com/watch/foo', 'ESPN')).toThrow(/not allowlisted/);
+  });
+
+  test('setQuadrantUrl records url kind in status', () => {
+    const feeders = new QuadrantFeeders({ log: () => {} });
+    feeders.setQuadrantUrl(0, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'EVENT');
+    const st = feeders.status()[0];
+    expect(st.kind).toBe('url');
+    expect(st.feedUrl).toContain('youtube.com');
+    expect(st.displayName).toBe('EVENT · watch');
+    expect(st.channelSlug).toBe('watch');
+    feeders.stopAll();
+  });
+
+  test('setQuadrantUrl twitch feed shows EVENT · channel', () => {
+    const feeders = new QuadrantFeeders({ log: () => {} });
+    feeders.setQuadrantUrl(0, 'https://www.twitch.tv/ishowspeed', 'EVENT');
+    const st = feeders.status()[0];
+    expect(st.displayName).toBe('EVENT · ishowspeed');
+    expect(st.channelSlug).toBe('ishowspeed');
+    feeders.stopAll();
+  });
+
+  test('applySources routes url objects to setQuadrantUrl', () => {
+    const feeders = new QuadrantFeeders({ log: () => {} });
+    feeders.applySources([
+      { type: 'url', url: 'https://www.twitch.tv/eslcs', label: 'EVENT' },
+      'someone',
+      null,
+      null,
+    ]);
+    expect(feeders.status()[0].kind).toBe('url');
+    expect(feeders.status()[1].login).toBe('someone');
+    feeders.stopAll();
+  });
 });

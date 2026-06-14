@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
- * ClipzWorld TV — standalone runner (CPD-957)
+ * ClipzWorld TV — standalone runner (CPD-957) — LEGACY
  *
- * Runs the loop channel without the C0 server, for when the server can't be
- * restarted (e.g. the Live Grid is broadcasting). Once the server restarts,
- * stop this and use the /live-tv endpoints instead — never run both.
+ * Prefer pm2 process `broadcast-sidecar` (scripts/live_broadcast_sidecar.js).
+ * It survives auraflux restarts during code deploys. This runner is only for
+ * emergencies when the sidecar is down.
  *
  *   node scripts/live_tv_runner.js [--shuffle]
+ *
+ * Never run this AND broadcast-sidecar at the same time.
  */
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });

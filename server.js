@@ -1265,7 +1265,7 @@ pipelineBus.on('assembly:drive_url', ({ jobId, driveUrl }) => {
 // CPD-936: assembly held Gate 5 for a scheduled publish — persist the hold state
 // (stage/driveUrl/publishCopy/thumbnail) so a restart during the hold window
 // doesn't strand the job (cron used to fire with no driveUrl on the reloaded card).
-pipelineBus.on('gate5:scheduled_hold', ({ jobId, driveUrl, scheduledAt, publishCopy, thumbnailDriveUrl }) => {
+pipelineBus.on('gate5:scheduled_hold', ({ jobId, driveUrl, scheduledAt, publishCopy, thumbnailDriveUrl, nativeScheduledPublish }) => {
   if (!jobId) return;
   const card = persistedJobs[jobId];
   if (!card) {
@@ -1274,7 +1274,8 @@ pipelineBus.on('gate5:scheduled_hold', ({ jobId, driveUrl, scheduledAt, publishC
   }
   card.stage = 'publish_scheduled';
   if (driveUrl) card.driveUrl = driveUrl;
-  if (scheduledAt) card.scheduledPublishAt = scheduledAt;
+  if (scheduledAt)   card.scheduledPublishAt = scheduledAt;
+  if (nativeScheduledPublish) card.nativeScheduledPublish = true;
   card.state = card.state || {};
   card.state.savedOutputs = card.state.savedOutputs || {};
   if (driveUrl) card.state.savedOutputs.driveUrl = driveUrl;
@@ -1287,7 +1288,23 @@ pipelineBus.on('gate5:scheduled_hold', ({ jobId, driveUrl, scheduledAt, publishC
     card.state.savedOutputs.thumbnailDriveUrl = thumbnailDriveUrl;
   }
   saveJobCard(jobId, card);
-  console.log(`[gate5:scheduled_hold] Persisted hold state for ${jobId} (driveUrl=${!!driveUrl}, publishCopy=${!!publishCopy}, due=${scheduledAt})`);
+  console.log(`[gate5:scheduled_hold] Persisted hold state for ${jobId} (driveUrl=${!!driveUrl}, publishCopy=${!!publishCopy}, due=${scheduledAt}, native=${!!nativeScheduledPublish})`);
+});
+
+pipelineBus.on('publish:complete', async ({ jobId }) => {
+  if (!jobId) return;
+  const card = persistedJobs[jobId];
+  if (!card) return;
+  try {
+    const { applyLiveAlsoHooks } = require('./lib/calendar/live_also');
+    const baseUrl = process.env.LIVE_SIDECAR_URL || `http://127.0.0.1:${process.env.LIVE_SIDECAR_PORT || 3001}`;
+    const result = await applyLiveAlsoHooks({ jobId, card, baseUrl });
+    if (result.applied?.length) {
+      console.log(`[liveAlso] ${jobId}: applied → ${result.applied.join(', ')}`);
+    }
+  } catch (e) {
+    console.warn(`[liveAlso] ${jobId}: hook failed — ${e.message}`);
+  }
 });
 
 pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
@@ -2520,9 +2537,18 @@ app.post('/job/:id/schedule', (req, res) => {
 
 // ---------------------------------------------------------------------------
 // Live Grid (CPD-940/CPD-946) — 4-quadrant Twitch mosaic → YouTube Live
+// When LIVE_BROADCAST_SIDECAR=on, ffmpeg runs in pm2 process broadcast-sidecar.
 // ---------------------------------------------------------------------------
+const sidecarClient = require('./lib/broadcast/sidecar_client');
+const USE_BROADCAST_SIDECAR = sidecarClient.isEnabled();
+if (USE_BROADCAST_SIDECAR) {
+  sidecarClient.mountProxy(app);
+  console.log(`[broadcast] sidecar mode — TV/Grid ffmpeg on ${sidecarClient.sidecarBaseUrl()} (auraflux restarts won't drop streams)`);
+}
+
 let liveGridManager = null;
 
+if (!USE_BROADCAST_SIDECAR) {
 // POST /live-grid/start { privacyStatus?, title?, roster?, bench?, exclude?, output?,
 //   programMode?, eventFile?, eventTitle?, headline?, fileOverrides? }
 app.post('/live-grid/start', async (req, res) => {
@@ -2550,6 +2576,8 @@ app.post('/live-grid/stop', async (req, res) => {
   liveGridManager = null;
   res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
 });
+
+} // end !USE_BROADCAST_SIDECAR (grid start/stop on main)
 
 // --- Twitch user OAuth (CPD-953) — one-time connect so the grid can read
 // Rob's followed channels (user:read:follows) and use them as the bench. ---
@@ -2635,13 +2663,25 @@ app.post('/connect/twitch/token', async (req, res) => {
 
 // GET /live-grid/followed-bench — preview the bench the next stream would use
 app.get('/live-grid/followed-bench', async (req, res) => {
-  const { getFollowedBench, FOLLOWS_USER } = require('./lib/live_grid/follows');
+  const { getFollowedBench, getAllFollows, FOLLOWS_USER, loadUserToken } = require('./lib/live_grid/follows');
   const { DEFAULT_ROSTER } = require('./lib/live_grid/poller');
+  const all = await getAllFollows();
   const bench = await getFollowedBench({ roster: DEFAULT_ROSTER });
-  if (!bench) return res.status(400).json({ ok: false, error: `No Twitch user token (or expired) — connect at /connect/twitch as ${FOLLOWS_USER}` });
-  res.json({ ok: true, user: FOLLOWS_USER, count: bench.length, bench });
+  if (!all && !bench) {
+    return res.status(400).json({ ok: false, error: `No Twitch user token (or expired) — connect at /connect/twitch as ${FOLLOWS_USER}` });
+  }
+  const tokenUser = loadUserToken()?.login || FOLLOWS_USER;
+  res.json({
+    ok: true,
+    user: tokenUser,
+    count: (all || bench || []).length,
+    follows: all || [],
+    bench: bench || [],
+    roster: DEFAULT_ROSTER,
+  });
 });
 
+if (!USE_BROADCAST_SIDECAR) {
 // POST /live-grid/roster { add?, remove?, benchAdd?, benchRemove? } — mutate the
 // running grid's streamer lists on demand (CPD-951); next 60s poll applies it.
 // Bench streamers only fill quadrants the A-roster can't and are preempted
@@ -2687,6 +2727,7 @@ app.get('/live-grid/program/status', (req, res) => {
         title: layout.title,
         sources: layout.sources,
         filePaths: layout.filePaths,
+        eventFeed: layout.eventFeed || liveGridManager?._eventFeed || null,
         activeEvent: layout.activeEvent,
       } : null,
     });
@@ -2706,6 +2747,33 @@ app.post('/live-grid/quadrant/:n/file', (req, res) => {
     res.json({ ok: true, quadrant });
   } catch (e) {
     res.status(400).json({ ok: false, error: e.message });
+  }
+});
+
+} // end !USE_BROADCAST_SIDECAR (grid control routes)
+
+// GET /live-grid/event-feed/preview — pick allowlisted live feed for event_night (CPD-1030)
+app.get('/live-grid/event-feed/preview', async (req, res) => {
+  try {
+    const { resolveActiveEvent } = require('./lib/live_grid/event_calendar');
+    const { pickEventFeed } = require('./lib/live_grid/event_feed_picker');
+    const { loadFeedSources } = require('./lib/live_grid/feed_allowlist');
+    const activeEvent = resolveActiveEvent();
+    const eventId = req.query.eventId || activeEvent?.eventId;
+    const feed = await pickEventFeed({
+      eventId,
+      eventTitle: activeEvent?.eventTitle,
+      activeEvent: activeEvent ? { ...activeEvent, eventId: eventId || activeEvent.eventId } : null,
+    });
+    res.json({
+      ok: true,
+      activeEvent,
+      feed,
+      configPath: process.env.LIVE_GRID_FEED_SOURCES || 'config/live_grid_feed_sources.json',
+      spec: eventId ? loadFeedSources().events?.[eventId] : null,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
@@ -2805,8 +2873,11 @@ app.post('/calendar/override', (req, res) => {
 // GET /calendar/eligible-jobs?contentType=news — assembled jobs ready to schedule to a slot
 app.get('/calendar/eligible-jobs', (req, res) => {
   try {
-    const { listEligibleJobs } = require('./lib/calendar/slot_jobs');
-    const jobs = listEligibleJobs(persistedJobs, req.query.contentType);
+    const { listEligibleJobs, findSlotConfig } = require('./lib/calendar/slot_jobs');
+    const slot = req.query.slotId ? findSlotConfig(req.query.slotId) : null;
+    const jobs = listEligibleJobs(persistedJobs, req.query.contentType, {
+      alternateTypes: slot?.alternateTypes,
+    });
     res.json({ ok: true, jobs });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
@@ -2854,7 +2925,7 @@ app.get('/broadcast/content-board', (req, res) => {
 });
 
 // GET /broadcast/ops — pipeline + stream safety snapshot (CPD-1028)
-app.get('/broadcast/ops', (req, res) => {
+app.get('/broadcast/ops', async (req, res) => {
   try {
     const { buildOpsSnapshot } = require('./lib/broadcast/ops');
     const health = {
@@ -2863,12 +2934,28 @@ app.get('/broadcast/ops', (req, res) => {
       gitBranch: BUILD_INFO.gitBranch,
       uptime: process.uptime(),
     };
+    let gridRunning = !!liveGridManager?.running;
+    let tvRunning = !!liveTvManager?.running;
+    let sidecar = null;
+    if (USE_BROADCAST_SIDECAR) {
+      try {
+        sidecar = await sidecarClient.getStatus();
+        gridRunning = sidecar.gridRunning;
+        tvRunning = sidecar.tvRunning;
+      } catch (_) {}
+    }
     res.json({
       ok: true,
+      broadcastSidecar: USE_BROADCAST_SIDECAR ? {
+        url: sidecarClient.sidecarBaseUrl(),
+        reachable: sidecar?.sidecarReachable ?? false,
+        tvRunning,
+        gridRunning,
+      } : null,
       ...buildOpsSnapshot({
         persistedJobs,
-        gridRunning: !!liveGridManager?.running,
-        tvRunning: !!liveTvManager?.running,
+        gridRunning,
+        tvRunning,
         health,
       }),
     });
@@ -2889,6 +2976,8 @@ app.post('/broadcast/24h-arm', (req, res) => {
 
 // ---------------------------------------------------------------------------
 let liveTvManager = null;
+
+if (!USE_BROADCAST_SIDECAR) {
 
 function resolveLiveTvStartOpts(body = {}) {
   const opts = { ...body };
@@ -3009,16 +3098,21 @@ app.get('/live-tv/status', (req, res) => {
   res.json({ ok: true, ...liveTvManager.status() });
 });
 
-// CPD-958: the channel programs itself — every successful Gate 5 publish
-// auto-appends the produced video to a running ClipzWorld TV rotation.
-// (isPlayable inside enqueue() still applies the takedown shield: clips-only
-// comps / clip shorts / grid recordings are refused.)
+} // end !USE_BROADCAST_SIDECAR (live-tv routes on main)
+
+// CPD-958: auto-enqueue published videos into ClipzWorld TV rotation
 function tvAutoEnqueue(jobId) {
   try {
-    if (!liveTvManager?.running || liveTvManager.curated) return;
     const card = persistedJobs[jobId];
     const file = card?.outputPath || card?.state?.savedOutputs?.outputPath || null;
     if (!file) return;
+
+    if (USE_BROADCAST_SIDECAR) {
+      sidecarClient.request('POST', '/live-tv/enqueue', { file }).catch(() => {});
+      return;
+    }
+
+    if (!liveTvManager?.running || liveTvManager.curated) return;
     if (liveTvManager.enqueue(file)) {
       console.log(`[live-tv] ${jobId}: published video auto-enqueued into the rotation`);
     }

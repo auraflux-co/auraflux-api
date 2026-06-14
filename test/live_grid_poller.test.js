@@ -132,6 +132,14 @@ describe('live_grid bench tier (CPD-951)', () => {
     expect(swaps).toContainEqual({ quadrant: 3, out: null, in: 'a', reason: 'fill' });
     expect(swaps).toContainEqual({ quadrant: 2, out: 'z', in: 'b', reason: 'roster_priority' });
   });
+
+  test('operator mode only drops offline — no auto fill or swaps', () => {
+    const current = ['a', 'b', 'c', 'd'];
+    const live = { b: 50, c: 40, d: 30 };
+    const { assignments, swaps } = computeAssignments(current, live, {}, { operatorMode: true });
+    expect(assignments).toEqual([null, 'b', 'c', 'd']);
+    expect(swaps).toEqual([{ quadrant: 0, out: 'a', in: null, reason: 'offline' }]);
+  });
 });
 
 describe('live_grid mergeBench (CPD-955 live follows sync)', () => {

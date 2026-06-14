@@ -28,6 +28,29 @@ module.exports = {
       env_production: { ROO_WATCHER: 'true' },
     },
     {
+      name: 'broadcast-sidecar',
+      script: 'scripts/live_broadcast_sidecar.js',
+      cwd: __dirname,
+      interpreter: 'node',
+      watch: false,
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 3000,
+      out_file: 'logs/broadcast_sidecar.log',
+      error_file: 'logs/broadcast_sidecar.log',
+      merge_logs: true,
+      env: {
+        NODE_ENV: 'development',
+        LIVE_SIDECAR_PORT: 3001,
+        LIVE_BROADCAST_SIDECAR: 'on',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        LIVE_SIDECAR_PORT: 3001,
+        LIVE_BROADCAST_SIDECAR: 'on',
+      },
+    },
+    {
       name: 'auraflux',
       script: 'server.js',
       watch: false,  // nodemon handles dev watching — PM2 watch off in production

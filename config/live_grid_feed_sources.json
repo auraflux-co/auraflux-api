@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "updated": "2026-06-13",
+  "notes": "Allowlisted live feeds for event_night Q0 — YouTube/Twitch/Kick/Trovo/DLive/Rumble/CHZZK/Nimo + NASA. No raw ESPN/AP/Reuters wire.",
+  "blockedUrlPatterns": [
+    "espn.com/watch",
+    "espn.com/live",
+    "reuters.com/video",
+    "apnews.com/video",
+    "associatedpress.com/video",
+    "dazn.com",
+    "peacocktv.com/watch"
+  ],
+  "allowedHostPatterns": [
+    "youtube.com",
+    "youtu.be",
+    "twitch.tv",
+    "m.twitch.tv",
+    "kick.com",
+    "trovo.live",
+    "dlive.tv",
+    "rumble.com",
+    "chzzk.naver.com",
+    "nimo.tv",
+    "nasa.gov"
+  ],
+  "platformPins": {
+    "kick": ["ishowspeed", "xqc", "trainwreckstv", "adinross", "lacy", "n3on"],
+    "trovo": ["Shroud", "TrovoGaming"],
+    "dlive": ["IcePoseidon"],
+    "rumble": ["Timcast", "Vince"],
+    "chzzk": [],
+    "nimo": []
+  },
+  "events": {
+    "sports_watchalong": {
+      "label": "Sports watch-along",
+      "kickPins": ["ishowspeed", "lacy", "xqc"],
+      "twitchPins": ["eslcs", "eslcsb", "lcs", "valorant", "rocketleague"],
+      "twitchGames": ["EA Sports FC 26", "Sports", "Counter-Strike", "League of Legends"],
+      "youtubeQueries": [
+        "fifa world cup 2026 live english",
+        "football live match english",
+        "soccer live stream english"
+      ],
+      "youtubeChannels": []
+    },
+    "esports_grand_final": {
+      "label": "Esports grand final",
+      "twitchPins": ["eslcs", "eslcsb", "valorant", "leagueoflegends", "rocketleague", "riotgames", "lcs"],
+      "twitchGames": ["Counter-Strike", "VALORANT", "League of Legends", "Rocket League"],
+      "youtubeQueries": [
+        "valorant masters live",
+        "league of legends esports live",
+        "cs2 major live english"
+      ],
+      "youtubeChannels": []
+    },
+    "gaming_showcase": {
+      "label": "Gaming showcase",
+      "twitchPins": ["nintendo", "playstation", "xbox"],
+      "youtubeQueries": [
+        "Nintendo Direct live",
+        "Xbox showcase live",
+        "Summer Game Fest live"
+      ],
+      "youtubeChannels": []
+    },
+    "space_launch": {
+      "label": "Space launch",
+      "twitchPins": ["nasaspaceflight"],
+      "youtubeQueries": [
+        "SpaceX launch live",
+        "NASA live stream",
+        "Starship launch live"
+      ],
+      "youtubeChannels": [
+        { "id": "UC0RyV8kE2k", "label": "NASASpaceflight" }
+      ]
+    },
+    "weather_disaster": {
+      "label": "Weather / disaster",
+      "twitchPins": ["weatherchannel"],
+      "youtubeQueries": [
+        "tornado coverage live",
+        "hurricane live stream english",
+        "severe weather live"
+      ],
+      "youtubeChannels": [
+        { "id": "UCkx3i32L0p5lK98T48vE3Q", "label": "Ryan Hall Y'all" }
+      ]
+    }
+  },
+  "fallbackEventId": "sports_watchalong"
+}

@@ -1,4 +1,5 @@
 const { parseWindow, inWindow, windowKey, decide, nextBoundary } = require('../lib/services/stream_scheduler');
+const { inPrepareWindow } = require('../lib/live_grid/prepared_broadcast');
 
 const TV = { start: 12 * 60, end: 18 * 60 };     // 12pm–6pm same-day
 const GRID = { start: 18 * 60, end: 3 * 60 };    // 6pm–3am overnight
@@ -107,5 +108,12 @@ describe('nextBoundary', () => {
   });
   test('overnight wrap', () => {
     expect(nextBoundary(at(4 * 60), GRID)).toEqual({ action: 'start', inMinutes: 14 * 60 });
+  });
+});
+
+describe('schedule-ahead prepare window (live-grid)', () => {
+  test('aligns with stream_scheduler grid window', () => {
+    expect(inPrepareWindow(17 * 60 + 45, GRID)).toBe(true);
+    expect(inPrepareWindow(18 * 60, GRID)).toBe(false);
   });
 });

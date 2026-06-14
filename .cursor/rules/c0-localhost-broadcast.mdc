@@ -1,0 +1,70 @@
+---
+description: C0 localhost — Rob uses dashboard only; agents deploy without killing live streams
+alwaysApply: true
+---
+
+# C0 localhost — live streams + deploy
+
+## What Rob does (dashboard only)
+
+- **Dashboard:** http://localhost:3000/ — Broadcast tab (TV/Grid), Calendar (schedule)
+- Start/stop streams from the UI — same buttons as before
+- If Twitch goes offline: Broadcast → start ClipzWorld TV again (or wait for scheduler). Not operator error — usually a bad agent restart before sidecar existed
+- **Owner calendar PIN:** `1010` (overrides only)
+- Rob does **not** run terminals — agents run all commands
+
+When an agent says "deploy" or "restart server", Rob says:
+
+> Use `bash scripts/deploy_c0.sh` only — do not restart broadcast-sidecar.
+
+## Two pm2 processes
+
+| Process | Role | Agent may restart? |
+|---------|------|-------------------|
+| `broadcast-sidecar` | Twitch TV + YouTube Live ffmpeg | **NO** while on air (unless intentionally stopping streams) |
+| `auraflux` | Dashboard + pipeline API | **YES** via `deploy_c0.sh` when loading new code |
+
+With sidecar running, streams **survive** an `auraflux` restart.
+
+## Code deploys / new routes
+
+```bash
+bash scripts/deploy_c0.sh
+```
+
+- Restarts **auraflux only**; checks sidecar health first
+- **NEVER** `pm2 restart all`
+- **NEVER** `pm2 restart broadcast-sidecar` (kills live ffmpeg mid-stream)
+- **NEVER** raw `pm2 restart auraflux` during live stream **without** sidecar running (old behavior — stream dies)
+
+`safe_restart.sh` = full auraflux restart when pipeline is idle (no assembly). Sidecar-owned streams still survive if sidecar is up.
+
+## ClipzWorld TV
+
+Transformative VOD loop only (Bobby G + news). **Not** raw Twitch grid rebroadcast.
+
+## If Twitch is offline
+
+1. Confirm `broadcast-sidecar` is online (`pm2 list`)
+2. Start TV from **Broadcast** dashboard (curated ~1hr preset)
+3. Do **not** restart sidecar unless starting fresh
+
+Rob checks Twitch/dashboard only. Agent runs the steps above.
+
+## End of session
+
+```bash
+# cwn-c0 work:
+bash scripts/aider_session_review_local.sh
+
+# always (from cwn-production repo):
+bash scripts/session_close.sh
+```
+
+## Agent must NOT
+
+| Don't | Why |
+|-------|-----|
+| `pm2 restart all` | Can kill sidecar and drop Twitch |
+| `pm2 restart broadcast-sidecar` | Kills live ffmpeg mid-stream |
+| Ask Rob to restart, edit `.env`, or run `curl` | Dashboard-only operator |

@@ -50,16 +50,25 @@ describe('live_grid program director', () => {
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 
-  test('buildQuadrantSources event_night keeps co-streams on Q1-Q3', () => {
+  test('buildQuadrantSources event_night keeps co-streams on Q2-Q4', () => {
     const config = loadPrograms(path.join(__dirname, '..', 'config', 'live_grid_programs.json'));
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lg-event-'));
     const event = path.join(tmp, 'wc_final.mp4');
     fs.writeFileSync(event, 'fake');
     const poller = ['a', 'b', 'c', 'd'];
-    const { sources } = buildQuadrantSources('event_night', config, poller, { event_primary: event });
+    const { sources } = buildQuadrantSources('event_night', config, poller, { event_primary: event }, {});
     expect(sources[0]).toEqual({ type: 'file', path: event, label: 'EVENT' });
-    expect(sources.slice(1)).toEqual(['b', 'c', 'd']);
+    expect(sources.slice(1)).toEqual(['a', 'b', 'c']);
     fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test('buildQuadrantSources event_night feed url maps co-streams from poller slot 0', () => {
+    const config = loadPrograms(path.join(__dirname, '..', 'config', 'live_grid_programs.json'));
+    const poller = ['lacy', 'hasanabi', 'extraemily', 'strogo'];
+    const feed = { url: 'https://www.twitch.tv/ishowspeed', title: 'World Cup', channel: 'ishowspeed' };
+    const { sources } = buildQuadrantSources('event_night', config, poller, {}, { event_feed: feed });
+    expect(sources[0].url).toContain('ishowspeed');
+    expect(sources.slice(1)).toEqual(['lacy', 'hasanabi', 'extraemily']);
   });
 
   test('formatTitle substitutes mode variables', () => {

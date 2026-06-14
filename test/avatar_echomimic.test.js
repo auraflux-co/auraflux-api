@@ -149,9 +149,23 @@ describe('getSegmentStatus', () => {
 });
 
 describe('speech chunking', () => {
-  test('mergeTagOnlyChunks attaches tag-only slices to previous chunk', () => {
+  test('mergeTagOnlyChunks attaches trailing tag-only to previous chunk', () => {
     const merged = echomimic._mergeTagOnlyChunks(['Hello world.', '[excited]', 'Next line.']);
     expect(merged).toEqual(['Hello world. [excited]', 'Next line.']);
+  });
+
+  test('mergeTagOnlyChunks attaches leading tag-only to next chunk', () => {
+    const merged = echomimic._mergeTagOnlyChunks(['[excited]', 'Jason was surrounded by fans.']);
+    expect(merged).toEqual(['[excited] Jason was surrounded by fans.']);
+  });
+
+  test('mergeTagOnlyChunks handles trailing run of tag-only slices', () => {
+    const merged = echomimic._mergeTagOnlyChunks(['Hello.', '[beat]', '[pause]']);
+    expect(merged).toEqual(['Hello. [beat] [pause]']);
+  });
+
+  test('mergeTagOnlyChunks drops orphan tag-only with no speakable neighbor', () => {
+    expect(echomimic._mergeTagOnlyChunks(['[beat]', '[pause]'])).toEqual([]);
   });
 
   test('prepareTextChunksForTts rejects chunks with no speakable text', () => {
@@ -162,6 +176,24 @@ describe('speech chunking', () => {
     const chunks = echomimic._prepareTextChunksForTts('[excited] Jason just dropped a bomb.', 3);
     expect(chunks.length).toBeGreaterThan(0);
     expect(echomimic._speakablePlain(chunks[0])).toMatch(/Jason/);
+  });
+
+  test('prepareTextChunksForTts preserves leading tags on first window of long sentence', () => {
+    const long = '[curious] ' + 'word '.repeat(20).trim() + '.';
+    const chunks = echomimic._prepareTextChunksForTts(long, 3);
+    expect(chunks[0]).toMatch(/^\[curious\]/);
+    expect(echomimic._speakablePlain(chunks[0])).toMatch(/word/);
+  });
+
+  test('prepareTextChunksForTts does not split <break/> tags across word windows', () => {
+    const text = 'Jason was surrounded by fans, many wearing United States flag apparel. <break time="0.5s"/> He found himself face-to-face with a fellow internet personality.';
+    const maxSec = (81 - 1) / 25 - 0.15;
+    const chunks = echomimic._prepareTextChunksForTts(text, maxSec);
+    for (const chunk of chunks) {
+      expect(chunk).not.toMatch(/^<break time="0\.$/);
+      expect(echomimic._speakablePlain(chunk).length).toBeGreaterThan(0);
+    }
+    expect(chunks.some((c) => c.includes('<break time="0.5s"/>'))).toBe(true);
   });
 });
 
