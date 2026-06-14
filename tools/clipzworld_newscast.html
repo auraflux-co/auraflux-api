@@ -326,8 +326,24 @@ body {
   color: rgba(255,255,255,0.75);
 }
 
-/* Fix 5a — Static 5-card cap: cards 6+ are never shown (no rotation logic) */
-.story-list .story-item:nth-child(n+6) {
+/* Pagination: items hidden by default; paginateSidebar() shows the active window */
+.story-list .story-item {
+  display: none;
+}
+.story-list .story-item.in-window {
+  display: flex;
+}
+
+/* Page indicator: "3 / 8" counter below sidebar when list overflows window */
+.sidebar-page-indicator {
+  position: absolute;
+  width: 420px;
+  right: 32px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.45);
   display: none;
 }
 
@@ -405,6 +421,8 @@ body.baseline-0415 .story-item.active { background: rgba(34,48,75,0.95); }
 <!-- STORY LIST — populated dynamically by generateNewscastOverlay() via page.evaluate() -->
 <div class="story-list">
 </div>
+<!-- Page indicator — shown when total streamers > window size -->
+<div class="sidebar-page-indicator" id="sidebar-page-indicator"></div>
 
 <!-- LOGO -->
 <div class="cwn-logo-wrap">
@@ -456,6 +474,64 @@ var urlParams = new URLSearchParams(window.location.search);
 var activeStory = urlParams.get('activeStory');
 if (activeStory) {
   setActiveStory(parseInt(activeStory));
+}
+
+/**
+ * Sliding-window sidebar pagination.
+ *
+ * Shows a window of `windowSize` items centered on `activeIdx`, always keeping
+ * the active streamer visible. When total > windowSize a "n / total" indicator
+ * is shown so QA can see the current position in the full roster.
+ *
+ * Called by generateNewscastOverlay() via page.evaluate() after the story list
+ * is injected, and also on page load for browser preview use.
+ *
+ * @param {number} activeIdx  - 0-based index of the active streamer in allStories
+ * @param {number} [windowSize=5] - number of cards to show at once
+ */
+function paginateSidebar(activeIdx, windowSize) {
+  if (typeof windowSize === 'undefined') windowSize = 5;
+  var items = document.querySelectorAll('.story-list .story-item');
+  var total = items.length;
+
+  // Remove any previous window assignment
+  items.forEach(function(item) { item.classList.remove('in-window'); });
+
+  if (total === 0) return;
+
+  var safeActive = Math.max(0, Math.min(activeIdx, total - 1));
+
+  if (total <= windowSize) {
+    // All items fit — show all, hide indicator
+    items.forEach(function(item) { item.classList.add('in-window'); });
+    var ind = document.getElementById('sidebar-page-indicator');
+    if (ind) ind.style.display = 'none';
+    return;
+  }
+
+  // Center the window on the active item, clamped so we never go out of bounds
+  var half = Math.floor(windowSize / 2);
+  var windowStart = Math.max(0, Math.min(safeActive - half, total - windowSize));
+  var windowEnd = windowStart + windowSize;
+
+  items.forEach(function(item, i) {
+    if (i >= windowStart && i < windowEnd) {
+      item.classList.add('in-window');
+    }
+  });
+
+  // Position indicator just below the last visible item
+  var storyList = document.querySelector('.story-list');
+  var ind = document.getElementById('sidebar-page-indicator');
+  if (ind && storyList) {
+    var listRect = storyList.getBoundingClientRect();
+    // Each item is min-height 90px + 12px gap; approximate bottom of last visible item
+    var itemH = 90 + 12;
+    var indTop = 120 + (windowSize * itemH) - 12 + 6; // sidebar top + window height + small gap
+    ind.style.top = indTop + 'px';
+    ind.style.display = 'block';
+    ind.textContent = (safeActive + 1) + ' / ' + total;
+  }
 }
 
 // Optional: Listen for postMessage from parent (for OBS integration)

@@ -37,7 +37,7 @@ These are system-owned. Gemini never writes them. Scaffold pre-fills them. Gate 
 
 **TALK SOUP (Twitch / clips):**
 ```
-Welcome to Twitch Soup. I'm your host Bobby G, and for the next five minutes, I'll be your guide through the digital world that is livestreaming.
+Welcome to Twitch Soup. I'm your host Bobby G, and for the next few minutes, I'll be your guide through the digital world that is livestreaming.
 ```
 
 **OTHER SIDE OF THE PILLOW (NBA / sports):**

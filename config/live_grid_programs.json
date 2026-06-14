@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "timezone": "America/New_York",
+  "modes": {
+    "grid": {
+      "label": "Twitch multiview grid",
+      "titleTemplate": "🔴 LIVE: {streamers} — ClipzWorld Multiview",
+      "descriptionPrefix": "Four live streams on one screen — members pick audio with !listen 1-4.",
+      "quadrants": [
+        { "type": "twitch" },
+        { "type": "twitch" },
+        { "type": "twitch" },
+        { "type": "twitch" }
+      ]
+    },
+    "news_desk": {
+      "label": "ClipzWorld News desk",
+      "titleTemplate": "🔴 LIVE: ClipzWorld News Desk — {headline}",
+      "descriptionPrefix": "Live news desk with ClipzWorld produced coverage. Because the Light Was On + Twitch Soup.",
+      "headline": "Breaking & Analysis",
+      "quadrants": [
+        { "type": "file", "source": "produced_news", "label": "NEWS DESK" },
+        { "type": "file", "source": "produced_bump", "label": "CLIPZWORLD" },
+        { "type": "slate" },
+        { "type": "twitch" }
+      ]
+    },
+    "event_night": {
+      "label": "Sports / event watch party",
+      "titleTemplate": "🔴 LIVE: {eventTitle} — ClipzWorld Watch Party",
+      "descriptionPrefix": "Live event watch party — allowlisted feed on Q1 plus Twitch co-stream reactions.",
+      "eventTitle": "Live Event",
+      "quadrants": [
+        { "type": "feed", "source": "event_feed", "fileSource": "event_primary", "label": "EVENT" },
+        { "type": "twitch" },
+        { "type": "twitch" },
+        { "type": "twitch" }
+      ]
+    }
+  },
+  "schedule": [
+    {
+      "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+      "start": "18:00",
+      "end": "20:00",
+      "mode": "event_night"
+    },
+    {
+      "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+      "start": "20:00",
+      "end": "23:00",
+      "mode": "news_desk"
+    },
+    {
+      "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+      "start": "23:00",
+      "end": "03:00",
+      "mode": "grid"
+    }
+  ],
+  "fileSources": {
+    "produced_news": {
+      "rights": "green",
+      "description": "Latest produced news longform from output/",
+      "glob": "output/*.mp4",
+      "prefer": ["news", "because", "light"]
+    },
+    "produced_bump": {
+      "rights": "green",
+      "description": "Short branded bump — falls back to slate if missing",
+      "optional": true,
+      "glob": "output/*short*.mp4",
+      "prefer": ["clip", "short", "twitch"]
+    },
+    "event_primary": {
+      "rights": "yellow",
+      "description": "Event tile — set LIVE_GRID_EVENT_FILE or pass eventFile on start",
+      "env": "LIVE_GRID_EVENT_FILE",
+      "optional": true
+    }
+  }
+}

@@ -12,17 +12,58 @@ require('dotenv').config({ path: path.join(__dirname, '.env'), override: true })
 module.exports = {
   apps: [
     {
+      name: 'roo-watcher',
+      script: 'scripts/roo_watcher.sh',
+      interpreter: 'bash',
+      watch: false,
+      max_restarts: 10,
+      min_uptime: '5s',
+      restart_delay: 3000,
+      out_file: 'logs/roo_watcher.log',
+      error_file: 'logs/roo_watcher.log',
+      merge_logs: true,
+      // Always runs locally. On Render the RENDER env var is set automatically
+      // and the script exits cleanly — no Cursor/Roo available in cloud.
+      env: { ROO_WATCHER: 'true' },
+      env_production: { ROO_WATCHER: 'true' },
+    },
+    {
+      name: 'broadcast-sidecar',
+      script: 'scripts/live_broadcast_sidecar.js',
+      cwd: __dirname,
+      interpreter: 'node',
+      watch: false,
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 3000,
+      out_file: 'logs/broadcast_sidecar.log',
+      error_file: 'logs/broadcast_sidecar.log',
+      merge_logs: true,
+      env: {
+        NODE_ENV: 'development',
+        LIVE_SIDECAR_PORT: 3001,
+        LIVE_BROADCAST_SIDECAR: 'on',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        LIVE_SIDECAR_PORT: 3001,
+        LIVE_BROADCAST_SIDECAR: 'on',
+      },
+    },
+    {
       name: 'auraflux',
       script: 'server.js',
-      watch: false, // nodemon handles dev watching — PM2 watch off in production
+      watch: false,  // nodemon handles dev watching — PM2 watch off in production
 
       // Restart policy
       max_restarts: 10,
-      min_uptime: '10s', // must stay up 10s to count as a successful start
-      restart_delay: 2000, // 2s between crash restarts
+      min_uptime: '10s',       // must stay up 10s to count as a successful start
+      restart_delay: 2000,     // 2s between crash restarts
 
-      // Memory guard — restart if server leaks past 1GB
-      max_memory_restart: '1G',
+      // Memory guard — restart if server leaks past 4GB.
+      // 1G was too low: Gemini clip-analysis wave (8 parallel ~32MB downloads + base64
+      // upload buffers) legitimately peaks ~1.5-2GB and was OOM-killed mid-job (2026-06-10).
+      max_memory_restart: '4G',
 
       // Logging
       out_file: 'logs/pm2-out.log',
@@ -47,7 +88,16 @@ module.exports = {
       },
 
       // Ignore watch dirs (mirrors nodemon.json)
-      ignore_watch: ['node_modules', 'tmp', 'output', 'assets', 'data', 'logs', '*.mp4', '*.png'],
+      ignore_watch: [
+        'node_modules',
+        'tmp',
+        'output',
+        'assets',
+        'data',
+        'logs',
+        '*.mp4',
+        '*.png',
+      ],
     },
     {
       name: 'job-monitor',

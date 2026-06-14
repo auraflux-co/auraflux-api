@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "updated": "2026-06-13",
+  "notes": "From youtube_top200_build_analysis.json — trial events; yellow needs transform layer.",
+  "events": [
+    {
+      "id": "sports_watchalong",
+      "tier": "yellow",
+      "label": "Sports watch-along",
+      "modes": ["event_night"],
+      "titleHint": "LIVE: {teams} — ClipzWorld Watch Party",
+      "transform": "Sim/produced tile Q0 + Twitch co-streams Q1-3; no raw ESPN/DAZN feed"
+    },
+    {
+      "id": "esports_grand_final",
+      "tier": "yellow",
+      "label": "Esports grand final",
+      "modes": ["event_night"],
+      "titleHint": "LIVE: {event} Grand Final — ClipzWorld",
+      "transform": "Pin esl/valorant co-streams; produced intro on Q0"
+    },
+    {
+      "id": "breaking_news_wall",
+      "tier": "green",
+      "label": "Produced news desk",
+      "modes": ["news_desk"],
+      "titleHint": "ClipzWorld News Desk",
+      "transform": "Pipeline news VOD loop only — no wire AP/Reuters"
+    },
+    {
+      "id": "gaming_showcase",
+      "tier": "yellow",
+      "label": "Showcase / keynote watch",
+      "modes": ["event_night"],
+      "titleHint": "LIVE: {show} — ClipzWorld Reacts",
+      "transform": "Official stream on Q0 only if allowlisted URL; else produced recap file"
+    },
+    {
+      "id": "weather_disaster",
+      "tier": "yellow",
+      "label": "Weather / disaster coverage",
+      "modes": ["event_night", "news_desk"],
+      "titleHint": "LIVE: {event} Coverage — ClipzWorld",
+      "transform": "Public feed + desk commentary; long-run OK"
+    },
+    {
+      "id": "space_launch",
+      "tier": "yellow",
+      "label": "Space launch",
+      "modes": ["event_night"],
+      "titleHint": "LIVE: {mission} — ClipzWorld Space Watch",
+      "transform": "NASA/public embed or produced file + chat"
+    }
+  ],
+  "twitchTv": {
+    "allowedPatterns": [
+      "script_",
+      "clips_comp_",
+      "cwn_",
+      "because",
+      "news",
+      "twitch-short",
+      "top10"
+    ],
+    "blockedPatterns": [
+      "live_grid",
+      "livegrid",
+      "_0clips_",
+      "synth_prebuild",
+      "clip_short_",
+      "clips_comp_"
+    ],
+    "notes": "Transformative produced output + news/event VODs. Never grid recordings or raw clip comps."
+  },
+  "youtubeGrid": {
+    "twitchMultiview": "allowed_offpeak",
+    "fileQuadrants": "green_produced_only",
+    "never": ["ap_wire", "reuters_wire", "full_espn_feed", "grid_on_twitch"]
+  }
+}

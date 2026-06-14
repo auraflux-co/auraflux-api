@@ -1,19 +1,7 @@
-// ── New Relic APM — MUST be the first require in the entire process ──────────
-// NR patches the Node.js module loader at startup. If any other require runs
-// first, NR cannot instrument those modules (Express, pg, axios, etc.).
-// The agent reads NEW_RELIC_LICENSE_KEY + NEW_RELIC_APP_NAME from env.
-// If the license key is absent, NR starts in disabled mode — no errors thrown.
-if (process.env.NEW_RELIC_LICENSE_KEY) {
-  require('newrelic');
-}
-
 // Load repo-root .env regardless of PM2/cwd (folder_id and keys live here).
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
-// Load Render Secret File if present — encrypted-at-rest secrets override env vars.
-// Render mounts the file at /etc/secrets/.secrets.env (name set in secret-files API).
-// Falls back silently so local dev (no secret file) is unaffected.
-require('dotenv').config({ path: '/etc/secrets/.secrets.env', override: true });
+require('newrelic');
 
 // ── Build identity — set once at startup, never changes during runtime ────────
 const BUILD_INFO = (() => {
@@ -33,78 +21,17 @@ const BUILD_INFO = (() => {
       deployedAt: new Date().toISOString()
     };
   } catch(e) {
-    // Render injects RENDER_GIT_COMMIT automatically — use it when .git is not available
-    const renderHash = process.env.RENDER_GIT_COMMIT || 'unknown';
-    return {
-      version: require('./package.json').version,
-      gitHash: renderHash.length > 7 ? renderHash.slice(0, 7) : renderHash,
-      gitHashFull: renderHash,
-      deployedAt: new Date().toISOString()
-    };
+    return { version: require('./package.json').version, gitHash: 'unknown', deployedAt: new Date().toISOString() };
   }
 })();
 
-// ── Sentry — runtime error aggregation ───────────────────────────────────────
-// Sentry replaces New Relic for error tracking (NR license key was never
-// provisioned). Captures unhandled rejections, pipeline-level portal errors,
-// and assembly failures with full job context so alerts fire at 2am not at
-// 9am when a customer complains.
-//
-// SENTRY_DSN is optional — if absent Sentry is silently disabled.
-// Set on Render env: Settings → Environment → SENTRY_DSN
-const Sentry = require('@sentry/node');
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || 'production',
-    release: `auraflux-api@${BUILD_INFO?.version || 'unknown'}+${BUILD_INFO?.gitHash || 'unknown'}`,
-    tracesSampleRate: 0.05,   // 5% of requests traced — low enough to avoid perf impact
-    // Capture portal-level errors with job context set via Sentry.setContext below
-  });
-  Sentry.setTag('service', 'auraflux-api');
-  Sentry.setTag('git_hash', BUILD_INFO?.gitHash || 'unknown');
-}
-
-// ── Sentry portal helper ──────────────────────────────────────────────────────
-// Wraps a portal async function. On error, enriches the Sentry capture with
-// portal stage, jobId, and templateId before re-throwing so the job handler
-// can still decide whether to retry.
-function withSentryPortal(stage, jobSpec, fn) {
-  return fn().catch((err) => {
-    if (process.env.SENTRY_DSN) {
-      Sentry.withScope((scope) => {
-        scope.setTag('portal', String(stage));
-        scope.setContext('job', {
-          jobId:      jobSpec?.jobId,
-          templateId: jobSpec?.templateId,
-          customerId: jobSpec?.customerId,
-          contentType: jobSpec?.contentType,
-        });
-        Sentry.captureException(err);
-      });
-    }
-    throw err;
-  });
-}
-
 // ── New Relic custom event helpers ───────────────────────────────────────────
-// Fire-and-forget pipeline events — queryable via NRQL in New Relic.
-// nrPipelineEvent() is a safe no-op when the NR agent is not loaded.
-// Sentry breadcrumbs are added alongside every event for dual-path tracing.
+// All events are fire-and-forget — never block the pipeline.
+// Queryable via NRQL on each custom event type name.
 const { nrPipelineEvent } = require('./lib/nr_pipeline');
 
 function nrEvent(eventType, attributes) {
   nrPipelineEvent(eventType, attributes);
-  // Also add as a Sentry breadcrumb so every portal transition is visible
-  // in the event trail when an error occurs later in the same job.
-  if (process.env.SENTRY_DSN) {
-    Sentry.addBreadcrumb({
-      category: 'pipeline',
-      message: eventType,
-      data: attributes,
-      level: 'info',
-    });
-  }
 }
 
 // Keep old helper for backwards compat
@@ -251,18 +178,10 @@ function stripCodeFences(text) {
 
 // Validate required environment variables on startup
 function validateRequiredEnv() {
-  // CLERK_PUBLISHABLE_KEY and NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY are interchangeable —
-  // clerk.js copies the NEXT_PUBLIC_ variant into CLERK_PUBLISHABLE_KEY if only the
-  // former is set. Accept either so a missing alias never crashes the server.
-  if (!process.env.CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    process.env.CLERK_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  }
   const required = [
     'ANTHROPIC_API_KEY',
     'GEMINI_API_KEY',
-    'HEYGEN_API_KEY',
-    'CLERK_SECRET_KEY',
-    'CLERK_PUBLISHABLE_KEY',
+    'HEYGEN_API_KEY'
   ];
   const missing = required.filter(key => !process.env[key]);
   if (missing.length > 0) {
@@ -363,7 +282,6 @@ function withPuppeteerExecutable(opts) {
 const { body, validationResult } = require('express-validator');
 const { logError, getErrorRate, getRecentErrors, errorMiddleware } = require('./lib/error_logger');
 const { requireFields, validateContentType, validateArrayLength, sanitizeStrings } = require('./lib/validation');
-const { requireAuth } = require('./lib/auth');
 const TwitchClient = require('./lib/clients/twitch_client');
 const { CONFIG } = require('./lib/config');
 const logger = require('./lib/logger');
@@ -389,12 +307,10 @@ const {
   generateNewscastOverlay
 } = require('./lib/chrome_overlay');
 const {
-  geminiQACheck, // TODO: remove — dead code, gate2Worker.run() replaces this (see /gate2-segment-qa endpoint)
   parseScriptIntoScenes,
   generateClipAvailabilityReport,
   claudeScriptQA,
   claudeScriptFix,
-  geminiSegmentQA, // TODO: remove — dead code, gate2Worker.run() replaces this
   callClaudeAPI,
   uploadToGeminiFiles,
   waitForGeminiFile,
@@ -534,8 +450,10 @@ const heygenJobs   = {};
 // Dashboard calls GET /jobs on load to restore the job queue.
 const JOBS_FILE = path.join(__dirname, 'data', 'jobs.json');
 let persistedJobs = {};
+let jsonJobsSnapshot = {};
 try {
   persistedJobs = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+  jsonJobsSnapshot = { ...persistedJobs };
   console.log(`[jobs] Loaded ${Object.keys(persistedJobs).length} persisted jobs from disk`);
 } catch(e) {
   persistedJobs = {};
@@ -543,22 +461,57 @@ try {
 // Expose to assembly.js Gate 2 bypass (avoids circular require)
 global.persistedJobsRef = persistedJobs;
 
-// ── Postgres init + job hydration ────────────────────────────────────────────
-// Both db.initDb() and db.loadAllJobs() are async. Use .then().catch() chains
-// so Promise rejections (e.g. DATABASE_URL absent) are always handled and the
-// server degrades gracefully instead of crashing after port bind.
-db.initDb()
-  .catch((e) => console.warn('[db] initDb warn (non-fatal):', e.message));
-db.loadAllJobs()
-  .then((pgJobs) => {
-    if (!pgJobs || pgJobs.length === 0) return;
-    console.log(`[db] Postgres: hydrating ${pgJobs.length} jobs into memory`);
+function countCompletedAvatarScenes(card) {
+  return (card?.heygen?.videoJobs || []).filter((v) => v.status === 'completed' && v.video_id).length;
+}
+
+/** SQLite may lag jobs.json on avatar checkpoints — merge newer heygen.videoJobs from JSON. */
+function mergeJsonAvatarCheckpoints(intoJobs, jsonJobs) {
+  let merged = 0;
+  for (const [id, jsonCard] of Object.entries(jsonJobs || {})) {
+    const mem = intoJobs[id];
+    if (!mem || !jsonCard?.heygen?.videoJobs?.length) continue;
+    const jsonDone = countCompletedAvatarScenes(jsonCard);
+    const memDone = countCompletedAvatarScenes(mem);
+    const jsonSaved = new Date(jsonCard.savedAt || 0).getTime();
+    const memSaved = new Date(mem.savedAt || 0).getTime();
+    if (jsonDone <= memDone && jsonSaved <= memSaved) continue;
+    intoJobs[id] = {
+      ...mem,
+      stage: jsonCard.stage || mem.stage,
+      avatarEngine: jsonCard.avatarEngine || mem.avatarEngine,
+      heygen: { ...(mem.heygen || {}), ...jsonCard.heygen },
+      savedAt: jsonCard.savedAt || mem.savedAt
+    };
+    try { db.saveJob(id, intoJobs[id]); } catch (_) { /* saveJobCard also writes SQLite */ }
+    merged++;
+  }
+  if (merged > 0) console.log(`[jobs] Merged avatar checkpoints from jobs.json for ${merged} job(s)`);
+}
+
+// ── SQLite init + fallback load ───────────────────────────────────────────────
+// Initialize SQLite alongside jobs.json. During transition both run in parallel.
+// If SQLite has more jobs than the JSON file (e.g. after a partial migration),
+// prefer SQLite so no jobs are lost.
+try {
+  db.initDb();
+  const sqliteJobs = db.loadAllJobs();
+  if (sqliteJobs.length > Object.keys(persistedJobs).length) {
+    console.log(`[db] SQLite has ${sqliteJobs.length} jobs vs JSON ${Object.keys(persistedJobs).length} — using SQLite as primary`);
     persistedJobs = {};
-    for (const card of pgJobs) {
-      if (card && card.jobId) persistedJobs[card.jobId] = card;
+    for (const card of sqliteJobs) {
+      // Cards created by /generate-clip-comp (and some legacy flows) use `id`, not `jobId`
+      // — keying on jobId alone silently dropped them from memory on every restart.
+      const key = card && (card.jobId || card.id);
+      if (key) persistedJobs[key] = card;
     }
-  })
-  .catch((e) => console.warn('[db] loadAllJobs warn (non-fatal):', e.message));
+    mergeJsonAvatarCheckpoints(persistedJobs, jsonJobsSnapshot);
+  } else {
+    console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
+  }
+} catch (e) {
+  console.error('[db] SQLite init failed — falling back to jobs.json only:', e.message);
+}
 
 // Infer job stage from card fields for legacy jobs that predate the explicit stage field.
 // Used by /jobs filter and startup resume logic.
@@ -576,7 +529,6 @@ function inferJobStage(job) {
   return '';
 }
 
-
 function saveJobCard(jobId, card) {
   // Fix 2 Part A: Extract source_clip segments from script and save to card
   if (card.script && card.orderedClipUrls) {
@@ -585,14 +537,16 @@ function saveJobCard(jobId, card) {
       const sourceClipSegments = sourceClipScenes.map((scene, i) => {
         const clipData = card.orderedClipUrls[i] || {};
         return {
-          type: 'source_clip',
-          sceneId: scene.name,
-          label: scene.name || `STORY${i+1}_CLIP`,
-          clipUrl: clipData.clipUrl || clipData.url || '',
-          pageUrl: clipData.pageUrl || '',
+          type:            'source_clip',
+          sceneId:         scene.name,
+          label:           scene.name || `STORY${i+1}_CLIP`,
+          clipUrl:         clipData.clipUrl || clipData.url || '',
+          pageUrl:         clipData.pageUrl || '',
+          pillarboxFilter: clipData.pillarboxFilter || null,
+          orientation:     clipData.orientation || 'portrait',
           clipTimingTargets: Array.isArray(clipData.clipTimingTargets) ? clipData.clipTimingTargets : [],
           clipTimingFormat: clipData.clipTimingFormat || 'none',
-          storyIndex: clipData.storyIndex ?? i,
+          storyIndex:      clipData.storyIndex ?? i,
           status: 'ready'  // source clips don't render via HeyGen
         };
       });
@@ -615,8 +569,12 @@ function saveJobCard(jobId, card) {
   } catch(e) {
     console.error('[jobs] Failed to save jobs.json:', e.message);
   }
-  db.saveJob(jobId, persistedJobs[jobId])
-    .catch((e) => console.error('[db] Failed to save job to Postgres:', e.message));
+  // ── SQLite write (additive — runs alongside JSON during transition) ──────────
+  try {
+    db.saveJob(jobId, persistedJobs[jobId]);
+  } catch (e) {
+    console.error('[db] Failed to save job to SQLite:', e.message);
+  }
 }
 
 // ── markJobStuck() — Mark a job as stuck and trigger auto-disable pattern check ──
@@ -723,8 +681,11 @@ function unregisterPoller(jobId) {
 // Implements the fully-automatic pipeline: Gate 1 → HeyGen render → auto-assemble → Gate 3 → Drive → Gate 6 publish (private)
 // Rob's only role: review private drafts on YouTube/TikTok/Instagram and flip to public.
 async function startHeyGenPoller(jobId, card) {
+  const avatarEngine = card.avatarEngine || process.env.AVATAR_ENGINE || 'heygen';
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
-  if (!HEYGEN_API_KEY) {
+  const simMode = process.env.HEYGEN_SIM_MODE === 'true';
+  const needsHeyGenKey = avatarEngine === 'heygen' && !simMode;
+  if (needsHeyGenKey && !HEYGEN_API_KEY) {
     console.error(`[heygen-poller:${jobId}] No HEYGEN_API_KEY — cannot poll`);
     return;
   }
@@ -762,11 +723,13 @@ async function startHeyGenPoller(jobId, card) {
           const clip = orderedClipUrls[clipIdx++];
           if (clip && (clip.url || clip.clipUrl)) {
             segmentData.push({
-              url: clip.clipUrl || clip.url || '',
-              pageUrl: clip.pageUrl || '',
-              label: clip.label || scene.name || `CLIP_${clipIdx}`,
-              type: 'source_clip',
-              clipUrl: clip.clipUrl || clip.url || '',
+              url:             clip.clipUrl || clip.url || '',
+              pageUrl:         clip.pageUrl || '',
+              label:           clip.label || scene.name || `CLIP_${clipIdx}`,
+              type:            'source_clip',
+              clipUrl:         clip.clipUrl || clip.url || '',
+              pillarboxFilter: clip.pillarboxFilter || null,
+              orientation:     clip.orientation || 'portrait',
               clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
               clipTimingFormat: clip.clipTimingFormat || 'none'
             });
@@ -780,11 +743,13 @@ async function startHeyGenPoller(jobId, card) {
               const clip = orderedClipUrls[clipIdx++];
               if (clip && (clip.url || clip.clipUrl)) {
                 segmentData.push({
-                  url: clip.clipUrl || clip.url || '',
-                  pageUrl: clip.pageUrl || '',
-                  label: clip.label || `${sceneKey}_CLIP`,
-                  type: 'source_clip',
-                  clipUrl: clip.clipUrl || clip.url || '',
+                  url:             clip.clipUrl || clip.url || '',
+                  pageUrl:         clip.pageUrl || '',
+                  label:           clip.label || `${sceneKey}_CLIP`,
+                  type:            'source_clip',
+                  clipUrl:         clip.clipUrl || clip.url || '',
+                  pillarboxFilter: clip.pillarboxFilter || null,
+                  orientation:     clip.orientation || 'portrait',
                   clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
                   clipTimingFormat: clip.clipTimingFormat || 'none'
                 });
@@ -890,20 +855,18 @@ async function startHeyGenPoller(jobId, card) {
     }
 
     try {
-      // Check status of all video IDs in parallel
+      // Check status of all video IDs in parallel (CPD-989: via the avatar adapter layer —
+      // card.avatarEngine selects the engine; absent = heygen, unchanged behaviour)
+      const avatarCore = require('./lib/avatar');
       const statuses = await Promise.all(videoJobs.map(async (job) => {
         try {
-          const resp = await axios.get(
-            `https://api.heygen.com/v1/video_status.get?video_id=${job.video_id}`,
-            { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
-          );
-          const data = resp.data?.data || {};
+          const s = await avatarCore.getSegmentStatus(job.video_id, { engine: card.avatarEngine || null });
           return {
             video_id: job.video_id,
             sceneName: job.sceneName,
             sceneIndex: job.sceneIndex,
-            status: data.status,
-            video_url: data.video_url || null
+            status: s.status,
+            video_url: s.videoUrl
           };
         } catch(e) {
           return { video_id: job.video_id, sceneName: job.sceneName, sceneIndex: job.sceneIndex, status: 'error', video_url: null };
@@ -996,11 +959,13 @@ async function startHeyGenPoller(jobId, card) {
             clipIdx++;
             if (clip && (clip.url || clip.clipUrl)) {
               segmentData.push({
-                url:     clip.clipUrl || clip.url || '',
-                pageUrl: clip.pageUrl || '',
-                label:   clip.label || scene.name || `CLIP_${clipIdx}`,
-                type:    'source_clip',
-                clipUrl: clip.clipUrl || clip.url || '',
+                url:             clip.clipUrl || clip.url || '',
+                pageUrl:         clip.pageUrl || '',
+                label:           clip.label || scene.name || `CLIP_${clipIdx}`,
+                type:            'source_clip',
+                clipUrl:         clip.clipUrl || clip.url || '',
+                pillarboxFilter: clip.pillarboxFilter || null,
+                orientation:     clip.orientation || 'portrait',
                 clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
                 clipTimingFormat: clip.clipTimingFormat || 'none'
               });
@@ -1021,11 +986,13 @@ async function startHeyGenPoller(jobId, card) {
                 clipIdx++;
                 if (clip && (clip.url || clip.clipUrl)) {
                   segmentData.push({
-                    url:     clip.clipUrl || clip.url || '',
-                    pageUrl: clip.pageUrl || '',
-                    label:   clip.label || `${sceneKey}_CLIP`,
-                    type:    'source_clip',
-                    clipUrl: clip.clipUrl || clip.url || '',
+                    url:             clip.clipUrl || clip.url || '',
+                    pageUrl:         clip.pageUrl || '',
+                    label:           clip.label || `${sceneKey}_CLIP`,
+                    type:            'source_clip',
+                    clipUrl:         clip.clipUrl || clip.url || '',
+                    pillarboxFilter: clip.pillarboxFilter || null,
+                    orientation:     clip.orientation || 'portrait',
                     clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
                     clipTimingFormat: clip.clipTimingFormat || 'none'
                   });
@@ -1264,8 +1231,83 @@ setImmediate(() => {
 });
 
 // ── Pipeline Bus: heygen:all_complete → Gate 2 QA → assembly ─────────────────
-// C0 localhost only. On Render (DATABASE_URL set) HeyGen flows through portal_heygen_ext.js only.
-if (!process.env.DATABASE_URL) pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
+// The HeyGen poller emits this when all segments are done.
+// This listener owns Gate 2 QA + logging + assembly trigger + assembly completion polling.
+// Dashboard is view-only — it reads persistedJobs, never drives this flow.
+pipelineBus.on('thumbnail:uploaded', ({ jobId, thumbnailDriveUrl }) => {
+  if (!jobId || !thumbnailDriveUrl) return;
+  const card = persistedJobs[jobId];
+  if (card) {
+    card.thumbnailDriveUrl = thumbnailDriveUrl;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.thumbnailDriveUrl = thumbnailDriveUrl;
+    saveJobCard(jobId, card);
+    console.log(`[thumbnail:uploaded] Saved thumbnailDriveUrl to job card ${jobId}`);
+  }
+});
+
+// CPD-883: every successful assembly upload refreshes the canonical card's
+// driveUrl (re-assemblies included) so Gate 5 recovery never publishes a stale file.
+pipelineBus.on('assembly:drive_url', ({ jobId, driveUrl }) => {
+  if (!jobId || !driveUrl) return;
+  const card = persistedJobs[jobId];
+  if (!card) return;
+  const prev = card.state?.savedOutputs?.driveUrl || card.driveUrl || null;
+  card.driveUrl = driveUrl;
+  card.state = card.state || {};
+  card.state.savedOutputs = card.state.savedOutputs || {};
+  card.state.savedOutputs.driveUrl = driveUrl;
+  saveJobCard(jobId, card);
+  console.log(`[assembly:drive_url] ${jobId}: card driveUrl refreshed${prev && prev !== driveUrl ? ' (replaced stale URL)' : ''}`);
+});
+
+// CPD-936: assembly held Gate 5 for a scheduled publish — persist the hold state
+// (stage/driveUrl/publishCopy/thumbnail) so a restart during the hold window
+// doesn't strand the job (cron used to fire with no driveUrl on the reloaded card).
+pipelineBus.on('gate5:scheduled_hold', ({ jobId, driveUrl, scheduledAt, publishCopy, thumbnailDriveUrl, nativeScheduledPublish }) => {
+  if (!jobId) return;
+  const card = persistedJobs[jobId];
+  if (!card) {
+    console.warn(`[gate5:scheduled_hold] No card for ${jobId} — hold state NOT persisted`);
+    return;
+  }
+  card.stage = 'publish_scheduled';
+  if (driveUrl) card.driveUrl = driveUrl;
+  if (scheduledAt)   card.scheduledPublishAt = scheduledAt;
+  if (nativeScheduledPublish) card.nativeScheduledPublish = true;
+  card.state = card.state || {};
+  card.state.savedOutputs = card.state.savedOutputs || {};
+  if (driveUrl) card.state.savedOutputs.driveUrl = driveUrl;
+  if (publishCopy) {
+    card.publishCopy = publishCopy;
+    card.state.savedOutputs.publishCopy = publishCopy;
+  }
+  if (thumbnailDriveUrl) {
+    card.thumbnailDriveUrl = thumbnailDriveUrl;
+    card.state.savedOutputs.thumbnailDriveUrl = thumbnailDriveUrl;
+  }
+  saveJobCard(jobId, card);
+  console.log(`[gate5:scheduled_hold] Persisted hold state for ${jobId} (driveUrl=${!!driveUrl}, publishCopy=${!!publishCopy}, due=${scheduledAt}, native=${!!nativeScheduledPublish})`);
+});
+
+pipelineBus.on('publish:complete', async ({ jobId }) => {
+  if (!jobId) return;
+  const card = persistedJobs[jobId];
+  if (!card) return;
+  try {
+    const { applyLiveAlsoHooks } = require('./lib/calendar/live_also');
+    const baseUrl = process.env.LIVE_SIDECAR_URL || `http://127.0.0.1:${process.env.LIVE_SIDECAR_PORT || 3001}`;
+    const result = await applyLiveAlsoHooks({ jobId, card, baseUrl });
+    if (result.applied?.length) {
+      console.log(`[liveAlso] ${jobId}: applied → ${result.applied.join(', ')}`);
+    }
+  } catch (e) {
+    console.warn(`[liveAlso] ${jobId}: hook failed — ${e.message}`);
+  }
+});
+
+pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, card, segmentData: rawSegmentData }) => {
   // Concurrent job isolation guard: verify the card in persistedJobs matches the event's jobId
   // and contentType. If a concurrent job mutated persistedJobs[jobId] with the wrong contentType,
   // this guard aborts before assembly uses mismatched context (e.g. long-form assembled as short-form).
@@ -1312,14 +1354,16 @@ if (!process.env.DATABASE_URL) pipelineBus.on('heygen:all_complete', async ({ jo
           const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
           if (clip) {
             segmentData.push({
-              type: 'source_clip',
-              url: clip.clipUrl || clip.url || '',
-              label: clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
-              pageUrl: clip.pageUrl || '',
+              type:            'source_clip',
+              url:             clip.clipUrl || clip.url || '',
+              label:           clip.label || scene.name || scene.id || `CLIP_${clipIdx + 1}`,
+              pageUrl:         clip.pageUrl || '',
+              pillarboxFilter: clip.pillarboxFilter || null,
+              orientation:     clip.orientation || 'portrait',
               clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
               clipTimingFormat: clip.clipTimingFormat || 'none',
-              storyIndex: clip.storyIndex ?? clipIdx,
-              sceneId: scene.name || scene.id
+              storyIndex:      clip.storyIndex ?? clipIdx,
+              sceneId:         scene.name || scene.id
             });
           }
           clipIdx++;
@@ -1384,10 +1428,12 @@ if (!process.env.DATABASE_URL) pipelineBus.on('heygen:all_complete', async ({ jo
               const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
               if (clip) {
                 segmentData.push({
-                  type: 'source_clip',
-                  url: clip.clipUrl || clip.url || '',
-                  label: clip.label || `${sceneKey}_CLIP`,
-                  pageUrl: clip.pageUrl || '',
+                  type:            'source_clip',
+                  url:             clip.clipUrl || clip.url || '',
+                  label:           clip.label || `${sceneKey}_CLIP`,
+                  pageUrl:         clip.pageUrl || '',
+                  pillarboxFilter: clip.pillarboxFilter || null,
+                  orientation:     clip.orientation || 'portrait',
                   clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
                   clipTimingFormat: clip.clipTimingFormat || 'none',
                   storyIndex: clip.storyIndex ?? clipIdx,
@@ -1546,6 +1592,7 @@ if (!process.env.DATABASE_URL) pipelineBus.on('heygen:all_complete', async ({ jo
         if (asmJob.publishResult) {
           finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
           finalCard.stage = 'published';
+          tvAutoEnqueue(jobId); // CPD-958: published in-assembly → join the TV rotation
         }
         saveJobCard(jobId, finalCard);
         logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
@@ -1596,19 +1643,15 @@ const twitchClient = new TwitchClient({
   token: process.env.TWITCH_TOKEN
 });
 
-// Security headers via helmet — CPD-320
-// CSP disabled: this is a JSON API server, not an HTML app. Helmet's other headers
-// (X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy) remain active.
+// Security headers via helmet
 app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: false, // Disabled for local dashboard with inline scripts
+  crossOriginEmbedderPolicy: false // Disabled for embedded videos/images
 }));
 
 // CORS configuration with origin whitelist
-// CPD-280: ALLOWED_ORIGINS must include app.auraflux.co in production.
-// Render env var: https://app.auraflux.co,https://auraflux-app.onrender.com,http://localhost:3000
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://localhost:8765', 'http://localhost:3000'];
 
 // Request ID middleware for tracing
@@ -1631,16 +1674,8 @@ app.use(cors({
   },
   credentials: true
 }));
-// CPD-320: JSON API body limit reduced to 1MB to prevent DoS.
-// Upload routes use multer (multipart) so they are unaffected by this limit.
-app.use(require('express').json({
-  limit: '1mb',
-  // CPD-362: save raw Buffer on every request so the Stripe webhook handler can
-  // verify the signature. express.raw() on that route alone cannot capture it
-  // once express.json() has already consumed the stream.
-  verify: (req, _res, buf) => { req.rawBody = buf; },
-}));
-app.use(require('express').urlencoded({ extended: true, limit: '1mb' }));
+app.use(require('express').json({ limit: '50mb' }));
+app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 
 
 
@@ -1729,8 +1764,7 @@ class VectCutClient {
       const response = await axios.get(`${this.baseUrl}/`);
       return { healthy: true, status: response.status };
     } catch (error) {
-      // VectCut is optional — use debug only; error floods logs since /health is polled every 5s
-      console.debug(`[VectCut] offline: ${error.message}`);
+      console.error(`[VectCut] Health check failed: ${error.message}`);
       return { healthy: false, error: error.message };
     }
   }
@@ -1881,23 +1915,6 @@ app.post('/episode-counters', (req, res) => {
   }
 });
 
-// Temporary: expose outbound IP for YouTube API key IP restriction setup (CPD-283)
-app.get('/debug/outbound-ip', async (req, res) => {
-  try {
-    const https = require('https');
-    const ip = await new Promise((resolve, reject) => {
-      https.get('https://api.ipify.org', (r) => {
-        let d = '';
-        r.on('data', (c) => { d += c; });
-        r.on('end', () => resolve(d.trim()));
-      }).on('error', reject);
-    });
-    res.json({ outboundIp: ip });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 app.get('/health', async (req, res) => {
   const health = {
     ok: true,
@@ -1928,13 +1945,15 @@ app.get('/health', async (req, res) => {
     health.errors.push('FFmpeg not available');
   }
 
-  // Check API keys — missing keys degrade features but don't prevent the service from running.
-  // Report as warnings only; do not fail the health check (which would block Render deploys).
-  const featureKeys = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'];
-  featureKeys.forEach(key => {
+  // Check API keys
+  const requiredKeys = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'HEYGEN_API_KEY'];
+  requiredKeys.forEach(key => {
     const exists = !!process.env[key];
     health.dependencies[key] = { status: exists ? 'ok' : 'missing' };
-    if (!exists) health.warnings = [...(health.warnings || []), `${key} not configured — related features disabled`];
+    if (!exists) {
+      health.ok = false;
+      health.errors.push(`${key} not configured`);
+    }
   });
 
   // Check directories
@@ -1958,19 +1977,15 @@ app.get('/health', async (req, res) => {
     }
   }
 
-  // Check VectCut API (optional — skip entirely when VECTCUT_API_URL not configured,
-  // otherwise GET /health polls this every 5s and floods logs with "offline" entries)
-  if (process.env.VECTCUT_API_URL) {
-    try {
-      const vectCutHealth = await vectCutClient.healthCheck();
-      health.dependencies.vectcut = vectCutHealth.healthy
-        ? { status: 'ok' }
-        : { status: 'offline', error: vectCutHealth.error };
-    } catch (err) {
-      health.dependencies.vectcut = { status: 'offline', error: err.message };
-    }
-  } else {
-    health.dependencies.vectcut = { status: 'not_configured' };
+  // Check VectCut API (optional)
+  try {
+    const vectCutHealth = await vectCutClient.healthCheck();
+    health.dependencies.vectcut = vectCutHealth.healthy
+      ? { status: 'ok' }
+      : { status: 'offline', error: vectCutHealth.error };
+  } catch (err) {
+    health.dependencies.vectcut = { status: 'offline', error: err.message };
+    // VectCut is optional, don't fail health check
   }
 
   // Check disk space
@@ -2000,8 +2015,9 @@ app.get('/health', async (req, res) => {
   res.status(statusCode).json(health);
 });
 
-// GET /jobs — C0 localhost only. C1+ dashboard uses jobs_c1 router (PG-backed).
-if (!process.env.DATABASE_URL) app.get('/jobs', (req, res) => {
+// GET /jobs — return all persisted job cards for dashboard recovery after server restart
+// Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
+app.get('/jobs', (req, res) => {
   // Only return in-flight jobs. Completed (assembled, published) and
   // failed/dismissed jobs are excluded — they do not need to restore on page load.
   const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling']);
@@ -2061,7 +2077,7 @@ app.delete('/job/:id', (req, res) => {
     console.error('[jobs] Failed to save jobs.json after delete:', e.message);
   }
 
-  // 4. Delete from Postgres so job doesn't reappear on server restart
+  // 4. Delete from SQLite DB so job doesn't reappear on server restart
   try {
     const { deleteJob } = require('./lib/db');
     if (typeof deleteJob === 'function') deleteJob(jobId);
@@ -2071,6 +2087,39 @@ app.delete('/job/:id', (req, res) => {
 
   console.log(`[jobs] Deleted job: ${jobId}`);
   res.json({ ok: true, deleted: jobId });
+});
+
+// ── POST /job/:id/fix-claims (CPD-980) — mute claimed ranges + republish ─────
+// Body: { ranges: "12:34-13:10, 45:00-45:40" } (timestamps from the Studio
+// claim panel). Mutes those ranges on the job's final video (video stream
+// copied) and uploads a clean copy to YouTube as a NEW video. The claimed
+// original is left alone — deleting it is the operator's call.
+app.post('/job/:id/fix-claims', async (req, res) => {
+  const card = persistedJobs[req.params.id];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found: ' + req.params.id });
+  try {
+    const { parseTimeRanges, muteAndRepublish } = require('./lib/services/claim_fixer');
+    const ranges = parseTimeRanges(req.body?.ranges);
+    const out = await muteAndRepublish({
+      card, ranges,
+      tmpDir: path.join(__dirname, 'tmp'),
+      log: (m) => console.log(m),
+    });
+    try {
+      const { savePublishResult } = require('./lib/db');
+      savePublishResult(card.id, 'youtube', {
+        platformJobId: out.videoId,
+        driveUrl: out.url,
+        title: card.publishPrep?.title || card.title,
+        status: 'published',
+      });
+    } catch (e) { console.warn('[claim-fixer] publish_results save failed (non-fatal):', e.message); }
+    try { fs.unlinkSync(out.mutedPath); } catch (_) {}
+    res.json({ ok: true, videoId: out.videoId, url: out.url });
+  } catch (e) {
+    console.error(`[claim-fixer] ${req.params.id} failed:`, e.message);
+    res.status(400).json({ ok: false, error: e.message });
+  }
 });
 
 // ── POST /job/:id/rollback — roll a job back to the previous pipeline stage ──
@@ -2174,6 +2223,23 @@ app.post('/job/:id/advance', (req, res) => {
 
   const stage = card.stage || detectStage(card);
 
+  // CPD-971 recovery: a card stuck at gate5_forced/gate5_running after the
+  // publish ACTUALLY completed (confirmed publish_results rows) advances to
+  // 'published' instead of re-firing Gate 5 and double-publishing.
+  if (stage === 'gate5_forced' || stage === 'gate5_running') {
+    let publishedRows = [];
+    try { publishedRows = db.getPublishedResults(jobId) || []; } catch (_e) { /* table may not exist in tests */ }
+    if (publishedRows.length) {
+      card.stage = 'published';
+      card.publishedAt = card.publishedAt || new Date(publishedRows[0].published_at || Date.now()).toISOString();
+      saveJobCard(jobId, card);
+      const platforms = publishedRows.map(r => r.platform).join(', ');
+      console.log(`[advance] ${jobId}: ${stage} → published (recovered — publish_results confirm ${platforms})`);
+      logError('PIPELINE_ADVANCE', `Job recovered: ${stage} → published`, { jobId, before: stage, after: 'published', platforms, at: new Date().toISOString() });
+      return res.json({ ok: true, jobId, before: stage, after: 'published', message: `Publish already confirmed on: ${platforms} — card marked published.` });
+    }
+  }
+
   if (stage === 'script_ready') {
     // Force-advance: mark Gate 1 as force-passed so SEND TO HEYGEN is unblocked
     card.gate1 = card.gate1 || {};
@@ -2274,8 +2340,23 @@ async function _runGate5ForCard(jobId) {
   const driveUrl = savedOutputs.driveUrl || card.driveUrl;
   if (!driveUrl) throw new Error(`driveUrl missing for ${jobId} — Drive upload may not have completed`);
 
-  const publishCopy      = savedOutputs.publishCopy || {};
-  const thumbnailDriveUrl = savedOutputs.thumbnailDriveUrl || null;
+  // publishCopy may be in the DB spec's savedOutputs but not yet flushed to the in-memory card
+  // (assembly saves it via saveOutput() which writes to DB, but card is in-memory snapshot).
+  // Load from DB as fallback so Gate 5 always has the correct title/description.
+  // Short-form publish copy has no top-level title — titles nest under
+  // platforms.youtube.* (gate5 resolves via publishCopy.platforms?.youtube).
+  const _pcUsable = pc => pc && (pc.title || pc.platforms?.youtube || pc.youtube);
+  let publishCopy = savedOutputs.publishCopy || card.publishCopy || null;
+  if (!_pcUsable(publishCopy)) {
+    try {
+      const { getJobSpec: _g5GetSpec } = require('./lib/job_spec');
+      const _dbSpec = _g5GetSpec(jobId);
+      const _dbPc = _dbSpec?.state?.savedOutputs?.publishCopy;
+      if (_pcUsable(_dbPc)) publishCopy = _dbPc;
+    } catch (_e) { /* non-fatal */ }
+  }
+  publishCopy = publishCopy || {};
+  const thumbnailDriveUrl = savedOutputs.thumbnailDriveUrl || card.thumbnailDriveUrl || null;
   const contentType      = card.contentType || 'news';
 
   // Resolve platforms: env override → contentTypes.json config → content-type default
@@ -2299,13 +2380,17 @@ async function _runGate5ForCard(jobId) {
       ...(card.state || {}),
       savedOutputs: { ...savedOutputs, publishCopy, thumbnailDriveUrl }
     },
-    deliverySpec: card.deliverySpec || {
-      platforms,
-      driveFolderId: process.env.DRIVE_FOLDER_ID || null,
-      uploadPostProfile: process.env.UPLOADPOST_PROFILE || null,
-      categoryId: '24',
-      scheduledAt: null
-    },
+    // A card deliverySpec without platforms (e.g. created by /job/:id/schedule)
+    // must not defeat the platform fallback — merge defaults underneath it.
+    deliverySpec: (card.deliverySpec && Array.isArray(card.deliverySpec.platforms) && card.deliverySpec.platforms.length)
+      ? card.deliverySpec
+      : {
+          driveFolderId: process.env.DRIVE_FOLDER_ID || null,
+          uploadPostProfile: process.env.UPLOADPOST_PROFILE || null,
+          categoryId: '24',
+          ...(card.deliverySpec || {}),
+          platforms
+        },
     order: card.order || {},
     planTier: card.planTier || 'dfy'
   };
@@ -2342,6 +2427,721 @@ async function _runGate5ForCard(jobId) {
   saveJobCard(jobId, card);
 }
 
+// ── Direct YouTube OAuth (CPD-923) ──────────────────────────────────────────
+// One-time connect: visit /connect/youtube in a browser, authorize the
+// ClipzWorld channel, tokens persist in data/youtube_tokens.json.
+// Publish path stays Upload-Post until YOUTUBE_DIRECT_PUBLISH=true is set.
+
+function _ytRedirectUri(req) {
+  return `${req.protocol}://${req.get('host')}/connect/youtube/callback`;
+}
+
+app.get('/connect/youtube', (req, res) => {
+  if (!process.env.YOUTUBE_CLIENT_ID || !process.env.YOUTUBE_CLIENT_SECRET) {
+    return res.status(400).send('YOUTUBE_CLIENT_ID / YOUTUBE_CLIENT_SECRET not set in .env');
+  }
+  const ytDirect = require('./lib/services/youtube_direct');
+  res.redirect(ytDirect.buildAuthUrl(_ytRedirectUri(req), 'c0'));
+});
+
+app.get('/connect/youtube/callback', async (req, res) => {
+  const { code, error } = req.query;
+  if (error) return res.status(400).send(`Google OAuth error: ${error}`);
+  if (!code) return res.status(400).send('Missing authorization code');
+  try {
+    const ytDirect = require('./lib/services/youtube_direct');
+    const tokens = await ytDirect.exchangeCode(code, _ytRedirectUri(req));
+    if (!tokens.refresh_token) {
+      return res.status(400).send('No refresh_token returned — revoke app access at myaccount.google.com/permissions and retry');
+    }
+    const stored = {
+      refresh_token: tokens.refresh_token,
+      access_token: tokens.access_token,
+      expires_at: new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString(),
+      scope: tokens.scope,
+      connectedAt: new Date().toISOString(),
+    };
+    try {
+      const info = await ytDirect.getChannelInfo(tokens.access_token);
+      if (info) Object.assign(stored, info);
+    } catch { /* channel info is cosmetic */ }
+    ytDirect.saveTokens(stored);
+    console.log(`[youtube_direct] Connected channel: ${stored.channelTitle || stored.channelId || 'unknown'}`);
+    res.send(`<h2>✅ YouTube connected</h2><p>Channel: <b>${stored.channelTitle || stored.channelId || 'unknown'}</b></p><p>Set <code>YOUTUBE_DIRECT_PUBLISH=true</code> in .env to enable direct publishing (after thumbnail parity test).</p>`);
+  } catch (e) {
+    console.error('[youtube_direct] OAuth exchange failed:', e.response?.data || e.message);
+    res.status(500).send(`Token exchange failed: ${e.response?.data?.error_description || e.message}`);
+  }
+});
+
+app.get('/connect/youtube/status', (req, res) => {
+  const ytDirect = require('./lib/services/youtube_direct');
+  const t = ytDirect.loadTokens();
+  res.json({
+    connected: ytDirect.isConnected(),
+    channelTitle: t?.channelTitle || null,
+    channelId: t?.channelId || null,
+    connectedAt: t?.connectedAt || null,
+    directPublishEnabled: process.env.YOUTUBE_DIRECT_PUBLISH === 'true',
+  });
+});
+
+// POST /job/:id/schedule — set/clear a deferred publish time (CPD-924)
+// Body: { scheduledAt: ISO-8601 string } to set, { scheduledAt: null } to clear.
+// Gate 5 holds at 'publish_scheduled' and scheduling_cron fires it when due.
+app.post('/job/:id/schedule', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job already published — cannot schedule' });
+  }
+
+  const { scheduledAt } = req.body;
+
+  // Optional: update delivery platforms alongside the schedule (calendar workflows)
+  if (Array.isArray(req.body.platforms) && req.body.platforms.length) {
+    card.platforms = req.body.platforms;
+    card.deliverySpec = card.deliverySpec || {};
+    card.deliverySpec.platforms = req.body.platforms;
+  }
+
+  if (scheduledAt === null || scheduledAt === '') {
+    card.scheduledPublishAt = null;
+    if (card.deliverySpec) card.deliverySpec.scheduledAt = null;
+    if (card.stage === 'publish_scheduled') card.stage = 'assembled';
+    saveJobCard(jobId, card);
+    return res.json({ ok: true, jobId, scheduledAt: null, message: 'Schedule cleared — job will publish on normal Gate 5 flow' });
+  }
+
+  const due = new Date(scheduledAt);
+  if (isNaN(due.getTime())) {
+    return res.status(400).json({ ok: false, error: `Invalid scheduledAt: ${scheduledAt} — must be ISO-8601` });
+  }
+  if (due.getTime() <= Date.now()) {
+    return res.status(400).json({ ok: false, error: 'scheduledAt must be in the future' });
+  }
+
+  card.scheduledPublishAt = due.toISOString();
+  card.deliverySpec = card.deliverySpec || {};
+  card.deliverySpec.scheduledAt = due.toISOString();
+  // If the video is already assembled and waiting, hold it now;
+  // otherwise assembly's Gate 5 trigger will see the schedule and hold.
+  if (['assembled', 'gate5_forced', 'gate5_failed'].includes(card.stage)) {
+    card.stage = 'publish_scheduled';
+  }
+  saveJobCard(jobId, card);
+  console.log(`[schedule] ${jobId}: publish scheduled for ${card.scheduledPublishAt} (stage=${card.stage})`);
+  return res.json({ ok: true, jobId, scheduledAt: card.scheduledPublishAt, stage: card.stage });
+});
+
+// ---------------------------------------------------------------------------
+// Live Grid (CPD-940/CPD-946) — 4-quadrant Twitch mosaic → YouTube Live
+// When LIVE_BROADCAST_SIDECAR=on, ffmpeg runs in pm2 process broadcast-sidecar.
+// ---------------------------------------------------------------------------
+const sidecarClient = require('./lib/broadcast/sidecar_client');
+const USE_BROADCAST_SIDECAR = sidecarClient.isEnabled();
+if (USE_BROADCAST_SIDECAR) {
+  sidecarClient.mountProxy(app);
+  console.log(`[broadcast] sidecar mode — TV/Grid ffmpeg on ${sidecarClient.sidecarBaseUrl()} (auraflux restarts won't drop streams)`);
+}
+
+let liveGridManager = null;
+
+if (!USE_BROADCAST_SIDECAR) {
+// POST /live-grid/start { privacyStatus?, title?, roster?, bench?, exclude?, output?,
+//   programMode?, eventFile?, eventTitle?, headline?, fileOverrides? }
+app.post('/live-grid/start', async (req, res) => {
+  try {
+    if (liveGridManager?.running) {
+      return res.status(400).json({ ok: false, error: 'Live grid already running', status: liveGridManager.status() });
+    }
+    const { LiveGridManager } = require('./lib/live_grid/manager');
+    liveGridManager = new LiveGridManager();
+    const status = await liveGridManager.start(req.body || {});
+    res.json({ ok: true, status });
+  } catch (e) {
+    console.error('[live-grid] start failed:', e.message);
+    try { await liveGridManager?.stop(); } catch (_) {}
+    liveGridManager = null;
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-grid/stop — instant kill (also the DMCA mitigation switch)
+app.post('/live-grid/stop', async (req, res) => {
+  if (!liveGridManager) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const watchUrl = liveGridManager.broadcast?.watchUrl || null;
+  await liveGridManager.stop();
+  liveGridManager = null;
+  res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
+});
+
+} // end !USE_BROADCAST_SIDECAR (grid start/stop on main)
+
+// --- Twitch user OAuth (CPD-953) — one-time connect so the grid can read
+// Rob's followed channels (user:read:follows) and use them as the bench. ---
+app.get('/connect/twitch', async (req, res) => {
+  // Separate localhost OAuth app (production app's redirect is auraflux.co)
+  const clientId = process.env.TWITCH_OAUTH_CLIENT_ID || process.env.TWITCH_CLIENT_ID;
+  const clientSecret = process.env.TWITCH_OAUTH_CLIENT_SECRET;
+  const redirectUri = `http://localhost:${PORT}/connect/twitch`;
+
+  // Authorization code grant (CPD-966) — confidential client with secret.
+  // One browser auth ever: the refresh token keeps the server tokened forever.
+  if (clientSecret) {
+    const page = (msg) => `<!doctype html><html><body style="background:#0d1424;color:#fff;font-family:monospace;padding:40px;">${msg}</body></html>`;
+    if (req.query.error) {
+      return res.send(page(`❌ Twitch error: ${req.query.error_description || req.query.error}`));
+    }
+    if (req.query.code) {
+      try {
+        const t = await axios.post('https://id.twitch.tv/oauth2/token', new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: req.query.code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+        }).toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+        const v = await axios.get('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: `OAuth ${t.data.access_token}` } });
+        require('./lib/live_grid/follows').saveUserToken({
+          accessToken: t.data.access_token,
+          refreshToken: t.data.refresh_token,
+          login: v.data.login,
+          clientId: v.data.client_id,
+          userId: v.data.user_id,
+        });
+        console.log(`[live-grid:follows] Twitch user token saved for ${v.data.login} (auth-code + refresh)`);
+        return res.send(page(`✅ Twitch connected as ${v.data.login} — token now auto-refreshes, no re-auth needed. You can close this tab.`));
+      } catch (e) {
+        return res.send(page(`❌ Token exchange failed: ${e.response?.data?.message || e.message}`));
+      }
+    }
+    const codeUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${encodeURIComponent(clientId)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=user:read:follows`;
+    return res.redirect(codeUrl);
+  }
+
+  // Legacy implicit grant (no client secret configured) — token lasts ~4h.
+  const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${encodeURIComponent(clientId)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=user:read:follows`;
+  // Implicit grant returns the token in the URL #fragment — only the browser
+  // can see it, so this page captures it and POSTs it back.
+  res.send(`<!doctype html><html><body style="background:#0d1424;color:#fff;font-family:monospace;padding:40px;">
+<div id="msg">Connecting to Twitch…</div>
+<script>
+const h = new URLSearchParams(location.hash.slice(1));
+const token = h.get('access_token');
+if (token) {
+  fetch('/connect/twitch/token', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ access_token: token }) })
+    .then(r => r.json())
+    .then(d => { document.getElementById('msg').textContent = d.ok ? ('✅ Twitch connected as ' + d.login + ' — followed channels will be used as the live grid bench. You can close this tab.') : ('❌ ' + (d.error || 'failed')); })
+    .catch(e => { document.getElementById('msg').textContent = '❌ ' + e.message; });
+} else if (h.get('error') || new URLSearchParams(location.search).get('error')) {
+  document.getElementById('msg').textContent = '❌ Twitch error: ' + (h.get('error_description') || new URLSearchParams(location.search).get('error_description') || 'denied');
+} else {
+  location.href = ${JSON.stringify(authUrl)};
+}
+</script></body></html>`);
+});
+
+app.post('/connect/twitch/token', async (req, res) => {
+  try {
+    const accessToken = req.body?.access_token;
+    if (!accessToken) return res.status(400).json({ ok: false, error: 'access_token required' });
+    const v = await axios.get('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: `OAuth ${accessToken}` } });
+    if (!(v.data.scopes || []).includes('user:read:follows')) {
+      return res.status(400).json({ ok: false, error: 'token missing user:read:follows scope' });
+    }
+    require('./lib/live_grid/follows').saveUserToken({ accessToken, login: v.data.login, clientId: v.data.client_id, userId: v.data.user_id });
+    console.log(`[live-grid:follows] Twitch user token saved for ${v.data.login}`);
+    res.json({ ok: true, login: v.data.login });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.response?.data?.message || e.message });
+  }
+});
+
+// GET /live-grid/followed-bench — preview the bench the next stream would use
+app.get('/live-grid/followed-bench', async (req, res) => {
+  const { getFollowedBench, getAllFollows, FOLLOWS_USER, loadUserToken } = require('./lib/live_grid/follows');
+  const { DEFAULT_ROSTER } = require('./lib/live_grid/poller');
+  const all = await getAllFollows();
+  const bench = await getFollowedBench({ roster: DEFAULT_ROSTER });
+  if (!all && !bench) {
+    return res.status(400).json({ ok: false, error: `No Twitch user token (or expired) — connect at /connect/twitch as ${FOLLOWS_USER}` });
+  }
+  const tokenUser = loadUserToken()?.login || FOLLOWS_USER;
+  res.json({
+    ok: true,
+    user: tokenUser,
+    count: (all || bench || []).length,
+    follows: all || [],
+    bench: bench || [],
+    roster: DEFAULT_ROSTER,
+  });
+});
+
+if (!USE_BROADCAST_SIDECAR) {
+// POST /live-grid/roster { add?, remove?, benchAdd?, benchRemove? } — mutate the
+// running grid's streamer lists on demand (CPD-951); next 60s poll applies it.
+// Bench streamers only fill quadrants the A-roster can't and are preempted
+// the moment a roster streamer goes live.
+app.post('/live-grid/roster', (req, res) => {
+  if (!liveGridManager?.running) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const lists = liveGridManager.poller.updateRoster(req.body || {});
+  liveGridManager.poller.pollOnce().catch(() => {}); // apply immediately, don't wait for the tick
+  res.json({ ok: true, ...lists });
+});
+
+// POST /live-grid/audio { quadrant: 1-4 } pins audio (operator override);
+// { quadrant: "auto" } releases back to chat/auto control
+app.post('/live-grid/audio', (req, res) => {
+  if (!liveGridManager?.running) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const { quadrant } = req.body || {};
+  const arg = quadrant === 'auto' ? 'auto' : Number(quadrant) - 1;
+  const switched = liveGridManager.setAudio(arg, 'manual');
+  res.json({ ok: true, switched, audio: liveGridManager.status().audio });
+});
+
+// GET /live-grid/status
+app.get('/live-grid/status', (req, res) => {
+  if (!liveGridManager) return res.json({ ok: true, running: false });
+  res.json({ ok: true, ...liveGridManager.status() });
+});
+
+// GET /live-grid/program/status — daypart mode + file sources (CPD-1017)
+app.get('/live-grid/program/status', (req, res) => {
+  try {
+    const { ProgramDirector } = require('./lib/live_grid/program_director');
+    const director = liveGridManager?.programDirector || new ProgramDirector();
+    const layout = liveGridManager?.running
+      ? liveGridManager._programLayout
+      : director.layout([null, null, null, null]);
+    res.json({
+      ok: true,
+      running: !!liveGridManager?.running,
+      ...director.status(),
+      layout: layout ? {
+        mode: layout.mode,
+        modeLabel: layout.modeLabel,
+        title: layout.title,
+        sources: layout.sources,
+        filePaths: layout.filePaths,
+        eventFeed: layout.eventFeed || liveGridManager?._eventFeed || null,
+        activeEvent: layout.activeEvent,
+      } : null,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-grid/quadrant/:n/file { path, label? } — hot-swap a file into quadrant (CPD-1018)
+app.post('/live-grid/quadrant/:n/file', (req, res) => {
+  if (!liveGridManager?.running) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const q = Number(req.params.n) - 1;
+  const { path: filePath, label } = req.body || {};
+  if (!filePath) return res.status(400).json({ ok: false, error: 'path required' });
+  try {
+    const quadrant = liveGridManager.setQuadrantFile(q, filePath, label);
+    res.json({ ok: true, quadrant });
+  } catch (e) {
+    res.status(400).json({ ok: false, error: e.message });
+  }
+});
+
+} // end !USE_BROADCAST_SIDECAR (grid control routes)
+
+// GET /live-grid/event-feed/preview — pick allowlisted live feed for event_night (CPD-1030)
+app.get('/live-grid/event-feed/preview', async (req, res) => {
+  try {
+    const { resolveActiveEvent } = require('./lib/live_grid/event_calendar');
+    const { pickEventFeed } = require('./lib/live_grid/event_feed_picker');
+    const { loadFeedSources } = require('./lib/live_grid/feed_allowlist');
+    const activeEvent = resolveActiveEvent();
+    const eventId = req.query.eventId || activeEvent?.eventId;
+    const feed = await pickEventFeed({
+      eventId,
+      eventTitle: activeEvent?.eventTitle,
+      activeEvent: activeEvent ? { ...activeEvent, eventId: eventId || activeEvent.eventId } : null,
+    });
+    res.json({
+      ok: true,
+      activeEvent,
+      feed,
+      configPath: process.env.LIVE_GRID_FEED_SOURCES || 'config/live_grid_feed_sources.json',
+      spec: eventId ? loadFeedSources().events?.[eventId] : null,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /live-grid/discovery/bench — platform top live preview (CPD-1019)
+app.get('/live-grid/discovery/bench', async (req, res) => {
+  try {
+    const { DEFAULT_ROSTER } = require('./lib/live_grid/poller');
+    const { getFollowedBench } = require('./lib/live_grid/follows');
+    const { fetchPlatformTopLive, mergePlatformBench } = require('./lib/live_grid/discovery');
+    const roster = DEFAULT_ROSTER;
+    const follows = await getFollowedBench({ roster });
+    const platform = await fetchPlatformTopLive();
+    const bench = mergePlatformBench({ roster, follows: follows || [], platform });
+    res.json({ ok: true, followsCount: follows?.length || 0, platformTop: platform.slice(0, 20), benchCount: bench.length, bench: bench.slice(0, 50) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /live-grid/analytics/hourly — watch time by hour + schedule recommendation (CPD-1024)
+app.get('/live-grid/analytics/hourly', async (req, res) => {
+  try {
+    const yt = require('./lib/services/youtube_direct');
+    const { fetchHourlyWatch, aggregateByHour, recommendGridWindow } = require('./lib/live_grid/hourly_analytics');
+    const ch = await yt.getChannelInfo();
+    if (!ch?.id) return res.status(400).json({ ok: false, error: 'YouTube not connected' });
+    const rows = await fetchHourlyWatch(ch.id, { days: Number(req.query.days) || 14 });
+    const hourly = aggregateByHour(rows);
+    const recommendation = recommendGridWindow(hourly);
+    res.json({ ok: true, channelId: ch.id, rows: rows.slice(-48), hourly, recommendation });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.response?.data?.error?.message || e.message });
+  }
+});
+
+// GET /live-grid/allowlist — trial events + platform rules (CPD-1023)
+app.get('/live-grid/allowlist', (req, res) => {
+  try {
+    const { loadAllowlist } = require('./lib/live_grid/rights_registry');
+    res.json({ ok: true, ...loadAllowlist() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /live-grid/files — eligible mp4 list for quadrant swap (CPD-1028)
+app.get('/live-grid/files', (req, res) => {
+  try {
+    const { listEligibleGridFiles } = require('./lib/broadcast/ops');
+    const files = listEligibleGridFiles();
+    res.json({ ok: true, count: files.length, files });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/plan — master week plan (production + live + publish)
+app.get('/calendar/plan', (req, res) => {
+  try {
+    const { buildWeekPlan } = require('./lib/calendar/master_plan');
+    res.json(buildWeekPlan({ persistedJobs }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/broadcast-today — what Broadcast should use right now
+app.get('/calendar/broadcast-today', (req, res) => {
+  try {
+    const { buildBroadcastToday } = require('./lib/calendar/master_plan');
+    res.json(buildBroadcastToday({ persistedJobs }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /calendar/verify-pin — unlock owner mode in dashboard
+app.post('/calendar/verify-pin', (req, res) => {
+  const { verifyOwnerPin } = require('./lib/calendar/owner_gate');
+  const gate = verifyOwnerPin(req.body?.pin);
+  if (!gate.ok) return res.status(403).json(gate);
+  res.json({ ok: true, message: 'Owner verified' });
+});
+
+// POST /calendar/override — owner PIN required { pin, type, date, slotId?, daypartId?, patch, reason }
+app.post('/calendar/override', (req, res) => {
+  try {
+    const { applyOwnerOverride } = require('./lib/calendar/master_plan');
+    const result = applyOwnerOverride(req.body || {});
+    if (!result.ok) return res.status(result.error?.includes('PIN') ? 403 : 400).json(result);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/eligible-jobs?contentType=news — assembled jobs ready to schedule to a slot
+app.get('/calendar/eligible-jobs', (req, res) => {
+  try {
+    const { listEligibleJobs, findSlotConfig } = require('./lib/calendar/slot_jobs');
+    const slot = req.query.slotId ? findSlotConfig(req.query.slotId) : null;
+    const jobs = listEligibleJobs(persistedJobs, req.query.contentType, {
+      alternateTypes: slot?.alternateTypes,
+    });
+    res.json({ ok: true, jobs });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /calendar/schedule-job — link assembled job to calendar slot + set publish time
+app.post('/calendar/schedule-job', (req, res) => {
+  try {
+    const { scheduleJobToSlot } = require('./lib/calendar/slot_jobs');
+    const { jobId, slotId, date } = req.body || {};
+    if (!jobId || !slotId || !date) {
+      return res.status(400).json({ ok: false, error: 'jobId, slotId, and date required' });
+    }
+    const result = scheduleJobToSlot({
+      jobId, slotId, date,
+      persistedJobs,
+      saveJobCard,
+    });
+    if (!result.ok) return res.status(400).json(result);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/playbook — youtube top200 data + allowlist programming (dashboard)
+app.get('/broadcast/playbook', (req, res) => {
+  try {
+    const { buildProgrammingPlaybook } = require('./lib/broadcast/programming_playbook');
+    res.json(buildProgrammingPlaybook());
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/content-board — schedule, pipeline, gaps (dashboard)
+app.get('/broadcast/content-board', (req, res) => {
+  try {
+    const { buildContentBoard } = require('./lib/broadcast/content_board');
+    res.json(buildContentBoard({ persistedJobs }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/ops — pipeline + stream safety snapshot (CPD-1028)
+app.get('/broadcast/ops', async (req, res) => {
+  try {
+    const { buildOpsSnapshot } = require('./lib/broadcast/ops');
+    const health = {
+      version: BUILD_INFO.version,
+      gitHash: BUILD_INFO.gitHash,
+      gitBranch: BUILD_INFO.gitBranch,
+      uptime: process.uptime(),
+    };
+    let gridRunning = !!liveGridManager?.running;
+    let tvRunning = !!liveTvManager?.running;
+    let sidecar = null;
+    if (USE_BROADCAST_SIDECAR) {
+      try {
+        sidecar = await sidecarClient.getStatus();
+        gridRunning = sidecar.gridRunning;
+        tvRunning = sidecar.tvRunning;
+      } catch (_) {}
+    }
+    res.json({
+      ok: true,
+      broadcastSidecar: USE_BROADCAST_SIDECAR ? {
+        url: sidecarClient.sidecarBaseUrl(),
+        reachable: sidecar?.sidecarReachable ?? false,
+        tvRunning,
+        gridRunning,
+      } : null,
+      ...buildOpsSnapshot({
+        persistedJobs,
+        gridRunning,
+        tvRunning,
+        health,
+      }),
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /broadcast/24h-arm — operator ready for 24h measurement (CPD-1028)
+app.post('/broadcast/24h-arm', (req, res) => {
+  try {
+    const { arm24hMeasurement } = require('./lib/broadcast/ops');
+    res.json({ ok: true, ...arm24hMeasurement() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+let liveTvManager = null;
+
+if (!USE_BROADCAST_SIDECAR) {
+
+function resolveLiveTvStartOpts(body = {}) {
+  const opts = { ...body };
+  if (!opts.videos?.length) {
+    const { loadCuratedPlaylist } = require('./lib/live_tv/curated_playlist');
+    const curated = loadCuratedPlaylist();
+    if (curated?.videos?.length) {
+      opts.videos = curated.videos;
+      if (curated.curated) opts.curated = true;
+    }
+  }
+  return opts;
+}
+
+function startLiveTv(body = {}) {
+  const { LiveTvManager } = require('./lib/live_tv/manager');
+  liveTvManager = new LiveTvManager();
+  return liveTvManager.start(resolveLiveTvStartOpts(body));
+}
+
+// POST /live-tv/start { videos?, shuffle?, output?, curated? } — default uses
+// config/live_tv_playlist.json when set; else scans output/
+app.post('/live-tv/start', (req, res) => {
+  try {
+    if (liveTvManager?.running) {
+      return res.status(400).json({ ok: false, error: 'ClipzWorld TV already running', status: liveTvManager.status() });
+    }
+    const status = startLiveTv(req.body || {});
+    res.json({ ok: true, status });
+  } catch (e) {
+    console.error('[live-tv] start failed:', e.message);
+    try { liveTvManager?.stop(); } catch (_) {}
+    liveTvManager = null;
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-tv/restart — swap playlist with minimal downtime (~2s Twitch blip)
+app.post('/live-tv/restart', (req, res) => {
+  try {
+    if (liveTvManager?.running) {
+      liveTvManager.stop();
+      liveTvManager = null;
+    }
+    const status = startLiveTv(req.body || {});
+    res.json({ ok: true, status });
+  } catch (e) {
+    console.error('[live-tv] restart failed:', e.message);
+    try { liveTvManager?.stop(); } catch (_) {}
+    liveTvManager = null;
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /live-tv/playlist — catalog + saved rotation for Broadcast dashboard
+app.get('/live-tv/playlist', (req, res) => {
+  try {
+    const pl = require('./lib/live_tv/curated_playlist');
+    const curated = pl.loadCuratedPlaylist();
+    const catalog = pl.buildTvCatalog();
+    const selected = new Set(curated?.videos || []);
+    const recommended = pl.recommendedPlaylist(catalog);
+    const pathMod = require('path');
+    res.json({
+      ok: true,
+      curated,
+      catalog: pl.markSelected(catalog, selected),
+      recommended: recommended.map((abs) => ({
+        abs,
+        path: pathMod.relative(pl.REPO_ROOT, abs).replace(/\\/g, '/'),
+        label: pl.friendlyTvLabel(pathMod.basename(abs)),
+      })),
+      running: liveTvManager?.running ? liveTvManager.status() : { running: false },
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-tv/playlist { videos: string[], apply?: boolean } — save from dashboard; optional live swap
+app.post('/live-tv/playlist', (req, res) => {
+  try {
+    const pl = require('./lib/live_tv/curated_playlist');
+    const videos = req.body?.videos;
+    if (!Array.isArray(videos) || !videos.length) {
+      return res.status(400).json({ ok: false, error: 'Pick at least one video' });
+    }
+    const saved = pl.saveCuratedPlaylist({
+      videos,
+      notes: req.body?.notes || 'Saved from Broadcast dashboard',
+      targetDurationMin: req.body?.targetDurationMin || null,
+    });
+    let status = liveTvManager?.running ? liveTvManager.status() : { running: false };
+    if (req.body?.apply) {
+      if (liveTvManager?.running) {
+        liveTvManager.stop();
+        liveTvManager = null;
+      }
+      status = startLiveTv({ videos: saved.videos, curated: true });
+    }
+    res.json({ ok: true, curated: saved, status });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /live-tv/stop
+app.post('/live-tv/stop', (req, res) => {
+  if (!liveTvManager) return res.status(400).json({ ok: false, error: 'ClipzWorld TV not running' });
+  liveTvManager.stop();
+  liveTvManager = null;
+  res.json({ ok: true, message: 'ClipzWorld TV stopped' });
+});
+
+// GET /live-tv/status
+app.get('/live-tv/status', (req, res) => {
+  if (!liveTvManager) return res.json({ ok: true, running: false });
+  res.json({ ok: true, ...liveTvManager.status() });
+});
+
+} // end !USE_BROADCAST_SIDECAR (live-tv routes on main)
+
+// CPD-958: auto-enqueue published videos into ClipzWorld TV rotation
+function tvAutoEnqueue(jobId) {
+  try {
+    const card = persistedJobs[jobId];
+    const file = card?.outputPath || card?.state?.savedOutputs?.outputPath || null;
+    if (!file) return;
+
+    if (USE_BROADCAST_SIDECAR) {
+      sidecarClient.request('POST', '/live-tv/enqueue', { file }).catch(() => {});
+      return;
+    }
+
+    if (!liveTvManager?.running || liveTvManager.curated) return;
+    if (liveTvManager.enqueue(file)) {
+      console.log(`[live-tv] ${jobId}: published video auto-enqueued into the rotation`);
+    }
+  } catch (_e) { /* non-fatal */ }
+}
+pipelineBus.on('publish:complete', ({ jobId }) => tvAutoEnqueue(jobId));
+
+// CPD-998: one production run feeds every platform — a published longform
+// auto-spawns a vertical sibling (clip short / news-short / nba-short).
+// Gated by REPURPOSE_SHORTS=on; short-form and clips-only cards never repurpose.
+pipelineBus.on('publish:complete', ({ jobId }) => {
+  try {
+    const { repurposeOnPublish } = require('./lib/services/repurpose');
+    const card = persistedJobs[jobId];
+    if (!card) return;
+    repurposeOnPublish(card, { baseUrl: `http://localhost:${PORT}` })
+      .catch((e) => console.warn(`[repurpose] ${jobId}: unexpected error (non-fatal): ${e.message}`));
+  } catch (e) {
+    console.warn(`[repurpose] listener error (non-fatal): ${e.message}`);
+  }
+});
+
+// GET /stream-scheduler/status — programming windows + next start/stop (CPD-975/976)
+let streamScheduler = null;
+app.get('/stream-scheduler/status', (req, res) => {
+  if (!streamScheduler) return res.json({ ok: true, enabled: false });
+  res.json({ ok: true, enabled: true, streams: streamScheduler.status() });
+});
+
 // POST /job/:id/run-gate5 — trigger Gate 5 upload for an assembled/force-advanced job
 app.post('/job/:id/run-gate5', async (req, res) => {
   const jobId = req.params.id;
@@ -2349,8 +3149,28 @@ app.post('/job/:id/run-gate5', async (req, res) => {
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
 
   const stage = card.stage || '';
-  if (!['assembled', 'gate5_forced', 'gate5_failed'].includes(stage)) {
-    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/gate5_forced/gate5_failed` });
+  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked'].includes(stage)) {
+    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/heygen_done/gate5_forced/gate5_failed/gate5_running` });
+  }
+
+  // Allow caller to inject driveUrl / assembledPath when Gate 3b blocked the normal save path
+  if (req.body.driveUrl) {
+    card.driveUrl = req.body.driveUrl;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.driveUrl = req.body.driveUrl;
+  }
+  if (req.body.assembledPath) {
+    card.assembledPath = req.body.assembledPath;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.assembledPath = req.body.assembledPath;
+  }
+  if (req.body.thumbnailDriveUrl) {
+    card.thumbnailDriveUrl = req.body.thumbnailDriveUrl;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.thumbnailDriveUrl = req.body.thumbnailDriveUrl;
   }
 
   // Mark forced so the advance branch doesn't re-fire on page reload
@@ -2366,6 +3186,256 @@ app.post('/job/:id/run-gate5', async (req, res) => {
       console.error(`[run-gate5 endpoint] ${jobId}:`, err.message);
     }
   });
+});
+
+// GET /job/:id/assembly-preflight — verify manual_segments folder before triggering assembly.
+// Returns a report showing every expected segment: present/missing, dimensions, chrome story mapping.
+// Run this after placing HeyGen exports but BEFORE hitting resume — catch mismatches before spending credits.
+app.get('/job/:id/assembly-preflight', (req, res) => {
+  const jobId = req.params.id;
+  const card  = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const { getManualDir, discoverHeyGenNestedExports: _discoverNestedExports, labelSceneTypeSuffixMatch: _labelSuffixMatch } = require('./lib/manual_segment_workflow');
+  const manualDir = getManualDir(jobId);
+  const dirExists = fs.existsSync(manualDir);
+
+  // Load manifest to get expected segments in correct order
+  const manifestPath = path.join(manualDir, 'manifest.json');
+  let manifest = null;
+  try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch(_) {}
+
+  const segments = manifest?.segments || [];
+  const sceneItems = card?.designSpec?.sceneStructure?.items || [];
+
+  // Build expected chrome story order from the CARD (picker order), not DB spec
+  const chromeStoryOrder = sceneItems.map((it, i) => ({
+    position: i + 1,
+    title: (it.label || '').slice(0, 50),
+    sceneId: it.sceneId || `ITEM${i+1}`
+  }));
+
+  const report = {
+    jobId,
+    contentType: card.contentType,
+    manualDir,
+    dirExists,
+    chromeStoryOrder,
+    segments: [],
+    summary: { total: 0, avatar: 0, sourceClip: 0, present: 0, missing: 0, dimensionOk: 0, dimensionWrong: 0, audioOk: 0, audioMissing: 0 }
+  };
+
+  if (!dirExists || segments.length === 0) {
+    report.error = dirExists ? 'manifest.json missing — job has not reached manual checkpoint yet' : 'manual_segments folder does not exist yet';
+    return res.json(report);
+  }
+
+  const { spawnSync } = require('child_process');
+
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    const segType = seg.type || 'avatar';
+
+    // Determine expected file for this segment
+    let expectedFile = null;
+    if (segType === 'source_clip') {
+      // Flat mp4 files for clips
+      const typeTag = 'clip';
+      const safeLabel = String(seg.label || 'seg').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      expectedFile = path.join(manualDir, `${String(i).padStart(2, '0')}_${typeTag}_${safeLabel}.mp4`);
+    } else {
+      // Nested HeyGen folder for avatar segments
+      expectedFile = null; // checked via label matching below
+    }
+
+    // For avatar: mirror the 3-priority matching used in applyManualOverrides so the
+    // preflight accurately reflects whether assembly will find each segment.
+    let foundMp4 = null;
+    if (segType === 'avatar') {
+      if (dirExists) {
+        const nested = _discoverNestedExports(manualDir);
+        const segLabel = String(seg.label || '').toUpperCase().trim();
+        // heygenOrdinal = count of non-source_clip segments before this index
+        const heygenOrdinal = segments.slice(0, i).filter(s => (s.type || 'avatar') !== 'source_clip').length;
+
+        // Priority 1: exact label match (e.g. folder "RON_INTRO" === seg label "RON_INTRO")
+        const labelMatches = segLabel ? nested.filter(n => n.label === segLabel) : [];
+        const byLabel = labelMatches.length === 1
+          ? labelMatches[0]
+          : labelMatches.length > 1
+            ? labelMatches.reduce((best, n) =>
+                Math.abs(n.ord - heygenOrdinal) < Math.abs(best.ord - heygenOrdinal) ? n : best)
+            : null;
+
+        // Priority 2: HeyGen avatar ordinal + scene-type suffix match
+        // (handles NBA short labels "G1_INTRO" matching manifest "GAME1_NEW_YORK_KNICKS_..._INTRO")
+        const byHeygenOrd = nested.find(n => n.ord === heygenOrdinal && (
+          !n.label || !segLabel || n.label === segLabel || _labelSuffixMatch(n.label, segLabel)
+        ));
+
+        // Priority 3: absolute index + suffix match (fallback when user names folders 00_, 01_…)
+        const byAbsoluteIdx = nested.find(n => n.ord === i && (
+          !n.label || !segLabel || n.label === segLabel || _labelSuffixMatch(n.label, segLabel)
+        ));
+
+        const pick = byLabel || byHeygenOrd || byAbsoluteIdx;
+        if (pick) foundMp4 = pick.mp4Path;
+      }
+    } else {
+      if (expectedFile && fs.existsSync(expectedFile) && fs.statSync(expectedFile).size > 10000) {
+        foundMp4 = expectedFile;
+      }
+    }
+
+    // Probe dimensions + audio if file found
+    let width = null, height = null, hasAudio = null;
+    if (foundMp4) {
+      try {
+        const probe = spawnSync('ffprobe', [
+          '-v', 'quiet', '-show_streams', '-of', 'json', foundMp4
+        ], { encoding: 'utf8', timeout: 8000 });
+        if (probe.status === 0) {
+          const streams = JSON.parse(probe.stdout).streams || [];
+          const v = streams.find(s => s.codec_type === 'video');
+          const a = streams.find(s => s.codec_type === 'audio');
+          if (v) { width = v.width; height = v.height; }
+          hasAudio = !!a;
+        }
+      } catch(_) {}
+    }
+
+    // Determine which chrome story this segment maps to
+    const storyMatch = String(seg.label || '').match(/(?:STORY|ITEM|GAME)(\d+)/i);
+    const storyNum = storyMatch ? parseInt(storyMatch[1], 10) : null;
+    const chromeStory = storyNum ? chromeStoryOrder[storyNum - 1] : null;
+
+    // Dimension check: avatars must be 1920x1080 (HeyGen standard).
+    // Source clips can be any resolution — assembly pillarboxes portrait clips automatically.
+    let dimOk = null;
+    if (width && height) {
+      if (segType === 'avatar') {
+        dimOk = (width === 1920 && height === 1080);
+      } else {
+        // For clips: just require video track present — any resolution is acceptable
+        dimOk = true;
+      }
+    }
+    const isPortraitClip = segType === 'source_clip' && width && height && height > width;
+
+    const row = {
+      index: i,
+      label: seg.label,
+      type: segType,
+      present: !!foundMp4,
+      file: foundMp4 ? path.basename(path.dirname(foundMp4) === manualDir ? foundMp4 : path.dirname(foundMp4)) : (expectedFile ? path.basename(expectedFile) : '(nested folder)'),
+      dimensions: width ? `${width}x${height}${isPortraitClip ? ' (portrait→pillarbox)' : ''}` : null,
+      dimensionsOk: dimOk,
+      hasAudio,
+      chromeStory: chromeStory ? `[${chromeStory.position}] ${chromeStory.title}` : null,
+      issue: null
+    };
+
+    if (!row.present) row.issue = 'MISSING';
+    else if (dimOk === false) row.issue = `WRONG_DIMS: ${width}x${height} (expected 1920x1080)`;
+    else if (hasAudio === false && segType === 'avatar') row.issue = 'NO_AUDIO on avatar segment — Bobby G will be silent';
+
+    report.segments.push(row);
+    report.summary.total++;
+    if (segType === 'avatar') report.summary.avatar++;
+    else report.summary.sourceClip++;
+    if (row.present) report.summary.present++;
+    else report.summary.missing++;
+    if (dimOk === true) report.summary.dimensionOk++;
+    if (dimOk === false) report.summary.dimensionWrong++;
+    if (hasAudio === true) report.summary.audioOk++;
+    if (hasAudio === false) report.summary.audioMissing++;
+  }
+
+  report.ready = report.summary.missing === 0 && report.summary.dimensionWrong === 0 && report.summary.audioMissing === 0;
+  report.issues = report.segments.filter(s => s.issue).map(s => `[${s.index}] ${s.label}: ${s.issue}`);
+
+  res.json(report);
+});
+
+// POST /job/:id/resubmit-avatar — re-run avatar adapter (EchoMimic/HeyGen) for an approved script
+// Resumes from card.heygen.videoJobs checkpoints — skips scenes already completed.
+app.post('/job/:id/resubmit-avatar', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card?.script?.raw) {
+    return res.status(404).json({ ok: false, error: `Job not found or has no script: ${jobId}` });
+  }
+
+  const existing = card.heygen?.videoJobs || [];
+  const done = existing.filter((v) => v.status === 'completed' && v.video_id).length;
+  res.json({
+    ok: true,
+    jobId,
+    resume: done > 0,
+    completedScenes: done,
+    message: done > 0
+      ? `Avatar resume started (${done} scene(s) already done)`
+      : 'Avatar resubmit started — watch pm2 logs for progress'
+  });
+
+  (async () => {
+    const type = card.contentType || 'twitch';
+    const format = type.includes('-short') ? 'portrait' : 'landscape';
+    let script = card.script.raw
+      .replace(/^HOOK:\s*/mg, '')
+      .replace(/^REACTION:\s*/mg, '')
+      .replace(/^CAPTION:\s*.+$/mg, '')
+      .replace(/\[(?:pause|beat)[^\]]*\]/gi, '')
+      .replace(/\n{3,}/g, '\n\n').trim();
+
+    const checkpoint = (heygenPartial) => {
+      const snap = {
+        ...card,
+        ...persistedJobs[jobId],
+        stage: 'avatar_in_progress',
+        avatarEngine: process.env.AVATAR_ENGINE || 'heygen',
+        heygen: { ...(card.heygen || {}), ...heygenPartial, videoJobs: heygenPartial.videoJobs }
+      };
+      saveJobCard(jobId, snap);
+    };
+
+    console.log(`[resubmit-avatar:${jobId}] starting ${process.env.AVATAR_ENGINE || 'heygen'} — ${type}, ${format}${done ? ` (resume, ${done} done)` : ''}`);
+    try {
+      const heygenResult = await sendScriptToHeyGen(script, {
+        contentType: type,
+        format,
+        jobId,
+        existingVideoJobs: existing,
+        onSceneComplete: ({ videoJobs }) => checkpoint({ videoJobs, engine: process.env.AVATAR_ENGINE || 'heygen' })
+      });
+      if (heygenResult?.error) throw new Error(heygenResult.error);
+
+      const updated = { ...card, stage: 'all_sent', avatarEngine: process.env.AVATAR_ENGINE || 'heygen', heygen: heygenResult };
+      saveJobCard(jobId, updated);
+      console.log(`[resubmit-avatar:${jobId}] ✅ ${heygenResult.videoJobs?.length || 0} segments submitted`);
+
+      const manualWf = require('./lib/manual_segment_workflow');
+      if (manualWf.useC0ImmediateManualHold(updated)) {
+        const prep = await manualWf.prepareC0ManualHoldAfterHeyGen(jobId, updated);
+        updated.stage = 'awaiting_manual_segments';
+        updated.manualSegments = prep.manualSegments;
+        saveJobCard(jobId, updated);
+        console.log(`[resubmit-avatar:${jobId}] c0 manual hold — ${prep.manualSegments.manualDir}`);
+        return;
+      }
+
+      startHeyGenPoller(jobId, persistedJobs[jobId] || updated).catch(e => {
+        console.error(`[resubmit-avatar:${jobId}] poller error: ${e.message}`);
+      });
+    } catch (e) {
+      console.error(`[resubmit-avatar:${jobId}] ❌ ${e.message}`);
+      if (e.videoJobs?.length) {
+        checkpoint({ videoJobs: e.videoJobs, engine: process.env.AVATAR_ENGINE || 'heygen', lastError: e.message, failedScene: e.failedScene });
+        console.log(`[resubmit-avatar:${jobId}] 💾 checkpoint saved — ${e.videoJobs.length} scene(s) — resume with same endpoint`);
+      }
+      logError('RESUBMIT_AVATAR', e.message, { jobId, contentType: type, completedScenes: e.videoJobs?.length || done });
+    }
+  })();
 });
 
 // POST /job/:id/manual-segments/resume — continue pipeline after c0 manual checkpoint
@@ -2444,6 +3514,343 @@ app.post('/job/:id/manual-segments/resume', (req, res) => {
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message || String(e) });
   }
+});
+
+// POST /job/:id/reassemble — skip Gate 2, build segmentData from the card's heygen.videoJobs
+// and orderedClipUrls, then fire /assemble directly.  Any files the operator dropped into
+// tmp/manual_segments/<jobId>/ are picked up automatically by applyManualOverrides inside
+// the assembly handler, so expired HeyGen URLs don't matter — they get replaced.
+//
+// Safe to call from any stage except 'published'. Increments _assemblyRetryCount so the
+// asmId is unique and the dedup lock does not block it.
+app.post('/job/:id/reassemble', async (req, res) => {
+  const jobId = req.params.id;
+  const card  = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job is already published — rollback first if you need to re-assemble.' });
+  }
+
+  const videoJobs     = card.heygen?.videoJobs || [];
+  const orderedClips  = card.orderedClipUrls   || [];
+
+  // Clips-only jobs (CPD-935 comps / CPD-981 avatar-free shorts) legitimately
+  // have zero videoJobs — their script scenes are all source_clip, so the
+  // script-driven rebuild below works fine. Only reject when there is nothing
+  // at all to rebuild from.
+  if (!videoJobs.length && !card.clipsOnly && !orderedClips.length) {
+    return res.status(400).json({ ok: false, error: 'No heygen.videoJobs on this card — cannot build segment data.' });
+  }
+
+  // ── Build segmentData — prefer manifest (has correct clip interleaving) ────
+  // The manifest written at hold time is authoritative: it has both avatar and
+  // source_clip segments in the correct order.  Fall back to videoJobs-only
+  // reconstruction if no manifest exists (older jobs / NBA long-form).
+  const { getManualDir } = require('./lib/manual_segment_workflow');
+  const manualDir = getManualDir(jobId);
+  const manifestPath = path.join(manualDir, 'manifest.json');
+  let manifest = null;
+  try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch (_) {}
+
+  let clipIdx = 0;
+  let segmentData;
+
+  if (manifest?.segments?.length) {
+    // Use manifest — interleaves source_clip segments in the correct positions
+    segmentData = manifest.segments.map((seg, i) => {
+      if ((seg.type || 'avatar') === 'source_clip') {
+        const clipEntry = orderedClips[clipIdx++] || {};
+        return {
+          type:              'source_clip',
+          url:               seg.url || clipEntry.url || clipEntry.pageUrl || '',
+          label:             seg.label,
+          clipTimingTargets: clipEntry.clipTimingTargets  || seg.clipTimingTargets  || [],
+          clipTimingFormat:  clipEntry.clipTimingFormat   || seg.clipTimingFormat   || 'timestamp_table',
+          pillarboxFilter:   clipEntry.pillarboxFilter    || seg.pillarboxFilter    || null,
+          sourceOrientation: clipEntry.sourceOrientation  || seg.sourceOrientation  || 'landscape'
+        };
+      }
+      // Avatar — find matching videoJob for the HeyGen URL (best-effort, overridden by applyManualOverrides anyway)
+      const matchingJob = videoJobs.find(j => (j.sceneName || j.scene) === seg.label);
+      return { type: 'avatar', url: matchingJob?.video_url || seg.url || '', label: seg.label };
+    });
+    console.log(`[reassemble] ${jobId}: using manifest (${segmentData.length} segs, ${clipIdx} clips)`);
+  } else if (card.script?.scenes?.length) {
+    // Script-driven rebuild — same source of truth as the heygen-poller build.
+    // The videoJobs-only fallback below drops source_clip scenes (they are never
+    // sent to HeyGen), which produced 0-clip re-assemblies on shorts (CPD-932).
+    const pushClip = (scene, labelFallback) => {
+      const clipEntry = orderedClips[clipIdx++] || {};
+      const url = clipEntry.clipUrl || clipEntry.url || clipEntry.pageUrl || '';
+      if (!url) return;
+      segmentData.push({
+        type:              'source_clip',
+        url,
+        label:             clipEntry.label || scene.name || labelFallback,
+        clipTimingTargets: Array.isArray(clipEntry.clipTimingTargets) ? clipEntry.clipTimingTargets : [],
+        clipTimingFormat:  clipEntry.clipTimingFormat || 'timestamp_table',
+        pillarboxFilter:   clipEntry.pillarboxFilter || null,
+        sourceOrientation: clipEntry.sourceOrientation || clipEntry.orientation || 'landscape'
+      });
+    };
+    segmentData = [];
+    for (const scene of card.script.scenes) {
+      if (scene.type === 'source_clip') {
+        pushClip(scene, `CLIP_${clipIdx + 1}`);
+      } else {
+        const sceneKey = scene.name || scene.id;
+        const matchingJob = videoJobs.find(j => (j.sceneName || j.scene) === sceneKey);
+        if (matchingJob?.video_url) {
+          segmentData.push({ type: 'avatar', url: matchingJob.video_url, label: sceneKey });
+        }
+        if (scene.hasClipInsert) pushClip(scene, `${sceneKey}_CLIP`);
+      }
+    }
+    console.log(`[reassemble] ${jobId}: script-driven rebuild (${segmentData.length} segs, ${clipIdx} clips)`);
+  } else {
+    // Fallback: rebuild from videoJobs only (no clip interleaving)
+    segmentData = videoJobs.map(job => {
+      const sceneName   = job.sceneName || job.scene || `SEG_${clipIdx}`;
+      const isClipScene = /CLIP/i.test(sceneName) && !/COLD_OPEN/i.test(sceneName);
+      if (isClipScene) {
+        const clipEntry = orderedClips[clipIdx++] || {};
+        return {
+          type:              'source_clip',
+          url:               clipEntry.url || clipEntry.pageUrl || '',
+          label:             sceneName,
+          clipTimingTargets: clipEntry.clipTimingTargets  || [],
+          clipTimingFormat:  clipEntry.clipTimingFormat   || 'timestamp_table',
+          pillarboxFilter:   clipEntry.pillarboxFilter    || null,
+          sourceOrientation: clipEntry.sourceOrientation  || 'landscape'
+        };
+      }
+      return { type: 'avatar', url: job.video_url || '', label: sceneName };
+    });
+    console.log(`[reassemble] ${jobId}: no manifest — rebuilt from videoJobs (${segmentData.length} segs, ${clipIdx} clips)`);
+  }
+
+  // ── Reset assembly-related state so old stitch artefacts are gone ──────────
+  const retryNum  = (card._assemblyRetryCount || 0) + 1;
+  const assemblyId = `asm_${jobId}_r${retryNum}`;
+
+  card._assemblyRetryCount = retryNum;
+  // Clear previous assembly artefacts but preserve heygen, script, designSpec, etc.
+  delete card.assembledAt;
+  delete card.finalUrl;
+  delete card.outputPath;
+  delete card.gate5;
+  delete card._gate5Done;
+  delete card._gate5Running;
+  delete card._gate3Approved;
+  delete card._gate3Rejected;
+  Object.keys(assemblyJobs).forEach(asmId => {
+    if (assemblyJobs[asmId]?.sourceJobId === jobId) delete assemblyJobs[asmId];
+  });
+  card.stage = 'heygen_done';
+  saveJobCard(jobId, card);
+
+  // ── Fire /assemble (internal axios call so all middleware runs normally) ───
+  const port = process.env.PORT || 3000;
+  const payload = {
+    segments:     segmentData.map(s => s.url),
+    segmentData,
+    labels:       segmentData.map(s => s.label),
+    transition:   'crossfade',
+    // Shorts must re-assemble down the split-screen portrait path (CPD-932):
+    // assembly.js only routes short-form when format === 'portrait'.
+    format:       (card.contentType || '').includes('-short') ? 'portrait' : 'mp4',
+    assemblyId,
+    contentType:  card.contentType || 'nba',
+    jobId,
+    jobSpecId:    card.specId || card.jobSpecId || null,
+    // Without jobTitle the short-form output falls back to a cwn_short_* name —
+    // clips-only retries then lose their clips_comp_*/clip_short_* slug and the
+    // ClipzWorld TV takedown-shield filename filter no longer matches them.
+    jobTitle:     card.title || null,
+    sceneTextMap: card.heygen?.sceneTextMap || null,
+    fullScript:   card.script?.raw || card.script || null,
+    streamers:    card.streamers || [],
+    items:        card.nbaItems  || card.newsItems || card.items || [],
+    expectedClips: orderedClips.length,
+    designSpec:   card.designSpec  || null,
+    nbaItems:     card.nbaItems    || [],
+    captionText:  card.captionText || null,
+    captionStyle: card.captionStyle || null
+  };
+
+  res.json({
+    ok: true,
+    jobId,
+    assemblyId,
+    retryNum,
+    message: `Re-assembly r${retryNum} started — files from manual_segments will be used. Watch the dashboard for Gate 3 result.`,
+    segmentCount: segmentData.length,
+    clipCount: clipIdx
+  });
+
+  // Fire async so the HTTP response goes out first
+  setImmediate(async () => {
+    try {
+      await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
+      console.log(`[reassemble] ${jobId} r${retryNum}: /assemble fired (${segmentData.length} segs, ${clipIdx} clips)`);
+    } catch (err) {
+      console.error(`[reassemble] ${jobId} r${retryNum}: /assemble failed — ${err.message}`);
+    }
+  });
+});
+
+// ── POST /generate-clip-comp — CPD-935: clips-only compilation short ─────────
+// No script gen, no HeyGen. Picked clips (already mp4-resolved by the dashboard)
+// go straight to assembly: blur-pad portrait per clip + concat. Whisper captions
+// and loudnorm apply in the standard post-process pass.
+// CPD-981: also the path for ALL dashboard shorts — Bobby G is VOD-only now
+// (HeyGen credits reserved for watch-hour content until CPD-881 lands), so the
+// SHORT buttons dispatch single-clip jobs here. contentType 'news-short' rides
+// the same flow: assembly re-scrapes fresh Brightcove HLS from clip pageUrl.
+app.post('/generate-clip-comp', async (req, res) => {
+  const clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
+  if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
+  if (clips.length > 10) return res.status(400).json({ error: `Too many clips (${clips.length} > 10 max)` });
+
+  const contentType = ['twitch-short', 'news-short'].includes(req.body.contentType)
+    ? req.body.contentType : 'twitch-short';
+  const platforms = Array.isArray(req.body.platforms) && req.body.platforms.length ? req.body.platforms : ['tiktok'];
+  const streamers = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
+  // Single-clip shorts slug to clip_short_* — the ClipzWorld TV playlist filter
+  // excludes that prefix (no avatar = no transformative layer = never on the loop)
+  const title     = req.body.title ||
+    (clips.length === 1 ? `Clip Short — ${streamers[0] || 'Twitch'}`
+                        : `Clips Comp — ${streamers.join(', ') || 'Twitch'}`);
+  const jobId     = `script_${contentType}_${Date.now()}`;
+
+  // Job spec — same contract as the script flow so all gates read normally.
+  // contentType twitch-short inherits the CPD-932 short-form gate handling.
+  let jobSpec = null;
+  try {
+    jobSpec = await createJobSpec({
+      customerId:   'c0',
+      templateId:   'short-form',
+      contentType,
+      createdBy:    'dashboard',
+      sourceType:   'url_list',
+      sourceConfig: { urls: clips.map(c => c.pageUrl || c.url).filter(Boolean) },
+      items:        clips,
+      title
+    });
+    const { updateJobSpec, linkScriptJob } = require('./lib/job_spec');
+    // Link semantic spec ↔ card id like the script flow does. Without this,
+    // saveOutput(card id) seeds a DUPLICATE spec row and Gate 5 (reading the
+    // semantic row) sees publishCopy=null → "YouTube: title is required" fail.
+    linkScriptJob(jobSpec.jobId, jobId);
+    jobSpec = updateJobSpec(jobSpec.jobId, {
+      clipsOnly: true,
+      deliverySpec: { platforms },
+      // Spec-driven routing: declare the stages this job actually skips. Clips-only
+      // comps have no script generation and no HeyGen avatar — the spec must say so.
+      stageMap: {
+        script: { active: false },
+        avatar: { active: false }
+      },
+      designSpec: { chrome: {
+        layout: 'clip-comp',
+        hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false, hasLogo: true,
+        // Short-form assembly places the logo bottom-right (shortLogoPos "mug") — the
+        // inherited top-right default made Gate 3a dock points for a per-spec logo.
+        logoPosition: 'bottom-right', logoSize: 80
+      } }
+    });
+  } catch (specErr) {
+    console.warn('[/generate-clip-comp] Job Spec creation failed (non-fatal):', specErr.message);
+  }
+
+  const orderedClipUrls = clips.map((c, i) => ({
+    url:         c.url || c.clipUrl || '',
+    clipUrl:     c.url || c.clipUrl || '',
+    pageUrl:     c.pageUrl || '',
+    label:       `CLIP_${i + 1}`,
+    streamer:    c.streamer || '',
+    displayName: c.displayName || c.streamer || '',
+    title:       c.title || '',
+    orientation: c.orientation || 'landscape',
+    pillarboxFilter: c.pillarboxFilter != null ? c.pillarboxFilter : null
+  }));
+
+  const card = {
+    id:          jobId,
+    contentType,
+    clipsOnly:   true,
+    title,
+    streamers,
+    platforms,
+    repurposedFrom: req.body.repurposedFrom || null, // CPD-998: spawned from a published longform
+    specId:      jobSpec?.jobId || null,
+    jobSpecId:   jobSpec?.jobId || null,
+    createdAt:   new Date().toISOString(),
+    stage:       'heygen_done',
+    status:      'assembling',
+    // Synthetic all-clip scene script: keeps saveJobCard segment extraction and
+    // the /reassemble script-driven rebuild (CPD-932) working with no avatar scenes.
+    script: {
+      title,
+      scenes: clips.map((c, i) => ({ name: `CLIP_${i + 1}`, type: 'source_clip', title: c.title || '' }))
+    },
+    orderedClipUrls,
+    heygen: { videoJobs: [] },
+    designSpec: jobSpec?.designSpec || { chrome: { layout: 'clip-comp', hasLogo: true, hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false } },
+    _assemblyRetryCount: 1
+  };
+  saveJobCard(jobId, card);
+
+  const segmentData = orderedClipUrls.map(c => ({
+    url:             c.clipUrl,
+    pageUrl:         c.pageUrl,
+    label:           c.label,
+    type:            'source_clip',
+    clipUrl:         c.clipUrl,
+    pillarboxFilter: c.pillarboxFilter,
+    orientation:     c.orientation,
+    clipTimingTargets: [],
+    clipTimingFormat: 'none'
+  }));
+
+  const assemblyId = `asm_${jobId}_r1`;
+  const port = process.env.PORT || 3000;
+  const payload = {
+    segments:      segmentData.map(s => s.url),
+    segmentData,
+    labels:        segmentData.map(s => s.label),
+    transition:    'crossfade',
+    format:        'portrait',
+    assemblyId,
+    contentType,
+    jobId,
+    jobSpecId:     jobSpec?.jobId || null,
+    jobTitle:      title,
+    streamers,
+    expectedClips: segmentData.length,
+    designSpec:    card.designSpec,
+    captionText:   null, // CPD-935: no hook caption — whisper captions only
+    // Synthetic script from clip titles so publish-copy generation has material
+    fullScript:    clips.map((c, i) => `CLIP ${i + 1} (${c.displayName || c.streamer || 'streamer'}): ${c.title || 'untitled clip'}`).join('\n')
+  };
+
+  res.json({
+    ok: true,
+    jobId,
+    assemblyId,
+    clipCount: segmentData.length,
+    platforms,
+    message: `Clips comp started — ${segmentData.length} clip(s) assembling full-frame portrait. Watch the dashboard for Gate 3 result.`
+  });
+
+  setImmediate(async () => {
+    try {
+      await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
+      console.log(`[clip-comp] ${jobId}: /assemble fired (${segmentData.length} clips)`);
+    } catch (err) {
+      console.error(`[clip-comp] ${jobId}: /assemble failed — ${err.message}`);
+    }
+  });
 });
 
 // POST /job/:id/dismiss — operator closed the job card on the dashboard.
@@ -2549,6 +3956,16 @@ app.get('/market-keys', (req, res) => {
 
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// Serve dashboard — no-cache so hard refresh always picks up latest on-disk version
+app.get('/', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'cwn_production.html'));
+});
+app.get('/cwn_production.html', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.redirect(302, '/');
+});
 
 // ── POST /assemble ────────────────────────────────────────────────
 // ── GOOGLE DRIVE AUTO-UPLOAD ──────────────────────────────────────
@@ -3015,131 +4432,6 @@ app.get('/canva-import-status/:id', (req, res) => {
   res.json(job);
 });
 
-// ── POST /admin/canva-generate ────────────────────────────────────
-// Superadmin: generate Canva design candidates from a text prompt.
-// Uses Anthropic API with Canva MCP (mcp_servers) to call generate-design.
-// Returns: { ok, jobId, candidates: [{ candidateId, thumbnailUrl, url }] }
-app.post('/admin/canva-generate', requireAuth, async (req, res) => {
-  const { role } = req.auth || {};
-  if (role !== 'superadmin') return res.status(403).json({ error: 'Superadmin only' });
-
-  const { prompt, designType = 'poster' } = req.body;
-  if (!prompt) return res.status(400).json({ error: 'prompt is required' });
-
-  const token = process.env.CANVA_ACCESS_TOKEN;
-  if (!token) return res.status(503).json({ error: 'CANVA_ACCESS_TOKEN not configured' });
-
-  try {
-    const client = new Anthropic();
-    const mcpServer = {
-      type: 'url',
-      url: 'https://mcp.canva.com/mcp',
-      name: 'canva-mcp',
-      authorization_token: token,
-    };
-
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
-      system: `You are a Canva design assistant. When the user provides a prompt, call the generate-design tool with:
-- query: the user's prompt (enhanced with design context)
-- design_type: as specified by the user
-- user_intent: brief description of what the user wants
-
-After calling generate-design, return ONLY a JSON object:
-{
-  "job_id": "<job_id from tool response>",
-  "candidates": [
-    { "candidate_id": "...", "thumbnail_url": "...", "design_url": "..." }
-  ]
-}
-No other text. Extract the actual job_id and all candidates from the tool response.`,
-      messages: [{
-        role: 'user',
-        content: `Generate a ${designType} design with this prompt: "${prompt}"\nReturn JSON with job_id and all candidates.`
-      }],
-      mcp_servers: [mcpServer],
-    });
-
-    const textBlock = response.content.find(b => b.type === 'text');
-    if (!textBlock) throw new Error('No text response from Claude');
-
-    let parsed;
-    try {
-      const clean = textBlock.text.replace(/```json\n?|```/g, '').trim();
-      parsed = JSON.parse(clean);
-    } catch {
-      throw new Error('Could not parse Canva response: ' + textBlock.text.slice(0, 300));
-    }
-
-    console.log(`[canva-generate] ${parsed.candidates?.length ?? 0} candidates for "${prompt.slice(0, 40)}"`);
-    res.json({ ok: true, jobId: parsed.job_id, candidates: parsed.candidates || [] });
-  } catch (err) {
-    console.error('[canva-generate] Error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── POST /admin/canva-save ─────────────────────────────────────────
-// Superadmin: save a generation candidate to the Canva account.
-// Body: { jobId, candidateId }
-// Returns: { ok, designId, designUrl }
-app.post('/admin/canva-save', requireAuth, async (req, res) => {
-  const { role } = req.auth || {};
-  if (role !== 'superadmin') return res.status(403).json({ error: 'Superadmin only' });
-
-  const { jobId, candidateId } = req.body;
-  if (!jobId || !candidateId) return res.status(400).json({ error: 'jobId and candidateId are required' });
-
-  const token = process.env.CANVA_ACCESS_TOKEN;
-  if (!token) return res.status(503).json({ error: 'CANVA_ACCESS_TOKEN not configured' });
-
-  try {
-    const client = new Anthropic();
-    const mcpServer = {
-      type: 'url',
-      url: 'https://mcp.canva.com/mcp',
-      name: 'canva-mcp',
-      authorization_token: token,
-    };
-
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 512,
-      system: `You are a Canva assistant. Call create-design-from-candidate with the provided job_id and candidate_id.
-Return ONLY a JSON object: { "design_id": "...", "design_url": "..." }
-No other text.`,
-      messages: [{
-        role: 'user',
-        content: `Save this candidate to my Canva account. job_id: "${jobId}", candidate_id: "${candidateId}". Return JSON with design_id and design_url.`
-      }],
-      mcp_servers: [mcpServer],
-    });
-
-    const textBlock = response.content.find(b => b.type === 'text');
-    if (!textBlock) throw new Error('No text response from Claude');
-
-    let parsed;
-    try {
-      const clean = textBlock.text.replace(/```json\n?|```/g, '').trim();
-      parsed = JSON.parse(clean);
-    } catch {
-      const urlMatch = textBlock.text.match(/https:\/\/www\.canva\.com\/design\/[^\s"']+/);
-      if (urlMatch) {
-        parsed = { design_url: urlMatch[0] };
-      } else {
-        throw new Error('Could not parse save response: ' + textBlock.text.slice(0, 300));
-      }
-    }
-
-    console.log(`[canva-save] Saved candidate ${candidateId} → ${parsed.design_url}`);
-    res.json({ ok: true, designId: parsed.design_id, designUrl: parsed.design_url });
-  } catch (err) {
-    console.error('[canva-save] Error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // ── TICKER BAKING ────────────────────────────────────────────────
 // Captures a ticker HTML file (served at localhost:8765) as a looping
 // video using headless Chrome + puppeteer, then caches it per content type.
@@ -3291,14 +4583,28 @@ app.get('/twitch/clips-pool', async (req, res) => {
     );
     const users = userResp.data?.data || [];
 
-    // Fetch recent clips for each resolved user in parallel
+    // Fetch recent clips for each resolved user in parallel.
+    // Recency: last 24h first; if a streamer has none, fall back to last 7d.
+    const fetchClips = async (userId, sinceIso) => {
+      const startedAt = sinceIso ? `&started_at=${encodeURIComponent(sinceIso)}` : '';
+      const resp = await axios.get(
+        `https://api.twitch.tv/helix/clips?broadcaster_id=${userId}&first=${clipsPerStreamer}${startedAt}`,
+        { headers: { 'Client-Id': clientId, 'Authorization': `Bearer ${token}` }, timeout: 10000 }
+      );
+      return resp.data?.data || [];
+    };
+
+    const since24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const since7d  = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
     const allClips = (await Promise.all(users.map(async user => {
       try {
-        const clipsResp = await axios.get(
-          `https://api.twitch.tv/helix/clips?broadcaster_id=${user.id}&first=${clipsPerStreamer}`,
-          { headers: { 'Client-Id': clientId, 'Authorization': `Bearer ${token}` }, timeout: 10000 }
-        );
-        return (clipsResp.data?.data || []).map(c => ({
+        let clips = await fetchClips(user.id, since24h);
+        if (!clips.length) {
+          console.log(`[twitch/clips-pool] No 24h clips for ${user.login} — falling back to 7d window`);
+          clips = await fetchClips(user.id, since7d);
+        }
+        return clips.map(c => ({
           streamer:  user.display_name || user.login,
           title:     c.title || 'Clip',
           thumbnail: c.thumbnail_url || '',
@@ -3306,7 +4612,8 @@ app.get('/twitch/clips-pool', async (req, res) => {
           url:       c.url || '',
           slug:      c.id || '',
           game:      c.game_id || '',
-          viewCount: c.view_count || 0
+          viewCount: c.view_count || 0,
+          createdAt: c.created_at || null
         }));
       } catch (e) {
         console.warn(`[twitch/clips-pool] Failed for ${user.login}: ${e.message}`);
@@ -3378,52 +4685,15 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
     const summaryResp = await axios.get(summaryUrl, { timeout: 10000 });
     const summaryData = summaryResp.data;
 
-    // Check article.video first — this is where the compiled highlights reel lives
-    const articleVideos = (summaryData.article && summaryData.article.video) || [];
-    if (articleVideos.length) {
-      const highlight = articleVideos[0]; // First is always the Game Highlights reel
-      // Prefer Akamai HLS manifest (stable, no expiring token) over direct CDN MP4 (expires in seconds)
-      const hlsUrl = highlight.links?.source?.HLS?.HD?.href || highlight.links?.source?.HLS?.href;
-      const directMp4 = highlight.links?.source?.HD?.href;
-      const hlUrl = hlsUrl || directMp4;
-      if (hlUrl) {
-        console.log(`[nba-scrape] ✅ Gate 0 PASS: Game Highlights from article.video: "${highlight.headline}" (${highlight.duration}s) [${hlsUrl ? 'HLS' : 'direct MP4'}]`);
-        // Download immediately — ESPN CDN URLs expire within seconds
-        const tmpPathAv = path.join(__dirname, 'tmp', `nba_highlight_${gameId}_${Date.now()}.mp4`);
-        let localPathAv = null;
-        try {
-          localPathAv = await downloadEspnVideo(hlUrl, tmpPathAv);
-        } catch(e) {
-          console.warn(`[nba-scrape] Download failed (will use URL fallback): ${e.message}`);
-        }
-        return res.json({
-          ok: true,
-          gate0: 'pass',
-          gameId,
-          videoUrl: hlUrl,
-          localPath: localPathAv,
-          thumbnail: (highlight.thumbnail && highlight.thumbnail.href) || '',
-          title: highlight.headline || 'Game Highlights',
-          description: highlight.description || '',
-          duration: highlight.duration || 0,
-          source: 'article.video'
-        });
-      }
-    }
-
-    // Long-form requires the compiled Game Highlights reel — individual play clips are too short
-    // and don't give Bobby G enough material for voiced narration.
-    if (!isShortFormRequest) {
-      return res.json({
-        ok: false,
-        gate0: 'fail',
-        error: `No Game Highlights reel found for game ${gameId} — article.video is empty. ESPN may not have processed the highlights yet. Try again in a few minutes, or pick a different game.`
-      });
-    }
-
-    // Short-form only: fall back to individual play clips (30-90s range preferred)
-    console.warn(`[nba-scrape] ⚠️ article.video empty — falling back to API play clips for short-form`);
-    const videos = summaryData.videos || [];
+    // Merge article.video + summaryData.videos into one pool, then pick by duration.
+    // article.video[0] was previously assumed to always be the highlights reel, but ESPN
+    // sometimes puts short stat/milestone clips (16-27s) there instead. Picking by duration
+    // is the only reliable way to get the actual highlights compilation for long form.
+    const articleVideos = Array.isArray(summaryData.article?.video)
+      ? summaryData.article.video
+      : (summaryData.article?.video ? [summaryData.article.video] : []);
+    const topVideos = summaryData.videos || [];
+    const videos = [...topVideos, ...articleVideos];
 
     if (!videos.length) {
       return res.json({
@@ -3433,38 +4703,56 @@ app.post('/nba/scrape-game-highlight', async (req, res) => {
       });
     }
 
-    console.log(`[nba-scrape] Found ${videos.length} API play clips for game ${gameId} — selecting best 30-90s clip for short-form`);
+    console.log(`[nba-scrape] Found ${videos.length} total videos for game ${gameId} (${topVideos.length} top + ${articleVideos.length} article)`);
 
-    // Step 2: Use full video pool — select best clip based on form type.
-    // Long-form: select longest duration (game highlights reel is reliably longest at 115s).
-    // Short-form: prefer clips in 30-90s range for split-screen; fall back to longest if none in range.
-    // Keyword filtering on API metadata was removed: ESPN titles don't contain "highlight"
-    // even when the page shows "Game Highlights", so the filter always returned 0 matches.
+    // Select best clip by form type from the merged pool.
+    // Long-form: prefer "Game Highlights" titled clip (the actual compiled reel ESPN produces).
+    //   Fall back to longest clip only if no highlights-titled clip exists.
+    //   Duration-only selection is unreliable — player feature clips ("Ant drops 36 points", 109s)
+    //   can beat the actual "Game Highlights" reel (107s) by a few seconds.
+    // Short-form: prefer 30-90s range; fall back to longest if none in range.
     const videoPool = videos;
     console.log(`[nba-scrape]   Using full pool of ${videoPool.length} videos`);
 
-    // Step 3: Find best video — prefer 30-90s range for short-form, longest for long-form
+    const isHighlightsReel = (v) => {
+      const t = (v.headline || v.title || v.description || '').toLowerCase();
+      return /game highlights|highlights$/i.test(t);
+    };
+
+    // Log all clips for diagnostics
+    for (const video of videoPool) {
+      const title = video.headline || video.title || video.description || '';
+      console.log(`[nba-scrape]   Video: "${title}" (${video.duration || 0}s)${isHighlightsReel(video) ? ' ← HIGHLIGHTS REEL' : ''}`);
+    }
+
     let highestDurationVideo = null;
     let maxDuration = 0;
-    let shortFormPreferred = null;  // best clip in 30-90s range for short-form
+    let shortFormPreferred = null;
 
     for (const video of videoPool) {
       const duration = video.duration || 0;
-      const title = video.headline || video.title || video.description || '';
-
-      console.log(`[nba-scrape]   Video: "${title}" (${duration}s)`);
-
-      // Track the longest clip (long-form selection + short-form fallback)
       if (duration > maxDuration) {
         maxDuration = duration;
         highestDurationVideo = video;
       }
-
-      // Track best clip in 30-90s range for short-form (prefer longer within range)
       if (isShortFormRequest && duration >= minDurationSecs && duration <= maxDurationSecs) {
         if (!shortFormPreferred || duration > (shortFormPreferred.duration || 0)) {
           shortFormPreferred = video;
         }
+      }
+    }
+
+    if (!isShortFormRequest) {
+      // Long-form: prefer the "Game Highlights" reel over pure duration
+      const highlightsReelCandidates = videoPool.filter(isHighlightsReel);
+      if (highlightsReelCandidates.length > 0) {
+        // Among highlights reels, pick the longest
+        const best = highlightsReelCandidates.slice().sort((a, b) => (b.duration || 0) - (a.duration || 0))[0];
+        console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected "Game Highlights" reel: "${best.headline || best.title}" (${best.duration}s)`);
+        highestDurationVideo = best;
+        maxDuration = best.duration || 0;
+      } else {
+        console.log(`[nba-scrape] ✅ Gate 0 PASS: Selected longest duration video: "${(highestDurationVideo?.headline || highestDurationVideo?.title) || '?'}" (${maxDuration}s)`);
       }
     }
 
@@ -4002,6 +5290,25 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
           `sitemap where/united-states=${sitemapWhereUs.length}, sitemap /us-canada/=${sitemapUsCanada.length}, ` +
           `US-first filter (hub=/news|section, sitemap=section only) → ${candidateUrls.length} URL(s)`
       );
+      // Thin-pool top-up (CPD-963): when the news cycle is dominated by non-US
+      // sections (e.g. Iran war 2026-06-12 → US pool = 0), the strict filter
+      // starves the scraper and the operator sees 0 stories. Top up with
+      // all-topics sitemap articles, US-first ordering preserved. Puppeteer +
+      // Brightcove confirmation still gates what gets returned.
+      const MIN_CANDIDATES = Math.max(targetCount * 3, 12);
+      if (candidateUrls.length < MIN_CANDIDATES) {
+        const seenTopUp = new Set(candidateUrls);
+        let added = 0;
+        for (const raw of mergedSitemap) {
+          if (candidateUrls.length >= MIN_CANDIDATES * 2) break;
+          const u = stripAjPageFragment(String(raw));
+          if (!u || seenTopUp.has(u) || !ajAljazeeraArticleBaseOk(u)) continue;
+          seenTopUp.add(u);
+          candidateUrls.push(u);
+          added++;
+        }
+        console.log(`[scrapeAjNewsVideos] Thin US pool — topped up with ${added} all-topics sitemap article(s) → ${candidateUrls.length} total`);
+      }
     } catch (e) {
       console.warn(`[scrapeAjNewsVideos] Sitemap fetch error: ${e.message}`);
       return [];
@@ -4025,6 +5332,9 @@ async function scrapeAjNewsVideos(targetCount = 5, forcedCandidates = null) {
 
   const browser = await puppeteer.launch(withPuppeteerExecutable({
     headless: 'new',
+    // Default 30s protocolTimeout caused "Target.closeTarget timed out" aborts
+    // mid-scan (seen 2026-06-12); slow Brightcove pages need more headroom.
+    protocolTimeout: 120000,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   }));
 
@@ -4275,7 +5585,8 @@ app.get('/news/us-canada-videos', async (req, res) => {
         const [_, yyyy, mm, dd] = dateMatch;
         publishedAt = new Date(`${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T23:59:59Z`).toISOString();
       }
-      const slug = v.articleUrl.split('/').filter(Boolean).pop() || '';
+      const rawSlug = v.articleUrl.split('/').filter(Boolean).pop() || '';
+      const slug = rawSlug.split('?')[0]; // strip ?update=... query params from live-blog URLs
       const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
       return {
@@ -4313,6 +5624,398 @@ app.get('/news/us-canada-videos', async (req, res) => {
     });
   } catch (err) {
     console.error('[news/us-canada-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
+
+// ── BBC news scraper ─────────────────────────────────────────────────────────
+// Fetches BBC US/Canada RSS, runs yt-dlp in parallel on each article, returns
+// only articles that have an extractable video.
+// Returns items in the same shape as /news/us-canada-videos.
+
+const BBC_RSS_URLS = [
+  'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml',
+  'https://feeds.bbci.co.uk/news/world/rss.xml'
+];
+const BBC_YTDLP_CONCURRENCY = 8;   // parallel yt-dlp workers — local machine, no throttle needed
+const BBC_FETCH_LIMIT      = 30;   // articles to attempt (40% hit rate → ~12 videos from 30)
+const BBC_VIDEO_MIN_SEC    = 8;
+const BBC_VIDEO_MAX_SEC    = parseInt(process.env.NEWS_BBC_MAX_CLIP_SEC || '180');
+
+/**
+ * Parse a simple RSS feed with axios — no external xml parser needed.
+ * Returns [{ title, link, pubDate, description }]
+ */
+function parseBbcRss(xmlText) {
+  const items = [];
+  const itemRe = /<item>([\s\S]*?)<\/item>/g;
+  let m;
+  while ((m = itemRe.exec(xmlText)) !== null) {
+    const block = m[1];
+    const title   = (block.match(/<title><!\[CDATA\[([^\]]*)\]\]><\/title>/) || block.match(/<title>([^<]*)<\/title>/) || [])[1] || '';
+    const link    = (block.match(/<link>([^<]*)<\/link>/) || [])[1] || '';
+    const pubDate = (block.match(/<pubDate>([^<]*)<\/pubDate>/) || [])[1] || '';
+    const desc    = (block.match(/<description><!\[CDATA\[([^\]]*)\]\]><\/description>/) || block.match(/<description>([^<]*)<\/description>/) || [])[1] || '';
+    if (link && link.includes('bbc.com/news')) items.push({ title: title.trim(), link: link.trim(), pubDate: pubDate.trim(), description: desc.replace(/<[^>]+>/g,'').trim() });
+  }
+  return items;
+}
+
+/**
+ * Run yt-dlp on a single BBC article URL.
+ * Returns { url, title, hlsUrl, duration, thumbnail, publishedAt } or null.
+ */
+async function extractBbcVideo(articleUrl) {
+  return new Promise(resolve => {
+    let out = '';
+    const { execFile } = require('child_process');
+    const proc = execFile('yt-dlp', ['--no-download', '--dump-json', articleUrl], { timeout: 14000 });
+    proc.stdout.on('data', d => out += d);
+    proc.on('close', () => {
+      try {
+        const d = JSON.parse(out);
+        const duration = d.duration || 0;
+        if (!duration || duration < BBC_VIDEO_MIN_SEC || duration > BBC_VIDEO_MAX_SEC) return resolve(null);
+        // Prefer HLS manifest over DASH for compatibility
+        const formats = d.formats || [];
+        let hlsUrl = null;
+        for (const f of formats) {
+          const u = f.url || '';
+          if (u.includes('.m3u8') && (f.vcodec !== 'none') && f.height && f.height >= 360) {
+            if (!hlsUrl) hlsUrl = u;
+          }
+        }
+        // Fall back to best available URL if no HLS
+        if (!hlsUrl) hlsUrl = d.url || null;
+        if (!hlsUrl) return resolve(null);
+
+        resolve({
+          url:         articleUrl,
+          title:       d.title || '',
+          hlsUrl,
+          duration,
+          thumbnail:   d.thumbnail || null,
+          publishedAt: d.upload_date
+            ? new Date(`${d.upload_date.slice(0,4)}-${d.upload_date.slice(4,6)}-${d.upload_date.slice(6,8)}`).toISOString()
+            : new Date().toISOString(),
+          orientation: 'landscape',   // BBC is always landscape 16:9 — fits 1920x1080 assembly frame directly
+          pillarboxFilter: null,
+          source: 'bbc'
+        });
+      } catch(_) { resolve(null); }
+    });
+    proc.on('error', () => resolve(null));
+  });
+}
+
+/**
+ * Scrape BBC news articles with video. Returns up to `limit` results.
+ */
+async function scrapeBbcNewsVideos(limit = 10) {
+  // Fetch both RSS feeds in parallel, dedupe by URL
+  const feeds = await Promise.allSettled(
+    BBC_RSS_URLS.map(u => axios.get(u, { timeout: 10000 }))
+  );
+  const seen = new Set();
+  const articles = [];
+  for (const r of feeds) {
+    if (r.status !== 'fulfilled') continue;
+    for (const item of parseBbcRss(r.value.data)) {
+      const key = item.link.split('?')[0];
+      if (!seen.has(key)) { seen.add(key); articles.push(item); }
+    }
+  }
+
+  console.log(`[bbc-scraper] ${articles.length} unique articles from RSS — testing ${Math.min(articles.length, BBC_FETCH_LIMIT)} for video...`);
+
+  // Run yt-dlp in batches of BBC_YTDLP_CONCURRENCY
+  const candidates = articles.slice(0, BBC_FETCH_LIMIT);
+  const results = [];
+  for (let i = 0; i < candidates.length && results.length < limit; i += BBC_YTDLP_CONCURRENCY) {
+    const batch = candidates.slice(i, i + BBC_YTDLP_CONCURRENCY);
+    const batchResults = await Promise.all(batch.map(art => extractBbcVideo(art.link).then(v => {
+      if (v) {
+        // Merge RSS title/desc (cleaner than URL-slug title) if yt-dlp title is short
+        if (!v.title || v.title.length < 10) v.title = art.title;
+        v.description = art.description || '';
+      }
+      return v;
+    })));
+    for (const v of batchResults) {
+      if (v && results.length < limit) results.push(v);
+    }
+  }
+
+  console.log(`[bbc-scraper] ✅ ${results.length} BBC articles with video (tested ${Math.min(candidates.length, BBC_FETCH_LIMIT)})`);
+  return results;
+}
+
+// ── AP / Reuters YouTube channel scrapers ────────────────────────────────────
+// AP and Reuters block direct article scraping (JS-rendered / bot-blocked).
+// Their YouTube channels post the same stories as short clips (20-150s) —
+// 100% hit rate since the channel only contains videos.
+
+const YT_NEWS_CHANNELS = {
+  ap:      { handle: '@AssociatedPress/videos', label: 'AP',      maxSec: 180 },
+  reuters: { handle: '@Reuters/videos',         label: 'Reuters', maxSec: 180 },
+};
+
+/**
+ * Scrape a YouTube news channel for recent short clips.
+ * Returns items in the same shape as the BBC/AJ scrapers.
+ */
+async function scrapeYtNewsChannel(source, limit = 12) {
+  const cfg = YT_NEWS_CHANNELS[source];
+  if (!cfg) throw new Error(`Unknown YT news source: ${source}`);
+
+  const channelUrl = `https://www.youtube.com/${cfg.handle}`;
+
+  // Step 1: get playlist metadata (fast, no video download)
+  const ids = await new Promise((resolve, reject) => {
+    let out = '';
+    const { execFile } = require('child_process');
+    const proc = execFile('yt-dlp', [
+      '--no-download', '--dump-json', '--flat-playlist',
+      '--playlist-end', String(Math.min(limit * 3, 40)), // over-fetch to account for long-form
+      channelUrl
+    ], { timeout: 30000 });
+    proc.stdout.on('data', d => out += d);
+    proc.on('close', () => {
+      const entries = out.trim().split('\n').filter(Boolean).flatMap(line => {
+        try {
+          const d = JSON.parse(line);
+          const dur = d.duration || 0;
+          if (dur > 0 && dur <= cfg.maxSec) return [{ id: d.id, title: d.title || '', duration: dur }];
+        } catch(_) {}
+        return [];
+      });
+      console.log(`[${source}-yt] Playlist: ${entries.length} clips ≤${cfg.maxSec}s`);
+      resolve(entries);
+    });
+    proc.on('error', reject);
+  });
+
+  if (!ids.length) return [];
+
+  // Step 2: extract direct video URLs in parallel batches
+  const CONCURRENCY = 6;
+  const results = [];
+  for (let i = 0; i < ids.length && results.length < limit; i += CONCURRENCY) {
+    const batch = ids.slice(i, i + CONCURRENCY);
+    const batchResults = await Promise.all(batch.map(entry => new Promise(resolve => {
+      const { execFile } = require('child_process');
+      const ytUrl = `https://www.youtube.com/watch?v=${entry.id}`;
+      const proc = execFile('yt-dlp',
+        ['--get-url', '-f', 'best[ext=mp4][height<=720]/best[ext=mp4]/best', ytUrl],
+        { timeout: 14000 }
+      );
+      let url = '';
+      proc.stdout.on('data', d => url += d);
+      proc.on('close', () => {
+        const hlsUrl = url.trim().split('\n')[0].trim();
+        if (!hlsUrl || hlsUrl.length < 20) return resolve(null);
+        resolve({
+          url:         ytUrl,
+          title:       entry.title,
+          hlsUrl,
+          duration:    entry.duration,
+          thumbnail:   `https://i.ytimg.com/vi/${entry.id}/maxresdefault.jpg`,
+          publishedAt: new Date().toISOString(), // channel doesn't give publish date in flat mode
+          orientation: 'landscape',   // AP/Reuters YouTube clips are 16:9 — fit 1920x1080 assembly frame directly
+          pillarboxFilter: null,
+          source
+        });
+      });
+      proc.on('error', () => resolve(null));
+    })));
+    for (const v of batchResults) { if (v && results.length < limit) results.push(v); }
+  }
+
+  console.log(`[${source}-yt] ✅ ${results.length} extractable clips`);
+  return results;
+}
+
+// GET /news/ap-videos
+app.get('/news/ap-videos', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '12'), 20);
+    const videos = await scrapeYtNewsChannel('ap', limit);
+    return res.json({ ok: true, source: 'ap', videos, recentCount: videos.length, totalFound: videos.length });
+  } catch (err) {
+    console.error('[news/ap-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
+
+// GET /news/reuters-videos
+app.get('/news/reuters-videos', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '12'), 20);
+    const videos = await scrapeYtNewsChannel('reuters', limit);
+    return res.json({ ok: true, source: 'reuters', videos, recentCount: videos.length, totalFound: videos.length });
+  } catch (err) {
+    console.error('[news/reuters-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
+
+// GET /news/bbc-videos — BBC news video scraper endpoint
+app.get('/news/bbc-videos', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '12'), 20);
+    const videos = await scrapeBbcNewsVideos(limit);
+    return res.json({
+      ok: true,
+      source: 'bbc',
+      videos,
+      recentCount: videos.length,
+      totalFound: videos.length
+    });
+  } catch (err) {
+    console.error('[news/bbc-videos] Error:', err.message);
+    return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
+  }
+});
+
+// Per-source result cache — protects "All Sources" from transient yt-dlp failures.
+// If a source returns 0 results (cold-start rate-limit, network blip), the last
+// successful batch is served instead. TTL: 30 min.
+const _newsSourceCache = {};
+const NEWS_SOURCE_CACHE_TTL_MS = 30 * 60 * 1000;
+
+function _cacheNewsResults(src, videos) {
+  if (videos.length > 0) {
+    _newsSourceCache[src] = { videos, ts: Date.now() };
+  }
+}
+
+function _getCachedNewsResults(src) {
+  const entry = _newsSourceCache[src];
+  if (!entry) return null;
+  if (Date.now() - entry.ts > NEWS_SOURCE_CACHE_TTL_MS) return null;
+  return entry.videos;
+}
+
+// GET /news/stories?source=aljazeera|bbc|all — unified multi-source news endpoint
+// Replaces hardcoded /news/us-canada-videos calls when source != aljazeera.
+// Returns same video shape as /news/us-canada-videos so dashboard needs minimal change.
+app.get('/news/stories', async (req, res) => {
+  const source = (req.query.source || 'aljazeera').toLowerCase();
+  const limit  = Math.min(parseInt(req.query.limit || '12'), 20);
+
+  try {
+    let videos = [];
+
+    // Run all requested sources in parallel — local machine, accuracy > speed
+    const fetchTasks = [];
+
+    if (source === 'aljazeera' || source === 'all') {
+      fetchTasks.push(
+        axios.get(`http://localhost:${process.env.PORT || 3000}/news/us-canada-videos`, { timeout: 180000 })
+          .then(r => {
+            const v = (r.data?.videos || []).map(v => ({ ...v, source: 'aljazeera' }));
+            _cacheNewsResults('aljazeera', v);
+            console.log(`[news/stories] AJ: ${v.length} videos`);
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] AJ failed: ${e.message}`);
+            const cached = _getCachedNewsResults('aljazeera');
+            if (cached) { console.log(`[news/stories] AJ: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    if (source === 'bbc' || source === 'all') {
+      const bbcLimit = source === 'all' ? 8 : limit;
+      fetchTasks.push(
+        scrapeBbcNewsVideos(bbcLimit)
+          .then(v => {
+            _cacheNewsResults('bbc', v);
+            console.log(`[news/stories] BBC: ${v.length} videos`);
+            if (v.length === 0) {
+              const cached = _getCachedNewsResults('bbc');
+              if (cached) { console.log(`[news/stories] BBC: 0 fresh — using ${cached.length} cached`); return cached; }
+            }
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] BBC failed: ${e.message}`);
+            const cached = _getCachedNewsResults('bbc');
+            if (cached) { console.log(`[news/stories] BBC: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    if (source === 'ap' || source === 'all') {
+      const apLimit = source === 'all' ? 6 : limit;
+      fetchTasks.push(
+        scrapeYtNewsChannel('ap', apLimit)
+          .then(v => {
+            _cacheNewsResults('ap', v);
+            console.log(`[news/stories] AP: ${v.length} videos`);
+            if (v.length === 0) {
+              const cached = _getCachedNewsResults('ap');
+              if (cached) { console.log(`[news/stories] AP: 0 fresh — using ${cached.length} cached`); return cached; }
+            }
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] AP failed: ${e.message}`);
+            const cached = _getCachedNewsResults('ap');
+            if (cached) { console.log(`[news/stories] AP: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    if (source === 'reuters' || source === 'all') {
+      const reutersLimit = source === 'all' ? 6 : limit;
+      fetchTasks.push(
+        scrapeYtNewsChannel('reuters', reutersLimit)
+          .then(v => {
+            _cacheNewsResults('reuters', v);
+            console.log(`[news/stories] Reuters: ${v.length} videos`);
+            if (v.length === 0) {
+              const cached = _getCachedNewsResults('reuters');
+              if (cached) { console.log(`[news/stories] Reuters: 0 fresh — using ${cached.length} cached`); return cached; }
+            }
+            return v;
+          })
+          .catch(e => {
+            console.warn(`[news/stories] Reuters failed: ${e.message}`);
+            const cached = _getCachedNewsResults('reuters');
+            if (cached) { console.log(`[news/stories] Reuters: using ${cached.length} cached videos`); return cached; }
+            return [];
+          })
+      );
+    }
+
+    const results = await Promise.all(fetchTasks);
+    for (const batch of results) videos.push(...batch);
+
+    // Sort by recency, then dedupe by normalised title (AJ can return URL variants of same story)
+    videos.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+    const seenTitles = new Set();
+    videos = videos.filter(v => {
+      const key = (v.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (seenTitles.has(key)) return false;
+      seenTitles.add(key);
+      return true;
+    });
+    if (source === 'all') videos = videos.slice(0, limit);
+
+    return res.json({
+      ok: true,
+      source,
+      videos,
+      recentCount: videos.length,
+      totalFound: videos.length
+    });
+  } catch (err) {
+    console.error('[news/stories] Error:', err.message);
     return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
   }
 });
@@ -5122,8 +6825,11 @@ app.post('/generate-publish-copy', handleGeneratePublishCopy);
 //     { index: number, renderTimeMs: number, retries: number }
 //   ]
 // }
-// GET /heygen/latest-videos — C0 localhost only. Gated: not mounted on Render (DATABASE_URL set).
-if (!process.env.DATABASE_URL) app.get('/heygen/latest-videos', async (req, res) => {
+// GET /heygen/latest-videos — fetch most recent N videos from HeyGen account
+// Used by dashboard "REFRESH IDs" button to get new video_ids after Avatar V web UI renders
+// Returns videos sorted by created_at desc, with download URLs fetched for completed ones
+// Query params: ?limit=20 (default 20, max 50)
+app.get('/heygen/latest-videos', async (req, res) => {
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
   if (!HEYGEN_API_KEY) return res.status(400).json({ error: 'HEYGEN_API_KEY not set' });
 
@@ -5149,7 +6855,7 @@ if (!process.env.DATABASE_URL) app.get('/heygen/latest-videos', async (req, res)
       const results = await Promise.all(batch.map(async (v) => {
         try {
           const statusResp = await axios.get(
-            `https://api.heygen.com/v1/video_status.get?video_id=${v.video_id}`,
+            `https://api.heygen.com/v3/videos/${v.video_id}`,
             { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
           );
           const data = statusResp.data?.data || {};
@@ -5281,8 +6987,7 @@ async function bulkDeleteHeyGenVideos({ apiKey, dryRun = false, maxPasses = 100,
 // POST /admin/heygen/delete-all — dangerous operation; token + explicit confirmation required.
 // Header: x-admin-token: <HEYGEN_ADMIN_TOKEN>
 // Body: { confirmDeleteAll: "DELETE_ALL_HEYGEN_VIDEOS", dryRun?: boolean, maxPasses?: number, perPassLimit?: number }
-// C0 localhost only — gated behind DATABASE_URL absence
-if (!process.env.DATABASE_URL) app.post('/admin/heygen/delete-all', async (req, res) => {
+app.post('/admin/heygen/delete-all', async (req, res) => {
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
   if (!HEYGEN_API_KEY) return res.status(400).json({ ok: false, error: 'HEYGEN_API_KEY not set' });
 
@@ -5329,8 +7034,7 @@ if (!process.env.DATABASE_URL) app.post('/admin/heygen/delete-all', async (req, 
 // Used by dashboard REFRESH IDs fallback when title-prefix matching returns 0 results
 // (jobs sent before the title format was added to generateVideo())
 // Body: { videoIds: ["abc123", "def456", ...] }
-// C0 localhost only — gated behind DATABASE_URL absence
-if (!process.env.DATABASE_URL) app.post('/heygen/video-urls', async (req, res) => {
+app.post('/heygen/video-urls', async (req, res) => {
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
   if (!HEYGEN_API_KEY) return res.status(400).json({ error: 'HEYGEN_API_KEY not set' });
 
@@ -5352,7 +7056,7 @@ if (!process.env.DATABASE_URL) app.post('/heygen/video-urls', async (req, res) =
     const batchResults = await Promise.all(batch.map(async (videoId) => {
       try {
         const statusResp = await axios.get(
-          `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
+          `https://api.heygen.com/v3/videos/${videoId}`,
           { headers: { 'X-Api-Key': HEYGEN_API_KEY }, timeout: 10000 }
         );
         const data = statusResp.data?.data || {};
@@ -5378,8 +7082,7 @@ if (!process.env.DATABASE_URL) app.post('/heygen/video-urls', async (req, res) =
   res.json({ ok: true, count: results.length, videos: results });
 });
 
-// C0 localhost only — gated behind DATABASE_URL absence
-if (!process.env.DATABASE_URL) app.post('/log-heygen-metrics', async (req, res) => {
+app.post('/log-heygen-metrics', async (req, res) => {
   const { jobId, segmentCount, totalWaitTimeMs, avgRenderTimeMs, segments } = req.body;
 
   if (!jobId) {
@@ -5504,7 +7207,7 @@ app.post('/publish/youtube', async (req, res) => {
     const { google } = require('googleapis');
     // Reuse OAuth2 from Drive
     const CLIENT_ID     = '764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com';
-    const CLIENT_SECRET = 'YOUTUBE-CLIENT-SECRET-REDACTED';
+    const CLIENT_SECRET = 'd-FL95Q19q7MQmFpd7hHD0Ty';
     const oauth2Client  = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
     if (!process.env.DRIVE_REFRESH_TOKEN) return res.status(400).json({ error: 'Run node cwn-auth.js first to authorize Google' });
     oauth2Client.setCredentials({ refresh_token: process.env.DRIVE_REFRESH_TOKEN });
@@ -7378,110 +9081,11 @@ app.get('/errors', (req, res) => {
   res.json({ ok: true, errorRate: rate, recent, logFile: ERROR_LOG });
 });
 
-// ── Developer API — /v1/ surface for Operate plan (CPD-126) ──────
-const developerApiRouter = require('./lib/routes/developer_api');
-app.use('/v1', developerApiRouter);
-
-// ── Public API — unauthenticated, used by marketing site (CPD-397, CPD-396) ──
-const publicRouter = require('./lib/routes/public');
-app.use(publicRouter);
-
-// ── Admin CRM + Permissions (CPD-150 / CPD-154) ───────────────────
-// Clerk middleware — must run before any route that calls requireAuth.
-// Initialises session context so getAuth(req) can verify JWTs.
-const { clerkInit } = require('./lib/auth');
-app.use(clerkInit());
-
-// Mounted without prefix so routes are /admin/crm, /admin/permissions, etc.
-// matching the NEXT_PUBLIC_API_URL + path pattern used by the frontend.
-const adminCrmRouter = require('./lib/routes/admin_crm');
-app.use(adminCrmRouter);
-
-// ── Admin infrastructure routes (CPD-204) ────────────────────────────────────
-// Provides: /api/generate-test-key, /api/admin/migrate-pg, /api/portal0-creds,
-//           /api/jira-webhook, /api/github-sync, /internal/alert, etc.
-// Note: /health in this router is shadowed by server.js's own /health above.
-const _adminHealthCacheStub = {
-  ffmpeg: { status: 'ok' },
-  directories: {},
-  freeSpaceGB: null,
-  apiKeys: {},
-  vectcut: { status: 'unknown' },
-  lastRefreshed: null,
-};
-const createAdminRouter = require('./lib/routes/admin');
-const adminRouter = createAdminRouter({ _healthCache: _adminHealthCacheStub, BUILD_INFO });
-app.use(adminRouter);
-
-// ── Admin Assistant (CPD-411) ─────────────────────────────────────────────────
-const adminAssistantRoutes = require('./lib/routes/admin_assistant');
-app.use('/api/admin', adminAssistantRoutes);
-
-const adminChatRoutes = require('./lib/routes/admin_chat');
-app.use(adminChatRoutes);
-
-const adminSeedRoutes = require('./lib/routes/admin_seed');
-app.use(adminSeedRoutes);
-
-// ── Dashboard API routes (CPD-177 / frontend api.ts surface) ─────
-// These route files define the paths the Next.js dashboard calls directly
-// (no /v1 prefix). All require Clerk auth — must come after clerkInit().
-const planRouter      = require('./lib/routes/plan');
-const creditsRouter        = require('./lib/routes/credits');
-const marketingRouter      = require('./lib/routes/marketing'); // CPD-402
-const appContentRouter     = require('./lib/routes/app_content'); // CPD-490
-const billingRouter        = require('./lib/routes/billing');
-const notificationsRouter  = require('./lib/routes/notifications');
-const collabRouter    = require('./lib/routes/collab');
-const socialRouter    = require('./lib/routes/social_connect');
-const channelConnectRouter = require('./lib/routes/channel_connect');
-const supportRouter   = require('./lib/routes/support');
-const templatesRouter = require('./lib/routes/templates');
-const teamRouter          = require('./lib/routes/team');
-const uploadRouter        = require('./lib/routes/upload');
-const accountRouter       = require('./lib/routes/account');
-const brandsRouter        = require('./lib/routes/brands');
-const voiceRouter         = require('./lib/routes/voice');
-const videoRouter         = require('./lib/routes/video');
-const thumbnailRouter     = require('./lib/routes/thumbnail');
-const clipSourcingRouter  = require('./lib/routes/clip_sourcing');
-const sourceRouter        = require('./lib/routes/source');
-const heygenRouter        = require('./lib/routes/heygen');
-const jobsC1Router        = require('./lib/routes/jobs_c1');
-const claimFixerRouter    = require('./lib/routes/claim_fixer'); // CPD-980
-app.use(planRouter);
-app.use(creditsRouter);
-app.use(marketingRouter);
-app.use(appContentRouter);
-app.use(billingRouter);
-app.use(notificationsRouter);
-// Backward-compat: /concierge/* → /collab/* (CPD-489)
-app.all('/concierge*', (req, res) => res.redirect(301, req.path.replace('/concierge', '/collab')));
-app.use(collabRouter);
-app.use(socialRouter);
-app.use(channelConnectRouter);
-app.use(supportRouter);
-app.use(templatesRouter);
-app.use(teamRouter);
-app.use(uploadRouter);
-app.use(accountRouter);
-app.use('/brands', brandsRouter);
-app.use(voiceRouter);
-app.use(videoRouter);
-app.use(thumbnailRouter);
-app.use(clipSourcingRouter);
-app.use(sourceRouter);
-app.use(jobsC1Router);
-app.use(claimFixerRouter); // CPD-980: mute claimed timestamp ranges + republish
-// heygen inline routes are guarded with !DATABASE_URL — with DB now set those
-// won't register, so the router file is safe to mount without conflicts.
-app.use(heygenRouter);
-
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
 
 // ── Start ─────────────────────────────────────────────────────────
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`\n🎬 CWN Production Server running on http://localhost:${PORT}`);
   console.log(`   FFmpeg path: ${ffmpegPath()}`);
   console.log(`   Tmp dir:     ${TMP_DIR}`);
@@ -7498,116 +9102,71 @@ const server = app.listen(PORT, () => {
   });
   startMonitoring(); // Start pipeline event monitoring
 
-  const { startSchedulingCron } = require('./lib/services/scheduling_cron');
-  startSchedulingCron();
-
-  // BullMQ pipeline worker — processes jobs from Redis queue (CPD-324)
-  // Replaces fragile in-process setImmediate; jobs survive restarts/deploys.
-  if (process.env.REDIS_URL) {
-    const { startPipelineWorker } = require('./lib/queue/worker');
-    startPipelineWorker();
-  } else {
-    console.warn('[server] REDIS_URL not set — BullMQ worker disabled, using in-process fallback');
+  // CPD-924: deferred publish cron — fires Gate 5 for 'publish_scheduled' cards when due
+  try {
+    const { startSchedulingCron } = require('./lib/services/scheduling_cron');
+    startSchedulingCron({
+      getCards: () => persistedJobs,
+      runGate5: _runGate5ForCard,
+      saveCard: saveJobCard,
+    });
+  } catch (e) {
+    console.warn('⚠️  Scheduling cron failed to start:', e.message);
   }
 
-  // Rescue any jobs left in 'running' state by the previous process (CPD-183)
-  const { rescueInterruptedJobs, promoteAssembledJobs } = require('./lib/startup');
-  rescueInterruptedJobs();
-  // CPD-218: Promote assembled-with-outputUrl jobs to published 5s after rescue runs
-  setTimeout(() => promoteAssembledJobs(), 5000);
-  // Periodic rescue — catches jobs orphaned >90s after Render restarts mid-assembly
-  setInterval(rescueInterruptedJobs, 5 * 60 * 1000); // every 5 minutes
-  setInterval(promoteAssembledJobs, 5 * 60 * 1000);  // CPD-218: scan every 5 min
-
-  // Nightly backup to R2 — 03:00 UTC daily (runs inside auraflux-api so it can
-  // access the persistent disk at /app/data). The separate auraflux-backup Render
-  // cron service was removed because Render only allows one service to mount a disk.
+  // CPD-996: end orphaned live broadcasts from a previous process (restart kills
+  // the ffmpeg feed but never told YouTube the broadcast ended). Must complete
+  // BEFORE the stream scheduler can start a fresh grid session, or the guard
+  // could end the broadcast the new session just created.
   try {
-    const cron = require('node-cron');
-    cron.schedule('0 3 * * *', async () => {
-      console.log('[backup] Starting nightly backup to R2...');
-      try {
-        const { runBackup } = require('./scripts/backup_to_r2');
-        await runBackup();
-        console.log('[backup] Nightly backup completed successfully.');
-      } catch (backupErr) {
-        console.error('[backup] Nightly backup failed:', backupErr.message);
-      }
-    }, { timezone: 'UTC' });
-    console.log('   ✅ Nightly R2 backup cron scheduled (03:00 UTC)');
-  } catch (cronErr) {
-    console.warn('   ⚠️  node-cron not available — nightly backup disabled:', cronErr.message);
+    const { reconcileOrphanedBroadcasts } = require('./lib/services/youtube_direct');
+    await reconcileOrphanedBroadcasts();
+  } catch (e) {
+    console.warn('⚠️  Broadcast reconciliation failed (non-fatal):', e.message);
   }
 
-  // CPD-366: Nightly overage billing — runs at 03:30 UTC so it fires after the
-  // R2 backup and avoids contention. Only reports overage if Stripe metered item
-  // IDs are configured; logs a warning otherwise (safe no-op).
+  // CPD-975/976: daily programming windows — driven by content_calendar.json when env unset
   try {
-    const cron = require('node-cron');
-    const { runOverageBillingCycle } = require('./lib/services/billing_cron');
-    cron.schedule('30 3 * * *', async () => {
-      console.log('[overage-cron] Starting nightly overage billing cycle...');
-      try {
-        const result = await runOverageBillingCycle();
-        console.log('[overage-cron] Completed:', JSON.stringify(result));
-      } catch (overageErr) {
-        console.error('[overage-cron] Failed:', overageErr.message);
-      }
-    }, { timezone: 'UTC' });
-    console.log('   ✅ Nightly overage billing cron scheduled (03:30 UTC)');
-  } catch (cronErr) {
-    console.warn('   ⚠️  node-cron not available — overage billing cron disabled:', cronErr.message);
+    const { startStreamScheduler } = require('./lib/services/stream_scheduler');
+    streamScheduler = startStreamScheduler({
+      baseUrl: `http://localhost:${PORT}`,
+      getPersistedJobs: () => persistedJobs,
+    });
+  } catch (e) {
+    console.warn('⚠️  Stream scheduler failed to start:', e.message);
   }
 
-  // Pipeline health report — 07:00 UTC (2am Eastern) daily.
-  // Runs the 3-layer ecosystem check and posts findings to Jira (label: pipeline-health-report)
-  // so the agent can read today's status at session start via:
-  //   jira_search: project=CPD AND labels=pipeline-health-report ORDER BY created DESC
+  // YouTube Live daypart auto-switch (8pm event→news, 11pm news→grid)
   try {
-    const cron = require('node-cron');
-    cron.schedule('0 7 * * *', async () => {
-      console.log('[pipeline-review] Starting nightly pipeline health review...');
-      try {
-        const { runReviewAndPost } = require('./scripts/pipeline_parity_review');
-        const result = await runReviewAndPost();
-        console.log(`[pipeline-review] Done — ${result.failures} failures, ${result.warnings} warnings. Jira: ${result.jiraKey || 'not posted'}`);
-      } catch (reviewErr) {
-        console.error('[pipeline-review] Nightly review failed:', reviewErr.message);
-      }
-    }, { timezone: 'UTC' });
-    console.log('   ✅ Nightly pipeline health review cron scheduled (07:00 UTC / 2am ET)');
-  } catch (cronErr) {
-    console.warn('   ⚠️  node-cron not available — pipeline health review cron disabled:', cronErr.message);
+    const { startCalendarLiveSync } = require('./lib/calendar/live_sync');
+    startCalendarLiveSync({
+      baseUrl: `http://localhost:${PORT}`,
+      getPersistedJobs: () => persistedJobs,
+    });
+  } catch (e) {
+    console.warn('⚠️  Calendar live sync failed to start:', e.message);
   }
 });
 
-// CPD-266: Graceful shutdown — waits for HeyGen pollers, assembly jobs, AND
-// in-flight portal-pipeline jobs before exiting on SIGTERM.
-// Render sends SIGTERM and gives 90s before SIGKILL — we use 85s to leave
-// a small buffer. Jobs still running after 85s are marked failed by the next
-// boot's rescueInterruptedJobs(), which records failReason:'interrupted_by_restart'
-// so E2E scripts and operators can identify and resubmit them.
+// Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
 async function gracefulShutdown(signal) {
   console.log(`\n[shutdown] ${signal} received — checking in-flight work...`);
 
-  const { getActivePipelineJobs } = require('./lib/active_jobs');
-  const pipelineJobs  = getActivePipelineJobs();
   const pollerCount   = activePollers.size;
   const assemblyCount = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
-  const pipelineCount = pipelineJobs.size;
 
-  if (pollerCount === 0 && assemblyCount === 0 && pipelineCount === 0) {
-    console.log('[shutdown] No active pollers, assemblies, or pipeline jobs — exiting cleanly');
+  if (pollerCount === 0 && assemblyCount === 0) {
+    console.log('[shutdown] No active pollers or assemblies — exiting cleanly');
     process.exit(0);
   }
 
-  console.log(`[shutdown] ${pollerCount} poller(s), ${assemblyCount} assembly job(s), ${pipelineCount} pipeline job(s) in flight — waiting up to 85s...`);
+  console.log(`[shutdown] ${pollerCount} poller(s), ${assemblyCount} assembly job(s) in flight — waiting up to 35s...`);
 
-  // Hard exit after 85s — Render SIGKILL at 90s so we exit first
+  // Hard exit after 35s no matter what
   const forceTimer = setTimeout(() => {
-    console.error('[shutdown] 85s timeout — forcing exit (Render SIGKILL imminent)');
+    console.error('[shutdown] 35s timeout — forcing exit');
     process.exit(1);
-  }, 85000);
+  }, 35000);
   forceTimer.unref();
 
   // Wait for all pollers to checkpoint their current poll cycle
@@ -7633,24 +9192,6 @@ async function gracefulShutdown(signal) {
     console.log('[shutdown] Assemblies checkpointed');
   }
 
-  // CPD-266: Wait for in-flight portal-pipeline jobs (registered by developer_api.js).
-  // These are the long-running COMPACT/EXTRACT jobs that can take 20–30 minutes.
-  // We wait up to 80s so short-to-mid jobs (most are <15 min from this signal) finish.
-  if (pipelineCount > 0) {
-    const ids = [...pipelineJobs.keys()].join(', ').slice(0, 120);
-    console.log(`[shutdown] Waiting for ${pipelineCount} pipeline job(s): ${ids}…`);
-    await Promise.race([
-      Promise.all([...pipelineJobs.values()].map(e => e.done)),
-      new Promise(r => setTimeout(r, 80000))
-    ]);
-    const remaining = getActivePipelineJobs().size;
-    if (remaining > 0) {
-      console.warn(`[shutdown] ${remaining} pipeline job(s) still in flight after 80s — they will be rescued on next boot`);
-    } else {
-      console.log('[shutdown] Pipeline jobs checkpointed');
-    }
-  }
-
   console.log('[shutdown] Clean exit');
   process.exit(0);
 }
@@ -7672,15 +9213,9 @@ app.post('/nba/generate-intro-card', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Missing required field: gameId' });
   }
 
-  const { assertNumericGameId, gotoLocalTemplateWithParams } = require('./lib/puppeteer_safe');
-  const safeGameId = assertNumericGameId(gameId);
-  if (!safeGameId) {
-    return res.status(400).json({ ok: false, error: 'Invalid gameId: must be a numeric ESPN game ID' });
-  }
-
   const cardPath = outputPath
     ? path.resolve(outputPath)
-    : path.join(OUTPUT_DIR, `nba_intro_card_${safeGameId}.png`);
+    : path.join(OUTPUT_DIR, `nba_intro_card_${gameId}.png`);
 
   // Ensure output directory exists
   const cardDir = path.dirname(cardPath);
@@ -7693,7 +9228,7 @@ app.post('/nba/generate-intro-card', async (req, res) => {
 
   let browser;
   try {
-    console.log(`[nba-intro-card] Generating card for game ${safeGameId}...`);
+    console.log(`[nba-intro-card] Generating card for game ${gameId}...`);
 
     browser = await puppeteer.launch(withPuppeteerExecutable({
       headless: true,
@@ -7705,8 +9240,9 @@ app.post('/nba/generate-intro-card', async (req, res) => {
     // Set viewport to exactly 640×360 (TV aspect ratio)
     await page.setViewport({ width: 640, height: 360, deviceScaleFactor: 2 });
 
-    // Load local template; inject gameId via safe in-page navigation (not user URL in goto)
-    await gotoLocalTemplateWithParams(page, templatePath, { gameId: safeGameId });
+    // Load the template with gameId param — HTML auto-fetches ESPN API
+    const fileUrl = `file://${templatePath}?gameId=${gameId}`;
+    await page.goto(fileUrl, { waitUntil: 'networkidle0', timeout: 20000 });
 
     // Wait for ESPN API data to render (title changes to 'READY' when done)
     try {

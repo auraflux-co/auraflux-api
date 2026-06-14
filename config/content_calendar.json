@@ -1,0 +1,279 @@
+{
+  "version": 1,
+  "timezone": "America/New_York",
+  "updated": "2026-06-13",
+  "ownerOverride": {
+    "requirePin": true,
+    "note": "Schedule changes require CALENDAR_OWNER_PIN in .env — only Rob overrides hard rules."
+  },
+  "guidelines": {
+    "live": [
+      "Twitch TV: transformative produced video only (Bobby G commentary VODs + news desk). No streamer clip comps, no 4-up grid rebroadcast.",
+      "YouTube Live: follow dayparts from this calendar — event_night → news_desk (when day-fresh VOD exists) → grid.",
+      "Live overrides require owner PIN — agents and automation cannot change the calendar without it."
+    ],
+    "vod": [
+      "Long-form VOD: publish YouTube after Gate 5 QA pass (direct API when enabled, else Upload-Post).",
+      "Shorts: 3/day at fixed slots — Twitch 5pm, News 6pm, bonus 7pm — YouTube + TikTok + Instagram via Upload-Post.",
+      "Scheduled publish: job holds at publish_scheduled until slot time; cron fires Gate 5 automatically.",
+      "NBA long-form and shorts: OFF until NFL prep (August) unless owner override."
+    ]
+  },
+  "production": {
+    "slots": [
+      {
+        "id": "nba_long",
+        "label": "NBA highlights long-form",
+        "time": "10:30",
+        "contentType": "nba",
+        "kind": "longform",
+        "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+        "when": "dayAfterGames",
+        "enabled": false,
+        "disabledReason": "NBA off-season — NFL prep starts August",
+        "publishPlatforms": ["youtube", "tiktok", "instagram"]
+      },
+      {
+        "id": "news_long",
+        "label": "News desk compilation",
+        "time": "10:45",
+        "contentType": "news",
+        "kind": "longform",
+        "daily": true,
+        "enabled": true,
+        "publishPlatforms": ["youtube"],
+        "liveAlso": ["twitchTv", "youtubeNewsDesk"]
+      },
+      {
+        "id": "twitch_long",
+        "label": "Twitch Soup (Bobby G avatar VOD)",
+        "time": "11:00",
+        "contentType": "twitch",
+        "kind": "longform",
+        "days": ["wed", "thu", "fri", "sat", "sun"],
+        "enabled": true,
+        "publishPlatforms": ["youtube"],
+        "liveAlso": ["twitchTv"]
+      },
+      {
+        "id": "twitch_short",
+        "label": "Twitch short (clip comp)",
+        "time": "17:00",
+        "contentType": "twitch-short",
+        "kind": "short",
+        "daily": true,
+        "enabled": true,
+        "publishPlatforms": ["youtube", "tiktok", "instagram"],
+        "liveAlso": []
+      },
+      {
+        "id": "news_short",
+        "label": "News short",
+        "time": "18:00",
+        "contentType": "news-short",
+        "kind": "short",
+        "daily": true,
+        "enabled": true,
+        "publishPlatforms": ["youtube", "tiktok", "instagram"],
+        "liveAlso": []
+      },
+      {
+        "id": "bonus_short",
+        "label": "Bonus short (news or twitch alternate)",
+        "time": "19:00",
+        "contentType": "alternate",
+        "alternateTypes": ["news-short", "twitch-short"],
+        "kind": "short",
+        "daily": true,
+        "enabled": true,
+        "publishPlatforms": ["youtube", "tiktok", "instagram"],
+        "liveAlso": []
+      }
+    ]
+  },
+  "liveStreams": {
+    "twitchTv": {
+      "label": "ClipzWorld TV",
+      "window": "15:00-18:00",
+      "composition": "curated_playlist",
+      "contentRule": "bobbyg_vod_and_news_only",
+      "playlistConfig": "config/live_tv_playlist.json"
+    },
+    "youtubeLive": {
+      "label": "YouTube Live Grid",
+      "dayparts": [
+        {
+          "id": "yt_event",
+          "start": "18:00",
+          "end": "20:00",
+          "mode": "event_night",
+          "label": "Event watch-along",
+          "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+        },
+        {
+          "id": "yt_news",
+          "start": "20:00",
+          "end": "23:00",
+          "mode": "news_desk",
+          "label": "News desk live",
+          "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+        },
+        {
+          "id": "yt_grid",
+          "start": "23:00",
+          "end": "03:00",
+          "mode": "grid",
+          "label": "Multiview grid",
+          "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+        }
+      ]
+    }
+  },
+  "vodPublish": {
+    "youtube": {
+      "longform": { "when": "gate5_pass", "method": "youtube_direct_or_upload_post" },
+      "shorts": { "when": "scheduled_slot", "method": "youtube_direct_or_upload_post" },
+      "liveArchive": { "when": "after_stream_end", "method": "manual_or_future_auto" }
+    },
+    "tiktok": {
+      "shorts": { "when": "scheduled_slot", "method": "upload_post" },
+      "longform": { "when": "optional", "method": "upload_post" }
+    },
+    "instagram": {
+      "reels": { "when": "scheduled_slot", "method": "upload_post" }
+    }
+  },
+  "schedulingCapabilities": {
+    "updated": "2026-06-13",
+    "legend": {
+      "yes": "Works today — calendar or scheduler handles it",
+      "partial": "Works with gaps, manual steps, or platform limits",
+      "no": "Not available — blocked or not built",
+      "planned": "Agreed next — not shipped yet"
+    },
+    "items": [
+      {
+        "id": "twitch_tv",
+        "label": "ClipzWorld TV (Twitch loop)",
+        "category": "live",
+        "status": "yes",
+        "window": "15:00-18:00 ET",
+        "why": "stream_scheduler auto-starts/stops at window; curated Bobby G + news VODs only",
+        "operatorPath": "Broadcast → Twitch TV, or auto at 3pm",
+        "repairsNeeded": ["Verify TWITCH_STREAM_KEY stable after reconnects"],
+        "env": ["TWITCH_STREAM_KEY", "STREAM_SCHEDULER", "LIVE_TV_WINDOW"]
+      },
+      {
+        "id": "youtube_live_grid",
+        "label": "YouTube Live Grid (2×2)",
+        "category": "live",
+        "status": "yes",
+        "window": "18:00-03:00 ET (dayparts: event → news → grid)",
+        "why": "Schedule-ahead prepare at T−30 + auto-start with prepared RTMP; hot daypart switch (no restart); SEO + live thumbnail on prepare",
+        "operatorPath": "Broadcast → PREPARE TONIGHT or GO LIVE; auto at 6pm ET",
+        "repairsNeeded": [
+          "Deploy sidecar when offline to load new routes",
+          "YouTube/Twitch OAuth token health on ops bar"
+        ],
+        "env": ["STREAM_SCHEDULER", "LIVE_GRID_SCHEDULE_AHEAD", "CALENDAR_LIVE_SYNC", "YOUTUBE_*", "OPENAI_API_KEY"]
+      },
+      {
+        "id": "news_short_publish",
+        "label": "News short → publish",
+        "category": "vod",
+        "status": "partial",
+        "window": "18:00 ET slot",
+        "why": "Generate manually → Calendar links job → cron fires Gate 5 at slot; needs assembled job + QA",
+        "operatorPath": "Generate (news short) → Calendar 6pm slot → pick job",
+        "repairsNeeded": [
+          "Run news clip tests end-to-end before relying on schedule"
+        ],
+        "env": ["UPLOADPOST_*"]
+      },
+      {
+        "id": "twitch_short_publish",
+        "label": "Twitch clip comp short → publish",
+        "category": "vod",
+        "status": "partial",
+        "window": "17:00 ET slot",
+        "why": "Same calendar + cron path as news short",
+        "operatorPath": "Generate (twitch short) → Calendar 5pm slot → pick job",
+        "repairsNeeded": ["Comp QA / publish copy verification", "Multi-platform upload timing"],
+        "env": ["UPLOADPOST_*"]
+      },
+      {
+        "id": "bonus_short_publish",
+        "label": "Bonus short (alternate) → publish",
+        "category": "vod",
+        "status": "partial",
+        "window": "19:00 ET slot",
+        "why": "Slot exists; job picker accepts news-short OR twitch-short",
+        "operatorPath": "Generate either short → Calendar 7pm slot",
+        "repairsNeeded": [],
+        "env": ["UPLOADPOST_*"]
+      },
+      {
+        "id": "news_long_publish",
+        "label": "News long-form → publish",
+        "category": "vod",
+        "status": "partial",
+        "window": "10:45 ET production target; publish on Gate 5 pass",
+        "why": "No auto-generate at slot — produce on Generate tab, then schedule publish via Calendar when assembled",
+        "operatorPath": "Generate news longform → assemble → Calendar or Gate 5",
+        "repairsNeeded": ["VOD pipeline needs more testing before trusting overnight schedule", "Longform not fixed clock publish"],
+        "env": ["UPLOADPOST_*", "YOUTUBE_DIRECT_PUBLISH"]
+      },
+      {
+        "id": "twitch_long_publish",
+        "label": "Twitch Soup long-form → publish",
+        "category": "vod",
+        "status": "partial",
+        "window": "11:00 ET Wed–Sun",
+        "why": "Same as news long — manual generate, calendar publish when ready",
+        "operatorPath": "Generate twitch longform → Calendar",
+        "repairsNeeded": ["VOD testing", "Can also air on Twitch TV when in playlist"],
+        "env": ["UPLOADPOST_*"]
+      },
+      {
+        "id": "vod_production_auto",
+        "label": "Auto-run Generate at production times",
+        "category": "production",
+        "status": "no",
+        "why": "Not built — Generate is always manual; roadmap item",
+        "operatorPath": "Generate tab only",
+        "repairsNeeded": ["Autonomous production cron (Task #21)"],
+        "env": []
+      },
+      {
+        "id": "vod_native_platform_schedule",
+        "label": "Native YT/TikTok scheduled publish time",
+        "category": "vod",
+        "status": "partial",
+        "why": "Gate 5 uploads with YouTube publishAt / Upload-Post scheduled_date when calendar slot is in the future (YouTube + TikTok + Instagram)",
+        "operatorPath": "Calendar links job → assemble before slot → native schedule on Gate 5 pass",
+        "repairsNeeded": [],
+        "env": ["UPLOADPOST_*", "YOUTUBE_DIRECT_PUBLISH"]
+      },
+      {
+        "id": "nba_all",
+        "label": "NBA long + short",
+        "category": "vod",
+        "status": "no",
+        "why": "Calendar slots disabled — off-season until August",
+        "operatorPath": "Owner override only",
+        "repairsNeeded": ["Re-enable nba_long / nba slots in August"],
+        "env": []
+      },
+      {
+        "id": "live_also_rules",
+        "label": "liveAlso (auto-play VOD on Twitch/YT when published)",
+        "category": "automation",
+        "status": "partial",
+        "why": "On Gate 5 publish: twitchTv adds to curated playlist + enqueues; youtubeNewsDesk queues file for news_desk segment",
+        "operatorPath": "Automatic when slot has liveAlso in calendar",
+        "repairsNeeded": ["Wire news_desk queue into program director file override on grid start"],
+        "env": []
+      }
+    ]
+  }
+}
