@@ -31,10 +31,16 @@ jobs:
             [[ -z "$b" ]] && return 1
             [[ "$b" != http* ]] && b="https://${b}"
             b="${b/http:\/\//https:\/\/}"
+            b="${b%/wiki}"
+            b="${b%/jira}"
             printf '%s' "$b"
           }
 
           BASE="$(normalize_base "$JIRA_BASE_URL")"
+          if [[ "$BASE" == *"id.atlassian.com"* ]]; then
+            echo "::error::JIRA_BASE_URL must be https://<site>.atlassian.net (got id.atlassian.com)" >&2
+            exit 1
+          fi
           AUTH="$JIRA_USER_EMAIL:$JIRA_API_TOKEN"
 
           jira_get() {
