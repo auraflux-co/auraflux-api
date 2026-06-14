@@ -78,7 +78,7 @@
     "archiver": "^8.0.0",
     "axios": "^1.14.0",
     "better-sqlite3": "^12.9.0",
-    "bullmq": "^5.74.1",
+    "bullmq": "^5.78.1",
     "canvas": "^3.2.3",
     "cheerio": "^1.2.0",
     "cors": "^2.8.5",
