@@ -6,8 +6,8 @@
 
 | World | Folder | Branch | Deploys to |
 |-------|--------|--------|------------|
-| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 |
-| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app |
+| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 · **GitHub:** [auraflux-c0](https://github.com/auraflux-co/auraflux-c0) |
+| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app · **GitHub:** [auraflux-api](https://github.com/auraflux-co/auraflux-api) |
 
 **Never:** merge `origin/main` into C0 to sync; merge C0 → `main` without port ticket; replace C0 `gate5.js` with production `portal5` shim; delete gate shims; restart sidecar/auraflux during live RTMP stream.
 
@@ -17,8 +17,8 @@
 
 ---
 
-**Last Updated:** 2026-06-14 (CPD-1025) — Worker memory policy: STATUS top block, cursor.md, C0_REPOSITORY_POLICY.md, c0-render-separation rule, Serena memory. Epic CPD-1021; branch c0/main. Code: CPD-1022 gate5, CPD-1023 RTMP bypass, CPD-1026 portal5 poll.
-**Branch:** c0/main
+**Last Updated:** 2026-06-14 (CPD-1030) — **auraflux-c0** repo live; YouTube sync watchdog (auto-stop stale encoder), Epidemic Sound fallback bed, panic mute, faster music guard. Prior: CPD-1025 worker memory; CPD-1022 gate5; CPD-1023 RTMP bypass; CPD-1026 portal5 poll.
+**Branch:** c0/main → `origin` = **auraflux-c0** · `production` = auraflux-api (cherry-pick only)
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
 

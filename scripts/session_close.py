@@ -8,9 +8,11 @@ Works regardless of whether changes came from Cursor, Aider, in-app edits,
 or direct git commits.
 
 Usage:
-  python3 scripts/session_close.py           # audit + create missing tickets
-  python3 scripts/session_close.py --dry-run # report only, no ticket creation
-  python3 scripts/session_close.py --since <sha>
+  bash scripts/session_close.sh           # audit + create missing tickets (via Doppler)
+  bash scripts/session_close.sh --dry-run
+  bash scripts/session_close.sh --since <sha>
+
+Atlassian creds come from Doppler auraflux/prd (session_close.sh wraps doppler_run).
 """
 
 import os, sys, re, json, subprocess, urllib.request, urllib.error, base64

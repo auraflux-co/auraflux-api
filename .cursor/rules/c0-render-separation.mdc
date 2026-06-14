@@ -11,8 +11,8 @@ Read `docs/C0_REPOSITORY_POLICY.md` and the **Worker Memory** block at the top o
 
 | World | Folder | Branch | Deploys to |
 |-------|--------|--------|------------|
-| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 |
-| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app |
+| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 · GitHub **auraflux-c0** |
+| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app · GitHub **auraflux-api** |
 | **Jira ticket IDs** | — | — | Git commit tags may be wrong (e.g. `cpd-1017` in commits ≠ Jira CPD-1017) |
 
 ## Never

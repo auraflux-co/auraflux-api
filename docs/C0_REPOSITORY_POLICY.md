@@ -5,29 +5,27 @@
 
 **Purpose:** Keep Rob's C0 localhost tool (`cwn-c0`, pm2, `cwn_production.html`) separate from C1+ production (`main` on Render) without merge conflicts.
 
-## Two release lines, one GitHub org (interim)
+## Two release lines — split complete (2026-06-14)
 
-| Line | Branch | Folder | Deploys to |
-|------|--------|--------|------------|
-| **C0 localhost** | `c0/main` (rename from `feat/cpd-1017-program-director`) | `/Users/robertgregory/cwn-c0` | pm2 `auraflux` @ localhost:3000 |
-| **C1+ product** | `main` | `/Users/robertgregory/cwn-production` | Render `auraflux-api` + Vercel app |
+| Line | Branch | Folder | GitHub | Deploys to |
+|------|--------|--------|--------|------------|
+| **C0 localhost** | `c0/main` | `/Users/robertgregory/cwn-c0` | [auraflux-co/auraflux-c0](https://github.com/auraflux-co/auraflux-c0) | pm2 `auraflux` @ localhost:3000 |
+| **C1+ product** | `main` | `/Users/robertgregory/cwn-production` | [auraflux-co/auraflux-api](https://github.com/auraflux-co/auraflux-api) | Render `auraflux-api` + Vercel app |
 
-Both currently push to `auraflux-co/auraflux-api`. **Never merge C0 → `main`.** Cherry-pick shared `lib/` fixes only when intentional.
+**Never merge C0 → `main`.** Cherry-pick shared `lib/` fixes only when intentional.
 
-## Long-term: dedicated repo (recommended)
+## Remote setup (already applied on Rob's Mac)
 
-1. Create private GitHub repo **`auraflux-c0`** (or `clipzworld-c0`).
-2. Push current C0 line:
-   ```bash
-   cd ~/cwn-c0
-   git branch -m feat/cpd-1017-program-director c0/main   # if not done
-   git remote rename origin production
-   git remote add origin git@github.com:auraflux-co/auraflux-c0.git
-   git push -u origin c0/main
-   ```
-3. Point `~/cwn-c0` only at `auraflux-c0`. Keep `~/cwn-production` on `auraflux-api` / `main`.
-4. Close PRs targeting `main` from C0 branches (e.g. #637) — label **won't merge, C0 line**.
-5. Add branch protection on `auraflux-api` `main`; no requirement on `auraflux-c0`.
+```bash
+cd ~/cwn-c0
+git remote rename origin production   # auraflux-api
+git remote add origin https://github.com/auraflux-co/auraflux-c0.git
+git push -u origin c0/main
+```
+
+## Historical note
+
+Before 2026-06-14 both lines pushed to `auraflux-co/auraflux-api`. PR #637 merged C0 into `main` by mistake — do not repeat.
 
 ## Day-to-day rules (agents + Rob)
 

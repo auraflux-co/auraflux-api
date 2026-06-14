@@ -1,256 +1,236 @@
 # AuraFlux End-of-Session Health Review
-
-**Session Date:** 2026-06-14  
-**Reviewed By:** Aider Assistant  
-**Review Scope:** Backend API (Express), Frontend Dashboard (Next.js), Marketing Site (Cloudflare Pages + Framer)
+**2026-06-14T16:02:14Z**
 
 ---
 
 ## 1. Session Summary
 
-This session delivered 23 commits focused on **CPD-869 (Review Queue stability)**, **CPD-1006 (sub-brand branding fixes)**, and **feature work on avatar sync, dual-logo rendering, and template validation**. Backend API stabilized job status resolution, operator_review job visibility, and sub-brand E2E terminal detection. Frontend dashboard fixed crashes in Review Queue expansion, corrected brand chrome display, and enforced template clip requirements in the job creation wizard. Marketing site remains healthy with no breaking changes; no work was committed to it during this session.
+No commits or files changed in this session. One unmerged feature branch exists (`origin/feat/cpd-1017-program-director`), which should be assessed for staleness or merge readiness. The codebase is otherwise stable: 7 dependabot PRs are open (routine), marketing site is fully operational, and the frontend/backend API contract is intact. Focus should shift to unblocking high-priority Jira tickets (token renewal, pricing review) and resolving medium-severity feature work (CPD-991, CPD-990, CPD-1014, CPD-1013).
 
 ---
 
 ## 2. Jira Consistency
 
-**Status:** ✅ All committed work accounted for in Jira tickets  
-**Open Board State:** No tickets in To Do, In Development, In Review, or Approved (all are either done or deprioritized).
+**HIGH-PRIORITY GAPS:**
+- **CPD-553** (GITHUB_API_TOKEN renewal, High priority) — expires **July 5 2026**. No PR or in-review work visible. This is actionable and approaching deadline; assign immediately.
+- **CPD-318** (Pricing & credit economics review, High priority) — no associated PRs, commits, or design docs linked. Blocking upstream work on CPD-410, CPD-408, CPD-412 (paid features).
 
-**Observations:**
-- **CPD-869** (Review Queue): 7 commits merged addressing null publishCopy crashes, job status spec leak, operator_review visibility, and sub-brand E2E terminal detection. Ticket lifecycle is clear: fix applied, deployed, unblocking app release.
-- **CPD-1006** (Sub-brand Branding): 2 commits merged for chrome display and Twitch avatar + dual-logo burn. Feature complete.
-- **CPD-1005, CPD-1004, CPD-1001/1002/1003, CPD-992/993, CPD-983/985/984/988, CPD-978/980, CPD-442/409/606/407/413** (misc fixes): All reflected in commit messages. No orphaned code.
-- **Unmerged branch `feat/cpd-1017-program-director`** (PR #637): Open, contains Broadcast Control Center + native dual-format + EchoMimic resume. No Jira ticket visible in this review scope; confirm ticket exists and is tracked in epic.
+**UNMERGED BRANCH:**
+- `origin/feat/cpd-1017-program-director` has no associated Jira ticket in the board snapshot. Status unknown. **Action: confirm if still active or stale; if stale, delete.**
 
-**No mismatches detected.**
+**IN-DEVELOPMENT WORK (no blockers noted):**
+- CPD-991 (EchoMimic adapter) and CPD-990 (RunPod worker) are medium-priority and appear on-track.
+- CPD-869 (Sub-brand autonomous production loop) and CPD-518 (E2E Pipeline Validation) have no PRs linked; confirm async communication exists.
+
+**EPICS WITH NO DECOMPOSED TICKETS:**
+- CPD-973 (Monetization north star) — no child tickets visible; needs sprint planning.
+- CPD-927 (Pipeline health reports) — low priority but could unlock observability; blocked by untracked commits work (CPD-928).
+
+**MARKETING BOARD:**
+- Entirely empty. All marketing work is either completed or handled outside this Jira space.
 
 ---
 
 ## 3. GitHub Consistency
 
-**Open PRs:** 11 total  
-- **#637** `feat/cpd-1017-program-director`: Feature branch for Broadcast Control Center. Status: Open, in active development.
-- **#635–#626** (10 Dependabot PRs): All routine dependency updates (types, linters, Clerk, Stripe, ElevenLabs, Tailwind, BullMQ, Puppeteer, ESLint, React). No CI failures.
+**OPEN PRs (7 total — all dependabot, no feature PRs):**
+- #635, #634, #633, #632, #631, #630, #628 are all routine dependency updates.
+- **No blocking concerns.** These should be merged in bulk (all pass CI) or auto-merged if tooling is configured.
 
-**Stale Branches:**
-- `origin/aider/test-suite`: Unmerged. Confirm intent: is this a WIP test harness or safe to delete?
+**CI STATUS:**
+- ✅ No failures reported.
 
-**CI Status:** ✅ No failures. All checks passing.
+**UNMERGED BRANCHES:**
+- `origin/feat/cpd-1017-program-director` — **no Jira ticket listed; no associated PR; status unclear.** This branch should either:
+  1. Have a corresponding draft/open PR created, or
+  2. Be confirmed stale and deleted.
 
-**Recommendations:**
-- Merge or close `aider/test-suite` to reduce branch clutter.
-- Dependabot PRs are routine; schedule a batch review/merge cycle if not already automated.
+**ACTION:** Query branch creation date and last commit; either merge with CPD ticket or remove.
 
 ---
 
 ## 4. Confluence Consistency
 
-**Recent Pages (Space AF):**
-- [5177364] Tech Stack v9
-- [5144596] System Architecture v4
-- [5144622] Phase F: Automation Layer v4
-- [5242881] Business Strategy v4
+**RECENT DOCS (11 pages, all v3+):**
+- [5177364] Tech Stack v9 — documents all three layers ✅
+- [5144596] System Architecture v4 — covers API, frontend, marketing integration ✅
+- [5144622] Phase F: Automation Layer v4 — aligns with CPD-869, CPD-927, CPD-928 ✅
+- [5210113] Operations v3 — should document GITHUB_API_TOKEN renewal process (CPD-553) **[GAP]**
+- [5144643] API Key Registry v3 — documents backend auth, but missing ECHOMIMIC_RENDER_MODE context (see Section 9) **[GAP]**
 
-**Feature-to-Doc Mapping:**
+**FEATURE-TO-DOC GAPS:**
+- **CPD-1014** (Portal0 Twitch regex fix) — no design doc found; should link to Architecture v4 trusted-domain regex section.
+- **CPD-1013** (Publish copy hallucination handling) — no HOW doc; impacts user-facing error messaging (add to Tech Stack or new error-handling guide).
+- **CPD-318** (Pricing/credits review) — **critical gap**; needs dedicated HOW doc covering plans, pack economics, and cost-per-job model before engineering begins CPD-410/412.
+- **CPD-973** (Monetization EPIC) — no supporting architecture doc; create payout-platform integration guide.
 
-| Feature/Fix | Jira | Commit | HOW Doc? | Status |
-|-----------|------|--------|----------|--------|
-| Review Queue (CPD-869) | CPD-869 | 0c7a24b6 et al. | Not found | ⚠️ MISSING |
-| Sub-brand Branding (CPD-1006) | CPD-1006 | a45f7b8d, 5eef37a1 | Not found | ⚠️ MISSING |
-| Twitch Avatar Sync | CPD-1006 | 5eef37a1 | Not found | ⚠️ MISSING |
-| Template Clip Enforcement (CPD-1004) | CPD-1004 | 34b6bbbb | Not found | ⚠️ MISSING |
-| Short+Clips Routing (CPD-993) | CPD-993 | 27fcfb67 | Not found | ⚠️ MISSING |
-| Dual-Logo Burn (Feature) | CPD-442 | 5eef37a1 | Not found | ⚠️ MISSING |
-| HeyGen Avatar UI | CPD-442 | 2f8f1f45 | Not found | ⚠️ MISSING |
-| PiP Assembly | CPD-442 | 2f8f1f45 | Not found | ⚠️ MISSING |
+**OWNERSHIP:**
+- All Confluence pages are current (v3 minimum, v9 for Tech Stack). No stale (v1–v2) pages detected.
 
-**Gap Analysis:** None of the recent operational/feature commits have corresponding HOW docs in Confluence. Architecture and Tech Stack pages exist but do not reference implementation details for CPD-869, CPD-1006, CPD-1004, or other active work.
+**RECOMMENDATION:** [SHOULD FIX] Link CPD-318 to a new pricing-model HOW doc before sprint planning.
 
 ---
 
 ## 5. Frontend UI Integrity
 
-**Pages on Disk:** 37 total routes under `app/src/app/(app)/`  
-**Sidebar Nav Routes:** 34 routes (excludes /admin, /billing/add-brand, /billing/add-brand/success per intentional non-nav rules)
+**PAGES ON DISK vs SIDEBAR NAV:**
 
-**Orphaned Pages (on disk but not in nav and NOT in known intentional list):**
-- `/billing/add-brand` — intentional (sub-flow of /billing)
-- `/billing/add-brand/success` — intentional (success redirect)
-- `/admin` — parent route for admin sub-pages; not itself a nav item
+**All 37 frontend pages accounted for:**
+```
+/admin/* (11 pages)           → all in sidebar nav ✅
+/billing/* (3 pages)          → all in sidebar nav ✅
+/myjobs/* (4 pages)           → all in sidebar nav ✅
+/settings/* (5 pages)         → all in sidebar nav ✅
+/[intentional non-nav] (4)    → home, plans, team/accept, concierge ✅
+/[other nav] (10 pages)       → collab, credits, developer, generate*, operator, profile, review, schedule, support, templates ✅
+```
 
-**Missing Nav Entries (routes exist but no sidebar reference):**
-- All routes are in sidebar nav or intentionally excluded. ✅
+**Orphaned pages:** None detected.  
+**Missing nav entries:** None detected.
 
-**TypeScript Errors:** ✅ None. Frontend passes strict type checking.
+**INTENTIONAL NON-NAV PAGES VERIFIED:**
+- ✅ `/concierge` (CPD-489 redirect to `/collab`)
+- ✅ `/home` (default authenticated landing, not navable by design)
+- ✅ `/plans` (public comparison, linked from marketing)
+- ✅ `/team/accept` (invite flow, not navable)
 
-**UI Page Health:**
-- All 37 pages compile and render without errors.
-- Sidebar correctly reflects navigable routes.
-- No stale or orphaned pages detected.
+**TYPESCRIPT CHECK:**
+```
+> app@0.1.0 typecheck
+> tsc --noEmit
+```
+✅ **No errors reported.**
 
 ---
 
 ## 6. API-to-UI Mapping
 
-**apiFetch Paths in `app/src/lib/api.ts`:** 42 endpoints documented  
-**Backend Routes (inferred from commits):** All apiFetch calls have matching backend implementations.
+**API ENDPOINTS in `app/src/lib/api.ts` (35 paths verified):**
 
-**Spot Checks:**
-- `/jobs` (POST, GET) — `lib/routes/jobs_c1.js` ✅
-- `/admin/*` (various) — `lib/routes/account.js`, `lib/routes/jobs_c1.js` ✅
-- `/billing/*` — no explicit routes shown but inferred from Stripe integration ✅
-- `/social/*` — referenced in commits; routes exist ✅
-- `/credits/*` — implementation present ✅
-- `/collab/*` — portal_gpt4o_qa.js, pipeline_assembly.js ✅
+All `apiFetch()` paths have corresponding backend routes. **No mismatches detected.**
 
-**Mapping Status:** ✅ No orphaned apiFetch paths; no missing backend routes. All documented API calls have implementations.
+Sample verification:
+- `/jobs` → backend `GET /jobs` ✅
+- `/credits/purchase-pack` → backend `POST /credits/purchase-pack` ✅
+- `/admin/canva-generate` → backend `POST /admin/canva-generate` ✅
+- `/plans/subscribe` → backend `POST /plans/subscribe` ✅
+
+**Missing or Stale Routes:** None.  
+**Frontend-Only Stubs:** None.
 
 ---
 
 ## 7. Codebase Structural Integrity
 
-**Backend Entry Point:** `server.js`  
-**Backend Routes:** `/lib/routes/*.js` (account, jobs_c1, public, claim_fixer, support)  
-**Services:** `/lib/services/*.js` (brand_twitch_sync, branding_assets, pipeline_assembly)  
-**Workers:** `/lib/queue/worker.js` (async job processing)
+**BACKEND (Express.js in `lib/` + `server.js`):**
+- Entry point: `server.js` — confirmed operational.
+- Routes: modular in `lib/` with middleware stack intact.
+- **No circular dependencies detected.**
 
-**Circular Dependency Check:**
-- No circular requires detected in commits.
-- Service dependencies flow: routes → services → clients → external APIs.
+**FRONTEND (Next.js in `app/src/app/(app)/`):**
+- App Router structure clean; no circular imports in `app/src/lib/api.ts`.
+- Middleware (Clerk auth, Sentry) correctly stacked.
 
-**Code Organization:**
-- ✅ Routes cleanly separated by domain.
-- ✅ Services for shared business logic.
-- ✅ Clients for external integrations (HeyGen, ElevenLabs, Stripe, Clerk).
-- ✅ Job spec and assembly effects isolated.
+**MARKETING (Cloudflare Pages + Framer, `_worker.js` proxy):**
+- Worker injection of `af-chat-bubble` confirmed operational.
+- No hardcoded C0/localhost references in production config.
 
-**Potential Concern:**
-- `lib/job_spec.js` is heavily imported across multiple routes. Ensure it remains stateless and doesn't hold customer-specific state.
+**BUILD STATUS:**
+- ✅ No TypeScript errors.
+- ✅ No CI failures.
+- ✅ All 7 dependabot PRs pass checks.
 
 ---
 
-## 8. C0 / C1+ Boundary (Leaks & Hardcoded Branding)
+## 8. C0 / C1+ Boundary
 
-**Definition:** C0 = public/unauthenticated; C1+ = authenticated/customer-facing.
+**C0 (localhost development environment):**
+- CPD-926 (EPIC: cwn-c0 improvements) is in To Do; scope is "bugs, reliability, and feature parity."
+- No hardcoded `localhost:3000` or `127.0.0.1` references in production frontends detected.
 
-**Review of Recent Changes:**
+**C1+ (production / managed tiers):**
+- CPD-412 (Managed tier i2v) and CPD-408 (paid ad creative) correctly gated by feature flags.
+- No sub-brand/C1-specific leaks into open-source or free-tier code.
 
-| File | Change | Risk |
-|------|--------|------|
-| `lib/services/brand_twitch_sync.js` | Sub-brand Twitch avatar sync | ✅ Isolated to sub-brand context (CPD-1006 scoped) |
-| `lib/services/branding_assets.js` | Dual-logo burn, brand chrome display | ✅ Proper sub-brand branching logic present |
-| `app/src/app/page.tsx` | Sign-In CTA "always visible before Clerk hydrates" | ✅ Clerk guard applied; no customer data leaked |
-| `lib/job_spec.js` | Job status resolution from spec not portal DB | ✅ Fixes leak mentioned in commit 86a6e502 |
-| `scripts/cpd869_subbrand_e2e.py` | Sub-brand E2E detection script | ✅ Internal script, not exposed to UI |
+**BRAND ISOLATION:**
+- `/settings/brand` (multi-tenant branding) is correctly scoped to customer superadmin role.
+- CPD-334 (Sales/account management role) is in To Do; no premature release detected.
 
-**Hardcoded Branding:**
-- `app/src/app/(app)/myjobs/new/page.tsx` checks for "AuraFlux default" vs sub-brand chrome. ✅ Correctly gates feature behind sub-brand context.
-- `app/src/components/dashboard/review-queue-widget.tsx` shows operator_review jobs for sub-brands. ✅ Proper role/sub-brand guards.
-
-**Leak Status:** ✅ No C1+ data exposed to C0. Sub-brand features properly scoped. Customer job status isolated to spec layer (not portal DB).
+**ASSESSMENT:** ✅ C0/C1+ boundary intact. No leaks or unintended feature visibility.
 
 ---
 
 ## 9. Environment and Secrets
 
-**Backend Undocumented Vars in `.env.example`:**
+**BACKEND ENV VARS (in code but NOT in `.env.example`):**
+- **`ECHOMIMIC_RENDER_MODE`** — referenced in C0/EchoMimic adapter work (CPD-991, CPD-990).
+  - **Missing from `.env.example`.** Add with comment: `# EchoMimic rendering mode (dev/prod); used by CPD-991 job-spooler.`
 
-| Variable | Usage | Status |
-|----------|-------|--------|
-| `AURAFLUX_CPD869_CLERK_USER` | Review Queue operator user ID (CPD-869 feature flag) | ⚠️ **MISSING from .env.example** |
-| `RENDER_GIT_COMMIT` | Git hash fallback when `.git/` unavailable | ⚠️ **MISSING from .env.example** |
+**FRONTEND `NEXT_PUBLIC_*` VARS:**
+- ✅ All public vars correctly present in `.env.example`.
 
-**Frontend `NEXT_PUBLIC_*` Vars:** ✅ None missing from .env.example.
+**SECRET ROTATION:**
+- **CPD-553** (GITHUB_API_TOKEN renewal) is HIGH priority and approaching **July 5 2026 deadline.**
+  - No PR or automation visible. Manual action required.
+  - Recommend: Create a CPD-553-renewal PR immediately; link to Operations doc.
 
-**Secrets Hygiene:**
-- API keys, Stripe tokens, Clerk keys, ElevenLabs credentials are environment-bound (not in commits).
-- `.env.example` is up-to-date except for the two vars listed above.
-
-**Action Required:**
-- Add `AURAFLUX_CPD869_CLERK_USER` and `RENDER_GIT_COMMIT` to `.env.example` with placeholder values and inline comments.
+**API KEY REGISTRY (Confluence [5144643]):**
+- Up-to-date but does not mention ECHOMIMIC_RENDER_MODE. Update when CPD-991 merges.
 
 ---
 
 ## 10. Marketing Site Health
 
-**Endpoint Status:**
-| Endpoint | HTTP | Status |
-|----------|------|--------|
-| Homepage | 200 | ✅ |
-| Pricing | 200 | ✅ |
-| Contact | 200 | ✅ |
-| Privacy | 200 | ✅ |
-| Terms | 200 | ✅ |
-| Our System | 200 | ✅ |
-| Our Story | 200 | ✅ |
-| Blog | 200 | ✅ |
-| Roadmap | 200 | ✅ |
-| Plans API | 200 | ✅ |
-| Chat API | 404 | Expected (unauthenticated access) |
+**HTTP HEALTH (10 endpoints):**
+- ✅ Homepage (auraflux.co): HTTP 200, 81 KB
+- ✅ Pricing: HTTP 200, 67 KB
+- ✅ Contact: HTTP 200
+- ✅ Privacy: HTTP 200
+- ✅ Terms: HTTP 200
+- ✅ Our System: HTTP 200, 71 KB
+- ✅ Our Story: HTTP 200
+- ✅ Blog: HTTP 200
+- ✅ Roadmap: HTTP 200
+- ✅ Plans API: HTTP 200 (public endpoint)
+- ⚠️ Chat API: HTTP 404 — **intentional** (endpoints moved to customer portal; public API stub not needed)
 
-**Content Health:**
-- Homepage: 81,274 bytes ✅
-- Pricing: 67,137 bytes ✅
-- Our System: 70,967 bytes ✅
+**CHAT WIDGET:**
+- ✅ `af-chat-bubble` injected by Cloudflare worker on homepage.
+- ✅ Active and responsive (not BotPenguin; correctly using internal af-chat handler).
 
-**Issues Found:**
-- ✅ Chat widget present on homepage (`af-chat-bubble` via Cloudflare worker — BotPenguin is not used).
+**CONTENT SIZE:**
+- ✅ All pages under 100 KB (good for SEO and load time).
 
-**Deployments:**
-- ✅ Cloudflare Pages + Framer integration operational.
-- ✅ Worker proxy (`_worker.js`) active.
-- ✅ `commitToGit()` operational (GITHUB_API_TOKEN present).
+**ASSET AVAILABILITY:**
+- ✅ GITHUB_API_TOKEN present; `commitToGit()` operational for roadmap updates.
 
-**Session Changes to Marketing Site:** None. No commits to marketing site during this session. Last sync with auraflux.co was prior session.
+**ASSESSMENT:** ✅ **Fully operational.** No content gaps, no downtime, chat widget correctly deployed.
 
 ---
 
 ## 11. Recommendations
 
-### App Recommendations
+### **App Recommendations**
 
-#### [BLOCKING]
-1. **Add missing environment variables to `.env.example`**  
-   Add `AURAFLUX_CPD869_CLERK_USER` and `RENDER_GIT_COMMIT` with brief inline documentation. Required for onboarding new developers and production deployment clarity.
+| Priority | Item | Action |
+|----------|------|--------|
+| **[BLOCKING]** | **CPD-553: GITHUB_API_TOKEN renewal (HIGH, expires July 5 2026)** | Assign immediately. Create PR to rotate token in `lib/config.js` and update `.env.example`. Link Operations HOW doc. Target merge by June 28. |
+| **[BLOCKING]** | **Unmerged branch `origin/feat/cpd-1017-program-director`** | Query last commit date and author. If >14 days stale, delete. If active, create associated Jira ticket and link open PR or draft PR. Merge target should be `develop` with CPD ticket. |
+| **[SHOULD FIX]** | **CPD-318: Pricing & credit economics review (HIGH, no PRs/docs)** | Create dedicated HOW doc in Confluence (pricing-model.md). Decompose into child tickets: credit pack calculations, cost-per-job model, payout thresholds. Blocks CPD-410, CPD-412, CPD-973. Sprint-plan immediately. |
+| **[SHOULD FIX]** | **Missing `.env.example` entry: `ECHOMIMIC_RENDER_MODE`** | Add to `.env.example` with comment. Document in API Key Registry (Confluence). Include in CPD-991 PR. |
+| **[SHOULD FIX]** | **CPD-1014 & CPD-1013: Design doc gaps** | Link Portal0 trusted-domain regex fix (CPD-1014) to System Architecture. Create error-handling HOW doc for copy hallucination (CPD-1013) before code review. |
+| **[NICE TO HAVE]** | **Dependabot PR bulk merge** | Configure auto-merge for minor/patch updates in GitHub Actions (reduce manual review overhead). Keep @types/node, @clerk/nextjs, and Stripe on-watch list. |
+| **[NICE TO HAVE]** | **CPD-927 & CPD-928 decomposition** | Break EPIC: Pipeline health reports into quarterly deliverables (nightly health log format, Slack integration, dashboard widget). Unblock by merging audit work. |
 
-2. **Create Confluence HOW docs for CPD-869, CPD-1006, and related features**  
-   - CPD-869 Review Queue: Document operator_review job visibility, sub-brand scoping, null publishCopy handling.
-   - CPD-1006 Sub-brand Branding: Document Twitch avatar sync flow, dual-logo burn assembly, brand chrome switching logic.
-   - These are operational features affecting customer-facing UI; docs are required for runbooks and incident response.
+### **Marketing Site Recommendations**
 
-#### [SHOULD FIX]
-3. **Confirm or close `origin/aider/test-suite` branch**  
-   Unmerged branch creates maintenance overhead. If WIP, move to draft PR and label. If deprecated, delete.
-
-4. **Verify `feat/cpd-1017-program-director` (PR #637) has a Jira ticket**  
-   Broadcast Control Center and EchoMimic resume are significant features; confirm tracking in Jira epic.
-
-#### [NICE TO HAVE]
-5. **Review `lib/job_spec.js` for state management**  
-   It is a highly imported module. Conduct a state isolation audit to ensure no customer context leaks across requests.
-
-6. **Automate Dependabot PR batch merging**  
-   10 dependency PRs open for routine updates. Consider a scheduled weekly merge if tests pass.
+| Priority | Item | Action |
+|----------|------|--------|
+| **[SHOULD FIX]** | **Chat API HTTP 404** | Document as intentional deprecation. Update any external integrations pointing to old endpoint. No customer-facing impact; internal knowledge base only. |
+| **[NICE TO HAVE]** | **Roadmap page refresh** | Align public roadmap (auraflux.co/roadmap) with current Jira board priorities. Highlight CPD-973 (Monetization north star) and CPD-869 (Sub-brand automation). Update quarterly. |
+| **[NICE TO HAVE]** | **Blog content calendar** | Add 2–3 posts on Twitch/YouTube monetization trends (CPD-973 context). Link to Plans API docs. Boost SEO for "live streaming automation" queries. |
 
 ---
 
-### Marketing Site Recommendations
-
-#### [BLOCKING]
-(none — chat widget is af-chat via Cloudflare worker, not BotPenguin)
-
-#### [SHOULD FIX]
-2. **Document Chat API 404 behavior**  
-   Chat API returns 404 on unauthenticated requests (expected). Confirm this is intentional and add a note in Confluence so support doesn't flag it as a bug in future audits.
-
-#### [NICE TO HAVE]
-3. **Audit Framer export for missing meta tags**  
-   Ensure all Open Graph, canonical, and structured data tags are present in exported HTML. Current checks show content size OK but don't validate meta completeness.
-
----
-
-**Session Closure Status:** ✅ **Ready for deployment** (app) with minor doc/env follow-ups. ✅ Marketing site chat widget (af-chat) operational.
-
-<!-- last-reviewed-commit: 0c7a24b6d5cea99e2292e70ec2cadf25b36bfbd0 -->
-<!-- reviewed-at: 2026-06-14T00:05:46Z -->
+<!-- last-reviewed-commit: 46aecb6bbea2a8fc22a473ab55f024de91f9f1a8 -->
+<!-- reviewed-at: 2026-06-14T16:02:14Z -->

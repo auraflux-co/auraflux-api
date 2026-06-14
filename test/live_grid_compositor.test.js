@@ -2,6 +2,7 @@ const { buildArgs, gridEncodeConfig, quadMasterInputArgs, USE_UDP_RELAY } = requ
 
 describe('live_grid compositor (CPD-1005)', () => {
   const orig = process.env;
+  const { isUdpInputNotReady } = require('../lib/live_grid/compositor');
 
   beforeEach(() => {
     process.env = { ...orig, LIVE_GRID_FPS: '60', LIVE_GRID_AUDIO_BITRATE_K: '192', LIVE_GRID_BITRATE_K: '6800' };
@@ -20,5 +21,10 @@ describe('live_grid compositor (CPD-1005)', () => {
     expect(joined).toContain('fps=60');
     expect(joined).toContain('192k');
     expect(joined).toContain('aresample=async=1');
+  });
+
+  test('isUdpInputNotReady detects empty UDP port errors', () => {
+    expect(isUdpInputNotReady('Error opening input: Operation not supported on socket')).toBe(true);
+    expect(isUdpInputNotReady('Broken pipe')).toBe(false);
   });
 });

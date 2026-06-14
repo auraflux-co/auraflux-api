@@ -11,7 +11,10 @@ describe('live_grid avatar overlay', () => {
 
   test('isExcludedAvatarCandidate rejects produced shorts and comps', () => {
     expect(isExcludedAvatarCandidate(shortBump)).toBe(true);
-    expect(isExcludedAvatarCandidate(avatarLong)).toBe(false);
+    expect(isExcludedAvatarCandidate(avatarLong)).toBe(true);
+    expect(isExcludedAvatarCandidate(
+      path.join(__dirname, '..', 'output', 'nba_saturday_may_9_2026_10_avatar_2_clip_2clips_script_nba_1778361117770.mp4')
+    )).toBe(true);
   });
 
   test('shouldUseAvatarPip is off for event_night and grid without explicit path', () => {

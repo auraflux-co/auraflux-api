@@ -23,7 +23,8 @@ const echomimic = require('../lib/avatar/adapters/echomimic');
 const avatar = require('../lib/avatar');
 
 const ENV_KEYS = [
-  'AVATAR_ENGINE', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID', 'ELEVENLABS_MODEL',
+  'AVATAR_ENGINE', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID', 'ELEVENLABS_DEFAULT_VOICE_ID',
+  'ELEVENLABS_MODEL', 'ECHOMIMIC_AUDIO_SOURCE',
   'RUNPOD_API_KEY', 'RUNPOD_ENDPOINT_ID', 'ECHOMIMIC_ENDPOINT_ID', 'ECHOMIMIC_IMAGE_KEY',
   'ECHOMIMIC_STEPS', 'ECHOMIMIC_MAX_FRAMES', 'ECHOMIMIC_SPEAK_SPEED'
 ];
@@ -49,8 +50,10 @@ beforeEach(() => {
   for (const k of ENV_KEYS) { envBackup[k] = process.env[k]; delete process.env[k]; }
   process.env.ELEVENLABS_API_KEY = 'el-key';
   process.env.ELEVENLABS_VOICE_ID = 'el-voice';
+  process.env.ECHOMIMIC_AUDIO_SOURCE = 'elevenlabs';
   process.env.RUNPOD_API_KEY = 'rp-key';
   process.env.ECHOMIMIC_ENDPOINT_ID = 'ep-1';
+  process.env.ECHOMIMIC_STEPS = '8';
   jest.clearAllMocks();
 });
 
@@ -86,7 +89,7 @@ describe('wav duration', () => {
 describe('resolveConfig', () => {
   test('defaults to spike portrait and 8 steps', () => {
     const cfg = echomimic.resolveConfig({ contentType: 'twitch', format: 'landscape' });
-    expect(cfg.avatarId).toBe('spike/cpd881/inputs/bobbyg_studio.png');
+    expect(cfg.avatarId).toBe('spike/cpd881/inputs/bobbyg_headshot.png');
     expect(cfg.steps).toBe(8);
     expect(cfg.engine).toBe('echomimic');
     expect(cfg.voiceId).toBe('el-voice');
@@ -100,9 +103,26 @@ describe('resolveConfig', () => {
     expect(cfg.steps).toBe(20);
   });
 
-  test('missing ELEVENLABS_VOICE_ID throws', () => {
+  test('missing ELEVENLABS_VOICE_ID throws when elevenlabs audio', () => {
     delete process.env.ELEVENLABS_VOICE_ID;
+    delete process.env.ELEVENLABS_DEFAULT_VOICE_ID;
+    process.env.ECHOMIMIC_AUDIO_SOURCE = 'elevenlabs';
     expect(() => echomimic.resolveConfig({})).toThrow(/ELEVENLABS_VOICE_ID/);
+  });
+
+  test('heygen audio source does not require ElevenLabs voice id', () => {
+    delete process.env.ELEVENLABS_VOICE_ID;
+    delete process.env.ELEVENLABS_DEFAULT_VOICE_ID;
+    process.env.ECHOMIMIC_AUDIO_SOURCE = 'heygen';
+    const cfg = echomimic.resolveConfig({});
+    expect(cfg.audioSource).toBe('heygen');
+    expect(cfg.voiceId).toBeNull();
+  });
+
+  test('falls back to ELEVENLABS_DEFAULT_VOICE_ID', () => {
+    delete process.env.ELEVENLABS_VOICE_ID;
+    process.env.ELEVENLABS_DEFAULT_VOICE_ID = 'default-voice';
+    expect(echomimic.resolveConfig({}).voiceId).toBe('default-voice');
   });
 });
 
@@ -244,11 +264,13 @@ describe('submitSegment', () => {
     // RunPod call shape
     const [url, body, opts] = axios.post.mock.calls[1];
     expect(url).toBe('https://api.runpod.ai/v2/ep-1/run');
-    expect(body.input.image_url).toContain('presigned/get/spike/cpd881/inputs/bobbyg_studio.png');
+    expect(body.input.image_url).toContain('presigned/get/spike/cpd881/inputs/bobbyg_headshot.png');
     expect(body.input.audio_url).toContain('presigned/get/avatar/echomimic/');
     expect(body.input.output_put_url).toContain('presigned/put/avatar/echomimic/');
     expect(body.input.video_length).toBe(49); // 2.0s → 49 frames (4n+1)
     expect(body.input.num_inference_steps).toBe(8);
+    expect(body.input.audio_guidance_scale).toBe(3.0);
+    expect(body.input.guidance_scale).toBe(4.0);
     expect(opts.headers.Authorization).toBe('Bearer rp-key');
   }, 20000);
 

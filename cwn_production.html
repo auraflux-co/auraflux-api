@@ -489,7 +489,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         <div class="card-body">
           <div id="lg-watch-row" style="display:none;font-size:11px;margin-bottom:10px;">
             <a id="lg-watch-link" href="#" target="_blank" style="color:#c7af4f;font-weight:700;letter-spacing:1px;">▶ OPEN STREAM ON YOUTUBE</a>
+            <a id="lg-vertical-link" href="#" target="_blank" style="display:none;color:#9146ff;font-weight:700;letter-spacing:1px;margin-left:12px;">▶ PORTRAIT (9:16)</a>
             <span id="lg-uptime" style="color:rgba(255,255,255,0.35);margin-left:8px;"></span>
+            <span id="lg-yt-sync" style="margin-left:8px;font-size:10px;"></span>
+          </div>
+          <div id="lg-health-panel" style="display:none;margin-bottom:10px;padding:8px 10px;background:rgba(13,21,36,0.85);border:1px solid rgba(199,175,79,0.2);border-radius:4px;">
+            <div style="font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:6px;">STREAM HEALTH</div>
+            <div id="lg-health-specs" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+              <button type="button" class="btn btn-outline btn-sm" id="lg-master-refresh-btn" style="font-size:10px;" onclick="liveGridMasterRefresh()" title="Reconnect YouTube encoder to all quadrants (~5s blip)">↻ REFRESH ENCODER</button>
+              <button type="button" class="btn btn-outline btn-sm" id="lg-yt-seo-btn" style="font-size:10px;" onclick="liveGridRefreshLiveSeo()" title="Update YouTube title, description, tags, and thumbnail">↻ REFRESH YOUTUBE SEO</button>
+            </div>
           </div>
           <div id="lg-quads" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
           <div id="lg-assign-row" style="display:none;margin-bottom:8px;font-size:10px;color:rgba(255,255,255,0.45);">
@@ -542,12 +552,20 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               </div>
             </div>
           </div>
-          <div class="btn-row">
+          <div class="btn-row" style="flex-wrap:wrap;align-items:center;gap:8px;">
             <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
               <option value="public" selected>PUBLIC</option>
               <option value="unlisted">UNLISTED</option>
             </select>
+            <label style="font-size:10px;color:rgba(255,255,255,0.45);">Mode:</label>
+            <select id="lg-seo-mode" title="Controls quadrants + YouTube title, description, and thumbnail" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
+              <option value="grid" selected>Twitch multiview grid</option>
+              <option value="news_desk">News desk</option>
+              <option value="event_night">Event night</option>
+            </select>
             <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
+            <button id="lg-panic-mute-btn" class="btn btn-outline" style="display:none;border-color:rgba(255,120,120,0.5);color:#e88;" onclick="liveGridPanicMute()" title="Instant copyright-safe audio — Epidemic Sound bed or mute">🔇 PANIC MUTE</button>
+            <button id="lg-unmute-btn" class="btn btn-outline" style="display:none;font-size:11px;" onclick="liveGridUnmute()" title="Restore Twitch quadrant audio">🔊 RESTORE AUDIO</button>
             <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
           </div>
         </div>
@@ -9572,6 +9590,75 @@ function confirmPlatformModal() {
 const LG_BASE = (typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000';
 let _lgStatus = null;
 
+/** Health pill colors: ok=green, warn=amber, bad=red, off=muted */
+function lgHealthTone(level) {
+  if (level === 'ok') return { bg: 'rgba(46,204,113,0.12)', border: 'rgba(46,204,113,0.45)', color: '#6ecf8f' };
+  if (level === 'warn') return { bg: 'rgba(255,170,80,0.12)', border: 'rgba(255,170,80,0.45)', color: '#fa5' };
+  if (level === 'bad') return { bg: 'rgba(255,100,100,0.12)', border: 'rgba(255,100,100,0.45)', color: '#e88' };
+  return { bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.4)' };
+}
+
+function lgHealthPill(label, value, level, title) {
+  const t = lgHealthTone(level);
+  return `<span title="${title || ''}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;font-size:9px;
+    background:${t.bg};border:1px solid ${t.border};color:${t.color};">
+    <span style="opacity:0.75;">${label}</span><b>${value}</b></span>`;
+}
+
+function liveGridRenderHealth(s) {
+  const panel = document.getElementById('lg-health-panel');
+  const specs = document.getElementById('lg-health-specs');
+  const running = !!(s && s.running);
+  panel.style.display = running ? '' : 'none';
+  if (!running || !specs) return;
+
+  const master = s.master || {};
+  const enc = master.encode || {};
+  const live = (s.poller && s.poller.live) || {};
+  const relays = s.relays || [];
+  const pills = [];
+
+  pills.push(lgHealthPill('ENCODER', master.running ? 'UP' : 'DOWN', master.running ? 'ok' : 'bad', 'Master ffmpeg → YouTube RTMP'));
+
+  const uptime = master.uptimeSec != null ? master.uptimeSec : 0;
+  pills.push(lgHealthPill('MASTER UP', uptime >= 60 ? `${Math.floor(uptime / 60)}m` : `${uptime}s`, uptime >= 45 ? 'ok' : 'warn', 'Time since last encoder restart'));
+
+  const mRestarts = master.restarts != null ? master.restarts : 0;
+  pills.push(lgHealthPill('ENC RESTARTS', String(mRestarts), mRestarts <= 2 ? 'ok' : mRestarts <= 5 ? 'warn' : 'bad', 'Encoder restarts this session'));
+
+  const br = enc.bitrateK || 0;
+  pills.push(lgHealthPill('BITRATE', br ? `${br}k` : '—', br >= 6800 ? 'ok' : br >= 4500 ? 'warn' : 'bad', 'Outbound video bitrate'));
+
+  const fps = enc.fps || 0;
+  pills.push(lgHealthPill('FPS', fps || '—', fps >= 60 ? 'ok' : fps >= 30 ? 'warn' : 'bad', 'Output frame rate'));
+
+  pills.push(lgHealthPill('RES', '1080p', 'ok', 'Grid output resolution'));
+
+  pills.push(lgHealthPill('UDP RELAY', enc.udpRelay ? 'ON' : 'OFF', enc.udpRelay ? 'ok' : 'warn', 'Per-quadrant RTSP→UDP relays'));
+
+  (s.quadrants || []).forEach(q => {
+    const relay = relays.find(r => r.quadrant === q.quadrant) || {};
+    const login = q.login || q.channelSlug;
+    const isLive = login && live[login] != null;
+    const hasSource = !!(q.login || q.feedUrl || q.filePath);
+    let qLevel = 'ok';
+    let qVal = login ? login.toUpperCase() : (hasSource ? 'FEED' : 'SLATE');
+    const rRestarts = relay.restarts != null ? relay.restarts : 0;
+    if (!hasSource) { qLevel = 'off'; qVal = 'SLATE'; }
+    else if (!isLive && login) { qLevel = 'warn'; qVal += ' ⚠'; }
+    if (rRestarts > 20) qLevel = 'bad';
+    else if (rRestarts > 3 && qLevel === 'ok') qLevel = 'warn';
+    if (!relay.running && enc.udpRelay) qLevel = 'bad';
+    pills.push(lgHealthPill(`Q${q.quadrant}`, qVal, qLevel, `Relay restarts: ${rRestarts}`));
+  });
+
+  pills.push(lgHealthPill('CHAT', (s.audio && s.audio.chatControl) ? 'ON' : 'OFF', (s.audio && s.audio.chatControl) ? 'ok' : 'warn', 'YouTube live chat control'));
+
+  pills.push(lgHealthPill('PORTRAIT', s.verticalBroadcast ? 'LIVE' : 'OFF', s.verticalBroadcast ? 'ok' : 'warn', s.verticalBroadcast ? '9:16 YouTube listing (dual broadcast)' : 'Enable LIVE_GRID_DUAL_BROADCAST or YouTube Studio dual-format'));
+
+  specs.innerHTML = pills.join('');
+}
+
 async function liveGridRefresh() {
   try {
     const r = await fetch(LG_BASE + '/live-grid/status');
@@ -9584,32 +9671,69 @@ function liveGridRender() {
   const s = _lgStatus;
   const running = !!(s && s.running);
   const tag = document.getElementById('lg-status-tag');
+  const ytStale = running && s && s.youtube && s.youtube.staleLocal;
   tag.innerHTML = running
-    ? '<span class="tag-dot" style="background:#e33;"></span> LIVE'
+    ? (ytStale
+      ? '<span class="tag-dot" style="background:#fa0;"></span> STALE LOCAL'
+      : '<span class="tag-dot" style="background:#e33;"></span> LIVE')
     : '<span class="tag-dot"></span> OFFLINE';
-  tag.style.color = running ? '#e88' : '';
+  tag.style.color = running ? (ytStale ? '#fa0' : '#e88') : '';
 
   document.getElementById('lg-start-btn').style.display = running ? 'none' : '';
   document.getElementById('lg-privacy').style.display = running ? 'none' : '';
   document.getElementById('lg-stop-btn').style.display = running ? '' : 'none';
+  const panicBtn = document.getElementById('lg-panic-mute-btn');
+  const unmuteBtn = document.getElementById('lg-unmute-btn');
+  const audio = (s && s.audio) || {};
+  const protectedAudio = !!(audio.muted || audio.fallbackMusic);
+  if (panicBtn) panicBtn.style.display = (running && !protectedAudio) ? '' : 'none';
+  if (unmuteBtn) unmuteBtn.style.display = (running && protectedAudio) ? '' : 'none';
   document.getElementById('lg-bench-row').style.display = running ? '' : 'none';
   const assignRow = document.getElementById('lg-assign-row');
   if (assignRow) assignRow.style.display = running ? '' : 'none';
 
   const watchRow = document.getElementById('lg-watch-row');
   const watchUrl = s && s.broadcast && s.broadcast.watchUrl;
+  const vertUrl = s && s.verticalBroadcast && s.verticalBroadcast.watchUrl;
   watchRow.style.display = (running && watchUrl) ? '' : 'none';
   if (watchUrl) document.getElementById('lg-watch-link').href = watchUrl;
+  const vertLink = document.getElementById('lg-vertical-link');
+  if (vertLink) {
+    vertLink.style.display = (running && vertUrl) ? 'inline' : 'none';
+    if (vertUrl) vertLink.href = vertUrl;
+  }
   if (running && s.uptimeSec != null) {
     const mins = Math.floor(s.uptimeSec / 60);
     document.getElementById('lg-uptime').textContent = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
   }
+  const ytSyncEl = document.getElementById('lg-yt-sync');
+  if (ytSyncEl) {
+    const yt = s && s.youtube;
+    if (running && yt && yt.liveOnYouTube === false) {
+      ytSyncEl.innerHTML = '<span style="color:#e88;font-weight:700;">⚠ YT ENDED — local encoder stale</span>';
+    } else if (running && yt && yt.liveOnYouTube === true) {
+      ytSyncEl.innerHTML = '<span style="color:#6c6;">✓ live on YouTube</span>';
+    } else if (running && yt && yt.lifeCycleStatus) {
+      ytSyncEl.textContent = `YT: ${yt.lifeCycleStatus}`;
+    } else {
+      ytSyncEl.textContent = '';
+    }
+  }
 
-  const audio = (s && s.audio) || {};
+  liveGridRenderHealth(s);
+
+  const seoModeEl = document.getElementById('lg-seo-mode');
+  const progMode = s.program?.layout?.mode || s.program?.activeMode;
+  if (seoModeEl && progMode && seoModeEl.querySelector(`option[value="${progMode}"]`)) {
+    seoModeEl.value = progMode;
+  }
+
   document.getElementById('lg-audio-mode').textContent = running
-    ? (audio.muted
-        ? '🔇 MUTED — MUSIC ON ALL QUADS'
-        : `${(audio.label || audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}${audio.musicWarning ? ' · 🎵 MUSIC ON AIR' : ''}`)
+    ? (audio.fallbackMusic
+        ? `🎵 EPIDEMIC BED · ${audio.fallbackTrack || 'royalty-free'}`
+        : audio.muted
+          ? '🔇 MUTED — COPYRIGHT PROTECT'
+          : `${(audio.label || audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}${audio.musicWarning ? ' · 🎵 MUSIC ON AIR' : ''}`)
     : '—';
   document.getElementById('lg-audio-auto').style.display = (running && audio.mode === 'manual') ? '' : 'none';
 
@@ -9723,13 +9847,21 @@ function liveGridRender() {
 
 async function liveGridStart() {
   const privacy = document.getElementById('lg-privacy').value;
-  if (!confirm(`Start the Live Grid broadcast (${privacy.toUpperCase()})?`)) return;
+  const programMode = document.getElementById('lg-seo-mode')?.value
+    || document.getElementById('bc-program-mode')?.value
+    || 'grid';
+  if (!confirm(`Start the Live Grid broadcast (${programMode.replace('_', ' ')}, ${privacy.toUpperCase()})?`)) return;
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
+  const body = { privacyStatus: privacy, programMode: programMode === 'auto' ? 'grid' : programMode };
+  const headline = document.getElementById('bc-headline')?.value?.trim();
+  const eventTitle = document.getElementById('bc-event-title')?.value?.trim();
+  if (headline) body.headline = headline;
+  if (eventTitle) body.eventTitle = eventTitle;
   try {
     const r = await fetch(LG_BASE + '/live-grid/start', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ privacyStatus: privacy }),
+      body: JSON.stringify(body),
     });
     const d = await r.json();
     if (!d.ok) alert('Start failed: ' + (d.error || 'unknown'));
@@ -9745,6 +9877,27 @@ async function liveGridStop() {
     const d = await r.json();
     if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Stop failed: ' + e.message); }
+  liveGridRefresh();
+}
+
+async function liveGridPanicMute() {
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/audio/panic-mute', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'operator-panic' }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('Panic mute failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Panic mute failed: ' + e.message); }
+  liveGridRefresh();
+}
+
+async function liveGridUnmute() {
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/audio/unmute', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) alert('Unmute failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Unmute failed: ' + e.message); }
   liveGridRefresh();
 }
 
@@ -9871,6 +10024,42 @@ async function liveGridUnlockQuad(quadrant) {
     const d = await r.json();
     if (!d.ok) alert('Unlock failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Unlock failed: ' + e.message); }
+  setTimeout(liveGridRefresh, 1500);
+}
+
+async function liveGridMasterRefresh() {
+  if (!confirm('Refresh the YouTube encoder? ~5 second blip on stream — fixes blank/stuck quadrants.')) return;
+  const btn = document.getElementById('lg-master-refresh-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'REFRESHING…'; }
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/master-refresh', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'dashboard' }),
+    });
+    const d = await r.json();
+    if (!d.ok || !d.refreshed) alert('Encoder refresh failed: ' + (d.error || d.reason || 'unknown'));
+  } catch (e) { alert('Encoder refresh failed: ' + e.message); }
+  if (btn) { btn.disabled = false; btn.textContent = '↻ REFRESH ENCODER'; }
+  setTimeout(liveGridRefresh, 3000);
+}
+
+async function liveGridRefreshLiveSeo() {
+  const btn = document.getElementById('lg-yt-seo-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'UPDATING…'; }
+  const programMode = document.getElementById('lg-seo-mode')?.value || 'grid';
+  const headline = document.getElementById('bc-headline')?.value?.trim();
+  const body = { reason: 'dashboard', programMode };
+  if (programMode === 'news_desk' && headline) body.headline = headline;
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/refresh-youtube-seo', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!d.ok || !d.refreshed) alert('YouTube SEO refresh failed: ' + (d.error || d.reason || 'unknown'));
+    else if (d.thumbnail === false) alert('Title/description updated but thumbnail may not have applied — check YouTube Studio or channel verification.');
+  } catch (e) { alert('YouTube SEO refresh failed: ' + e.message); }
+  if (btn) { btn.disabled = false; btn.textContent = '↻ REFRESH YOUTUBE SEO'; }
   setTimeout(liveGridRefresh, 1500);
 }
 

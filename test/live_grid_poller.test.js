@@ -133,12 +133,21 @@ describe('live_grid bench tier (CPD-951)', () => {
     expect(swaps).toContainEqual({ quadrant: 2, out: 'z', in: 'b', reason: 'roster_priority' });
   });
 
-  test('operator mode only drops offline — no auto fill or swaps', () => {
+  test('operator mode drops offline, fills empties — no challenge swaps', () => {
     const current = ['a', 'b', 'c', 'd'];
-    const live = { b: 50, c: 40, d: 30 };
+    const live = { b: 50, c: 40, d: 30, e: 100 };
     const { assignments, swaps } = computeAssignments(current, live, {}, { operatorMode: true });
-    expect(assignments).toEqual([null, 'b', 'c', 'd']);
-    expect(swaps).toEqual([{ quadrant: 0, out: 'a', in: null, reason: 'offline' }]);
+    expect(assignments).toEqual(['e', 'b', 'c', 'd']);
+    expect(swaps).toEqual([{ quadrant: 0, out: 'a', in: 'e', reason: 'offline' }]);
+  });
+
+  test('operator mode skips viewer-challenge reshuffles', () => {
+    const current = ['a', 'b', 'c', 'd'];
+    const live = { a: 100, b: 90, c: 80, d: 70, e: 200 };
+    const { assignments, swaps, streaks } = computeAssignments(current, live, {}, { operatorMode: true });
+    expect(assignments).toEqual(current);
+    expect(swaps).toEqual([]);
+    expect(streaks).toEqual({});
   });
 });
 

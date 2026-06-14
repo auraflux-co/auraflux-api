@@ -12,7 +12,12 @@ Job input:
   "guidance_scale": 4.5,
   "sample_size":    [768, 768],
   "fps":            25,
-  "seed":           43
+  "seed":           43,
+  "use_dynamic_cfg": true,     # Phase-aware Negative CFG (paper / app_mm.py)
+  "use_dynamic_acfg": true,
+  "neg_scale": 1.5,
+  "neg_steps": 2,
+  "negative_prompt": "optional — defaults to EchoMimic hand-artifact negatives"
 }
 
 Output:
@@ -47,6 +52,12 @@ DEFAULT_PROMPT = (
     "and color temperature."
 )
 
+DEFAULT_NEGATIVE_PROMPT = (
+    "Gesture is bad. Gesture is unclear. Strange and twisted hands. Bad hands. "
+    "Bad fingers. Unclear and blurry hands. Unclear gestures, broken hands, "
+    "fused fingers. Exaggerated mouth opening. Teeth distortion."
+)
+
 
 def _download(url, dest, label):
     resp = requests.get(url, timeout=120)
@@ -58,6 +69,14 @@ def _download(url, dest, label):
         raise RuntimeError(f"{label} downloaded 0 bytes")
     print(f"[handler] {label}: {size} bytes")
     return dest
+
+
+def _truthy(val):
+    if isinstance(val, bool):
+        return val
+    if val is None:
+        return False
+    return str(val).lower() in ("1", "true", "yes", "on")
 
 
 def handler(job):
@@ -77,6 +96,11 @@ def handler(job):
         os.makedirs(out_dir, exist_ok=True)
 
         sample_size = inp.get("sample_size") or [768, 768]
+        use_dynamic_cfg = _truthy(inp.get("use_dynamic_cfg"))
+        use_dynamic_acfg = _truthy(inp.get("use_dynamic_acfg"))
+        neg_scale = float(inp.get("neg_scale", 1.5 if use_dynamic_cfg else 1.0))
+        neg_steps = int(inp.get("neg_steps", 2 if use_dynamic_cfg else 0))
+
         # Exact spike invocation (spike/cpd881/control.sh) with tunable overrides.
         # --fsdp_dit is REQUIRED: without it the audio-injection layers missing
         # from the base Wan checkpoint stay on the meta device and .to(device) crashes.
@@ -85,6 +109,7 @@ def handler(job):
             "--image_path", image_path,
             "--audio_path", audio_path,
             "--prompt", inp.get("prompt") or DEFAULT_PROMPT,
+            "--negative_prompt", inp.get("negative_prompt") or DEFAULT_NEGATIVE_PROMPT,
             "--num_inference_steps", str(inp.get("num_inference_steps", 8)),
             "--config_path", "config/config.yaml",
             "--model_name", f"{MODELS_DIR}/Wan2.1-Fun-V1.1-1.3B-InP",
@@ -95,18 +120,22 @@ def handler(job):
             "--video_length", str(inp.get("video_length", 81)),
             "--guidance_scale", str(inp.get("guidance_scale", 4.5)),
             "--audio_guidance_scale", str(inp.get("audio_guidance_scale", 2.0)),
-            "--audio_scale", "1.0",
-            "--neg_scale", "1.0",
-            "--neg_steps", "0",
+            "--audio_scale", str(inp.get("audio_scale", 1.0)),
+            "--neg_scale", str(neg_scale),
+            "--neg_steps", str(neg_steps),
             "--seed", str(inp.get("seed", 43)),
-            "--teacache_threshold", "0.1",
-            "--num_skip_start_steps", "5",
+            "--teacache_threshold", str(inp.get("teacache_threshold", 0.1)),
+            "--num_skip_start_steps", str(inp.get("num_skip_start_steps", 5)),
             "--weight_dtype", "bfloat16",
             "--sample_size", str(sample_size[0]), str(sample_size[1]),
             "--fps", str(inp.get("fps", 25)),
             "--shift", "5.0",
             "--fsdp_dit",
         ]
+        if use_dynamic_cfg:
+            args.append("--use_dynamic_cfg")
+        if use_dynamic_acfg:
+            args.append("--use_dynamic_acfg")
 
         env = dict(os.environ, PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True")
         t0 = time.time()

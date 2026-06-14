@@ -28,4 +28,13 @@ describe('live_grid UDP relays (CPD-1006)', () => {
     process.env.LIVE_GRID_UDP_RELAY = orig;
     jest.resetModules();
   });
+
+  test('QuadRelays.waitForRunning resolves when relays are up', async () => {
+    const { QuadRelays } = require('../lib/live_grid/relays');
+    const relays = new QuadRelays({ log: () => {} });
+    relays.procs = [{}, {}, {}, {}];
+    const r = await relays.waitForRunning({ minRunning: 4, timeoutMs: 1000 });
+    expect(r.ready).toBe(true);
+    expect(r.running).toBe(4);
+  });
 });

@@ -36,6 +36,14 @@ if [ -f "$REPO_ROOT/.env" ]; then
   done < "$REPO_ROOT/.env"
 fi
 
+# Shared secrets live in Doppler — re-exec once if bootstrap .env has token but Jira/GitHub vars are empty.
+if [ -z "${JIRA_API_TOKEN:-${ATLASSIAN_API_TOKEN:-}}" ] || [ -z "${GITHUB_API_TOKEN:-}" ]; then
+  if [ -z "${AIDER_DOPPLER_REEXEC:-}" ] && [ -n "${DOPPLER_TOKEN:-}" ] && command -v doppler &>/dev/null; then
+    export AIDER_DOPPLER_REEXEC=1
+    exec doppler run --project auraflux --config prd -- bash "$0" "$@"
+  fi
+fi
+
 # Support ATLASSIAN_* as fallback for JIRA_*
 JIRA_API_TOKEN="${JIRA_API_TOKEN:-${ATLASSIAN_API_TOKEN:-}}"
 JIRA_USER_EMAIL="${JIRA_USER_EMAIL:-${ATLASSIAN_EMAIL:-}}"
@@ -180,13 +188,17 @@ FRONTEND_ENV_IN_CODE=$(grep -rh 'process\.env\.' "$REPO_ROOT/app/src" 2>/dev/nul
   | grep -oE 'process\.env\.NEXT_PUBLIC_[A-Z][A-Z0-9_]*' | sort -u \
   | sed 's/process\.env\.//' || true)
 
-ENV_IN_EXAMPLE=$(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)=' "$REPO_ROOT/.env.example" 2>/dev/null | sed -E 's/^[# ]*//;s/=.*//' | sort -u || true)
+ENV_IN_EXAMPLE=$(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)[=:]' "$REPO_ROOT/.env.example" 2>/dev/null | sed -E 's/^[# ]*//;s/[=:].*//' | sort -u || true)
 ENV_MISSING=$(comm -23 <(echo "$ENV_IN_CODE" | sort) <(echo "$ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
+MISSING_COUNT=$(echo "$ENV_MISSING" | grep -c . || true)
+if [ "$MISSING_COUNT" -gt 0 ] && [ -f "$REPO_ROOT/scripts/sync_env_example.js" ]; then
+  echo "🔧 $MISSING_COUNT env vars missing — run: node scripts/sync_env_example.js --write"
+fi
 # Frontend NEXT_PUBLIC_* vars live in app/.env.local.example (not the root .env.example)
 # Merge both sources before checking for missing vars.
 FRONTEND_ENV_IN_EXAMPLE=$(cat \
-  <(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)=' "$REPO_ROOT/.env.example" 2>/dev/null | sed -E 's/^[# ]*//;s/=//') \
-  <(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)=' "$REPO_ROOT/app/.env.local.example" 2>/dev/null | sed -E 's/^[# ]*//;s/=//') \
+  <(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)[=:]' "$REPO_ROOT/.env.example" 2>/dev/null | sed -E 's/^[# ]*//;s/[=:].*//') \
+  <(grep -oE '^[# ]*([A-Z_][A-Z0-9_]+)[=:]' "$REPO_ROOT/app/.env.local.example" 2>/dev/null | sed -E 's/^[# ]*//;s/[=:].*//') \
   2>/dev/null | sort -u || true)
 FRONTEND_ENV_MISSING=$(comm -23 <(echo "$FRONTEND_ENV_IN_CODE" | sort) <(echo "$FRONTEND_ENV_IN_EXAMPLE" | sort) 2>/dev/null || true)
 
@@ -228,13 +240,13 @@ echo "🔷 Running frontend TypeScript check..."
 _TIMEOUT_CMD="timeout"
 command -v timeout &>/dev/null || { command -v gtimeout &>/dev/null && _TIMEOUT_CMD="gtimeout"; } || _TIMEOUT_CMD=""
 FRONTEND_TS_ERRORS="(skipped)"
-if [ -f "$REPO_ROOT/app/tsconfig.json" ] || [ -f "$REPO_ROOT/app/package.json" ]; then
-  if command -v tsc &>/dev/null || [ -x "$REPO_ROOT/app/node_modules/.bin/tsc" ]; then
-    if [ -n "$_TIMEOUT_CMD" ]; then
-      FRONTEND_TS_ERRORS=$(cd "$REPO_ROOT/app" && "$_TIMEOUT_CMD" 60 node_modules/.bin/tsc --noEmit 2>&1 | head -30 || echo "(tsc check failed or timed out)")
-    else
-      FRONTEND_TS_ERRORS=$(cd "$REPO_ROOT/app" && node_modules/.bin/tsc --noEmit 2>&1 | head -30 || echo "(tsc check failed)")
-    fi
+  if [ -f "$REPO_ROOT/app/tsconfig.json" ] || [ -f "$REPO_ROOT/app/package.json" ]; then
+    if [ -x "$REPO_ROOT/app/node_modules/.bin/tsc" ] || command -v tsc &>/dev/null; then
+      if [ -n "$_TIMEOUT_CMD" ]; then
+        FRONTEND_TS_ERRORS=$(cd "$REPO_ROOT/app" && "$_TIMEOUT_CMD" 120 npm run typecheck 2>&1 | head -30 || echo "(tsc check failed or timed out)")
+      else
+        FRONTEND_TS_ERRORS=$(cd "$REPO_ROOT/app" && npm run typecheck 2>&1 | head -30 || echo "(tsc check failed)")
+      fi
     if [ -z "$FRONTEND_TS_ERRORS" ]; then
       FRONTEND_TS_ERRORS="✅ No TypeScript errors"
     fi
