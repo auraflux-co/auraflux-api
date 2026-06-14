@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-15 (CPD-1027) — implement getPresignedDownloadUrl so publish refreshes expired R2 URLs.
+**Last Updated:** 2026-06-15 (CPD-1027) — YouTube purge-by-title + immediate private republish API.
 **Last Updated:** 2026-06-15 (CPD-1027) — YouTube channel metadata backfill for wanderbot + customUrl handles.
 **Last Updated:** 2026-06-15 (CPD-1027) — buffer R2 downloads for YouTube upload (Content-Length fix).
 **Branch:** main
