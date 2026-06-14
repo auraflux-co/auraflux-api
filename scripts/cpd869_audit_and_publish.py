@@ -190,16 +190,54 @@ def regen_copy_one(jid):
     }
     return api('POST', '/generate-publish-copy', body, timeout=120)
 
+def publish_results_ok(pub):
+    if not pub or not isinstance(pub, dict):
+        return False
+    yt = pub.get('youtube') or {}
+    if yt.get('failed') or yt.get('error') or yt.get('failReason'):
+        return False
+    if yt.get('ok') is True and not yt.get('failReason'):
+        return True
+    if yt.get('platformJobId') or yt.get('videoId') or yt.get('url'):
+        return True
+    return False
+
+def wait_publish(jid, timeout=900):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        code, s = api('GET', f'/jobs/{urllib.parse.quote(jid, safe="")}/staging-assets', timeout=60)
+        if code != 200:
+            time.sleep(10)
+            continue
+        pub = s.get('publishResults')
+        st = s.get('status')
+        if pub and publish_results_ok(pub):
+            return True, pub
+        if st == 'published' and pub and publish_results_ok(pub):
+            return True, pub
+        if st in ('complete', 'failed') and pub:
+            yt = (pub or {}).get('youtube') or {}
+            if yt.get('failed') or yt.get('error') or yt.get('failReason'):
+                return False, pub
+        if s.get('publishStatus') == 'failed':
+            return False, pub or {}
+        time.sleep(15)
+    return False, {'error': 'publish_poll_timeout'}
+
 def publish_one(jid, scheduled_at=None):
     body = {'platforms': ['youtube']}
     if scheduled_at:
         body['scheduledPublishAt'] = scheduled_at
-    return api(
+    code, resp = api(
         'POST',
         f'/jobs/{urllib.parse.quote(jid, safe="")}/approve-publish',
         body,
-        timeout=PUBLISH_TIMEOUT,
+        timeout=120,
     )
+    if code == 202 and resp.get('accepted'):
+        ok, result = wait_publish(jid)
+        return (200 if ok else 422), {'approved': ok, 'platforms': {'youtube': result.get('youtube', result) if isinstance(result, dict) else result}, 'async': True}
+    return code, resp
 
 def schedule_slots(n, interval_h=DEFAULT_INTERVAL_HOURS, start_h=DEFAULT_START_HOURS):
     start = datetime.now(timezone.utc) + timedelta(hours=start_h)

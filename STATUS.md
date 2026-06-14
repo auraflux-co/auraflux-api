@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-15 (CPD-1027) — clip jobs use twitch publish-copy (not news fallback); CPD-869 batch regen + schedule-publish in progress.
+**Last Updated:** 2026-06-15 (CPD-1027) — async approve-publish (fixes Render 499 on long YouTube uploads); 55/55 audit ready.
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
