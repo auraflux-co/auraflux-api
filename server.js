@@ -6046,6 +6046,49 @@ app.get('/sports/highlights', async (req, res) => {
   }
 });
 
+// ── Streamers picker (Twitch + Kick + YouTube) ───────────────────────────────
+const streamerPicker = require('./lib/pickers/streamers');
+
+app.get('/streamers/sources', async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      platforms: streamerPicker.listPlatforms(),
+      configPath: 'config/streamerSources.json',
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/streamers/clips', async (req, res) => {
+  const streamersParam = (req.query.streamers || '').trim();
+  if (!streamersParam) return res.status(400).json({ ok: false, error: 'streamers query param required' });
+
+  const streamers = streamersParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const platforms = (req.query.platforms || 'twitch,kick,youtube')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const clipsPer = Math.max(1, Math.min(10, parseInt(req.query.clipsPer, 10) || 2));
+  const pubHours = parseFloat(req.query.pubHours);
+  const durMin = parseNewsQueryInt(req.query.durMin);
+  const durMax = parseNewsQueryInt(req.query.durMax);
+
+  try {
+    const results = await streamerPicker.fetchStreamerPickerClips({
+      streamers,
+      platforms,
+      clipsPer,
+      pubHours: Number.isFinite(pubHours) ? pubHours : null,
+      durMin,
+      durMax,
+    });
+    res.json({ ok: true, streamers: results, clipsPer, platforms });
+  } catch (err) {
+    console.error('[streamers/clips] Error:', err.message);
+    res.status(500).json({ ok: false, error: err.message, streamers: [] });
+  }
+});
+
 // ── AP / Reuters YouTube channel scrapers ────────────────────────────────────
 // AP and Reuters block direct article scraping (JS-rendered / bot-blocked).
 // Their YouTube channels post the same stories as short clips (20-150s) —

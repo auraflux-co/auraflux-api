@@ -35,7 +35,42 @@
       }
     },
     "nba": {
-      "label": "NBA Highlights",
+      "label": "NBA Highlights (legacy alias)",
+      "deprecated": true,
+      "aliasOf": "sports",
+      "formFactor": "long",
+      "source": {
+        "module": "./sources/nba_source"
+      },
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_ID",
+        "format": "landscape",
+        "speakSpeed": 0.85
+      },
+      "assembly": {
+        "chrome": {
+          "skin": "nba"
+        },
+        "ticker": "nba",
+        "sourceCrop": "crop=1920:1080,",
+        "voiceover": true
+      },
+      "qa": {
+        "checklistModule": "./qa/checklists/nba",
+        "gate1PassThreshold": 90,
+        "gate1ManualThreshold": 70,
+        "gate2PassThreshold": 85,
+        "gate2ManualThreshold": 65,
+        "gate3PassThreshold": 70,
+        "gate3ManualThreshold": 60
+      },
+      "publish": {
+        "pinnedCommentKey": "nba",
+        "platforms": ["youtube"]
+      }
+    },
+    "sports": {
+      "label": "Sports Highlights",
       "formFactor": "long",
       "source": {
         "module": "./sources/nba_source"

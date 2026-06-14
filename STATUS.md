@@ -32,11 +32,11 @@
 |-------|--------|--------|
 | 1 Sports categories (48h gate) | ESPN + BBC, dynamic discovery | ✅ Done |
 | 2 Unified shell (pillar tabs) | SPORTS \| WORLD NEWS \| STREAMERS | ✅ Done |
-| 3 Output + publish | VOD/SHORT/COMP + schedule in platform modal | ✅ Mostly done — calendar slot linking from Generate still optional |
-| 4 Streamers expansion | Kick / YouTube picker sources | ⬜ Not started |
-| 5 Content type rename | `nba` → `sports` in config/gates | ⬜ Not started |
+| 3 Output + publish | VOD/SHORT/COMP + schedule in platform modal | ✅ Done |
+| 4 Streamers expansion | Kick / YouTube picker sources | ✅ Done |
+| 5 Content type rename | `nba` → `sports` (legacy aliases kept) | ✅ Done |
 
-**Next:** Commit picker bundle; EchoMimic avatar path for VOD; Phase 4/5 when needed.
+**Next:** Push to auraflux-c0; wire VOD through EchoMimic when avatar path is green.
 
 ---
 
@@ -206,6 +206,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **feat(cpd-1026): complete unified picker plan — Kick/YouTube + sports content type** — `lib/pickers/streamers/` (Twitch/Kick/YouTube adapters), `GET /streamers/clips`, platform checkboxes on STREAMERS pillar, `dispatchFromPicker()` helper, canonical `sports` type with `nba` legacy aliases (`lib/content_type.js`), explorer VOD uses `sports`. Serena QA: 12 files, 12/12 tests pass, no blocking issues. | config/streamerSources.json, lib/pickers/, lib/content_type.js, config/contentTypes.json, lib/configLoader.js, lib/validation.js, lib/script_gen.js, lib/qa.js, lib/sources/nba_source.js, server.js, cwn_production.html, test/picker_plan.test.js, STATUS.md | — | 2026-06-15 |
 | Cursor | **feat(cpd-991): EchoMimic avatar adapter hardening + post-process** — echomimic adapter/post-process, handler tweaks, clone gate + env docs, AB scripts. | lib/avatar/, worker/echomimic/, scripts/avatar_*.js, test/avatar_echomimic.test.js, .env.example, STATUS.md | f26dcbed | 2026-06-15 |
 | Cursor | **feat(cpd-1026): unified three-pillar picker — VOD/SHORT/COMP + schedule** — SPORTS|WORLD NEWS|STREAMERS tabs; sports explorer VOD from multi-league clips; picker-first VOD for news/twitch; platform modal optional publish schedule → `/job/:id/schedule`. | cwn_production.html, STATUS.md | e8079a05 | 2026-06-15 |
 | Cursor | **feat(cpd-1026): sports-short pipeline + multi-league VOD source** — `sports-short` in contentTypes + PIPELINE_CONTENT_TYPES; generate-clip-comp accepts sports-short; nba_source refreshes any ESPN league via sportsApiPath; news picker sweet-spot sort + query filters; scheduledAt on clip-comp jobs. | config/contentTypes.json, lib/validation.js, lib/qa.js, lib/sources/nba_source.js, lib/customerConfig.js, lib/heygen_folder_map.js, lib/thumbnail.js, lib/calendar/slot_jobs.js, lib/assembly.js, lib/routes/assembly_routes.js, lib/routes/c0_sources.js, lib/script_gen.js, server.js, STATUS.md | 1697b17d | 2026-06-15 |

@@ -406,6 +406,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <span class="tag tag-pending" id="twitch-gen-status"><span class="tag-dot"></span> READY</span>
           </div>
           <div class="card-body">
+            <div class="field"><label>STREAMER PLATFORMS</label>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="streamer-plat-twitch" checked style="accent-color:#9146ff;"> Twitch</label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="streamer-plat-kick" checked style="accent-color:#53fc18;"> Kick</label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="streamer-plat-youtube" checked style="accent-color:#ff4444;"> YouTube</label>
+              </div>
+            </div>
             <div class="field"><label>STREAMERS (top clips from each)</label>
               <!-- CPD-930: chip multi-select. Hidden input keeps the same id/value
                    contract (comma-joined) so all existing readers work unchanged. -->
@@ -7378,7 +7385,7 @@ var _origGenerateNBA = null;
       }
       lockGenerateButton('btn-gen-nba');
       setGenerateModeActive('nba', 'long');
-      CURRENT_TYPE = 'nba';
+      CURRENT_TYPE = 'sports';
       setGeneratingState('nba-status', 'SPORTS VOD — Analyzing ' + exItems.length + ' clip(s) with Gemini (~2-3 min)...');
       if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#c7af4f;">⏳ Gemini analyzing clips · script generating · HeyGen when avatar pipeline is ready…</span>';
       CURRENT_META = { gameIds: exItems.map(function(i) { return i.gameId; }).filter(Boolean), items: exItems };
@@ -7387,7 +7394,7 @@ var _origGenerateNBA = null;
       if (g('script-type-label')) g('script-type-label').textContent = 'SPORTS VOD — ' + exItems.length + ' selected clips — generating script...';
       if (g('nba-fetch-status')) g('nba-fetch-status').textContent = exItems.length + ' clips for VOD';
       nav('generate');
-      callFullScriptServer('nba', exItems, 'nba-status', null);
+      callFullScriptServer('sports', exItems, 'nba-status', null);
       return;
     }
     // NBA game picker — one highlights reel per game
@@ -7837,6 +7844,24 @@ function _dispatchBatchNewsShorts(pool, n, platforms, statusId, scheduledAt) {
 
 var PICKER_COMP_CLIP_COUNT = 4;
 
+function dispatchFromPicker(pillar, mode) {
+  if (pillar === 'sports') {
+    if (mode === 'vod') return generateNBAWithPicker();
+    if (mode === 'short') return triggerNbaShort();
+    if (mode === 'comp') return triggerSportsClipComp();
+  }
+  if (pillar === 'news') {
+    if (mode === 'vod') return generateNewsWithPicker();
+    if (mode === 'short') return triggerNewsShort();
+    if (mode === 'comp') return triggerNewsClipComp();
+  }
+  if (pillar === 'twitch') {
+    if (mode === 'vod') return generateTwitchWithPicker();
+    if (mode === 'short') return triggerTwitchShort();
+    if (mode === 'comp') return triggerClipComp();
+  }
+}
+
 function getSelectedSportsExplorerClips() {
   return (_sportsPickerClips || []).filter(function(c) { return c.selected && c.hlsUrl; });
 }
@@ -8192,6 +8217,14 @@ var TWITCH_PICKER_DISPLAY_NAMES = {
   'extraemily':'ExtraEmily','yourragegaming':'Rage','yourrage':'Rage'
 };
 
+function getSelectedStreamerPlatforms() {
+  var out = [];
+  if (g('streamer-plat-twitch') && g('streamer-plat-twitch').checked) out.push('twitch');
+  if (g('streamer-plat-kick') && g('streamer-plat-kick').checked) out.push('kick');
+  if (g('streamer-plat-youtube') && g('streamer-plat-youtube').checked) out.push('youtube');
+  return out.length ? out : ['twitch'];
+}
+
 function previewTwitchClips() {
   var btn = g('btn-preview-twitch');
   var picker = g('twitch-inline-picker');
@@ -8205,83 +8238,56 @@ function previewTwitchClips() {
   _twitchPickerStreamers = [];
   var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
   var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
-  var fetchWindow = Math.max(clipsPerStreamer * 6, 24);
   var twFilters = getPickerFilters('twitch');
-  var pubHours = twFilters.pubHours != null ? twFilters.pubHours : 24;
-  var sincePrimary = new Date(Date.now() - pubHours * 3600000).toISOString();
-  var sinceFallback = new Date(Date.now() - Math.max(pubHours * 2, 168) * 3600000).toISOString();
-  var windowPrimaryLabel = twFilters.pubWindow && twFilters.pubWindow !== 'any' ? twFilters.pubWindow : '24h';
-  var done = 0;
+  var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
+    + '&platforms=' + encodeURIComponent(getSelectedStreamerPlatforms().join(','))
+    + '&clipsPer=' + clipsPerStreamer;
+  if (twFilters.durMin != null) qs += '&durMin=' + twFilters.durMin;
+  if (twFilters.durMax != null) qs += '&durMax=' + twFilters.durMax;
+  if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
 
-  streamers.forEach(function(name) {
-    var entry = { name: name, displayName: TWITCH_PICKER_DISPLAY_NAMES[name] || name, selected: true, clips: [], dropReason: null };
-    _twitchPickerStreamers.push(entry);
-
-    var xU = new XMLHttpRequest();
-    xU.open('GET', 'https://api.twitch.tv/helix/users?login=' + name, true);
-    xU.setRequestHeader('Client-Id', CFG.twitchId);
-    xU.setRequestHeader('Authorization', 'Bearer ' + CFG.twitchToken);
-    xU.timeout = 8000;
-    xU.onload = function() {
-      try {
-        var u = JSON.parse(xU.responseText); var user = u.data && u.data[0];
-        if (!user) { entry.dropReason = 'Twitch user not found'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); return; }
-        entry.userId = user.id; entry.displayName = TWITCH_PICKER_DISPLAY_NAMES[name] || user.display_name;
-        // Recency: try 24h first; if a streamer has zero clips, fall back to 7d
-        var fetchClipsFor = function(sinceIso, windowLabel, onEmpty) {
-          var xC = new XMLHttpRequest();
-          xC.open('GET', 'https://api.twitch.tv/helix/clips?broadcaster_id=' + user.id + '&first=' + fetchWindow + '&started_at=' + sinceIso, true);
-          xC.setRequestHeader('Client-Id', CFG.twitchId);
-          xC.setRequestHeader('Authorization', 'Bearer ' + CFG.twitchToken);
-          xC.timeout = 8000;
-          xC.onload = function() {
-            try {
-              var cd = JSON.parse(xC.responseText);
-              var allRaw = (cd.data || []);
-              if (allRaw.length === 0 && onEmpty) { onEmpty(); return; }
-              // Titles are viewer-created and never used in the video — no title filter
-              var unused = allRaw.filter(function(c){ return !isClipUsed(c.url); });
-              var pool = unused.length >= clipsPerStreamer ? unused : allRaw;
-              var mapped = pool.slice(0, 16).map(function(c, ci) {
-                return {
-                  title: c.title, url: c.url, views: c.view_count || 0,
-                  game: c.game_name || '', thumbnailUrl: c.thumbnail_url || '',
-                  duration: c.duration || 0, isUsed: isClipUsed(c.url),
-                  createdAt: c.created_at || null,
-                  selected: ci < clipsPerStreamer  // default: first N selected
-                };
-              });
-              entry.clipsRaw = mapped;
-              entry.clips = mapped.filter(function(c) {
-                return clipPassesPickerFilters(c, twFilters, { durationField: 'duration', dateField: 'createdAt' });
-              });
-              entry._clipsBeforeFilter = mapped.length;
-              entry.clips.forEach(function(c, ci) { c.selected = ci < clipsPerStreamer; });
-              if (entry.clips.length === 0 && mapped.length > 0) {
-                entry.dropReason = 'No clips match picker filters (duration / recency)';
-                entry.selected = false;
-              } else if (entry.clips.length < clipsPerStreamer) {
-                var rawCount = allRaw.length;
-                entry.dropReason = rawCount === 0
-                  ? 'No clips in ' + windowLabel + ' window'
-                  : 'Only ' + rawCount + ' clip' + (rawCount === 1 ? '' : 's') + ' in ' + windowLabel + ' window (need ' + clipsPerStreamer + ')';
-                entry.selected = false;
-              }
-            } catch(e) { entry.dropReason = 'Parse error'; }
-            done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length);
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/streamers/clips?' + qs, true);
+  xhr.timeout = 120000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText || '{}');
+      if (!d.ok) throw new Error(d.error || 'fetch failed');
+      _twitchPickerStreamers = (d.streamers || []).map(function(s) {
+        var clips = (s.clips || []).map(function(c, ci) {
+          return {
+            title: c.title, url: c.url, views: c.views || 0,
+            game: c.game || '', thumbnailUrl: c.thumbnailUrl || '',
+            duration: c.duration || 0, isUsed: isClipUsed(c.url),
+            createdAt: c.createdAt || null,
+            selected: ci < clipsPerStreamer,
+            platform: c.platform || s.platform
           };
-          xC.onerror = xC.ontimeout = function() { entry.dropReason = 'Clips API timeout'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); };
-          xC.send();
-        };
-        fetchClipsFor(sincePrimary, windowPrimaryLabel, function() {
-          if (twFilters.pubHours == null) fetchClipsFor(sinceFallback, 'fallback', null);
-          else fetchClipsFor(sinceFallback, windowPrimaryLabel + ' (wider)', null);
         });
-      } catch(e) { entry.dropReason = 'Error: ' + e.message; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); }
-    };
-    xU.onerror = xU.ontimeout = function() { entry.dropReason = 'User API timeout'; done++; renderTwitchPickerWhenDone(btn, clipsPerStreamer, streamers.length); };
-    xU.send();
-  });
+        return {
+          name: s.login,
+          displayName: s.displayName || s.login,
+          platform: s.platform || 'twitch',
+          selected: !s.dropReason && clips.length > 0,
+          clips: clips,
+          clipsRaw: clips.slice(),
+          dropReason: s.dropReason,
+          _clipsBeforeFilter: clips.length
+        };
+      });
+    } catch (e) {
+      _twitchPickerStreamers = streamers.map(function(name) {
+        return { name: name, displayName: TWITCH_PICKER_DISPLAY_NAMES[name] || name, platform: 'twitch', selected: false, clips: [], dropReason: e.message };
+      });
+    }
+    renderTwitchPicker(btn, clipsPerStreamer);
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    btn.textContent = 'PICK CLIPS'; btn.disabled = false;
+    var st = g('twitch-fetch-status');
+    if (st) st.textContent = 'Fetch failed — check server';
+  };
+  xhr.send();
 }
 
 function renderTwitchPickerWhenDone(btn, clipsPerStreamer, total) {
@@ -8336,7 +8342,9 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
       + '<input type="checkbox" id="tpick-' + si + '" ' + (entry.selected && !isDropped ? 'checked' : '') + (isDropped ? ' disabled' : '')
       + ' onchange="_twitchPickerStreamers[' + si + '].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;">'
       + '<span style="font-weight:700;font-family:Barlow Condensed,sans-serif;font-size:14px;color:' + nameColor + ';min-width:90px;">'
-      + entry.displayName + '</span>';
+      + entry.displayName + '</span>'
+      + '<span style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);">'
+      + (entry.platform || 'twitch') + '</span>';
 
     if (isDropped) {
       html += '<span style="font-size:10px;color:rgba(255,80,80,0.7);font-family:monospace;">✗ ' + entry.dropReason + '</span>';

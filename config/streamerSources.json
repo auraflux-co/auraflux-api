@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "defaults": {
+    "platform": "twitch",
+    "clipsPerStreamer": 2
+  },
+  "platforms": {
+    "twitch": { "label": "Twitch", "enabled": true },
+    "kick": { "label": "Kick", "enabled": true },
+    "youtube": { "label": "YouTube", "enabled": true }
+  },
+  "streamers": {
+    "jasontheween": { "displayName": "Jason", "platform": "twitch" },
+    "adapt": { "displayName": "Adapt", "platform": "twitch" },
+    "marlon": { "displayName": "Marlon", "platform": "twitch" },
+    "extraemily": { "displayName": "ExtraEmily", "platform": "twitch" },
+    "stableronaldo": { "displayName": "Ron", "platform": "twitch" },
+    "maya": { "displayName": "Maya", "platform": "twitch" },
+    "cinna": { "displayName": "Cinna", "platform": "twitch" },
+    "yonnajay": { "displayName": "Yonna", "platform": "twitch" },
+    "jaycinco": { "displayName": "Jay Cinco", "platform": "twitch" },
+    "lacy": { "displayName": "Lacy", "platform": "twitch" },
+    "hasanabi": { "displayName": "Hasan", "platform": "twitch" },
+    "yourragegaming": { "displayName": "Rage", "platform": "twitch" },
+    "xqc": { "displayName": "xQc", "platform": "kick" },
+    "trainwreckstv": { "displayName": "Trainwrecks", "platform": "kick" },
+    "ishowspeed": { "displayName": "IShowSpeed", "platform": "youtube", "handle": "@IShowSpeed" }
+  }
+}
