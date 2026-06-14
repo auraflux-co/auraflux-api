@@ -1,0 +1,34 @@
+---
+description: C0 localhost vs Render production — never merge the two release lines blindly
+alwaysApply: true
+---
+
+# C0 vs Render — Worker Memory (CPD-1021 / CPD-1025)
+
+Read `docs/C0_REPOSITORY_POLICY.md` (C0 repo) and the **Worker Memory** block at the top of `STATUS.md` before any git merge or gate/publish work.
+
+## Three worlds (do not conflate)
+
+| World | Folder | Branch | Deploys to |
+|-------|--------|--------|------------|
+| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 |
+| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app |
+| **Jira ticket IDs** | — | — | Git commit tags may be wrong (e.g. `cpd-1017` in commits ≠ Jira CPD-1017) |
+
+## Never
+
+- Merge `origin/main` into the C0 branch to "sync" — cherry-pick portable `lib/` fixes only (CPD ticket each)
+- Merge C0 branch → `main` without explicit port ticket (PR #637 class mistake)
+- Replace C0 `lib/gates/gate5.js` with a production `portal5.js` shim — C0 uses full gate5 + `/uploadposts/status`
+- Delete `lib/gates/gate{1,2,3b}.js` without shims — `assembly.js` still `require('./gates/…')`
+- `pm2 restart broadcast-sidecar` during a live RTMP-bypass stream (ends YouTube listing)
+- Raw `pm2 restart auraflux` during grid — use `bash scripts/safe_restart.sh`
+
+## Reviews
+
+- C0: `bash scripts/aider_session_review_local.sh`
+- Render: `bash scripts/aider_session_review.sh`
+
+## Epic
+
+[CPD-1021](https://aurafluxco.atlassian.net/browse/CPD-1021) — C0 separation + publish regression
