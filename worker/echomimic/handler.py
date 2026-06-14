@@ -46,16 +46,21 @@ DEFAULT_PROMPT = (
     "A bearded man in a tan blazer over a black t-shirt sits at a desk in a "
     "streaming studio, a purple neon world map glowing on the wall behind him, "
     "a broadcast microphone on an arm at frame left. He speaks naturally to the "
-    "camera. Hand and body movements are minimal and consistent with a natural "
-    "speaking posture. Don't blink too often. Preserve background integrity "
-    "matching the reference image's spatial configuration, lighting conditions, "
-    "and color temperature."
+    "camera with a closed relaxed mouth when silent. Eyes stay fixed on the camera — "
+    "stable gaze, no eye rolling or darting with head motion. Only the mouth and jaw "
+    "move during speech. Lip and jaw movement stays anatomically correct — natural teeth, "
+    "no exaggerated mouth opening. Hands remain below the desk and out of frame — "
+    "no visible hands, no gestures. Minimal head motion. Preserve background integrity "
+    "matching the reference image's spatial configuration, lighting conditions, and color temperature."
 )
 
 DEFAULT_NEGATIVE_PROMPT = (
     "Gesture is bad. Gesture is unclear. Strange and twisted hands. Bad hands. "
-    "Bad fingers. Unclear and blurry hands. Unclear gestures, broken hands, "
-    "fused fingers. Exaggerated mouth opening. Teeth distortion."
+    "Bad fingers. Extra fingers, missing fingers, fused fingers. Visible hands, "
+    "waving hands, pointing gesture, raised hands. Unclear and blurry hands. "
+    "Unclear gestures, broken hands. "
+    "手部快速摆动, 手指频繁抽搐, 夸张手势, 重复机械性动作. "
+    "Exaggerated mouth opening. Teeth distortion."
 )
 
 

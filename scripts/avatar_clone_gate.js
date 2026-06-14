@@ -67,13 +67,16 @@ async function heygenBaseline() {
 async function echoMimicCloneProduction() {
   process.env.ECHOMIMIC_AUDIO_SOURCE = 'elevenlabs';
   process.env.ECHOMIMIC_HEYGEN_AUDIO_FALLBACK = '0';
-  process.env.ECHOMIMIC_CHUNK = 'off';
   process.env.ECHOMIMIC_STEPS = process.env.ECHOMIMIC_GATE_STEPS || '8';
   process.env.ECHOMIMIC_AUDIO_GUIDANCE_SCALE = process.env.ECHOMIMIC_GATE_AGS || '2.0';
   process.env.ECHOMIMIC_GUIDANCE_SCALE = process.env.ECHOMIMIC_GATE_GUIDANCE || '4.5';
   process.env.ECHOMIMIC_USE_DYNAMIC_CFG = '0';
-  process.env.ECHOMIMIC_IMAGE_KEY = process.env.ECHOMIMIC_GATE_IMAGE_KEY
-    || 'spike/cpd881/inputs/bobbyg_heygen_frame.png';
+  process.env.ECHOMIMIC_PORTRAIT = process.env.ECHOMIMIC_GATE_PORTRAIT || 'heygen_frame';
+  process.env.ECHOMIMIC_ASSEMBLY_CROP = 'off';
+  process.env.ECHOMIMIC_ENHANCED_DELIVERY = '0';
+  delete process.env.ECHOMIMIC_IMAGE_KEY;
+  delete process.env.ECHOMIMIC_CHUNK_XFADE;
+  process.env.ECHOMIMIC_CHUNK = process.env.ECHOMIMIC_GATE_CHUNK || 'off';
   const avatar = require('../lib/avatar');
   const { wakePod } = require('../lib/avatar/echomimic_pod');
   await wakePod();

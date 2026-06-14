@@ -26,7 +26,7 @@ const ENV_KEYS = [
   'AVATAR_ENGINE', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID', 'ELEVENLABS_DEFAULT_VOICE_ID',
   'ELEVENLABS_MODEL', 'ECHOMIMIC_AUDIO_SOURCE',
   'RUNPOD_API_KEY', 'RUNPOD_ENDPOINT_ID', 'ECHOMIMIC_ENDPOINT_ID', 'ECHOMIMIC_IMAGE_KEY',
-  'ECHOMIMIC_STEPS', 'ECHOMIMIC_MAX_FRAMES', 'ECHOMIMIC_SPEAK_SPEED'
+  'ECHOMIMIC_STEPS', 'ECHOMIMIC_MAX_FRAMES', 'ECHOMIMIC_SPEAK_SPEED', 'ECHOMIMIC_PORTRAIT'
 ];
 let envBackup;
 
@@ -87,9 +87,9 @@ describe('wav duration', () => {
 });
 
 describe('resolveConfig', () => {
-  test('defaults to spike portrait and 8 steps', () => {
+  test('defaults to heygen_frame portrait and 8 steps (spike8 QA winner)', () => {
     const cfg = echomimic.resolveConfig({ contentType: 'twitch', format: 'landscape' });
-    expect(cfg.avatarId).toBe('spike/cpd881/inputs/bobbyg_headshot.png');
+    expect(cfg.avatarId).toBe('spike/cpd881/inputs/bobbyg_heygen_frame.png');
     expect(cfg.steps).toBe(8);
     expect(cfg.engine).toBe('echomimic');
     expect(cfg.voiceId).toBe('el-voice');
@@ -264,13 +264,13 @@ describe('submitSegment', () => {
     // RunPod call shape
     const [url, body, opts] = axios.post.mock.calls[1];
     expect(url).toBe('https://api.runpod.ai/v2/ep-1/run');
-    expect(body.input.image_url).toContain('presigned/get/spike/cpd881/inputs/bobbyg_headshot.png');
+    expect(body.input.image_url).toContain('presigned/get/spike/cpd881/inputs/bobbyg_heygen_frame.png');
     expect(body.input.audio_url).toContain('presigned/get/avatar/echomimic/');
     expect(body.input.output_put_url).toContain('presigned/put/avatar/echomimic/');
     expect(body.input.video_length).toBe(49); // 2.0s → 49 frames (4n+1)
     expect(body.input.num_inference_steps).toBe(8);
-    expect(body.input.audio_guidance_scale).toBe(3.0);
-    expect(body.input.guidance_scale).toBe(4.0);
+    expect(body.input.audio_guidance_scale).toBe(2.0);
+    expect(body.input.guidance_scale).toBe(4.5);
     expect(opts.headers.Authorization).toBe('Bearer rp-key');
   }, 20000);
 
