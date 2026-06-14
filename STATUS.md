@@ -17,7 +17,7 @@
 
 ---
 
-**Last Updated:** 2026-06-14 (CPD-1023) — RTMP bypass: sidecar restart skips endLiveBroadcast when manual RTMP key active. Prior CPD-1022: gate shims + full gate5 restored.
+**Last Updated:** 2026-06-14 (CPD-1026) — portal5 Upload-Post poll `/uploadposts/status` + 15min timeout (.env.example). Prior: CPD-1022 gate5 restore, CPD-1023 RTMP bypass.
 **Branch:** c0/main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
