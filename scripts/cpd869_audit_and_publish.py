@@ -148,24 +148,42 @@ def audit_one(jid):
 def repair_one(jid):
     return api('POST', f'/jobs/{urllib.parse.quote(jid, safe="")}/reapply-brand-chrome', {}, timeout=300)
 
+def infer_script(inp):
+    state = inp.get('state') or {}
+    saved = state.get('savedOutputs') or {}
+    for key in ('script', 'filledScript'):
+        v = inp.get(key) or saved.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    brand = inp.get('brandName') or twitch_from_order(inp) or 'streamer'
+    topic = (inp.get('topic') or '').strip()
+    sel_title = ((inp.get('orderSource') or {}).get('selected') or {}).get('title') or ''
+    if topic:
+        return f'{brand} Twitch highlight. {topic}'
+    clip_hint = sel_title if sel_title and sel_title.lower() != 'selected clip' else 'Best moment from their latest stream.'
+    return f'{brand} Twitch clip highlight. {clip_hint}'
+
+def infer_content_type(inp, jid):
+    ct = (inp.get('contentType') or '').lower()
+    if ct in ('clips', 'twitch', 'streamer') or 'COMPACT_FETCH' in jid or 'EXTRACT_FETCH' in jid:
+        return 'twitch'
+    if 'news' in ct:
+        return 'news'
+    if 'nba' in ct or 'sport' in ct:
+        return 'nba'
+    return ct or 'twitch'
+
 def regen_copy_one(jid):
     code, s = api('GET', f'/jobs/{urllib.parse.quote(jid, safe="")}/staging-assets')
     if code != 200:
         return code, {'error': 'staging failed'}
     inp = s.get('input') or {}
-    script = (
-        inp.get('script')
-        or (inp.get('state') or {}).get('savedOutputs', {}).get('script')
-        or inp.get('filledScript')
-        or ''
-    )
-    if not script:
-        return 422, {'error': 'no script on job spec'}
+    script = infer_script(inp)
     brand = inp.get('brandName') or twitch_from_order(inp) or 'streamer'
     body = {
         'jobId': jid,
         'script': script[:8000],
-        'contentType': inp.get('contentType') or 'clips',
+        'contentType': infer_content_type(inp, jid),
         'formType': 'short' if 'COMPACT' in jid or 'short' in str(inp.get('formType', '')).lower() else 'compilation',
         'platforms': ['youtube'],
         'streamers': [brand],
