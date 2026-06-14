@@ -12,6 +12,8 @@ This file provides guidance to **Cursor** (AI coding agents in the Cursor IDE) a
 
 ## Session Start
 
+**C0 vs Render (CPD-1021):** Read the **Worker Memory** block at the top of `STATUS.md` first when working in `~/cwn-c0` or `~/cwn-production`. Policy: `docs/C0_REPOSITORY_POLICY.md` · Rule: `.cursor/rules/c0-render-separation.mdc` · Serena memory: `c0-render-separation`.
+
 **Read these files at the start of every session, in this order:**
 
 1. `cursor.md` — architecture, rules, gotchas (this file)

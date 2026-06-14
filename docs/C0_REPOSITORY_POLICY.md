@@ -1,5 +1,8 @@
 # C0 Repository Policy — localhost vs production
 
+**Epic:** [CPD-1021](https://aurafluxco.atlassian.net/browse/CPD-1021) — C0 separation + publish regression  
+**Worker memory:** `STATUS.md` (top) · `.cursor/rules/c0-render-separation.mdc` · Serena `c0-render-separation`
+
 **Purpose:** Keep Rob's C0 localhost tool (`cwn-c0`, pm2, `cwn_production.html`) separate from C1+ production (`main` on Render) without merge conflicts.
 
 ## Two release lines, one GitHub org (interim)
