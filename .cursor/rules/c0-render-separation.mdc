@@ -5,7 +5,9 @@ alwaysApply: true
 
 # C0 vs Render — Worker Memory (CPD-1021 / CPD-1025)
 
-Read `docs/C0_REPOSITORY_POLICY.md` (C0 repo) and the **Worker Memory** block at the top of `STATUS.md` before any git merge or gate/publish work.
+Read the **Worker Memory** block at the top of `STATUS.md` before any git merge or gate/publish work.
+
+**Confluence HOW:** [Server Split — C0/C1+ Boundary](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/6881341)
 
 ## Three worlds (do not conflate)
 
