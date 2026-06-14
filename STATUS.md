@@ -17,7 +17,7 @@
 
 ---
 
-**Last Updated:** 2026-06-14 (CPD-1021–1026) — Restored C0 gate shims + full gate5 publish worker; RTMP bypass skip on sidecar restart; portal5 Upload-Post poll `/uploadposts/status` + 15min timeout; worker memory in STATUS/cursor/rules/Serena; branch → `c0/main`. Prior: PR #637 merged C0 into main (regression — gate deletion + portal5 shim broke Upload-Post publish).
+**Last Updated:** 2026-06-14 (CPD-1023) — RTMP bypass: sidecar restart skips endLiveBroadcast when manual RTMP key active. Prior CPD-1022: gate shims + full gate5 restored.
 **Branch:** c0/main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.

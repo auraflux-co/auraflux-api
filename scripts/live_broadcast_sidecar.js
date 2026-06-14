@@ -28,7 +28,13 @@ const server = app.listen(PORT, '127.0.0.1', () => {
 async function shutdown() {
   console.log('[broadcast-sidecar] shutting down — stopping streams…');
   try { liveState.tv?.stop(); } catch (_) {}
-  try { await liveState.grid?.stop(); } catch (_) {}
+  const rtmpBypass = !!(
+    (process.env.LIVE_GRID_RTMP_URL || process.env.YOUTUBE_LIVE_RTMP_URL) &&
+    (process.env.LIVE_GRID_BROADCAST_ID || process.env.LIVE_GRID_WATCH_URL)
+  );
+  try {
+    await liveState.grid?.stop({ skipEndBroadcast: rtmpBypass });
+  } catch (_) {}
   server.close(() => process.exit(0));
 }
 
