@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.148",
+  "version": "1.0.149",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -89,6 +89,7 @@
     "newrelic": "^13.19.1",
     "node-cron": "^3.0.3",
     "openai": "^6.37.0",
+    "pg": "^8.21.0",
     "pino": "^9.14.0",
     "pino-pretty": "^11.3.0",
     "puppeteer": "^24.40.0",

@@ -6,14 +6,14 @@
 
 | World | Folder | Branch | Deploys to |
 |-------|--------|--------|------------|
-| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 |
-| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app |
+| **C0 localhost** | `~/cwn-c0` | `c0/main` | pm2 @ localhost:3000 · **GitHub:** [auraflux-c0](https://github.com/auraflux-co/auraflux-c0) |
+| **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app · **GitHub:** [auraflux-api](https://github.com/auraflux-co/auraflux-api) |
 
 **Never:** merge C0 → `main` without port ticket; replace C0 `gate5.js` with `portal5` shim; delete gate shims.
 
 ---
 
-**Last Updated:** 2026-06-15 (CPD-1027) — restore C1 route mounts dropped in #637; gate_policy_runner import fix. Prior: CPD-1026 portal5 Upload-Post poll.
+**Last Updated:** 2026-06-14 (CPD-1030) — C0 line now on [auraflux-c0](https://github.com/auraflux-co/auraflux-c0); STATUS delineation updated. Prior: CPD-1027 route mounts; CPD-1026 portal5 poll.
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
