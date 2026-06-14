@@ -18,16 +18,34 @@
 
 ---
 
-**Last Updated:** 2026-06-14 (CPD-1026) — **News wire + picker:** BBC/PBS/Vox sources, clips-only news-short (no HeyGen), Twitch-style story cards (thumb/duration/relative time), 20–50 fetch limit, real yt-dlp upload dates (no fake "0m ago"), script scaffolding moved to Settings → Script, `GET/POST /customer-config/c0/scaffold`. Prior: CPD-1030 auraflux-c0 split; CPD-1026 dashboard audit.
+**Last Updated:** 2026-06-15 (CPD-1026) — **Unified three-pillar picker:** SPORTS \| WORLD NEWS \| STREAMERS tabs; ESPN discovery (~346 leagues) + BBC Sport; 48h-active category probe; sports-short pipeline; VOD/SHORT/CLIPS COMP from explorer selections (multi-league sports VOD); optional publish schedule in platform modal → Gate 5. Prior: news wire BBC/PBS/Vox, clips-only news-short, CPD-1030 auraflux-c0 split.
 **Branch:** c0/main → `origin` = **auraflux-c0** · `production` = auraflux-api (cherry-pick only)
-**Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
-**How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
+**How to start a session:** Read **this file first** → `cursor.md` → current focus below.
 
 ---
 
-## 🎯 Owned execution order (single source of truth for “what we do next”)
+## 🎯 Current focus — unified picker (operator UX)
 
-**Rule:** Work **respects this sequence**. Supporting docs (`docs/ops/LAUNCH_PLAN_2026.md`, `docs/ops/LAUNCH_TEST_MATRIX.md`, `docs/architecture/SYSTEM_ARCHITECTURE.md`, `docs/strategy/PO_AND_ENGINEERING_RUNBOOK.md`, `docs/ops/REQUIRED_API_KEYS.md`, etc.) are **reference** — they do not replace this section. **Progress and sign-off live here.**
+**North star:** Same rhythm for all three pillars — pick sources → FETCH → select → **VOD / SHORT / CLIPS COMP** → publish now or schedule.
+
+| Phase | Scope | Status |
+|-------|--------|--------|
+| 1 Sports categories (48h gate) | ESPN + BBC, dynamic discovery | ✅ Done |
+| 2 Unified shell (pillar tabs) | SPORTS \| WORLD NEWS \| STREAMERS | ✅ Done |
+| 3 Output + publish | VOD/SHORT/COMP + schedule in platform modal | ✅ Mostly done — calendar slot linking from Generate still optional |
+| 4 Streamers expansion | Kick / YouTube picker sources | ⬜ Not started |
+| 5 Content type rename | `nba` → `sports` in config/gates | ⬜ Not started |
+
+**Next:** Commit picker bundle; EchoMimic avatar path for VOD; Phase 4/5 when needed.
+
+---
+
+## 🎯 Owned execution order (archived — launch plan signed off)
+
+<details>
+<summary>Legacy Phase A–D launch plan (April 2026 — no longer active gate)</summary>
+
+**Rule:** Work **respects this sequence**. Supporting docs (`docs/ops/LAUNCH_PLAN_2026.md`, etc.) are **reference** only.
 
 ### Definition of done — **full job run** (product)
 
@@ -114,6 +132,8 @@ A run is **green / successful** only when **all** of the following are true:
 | 2026-04-21 | Cursor | Phase A 4 — NBA short | script_nba-short_1776722120450 | Pass | ~79s, 56 words. |
 | 2026-04-21 | Cursor | Phase A mini — NBA LF + news short; `PHASE_A_WATCH_EXIT_ON_STABLE=0`; transcript `logs/phase_a_live_20260421_223306Z.log` | `script_nba_1776810791666`, `script_news-short_1776811183984` | **Partial (progressing)** | Both **script POST OK** (~168s / ~33s). **NBA:** Gate 0 pass, Gate 1 **hard_fail** — Gemini QA flagged unsupported player/score specifics vs authorized facts. **News short:** Gate 0 pass; pipeline still early for G1+ at log time. **Regression / stall:** Gate watch was polling **semantic** job ids → looked frozen; **`phase_a_batch.cjs` fixed** to poll `scriptJobId` first. **Re-run** recommended for a truthful live tail + RCA. VectCut offline in `/health`. |
 
+</details>
+
 ---
 
 ## 🔖 2026-04-18 Session Summary — Read This When You Return
@@ -186,7 +206,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **feat(cpd-1026): news wire BBC/PBS/Vox, clips-only shorts, picker UX, real timestamps** — `news-short` clipsOnly + heygen null; HeyGen adapter skips avatar for clipsOnly types. Sources: BBC (YT+RSS merge), PBS, Vox; `all` limit up to 50. Picker: nothing pre-checked, Twitch-style cards, 560px scroll, batch requires explicit selection. Generate page: script editor → Pipeline status card; scaffolding + hold-before-HeyGen → Settings → Script tab + `GET/POST /customer-config/c0/scaffold`. Timestamps: `parseYtPublishedAt` + yt-dlp `--dump-json` (fixes fake "0m ago"); BBC RSS pubDate preferred over date-only upload_date. `scripts/test_wire_news_fetch.js` benchmark helper. | config/contentTypes.json, cwn_production.html, server.js, lib/avatar/adapters/heygen.js, lib/configLoader.js, lib/customerConfig.js, scripts/test_wire_news_fetch.js, STATUS.md | — | 2026-06-14 |
+| Cursor | **feat(cpd-1026): sports sources — ESPN discovery, BBC Sport, 48h category probe** — `lib/sports/` adapters (ESPN scoreboard/summary, BBC RSS+yt-dlp, dynamic league discovery ~346 leagues, worldcup alias); `config/sportsSources.json`; `GET /sports/sources|categories|highlights|espn/discover`; tests 6/6. | lib/sports/, config/sportsSources.json, test/sports_sources.test.js, STATUS.md | — | 2026-06-15 |
 | Cursor | **feat(cpd-1006): UDP relay layer + member-only chat policy** — NEW `lib/live_grid/relays.js`: 4× ffmpeg RTSP→UDP MPEG-TS relays on localhost ports 5010–5013; `QuadRelays.startAll/restart/stopAll` with auto-restart on EOF. Master compositor reads fixed UDP URLs via `quadMasterInputArgs()` — quadrant swaps nudge only the relay, RTMP to YouTube uninterrupted. Manager wires relays after 8s feeder warmup; poller swaps + member !swap call `relays.restart(q)`; status exposes `relays` array. Legacy path when `LIVE_GRID_UDP_RELAY=off`: RTSP direct + freeze watchdog + optional SWAP_RESTART. **Chat policy (CPD-1005 amendment):** removed public audio voting — `LIVE_GRID_MEMBER_ONLY_AUDIO=on` (default) rejects non-members on !listen; !swap members-only + gated by like milestone via `LikeTracker.onMilestone`. `.env.example` updated. jest live-grid 42/42. | lib/live_grid/relays.js, manager.js, compositor.js, chat_perks.js, seo.js, .env.example, test/live_grid_relays.test.js, test/live_grid_compositor.test.js, STATUS.md | — | 2026-06-13 |
 | Cursor | **fix(cpd-879): HeyGen v3 720p regression — chrome overlay cropped (no sidebar, flag over avatar head)** — CPD-605 v3 migration set `resolution: '720p'`; the 1920x1080 legacy chrome overlay PNG composited onto raw 1280x720 segments via `overlay=0:0` was cropped (sidebar at x≥1468 lost, LIVE+date lost), then the burned 720p upscaled to 1080p blew the flag up 1.5x over the avatar's head. v2 returned 1080p so May 8 was correct. Fix: (1) `burnLegacyHtmlOverlay` now scales+pads base to 1920x1080 BEFORE compositing (resolution-agnostic, lets tonight's job re-assemble from existing 720p renders — no HeyGen re-spend); (2) `script_gen.js` + assembly re-render path request `resolution: '1080p'` for future runs. Job script_twitch_1781140275746 sent back to assembly. | lib/assembly.js, lib/script_gen.js, STATUS.md | — | 2026-06-10 |
 | Cursor | **fix(cpd-874/875/876/877): QA timestamp proof, chapter labels, hype-word removal** — (1) CPD-874: removed legacy hype-word ban from twitch Gate 1 VOICE STYLE check ('legendary' deduction was bogus). (2) CPD-875: Gate 3a/4 Gemini prompts now require every deduction to start with `[M:SS — what is on screen]`; gate3a receives the per-sample absolute time window; clarified `*_CLIPn_SETUP/_REACTION` are avatar commentary scenes, not source-clip playback (killed the -21.7 middle-sample false positive). (3) CPD-876: chapter labels on chunked twitch jobs derive from segment label prefix (JASON_CLIP1_SETUP → 'Jason') with consecutive-duplicate collapse — was 'Stream 0' for every chapter. (4) CPD-877: verified by frame extraction that the Gate 3a '7-item sidebar' deduction was a Gemini hallucination (no sidebar present in late sample; window caps at 5 everywhere) — no code change needed, mitigated by CPD-875. Also: hoisted `chaptersString` to run() scope (fixes ASSEMBLY_CRASH ReferenceError at assembly.js:4138). | lib/qa/checklists/twitch.js, lib/gates/gate3a.js, lib/gates/gate4.js, lib/assembly.js, STATUS.md | — | 2026-06-10 |

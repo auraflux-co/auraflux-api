@@ -1,0 +1,50 @@
+{
+  "version": 3,
+  "description": "Sports picker — ESPN leagues auto-discovered from espn.com dropdown APIs (URL segment → API path). BBC RSS categories static.",
+  "probeWindowHours": 48,
+  "espnDiscoveryCacheHours": 6,
+  "espnSportSlugs": [
+    "basketball", "football", "baseball", "hockey", "soccer",
+    "golf", "racing", "mma", "tennis"
+  ],
+  "espnAliases": {
+    "worldcup": "fifa.world",
+    "epl": "eng.1",
+    "mls": "usa.1",
+    "ucl": "uefa.champions",
+    "laliga": "esp.1",
+    "bundesliga": "ger.1",
+    "seriea": "ita.1",
+    "ligue1": "fra.1",
+    "ncaam": "mens-college-basketball",
+    "ncaaw": "womens-college-basketball",
+    "nascar": "nascar-premier"
+  },
+  "espnLeagues": {
+    "nba": { "label": "NBA", "path": "basketball/nba", "maxClipSec": 600 },
+    "fifa.world": { "label": "FIFA World Cup", "path": "soccer/fifa.world", "maxClipSec": 300, "webUrl": "https://www.espn.com/soccer/worldcup/" }
+  },
+  "bbcCategories": {
+    "top": { "label": "BBC Sport — Top", "rssUrl": "https://feeds.bbci.co.uk/sport/rss.xml" },
+    "football": { "label": "Football", "rssUrl": "https://feeds.bbci.co.uk/sport/football/rss.xml" },
+    "cricket": { "label": "Cricket", "rssUrl": "https://feeds.bbci.co.uk/sport/cricket/rss.xml" },
+    "rugby-union": { "label": "Rugby Union", "rssUrl": "https://feeds.bbci.co.uk/sport/rugby-union/rss.xml" },
+    "rugby-league": { "label": "Rugby League", "rssUrl": "https://feeds.bbci.co.uk/sport/rugby-league/rss.xml" },
+    "golf": { "label": "Golf", "rssUrl": "https://feeds.bbci.co.uk/sport/golf/rss.xml" },
+    "formula1": { "label": "Formula 1", "rssUrl": "https://feeds.bbci.co.uk/sport/formula1/rss.xml" },
+    "tennis": { "label": "Tennis", "rssUrl": "https://feeds.bbci.co.uk/sport/tennis/rss.xml" },
+    "athletics": { "label": "Athletics", "rssUrl": "https://feeds.bbci.co.uk/sport/athletics/rss.xml" },
+    "cycling": { "label": "Cycling", "rssUrl": "https://feeds.bbci.co.uk/sport/cycling/rss.xml" },
+    "boxing": { "label": "Boxing", "rssUrl": "https://feeds.bbci.co.uk/sport/boxing/rss.xml" },
+    "mma": { "label": "MMA", "rssUrl": "https://feeds.bbci.co.uk/sport/mixed-martial-arts/rss.xml" },
+    "basketball": { "label": "Basketball", "rssUrl": "https://feeds.bbci.co.uk/sport/basketball/rss.xml" },
+    "american-football": { "label": "American Football", "rssUrl": "https://feeds.bbci.co.uk/sport/american-football/rss.xml" },
+    "ice-hockey": { "label": "Ice Hockey", "rssUrl": "https://feeds.bbci.co.uk/sport/ice-hockey/rss.xml" },
+    "snooker": { "label": "Snooker", "rssUrl": "https://feeds.bbci.co.uk/sport/snooker/rss.xml" },
+    "darts": { "label": "Darts", "rssUrl": "https://feeds.bbci.co.uk/sport/darts/rss.xml" },
+    "rowing": { "label": "Rowing", "rssUrl": "https://feeds.bbci.co.uk/sport/rowing/rss.xml" },
+    "sailing": { "label": "Sailing", "rssUrl": "https://feeds.bbci.co.uk/sport/sailing/rss.xml" },
+    "winter-sports": { "label": "Winter Sports", "rssUrl": "https://feeds.bbci.co.uk/sport/winter-sports/rss.xml" },
+    "olympics": { "label": "Olympics", "rssUrl": "https://feeds.bbci.co.uk/sport/olympics/rss.xml" }
+  }
+}
